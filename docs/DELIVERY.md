@@ -136,3 +136,16 @@ and direct-device installation are in IPAD.md.
 - Signed native version 0.1.0 build 4 and installed it on the paired iPad over
   WLAN. Installation succeeded; automatic launch was denied by iPadOS because
   the device was locked. Physical Files/Pencil and touch acceptance remain pending.
+
+## Native macOS inspection host
+
+- Built an original Swift/AppKit/WebKit host for macOS 14+, with bundled offline
+  assets, a loopback-only stable origin, native Open/Save dialogs and native
+  confirmation/checkpoint sheets. No desktop runtime dependency was added.
+- The arm64 app is locally signed and installed in `~/Applications`. Actual
+  native smoke verification passed editor/worker/WASM startup and an iteration
+  save using an ephemeral workspace; the regular app was then launched for owner
+  inspection. Browser tests pass project/history exports through the desktop
+  bridge on Chromium and WebKit. Native dialog acceptance remains manual.
+- Added macOS build instructions, contribution guidance and a macOS CI build
+  artifact job. Native local signing is not a notarized distribution release.

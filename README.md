@@ -2,7 +2,16 @@
 
 A standalone 3D solid editor and the same editor as an embeddable BSD-3-Clause
 package. It uses Manifold for mesh-solid operations and Three.js for rendering.
-It does not depend on Layerling, Scratch, a backend, or a desktop wrapper.
+The shared editor needs no backend, Layerling or Scratch. Optional native hosts
+provide macOS and iPad apps without changing the reusable editor.
+
+**Status:** working early CAD workbench, not yet a FreeCAD or Layerling replacement.
+Development is progressing toward independently implemented UX parity and optional
+parametric modeling. See the [roadmap](docs/ROADMAP.md) for current limits.
+
+## Run locally
+
+Requires Node **22.18+** and npm; CI uses Node 24.
 
 ```sh
 npm ci
@@ -16,6 +25,8 @@ builds the library packages before starting Vite; after changing a package,
 rerun `npm run build:packages` (or `npx tsc -b --watch` in another terminal).
 
 For the native iPad host and Brickwright-keychain signing, see [docs/IPAD.md](docs/IPAD.md).
+For the native macOS app, run `npm run mac:build` followed by `npm run mac:run`.
+See [docs/MACOS.md](docs/MACOS.md) for native verification, storage and build details.
 
 The delivered scope and exclusions are in [docs/SCOPE.md](docs/SCOPE.md).
 Host APIs, package boundaries and the later Brickwright wiring are documented
@@ -88,3 +99,15 @@ a simulation tab in the standalone UI. An explicit rigid preview is distinct
 from a qualified spring, thread, snap-fit, belt or gear mechanism; unconfigured
 mechanical models are refused. Run `node scripts/qualify-catalog-physics.mjs`
 for the full catalog qualification report after building packages.
+
+## License and development
+
+Original project code is [BSD-3-Clause](LICENSE). Runtime dependencies include
+Three.js (MIT), Manifold (Apache-2.0), and the Brickwright Jolt fork (MIT).
+[Third-party notices](THIRD-PARTY-NOTICES.md) cover bundled components; native
+Apple frameworks are supplied by the operating system. The project incorporates
+no Layerling implementation or artwork.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development, verification and package
+boundaries. Models stay on your device unless you export or share them. Retain
+portable backups; local autosave is not off-device backup.

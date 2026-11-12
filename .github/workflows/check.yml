@@ -25,3 +25,20 @@ jobs:
             test-results/
             artifacts/
           retention-days: 7
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run mac:build
+      - run: ditto -c -k --sequesterRsrc --keepParent 'apps/macos/build/Brickwright CAD.app' Brickwright-CAD-macOS.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Brickwright-CAD-macOS
+          path: Brickwright-CAD-macOS.zip
+          retention-days: 14

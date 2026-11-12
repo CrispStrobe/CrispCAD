@@ -53,7 +53,7 @@ function recovery(error: unknown, raw: string | null) {
 }
 const help = document.querySelector<HTMLDialogElement>('#help-dialog')!;
 document.querySelector('#help')!.addEventListener('click', () => help.showModal()); document.querySelector('#close-help')!.addEventListener('click', () => help.close());
-if (!Capacitor.isNativePlatform() && import.meta.env.PROD && 'serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => { /* Local file exports remain available. */ });
+if (!window.brickwrightDesktop && !Capacitor.isNativePlatform() && import.meta.env.PROD && 'serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => { /* Local file exports remain available. */ });
 
 const licenseDetails=document.querySelector('#licenses')!.parentElement as HTMLDetailsElement;
 licenseDetails.addEventListener('toggle',()=>{if(licenseDetails.open)void fetch(new URL('../cad-assets/notices.txt',import.meta.url)).then(r=>{if(!r.ok)throw Error('License notices could not be read');return r.text();}).then(text=>{document.querySelector('#licenses')!.textContent=text;}).catch(error=>{document.querySelector('#licenses')!.textContent=String(error);});});

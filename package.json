@@ -25,7 +25,10 @@
     "ipad:open": "cap open ios",
     "ipad:archive": "npm run ipad:sync && node scripts/archive-ipad.mjs",
     "ipad:install": "node scripts/install-ipad.mjs",
-    "verify:physics": "node scripts/qualify-catalog-physics.mjs"
+    "verify:physics": "node scripts/qualify-catalog-physics.mjs",
+    "mac:build": "npm run build && node scripts/build-macos.mjs",
+    "mac:run": "open \"apps/macos/build/Brickwright CAD.app\"",
+    "mac:verify": "\"apps/macos/build/Brickwright CAD.app/Contents/MacOS/BrickwrightCAD\" --smoke-test"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",
