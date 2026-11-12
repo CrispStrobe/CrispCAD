@@ -1,0 +1,22 @@
+{
+  "name": "@brickwright/cad-brickwright",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "BSD-3-Clause",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE.md"
+  ],
+  "dependencies": {
+    "@brickwright/cad-core": "0.1.0",
+    "@brickwright/cad-geometry": "0.1.0",
+    "fflate": "0.8.3"
+  }
+}

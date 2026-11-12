@@ -1,0 +1,17 @@
+{
+  "repository": "https://github.com/CrispStrobe/brickwright-lite",
+  "commit": "05d67f149e4c4c947a8631d0a36b4d27e449cc6e",
+  "license": "BSD-3-Clause",
+  "files": [
+    {
+      "file": "packages/editor/src/vendor/touch-gestures.js",
+      "source": "overlay/scratch-gui/src/lib/bw-sim/editor/touch-gestures.js",
+      "sha256": "70a9f44d89782631058f185b66e80c6879a43d94f2fb057c23de48b7d49180c2"
+    },
+    {
+      "file": "packages/editor/src/vendor/transform-math.js",
+      "source": "overlay/scratch-gui/src/lib/bw-sim/editor/transform-math.js",
+      "sha256": "7090ecf2dc33cddc8221676ca07a83c6b8e25ac1c2bab86f0f8c2a894c91a505"
+    }
+  ]
+}

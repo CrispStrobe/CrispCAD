@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.tsbuildinfo
+test-results/
+playwright-report/
+apps/standalone/public/cad-assets/
+.appstoreconnect/
+*.p8
+*.p12
+*.mobileprovision
+.DS_Store

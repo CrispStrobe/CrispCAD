@@ -1,0 +1,1 @@
+{"extends":"../../tsconfig.base.json","compilerOptions":{"noEmit":true,"composite":false,"types":["vite/client"]},"include":["src/**/*.ts"],"references":[{"path":"../../packages/core"},{"path":"../../packages/editor"},{"path":"../../packages/brickwright"}]}

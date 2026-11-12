@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict>
+<key>method</key><string>release-testing</string><key>destination</key><string>export</string><key>signingStyle</key><string>manual</string>
+<key>teamID</key><string>N9XSJ4M3GT</string><key>signingCertificate</key><string>56D3B7D782F2CEF0BBEFEEE30D98C6BA0F31C632</string>
+<key>provisioningProfiles</key><dict><key>com.crispstrobe.brickwrightcad</key><string>Brickwright CAD iPad AdHoc</string></dict>
+<key>manageAppVersionAndBuildNumber</key><false/>
+</dict></plist>

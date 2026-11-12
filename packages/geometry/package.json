@@ -1,0 +1,22 @@
+{
+  "name": "@brickwright/cad-geometry",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "BSD-3-Clause",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE.md"
+  ],
+  "dependencies": {
+    "@brickwright/cad-core": "0.1.0",
+    "manifold-3d": "3.5.4",
+    "fflate": "0.8.3"
+  }
+}
