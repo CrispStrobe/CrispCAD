@@ -5,9 +5,7 @@ A 3D solid editor and the same editor that uses Manifold for mesh-solid operatio
 Optional native hosts
 provide macOS and iPad apps without changing the reusable editor.
 
-**Status:** working early CAD workbench, not yet a FreeCAD or Layerling replacement.
-Development is progressing toward independently implemented UX parity and optional
-parametric modeling. See the [roadmap](docs/ROADMAP.md) for current limits.
+**Status:** working early CAD workbench, see the [roadmap](docs/ROADMAP.md) for current limits.
 
 ## Run locally
 
