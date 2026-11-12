@@ -2,6 +2,8 @@
 import { checkDocument, createDocument, freezeDocument, identityTransform, newId, parseDocument, pruneDocument, serializeDocument, validateDocument } from './document.js';
 import type { CadDocument, Primitive, SolidNode, Transform } from './document.js';
 import { defaultPartPhysics } from './physics.js';
+import { applyParametricBindings, assertDrivenEdit } from './parameters.js';
+import type { ParametricDesign } from './parameters.js';
 export interface SessionState { document: CadDocument; selection: readonly string[]; revision: number; canUndo: boolean; canRedo: boolean; label: string }
 const cloneNode = (node: SolidNode): SolidNode => ({ ...node,
   transform: { position: [...node.transform.position], rotation: [...node.transform.rotation], scale: [...node.transform.scale] },
@@ -23,14 +25,15 @@ export function createCadSession(initial: CadDocument = createDocument()) {
   const emit = () => { for (const listener of [...listeners]) listener(state()); };
   const snapshot = (): Snapshot => ({ document, selection: [...selection], label });
   function commit(title: string, edit: (draft: CadDocument) => string[] | void) {
-    const draft = { ...document, roots: [...document.roots], ...(document.joints ? {joints: structuredClone(document.joints)} : {}), nodes: Object.fromEntries(Object.entries(document.nodes).map(([id, node]) => [id, cloneNode(node)])) };
+    const draft = { ...document, roots: [...document.roots], ...(document.joints ? {joints: structuredClone(document.joints)} : {}), ...(document.parametric ? {parametric:structuredClone(document.parametric)} : {}), nodes: Object.fromEntries(Object.entries(document.nodes).map(([id, node]) => [id, cloneNode(node)])) };
     const nextSelection = edit(draft);
+    applyParametricBindings(draft);
     checkDocument(draft);
     for (const [id, node] of Object.entries(draft.nodes)) {
       const previous = document.nodes[id];
       if (previous && equivalent(node, previous)) draft.nodes[id] = previous;
     }
-    if (draft.title === document.title && JSON.stringify(draft.roots) === JSON.stringify(document.roots) && JSON.stringify(draft.joints) === JSON.stringify(document.joints) && Object.keys(draft.nodes).length === Object.keys(document.nodes).length && Object.entries(draft.nodes).every(([id, node]) => document.nodes[id] === node)) return;
+    if (draft.version === document.version && JSON.stringify(draft.parametric) === JSON.stringify(document.parametric) && draft.title === document.title && JSON.stringify(draft.roots) === JSON.stringify(document.roots) && JSON.stringify(draft.joints) === JSON.stringify(document.joints) && Object.keys(draft.nodes).length === Object.keys(document.nodes).length && Object.entries(draft.nodes).every(([id, node]) => document.nodes[id] === node)) return;
     const validated = freezeDocument(draft);
     undo.push(snapshot()); if (undo.length > 100) undo.shift(); redo.length = 0;
     document = validated; selection = nextSelection ?? selection.filter(id => !!document.nodes[id]); label = title; revision++; emit();
@@ -40,8 +43,10 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     subscribe(listener: (state: SessionState) => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     select(ids: readonly string[]) { selection = [...new Set(ids)].filter(id => Object.hasOwn(document.nodes, id)); emit(); },
     rename(title: string) { commit('Rename design', d => { d.title = title; }); },
+    setParametric(design: ParametricDesign) {commit('Edit parameters',d=>{d.version=2;d.parametric=structuredClone(design);});},
     insert(fragment: CadDocument, offset: [number, number, number] = [0, 0, 0]) {
       const source = validateDocument(fragment); const ids = new Map(Object.keys(source.nodes).map(id => [id, newId()]));
+      if(source.parametric?.bindings.length)throw new Error('Insert a baked snapshot of a parametric model; merging parameter namespaces is not supported yet');
       commit('Add shape', d => {
         for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); node.id = ids.get(id)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if (source.roots.includes(id)) node.transform.position = node.transform.position.map((v, i) => v + offset[i]) as [number, number, number]; d.nodes[node.id] = node; }
         const roots = source.roots.map(id => ids.get(id)!); d.roots.push(...roots);
@@ -60,9 +65,10 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       if (!d.nodes[id]) throw new Error('Object does not exist');
       // Kind and identity cannot be changed by inspector edits.
       if ((patch.id && patch.id !== id) || (patch.kind && patch.kind !== d.nodes[id].kind)) throw new Error('Cannot change object identity or kind');
-      d.nodes[id] = { ...d.nodes[id], ...structuredClone(patch) } as SolidNode;
+      const next = { ...d.nodes[id], ...structuredClone(patch) } as SolidNode;
+      assertDrivenEdit(d,next); d.nodes[id] = next;
     }); },
-    transform(updates: Array<{ id: string; transform: Transform }>) { commit('Transform selection', d => { for (const { id, transform } of updates) { if (!d.nodes[id]) throw new Error('Object does not exist'); d.nodes[id].transform = structuredClone(transform); } }); },
+    transform(updates: Array<{ id: string; transform: Transform }>) { commit('Transform selection', d => { for (const { id, transform } of updates) { if (!d.nodes[id]) throw new Error('Object does not exist'); const next={...d.nodes[id],transform:structuredClone(transform)};assertDrivenEdit(d,next);d.nodes[id]=next; } }); },
     combine(operation: 'union' | 'subtract' | 'intersect', ids: readonly string[] = selection) {
       const chosen = [...new Set(ids)]; const id = newId();
       commit(operation === 'subtract' ? 'Subtract (first selected is the base)' : operation, d => {
@@ -80,10 +86,12 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       const node = d.nodes[id]; if (node?.kind !== 'boolean' || !d.roots.includes(id)) throw new Error('Select a top-level operation');
       if(d.joints?.some(j=>j.bodyA===id||j.bodyB===id))throw new Error('Detach this body’s joints before separating its operands');
       if (JSON.stringify(node.transform) !== JSON.stringify(identityTransform())) throw new Error('Reset the operation transform before separating its operands');
-      d.roots.splice(d.roots.indexOf(id), 1, ...node.inputs); delete d.nodes[id]; return [...node.inputs];
+      d.roots.splice(d.roots.indexOf(id), 1, ...node.inputs); delete d.nodes[id];if(d.parametric)d.parametric.bindings=d.parametric.bindings.filter(b=>b.nodeId!==id); return [...node.inputs];
     }); },
     duplicate(ids: readonly string[] = selection) { commit('Duplicate', d => {
       const roots = ids.filter(id => d.roots.includes(id)); if (!roots.length) throw new Error('Select a top-level body');
+      const sourceBindings=d.parametric?.bindings.slice()??[];
+      if(sourceBindings.some(b=>roots.includes(b.nodeId)&&b.property==='positionX'))throw new Error('Detach the driving Position X binding before duplicating with an offset');
       const copied: string[] = []; const allCopied = new Map<string,string>();
       for (const root of roots) {
         const map = new Map<string, string>();
@@ -94,6 +102,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
           d.nodes[next] = n; return next;
         };
         const id = copy(root); const n = d.nodes[id]; n.name += ' copy'; n.transform.position[0] += 10; d.roots.push(id); copied.push(id); for(const [old,next] of map)allCopied.set(old,next);
+        if(d.parametric)d.parametric.bindings.push(...sourceBindings.filter(b=>map.has(b.nodeId)).map(b=>({...b,nodeId:map.get(b.nodeId)!})));
       }
       if(d.joints)d.joints.push(...d.joints.filter(j=>roots.includes(j.bodyA)&&roots.includes(j.bodyB)).map(j=>({...structuredClone(j),id:newId(),bodyA:allCopied.get(j.bodyA)!,bodyB:allCopied.get(j.bodyB)!})));
       return copied;

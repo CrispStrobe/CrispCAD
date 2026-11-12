@@ -30,8 +30,8 @@ The native bridge currently caps exports at 64 MiB, matching history backups.
 
 `mac:verify` starts the **actual native app**, with ephemeral website data, and
 checks editor startup, worker/WASM evaluation of a box and a saved iteration.
-It exits without changing the inspection workspace. Run it while the regular app
-is closed so the fixed port is available. Native file-dialog acceptance remains
+It exits without changing the inspection workspace, using separate port 4319
+and ephemeral storage even while the regular app is open. Native file-dialog acceptance remains
 a manual check; browser tests additionally cover the desktop export bridge.
 
 Safari's Develop menu can inspect this WebKit app during development. The host

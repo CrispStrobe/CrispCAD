@@ -11,6 +11,10 @@ test('desktop host exports project and iteration archives through the native sav
   await expect.poll(()=>page.evaluate(()=>(window as unknown as {exports:unknown[]}).exports.length)).toBe(1);
   const project=await page.evaluate(()=>JSON.parse(atob((window as unknown as {exports:{data:string}[]}).exports[0].data)));
   expect(project.format).toBe('brickwright-cad');expect(project.roots).toHaveLength(1);
+  // Native Quit commits a still-focused inspector field before flushing history.
+  const width=page.getByLabel('Width (mm)',{exact:true});if(!await width.isVisible())await page.getByRole('button',{name:'Properties',exact:true}).click();
+  await width.fill('42');await page.evaluate(async()=>{await (window as unknown as {brickwrightPrepareToClose:()=>Promise<void>}).brickwrightPrepareToClose();});
+  expect(await page.evaluate(()=>{const doc=JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!);return doc.nodes[doc.roots[0]].size[0];})).toBe(42);
   await page.getByRole('button',{name:'Models and version history',exact:true}).click();
   await page.getByRole('button',{name:'Back up model + history',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>(window as unknown as {exports:unknown[]}).exports.length)).toBe(2);

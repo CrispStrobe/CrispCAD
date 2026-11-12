@@ -4,6 +4,7 @@ import { newId } from '@brickwright/cad-core';
 declare global {
   interface Window {
     brickwrightDesktop?: boolean;
+    brickwrightPrepareToClose?: () => Promise<void>;
     webkit?: { messageHandlers: { cadSave?: { postMessage(body: {name:string;data:string}): Promise<{saved:boolean}> } } };
   }
 }

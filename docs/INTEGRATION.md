@@ -61,7 +61,10 @@ renderer objects, worker state, or a displayed mesh as the editable project.
 
 ## Document and units
 
-`.bcad` is UTF-8 JSON, `format: brickwright-cad`, `version: 1`, `units: mm`.
+`.bcad` is UTF-8 JSON, `format: brickwright-cad`, `units: mm`. Version 1 is the
+direct document; version 2 adds optional named parameters and formula bindings.
+Both are supported. Old version-1-only hosts reject version 2 rather than silently
+discarding design intent. See [PARAMETERS.md](PARAMETERS.md) for schema/API behavior.
 The coordinates are right-handed and Z-up. Primitives are centred at their local
 origin. Each node applies positive scale, fixed-axis X/Y/Z rotations in degrees,
 then translation. Boolean nodes retain ordered input IDs and apply their own

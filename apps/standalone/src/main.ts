@@ -27,6 +27,13 @@ try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) { failedRaw = raw;
   if (failedRaw !== null) recovery(error, failedRaw); else { badge.textContent = 'Local storage unavailable · save files to keep your work'; badge.className = 'error'; start(); }
 }
 if (!root.childElementCount) start(initial);
+if(window.brickwrightDesktop)window.brickwrightPrepareToClose=async()=>{
+  let active:Element|null=document.activeElement;
+  while(active?.shadowRoot?.activeElement)active=active.shadowRoot.activeElement;
+  if(active instanceof HTMLElement)active.blur();
+  await lastSave;
+  await (await historyStore).flush();
+};
 function start(doc?: CadDocument) {
   root.replaceChildren();
   try {

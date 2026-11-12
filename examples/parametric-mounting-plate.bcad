@@ -1,0 +1,165 @@
+{
+  "format": "brickwright-cad",
+  "version": 2,
+  "units": "mm",
+  "id": "parametric-mounting-plate",
+  "title": "Parametric mounting plate",
+  "nodes": {
+    "0574e174-97fe-4afa-a4ee-67c221d60926": {
+      "kind": "box",
+      "size": [
+        60,
+        40,
+        8
+      ],
+      "id": "0574e174-97fe-4afa-a4ee-67c221d60926",
+      "name": "Plate",
+      "color": "#eea52b",
+      "transform": {
+        "position": [
+          0,
+          0,
+          4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    "699c2ba7-37f0-4174-a4ac-cd8277554cc6": {
+      "kind": "cylinder",
+      "radius": 4,
+      "height": 10,
+      "segments": 64,
+      "id": "699c2ba7-37f0-4174-a4ac-cd8277554cc6",
+      "name": "Through bore",
+      "color": "#eea52b",
+      "transform": {
+        "position": [
+          15,
+          0,
+          4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    "3ba9db62-a2ee-4aba-8770-3038eeb34342": {
+      "id": "3ba9db62-a2ee-4aba-8770-3038eeb34342",
+      "kind": "boolean",
+      "operation": "subtract",
+      "inputs": [
+        "0574e174-97fe-4afa-a4ee-67c221d60926",
+        "699c2ba7-37f0-4174-a4ac-cd8277554cc6"
+      ],
+      "name": "Subtract",
+      "color": "#eea52b",
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "physics": {
+        "version": 1,
+        "motion": "dynamic",
+        "densityKgM3": 1050,
+        "friction": 0.4,
+        "restitution": 0.05,
+        "intent": "rigid"
+      }
+    }
+  },
+  "roots": [
+    "3ba9db62-a2ee-4aba-8770-3038eeb34342"
+  ],
+  "parametric": {
+    "version": 1,
+    "parameters": {
+      "width": {
+        "expression": "60",
+        "unit": "mm"
+      },
+      "depth": {
+        "expression": "40",
+        "unit": "mm"
+      },
+      "thickness": {
+        "expression": "8",
+        "unit": "mm"
+      },
+      "holeDiameter": {
+        "expression": "8",
+        "unit": "mm"
+      }
+    },
+    "bindings": [
+      {
+        "nodeId": "0574e174-97fe-4afa-a4ee-67c221d60926",
+        "property": "width",
+        "expression": "width"
+      },
+      {
+        "nodeId": "0574e174-97fe-4afa-a4ee-67c221d60926",
+        "property": "depth",
+        "expression": "depth"
+      },
+      {
+        "nodeId": "0574e174-97fe-4afa-a4ee-67c221d60926",
+        "property": "height",
+        "expression": "thickness"
+      },
+      {
+        "nodeId": "0574e174-97fe-4afa-a4ee-67c221d60926",
+        "property": "positionZ",
+        "expression": "thickness / 2"
+      },
+      {
+        "nodeId": "699c2ba7-37f0-4174-a4ac-cd8277554cc6",
+        "property": "radius",
+        "expression": "holeDiameter / 2"
+      },
+      {
+        "nodeId": "699c2ba7-37f0-4174-a4ac-cd8277554cc6",
+        "property": "height",
+        "expression": "thickness + 2 mm"
+      },
+      {
+        "nodeId": "699c2ba7-37f0-4174-a4ac-cd8277554cc6",
+        "property": "positionX",
+        "expression": "width / 4"
+      },
+      {
+        "nodeId": "699c2ba7-37f0-4174-a4ac-cd8277554cc6",
+        "property": "positionZ",
+        "expression": "thickness / 2"
+      }
+    ]
+  }
+}

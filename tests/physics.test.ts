@@ -2,12 +2,24 @@ import {beforeAll,describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import initJolt from 'jolt-physics/debug-wasm-compat';
 import {createPresetDocument} from '../packages/editor/src/shapes.js';
+import {createCadSession} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {createPhysicsWorld,prepareDocumentCollisions,solidMassProperties} from '../packages/physics/src/index.js';
 let kernel:GeometryKernel,J:Awaited<ReturnType<typeof initJolt>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});J=await initJolt();});
 describe('qualified Jolt physics boundary',()=>{
+ it('requires fresh collision qualification after a driving parameter changes',async()=>{
+  const s=createCadSession(),id=s.add({kind:'box',size:[20,20,10]},{transform:{position:[0,0,50],rotation:[0,0,0],scale:[1,1,1]}});
+  s.setParametric({version:1,parameters:{width:{expression:'20',unit:'mm'}},bindings:[{nodeId:id,property:'width',expression:'width'}]});
+  const before=kernel.evaluate(s.state.document),old=await prepareDocumentCollisions(s.state.document,before,kernel);
+  const d=structuredClone(s.state.document.parametric!);d.parameters.width.expression='40';s.setParametric(d);const result=kernel.evaluate(s.state.document);
+  expect(solidMassProperties(result.bodies[0],1050).massKg).toBeCloseTo(.0084,10);
+  await expect(createPhysicsWorld(s.state.document,before,old,{J})).rejects.toThrow('stale');
+  await expect(createPhysicsWorld(s.state.document,result,old,{J})).rejects.toThrow();
+  const prepared=await prepareDocumentCollisions(s.state.document,result,kernel),world=await createPhysicsWorld(s.state.document,result,prepared,{J});
+  try{for(let i=0;i<200;i++)world.step();expect(world.geometryBoundsMm(id).min[2]).toBeGreaterThan(-.25);}finally{world.dispose();}
+ });
  it('computes mass, center and inertia from actual solid geometry in SI units',()=>{
   const doc=structuredClone(createPresetDocument('box'));const node=doc.nodes[doc.roots[0]];if(node.kind!=='box')throw Error('fixture');node.size=[10,20,30];node.transform.position=[10000,-2000,45];const body=kernel.evaluate(doc).bodies[0],p=solidMassProperties(body,1050);expect(p.massKg).toBeCloseTo(.0063,10);[10,-2,.045].forEach((v,i)=>expect(p.centerM[i]).toBeCloseTo(v,10));expect(p.inertiaKgM2[0][0]).toBeCloseTo(.0063*(.02**2+.03**2)/12,12);expect(p.inertiaKgM2[0][1]).toBeCloseTo(0,12);
  });

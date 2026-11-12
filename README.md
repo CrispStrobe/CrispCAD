@@ -38,6 +38,10 @@ CrispMesh scan-to-CAD path, is in [docs/ROADMAP.md](docs/ROADMAP.md).
   The three basic primitives expose dimensions; other constructions currently
   expose transforms and retained operands rather than full generator parameters.
 - Retain and edit the operands of union, subtract and intersection operations.
+- Optionally drive primitive dimensions and transforms with named parameters,
+  unit-aware formulas and dependency recomputation, including retained boolean
+  operands. See [the parameter tutorial](docs/PARAMETERS.md) and editable
+  [mounting-plate example](examples/parametric-mounting-plate.bcad).
 - Multi-select with object checkboxes, Shift-click or long press. Subtraction
   uses the first selected body as its base and later bodies as cutters.
 - Navigate with a camera-synchronized view cube, six principal views, Home/Fit,
@@ -89,7 +93,8 @@ commit and SHA-256 hashes in `docs/brickwright-provenance.json`. Third-party
 notices are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 The optional parametric CAD architecture and reference-UX acceptance criteria are
-in [docs/UX-AND-PARAMETRIC.md](docs/UX-AND-PARAMETRIC.md). The current mesh-solid
+in [docs/UX-AND-PARAMETRIC.md](docs/UX-AND-PARAMETRIC.md). Named parameters and
+formula bindings are implemented; the current mesh-solid
 editor is not a complete constrained-sketch/B-rep CAD. Stored iterations are
 separate from bounded editing undo. Local storage is finite: preserve portable
 backups; current full-history backup/import is limited to 64 MiB per archive.

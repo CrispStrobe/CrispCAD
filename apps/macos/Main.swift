@@ -9,11 +9,13 @@ import UniformTypeIdentifiers
 final class AssetServer {
     private let listener: NWListener
     private let root: URL
+    private let port: UInt16
     private let queue = DispatchQueue(label: "cad.assets")
-    init(root: URL, ready: @escaping (Error?) -> Void) throws {
+    init(root: URL, port: UInt16, ready: @escaping (Error?) -> Void) throws {
         self.root = root.resolvingSymlinksInPath()
+        self.port = port
         let parameters = NWParameters.tcp
-        parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: 4318)
+        parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: port)!)
         listener = try NWListener(using: parameters)
         listener.stateUpdateHandler = { state in
             switch state {
@@ -42,7 +44,7 @@ final class AssetServer {
             let lines = header.components(separatedBy: "\r\n")
             let parts = (lines.first ?? "").split(separator: " ")
             let host = lines.dropFirst().first { $0.lowercased().hasPrefix("host:") }?.dropFirst(5).trimmingCharacters(in: .whitespaces)
-            guard parts.count == 3, ["GET", "HEAD"].contains(String(parts[0])), host == "127.0.0.1:4318" else {
+            guard parts.count == 3, ["GET", "HEAD"].contains(String(parts[0])), host == "127.0.0.1:\(self.port)" else {
                 self.send(connection, status: "400 Bad Request", data: Data(), type: "text/plain"); return
             }
             let encoded = String(parts[1]).components(separatedBy: "?")[0]
@@ -69,10 +71,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     private var window: NSWindow!
     private var webView: WKWebView!
     private var server: AssetServer?
-    private let origin = "http://127.0.0.1:4318"
     private let smoke = CommandLine.arguments.contains("--smoke-test")
+    private var port: UInt16 { smoke ? 4319 : 4318 }
+    private var origin: String { "http://127.0.0.1:\(port)" }
     private var smokeStage = 0
     private var smokeAttempts = 0
+    private var pageLoaded = false
     func applicationDidFinishLaunching(_ notification: Notification) {
         let menu = NSMenu()
         let appItem = NSMenuItem(); menu.addItem(appItem)
@@ -97,13 +101,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1440, height: 920), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.title = smoke ? "Brickwright CAD — verification" : "Brickwright CAD"
         window.minSize = NSSize(width: 800, height: 600); window.contentView = webView
-        window.center(); window.setFrameAutosaveName("CADWorkspace"); window.makeKeyAndOrderFront(nil)
+        window.center(); if !smoke { window.setFrameAutosaveName("CADWorkspace") }; window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         do {
             guard let root = Bundle.main.resourceURL?.appendingPathComponent("web") else { throw NSError(domain: "CAD", code: 1) }
-            server = try AssetServer(root: root) { [weak self] error in
+            server = try AssetServer(root: root, port: port) { [weak self] error in
                 guard let self else { return }
-                if let error { self.fail("Cannot start the local asset server on port 4318. Close other CAD copies and retry. \(error)"); return }
+                if let error { self.fail("Cannot start the local asset server on port \(self.port). Close other CAD copies and retry. \(error)"); return }
                 self.webView.load(URLRequest(url: URL(string: self.origin)!))
             }
         } catch { fail(error.localizedDescription) }
@@ -113,9 +117,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         let alert = NSAlert(); alert.messageText = "Brickwright CAD could not start"; alert.informativeText = message; alert.runModal()
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard pageLoaded && !smoke else { return .terminateNow }
+        webView.callAsyncJavaScript("if (window.brickwrightPrepareToClose) await window.brickwrightPrepareToClose();", arguments: [:], in: nil, in: .page) { result in
+            switch result {
+            case .success: sender.reply(toApplicationShouldTerminate: true)
+            case .failure(let error):
+                let alert = NSAlert(); alert.messageText = "The last model save could not finish"
+                alert.informativeText = "\(error.localizedDescription) You can keep editing and export a project file."
+                alert.addButton(withTitle: "Keep editing"); alert.addButton(withTitle: "Quit anyway")
+                alert.beginSheetModal(for: self.window) { sender.reply(toApplicationShouldTerminate: $0 == .alertSecondButtonReturn) }
+            }
+        }
+        return .terminateLater
+    }
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         guard let url = navigationAction.request.url else { decisionHandler(.cancel); return }
-        if url.scheme == "http", url.host == "127.0.0.1", url.port == 4318 { decisionHandler(.allow) }
+        if url.scheme == "http", url.host == "127.0.0.1", url.port == Int(port) { decisionHandler(.allow) }
         else { decisionHandler(.cancel); if navigationAction.navigationType == .linkActivated, ["http", "https"].contains(url.scheme ?? "") { NSWorkspace.shared.open(url) } }
     }
     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
@@ -136,7 +154,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         panel.beginSheetModal(for: window) { completionHandler($0 == .OK ? panel.urls : nil) }
     }
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
-        guard message.frameInfo.isMainFrame, message.frameInfo.securityOrigin.host == "127.0.0.1", message.frameInfo.securityOrigin.port == 4318,
+        guard message.frameInfo.isMainFrame, message.frameInfo.securityOrigin.protocol == "http", message.frameInfo.securityOrigin.host == "127.0.0.1", message.frameInfo.securityOrigin.port == Int(port),
               let body = message.body as? [String: String], let name = body["name"], let base64 = body["data"], base64.utf8.count <= 90 * 1024 * 1024,
               let bytes = Data(base64Encoded: base64), bytes.count <= 64 * 1024 * 1024 else { replyHandler(nil, "Invalid export request"); return }
         let panel = NSSavePanel(); panel.nameFieldStringValue = URL(fileURLWithPath: name).lastPathComponent; panel.canCreateDirectories = true
@@ -146,7 +164,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             catch { replyHandler(nil, error.localizedDescription) }
         }
     }
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { if smoke { pollSmoke() } }
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { pageLoaded = true; if smoke { pollSmoke() } }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { fail(error.localizedDescription) }
     private func pollSmoke() {
         smokeAttempts += 1
@@ -160,14 +178,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
           const objects = root.querySelectorAll('[data-testid="object-name"]');
           if (objects.length !== 1 || Number(host.dataset.triangles) !== 12) return 'waiting';
           if (!document.querySelector('#save-state').textContent.includes('Saved · iteration')) return 'waiting';
-          return window.brickwrightDesktop && !!window.webkit.messageHandlers.cadSave ? 'passed' : 'bridge missing';
+          if (\(smokeStage) === 1) {
+            root.querySelector('button[aria-label="Parameters"]').click();
+            const panel = root.querySelector('.parameters-dialog');
+            const click = label => Array.from(panel.querySelectorAll('button')).find(b => b.textContent === label).click();
+            click('Add parameter');
+            panel.querySelector('[aria-label="Parameter name"]').value = 'width';
+            panel.querySelector('[aria-label="Parameter expression"]').value = '40';
+            click('Drive a property');
+            panel.querySelector('[aria-label="Driving expression"]').value = 'width';
+            click('Apply parameters');
+            if (!panel.querySelector('.parameter-status').textContent.includes('Parameters applied')) return 'parameter failure';
+            panel.close(); return 'parameterized';
+          }
+          const doc = JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1'));
+          if (doc.version !== 2 || doc.nodes[doc.roots[0]].size[0] !== 40) return 'parameter failure';
+          if (\(smokeStage) === 2) return 'reload';
+          if (\(smokeStage) === 3) { document.querySelector('#history').click(); return 'history'; }
+          if (!document.querySelector('.history-dialog [aria-label="Restore iteration 3"]')) return 'waiting';
+          return window.brickwrightDesktop && !!window.webkit.messageHandlers.cadSave && !!window.brickwrightPrepareToClose ? 'passed' : 'bridge missing';
         })()
         """
         webView.evaluateJavaScript(script) { [weak self] result, error in
             guard let self else { return }
             if let error { self.fail(error.localizedDescription); return }
-            if result as? String == "passed" { print("PASS: native macOS WebKit editor, worker/WASM solid, durable iteration and save bridge"); exit(0) }
+            if result as? String == "passed" { print("PASS: native macOS WebKit editor, worker/WASM solid, formula recomputation, reload, version history and save/quit bridge"); exit(0) }
             if result as? String == "added" { self.smokeStage = 1 }
+            if result as? String == "parameterized" { self.smokeStage = 2 }
+            if result as? String == "reload" { self.smokeStage = 3; self.webView.reload(); return }
+            if result as? String == "history" { self.smokeStage = 4 }
+            if ["parameter failure", "bridge missing"].contains(result as? String ?? "") { self.fail(result as? String ?? "Verification failed"); return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.pollSmoke() }
         }
     }

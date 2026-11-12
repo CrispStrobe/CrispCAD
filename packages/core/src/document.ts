@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import { checkPhysics } from './physics.js';
+import { checkParametricDesign } from './parameters.js';
+import type { ParametricDesign } from './parameters.js';
 import type { PartPhysics, CadJoint } from './physics.js';
 export type Vec3 = [number, number, number];
 export interface Transform { position: Vec3; rotation: Vec3; scale: Vec3 }
 export type Primitive = { kind: 'box'; size: Vec3 } | { kind: 'cylinder'; radius: number; height: number; segments: number } | { kind: 'sphere'; radius: number; segments: number };
 export type Shape = Primitive | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[] } | { kind: 'mesh'; positions: number[]; indices: number[] };
 export type SolidNode = { id: string; name: string; color: string; transform: Transform; reference?: boolean; physics?: PartPhysics } & Shape;
-export interface CadDocument { format: 'brickwright-cad'; version: 1; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[] }
+export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign }
 export const MAX_DOCUMENT_BYTES = 16 * 1024 * 1024;
 export const identityTransform = (): Transform => ({ position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] });
 export function newId(): string {
@@ -30,7 +32,7 @@ const vec = (v: unknown, min = -1e6, max = 1e6): v is Vec3 => Array.isArray(v) &
 
 /** Validate before replacing any live state. Unknown versions are refused, never downgraded. */
 export function checkDocument(value: unknown): CadDocument {
-  if (!record(value) || value.format !== 'brickwright-cad' || value.version !== 1 || value.units !== 'mm') fail('unsupported format, version or units');
+  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2].includes(value.version as number) || value.units !== 'mm') fail('unsupported format, version or units');
   if (!idOk(value.id) || !text(value.title) || !record(value.nodes) || !Array.isArray(value.roots)) fail('missing document identity, nodes or roots');
   const nodes = value.nodes as Record<string, unknown>;
   const entries = Object.entries(nodes);
@@ -71,6 +73,7 @@ export function checkDocument(value: unknown): CadDocument {
   (value.roots as string[]).forEach(mark);
   if (reachable.size !== entries.length) fail('orphaned nodes');
   checkPhysics(value as unknown as CadDocument);
+  checkParametricDesign(value as unknown as CadDocument);
   return value as unknown as CadDocument;
 }
 export function validateDocument(value: unknown): CadDocument {
@@ -94,4 +97,5 @@ export function pruneDocument(doc: CadDocument) {
   const walk = (id: string) => { if (keep.has(id)) return; keep.add(id); const n = doc.nodes[id]; if (n.kind === 'boolean') n.inputs.forEach(walk); };
   doc.roots.forEach(walk);
   Object.keys(doc.nodes).forEach(id => { if (!keep.has(id)) delete doc.nodes[id]; });
+  if(doc.parametric)doc.parametric.bindings=doc.parametric.bindings.filter(binding=>keep.has(binding.nodeId));
 }

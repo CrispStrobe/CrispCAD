@@ -38,5 +38,8 @@ with independent implementation and permissively licensed dependencies. See
 parametric architecture, persistent revision semantics and the remaining work.
 
 Current milestone adds the full category catalog and persistent model iterations.
+The next delivered milestone adds a native macOS host and optional named parameters,
+unit-aware formulas and primitive/transform bindings, including retained boolean
+operands; see [PARAMETERS.md](PARAMETERS.md).
 Full parametric sketches/B-rep and complete mechanical/elastic simulation are
 separate implementation milestones with explicit qualification requirements.

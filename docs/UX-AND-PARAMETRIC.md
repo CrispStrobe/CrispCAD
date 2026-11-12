@@ -38,16 +38,21 @@ basic modeling stays simple.
 
 ## Optional parametric CAD: feasible, separate modeling layer
 
-The current primitive parameters and retained boolean graph are an initial
-foundation. A tessellated preset with numeric transforms is not a FreeCAD-style
+The current primitive parameters, retained boolean graph and optional named
+parameters with unit-aware expression bindings are an initial foundation. The
+first named-parameter milestone is described in [PARAMETERS.md](PARAMETERS.md).
+A tessellated preset with numeric transforms is not a FreeCAD-style
 parametric feature. Full sketch constraints, exact B-rep topology and STEP are
 not implemented or promised by the current mesh kernel.
 
-Introduce a versioned, headless design-intent graph beside evaluated geometry:
+Continue the versioned, headless design-intent graph beside evaluated geometry:
 
 1. Stable feature/sketch/body/face-reference IDs; named parameters with units,
    arithmetic expressions and explicit dependency edges. Validate cycles and
    invalid dimensions without executing arbitrary JavaScript.
+   Named values, arithmetic dependencies, unit validation and primitive/transform
+   bindings are implemented in document version 2. Stable topology references
+   and parametric sketch/feature identity are still required.
 2. Versioned feature definitions for primitives, catalog generators, sketches,
    extrude/revolve/sweep, booleans and later edge features. Keep user inputs,
    generator/kernel versions and external source assets, not just tessellation.

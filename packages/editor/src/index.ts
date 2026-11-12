@@ -9,6 +9,7 @@ import { editorStyle } from './style.js';
 import { toolIcon } from './icons.js';
 import { mountShapePicker } from './shape-picker.js';
 import { createPresetDocument, evaluatedPreview } from './shapes.js';
+import { mountParametersPanel, propertyLabels } from './parameters-panel.js';
 export interface CadFile { name: string; bytes: Uint8Array; mime: string }
 export interface CadEditorOptions {
   wasmURL: string;
@@ -57,6 +58,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const partsToggle = button('Objects', () => togglePanel(tree, partsToggle), designBar, 'panel-toggle');
   partsToggle.title = 'Show objects';
   const propertiesToggle = button('Properties', () => togglePanel(inspector, propertiesToggle), designBar, 'panel-toggle');
+  const parametersPanel=mountParametersPanel(shell,session);
+  button('Parameters',()=>parametersPanel.open(),designBar,'panel-toggle');
   toolGroup('Shapes', 'shapes-tools');
   const shapesButton = button('Shapes', () => picker.toggle(), toolParent, 'shape-library-toggle');
   const previewCache = new Map<string, Promise<string>>();
@@ -162,6 +165,9 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       if(session.state.document.joints?.some(j=>j.bodyA===id||j.bodyB===id))button('Detach joints',()=>session.detachJoints([id]),inspector);
     }
     inspector.append(el('p', 'hint', 'Dimensions are centred on the object. Move Z to keep its bottom on the workplane.'));
+    const bindings=session.state.document.parametric?.bindings.filter(binding=>binding.nodeId===id)??[];
+    for(const binding of bindings){const label=propertyLabels[binding.property];const input=Array.from(inspector.querySelectorAll('input')).find(input=>input.getAttribute('aria-label')===label);if(input){input.disabled=true;input.title=`Driven by ${binding.expression}`;input.parentElement?.append(el('small','driven-expression',`= ${binding.expression}`));}}
+    if(bindings.length)button('Edit driving expressions',()=>parametersPanel.open(),inspector);
   }
   async function buildLatest() {
     if (running || disposed || builtRevision === session.state.revision) return;
@@ -246,7 +252,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     session, whenIdle, openFile, export: deliver, frame: viewport.frame,
     focus() { viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return; disposed = true; unsubscribe(); shell.removeEventListener('keydown', keyboard); picker.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error('Editor was disposed')); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return; disposed = true; unsubscribe(); shell.removeEventListener('keydown', keyboard); picker.dispose(); parametersPanel.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error('Editor was disposed')); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;

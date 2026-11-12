@@ -149,3 +149,17 @@ and direct-device installation are in IPAD.md.
   bridge on Chromium and WebKit. Native dialog acceptance remains manual.
 - Added macOS build instructions, contribution guidance and a macOS CI build
   artifact job. Native local signing is not a notarized distribution release.
+
+## Optional named parameters
+
+- Added bounded, unit-aware expressions and transactional primitive/transform
+  bindings, including retained boolean operands. Version 2 preserves the design
+  graph and evaluated geometry; version 1 direct models remain supported.
+- Added a scoped Parameters panel and an editable mounting-plate example. Driven
+  numeric fields are marked, invalid expressions leave the prior model intact,
+  and revisions/archives retain formulas and both branches after restoring.
+- 103 headless tests, 28 Chromium/WebKit workflows, all 48 default rigid solids
+  plus the excluded ruler, and native macOS parameter/reload/history smoke checks
+  pass. A changed parameter requires fresh Jolt collision qualification.
+- Added a native quit hook that commits the focused inspector field and flushes
+  saved iterations. Smoke checks use ephemeral storage on their own loopback port.
