@@ -1,8 +1,8 @@
 # Brickwright CAD
 
-A standalone 3D solid editor and the same editor as an embeddable BSD-3-Clause
-package. It uses Manifold for mesh-solid operations and Three.js for rendering.
-The shared editor needs no backend, Layerling or Scratch. Optional native hosts
+A 3D solid editor and the same editor that uses Manifold for mesh-solid operations and Three.js for rendering.
+
+Optional native hosts
 provide macOS and iPad apps without changing the reusable editor.
 
 **Status:** working early CAD workbench, not yet a FreeCAD or Layerling replacement.
