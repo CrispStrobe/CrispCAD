@@ -60,8 +60,42 @@ test('touch taps select a solid after orbiting and selection stays usable in a n
     await page.goto('http://127.0.0.1:4317'); await ready(page); await page.getByRole('button', { name: 'Box', exact: true }).tap(); await ready(page);
     await page.getByRole('button', { name: 'Fit', exact: true }).tap();
     const canvas = page.locator('canvas'); const bounds = (await canvas.boundingBox())!;
-    await canvas.tap({ position: { x: 15, y: bounds.height - 15 } }); await expect(page.getByLabel('Select Box', { exact: true })).not.toBeChecked();
+    await canvas.tap({ position: { x: bounds.width - 25, y: bounds.height - 65 } }); await expect(page.getByLabel('Select Box', { exact: true })).not.toBeChecked();
     await canvas.tap({ position: { x: bounds.width / 2, y: bounds.height / 2 } }); await expect(page.getByLabel('Select Box', { exact: true })).toBeChecked();
     await page.getByRole('button', { name: 'Properties', exact: true }).tap(); await expect(page.getByLabel('Width (mm)', { exact: true })).toHaveValue('30');
   } finally { await context.close(); }
+});
+
+test('view cube follows orbit, projection and workplane controls preserve the document', async ({ page }) => {
+  await page.goto('/'); await ready(page);
+  await page.getByRole('button', { name: 'Box', exact: true }).click(); await ready(page);
+  const original = await page.evaluate(() => localStorage.getItem('brickwright-cad:standalone:v1'));
+  const canvas = page.locator('[data-testid=cad-canvas]');
+  const cube = page.getByRole('group', { name: 'View cube', exact: true });
+  await cube.getByRole('button', { name: 'Top', exact: true }).click(); await expect(canvas).toHaveAttribute('data-view', 'top');
+  await page.getByRole('button', { name: 'Orthographic view', exact: true }).click(); await expect(canvas).toHaveAttribute('data-projection', 'orthographic');
+  await page.getByRole('button', { name: 'Zoom in', exact: true }).click(); await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
+  await page.getByLabel('View direction', { exact: true }).selectOption('right'); await expect(canvas).toHaveAttribute('data-view', 'right');
+  await expect(cube.getByRole('button', { name: 'Right', exact: true })).toBeVisible();
+  await page.getByLabel('View direction', { exact: true }).selectOption('front'); await expect(canvas).toHaveAttribute('data-view', 'front');
+  await page.getByRole('button', { name: 'Show workplane', exact: true }).click(); await expect(page.getByRole('button', { name: 'Show workplane', exact: true })).toHaveAttribute('aria-pressed', 'false');
+  await page.getByRole('button', { name: 'Show workplane', exact: true }).click();
+  await page.getByRole('button', { name: 'Home', exact: true }).click(); await expect(canvas).toHaveAttribute('data-view', 'iso');
+  await expect(cube.getByRole('button', { name: 'Front', exact: true })).toBeVisible(); await expect(cube.getByRole('button', { name: 'Right', exact: true })).toBeVisible();
+  const points = await cube.locator('polygon').first().getAttribute('points');
+  const bounds = (await canvas.boundingBox())!;
+  await page.mouse.move(bounds.x + bounds.width * .5, bounds.y + bounds.height * .7); await page.mouse.down(); await page.mouse.move(bounds.x + bounds.width * .65, bounds.y + bounds.height * .8, { steps: 8 }); await page.mouse.up();
+  await expect(cube.locator('polygon').first()).not.toHaveAttribute('points', points!);
+  expect(await page.evaluate(() => localStorage.getItem('brickwright-cad:standalone:v1'))).toBe(original);
+  await page.screenshot({ path: `test-results/workbench-${test.info().project.name}.png`, fullPage: true });
+});
+
+test('drop to workplane accounts for rotation and is undoable', async ({ page }) => {
+  await page.goto('/'); await ready(page); await page.getByRole('button', { name: 'Box', exact: true }).click(); await ready(page);
+  for (const [label, value] of [['Rotation Y', '90'], ['Position Z', '50']]) { const field = page.getByLabel(label, { exact: true }); await field.fill(value); await field.press('Tab'); await ready(page); }
+  await page.getByRole('button', { name: 'Drop to workplane', exact: true }).click(); await ready(page);
+  expect(Number(await page.getByLabel('Position Z', { exact: true }).inputValue())).toBeCloseTo(15, 4);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click(); await ready(page); await expect(page.getByLabel('Position Z', { exact: true })).toHaveValue('50');
+  await page.getByRole('button', { name: 'Redo', exact: true }).click(); await ready(page);
+  expect(Number(await page.getByLabel('Position Z', { exact: true }).inputValue())).toBeCloseTo(15, 4);
 });

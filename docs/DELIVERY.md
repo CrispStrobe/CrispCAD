@@ -68,3 +68,27 @@ is an extra local integration check and is not needed to build this standalone r
 
 Integration steps and lifecycle responsibilities are in INTEGRATION.md. Signing
 and direct-device installation are in IPAD.md.
+
+## Workbench UX update — 2026-11-12
+
+- Original grouped icon ribbon and editable design header; collapsible Objects
+  and Properties panels and horizontal ribbon scrolling for narrow hosts.
+- Camera-synchronized SVG view cube: Top/Front/Right faces and all six exact
+  principal views through the view menu. Home/Fit, zoom and perspective/
+  orthographic projection operate on the actual viewport camera.
+- Numbered 400 × 400 mm workplane with 1 mm minor and 10 mm major lines,
+  origin axes, visibility toggle and independent movement snap spacing.
+- Persistent touch multi-select and undoable Drop to workplane based on evaluated
+  world-space bounds, including rotated bodies.
+- Navigation and view choices leave the editable document and history unchanged.
+- Production build, 27 headless tests, 18 Chromium/iPad WebKit workflows and
+  offline installation of all four packed packages into an independent host pass.
+  Browser workflows include actual orbit/cube synchronization, projection,
+  document preservation and undo/redo of rotated-body placement.
+- Visually reviewed desktop and iPad landscape screenshots. Physical touch,
+  Pencil, Files and share-sheet acceptance remain separate from browser checks.
+- The possible CrispMesh integration is recorded in ROADMAP.md; no CrispMesh
+  source files were changed and no integration is claimed.
+- Native version 0.1.0 build 3 archived and exported using the existing
+  Brickwright keychain, then installed and launched successfully on the paired
+  iPad over its local-network tunnel. No store upload was performed.

@@ -19,13 +19,21 @@ For the native iPad host and Brickwright-keychain signing, see [docs/IPAD.md](do
 
 The delivered scope and exclusions are in [docs/SCOPE.md](docs/SCOPE.md).
 Host APIs, package boundaries and the later Brickwright wiring are documented
-in [docs/INTEGRATION.md](docs/INTEGRATION.md).
+in [docs/INTEGRATION.md](docs/INTEGRATION.md). The roadmap, including the possible
+CrispMesh scan-to-CAD path, is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 - Add boxes, cylinders and spheres; edit dimensions and transforms in millimetres.
 - Retain and edit the operands of union, subtract and intersection operations.
 - Multi-select with object checkboxes, Shift-click or long press. Subtraction
   uses the first selected body as its base and later bodies as cutters.
+- Navigate with a camera-synchronized view cube, six principal views, Home/Fit,
+  zoom controls and perspective/orthographic projection.
+- Model on a numbered 400 × 400 mm workplane with 1 mm minor / 10 mm major lines.
+  Snap spacing is independent of the displayed ruler grid.
 - Move/rotate/scale with handles or numeric properties; nudge with arrow keys.
+  Drop selected top-level bodies onto the workplane, including rotated bodies.
+- Grouped tool ribbon, collapsible Objects/Properties panels and a persistent
+  touch multi-select mode; navigation does not change document history.
 - Undo/redo and independent histories for each embedded instance.
 - Save editable `.bcad` projects; reopen them or closed STL meshes.
 - Export binary STL or 3MF for printing. These exports contain meshes, not the
