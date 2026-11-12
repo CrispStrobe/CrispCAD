@@ -16,14 +16,14 @@ test('edit dimensions, retain a boolean, export project and STL, reopen after re
   const file = await fileEvent; expect(file.suggestedFilename()).toMatch(/\.bcad$/); const filePath = await file.path();
   const stlEvent = page.waitForEvent('download'); await page.getByRole('button', { name: 'STL', exact: true }).click(); expect((await stlEvent).suggestedFilename()).toMatch(/\.stl$/);
   await page.reload(); await ready(page); await expect(page.locator('[data-testid="object-name"]')).toHaveCount(3);
-  await page.locator('input[type=file]').setInputFiles(filePath!); await ready(page); await expect(page.locator('[data-testid="object-name"]')).toHaveCount(3);
+  await page.getByLabel('Open CAD project or STL',{exact:true}).setInputFiles(filePath!); await ready(page); await expect(page.locator('[data-testid="object-name"]')).toHaveCount(3);
   expect(errors).toEqual([]); await page.screenshot({ path: 'test-results/standalone.png', fullPage: true });
 });
 test('undo restores a transformed object and invalid import preserves the live project', async ({ page }) => {
   await page.goto('/'); await ready(page); await page.getByRole('button', { name: 'Box', exact: true }).click(); await ready(page);
   await page.getByLabel('Position X', { exact: true }).fill('25'); await page.getByLabel('Position X', { exact: true }).press('Tab'); await ready(page);
   await page.getByRole('button', { name: 'Undo', exact: true }).click(); await ready(page); await expect(page.getByLabel('Position X', { exact: true })).toHaveValue('0');
-  await page.locator('input[type=file]').setInputFiles({ name: 'future.bcad', mimeType: 'application/json', buffer: Buffer.from('{"format":"brickwright-cad","version":99}') });
+  await page.getByLabel('Open CAD project or STL',{exact:true}).setInputFiles({ name: 'future.bcad', mimeType: 'application/json', buffer: Buffer.from('{"format":"brickwright-cad","version":99}') });
   await expect(page.locator('#cad-root').getByRole('status')).toContainText('unsupported'); await expect(page.locator('[data-testid="object-name"]')).toHaveCount(1);
 });
 test('host instances isolate history and preserve project data through embedding and remount', async ({ page }) => {
@@ -98,4 +98,26 @@ test('drop to workplane accounts for rotation and is undoable', async ({ page })
   await page.getByRole('button', { name: 'Undo', exact: true }).click(); await ready(page); await expect(page.getByLabel('Position Z', { exact: true })).toHaveValue('50');
   await page.getByRole('button', { name: 'Redo', exact: true }).click(); await ready(page);
   expect(Number(await page.getByLabel('Position Z', { exact: true }).inputValue())).toBeCloseTo(15, 4);
+});
+
+test('shape library searches real solids, pins for repeat insertion and imports filled SVG icons',async({page})=>{
+ await page.goto('/');await ready(page);await page.getByRole('button',{name:'Shapes',exact:true}).click();const library=page.getByRole('dialog',{name:'Shape library',exact:true});await expect(library).toBeVisible();await expect(library.locator('.shape-card')).toHaveCount(49);
+ await library.getByLabel('Search shapes',{exact:true}).fill('pipe');await expect(library.getByRole('button',{name:'Add Tube',exact:true})).toBeVisible();await library.getByRole('button',{name:'Add Tube',exact:true}).click();await ready(page);await expect(library).toBeHidden();await expect(page.locator('[data-testid=object-name]').first()).toContainText('Tube');
+ await page.getByRole('button',{name:'Shapes',exact:true}).click();await library.getByLabel('Search shapes',{exact:true}).fill('gear');await library.getByRole('button',{name:'Pin shape library',exact:true}).click();await library.getByRole('button',{name:'Add Gear',exact:true}).click();await expect(library.getByRole('status')).toContainText('Added Gear');await ready(page);await expect(library).toBeVisible();await library.getByLabel('Search shapes',{exact:true}).fill('does-not-exist');await expect(library.getByText('No shapes match.',{exact:false})).toBeVisible();await library.getByRole('button',{name:'Close shape library',exact:true}).click();
+ await page.getByRole('button',{name:'Shapes',exact:true}).click();await library.getByLabel('Search shapes',{exact:true}).fill('icon');await library.getByText('Lettering, QR and SVG options',{exact:true}).click();await library.getByLabel('Icon SVG file',{exact:true}).setInputFiles({name:'triangle.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0L20 0L10 15Z"/></svg>')});await library.getByRole('button',{name:'Add Icon tag',exact:true}).click();await expect(library.getByRole('status')).toContainText('Added Icon tag');await ready(page);await library.getByRole('button',{name:'Close shape library',exact:true}).click();await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await page.screenshot({path:`test-results/catalog-${test.info().project.name}.png`,fullPage:true});
+});
+
+test('persistent iterations survive reload, restore a branch and round-trip a full history backup',async({page})=>{
+ await page.goto('/');await ready(page);await page.getByRole('button',{name:'Box',exact:true}).click();await ready(page);
+ await page.getByLabel('Width (mm)',{exact:true}).fill('40');await page.getByLabel('Width (mm)',{exact:true}).press('Tab');await ready(page);await expect(page.locator('#save-state')).toContainText('iteration');
+ await page.getByRole('button',{name:'Models and version history',exact:true}).click();const history=page.getByRole('dialog',{name:'Models and version history',exact:true});await expect(history.getByRole('button',{name:'Restore iteration 2',exact:true})).toBeVisible();await history.getByRole('button',{name:'Restore iteration 2',exact:true}).click();await expect(history.getByRole('status')).toContainText('Later work is preserved');await history.getByRole('button',{name:'Close version history',exact:true}).click();await ready(page);
+ // Restoring loads with no selection. Select the retained body to inspect it.
+ const objects=page.getByRole('button',{name:'Objects',exact:true});if(!await page.locator('.tree').isVisible())await objects.click();await page.locator('[data-testid=object-name]').first().click();const properties=page.getByRole('button',{name:'Properties',exact:true});if(!await page.getByLabel('Width (mm)',{exact:true}).isVisible())await properties.click();await expect(page.getByLabel('Width (mm)',{exact:true})).toHaveValue('30');
+ await page.reload();await ready(page);await page.getByRole('button',{name:'Models and version history',exact:true}).click();await expect(history.getByRole('button',{name:'Restore iteration 3',exact:true})).toBeVisible();const event=page.waitForEvent('download');await history.getByRole('button',{name:'Back up model + history',exact:true}).click();const file=await event;expect(file.suggestedFilename()).toMatch(/\.bcadhistory$/);await history.locator('input[type=file]').setInputFiles((await file.path())!);await expect(history.getByRole('status')).toContainText('Imported as a separate model');await expect(history.getByRole('navigation',{name:'Saved models'}).getByRole('button')).toHaveCount(2);
+});
+
+test('native-style hosts without randomUUID or WebCrypto still create and retain model iterations',async({page})=>{
+ await page.addInitScript(()=>{Object.defineProperty(crypto,'randomUUID',{value:undefined,configurable:true});Object.defineProperty(crypto,'subtle',{value:undefined,configurable:true});});
+ await page.goto('/');await ready(page);await page.getByRole('button',{name:'Box',exact:true}).click();await ready(page);await expect(page.locator('#save-state')).toContainText('Saved · iteration');await page.reload();await ready(page);await expect(page.locator('[data-testid=object-name]')).toHaveCount(1);await page.getByRole('button',{name:'Models and version history',exact:true}).click();await expect(page.getByRole('button',{name:'Restore iteration 2',exact:true})).toBeVisible();
 });

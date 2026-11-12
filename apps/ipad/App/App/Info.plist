@@ -93,6 +93,27 @@
 				</array>
 			</dict>
 		</dict>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>com.crispstrobe.brickwrightcad.history</string>
+			<key>UTTypeDescription</key>
+			<string>Brickwright CAD model history</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.json</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>bcadhistory</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/vnd.brickwright.cad-history+json</string>
+				</array>
+			</dict>
+		</dict>
 	</array>
 </dict>
 </plist>

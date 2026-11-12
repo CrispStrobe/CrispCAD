@@ -1,14 +1,26 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import { checkPhysics } from './physics.js';
+import type { PartPhysics, CadJoint } from './physics.js';
 export type Vec3 = [number, number, number];
 export interface Transform { position: Vec3; rotation: Vec3; scale: Vec3 }
 export type Primitive = { kind: 'box'; size: Vec3 } | { kind: 'cylinder'; radius: number; height: number; segments: number } | { kind: 'sphere'; radius: number; segments: number };
 export type Shape = Primitive | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[] } | { kind: 'mesh'; positions: number[]; indices: number[] };
-export type SolidNode = { id: string; name: string; color: string; transform: Transform } & Shape;
-export interface CadDocument { format: 'brickwright-cad'; version: 1; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[] }
+export type SolidNode = { id: string; name: string; color: string; transform: Transform; reference?: boolean; physics?: PartPhysics } & Shape;
+export interface CadDocument { format: 'brickwright-cad'; version: 1; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[] }
 export const MAX_DOCUMENT_BYTES = 16 * 1024 * 1024;
 export const identityTransform = (): Transform => ({ position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] });
-export const newId = () => crypto.randomUUID();
+export function newId(): string {
+  if(typeof globalThis.crypto?.randomUUID==='function'){try{return crypto.randomUUID();}catch{}}
+  if(typeof globalThis.crypto?.getRandomValues!=='function')throw new Error('Secure random identifiers are unavailable in this host');
+  const bytes=crypto.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+  const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+}
 export const createDocument = (title = 'Untitled design'): CadDocument => ({ format: 'brickwright-cad', version: 1, units: 'mm', id: newId(), title, nodes: {}, roots: [] });
+/** Fast stale-result guard, not an authenticity/signing mechanism. */
+export function documentGeometryKey(doc: CadDocument): string {
+  const source=JSON.stringify([doc.id,doc.roots,Object.entries(doc.nodes).map(([id,n])=>{const {physics,...geometry}=n;return [id,geometry];})]);let a=2166136261,b=3339675911;
+  for(let i=0;i<source.length;i++){a=Math.imul(a^source.charCodeAt(i),16777619);b=Math.imul(b^source.charCodeAt(i),2246822519);}return `${source.length}:${a>>>0}:${b>>>0}`;
+}
 function fail(message: string): never { throw new Error(`Invalid CAD project: ${message}`); }
 const record = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
 const num = (v: unknown, min = -1e6, max = 1e6): v is number => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
@@ -58,6 +70,7 @@ export function checkDocument(value: unknown): CadDocument {
   const mark = (id: string) => { if (reachable.has(id)) return; reachable.add(id); const n = nodes[id] as SolidNode; if (n.kind === 'boolean') n.inputs.forEach(mark); };
   (value.roots as string[]).forEach(mark);
   if (reachable.size !== entries.length) fail('orphaned nodes');
+  checkPhysics(value as unknown as CadDocument);
   return value as unknown as CadDocument;
 }
 export function validateDocument(value: unknown): CadDocument {

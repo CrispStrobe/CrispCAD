@@ -29,3 +29,14 @@ Planning estimate, not a delivery commitment: a few days for an embedding proof;
 ## Later: Brickwright integration
 
 Use the existing SB3 sidecar adapter and coordinate conversions. Wire the shared editor to Brickwright's host UI and persistence. Connector/physics metadata and LEGO assembly semantics remain explicit host responsibilities. See INTEGRATION.md.
+
+## Required product direction: UX, parametrics and iterations
+
+The finished editor must meet or exceed the reference's usability and versatility,
+with independent implementation and permissively licensed dependencies. See
+[UX-AND-PARAMETRIC.md](UX-AND-PARAMETRIC.md) for workflow acceptance, optional
+parametric architecture, persistent revision semantics and the remaining work.
+
+Current milestone adds the full category catalog and persistent model iterations.
+Full parametric sketches/B-rep and complete mechanical/elastic simulation are
+separate implementation milestones with explicit qualification requirements.

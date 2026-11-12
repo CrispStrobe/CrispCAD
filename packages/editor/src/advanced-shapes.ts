@@ -1,0 +1,129 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Independently authored constructions from geometric definitions, not Layerling source.
+import * as T from 'three';
+import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import {iconGeometry} from './svg-icon.js';
+import qrcode from 'qrcode-generator';
+import { createDocument, identityTransform, newId, defaultPartPhysics } from '@brickwright/cad-core';
+import type { CadDocument, SolidNode, Vec3 } from '@brickwright/cad-core';
+export const advancedCatalog = [
+ ['loft','Loft','Hollow & tapered','A square base transitioning to a circular top.','transition rectangle circle loft','#c79c71'],
+ ['bent-tube','Bent tube','Hollow & tapered','A hollow quarter-circle pipe.','elbow pipe hollow','#d39c66'],
+ ['counterbore','Counterbore','Cutting tools','A stepped cutter for a recessed screw head.','hole bolt recess','#8baaba'],
+ ['countersink','Countersink','Cutting tools','A cutter with a conical head recess.','hole screw recess','#87b6a7'],
+ ['teardrop','Teardrop hole','Cutting tools','An upright pointed arch cutter.','hole printable arch','#a595c6'],
+ ['port','Port opening','Cutting tools','An extruded slot with rounded ends.','slot capsule hole','#89b1c9'],
+ ['thread','Thread','Fasteners & joints','A helical triangular thread on a cylindrical core.','helix external pitch','#9faebc'],
+ ['screw','Screw','Fasteners & joints','A threaded shaft and cylindrical head.','bolt thread fastener','#b0b7c2'],
+ ['nut','Nut','Fasteners & joints','A hexagonal nut with a matching helical bore.','hex thread fastener','#9eacb9'],
+ ['finishing-washer','Finishing washer','Fasteners & joints','A washer with a conical screw seat.','cup countersink ring','#bac1c7'],
+ ['hinge','Hinge','Fasteners & joints','Two separate leaves and a pin with assembly clearance.','joint pivot barrel articulation','#7bb7a3'],
+ ['dovetail','Dovetail','Fasteners & joints','An extruded trapezoidal sliding key.','slide joint key','#c68a6b'],
+ ['boss','Screw boss','Enclosure parts','A hollow screw support with four reinforcing ribs.','standoff rib enclosure','#b1a18a'],
+ ['snap-fit','Snap-fit','Enclosure parts','A cantilever clip with a lead-in hook.','clip latch flexible','#78b7ae'],
+ ['rib','Rib','Enclosure parts','A triangular reinforcing gusset.','brace support gusset','#90acbe'],
+ ['spring','Spring','Mechanisms','A helical coil with a circular wire section.','coil elastic compression','#66c1af'],
+ ['gear','Gear','Mechanisms','A 20-tooth involute spur gear, module 1.5 mm, pressure angle 20°.','spur involute teeth','#a0b8c5'],
+ ['hirth','Hirth joint','Mechanisms','A radial face-serration coupling.','face teeth serration coupling','#9cb3c5'],
+ ['gt2-pulley','GT2 pulley','Mechanisms','A 20-position, 2 mm pitch pulley blank with flanges. Verify belt fit before use.','timing belt teeth','#aab6c6'],
+ ['grid-bin','Gridfinity bin','Project templates','A 1 × 1 nominal 42 mm grid storage bin. Verify mating fit before printing.','gridfinity 42 organizer box','#81b2c5'],
+ ['sbc','SBC board','Project templates','A generic 85 × 56 mm board envelope with mounting holes.','board pcb computer template','#6ab895'],
+ ['text','Text','Lettering & tags','Raised lettering using our original block alphabet.','letters words label','#e28e79'],
+ ['name-tag','Name tag','Lettering & tags','Raised lettering on a tag with a hanging hole.','label letters keychain','#c5b8cd'],
+ ['icon-tag','Icon tag','Lettering & tags','An original star icon raised on a round tag.','svg symbol badge star','#bcb7c8'],
+ ['qr','QR code','Lettering & tags','A raised QR code with a four-module quiet zone. Use contrasting material for scanning.','qrcode url barcode','#92a5af'],
+ ['star','Star','Decorative shapes','A five-point star extrusion.','outline badge','#dfba59'],
+ ['heart','Heart','Decorative shapes','A heart-shaped extrusion.','outline love','#d98aab'],
+ ['crescent','Crescent','Decorative shapes','A crescent moon extrusion.','moon outline','#d8c26b'],
+ ['knurl','Knurl','Decorative shapes','A cylindrical grip with crossed helical ridges.','grip diamond texture','#a3b4c5'],
+ ['ruler','Ruler','Reference helpers','A 100 mm reference ruler. Excluded from printable exports and physics.','measure scale helper','#dfce97'],
+] as const;
+const XY=(points:number[][])=>{const s=new T.Shape();s.moveTo(points[0][0],points[0][1]);for(const p of points.slice(1))s.lineTo(p[0],p[1]);s.closePath();return s;};
+const extrude=(shape:T.Shape,height:number)=>new T.ExtrudeGeometry(shape,{depth:height,bevelEnabled:false,curveSegments:32});
+const box=(x:number,y:number,z:number,at:Vec3=[0,0,0])=>new T.BoxGeometry(x,y,z).translate(...at);
+const cylinder=(r:number,h:number,at:Vec3=[0,0,0],n=64,top=r)=>new T.CylinderGeometry(top,r,h,n).rotateX(Math.PI/2).translate(...at);
+const lathe=(p:number[][])=>{const g=new T.LatheGeometry(p.map(v=>new T.Vector2(v[0],v[1])),64).rotateX(Math.PI/2);g.userData.collisionHint={kind:'radial-profile',segments:64,sides:p.length-1,layout:'rows',closed:true};return g;};
+const ring=(outer:number,inner:number,h:number)=>lathe([[inner,0],[outer,0],[outer,h],[inner,h],[inner,0]]);
+function annulus(outer:number,inner:number){const s=new T.Shape();s.absarc(0,0,outer,0,Math.PI*2,false);const hole=new T.Path();hole.absarc(0,0,inner,0,Math.PI*2,true);s.holes.push(hole);return s;}
+function star(){return XY(Array.from({length:10},(_,i)=>{const a=i*Math.PI/5+Math.PI/2,r=i%2?7:16;return [r*Math.cos(a),r*Math.sin(a)];}));}
+function gear(){
+ const teeth=20,module=1.5,pressure=20*Math.PI/180, pitch=module*teeth/2,base=pitch*Math.cos(pressure),root=pitch-1.25*module,tip=pitch+module;
+ const inv=(r:number)=>{const t=Math.sqrt(Math.max(0,(r/base)**2-1));return t-Math.atan(t);}; const half=Math.PI/(2*teeth)+inv(pitch),points:number[][]=[];
+ for(let i=0;i<teeth;i++){const a=i*2*Math.PI/teeth;const add=(r:number,t:number)=>points.push([r*Math.cos(t),r*Math.sin(t)]);add(root,a-half);add(base,a-half);for(let j=1;j<=8;j++){const r=base+(tip-base)*j/8;add(r,a-half+inv(r));}for(let j=8;j>=0;j--){const r=base+(tip-base)*j/8;add(r,a+half-inv(r));}add(root,a+half);add(root,a+Math.PI/teeth);}
+ const s=XY(points);const hole=new T.Path();hole.absarc(0,0,3,0,Math.PI*2,true);s.holes.push(hole);return extrude(s,6);
+}
+class Helix extends T.Curve<T.Vector3>{constructor(readonly radius:number,readonly height:number,readonly turns:number,readonly start=0){super();}getPoint(t:number,target=new T.Vector3()){const a=t*this.turns*Math.PI*2+this.start;return target.set(this.radius*Math.cos(a),this.radius*Math.sin(a),this.height*t);}}
+function closedTube(curve:T.Curve<T.Vector3>,segments:number,radius:number,sides:number){
+ const tube=new T.TubeGeometry(curve,segments,radius,sides,false);const positions=Array.from(tube.getAttribute('position').array),indices=Array.from(tube.index!.array);const start=positions.length/3;positions.push(...curve.getPoint(0).toArray(),...curve.getPoint(1).toArray());
+ for(let j=0;j<sides;j++){indices.push(start,j,j+1);const end=segments*(sides+1);indices.push(start+1,end+j+1,end+j);}
+ tube.dispose();let volume=0;for(let i=0;i<indices.length;i+=3){const a=new T.Vector3().fromArray(positions,indices[i]*3),b=new T.Vector3().fromArray(positions,indices[i+1]*3),c=new T.Vector3().fromArray(positions,indices[i+2]*3);volume+=a.dot(b.cross(c));}if(volume<0)for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.userData.collisionHint={kind:'tube-grid',segments,sides,layout:'rows',closed:false,stride:1};return g;
+}
+function threadRidge(radius=5,pitch=2,turns=10,clearance=0){
+ const count=turns*48,positions:number[]=[],indices:number[]=[];
+ for(let i=0;i<=count;i++){const a=i/count*turns*2*Math.PI,z=i/count*turns*pitch;for(const [r,dz] of [[radius-.3,-pitch*.38],[radius+1+clearance,0],[radius-.3,pitch*.38]])positions.push(r*Math.cos(a),r*Math.sin(a),z+dz);}
+ for(let i=0;i<count;i++)for(let j=0;j<3;j++){const a=i*3+j,b=i*3+(j+1)%3,c=(i+1)*3+j,d=(i+1)*3+(j+1)%3;indices.push(a,b,c,b,d,c);}indices.push(0,2,1,count*3,count*3+1,count*3+2);
+ let volume=0;for(let i=0;i<indices.length;i+=3){const a=new T.Vector3().fromArray(positions,indices[i]*3),b=new T.Vector3().fromArray(positions,indices[i+1]*3),c=new T.Vector3().fromArray(positions,indices[i+2]*3);volume+=a.dot(b.cross(c));}if(volume<0)for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.userData.collisionHint={kind:'tube-grid',segments:count,sides:3,layout:'rows',closed:false,seam:false,stride:1};return g;
+}
+// Original 5×7 block alphabet, encoded directly here; no font assets or font software.
+const alphabet:Record<string,string>={A:'01110/10001/10001/11111/10001/10001/10001',B:'11110/10001/10001/11110/10001/10001/11110',C:'01111/10000/10000/10000/10000/10000/01111',D:'11110/10001/10001/10001/10001/10001/11110',E:'11111/10000/10000/11110/10000/10000/11111',F:'11111/10000/10000/11110/10000/10000/10000',G:'01111/10000/10000/10111/10001/10001/01111',H:'10001/10001/10001/11111/10001/10001/10001',I:'11111/00100/00100/00100/00100/00100/11111',J:'00111/00010/00010/00010/10010/10010/01100',K:'10001/10010/10100/11000/10100/10010/10001',L:'10000/10000/10000/10000/10000/10000/11111',M:'10001/11011/10101/10101/10001/10001/10001',N:'10001/11001/10101/10011/10001/10001/10001',O:'01110/10001/10001/10001/10001/10001/01110',P:'11110/10001/10001/11110/10000/10000/10000',Q:'01110/10001/10001/10001/10101/10010/01101',R:'11110/10001/10001/11110/10100/10010/10001',S:'01111/10000/10000/01110/00001/00001/11110',T:'11111/00100/00100/00100/00100/00100/00100',U:'10001/10001/10001/10001/10001/10001/01110',V:'10001/10001/10001/10001/10001/01010/00100',W:'10001/10001/10001/10101/10101/11011/10001',X:'10001/10001/01010/00100/01010/10001/10001',Y:'10001/10001/01010/00100/00100/00100/00100',Z:'11111/00001/00010/00100/01000/10000/11111','0':'01110/10001/10011/10101/11001/10001/01110','1':'00100/01100/00100/00100/00100/00100/01110','2':'01110/10001/00001/00110/01000/10000/11111','3':'11110/00001/00001/01110/00001/00001/11110','4':'00010/00110/01010/10010/11111/00010/00010','5':'11111/10000/10000/11110/00001/00001/11110','6':'01110/10000/10000/11110/10001/10001/01110','7':'11111/00001/00010/00100/01000/01000/01000','8':'01110/10001/10001/01110/10001/10001/01110','9':'01110/10001/10001/01111/00001/00001/01110','-':'00000/00000/00000/11111/00000/00000/00000','.':'00000/00000/00000/00000/00000/00110/00110'};
+function letters(text:string,z=0){const clean=text.trim().toUpperCase();if(!clean||clean.length>24||/[^A-Z0-9 .-]/.test(clean))throw new Error('Lettering supports 1–24 characters: A–Z, 0–9, spaces, dots and hyphens.');const parts:T.BufferGeometry[]=[];for(let k=0;k<clean.length;k++){const pattern=alphabet[clean[k]];if(!pattern)continue;pattern.split('/').forEach((row,y)=>{let start=-1;for(let x=0;x<=5;x++){if(row[x]==='1'){if(start<0)start=x;}else if(start>=0){parts.push(box((x-start)*1.2,1.2,2,[k*7.2+(start+x-1)*.6, (6-y)*1.2,z+1]));start=-1;}}});}return parts;}
+export interface Construction { add:T.BufferGeometry[]; cut?:T.BufferGeometry[]; after?:T.BufferGeometry[]; separate?:boolean; reference?:boolean }
+export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string):Construction {
+ switch(id){
+ case 'loft':{const points:number[]=[],triangles:number[]=[];for(let level=0;level<=8;level++)for(let j=0;j<64;j++){const a=j*Math.PI/32,t=level/8,r=(1-t)*15/Math.max(Math.abs(Math.cos(a)),Math.abs(Math.sin(a)))+t*8;points.push(r*Math.cos(a),r*Math.sin(a),25*t);}for(let i=0;i<8;i++)for(let j=0;j<64;j++){const a=i*64+j,b=i*64+(j+1)%64,c=a+64,d=b+64;triangles.push(a,b,c,b,d,c);}const bottom=points.length/3;points.push(0,0,0,0,0,25);for(let j=0;j<64;j++)triangles.push(bottom,(j+1)%64,j,bottom+1,512+j,512+(j+1)%64);const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(points,3));g.setIndex(triangles);return {add:[g]};}
+ case 'bent-tube': {const s=annulus(5,3);class Bend extends T.Curve<T.Vector3>{constructor(){super();}getPoint(t:number,v=new T.Vector3()){return v.set(20*Math.cos(t*Math.PI/2),20*Math.sin(t*Math.PI/2),0);}}return {add:[new T.ExtrudeGeometry(s,{extrudePath:new Bend(),steps:32,bevelEnabled:false,curveSegments:16})]};}
+ case 'counterbore':return {add:[lathe([[0,0],[3,0],[3,20],[6,20],[6,26],[0,26]])]};
+ case 'countersink':return {add:[lathe([[0,0],[3,0],[3,20],[6,23],[6,25],[0,25]])]};
+ case 'teardrop':{const s=new T.Shape();s.moveTo(-8,0);s.absarc(0,0,8,Math.PI,Math.PI*2,false);s.lineTo(0,12);s.closePath();return {add:[extrude(s,25).rotateX(Math.PI/2)]};}
+ case 'port':{const s=new T.Shape();s.moveTo(-10,-5);s.lineTo(10,-5);s.absarc(10,0,5,-Math.PI/2,Math.PI/2,false);s.lineTo(-10,5);s.absarc(-10,0,5,Math.PI/2,3*Math.PI/2,false);s.closePath();return {add:[extrude(s,20)]};}
+ case 'thread':return {add:[cylinder(5,20,[0,0,10]),threadRidge()]};
+ case 'screw':return {add:[cylinder(5,20,[0,0,10]),threadRidge(),cylinder(9,5,[0,0,-2.5])],cut:[box(2,14,2,[0,0,-4.5])]};
+ case 'nut':return {add:[cylinder(10,8,[0,0,10],6)],cut:[cylinder(5.25,30,[0,0,10]),threadRidge(5.25,2,12,.15)]};
+ case 'finishing-washer':return {add:[lathe([[3,0],[9,0],[9,3],[7,5],[3,1],[3,0]])]};
+ case 'hinge':return {separate:true,add:[box(19,3,30,[-12.5,0,0]),box(19,3,30,[12.5,0,0]),...[-12,-6,0,6,12].map(z=>ring(5,3,5.7).translate(0,0,z-2.85)),cylinder(2.5,32)]};
+ case 'dovetail':return {add:[extrude(XY([[-8,0],[8,0],[12,8],[-12,8]]),30).rotateX(Math.PI/2)]};
+ case 'boss':return {add:[ring(7,3,20),box(25,2,5,[0,0,2.5]),box(2,25,5,[0,0,2.5])],cut:[cylinder(3,40,[0,0,10])]};
+ case 'snap-fit':return {add:[box(20,12,3,[0,0,1.5]),box(3,12,25,[8.5,0,15]),extrude(XY([[0,0],[5,0],[0,6]]),12).rotateX(Math.PI/2).translate(5.5,6,24)]};
+ case 'rib':return {add:[extrude(XY([[0,0],[25,0],[0,25]]),3).rotateX(Math.PI/2)]};
+ case 'spring':return {add:[closedTube(new Helix(10,40,6),preview?96:288,1.4,preview?6:12)]};
+ case 'gear':return {add:[gear()]};
+ case 'hirth':{const add:T.BufferGeometry[]=[ring(16,4,4)];for(let i=0;i<24;i++){const half=Math.PI/24*.9,points=[];for(const r of [5,16]){points.push(new T.Vector3(r*Math.cos(-half),r*Math.sin(-half),3.8),new T.Vector3(r*Math.cos(half),r*Math.sin(half),3.8),new T.Vector3(r,0,6));}const g=new ConvexGeometry(points);g.rotateZ(i*Math.PI/12);add.push(g);}return {add};}
+ case 'gt2-pulley':{const add=[ring(20*2/(2*Math.PI),2.5,6).translate(0,0,1)],after=[ring(8,2.5,1),ring(8,2.5,1).translate(0,0,7)],cut=[];for(let i=0;i<20;i++){const a=i*Math.PI/10;cut.push(cylinder(.65,6.2,[6.4*Math.cos(a),6.4*Math.sin(a),4]));}return {add,cut,after};}
+ case 'grid-bin':return {add:[box(41.5,41.5,28,[0,0,14])],cut:[box(37.5,37.5,30,[0,0,18])]};
+ case 'sbc':return {add:[box(85,56,1.6),box(20,20,2,[0,0,1.7]),box(14,15,10,[28,18,5.7]),box(14,15,10,[28,-18,5.7])],cut:[...[-39,39].flatMap(x=>[-24.5,24.5].map(y=>cylinder(1.5,8,[x,y,0])))]};
+ case 'text':return {add:letters(text)};
+ case 'name-tag':{const length=Math.max(24,text.trim().length*7.2+10);return {add:[box(length,16,3,[(length-10)/2,3.6,0]),...letters(text,1.4)],cut:[cylinder(2,10,[-2,3.6,0])]};}
+ case 'icon-tag':return {add:[cylinder(20,3),...(svg?iconGeometry(svg):[extrude(star(),2).translate(0,0,1.4)])],cut:[cylinder(2,10,[0,17,0])]};
+ case 'qr':{const qr=qrcode(0,'M'),previousEncoding=qrcode.stringToBytes;try{qrcode.stringToBytes=value=>Array.from(new TextEncoder().encode(value));qr.addData(text||'BRICKWRIGHT','Byte');qr.make();}finally{qrcode.stringToBytes=previousEncoding;}const n=qr.getModuleCount(),unit=1;const add=[box((n+8)*unit,(n+8)*unit,2,[(n-1)*unit/2,(n-1)*unit/2,0])];for(let y=0;y<n;y++){let start=-1;for(let x=0;x<=n;x++){if(x<n&&qr.isDark(y,x)){if(start<0)start=x;}else if(start>=0){add.push(box((x-start)*unit,unit,1,[(start+x-1)*unit/2,(n-1-y)*unit,1.4]));start=-1;}}}return {add};}
+ case 'star':return {add:[extrude(star(),5)]};
+ case 'heart':{const s=new T.Shape();s.moveTo(0,-14);s.bezierCurveTo(-28,4,-13,22,0,10);s.bezierCurveTo(13,22,28,4,0,-14);return {add:[extrude(s,5)]};}
+ case 'crescent':{const s=new T.Shape();s.absarc(0,0,16,Math.PI/3,Math.PI*5/3,false);s.quadraticCurveTo(-5,0,8,16*Math.sin(Math.PI/3));s.closePath();return {add:[extrude(s,5)]};}
+ case 'knurl':{const add:T.BufferGeometry[]=[cylinder(12,25,[0,0,12.5])];for(let k=0;k<12;k++)for(const turn of [-.5,.5]){const g=closedTube(new Helix(11.8,25,turn,k*Math.PI/6),preview?12:24,.65,4);g.userData.collisionHint.stride=2;add.push(g);};return {add};}
+ case 'ruler':return {reference:true,add:[box(100,6,1),...Array.from({length:101},(_,i)=>box(.18,i%10===0?4:i%5===0?3:1.5,.35,[-50+i,0,.65]))]};
+ default:throw new Error(`Unknown construction: ${id}`);
+ }
+}
+export function constructionPreview(id:string):T.BufferGeometry {
+ const c=advancedGeometry(id,['text','name-tag'].includes(id)?'ABC':'BW',true);const geometries=[...c.add,...(c.after??[])].map(g=>{const non=g.index?g.toNonIndexed():g;const clean=new T.BufferGeometry();clean.setAttribute('position',non.getAttribute('position').clone());if(non!==g)non.dispose();g.dispose();return clean;});const merged=mergeGeometries(geometries)!;geometries.forEach(g=>g.dispose());return merged;
+}
+export function constructionDocument(id:string,name:string,color:string,text:string,svg?:string):CadDocument {
+ const c=advancedGeometry(id,text,false,svg);const doc=createDocument(name);const addNode=(g:T.BufferGeometry)=>{const key=newId();doc.nodes[key]={id:key,name,kind:'mesh',color,transform:identityTransform(),positions:Array.from(g.getAttribute('position').array),indices:g.index?Array.from(g.index.array):Array.from({length:g.getAttribute('position').count},(_,i)=>i),...(g.userData.collisionHint?{physics:{...defaultPartPhysics(),sourcePreset:id,collisionHint:g.userData.collisionHint}}:{})};g.dispose();return key;};
+ const combine=(operation:'union'|'subtract',inputs:string[]):string=>{if(inputs.length===1)return inputs[0];if(inputs.length>100){const groups=[];for(let i=0;i<inputs.length;i+=100)groups.push(combine('union',inputs.slice(i,i+100)));return combine(operation,groups);}const key=newId();doc.nodes[key]={id:key,name,kind:'boolean',operation,inputs,color,transform:identityTransform()};return key;};
+ if(id==='hinge') {
+  c.add.forEach(g=>g.dispose());
+  const leaf=(side:number,zs:number[])=>{const parts=[box(19,3,30,[side*12.5,0,0]),...zs.map(z=>cylinder(5,5.7,[0,0,z]))];const body=combine('union',parts.map(addNode));return combine('subtract',[body,addNode(cylinder(3,40))]);};
+  const a=leaf(-1,[-12,0,12]),b=leaf(1,[-6,6]),pin=combine('union',[addNode(cylinder(2.5,32)),addNode(cylinder(4,1,[0,0,16.4]))]);
+  doc.roots=[a,b,pin];doc.nodes[a].name='Hinge leaf A';doc.nodes[b].name='Hinge leaf B';doc.nodes[pin].name='Hinge pin';
+  const frame={anchorA:[0,0,0] as Vec3,anchorB:[0,0,0] as Vec3,axisA:[0,0,1] as Vec3,axisB:[0,0,1] as Vec3};
+  doc.joints=[{id:newId(),kind:'hinge',bodyA:a,bodyB:b,...frame,limits:[-2.3,2.3]},{id:newId(),kind:'fixed',bodyA:a,bodyB:pin,...structuredClone(frame)}];
+ } else {const roots=c.add.map(addNode);doc.roots=c.separate?roots:[combine('union',roots)];}
+ if(c.cut?.length){const cut=combine('union',c.cut.map(addNode));doc.roots=[combine('subtract',[doc.roots[0],cut])];}
+ if(c.after?.length)doc.roots=[combine('union',[doc.roots[0],...c.after.map(addNode)])];
+ for(const root of doc.roots){const node=doc.nodes[root];if(c.reference)node.reference=true;else node.physics={...defaultPartPhysics(),...(node.physics?.collisionHint?{collisionHint:node.physics.collisionHint}:{}),sourcePreset:id,intent:id==='hinge'?'hinge':id==='spring'?'spring':id==='snap-fit'?'snap-fit':['thread','screw','nut'].includes(id)?'thread':id==='gear'?'gear':id==='gt2-pulley'?'belt':id==='hirth'?'face-coupling':id==='dovetail'?'sliding-fit':'rigid',...(['thread','screw','nut'].includes(id)?{parameters:{pitchMm:2,starts:1}}:id==='gear'?{parameters:{teeth:20,moduleMm:1.5,pressureAngleDeg:20}}:id==='spring'?{parameters:{wireDiameterMm:2.8,meanDiameterMm:20,activeTurns:6}}:id==='gt2-pulley'?{parameters:{teeth:20,pitchMm:2}}:{})};}
+ const root=doc.nodes[doc.roots[0]];if(root.physics&&id==='spring')root.physics.collisionHint={kind:'tube-grid',segments:288,sides:12,layout:'rows',closed:false};
+ const profileLengths:Record<string,number>={counterbore:6,countersink:6,'finishing-washer':6};if(root.physics&&profileLengths[id])root.physics.collisionHint={kind:'radial-profile',segments:64,sides:profileLengths[id]-1,layout:'rows',closed:true};
+ return doc;
+}

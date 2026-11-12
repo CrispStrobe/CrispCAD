@@ -12,6 +12,12 @@
     },
     {
       "path": "packages/brickwright"
+    },
+    {
+      "path": "packages/physics"
+    },
+    {
+      "path": "packages/history"
     }
   ]
 }

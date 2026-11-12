@@ -22,7 +22,10 @@ Host APIs, package boundaries and the later Brickwright wiring are documented
 in [docs/INTEGRATION.md](docs/INTEGRATION.md). The roadmap, including the possible
 CrispMesh scan-to-CAD path, is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
-- Add boxes, cylinders and spheres; edit dimensions and transforms in millimetres.
+- Search a 49-entry categorized shape library with geometry-derived thumbnails,
+  pinning, filled SVG icons, original block lettering, name tags and QR content.
+  The three basic primitives expose dimensions; other constructions currently
+  expose transforms and retained operands rather than full generator parameters.
 - Retain and edit the operands of union, subtract and intersection operations.
 - Multi-select with object checkboxes, Shift-click or long press. Subtraction
   uses the first selected body as its base and later bodies as cutters.
@@ -34,7 +37,10 @@ CrispMesh scan-to-CAD path, is in [docs/ROADMAP.md](docs/ROADMAP.md).
   Drop selected top-level bodies onto the workplane, including rotated bodies.
 - Grouped tool ribbon, collapsible Objects/Properties panels and a persistent
   touch multi-select mode; navigation does not change document history.
-- Undo/redo and independent histories for each embedded instance.
+- Undo/redo and independent sessions for each embedded instance. The standalone
+  host additionally retains every saved iteration, with model selection, named
+  checkpoints, branching restore and portable `.bcadhistory` backups. No automatic
+  pruning; large immutable mesh assets are shared by SHA-256 content address.
 - Save editable `.bcad` projects; reopen them or closed STL meshes.
 - Export binary STL or 3MF for printing. These exports contain meshes, not the
   editable project graph; 3MF currently exports geometry without materials.
@@ -53,6 +59,8 @@ if an edit fails. Imported geometry is built before replacing the current design
 | `@brickwright/cad-core` | Versioned documents, validation, commands, selection and undo |
 | `@brickwright/cad-geometry` | Headless Manifold evaluation, STL/3MF |
 | `@brickwright/cad-editor` | Framework-independent DOM/Three editor, isolated worker |
+| `@brickwright/cad-history` | Append-only IndexedDB revisions, shared content, ancestry and portable archives |
+| `@brickwright/cad-physics` | Qualified convex compounds, actual solid mass/inertia and headless Jolt worlds |
 | `@brickwright/cad-brickwright` | SB3 sidecar, LDraw coordinate conversions and part-mesh handoff |
 
 The standalone app is one host. File access and persistence are injected rather
@@ -68,3 +76,15 @@ npm run test:e2e
 The source provenance for reused Brickwright BSD arithmetic is recorded with
 commit and SHA-256 hashes in `docs/brickwright-provenance.json`. Third-party
 notices are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+The optional parametric CAD architecture and reference-UX acceptance criteria are
+in [docs/UX-AND-PARAMETRIC.md](docs/UX-AND-PARAMETRIC.md). The current mesh-solid
+editor is not a complete constrained-sketch/B-rep CAD. Stored iterations are
+separate from bounded editing undo. Local storage is finite: preserve portable
+backups; current full-history backup/import is limited to 64 MiB per archive.
+
+The physics package uses the existing MIT Brickwright Jolt fork. It is not yet
+a simulation tab in the standalone UI. An explicit rigid preview is distinct
+from a qualified spring, thread, snap-fit, belt or gear mechanism; unconfigured
+mechanical models are refused. Run `node scripts/qualify-catalog-physics.mjs`
+for the full catalog qualification report after building packages.

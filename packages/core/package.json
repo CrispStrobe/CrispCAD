@@ -14,5 +14,7 @@
     "LICENSE",
     "NOTICE.md"
   ],
-  "dependencies": {}
+  "dependencies": {
+    "@noble/hashes": "2.4.0"
+  }
 }

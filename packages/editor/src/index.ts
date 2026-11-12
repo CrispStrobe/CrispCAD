@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import { createCadSession, createDocument, identityTransform, newId, parseDocument } from '@brickwright/cad-core';
+import { createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics } from '@brickwright/cad-core';
 import type { CadDocument, CadSession, Primitive, SolidNode, Transform, Vec3 } from '@brickwright/cad-core';
 import { export3MF, exportSTL, importSTL } from '@brickwright/cad-geometry';
 import type { GeometryResult } from '@brickwright/cad-geometry';
@@ -7,6 +7,8 @@ import { createGeometryClient } from './geometry-client.js';
 import { mountViewport } from './viewport.js';
 import { editorStyle } from './style.js';
 import { toolIcon } from './icons.js';
+import { mountShapePicker } from './shape-picker.js';
+import { createPresetDocument, evaluatedPreview } from './shapes.js';
 export interface CadFile { name: string; bytes: Uint8Array; mime: string }
 export interface CadEditorOptions {
   wasmURL: string;
@@ -33,11 +35,12 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const main = el('div', 'main'); const tree = el('aside', 'panel tree'); const viewHost = el('div', 'viewport'); const inspector = el('aside', 'panel inspector');
   const status = el('div', 'status'); const message = el('span'); message.setAttribute('role', 'status'); message.setAttribute('aria-live', 'polite'); const stats = el('span', 'stats'); status.append(message, stats);
   const designBar = el('div', 'design-bar'); designBar.append(el('span', 'workspace-label', '3D WORKSPACE'));
-  const titleInput = el('input'); titleInput.setAttribute('aria-label', 'Design title'); titleInput.addEventListener('change', () => run(() => session.rename(titleInput.value))); designBar.append(titleInput, el('span', 'units-label', 'mm · Z up'));
+  const titleInput = el('input'); titleInput.setAttribute('aria-label', 'Design title'); titleInput.addEventListener('keydown',event=>{if(event.key==='Enter')titleInput.blur();else if(event.key==='Escape'){titleInput.value=session.state.document.title;titleInput.blur();}}); titleInput.addEventListener('change', () => run(() => session.rename(titleInput.value))); designBar.append(titleInput, el('span', 'units-label', 'mm · Z up'));
   main.append(tree, viewHost, inspector); shell.append(designBar, toolbar, main, status); shadow.append(style, shell);
   let disposed = false; let builtRevision = -1; let built: GeometryResult | null = null; let running = false; let lastRevision = -1; let lastSelection = ''; let geometryError = ''; let mode: 'translate' | 'rotate' | 'scale' = 'translate'; let grid = 1;
   const waiters = new Set<{ resolve: (r: GeometryResult) => void; reject: (e: Error) => void }>();
-  function report(e: unknown) { const error = e instanceof Error ? e : new Error(String(e)); message.textContent = error.message; if (!disposed) options.onError?.(error); }
+  let operationError = '';
+  function report(e: unknown) { const error = e instanceof Error ? e : new Error(String(e)); operationError = error.message; message.textContent = error.message; if (!disposed) options.onError?.(error); }
   const run = (fn: () => unknown) => { try { const result = fn(); if (result instanceof Promise) result.catch(report); } catch (e) { report(e); } };
   const client = createGeometryClient(new URL(options.wasmURL, document.baseURI).href, options.createWorker);
   let viewport: ReturnType<typeof mountViewport>;
@@ -55,6 +58,16 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   partsToggle.title = 'Show objects';
   const propertiesToggle = button('Properties', () => togglePanel(inspector, propertiesToggle), designBar, 'panel-toggle');
   toolGroup('Shapes', 'shapes-tools');
+  const shapesButton = button('Shapes', () => picker.toggle(), toolParent, 'shape-library-toggle');
+  const previewCache = new Map<string, Promise<string>>();
+  const picker = mountShapePicker(main, shapesButton, async (preset, text, svg) => {
+    const projectId=session.state.document.id;const doc = createPresetDocument(preset.id, text, {svg}); const result = await client.evaluate(doc);
+    if (disposed) return;
+    if(session.state.document.id!==projectId)throw new Error('Shape insertion was canceled because a different model was opened');
+    const minZ = Math.min(...result.bodies.map(body => body.bounds.min[2]));
+    session.insert(doc, [session.state.document.roots.length * 12, 0, -minZ]);
+    await whenIdle();
+  }, report, preset => { let preview=previewCache.get(preset.id); if(!preview){preview=client.evaluate(createPresetDocument(preset.id,'ABC')).then(result=>evaluatedPreview(result.bodies));previewCache.set(preset.id,preview);}return preview; });
   const add = (shape: Primitive) => {
     const transform = identityTransform(); const height = shape.kind === 'box' ? shape.size[2] : shape.kind === 'cylinder' ? shape.height : shape.radius * 2;
     transform.position = [session.state.document.roots.length * 12, 0, height / 2]; session.add(shape, { transform });
@@ -81,7 +94,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const duplicateButton = button('Duplicate', () => session.duplicate()); const deleteButton = button('Delete', () => session.remove());
   toolGroup('File', 'file-tools');
   button('New', async () => { if (!options.requestNew || await options.requestNew()) session.load(createDocument()); });
-  const input = el('input'); input.type = 'file'; input.accept = '.bcad,.json,.stl'; input.hidden = true; shell.append(input);
+  const input = el('input'); input.type = 'file'; input.setAttribute('aria-label','Open CAD project or STL'); input.accept = '.bcad,.json,.stl'; input.hidden = true; shell.append(input);
   button('Open', async () => { if (options.requestOpen) { const file = await options.requestOpen(); if (file) await openFile(file.name, file.bytes); } else input.click(); });
   input.addEventListener('change', () => { const file = input.files?.[0]; input.value = ''; if (file) run(async () => { if (file.size > 16 * 1024 * 1024) throw new Error('File exceeds 16 MiB'); await openFile(file.name, new Uint8Array(await file.arrayBuffer())); }); });
   const save = button('Save project', () => deliver('bcad'), toolParent, 'primary'); save.disabled = !options.onExport;
@@ -122,7 +135,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     const selection = session.state.selection;
     if (selection.length !== 1) { inspector.append(el('p', '', selection.length ? `${selection.length} bodies selected. Use the handles to transform them together.` : 'Select an object to edit its dimensions and position.')); return; }
     const id = selection[0], n = session.state.document.nodes[id];
-    inspector.append(el('div', 'selection-count', n.kind === 'boolean' ? 'Retained boolean operation' : n.kind === 'mesh' ? 'Imported mesh' : 'Parametric solid'));
+    inspector.append(el('div', 'selection-count', n.reference ? 'Reference helper · not exported' : n.kind === 'boolean' ? 'Retained boolean operation' : n.kind === 'mesh' ? 'Mesh solid' : 'Parametric solid'));
     field(inspector, 'Object name', n.name, value => session.update(id, { name: value }), 'text');
     field(inspector, 'Color', n.color, value => session.update(id, { color: value }), 'color');
     if (n.kind === 'box') {
@@ -140,6 +153,14 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       ['X', 'Y', 'Z'].forEach((axis, i) => field(group, `${title} ${axis}`, n.transform[key][i], value => { const transform = structuredClone(n.transform); transform[key][i] = Number(value); session.update(id, { transform }); }, 'number', step));
     }
     button('Reset transform', () => session.update(id, { transform: identityTransform() }), inspector);
+    if(!n.reference && session.state.document.roots.includes(id)) {
+      inspector.append(el('div','inspect-title','Physics material'));
+      const p=n.physics??defaultPartPhysics();
+      for(const [key,label,step] of [['densityKgM3','Density (kg/m³)','10'],['friction','Friction','0.05'],['restitution','Restitution','0.05']] as const)field(inspector,label,p[key],value=>session.update(id,{physics:{...p,[key]:Number(value)}}),'number',step);
+      const label=el('label','field','Body motion');const select=el('select');select.setAttribute('aria-label','Body motion');for(const motion of ['dynamic','static'] as const){const option=el('option','',motion==='dynamic'?'Dynamic':'Fixed in world');option.value=motion;select.append(option);}select.value=p.motion;select.addEventListener('change',()=>run(()=>session.update(id,{physics:{...p,motion:select.value as 'dynamic'|'static'}})));label.append(select);inspector.append(label);
+      if(p.intent!=='rigid')inspector.append(el('p','hint',`Mechanical role: ${p.intent}. Rigid collision preview does not qualify elastic behavior, mating fit or a complete mechanism.`));
+      if(session.state.document.joints?.some(j=>j.bodyA===id||j.bodyB===id))button('Detach joints',()=>session.detachJoints([id]),inspector);
+    }
     inspector.append(el('p', 'hint', 'Dimensions are centred on the object. Move Z to keep its bottom on the workplane.'));
   }
   async function buildLatest() {
@@ -153,7 +174,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
         if (revision !== session.state.revision) continue;
         built = result; builtRevision = revision; geometryError = ''; errorPanel.hidden = true; viewport.update(result); empty.hidden = !!doc.roots.length;
         stats.textContent = `${doc.roots.length} ${doc.roots.length === 1 ? 'body' : 'bodies'} · ${result.triangles.toLocaleString()} triangles · ${result.volume.toLocaleString(undefined, { maximumFractionDigits: 1 })} mm³`;
-        message.textContent = doc.roots.length ? 'Ready · mm · Z up' : 'Add a solid to begin';
+        message.textContent = operationError || (doc.roots.length ? 'Ready · mm · Z up' : 'Add a solid to begin');
         host.dataset.state = 'ready'; host.dataset.triangles = String(result.triangles);
         for (const w of waiters) w.resolve(result); waiters.clear();
       } catch (e) {
@@ -174,7 +195,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const unsubscribe = session.subscribe(state => {
     if (disposed) return;
     if (state.revision !== lastRevision) {
-      lastRevision = state.revision; buildTree(); buildInspector(); refreshButtons();
+      lastRevision = state.revision; operationError = ''; buildTree(); buildInspector(); refreshButtons();
       run(() => options.onDocumentChange?.(state.document, state.revision)); void buildLatest();
     } else { buildTree(); buildInspector(); }
     const selection = JSON.stringify(state.selection);
@@ -190,6 +211,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     else if (command && key === 's') action = () => deliver('bcad');
     else if (command && key === 'a') action = () => session.select(session.state.document.roots);
     else if (command && key === 'd') action = () => session.duplicate();
+    else if ((command && key === 'k') || (!command && event.shiftKey && key === 'a')) action = () => picker.open(true);
     else if (key === 'delete' || key === 'backspace') action = () => session.remove();
     else if (key === 'escape') action = () => { viewport.cancelTransform(); session.select([]); };
     else if (key === 'f') action = () => viewport.frame();
@@ -211,7 +233,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       doc.nodes[id] = { id, name: doc.title, kind: 'mesh', ...mesh, color: '#eea52b', transform: identityTransform() }; doc.roots = [id];
     } else doc = parseDocument(new TextDecoder().decode(bytes));
     // Geometry errors in imported meshes must not destroy the current project.
-    await client.evaluate(doc); if (disposed) return; session.load(doc); await whenIdle(); viewport.frame();
+    const expectedRevision=session.state.revision;await client.evaluate(doc); if (disposed) return;if(session.state.revision!==expectedRevision)throw new Error('The model changed while opening the file. Try opening it again.'); session.load(doc); await whenIdle(); viewport.frame();
   }
   async function deliver(format: 'bcad' | 'stl' | '3mf') {
     if (!options.onExport) throw new Error('This host has not provided file export');
@@ -221,11 +243,12 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   buildTree(); buildInspector(); lastRevision = session.state.revision; lastSelection = JSON.stringify(session.state.selection); viewport.setSelection(session.state.selection); void buildLatest(); refreshButtons();
   return {
-    session, whenIdle, openFile, export: deliver,
+    session, whenIdle, openFile, export: deliver, frame: viewport.frame,
     focus() { viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return; disposed = true; unsubscribe(); shell.removeEventListener('keydown', keyboard); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error('Editor was disposed')); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return; disposed = true; unsubscribe(); shell.removeEventListener('keydown', keyboard); picker.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error('Editor was disposed')); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;
 export { createCadSession } from '@brickwright/cad-core';
+export { shapeCatalog, createPresetDocument } from './shapes.js';

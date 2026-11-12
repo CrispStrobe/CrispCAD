@@ -43,3 +43,13 @@ Acceptance: build every package; real kernel geometry/volume and export tests;
 invalid/cyclic/future documents cannot replace a live design; independent undo;
 SB3 old sections preserved; frame transforms round-trip; browser create/edit/
 boolean/save/reload; mobile viewport; embedded instance and lifecycle isolation.
+
+## Subsequent workbench/catalog/history milestone
+
+The later implementation adds 49 catalog entries, a shared headless Jolt adapter,
+explicit materials/mechanical intent and articulated hinge data, and persistent
+model revisions with immutable mesh sharing. See PHYSICS.md for precise preview
+qualification and its limits; UX-AND-PARAMETRIC.md defines the remaining UX and
+optional parametric scope. The first-delivery exclusions above describe the
+initial MVP and do not claim that the later mechanical or exact-CAD milestones
+are finished.

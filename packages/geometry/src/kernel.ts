@@ -1,16 +1,27 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import Module from 'manifold-3d';
 import type { Manifold, ManifoldToplevel } from 'manifold-3d';
-import { validateDocument } from '@brickwright/cad-core';
+import { validateDocument, documentGeometryKey } from '@brickwright/cad-core';
 import type { CadDocument, SolidNode } from '@brickwright/cad-core';
-export interface BodyMesh { id: string; name: string; color: string; positions: Float32Array; indices: Uint32Array; volume: number; bounds: { min: number[]; max: number[] } }
-export interface GeometryResult { bodies: BodyMesh[]; volume: number; triangles: number }
+import { collisionCSG } from './collision-csg.js';
+import { partitionConvex } from './convex.js';
+export interface BodyMesh { id: string; name: string; color: string; reference?: boolean; positions: Float32Array; indices: Uint32Array; volume: number; bounds: { min: number[]; max: number[] } }
+export interface GeometryResult { sourceKey?: string; bodies: BodyMesh[]; volume: number; triangles: number }
 export async function createGeometryKernel(options: { wasmURL?: string; wasmBinary?: Uint8Array } = {}) {
   // Upstream's declaration omits Emscripten's wasmBinary option and locateFile argument.
   const factory = Module as unknown as (options: { locateFile?: (name: string) => string; wasmBinary?: Uint8Array }) => Promise<ManifoldToplevel>;
   const module = await factory({ ...(options.wasmURL ? { locateFile: (name: string) => name.endsWith('.wasm') ? options.wasmURL! : name } : {}), ...(options.wasmBinary ? { wasmBinary: options.wasmBinary } : {}) });
   module.setup();
-  return { evaluate: (doc: CadDocument) => evaluateDocument(module, doc) };
+  // Preserve a verified producer's triangulation. Re-hulling Float32 output a
+  // second time can create different coplanar faces at tiny helical interfaces.
+  // External or mutated pieces still require canonical convex reconstruction.
+  const convexRegistry=new WeakMap<object,{positions:Float64Array;indices:Uint32Array}>();
+  const remember=<T extends {positions:Float64Array;indices:Uint32Array}>(piece:T):T=>{convexRegistry.set(piece,{positions:new Float64Array(piece.positions),indices:new Uint32Array(piece.indices)});return piece;};
+  return { evaluate: (doc: CadDocument) => evaluateDocument(module, doc), partitionConvex: (mesh: Pick<BodyMesh,'positions'|'indices'>, maxPieces=2048) => partitionConvex(module,mesh.positions,mesh.indices,maxPieces).map(remember),
+    isConvexPiece(piece:{positions:Float64Array;indices:Uint32Array}){const snapshot=convexRegistry.get(piece);return !!snapshot&&snapshot.positions.length===piece.positions.length&&snapshot.indices.length===piece.indices.length&&snapshot.positions.every((v,i)=>v===piece.positions[i])&&snapshot.indices.every((v,i)=>v===piece.indices[i]);},
+    collisionCSG: collisionCSG(module,remember),
+    hullPoints(points: readonly [number,number,number][]) { if(points.length<4||points.length>4096||points.some(p=>p.length!==3||p.some(v=>!Number.isFinite(v)||Math.abs(v)>1e6)))throw new Error('Collision hull points exceed the finite geometry budget');const hull=module.Manifold.hull(points);try{if(hull.isEmpty())throw new Error('Collision segment is degenerate');const mesh=hull.getMesh();return remember({positions:new Float64Array(Array.from({length:mesh.numVert*3},(_,i)=>mesh.vertProperties[Math.floor(i/3)*mesh.numProp+i%3])),indices:new Uint32Array(mesh.triVerts)});}finally{hull.delete();} },
+  };
 }
 export type GeometryKernel = Awaited<ReturnType<typeof createGeometryKernel>>;
 function evaluateDocument(module: ManifoldToplevel, input: CadDocument): GeometryResult {
@@ -38,6 +49,7 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
     const result = keep(rotated.translate(node.transform.position));
     const status = result.status();
     if (status !== 'NoError') throw new Error(`${node.name}: ${status}. Import a closed, consistently oriented solid mesh.`);
+    if(result.volume()< -1e-8)throw new Error(`${node.name}: reversed solid winding produces negative volume. Reorient the mesh faces before importing.`);
     cache.set(id, result); return result;
   };
   try {
@@ -46,8 +58,8 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
       const positions = new Float32Array(mesh.numVert * 3);
       for (let i = 0; i < mesh.numVert; i++) for (let j = 0; j < 3; j++) positions[i * 3 + j] = mesh.vertProperties[i * mesh.numProp + j];
       const bounds = solid.boundingBox();
-      return { id, name: node.name, color: node.color, positions, indices: new Uint32Array(mesh.triVerts), volume: solid.volume(), bounds };
+      return { id, name: node.name, color: node.color, reference: node.reference, positions, indices: new Uint32Array(mesh.triVerts), volume: solid.volume(), bounds };
     });
-    return { bodies, volume: bodies.reduce((s, b) => s + b.volume, 0), triangles: bodies.reduce((s, b) => s + b.indices.length / 3, 0) };
+    return { sourceKey:documentGeometryKey(doc), bodies, volume: bodies.filter(b=>!b.reference).reduce((s, b) => s + b.volume, 0), triangles: bodies.filter(b=>!b.reference).reduce((s, b) => s + b.indices.length / 3, 0) };
   } finally { for (const solid of [...owned].reverse()) solid.delete(); }
 }

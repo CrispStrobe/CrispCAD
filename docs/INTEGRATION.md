@@ -126,3 +126,26 @@ source, and separately authors those fields before treating it as a simulated
 mechanism. The curated official-LDraw pipeline and its CC BY credits stay intact.
 The generated part does not assign a new license to user geometry. The host must
 retain the owner’s license/attribution for imported models and user assets.
+
+## Optional history and simulation providers
+
+The standalone host now uses `@brickwright/cad-history` for immutable model
+iterations. Hosts can implement its structural API over their project/native
+storage. The editor still owns neither autosave nor a global model library.
+`editor.frame()` fits restored/imported work without changing its history.
+
+`@brickwright/cad-physics` provides source-verified convex compounds, SI mass and
+inertia, and headless Jolt worlds. See PHYSICS.md before wiring simulation UI;
+rigid-preview qualification does not supply gear/belt/spring/thread mates or
+material deformation. Keep simulation state separate from design revisions.
+
+Core IDs and hashes also support native/custom-scheme hosts without randomUUID
+or WebCrypto, using getRandomValues for RFC 4122 v4 IDs and MIT @noble/hashes for
+the identical SHA-256 fallback. WebCrypto remains the preferred hash provider.
+
+Offline package verification packs the already pinned Jolt release locally and
+uses a temporary host dependency override: GitHub release URLs do not expose an
+offline-cacheable npm manifest. Other npm dependencies use the cache populated
+by npm ci. The public physics package continues to pin the qualified release
+URL; this is not a claim that an empty npm cache can install every dependency
+without a supplied dependency bundle.

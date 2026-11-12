@@ -9,3 +9,5 @@ apps/standalone/public/cad-assets/
 *.p12
 *.mobileprovision
 .DS_Store
+
+artifacts/

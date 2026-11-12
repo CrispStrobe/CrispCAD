@@ -24,13 +24,15 @@
     "ipad:sync": "npm run build && cap sync ios",
     "ipad:open": "cap open ios",
     "ipad:archive": "npm run ipad:sync && node scripts/archive-ipad.mjs",
-    "ipad:install": "node scripts/install-ipad.mjs"
+    "ipad:install": "node scripts/install-ipad.mjs",
+    "verify:physics": "node scripts/qualify-catalog-physics.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",
     "@playwright/test": "1.62.1",
     "@types/node": "^22.15.18",
     "@types/three": "^0.184.1",
+    "fake-indexeddb": "6.2.8",
     "fflate": "0.8.3",
     "typescript": "^5.8.3",
     "vite": "^7.3.0",

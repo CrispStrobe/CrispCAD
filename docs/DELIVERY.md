@@ -92,3 +92,47 @@ and direct-device installation are in IPAD.md.
 - Native version 0.1.0 build 3 archived and exported using the existing
   Brickwright keychain, then installed and launched successfully on the paired
   iPad over its local-network tunnel. No store upload was performed.
+
+## Catalog, simulation boundary and permanent iterations — 2026-11-12
+
+- Implemented 49 searchable, categorized catalog entries with original geometry-
+  derived previews, pinning, text/name/QR input and sanitized filled-SVG icons.
+  The capsule is a flat-based rounded slot, matching the reference workflow.
+  Mechanical parts and generic board/grid/pulley templates are starting designs;
+  this does not qualify their manufacturing fit or every parameter variation.
+- Added versioned body material/mechanical intent and local hinge/fixed frames.
+  A hinge inserts as three independent bodies with two joints. Helpers are excluded
+  from exports, mass and simulation. Joint identity/remapping, composite-density
+  guards and helper validation survive save/load and editing commands.
+- Added the independent headless cad-physics package using the existing MIT
+  Brickwright Jolt fork. Actual solid mass/COM/inertia, qualified compound
+  preprocessing, SI conversion, fixed steps, source/buffer integrity and native
+  small-part contact tolerances are exercised by real debug-build tests.
+- The full default-catalog report passes: 48 rigid solids create native shapes,
+  simulate one second at 200 Hz, stay finite and pass the floor-surface check;
+  one ruler is excluded. Mechanical/elastic behavior remains explicitly separate:
+  an unconfigured spring/thread/gear/belt/snap-fit is not called a mechanism.
+- Added append-only model revisions, model selection, named iterations, restore
+  that preserves later work, content-addressed mesh sharing, and portable history
+  backup/import. History has no automatic pruning; its current in-memory backup
+  path is capped at 64 MiB and fails without deleting revisions. Native journal
+  mirroring and streaming large-history backups remain roadmap work.
+- Model changes archive transactionally. Tests cover more than the 100-entry edit
+  undo bound, multi-writer serialization, aborted-write rollback, reload, branching
+  restore, portable import as a separate model and corrupt-archive refusal.
+- Added native/custom-scheme-safe secure UUID generation and an MIT SHA-256
+  fallback when randomUUID/WebCrypto are unavailable. Both browser engines verify
+  creation, autosave and history restore with those APIs deliberately disabled.
+- Validation: production build, 92 headless tests, 24 Chromium/iPad WebKit workflows,
+  the full catalog rigid-preview qualification, and independent packed-package
+  geometry/real-physics checks pass. Offline SDK verification supplies the pinned
+  GitHub Jolt runtime as a local tarball; registry dependencies use the npm cache
+  populated during setup. No remote CI run or publishing is claimed.
+- Read the owner's linked guide and relevant workflow chapters. The required
+  reference-UX acceptance criteria and optional feature/constraint architecture
+  are in UX-AND-PARAMETRIC.md. Complete GUI parity, constrained parametric sketches,
+  B-rep/STEP and an interactive mechanical/elastic simulation workspace remain
+  separate milestones. CrispMesh remains an optional future integration path.
+- Signed native version 0.1.0 build 4 and installed it on the paired iPad over
+  WLAN. Installation succeeded; automatic launch was denied by iPadOS because
+  the device was locked. Physical Files/Pencil and touch acceptance remain pending.
