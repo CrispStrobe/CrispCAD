@@ -66,3 +66,18 @@ small independently checked CC0 calibration collection. Add selected attributed
 FreeCAD parts and filtered Thingi10K models only after manifest/quality tooling
 and project provenance support are implemented. Do not promise that corpus
 imports become parametric or mechanically accurate automatically.
+
+## Implementation sequence
+
+The first slice establishes a versioned catalogue contract and validates declared
+provenance and separate quality results. Validation checks the shape and policy of
+records; it cannot independently establish that a grant is genuine, that bytes
+match their hashes, or that a mesh passes its reported checks. Curators must
+verify evidence and files before admitting records.
+
+Next, add selected-file fetching with hash verification and an offline cache,
+mesh quality checks, and records for the 34 editable examples and a small CC0
+calibration set. Preserve original files and derived meshes with their respective
+hashes. Before catalogue insertion or attributed STL export, implement project
+provenance and attribution sidecars. These later steps are not provided by the
+catalogue contract alone.
