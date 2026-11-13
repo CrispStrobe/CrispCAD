@@ -1,5 +1,54 @@
 # Constraint performance and deployment decision
 
+## Current numerical module: fresh measurements
+
+The current MIT dart_csp 2.4.0 pin is
+`894a11d74dae312ca99578532b27cca0b51fd34f`. Its persistent geometric module
+changes the deployment recommendation: integrate it behind the CAD worker
+boundary, keeping the current model/history graph authoritative. The interval
+measurements retained below describe the old pin, not the new numerical solver.
+
+An independent original probe ran with Dart 3.12.2 on Mac arm64, Chromium 151
+and WebKit 26.5. Each warm edit changes the shared fixed radius and resolves all
+independent 3D point components. Hard coordinate/length residuals are checked
+outside the solver (maximum observed error 3.33e-8 in the axis fixtures), with
+zero local freedoms. A separate plane/circle soft drag preserves one freedom
+and stays below 7.99e-8 hard residual while approaching its target.
+
+Median warm edit time, milliseconds (7 samples after 2 warmups):
+
+| Browser | Points / coordinates | JS | Wasm |
+| --- | --- | ---: | ---: |
+| Chromium | 10 / 30 | 2 | 2.2 |
+| Chromium | 100 / 300 | 15 | 3.4 |
+| Chromium | 500 / 1500 | 46 | 9.9 |
+| WebKit | 10 / 30 | 1 | 1 |
+| WebKit | 100 / 300 | 10 | 4 |
+| WebKit | 500 / 1500 | 37 | 13 |
+
+For 500 points, Wasm p95 was 15.5 ms in Chromium and 15 ms in WebKit; cold solve
+was 53/36 ms, excluding compile and worker startup. JS cold solve was 121/103 ms.
+The one-point soft drag was at or below one millisecond median; timer granularity
+limits the meaning of those small measurements, especially reported zeros.
+
+These are independent components, not a general coupled-sketch stress test. A
+separate upstream coupled 72-coordinate chain passed its independent cold/edit
+checks; it was not used for the table. WebKit used an emulated iPad browser profile
+on this Mac, so these numbers do not qualify our physical iPad or every iPadOS
+Wasm feature set. The existing browser harness enforces a 30-second worker deadline.
+Persistent-worker cancellation and superseded-result handling still need an app
+adapter. Rendering, feature regeneration and message transfer add further latency.
+
+The compiled probe was 141,932 JS bytes, or 114,546 Wasm bytes plus an 11,813-byte
+loader. These describe this probe's tree-shaken closure, not a full CAD backend.
+[Raw browser data](../experiments/constraints/results/geometric-macos-arm64-2026-11-13.json)
+includes samples, startup, independent checks, exact pin and artifact/source hashes.
+[Reproduction instructions](../experiments/constraints/geometric/README.md) keep
+artifacts outside production assets. Full solver correctness and difficult branch
+continuation are not established by these probes.
+
+## Historical interval-only measurements
+
 The pinned dart_csp interval solver compiles to JavaScript **and Dart/Wasm** and
 runs inside browser workers in Chromium 151 and Playwright WebKit 26.5. This is
 Mac arm64 testing with an iPad browser profile, not a physical-iPad benchmark.
@@ -27,7 +76,7 @@ background work and build activity can affect timings; do not infer universal
 speed ratios from this run. Returned points were independently residual-checked;
 null/budget failures have no accepted geometric result.
 
-## Recommendation
+## Historical recommendation for the interval-only pin
 
 Do not port the existing interval search merely to change language. Improve the
 algorithm: connected-component decomposition, warm starts, sparse/rank-aware

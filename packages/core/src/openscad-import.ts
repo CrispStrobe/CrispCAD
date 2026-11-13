@@ -17,7 +17,7 @@ export function importOpenSCAD(source:string):CodeProgram{
  const limited=(message:string,at=tokens[cursor]?.at??source.length):never=>{throw new CadCodeError(message,at,source,'resource-limit');};
  if(new TextEncoder().encode(source).length>CODE_LIMITS.sourceBytes)limited(t('Source exceeds 32 KiB'),0);
  while(position<source.length){if(/\s/.test(source[position])){position++;continue;}if(source.startsWith('//',position)){const end=source.indexOf('\n',position);position=end<0?source.length:end+1;continue;}if(source.startsWith('/*',position)){const end=source.indexOf('*/',position+2);if(end<0)fail(t('Unclosed OpenSCAD comment'),position);position=end+2;continue;}
-  const text=/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|^[A-Za-z_$][A-Za-z0-9_$]*|^[{}\[\](),;=+*/-]|^[\s\S]/.exec(source.slice(position))?.[0];if(!text)fail(t('Unsupported OpenSCAD token'),position);tokens.push({text:text!,at:position});position+=text!.length;if(tokens.length>CODE_LIMITS.tokens)limited(t('Too many source tokens'),position);
+  const text=/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|^[A-Za-z_$][A-Za-z0-9_$]*|^(?:==|!=|<=|>=|&&|\|\|)|^[{}\[\](),;=+*/%!?<>:-]|^[\s\S]/.exec(source.slice(position))?.[0];if(!text)fail(t('Unsupported OpenSCAD token'),position);tokens.push({text:text!,at:position});position+=text!.length;if(tokens.length>CODE_LIMITS.tokens)limited(t('Too many source tokens'),position);
  }
  const peek=(ahead=0)=>tokens[cursor+ahead]?.text;
  const take=()=>{const next=tokens[cursor++];if(!next)fail(t('Unexpected end of source'));return next!;};
@@ -38,17 +38,17 @@ export function importOpenSCAD(source:string):CodeProgram{
   return v;
  }
  const mathFunctions=new Set(['sin','cos','tan','asin','acos','atan','atan2','sqrt','abs','floor','ceil','round','exp','ln','log','pow','min','max']);
- function expr(stops:string[],initial?:string):string{const out:string[]=initial===undefined?[]:[initial];let nesting=0;while(cursor<tokens.length){const next=peek()!;if(nesting===0&&stops.includes(next))break;
+ function expr(stops:string[],initial?:string):string{const out:string[]=initial===undefined?[]:[initial];let nesting=0,questions=0;while(cursor<tokens.length){const next=peek()!;if(nesting===0&&stops.includes(next)&&!(next===':'&&questions>0))break;if(next==='?')questions++;if(next===':'&&questions>0)questions--;
   const replacement=reference();if(replacement!==undefined){if(typeof replacement!=='string')unsupported('vector used as a scalar');if(out.join(' ').length+replacement.length+3>256)limited(t('OpenSCAD expanded expression limit exceeded'));out.push(`(${replacement})`);continue;}
   if(next==='(')nesting++;if(next===')'){if(!nesting)break;nesting--;}
   if(/^[A-Za-z][A-Za-z0-9_]*$/.test(next)&&peek(1)==='('&&!mathFunctions.has(next))unsupported(next);
-  if(!/^[A-Za-z][A-Za-z0-9_]*$|^(?:\d|\.\d)|^[(),+*/-]$/.test(next))unsupported(next);
+  if(!/^[A-Za-z][A-Za-z0-9_]*$|^(?:\d|\.\d)|^(?:[(),+*/%!?<>:-]|==|!=|<=|>=|&&|\|\|)$/.test(next))unsupported(next);
   out.push(take().text==='PI'&&!declaredGlobals.has('PI')?'3.141592653589793':next);if(out.length>256||nesting>32)limited(t('Expression nesting exceeds 32'));}
   if(!out.length||nesting)fail(t('Expected a complete dimensional expression'));if(out.join(' ').length>256)limited(t('OpenSCAD expanded expression limit exceeded'));return out.join(' ');}
- function value(depth=0):Value{if(depth>32)limited(t('OpenSCAD array nesting limit exceeded'));
+ function value(depth=0,extraStops:string[]=[]):Value{if(depth>32)limited(t('OpenSCAD array nesting limit exceeded'));
   // A whole vector reference can be passed to size/v/points. Scalar expressions continue in expr().
-  if((locals.has(peek()!)||vectors.has(peek()!)||(functions.has(peek()!)&&peek(1)==='('))){const v=reference();if([',',')',']',';'].includes(peek()??''))return v!;if(typeof v!=='string')unsupported('vector used as a scalar');return expr([',',')',']',';'],`(${v})`);}
-  if(peek()!=='[')return expr([',',')',']',';']);take();const values:Value[]=[];while(peek()!==']'){values.push(value(depth+1));if(values.length>256)limited(t('OpenSCAD array limit exceeded'));if(peek()!==',')break;take();}expect(']');return values;}
+  if((locals.has(peek()!)||vectors.has(peek()!)||(functions.has(peek()!)&&peek(1)==='('))){const v=reference();if([',',')',']',';',...extraStops].includes(peek()??''))return v!;if(typeof v!=='string')unsupported('vector used as a scalar');return expr([',',')',']',';',...extraStops],`(${v})`);}
+  if(peek()!=='[')return expr([',',')',']',';',...extraStops]);take();const values:Value[]=[];while(peek()!==']'){values.push(value(depth+1));if(values.length>256)limited(t('OpenSCAD array limit exceeded'));if(peek()!==',')break;take();}expect(']');return values;}
  const scalar=(v:Value|undefined,fallback?:string):string=>{if(v===undefined&&fallback!==undefined)return fallback;if(typeof v!=='string')return fail(t('Expected a numeric OpenSCAD argument'));return v;};
  const vector=(v:Value|undefined,allowScalar=false):string[]=>{if(Array.isArray(v)&&v.length===3&&v.every(x=>typeof x==='string'))return v as string[];if(allowScalar&&typeof v==='string')return [v,v,v];if(Array.isArray(v))return unsupported('vector length other than three');return fail(t('Expected a three-component OpenSCAD vector'));};
  // Definitions are hoisted in the file scope, so calls may precede declarations.
@@ -66,7 +66,7 @@ export function importOpenSCAD(source:string):CodeProgram{
   collection.set(name.text,{parameters,start,end:cursor});definitions.set(begin,cursor);
  }
  {let depth=0;while(cursor<tokens.length){const n=peek();if(depth===0&&(n==='module'||n==='function')){scanDefinition();continue;}if(depth===0&&peek(1)==='=')declaredGlobals.add(n!);if(n==='{')depth++;if(n==='}')depth--;take();}cursor=0;}
- function union(shapes:string[]):string{if(!shapes.length)fail(t('OpenSCAD block contains no supported solid'));return shapes.length===1?shapes[0]:`union(${shapes.join(', ')})`;}
+ function union(shapes:string[]):string{if(!shapes.length)return 'empty()';return shapes.length===1?shapes[0]:`union(${shapes.join(', ')})`;}
  function blockParts(depth:number,anonymous=false):string[]{
   expect('{');const begin=cursor,outer=locals,scope=new Map<string,ScopeValue>(outer),declarations=new Map<number,number>();
   // Predeclare all direct assignments. OpenSCAD's last assignment wins throughout
@@ -114,15 +114,43 @@ return {named,positional,use,allowed};
   try{const token=take(),definition=functions.get(token.text)!,args=argumentsFor(token.text,token.at);return invokeDefinition('function',definition,args,token.at,()=>value());}
   finally{functionDepth--;}
  }
+ let loopSequence=0;
+ const symbolNames=new Set(tokens.filter(token=>/^[A-Za-z_$]/.test(token.text)).map(token=>token.text));
+ function controlLoop(depth:number):string{
+  expect('(');const variable=take();if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(variable.text))unsupported('loop variable',variable.at);expect('=');
+  let generated:string;do{generated=`cadLoop${loopSequence++}`;}while(symbolNames.has(generated));symbolNames.add(generated);
+  let range:string[]|undefined,items:Value[];
+  if(peek()==='['){take();items=[];
+   if(peek()!==']'){const first=value(0,[':']);if(peek()===':'){take();const second=value(0,[':']);let step='1',start=scalar(first),end=scalar(second);if(peek()===':'){take();step=scalar(second);end=scalar(value());}else{start=`min(${scalar(first)}, ${scalar(second)})`;end=`max(${scalar(first)}, ${scalar(second)})`;}range=[start,end,step];}
+    else{items.push(first);while(peek()===','){take();if(peek()===']')break;items.push(value());if(items.length>64)limited(t('Loop exceeds 64 values'));}}
+   }expect(']');
+  }else{const v=value();if(!Array.isArray(v))unsupported('for requires a range or vector',variable.at);items=v as Value[];}
+  if(peek()===',')unsupported('multiple for bindings; nest for operators',variable.at);expect(')');
+  const outer=locals,scope=new Map<string,ScopeValue>(outer);locals=scope;
+  try{
+   if(range||items!.every(item=>typeof item==='string')){
+    scope.set(variable.text,generated);const body=peek()==='{'?block(depth+1):shape(depth+1);
+    return range?`forRange(${generated}, ${range.join(', ')}, ${body})`:`forValues(${generated}, [${items!.join(', ')}], ${body})`;
+   }
+   // Vector-valued lists have fixed length. Expand each lexical instance while
+   // retaining the expressions within that instance, without numerical baking.
+   if(items!.length>64)limited(t('Loop exceeds 64 values'));const begin=cursor,parts:string[]=[];let end:number|undefined;
+   for(const item of items!){cursor=begin;locals=new Map(outer);locals.set(variable.text,item);parts.push(peek()==='{'?block(depth+1):shape(depth+1));if(end!==undefined&&cursor!==end)unsupported('loop body');end=cursor;}
+   if(end!==undefined)cursor=end;return union(parts);
+  }finally{locals=outer;}
+ }
  function profile(depth:number,height:string):string{if(depth>32||++statements>128)limited(t('OpenSCAD construction limit exceeded'));if(peek()==='{'){take();const result=profile(depth+1,height);expect('}');return result;}const token=take(),name=token.text;if(!['polygon','square','circle'].includes(name))unsupported(`linear_extrude profile: ${name}`,token.at);const {named,use,allowed}=argumentsFor(name,token.at);expect(';');
   if(name==='polygon'){allowed(['points'],1);const points=use('points',0);if(!Array.isArray(points)||points.length<3||!points.every(p=>Array.isArray(p)&&p.length===2&&p.every(v=>typeof v==='string')))fail(t('Expected an OpenSCAD polygon point list'),token.at);return `extrude(${height}, [${(points as string[][]).map(p=>`[${p.join(', ')}]`).join(', ')}])`;}
-  if(name==='square'){allowed(['size','center'],2);const raw=use('size',0,'1'),size=typeof raw==='string'?[raw,raw]:raw;if(!Array.isArray(size)||size.length!==2||!size.every(v=>typeof v==='string'))fail(t('Expected an OpenSCAD square size'),token.at);const [w,d]=size as string[],center=use('center',1,'false');if(center!=='true'&&center!=='false')unsupported('computed center flag',token.at);return `move([${center==='true'?'0':`(${w}) / 2`}, ${center==='true'?'0':`(${d}) / 2`}, (${height}) / 2], box(${w}, ${d}, ${height}))`;}
+  if(name==='square'){allowed(['size','center'],2);const raw=use('size',0,'1'),size=typeof raw==='string'?[raw,raw]:raw;if(!Array.isArray(size)||size.length!==2||!size.every(v=>typeof v==='string'))fail(t('Expected an OpenSCAD square size'),token.at);const [w,d]=size as string[],center=use('center',1,'false');const centered=(size:string)=>center==='true'?'0':center==='false'?`(${size}) / 2`:`(${scalar(center)}) ? 0 : (${size}) / 2`;return `move([${centered(w)}, ${centered(d)}, (${height}) / 2], box(${w}, ${d}, ${height}))`;}
   allowed(['r','d','$fn'],1);if(named.has('d')&&(named.has('r')||use('r',0)!==undefined))unsupported('circle: both radius and diameter',token.at);const radius=named.has('d')?`(${scalar(named.get('d'))}) / 2`:scalar(use('r',0,'1')),count=scalar(named.get('$fn')??localValue('$fn'),fn);return `move([0, 0, (${height}) / 2], cylinder(${radius}, ${height}, ${count}))`;
  }
  function shape(depth=0):string{
   if(depth>32||++statements>CODE_LIMITS.statements)limited(t('OpenSCAD construction limit exceeded'));if(peek()==='{')return block(depth,true);
   const token=take(),name=token.text;
-  if(!modules.has(name)&&!['cube','sphere','cylinder','translate','rotate','scale','union','difference','intersection','linear_extrude'].includes(name))unsupported(name,token.at);
+  if(name==='for')return controlLoop(depth);
+  if(name==='if'){expect('(');const condition=scalar(value());expect(')');const yes=peek()==='{'?block(depth+1):shape(depth+1);let no='empty()';if(peek()==='else'){take();no=peek()==='{'?block(depth+1):shape(depth+1);}return `choose(${condition}, ${yes}, ${no})`;}
+  if(name===';')return 'empty()';
+  if(!modules.has(name)&&!['cube','sphere','cylinder','translate','rotate','scale','union','difference','intersection','hull','linear_extrude'].includes(name))unsupported(name,token.at);
   const {named,positional,use,allowed}=argumentsFor(name,token.at);
   if(modules.has(name)){
    const definition=modules.get(name)!;
@@ -130,16 +158,23 @@ return {named,positional,use,allowed};
    if(peek()!==';')unsupported('module child geometry',token.at);expect(';');
    return invokeDefinition('module',definition,{named,positional,use,allowed},token.at,()=>peek()==='{'?block(depth+1):shape(depth+1));
   }
-  const centered=(v:Value|undefined)=>{if(v===undefined||v==='false')return false;if(v==='true')return true;return unsupported('computed center flag',token.at);};
+  const centerZ=(v:Value|undefined,height:string)=>v==='true'?'0':v===undefined||v==='false'?`(${height}) / 2`:`(${scalar(v)}) ? 0 : (${height}) / 2`;
   const segments=()=>scalar(named.get('$fn')??localValue('$fn'),fn);
-  if(['union','difference','intersection'].includes(name)){allowed([],0);const parts:string[]=[];if(peek()==='{')parts.push(...blockParts(depth));else parts.push(shape(depth+1));if(!parts.length)fail(t('OpenSCAD block contains no supported solid'));if(parts.length===1)return parts[0];return `${name==='difference'?'subtract':name==='intersection'?'intersect':'union'}(${parts.join(', ')})`;}
+  if(['union','difference','intersection','hull'].includes(name)){allowed([],0);const parts:string[]=[];if(peek()==='{')parts.push(...blockParts(depth));else parts.push(shape(depth+1));if(!parts.length)return 'empty()';if(parts.length===1&&name!=='hull')return parts[0];return `${name==='hull'?'hull':name==='difference'?'subtract':name==='intersection'?'intersect':'union'}(${parts.join(', ')})`;}
   if(['translate','rotate','scale'].includes(name)){allowed([name==='rotate'?'a':'v'],1);const v=use(name==='rotate'?'a':'v',0);const vec=name==='rotate'&&typeof v==='string'?['0','0',v]:vector(v,name==='scale');const child=peek()==='{'?block(depth):shape(depth+1);return `${name==='translate'?'move':name}([${vec.join(', ')}], ${child})`;}
-  if(name==='linear_extrude'){allowed(['height','center'],2);const height=scalar(use('height',0,'1')),body=profile(depth+1,height);return centered(use('center',1))?`move([0, 0, -(${height}) / 2], ${body})`:body;}
+  if(name==='linear_extrude'){allowed(['height','center'],2);const height=scalar(use('height',0,'1')),body=profile(depth+1,height);const flag=use('center',1);return flag===undefined||flag==='false'?body:`move([0, 0, (${scalar(flag)}) ? -(${height}) / 2 : 0], ${body})`;}
   expect(';');
-  if(name==='cube'){allowed(['size','center'],2);const size=vector(use('size',0,'1'),true),body=`box(${size.join(', ')})`;return centered(use('center',1))?body:`move([${size.map(v=>`(${v}) / 2`).join(', ')}], ${body})`;}
+  if(name==='cube'){allowed(['size','center'],2);const size=vector(use('size',0,'1'),true),body=`box(${size.join(', ')})`;const flag=use('center',1);return flag==='true'?body:`move([${size.map(v=>centerZ(flag,v)).join(', ')}], ${body})`;}
   if(name==='sphere'){allowed(['r','d','$fn'],1);if(named.has('d')&&(named.has('r')||positional.length))unsupported('sphere: both radius and diameter',token.at);const radius=named.has('d')?`(${scalar(named.get('d'))}) / 2`:scalar(use('r',0,'1'));return `sphere(${radius}, ${segments()})`;}
-  allowed(['h','r','d','center','$fn'],2);if(named.has('d')&&(named.has('r')||positional[1]!==undefined))unsupported('cylinder: both radius and diameter',token.at);const height=scalar(use('h',0,'1')),radius=named.has('d')?`(${scalar(named.get('d'))}) / 2`:scalar(use('r',1,'1')),body=`cylinder(${radius}, ${height}, ${segments()})`;return centered(named.get('center'))?body:`move([0, 0, (${height}) / 2], ${body})`;
+  if(['r1','r2','d1','d2'].some(key=>named.has(key))||positional.length>2){
+   allowed(['h','r1','r2','d1','d2','center','$fn'],4);
+   if(named.has('r1')&&named.has('d1')||named.has('r2')&&named.has('d2')||positional[1]!==undefined&&named.has('d1')||positional[2]!==undefined&&named.has('d2'))unsupported('cylinder: duplicate taper radius',token.at);
+   const height=scalar(use('h',0,'1')),bottom=named.has('d1')?`(${scalar(named.get('d1'))}) / 2`:scalar(use('r1',1,'1')),top=named.has('d2')?`(${scalar(named.get('d2'))}) / 2`:scalar(use('r2',2,'1'));
+   const body=`frustum(${bottom}, ${top}, ${height}, ${segments()})`;return `move([0, 0, ${centerZ(use('center',3),height)}], ${body})`;
+  }
+  allowed(['h','r','d','center','$fn'],2);if(named.has('d')&&(named.has('r')||positional[1]!==undefined))unsupported('cylinder: both radius and diameter',token.at);const height=scalar(use('h',0,'1')),radius=named.has('d')?`(${scalar(named.get('d'))}) / 2`:scalar(use('r',1,'1')),body=`cylinder(${radius}, ${height}, ${segments()})`;return `move([0, 0, ${centerZ(named.get('center'),height)}], ${body})`;
  }
- let constructionAt=0;const shapes:string[]=[];while(cursor<tokens.length){if(definitions.has(cursor)){cursor=definitions.get(cursor)!;continue;}if(peek(1)==='='){const token=take(),name=token.text;take();if(shapes.length)unsupported('assignment after geometry',token.at);const v=value();expect(';');if(name==='$fn')fn=scalar(v);else{if(!/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(name)||['constructor','prototype'].includes(name))unsupported(name,token.at);if(assignments.has(name)||vectors.has(name))unsupported('variable reassignment',token.at);if(Array.isArray(v)||v==='true'||v==='false')vectors.set(name,v);else assignments.set(name,v);}if(++statements>CODE_LIMITS.statements)limited(t('Too many statements'));}else{constructionAt=tokens[cursor]?.at??0;shapes.push(shape());}}
+ let constructionAt=0;const shapes:string[]=[];while(cursor<tokens.length){if(definitions.has(cursor)){cursor=definitions.get(cursor)!;continue;}if(peek(1)==='='){const token=take(),name=token.text;take();if(shapes.length)unsupported('assignment after geometry',token.at);const v=value();expect(';');if(name==='$fn')fn=scalar(v);else{if(!/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(name)||['constructor','prototype'].includes(name))unsupported(name,token.at);if(assignments.has(name)||vectors.has(name))unsupported('variable reassignment',token.at);if(Array.isArray(v))vectors.set(name,v);else assignments.set(name,v);}if(++statements>CODE_LIMITS.statements)limited(t('Too many statements'));}else{constructionAt=tokens[cursor]?.at??0;shapes.push(shape());}}
+ if(!shapes.length)fail(t('OpenSCAD block contains no supported solid'));
  const program:CodeProgram={version:1,language:'brickwright-cad-script',parameters:{},source:`// Converted from the supported OpenSCAD subset.\n${[...assignments].map(([name,v])=>`param ${name}: scalar = ${v};`).join('\n')}\nreturn ${union(shapes)};\n`};try{compileCode(program);}catch(error){if(error instanceof CadCodeError)throw new CadCodeError(t`Converted OpenSCAD construction: ${error.detail}`,constructionAt,source,error.code);throw error;}return program;
 }

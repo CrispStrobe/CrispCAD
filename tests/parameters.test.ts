@@ -82,3 +82,12 @@ it('evaluates safe degree math with dimensional checks and bounded function argu
  expect(evaluateExpression('abs(round(-2.5))',lookup).value).toBe(3);
  for(const source of ['sin(2 mm)','max(1 mm, 2 deg)','sqrt(1 mm)','sqrt(-1)','ln(0)','sin()','pow(1)','nope(1)','sin('.repeat(34)+'0'+')'.repeat(34)])expect(()=>evaluateExpression(source,lookup),source).toThrow();
 });
+
+it('checks conditional dimensions while short-circuiting inactive expressions',()=>{
+ const noLookup=(name:string)=>{throw Error(name);};
+ expect(evaluateExpression('true ? 2 mm : sqrt(-1)',noLookup)).toEqual({value:2,length:1,angle:0});
+ expect(evaluateExpression('false && missing > 0',noLookup).value).toBe(0);expect(evaluateExpression('true || 1/0 > 0',noLookup).value).toBe(1);
+ expect(evaluateExpression('1 + 2 * 3 >= 7 && !false ? 8 : 9',noLookup).value).toBe(8);
+ expect(evaluateExpression('-5 % 3',noLookup).value).toBe(-2);
+ for(const source of ['2 mm < 3 deg','1 mm ? 2 : 3','4 % 0','true ? 1','1 ? : 2'])expect(()=>evaluateExpression(source,noLookup),source).toThrow();
+});

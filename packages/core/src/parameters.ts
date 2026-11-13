@@ -9,7 +9,7 @@ export type DrivenProperty = 'width' | 'depth' | 'height' | 'radius' |
   'scaleX' | 'scaleY' | 'scaleZ';
 export interface ParameterBinding {nodeId: string; property: DrivenProperty; expression: string}
 export interface ParametricDesign {version: 1; parameters: Record<string, NamedParameter>; bindings: ParameterBinding[]}
-export interface Quantity {value: number; length: number; angle: number}
+export interface Quantity {value: number; length: number; angle: number; boolean?: true}
 const units: Record<string, Quantity> = {
   mm: {value: 1, length: 1, angle: 0}, cm: {value: 10, length: 1, angle: 0},
   m: {value: 1000, length: 1, angle: 0}, in: {value: 25.4, length: 1, angle: 0},
@@ -24,6 +24,7 @@ function finite(q: Quantity): Quantity {
   return q;
 }
 function asUnit(q: Quantity, unit: ParameterUnit): Quantity {
+  if(q.boolean&&unit!=='scalar')error(t('boolean cannot supply a dimensional value'));
   const [length, angle] = dimensions(unit);
   // Bare numeric expressions are interpreted in the field's declared unit.
   if (q.length === 0 && q.angle === 0) return {...q, length, angle};
@@ -37,6 +38,7 @@ function evaluateMathFunction(name: string, args: Quantity[]): Quantity {
   const count = unary.includes(name) ? 1 : ['atan2','pow'].includes(name) ? 2 : ['min','max'].includes(name) ? -1 : 0;
   if (!count) return error(t`unknown mathematical function “${name}”`);
   if (count > 0 ? args.length !== count : args.length < 1) return error(t`invalid arguments for “${name}”`);
+  if(args.some(q=>q.boolean))error(t('function requires numeric arguments'));
   const a = args[0], b = args[1];
   const scalar = (q: Quantity) => {if (q.length || q.angle) error(t('function requires a dimensionless argument')); return q.value;};
   const matching = () => {if (args.some(q => q.length !== a.length || q.angle !== a.angle)) error(t('function arguments must have matching units'));};
@@ -59,68 +61,76 @@ function evaluateMathFunction(name: string, args: Quantity[]): Quantity {
   return result(name === 'exp' ? Math.exp(value) : name === 'ln' ? Math.log(value) : Math.log10(value));
 }
 
-/** Original bounded arithmetic parser. Never evals JS or accesses object members. */
+/** Original bounded expression AST. Evaluation short-circuits inactive branches. */
 export function evaluateExpression(source: string, lookup: (name: string) => Quantity): Quantity {
   if (typeof source !== 'string' || !source.trim() || source.length > 256) error(t('expression must contain 1–256 characters'));
-  const tokens: string[] = [];
-  let at = 0;
+  const tokens: string[] = []; let at = 0;
   while (at < source.length) {
     if (/\s/.test(source[at])) {at++; continue;}
-    const token = /^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|^[A-Za-z][A-Za-z0-9_]*|^[(),+*/-]/.exec(source.slice(at))?.[0];
+    const token = /^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|^[A-Za-z][A-Za-z0-9_]*|^(?:==|!=|<=|>=|&&|\|\|)|^[(),+*/%!?<>:-]/.exec(source.slice(at))?.[0];
     if (!token) error(t`unsupported expression near “${source.slice(at, at + 12)}”`);
     tokens.push(token); at += token.length;
     if (tokens.length > 128) error(t('expression has too many tokens'));
   }
+  type Expr = {kind:'literal';value:Quantity}|{kind:'name';name:string}|{kind:'unary';op:string;value:Expr}|{kind:'binary';op:string;a:Expr;b:Expr}|{kind:'call';name:string;args:Expr[]}|{kind:'conditional';test:Expr;yes:Expr;no:Expr};
   let cursor = 0;
-  function primary(depth: number): Quantity {
-    if (depth > 32) error(t('expression is too deeply nested'));
-    const token = tokens[cursor++];
-    if (token === '+' || token === '-') {const q = primary(depth + 1); return finite({...q, value: token === '-' ? -q.value : q.value});}
-    if (token === '(') {const q = sum(depth + 1); if (tokens[cursor++] !== ')') error(t('missing closing parenthesis')); return q;}
-    if (token && /^(?:\d|\.)/.test(token)) {
-      let q: Quantity = {value: Number(token), length: 0, angle: 0};
-      if (Object.hasOwn(units, tokens[cursor])) {const u = units[tokens[cursor++]]; q = {...u, value: q.value * u.value};}
-      return finite(q);
+  const scalar = (value:number):Quantity => ({value,length:0,angle:0});
+  const expect = (token:string) => {if(tokens[cursor++]!==token)error(t('expected a number, parameter or parenthesis'));};
+  function primary(depth:number):Expr {
+    if(depth>32)error(t('expression is too deeply nested'));
+    const token=tokens[cursor++];
+    if(['+','-','!'].includes(token))return {kind:'unary',op:token,value:primary(depth+1)};
+    if(token==='('){const value=conditional(depth+1);if(tokens[cursor++]!==')')error(t('missing closing parenthesis'));return value;}
+    if(token&&/^(?:\d|\.)/.test(token)){
+      let value=scalar(Number(token));if(Object.hasOwn(units,tokens[cursor])){const unit=units[tokens[cursor++]];value={...unit,value:value.value*unit.value};}
+      return {kind:'literal',value:finite(value)};
     }
-    if (token && /^[A-Za-z]/.test(token)) {
-      if (tokens[cursor] === '(') {
-        cursor++; const args: Quantity[] = [];
-        if (tokens[cursor] !== ')') do {
-          args.push(sum(depth + 1));
-          if (args.length > 32) error(t('too many function arguments'));
-          if (tokens[cursor] !== ',') break;
-          cursor++;
-        } while (true);
-        if (tokens[cursor++] !== ')') error(t('missing closing parenthesis'));
-        return evaluateMathFunction(token, args);
+    if(token&&/^[A-Za-z]/.test(token)){
+      if(tokens[cursor]==='('){cursor++;const args:Expr[]=[];
+        if(tokens[cursor]!==')')do{args.push(conditional(depth+1));if(args.length>32)error(t('too many function arguments'));if(tokens[cursor]!==',')break;cursor++;}while(true);
+        if(tokens[cursor++]!==')')error(t('missing closing parenthesis'));return {kind:'call',name:token,args};
       }
-      if (Object.hasOwn(units, token)) error(t('put a number before a unit'));
-      return finite(lookup(token));
+      if(Object.hasOwn(units,token))error(t('put a number before a unit'));
+      return token==='true'||token==='false'?{kind:'literal',value:{...scalar(token==='true'?1:0),boolean:true}}:{kind:'name',name:token};
     }
     return error(t('expected a number, parameter or parenthesis'));
   }
-  function product(depth: number): Quantity {
-    let q = primary(depth);
-    while (tokens[cursor] === '*' || tokens[cursor] === '/') {
-      const operation = tokens[cursor++], b = primary(depth);
-      if (operation === '/' && b.value === 0) error(t('division by zero'));
-      q = finite({value: operation === '*' ? q.value * b.value : q.value / b.value,
-        length: q.length + (operation === '*' ? b.length : -b.length), angle: q.angle + (operation === '*' ? b.angle : -b.angle)});
-    }
-    return q;
+  const operators=[['||'],['&&'],['==','!='],['<','<=','>','>='],['+','-'],['*','/','%']];
+  function binary(level:number,depth:number):Expr {
+    if(level===operators.length)return primary(depth);
+    let a=binary(level+1,depth);while(operators[level].includes(tokens[cursor])){const op=tokens[cursor++],b=binary(level+1,depth);a={kind:'binary',op,a,b};}return a;
   }
-  function sum(depth: number): Quantity {
-    let q = product(depth);
-    while (tokens[cursor] === '+' || tokens[cursor] === '-') {
-      const operation = tokens[cursor++], b = product(depth);
-      if (q.length !== b.length || q.angle !== b.angle) error(t('addition/subtraction requires matching units (for example width + 5 mm)'));
-      q = finite({...q, value: q.value + (operation === '+' ? b.value : -b.value)});
-    }
-    return q;
+  function conditional(depth:number):Expr {
+    if(depth>32)error(t('expression is too deeply nested'));
+    const test=binary(0,depth);if(tokens[cursor]!=='?')return test;cursor++;
+    const yes=conditional(depth+1);expect(':');return {kind:'conditional',test,yes,no:conditional(depth+1)};
   }
-  const result = sum(0);
-  if (cursor !== tokens.length) error(t`unexpected token “${tokens[cursor]}”`);
-  return result;
+  const root=conditional(0);if(cursor!==tokens.length)error(t`unexpected token “${tokens[cursor]}”`);
+  const truth=(q:Quantity):boolean=>{if(q.length||q.angle)error(t('condition requires a dimensionless value'));return q.value!==0;};
+  const bool=(value:boolean):Quantity=>({...scalar(value?1:0),boolean:true});
+  const numeric=(q:Quantity)=>{if(q.boolean)error(t('arithmetic requires numeric values'));};
+  const matching=(a:Quantity,b:Quantity)=>{if(a.length!==b.length||a.angle!==b.angle)error(t('comparison requires matching units'));};
+  function evaluate(node:Expr):Quantity {
+    if(node.kind==='literal')return node.value;
+    if(node.kind==='name')return finite(lookup(node.name));
+    if(node.kind==='call')return evaluateMathFunction(node.name,node.args.map(evaluate));
+    if(node.kind==='conditional')return evaluate(truth(evaluate(node.test))?node.yes:node.no);
+    if(node.kind==='unary'){const q=evaluate(node.value);if(node.op==='!')return bool(!truth(q));numeric(q);return finite({...q,value:node.op==='-'?-q.value:q.value});}
+    const a=evaluate(node.a),op=node.op;
+    if(op==='&&')return bool(truth(a)&&truth(evaluate(node.b)));
+    if(op==='||')return bool(truth(a)||truth(evaluate(node.b)));
+    const b=evaluate(node.b);
+    if(['==','!=','<','<=','>','>='].includes(op)){matching(a,b);if((op==='=='||op==='!=')&&!!a.boolean!==!!b.boolean)return bool(op==='!=');return bool((op==='=='?a.value===b.value:op==='!='?a.value!==b.value:op==='<'?a.value<b.value:op==='<='?a.value<=b.value:op==='>'?a.value>b.value:a.value>=b.value));}
+    numeric(a);numeric(b);
+    if(op==='+'||op==='-'){
+      if(a.length!==b.length||a.angle!==b.angle)error(t('addition/subtraction requires matching units (for example width + 5 mm)'));
+      return finite({...a,value:a.value+(op==='+'?b.value:-b.value)});
+    }
+    if((op==='/'||op==='%')&&b.value===0)error(t('division by zero'));
+    if(op==='%'){matching(a,b);return finite({...a,value:a.value%b.value});}
+    return finite({value:op==='*'?a.value*b.value:a.value/b.value,length:a.length+(op==='*'?b.length:-b.length),angle:a.angle+(op==='*'?b.angle:-b.angle)});
+  }
+  return evaluate(root);
 }
 
 export function evaluateParameters(design: ParametricDesign): Record<string, Quantity> {

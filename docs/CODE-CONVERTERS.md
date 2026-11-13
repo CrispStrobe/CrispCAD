@@ -11,14 +11,16 @@ The GUI, SDK, CLI and MCP share the converters.
 
 | Input | Supported |
 | --- | --- |
-| OpenSCAD | Scalar/vector/boolean assignments before geometry; arithmetic, degree math and dependent parameters; top-level reusable modules and scalar/vector functions with positional/named/default arguments; declarative module/operator-local bindings; fixed vector indexing; cube/sphere/cylinder; centering and radius/diameter arguments; translate, XYZ/scalar-Z rotation, positive scale; union/difference/intersection; linear_extrude of a simple polygon, square or circle. |
-| JSCAD | CommonJS/ES imports of @jscad/modeling; exported main or explicitly selected entry; helper functions, destructuring/default arguments, arithmetic/Math; bounded loops and arrays; scalar input parameters; cube/cuboid/cylinder/sphere/polygon, rectangle/circle/ellipse profiles and planar profile transforms; Booleans; translate/rotate/scale and axis shortcuts; flat output colours; basic vec2 maths and untwisted extrudeLinear. |
-| Native CAD Script | Existing primitives/CSG/transforms/repeat, plus extrude(height, [[x,y], ...]) for a simple XY profile. Profile closes automatically, needs 3–256 points, and rejects zero edges/area and self-intersections. |
+| OpenSCAD | Scalar/vector/boolean assignments before geometry; arithmetic, degree math and dependent parameters; top-level reusable modules and scalar/vector functions with positional/named/default arguments; declarative module/operator-local bindings; fixed vector indexing; cube/sphere/cylinder, including r1/r2 and d1/d2 tapers; parametric range/scalar-list loops, fixed vector-list loops, if/else, scalar conditional/comparison/logic expressions; centering and radius/diameter arguments; translate, XYZ/scalar-Z rotation, positive scale; union/difference/intersection and 3D convex hull; linear_extrude of a simple polygon, square or circle. |
+| JSCAD | CommonJS/ES imports of @jscad/modeling; exported main or explicitly selected entry; helper functions, destructuring/default arguments, arithmetic/Math; bounded loops and arrays; scalar input parameters; cube/cuboid/cylinder/sphere/polygon, rectangle/circle/ellipse profiles and planar profile transforms; Booleans and 3D convex hull; circular cylinderElliptic tapers; empty 3D geometry; translate/rotate/scale and axis shortcuts; flat output colours; basic vec2 maths and untwisted extrudeLinear. |
+| Native CAD Script | Primitives/CSG/transforms/repeat, frustum, hull, empty, choose, forRange and forValues, plus extrude(height, [[x,y], ...]) for a simple XY profile. Profile closes automatically, needs 3–256 points, and rejects zero edges/area and self-intersections. |
 
-Cylinder tessellation supports 3–256 segments, including hexagonal parts. Sphere
-limits remain 12–96 segments. OpenSCAD round surfaces use 48 segments if $fn is
-absent; this differs from OpenSCAD's adaptive defaults. Analytic intent and CSG
-order are retained, but matching tessellation/triangle layout is not promised.
+Cylinder/taper tessellation supports 3–4096 segments and sphere tessellation
+4–4096, subject to the 200,000 estimated-face budget. Small sphere counts may be
+rounded by Manifold; triangle layout is not promised. OpenSCAD uses 48 segments
+if $fn is absent, differing from its adaptive defaults. Extrusion profiles retain
+the 256-point limit. Zero-sized boxes/cylinders/spheres contribute empty geometry;
+a whole code object must still produce a printable solid for insertion.
 
 Source limit is 32 KiB. JSCAD has 20,000 interpreter steps, 64 iterations per loop,
 256 array items and call depth 32. The parsed AST is bounded to 8,192 nodes
@@ -30,14 +32,16 @@ limits are distinct from unsupported features and malformed input.
 
 Known gaps, deliberately diagnosed:
 
-- OpenSCAD include/use, for/if, conditional expressions, nested definitions, module
+- OpenSCAD include/use, recursive conditional function evaluation, vector/string
+  conditional expressions, multiple loop bindings in one for (nest for operators),
+  nested definitions, module
   child operators, global reassignment/assignment after geometry, assignments in
   anonymous blocks, 2D-profile-local bindings,
-  2D profile Booleans/holes, twisted/scaled extrusion, hull/minkowski, imported
+  2D profile Booleans/holes, twisted/scaled extrusion, minkowski, imported
   meshes and arbitrary-axis transforms. BOSL2 library execution is not supported.
 - JSCAD external/local modules, arbitrary JavaScript/host APIs, unsupported math
   helpers and geometry APIs, 2D profile Booleans/holes, slice/callback extrusion,
-  hulls, lofts, curved sweeps and per-face materials. The pinned nuts-and-bolts
+  2D hulls/hull chains, lofts, curved sweeps and per-face materials. The pinned nuts-and-bolts
   example currently stops specifically at extrusions.extrudeFromSlices.
 
 This is a tested subset, not a full OpenSCAD or JSCAD implementation. The goal is
@@ -62,6 +66,20 @@ blocks have different scope behavior in OpenSCAD: assignments there are explicit
 rejected until scope flattening is implemented. Global assignments still need to
 precede geometry and cannot be reassigned. Unused declarations/definitions need
 not produce geometry; a library-only file is not an instantiable solid.
+
+Range and scalar-list loops lower to native forRange/forValues templates and
+recompute their instance counts, positions and dimensions after parameter edits.
+Fixed vector-list loops expand symbolically. Loops allow at most 64 values each,
+with global expansion/node/face budgets and a 4,096-evaluation guard against nested
+explosion. Two-component descending ranges retain the documented legacy OpenSCAD
+endpoint-swapping behavior; explicit stepped ranges remain directional.
+
+Native choose resolves only the selected shape branch. Scalar conditions use an
+AST with short-circuit &&/|| and lazy ternary evaluation, retaining native parameter
+dependencies. Inactive numerical domains do not fail. Booleans retain their type
+for equality (true is not the number 1). Dimensions are checked; shape dimensions
+must be numeric. Recursive source functions still expand symbolically and hit
+explicit recursion limits rather than implementing general recursive execution.
 
 Math functions include degree-based sin/cos/tan and inverse trigonometry, atan2,
 sqrt, abs, floor/ceil/round, exp/ln/log, pow and min/max. This bounded whitelist is
@@ -152,7 +170,7 @@ Basic Booleans retains five output records and flat colour metadata. All 34 nati
 examples round-trip via the supported OpenSCAD and JSCAD syntax. Exported JSCAD is
 checked against the actual MIT modeling library for volume and bounds.
 
-Next valuable work is bounded OpenSCAD loops/conditionals, anonymous-scope flattening,
+Next valuable work is typed source-expression/list handling, anonymous-scope flattening,
 callback/slice loft IR and 2D profile operations. Add a small pinned failing fixture with exact
 licence/provenance for each capability before changing the converter. Never turn
 an unsupported operation into an unreported approximation or execute source JS.

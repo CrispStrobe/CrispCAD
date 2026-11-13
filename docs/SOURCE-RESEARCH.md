@@ -127,3 +127,19 @@ It fingerprints the separate OpenSCAD importer as well as the core compiler,
 interchange layer, JSCAD interpreter and parameter engine. These sources remain
 research-only; the regression fixtures added to the application tests are original
 small examples of the documented language behavior.
+
+### Engine/control-flow follow-up
+
+The same 256-file replay now yields **38 positive-solid conversions**, 210
+unsupported, 5 limited and 3 failures. All ten earlier successes still convert.
+Native loops/conditional branches retain scalar dependencies; tapered cylinders,
+3D convex hulls and finer tessellation remove common engine gaps. Native budgets
+now carry resource-limit codes rather than generic malformed-source errors.
+One failure has a malformed vector also rejected by the syntax oracle; another
+is declarations-only; the remaining case produces no printable solid.
+The report and raw sources remain outside the repo at
+`/tmp/brickwright-cad-research/thingiverse-openscad/probe-256-control-final.json`.
+Positive geometry is not an independent OpenSCAD semantic-equivalence oracle.
+Analytic volumes/bounds and the MIT JSCAD implementation independently check the
+new taper/hull/empty export cases; a parameterized imported hull/taper/loop object
+passes actual Jolt collision qualification and rejects stale certificates.

@@ -6,6 +6,8 @@ import {resolve,join} from 'node:path';
 import {chromium,webkit,devices} from '@playwright/test';
 const root=resolve(process.argv[2]??'/tmp/brickwright-cad-constraint-bench');
 const output=resolve(process.argv[3]??'/tmp/cad-constraint-browser-results.json');
+const config=process.argv[4]?JSON.parse(await readFile(resolve(process.argv[4]),'utf8')):{};
+const cases=config.cases??[['linear-chain',10],['linear-chain',100],['linear-chain',500],['circle-line',1],['circle-line',10],['circle-line',50],['free-chain',10],['free-chain',50],['free-chain',100]];
 const worker=`
 const started=performance.now();
 (async()=>{
@@ -28,13 +30,13 @@ const server=createServer(async(req,res)=>{
  try{res.setHeader('Content-Type',name.endsWith('.wasm')?'application/wasm':'text/javascript');res.end(await readFile(join(root,name)));}catch{res.writeHead(404);res.end();}
 });
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const url=`http://127.0.0.1:${server.address().port}`;
-const results={recordedAt:new Date().toISOString(),runtime:process.version,platform:process.platform,arch:process.arch,dart:'3.12.2',solverCommit:'13f2b04925443a75b6766c969b10aefc65978a0e',samples:7,warmups:2,artifacts:{},runs:[]};
+const results={recordedAt:new Date().toISOString(),runtime:process.version,platform:process.platform,arch:process.arch,dart:config.dart??'3.12.2',solverCommit:config.solverCommit??'13f2b04925443a75b6766c969b10aefc65978a0e',samples:7,warmups:2,artifacts:{},runs:[]};
 for(const name of allowed)results.artifacts[name]=(await stat(join(root,name))).size;
 try{
  for(const [name,type,options] of [['chromium',chromium,{}],['ipad-webkit',webkit,devices['iPad Pro 11']]]){
   const browser=await type.launch({headless:true});
   try {const page=await browser.newPage(options);await page.goto(url);const userAgent=await page.evaluate(()=>navigator.userAgent);
-   for(const backend of ['js','wasm'])for(const [kind,size] of [['linear-chain',10],['linear-chain',100],['linear-chain',500],['circle-line',1],['circle-line',10],['circle-line',50],['free-chain',10],['free-chain',50],['free-chain',100]]){
+   for(const backend of ['js','wasm'])for(const [kind,size] of cases){
     const run=await page.evaluate(({backend,kind,size})=>new Promise(resolve=>{
       const t=performance.now(),w=new Worker(`/worker.js?backend=${backend}`);let startupMs;
       const timer=setTimeout(()=>{w.terminate();resolve({error:'30-second worker deadline exceeded'});},30000);

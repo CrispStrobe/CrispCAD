@@ -15,3 +15,12 @@ test('imports OpenSCAD functions and module-local bindings with live math parame
  await expect(panel.getByRole('status',{name:'Code status'})).toContainText('OpenSCAD subset converted');await expect(panel.getByLabel('CAD code source',{exact:true})).toHaveValue(/sin/);
  await panel.getByRole('button',{name:'Preview code',exact:true}).click();await expect(panel.getByRole('status',{name:'Code status'})).toContainText('Preview ready');await panel.getByRole('button',{name:'Create code object',exact:true}).click();await expect(panel).toBeHidden();await ready(page);await expect(page.getByTestId('object-name')).toHaveCount(1);
 });
+test('imports a parametric loop and recomputes tapered instances after a numeric edit',async({page})=>{
+ await page.goto('/');await ready(page);await page.getByRole('button',{name:'Code',exact:true}).click();const panel=page.getByRole('dialog',{name:'Code object',exact:true});
+ await panel.getByLabel('Import CAD source',{exact:true}).setInputFiles({name:'copies.scad',mimeType:'text/plain',buffer:Buffer.from('copies=3; for(i=[0:copies-1]) translate([i*10,0,0]) if(i>=0) cylinder(h=8,r1=3,r2=1,$fn=24);')});
+ await expect(panel.getByRole('status',{name:'Code status'})).toContainText('OpenSCAD subset converted');await expect(panel.getByLabel('CAD code source',{exact:true})).toHaveValue(/forRange/);
+ await panel.getByRole('button',{name:'Preview code',exact:true}).click();await expect(panel.getByRole('status',{name:'Code status'})).toContainText('Preview ready');
+ const first=await panel.locator('.code-preview-pane p').first().textContent();await panel.getByLabel('Code parameter copies',{exact:true}).fill('5');
+ await panel.getByRole('button',{name:'Preview code',exact:true}).click();await expect(panel.getByRole('status',{name:'Code status'})).toContainText('Preview ready');await expect(panel.locator('.code-preview-pane p').first()).not.toHaveText(first!);
+ await panel.getByRole('button',{name:'Create code object',exact:true}).click();await expect(panel).toBeHidden();await ready(page);await expect(page.getByTestId('object-name')).toHaveCount(1);
+});

@@ -26,7 +26,7 @@ to use its source default. Inputs are scoped to this object, independently of
 model parameters; copying an object retains independent local inputs. Updating
 source preserves object ID, placement, appearance and physics settings. Units
 are millimetres/degrees; scalar means dimensionless. Expressions support named
-parameters, `+ - * /`, parentheses and explicit mm/cm/m/in/deg/rad units.
+parameters, `+ - * / %`, comparisons, &&/||/!, lazy ternaries, parentheses and explicit mm/cm/m/in/deg/rad units.
 The final `return` is required. Named shapes support forward references; cycles
 and duplicate declarations are errors. `//` starts a comment.
 
@@ -34,6 +34,12 @@ and duplicate declarations are errors. `//` starts a comment.
 | --- | --- |
 | `box(width, depth, height)` | Centred box |
 | `cylinder(radius, height[, segments])` | Centred cylinder along Z |
+| `frustum(bottom, top, height[, segments])` | Centred taper; one radius can be zero |
+| `hull(a, ...)` | 3D convex hull, including a single concave input |
+| `empty()` | No solid, useful in branches |
+| `choose(condition, a, b)` | Resolve only the selected branch |
+| `forRange(i,start,end,step,shape)` | Parametric directed range, at most 64 values |
+| `forValues(i,[values],shape)` | Parametric scalar-list instances |
 | `sphere(radius[, segments])` | Centred sphere |
 | `union(a, b, ...)` | Combine solids |
 | `subtract(base, cutter, ...)` | Remove cutters from base |

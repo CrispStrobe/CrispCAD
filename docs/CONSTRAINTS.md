@@ -1,10 +1,38 @@
 # Constraint solving: concrete next architecture
 
-Recommendation: extend the owner's MIT `dart_csp` with a separate geometric
-solving layer, and keep interval/discrete solving available alongside it. Do not
-put interval branch-and-prune on every pointer move. First define a backend-neutral
-sketch model and result protocol in CAD core; benchmark the geometric solver
-behind a worker adapter before making it a production dependency.
+## Updated assessment — 2026-11-13
+
+Integrate the owner's MIT `dart_csp` geometric module behind a worker adapter;
+do not recreate that solver. Current reviewed pin
+[`894a11d74dae312ca99578532b27cca0b51fd34f`](https://github.com/CrispStrobe/dart_csp/tree/894a11d74dae312ca99578532b27cca0b51fd34f)
+is version 2.4.0 with no declared runtime package dependencies. It now supplies
+persistent geometric sessions, component decomposition, sparse derivatives,
+rank diagnostics, soft drag targets, quaternion poses, rigid/revolute mates,
+independent candidate forks and transactional CAD feature regeneration. Its
+reference analytic backend supports constrained profiles/extrusions and instances;
+its documentation still excludes general Boolean/fillet/shell/revolve support.
+This changes the earlier interval-only recommendation substantially.
+
+The upstream geometric-edit, parametric-bracket, articulated-linkage and coupled
+72-coordinate chain examples passed locally. Our independent
+[geometric probe](../experiments/constraints/geometric/README.md) also runs in
+native Dart, JavaScript and Wasm browser workers. It checks coordinates, hard
+residuals and freedom counts on 10/100/500 independent points and a soft circle drag.
+See [measurements and limits](CONSTRAINT-PERFORMANCE.md). No solver is integrated
+into the production app yet; the evidence supports building that adapter next.
+
+Keep the backend-neutral entity/constraint model and history transaction boundary
+described below. Reuse existing app IDs/feature dependencies through an adapter;
+do not introduce a second independently mutable Dart document. Convert app degrees
+to solver radians explicitly, keep one length unit (mm), and treat nullable rank
+as unknown rather than zero freedom. Numerical failure/limits remain different
+from proof of inconsistency. Solver mates and Jolt runtime joints remain separate.
+
+The original review and proposed extension list below are **historical evidence
+for pin 13f2b04**. Several proposed upstream capabilities now exist; that list must
+not be read as a current claim that dart_csp lacks them. The remaining work here is
+our sketch schema, retained profile extraction and persistent worker integration,
+plus physical-iPad qualification and geometry/transaction tests.
 
 ## What was actually reviewed
 

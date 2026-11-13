@@ -492,3 +492,25 @@ ff362ef5595fe59be03ef3ce19863bcafb2d8095. The running app's asset receipt report
 that revision with dirty=false, and its native bundle reports build 14. Native
 magnification isolation and the complete native menu/clipboard/library/history
 smoke passed. Existing projects and their histories were retained.
+
+## Retained control flow, engine extension and current constraint review
+
+Native CAD Script adds parametric range/value loops, lazy shape choice, empty
+geometry, typed boolean/conditional expressions, tapered cylinders and 3D hulls.
+OpenSCAD range/list loops and if/else retain their source scalar dependencies;
+JSCAD gains circular tapers, 3D hull and empty-geometry interchange. Tessellation
+uses the global mesh budget with distinct resource-limit diagnostics. Real Jolt
+mass/collision/drop checks cover a regenerated imported hull/taper/loop object.
+
+Local verification: production build, 418 unit tests, 16 desktop/iPad WebKit
+code-import/camera/localization workflows, 1,091-message German audit and six
+SDK packages installed offline with an empty cache. The fixed research sample
+improves 10 -> 38 positive solids without losing previous successes. Reviewed
+library coverage remains 36/38, with two explicit feature gaps.
+
+The updated MIT dart_csp 2.4.0 was pinned at 894a11d74dae312ca99578532b27cca0b51fd34f.
+Its actual geometry/transaction/linkage examples passed; a new original probe ran
+native and in JS/Wasm workers with independent residual/freedom checks. Fresh
+results and qualified recommendations supersede the old interval-only assessment.
+The solver remains an isolated development experiment pending our sketch/worker
+integration; see CONSTRAINTS.md and CONSTRAINT-PERFORMANCE.md.

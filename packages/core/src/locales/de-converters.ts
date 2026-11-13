@@ -1,5 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+  "Tapers: frustum(bottom, top, height[,segments]). Convex hull: hull(a,...). empty() contributes no solid.": "Kegelstümpfe: frustum(unten, oben, höhe[,segmente]). Konvexe Hülle: hull(a,...). empty() trägt keinen Körper bei.",
+  "Control flow: choose(condition, thenShape, elseShape), forRange(index,start,end,step,shape), forValues(index,[values],shape). Scalar conditions use comparisons, &&, ||, ! and condition ? a : b.": "Kontrollfluss: choose(bedingung, dannKörper, sonstKörper), forRange(index,start,ende,schritt,körper), forValues(index,[werte],körper). Skalare Bedingungen verwenden Vergleiche, &&, ||, ! und bedingung ? a : b.",
+  "Loop exceeds 64 values": "Die Schleife überschreitet 64 Werte",
+  "Loop step must be nonzero": "Die Schrittweite der Schleife darf nicht null sein",
+  "Code evaluation budget exceeded": "Budget für die Codeauswertung überschritten",
+  "condition requires a dimensionless value": "Die Bedingung benötigt einen dimensionslosen Wert",
+  "comparison requires matching units": "Der Vergleich benötigt übereinstimmende Einheiten",
+  "boolean cannot supply a dimensional value": "Ein Wahrheitswert kann keinen dimensionsbehafteten Wert liefern",
+  "function requires numeric arguments": "Die Funktion benötigt numerische Argumente",
+  "arithmetic requires numeric values": "Arithmetik benötigt numerische Werte",
+  "Expected a numeric modeling argument": "Ein numerisches Modellierungsargument wird erwartet",
+  "At least one taper radius must be positive": "Mindestens ein Radius des Kegelstumpfs muss positiv sein",
   "OpenSCAD array nesting limit exceeded": "OpenSCAD-Verschachtelungsgrenze für Listen überschritten",
   "OpenSCAD array limit exceeded": "OpenSCAD-Listengrenze überschritten",
   "Expected an OpenSCAD polygon point list": "Eine OpenSCAD-Punktliste für das Polygon wird erwartet",
