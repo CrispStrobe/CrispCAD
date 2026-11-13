@@ -1,0 +1,3969 @@
+{
+  "format": "brickwright-local-example-library",
+  "version": 1,
+  "capturedOn": "2026-11-13",
+  "pathBase": "library/",
+  "reproduction": {
+    "command": "npm run library:examples:check",
+    "generator": {
+      "path": "../scripts/generate-example-library.mjs",
+      "format": "mjs",
+      "sha256": "ecd47c1a5329edc574aad450336e7dd6fc92ba6ef8a4935114a0e3fd044621a6",
+      "bytes": 6933
+    },
+    "packageLockSha256": "d798156b8ec34218118c8169e4c57e4e9685968e56b1eef6f99111b370eeb12a",
+    "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c",
+    "sourceModule": {
+      "path": "sources/brickwright/code-examples.ts",
+      "format": "typescript",
+      "sha256": "8b705fd547f68c80081f4723a3f9517558848a893a9bf98d8fc127de3c5d0a1f",
+      "bytes": 6874
+    }
+  },
+  "assets": [
+    {
+      "id": "brickwright-box",
+      "exampleId": "box",
+      "version": 1,
+      "title": "Dimensioned box",
+      "group": "basics",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/box.cad",
+        "format": "cad-script",
+        "sha256": "2e3be873cb60ffcc45662b5af91a4bc092164c1a472c8c4356c71b5e100c3b57",
+        "bytes": 90
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/box.stl",
+          "format": "stl",
+          "sha256": "aff7a9f87434f6f0e498cec9179255722c3e77341969f1c6e0048aaf8245c377",
+          "bytes": 684
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "aff7a9f87434f6f0e498cec9179255722c3e77341969f1c6e0048aaf8245c377",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 12,
+        "boundsMm": {
+          "min": [
+            -15,
+            -10,
+            -5
+          ],
+          "max": [
+            15,
+            10,
+            5
+          ]
+        },
+        "signedVolumeMm3": 6000
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-cylinder",
+      "exampleId": "cylinder",
+      "version": 1,
+      "title": "Cylinder",
+      "group": "basics",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/cylinder.cad",
+        "format": "cad-script",
+        "sha256": "96912b4a8044ccdfd4800802f039a0836bddb72991cdec63a735a8a3a5098fbc",
+        "bytes": 72
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/cylinder.stl",
+          "format": "stl",
+          "sha256": "fa7351161533f6bba4362a5287f784834952b001c7c283c77d9e185c758cbec0",
+          "bytes": 9484
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "fa7351161533f6bba4362a5287f784834952b001c7c283c77d9e185c758cbec0",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 188,
+        "boundsMm": {
+          "min": [
+            -10,
+            -10,
+            -10
+          ],
+          "max": [
+            10,
+            10,
+            10
+          ]
+        },
+        "signedVolumeMm3": 6265.257199592777
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-sphere",
+      "exampleId": "sphere",
+      "version": 1,
+      "title": "Sphere",
+      "group": "basics",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/sphere.cad",
+        "format": "cad-script",
+        "sha256": "6f9d1809f4cc1b79e09de4e2a3772102e62a65ce665dbb6f3001b4828c2d508a",
+        "bytes": 46
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/sphere.stl",
+          "format": "stl",
+          "sha256": "c8340e5946b859cc129178abb278e5c0acf98790a1a75d4218e1ded5d7df5715",
+          "bytes": 102484
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "c8340e5946b859cc129178abb278e5c0acf98790a1a75d4218e1ded5d7df5715",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 2048,
+        "boundsMm": {
+          "min": [
+            -12,
+            -12,
+            -12
+          ],
+          "max": [
+            12,
+            12,
+            12
+          ]
+        },
+        "signedVolumeMm3": 7197.35602778933
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-ellipsoid",
+      "exampleId": "ellipsoid",
+      "version": 1,
+      "title": "Ellipsoid",
+      "group": "basics",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/ellipsoid.cad",
+        "format": "cad-script",
+        "sha256": "654a7031774a55d343b5b39a56758d9de050372d9d9573fdac799e36f74b0069",
+        "bytes": 65
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/ellipsoid.stl",
+          "format": "stl",
+          "sha256": "eafd48163e9a8490fd836e1cf8c8088a1ad68540c55e72be6f187dc603e69a26",
+          "bytes": 102484
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "eafd48163e9a8490fd836e1cf8c8088a1ad68540c55e72be6f187dc603e69a26",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 2048,
+        "boundsMm": {
+          "min": [
+            -16,
+            -10,
+            -7
+          ],
+          "max": [
+            16,
+            10,
+            7
+          ]
+        },
+        "signedVolumeMm3": 4664.9528815697895
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-units",
+      "exampleId": "units",
+      "version": 1,
+      "title": "Dimensions with units",
+      "group": "basics",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/units.cad",
+        "format": "cad-script",
+        "sha256": "e349452cfe626625a87d2a1204251fcc27e528110f14250f2448e160a4f64f77",
+        "bytes": 93
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/units.stl",
+          "format": "stl",
+          "sha256": "c6d10e60bbbe734e3a5d511376dc5a6a34e8a837f558b3cf3b40a3897b413ace",
+          "bytes": 684
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "c6d10e60bbbe734e3a5d511376dc5a6a34e8a837f558b3cf3b40a3897b413ace",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 12,
+        "boundsMm": {
+          "min": [
+            -25.399999618530273,
+            -15,
+            -2.5
+          ],
+          "max": [
+            25.399999618530273,
+            15,
+            2.5
+          ]
+        },
+        "signedVolumeMm3": 7619.999885559082
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-angled-beam",
+      "exampleId": "angled-beam",
+      "version": 1,
+      "title": "Angled beam",
+      "group": "basics",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/angled-beam.cad",
+        "format": "cad-script",
+        "sha256": "3ceada218a6055e6c79053ed58e72e6e2d4de718aa29c417c621dbe7612da285",
+        "bytes": 60
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/angled-beam.stl",
+          "format": "stl",
+          "sha256": "49dc1077b956eb371d534cb00897a7d40347ae90dbd5c021e222fa59fc8fcec6",
+          "bytes": 684
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "49dc1077b956eb371d534cb00897a7d40347ae90dbd5c021e222fa59fc8fcec6",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 12,
+        "boundsMm": {
+          "min": [
+            -23.650634765625,
+            -15.964101791381836,
+            -3
+          ],
+          "max": [
+            23.650634765625,
+            15.964101791381836,
+            3
+          ]
+        },
+        "signedVolumeMm3": 2400.00006422773
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-mounting-plate",
+      "exampleId": "mounting-plate",
+      "version": 1,
+      "title": "Four-hole mounting plate",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/mounting-plate.cad",
+        "format": "cad-script",
+        "sha256": "506ebd34fe25da2f905c96550e0f6d94bb0fd7522f2156a2488d96e48ece656c",
+        "bytes": 239
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/mounting-plate.stl",
+          "format": "stl",
+          "sha256": "573a9526d937b84b5fa351496da3868208f50e5d1f2249182ec9c7d908321cdd",
+          "bytes": 39884
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "573a9526d937b84b5fa351496da3868208f50e5d1f2249182ec9c7d908321cdd",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 796,
+        "boundsMm": {
+          "min": [
+            -30,
+            -20,
+            -2.5
+          ],
+          "max": [
+            30,
+            20,
+            2.5
+          ]
+        },
+        "signedVolumeMm3": 11436.126818871646
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-three-bores",
+      "exampleId": "three-bores",
+      "version": 1,
+      "title": "Three-bore plate",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/three-bores.cad",
+        "format": "cad-script",
+        "sha256": "88af6cf4e2bb51aa29cd9d6e7cf14742005835a81c8dbaa20fe5fb56ae3d47df",
+        "bytes": 154
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/three-bores.stl",
+          "format": "stl",
+          "sha256": "dd55b9434d0fd504afb7f233b62afb40ceb543a27a326e5288d33102c3f6b21c",
+          "bytes": 30084
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "dd55b9434d0fd504afb7f233b62afb40ceb543a27a326e5288d33102c3f6b21c",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 600,
+        "boundsMm": {
+          "min": [
+            -30,
+            -12.5,
+            -2.5
+          ],
+          "max": [
+            30,
+            12.5,
+            2.5
+          ]
+        },
+        "signedVolumeMm3": 7077.09513441612
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-washer",
+      "exampleId": "washer",
+      "version": 1,
+      "title": "Washer",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/washer.cad",
+        "format": "cad-script",
+        "sha256": "59b4fe0abc498a2fab18f4ae7d9896229813877c0bf64dee0e645685690ece83",
+        "bytes": 129
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/washer.stl",
+          "format": "stl",
+          "sha256": "369f19ae979fad0fe20504e3cadd6d149455fbbc7f523c4d73bffc1ef42361a5",
+          "bytes": 19284
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "369f19ae979fad0fe20504e3cadd6d149455fbbc7f523c4d73bffc1ef42361a5",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 384,
+        "boundsMm": {
+          "min": [
+            -12,
+            -12,
+            -1
+          ],
+          "max": [
+            12,
+            12,
+            1
+          ]
+        },
+        "signedVolumeMm3": 801.9529066784077
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-spacer",
+      "exampleId": "spacer",
+      "version": 1,
+      "title": "Tubular spacer",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/spacer.cad",
+        "format": "cad-script",
+        "sha256": "6da53fed4e5c37bd9ed5c308c4fdc6819e01155c2bd7d6e0bf4008fb568d70c5",
+        "bytes": 120
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/spacer.stl",
+          "format": "stl",
+          "sha256": "01735752509ed37e0bbff3060d053b93e9d09fb5f5009a03dada7a22ecb97473",
+          "bytes": 19284
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "01735752509ed37e0bbff3060d053b93e9d09fb5f5009a03dada7a22ecb97473",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 384,
+        "boundsMm": {
+          "min": [
+            -7,
+            -7,
+            -9
+          ],
+          "max": [
+            7,
+            7,
+            9
+          ]
+        },
+        "signedVolumeMm3": 2255.4926504738505
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-sleeve",
+      "exampleId": "sleeve",
+      "version": 1,
+      "title": "Thin sleeve",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/sleeve.cad",
+        "format": "cad-script",
+        "sha256": "dc6065913626aaa5862ea5e80d556872c11967df22f81f21af925a8d9f5c737b",
+        "bytes": 130
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/sleeve.stl",
+          "format": "stl",
+          "sha256": "27c6a60ecfc2b5ee7101c797697fd3af1fd78ea199e7f9ac4bd4e0d859a0bb88",
+          "bytes": 19284
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "27c6a60ecfc2b5ee7101c797697fd3af1fd78ea199e7f9ac4bd4e0d859a0bb88",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 384,
+        "boundsMm": {
+          "min": [
+            -15,
+            -15,
+            -12.5
+          ],
+          "max": [
+            15,
+            15,
+            12.5
+          ]
+        },
+        "signedVolumeMm3": 4385.679931431977
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-boss",
+      "exampleId": "boss",
+      "version": 1,
+      "title": "Mounting boss",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/boss.cad",
+        "format": "cad-script",
+        "sha256": "576d557c2aa3143063ca84e6d11779f7eda76347b1f58673b7a5f1a5d1370535",
+        "bytes": 127
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/boss.stl",
+          "format": "stl",
+          "sha256": "8c1e409c26b629e6b7de4ada6aba10e7b9791426237b9490fd2863885e815fe7",
+          "bytes": 20084
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "8c1e409c26b629e6b7de4ada6aba10e7b9791426237b9490fd2863885e815fe7",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 400,
+        "boundsMm": {
+          "min": [
+            -17.5,
+            -17.5,
+            0
+          ],
+          "max": [
+            17.5,
+            17.5,
+            20
+          ]
+        },
+        "signedVolumeMm3": 7543.93850118566
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-hub",
+      "exampleId": "hub",
+      "version": 1,
+      "title": "Flanged hub",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/hub.cad",
+        "format": "cad-script",
+        "sha256": "2b415e03b03448b80518621c5147794672f79c1d24242ae7bb56a67b03749724",
+        "bytes": 131
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/hub.stl",
+          "format": "stl",
+          "sha256": "9e9d63b14b8727d5e95c7ab37941da1b83163b107c3fa13dd766bff6164ade20",
+          "bytes": 30484
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "9e9d63b14b8727d5e95c7ab37941da1b83163b107c3fa13dd766bff6164ade20",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 608,
+        "boundsMm": {
+          "min": [
+            -18,
+            -18,
+            0
+          ],
+          "max": [
+            18,
+            18,
+            20
+          ]
+        },
+        "signedVolumeMm3": 7117.332397107394
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-shaft-collar",
+      "exampleId": "shaft-collar",
+      "version": 1,
+      "title": "Split shaft collar",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/shaft-collar.cad",
+        "format": "cad-script",
+        "sha256": "27b5e4c533f774513fdb913b3d151b82317a9baee5f64a15c5edd4e826878708",
+        "bytes": 102
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/shaft-collar.stl",
+          "format": "stl",
+          "sha256": "8c04e9e90f383fee06acbacea5cd86efa014b2efaaa81a406914cb31242051cf",
+          "bytes": 19084
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "8c04e9e90f383fee06acbacea5cd86efa014b2efaaa81a406914cb31242051cf",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 380,
+        "boundsMm": {
+          "min": [
+            -14,
+            -14,
+            -5
+          ],
+          "max": [
+            13.934456825256348,
+            14,
+            5
+          ]
+        },
+        "signedVolumeMm3": 4464.954190052802
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-l-bracket",
+      "exampleId": "l-bracket",
+      "version": 1,
+      "title": "L bracket",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/l-bracket.cad",
+        "format": "cad-script",
+        "sha256": "29acb762bb93b9618f9154c527d49628b7a9993fd60e645238a64eef42726d36",
+        "bytes": 198
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/l-bracket.stl",
+          "format": "stl",
+          "sha256": "49efea0455378f20b68b6504386103ff743d92d50f7762fe1e0d5f77cfc1f4b7",
+          "bytes": 1384
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "49efea0455378f20b68b6504386103ff743d92d50f7762fe1e0d5f77cfc1f4b7",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 26,
+        "boundsMm": {
+          "min": [
+            -20,
+            -15,
+            0
+          ],
+          "max": [
+            20,
+            15,
+            30
+          ]
+        },
+        "signedVolumeMm3": 7920
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-u-channel",
+      "exampleId": "u-channel",
+      "version": 1,
+      "title": "U channel",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/u-channel.cad",
+        "format": "cad-script",
+        "sha256": "b634814c5f3dac90fe7fef64f8b500d30df16af36a4761aad05cde05b870a3a7",
+        "bytes": 130
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/u-channel.stl",
+          "format": "stl",
+          "sha256": "5cbb214ad56124e4e98abec1d2c9f5734662ff7011b4d146a4b2408e8908a9da",
+          "bytes": 1484
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "5cbb214ad56124e4e98abec1d2c9f5734662ff7011b4d146a4b2408e8908a9da",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 28,
+        "boundsMm": {
+          "min": [
+            -25,
+            -15,
+            -10
+          ],
+          "max": [
+            25,
+            15,
+            10
+          ]
+        },
+        "signedVolumeMm3": 9600
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-tray",
+      "exampleId": "tray",
+      "version": 1,
+      "title": "Open tray",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/tray.cad",
+        "format": "cad-script",
+        "sha256": "3672f90b4b88440394cd73c8362ed95639a4b86a2ba6ca2258f9dd2253a9cc9d",
+        "bytes": 100
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/tray.stl",
+          "format": "stl",
+          "sha256": "120f8fe5fa284d43f558bead54f7bab752c73df3d126e7501f8197cc16851325",
+          "bytes": 1484
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "120f8fe5fa284d43f558bead54f7bab752c73df3d126e7501f8197cc16851325",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 28,
+        "boundsMm": {
+          "min": [
+            -30,
+            -20,
+            -10
+          ],
+          "max": [
+            30,
+            20,
+            10
+          ]
+        },
+        "signedVolumeMm3": 16788
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-lid",
+      "exampleId": "lid",
+      "version": 1,
+      "title": "Lid with locating rim",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/lid.cad",
+        "format": "cad-script",
+        "sha256": "aeb7381b0cc16b7838ecedda8d3b34f00cf332f6f0382ff93b536c5100dee58c",
+        "bytes": 105
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/lid.stl",
+          "format": "stl",
+          "sha256": "c1e23b61d20e223c40b848031e7134f277c9b61789fc79899119852d54987abe",
+          "bytes": 2284
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "c1e23b61d20e223c40b848031e7134f277c9b61789fc79899119852d54987abe",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 44,
+        "boundsMm": {
+          "min": [
+            -30,
+            -20,
+            -3
+          ],
+          "max": [
+            30,
+            20,
+            4
+          ]
+        },
+        "signedVolumeMm3": 11076
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-handle",
+      "exampleId": "handle",
+      "version": 1,
+      "title": "Rounded-end handle",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/handle.cad",
+        "format": "cad-script",
+        "sha256": "a37f5f6d1da3a07bc8aed26e4f983072e06ca7129b58ce2a9df839f3ae2e3e03",
+        "bytes": 111
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/handle.stl",
+          "format": "stl",
+          "sha256": "d1033a4a1e0173d76ca75ed28de4b565741cb41d15091faf4b3f0cd2ae85cda5",
+          "bytes": 9884
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "d1033a4a1e0173d76ca75ed28de4b565741cb41d15091faf4b3f0cd2ae85cda5",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 196,
+        "boundsMm": {
+          "min": [
+            -26,
+            -6,
+            -3
+          ],
+          "max": [
+            26,
+            6,
+            3
+          ]
+        },
+        "signedVolumeMm3": 3556.647794753142
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-cable-clip",
+      "exampleId": "cable-clip",
+      "version": 1,
+      "title": "Open cable clip",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/cable-clip.cad",
+        "format": "cad-script",
+        "sha256": "13ba885a9e1bb627fcb060ed4dec8b3ecb74e83184f8d9259e52eb16e643654c",
+        "bytes": 101
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/cable-clip.stl",
+          "format": "stl",
+          "sha256": "dcc71cb11a7b9a857e97a223e5bd85ccce1b939f0b984a9af89b32c80b86905e",
+          "bytes": 17084
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "dcc71cb11a7b9a857e97a223e5bd85ccce1b939f0b984a9af89b32c80b86905e",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 340,
+        "boundsMm": {
+          "min": [
+            -12,
+            -12,
+            -4
+          ],
+          "max": [
+            11.117852210998535,
+            12,
+            4
+          ]
+        },
+        "signedVolumeMm3": 1705.9778273409142
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-drill-jig",
+      "exampleId": "drill-jig",
+      "version": 1,
+      "title": "Drilling guide",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/drill-jig.cad",
+        "format": "cad-script",
+        "sha256": "696440e569e0ebdccb61a79eabbfa9a92e4971e4360698df0d76d8684d04dd97",
+        "bytes": 149
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/drill-jig.stl",
+          "format": "stl",
+          "sha256": "01f90dd49dae36e0aa9809e3e69898d6379ce4d1ecf2ee1d1e6ed858fd3e51ec",
+          "bytes": 30084
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "01f90dd49dae36e0aa9809e3e69898d6379ce4d1ecf2ee1d1e6ed858fd3e51ec",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 600,
+        "boundsMm": {
+          "min": [
+            -30,
+            -10,
+            -9
+          ],
+          "max": [
+            30,
+            10,
+            9
+          ]
+        },
+        "signedVolumeMm3": 20542.737815828794
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-counterbore",
+      "exampleId": "counterbore",
+      "version": 1,
+      "title": "Counterbored plate",
+      "group": "parts",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/counterbore.cad",
+        "format": "cad-script",
+        "sha256": "b0ccdd55e300118177ca162aae8820def59751e3957e622cc4ac86cf6a0332fd",
+        "bytes": 132
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/counterbore.stl",
+          "format": "stl",
+          "sha256": "403f191459912a980f672aee4e61309653bfe1f22dad1d81020ca3f64960be30",
+          "bytes": 20084
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "403f191459912a980f672aee4e61309653bfe1f22dad1d81020ca3f64960be30",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 400,
+        "boundsMm": {
+          "min": [
+            -20,
+            -15,
+            -6
+          ],
+          "max": [
+            20,
+            15,
+            6
+          ]
+        },
+        "signedVolumeMm3": 13723.352234703721
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-standoff-array",
+      "exampleId": "standoff-array",
+      "version": 1,
+      "title": "Standoffs on a base",
+      "group": "patterns",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/standoff-array.cad",
+        "format": "cad-script",
+        "sha256": "6abf4e30b9c5ec4009ad3a2e7408f1bf0c324783e310cbfe65754a36320ccd30",
+        "bytes": 125
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/standoff-array.stl",
+          "format": "stl",
+          "sha256": "b60b9447dd6d30e894bd9dacb70b99e869119f9d35e8f23864ffda867f40714d",
+          "bytes": 39084
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "b60b9447dd6d30e894bd9dacb70b99e869119f9d35e8f23864ffda867f40714d",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 780,
+        "boundsMm": {
+          "min": [
+            -32.5,
+            -15,
+            0
+          ],
+          "max": [
+            32.5,
+            15,
+            20
+          ]
+        },
+        "signedVolumeMm3": 11007.811719799425
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-perforated-tile",
+      "exampleId": "perforated-tile",
+      "version": 1,
+      "title": "Perforated tile",
+      "group": "patterns",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/perforated-tile.cad",
+        "format": "cad-script",
+        "sha256": "bcc50fe154f7d58be7c49f6a555229354024c61e7c86fc76776a9247fb84b38e",
+        "bytes": 134
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/perforated-tile.stl",
+          "format": "stl",
+          "sha256": "586feaa599d873c04821d514daaf3aace4c5cb58d87ff745234deb808fa8404e",
+          "bytes": 147684
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "586feaa599d873c04821d514daaf3aace4c5cb58d87ff745234deb808fa8404e",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 2952,
+        "boundsMm": {
+          "min": [
+            -35,
+            -20,
+            -2
+          ],
+          "max": [
+            35,
+            20,
+            2
+          ]
+        },
+        "signedVolumeMm3": 9508.380478750989
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-ventilation-panel",
+      "exampleId": "ventilation-panel",
+      "version": 1,
+      "title": "Ventilation slots",
+      "group": "patterns",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/ventilation-panel.cad",
+        "format": "cad-script",
+        "sha256": "64ee94aa8010c7f38171deebe3291b572f4bb1ebe6776b1be2ed5321245f435c",
+        "bytes": 112
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/ventilation-panel.stl",
+          "format": "stl",
+          "sha256": "20db153020fe18be5c95e45f45da07fa9d69fd8bfeef959c4f253c0e153e0cf8",
+          "bytes": 7684
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "20db153020fe18be5c95e45f45da07fa9d69fd8bfeef959c4f253c0e153e0cf8",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 152,
+        "boundsMm": {
+          "min": [
+            -32.5,
+            -22.5,
+            -2
+          ],
+          "max": [
+            32.5,
+            22.5,
+            2
+          ]
+        },
+        "signedVolumeMm3": 9180
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-comb",
+      "exampleId": "comb",
+      "version": 1,
+      "title": "Comb",
+      "group": "patterns",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/comb.cad",
+        "format": "cad-script",
+        "sha256": "e4bd41454ed9985032c01cd42af23b0378932923ea2a646c1b106d3951f6284a",
+        "bytes": 108
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/comb.stl",
+          "format": "stl",
+          "sha256": "0ea039d1ac65ff8e35acf2d69b0607c86fc57545c67c7e3d7349d6a8e277cf20",
+          "bytes": 9984
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "0ea039d1ac65ff8e35acf2d69b0607c86fc57545c67c7e3d7349d6a8e277cf20",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 198,
+        "boundsMm": {
+          "min": [
+            -30,
+            -3,
+            -2.5
+          ],
+          "max": [
+            30,
+            24,
+            2.5
+          ]
+        },
+        "signedVolumeMm3": 4635
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-ribbed-platform",
+      "exampleId": "ribbed-platform",
+      "version": 1,
+      "title": "Ribbed platform",
+      "group": "patterns",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/ribbed-platform.cad",
+        "format": "cad-script",
+        "sha256": "46ba7497813efa079514e3819337373c51f3fe4575ee3ab3a84734aa3a3cc94e",
+        "bytes": 121
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/ribbed-platform.stl",
+          "format": "stl",
+          "sha256": "1f2a627f747d7d780e93bae777e9108e6749390ee54b4c3fb8af1773499f4260",
+          "bytes": 6284
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "1f2a627f747d7d780e93bae777e9108e6749390ee54b4c3fb8af1773499f4260",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 124,
+        "boundsMm": {
+          "min": [
+            -30,
+            -20,
+            0
+          ],
+          "max": [
+            30,
+            20,
+            14
+          ]
+        },
+        "signedVolumeMm3": 18000
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-wedge",
+      "exampleId": "wedge",
+      "version": 1,
+      "title": "Wedge by intersection",
+      "group": "booleans",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/wedge.cad",
+        "format": "cad-script",
+        "sha256": "fb898dd508158b449569157c336101dc4b0842b7c5593ed4f9cf3a0adb6a3fea",
+        "bytes": 80
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/wedge.stl",
+          "format": "stl",
+          "sha256": "f15c0cca6cabeb6d6f449fbcb1b0cbfd58cce18bcc639341cd48b56cbe539ba0",
+          "bytes": 884
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "f15c0cca6cabeb6d6f449fbcb1b0cbfd58cce18bcc639341cd48b56cbe539ba0",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 16,
+        "boundsMm": {
+          "min": [
+            -20,
+            -15,
+            -10
+          ],
+          "max": [
+            20,
+            15,
+            10
+          ]
+        },
+        "signedVolumeMm3": 14395.998019120652
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-lens",
+      "exampleId": "lens",
+      "version": 1,
+      "title": "Intersection lens",
+      "group": "booleans",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/lens.cad",
+        "format": "cad-script",
+        "sha256": "71a7a0af018837215dfd01813a7b5e6a7442888be16bc930cd0421d35a705688",
+        "bytes": 70
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/lens.stl",
+          "format": "stl",
+          "sha256": "8d64eb588a6fd9b284b5f7d0c127913a9cedfa243cb7acb7f3be4df2d2d992eb",
+          "bytes": 42884
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "8d64eb588a6fd9b284b5f7d0c127913a9cedfa243cb7acb7f3be4df2d2d992eb",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 856,
+        "boundsMm": {
+          "min": [
+            -9,
+            -13.730098724365234,
+            -13.730098724365234
+          ],
+          "max": [
+            9,
+            13.730098724365234,
+            13.730098724365234
+          ]
+        },
+        "signedVolumeMm3": 6020.511147775454
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-dome",
+      "exampleId": "dome",
+      "version": 1,
+      "title": "Hemisphere",
+      "group": "booleans",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/dome.cad",
+        "format": "cad-script",
+        "sha256": "4f0662ce671c1e96c01bebf52a5db7f8494df15634c9db4d31b5c14d37629dcb",
+        "bytes": 62
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/dome.stl",
+          "format": "stl",
+          "sha256": "87db7b51c06c2fecf39cd83d06733f06f825bcf8567eb46eb71d0de364f20a9a",
+          "bytes": 54384
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "87db7b51c06c2fecf39cd83d06733f06f825bcf8567eb46eb71d0de364f20a9a",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 1086,
+        "boundsMm": {
+          "min": [
+            -20,
+            -20,
+            0
+          ],
+          "max": [
+            20,
+            20,
+            20
+          ]
+        },
+        "signedVolumeMm3": 16660.54571035591
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-hollow-dome",
+      "exampleId": "hollow-dome",
+      "version": 1,
+      "title": "Hollow dome",
+      "group": "booleans",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/hollow-dome.cad",
+        "format": "cad-script",
+        "sha256": "95a39f0f1e28107b56eb7901b4674d202a1b09f04aef8c70005f98b0ac5a052d",
+        "bytes": 103
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/hollow-dome.stl",
+          "format": "stl",
+          "sha256": "88b2ae704b6ae1ccd519ed547e85e399b98beda81fcc87951e8fdcae3de8d1b4",
+          "bytes": 108884
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "88b2ae704b6ae1ccd519ed547e85e399b98beda81fcc87951e8fdcae3de8d1b4",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 2176,
+        "boundsMm": {
+          "min": [
+            -20,
+            -20,
+            0
+          ],
+          "max": [
+            20,
+            20,
+            20
+          ]
+        },
+        "signedVolumeMm3": 6428.887938849988
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-ball-seat",
+      "exampleId": "ball-seat",
+      "version": 1,
+      "title": "Spherical seat",
+      "group": "booleans",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/ball-seat.cad",
+        "format": "cad-script",
+        "sha256": "ec63ea9751cba4eb267960a4ac406025ac383e6edc810cc952ee8bf132fcdaaa",
+        "bytes": 61
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/ball-seat.stl",
+          "format": "stl",
+          "sha256": "7eb8cb56422042fcb9c4aa9f7a91583db76f376d68e1ac960b731ca8f0ad8a18",
+          "bytes": 40784
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "7eb8cb56422042fcb9c4aa9f7a91583db76f376d68e1ac960b731ca8f0ad8a18",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 814,
+        "boundsMm": {
+          "min": [
+            -20,
+            -20,
+            -8
+          ],
+          "max": [
+            20,
+            20,
+            8
+          ]
+        },
+        "signedVolumeMm3": 22570.9080008877
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-cross-brace",
+      "exampleId": "cross-brace",
+      "version": 1,
+      "title": "Cross brace",
+      "group": "booleans",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/cross-brace.cad",
+        "format": "cad-script",
+        "sha256": "d34683a895f4d209ada9261b4283c6e3c4a1264af4e3dca29cbfd850fd66ee6c",
+        "bytes": 74
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/cross-brace.stl",
+          "format": "stl",
+          "sha256": "707d5667d93324305638f8647737481e0f81b66e623bd013ea2c93ed314e3c2d",
+          "bytes": 2484
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "707d5667d93324305638f8647737481e0f81b66e623bd013ea2c93ed314e3c2d",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 48,
+        "boundsMm": {
+          "min": [
+            -24.041629791259766,
+            -24.041629791259766,
+            -2.5
+          ],
+          "max": [
+            24.041629791259766,
+            24.041629791259766,
+            2.5
+          ]
+        },
+        "signedVolumeMm3": 4479.99940158541
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "brickwright-forward-references",
+      "exampleId": "forward-references",
+      "version": 1,
+      "title": "Named dependencies",
+      "group": "basics",
+      "author": "Christian Ströbele (CrispStrobe) / Brickwright CAD contributors",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba",
+        "sourceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/packages/core/src/code-examples.ts"
+      },
+      "licence": {
+        "spdx": "BSD-3-Clause",
+        "scope": "asset",
+        "attribution": "Copyright (c) 2026, Christian Ströbele (CrispStrobe). BSD-3-Clause; original Brickwright CAD Script example.",
+        "evidenceUrl": "https://github.com/CrispStrobe/brickwright-cad/blob/893ad7b0e56bcddecb5737a7f1a6d78ad9d7fcba/LICENSE",
+        "localEvidence": {
+          "path": "evidence/brickwright-examples-LICENSE.txt",
+          "format": "txt",
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+          "bytes": 1520
+        },
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Brickwright original-source licence audit"
+      },
+      "original": {
+        "path": "sources/brickwright/forward-references.cad",
+        "format": "cad-script",
+        "sha256": "2fb42634ecc0e8a63dd822c0eaf301712252b8d9eda976aed4d81152cd35d173",
+        "bytes": 167
+      },
+      "derivatives": [
+        {
+          "path": "meshes/brickwright/forward-references.stl",
+          "format": "stl",
+          "sha256": "b54fc5630b11d56726bee8799a9b7bce5bc1283f7ace5bedb12edd30559f3166",
+          "bytes": 10284
+        }
+      ],
+      "modificationNotes": "Editable program extracted verbatim with a final newline from the pinned example module; default parameters rendered to binary STL. No repair, simplification, placement or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "CAD Script lengths resolve to millimetres (including explicit cm/in literals); coordinates are Z up. STL retains these millimetre coordinates.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "b54fc5630b11d56726bee8799a9b7bce5bc1283f7ace5bedb12edd30559f3166",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 83333,
+          "maxExtentMm": 1000,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 204,
+        "boundsMm": {
+          "min": [
+            -15,
+            -15,
+            -2
+          ],
+          "max": [
+            15,
+            15,
+            15
+          ]
+        },
+        "signedVolumeMm3": 4618.10429493383
+      },
+      "diagnostics": []
+    }
+  ]
+}

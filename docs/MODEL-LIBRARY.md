@@ -77,8 +77,8 @@ verify evidence and files before admitting records.
 
 The next slice now provides selected-file fetching with hash verification and an
 offline cache (see below). Headless STL quality screening is also available
-(see below). Records for the 34 editable examples and a small CC0 calibration
-set remain to be implemented. Preserve original files and derived meshes with their respective
+(see below). The 34 original editable examples now have a reproducible local collection
+(see below). A small CC0 calibration set remains to be implemented. Preserve original files and derived meshes with their respective
 hashes. Before catalogue insertion or attributed STL export, implement project
 provenance and attribution sidecars. These later steps are not provided by the
 catalogue contract alone.
@@ -176,3 +176,50 @@ qualify collisions. A passing topology/volume screen can still contain overlappi
 or self-intersecting surfaces and requires further curation. No `physics` evidence
 is produced. Source rights, project provenance, attributed exports and Jolt
 qualification remain separate requirements.
+
+## Original editable example collection
+
+`library/examples-manifest.json` inventories all 34 original BSD-3-Clause CAD
+Script examples. Each has a verbatim editable `.cad` source (plus a final newline)
+and a binary STL rendered with default parameters. The collection retains the
+complete original example module and repository licence under `library/sources/`
+and `library/evidence/`. Per-record provenance links pin the actual source-module
+commit; the source-module and licence hashes are checked before generation.
+No reference application's source or assets were used for this collection.
+
+This is a **local collection manifest**, format
+`brickwright-local-example-library` version 1. File `path` values are relative to
+`library/`; they deliberately do not claim HTTPS download endpoints for files
+that have not been published at an immutable revision. It is separate from the
+network catalogue schema, cannot be passed to `fetchModelLibraryFile`, and is not
+a catalogue insertion UI. Publication and reviewed immutable download URLs are
+still required to admit these generated files to the remote catalogue. The source
+repository remains private; its provenance links require repository access.
+
+Run locally from the repository root, with the lockfile-installed dependencies:
+
+```sh
+npm run library:examples:generate  # rebuild SDKs and intentionally write outputs
+npm run library:examples:check     # rebuild SDKs; regenerate in memory and compare
+```
+
+Check mode does no network IO and writes no library files. It compares exact bytes
+of every source, mesh, evidence file and manifest, and rejects unexpected files in
+the generated source/mesh directories. Generation records its own SHA-256, the
+package-lock hash and Manifold WASM hash. Reproduction is scoped to this locked
+Node/Manifold toolchain; a toolchain or geometry implementation change requires
+review and regeneration, not acceptance of stale hashes. Commands build SDKs
+first so generation uses the current compiler, kernel and quality checker. The
+source-module pin must be deliberately updated after committing any changed
+original examples; generation refuses silent changes to their pinned source or
+grant. No files are fetched from the provenance URLs during these commands.
+
+All 34 checked-in STL files pass the existing versioned parsing, positive-volume
+closed-manifold topology, size and triangle screens as of 2026-11-13. Each record
+retains the mesh hash, policy, explicit millimetres/Z-up identity conversion,
+measurements, diagnostics and checker version. The `units` example resolves its
+explicit inch/centimetre literals to millimetres before export. Default source
+coordinates are preserved, including negative Z coordinates; meshes are not
+moved onto a print bed or repaired. The screens do not establish self-intersection
+freedom, printability, mechanical accuracy or physics/collision qualification.
+Project provenance, insertion and attribution sidecars remain separate work.

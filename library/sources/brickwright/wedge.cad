@@ -1,0 +1,1 @@
+return intersect(box(40,30,20),move([0,0,-15],rotate([0,30,0],box(80,40,30))));

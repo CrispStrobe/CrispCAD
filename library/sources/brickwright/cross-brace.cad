@@ -1,0 +1,1 @@
+return union(rotate([0,0,45],box(60,8,5)),rotate([0,0,-45],box(60,8,5)));
