@@ -68,3 +68,21 @@ order are in [PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md). Prioritize headless cat
 features and sketch entity/constraint contracts next, then further solid features,
 semantic attachments/mates and incremental recomputation. The current profiles
 are rectangle/circle templates, not a freehand constrained sketch editor.
+
+
+## Parametric CAD strategy and practical modeling workflow
+
+The cross-application comparison, pinned FluidCAD/Solidcraft/Macad3D source reviews,
+licensing boundary and implementation order are in
+[PARAMETRIC-CAD-STRATEGY.md](PARAMETRIC-CAD-STRATEGY.md). Prioritize constrained
+sketches, scoped part inputs, stable outputs and datum-based references over
+copying another editor's preset list. Solidcore is an experimental permissive
+exact-backend candidate to benchmark; no new kernel has been adopted.
+
+The current library presents 30 essentials by task, including retained parametric
+L bracket, mounting plate and spacer templates. The other 22 constructions,
+including SBC and QR, are discoverable through Additional shapes or search.
+Existing models and factory IDs remain supported. XYZ values are optionally
+shown beside the selection and update during transform/direct drags, as do the
+inspector values. Preview frames are not history entries; accepted release is one
+edit. The preference belongs to the host/view, not the saved CAD definition.

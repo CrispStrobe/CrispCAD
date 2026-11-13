@@ -8,3 +8,4 @@ export * from './generators.js';
 export * from './fragments.js';
 
 export * from './features.js';
+export * from './templates.js';

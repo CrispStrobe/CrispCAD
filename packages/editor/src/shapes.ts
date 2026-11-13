@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Independently authored presets. Geometry constructors are from Three.js (MIT).
-// Presets use existing .bcad primitives/meshes; no new document format is needed.
+// Simple presets and retained sketch templates share the versioned CAD document.
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
-import { identityTransform, createCadSession, defaultPartPhysics } from '@brickwright/cad-core';
+import { identityTransform, createCadSession, defaultPartPhysics,createDesignTemplate } from '@brickwright/cad-core';
 import type { Primitive, SolidNode,GeneratorRecipe } from '@brickwright/cad-core';
 import { advancedCatalog, constructionDocument, constructionPreview } from './advanced-shapes.js';
 type MeshShape = Extract<SolidNode, { kind: 'mesh' }>;
-export interface ShapePreset { id: string; name: string; category: string; description: string; keywords: string; color: string }
-export const shapeCatalog: readonly ShapePreset[] = [
+export interface ShapePreset { additional?:boolean; id: string; name: string; category: string; description: string; keywords: string; color: string }
+const originalCatalog = [
   ['box','Box','Basic solids','A rectangular solid with editable width, depth and height.','cube block rectangular','#e9a743'],
   ['rounded-box','Rounded box','Basic solids','A box with rounded corners.','filleted soft rectangle','#ef8763'],
   ['cylinder','Cylinder','Basic solids','A circular solid with editable radius and height.','round disk rod','#db933b'],
@@ -29,7 +29,26 @@ export const shapeCatalog: readonly ShapePreset[] = [
   ['frustum','Tapered cylinder','Hollow & tapered','A truncated cone with different end radii.','frustum transition reducer loft','#cd9571'],
   ['vase','Vase','Hollow & tapered','An open vessel with a thick wall and solid bottom.','vessel container cup hollow','#71b6ab'],
   ['washer','Washer','Hollow & tapered','A flat ring with a through hole.','ring spacer hole','#b0b6c0'],
-].concat(advancedCatalog.map(row => [...row])).map(([id,name,category,description,keywords,color]) => Object.freeze({id,name,category,description,keywords,color}));
+].concat(advancedCatalog.map(row => [...row])).map(([id,name,category,description,keywords,color]) => ({id,name,category,description,keywords,color}));
+
+const essentials:Record<string,string[]>={
+ 'Start a part':['l-bracket','mounting-plate','spacer'],
+ 'Build solids':['box','cylinder','rounded-box','capsule','sphere','wedge','cone','polygon'],
+ 'Holes & hollow parts':['tube','washer','counterbore','countersink','port','teardrop'],
+ 'Supports & connections':['rib','boss','screw','nut','hinge','dovetail','snap-fit'],
+ 'Motion parts':['gear','spring'],
+ 'Labels & outlines':['text','name-tag','star','heart'],
+};
+const templates:ShapePreset[]=[
+ {id:'l-bracket',name:'L bracket',category:'',description:'A dimensioned angle bracket. Edit width, depth, height and wall thickness in Parameters.',keywords:'support angle wall mount parametric',color:'#e9a743'},
+ {id:'mounting-plate',name:'Mounting plate',category:'',description:'A dimensioned plate with two bores. Edit the plate and hole dimensions in Parameters.',keywords:'mount base holes flange parametric',color:'#74b7cb'},
+ {id:'spacer',name:'Spacer',category:'',description:'A dimensioned ring with an editable outer radius, bore radius and length.',keywords:'bushing sleeve standoff bearing parametric',color:'#abc1cd'},
+];
+const entries=[...templates,...originalCatalog];
+export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
+ ...Object.entries(essentials).flatMap(([category,ids])=>ids.map(id=>Object.freeze({...entries.find(p=>p.id===id)!,category,additional:false}))),
+ ...entries.filter(p=>!Object.values(essentials).flat().includes(p.id)).map(p=>Object.freeze({...p,category:'Additional shapes',additional:true})),
+]);
 
 function profile(points: [number, number][], detail: number) { return new THREE.LatheGeometry(points.map(p => new THREE.Vector2(...p)), detail).rotateX(Math.PI / 2); }
 function tube(outer: number, inner: number, height: number, detail: number) {
@@ -77,6 +96,7 @@ export function createPresetShape(id: string): { shape: Primitive | MeshShape; h
 const previews = new Map<string,string>();
 export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: {svg?:string;recipe?:GeneratorRecipe} = {}) {
   const preset = shapeCatalog.find(p => p.id === id); if (!preset) throw new Error('Unknown shape');
+  if(['l-bracket','mounting-plate','spacer'].includes(id))return createDesignTemplate(id as import('@brickwright/cad-core').DesignTemplate);
   if (advancedCatalog.some(p => p[0] === id)) return constructionDocument(id, preset.name, preset.color, text, options.svg,options.recipe);
   const session = createCadSession(); session.add(createPresetShape(id).shape, { name: preset.name, color: preset.color }); const doc = structuredClone(session.state.document); const node=doc.nodes[doc.roots[0]];node.physics = {...defaultPartPhysics(),sourcePreset:id};
   if(id==='torus')node.physics.collisionHint={kind:'tube-grid',segments:64,sides:24,layout:'columns',closed:true};
@@ -86,6 +106,7 @@ export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: 
 /** Static SVG thumbnails derived from our actual geometry, with no GPU contexts. */
 export function presetPreview(preset: ShapePreset): string {
   const cached = previews.get(preset.id); if (cached) return cached;
+  if(['l-bracket','mounting-plate','spacer'].includes(preset.id))return 'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path d="M15 14h14v38h37v14H15z" fill="'+preset.color+'"/></svg>');
   const geometry = presetGeometry(preset.id,true);
   try {
     geometry.center(); geometry.computeBoundingSphere(); const factor=30/geometry.boundingSphere!.radius;

@@ -1,6 +1,7 @@
 # Brickwright CAD
 
-[![Build and verify](https://github.com/CrispStrobe/brickwright-cad/actions/workflows/check.yml/badge.svg)](https://github.com/CrispStrobe/brickwright-cad/actions/workflows/check.yml)
+**Verification runs locally.** GitHub Actions is disabled while this repository
+is private to preserve the owner’s Free-tier CI allowance. See [local checks](docs/CI.md).
 
 A 3D solid editor and the same editor that uses Manifold for mesh-solid operations and Three.js for rendering.
 
@@ -13,7 +14,7 @@ provide macOS and iPad apps without changing the reusable editor.
 
 ## Run locally
 
-Requires Node **22.18+** and npm; CI uses Node 24.
+Requires Node **22.18+** and npm.
 
 ```sh
 npm ci
@@ -36,7 +37,9 @@ Host APIs, package boundaries and the later Brickwright wiring are documented
 in [docs/INTEGRATION.md](docs/INTEGRATION.md). The roadmap, including the possible
 CrispMesh scan-to-CAD path, is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
-- Search a 49-entry categorized shape library with geometry-derived thumbnails,
+- Start with 30 everyday shapes and parametric bracket/plate/spacer templates;
+  find 22 further presets under Additional shapes or search. The library retains
+  geometry-derived thumbnails,
   pinning, filled SVG icons, original block lettering, name tags and QR content.
   Box/cylinder/sphere expose dimensions. Screws, threads, nuts and hearts expose
   editable generator controls; remaining catalog presets currently expose transforms
@@ -57,6 +60,8 @@ CrispMesh scan-to-CAD path, is in [docs/ROADMAP.md](docs/ROADMAP.md).
 - Model on a numbered 400 × 400 mm workplane with 1 mm minor / 10 mm major lines.
   Snap spacing is independent of the displayed ruler grid.
 - Move/rotate/scale with handles or numeric properties; nudge with arrow keys.
+  Optional on-canvas XYZ inputs and the inspector update live during drags;
+  enable XYZ below the workplane or in Settings. Drag previews do not fill history.
   Drop selected top-level bodies onto the workplane, including rotated bodies.
 - A single-row workbench with Shapes, Select/Move/Rotate/Scale, and File/Edit/Combine
   menus. Escape or V returns to normal selection and direct dragging. Cyan bounds
@@ -135,3 +140,11 @@ no Layerling implementation or artwork.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development, verification and package
 boundaries. Models stay on your device unless you export or share them. Retain
 portable backups; local autosave is not off-device backup.
+
+![Task-based shape library](docs/images/shape-library.png)
+
+![Live on-canvas position values during a drag](docs/images/live-transform.png)
+
+The [parametric CAD strategy](docs/PARAMETRIC-CAD-STRATEGY.md) compares modeling
+workflows, records the FluidCAD/Solidcraft/Macad3D reviews and defines the next solver,
+feature, component and exact-kernel milestones.

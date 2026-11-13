@@ -184,3 +184,10 @@ These extensions should evolve versioned definitions, not append unrelated UI
 state or replayable mouse commands to saved projects. Full sketch constraints,
 B-rep/STEP, feature suppression and general FreeCAD parity are not delivered by
 this milestone.
+
+
+The follow-up [CAD strategy](PARAMETRIC-CAD-STRATEGY.md) records the six commercial/
+open CAD workflow comparisons and a pinned FluidCAD/Solidcraft architecture review.
+Practical `createDesignTemplate` factories now expose their upstream driving inputs
+in Properties. On-canvas transforms remain independent of design dimensions:
+scaling geometry does not silently rewrite a width equation.

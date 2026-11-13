@@ -20,7 +20,9 @@ const historyUI=mountHistoryUI(()=>editor,async revision=>{
  const doc=await store.readDocument(revision.id);if(editor!==current||current.session.state.revision!==expectedRevision)throw new Error('The model changed while loading this iteration. Try restoring again.');restoring=revision;current.session.load(doc);await lastSave;await current.whenIdle();current.frame();
 });
 document.querySelector('#library')!.addEventListener('click',()=>historyUI.open());
-mountAppDialogs();
+let showReadout=false;try{showReadout=localStorage.getItem('brickwright-cad:view:readout')==='true';}catch{}
+function saveReadout(visible:boolean){showReadout=visible;try{localStorage.setItem('brickwright-cad:view:readout',String(visible));}catch{}}
+mountAppDialogs({getReadout:()=>editor?.transformReadoutVisible??showReadout,setReadout:visible=>{saveReadout(visible);editor?.setTransformReadoutVisible(visible);}});
 const desktop=mountDesktopHost(()=>editor,{projects:()=>historyUI.open(),about:()=>hostActions.querySelector<HTMLButtonElement>('#about')!.click(),settings:()=>hostActions.querySelector<HTMLButtonElement>('#settings')!.click(),help:()=>hostActions.querySelector<HTMLButtonElement>('#help')!.click()});
 async function record(document:CadDocument,label:string,parentId?:string){
  const token=++saveToken;let cacheFailed=false;badge.textContent='Saving iteration…';badge.className='';
@@ -48,6 +50,7 @@ function start(doc?: CadDocument) {
     editor = mountCadEditor(root, {
       document: doc, wasmURL: new URL('../cad-assets/manifold.wasm', import.meta.url).href,
       headerContent:hostActions,
+      showTransformReadout:showReadout,onTransformReadoutChange:saveReadout,
       saveProject:async()=>{if(editor)await saveProject(editor.session.state.document);},
       decodeProject,
       requestOpen:desktop.available?()=>desktop.open('project'):undefined,

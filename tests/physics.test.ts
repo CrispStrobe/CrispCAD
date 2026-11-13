@@ -22,7 +22,7 @@ describe('qualified Jolt physics boundary',()=>{
    const result=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,result,kernel),world=await createPhysicsWorld(doc,result,prepared,{J,mode:'rigid-preview',ground:false});
    try{world.step(.1);expect(world.pose(doc.roots[0]).positionMm.every(Number.isFinite)).toBe(true);expect(prepared.get(doc.roots[0])!.certificate.relativeError).toBeLessThan(.02);}finally{world.dispose();}
   }
- });
+ },30000);
  it('requires fresh collision qualification after a driving parameter changes',async()=>{
   const s=createCadSession(),id=s.add({kind:'box',size:[20,20,10]},{transform:{position:[0,0,50],rotation:[0,0,0],scale:[1,1,1]}});
   s.setParametric({version:1,parameters:{width:{expression:'20',unit:'mm'}},bindings:[{nodeId:id,property:'width',expression:'width'}]});

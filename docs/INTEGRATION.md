@@ -196,3 +196,19 @@ The exported core session APIs, derived dependency graph, semantic reference
 contract, expression rules and simulation invalidation boundary are specified in
 [PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md). The editor command `sketch` opens the
 same definition UI as the Sketch button; native hosts route it like `parameters`.
+
+
+## Live transform view state
+
+`showTransformReadout` sets the initial on-canvas parameter preference;
+`onTransformReadoutChange(visible)` lets the host persist it. The editor also
+exposes `setTransformReadoutVisible`, `transformReadoutVisible` and the `readout`
+command. The standalone host keeps the preference outside model/history storage;
+the native View menu routes the same command. Pointer preview poses update the
+inspector and optional readout without changing the session. A successful drag
+commits on release, while cancellation restores the committed values.
+
+`createDesignTemplate` in the headless core creates retained L-bracket, mounting
+plate and spacer definitions. Insert these with parameter namespace merging,
+using the same rules as clipboard paste. UI category changes do not remove
+factory IDs or change imported models.

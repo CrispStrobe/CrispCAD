@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import {beforeAll,describe,expect,it} from 'vitest';
 import {readFileSync} from 'node:fs';
-import {createCadSession,designGraph,affectedDesignEntries,evaluateExtrusion,validateDocument,parseDocument,resolveDesignReference,FeatureEvaluationError,documentGeometryKey} from '@brickwright/cad-core';
+import {createCadSession,designGraph,affectedDesignEntries,evaluateExtrusion,validateDocument,parseDocument,resolveDesignReference,FeatureEvaluationError,documentGeometryKey,createDesignTemplate} from '@brickwright/cad-core';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import {openHistoryStore} from '@brickwright/cad-history';
@@ -63,4 +63,11 @@ describe('retained sketch extrusion features',()=>{
   const s=createCadSession(),sketch=s.addSketch({kind:'rectangle',id:'shared-profile',width:20,depth:10});expect(s.state.document.roots).toHaveLength(0);expect(parseDocument(s.serialize()).sketches![sketch]).toBeDefined();const a=s.extrudeSketch(sketch,{distance:5}),b=s.extrudeSketch(sketch,{distance:10});expect(kernel.evaluate(s.state.document).volume).toBeCloseTo(3000);s.updateSketch(sketch,{profile:{kind:'rectangle',id:'shared-profile',width:30,depth:10}});expect(kernel.evaluate(s.state.document).volume).toBeCloseTo(4500);s.remove([a]);expect(s.state.document.nodes[b]).toMatchObject({sketchId:sketch});
  });
  it('invalidates geometry identity when a shared sketch changes',()=>{const {s,sketchId}=fixture(),key=documentGeometryKey(s.state.document),p=s.state.document.sketches![sketchId].profile;s.updateSketch(sketchId,{profile:{...p,kind:'rectangle',width:50,depth:20}});expect(documentGeometryKey(s.state.document)).not.toBe(key);});
+});
+
+
+it('keeps practical starting parts editable through dimension changes and namespaced insertion',()=>{
+ const s=createCadSession(createDesignTemplate('l-bracket'));expect(kernel.evaluate(s.state.document).volume).toBeCloseTo(8960);const design=structuredClone(s.state.document.parametric!);design.parameters.width.expression='60';s.setParametric(design);expect(kernel.evaluate(s.state.document).volume).toBeCloseTo(13440);
+ const spacer=createCadSession(createDesignTemplate('spacer')),before=kernel.evaluate(spacer.state.document).volume,p=structuredClone(spacer.state.document.parametric!);p.parameters.length.expression='20';spacer.setParametric(p);expect(kernel.evaluate(spacer.state.document).volume).toBeCloseTo(before*2);
+ const host=createCadSession(createDesignTemplate('mounting-plate'));host.insert(createDesignTemplate('l-bracket'),[80,0,0],{mergeParameters:true});expect(host.state.document.parametric!.parameters.width_2.expression).toBe('40');expect(kernel.evaluate(host.state.document).bodies).toHaveLength(2);expect(parseDocument(host.serialize())).toEqual(host.state.document);
 });

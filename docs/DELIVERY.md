@@ -262,3 +262,43 @@ workflows, native macOS menu/clipboard/sketch/library smoke checks, and independ
 empty-cache offline installation of all six packed SDKs with real parametric
 geometry and SI Jolt physics. Mac build 6 was installed and launched with the
 existing project library retained.
+
+
+## Practical modeling palette and live transform inputs — 2026-11-13
+
+- The default palette is curated by task: Start a part, Build solids, Holes &
+  hollow parts, Supports & connections, Motion parts, Labels & outlines. Thirty
+  essentials include new retained parametric L bracket, mounting plate and spacer
+  definitions; 22 additional presets (including SBC and QR) remain optional and
+  searchable. Factory IDs and existing saved models remain valid.
+- Properties exposes the selected feature's upstream named design inputs. Changes
+  use the existing expression validation, recompute and history path.
+- Optional XYZ inputs beside the selection show live position/rotation/scale
+  values. The inspector also updates during drags. Numeric edits remain available;
+  driven fields are identified and protected. Preview poses do not change model
+  storage or add iterations. Release commits once; Escape restores the model.
+- The host stores the display preference separately from models. XYZ below the
+  workplane, Settings and native View commands control the same option. Embedders
+  receive explicit initial/preference callbacks and setters rather than implicit
+  shared storage.
+- Full catalog qualification: 52 pass/excluded, no blocked entries; this is rigid
+  preview qualification, not validation of elastic/mechanism behavior or print fit.
+- [PARAMETRIC-CAD-STRATEGY.md](PARAMETRIC-CAD-STRATEGY.md) records a concrete path
+  through sketch constraints, scoped parts/features, semantic references and
+  exact-backend qualification, plus pinned FluidCAD/Solidcraft reviews. No code,
+  assets or dependencies from those projects were incorporated.
+
+
+Private-repository CI policy: GitHub Actions was disabled in repository settings,
+no active runs remained, and the former workflow was archived outside the workflow
+directory. Future verification runs locally; see [CI.md](CI.md). Visibility remains
+private. The Macad3D architecture review is also recorded in the CAD strategy.
+
+
+Local verification for build 7: 136 headless tests, all 48 Chromium/iPad WebKit
+workflows, all 52 catalog qualification outcomes (51 rigid-preview passes and
+one reference helper excluded), native Mac menu/clipboard/sketch/library checks,
+independent offline SDK installation, and a separate Settings/reload check that
+leaves the model untouched. The existing expensive edited-thread/bent-heart
+physics fixture now has a dedicated 30-second test budget instead of the default
+5 seconds; its geometric and physical acceptance checks are unchanged.

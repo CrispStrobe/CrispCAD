@@ -2,10 +2,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import {assertDrivenEdit} from '@brickwright/cad-core';
 import type { CadSession, Transform, Vec3 } from '@brickwright/cad-core';
 import type { GeometryResult } from '@brickwright/cad-geometry';
 import { TOUCH_SLOP_PX, createTouchTracker } from './vendor/touch-gestures.js';
 import {scalePivotRotation,applyGizmoDelta} from './transform-selection.js';
+import type {TransformPreview} from './transform-readout.js';
 import { snapDelta } from './vendor/transform-math.js';
 const RAD = Math.PI / 180;
 export type ViewDirection = 'top' | 'bottom' | 'front' | 'back' | 'right' | 'left' | 'iso';
@@ -47,6 +49,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const selectionBoxes=new Map<string,THREE.BoxHelper>();let activeMode:'select'|'translate'|'rotate'|'scale'='select';
   let directDrag:{pointerId:number;start:THREE.Vector3;plane:THREE.Plane;transforms:Map<string,Transform>;offset:Vec3;moved:boolean}|null=null;
   let disposed = false; let selected: string[] = []; let drag: { matrix: THREE.Matrix4; transforms: Map<string, Transform> } | null = null; let gridStep = 1; let multiSelect = false; let viewListener: ((view: ViewDirection) => void) | undefined;
+  let previewListener:((preview:TransformPreview)=>void)|undefined;
   // Project an original SVG cube from the camera basis. The controls rotate with
   // the actual camera, including free orbit, without a second WebGL context.
   const ns = 'http://www.w3.org/2000/svg';
@@ -77,7 +80,16 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     const exact = Object.entries(directions).find(([name, d]) => name !== 'iso' && new THREE.Vector3(...d).normalize().dot(toward) > 0.99999)?.[0];
     const view = (exact ?? 'iso') as ViewDirection; canvas.dataset.view = view; viewListener?.(view); canvas.dataset.projection = camera instanceof THREE.OrthographicCamera ? 'orthographic' : 'perspective';
   }
-  const draw = () => { if (!disposed) { canvas.dataset.transformAxis=gizmo.axis??'';updateCube();const distance=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:camera.position.distanceTo(orbit.target);grid.material.opacity=THREE.MathUtils.clamp((240-distance)/200,0,.4);for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
+  const draw = () => { if (!disposed) { canvas.dataset.transformAxis=gizmo.axis??'';updateCube();publishPreview();const distance=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:camera.position.distanceTo(orbit.target);grid.material.opacity=THREE.MathUtils.clamp((240-distance)/200,0,.4);for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
+  function publishPreview(){
+    if(!previewListener)return;let poses=selected.filter(id=>session.state.document.roots.includes(id)).map(id=>({id,transform:structuredClone(session.state.document.nodes[id].transform)})),valid=true,warning:string|undefined;
+    if(drag){try{const d=delta();poses=[...drag.transforms].map(([id,original])=>({id,transform:applyGizmoDelta(original,d,activeMode==='select'?'translate':activeMode,pivot.scale.toArray() as Vec3)}));}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}}
+    else if(directDrag)poses=[...directDrag.transforms].map(([id,t])=>({id,transform:{...t,position:t.position.map((v,i)=>v+directDrag!.offset[i]) as Vec3}}));
+    if(drag||directDrag?.moved)try{for(const {id,transform} of poses)assertDrivenEdit(session.state.document,{...session.state.document.nodes[id],transform});}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}
+    const box=new THREE.Box3();for(const {id} of poses){const mesh=meshes.get(id);if(mesh)box.union(new THREE.Box3().setFromObject(mesh));}
+    const center=box.isEmpty()?new THREE.Vector3():box.getCenter(new THREE.Vector3());center.project(camera);
+    previewListener({mode:activeMode,poses,dragging:!!drag||!!directDrag?.moved,valid,warning,anchor:[(center.x+1)*container.clientWidth/2,(1-center.y)*container.clientHeight/2]});
+  }
   const placeGizmo = () => {
     if (drag) return;
     const roots = selected.filter(id => session.state.document.roots.includes(id) && meshes.has(id));
@@ -109,7 +121,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       for (const [id, original] of drag.transforms) updates.push({id,transform:applyGizmoDelta(original,d,activeMode==='select'?'translate':activeMode,pivot.scale.toArray() as Vec3)});
     } catch(error){cancelTransform();onError(error);return;}
     drag = null;
-    try { session.transform(updates); } catch (e) { for (const mesh of meshes.values()) { mesh.matrix.identity(); mesh.matrixWorldNeedsUpdate = true; } onError(e); placeGizmo(); }
+    try { session.transform(updates); draw(); } catch (e) { for (const mesh of meshes.values()) { mesh.matrix.identity(); mesh.matrixWorldNeedsUpdate = true; } onError(e); placeGizmo(); }
   };
   gizmo.addEventListener('dragging-changed', onDrag); gizmo.addEventListener('mouseDown', startTransform); gizmo.addEventListener('objectChange', previewTransform); gizmo.addEventListener('mouseUp', endTransform);
   const resize = new ResizeObserver(() => { const w = container.clientWidth, h = container.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); if (camera instanceof THREE.PerspectiveCamera) camera.aspect = w / h; else { const half = (camera.top - camera.bottom) / 2; camera.left = -half * w / h; camera.right = half * w / h; } camera.updateProjectionMatrix(); draw(); }); resize.observe(container);
@@ -182,6 +194,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   }
   draw();
   return { canvas, update, setSelection, frame, setView, cancelTransform,
+    setTransformPreviewListener(listener:(preview:TransformPreview)=>void){previewListener=listener;draw();},
     setViewListener(listener: (view: ViewDirection) => void) { viewListener = listener; draw(); },
     setMultiSelect(enabled: boolean) { multiSelect = enabled; },
     zoom(factor: number) {
