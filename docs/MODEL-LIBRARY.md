@@ -181,6 +181,52 @@ or self-intersecting surfaces and requires further curation. No `physics` eviden
 is produced. Source rights, retained project provenance, attributed exports and Jolt
 qualification remain separate requirements.
 
+## Optional headless Jolt collision qualification
+
+`qualifyModelLibrarySTL` in `@brickwright/cad-physics` explicitly qualifies one
+reviewed original/derivative STL selection. Supply the catalogue, selected bytes,
+and `{kernel, toMillimetresZUp, checkedOn}`. `kernel` must be the trusted host's
+`createGeometryKernel()` instance; a caller-supplied implementation is within the
+host trust boundary, not independently authenticated by this API. The conversion
+must match the selected file's retained screening policy. This optional operation
+does not run during browsing, retrieval, screening or insertion.
+
+The qualifier reuses verified atomic STL insertion in a private disposable session:
+exact byte size/SHA-256, passing curated quality, retained conversion and fresh
+strict screening are all required. It then evaluates that converted solid, runs
+the existing fail-closed compound decomposition/comparison gate, creates actual
+native shapes in the pinned **debug** Jolt build, advances one 1/200 s rigid-only
+step without ground, checks finite poses/source bounds, and tears down the world.
+It never replaces a non-convex part with an unqualified hull or box. Optional
+`maxTriangles`, `maxExtentMm`, `maxHulls`, `volumeFraction` and `boundsMm` retain
+the existing admission and collision limits; oversized/difficult geometry fails.
+
+The result keeps fresh `quality` separate from `evidence`. Evidence records the
+exact source byte hash, converted geometry hash, explicit conversion, capture date,
+mesh checker/policy (in `quality`), qualifier version, pinned Jolt version/debug
+build, hull count, full geometric certificate/tolerances and native step scope.
+Failures reject without returning positive evidence. Catalogue records, live
+projects, selection and saved history are untouched. Serialized reports are
+curation evidence only: they cannot be passed as qualified runtime collisions.
+World creation still requires fresh immutable runtime proofs, and changed bytes,
+conversion, geometry or toolchain require requalification.
+The reported engine version and package release pin must be updated together;
+a focused test binds them. The host's installed dependency closure is trusted.
+Keep the complete returned report separately when persisting curation evidence.
+The catalogue's older `quality.physics` summary cannot retain its conversion,
+geometric certificate or native-check scope; this API does not populate that
+summary or certify a catalogue automatically. A future versioned catalogue/report
+integration must retain those bindings rather than discard them.
+
+Run this operation in a host worker with a time limit. `signal` is checked at
+asynchronous stage boundaries, but cannot interrupt synchronous decomposition.
+A native abort requires discarding the worker/module. The single free rigid step
+does not test ground settling, cavity clearance, contacts, mechanism behavior,
+elasticity, printability or manufacturing accuracy; fit-critical openings still
+need independent probes. The native step API currently exposes no capacity/error
+telemetry. No external content, saved qualification collection or editor physics
+interface is introduced by this API.
+
 ## Original editable example collection
 
 `library/examples-manifest.json` inventories all 34 original BSD-3-Clause CAD

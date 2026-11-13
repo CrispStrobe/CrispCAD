@@ -3,3 +3,4 @@ export * from './mass.js';
 export * from './collision.js';
 export * from './world.js';
 export * from './hints.js';
+export * from './model-library.js';
