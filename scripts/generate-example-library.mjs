@@ -4,7 +4,8 @@ import {createHash} from 'node:crypto';
 import {readFile, writeFile, mkdir, readdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
-import {codeExamples, codeExampleProgram, createCadSession} from '../packages/core/dist/index.js';
+import {createCadSession} from '../packages/core/dist/index.js';
+import ts from 'typescript';
 import {createGeometryKernel, exportSTL, checkModelLibrarySTL} from '../packages/geometry/dist/index.js';
 
 const root = new URL('../', import.meta.url);
@@ -16,14 +17,31 @@ const repositoryUrl = 'https://github.com/CrispStrobe/brickwright-cad';
 const capturedOn = '2026-11-13';
 const localFile = (path, format, bytes) => ({path, format, sha256: hash(bytes), bytes: bytes.length});
 
-/** Build every output in memory; check mode never writes or fetches anything. */
-export async function generateExampleLibrary() {
-  const outputs = new Map();
-  const moduleBytes = await readFile(new URL('packages/core/src/code-examples.ts', root));
-  // The immutable provenance link must describe these exact original programs.
+/** Load only the hash-pinned archived module, independently of the live UI examples. */
+export async function loadPinnedExampleModule() {
+  const moduleBytes = await readFile(new URL('library/sources/brickwright/code-examples.ts', root));
+  // Verify before evaluating any code from the archived source.
   if (hash(moduleBytes) !== '8b705fd547f68c80081f4723a3f9517558848a893a9bf98d8fc127de3c5d0a1f') {
     throw new Error('Example module changed: review and pin its committed source before updating this collection.');
   }
+  const compiled = ts.transpileModule(moduleBytes.toString('utf8'), {
+    compilerOptions: {module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022},
+    transformers: {before: [context => source => ts.visitNode(source, function visit(node) {
+      if (ts.isImportDeclaration(node) && node.moduleSpecifier.text === './i18n.js') {
+        return ts.factory.updateImportDeclaration(node, node.modifiers, node.importClause,
+          ts.factory.createStringLiteral(new URL('../packages/core/dist/i18n.js', import.meta.url).href), node.attributes);
+      }
+      return ts.visitEachChild(node, visit, context);
+    })]},
+  });
+  const examples = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputText).toString('base64')}`);
+  return {moduleBytes, codeExamples: examples.codeExamples, codeExampleProgram: examples.codeExampleProgram};
+}
+
+/** Build every output in memory; check mode never writes or fetches anything. */
+export async function generateExampleLibrary() {
+  const outputs = new Map();
+  const {moduleBytes, codeExamples, codeExampleProgram} = await loadPinnedExampleModule();
   const licenceBytes = await readFile(new URL('LICENSE', root));
   if (hash(licenceBytes) !== 'ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad') {
     throw new Error('Licence changed: review the pinned asset grant before updating this collection.');

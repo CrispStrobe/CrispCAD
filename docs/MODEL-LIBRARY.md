@@ -190,7 +190,9 @@ Script examples. Each has a verbatim editable `.cad` source (plus a final newlin
 and a binary STL rendered with default parameters. The collection retains the
 complete original example module and repository licence under `library/sources/`
 and `library/evidence/`. Per-record provenance links pin the actual source-module
-commit; the source-module and licence hashes are checked before generation.
+commit; the archived source-module and licence hashes are checked before generation.
+Generation transpiles that pinned TypeScript archive with the installed TypeScript
+compiler. Live UI examples can evolve independently, including their formatting.
 No reference application's source or assets were used for this collection.
 
 This is a **local collection manifest**, format
@@ -216,8 +218,8 @@ package-lock hash and Manifold WASM hash. Reproduction is scoped to this locked
 Node/Manifold toolchain; a toolchain or geometry implementation change requires
 review and regeneration, not acceptance of stale hashes. Commands build SDKs
 first so generation uses the current compiler, kernel and quality checker. The
-source-module pin must be deliberately updated after committing any changed
-original examples; generation refuses silent changes to their pinned source or
+archived source-module pin must be deliberately updated when curating a new
+committed snapshot of the original examples; generation refuses silent changes to their pinned source or
 grant. No files are fetched from the provenance URLs during these commands.
 
 All 34 checked-in STL files pass the existing versioned parsing, positive-volume

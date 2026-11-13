@@ -1,0 +1,126 @@
+{
+  "captured": "2026-11-13",
+  "models": [
+    {
+      "id": "jscad-basicBooleans",
+      "file": "jscad/basicBooleans.js",
+      "repository": "jscad/OpenJSCAD.org",
+      "revision": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+      "path": "packages/examples/core/booleans/basicBooleans.js",
+      "url": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/core/booleans/basicBooleans.js",
+      "license": "MIT",
+      "licenseFile": "jscad/LICENSE",
+      "sha256": "e269dbe7fa16fb1c80bef0cdd6ba4f94796e8cd1d3b87932b396e215343c0ec6",
+      "format": "jscad",
+      "expected": "supported"
+    },
+    {
+      "id": "jscad-mountPlate",
+      "file": "jscad/mountPlate.js",
+      "repository": "jscad/OpenJSCAD.org",
+      "revision": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+      "path": "packages/examples/module-design/mountPlate.js",
+      "url": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/module-design/mountPlate.js",
+      "license": "MIT",
+      "licenseFile": "jscad/LICENSE",
+      "sha256": "8a3a752610bec651e8cf6084f8c0d136ed83433ee5f3f2c26ebd40c1cac4adfd",
+      "format": "jscad",
+      "expected": "supported",
+      "entryPoint": "create",
+      "arguments": [
+        25
+      ]
+    },
+    {
+      "id": "jscad-nutsAndBolts",
+      "file": "jscad/nutsAndBolts.js",
+      "repository": "jscad/OpenJSCAD.org",
+      "revision": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+      "path": "packages/examples/core/extrusions/nutsAndBolts.js",
+      "url": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/core/extrusions/nutsAndBolts.js",
+      "license": "MIT",
+      "licenseFile": "jscad/LICENSE",
+      "sha256": "f96facf6dc85be7260a5b5e7648dd157abb9bc74e27da7d4cf78cdb0aa3df5ba",
+      "format": "jscad",
+      "expectedGap": "JavaScript runtime/API adapter"
+    },
+    {
+      "id": "jscad-gear",
+      "file": "jscad/gear.js",
+      "repository": "jscad/OpenJSCAD.org",
+      "revision": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+      "path": "packages/examples/parameters/gear.js",
+      "url": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/parameters/gear.js",
+      "license": "MIT",
+      "licenseFile": "jscad/LICENSE",
+      "sha256": "7867e3df0c6e43449e3dad46f5985269a8726658d5fc35a2f93d8a808a2ca9ec",
+      "format": "jscad",
+      "expectedGap": "JavaScript runtime/API adapter"
+    },
+    {
+      "id": "belfryscad-boolean_geometry",
+      "file": "belfryscad/boolean_geometry.scad",
+      "repository": "BelfrySCAD/BOSL2",
+      "revision": "1c6bcca3dcdc86121e697ab412db7658224df4e2",
+      "path": "examples/boolean_geometry.scad",
+      "url": "https://github.com/BelfrySCAD/BOSL2/blob/1c6bcca3dcdc86121e697ab412db7658224df4e2/examples/boolean_geometry.scad",
+      "license": "BSD-2-Clause",
+      "licenseFile": "belfryscad/LICENSE",
+      "sha256": "033f1be3c8db75a1e8f42351bc4bf667677b6a773e24ef099ebd2d8613734e84",
+      "format": "openscad",
+      "expectedGap": "include"
+    },
+    {
+      "id": "belfryscad-spring_handle",
+      "file": "belfryscad/spring_handle.scad",
+      "repository": "BelfrySCAD/BOSL2",
+      "revision": "1c6bcca3dcdc86121e697ab412db7658224df4e2",
+      "path": "examples/spring_handle.scad",
+      "url": "https://github.com/BelfrySCAD/BOSL2/blob/1c6bcca3dcdc86121e697ab412db7658224df4e2/examples/spring_handle.scad",
+      "license": "BSD-2-Clause",
+      "licenseFile": "belfryscad/LICENSE",
+      "sha256": "2fe4861603e3e78a4206a8c9282e50df13b9be24d3089d41e2db70bbfeb4f0f6",
+      "format": "openscad",
+      "expectedGap": "include"
+    },
+    {
+      "id": "jscad-translateEx1",
+      "file": "jscad/translateEx1.scad",
+      "repository": "jscad/OpenJSCAD.org",
+      "revision": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+      "path": "packages/io/scad-deserializer/tests/transformations/translateEx1.scad",
+      "url": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/translateEx1.scad",
+      "license": "MIT",
+      "licenseFile": "jscad/LICENSE",
+      "sha256": "a26aac3cc37c24dea98f8403f5b90547eb9903debf5dde77eedf914b6abd77c3",
+      "format": "openscad",
+      "expected": "supported"
+    },
+    {
+      "id": "jscad-scaleEx1",
+      "file": "jscad/scaleEx1.scad",
+      "repository": "jscad/OpenJSCAD.org",
+      "revision": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+      "path": "packages/io/scad-deserializer/tests/transformations/scaleEx1.scad",
+      "url": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/scaleEx1.scad",
+      "license": "MIT",
+      "licenseFile": "jscad/LICENSE",
+      "sha256": "0e9d3c5265754a7f88c778d6e1e08aced81491de32d37933bf30beadd3ffb96b",
+      "format": "openscad",
+      "expected": "supported"
+    },
+    {
+      "id": "jscad-rotateEx1",
+      "file": "jscad/rotateEx1.scad",
+      "repository": "jscad/OpenJSCAD.org",
+      "revision": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+      "path": "packages/io/scad-deserializer/tests/transformations/rotateEx1.scad",
+      "url": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/rotateEx1.scad",
+      "license": "MIT",
+      "licenseFile": "jscad/LICENSE",
+      "sha256": "b724d6d863a23ec1dca57725416ee6bf7d29ab6c87ea99e61ea79114d96430da",
+      "format": "openscad",
+      "expected": "supported"
+    }
+  ]
+}

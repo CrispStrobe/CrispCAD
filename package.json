@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",
+    "@jscad/modeling": "2.13.0",
     "@playwright/test": "1.62.1",
     "@types/node": "^22.15.18",
     "@types/three": "^0.184.1",

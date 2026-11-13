@@ -8,10 +8,10 @@
     "generator": {
       "path": "../scripts/generate-example-library.mjs",
       "format": "mjs",
-      "sha256": "ecd47c1a5329edc574aad450336e7dd6fc92ba6ef8a4935114a0e3fd044621a6",
-      "bytes": 6933
+      "sha256": "88c942cc1cafbc6c861250ff5c233dfd3cfcb72c76276632e04c83b057f9cb7d",
+      "bytes": 8013
     },
-    "packageLockSha256": "d798156b8ec34218118c8169e4c57e4e9685968e56b1eef6f99111b370eeb12a",
+    "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c",
     "sourceModule": {
       "path": "sources/brickwright/code-examples.ts",

@@ -4,7 +4,8 @@ import {execFileSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {expect, it} from 'vitest';
-import {codeExamples, compileCode} from '@brickwright/cad-core';
+import {codeExamples as liveExamples, compileCode} from '@brickwright/cad-core';
+import {loadPinnedExampleModule} from '../scripts/generate-example-library.mjs';
 
 const root = new URL('../', import.meta.url);
 const library = new URL('library/', root);
@@ -13,7 +14,8 @@ const manifest = JSON.parse(read('examples-manifest.json').toString());
 const identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
 const digest = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
 
-it('preserves each original editable example, its grant, and derived byte identity', () => {
+it('preserves each original editable example, its grant, and derived byte identity', async () => {
+  const {codeExamples} = await loadPinnedExampleModule();
   expect(manifest.format).toBe('brickwright-local-example-library');
   expect(manifest.version).toBe(1);
   expect(manifest.assets).toHaveLength(34);
@@ -54,9 +56,17 @@ it('preserves each original editable example, its grant, and derived byte identi
     expect(asset.diagnostics).toEqual([]);
   }
   const archivedModule = read(manifest.reproduction.sourceModule.path);
-  expect(archivedModule.equals(readFileSync(new URL('packages/core/src/code-examples.ts', root)))).toBe(true);
+  expect(digest(archivedModule)).toBe('8b705fd547f68c80081f4723a3f9517558848a893a9bf98d8fc127de3c5d0a1f');
   expect(digest(archivedModule)).toBe(manifest.reproduction.sourceModule.sha256);
   expect(read('evidence/brickwright-examples-LICENSE.txt').equals(readFileSync(new URL('LICENSE', root)))).toBe(true);
+});
+
+it('keeps the immutable collection distinct from live example formatting', async () => {
+  const {codeExamples} = await loadPinnedExampleModule();
+  expect(codeExamples.map((example: {id: string}) => example.id)).toEqual(liveExamples.map(example => example.id));
+  expect(codeExamples[0].source).not.toBe(liveExamples[0].source);
+  expect(compileCode({version: 1, language: 'brickwright-cad-script', source: codeExamples[0].source, parameters: {}}).shape)
+    .toEqual(compileCode({version: 1, language: 'brickwright-cad-script', source: liveExamples[0].source, parameters: {}}).shape);
 });
 
 it('reproduces all source, STL, provenance and quality outputs without writes or network', () => {

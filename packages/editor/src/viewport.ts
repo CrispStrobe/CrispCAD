@@ -2,6 +2,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {PrecisionControls} from './precision-controls.js';
+import {cameraWheelAction,cameraPointerAction} from './camera-input.js';
+import type {NavigationPreset,CameraWheel} from './camera-input.js';
 import {precisionTracker} from './precision.js';
 import {assertDrivenEdit,t} from '@brickwright/cad-core';
 import type { CadSession, Transform, Vec3 } from '@brickwright/cad-core';
@@ -45,6 +47,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   label('X · mm', 224, -200, '#f38f88'); label('Y · mm', -200, 218, '#8fcea1');
   const pivot = new THREE.Object3D(); scene.add(pivot);
   const gizmo = new PrecisionControls(camera, canvas); gizmo.setSize(0.85); gizmo.setSpace('world'); scene.add(gizmo.getHelper());
+  let navigationPreset:NavigationPreset='tinkercad',spaceHeld=false;let cameraDrag:{id:number;x:number;y:number;kind:'pan'|'orbit';gizmoEnabled:boolean}|undefined;
   let fineEnabled=false,shiftHeld=false;gizmo.isFine=()=>fineEnabled||shiftHeld;
   gizmo.setTranslationSnap(1); gizmo.setRotationSnap(15 * RAD); gizmo.setScaleSnap(0.1);
   const meshes = new Map<string, THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>>();
@@ -83,7 +86,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     const exact = Object.entries(directions).find(([name, d]) => name !== 'iso' && new THREE.Vector3(...d).normalize().dot(toward) > 0.99999)?.[0];
     const view = (exact ?? 'iso') as ViewDirection; canvas.dataset.view = view; viewListener?.(view); canvas.dataset.projection = camera instanceof THREE.OrthographicCamera ? 'orthographic' : 'perspective';
   }
-  const draw = () => { if (!disposed) { canvas.dataset.transformAxis=gizmo.axis??'';updateCube();publishPreview();const distance=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:camera.position.distanceTo(orbit.target);grid.material.opacity=THREE.MathUtils.clamp((240-distance)/200,0,.4);for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
+  const draw = () => { if (!disposed) {canvas.dataset.cameraPosition=JSON.stringify(camera.position.toArray());canvas.dataset.cameraTarget=JSON.stringify(orbit.target.toArray());canvas.dataset.cameraZoom=String(camera instanceof THREE.OrthographicCamera?camera.zoom:camera.position.distanceTo(orbit.target));canvas.dataset.navigation=navigationPreset; canvas.dataset.transformAxis=gizmo.axis??'';updateCube();publishPreview();const distance=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:camera.position.distanceTo(orbit.target);grid.material.opacity=THREE.MathUtils.clamp((240-distance)/200,0,.4);for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
   function publishPreview(){
     if(!previewListener)return;let poses=selected.filter(id=>session.state.document.roots.includes(id)).map(id=>({id,transform:structuredClone(session.state.document.nodes[id].transform)})),valid=true,warning:string|undefined;
     if(drag){try{const d=delta();poses=[...drag.transforms].map(([id,original])=>({id,transform:applyGizmoDelta(original,d,activeMode==='select'?'translate':activeMode,pivot.scale.toArray() as Vec3)}));}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}}
@@ -157,15 +160,26 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   orbit.addEventListener('change', draw); gizmo.addEventListener('change', draw);
   let down: { x: number; y: number; t: number; pointerId: number } | null = null; const touches = createTouchTracker(); let suppressTap = false;
   function pointerRay(e:PointerEvent){const rect=canvas.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);}
+  function zoomCamera(factor:number){if(!Number.isFinite(factor)||factor<=0)return;if(camera instanceof THREE.OrthographicCamera){camera.zoom=THREE.MathUtils.clamp(camera.zoom*factor,.01,1000);camera.updateProjectionMatrix();}else{const offset=camera.position.clone().sub(orbit.target);camera.position.copy(orbit.target).add(offset.setLength(THREE.MathUtils.clamp(offset.length()/factor,orbit.minDistance,orbit.maxDistance)));}orbit.update();draw();}
+  function navigate(kind:'pan'|'orbit',dx:number,dy:number){
+    if(kind==='pan'){const height=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:2*camera.position.distanceTo(orbit.target)*Math.tan((camera as THREE.PerspectiveCamera).fov*RAD/2);const unit=height/Math.max(1,canvas.clientHeight);camera.updateMatrixWorld();const offset=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0).multiplyScalar(-dx*unit).add(new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1).multiplyScalar(dy*unit));camera.position.add(offset);orbit.target.add(offset);}
+    else{const up=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0)),offset=camera.position.clone().sub(orbit.target).applyQuaternion(up),spherical=new THREE.Spherical().setFromVector3(offset);spherical.theta-=dx*.005;spherical.phi=THREE.MathUtils.clamp(spherical.phi-dy*.005,.01,orbit.maxPolarAngle);camera.position.copy(orbit.target).add(offset.setFromSpherical(spherical).applyQuaternion(up.invert()));}orbit.update();draw();
+  }
+  const wheel=(event:WheelEvent)=>{event.preventDefault();event.stopImmediatePropagation();if(drag||directDrag?.moved||cameraDrag)return;const action=cameraWheelAction(event,navigationPreset,canvas.clientHeight);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);};canvas.addEventListener('wheel',wheel,{capture:true,passive:false});
+  let gestureScale=1;const gesture=(event:Event)=>{event.preventDefault();const scale=(event as Event&{scale:number}).scale;if(event.type==='gesturestart'){gestureScale=1;return;}if(event.type==='gestureend'){gestureScale=1;return;}if(scale>0&&Number.isFinite(scale)){if(!drag&&!directDrag?.moved)zoomCamera(scale/gestureScale);gestureScale=scale;}};for(const name of ['gesturestart','gesturechange','gestureend'])canvas.addEventListener(name,gesture,{passive:false});
+  const nativeGesture=(event:Event)=>{const data=(event as CustomEvent).detail;if(!data||!Number.isFinite(data.x)||!Number.isFinite(data.y))return;let hit:Element|null=document.elementFromPoint(data.x,data.y);while(hit?.shadowRoot)hit=hit.shadowRoot.elementFromPoint(data.x,data.y);if(hit!==canvas||drag||directDrag?.moved||cameraDrag)return;if(data.kind==='zoom')zoomCamera(data.factor);else if(data.kind==='wheel'){const action=cameraWheelAction(data,navigationPreset,canvas.clientHeight);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);}};window.addEventListener('brickwright-camera-input',nativeGesture);
+  const cameraKey=(event:KeyboardEvent)=>{if(event.code==='Space'){spaceHeld=true;event.preventDefault();}};canvas.addEventListener('keydown',cameraKey);
+  const resetCameraKeys=()=>{spaceHeld=false;shiftHeld=false;if(cameraDrag){gizmo.enabled=cameraDrag.gizmoEnabled;cameraDrag=undefined;orbit.enabled=true;}};window.addEventListener('blur',resetCameraKeys);
   const onDown = (e: PointerEvent) => {shiftHeld=e.shiftKey;canvas.dataset.fine=String(gizmo.isFine());
     canvas.focus({ preventScroll: true });
+    const cameraAction=e.pointerType==='touch'?undefined:cameraPointerAction(e.button,e.shiftKey,e.altKey,e.ctrlKey,spaceHeld,navigationPreset);if(cameraAction&&!drag&&!directDrag){cameraDrag={id:e.pointerId,x:e.clientX,y:e.clientY,kind:cameraAction,gizmoEnabled:gizmo.enabled};orbit.enabled=false;gizmo.enabled=false;canvas.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();return;}
     if (e.pointerType === 'touch') { touches.down({ id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp }); if (touches.count > 1) suppressTap = true; }
     if (!down) { down = { x: e.clientX, y: e.clientY, t: e.timeStamp, pointerId: e.pointerId }; if (e.pointerType !== 'touch') suppressTap = false; }
     if (gizmo.axis) suppressTap = true;
     if(touches.count>1){if(directDrag)cancelTransform();return;}
     if(activeMode==='select'&&e.button===0&&!multiSelect&&!e.shiftKey&&!e.ctrlKey&&!e.metaKey){pointerRay(e);const hit=ray.intersectObjects([...meshes.values()],false)[0];const id=hit?.object.userData.id as string|undefined;if(id){if(!selected.includes(id))session.select([id]);const view=camera.getWorldDirection(new THREE.Vector3()),normal=Math.abs(view.z)<.25?(Math.abs(view.x)>Math.abs(view.y)?new THREE.Vector3(1,0,0):new THREE.Vector3(0,1,0)):new THREE.Vector3(0,0,1);const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,hit.point);const start=ray.ray.intersectPlane(plane,new THREE.Vector3());if(start){directDrag={pointerId:e.pointerId,start:start.clone(),plane,transforms:new Map(selected.filter(id=>session.state.document.roots.includes(id)).map(id=>[id,structuredClone(session.state.document.nodes[id].transform)])),offset:[0,0,0],moved:false,precision:precisionTracker([0,0,0]),usedFine:gizmo.isFine()};orbit.enableRotate=false;}}}
   };
-  const onMove = (e: PointerEvent) => {shiftHeld=e.shiftKey;canvas.dataset.fine=String(gizmo.isFine());
+  const onMove = (e: PointerEvent) => {if(cameraDrag?.id===e.pointerId){navigate(cameraDrag.kind,e.clientX-cameraDrag.x,e.clientY-cameraDrag.y);cameraDrag.x=e.clientX;cameraDrag.y=e.clientY;e.preventDefault();e.stopImmediatePropagation();return;}shiftHeld=e.shiftKey;canvas.dataset.fine=String(gizmo.isFine());
     if (e.pointerType === 'touch') touches.move({ id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp });
     if(!directDrag||directDrag.pointerId!==e.pointerId||!down)return;
     if(!directDrag.moved&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<=TOUCH_SLOP_PX)return;
@@ -173,7 +187,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     const d=point.sub(directDrag.start);directDrag.usedFine||=gizmo.isFine();const filtered=directDrag.precision.sample([d.x,d.y,d.z],gizmo.isFine());directDrag.offset=snapDelta(filtered,(gridStep||.01)/(directDrag.usedFine?10:1));directDrag.moved=true;
     for(const id of directDrag.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrixAutoUpdate=false;mesh.matrix.makeTranslation(...directDrag.offset);mesh.matrixWorldNeedsUpdate=true;}}draw();
   };
-  const onUp = (e: PointerEvent) => {
+  const onUp = (e: PointerEvent) => {if(cameraDrag?.id===e.pointerId){gizmo.enabled=cameraDrag.gizmoEnabled;cameraDrag=undefined;orbit.enabled=true;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();return;}
     if(directDrag?.pointerId===e.pointerId){const action=directDrag;directDrag=null;orbit.enableRotate=true;if(action.moved){down=null;touches.reset();suppressTap=false;try{session.transform([...action.transforms].map(([id,transform])=>({id,transform:{...transform,position:transform.position.map((v,i)=>v+action.offset[i]) as Vec3}})));}catch(error){for(const id of action.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;}}onError(error);draw();}return;}}
     const gesture = e.pointerType === 'touch' ? touches.up({ id: e.pointerId, t: e.timeStamp }) : null;
     const start = down; if (!start || start.pointerId !== e.pointerId) { if (!touches.count) { down = null; suppressTap = false; } return; }
@@ -186,8 +200,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     const multi = multiSelect || e.shiftKey || e.ctrlKey || e.metaKey || (gesture?.type === 'end' && gesture.was === 'longPress');
     session.select(id ? (multi ? (selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id]) : [id]) : []);
   };
-  const onCancel = () => { down = null; suppressTap = false; touches.reset(); cancelTransform(); };
-  const releaseShift=(e:KeyboardEvent)=>{if(e.key==='Shift'){shiftHeld=false;canvas.dataset.fine=String(fineEnabled);}};window.addEventListener('keyup',releaseShift);
+  const onCancel = () => {resetCameraKeys(); down = null; suppressTap = false; touches.reset(); cancelTransform(); };
+  const releaseShift=(e:KeyboardEvent)=>{if(e.code==='Space')spaceHeld=false;if(e.key==='Shift'){shiftHeld=false;canvas.dataset.fine=String(fineEnabled);}};window.addEventListener('keyup',releaseShift);
   canvas.addEventListener('pointerdown', onDown,true); canvas.addEventListener('pointermove', onMove,true); canvas.addEventListener('pointerup', onUp,true); canvas.addEventListener('pointercancel', onCancel);
   function setSelection(ids: readonly string[]) {
     selected = [...ids]; for (const [id, mesh] of meshes) { mesh.material.emissive.set(selected.includes(id) ? '#433317' : '#000000'); mesh.material.emissiveIntensity = selected.includes(id) ? 0.8 : 0; outlines.get(id)?.material && ((outlines.get(id)!.material as THREE.LineBasicMaterial).color.set(selected.includes(id) ? '#ffda82' : '#172a36')); }
@@ -212,8 +226,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     cancelTransform(); const distance = camera.position.distanceTo(orbit.target);
     camera.position.copy(orbit.target).addScaledVector(new THREE.Vector3(...directions[direction]).normalize(), distance); orbit.update(); draw();
   }
-  function frame(direction?: ViewDirection) {
-    const box = new THREE.Box3(); for (const mesh of meshes.values()) box.union(new THREE.Box3().setFromObject(mesh));
+  function frame(direction?: ViewDirection,onlySelection=false) {
+    const box = new THREE.Box3(); for (const [id,mesh] of meshes)if(!onlySelection||!selected.length||selected.includes(id))box.union(new THREE.Box3().setFromObject(mesh));
     if (box.isEmpty()) box.set(new THREE.Vector3(-20, -20, 0), new THREE.Vector3(20, 20, 30));
     const center = box.getCenter(new THREE.Vector3()); const radius = Math.max(15, box.getSize(new THREE.Vector3()).length() / 2);
     const aspect = Math.max(0.1, container.clientWidth / Math.max(1, container.clientHeight));
@@ -229,11 +243,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     setTransformPreviewListener(listener:(preview:TransformPreview)=>void){previewListener=listener;draw();},
     setViewListener(listener: (view: ViewDirection) => void) { viewListener = listener; draw(); },
     setMultiSelect(enabled: boolean) { multiSelect = enabled; },
-    zoom(factor: number) {
-      if (camera instanceof THREE.OrthographicCamera) { camera.zoom = THREE.MathUtils.clamp(camera.zoom * factor, 0.01, 1000); camera.updateProjectionMatrix(); }
-      else { const offset = camera.position.clone().sub(orbit.target); camera.position.copy(orbit.target).add(offset.setLength(THREE.MathUtils.clamp(offset.length() / factor, orbit.minDistance, orbit.maxDistance))); }
-      orbit.update(); draw();
-    },
+    zoom:zoomCamera,pan:(dx:number,dy:number)=>navigate('pan',dx,dy),orbit:(dx:number,dy:number)=>navigate('orbit',dx,dy),setNavigation:(preset:NavigationPreset)=>{navigationPreset=preset;draw();},
     setProjection(orthographic: boolean) {
       cancelTransform(); if (orthographic === (camera instanceof THREE.OrthographicCamera)) return;
       const aspect = container.clientWidth / Math.max(1, container.clientHeight), distance = camera.position.distanceTo(orbit.target);
@@ -257,6 +267,6 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       const offset = snapDelta([dx, dy, dz], (gridStep || .1)/(fine?10:1));
       session.transform(selected.filter(id => session.state.document.roots.includes(id)).map(id => { const transform = structuredClone(session.state.document.nodes[id].transform); transform.position = transform.position.map((v, i) => v + offset[i]) as Vec3; return { id, transform }; }));
     },
-    dispose() { disposed = true;window.removeEventListener('keyup',releaseShift); resize.disconnect(); touches.reset(); canvas.removeEventListener('pointerdown', onDown,true); canvas.removeEventListener('pointermove', onMove,true); canvas.removeEventListener('pointerup', onUp,true); canvas.removeEventListener('pointercancel', onCancel); gizmo.removeEventListener('dragging-changed', onDrag); gizmo.removeEventListener('mouseDown', startTransform); gizmo.removeEventListener('objectChange', previewTransform); gizmo.removeEventListener('mouseUp', endTransform); gizmo.removeEventListener('change', draw); orbit.removeEventListener('change', draw); gizmo.dispose(); orbit.dispose(); clear(); for (const object of [grid, majorGrid, border, plate, axes]) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()); } for (const sprite of textSprites) { sprite.material.map?.dispose(); sprite.material.dispose(); } renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); cube.remove(); },
+    dispose() { disposed = true;canvas.removeEventListener('wheel',wheel,true);canvas.removeEventListener('keydown',cameraKey);for(const name of ['gesturestart','gesturechange','gestureend'])canvas.removeEventListener(name,gesture);window.removeEventListener('brickwright-camera-input',nativeGesture);window.removeEventListener('blur',resetCameraKeys);window.removeEventListener('keyup',releaseShift); resize.disconnect(); touches.reset(); canvas.removeEventListener('pointerdown', onDown,true); canvas.removeEventListener('pointermove', onMove,true); canvas.removeEventListener('pointerup', onUp,true); canvas.removeEventListener('pointercancel', onCancel); gizmo.removeEventListener('dragging-changed', onDrag); gizmo.removeEventListener('mouseDown', startTransform); gizmo.removeEventListener('objectChange', previewTransform); gizmo.removeEventListener('mouseUp', endTransform); gizmo.removeEventListener('change', draw); orbit.removeEventListener('change', draw); gizmo.dispose(); orbit.dispose(); clear(); for (const object of [grid, majorGrid, border, plate, axes]) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()); } for (const sprite of textSprites) { sprite.material.map?.dispose(); sprite.material.dispose(); } renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); cube.remove(); },
   };
 }

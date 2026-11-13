@@ -33,6 +33,7 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
     const previous=codeCache.get(shape);if(previous)return previous;let solid:Manifold;
     if(shape.kind==='box')solid=keep(module.Manifold.cube(shape.size,true));
     else if(shape.kind==='cylinder')solid=keep(module.Manifold.cylinder(shape.height,shape.radius,shape.radius,shape.segments,true));
+    else if(shape.kind==='extrude')solid=keep(module.Manifold.extrude([shape.points],shape.height));
     else if(shape.kind==='sphere')solid=keep(module.Manifold.sphere(shape.radius,shape.segments));
     else if('shapes' in shape){const inputs=shape.shapes.map(buildCode);solid=keep(shape.kind==='union'?module.Manifold.union(inputs):shape.kind==='subtract'?module.Manifold.difference(inputs):module.Manifold.intersection(inputs));}
     else if(shape.kind==='repeat'){const child=buildCode(shape.shape);const copies=Array.from({length:shape.count},(_,i)=>keep(child.translate(shape.step.map(v=>v*i) as [number,number,number])));solid=keep(module.Manifold.union(copies));}
