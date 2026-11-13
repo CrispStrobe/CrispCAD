@@ -101,7 +101,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         let view=section("View")
         addCommand(view,"Fit Model","fit","0");addCommand(view,"Home View","home","0",[.command,.shift]);view.addItem(.separator());addCommand(view,"Top","top","1");addCommand(view,"Front","front","2");addCommand(view,"Right","right","3");addCommand(view,"Back","back");addCommand(view,"Left","left");addCommand(view,"Bottom","bottom");view.addItem(.separator());addCommand(view,"Toggle Orthographic Projection","projection");addCommand(view,"Show / Hide Workplane","workplane");addCommand(view,"On-canvas Parameters","readout");addCommand(view,"Show / Hide Objects","objects");addCommand(view,"Show / Hide Properties","properties")
         let object=section("Object")
-        addCommand(object,"Add Shape…","shapes","a",[.command,.shift]);addCommand(object,"Sketch and Extrude…","sketch");object.addItem(.separator())
+        addCommand(object,"Add Shape…","shapes","a",[.command,.shift]);addCommand(object,"Sketch and Extrude…","sketch");addCommand(object,"Code an Object…","code");object.addItem(.separator())
         addCommand(object,"Select / Drag","select");addCommand(object,"Move","move");addCommand(object,"Rotate","rotate");addCommand(object,"Scale","scale");addCommand(object,"Drop to Workplane","drop");object.addItem(.separator());addCommand(object,"Union","union");addCommand(object,"Subtract","subtract");addCommand(object,"Intersect","intersect");object.addItem(.separator());addCommand(object,"Model Parameters…","parameters")
         let windowItem = NSMenuItem(title:"Window",action:nil,keyEquivalent:""); menu.addItem(windowItem); let windowMenu = NSMenu(title: "Window"); windowItem.submenu = windowMenu
         windowMenu.addItem(withTitle: "Minimize", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
@@ -312,7 +312,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
           const root = host.shadowRoot;
           if (\(smokeStage) === 0) { root.querySelector('button[aria-label="Shapes"]').click();root.querySelector('button[aria-label="Add Box"]').click(); return 'added'; }
           const objects = root.querySelectorAll('[data-testid="object-name"]');
-          if ((\(smokeStage) < 6 && objects.length !== 1) || Number(host.dataset.triangles) !== objects.length * 12) return 'waiting';
+          if ((\(smokeStage) < 6 && objects.length !== 1) || (\(smokeStage) < 14 && Number(host.dataset.triangles) !== objects.length * 12)) return 'waiting';
           if (!root.querySelector('#save-state').textContent.includes('Saved · iteration')) return 'waiting';
           if (\(smokeStage) === 1) {
             root.querySelector('button[aria-label="Parameters"]').click();
@@ -328,7 +328,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             panel.close(); return 'parameterized';
           }
           const doc = JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1'));
-          if ((doc.version !== 2 && doc.version !== 3) || doc.nodes[doc.roots[0]].size[0] !== 40) return 'parameter failure';
+          if ((doc.version !== 2 && doc.version !== 3 && doc.version !== 4) || doc.nodes[doc.roots[0]].size[0] !== 40) return 'parameter failure';
           if (\(smokeStage) === 2) return 'reload';
           if (\(smokeStage) === 3) { root.querySelector('#library').click(); return 'history'; }
           if (\(smokeStage) === 4) {document.querySelector('.library-dialog')?.close();root.querySelector('[data-testid="object-name"]').click();return 'commands';}
@@ -346,8 +346,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
           if (\(smokeStage) === 12) {
             if (objects.length !== 3 || doc.version !== 3) return 'waiting';
             const extrusion = Object.values(doc.nodes).find(n=>n.kind==='extrusion');
-            return extrusion?.distance==='width / 8' && doc.sketches?.[extrusion.sketchId]?.profile.width==='width' ? 'passed' : 'feature failure';
+            return extrusion?.distance==='width / 8' && doc.sketches?.[extrusion.sketchId]?.profile.width==='width' ? 'code-command' : 'feature failure';
           }
+          if (\(smokeStage) === 13) {const panel=root.querySelector('.code-dialog[open]');if(!panel)return 'waiting';Array.from(panel.querySelectorAll('button')).find(b=>b.textContent==='Create code object').click();return 'code-created';}
+          if (\(smokeStage) === 14) {const code=Object.values(doc.nodes).find(n=>n.kind==='code');return objects.length===4 && doc.version===4 && code?.program.language==='brickwright-cad-script' ? 'passed':'waiting';}
           if (!Array.from(root.querySelectorAll('#iterations option')).some(option => option.textContent.startsWith('#3 ·'))) return 'waiting';
           if (!document.querySelector('.library-dialog .project-card')) return 'waiting';
           return window.brickwrightDesktop && !!window.webkit.messageHandlers.cadSave && !!window.brickwrightPrepareToClose ? 'passed' : 'bridge missing';
@@ -364,7 +366,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
                         guard files.count==1,let archive=try JSONSerialization.jsonObject(with:Data(contentsOf:files[0])) as? [String:Any],archive["format"] as? String == "brickwright-cad-history",let revisions=archive["revisions"] as? [Any],revisions.count>=3 else {self.fail("Native library file/history verification failed");return}
                         let original=try Data(contentsOf:files[0]);var pruned=archive;pruned["revisions"]=Array(revisions.dropFirst());let encoded=try JSONSerialization.data(withJSONObject:pruned).base64EncodedString();let project=archive["project"] as! [String:Any]
                         self.webView.callAsyncJavaScript("try {await window.webkit.messageHandlers.cadLibrary.postMessage({action:'write',id,data});return false;} catch(error){return true;}",arguments:["id":project["id"]!,"data":encoded],in:nil,in:.page){result in
-                            do {guard case .success(let value)=result,value as? Bool == true,try Data(contentsOf:files[0])==original else {self.fail("Native library accepted a history-pruning write");return};try FileManager.default.removeItem(at:folder);self.pasteboard.releaseGlobally();print("PASS: native menus, private system clipboard Copy/Paste, Duplicate/Delete/Undo/Redo, parameters, native sketch/extrusion creation, library files and refusal to prune history");exit(0)}catch{self.fail(error.localizedDescription)}
+                            do {guard case .success(let value)=result,value as? Bool == true,try Data(contentsOf:files[0])==original else {self.fail("Native library accepted a history-pruning write");return};try FileManager.default.removeItem(at:folder);self.pasteboard.releaseGlobally();print("PASS: native menus, private system clipboard Copy/Paste, Duplicate/Delete/Undo/Redo, parameters, native sketch/extrusion and coded-object creation, library files and refusal to prune history");exit(0)}catch{self.fail(error.localizedDescription)}
                         };return
                     }catch{self.fail(error.localizedDescription)}
                 };return
@@ -376,7 +378,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             let itemFor:(String)->NSMenuItem?={command in NSApp.mainMenu?.items.compactMap{$0.submenu}.flatMap{$0.items}.first{$0.representedObject as? String == command}}
             @MainActor func perform(_ command:String){guard let item=itemFor(command),item.action == #selector(AppDelegate.performEditorCommand(_:)) else{self.fail("Native command missing: \(command)");return};self.performEditorCommand(item)}
             if result as? String == "commands" {
-                for command in ["open","save","import","export","cut","copy","paste","duplicate","delete","fit","parameters","sketch","readout"]{if itemFor(command)==nil{self.fail("Native command missing: \(command)");return}}
+                for command in ["open","save","import","export","cut","copy","paste","duplicate","delete","fit","parameters","sketch","readout","code"]{if itemFor(command)==nil{self.fail("Native command missing: \(command)");return}}
                 self.smokeStage=5;perform("copy")
             }
             if result as? String == "copy-poll",self.pasteboard.string(forType:self.clipboardType)?.contains("brickwright-cad-clipboard") == true {self.smokeStage=6;perform("paste")}
@@ -386,6 +388,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             if result as? String == "undo-ready" {self.smokeStage=10;perform("redo")}
             if result as? String == "sketch-command" {self.smokeStage=11;perform("sketch")}
             if result as? String == "sketch-created" {self.smokeStage=12}
+            if result as? String == "code-command" {self.smokeStage=13;perform("code")}
+            if result as? String == "code-created" {self.smokeStage=14}
             if ["parameter failure", "feature failure", "bridge missing"].contains(result as? String ?? "") { self.fail(result as? String ?? "Verification failed"); return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.pollSmoke() }
         }

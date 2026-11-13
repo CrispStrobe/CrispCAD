@@ -212,3 +212,20 @@ commits on release, while cancellation restores the committed values.
 plate and spacer definitions. Insert these with parameter namespace merging,
 using the same rules as clipboard paste. UI category changes do not remove
 factory IDs or change imported models.
+
+## Retained code features and headless transport
+
+`defaultCodeProgram()` creates a language-v1 `CodeProgram`; `compileCode(program)`
+returns typed construction IR plus local parameter definitions/values. Use
+`session.addCode(program, name)` and `session.updateCode(id, program)` to retain
+source in document v4. Preflight a trial document with the geometry kernel before
+committing an application edit. Geometry/collision keys include source/overrides;
+never reuse collision qualification after changing them. Scope stays local to the
+coded body; global bindings can still drive its node transforms.
+
+The history package exports `readPortableHistory(bytes)` and
+`appendPortableRevision(previousBytes, document, label, parentId?)` for hosts without
+IndexedDB. They validate full archive integrity and retain prior revisions/content.
+They do not acquire filesystem locks; each host must provide its own safe writer.
+The MCP host is an example of a separate headless file writer, not a connection to
+a mounted editor. See [MCP setup and limitations](MCP.md).

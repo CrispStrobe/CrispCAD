@@ -29,7 +29,8 @@
     "mac:build": "npm run build && node scripts/build-macos.mjs",
     "mac:run": "npm run mac:install",
     "mac:verify": "\"apps/macos/build/Brickwright CAD.app/Contents/MacOS/BrickwrightCAD\" --smoke-test",
-    "mac:install": "node scripts/install-macos.mjs"
+    "mac:install": "node scripts/install-macos.mjs",
+    "mcp": "node apps/mcp/server.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",

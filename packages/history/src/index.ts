@@ -25,6 +25,33 @@ function decode(revision:ModelRevision,objects:ReadonlyMap<string,ContentObject>
  for(const [id,key] of Object.entries(revision.nodeRefs)){const object=objects.get(key);if(!object||object.kind!=='node')throw new Error('History node is missing');const stored=JSON.parse(object.value);if(stored.kind==='mesh'){const asset=objects.get(stored.meshAsset);if(!asset||asset.kind!=='mesh')throw new Error('History mesh data is missing');const {meshAsset,...node}=stored;nodes[id]={...node,...JSON.parse(asset.value)};}else nodes[id]=stored;}
  return validateDocument({...revision.header,nodes});
 }
+/** Validate the same archive contract for browser and headless hosts. */
+async function readArchiveContent(bytes:Uint8Array){
+   if(bytes.byteLength>ARCHIVE_LIMIT)throw new Error('History backup exceeds 64 MiB');const archive=JSON.parse(new TextDecoder().decode(bytes)) as Archive;
+   if(archive?.format!=='brickwright-cad-history'||archive.version!==1||!archive.project||!Array.isArray(archive.objects)||!Array.isArray(archive.revisions)||!archive.revisions.length)throw new Error('Unsupported history backup');
+   const objects=new Map<string,ContentObject>();for(const object of archive.objects){if(!object||!['node','mesh'].includes(object.kind)||typeof object.value!=='string'||object.hash!==await contentHash(object.kind,object.value)||objects.has(object.hash))throw new Error('History content hash is invalid');objects.set(object.hash,object);}
+   const ids=new Set<string>(),serials=new Set<number>();for(const r of archive.revisions){if(!r||typeof r.id!=='string'||ids.has(r.id)||r.projectId!==archive.project.id||!Number.isSafeInteger(r.serial)||r.serial<1||serials.has(r.serial)||!Number.isFinite(r.createdAt)||typeof r.label!=='string'||r.label.length>160)throw new Error('History revision metadata is invalid');ids.add(r.id);serials.add(r.serial);const doc=decode(r,objects);if(doc.id!==archive.project.id||r.snapshotHash!==await hash(JSON.stringify([r.header,r.nodeRefs])))throw new Error('History snapshot is corrupt');}
+   const byId=new Map(archive.revisions.map(r=>[r.id,r]));for(const r of archive.revisions)if(r.parentId!==null&&(!byId.has(r.parentId)||byId.get(r.parentId)!.serial>=r.serial))throw new Error('History ancestry is invalid');const oldHead=byId.get(archive.project.headId);if(!oldHead)throw new Error('History head is missing');
+   return {archive,objects,oldHead};
+}
+/** Lazy snapshot access avoids expanding shared mesh assets for every revision. */
+export async function readPortableHistory(bytes:Uint8Array){
+ const {archive,objects,oldHead}=await readArchiveContent(bytes),byId=new Map(archive.revisions.map(r=>[r.id,r]));
+ const project:ModelProject={id:oldHead.projectId,title:oldHead.header.title,headId:oldHead.id,serial:archive.revisions.reduce((max,r)=>Math.max(max,r.serial),0),updatedAt:oldHead.createdAt};
+ return {project,revisions:structuredClone(archive.revisions),readDocument(id:string){const revision=byId.get(id);if(!revision)throw new Error('History revision not found');return decode(revision,objects);}};
+}
+/** Append one accepted edit without rewriting or removing any old revision. */
+export async function appendPortableRevision(previous:Uint8Array|undefined,document:CadDocument,label:string,parentId?:string):Promise<Uint8Array>{
+ if(typeof label!=='string'||!label.trim()||label.length>160)throw new Error('Invalid history label');
+ const old=previous?await readArchiveContent(previous):undefined,doc=validateDocument(document);
+ if(old&&old.archive.project.id!==doc.id)throw new Error('Cannot append another model to this history');
+ const serial=(old?.archive.revisions.reduce((n,r)=>Math.max(n,r.serial),0)??0)+1;if(!Number.isSafeInteger(serial))throw new Error('History serial exceeds supported range');
+ const parent=parentId??old?.archive.project.headId??null;if(parent!==null&&!old?.archive.revisions.some(r=>r.id===parent))throw new Error('History parent is missing');
+ const encoded=await encode(doc),objects=new Map(old?.objects??[]);for(const record of encoded.objects)objects.set(record.hash,record);
+ const {header,nodeRefs,snapshotHash}=encoded,revision:ModelRevision={id:newId(),projectId:doc.id,parentId:parent,serial,createdAt:Date.now(),label,header,nodeRefs,snapshotHash};
+ const archive:Archive={format:'brickwright-cad-history',version:1,project:{id:doc.id,title:doc.title,headId:revision.id,serial,updatedAt:revision.createdAt},revisions:[...(old?.archive.revisions??[]),revision],objects:[...objects.values()]};
+ const result=new TextEncoder().encode(JSON.stringify(archive));if(result.byteLength>ARCHIVE_LIMIT)throw new Error('History backup exceeds 64 MiB. No revisions were removed.');return result;
+}
 /** Append-only revision journal. No retention count, expiry or automatic pruning.
  * Native/Tauri hosts may implement the same API over a file/object store. */
 export async function openHistoryStore(name='brickwright-cad-history-v1'){
@@ -53,11 +80,7 @@ export async function openHistoryStore(name='brickwright-cad-history-v1'){
   async listRevisions(projectId:string,options:{beforeSerial?:number;limit?:number}={}){ensure();const limit=options.limit??50;if(!Number.isInteger(limit)||limit<1||limit>200)throw new Error('Invalid history page size');const tx=db.transaction('revisions','readonly');const cursor=tx.objectStore('revisions').index('byProject').openCursor(projectRange(projectId,options.beforeSerial),'prev');return await new Promise<ModelRevision[]>((resolve,reject)=>{const records:ModelRevision[]=[];cursor.onerror=()=>reject(cursor.error);cursor.onsuccess=()=>{const row=cursor.result;if(!row||records.length>=limit){resolve(records);return;}records.push(row.value);row.continue();};});},
   async exportArchive(projectId:string){ensure();await queue;const tx=db.transaction(['projects','revisions'],'readonly');const [project,revisions]=await Promise.all([request<ModelProject|undefined>(tx.objectStore('projects').get(projectId)),request<ModelRevision[]>(tx.objectStore('revisions').index('byProject').getAll(projectRange(projectId)))]);if(!project)throw new Error('Model not found');const needed=new Set(revisions.flatMap(r=>Object.values(r.nodeRefs))),objects=new Map<string,ContentObject>();let bytes=0;const fetch=async(keys:string[])=>{const tx=db.transaction('objects','readonly');const records=await Promise.all(keys.map(key=>request<ContentObject|undefined>(tx.objectStore('objects').get(key))));for(const object of records){if(!object)throw new Error('History backup has missing content');bytes+=object.value.length*2;if(bytes>ARCHIVE_LIMIT)throw new Error('History is too large for this in-memory backup. No revisions were removed.');objects.set(object.hash,object);}};await fetch([...needed]);const assets=new Set([...objects.values()].flatMap(object=>{const n=JSON.parse(object.value);return n.kind==='mesh'?[n.meshAsset as string]:[];}));await fetch([...assets]);const archive:Archive={format:'brickwright-cad-history',version:1,project,revisions,objects:[...objects.values()]};const output=new TextEncoder().encode(JSON.stringify(archive));if(output.length>ARCHIVE_LIMIT)throw new Error('History backup exceeds 64 MiB. No revisions were removed.');return output;},
   importArchive(bytes:Uint8Array,options:{preserveIdentity?:boolean}={}){return serial(async()=>{
-   if(bytes.byteLength>ARCHIVE_LIMIT)throw new Error('History backup exceeds 64 MiB');const archive=JSON.parse(new TextDecoder().decode(bytes)) as Archive;
-   if(archive?.format!=='brickwright-cad-history'||archive.version!==1||!archive.project||!Array.isArray(archive.objects)||!Array.isArray(archive.revisions)||!archive.revisions.length)throw new Error('Unsupported history backup');
-   const objects=new Map<string,ContentObject>();for(const object of archive.objects){if(!object||!['node','mesh'].includes(object.kind)||typeof object.value!=='string'||object.hash!==await contentHash(object.kind,object.value)||objects.has(object.hash))throw new Error('History content hash is invalid');objects.set(object.hash,object);}
-   const ids=new Set<string>(),serials=new Set<number>();for(const r of archive.revisions){if(!r||typeof r.id!=='string'||ids.has(r.id)||r.projectId!==archive.project.id||!Number.isSafeInteger(r.serial)||r.serial<1||serials.has(r.serial)||!Number.isFinite(r.createdAt)||typeof r.label!=='string'||r.label.length>160)throw new Error('History revision metadata is invalid');ids.add(r.id);serials.add(r.serial);const doc=decode(r,objects);if(doc.id!==archive.project.id||r.snapshotHash!==await hash(JSON.stringify([r.header,r.nodeRefs])))throw new Error('History snapshot is corrupt');}
-   const byId=new Map(archive.revisions.map(r=>[r.id,r]));for(const r of archive.revisions)if(r.parentId!==null&&(!byId.has(r.parentId)||byId.get(r.parentId)!.serial>=r.serial))throw new Error('History ancestry is invalid');const oldHead=byId.get(archive.project.headId);if(!oldHead)throw new Error('History head is missing');
+   const {archive,objects,oldHead}=await readArchiveContent(bytes);
    // Import as a new model: an old backup can never overwrite current history.
    const projectId=options.preserveIdentity?archive.project.id:newId();
    if(options.preserveIdentity&&await request(db.transaction('projects').objectStore('projects').get(projectId)))throw new Error('This model already exists; refusing to replace its history');

@@ -9,3 +9,4 @@ export * from './fragments.js';
 
 export * from './features.js';
 export * from './templates.js';
+export * from './code.js';

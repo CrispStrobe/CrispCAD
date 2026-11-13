@@ -86,3 +86,30 @@ Existing models and factory IDs remain supported. XYZ values are optionally
 shown beside the selection and update during transform/direct drags, as do the
 inspector values. Preview frames are not history entries; accepted release is one
 edit. The preference belongs to the host/view, not the saved CAD definition.
+
+## Code-defined parts and model browser: implemented 2026-11-13
+
+Document v4 retains original CAD Script source and scoped overrides. GUI preview
+and accepted edits share the same core compiler/kernel as the headless stdio MCP
+server. Full archives retain all iterations. See [Code mode](CODE-MODE.md) and
+[MCP](MCP.md) for the supported subset and the headless/live-window boundary.
+Next: live host transport with revision guards, reusable parameterized functions,
+2D code profiles and constrained sketch integration. An implicit field backend is
+an optional research path, inspired only by ImplicitCAD documentation; no AGPL
+implementation or new kernel is adopted. Require explicit tolerance and mesh/
+collision qualification before such a backend can produce printable bodies.
+
+The model browser now uses compact body rows, collapsible authored boolean inputs,
+code parameters, sketch/extrusion inputs, and model parameter/sketch sections when
+present. Generated preset internals remain hidden. Preserve selection and keyboard
+editing when browsing inputs. Saved iterations remain in the existing selector;
+construction dependencies are not a second chronological history. Add constraints,
+datums, assemblies and feature suppression/rollback only with their real data
+models and editing tools. Do not add empty categories or imply a solver exists.
+
+Browser interaction and staged UX acceptance are in [Model browser](MODEL-BROWSER.md).
+
+[Constraint solving](CONSTRAINTS.md) pins the CAD-modeling-app/dart_csp review,
+records executable Dart/JS probes, and specifies the retained entity model and
+optional geometric solver extension. This is the next constrained-sketch path,
+not a claim that a general sketch solver is already integrated.

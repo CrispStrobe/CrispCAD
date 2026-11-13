@@ -2,7 +2,7 @@ import {beforeAll,describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import initJolt from 'jolt-physics/debug-wasm-compat';
 import {createPresetDocument} from '../packages/editor/src/shapes.js';
-import {createCadSession,defaultGenerator} from '@brickwright/cad-core';
+import {createCadSession,defaultGenerator,defaultCodeProgram} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {createPhysicsWorld,prepareDocumentCollisions,solidMassProperties} from '../packages/physics/src/index.js';
@@ -57,4 +57,10 @@ describe('qualified Jolt physics boundary',()=>{
 it('keeps millimetre knurl tips above the floor and rejects tampered collider buffers',async()=>{
  const doc=structuredClone(createPresetDocument('knurl'));doc.nodes[doc.roots[0]].transform.position[2]=70;const result=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,result,kernel);const world=await createPhysicsWorld(doc,result,prepared,{J});try{for(let i=0;i<200;i++)world.step();expect(world.geometryBoundsMm(doc.roots[0]).min[2]).toBeGreaterThan(-.1);}finally{world.dispose();}
  const asset=prepared.get(doc.roots[0])!;expect(Object.isFrozen(asset.certificate)).toBe(true);asset.hulls[0].positions[0]+=1;await expect(createPhysicsWorld(doc,result,prepared,{J})).rejects.toThrow('missing or stale');
-});
+},30000);
+
+
+it('qualifies coded CSG against its actual mesh and requires fresh proof after local parameter edits',async()=>{
+ const s=createCadSession(),id=s.addCode(defaultCodeProgram());s.update(id,{transform:{position:[0,0,60],rotation:[0,0,0],scale:[1,1,1]}});const original=kernel.evaluate(s.state.document),old=await prepareDocumentCollisions(s.state.document,original,kernel);const p=defaultCodeProgram();p.parameters.width='80';s.updateCode(id,p);const result=kernel.evaluate(s.state.document);expect(result.volume).toBeGreaterThan(original.volume);expect(solidMassProperties(result.bodies[0],1050).massKg).toBeCloseTo(result.volume*1050e-9,9);
+ await expect(createPhysicsWorld(s.state.document,result,old,{J})).rejects.toThrow();const prepared=await prepareDocumentCollisions(s.state.document,result,kernel),world=await createPhysicsWorld(s.state.document,result,prepared,{J});try{for(let step=0;step<200;step++)world.step();expect(world.geometryBoundsMm(id).min[2]).toBeGreaterThan(-.25);}finally{world.dispose();}
+},30000);

@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {compileCode} from './code.js';
+import type {CodeProgram} from './code.js';
 import {checkFeatures} from './features.js';
 import type {PlanarSketch,ExtrusionFeature} from './features.js';
 import { checkPhysics } from './physics.js';
@@ -10,9 +12,9 @@ import type { PartPhysics, CadJoint } from './physics.js';
 export type Vec3 = [number, number, number];
 export interface Transform { position: Vec3; rotation: Vec3; scale: Vec3 }
 export type Primitive = { kind: 'box'; size: Vec3 } | { kind: 'cylinder'; radius: number; height: number; segments: number } | { kind: 'sphere'; radius: number; segments: number };
-export type Shape = Primitive | ExtrusionFeature | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[] } | { kind: 'mesh'; positions: number[]; indices: number[] };
+export type Shape = Primitive | ExtrusionFeature | {kind:'code';program:CodeProgram} | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[] } | { kind: 'mesh'; positions: number[]; indices: number[] };
 export type SolidNode = { id: string; name: string; color: string; transform: Transform; reference?: boolean; physics?: PartPhysics; generator?:GeneratorRecipe } & Shape;
-export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch> }
+export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3 | 4; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch> }
 export const MAX_DOCUMENT_BYTES = 16 * 1024 * 1024;
 export const identityTransform = (): Transform => ({ position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] });
 export function newId(): string {
@@ -36,7 +38,7 @@ const vec = (v: unknown, min = -1e6, max = 1e6): v is Vec3 => Array.isArray(v) &
 
 /** Validate before replacing any live state. Unknown versions are refused, never downgraded. */
 export function checkDocument(value: unknown): CadDocument {
-  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2,3].includes(value.version as number) || value.units !== 'mm') fail('unsupported format, version or units');
+  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2,3,4].includes(value.version as number) || value.units !== 'mm') fail('unsupported format, version or units');
   if (!idOk(value.id) || !text(value.title) || !record(value.nodes) || !Array.isArray(value.roots)) fail('missing document identity, nodes or roots');
   const nodes = value.nodes as Record<string, unknown>;
   const entries = Object.entries(nodes);
@@ -52,6 +54,7 @@ export function checkDocument(value: unknown): CadDocument {
         if (!num(raw.radius, 0.01, 50000) || !num(raw.height, 0.01, 100000) || !Number.isInteger(raw.segments) || !num(raw.segments, 12, 256)) fail(`bad cylinder on ${id}`); break;
       case 'sphere':
         if (!num(raw.radius, 0.01, 50000) || !Number.isInteger(raw.segments) || !num(raw.segments, 12, 256)) fail(`bad sphere on ${id}`); break;
+      case 'code': if(value.version!==4)fail('code objects require version 4');compileCode(raw.program as CodeProgram);break;
       case 'extrusion': break; // Full versioned feature validation follows graph validation.
       case 'boolean':
         if (!['union', 'subtract', 'intersect'].includes(String(raw.operation)) || !Array.isArray(raw.inputs) || raw.inputs.length < 2 || raw.inputs.length > 100 || new Set(raw.inputs).size !== raw.inputs.length || !raw.inputs.every(x => idOk(x) && Object.hasOwn(nodes, x))) fail(`bad boolean inputs on ${id}`); break;

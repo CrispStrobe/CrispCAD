@@ -1,0 +1,8 @@
+// A dimensioned plate with three bores. Coordinates are millimetres.
+param width: mm = 60;
+param depth: mm = 30;
+param thickness: mm = 5;
+param bore: mm = 3;
+let plate = move([0, 0, thickness / 2], box(width, depth, thickness));
+let holes = move([-20, 0, thickness / 2], repeat(3, [20, 0, 0], cylinder(bore, thickness * 2)));
+return subtract(plate, holes);

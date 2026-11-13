@@ -3,6 +3,7 @@ import { checkDocument, createDocument, freezeDocument, identityTransform, newId
 import type { CadDocument, Primitive, SolidNode, Transform } from './document.js';
 import { defaultPartPhysics } from './physics.js';
 import { applyParametricBindings, assertDrivenEdit } from './parameters.js';
+import type {CodeProgram} from './code.js';
 import type {PlanarSketch,SketchProfile,FeatureScalar} from './features.js';
 import type { ParametricDesign } from './parameters.js';
 import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositionExpression} from './fragments.js';
@@ -71,12 +72,14 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         if(d.version===1)d.version=2;pruneDocument(d);return [id];
       });
     },
-    addSketch(profile:SketchProfile,options:{name?:string;plane?:PlanarSketch['plane']}={}) {const id=newId();commit('Add sketch',d=>{d.version=3;d.sketches??={};d.sketches[id]={version:1,id,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile)};});return id;},
+    addCode(program:CodeProgram,name='Code object'){const id=newId();commit('Add code object',d=>{d.version=4;d.nodes[id]={id,kind:'code',program:structuredClone(program),name:uniqueObjectName(name,new Set(d.roots.map(key=>d.nodes[key].name))),color:'#76b7ce',transform:identityTransform()};d.roots.push(id);return [id];});return id;},
+    updateCode(id:string,program:CodeProgram){commit('Edit code object',d=>{if(d.nodes[id]?.kind!=='code')throw new Error('Select a code object');guardConstructionEdit(d,id);d.nodes[id]={...d.nodes[id],program:structuredClone(program)};});},
+    addSketch(profile:SketchProfile,options:{name?:string;plane?:PlanarSketch['plane']}={}) {const id=newId();commit('Add sketch',d=>{d.version=Math.max(d.version,3) as CadDocument['version'];d.sketches??={};d.sketches[id]={version:1,id,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile)};});return id;},
     extrudeSketch(sketchId:string,options:{distance?:FeatureScalar;symmetric?:boolean}={}) {const id=newId();commit('Extrude sketch',d=>{
-      d.version=3;d.nodes[id]={id,kind:'extrusion',featureVersion:1,sketchId,distance:options.distance??10,symmetric:options.symmetric??false,name:uniqueObjectName('Extrusion',new Set(d.roots.map(key=>d.nodes[key].name))),color:'#eea52b',transform:identityTransform()};d.roots.push(id);return [id];});return id;},
+      d.version=Math.max(d.version,3) as CadDocument['version'];d.nodes[id]={id,kind:'extrusion',featureVersion:1,sketchId,distance:options.distance??10,symmetric:options.symmetric??false,name:uniqueObjectName('Extrusion',new Set(d.roots.map(key=>d.nodes[key].name))),color:'#eea52b',transform:identityTransform()};d.roots.push(id);return [id];});return id;},
     addSketchExtrusion(profile:SketchProfile,options:{name?:string;plane?:PlanarSketch['plane'];distance?:FeatureScalar;symmetric?:boolean}={}) {
       const sketchId=newId(),id=newId();
-      commit('Add sketch extrusion',d=>{d.version=3;d.sketches??={};d.sketches[sketchId]={version:1,id:sketchId,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile)};
+      commit('Add sketch extrusion',d=>{d.version=Math.max(d.version,3) as CadDocument['version'];d.sketches??={};d.sketches[sketchId]={version:1,id:sketchId,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile)};
         d.nodes[id]={id,kind:'extrusion',featureVersion:1,sketchId,distance:options.distance??10,symmetric:options.symmetric??false,name:uniqueObjectName('Extrusion',new Set(d.roots.map(id=>d.nodes[id].name))),color:'#eea52b',transform:identityTransform()};d.roots.push(id);return [id];});return id;
     },
     updateSketch(id:string,patch:Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>) {commit('Edit sketch',d=>{editSketch(d,id,patch);});},
@@ -111,6 +114,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     update(id: string, patch: Partial<SolidNode>) { commit('Edit object', d => {
       if (!d.nodes[id]) throw new Error('Object does not exist');
       guardConstructionEdit(d,id);
+      if('program' in patch)throw new Error('Use updateCode to edit a code program');
       if(patch.generator)throw new Error('Use shape regeneration to change generator inputs');
       // Kind and identity cannot be changed by inspector edits.
       if ((patch.id && patch.id !== id) || (patch.kind && patch.kind !== d.nodes[id].kind)) throw new Error('Cannot change object identity or kind');

@@ -6,6 +6,9 @@
 - Reference applications are learning sources. Do not copy Layerling implementation
   or assets. Solidcraft's UI kit, look, theme, branding and interface design are
   excluded; see docs/PARAMETRIC-CAD-STRATEGY.md for the reviewed boundaries.
+- OpenSCAD and ImplicitCAD are ideas-only references: consult documentation,
+  not their GPL/AGPL implementations. Keep our CAD Script compiler original;
+  see docs/CODE-MODE.md for the implemented language and reference boundary.
 - The repository remains private. On 2026-11-13 the owner requested no GitHub Actions
   while private to conserve Free-tier CI allowance. Actions is disabled, and the
   old workflow is archived outside .github/workflows. Run checks/builds locally;

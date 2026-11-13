@@ -1,0 +1,9 @@
+name: brickwright_constraint_review
+publish_to: none
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+dependencies:
+  dart_csp:
+    git:
+      url: https://github.com/CrispStrobe/dart_csp.git
+      ref: 13f2b04925443a75b6766c969b10aefc65978a0e

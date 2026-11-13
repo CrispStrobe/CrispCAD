@@ -2,6 +2,8 @@
 // Original line icons for the workbench. No external icon/font dependency.
 const paths: Record<string, string> = {
   Select:'M5 2 5 20l5-5 4 7 4-2-4-7h7Z',
+  Code:'M8 5 2 12l6 7 M16 5l6 7-6 7 M14 3l-4 18',
+  Sketch:'M3 3h13v5 M3 3v18h18v-8 M8 17l2-6L18 3l4 4-8 8Z M10 11l4 4',
   Parameters:'M3 6h18 M3 12h18 M3 18h18 M7 3v6 M16 9v6 M10 15v6',
   Shapes: 'M12 2 22 7v10l-10 5-10-5V7Z M2 7l10 5 10-5 M12 12v10 M18 21l3 2 3-2',
   Box: 'M12 2 22 7v10l-10 5-10-5V7Z M2 7l10 5 10-5 M12 12v10',

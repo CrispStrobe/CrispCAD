@@ -302,3 +302,44 @@ independent offline SDK installation, and a separate Settings/reload check that
 leaves the model untouched. The existing expensive edited-thread/bent-heart
 physics fixture now has a dedicated 30-second test budget instead of the default
 5 seconds; its geometric and physical acceptance checks are unchanged.
+
+## Retained coded objects, headless MCP and compact browser — 2026-11-13
+
+The original bounded CAD Script compiler retains source and local input overrides
+in document v4. Nested transforms, CSG, named shapes and bounded linear repeats
+produce the same evaluated solids in the GUI and headless server. Preview never
+adds an iteration; acceptance preflights the full model and creates one edit.
+Definition edits preserve object identity/placement and invalidate collision proof.
+A new Jolt fixture verifies actual coded CSG, mass, stale-collider rejection,
+requalification and floor contact after a local parameter change.
+
+The stdio MCP server provides code help/read/preview/create/update, revision paging,
+branch restore and complete project/STL exports. It uses a dedicated headless
+session, not a live editor connection. File writes preserve all prior history,
+refuse a competing writer/external change, and use atomic replacement. The official
+MCP SDK client was tested against the real process. No runtime dependency was added.
+
+The missing Sketch icon is fixed. Compact browser rows distinguish bodies from
+expandable authored construction inputs, code-local parameter readouts and sketch
+references. Existing model parameters/sketches get real sections. Generated preset
+internals remain hidden. [Model browser](MODEL-BROWSER.md) specifies the progression
+to constraints, feature editing, datums and assemblies without empty placeholder UI.
+
+[Code mode](CODE-MODE.md) records the OpenSCAD/JSCAD/ImplicitCAD ideas-only review,
+current grammar, budget/compatibility limits and optional future implicit-backend
+path. No OpenSCAD/ImplicitCAD implementation or Solidcraft interface design was
+incorporated. Document versions 1–3 remain readable; older builds refuse v4.
+
+Local verification for build 8: all 149 headless tests, all 56 Chromium/iPad
+WebKit workflows plus two final browser/icon checks, native Mac menu/clipboard/
+sketch/code/library checks, official MCP SDK stdio interoperability and independent
+empty-cache installation of all six SDK packages. The expensive knurl collision
+fixture has an explicit 30-second budget after a timeout under concurrent browser
+load; its contact and tampered-collider checks are unchanged. The same app build
+was installed and launched with existing projects/history retained.
+
+Constraint investigation: pinned dart_csp 13f2b049 and CAD-modeling-app 2a561555;
+standalone Dart and dart2js/Node probes verify geometric residuals and demonstrate
+nearest-pose/status gaps. Dart analysis passes. This development-only experiment
+adds no production dependency. See [CONSTRAINTS.md](CONSTRAINTS.md) for the concrete
+entity schema, solver extension and acceptance path. Private Actions remains off.

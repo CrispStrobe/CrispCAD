@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import Module from 'manifold-3d';
 import type { Manifold, ManifoldToplevel } from 'manifold-3d';
-import { validateDocument, documentGeometryKey, evaluateExtrusion, FeatureEvaluationError } from '@brickwright/cad-core';
-import type { CadDocument, SolidNode } from '@brickwright/cad-core';
+import { validateDocument, documentGeometryKey, evaluateExtrusion, FeatureEvaluationError, compileCode } from '@brickwright/cad-core';
+import type { CadDocument, SolidNode, CodeShape } from '@brickwright/cad-core';
 import { collisionCSG } from './collision-csg.js';
 import { partitionConvex } from './convex.js';
 export interface BodyMesh { id: string; name: string; color: string; reference?: boolean; positions: Float32Array; indices: Uint32Array; volume: number; bounds: { min: number[]; max: number[] } }
@@ -27,6 +27,17 @@ export type GeometryKernel = Awaited<ReturnType<typeof createGeometryKernel>>;
 function evaluateDocument(module: ManifoldToplevel, input: CadDocument): GeometryResult {
   const doc = validateDocument(input); const cache = new Map<string, Manifold>(); const owned = new Set<Manifold>();
   const keep = (m: Manifold) => { owned.add(m); return m; };
+  const codeCache=new WeakMap<CodeShape,Manifold>();
+  const buildCode=(shape:CodeShape):Manifold=>{
+    const previous=codeCache.get(shape);if(previous)return previous;let solid:Manifold;
+    if(shape.kind==='box')solid=keep(module.Manifold.cube(shape.size,true));
+    else if(shape.kind==='cylinder')solid=keep(module.Manifold.cylinder(shape.height,shape.radius,shape.radius,shape.segments,true));
+    else if(shape.kind==='sphere')solid=keep(module.Manifold.sphere(shape.radius,shape.segments));
+    else if('shapes' in shape){const inputs=shape.shapes.map(buildCode);solid=keep(shape.kind==='union'?module.Manifold.union(inputs):shape.kind==='subtract'?module.Manifold.difference(inputs):module.Manifold.intersection(inputs));}
+    else if(shape.kind==='repeat'){const child=buildCode(shape.shape);const copies=Array.from({length:shape.count},(_,i)=>keep(child.translate(shape.step.map(v=>v*i) as [number,number,number])));solid=keep(module.Manifold.union(copies));}
+    else {const child=buildCode(shape.shape);solid=keep(shape.kind==='move'?child.translate(shape.vector):shape.kind==='rotate'?child.rotate(shape.vector):child.scale(shape.vector));}
+    codeCache.set(shape,solid);return solid;
+  };
   const build = (id: string): Manifold => {
     const cached = cache.get(id); if (cached) return cached;
     const node = doc.nodes[id]; let solid: Manifold;
@@ -35,6 +46,7 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
       case 'box': solid = keep(module.Manifold.cube(node.size, true)); break;
       case 'cylinder': solid = keep(module.Manifold.cylinder(node.height, node.radius, node.radius, node.segments, true)); break;
       case 'sphere': solid = keep(module.Manifold.sphere(node.radius, node.segments)); break;
+      case 'code': solid=buildCode(compileCode(node.program).shape);if(solid.isEmpty()||solid.volume()<=1e-8)throw new Error('Code produces no printable solid');break;
       case 'extrusion': {
         const profile=evaluateExtrusion(node,doc);
         solid=keep(module.Manifold.extrude([profile.contour],profile.distance));

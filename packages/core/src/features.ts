@@ -46,9 +46,9 @@ export function evaluateExtrusion(node:ExtrusionFeature&{id:string},doc:CadDocum
   } catch(error){if(error instanceof FeatureEvaluationError)throw error;throw new FeatureEvaluationError({source:'feature',id:node.id,message:error instanceof Error?error.message:String(error)});}
 }
 export function checkFeatures(doc:CadDocument) {
-  if(doc.sketches!==undefined){if(doc.version!==3||!record(doc.sketches)||Object.keys(doc.sketches).length>256)throw new Error('Sketches require document version 3 and at most 256 sketches');
+  if(doc.sketches!==undefined){if(doc.version<3||!record(doc.sketches)||Object.keys(doc.sketches).length>256)throw new Error('Sketches require document version 3 and at most 256 sketches');
     for(const [id,sketch] of Object.entries(doc.sketches)){if(!idOk(id)||sketch.id!==id)throw new Error('Invalid sketch identity');evaluateSketch(sketch,doc);}}
-  for(const node of Object.values(doc.nodes))if(node.kind==='extrusion'){if(doc.version!==3)throw new Error('Extrusion features require document version 3');evaluateExtrusion(node,doc);}
+  for(const node of Object.values(doc.nodes))if(node.kind==='extrusion'){if(doc.version<3)throw new Error('Extrusion features require document version 3');evaluateExtrusion(node,doc);}
 }
 export function sketchExpressions(sketch:PlanarSketch):string[]{const p=sketch.profile;return (p.kind==='rectangle'?[p.width,p.depth]:[p.radius]).filter((v):v is string=>typeof v==='string');}
 export function rewriteSketchExpressions(sketch:PlanarSketch,rewrite:(s:string)=>string) {

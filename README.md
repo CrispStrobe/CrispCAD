@@ -3,12 +3,14 @@
 **Verification runs locally.** GitHub Actions is disabled while this repository
 is private to preserve the owner’s Free-tier CI allowance. See [local checks](docs/CI.md).
 
-A 3D solid editor and the same editor that uses Manifold for mesh-solid operations and Three.js for rendering.
+A reusable 3D solid editor using Manifold for mesh-solid operations and Three.js for rendering.
 
 Optional native hosts
 provide macOS and iPad apps without changing the reusable editor.
 
 **Status:** working early CAD workbench, see the [roadmap](docs/ROADMAP.md) for current limits.
+The next constrained-sketch architecture and solver review are in
+[Constraint solving](docs/CONSTRAINTS.md).
 
 ![Compact CAD workbench with editable screw parameters](docs/images/workbench.png)
 
@@ -48,6 +50,10 @@ CrispMesh scan-to-CAD path, is in [docs/ROADMAP.md](docs/ROADMAP.md).
   formulas, principal planes and symmetry. Reopen their inputs after booleans,
   save/reload and history restore. See [the parametric model](docs/PARAMETRIC-MODEL.md)
   and [sketch mounting plate](examples/parametric-sketch-plate.bcad).
+- **Code an object** with a bounded declarative language, local parameter fields,
+  geometry preview and retained source. The same compiler is available through a
+  headless stdio MCP server. See [Code mode](docs/CODE-MODE.md) and
+  [MCP setup](docs/MCP.md).
 - Retain and edit the operands of union, subtract and intersection operations.
 - Optionally drive primitive dimensions and transforms with named parameters,
   unit-aware formulas and dependency recomputation, including retained boolean
