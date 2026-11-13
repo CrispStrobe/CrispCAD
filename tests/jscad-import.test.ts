@@ -23,8 +23,24 @@ it('supports ES imports, helper functions, parameters, radians and bounded geome
 it('refuses host access, external imports, dynamic execution and unbounded programs',()=>{
  for(const source of ["require('fs');",'process.exit();','globalThis.fetch("x");',"eval('1');","new Function('return 1')();","import fs from 'node:fs';",'const main=()=>{while(true){}};module.exports={main};','function f(){return f();}module.exports.main=f;','module.exports.main=()=>{const a=1;a=2;return a;};','module.exports.main=()=>{for(let i=0;i<1000;i++){}return 1;};',"module.exports.main=()=>require('@jscad/modeling').constructor('return 1')();"]){expect(()=>importJSCAD(source),source).toThrow();}
 });
-it('reports unsupported upstream geometry APIs with source locations',()=>{
- for(const file of ['nutsAndBolts','gear']){const source=readFileSync(`tests/fixtures/code-corpus/jscad/${file}.js`,'utf8');expect(()=>importJSCAD(source)).toThrow(/Line .*JSCAD|Line .*12.*96/);}
+it('reports unsupported upstream slice extrusion with a source location',()=>{
+ const source=readFileSync('tests/fixtures/code-corpus/jscad/nutsAndBolts.js','utf8');
+ expect(()=>importJSCAD(source)).toThrow(/Line .*JSCAD feature “extrusions\.extrudeFromSlices”/);
+});
+for(const parameters of [{},{numTeeth:12,thickness:7,centerholeradius:0}])it(`qualifies upstream gear extrusion and vec2 arithmetic: ${JSON.stringify(parameters)}`,()=>{
+ const source=readFileSync('tests/fixtures/code-corpus/jscad/gear.js','utf8'),result=geometry(source,parameters);
+ // Execute only this pinned MIT fixture in the reference test implementation.
+ // Submitted source continues to use the bounded AST interpreter exclusively.
+ const modeling=createRequire(import.meta.url)('@jscad/modeling'),context={module:{exports:{} as any},require:()=>modeling,parameters};
+ runInNewContext(source+"\nmodule.exports.result=main({...Object.fromEntries(getParameterDefinitions().map(p=>[p.name,p.initial])),...parameters});",context,{timeout:3000});
+ const expected=context.module.exports.result,expectedVolume=modeling.measurements.measureVolume(expected),expectedBounds=modeling.measurements.measureBoundingBox(expected);
+ expect(result.imported.outputs).toHaveLength(1);
+ expect(result.volume).toBeGreaterThan(0);
+ expect(Math.abs(result.volume-expectedVolume)/expectedVolume).toBeLessThan(1e-7);
+ for(let axis=0;axis<3;axis++){
+  expect(result.bodies[0].bounds.min[axis]).toBeCloseTo(expectedBounds[0][axis],6);
+  expect(result.bodies[0].bounds.max[axis]).toBeCloseTo(expectedBounds[1][axis],6);
+ }
 });
 for(const example of codeExamples)it(`imports our real JSCAD export: ${example.id}`,()=>{
  const p=codeExampleProgram(example.id),s=createCadSession();s.addCode(p);expect(geometry(exportJSCAD(p)).volume).toBeCloseTo(kernel.evaluate(s.state.document).volume,4);

@@ -1,0 +1,47 @@
+{
+  "capturedOn": "2026-11-13",
+  "files": [
+    {
+      "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/LICENSE",
+      "localPath": "evidence/jscad-LICENSE.txt",
+      "sha256": "bf0a7136796ab8f4573a7a77783d7dfebca4d35a595f0ad160d70a855d4c0cbb",
+      "bytes": 1091,
+      "role": "licence"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/package.json",
+      "localPath": "evidence/jscad-examples-package.json",
+      "sha256": "7f1c673f16131139d3fa9a07c2f12a84ee09c83210ea9ede82d8e1900acce7a6",
+      "bytes": 749,
+      "role": "package-grant"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/rcolyer/threads-scad/4ae9aeb3b136f9858200f77a304b909a000ce3b4/LICENSE.txt",
+      "localPath": "evidence/threads-scad-LICENSE.txt",
+      "sha256": "7179683e8000e6bdc9bbc60d85edf0a4ac8e76f951857f54fcb775d5886f1309",
+      "bytes": 7049,
+      "role": "licence"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/core/extrusions/nutsAndBolts.js",
+      "localPath": "sources/jscad/nutsAndBolts.js",
+      "sha256": "f96facf6dc85be7260a5b5e7648dd157abb9bc74e27da7d4cf78cdb0aa3df5ba",
+      "bytes": 2754,
+      "role": "source"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/parameters/gear.js",
+      "localPath": "sources/jscad/gear.js",
+      "sha256": "7867e3df0c6e43449e3dad46f5985269a8726658d5fc35a2f93d8a808a2ca9ec",
+      "bytes": 5512,
+      "role": "source"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/rcolyer/threads-scad/4ae9aeb3b136f9858200f77a304b909a000ce3b4/threads.scad",
+      "localPath": "sources/threads-scad/threads.scad",
+      "sha256": "f8ee04e57a1c721b7d8d68764e55ea448af935242024e94768e7949e384b2bc7",
+      "bytes": 19631,
+      "role": "source"
+    }
+  ]
+}

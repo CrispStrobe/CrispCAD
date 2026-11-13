@@ -44,7 +44,7 @@ history. Use a dedicated file: this process is its writer until closed.
 | `cad_list_revisions` | Paginated iteration metadata |
 | `cad_restore_revision` | Append a restore, preserving later work |
 | `cad_export_project` | Base64 complete history-inclusive project |
-| `cad_export_stl` | Base64 printable mesh |
+| `cad_export_stl` | Base64 printable mesh; automatic paired attribution for recorded library sources |
 
 Read `cad_get_model`, then send its `revision` as `expectedRevision` for every
 mutation. Creation needs `source`; optional `name` and `parameters` supply its
@@ -64,7 +64,12 @@ the lock does not lock other applications' library or IndexedDB storage.
 Project archives are capped at 64 MiB and never pruned to fit. The headless edit
 surface caps a current model at 1 MiB; inline project/STL exports are capped at
 3 MiB (before base64). Use the configured project file for larger archives and the
-GUI for larger mesh exports. Geometry runs in a worker with a 30-second watchdog.
+GUI for larger plain mesh exports. Recorded library sources require accurate
+`modificationNotes` describing changes since insertion (including when unchanged).
+Such STL exports return one `brickwright-attributed-stl` response with a `files`
+array containing STL and attribution JSON; distribute both together. The combined
+pair must fit the 3 MiB limit. The GUI currently refuses attributed STL and 3MF
+exports pending paired delivery support. See [attribution export](MODEL-ATTRIBUTION.md). Geometry runs in a worker with a 30-second watchdog.
 MCP JSON messages are limited to 256 KiB. Cancellation is checked before acceptance;
 a final atomic file commit may already have completed when cancellation arrives.
 

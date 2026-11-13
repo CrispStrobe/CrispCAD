@@ -24,11 +24,13 @@ converter milestone here; it is not a completed compatibility release.
 
 Last verified before polygon extrusion work: 80 converter/MCP tests passed,
 including all 34 OpenSCAD/JSCAD snapshot round trips and the upstream Basic
-Booleans JSCAD file. The latest extrusion/vec2 additions compile but require tests
-and completion of the OpenSCAD profile syntax. Existing unsupported-fixture tests
-must be updated as capabilities become available, without hiding new failures.
+Booleans JSCAD file. The upstream gear fixture now has positive regression coverage
+for default and overridden parameters, comparing volume and bounds with the trusted
+MIT test implementation. Its planar polygon extrusion and vec2 arithmetic agree
+with that reference; slice extrusion remains explicitly unsupported. Completion
+of the OpenSCAD profile syntax and full local validation remain pending.
 
-Next: complete planar-profile extrusion conversion, qualify the upstream gear,
+Next: complete OpenSCAD planar-profile extrusion conversion,
 retain explicit slice-extrusion/BOSL library gaps, finish the machine-readable
 corpus report and handoff contract for the VPS library agent, then run the local
 checks. GitHub Actions remains disabled on the private repository.

@@ -2,7 +2,7 @@
 import {Worker} from 'node:worker_threads';
 import {readFile,writeFile,open,rename,unlink,stat,lstat,mkdir} from 'node:fs/promises';
 import {dirname,resolve} from 'node:path';
-import {createCadSession,createDocument,compileCode,defaultCodeProgram,codeExamples,importOpenSCAD,importJSCAD,exportOpenSCAD,exportJSCAD,exportCodeSource,newId,serializeDocument,CODE_LIMITS,t,getLocale} from '@brickwright/cad-core';
+import {createCadSession,createDocument,compileCode,defaultCodeProgram,codeExamples,importOpenSCAD,importJSCAD,exportOpenSCAD,exportJSCAD,exportCodeSource,newId,serializeDocument,CODE_LIMITS,t,getLocale,hasModelAttribution,createModelAttributionSidecar,validateDocument} from '@brickwright/cad-core';
 import {appendPortableRevision,readPortableHistory} from '@brickwright/cad-history';
 import {exportSTL} from '@brickwright/cad-geometry';
 
@@ -20,7 +20,7 @@ export const toolDefinitions=[
  spec('cad_list_revisions','List saved revision metadata, latest first.',{beforeSerial:{type:'integer',minimum:1},limit:{type:'integer',minimum:1,maximum:100}}),
  spec('cad_restore_revision','Restore an old definition as a new iteration; retain all later work.',{revisionId:id,expectedRevision:revision},['revisionId','expectedRevision'],false),
  spec('cad_export_project','Return a complete history-inclusive .bcad archive as base64; large projects use the configured project file instead.'),
- spec('cad_export_stl','Return printable binary STL as base64 from current evaluated geometry.')
+ spec('cad_export_stl','Return printable binary STL as base64. Recorded library sources automatically include a paired attribution JSON file; supply accurate modificationNotes describing changes since insertion (including when unchanged) and distribute both files together.',{modificationNotes:{type:'string',minLength:1,maxLength:4096}})
 ];
 function validateArguments(definition,args){
  if(!args||typeof args!=='object'||Array.isArray(args))throw new Error(t('Tool arguments must be an object'));const schema=definition.inputSchema;
@@ -64,7 +64,21 @@ export async function createCodeHost(options={}){
   if(name==='cad_get_code_object'){const n=session.state.document.nodes[args.objectId];if(n?.kind!=='code')throw new Error(t('Code object not found'));const compiled=compileCode(n.program);return {revision:metadata.project.serial,id:n.id,name:n.name,program:n.program,parameters:compiled.parameters,values:compiled.values,transform:n.transform};}
   if(name==='cad_list_revisions')return {revision:metadata.project.serial,revisions:metadata.revisions.filter(r=>!args.beforeSerial||r.serial<args.beforeSerial).sort((a,b)=>b.serial-a.serial).slice(0,args.limit??50).map(({id,parentId,serial,label,createdAt})=>({id,parentId,serial,label,createdAt}))};
   if(name==='cad_export_project'){if(archive.length>3*1024*1024)throw new Error(t('Use the configured project file for archives above 3 MiB; no history was removed'));return {name:'coded-project.bcad',mime:'application/json',base64:Buffer.from(archive).toString('base64'),revision:metadata.project.serial};}
-  if(name==='cad_export_stl'){const result=await geometry.evaluate(session.state.document,signal),bytes=exportSTL(result.bodies);if(bytes.length>3*1024*1024)throw new Error(t('Open the project in the GUI to export meshes above 3 MiB'));return {name:'coded-project.stl',mime:'model/stl',base64:Buffer.from(bytes).toString('base64')};}
+  if(name==='cad_export_stl'){
+   // Snapshot before worker IO: concurrent requests may advance the live project.
+   const document=validateDocument(session.state.document),attributed=hasModelAttribution(document);
+   if(attributed&&(typeof args.modificationNotes!=='string'||!args.modificationNotes.trim()||/[\u0000-\u001f]/.test(args.modificationNotes)))throw new Error(t('Recorded library sources require accurate modificationNotes describing changes since insertion, including when unchanged.'));
+   const result=await geometry.evaluate(document,signal),bytes=exportSTL(result.bodies);
+   if(bytes.length>3*1024*1024)throw new Error(attributed?t('Attributed STL exceeds the MCP 3 MiB limit; reduce model complexity. GUI attributed mesh export is not supported yet.'):t('Open the project in the GUI to export meshes above 3 MiB'));
+   const file={name:'coded-project.stl',mime:'model/stl',base64:Buffer.from(bytes).toString('base64')};
+   if(!attributed)return file;
+   const rootIds=document.roots.filter(id=>!document.nodes[id].reference);
+   const sidecar=await createModelAttributionSidecar(document,{filename:file.name,format:'stl',bytes,rootIds,modificationNotes:args.modificationNotes});
+   const sidecarBytes=new TextEncoder().encode(JSON.stringify(sidecar,null,2));
+   if(bytes.length+sidecarBytes.length>3*1024*1024)throw new Error(t('STL and attribution exceed the MCP 3 MiB limit; no partial export was returned. Reduce model or source metadata size.'));
+   cancelled(signal);
+   return {format:'brickwright-attributed-stl',version:1,files:[file,{name:`${file.name}.attribution.json`,mime:'application/json',base64:Buffer.from(sidecarBytes).toString('base64')}],distribution:t('Distribute both files together. Retain any licence texts and notices required by the recorded grants.')};
+  }
   if(name==='cad_preview_code'){const p=program(args.source,args.parameters),compiled=compileCode(p),trial=createCadSession();trial.addCode(p);return {...summary(await geometry.evaluate(trial.state.document,signal)),parameters:compiled.parameters,values:compiled.values,committed:false,revision:metadata.project.serial};}
   if(args.expectedRevision!==metadata.project.serial)throw new Error(t`Stale model revision. Current revision is ${metadata.project.serial}; read the model and retry.`);
   const trial=createCadSession(session.state.document);let objectId=args.objectId;

@@ -1,0 +1,1 @@
+param angle:deg=30; return rotate([0,0,angle],box(50,8,6));

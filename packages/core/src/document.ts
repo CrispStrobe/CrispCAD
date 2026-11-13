@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {checkModelProvenance,pruneModelProvenance} from './model-provenance.js';
+import type {ModelProvenance} from './model-provenance.js';
 import {t as translate} from './i18n.js';
 import {compileCode} from './code.js';
 import type {CodeProgram} from './code.js';
@@ -14,8 +16,8 @@ export type Vec3 = [number, number, number];
 export interface Transform { position: Vec3; rotation: Vec3; scale: Vec3 }
 export type Primitive = { kind: 'box'; size: Vec3 } | { kind: 'cylinder'; radius: number; height: number; segments: number } | { kind: 'sphere'; radius: number; segments: number };
 export type Shape = Primitive | ExtrusionFeature | {kind:'code';program:CodeProgram} | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[] } | { kind: 'mesh'; positions: number[]; indices: number[] };
-export type SolidNode = { id: string; name: string; color: string; transform: Transform; reference?: boolean; physics?: PartPhysics; generator?:GeneratorRecipe } & Shape;
-export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3 | 4; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch> }
+export type SolidNode = { id: string; name: string; color: string; transform: Transform; reference?: boolean; provenance?: string[]; physics?: PartPhysics; generator?:GeneratorRecipe } & Shape;
+export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3 | 4 | 5; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch>; provenance?:ModelProvenance }
 export const MAX_DOCUMENT_BYTES = 16 * 1024 * 1024;
 export const identityTransform = (): Transform => ({ position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] });
 export function newId(): string {
@@ -27,7 +29,7 @@ export function newId(): string {
 export const createDocument = (title = translate('Untitled design')): CadDocument => ({ format: 'brickwright-cad', version: 1, units: 'mm', id: newId(), title, nodes: {}, roots: [] });
 /** Fast stale-result guard, not an authenticity/signing mechanism. */
 export function documentGeometryKey(doc: CadDocument): string {
-  const source=JSON.stringify([doc.id,doc.roots,doc.sketches,doc.parametric,Object.entries(doc.nodes).map(([id,n])=>{const {physics,...geometry}=n;return [id,geometry];})]);let a=2166136261,b=3339675911;
+  const source=JSON.stringify([doc.id,doc.roots,doc.sketches,doc.parametric,Object.entries(doc.nodes).map(([id,n])=>{const {physics,...geometry}=n;if(doc.version===5)delete geometry.provenance;return [id,geometry];})]);let a=2166136261,b=3339675911;
   for(let i=0;i<source.length;i++){a=Math.imul(a^source.charCodeAt(i),16777619);b=Math.imul(b^source.charCodeAt(i),2246822519);}return `${source.length}:${a>>>0}:${b>>>0}`;
 }
 function fail(message: string): never { throw new Error(translate`Invalid CAD project: ${message}`); }
@@ -39,7 +41,7 @@ const vec = (v: unknown, min = -1e6, max = 1e6): v is Vec3 => Array.isArray(v) &
 
 /** Validate before replacing any live state. Unknown versions are refused, never downgraded. */
 export function checkDocument(value: unknown): CadDocument {
-  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2,3,4].includes(value.version as number) || value.units !== 'mm') fail(translate('unsupported format, version or units'));
+  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2,3,4,5].includes(value.version as number) || value.units !== 'mm') fail(translate('unsupported format, version or units'));
   if (!idOk(value.id) || !text(value.title) || !record(value.nodes) || !Array.isArray(value.roots)) fail(translate('missing document identity, nodes or roots'));
   const nodes = value.nodes as Record<string, unknown>;
   const entries = Object.entries(nodes);
@@ -55,7 +57,7 @@ export function checkDocument(value: unknown): CadDocument {
         if (!num(raw.radius, 0.01, 50000) || !num(raw.height, 0.01, 100000) || !Number.isInteger(raw.segments) || !num(raw.segments, 12, 256)) fail(translate`bad cylinder on ${id}`); break;
       case 'sphere':
         if (!num(raw.radius, 0.01, 50000) || !Number.isInteger(raw.segments) || !num(raw.segments, 12, 256)) fail(translate`bad sphere on ${id}`); break;
-      case 'code': if(value.version!==4)fail(translate('code objects require version 4'));compileCode(raw.program as CodeProgram);break;
+      case 'code': if((value.version as number)<4)fail(translate('code objects require version 4'));compileCode(raw.program as CodeProgram);break;
       case 'extrusion': break; // Full versioned feature validation follows graph validation.
       case 'boolean':
         if (!['union', 'subtract', 'intersect'].includes(String(raw.operation)) || !Array.isArray(raw.inputs) || raw.inputs.length < 2 || raw.inputs.length > 100 || new Set(raw.inputs).size !== raw.inputs.length || !raw.inputs.every(x => idOk(x) && Object.hasOwn(nodes, x))) fail(translate`bad boolean inputs on ${id}`); break;
@@ -82,6 +84,7 @@ export function checkDocument(value: unknown): CadDocument {
   const mark = (id: string) => { if (reachable.has(id)) return; reachable.add(id); const n = nodes[id] as SolidNode; if (n.kind === 'boolean') n.inputs.forEach(mark); };
   (value.roots as string[]).forEach(mark);
   if (reachable.size !== entries.length) fail(translate('orphaned nodes'));
+  checkModelProvenance(value as unknown as CadDocument);
   checkPhysics(value as unknown as CadDocument);
   checkParametricDesign(value as unknown as CadDocument);
   checkFeatures(value as unknown as CadDocument);
@@ -108,5 +111,6 @@ export function pruneDocument(doc: CadDocument) {
   const walk = (id: string) => { if (keep.has(id)) return; keep.add(id); const n = doc.nodes[id]; if (n.kind === 'boolean') n.inputs.forEach(walk); };
   doc.roots.forEach(walk);
   Object.keys(doc.nodes).forEach(id => { if (!keep.has(id)) delete doc.nodes[id]; });
+  pruneModelProvenance(doc);
   if(doc.parametric)doc.parametric.bindings=doc.parametric.bindings.filter(binding=>keep.has(binding.nodeId));
 }

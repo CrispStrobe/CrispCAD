@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: BSD-3-Clause
+import {assertPlainMeshExport} from './export-policy.js';
 import {fineNumberKeys} from './precision.js';
 import { t } from '@brickwright/cad-core';
-// SPDX-License-Identifier: BSD-3-Clause
 import { createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode } from '@brickwright/cad-core';
 import type { CadDocument, CadSession, Primitive, SolidNode, Transform, Vec3 } from '@brickwright/cad-core';
 import { export3MF, exportSTL, importSTL } from '@brickwright/cad-geometry';
@@ -409,8 +410,15 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   async function deliver(format: 'bcad' | 'stl' | '3mf') {
     if(format==='bcad'&&options.saveProject){await options.saveProject();return;}
     if (!options.onExport) throw new Error(t('This host has not provided file export'));
+    if(format!=='bcad')assertPlainMeshExport(session.state.document);
+    const exportRevision=session.state.revision;
     const title = session.state.document.title.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '-').trim() || 'design';
     const bytes = format === 'bcad' ? new TextEncoder().encode(session.serialize()) : format === 'stl' ? exportSTL((await whenIdle()).bodies) : export3MF((await whenIdle()).bodies);
+    // Never deliver geometry across an edit or project switch while awaiting a build.
+    if(format!=='bcad'){
+      if(session.state.revision!==exportRevision)throw new Error(t('The model changed while exporting. Export again from the current model.'));
+      assertPlainMeshExport(session.state.document);
+    }
     await options.onExport({ name: `${title}.${format}`, bytes, mime: format === 'bcad' ? 'application/vnd.brickwright.cad+json' : format === 'stl' ? 'model/stl' : 'model/3mf' });
   }
   buildTree(); buildInspector(); lastRevision = session.state.revision; lastSelection = JSON.stringify(session.state.selection); viewport.setSelection(session.state.selection); void buildLatest(); refreshButtons();
