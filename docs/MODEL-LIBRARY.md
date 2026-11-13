@@ -202,7 +202,7 @@ It never replaces a non-convex part with an unqualified hull or box. Optional
 the existing admission and collision limits; oversized/difficult geometry fails.
 
 The result keeps fresh `quality` separate from `evidence`. Evidence records the
-exact source byte hash, converted geometry hash, explicit conversion, capture date,
+exact source byte hash, converted geometry hash, evaluated source volume, explicit conversion, capture date,
 mesh checker/policy (in `quality`), qualifier version, pinned Jolt version/debug
 build, hull count, full geometric certificate/tolerances and native step scope.
 Failures reject without returning positive evidence. Catalogue records, live
@@ -212,11 +212,29 @@ World creation still requires fresh immutable runtime proofs, and changed bytes,
 conversion, geometry or toolchain require requalification.
 The reported engine version and package release pin must be updated together;
 a focused test binds them. The host's installed dependency closure is trusted.
-Keep the complete returned report separately when persisting curation evidence.
-The catalogue's older `quality.physics` summary cannot retain its conversion,
-geometric certificate or native-check scope; this API does not populate that
-summary or certify a catalogue automatically. A future versioned catalogue/report
-integration must retain those bindings rather than discard them.
+The complete return value is a `brickwright-library-collision-report` version 1
+report, including the exact selected STL identity and the fresh quality result.
+Catalogue version 1 optionally retains it as `asset.quality.collisionReport`.
+Older catalogues without reports and their optional `quality.physics` summaries
+remain valid; a summary alone does not establish a complete qualification report.
+The optional report has strict fields and binds the file, fresh passing checks,
+checker/policy, conversion, date, geometry hash, source volume, certificate,
+tolerances, engine/qualifier versions and native debug-step scope. Certificate
+relative error must agree with its difference volumes and evaluated source volume.
+Contradictory summaries, stale bindings, incomplete reports and unsupported report
+versions are rejected. These checks establish metadata consistency, not that
+serialized curator assertions describe a run that really happened.
+
+`qualifyModelLibrarySTLAndAttach(catalogue, selection, bytes, options)` explicitly
+runs fresh qualification and returns a new validated catalogue snapshot with the
+full report and its fresh quality. It accepts no external report for attachment,
+performs no IO, and leaves the input catalogue and all project/history state
+unchanged. Hosts decide where to save the returned catalogue. Ordinary insertion
+retains this complete reviewed asset snapshot in version-5 project provenance;
+serialization, undo/redo and existing history archives preserve it without
+rewriting old documents or revisions. Metadata is still curation evidence only:
+serialized reports cannot create a physics world, and runtime collision proofs
+must be freshly established. No automatic catalogue certification is performed.
 
 Run this operation in a host worker with a time limit. `signal` is checked at
 asynchronous stage boundaries, but cannot interrupt synchronous decomposition.
@@ -224,7 +242,7 @@ A native abort requires discarding the worker/module. The single free rigid step
 does not test ground settling, cavity clearance, contacts, mechanism behavior,
 elasticity, printability or manufacturing accuracy; fit-critical openings still
 need independent probes. The native step API currently exposes no capacity/error
-telemetry. No external content, saved qualification collection or editor physics
+telemetry. No external content, bundled qualification collection or editor physics
 interface is introduced by this API.
 
 ## Original editable example collection
