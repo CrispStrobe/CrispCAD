@@ -59,8 +59,8 @@ provenance in project documents before enabling catalogue insertion. Plain STL
 alone cannot carry these obligations reliably. The current STL importer/exporter
 is for user-provided geometry. Headless project provenance and a standalone
 [attribution sidecar helper](MODEL-ATTRIBUTION.md) are available; catalogue insertion
-and paired browser/native export remain pending; MCP STL export now automatically
-returns attribution for recorded printable sources (see MODEL-ATTRIBUTION.md).
+remains pending; browser/native STL export delivers one ZIP with STL and attribution,
+and MCP returns both files for recorded printable sources (see MODEL-ATTRIBUTION.md).
 
 ## Immediate useful library
 
@@ -83,9 +83,8 @@ offline cache (see below). Headless STL quality screening is also available
 (see below). The 34 original editable examples now have a reproducible local collection
 (see below). A small CC0 calibration set remains to be implemented. Preserve original files and derived meshes with their respective
 hashes. Project provenance now retains reviewed source snapshots in version 5 documents,
-and a standalone attribution sidecar helper is available. Catalogue insertion and
-paired browser/native export remain pending. MCP STL export now automatically
-returns attribution for recorded printable sources; the catalogue contract alone
+and a standalone attribution sidecar helper is available. Catalogue insertion remains pending. Browser/native STL export packages STL and
+attribution together, and MCP returns both files for recorded printable sources; the catalogue contract alone
 does not provide insertion.
 
 
@@ -139,8 +138,8 @@ This is a retrieval API, not catalogue insertion UI. Verified bytes establish fi
 identity only: they do not establish legal rights, mesh quality or physics
 qualification. Retrieval changes no STL importer, saved project definition or history revision.
 Insertion still requires host integration with project provenance. MCP now
-integrates the sidecar helper for attributed STL; paired browser/native delivery
-remains pending.
+integrates the sidecar helper for attributed STL; browser/native delivery now
+packages STL and attribution together in one ZIP.
 
 ## Headless STL quality screening
 
@@ -231,8 +230,8 @@ coordinates are preserved, including negative Z coordinates; meshes are not
 moved onto a print bed or repaired. The screens do not establish self-intersection
 freedom, printability, mechanical accuracy or physics/collision qualification.
 Project provenance and the standalone attribution sidecar helper are separate
-from this collection. Catalogue insertion and paired browser/native export remain
-pending; MCP STL export now returns attribution for recorded printable sources.
+from this collection. Catalogue insertion remains pending; browser/native STL export packages STL and
+attribution in one ZIP, and MCP returns both files for recorded printable sources.
 
 
 ## Retained project provenance
@@ -274,11 +273,11 @@ required. UI preferences and transient drag previews remain outside model histor
 
 This slice provides persistence and graph propagation only. It does not expose
 library insertion UI, fetch or convert an asset, track a complete narrative of
-subsequent edits, or expose paired browser/native STL downloads.
+subsequent edits.
 The MCP host now automatically pairs STL with attribution for recorded printable
 sources and requires explicit export modification notes; see
-[attribution export](MODEL-ATTRIBUTION.md). The editor refuses attributed STL/3MF
-until paired host delivery is implemented.
+[attribution export](MODEL-ATTRIBUTION.md). The editor now packages attributed STL and its JSON sidecar in one ZIP after
+requiring explicit modification notes; attributed 3MF remains refused.
 
 
 ## Reviewed external geometric fixture

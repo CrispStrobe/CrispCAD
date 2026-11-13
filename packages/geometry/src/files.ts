@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {t} from '@brickwright/cad-core';
+import {createModelAttributionSidecar, t} from '@brickwright/cad-core';
+import type {CadDocument} from '@brickwright/cad-core';
 import { strToU8, zipSync } from 'fflate';
 import type { BodyMesh } from './kernel.js';
 /** Binary STL, world-space millimetres. Normals are calculated from winding. */
@@ -40,4 +41,18 @@ export function export3MF(bodies: readonly BodyMesh[]): Uint8Array {
   const objects = bodies.map((b, i) => `<object id="${i + 1}" type="model" name="${escape(b.name)}"><mesh><vertices>${Array.from({ length: b.positions.length / 3 }, (_, n) => `<vertex x="${b.positions[n * 3]}" y="${b.positions[n * 3 + 1]}" z="${b.positions[n * 3 + 2]}"/>`).join('')}</vertices><triangles>${Array.from({ length: b.indices.length / 3 }, (_, n) => `<triangle v1="${b.indices[n * 3]}" v2="${b.indices[n * 3 + 1]}" v3="${b.indices[n * 3 + 2]}"/>`).join('')}</triangles></mesh></object>`).join('');
   const model = `<?xml version="1.0" encoding="UTF-8"?><model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"><resources>${objects}</resources><build>${bodies.map((_, i) => `<item objectid="${i + 1}"/>`).join('')}</build></model>`;
   return zipSync({ '[Content_Types].xml': strToU8('<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/></Types>'), '_rels/.rels': strToU8('<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>'), '3D/3dmodel.model': strToU8(model) });
+}
+
+/** Package the caller's same-snapshot STL and recorded attribution as one download.
+ * The caller must supply all printable bodies evaluated from this document.
+ */
+export async function exportAttributedSTL(document: CadDocument, bodies: readonly BodyMesh[], filename: string, modificationNotes: string): Promise<Uint8Array> {
+  const bytes = exportSTL(bodies);
+  const sidecar = await createModelAttributionSidecar(document, {filename, format: 'stl', bytes, modificationNotes});
+  const attribution = strToU8(JSON.stringify(sidecar, null, 2));
+  // Match the standalone native single-file limit, before and after compression.
+  if (bytes.byteLength + attribution.byteLength > 64 * 1024 * 1024) throw new Error(t('STL and attribution exceed 64 MiB; no export was delivered.'));
+  const archive = zipSync({[filename]: bytes, [`${filename}.attribution.json`]: attribution});
+  if (archive.byteLength > 64 * 1024 * 1024) throw new Error(t('STL and attribution exceed 64 MiB; no export was delivered.'));
+  return archive;
 }
