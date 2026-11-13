@@ -69,7 +69,7 @@ export async function createCodeHost(options={}){
    const document=validateDocument(session.state.document),attributed=hasModelAttribution(document);
    if(attributed&&(typeof args.modificationNotes!=='string'||!args.modificationNotes.trim()||/[\u0000-\u001f]/.test(args.modificationNotes)))throw new Error(t('Recorded library sources require accurate modificationNotes describing changes since insertion, including when unchanged.'));
    const result=await geometry.evaluate(document,signal),bytes=exportSTL(result.bodies);
-   if(bytes.length>3*1024*1024)throw new Error(attributed?t('Attributed STL exceeds the MCP 3 MiB limit; reduce model complexity. GUI attributed mesh export is not supported yet.'):t('Open the project in the GUI to export meshes above 3 MiB'));
+   if(bytes.length>3*1024*1024)throw new Error(attributed?t('Attributed STL exceeds the MCP 3 MiB limit; reduce model complexity or use the editor ZIP export.'):t('Open the project in the GUI to export meshes above 3 MiB'));
    const file={name:'coded-project.stl',mime:'model/stl',base64:Buffer.from(bytes).toString('base64')};
    if(!attributed)return file;
    const rootIds=document.roots.filter(id=>!document.nodes[id].reference);

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {assertPlainMeshExport} from './export-policy.js';
+import {prepareMeshExport} from './export-policy.js';
 import {fineNumberKeys} from './precision.js';
 import { t } from '@brickwright/cad-core';
-import { createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode } from '@brickwright/cad-core';
+import { createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution } from '@brickwright/cad-core';
 import type { CadDocument, CadSession, Primitive, SolidNode, Transform, Vec3 } from '@brickwright/cad-core';
-import { export3MF, exportSTL, importSTL } from '@brickwright/cad-geometry';
+import { importSTL } from '@brickwright/cad-geometry';
 import type { GeometryResult } from '@brickwright/cad-geometry';
 import { createGeometryClient } from './geometry-client.js';
 import {mountTransformReadout} from './transform-readout.js';
@@ -153,9 +153,25 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   button('Import STL…',chooseImport);
   const exportDialog=el('dialog','export-dialog');exportDialog.setAttribute('aria-label',t('Export model'));exportDialog.append(el('h2','',t('Export model')));
   const exportFormat=el('select');exportFormat.setAttribute('aria-label',t('Export format'));for(const [value,label] of [['stl','STL · triangle mesh'],['3mf','3MF · packaged mesh']]){const option=el('option','',t(label));option.value=value;exportFormat.append(option);}exportDialog.append(exportFormat);
-  const exportActions=el('footer');button('Cancel export',()=>exportDialog.close(),exportActions);
-  const exportRun=button('Export',async()=>{await deliver(exportFormat.value as 'stl'|'3mf');exportDialog.close();},exportActions,'primary');exportDialog.append(exportActions);exportDialog.addEventListener('keydown',event=>event.stopPropagation());shell.append(exportDialog);
-  const exportButton=button('Export…',()=>exportDialog.showModal());exportButton.disabled=true;
+  const attributionHelp=el('p','',t('Recorded sources export as one ZIP containing STL and attribution JSON. Distribute both files together and retain any separately required licence texts and notices.'));
+  const notesLabel=el('label','',t('Changes since insertion'));
+  const exportNotes=el('textarea');exportNotes.maxLength=4096;exportNotes.rows=3;exportNotes.setAttribute('aria-label',t('Changes since insertion'));notesLabel.append(exportNotes);
+  const notesHelp=el('p','',t('Describe changes since insertion accurately, including when unchanged.'));
+  exportDialog.append(attributionHelp,notesLabel,notesHelp);
+  let exporting=false,exportCanceled=false,exportDialogRevision=-1;
+  function showExport(){exportNotes.value='';exportCanceled=false;exportDialogRevision=session.state.revision;refreshExportAttribution();exportDialog.showModal();}
+  function refreshExportAttribution(){const attributed=hasModelAttribution(session.state.document);attributionHelp.hidden=notesLabel.hidden=notesHelp.hidden=!attributed;exportNotes.required=attributed;}
+  const exportActions=el('footer');button('Cancel export',()=>{exportCanceled=true;exportDialog.close();},exportActions);
+  exportDialog.addEventListener('cancel',()=>{exportCanceled=true;});
+  const exportRun=button('Export',async()=>{
+    if(exporting)return;
+    exporting=true;refreshButtons();
+    try{await deliver(exportFormat.value as 'stl'|'3mf',exportNotes.value,()=>{
+      if(exportCanceled||!exportDialog.open)throw new Error(t('Export canceled'));
+      if(session.state.revision!==exportDialogRevision)throw new Error(t('The model changed while exporting. Export again from the current model.'));
+    });exportDialog.close();}finally{exporting=false;refreshButtons();}
+  },exportActions,'primary');exportDialog.append(exportActions);exportDialog.addEventListener('keydown',event=>event.stopPropagation());shell.append(exportDialog);
+  const exportButton=button('Export…',showExport);exportButton.disabled=true;
   const viewActions = el('div', 'view-actions'); viewActions.setAttribute('role', 'toolbar'); viewActions.setAttribute('aria-label', 'View controls'); viewHost.append(viewActions);
   button('Home', () => viewport.frame('iso'), viewActions); button('Fit', () => viewport.frame(undefined,true), viewActions);
   button('Zoom in', () => viewport.zoom(1.25), viewActions); button('Zoom out', () => viewport.zoom(0.8), viewActions);
@@ -309,10 +325,11 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     dropButton.disabled = !roots.length || running || builtRevision !== state.revision || !built;
     opButtons.forEach(b => { b.disabled = roots.length < 2; });
     fitSelectionActions();contextActions.hidden=!state.selection.some(id=>state.document.roots.includes(id));for(const control of contextActions.querySelectorAll<HTMLButtonElement>('button'))control.disabled=running;
-    exportButton.disabled = exportRun.disabled = !options.onExport || running || !built || !built.triangles || builtRevision !== state.revision;
+    refreshExportAttribution();
+    exportButton.disabled = exportRun.disabled = exporting || !options.onExport || running || !built || !built.triangles || builtRevision !== state.revision;
     run(()=>options.onCommandStateChange?.(commandState()));
   }
-  function commandState():CadCommandState {const state=session.state,roots=state.selection.filter(id=>state.document.roots.includes(id));return {canUndo:state.canUndo,canRedo:state.canRedo,hasSelection:!!state.selection.length,canDelete:!!roots.length,canCombine:roots.length>=2,canExport:!!options.onExport&&!running&&!!built?.triangles&&builtRevision===state.revision,hasBodies:!!state.document.roots.length,ready:!running&&builtRevision===state.revision&&!!built};}
+  function commandState():CadCommandState {const state=session.state,roots=state.selection.filter(id=>state.document.roots.includes(id));return {canUndo:state.canUndo,canRedo:state.canRedo,hasSelection:!!state.selection.length,canDelete:!!roots.length,canCombine:roots.length>=2,canExport:!!options.onExport&&!exporting&&!running&&!!built?.triangles&&builtRevision===state.revision,hasBodies:!!state.document.roots.length,ready:!running&&builtRevision===state.revision&&!!built};}
   const unsubscribe = session.subscribe(state => {
     if (disposed) return;
     if (state.revision !== lastRevision) {
@@ -395,7 +412,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   async function executeCommand(command:CadCommand){
     switch(command){
-      case 'new':await newProject();break;case 'open':await chooseOpen();break;case 'save':await deliver('bcad');break;case 'import':await chooseImport();break;case 'export':if(exportButton.disabled)throw new Error(t('Build a solid before exporting'));exportDialog.showModal();break;
+      case 'new':await newProject();break;case 'open':await chooseOpen();break;case 'save':await deliver('bcad');break;case 'import':await chooseImport();break;case 'export':if(exportButton.disabled)throw new Error(t('Build a solid before exporting'));showExport();break;
       case 'undo':session.undo();break;case 'redo':session.redo();break;case 'cut':await copySelection(true);break;case 'copy':await copySelection();break;case 'paste':await pasteSelection();break;case 'duplicate':session.duplicate();break;case 'delete':session.remove();break;
       case 'select-all':session.select(session.state.document.roots);break;case 'deselect':session.select([]);break;
       case 'select':setMode('select');break;case 'move':setMode('translate');break;case 'rotate':setMode('rotate');break;case 'scale':setMode('scale');break;
@@ -407,19 +424,22 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     }
     if(!['open','import','save','export','parameters','shapes','code','sketch'].includes(command))viewport.canvas.focus({preventScroll:true});
   }
-  async function deliver(format: 'bcad' | 'stl' | '3mf') {
+  async function deliver(format: 'bcad' | 'stl' | '3mf', modificationNotes?: string, checkCanceled: () => void = () => {}) {
     if(format==='bcad'&&options.saveProject){await options.saveProject();return;}
     if (!options.onExport) throw new Error(t('This host has not provided file export'));
-    if(format!=='bcad')assertPlainMeshExport(session.state.document);
-    const exportRevision=session.state.revision;
-    const title = session.state.document.title.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '-').trim() || 'design';
-    const bytes = format === 'bcad' ? new TextEncoder().encode(session.serialize()) : format === 'stl' ? exportSTL((await whenIdle()).bodies) : export3MF((await whenIdle()).bodies);
-    // Never deliver geometry across an edit or project switch while awaiting a build.
-    if(format!=='bcad'){
-      if(session.state.revision!==exportRevision)throw new Error(t('The model changed while exporting. Export again from the current model.'));
-      assertPlainMeshExport(session.state.document);
+    if(format==='bcad'){
+      const title=session.state.document.title.replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-').trim()||'design';
+      await options.onExport({name:`${title}.bcad`,bytes:new TextEncoder().encode(session.serialize()),mime:'application/vnd.brickwright.cad+json'});return;
     }
-    await options.onExport({ name: `${title}.${format}`, bytes, mime: format === 'bcad' ? 'application/vnd.brickwright.cad+json' : format === 'stl' ? 'model/stl' : 'model/3mf' });
+    const exportRevision=session.state.revision;
+    const checkCurrent=()=>{
+      if(disposed)throw new Error(t('Editor was disposed'));
+      checkCanceled();
+      if(session.state.revision!==exportRevision)throw new Error(t('The model changed while exporting. Export again from the current model.'));
+    };
+    const file=await prepareMeshExport(session.state.document,format,()=>whenIdle(),checkCurrent,modificationNotes);
+    checkCurrent();
+    await options.onExport(file);
   }
   buildTree(); buildInspector(); lastRevision = session.state.revision; lastSelection = JSON.stringify(session.state.selection); viewport.setSelection(session.state.selection); void buildLatest(); refreshButtons();
   return {

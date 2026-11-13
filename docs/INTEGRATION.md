@@ -229,3 +229,10 @@ IndexedDB. They validate full archive integrity and retain prior revisions/conte
 They do not acquire filesystem locks; each host must provide its own safe writer.
 The MCP host is an example of a separate headless file writer, not a connection to
 a mounted editor. See [MCP setup and limitations](MCP.md).
+
+For recorded printable library sources, editor STL export requires explicit
+modification notes and invokes `onExport` once with `application/zip`, containing
+the STL and its attribution JSON. Programmatic callers use
+`editor.export('stl', modificationNotes)`. Attributed 3MF is refused. Hosts must
+save/share this ZIP intact; plain mesh and project export contracts are unchanged.
+See [attribution export](MODEL-ATTRIBUTION.md) for snapshot and cancellation behavior.
