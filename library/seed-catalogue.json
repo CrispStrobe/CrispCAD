@@ -1,0 +1,159 @@
+{
+  "format": "brickwright-model-library",
+  "version": 1,
+  "assets": [
+    {
+      "id": "jscad-nuts-and-bolts",
+      "version": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+      "title": "Nuts and Bolts",
+      "author": "platypii",
+      "sourceUrl": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/core/extrusions/nutsAndBolts.js",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/jscad/OpenJSCAD.org",
+        "commit": "720f3688312ed3bad1702fe83906be153b8ab8fc"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Nuts and Bolts by platypii; MIT. Original source and licence notices retained.",
+        "evidenceUrl": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/core/extrusions/nutsAndBolts.js",
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex per-file grant audit (2026-11-13)"
+      },
+      "original": {
+        "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/core/extrusions/nutsAndBolts.js",
+        "format": "jscad",
+        "sha256": "f96facf6dc85be7260a5b5e7648dd157abb9bc74e27da7d4cf78cdb0aa3df5ba",
+        "bytes": 2754
+      },
+      "derivatives": [],
+      "modificationNotes": "Unmodified exact upstream bytes. Archived editable source only; not executed or converted; no geometry or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "unitAssumption": "Source lengths have no explicit physical unit declaration; curator interprets model units as millimetres. Source uses Z for thread height. No transform was applied.",
+        "sourceUpAxis": "Z",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "id": "jscad-involute-gear",
+      "version": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+      "title": "Parametric Involute Gear",
+      "author": "Joost Nieuwenhuijse; Simon Clark",
+      "sourceUrl": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/parameters/gear.js",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/jscad/OpenJSCAD.org",
+        "commit": "720f3688312ed3bad1702fe83906be153b8ab8fc"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Parametric Involute Gear by Joost Nieuwenhuijse; Simon Clark; MIT. Original source and licence notices retained.",
+        "evidenceUrl": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/parameters/gear.js",
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex per-file grant audit (2026-11-13)"
+      },
+      "original": {
+        "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/parameters/gear.js",
+        "format": "jscad",
+        "sha256": "7867e3df0c6e43449e3dad46f5985269a8726658d5fc35a2f93d8a808a2ca9ec",
+        "bytes": 5512
+      },
+      "derivatives": [],
+      "modificationNotes": "Unmodified exact upstream bytes. Archived editable source only; not executed or converted; no geometry or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "unitAssumption": "Source lengths have no explicit physical unit declaration; curator interprets model units as millimetres. Source extrudes thickness along Z. No transform was applied.",
+        "sourceUpAxis": "Z",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "id": "threads-scad-demo",
+      "version": "4ae9aeb3b136f9858200f77a304b909a000ce3b4",
+      "title": "Metric Threads Demo",
+      "author": "Ryan A. Colyer",
+      "sourceUrl": "https://github.com/rcolyer/threads-scad/blob/4ae9aeb3b136f9858200f77a304b909a000ce3b4/threads.scad",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/rcolyer/threads-scad",
+        "commit": "4ae9aeb3b136f9858200f77a304b909a000ce3b4"
+      },
+      "licence": {
+        "spdx": "CC0-1.0",
+        "scope": "asset",
+        "attribution": "Metric Threads Demo by Ryan A. Colyer; CC0-1.0. Original source and licence notices retained.",
+        "evidenceUrl": "https://github.com/rcolyer/threads-scad/blob/4ae9aeb3b136f9858200f77a304b909a000ce3b4/threads.scad",
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex per-file grant audit (2026-11-13)"
+      },
+      "original": {
+        "url": "https://raw.githubusercontent.com/rcolyer/threads-scad/4ae9aeb3b136f9858200f77a304b909a000ce3b4/threads.scad",
+        "format": "openscad",
+        "sha256": "f8ee04e57a1c721b7d8d68764e55ea448af935242024e94768e7949e384b2bc7",
+        "bytes": 19631
+      },
+      "derivatives": [],
+      "modificationNotes": "Unmodified exact upstream bytes. Archived editable source only; not executed or converted; no geometry or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "unitAssumption": "Source annotates screw_resolution in mm and uses metric dimensions. Source builds rods along Z. No transform was applied.",
+        "sourceUpAxis": "Z",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  ]
+}

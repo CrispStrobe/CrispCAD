@@ -1,0 +1,1 @@
+param radius:mm=10; return scale([1.6,1,0.7],sphere(radius,64));

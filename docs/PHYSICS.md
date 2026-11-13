@@ -74,6 +74,18 @@ are immutable and their hull buffers are hashed again before world creation;
 serialized or mutated objects are refused. Cached hulls must pass through
 preprocessing/qualification again in the receiving worker.
 
+Reviewed STL library selections can explicitly run the optional headless
+`qualifyModelLibrarySTL` adapter. It verifies bytes/conversion, reruns mesh screens
+in an isolated session, qualifies the evaluated compound, and creates/steps/destroys
+the pinned debug Jolt world. Its separate hash/version/policy-bound report is
+curation evidence, never a serialized runtime proof. Its complete versioned report
+can be retained in catalogue quality and project provenance; the optional
+`qualifyModelLibrarySTLAndAttach` helper runs fresh qualification before returning
+a new catalogue snapshot. Existing documents and archived revisions are untouched. See
+[model library qualification](MODEL-LIBRARY.md#optional-headless-jolt-collision-qualification)
+for the trusted-kernel boundary, worker requirements and intentionally limited
+one-step rigid-preview scope.
+
 ## Actual checks
 
 Headless tests use the fork's **debug** build to catch binding/refcount misuse:

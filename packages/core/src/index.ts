@@ -16,7 +16,17 @@ export * from "./i18n.js";
 export * from "./i18n-history.js";
 
 export * from "./code-examples.js";
+
+export * from './model-library.js';
+export * from './model-library-fetch.js';
+
+export * from './model-provenance.js';
+export * from './model-attribution.js';
 export {importOpenSCAD,exportOpenSCAD,exportJSCAD} from './code-interchange.js';
 export {exportCodeSource} from './code-interchange.js';
 export {importJSCAD,JSCAD_IMPORT_LIMITS} from './jscad-import.js';
 export type {JSCADImport,JSCADImportOptions} from './jscad-import.js';
+
+export * from './model-library-local.js';
+
+export type {ModelLibraryCollisionReport} from './model-library-qualification.js';

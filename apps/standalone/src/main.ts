@@ -11,6 +11,8 @@ import type {CadEditor} from '@brickwright/cad-editor';
 import type {ModelRevision} from '@brickwright/cad-history';
 import {saveProject,decodeProject,scheduleLibrarySave,flushLibrary,initializeLibrary} from './library.js';
 import {mountAppDialogs} from './app-dialogs.js';
+import {createModelLibraryBrowserCache} from './model-library-cache.js';
+import {createBundledModelLibrary} from './model-library-local.js';
 import {mountDesktopHost} from './desktop.js';
 try { setLocale(localStorage.getItem('brickwright-cad:locale') ?? navigator.language); } catch { setLocale(navigator.language); }
 localizeHost();
@@ -58,6 +60,7 @@ function start(doc?: CadDocument) {
   root.replaceChildren();
   try {
     editor = mountCadEditor(root, {
+      modelLibrary:{cache:createModelLibraryBrowserCache(),...createBundledModelLibrary()},
       document: doc, wasmURL: new URL('../cad-assets/manifold.wasm', import.meta.url).href,
       headerContent:hostActions,navigationPreset,
       showTransformReadout:showReadout,onTransformReadoutChange:saveReadout,appearance,

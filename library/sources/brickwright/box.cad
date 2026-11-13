@@ -1,0 +1,1 @@
+param width:mm=30; param depth:mm=20; param height:mm=10; return box(width,depth,height);

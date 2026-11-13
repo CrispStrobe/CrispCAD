@@ -33,7 +33,11 @@
     "mcp": "node apps/mcp/server.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
     "convert:code": "node scripts/convert-code.mjs",
-    "verify:code-corpus": "node scripts/check-code-corpus.mjs"
+    "verify:code-corpus": "node scripts/check-code-corpus.mjs",
+    "library:examples:generate": "npm run build:packages && node scripts/generate-example-library.mjs --write",
+    "library:examples:check": "npm run build:packages && node scripts/generate-example-library.mjs --check",
+    "library:fixtures:generate": "npm run build:packages && node scripts/generate-fixture-library.mjs --write",
+    "library:fixtures:check": "npm run build:packages && node scripts/generate-fixture-library.mjs --check"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",
