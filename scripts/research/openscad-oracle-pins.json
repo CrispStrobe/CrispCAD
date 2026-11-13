@@ -1,0 +1,14 @@
+{
+  "parser": {
+    "repository": "https://github.com/timschmidt/openscad-rs",
+    "revision": "7a4c0759174dd0bff9bb3b9002c409ff3044bd3a",
+    "license": "MIT OR Apache-2.0"
+  },
+  "hyperreal": {
+    "repository": "https://github.com/timschmidt/csgrs",
+    "revision": "1671894b4a896b091416503910e3720ecf233c82",
+    "subdirectory": "crates/hyperreal",
+    "license": "MIT OR Apache-2.0"
+  },
+  "usage": "Optional external development syntax oracle; no renderer, app runtime or upstream OpenSCAD corpus."
+}

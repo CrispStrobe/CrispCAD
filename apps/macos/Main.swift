@@ -6,11 +6,14 @@ import UniformTypeIdentifiers
 
 // Native WebKit magnification belongs to the 3D camera, never to the app chrome.
 @MainActor final class CadWebView: WKWebView {
+    func routeCameraMagnification(factor: Double, x: Double, y: Double, completion: ((Any?, Error?) -> Void)? = nil) {
+        let payload: [String: Any] = ["kind": "zoom", "factor": max(0.05, min(20, factor)), "x": x, "y": y]
+        guard let data = try? JSONSerialization.data(withJSONObject: payload), let json = String(data: data, encoding: .utf8) else { return }
+        evaluateJavaScript("window.dispatchEvent(new CustomEvent('brickwright-camera-input', {detail: \(json)}));", completionHandler: completion)
+    }
     override func magnify(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
-        let payload: [String: Any] = ["kind": "zoom", "factor": max(0.05, min(20, 1 + Double(event.magnification))), "x": Double(point.x), "y": Double(isFlipped ? point.y : bounds.height - point.y)]
-        guard let data = try? JSONSerialization.data(withJSONObject: payload), let json = String(data: data, encoding: .utf8) else { return }
-        evaluateJavaScript("window.dispatchEvent(new CustomEvent('brickwright-camera-input', {detail: \(json)}));", completionHandler: nil)
+        routeCameraMagnification(factor: 1 + Double(event.magnification), x: Double(point.x), y: Double(isFlipped ? point.y : bounds.height - point.y))
     }
 }
 
@@ -100,6 +103,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     private var origin: String { "http://127.0.0.1:\(port)" }
     private var smokeStage = 0
     private var smokeAttempts = 0
+    private var magnificationMonitor: Any?
+    private var cameraSmokeDone = false
     private var pageLoaded = false
     private var editorState:[String:Bool]=[:]
     private lazy var pasteboard:NSPasteboard = smoke ? .withUniqueName() : .general
@@ -147,6 +152,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         window.minSize = NSSize(width: 800, height: 600); window.contentView = webView
         window.center(); if !smoke { window.setFrameAutosaveName("CADWorkspace") }; window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+        // Intercept before WebKit's internal content view can consume magnify.
+        magnificationMonitor = NSEvent.addLocalMonitorForEvents(matching: .magnify) { [weak self] event in
+            guard let self, event.window === self.window, let view = self.webView as? CadWebView else { return event }
+            let point = view.convert(event.locationInWindow, from: nil)
+            guard view.bounds.contains(point) else { return event }
+            view.magnify(with: event)
+            return nil
+        }
         do {
             guard let root = Bundle.main.resourceURL?.appendingPathComponent("web") else { throw NSError(domain: "CAD", code: 1) }
             server = try AssetServer(root: root, port: port) { [weak self] error in
@@ -201,6 +214,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         case "paste":return editing || pasteboard.availableType(from:[clipboardType,.string]) != nil
         default:return true
         }
+    }
+    func applicationWillTerminate(_ notification: Notification) {
+        if let monitor = magnificationMonitor { NSEvent.removeMonitor(monitor); magnificationMonitor = nil }
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -339,6 +355,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
           const host = document.querySelector('#cad-root');
           if (host?.dataset.state !== 'ready') return 'waiting';
           const root = host.shadowRoot;
+          if (\(smokeStage) === 0 && !\(cameraSmokeDone)) {
+            if (!root.querySelector('#save-state').textContent.includes('Saved · iteration')) return 'waiting';
+            const canvas=root.querySelector('canvas[data-testid="cad-canvas"]'),box=canvas.getBoundingClientRect();
+            return {kind:'camera-proof',x:box.x+box.width/2,y:box.y+box.height/2,zoom:Number(canvas.dataset.cameraZoom),saved:localStorage.getItem('brickwright-cad:standalone:v1')};
+          }
           if (\(smokeStage) === 0) { root.querySelector('button[aria-label="Shapes"]').click();root.querySelector('button[aria-label="Add Box"]').click(); return 'added'; }
           const objects = root.querySelectorAll('[data-testid="object-name"]');
           if ((\(smokeStage) < 6 && objects.length !== 1) || (\(smokeStage) < 14 && Number(host.dataset.triangles) !== objects.length * 12)) return 'waiting';
@@ -387,6 +408,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         webView.evaluateJavaScript(script) { [weak self] result, error in
             guard let self else { return }
             if let error { self.fail(error.localizedDescription); return }
+            if let info = result as? [String: Any], info["kind"] as? String == "camera-proof", let x = info["x"] as? Double, let y = info["y"] as? Double, let before = info["zoom"] as? Double, let saved = info["saved"] as? String, let view = self.webView as? CadWebView {
+                guard self.magnificationMonitor != nil else { self.fail("Native magnification monitor missing"); return }
+                view.routeCameraMagnification(factor: 1.2, x: x, y: y) { _, error in
+                    if let error { self.fail(error.localizedDescription); return }
+                    self.webView.callAsyncJavaScript("const c=document.querySelector('#cad-root').shadowRoot.querySelector('canvas[data-testid=\"cad-canvas\"]');return Number(c.dataset.cameraZoom)<before && (window.visualViewport?.scale??1)===1 && localStorage.getItem('brickwright-cad:standalone:v1')===saved;", arguments:["before":before,"saved":saved],in:nil,in:.page) { result in
+                        guard case .success(let value) = result, value as? Bool == true else { self.fail("Native magnification did not zoom only the camera"); return }
+                        self.cameraSmokeDone = true
+                        print("PASS: native magnification route zooms camera at 1x page scale without changing project data")
+                        self.pollSmoke()
+                    }
+                }
+                return
+            }
             if result as? String == "passed" {
                 self.webView.callAsyncJavaScript("await window.brickwrightPrepareToClose();",arguments:[:],in:nil,in:.page){result in
                     do {
