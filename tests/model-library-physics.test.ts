@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import 'fake-indexeddb/auto';
 import {beforeAll, describe, expect, it} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {createPresetDocument} from '../packages/editor/src/shapes.js';
-import {createCadSession, type ModelLibraryCatalogue} from '@brickwright/cad-core';
+import {createCadSession, parseDocument, parseModelLibraryCatalogue, validateModelLibraryCatalogue, type ModelLibraryCatalogue} from '@brickwright/cad-core';
 import {checkModelLibrarySTL, createGeometryKernel, exportSTL, type GeometryKernel} from '@brickwright/cad-geometry';
-import {qualifyModelLibrarySTL, MODEL_LIBRARY_COLLISION_QUALIFIER_VERSION, MODEL_LIBRARY_JOLT_VERSION} from '../packages/physics/src/index.js';
+import {qualifyModelLibrarySTL, qualifyModelLibrarySTLAndAttach, isQualifiedCollision, MODEL_LIBRARY_COLLISION_QUALIFIER_VERSION, MODEL_LIBRARY_JOLT_VERSION} from '../packages/physics/src/index.js';
+import {appendPortableRevision, readPortableHistory, openHistoryStore} from '../packages/history/src/index.js';
 let kernel: GeometryKernel;
 const identity = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
 const selection = {assetId: 'fixture', file: 'original'} as const;
@@ -60,6 +62,78 @@ describe('optional library Jolt collision qualification', () => {
     const result = await qualifyModelLibrarySTL(f.catalogue, selection, f.bytes, f.options);
     expect(result.evidence.hulls).toBeGreaterThan(1);
     expect(result.evidence.certificate.relativeError).toBeLessThan(0.02);
+  });
+  it('persists complete reports, rejects stale bindings, and retains document and history snapshots', async () => {
+    const f = await fixture(), old = structuredClone(f.catalogue);
+    const catalogue = await qualifyModelLibrarySTLAndAttach(f.catalogue, selection, f.bytes, f.options);
+    expect(f.catalogue).toEqual(old);
+    expect(parseModelLibraryCatalogue(JSON.stringify(old)).valid).toBe(true);
+    const parsed = parseModelLibraryCatalogue(JSON.stringify(catalogue));
+    expect(parsed.valid).toBe(true);
+    if (!parsed.valid) throw new Error('Expected valid persisted report');
+    const report = catalogue.assets[0].quality!.collisionReport!;
+    expect(report.selectedFile).toEqual(catalogue.assets[0].original);
+    expect(report.quality.quality).not.toHaveProperty('collisionReport');
+    expect(await isQualifiedCollision(JSON.parse(JSON.stringify(report)))).toBe(false);
+    const mutations: ((c: any) => void)[] = [
+      c => c.version = 2,
+      c => c.assets[0].quality.collisionReport.version = 2,
+      c => c.assets[0].quality.collisionReport.selectedFile.bytes++,
+      c => c.assets[0].quality.collisionReport.selectedFile.url += '?changed',
+      c => c.assets[0].quality.collisionReport.evidence.fileSha256 = 'a'.repeat(64),
+      c => c.assets[0].quality.collisionReport.evidence.toMillimetresZUp[12] = 1,
+      c => c.assets[0].quality.screeningPolicy.toMillimetresZUp[0] = 2,
+      c => c.assets[0].quality.collisionReport.quality.checks.parseable = 'unchecked',
+      c => c.assets[0].quality.collisionReport.quality.quality.withinSizeLimits = false,
+      c => c.assets[0].quality.collisionReport.evidence.geometrySha256 = 'b'.repeat(64),
+      c => c.assets[0].quality.collisionReport.evidence.engineVersion = 'unknown',
+      c => c.assets[0].quality.collisionReport.evidence.qualifierVersion = 'unknown',
+      c => c.assets[0].quality.collisionReport.evidence.nativeCheck.steps = 0,
+      c => c.assets[0].quality.collisionReport.evidence.nativeCheck.build = 'release',
+      c => c.assets[0].quality.collisionReport.evidence.certificate.relativeError = 0.01,
+      c => c.assets[0].quality.collisionReport.evidence.certificate.tolerance.boundsMm = 2,
+      c => c.assets[0].quality.collisionReport.evidence.hulls = 0,
+      c => c.assets[0].quality.collisionReport.extra = true,
+      c => c.assets[0].quality.physics = {engine:'Jolt', engineVersion:'wrong', qualifierVersion:'wrong', qualified:true},
+    ];
+    for (const mutate of mutations) {
+      const invalid = structuredClone(catalogue); mutate(invalid);
+      expect(validateModelLibraryCatalogue(invalid).valid).toBe(false);
+    }
+    const session = createCadSession(), id = session.add({kind:'box', size:[10,20,30]});
+    const before = session.serialize(), originalDoc = structuredClone(session.state.document);
+    let archive = await appendPortableRevision(undefined, originalDoc, 'Original');
+    session.attachProvenance([id], {id:'qualified',asset:parsed.catalogue.assets[0],selectedFile:report.selectedFile,modificationNotes:'Recorded reviewed source.'});
+    const saved = session.serialize(), savedDoc = structuredClone(session.state.document);
+    expect(parseDocument(saved)).toEqual(savedDoc);
+    session.undo(); expect(session.serialize()).toBe(before);
+    session.redo(); expect(session.serialize()).toBe(saved);
+    archive = await appendPortableRevision(archive, savedDoc, 'Report');
+    const history = await readPortableHistory(archive);
+    expect(history.readDocument(history.revisions[0].id)).toEqual(originalDoc);
+    expect(history.readDocument(history.revisions[1].id)).toEqual(savedDoc);
+    const store = await openHistoryStore(`qualification-${crypto.randomUUID()}`);
+    const project = await store.importArchive(archive, {preserveIdentity:true});
+    const reloaded = await readPortableHistory(await store.exportArchive(project.id));
+    expect(reloaded.readDocument(reloaded.revisions[0].id)).toEqual(originalDoc);
+    expect(reloaded.readDocument(reloaded.revisions[1].id)).toEqual(savedDoc);
+    await store.close(); session.dispose();
+    report.evidence.nativeCheck.steps = 0 as 1;
+    expect(parsed.catalogue.assets[0].quality!.collisionReport!.evidence.nativeCheck.steps).toBe(1);
+  });
+  it('retains a local derivative identity and its conversion independently from the original', async () => {
+    const f = await fixture(), asset = f.catalogue.assets[0];
+    asset.derivatives = [{path:'meshes/derived.stl', format:'stl', sha256:asset.original.sha256, bytes:asset.original.bytes}];
+    asset.original.sha256 = 'a'.repeat(64);
+    asset.conversion.toMillimetresZUp[0] = 10;
+    const catalogue = await qualifyModelLibrarySTLAndAttach(f.catalogue, {assetId:'fixture', file:{derivative:0}}, f.bytes, f.options);
+    const report = catalogue.assets[0].quality!.collisionReport!;
+    expect(report.selectedFile).toEqual(asset.derivatives[0]);
+    expect(report.evidence.toMillimetresZUp).toEqual(identity);
+    expect(catalogue.assets[0].conversion.toMillimetresZUp[0]).toBe(10);
+    const before = structuredClone(f.catalogue);
+    await expect(qualifyModelLibrarySTLAndAttach(f.catalogue, {assetId:'fixture', file:{derivative:0}}, new Uint8Array(f.bytes.length), f.options)).rejects.toThrow();
+    expect(f.catalogue).toEqual(before);
   });
   it('refuses missing/failing screen evidence, kernel failure, invalid limits and cancellation', async () => {
     const f = await fixture();

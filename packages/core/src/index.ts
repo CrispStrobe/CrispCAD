@@ -28,3 +28,5 @@ export {importJSCAD,JSCAD_IMPORT_LIMITS} from './jscad-import.js';
 export type {JSCADImport,JSCADImportOptions} from './jscad-import.js';
 
 export * from './model-library-local.js';
+
+export type {ModelLibraryCollisionReport} from './model-library-qualification.js';

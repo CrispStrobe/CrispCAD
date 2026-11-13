@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {createCadSession, type ModelLibraryFileSelection} from '@brickwright/cad-core';
-import {insertModelLibrarySTL, type GeometryKernel, type ModelLibraryMeshQualityOptions, type ModelLibraryMeshQualityResult} from '@brickwright/cad-geometry';
-import {prepareCollision, type CollisionCertificate} from './collision.js';
+import {createCadSession, validateModelLibraryCatalogue, type ModelLibraryFileSelection, type ModelLibraryCollisionReport, type ModelLibraryCatalogue} from '@brickwright/cad-core';
+import {insertModelLibrarySTL, type GeometryKernel, type ModelLibraryMeshQualityOptions} from '@brickwright/cad-geometry';
+import {prepareCollision} from './collision.js';
 import {createPhysicsWorld} from './world.js';
 
 export const MODEL_LIBRARY_COLLISION_QUALIFIER_VERSION = 'brickwright-library-collision/1';
@@ -15,24 +15,8 @@ export interface ModelLibraryCollisionOptions extends ModelLibraryMeshQualityOpt
   volumeFraction?: number;
   boundsMm?: number;
 }
-export interface ModelLibraryCollisionResult {
-  /** Fresh geometry screen; kept separate from collision evidence. */
-  quality: ModelLibraryMeshQualityResult;
-  evidence: {
-    fileSha256: string;
-    checkedOn: string;
-    toMillimetresZUp: number[];
-    engine: 'Jolt';
-    engineVersion: string;
-    qualifierVersion: string;
-    qualified: true;
-    scope: 'rigid-collision-preview';
-    geometrySha256: string;
-    hulls: number;
-    certificate: CollisionCertificate;
-    nativeCheck: {build: 'debug'; ground: false; steps: 1; stepSeconds: 0.005};
-  };
-}
+/** Complete serializable curation report, without runtime collision authority. */
+export type ModelLibraryCollisionResult = ModelLibraryCollisionReport;
 
 /** Explicit optional qualification of one reviewed STL, never visual-import certification.
  * Run in a host worker with a time limit: synchronous decomposition cannot be interrupted.
@@ -47,9 +31,16 @@ export async function qualifyModelLibrarySTL(
   const {kernel, signal, checkedOn, maxTriangles, maxExtentMm, maxHulls, volumeFraction, boundsMm} = options;
   const toMillimetresZUp = Array.from(options.toMillimetresZUp);
   signal?.throwIfAborted();
+  const checked = validateModelLibraryCatalogue(catalogue);
+  if (!checked.valid) throw new Error(`Invalid model library catalogue: ${checked.errors.join(' ')}`);
+  const asset = checked.catalogue.assets.find(a => a.id === selection.assetId);
+  const choice = selection.file;
+  const selectedFile = choice === 'original' ? asset?.original : choice && typeof choice === 'object' && Number.isInteger(choice.derivative) && choice.derivative >= 0 ? asset?.derivatives[choice.derivative] : undefined;
+  if (!selectedFile || selectedFile.format !== 'stl') throw new Error('Select one original or derivative STL.');
+  const stableSelection = structuredClone(selection);
   const session = createCadSession();
   try {
-    const quality = await insertModelLibrarySTL(session, catalogue, selection, bytes, {
+    const quality = await insertModelLibrarySTL(session, checked.catalogue, stableSelection, bytes, {
       evaluate: document => kernel.evaluate(document), toMillimetresZUp,
       checkedOn, maxTriangles, maxExtentMm, signal,
       modificationNotes: 'Temporary isolated collision qualification with the recorded STL conversion; no repair.',
@@ -72,13 +63,36 @@ export async function qualifyModelLibrarySTL(
       if (![...pose.positionMm, ...pose.quaternion, ...bounds.min, ...bounds.max].every(Number.isFinite)) throw new Error('Jolt rigid collision preview produced a non-finite state.');
     } finally { world.dispose(); }
     signal?.throwIfAborted();
-    return {quality, evidence: {
+    const report = {format: 'brickwright-library-collision-report', version: 1, selectedFile, quality, evidence: {
       fileSha256: quality.fileSha256, checkedOn, toMillimetresZUp,
       engine: 'Jolt', engineVersion: MODEL_LIBRARY_JOLT_VERSION,
       qualifierVersion: MODEL_LIBRARY_COLLISION_QUALIFIER_VERSION, qualified: true,
-      scope: 'rigid-collision-preview', geometrySha256: prepared.certificate.sourceSHA256,
+      scope: 'rigid-collision-preview', sourceVolumeMm3: mesh.volume, geometrySha256: prepared.certificate.sourceSHA256,
       hulls: prepared.hulls.length, certificate: structuredClone(prepared.certificate),
       nativeCheck: {build: 'debug', ground: false, steps: 1, stepSeconds: 0.005},
     }};
+    // Validate the full persisted representation before returning any positive report.
+    asset!.quality = {...quality.quality!, collisionReport: report as ModelLibraryCollisionReport};
+    const validated = validateModelLibraryCatalogue(checked.catalogue);
+    if (!validated.valid) throw new Error(`Invalid produced collision report: ${validated.errors.join(' ')}`);
+    return validated.catalogue.assets.find(a => a.id === stableSelection.assetId)!.quality!.collisionReport!;
   } finally { session.dispose(); }
+}
+
+/** Run fresh qualification and return a new validated catalogue with its complete report.
+ * Never attaches caller-supplied serialized assertions or edits a project/history.
+ */
+export async function qualifyModelLibrarySTLAndAttach(
+  catalogue: unknown, selection: ModelLibraryFileSelection, bytes: Uint8Array,
+  options: ModelLibraryCollisionOptions,
+): Promise<ModelLibraryCatalogue> {
+  const checked = validateModelLibraryCatalogue(catalogue);
+  if (!checked.valid) throw new Error(`Invalid model library catalogue: ${checked.errors.join(' ')}`);
+  const stableSelection = structuredClone(selection);
+  const report = await qualifyModelLibrarySTL(checked.catalogue, stableSelection, bytes, options);
+  const asset = checked.catalogue.assets.find(a => a.id === stableSelection.assetId)!;
+  asset.quality = {...report.quality.quality, collisionReport: report};
+  const result = validateModelLibraryCatalogue(checked.catalogue);
+  if (!result.valid) throw new Error(`Invalid qualified catalogue: ${result.errors.join(' ')}`);
+  return result.catalogue;
 }

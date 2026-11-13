@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {validModelLibraryCollisionReport, type ModelLibraryCollisionReport} from './model-library-qualification.js';
 /** Content rights are separate from the editor's software licence. No SPDX expressions. */
 export const MODEL_LIBRARY_CONTENT_LICENCES = [
   'CC0-1.0', 'MIT', 'Apache-2.0', 'BSD-2-Clause', 'BSD-3-Clause', 'CC-BY-3.0', 'CC-BY-4.0',
@@ -63,6 +64,8 @@ export interface ModelLibraryAsset {
     withinSizeLimits: boolean;
     withinTriangleLimits: boolean;
     screeningPolicy?: ModelLibraryScreeningPolicy;
+    /** Complete versioned curation report; never a runtime collision proof. */
+    collisionReport?: ModelLibraryCollisionReport;
     /** Separate collision qualification; visual import never implies physics safety. */
     physics?: {engine: 'Jolt'; engineVersion: string; qualifierVersion: string; qualified: boolean};
   };
@@ -142,7 +145,7 @@ function checkModelLibraryCatalogue(value: unknown): ModelLibraryValidation {
     }
     if (asset.quality !== undefined) {
       const q = asset.quality;
-      if (!object(q) || !keys(q, 'fileSha256 toolVersion checkedOn parseable closedPositiveVolume withinSizeLimits withinTriangleLimits screeningPolicy physics') || !hash(q.fileSha256) || !text(q.toolVersion, 240) || !date(q.checkedOn) || !['parseable', 'closedPositiveVolume', 'withinSizeLimits', 'withinTriangleLimits'].every(key => typeof q[key] === 'boolean')) error('Invalid quality evidence.');
+      if (!object(q) || !keys(q, 'fileSha256 toolVersion checkedOn parseable closedPositiveVolume withinSizeLimits withinTriangleLimits screeningPolicy physics collisionReport') || !hash(q.fileSha256) || !text(q.toolVersion, 240) || !date(q.checkedOn) || !['parseable', 'closedPositiveVolume', 'withinSizeLimits', 'withinTriangleLimits'].every(key => typeof q[key] === 'boolean')) error('Invalid quality evidence.');
       else {
         const files = [asset.original, ...(Array.isArray(asset.derivatives) ? asset.derivatives : [])];
         if (!files.some(f => file(f) && f.sha256 === q.fileSha256)) error('Quality evidence must name an original or derivative hash.');
@@ -156,6 +159,7 @@ function checkModelLibraryCatalogue(value: unknown): ModelLibraryValidation {
               !Number.isSafeInteger(p.maxAnalysisBytes) || (p.maxAnalysisBytes as number) < 1 ||
               typeof p.maxExtentMm !== 'number' || !Number.isFinite(p.maxExtentMm) || p.maxExtentMm <= 0 || !invertibleAffine(p.toMillimetresZUp)) error('Invalid reproducible mesh screening policy.');
         }
+        if (q.collisionReport !== undefined && !validModelLibraryCollisionReport(q.collisionReport, asset as unknown as ModelLibraryAsset)) error('Invalid complete collision qualification report or bindings.');
         if (q.physics !== undefined) {
           const p = q.physics;
           if (!object(p) || !keys(p, 'engine engineVersion qualifierVersion qualified') || p.engine !== 'Jolt' || !text(p.engineVersion, 240) || !text(p.qualifierVersion, 240) || typeof p.qualified !== 'boolean') error('Invalid versioned physics evidence.');
