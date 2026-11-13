@@ -2,7 +2,7 @@
 import {Worker} from 'node:worker_threads';
 import {readFile,writeFile,open,rename,unlink,stat,lstat,mkdir} from 'node:fs/promises';
 import {dirname,resolve} from 'node:path';
-import {createCadSession,createDocument,compileCode,defaultCodeProgram,codeExamples,newId,serializeDocument,CODE_LIMITS,t,getLocale} from '@brickwright/cad-core';
+import {createCadSession,createDocument,compileCode,defaultCodeProgram,codeExamples,importOpenSCAD,importJSCAD,exportOpenSCAD,exportJSCAD,exportCodeSource,newId,serializeDocument,CODE_LIMITS,t,getLocale} from '@brickwright/cad-core';
 import {appendPortableRevision,readPortableHistory} from '@brickwright/cad-history';
 import {exportSTL} from '@brickwright/cad-geometry';
 
@@ -11,6 +11,7 @@ const source={type:'string',minLength:1,maxLength:32768},id={type:'string',minLe
 const spec=(name,description,properties={},required=[],readOnly=true)=>({name,description,inputSchema:{type:'object',properties,required,additionalProperties:false},annotations:{readOnlyHint:readOnly,destructiveHint:!readOnly,openWorldHint:false}});
 export const toolDefinitions=[
  spec('cad_code_help','Get the CAD Script grammar, modeling functions, limits and an example.'),
+ spec('cad_convert_code','Convert supported OpenSCAD, JSCAD or native CAD source without changing the model.',{source,parameters,inputFormat:{type:'string',enum:['cadcode','openscad','jscad']},outputFormat:{type:'string',enum:['cadcode','openscad','jscad']}},['source','inputFormat','outputFormat']),
  spec('cad_get_model','Get current revision and object metadata; call before changing the model.'),
  spec('cad_get_code_object','Read a coded feature, its source and evaluated local parameters.',{objectId:id},['objectId']),
  spec('cad_preview_code','Compile and evaluate source without modifying the model or its history.',{source,parameters},['source']),
@@ -25,7 +26,7 @@ function validateArguments(definition,args){
  if(!args||typeof args!=='object'||Array.isArray(args))throw new Error(t('Tool arguments must be an object'));const schema=definition.inputSchema;
  for(const key of Object.keys(args))if(!Object.hasOwn(schema.properties,key))throw new Error(t`Unknown argument ${key}`);
  for(const key of schema.required)if(!Object.hasOwn(args,key))throw new Error(t`Missing argument ${key}`);
- for(const [key,value] of Object.entries(args)){const s=schema.properties[key];if(s.type==='string'&&(typeof value!=='string'||value.length<(s.minLength??0)||value.length>(s.maxLength??Infinity)))throw new Error(t`Invalid ${key}`);
+ for(const [key,value] of Object.entries(args)){const s=schema.properties[key];if(s.enum&&!s.enum.includes(value))throw new Error(t`Invalid ${key}`);if(s.type==='string'&&(typeof value!=='string'||value.length<(s.minLength??0)||value.length>(s.maxLength??Infinity)))throw new Error(t`Invalid ${key}`);
   if(s.type==='integer'&&(!Number.isSafeInteger(value)||value<(s.minimum??-Infinity)||value>(s.maximum??Infinity)))throw new Error(t`Invalid ${key}`);
   if(s.type==='object'){if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).length>64||Object.values(value).some(v=>typeof v!=='string'||!v.trim()||v.length>256))throw new Error(t`Invalid ${key}`);}
  }
@@ -58,6 +59,7 @@ export async function createCodeHost(options={}){
  const definitions=toolDefinitions.map(definition=>({...definition,description:t(definition.description)}));
  const localizedHelp={...codeHelp,examples:codeExamples.map(e=>({id:e.id,title:e.title[getLocale()],source:e.source,parameters:{}})),notes:codeHelp.notes.map(note=>t(note))};
  return {definitions,async call(name,args={},signal){if(disposed)throw new Error(t('MCP host is closed'));const definition=toolDefinitions.find(t=>t.name===name);if(!definition)throw new Error(t('Unknown tool'));validateArguments(definition,args);cancelled(signal);
+  if(name==='cad_convert_code'){const imported=args.inputFormat==='jscad'?importJSCAD(args.source,args.parameters??{}):undefined;const p=imported?.program??(args.inputFormat==='openscad'?importOpenSCAD(args.source):program(args.source));if(!imported)p.parameters=structuredClone(args.parameters??{});compileCode(p);return {format:args.outputFormat,evaluatedSnapshot:!!imported||args.outputFormat!=='cadcode',warnings:imported?.warnings??[],outputs:imported?.outputs,source:args.outputFormat==='openscad'?exportOpenSCAD(p):args.outputFormat==='jscad'?exportJSCAD(p):exportCodeSource(p)};}
   if(name==='cad_code_help')return localizedHelp;if(name==='cad_get_model')return info();
   if(name==='cad_get_code_object'){const n=session.state.document.nodes[args.objectId];if(n?.kind!=='code')throw new Error(t('Code object not found'));const compiled=compileCode(n.program);return {revision:metadata.project.serial,id:n.id,name:n.name,program:n.program,parameters:compiled.parameters,values:compiled.values,transform:n.transform};}
   if(name==='cad_list_revisions')return {revision:metadata.project.serial,revisions:metadata.revisions.filter(r=>!args.beforeSerial||r.serial<args.beforeSerial).sort((a,b)=>b.serial-a.serial).slice(0,args.limit??50).map(({id,parentId,serial,label,createdAt})=>({id,parentId,serial,label,createdAt}))};

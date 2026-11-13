@@ -2,7 +2,7 @@
 import type {CodeProgram} from './code.js';
 import {t} from './i18n.js';
 export interface CodeExample {id:string;title:{en:string;de:string};group:'basics'|'parts'|'patterns'|'booleans';source:string}
-const item=(id:string,en:string,de:string,group:CodeExample['group'],source:string):CodeExample=>({id,title:{en,de},group,source});
+const item=(id:string,en:string,de:string,group:CodeExample['group'],source:string):CodeExample=>({id,title:{en,de},group,source:source.replace(/;\s*/g,';\n').replace(/,\s*(?=(?:box|cylinder|sphere|move|rotate|scale|union|subtract|intersect|repeat)\()/g,',\n  ').trim()+'\n'});
 /** Independently authored modeling examples. Not OpenSCAD/JSCAD imports. */
 export const codeExamples:readonly CodeExample[]=Object.freeze([
  item('box','Dimensioned box','Bemaßter Quader','basics','param width:mm=30; param depth:mm=20; param height:mm=10; return box(width,depth,height);'),

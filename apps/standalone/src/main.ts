@@ -27,9 +27,11 @@ const historyUI=mountHistoryUI(()=>editor,async revision=>{
 document.querySelector('#library')!.addEventListener('click',()=>historyUI.open());
 let showReadout=false;try{showReadout=localStorage.getItem('brickwright-cad:view:readout')==='true';}catch{}
 function saveReadout(visible:boolean){showReadout=visible;try{localStorage.setItem('brickwright-cad:view:readout',String(visible));}catch{}}
+let navigationPreset:'tinkercad'|'fusion'='tinkercad';try{if(localStorage.getItem('brickwright-cad:view:navigation')==='fusion')navigationPreset='fusion';}catch{}
+function saveNavigation(value:'tinkercad'|'fusion'){localStorage.setItem('brickwright-cad:view:navigation',value);navigationPreset=value;editor?.setNavigation(value);}
 const defaultAppearance={background:'#111e29',baseplate:'#233644'};let appearance={...defaultAppearance};try{const saved=JSON.parse(localStorage.getItem('brickwright-cad:view:appearance')??'null');if(saved&&/^#[0-9a-f]{6}$/i.test(saved.background)&&/^#[0-9a-f]{6}$/i.test(saved.baseplate))appearance=saved;}catch{}
 function saveAppearance(value:typeof appearance){localStorage.setItem('brickwright-cad:view:appearance',JSON.stringify(value));appearance={...value};editor?.setAppearance(value);}
-mountAppDialogs({getAppearance:()=>({...appearance}),setAppearance:saveAppearance,getReadout:()=>editor?.transformReadoutVisible??showReadout,setReadout:visible=>{saveReadout(visible);editor?.setTransformReadoutVisible(visible);},setLanguage:async language=>{await prepareToClose();try{localStorage.setItem('brickwright-cad:locale',language);}catch{throw new Error(t('Language preference could not be saved'));}await window.webkit?.messageHandlers.cadHost?.postMessage({action:'locale',data:language});location.reload();}});
+mountAppDialogs({getNavigation:()=>navigationPreset,setNavigation:saveNavigation,getAppearance:()=>({...appearance}),setAppearance:saveAppearance,getReadout:()=>editor?.transformReadoutVisible??showReadout,setReadout:visible=>{saveReadout(visible);editor?.setTransformReadoutVisible(visible);},setLanguage:async language=>{await prepareToClose();try{localStorage.setItem('brickwright-cad:locale',language);}catch{throw new Error(t('Language preference could not be saved'));}await window.webkit?.messageHandlers.cadHost?.postMessage({action:'locale',data:language});location.reload();}});
 const desktop=mountDesktopHost(()=>editor,{projects:()=>historyUI.open(),about:()=>hostActions.querySelector<HTMLButtonElement>('#about')!.click(),settings:()=>hostActions.querySelector<HTMLButtonElement>('#settings')!.click(),help:()=>hostActions.querySelector<HTMLButtonElement>('#help')!.click()});
 async function record(document:CadDocument,label:string,parentId?:string){
  const token=++saveToken;let cacheFailed=false;badge.textContent=t('Saving iteration…');badge.className='';
@@ -57,7 +59,7 @@ function start(doc?: CadDocument) {
   try {
     editor = mountCadEditor(root, {
       document: doc, wasmURL: new URL('../cad-assets/manifold.wasm', import.meta.url).href,
-      headerContent:hostActions,
+      headerContent:hostActions,navigationPreset,
       showTransformReadout:showReadout,onTransformReadoutChange:saveReadout,appearance,
       saveProject:async()=>{if(editor)await saveProject(editor.session.state.document);},
       decodeProject,

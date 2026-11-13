@@ -16,3 +16,7 @@ export * from "./i18n.js";
 export * from "./i18n-history.js";
 
 export * from "./code-examples.js";
+export {importOpenSCAD,exportOpenSCAD,exportJSCAD} from './code-interchange.js';
+export {exportCodeSource} from './code-interchange.js';
+export {importJSCAD,JSCAD_IMPORT_LIMITS} from './jscad-import.js';
+export type {JSCADImport,JSCADImportOptions} from './jscad-import.js';

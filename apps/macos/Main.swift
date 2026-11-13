@@ -4,6 +4,16 @@ import WebKit
 import Network
 import UniformTypeIdentifiers
 
+// Native WebKit magnification belongs to the 3D camera, never to the app chrome.
+@MainActor final class CadWebView: WKWebView {
+    override func magnify(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        let payload: [String: Any] = ["kind": "zoom", "factor": max(0.05, min(20, 1 + Double(event.magnification))), "x": Double(point.x), "y": Double(isFlipped ? point.y : bounds.height - point.y)]
+        guard let data = try? JSONSerialization.data(withJSONObject: payload), let json = String(data: data, encoding: .utf8) else { return }
+        evaluateJavaScript("window.dispatchEvent(new CustomEvent('brickwright-camera-input', {detail: \(json)}));", completionHandler: nil)
+    }
+}
+
 // A loopback-only immutable asset server supplies a stable origin for workers,
 // WebAssembly and IndexedDB. It serves only files in this app's Resources/web.
 final class AssetServer {
@@ -130,7 +140,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         let info=["version":Bundle.main.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String ?? "0.1.0","build":Bundle.main.object(forInfoDictionaryKey:"CFBundleVersion") as? String ?? "dev"]
         let infoJSON=String(data:try! JSONSerialization.data(withJSONObject:info),encoding:.utf8)!
         configuration.userContentController.addUserScript(WKUserScript(source: "window.brickwrightDesktop = true;window.brickwrightDesktopInfo=\(infoJSON);\(smoke ? "localStorage.setItem('brickwright-cad:locale','en');" : "")", injectionTime: .atDocumentStart, forMainFrameOnly: true))
-        webView = WKWebView(frame: .zero, configuration: configuration)
+        webView = CadWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = self; webView.uiDelegate = self; webView.isInspectable = true
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1440, height: 920), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.title = smoke ? "Brickwright CAD — verification" : "Brickwright CAD"
