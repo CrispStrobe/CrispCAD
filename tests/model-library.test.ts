@@ -122,6 +122,21 @@ describe('model library metadata admission', () => {
     c.assets[0].quality.fileSha256 = 'c'.repeat(64);
     expect(validateModelLibraryCatalogue(c).valid).toBe(false);
   });
+  it('preserves optional reproducible screening policy and refuses malformed limits or transforms', () => {
+    const c = catalogue();
+    const screeningPolicy = {maxTriangles: 100, maxExtentMm: 1000, maxAnalysisBytes: 1024, maxAnalysisTriangles: 200, toMillimetresZUp: [...c.assets[0].conversion.toMillimetresZUp]};
+    c.assets[0].quality = {fileSha256: 'b'.repeat(64), toolVersion: 'mesh-check-1', checkedOn: '2026-11-13', parseable: true, closedPositiveVolume: true, withinSizeLimits: true, withinTriangleLimits: true, screeningPolicy};
+    const result = validateModelLibraryCatalogue(c);
+    expect(result.valid).toBe(true);
+    if (result.valid) expect(result.catalogue.assets[0].quality?.screeningPolicy).toEqual(screeningPolicy);
+    for (const patch of [{maxTriangles: 0}, {maxTriangles: 201}, {maxExtentMm: Infinity}, {maxAnalysisBytes: 0}, {maxAnalysisTriangles: 1.5}, {toMillimetresZUp: Array(16).fill(0)}, {extra: true}]) {
+      const invalid = structuredClone(c) as any;
+      Object.assign(invalid.assets[0].quality.screeningPolicy, patch);
+      expect(validateModelLibraryCatalogue(invalid).valid).toBe(false);
+    }
+    delete c.assets[0].quality.screeningPolicy;
+    expect(validateModelLibraryCatalogue(c).valid).toBe(true);
+  });
   it('refuses undeclared grant restrictions and returns diagnostics for hostile objects', () => {
     const c = catalogue() as any; c.assets[0].licence.restrictions = 'Noncommercial only';
     expect(validateModelLibraryCatalogue(c).valid).toBe(false);

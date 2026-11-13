@@ -17,6 +17,14 @@ export interface ModelLibraryFile {
   sha256: string;
   bytes: number;
 }
+/** Reproducible geometry screening policy; older records may omit this metadata. */
+export interface ModelLibraryScreeningPolicy {
+  maxTriangles: number;
+  maxExtentMm: number;
+  toMillimetresZUp: number[];
+  maxAnalysisBytes: number;
+  maxAnalysisTriangles: number;
+}
 export interface ModelLibraryAsset {
   id: string;
   version: string;
@@ -55,6 +63,7 @@ export interface ModelLibraryAsset {
     closedPositiveVolume: boolean;
     withinSizeLimits: boolean;
     withinTriangleLimits: boolean;
+    screeningPolicy?: ModelLibraryScreeningPolicy;
     /** Separate collision qualification; visual import never implies physics safety. */
     physics?: {engine: 'Jolt'; engineVersion: string; qualifierVersion: string; qualified: boolean};
   };
@@ -81,6 +90,12 @@ const date = (v: unknown): boolean => {
 };
 const keys = (v: Record<string, unknown>, allowed: string): boolean => Object.keys(v).every(key => allowed.split(' ').includes(key));
 const file = (v: unknown): v is unknown & ModelLibraryFile => object(v) && keys(v, 'url format sha256 bytes') && url(v.url) && text(v.format, 80) && /^[a-zA-Z0-9][a-zA-Z0-9.+_-]*$/.test(v.format) && hash(v.sha256) && Number.isSafeInteger(v.bytes) && (v.bytes as number) > 0;
+function invertibleAffine(value: unknown): boolean {
+  if (!Array.isArray(value) || value.length !== 16 || !value.every(n => typeof n === 'number' && Number.isFinite(n)) || value[3] !== 0 || value[7] !== 0 || value[11] !== 0 || value[15] !== 1) return false;
+  const m = value;
+  const determinant = m[0] * (m[5] * m[10] - m[9] * m[6]) - m[4] * (m[1] * m[10] - m[9] * m[2]) + m[8] * (m[1] * m[6] - m[5] * m[2]);
+  return Number.isFinite(determinant) && determinant !== 0;
+}
 /**
  * Validate metadata only, without downloading files or establishing legal rights.
  * The accepted review and evidence fields record curation; they do not verify it.
@@ -126,12 +141,20 @@ function checkModelLibraryCatalogue(value: unknown): ModelLibraryValidation {
     }
     if (asset.quality !== undefined) {
       const q = asset.quality;
-      if (!object(q) || !keys(q, 'fileSha256 toolVersion checkedOn parseable closedPositiveVolume withinSizeLimits withinTriangleLimits physics') || !hash(q.fileSha256) || !text(q.toolVersion, 240) || !date(q.checkedOn) || !['parseable', 'closedPositiveVolume', 'withinSizeLimits', 'withinTriangleLimits'].every(key => typeof q[key] === 'boolean')) error('Invalid quality evidence.');
+      if (!object(q) || !keys(q, 'fileSha256 toolVersion checkedOn parseable closedPositiveVolume withinSizeLimits withinTriangleLimits screeningPolicy physics') || !hash(q.fileSha256) || !text(q.toolVersion, 240) || !date(q.checkedOn) || !['parseable', 'closedPositiveVolume', 'withinSizeLimits', 'withinTriangleLimits'].every(key => typeof q[key] === 'boolean')) error('Invalid quality evidence.');
       else {
         const files = [asset.original, ...(Array.isArray(asset.derivatives) ? asset.derivatives : [])];
         if (!files.some(f => file(f) && f.sha256 === q.fileSha256)) error('Quality evidence must name an original or derivative hash.');
         if (files.some(f => file(f) && f.sha256 === q.fileSha256 && isModelLibrarySourceFormat(f.format))) error('Geometry quality evidence must identify rendered geometry, not program source.');
         if (!q.parseable && (q.closedPositiveVolume || q.withinSizeLimits || q.withinTriangleLimits)) error('Unparseable geometry cannot pass geometry checks.');
+        if (q.screeningPolicy !== undefined) {
+          const p = q.screeningPolicy;
+          if (!object(p) || !keys(p, 'maxTriangles maxExtentMm toMillimetresZUp maxAnalysisBytes maxAnalysisTriangles') ||
+              !Number.isSafeInteger(p.maxTriangles) || (p.maxTriangles as number) < 1 ||
+              !Number.isSafeInteger(p.maxAnalysisTriangles) || (p.maxAnalysisTriangles as number) < (p.maxTriangles as number) ||
+              !Number.isSafeInteger(p.maxAnalysisBytes) || (p.maxAnalysisBytes as number) < 1 ||
+              typeof p.maxExtentMm !== 'number' || !Number.isFinite(p.maxExtentMm) || p.maxExtentMm <= 0 || !invertibleAffine(p.toMillimetresZUp)) error('Invalid reproducible mesh screening policy.');
+        }
         if (q.physics !== undefined) {
           const p = q.physics;
           if (!object(p) || !keys(p, 'engine engineVersion qualifierVersion qualified') || p.engine !== 'Jolt' || !text(p.engineVersion, 240) || !text(p.qualifierVersion, 240) || typeof p.qualified !== 'boolean') error('Invalid versioned physics evidence.');

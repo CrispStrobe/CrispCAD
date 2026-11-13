@@ -76,8 +76,9 @@ match their hashes, or that a mesh passes its reported checks. Curators must
 verify evidence and files before admitting records.
 
 The next slice now provides selected-file fetching with hash verification and an
-offline cache (see below). Mesh quality checks and records for the 34 editable
-examples and a small CC0 calibration set remain to be implemented. Preserve original files and derived meshes with their respective
+offline cache (see below). Headless STL quality screening is also available
+(see below). Records for the 34 editable examples and a small CC0 calibration
+set remain to be implemented. Preserve original files and derived meshes with their respective
 hashes. Before catalogue insertion or attributed STL export, implement project
 provenance and attribution sidecars. These later steps are not provided by the
 catalogue contract alone.
@@ -134,3 +135,44 @@ identity only: they do not establish legal rights, mesh quality or physics
 qualification. No STL importer, saved project definition or history revision is
 changed; insertion and attributed export still require project provenance and
 sidecar support.
+
+## Headless STL quality screening
+
+`checkModelLibrarySTL` in `@brickwright/cad-geometry` screens one explicit STL
+byte array without fetching files, changing documents or inserting catalogue
+assets. Supply `checkedOn` and an explicit `toMillimetresZUp` affine conversion:
+STL does not establish its own units. The checker snapshots and SHA-256 hashes the
+exact input bytes, and records its version, capture date and applied policy.
+It accepts complete binary STL and line-oriented ASCII STL facet grammar;
+trailing ASCII content, incomplete facets and non-finite data fail parsing. This
+is stricter evidence than the existing user-provided STL importer's loose vertex
+extraction, which remains a separate API.
+
+The independent checks cover parsing; nondegenerate, consistently oriented,
+closed manifold topology with positive total signed volume; converted bounding
+box spans; and triangle count. Exact coincident positions are welded for topology
+analysis, without repair or tolerance-based stitching. Each edge needs opposite
+paired uses, and each vertex needs a connected manifold fan. Defaults admit at
+most 83,333 triangles and a 1000 mm span along each converted axis. Callers may
+lower the triangle limit and set a positive finite maximum span. Analysis itself
+has hard limits of 16 MiB and 83,333 triangles; oversized byte input is rejected
+before copying or hashing. Exceeding the triangle analysis budget reports a
+failed count limit while parsing and other geometry checks remain `unchecked`.
+Parse failures likewise leave dependent checks `unchecked`, distinct from a
+checked failure.
+
+Results include `checks`, diagnostics, and available measurements. A catalogue
+`quality` record is emitted only when all checks have run; its booleans retain
+failures and never convert unchecked work into evidence. Store its optional
+`screeningPolicy` with the quality record to retain chosen size/count limits,
+conversion and analysis budgets. This metadata is validated when present; older
+catalogues remain valid without it, but their booleans alone cannot reproduce the
+policy used. The quality hash identifies the screened STL, whose conversion can
+differ from the editable original's catalogue conversion.
+
+This screen does not detect intersections between nonadjacent triangles or
+shells, establish shell nesting, prove printability or mechanical accuracy, or
+qualify collisions. A passing topology/volume screen can still contain overlapping
+or self-intersecting surfaces and requires further curation. No `physics` evidence
+is produced. Source rights, project provenance, attributed exports and Jolt
+qualification remain separate requirements.
