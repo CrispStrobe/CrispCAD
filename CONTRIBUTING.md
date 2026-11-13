@@ -19,8 +19,9 @@ npm run verify:packages
 ```
 
 Package verification installs the six packed SDKs into an independent temporary
-host. For its offline install, the script packs the installed pinned Jolt runtime
-as a local tarball; registry dependencies must already be in npm's cache.
+host. Its offline install uses an empty npm cache and local tarballs of the exact
+installed runtime dependency closure. Unused Manifold GLTF/esbuild tooling peers
+are excluded with --legacy-peer-deps; the exercised CAD APIs do not use them.
 
 Keep document validation, commands, geometry and physics headless. File pickers,
 host storage, UI frameworks and native bridges belong in host adapters. Preserve

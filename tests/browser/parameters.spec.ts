@@ -1,8 +1,9 @@
+import {addShape,clickTool,restoreIteration} from './ui.js';
 import {expect,test} from '@playwright/test';
 test('named dimensions drive geometry, survive reload, reject cycles and restore through history',async({page})=>{
   const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
   await page.goto('/');const editor=page.locator('#cad-root');const ready=()=>expect(editor).toHaveAttribute('data-state','ready');await ready();
-  await page.getByRole('button',{name:'Box',exact:true}).click();await ready();
+  await addShape(page,'Box');await ready();
   await page.getByRole('button',{name:'Parameters',exact:true}).click();
   const panel=page.getByRole('dialog',{name:'Model parameters',exact:true});await expect(panel).toBeVisible();
   await panel.getByRole('button',{name:'Add parameter',exact:true}).click();
@@ -23,10 +24,7 @@ test('named dimensions drive geometry, survive reload, reject cycles and restore
   await page.getByRole('button',{name:'Undo',exact:true}).click();await ready();await expect(width).toHaveValue('40');
   await page.reload();await ready();
   await page.getByRole('button',{name:'Parameters',exact:true}).click();await expect(panel.getByLabel('Parameter expression',{exact:true}).first()).toHaveValue('4 cm');await panel.getByRole('button',{name:'Close parameters',exact:true}).click();
-  await page.getByRole('button',{name:'Models and version history',exact:true}).click();
-  const history=page.getByRole('dialog',{name:'Models and version history',exact:true});
-  await history.getByRole('button',{name:'Restore iteration 4',exact:true}).click();await expect(history.getByRole('status')).toContainText('Later work is preserved');
-  await history.getByRole('button',{name:'Close version history',exact:true}).click();await ready();
+  await restoreIteration(page,4);await ready();
   await page.getByRole('button',{name:'Parameters',exact:true}).click();await expect(panel.getByLabel('Parameter expression',{exact:true}).first()).toHaveValue('60');
   expect(errors).toEqual([]);
 });

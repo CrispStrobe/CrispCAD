@@ -4,6 +4,10 @@ import {openHistoryStore} from '../packages/history/src/index.js';
 import {createCadSession} from '@brickwright/cad-core';
 import {createPresetDocument} from '../packages/editor/src/shapes.js';
 describe('persistent model revisions',()=>{
+ it('recovers native library archives with stable identity and never replaces an existing journal',async()=>{
+  const source=await openHistoryStore(`history-${crypto.randomUUID()}`),target=await openHistoryStore(`history-${crypto.randomUUID()}`),s=createCadSession();s.add({kind:'box',size:[10,10,10]});const revision=await source.append(s.state.document);const archive=await source.exportArchive(s.state.document.id);
+  const recovered=await target.importArchive(archive,{preserveIdentity:true});expect(recovered.id).toBe(s.state.document.id);expect(recovered.headId).toBe(revision.id);await expect(target.importArchive(archive,{preserveIdentity:true})).rejects.toThrow('already exists');expect((await target.getProject(recovered.id))!.headId).toBe(revision.id);await source.close();await target.close();
+ });
  it('retains more than the undo limit, shares mesh assets, and branches without erasing later iterations',async()=>{
   const name=`history-${crypto.randomUUID()}`,store=await openHistoryStore(name),session=createCadSession(createPresetDocument('wedge'));const id=session.state.document.roots[0];const first=await store.append(session.state.document,'First');let latest=first;
   for(let i=1;i<=130;i++){session.update(id,{transform:{position:[i,0,0],rotation:[0,0,0],scale:[1,1,1]}});latest=await store.append(session.state.document,`Move ${i}`);}

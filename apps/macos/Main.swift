@@ -67,7 +67,7 @@ final class AssetServer {
 }
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandlerWithReply {
+final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandlerWithReply, NSMenuItemValidation {
     private var window: NSWindow!
     private var webView: WKWebView!
     private var server: AssetServer?
@@ -77,25 +77,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     private var smokeStage = 0
     private var smokeAttempts = 0
     private var pageLoaded = false
+    private var editorState:[String:Bool]=[:]
+    private lazy var pasteboard:NSPasteboard = smoke ? .withUniqueName() : .general
+    private let clipboardType=NSPasteboard.PasteboardType("com.crispstrobe.brickwrightcad.objects")
     func applicationDidFinishLaunching(_ notification: Notification) {
         let menu = NSMenu()
         let appItem = NSMenuItem(); menu.addItem(appItem)
         let appMenu = NSMenu(); appItem.submenu = appMenu
-        appMenu.addItem(withTitle: "About Brickwright CAD", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        let about=appMenu.addItem(withTitle: "About Brickwright CAD", action: #selector(showAbout), keyEquivalent: "");about.target=self
+        let preferences=appMenu.addItem(withTitle:"Settings…",action:#selector(showSettings),keyEquivalent:",");preferences.target=self
         appMenu.addItem(.separator())
+        appMenu.addItem(withTitle:"Hide Brickwright CAD",action:#selector(NSApplication.hide(_:)),keyEquivalent:"h")
+        let hideOthers=appMenu.addItem(withTitle:"Hide Others",action:#selector(NSApplication.hideOtherApplications(_:)),keyEquivalent:"h");hideOthers.keyEquivalentModifierMask=[.command,.option]
+        appMenu.addItem(withTitle:"Show All",action:#selector(NSApplication.unhideAllApplications(_:)),keyEquivalent:"");appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Quit Brickwright CAD", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        let editItem = NSMenuItem(); menu.addItem(editItem); let edit = NSMenu(title: "Edit"); editItem.submenu = edit
-        for (title, action, key) in [("Undo", "undo:", "z"), ("Redo", "redo:", "Z"), ("Cut", "cut:", "x"), ("Copy", "copy:", "c"), ("Paste", "paste:", "v"), ("Select All", "selectAll:", "a")] {
-            edit.addItem(withTitle: title, action: Selector(action), keyEquivalent: key)
-        }
-        let windowItem = NSMenuItem(); menu.addItem(windowItem); let windowMenu = NSMenu(title: "Window"); windowItem.submenu = windowMenu
+        func section(_ title:String)->NSMenu {let item=NSMenuItem(title:title,action:nil,keyEquivalent:"");menu.addItem(item);let submenu=NSMenu(title:title);item.submenu=submenu;return submenu}
+        let file=section("File")
+        addCommand(file,"New Project","new","n");addCommand(file,"Open Project…","open","o");addCommand(file,"Project Library…","projects","o",[.command,.shift]);file.addItem(.separator())
+        addCommand(file,"Save Project…","save","s");file.addItem(.separator());addCommand(file,"Import Geometry…","import","i");addCommand(file,"Export…","export","e",[.command,.shift])
+        let edit=section("Edit")
+        addCommand(edit,"Undo","undo","z");addCommand(edit,"Redo","redo","z",[.command,.shift]);edit.addItem(.separator())
+        addCommand(edit,"Cut","cut","x");addCommand(edit,"Copy","copy","c");addCommand(edit,"Paste","paste","v");addCommand(edit,"Duplicate","duplicate","d");addCommand(edit,"Delete","delete","\u{7f}",[]);edit.addItem(.separator());addCommand(edit,"Select All","select-all","a");addCommand(edit,"Deselect All","deselect")
+        let view=section("View")
+        addCommand(view,"Fit Model","fit","0");addCommand(view,"Home View","home","0",[.command,.shift]);view.addItem(.separator());addCommand(view,"Top","top","1");addCommand(view,"Front","front","2");addCommand(view,"Right","right","3");addCommand(view,"Back","back");addCommand(view,"Left","left");addCommand(view,"Bottom","bottom");view.addItem(.separator());addCommand(view,"Toggle Orthographic Projection","projection");addCommand(view,"Show / Hide Workplane","workplane");addCommand(view,"Show / Hide Objects","objects");addCommand(view,"Show / Hide Properties","properties")
+        let object=section("Object")
+        addCommand(object,"Add Shape…","shapes","a",[.command,.shift]);object.addItem(.separator())
+        addCommand(object,"Select / Drag","select");addCommand(object,"Move","move");addCommand(object,"Rotate","rotate");addCommand(object,"Scale","scale");addCommand(object,"Drop to Workplane","drop");object.addItem(.separator());addCommand(object,"Union","union");addCommand(object,"Subtract","subtract");addCommand(object,"Intersect","intersect");object.addItem(.separator());addCommand(object,"Model Parameters…","parameters")
+        let windowItem = NSMenuItem(title:"Window",action:nil,keyEquivalent:""); menu.addItem(windowItem); let windowMenu = NSMenu(title: "Window"); windowItem.submenu = windowMenu
         windowMenu.addItem(withTitle: "Minimize", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
+        let help=section("Help");addCommand(help,"Workbench Help","help");NSApp.helpMenu=help
         NSApp.mainMenu = menu; NSApp.windowsMenu = windowMenu
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = smoke ? .nonPersistent() : .default()
         configuration.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: "cadSave")
+        configuration.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: "cadLibrary")
+        configuration.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: "cadHost")
         // The capability marker is host-owned; the JS editor stays host independent.
-        configuration.userContentController.addUserScript(WKUserScript(source: "window.brickwrightDesktop = true;", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        let info=["version":Bundle.main.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String ?? "0.1.0","build":Bundle.main.object(forInfoDictionaryKey:"CFBundleVersion") as? String ?? "dev"]
+        let infoJSON=String(data:try! JSONSerialization.data(withJSONObject:info),encoding:.utf8)!
+        configuration.userContentController.addUserScript(WKUserScript(source: "window.brickwrightDesktop = true;window.brickwrightDesktopInfo=\(infoJSON);", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = self; webView.uiDelegate = self; webView.isInspectable = true
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1440, height: 920), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
@@ -115,6 +135,48 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     private func fail(_ message: String) {
         if smoke { fputs("FAIL: \(message)\n", stderr); exit(1) }
         let alert = NSAlert(); alert.messageText = "Brickwright CAD could not start"; alert.informativeText = message; alert.runModal()
+    }
+    @objc private func showAbout(){webView?.evaluateJavaScript("document.querySelector('#cad-root')?.shadowRoot?.querySelector('#about')?.click();")}
+    @objc private func showSettings(){webView?.evaluateJavaScript("document.querySelector('#cad-root')?.shadowRoot?.querySelector('#settings')?.click();")}
+    private func modelUndoRedo(redo:Bool){
+        webView?.evaluateJavaScript("""
+        (()=>{let active=document.activeElement;while(active?.shadowRoot?.activeElement)active=active.shadowRoot.activeElement;
+        if(active instanceof HTMLInputElement||active instanceof HTMLTextAreaElement||active?.isContentEditable){document.execCommand('\(redo ? "redo" : "undo")');return;}
+        const canvas=document.querySelector('#cad-root')?.shadowRoot?.querySelector('canvas');canvas?.dispatchEvent(new KeyboardEvent('keydown',{key:'z',metaKey:true,shiftKey:\(redo ? "true" : "false"),bubbles:true,composed:true}));})()
+        """)
+    }
+    @objc private func modelUndo(){modelUndoRedo(redo:false)}
+    @objc private func modelRedo(){modelUndoRedo(redo:true)}
+    private func addCommand(_ menu:NSMenu,_ title:String,_ command:String,_ key:String="",_ modifiers:NSEvent.ModifierFlags=[.command]){
+        let item=menu.addItem(withTitle:title,action:#selector(performEditorCommand(_:)),keyEquivalent:key);item.target=self;item.representedObject=command;item.keyEquivalentModifierMask=key.isEmpty ? [] : modifiers
+    }
+    @objc private func performEditorCommand(_ sender:NSMenuItem){
+        guard let command=sender.representedObject as? String else{return}
+        let selectors=["undo":"undo:","redo":"redo:","cut":"cut:","copy":"copy:","paste":"paste:","delete":"deleteBackward:","select-all":"selectAll:"]
+        let execute={self.webView.callAsyncJavaScript("await window.brickwrightExecuteCommand(command);",arguments:["command":command],in:nil,in:.page){result in if case .failure(let error)=result {fputs("CAD command failed: \(error.localizedDescription)\n",stderr)}}}
+        guard let selector=selectors[command] else {execute();return}
+        if !smoke && NSApp.keyWindow !== window {_ = NSApp.sendAction(Selector(selector),to:nil,from:sender);return}
+        webView.evaluateJavaScript("(()=>{let e=document.activeElement;while(e?.shadowRoot?.activeElement)e=e.shadowRoot.activeElement;return e instanceof HTMLTextAreaElement||(e instanceof HTMLInputElement&&!['checkbox','color','file','button','range'].includes(e.type))||!!e?.isContentEditable||!!window.getSelection()?.toString();})()") {result,error in
+            if result as? Bool == true {_ = NSApp.sendAction(Selector(selector),to:nil,from:sender)}else{execute()}
+        }
+    }
+    func validateMenuItem(_ menuItem:NSMenuItem)->Bool {
+        guard let command=menuItem.representedObject as? String else{return true}
+        guard pageLoaded else{return false}
+        if window.attachedSheet != nil {return ["cut","copy","paste","delete","undo","redo","select-all"].contains(command)}
+        let editing=editorState["editingText"] ?? false
+        if editorState["modalOpen"] == true {return editing && ["cut","copy","paste","delete","undo","redo","select-all"].contains(command)}
+        switch command {
+        case "undo":return editing || editorState["canUndo"] == true
+        case "redo":return editing || editorState["canRedo"] == true
+        case "cut","copy","delete":return editing || editorState["canDelete"] == true
+        case "duplicate","drop":return editorState["canDelete"] == true
+        case "union","subtract","intersect":return editorState["canCombine"] == true
+        case "export":return editorState["canExport"] == true
+        case "deselect":return editorState["hasSelection"] == true
+        case "paste":return editing || pasteboard.availableType(from:[clipboardType,.string]) != nil
+        default:return true
+        }
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -154,6 +216,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         panel.beginSheetModal(for: window) { completionHandler($0 == .OK ? panel.urls : nil) }
     }
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
+        if message.name == "cadHost" {
+            guard message.frameInfo.isMainFrame,message.frameInfo.securityOrigin.host == "127.0.0.1",message.frameInfo.securityOrigin.port == Int(port),message.frameInfo.securityOrigin.protocol == "http",let body=message.body as? [String:String] else{replyHandler(nil,"Invalid host request");return}
+            hostRequest(body,reply:replyHandler);return
+        }
+        if message.name == "cadLibrary" {
+            guard message.frameInfo.isMainFrame, message.frameInfo.securityOrigin.host == "127.0.0.1", message.frameInfo.securityOrigin.port == Int(port), message.frameInfo.securityOrigin.protocol == "http", let body = message.body as? [String:String] else { replyHandler(nil,"Invalid library request"); return }
+            libraryRequest(body, reply: replyHandler); return
+        }
         guard message.frameInfo.isMainFrame, message.frameInfo.securityOrigin.protocol == "http", message.frameInfo.securityOrigin.host == "127.0.0.1", message.frameInfo.securityOrigin.port == Int(port),
               let body = message.body as? [String: String], let name = body["name"], let base64 = body["data"], base64.utf8.count <= 90 * 1024 * 1024,
               let bytes = Data(base64Encoded: base64), bytes.count <= 64 * 1024 * 1024 else { replyHandler(nil, "Invalid export request"); return }
@@ -163,6 +233,72 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             do { try bytes.write(to: url, options: .atomic); replyHandler(["saved":true], nil) }
             catch { replyHandler(nil, error.localizedDescription) }
         }
+    }
+    private func hostRequest(_ body:[String:String],reply:@escaping(Any?,String?)->Void){
+        switch body["action"] {
+        case "state":
+            if let text=body["data"],text.utf8.count<4096,let data=text.data(using:.utf8),let value=(try? JSONSerialization.jsonObject(with:data)) as? [String:Bool] {editorState=value};reply(true,nil)
+        case "clipboard-read":
+            let text=pasteboard.string(forType:clipboardType) ?? pasteboard.string(forType:.string)
+            if let text,text.utf8.count>16*1024*1024 {reply(nil,"Clipboard selection exceeds 16 MiB")}else{reply(text as Any?,nil)}
+        case "clipboard-write":
+            guard let text=body["data"],text.utf8.count<=16*1024*1024 else {reply(nil,"Clipboard selection exceeds 16 MiB");return}
+            let item=NSPasteboardItem();item.setString(text,forType:clipboardType);item.setString(text,forType:.string);pasteboard.clearContents();guard pasteboard.writeObjects([item]) else{reply(nil,"The clipboard could not be written; the model was kept");return};reply(true,nil)
+        case "open":
+            let panel=NSOpenPanel();panel.canChooseDirectories=false;panel.allowsMultipleSelection=false
+            let geometry=body["mode"] == "geometry";panel.title=geometry ? "Import STL Geometry" : "Open CAD Project"
+            panel.allowedContentTypes=geometry ? [UTType(filenameExtension:"stl") ?? .data] : [.json,UTType(filenameExtension:"bcad") ?? .data,UTType(filenameExtension:"bcadhistory") ?? .data]
+            panel.beginSheetModal(for:window){result in guard result == .OK,let url=panel.url else{reply(NSNull(),nil);return};do{let size=try url.resourceValues(forKeys:[.fileSizeKey]).fileSize ?? 0;guard size<=(geometry ? 16:64)*1024*1024 else{reply(nil,"File exceeds the import limit");return};reply(["name":url.lastPathComponent,"data":try Data(contentsOf:url).base64EncodedString()],nil)}catch{reply(nil,error.localizedDescription)}}
+        default:reply(nil,"Unknown host request")
+        }
+    }
+    private func libraryFolder() throws -> URL {
+        let folder: URL
+        if smoke { folder = FileManager.default.temporaryDirectory.appendingPathComponent("bw-cad-smoke-\(ProcessInfo.processInfo.processIdentifier)") }
+        else if let path = UserDefaults.standard.string(forKey:"CADLibraryFolder") { folder = URL(fileURLWithPath:path,isDirectory:true) }
+        else { folder = FileManager.default.urls(for:.documentDirectory,in:.userDomainMask)[0].appendingPathComponent("Brickwright CAD",isDirectory:true) }
+        try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+        return folder.resolvingSymlinksInPath()
+    }
+    private func libraryRequest(_ body: [String:String], reply: @escaping (Any?,String?) -> Void) {
+        do {
+            let folder = try libraryFolder()
+            switch body["action"] {
+            case "settings": reply(["path":folder.path],nil)
+            case "choose-folder":
+                let panel = NSOpenPanel(); panel.canChooseFiles=false;panel.canChooseDirectories=true;panel.canCreateDirectories=true;panel.allowsMultipleSelection=false;panel.directoryURL=folder;panel.prompt="Use as library"
+                panel.beginSheetModal(for:window) { result in
+                    guard result == .OK, let selected=panel.url else { reply(["path":folder.path,"canceled":true],nil); return }
+                    UserDefaults.standard.set(selected.path,forKey:"CADLibraryFolder");reply(["path":selected.path],nil)
+                }
+            case "list":
+                let files=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:[.isRegularFileKey,.fileSizeKey],options:.skipsHiddenFiles)
+                var result:[[String:String]]=[]
+                for file in files where file.pathExtension == "bcad" {
+                    guard file.resolvingSymlinksInPath().deletingLastPathComponent() == folder,let size=try file.resourceValues(forKeys:[.fileSizeKey]).fileSize,size <= 64*1024*1024,
+                          let object=try? JSONSerialization.jsonObject(with:Data(contentsOf:file)) as? [String:Any],let project=object["project"] as? [String:Any],let id=project["id"] as? String else { continue }
+                    result.append(["name":file.lastPathComponent,"id":id])
+                };reply(result,nil)
+            case "read":
+                guard let name=body["name"],URL(fileURLWithPath:name).lastPathComponent == name,name.hasSuffix(".bcad") else { throw NSError(domain:"Invalid library filename",code:1) }
+                let file=folder.appendingPathComponent(name).resolvingSymlinksInPath()
+                guard file.deletingLastPathComponent() == folder,let size=try file.resourceValues(forKeys:[.fileSizeKey]).fileSize,size <= 64*1024*1024 else { throw NSError(domain:"Library project exceeds the file limit",code:1) }
+                reply(try Data(contentsOf:file).base64EncodedString(),nil)
+            case "write":
+                guard let id=body["id"],id.range(of:"^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$",options:.regularExpression) != nil,
+                      let encoded=body["data"],encoded.utf8.count<=90*1024*1024,let data=Data(base64Encoded:encoded),data.count<=64*1024*1024,
+                      let archive=try JSONSerialization.jsonObject(with:data) as? [String:Any],archive["format"] as? String == "brickwright-cad-history",let project=archive["project"] as? [String:Any],project["id"] as? String == id,let revisions=archive["revisions"] as? [[String:Any]] else { throw NSError(domain:"Invalid library project",code:1) }
+                let file=folder.appendingPathComponent(id+".bcad")
+                guard file.resolvingSymlinksInPath().deletingLastPathComponent() == folder else {throw NSError(domain:"Library file points outside its folder",code:1)}
+                if FileManager.default.fileExists(atPath:file.path) {
+                    guard let existing=try JSONSerialization.jsonObject(with:Data(contentsOf:file)) as? [String:Any],existing["format"] as? String == "brickwright-cad-history",let oldProject=existing["project"] as? [String:Any],oldProject["id"] as? String == id,let oldRevisions=existing["revisions"] as? [[String:Any]] else {throw NSError(domain:"Existing library file needs recovery; it was not overwritten",code:1)}
+                    var incoming:[String:String]=[:];for revision in revisions{if let key=revision["id"] as? String,let hash=revision["snapshotHash"] as? String {incoming[key]=hash}}
+                    guard oldRevisions.allSatisfy({old in guard let key=old["id"] as? String,let hash=old["snapshotHash"] as? String else{return false};return incoming[key]==hash}) else {throw NSError(domain:"Library file has another history branch. Open it as a separate project before saving; existing history was preserved",code:1)}
+                }
+                try data.write(to:file,options:.atomic);reply(["saved":true],nil)
+            default: reply(nil,"Unknown library operation")
+            }
+        } catch { reply(nil,error.localizedDescription) }
     }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { pageLoaded = true; if smoke { pollSmoke() } }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { fail(error.localizedDescription) }
@@ -174,10 +310,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
           const host = document.querySelector('#cad-root');
           if (host?.dataset.state !== 'ready') return 'waiting';
           const root = host.shadowRoot;
-          if (\(smokeStage) === 0) { root.querySelector('button[aria-label="Box"]').click(); return 'added'; }
+          if (\(smokeStage) === 0) { root.querySelector('button[aria-label="Shapes"]').click();root.querySelector('button[aria-label="Add Box"]').click(); return 'added'; }
           const objects = root.querySelectorAll('[data-testid="object-name"]');
-          if (objects.length !== 1 || Number(host.dataset.triangles) !== 12) return 'waiting';
-          if (!document.querySelector('#save-state').textContent.includes('Saved · iteration')) return 'waiting';
+          if ((\(smokeStage) < 6 && objects.length !== 1) || Number(host.dataset.triangles) !== objects.length * 12) return 'waiting';
+          if (!root.querySelector('#save-state').textContent.includes('Saved · iteration')) return 'waiting';
           if (\(smokeStage) === 1) {
             root.querySelector('button[aria-label="Parameters"]').click();
             const panel = root.querySelector('.parameters-dialog');
@@ -194,19 +330,50 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
           const doc = JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1'));
           if (doc.version !== 2 || doc.nodes[doc.roots[0]].size[0] !== 40) return 'parameter failure';
           if (\(smokeStage) === 2) return 'reload';
-          if (\(smokeStage) === 3) { document.querySelector('#history').click(); return 'history'; }
-          if (!document.querySelector('.history-dialog [aria-label="Restore iteration 3"]')) return 'waiting';
+          if (\(smokeStage) === 3) { root.querySelector('#library').click(); return 'history'; }
+          if (\(smokeStage) === 4) {document.querySelector('.library-dialog')?.close();root.querySelector('[data-testid="object-name"]').click();return 'commands';}
+          if (\(smokeStage) === 5) return 'copy-poll';
+          if (\(smokeStage) === 6) return objects.length === 2 ? 'paste-ready' : 'waiting';
+          if (\(smokeStage) === 7) return objects.length === 3 ? 'duplicate-ready' : 'waiting';
+          if (\(smokeStage) === 8) return objects.length === 2 ? 'delete-ready' : 'waiting';
+          if (\(smokeStage) === 9) return objects.length === 3 ? 'undo-ready' : 'waiting';
+          if (\(smokeStage) === 10) return objects.length === 2 ? 'passed' : 'waiting';
+          if (!Array.from(root.querySelectorAll('#iterations option')).some(option => option.textContent.startsWith('#3 ·'))) return 'waiting';
+          if (!document.querySelector('.library-dialog .project-card')) return 'waiting';
           return window.brickwrightDesktop && !!window.webkit.messageHandlers.cadSave && !!window.brickwrightPrepareToClose ? 'passed' : 'bridge missing';
         })()
         """
         webView.evaluateJavaScript(script) { [weak self] result, error in
             guard let self else { return }
             if let error { self.fail(error.localizedDescription); return }
-            if result as? String == "passed" { print("PASS: native macOS WebKit editor, worker/WASM solid, formula recomputation, reload, version history and save/quit bridge"); exit(0) }
+            if result as? String == "passed" {
+                self.webView.callAsyncJavaScript("await window.brickwrightPrepareToClose();",arguments:[:],in:nil,in:.page){result in
+                    do {
+                        if case .failure(let error)=result { throw error }
+                        let folder=try self.libraryFolder(),files=try FileManager.default.contentsOfDirectory(at:folder,includingPropertiesForKeys:nil).filter{$0.pathExtension=="bcad"}
+                        guard files.count==1,let archive=try JSONSerialization.jsonObject(with:Data(contentsOf:files[0])) as? [String:Any],archive["format"] as? String == "brickwright-cad-history",let revisions=archive["revisions"] as? [Any],revisions.count>=3 else {self.fail("Native library file/history verification failed");return}
+                        let original=try Data(contentsOf:files[0]);var pruned=archive;pruned["revisions"]=Array(revisions.dropFirst());let encoded=try JSONSerialization.data(withJSONObject:pruned).base64EncodedString();let project=archive["project"] as! [String:Any]
+                        self.webView.callAsyncJavaScript("try {await window.webkit.messageHandlers.cadLibrary.postMessage({action:'write',id,data});return false;} catch(error){return true;}",arguments:["id":project["id"]!,"data":encoded],in:nil,in:.page){result in
+                            do {guard case .success(let value)=result,value as? Bool == true,try Data(contentsOf:files[0])==original else {self.fail("Native library accepted a history-pruning write");return};try FileManager.default.removeItem(at:folder);self.pasteboard.releaseGlobally();print("PASS: native menus, private system clipboard Copy/Paste, Duplicate/Delete/Undo/Redo, parameters, library files and refusal to prune history");exit(0)}catch{self.fail(error.localizedDescription)}
+                        };return
+                    }catch{self.fail(error.localizedDescription)}
+                };return
+            }
             if result as? String == "added" { self.smokeStage = 1 }
             if result as? String == "parameterized" { self.smokeStage = 2 }
             if result as? String == "reload" { self.smokeStage = 3; self.webView.reload(); return }
             if result as? String == "history" { self.smokeStage = 4 }
+            let itemFor:(String)->NSMenuItem?={command in NSApp.mainMenu?.items.compactMap{$0.submenu}.flatMap{$0.items}.first{$0.representedObject as? String == command}}
+            @MainActor func perform(_ command:String){guard let item=itemFor(command),item.action == #selector(AppDelegate.performEditorCommand(_:)) else{self.fail("Native command missing: \(command)");return};self.performEditorCommand(item)}
+            if result as? String == "commands" {
+                for command in ["open","save","import","export","cut","copy","paste","duplicate","delete","fit","parameters"]{if itemFor(command)==nil{self.fail("Native command missing: \(command)");return}}
+                self.smokeStage=5;perform("copy")
+            }
+            if result as? String == "copy-poll",self.pasteboard.string(forType:self.clipboardType)?.contains("brickwright-cad-clipboard") == true {self.smokeStage=6;perform("paste")}
+            if result as? String == "paste-ready" {self.smokeStage=7;perform("duplicate")}
+            if result as? String == "duplicate-ready" {self.smokeStage=8;perform("delete")}
+            if result as? String == "delete-ready" {self.smokeStage=9;perform("undo")}
+            if result as? String == "undo-ready" {self.smokeStage=10;perform("redo")}
             if ["parameter failure", "bridge missing"].contains(result as? String ?? "") { self.fail(result as? String ?? "Verification failed"); return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.pollSmoke() }
         }

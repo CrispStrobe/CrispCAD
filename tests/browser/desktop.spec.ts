@@ -1,3 +1,4 @@
+import {addShape,clickTool} from './ui.js';
 import {expect,test} from '@playwright/test';
 test('desktop host exports project and iteration archives through the native save bridge',async({page})=>{
   await page.addInitScript(()=>{
@@ -6,17 +7,16 @@ test('desktop host exports project and iteration archives through the native sav
     host.webkit={messageHandlers:{cadSave:{postMessage:async(file:{name:string;data:string})=>{host.exports.push(file);return {saved:true};}}}};
   });
   await page.goto('/');const editor=page.locator('#cad-root');await expect(editor).toHaveAttribute('data-state','ready');
-  await page.getByRole('button',{name:'Box',exact:true}).click();await expect(editor).toHaveAttribute('data-state','ready');
-  await page.getByRole('button',{name:'Save project',exact:true}).click();
+  await addShape(page,'Box');await expect(editor).toHaveAttribute('data-state','ready');
+  await clickTool(page,'Save project');
   await expect.poll(()=>page.evaluate(()=>(window as unknown as {exports:unknown[]}).exports.length)).toBe(1);
   const project=await page.evaluate(()=>JSON.parse(atob((window as unknown as {exports:{data:string}[]}).exports[0].data)));
-  expect(project.format).toBe('brickwright-cad');expect(project.roots).toHaveLength(1);
+  expect(project.format).toBe('brickwright-cad-history');expect(project.revisions.at(-1).header.roots).toHaveLength(1);
   // Native Quit commits a still-focused inspector field before flushing history.
   const width=page.getByLabel('Width (mm)',{exact:true});if(!await width.isVisible())await page.getByRole('button',{name:'Properties',exact:true}).click();
   await width.fill('42');await page.evaluate(async()=>{await (window as unknown as {brickwrightPrepareToClose:()=>Promise<void>}).brickwrightPrepareToClose();});
   expect(await page.evaluate(()=>{const doc=JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!);return doc.nodes[doc.roots[0]].size[0];})).toBe(42);
-  await page.getByRole('button',{name:'Models and version history',exact:true}).click();
-  await page.getByRole('button',{name:'Back up model + history',exact:true}).click();
+  await clickTool(page,'Save project');
   await expect.poll(()=>page.evaluate(()=>(window as unknown as {exports:unknown[]}).exports.length)).toBe(2);
   const archive=await page.evaluate(()=>JSON.parse(atob((window as unknown as {exports:{data:string}[]}).exports[1].data)));
   expect(archive.format).toBe('brickwright-cad-history');expect(archive.revisions.length).toBeGreaterThanOrEqual(2);

@@ -4,8 +4,11 @@ import { newId } from '@brickwright/cad-core';
 declare global {
   interface Window {
     brickwrightDesktop?: boolean;
+    brickwrightDesktopInfo?: {version:string;build:string};
     brickwrightPrepareToClose?: () => Promise<void>;
-    webkit?: { messageHandlers: { cadSave?: { postMessage(body: {name:string;data:string}): Promise<{saved:boolean}> } } };
+    brickwrightExecuteCommand?: (command:string)=>Promise<void>;
+    brickwrightReceiveFile?:(name:string,data:string)=>Promise<void>;
+    webkit?: { messageHandlers: { cadSave?: { postMessage(body: {name:string;data:string}): Promise<{saved:boolean}> };cadHost?:{postMessage(body:{action:string;mode?:string;data?:string}):Promise<unknown>} } };
   }
 }
 /** The standalone host owns native files; reusable editor packages have no Capacitor dependency. */

@@ -35,9 +35,10 @@ bound property. Renaming a parameter requires updating expressions that refer to
 it; unresolved references are refused, not silently renamed.
 
 Duplicates preserve dimension/transform bindings to the same model parameters.
-The standard 10 mm duplicate offset requires first detaching a driven Position X.
-Deleting a body removes its bindings; Undo restores them. Inserting another
-parametric model with active bindings is refused until namespace merging exists.
+A driven Position X receives an explicit 10 mm offset expression when duplicated.
+Deleting a body removes its bindings; Undo restores them. Clipboard paste preserves driving formulas and merges parameter namespaces,
+renaming collisions. Headless hosts enable this with
+`session.insert(fragment, offset, {mergeParameters:true})`.
 Joints must be detached before driving connected bodies or their operands until
 joint frames themselves have stable parametric references.
 

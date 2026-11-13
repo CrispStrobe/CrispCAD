@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 import { identityTransform, createCadSession, defaultPartPhysics } from '@brickwright/cad-core';
-import type { Primitive, SolidNode } from '@brickwright/cad-core';
+import type { Primitive, SolidNode,GeneratorRecipe } from '@brickwright/cad-core';
 import { advancedCatalog, constructionDocument, constructionPreview } from './advanced-shapes.js';
 type MeshShape = Extract<SolidNode, { kind: 'mesh' }>;
 export interface ShapePreset { id: string; name: string; category: string; description: string; keywords: string; color: string }
@@ -75,9 +75,9 @@ export function createPresetShape(id: string): { shape: Primitive | MeshShape; h
   } finally { geometry.dispose(); }
 }
 const previews = new Map<string,string>();
-export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: {svg?:string} = {}) {
+export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: {svg?:string;recipe?:GeneratorRecipe} = {}) {
   const preset = shapeCatalog.find(p => p.id === id); if (!preset) throw new Error('Unknown shape');
-  if (advancedCatalog.some(p => p[0] === id)) return constructionDocument(id, preset.name, preset.color, text, options.svg);
+  if (advancedCatalog.some(p => p[0] === id)) return constructionDocument(id, preset.name, preset.color, text, options.svg,options.recipe);
   const session = createCadSession(); session.add(createPresetShape(id).shape, { name: preset.name, color: preset.color }); const doc = structuredClone(session.state.document); const node=doc.nodes[doc.roots[0]];node.physics = {...defaultPartPhysics(),sourcePreset:id};
   if(id==='torus')node.physics.collisionHint={kind:'tube-grid',segments:64,sides:24,layout:'columns',closed:true};
   const profileLengths:Record<string,number>={'curved-cone':18,hemisphere:18,paraboloid:26,tube:5,vase:14,washer:5};

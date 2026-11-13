@@ -163,3 +163,59 @@ and direct-device installation are in IPAD.md.
   pass. A changed parameter requires fresh Jolt collision qualification.
 - Added a native quit hook that commits the focused inspector field and flushes
   saved iterations. Smoke checks use ephemeral storage on their own loopback port.
+
+## Compact workbench and native project library
+
+- Replaced three stacked chrome rows with one application row. Removed redundant
+  primitive shortcuts and the embedding-demo link from the product. File contains
+  one Export dialog with a format choice; About includes version, author, project
+  links, Brickwright-lite provenance and bundled license notices.
+- Construction operands are collapsed by default. Object rows, checkboxes and
+  cyan scene bounds clearly mark selection. Select is the default; V / Escape
+  returns from Move/Rotate/Scale. Objects drag directly in the workplane or the
+  corresponding side-view plane. Transform values remain numerically editable,
+  with the active mode's fields placed first in Properties.
+- Screws, threads and nuts expose pitch, diameter, length, depth, starts and hand;
+  screws additionally expose head/slot dimensions, and nuts expose clearance.
+  Hearts expose size, thickness, lobes, cleft and bend. Regeneration is preflighted
+  and committed once, preserving root identity, placement, material, undo and
+  revision history. Other specialized presets still need generator controls.
+- Bent hearts retain convex sections as their actual CAD source. Both rendering
+  and Jolt qualification use those sections; the earlier coarse warped-cap path
+  failed the geometric collision gate and was replaced rather than relaxing it.
+- Replaced the full-screen revision list with a paged iteration selector. Projects
+  opens the searchable library. Normal .bcad saves include the complete history;
+  legacy snapshot and .bcadhistory files remain readable. Mac Settings selects a
+  library folder; existing journals migrate to full project files and subsequent
+  edits update them automatically. Quit flushes pending writes. Native writes
+  refuse damaged files and any update that removes or changes an old revision.
+- Validation: 109 headless tests, 32 Chromium/iPad WebKit workflows, 48 default
+  rigid-solid qualifications plus the excluded ruler, edited screw/bent-heart
+  real-Jolt checks, and the native app/file/anti-pruning smoke check pass.
+- Signed and installed macOS 0.1.0 build 3 and relaunched it. Its filesystem
+  library was verified to contain the existing project's 66 saved iterations.
+- Fresh-runner SDK packaging now supplies exact local runtime tarballs and tests
+  an empty-cache offline install. Unused upstream Manifold GLTF/esbuild peers are
+  excluded; geometry and real SI Jolt stepping are exercised in the packed host.
+
+## Native menus and body selection follow-up
+
+- Added native macOS File, Edit, View and Object menus with New/Open/Save,
+  Import/Export, Cut/Copy/Paste, Duplicate/Delete, selection, principal views,
+  projection, transform modes, workplane controls and model parameters. Native
+  file commands use AppKit Open panels; Import adds STL geometry to the model.
+- The editor exposes a typed command/state API shared by menus and workbench
+  actions. Native Edit commands preserve ordinary text editing in focused fields.
+  CAD clipboard transfers retain recipes, materials, joints and formula bindings;
+  paste remaps identities and resolves parameter-name collisions without baking.
+- Objects now contains actual top-level bodies only. Generic boolean sources are
+  edited separately in Properties. New objects/copies receive distinct names;
+  duplicate legacy names get a visible ordinal. Row selection explicitly focuses
+  the canvas, fixing Delete immediately after an Objects click.
+- Native runtime verification exercises actual menu handlers and a private Cocoa
+  pasteboard for Copy/Paste, Duplicate/Delete/Undo/Redo, while leaving the user's
+  system clipboard untouched. Parameter/reload and anti-pruning file checks pass.
+- macOS 0.1.0 build 4 was installed and reopened with the current workspace and
+  its complete saved iteration journal retained.
+- Final follow-up checks: 114 headless tests, 36 Chromium/iPad WebKit workflows,
+  empty-cache SDK package installation and real geometry/Jolt stepping pass.

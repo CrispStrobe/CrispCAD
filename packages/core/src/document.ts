@@ -2,12 +2,14 @@
 import { checkPhysics } from './physics.js';
 import { checkParametricDesign } from './parameters.js';
 import type { ParametricDesign } from './parameters.js';
+import {checkGenerator} from './generators.js';
+import type {GeneratorRecipe} from './generators.js';
 import type { PartPhysics, CadJoint } from './physics.js';
 export type Vec3 = [number, number, number];
 export interface Transform { position: Vec3; rotation: Vec3; scale: Vec3 }
 export type Primitive = { kind: 'box'; size: Vec3 } | { kind: 'cylinder'; radius: number; height: number; segments: number } | { kind: 'sphere'; radius: number; segments: number };
 export type Shape = Primitive | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[] } | { kind: 'mesh'; positions: number[]; indices: number[] };
-export type SolidNode = { id: string; name: string; color: string; transform: Transform; reference?: boolean; physics?: PartPhysics } & Shape;
+export type SolidNode = { id: string; name: string; color: string; transform: Transform; reference?: boolean; physics?: PartPhysics; generator?:GeneratorRecipe } & Shape;
 export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign }
 export const MAX_DOCUMENT_BYTES = 16 * 1024 * 1024;
 export const identityTransform = (): Transform => ({ position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] });
@@ -40,6 +42,7 @@ export function checkDocument(value: unknown): CadDocument {
   for (const [id, raw] of entries) {
     if (!idOk(id) || !record(raw) || raw.id !== id || !text(raw.name) || typeof raw.color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(raw.color)) fail(`bad node ${id}`);
     const t = raw.transform;
+    if(raw.generator!==undefined){if(value.version!==2)fail('shape recipes require version 2');checkGenerator(raw.generator);}
     if (!record(t) || !vec(t.position) || !vec(t.rotation, -360000, 360000) || !vec(t.scale, 0.001, 1000)) fail(`bad transform on ${id}`);
     switch (raw.kind) {
       case 'box': if (!vec(raw.size, 0.01, 100000)) fail(`bad box dimensions on ${id}`); break;

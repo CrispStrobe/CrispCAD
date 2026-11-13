@@ -2,13 +2,20 @@ import {beforeAll,describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import initJolt from 'jolt-physics/debug-wasm-compat';
 import {createPresetDocument} from '../packages/editor/src/shapes.js';
-import {createCadSession} from '@brickwright/cad-core';
+import {createCadSession,defaultGenerator} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {createPhysicsWorld,prepareDocumentCollisions,solidMassProperties} from '../packages/physics/src/index.js';
 let kernel:GeometryKernel,J:Awaited<ReturnType<typeof initJolt>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});J=await initJolt();});
 describe('qualified Jolt physics boundary',()=>{
+ it('qualifies edited screw threads and a bent heart against their regenerated solids',async()=>{
+  for(const preset of ['screw','heart'] as const){const recipe=defaultGenerator(preset)!;if(preset==='screw'){recipe.values.pitch=2.5;recipe.values.starts=2;recipe.values.hand=-1;}else recipe.values.bend=30;
+   const doc=createPresetDocument(preset,'BW',{recipe});doc.nodes[doc.roots[0]].transform.position[2]=60;
+   const result=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,result,kernel),world=await createPhysicsWorld(doc,result,prepared,{J,mode:'rigid-preview',ground:false});
+   try{world.step(.1);expect(world.pose(doc.roots[0]).positionMm.every(Number.isFinite)).toBe(true);expect(prepared.get(doc.roots[0])!.certificate.relativeError).toBeLessThan(.02);}finally{world.dispose();}
+  }
+ });
  it('requires fresh collision qualification after a driving parameter changes',async()=>{
   const s=createCadSession(),id=s.add({kind:'box',size:[20,20,10]},{transform:{position:[0,0,50],rotation:[0,0,0],scale:[1,1,1]}});
   s.setParametric({version:1,parameters:{width:{expression:'20',unit:'mm'}},bindings:[{nodeId:id,property:'width',expression:'width'}]});

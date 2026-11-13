@@ -5,7 +5,8 @@ import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import {iconGeometry} from './svg-icon.js';
 import qrcode from 'qrcode-generator';
-import { createDocument, identityTransform, newId, defaultPartPhysics } from '@brickwright/cad-core';
+import { createDocument, identityTransform, newId, defaultPartPhysics,defaultGenerator,checkGenerator } from '@brickwright/cad-core';
+import type {GeneratorRecipe} from '@brickwright/cad-core';
 import type { CadDocument, SolidNode, Vec3 } from '@brickwright/cad-core';
 export const advancedCatalog = [
  ['loft','Loft','Hollow & tapered','A square base transitioning to a circular top.','transition rectangle circle loft','#c79c71'],
@@ -60,9 +61,9 @@ function closedTube(curve:T.Curve<T.Vector3>,segments:number,radius:number,sides
  tube.dispose();let volume=0;for(let i=0;i<indices.length;i+=3){const a=new T.Vector3().fromArray(positions,indices[i]*3),b=new T.Vector3().fromArray(positions,indices[i+1]*3),c=new T.Vector3().fromArray(positions,indices[i+2]*3);volume+=a.dot(b.cross(c));}if(volume<0)for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.userData.collisionHint={kind:'tube-grid',segments,sides,layout:'rows',closed:false,stride:1};return g;
 }
-function threadRidge(radius=5,pitch=2,turns=10,clearance=0){
- const count=turns*48,positions:number[]=[],indices:number[]=[];
- for(let i=0;i<=count;i++){const a=i/count*turns*2*Math.PI,z=i/count*turns*pitch;for(const [r,dz] of [[radius-.3,-pitch*.38],[radius+1+clearance,0],[radius-.3,pitch*.38]])positions.push(r*Math.cos(a),r*Math.sin(a),z+dz);}
+function threadRidge(radius=5,pitch=2,turns=10,clearance=0,depth=1,hand=1,phase=0,spacing=pitch){
+ const count=Math.ceil(turns*48),positions:number[]=[],indices:number[]=[];
+ for(let i=0;i<=count;i++){const a=hand*i/count*turns*2*Math.PI+phase,z=i/count*turns*pitch;for(const [r,dz] of [[radius-.3,-spacing*.38],[radius+depth+clearance,0],[radius-.3,spacing*.38]])positions.push(r*Math.cos(a),r*Math.sin(a),z+dz);}
  for(let i=0;i<count;i++)for(let j=0;j<3;j++){const a=i*3+j,b=i*3+(j+1)%3,c=(i+1)*3+j,d=(i+1)*3+(j+1)%3;indices.push(a,b,c,b,d,c);}indices.push(0,2,1,count*3,count*3+1,count*3+2);
  let volume=0;for(let i=0;i<indices.length;i+=3){const a=new T.Vector3().fromArray(positions,indices[i]*3),b=new T.Vector3().fromArray(positions,indices[i+1]*3),c=new T.Vector3().fromArray(positions,indices[i+2]*3);volume+=a.dot(b.cross(c));}if(volume<0)for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.userData.collisionHint={kind:'tube-grid',segments:count,sides:3,layout:'rows',closed:false,seam:false,stride:1};return g;
@@ -71,7 +72,30 @@ function threadRidge(radius=5,pitch=2,turns=10,clearance=0){
 const alphabet:Record<string,string>={A:'01110/10001/10001/11111/10001/10001/10001',B:'11110/10001/10001/11110/10001/10001/11110',C:'01111/10000/10000/10000/10000/10000/01111',D:'11110/10001/10001/10001/10001/10001/11110',E:'11111/10000/10000/11110/10000/10000/11111',F:'11111/10000/10000/11110/10000/10000/10000',G:'01111/10000/10000/10111/10001/10001/01111',H:'10001/10001/10001/11111/10001/10001/10001',I:'11111/00100/00100/00100/00100/00100/11111',J:'00111/00010/00010/00010/10010/10010/01100',K:'10001/10010/10100/11000/10100/10010/10001',L:'10000/10000/10000/10000/10000/10000/11111',M:'10001/11011/10101/10101/10001/10001/10001',N:'10001/11001/10101/10011/10001/10001/10001',O:'01110/10001/10001/10001/10001/10001/01110',P:'11110/10001/10001/11110/10000/10000/10000',Q:'01110/10001/10001/10001/10101/10010/01101',R:'11110/10001/10001/11110/10100/10010/10001',S:'01111/10000/10000/01110/00001/00001/11110',T:'11111/00100/00100/00100/00100/00100/00100',U:'10001/10001/10001/10001/10001/10001/01110',V:'10001/10001/10001/10001/10001/01010/00100',W:'10001/10001/10001/10101/10101/11011/10001',X:'10001/10001/01010/00100/01010/10001/10001',Y:'10001/10001/01010/00100/00100/00100/00100',Z:'11111/00001/00010/00100/01000/10000/11111','0':'01110/10001/10011/10101/11001/10001/01110','1':'00100/01100/00100/00100/00100/00100/01110','2':'01110/10001/00001/00110/01000/10000/11111','3':'11110/00001/00001/01110/00001/00001/11110','4':'00010/00110/01010/10010/11111/00010/00010','5':'11111/10000/10000/11110/00001/00001/11110','6':'01110/10000/10000/11110/10001/10001/01110','7':'11111/00001/00010/00100/01000/01000/01000','8':'01110/10001/10001/01110/10001/10001/01110','9':'01110/10001/10001/01111/00001/00001/01110','-':'00000/00000/00000/11111/00000/00000/00000','.':'00000/00000/00000/00000/00000/00110/00110'};
 function letters(text:string,z=0){const clean=text.trim().toUpperCase();if(!clean||clean.length>24||/[^A-Z0-9 .-]/.test(clean))throw new Error('Lettering supports 1–24 characters: A–Z, 0–9, spaces, dots and hyphens.');const parts:T.BufferGeometry[]=[];for(let k=0;k<clean.length;k++){const pattern=alphabet[clean[k]];if(!pattern)continue;pattern.split('/').forEach((row,y)=>{let start=-1;for(let x=0;x<=5;x++){if(row[x]==='1'){if(start<0)start=x;}else if(start>=0){parts.push(box((x-start)*1.2,1.2,2,[k*7.2+(start+x-1)*.6, (6-y)*1.2,z+1]));start=-1;}}});}return parts;}
 export interface Construction { add:T.BufferGeometry[]; cut?:T.BufferGeometry[]; after?:T.BufferGeometry[]; separate?:boolean; reference?:boolean }
-export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string):Construction {
+export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string,recipe?:GeneratorRecipe):Construction {
+ const values=recipe?.values??defaultGenerator(id)?.values;
+ if(['thread','screw','nut'].includes(id)&&values){const p=values,r=p.diameter/2,lead=p.pitch*p.starts;const ridges=()=>Array.from({length:p.starts},(_,i)=>threadRidge(r+(id==='nut'?p.clearance:0),lead,p.length/lead,id==='nut'?.15:0,p.threadDepth,p.hand,i*2*Math.PI/p.starts,p.pitch));
+  if(id==='thread')return {add:[cylinder(r,p.length,[0,0,p.length/2]),...ridges()]};
+  if(id==='screw')return {add:[cylinder(r,p.length,[0,0,p.length/2]),...ridges(),cylinder(p.headDiameter/2,p.headHeight,[0,0,-p.headHeight/2])],cut:[box(p.slotWidth,p.headDiameter*.8,p.headHeight*.3+1,[0,0,-p.headHeight+(p.headHeight*.3-1)/2])]};
+  return {add:[cylinder(r+p.threadDepth+4,p.length,[0,0,p.length/2],6)],cut:[cylinder(r+p.clearance,p.length+4,[0,0,p.length/2]),...ridges()]};
+ }
+ if(id==='heart'&&values){
+  const p=values,s=new T.Shape();s.moveTo(0,-14);s.bezierCurveTo(-28*p.roundness,4,-13,22,0,p.cleft);s.bezierCurveTo(13,22,28*p.roundness,4,0,-14);
+  const g=extrude(s,p.thickness);g.computeBoundingBox();const bounds=g.boundingBox!,sx=p.width/(bounds.max.x-bounds.min.x),sy=p.height/(bounds.max.y-bounds.min.y);
+  if(Math.abs(p.bend)<.001){g.scale(sx,sy,1);return {add:[g]};}g.dispose();
+  // Retain convex sections as the actual source solid. Warping a coarse cap
+  // triangulation creates long nonplanar faces and unstable collision BSP cuts.
+  // Every section here participates in BOTH rendered CSG and physics candidates.
+  const contour=s.extractPoints(24).shape;if(contour[0].equals(contour.at(-1)!))contour.pop();const triangles=T.ShapeUtils.triangulateShape(contour,[]),radius=p.width/(p.bend*Math.PI/180),steps=3,parts:T.BufferGeometry[]=[];
+  const warp=(x:number,y:number,z:number)=>new T.Vector3((radius+z)*Math.sin(x/radius),y,(radius+z)*Math.cos(x/radius)-radius);
+  for(const triangle of triangles){
+   const sample=(i:number,j:number)=>{const weights=[1-(i+j)/steps,i/steps,j/steps];let x=0,y=0;for(const k of [0,1,2].sort((a,b)=>triangle[a]-triangle[b])){x+=contour[triangle[k]].x*weights[k];y+=contour[triangle[k]].y*weights[k];}return [x*sx,y*sy];};
+   const prism=(points:number[][])=>parts.push(new ConvexGeometry(points.flatMap(([x,y])=>[warp(x,y,0),warp(x,y,p.thickness)])));
+   for(let i=0;i<steps;i++)for(let j=0;j<steps-i;j++){prism([sample(i,j),sample(i+1,j),sample(i,j+1)]);if(i+j<steps-1)prism([sample(i+1,j),sample(i+1,j+1),sample(i,j+1)]);}
+  }
+  let minZ=Infinity;for(const part of parts){part.computeBoundingBox();minZ=Math.min(minZ,part.boundingBox!.min.z);}for(const part of parts)part.translate(0,0,-minZ);
+  return {add:parts};
+ }
  switch(id){
  case 'loft':{const points:number[]=[],triangles:number[]=[];for(let level=0;level<=8;level++)for(let j=0;j<64;j++){const a=j*Math.PI/32,t=level/8,r=(1-t)*15/Math.max(Math.abs(Math.cos(a)),Math.abs(Math.sin(a)))+t*8;points.push(r*Math.cos(a),r*Math.sin(a),25*t);}for(let i=0;i<8;i++)for(let j=0;j<64;j++){const a=i*64+j,b=i*64+(j+1)%64,c=a+64,d=b+64;triangles.push(a,b,c,b,d,c);}const bottom=points.length/3;points.push(0,0,0,0,0,25);for(let j=0;j<64;j++)triangles.push(bottom,(j+1)%64,j,bottom+1,512+j,512+(j+1)%64);const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(points,3));g.setIndex(triangles);return {add:[g]};}
  case 'bent-tube': {const s=annulus(5,3);class Bend extends T.Curve<T.Vector3>{constructor(){super();}getPoint(t:number,v=new T.Vector3()){return v.set(20*Math.cos(t*Math.PI/2),20*Math.sin(t*Math.PI/2),0);}}return {add:[new T.ExtrudeGeometry(s,{extrudePath:new Bend(),steps:32,bevelEnabled:false,curveSegments:16})]};}
@@ -109,8 +133,8 @@ export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string)
 export function constructionPreview(id:string):T.BufferGeometry {
  const c=advancedGeometry(id,['text','name-tag'].includes(id)?'ABC':'BW',true);const geometries=[...c.add,...(c.after??[])].map(g=>{const non=g.index?g.toNonIndexed():g;const clean=new T.BufferGeometry();clean.setAttribute('position',non.getAttribute('position').clone());if(non!==g)non.dispose();g.dispose();return clean;});const merged=mergeGeometries(geometries)!;geometries.forEach(g=>g.dispose());return merged;
 }
-export function constructionDocument(id:string,name:string,color:string,text:string,svg?:string):CadDocument {
- const c=advancedGeometry(id,text,false,svg);const doc=createDocument(name);const addNode=(g:T.BufferGeometry)=>{const key=newId();doc.nodes[key]={id:key,name,kind:'mesh',color,transform:identityTransform(),positions:Array.from(g.getAttribute('position').array),indices:g.index?Array.from(g.index.array):Array.from({length:g.getAttribute('position').count},(_,i)=>i),...(g.userData.collisionHint?{physics:{...defaultPartPhysics(),sourcePreset:id,collisionHint:g.userData.collisionHint}}:{})};g.dispose();return key;};
+export function constructionDocument(id:string,name:string,color:string,text:string,svg?:string,recipe=defaultGenerator(id)):CadDocument {
+ if(recipe)checkGenerator(recipe);const c=advancedGeometry(id,text,false,svg,recipe);const doc=createDocument(name);let component=0;const addNode=(g:T.BufferGeometry)=>{const key=newId();doc.nodes[key]={id:key,name:`${name} component ${++component}`,kind:'mesh',color,transform:identityTransform(),positions:Array.from(g.getAttribute('position').array),indices:g.index?Array.from(g.index.array):Array.from({length:g.getAttribute('position').count},(_,i)=>i),...(g.userData.collisionHint?{physics:{...defaultPartPhysics(),sourcePreset:id,collisionHint:g.userData.collisionHint}}:{})};g.dispose();return key;};
  const combine=(operation:'union'|'subtract',inputs:string[]):string=>{if(inputs.length===1)return inputs[0];if(inputs.length>100){const groups=[];for(let i=0;i<inputs.length;i+=100)groups.push(combine('union',inputs.slice(i,i+100)));return combine(operation,groups);}const key=newId();doc.nodes[key]={id:key,name,kind:'boolean',operation,inputs,color,transform:identityTransform()};return key;};
  if(id==='hinge') {
   c.add.forEach(g=>g.dispose());
@@ -124,6 +148,7 @@ export function constructionDocument(id:string,name:string,color:string,text:str
  if(c.after?.length)doc.roots=[combine('union',[doc.roots[0],...c.after.map(addNode)])];
  for(const root of doc.roots){const node=doc.nodes[root];if(c.reference)node.reference=true;else node.physics={...defaultPartPhysics(),...(node.physics?.collisionHint?{collisionHint:node.physics.collisionHint}:{}),sourcePreset:id,intent:id==='hinge'?'hinge':id==='spring'?'spring':id==='snap-fit'?'snap-fit':['thread','screw','nut'].includes(id)?'thread':id==='gear'?'gear':id==='gt2-pulley'?'belt':id==='hirth'?'face-coupling':id==='dovetail'?'sliding-fit':'rigid',...(['thread','screw','nut'].includes(id)?{parameters:{pitchMm:2,starts:1}}:id==='gear'?{parameters:{teeth:20,moduleMm:1.5,pressureAngleDeg:20}}:id==='spring'?{parameters:{wireDiameterMm:2.8,meanDiameterMm:20,activeTurns:6}}:id==='gt2-pulley'?{parameters:{teeth:20,pitchMm:2}}:{})};}
  const root=doc.nodes[doc.roots[0]];if(root.physics&&id==='spring')root.physics.collisionHint={kind:'tube-grid',segments:288,sides:12,layout:'rows',closed:false};
+ if(recipe){doc.version=2;root.generator=structuredClone(recipe);root.name=name;if(root.physics&&id!=='heart')root.physics.parameters={pitchMm:recipe.values.pitch,starts:recipe.values.starts,coreDiameterMm:recipe.values.diameter,lengthMm:recipe.values.length,threadDepthMm:recipe.values.threadDepth,hand:recipe.values.hand};}
  const profileLengths:Record<string,number>={counterbore:6,countersink:6,'finishing-washer':6};if(root.physics&&profileLengths[id])root.physics.collisionHint={kind:'radial-profile',segments:64,sides:profileLengths[id]-1,layout:'rows',closed:true};
  return doc;
 }

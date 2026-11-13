@@ -43,3 +43,13 @@ unit-aware formulas and primitive/transform bindings, including retained boolean
 operands; see [PARAMETERS.md](PARAMETERS.md).
 Full parametric sketches/B-rep and complete mechanical/elastic simulation are
 separate implementation milestones with explicit qualification requirements.
+
+## Workbench revision after owner inspection
+
+Implemented: a single application row, one Shapes entry, consolidated File/Export,
+About and Settings, project library, compact iteration selector, stronger selection
+indicators, default Select/drag with V/Escape, and visible numeric transform fields.
+Screw/thread/nut and heart recipes are editable and regenerate transactionally;
+other catalog generators still need their specific controls. Normal saved `.bcad`
+files include history. macOS mirrors the library to a configurable filesystem
+folder and refuses file updates that discard or rewrite saved iterations.

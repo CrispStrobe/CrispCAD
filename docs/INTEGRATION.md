@@ -61,7 +61,11 @@ renderer objects, worker state, or a displayed mesh as the editable project.
 
 ## Document and units
 
-`.bcad` is UTF-8 JSON, `format: brickwright-cad`, `units: mm`. Version 1 is the
+The core snapshot is UTF-8 JSON, `format: brickwright-cad`, `units: mm`.
+Standalone Save project wraps it in a `brickwright-cad-history` archive, using the
+same `.bcad` extension, with all saved iterations and shared assets. Legacy bare
+snapshots and `.bcadhistory` archives remain readable. Hosts can supply
+`saveProject` and `decodeProject` adapters; `session.serialize()` remains a snapshot. Version 1 is the
 direct document; version 2 adds optional named parameters and formula bindings.
 Both are supported. Old version-1-only hosts reject version 2 rather than silently
 discarding design intent. See [PARAMETERS.md](PARAMETERS.md) for schema/API behavior.
@@ -74,8 +78,9 @@ parent operation. The standalone adds a new primitive with Z at half its height.
 Future schema versions, dangling references, cycles, non-finite numbers,
 invalid dimensions and oversized inputs are refused. No automatic downgrade or
 mesh conversion silently discards editable data. Documents have at most 2000
-nodes and 100 levels, with a 16 MiB JSON limit. History retains up to 100 document
-snapshots per session. Meshes are capped separately to bound evaluation input.
+nodes and 100 levels, with a 16 MiB snapshot JSON limit. Editing undo retains up
+to 100 snapshots per session; the separate saved revision journal has no automatic
+retention count or expiry. Portable full-history archives have a 64 MiB limit. Meshes are capped separately to bound evaluation input.
 
 ## Brickwright project lifecycle
 
@@ -146,9 +151,36 @@ Core IDs and hashes also support native/custom-scheme hosts without randomUUID
 or WebCrypto, using getRandomValues for RFC 4122 v4 IDs and MIT @noble/hashes for
 the identical SHA-256 fallback. WebCrypto remains the preferred hash provider.
 
-Offline package verification packs the already pinned Jolt release locally and
-uses a temporary host dependency override: GitHub release URLs do not expose an
-offline-cacheable npm manifest. Other npm dependencies use the cache populated
-by npm ci. The public physics package continues to pin the qualified release
-URL; this is not a claim that an empty npm cache can install every dependency
-without a supplied dependency bundle.
+Offline package verification packs the exact installed runtime dependency closure,
+including the pinned GitHub Jolt release, and installs the SDKs into an independent
+host with an **empty npm cache** using only local tarballs. Unused Manifold GLTF /
+esbuild tooling peers are excluded with --legacy-peer-deps. Geometry and real Jolt
+stepping are exercised; the public physics package still pins the qualified URL.
+
+The standalone macOS host mirrors full project histories to a user-selected folder
+and flushes before quitting. File updates must retain every existing revision ID
+and snapshot hash; divergent or damaged files are refused, never silently replaced.
+The reusable history provider can recover a missing native journal with
+`importArchive(bytes, {preserveIdentity:true})`; this refuses an existing project.
+Ordinary portable imports continue to create a separate model.
+
+## Shared commands and clipboard
+
+Hosts can call `editor.executeCommand(command)` using the exported `CadCommand`
+type and observe `editor.commandState` / `onCommandStateChange`. This is the
+same operation path used by native menus, so a host never needs to discover
+private shadow-DOM buttons or send synthetic shortcuts. App-specific actions
+such as Projects, About and Settings remain host responsibilities.
+
+Supply `requestOpen`, `requestImport`, `readClipboard` and `writeClipboard` for
+native panels/clipboard access. The browser fallback uses its file chooser and
+Clipboard API. `editor.importFile(name, bytes)` adds a validated STL fragment;
+`editor.openFile` replaces the workspace only after import preflight succeeds.
+
+`session.fragment(ids)` returns a complete selected-body document with only
+required formula dependencies and joints whose two bodies are both copied.
+`session.insert(fragment, offset, {mergeParameters:true, label:'Paste objects'})`
+remaps identities and merges namespaces in one undoable transaction. Duplicate
+keeps links to existing model parameters; paste captures its own parameter values
+and renames collisions. Both retain generator recipes. Native document Edit
+commands defer to the system text responder when editing a field.

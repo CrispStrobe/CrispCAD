@@ -1,11 +1,15 @@
 # Brickwright CAD
 
+[![Build and verify](https://github.com/CrispStrobe/brickwright-cad/actions/workflows/check.yml/badge.svg)](https://github.com/CrispStrobe/brickwright-cad/actions/workflows/check.yml)
+
 A 3D solid editor and the same editor that uses Manifold for mesh-solid operations and Three.js for rendering.
 
 Optional native hosts
 provide macOS and iPad apps without changing the reusable editor.
 
 **Status:** working early CAD workbench, see the [roadmap](docs/ROADMAP.md) for current limits.
+
+![Compact CAD workbench with editable screw parameters](docs/images/workbench.png)
 
 ## Run locally
 
@@ -24,6 +28,7 @@ rerun `npm run build:packages` (or `npx tsc -b --watch` in another terminal).
 
 For the native iPad host and Brickwright-keychain signing, see [docs/IPAD.md](docs/IPAD.md).
 For the native macOS app, run `npm run mac:build` followed by `npm run mac:run`.
+The latter installs into `~/Applications` and gracefully refreshes an existing app.
 See [docs/MACOS.md](docs/MACOS.md) for native verification, storage and build details.
 
 The delivered scope and exclusions are in [docs/SCOPE.md](docs/SCOPE.md).
@@ -33,8 +38,9 @@ CrispMesh scan-to-CAD path, is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 - Search a 49-entry categorized shape library with geometry-derived thumbnails,
   pinning, filled SVG icons, original block lettering, name tags and QR content.
-  The three basic primitives expose dimensions; other constructions currently
-  expose transforms and retained operands rather than full generator parameters.
+  Box/cylinder/sphere expose dimensions. Screws, threads, nuts and hearts expose
+  editable generator controls; remaining catalog presets currently expose transforms
+  and retained operands rather than complete generator parameters.
 - Retain and edit the operands of union, subtract and intersection operations.
 - Optionally drive primitive dimensions and transforms with named parameters,
   unit-aware formulas and dependency recomputation, including retained boolean
@@ -48,14 +54,25 @@ CrispMesh scan-to-CAD path, is in [docs/ROADMAP.md](docs/ROADMAP.md).
   Snap spacing is independent of the displayed ruler grid.
 - Move/rotate/scale with handles or numeric properties; nudge with arrow keys.
   Drop selected top-level bodies onto the workplane, including rotated bodies.
-- Grouped tool ribbon, collapsible Objects/Properties panels and a persistent
-  touch multi-select mode; navigation does not change document history.
+- A single-row workbench with Shapes, Select/Move/Rotate/Scale, and File/Edit/Combine
+  menus. Escape or V returns to normal selection and direct dragging. Cyan bounds
+  and highlighted object rows identify selection. Objects lists actual bodies;
+  generic boolean source shapes are edited separately in Properties.
+- Native macOS File/Edit/View/Object menus share the workbench command API,
+  including real model Cut/Copy/Paste, Duplicate/Delete and native file panels.
+  Clipboard transfers preserve recipes, formulas, materials and internal joints.
+- About with acknowledgements, a searchable Projects library, Settings and a compact
+  iteration selector. Navigation does not change document history.
 - Undo/redo and independent sessions for each embedded instance. The standalone
   host additionally retains every saved iteration, with model selection, named
-  checkpoints, branching restore and portable `.bcadhistory` backups. No automatic
+  checkpoints, branching restore and history inside saved `.bcad` projects. No automatic
   pruning; large immutable mesh assets are shared by SHA-256 content address.
-- Save editable `.bcad` projects; reopen them or closed STL meshes.
-- Export binary STL or 3MF for printing. These exports contain meshes, not the
+- Save one editable `.bcad` file containing the model and its complete saved history.
+  Legacy snapshot `.bcad` and `.bcadhistory` files still open. Import closed STL meshes.
+- The macOS library automatically writes history-inclusive project files to a folder
+  selected in Settings; the default is `~/Documents/Brickwright CAD`. Existing WebKit
+  library projects are copied on startup. Conflicting histories are never overwritten.
+- File → Export chooses binary STL or 3MF for printing. These exports contain meshes, not the
   editable project graph; 3MF currently exports geometry without materials.
 - The standalone app autosaves on this device and can run offline after the
   production bundle's service worker has installed. Keep portable project files

@@ -25,6 +25,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const plate = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ color: '#233644', side: THREE.DoubleSide })); plate.position.z = -0.14; workplane.add(plate);
   const grid = new THREE.GridHelper(400, 400, '#52677a', '#2f4655'); grid.rotation.x = Math.PI / 2; grid.position.z = -0.1; workplane.add(grid);
   const majorGrid = new THREE.GridHelper(400, 40, '#8c9c99', '#536861'); majorGrid.rotation.x = Math.PI / 2; majorGrid.position.z = -0.08; workplane.add(majorGrid);
+  plate.material.depthWrite=false;plate.renderOrder=-10;
+  for(const lines of [grid,majorGrid]){lines.material.depthWrite=false;lines.material.transparent=true;lines.renderOrder=lines===grid?-9:-8;}majorGrid.material.opacity=.55;
   const border = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-200,-200,0), new THREE.Vector3(200,-200,0), new THREE.Vector3(200,200,0), new THREE.Vector3(-200,200,0)]), new THREE.LineBasicMaterial({ color: '#c5a35d' })); workplane.add(border);
   const axes = new THREE.AxesHelper(45); scene.add(axes);
   const textSprites: THREE.Sprite[] = [];
@@ -41,6 +43,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   gizmo.setTranslationSnap(1); gizmo.setRotationSnap(15 * RAD); gizmo.setScaleSnap(0.1);
   const meshes = new Map<string, THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>>();
   const outlines = new Map<string, THREE.LineSegments>(); const ray = new THREE.Raycaster(); const pointer = new THREE.Vector2();
+  const selectionBoxes=new Map<string,THREE.BoxHelper>();let activeMode:'select'|'translate'|'rotate'|'scale'='select';
+  let directDrag:{pointerId:number;start:THREE.Vector3;plane:THREE.Plane;transforms:Map<string,Transform>;offset:Vec3;moved:boolean}|null=null;
   let disposed = false; let selected: string[] = []; let drag: { matrix: THREE.Matrix4; transforms: Map<string, THREE.Matrix4> } | null = null; let gridStep = 1; let multiSelect = false; let viewListener: ((view: ViewDirection) => void) | undefined;
   // Project an original SVG cube from the camera basis. The controls rotate with
   // the actual camera, including free orbit, without a second WebGL context.
@@ -72,12 +76,12 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     const exact = Object.entries(directions).find(([name, d]) => name !== 'iso' && new THREE.Vector3(...d).normalize().dot(toward) > 0.99999)?.[0];
     const view = (exact ?? 'iso') as ViewDirection; canvas.dataset.view = view; viewListener?.(view); canvas.dataset.projection = camera instanceof THREE.OrthographicCamera ? 'orthographic' : 'perspective';
   }
-  const draw = () => { if (!disposed) { updateCube(); renderer.render(scene, camera); } };
+  const draw = () => { if (!disposed) { updateCube();const distance=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:camera.position.distanceTo(orbit.target);grid.material.opacity=THREE.MathUtils.clamp((240-distance)/200,0,.4);for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
   const matrixFor = (t: Transform) => new THREE.Matrix4().compose(new THREE.Vector3(...t.position), new THREE.Quaternion().setFromEuler(new THREE.Euler(t.rotation[0] * RAD, t.rotation[1] * RAD, t.rotation[2] * RAD, 'ZYX')), new THREE.Vector3(...t.scale));
   const placeGizmo = () => {
     if (drag) return;
     const roots = selected.filter(id => session.state.document.roots.includes(id) && meshes.has(id));
-    if (!roots.length) { gizmo.detach(); draw(); return; }
+    if (!roots.length || activeMode==='select') { gizmo.detach(); draw(); return; }
     const box = new THREE.Box3(); for (const id of roots) box.union(new THREE.Box3().setFromObject(meshes.get(id)!));
     pivot.position.copy(box.getCenter(new THREE.Vector3())); pivot.quaternion.identity(); pivot.scale.set(1, 1, 1); pivot.updateMatrixWorld(); gizmo.attach(pivot); draw();
   };
@@ -94,6 +98,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     draw();
   };
   const cancelTransform = () => {
+    if(directDrag){for(const id of directDrag.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;}}directDrag=null;orbit.enableRotate=true;draw();}
     if (!drag) return;
     for (const id of drag.transforms.keys()) { const mesh = meshes.get(id); if (mesh) { mesh.matrix.identity(); mesh.matrixWorldNeedsUpdate = true; } }
     drag = null; gizmo.reset(); orbit.enabled = true; placeGizmo();
@@ -117,14 +122,25 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const resize = new ResizeObserver(() => { const w = container.clientWidth, h = container.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); if (camera instanceof THREE.PerspectiveCamera) camera.aspect = w / h; else { const half = (camera.top - camera.bottom) / 2; camera.left = -half * w / h; camera.right = half * w / h; } camera.updateProjectionMatrix(); draw(); }); resize.observe(container);
   orbit.addEventListener('change', draw); gizmo.addEventListener('change', draw);
   let down: { x: number; y: number; t: number; pointerId: number } | null = null; const touches = createTouchTracker(); let suppressTap = false;
+  function pointerRay(e:PointerEvent){const rect=canvas.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);}
   const onDown = (e: PointerEvent) => {
     canvas.focus({ preventScroll: true });
     if (e.pointerType === 'touch') { touches.down({ id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp }); if (touches.count > 1) suppressTap = true; }
     if (!down) { down = { x: e.clientX, y: e.clientY, t: e.timeStamp, pointerId: e.pointerId }; if (e.pointerType !== 'touch') suppressTap = false; }
     if (gizmo.axis) suppressTap = true;
+    if(touches.count>1){if(directDrag)cancelTransform();return;}
+    if(activeMode==='select'&&e.button===0&&!multiSelect&&!e.shiftKey&&!e.ctrlKey&&!e.metaKey){pointerRay(e);const hit=ray.intersectObjects([...meshes.values()],false)[0];const id=hit?.object.userData.id as string|undefined;if(id){if(!selected.includes(id))session.select([id]);const view=camera.getWorldDirection(new THREE.Vector3()),normal=Math.abs(view.z)<.25?(Math.abs(view.x)>Math.abs(view.y)?new THREE.Vector3(1,0,0):new THREE.Vector3(0,1,0)):new THREE.Vector3(0,0,1);const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,hit.point);const start=ray.ray.intersectPlane(plane,new THREE.Vector3());if(start){directDrag={pointerId:e.pointerId,start:start.clone(),plane,transforms:new Map(selected.filter(id=>session.state.document.roots.includes(id)).map(id=>[id,structuredClone(session.state.document.nodes[id].transform)])),offset:[0,0,0],moved:false};orbit.enableRotate=false;}}}
   };
-  const onMove = (e: PointerEvent) => { if (e.pointerType === 'touch') touches.move({ id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp }); };
+  const onMove = (e: PointerEvent) => {
+    if (e.pointerType === 'touch') touches.move({ id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp });
+    if(!directDrag||directDrag.pointerId!==e.pointerId||!down)return;
+    if(!directDrag.moved&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<=TOUCH_SLOP_PX)return;
+    pointerRay(e);const point=ray.ray.intersectPlane(directDrag.plane,new THREE.Vector3());if(!point)return;
+    const d=point.sub(directDrag.start);directDrag.offset=snapDelta([d.x,d.y,d.z],gridStep||.01);directDrag.moved=true;
+    for(const id of directDrag.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrixAutoUpdate=false;mesh.matrix.makeTranslation(...directDrag.offset);mesh.matrixWorldNeedsUpdate=true;}}draw();
+  };
   const onUp = (e: PointerEvent) => {
+    if(directDrag?.pointerId===e.pointerId){const action=directDrag;directDrag=null;orbit.enableRotate=true;if(action.moved){down=null;touches.reset();suppressTap=false;try{session.transform([...action.transforms].map(([id,transform])=>({id,transform:{...transform,position:transform.position.map((v,i)=>v+action.offset[i]) as Vec3}})));}catch(error){for(const id of action.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;}}onError(error);draw();}return;}}
     const gesture = e.pointerType === 'touch' ? touches.up({ id: e.pointerId, t: e.timeStamp }) : null;
     const start = down; if (!start || start.pointerId !== e.pointerId) { if (!touches.count) { down = null; suppressTap = false; } return; }
     down = null;
@@ -137,10 +153,14 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     session.select(id ? (multi ? (selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id]) : [id]) : []);
   };
   const onCancel = () => { down = null; suppressTap = false; touches.reset(); cancelTransform(); };
-  canvas.addEventListener('pointerdown', onDown); canvas.addEventListener('pointermove', onMove); canvas.addEventListener('pointerup', onUp); canvas.addEventListener('pointercancel', onCancel);
+  canvas.addEventListener('pointerdown', onDown,true); canvas.addEventListener('pointermove', onMove,true); canvas.addEventListener('pointerup', onUp,true); canvas.addEventListener('pointercancel', onCancel);
   function setSelection(ids: readonly string[]) {
     selected = [...ids]; for (const [id, mesh] of meshes) { mesh.material.emissive.set(selected.includes(id) ? '#433317' : '#000000'); mesh.material.emissiveIntensity = selected.includes(id) ? 0.8 : 0; outlines.get(id)?.material && ((outlines.get(id)!.material as THREE.LineBasicMaterial).color.set(selected.includes(id) ? '#ffda82' : '#172a36')); }
-    placeGizmo(); draw();
+    for(const helper of selectionBoxes.values()){scene.remove(helper);helper.geometry.dispose();(helper.material as THREE.Material).dispose();}selectionBoxes.clear();
+    const selectedIds=new Set(selected);
+    const containsSelected=(id:string,seen=new Set<string>()):boolean=>{if(selectedIds.has(id))return true;if(seen.has(id))return false;seen.add(id);const node=session.state.document.nodes[id];return node?.kind==='boolean'&&node.inputs.some(child=>containsSelected(child,seen));};
+    for(const [id,mesh] of meshes)if(containsSelected(id)){const helper=new THREE.BoxHelper(mesh,0x5de2ff);(helper.material as THREE.LineBasicMaterial).depthTest=false;helper.renderOrder=100;scene.add(helper);selectionBoxes.set(id,helper);}
+    canvas.dataset.selected=String(ids.length);placeGizmo(); draw();
   }
   const clear = () => { for (const mesh of meshes.values()) { scene.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose(); } for (const outline of outlines.values()) { outline.geometry.dispose(); (outline.material as THREE.Material).dispose(); } meshes.clear(); outlines.clear(); };
   function update(result: GeometryResult) {
@@ -192,12 +212,12 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       for (const id of selected) { if (!session.state.document.roots.includes(id)) continue; const mesh = meshes.get(id); if (!mesh) continue; const bounds = new THREE.Box3().setFromObject(mesh); if (bounds.isEmpty()) continue; const transform = structuredClone(session.state.document.nodes[id].transform); transform.position[2] -= bounds.min.z; updates.push({ id, transform }); }
       if (updates.length) session.transform(updates);
     },
-    setMode(mode: 'translate' | 'rotate' | 'scale') { cancelTransform(); gizmo.setMode(mode); gizmo.setSpace(mode === 'scale' ? 'local' : 'world'); draw(); },
+    setMode(mode: 'select' | 'translate' | 'rotate' | 'scale') { cancelTransform();activeMode=mode;canvas.dataset.mode=mode;if(mode!=='select'){gizmo.setMode(mode); gizmo.setSpace(mode === 'scale' ? 'local' : 'world');}placeGizmo();draw(); },
     setGrid(step: number) { gridStep = step; gizmo.setTranslationSnap(gridStep || null); },
     nudge(dx: number, dy: number, dz: number) {
       const offset = snapDelta([dx, dy, dz], gridStep || 0.01);
       session.transform(selected.filter(id => session.state.document.roots.includes(id)).map(id => { const transform = structuredClone(session.state.document.nodes[id].transform); transform.position = transform.position.map((v, i) => v + offset[i]) as Vec3; return { id, transform }; }));
     },
-    dispose() { disposed = true; resize.disconnect(); touches.reset(); canvas.removeEventListener('pointerdown', onDown); canvas.removeEventListener('pointermove', onMove); canvas.removeEventListener('pointerup', onUp); canvas.removeEventListener('pointercancel', onCancel); gizmo.removeEventListener('dragging-changed', onDrag); gizmo.removeEventListener('mouseDown', startTransform); gizmo.removeEventListener('objectChange', previewTransform); gizmo.removeEventListener('mouseUp', endTransform); gizmo.removeEventListener('change', draw); orbit.removeEventListener('change', draw); gizmo.dispose(); orbit.dispose(); clear(); for (const object of [grid, majorGrid, border, plate, axes]) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()); } for (const sprite of textSprites) { sprite.material.map?.dispose(); sprite.material.dispose(); } renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); cube.remove(); },
+    dispose() { disposed = true; resize.disconnect(); touches.reset(); canvas.removeEventListener('pointerdown', onDown,true); canvas.removeEventListener('pointermove', onMove,true); canvas.removeEventListener('pointerup', onUp,true); canvas.removeEventListener('pointercancel', onCancel); gizmo.removeEventListener('dragging-changed', onDrag); gizmo.removeEventListener('mouseDown', startTransform); gizmo.removeEventListener('objectChange', previewTransform); gizmo.removeEventListener('mouseUp', endTransform); gizmo.removeEventListener('change', draw); orbit.removeEventListener('change', draw); gizmo.dispose(); orbit.dispose(); clear(); for (const object of [grid, majorGrid, border, plate, axes]) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()); } for (const sprite of textSprites) { sprite.material.map?.dispose(); sprite.material.dispose(); } renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); cube.remove(); },
   };
 }

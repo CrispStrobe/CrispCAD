@@ -26,7 +26,7 @@ claim of feature or usability parity.
 | Construct | Closed mesh solids, retained boolean operands, imported STL | Clear solid/hole roles, grouping/bundling, locking/hiding, split/hollow, edge operations and appropriate exact-body support |
 | Draw | SVG-to-solid path | Editable planar sketches, arcs/curves, construction geometry, extrude/revolve/sweep and diagnostics |
 | Touch | Tap/long-press, persistent multi-select, pinch/pan, onscreen controls | Finger/Pencil hit-target qualification, explicit gesture modes, tablet context menus, keyboard-free completion and focus/simple modes |
-| Keep work | Local autosave plus append-only revision journal, model list, restore and portable history backup | Native durable journal mirror/recovery, streaming large-history backups, thumbnails, folder organization and cross-device backup/sync |
+| Keep work | Local autosave plus append-only revision journal, model list, restore and portable history backup | Streaming large-history backups and further native recovery/performance qualification, thumbnails, folder organization and cross-device backup/sync |
 | Simulate | Separate physics adapter and body/joint/material contract with geometric qualification gates | Interactive simulation UI, qualified mates/actuators, critical clearance fixtures, elastic/contact/material calibration and large-model performance qualification |
 
 Usability acceptance must use tasks, not icon counts: build a dimensioned bracket
@@ -92,12 +92,14 @@ A full constraint/B-rep CAD is a substantial later project, not a toolbar change
 - Journal data and model head updates commit in one transaction. Reject corrupt
   snapshots or archives before replacement. A failed save leaves prior history
   intact and is visible to the user. Concurrent writers preserve both revisions.
-- Portable `.bcadhistory` backups include a model's revisions, ancestry and shared
-  geometry. Import creates a separate model, so an old backup cannot overwrite
-  the current library. `.bcad` remains a single editable snapshot.
+- Saved `.bcad` projects include a model's revisions, ancestry and shared
+  geometry. `.bcadhistory` is accepted as a legacy archive extension. Import creates a separate model, so an old backup cannot overwrite
+  the current library. The core serializer remains a single editable snapshot;
+  the standalone save adapter supplies the full archive.
 - “Indefinitely” means the app never discards versions automatically. Storage is
   finite and device/browser data can be removed externally. Keep portable copies;
-  add native journal mirroring and streaming backups for larger projects. The
+  native macOS folder mirroring is implemented; streaming backups for larger
+  projects remain future work. The
   first in-memory backup path has an explicit 64 MiB limit and fails without
   deleting history. It is not a claim of infinite storage or disaster immunity.
 

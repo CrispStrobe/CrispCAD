@@ -1,25 +1,37 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {openHistoryStore} from '@brickwright/cad-history';
-import type {HistoryStore,ModelRevision} from '@brickwright/cad-history';
 import type {CadEditor} from '@brickwright/cad-editor';
-import {download} from './files.js';
-export const historyStore=openHistoryStore();
-// Attach a rejection handler immediately; the app can still offer file recovery
-// when persistent storage is unavailable in a private/locked-down environment.
-void historyStore.catch(()=>{});
+import type {ModelRevision} from '@brickwright/cad-history';
+import {historyStore} from './project-store.js';
+import {recoverLibrary,saveProject} from './library.js';
+export {historyStore} from './project-store.js';
 export function mountHistoryUI(getEditor:()=>CadEditor|undefined,restore:(revision:ModelRevision)=>Promise<void>){
- const dialog=document.createElement('dialog');dialog.className='history-dialog';dialog.setAttribute('aria-label','Models and version history');
- const header=document.createElement('header'),heading=document.createElement('h1');heading.textContent='Models & iterations';const close=document.createElement('button');close.textContent='Close';close.setAttribute('aria-label','Close version history');close.onclick=()=>dialog.close();header.append(heading,close);
- const toolbar=document.createElement('div');toolbar.className='history-actions';const checkpoint=document.createElement('button');checkpoint.textContent='Name this iteration';const backup=document.createElement('button');backup.textContent='Back up model + history';const importButton=document.createElement('button');importButton.textContent='Restore history backup';toolbar.append(checkpoint,backup,importButton);
- const layout=document.createElement('div');layout.className='history-layout';const projects=document.createElement('nav');projects.setAttribute('aria-label','Saved models');const revisions=document.createElement('section');revisions.setAttribute('aria-label','Saved iterations');layout.append(projects,revisions);
- const status=document.createElement('p');status.className='history-status';status.setAttribute('role','status');status.textContent='Every saved edit is retained. Restoring creates a new iteration and keeps later work.';
- const file=document.createElement('input');file.type='file';file.accept='.bcadhistory';file.hidden=true;dialog.append(header,toolbar,layout,status,file);document.body.append(dialog);
- let selectedProject='',before:number|undefined,loading=false;
- const action=(fn:()=>Promise<void>)=>{void fn().catch(e=>{status.textContent=e instanceof Error?e.message:String(e);});};
- async function showProjects(store:HistoryStore){projects.replaceChildren();const all=await store.listProjects();for(const p of all){const button=document.createElement('button');button.textContent=p.title;const updated=document.createElement('small');updated.textContent=new Date(p.updatedAt).toLocaleString();button.append(updated);button.classList.toggle('selected',p.id===selectedProject);button.onclick=()=>action(async()=>{selectedProject=p.id;await showProjects(store);await showRevisions(store,true);});projects.append(button);}}
- async function showRevisions(store:HistoryStore,reset=false){if(loading)return;loading=true;const project=selectedProject;try{if(reset){before=undefined;revisions.replaceChildren();}const page=await store.listRevisions(project,{beforeSerial:before});if(project!==selectedProject)return;revisions.querySelector('[data-more]')?.remove();for(const revision of page){const row=document.createElement('div');row.className='revision-row';const info=document.createElement('div');const title=document.createElement('strong');title.textContent=`Iteration ${revision.serial} · ${revision.label}`;const time=document.createElement('small');time.textContent=`${new Date(revision.createdAt).toLocaleString()} · ${revision.header.roots.length} objects`;info.append(title,time);const restoreButton=document.createElement('button');restoreButton.textContent='Restore';restoreButton.setAttribute('aria-label',`Restore iteration ${revision.serial}`);restoreButton.onclick=()=>action(async()=>{restoreButton.disabled=true;try{await restore(revision);status.textContent=`Restored iteration ${revision.serial} as a new iteration. Later work is preserved.`;await showProjects(store);await showRevisions(store,true);}finally{restoreButton.disabled=false;}});row.append(info,restoreButton);revisions.append(row);}if(page.length===50){before=page.at(-1)!.serial;const more=document.createElement('button');more.dataset.more='true';more.textContent='Load earlier iterations';more.onclick=()=>action(()=>showRevisions(store));revisions.append(more);}if(!page.length&&reset)revisions.textContent='No saved iterations yet.';}finally{loading=false;}}
- checkpoint.onclick=()=>action(async()=>{const editor=getEditor();if(!editor)return;const label=prompt('Name this iteration','Milestone');if(!label?.trim())return;const store=await historyStore;await store.append(editor.session.state.document,label,(await store.getProject(editor.session.state.document.id))?.headId??null);selectedProject=editor.session.state.document.id;await showProjects(store);await showRevisions(store,true);});
- backup.onclick=()=>action(async()=>{if(!selectedProject)return;const store=await historyStore;const project=await store.getProject(selectedProject);await download({name:`${(project?.title??'model').replace(/[^a-z0-9 _-]/gi,'-')}.bcadhistory`,bytes:await store.exportArchive(selectedProject),mime:'application/vnd.brickwright.cad-history+json'});status.textContent='Backup includes this model’s saved iterations and shared geometry.';});
- importButton.onclick=()=>file.click();file.onchange=()=>action(async()=>{const chosen=file.files?.[0];file.value='';if(!chosen)return;if(chosen.size>64*1024*1024)throw new Error('History backup exceeds 64 MiB');const store=await historyStore;const project=await store.importArchive(new Uint8Array(await chosen.arrayBuffer()));selectedProject=project.id;await showProjects(store);await showRevisions(store,true);status.textContent='Imported as a separate model. Existing models and iterations are preserved.';});
- return {open(){dialog.showModal();action(async()=>{const store=await historyStore;const editor=getEditor();if(editor)await store.append(editor.session.state.document,'Current model');await store.flush();selectedProject=editor?.session.state.document.id??'';await showProjects(store);await showRevisions(store,true);});}};
+ const select=document.querySelector<HTMLSelectElement>('#iterations')!;
+ const dialog=document.createElement('dialog');dialog.className='library-dialog';dialog.setAttribute('aria-label','Project library');
+ const header=document.createElement('header'),heading=document.createElement('h1');heading.textContent='Projects';const close=document.createElement('button');close.textContent='Close';close.setAttribute('aria-label','Close project library');close.onclick=()=>dialog.close();header.append(heading,close);
+ const search=document.createElement('input');search.type='search';search.placeholder='Search projects';search.setAttribute('aria-label','Search projects');
+ const toolbar=document.createElement('div');toolbar.className='library-actions';
+ const makeButton=(name:string,action:()=>void)=>{const b=document.createElement('button');b.textContent=name;b.onclick=action;toolbar.append(b);return b;};
+ const projects=document.createElement('section');projects.setAttribute('aria-label','Saved projects');
+ const status=document.createElement('p');status.className='library-status';status.setAttribute('role','status');
+ const file=document.createElement('input');file.type='file';file.accept='.bcad,.bcadhistory,.json';file.hidden=true;
+ dialog.append(header,search,toolbar,projects,status,file);document.body.append(dialog);
+ let model='',before:number|undefined,revisionToken=0;
+ const action=(fn:()=>Promise<void>)=>{void fn().catch(error=>{status.textContent=error instanceof Error?error.message:String(error);});};
+ async function showProjects(){const store=await historyStore;await store.flush();projects.replaceChildren();for(const p of await store.listProjects()){if(search.value&&!p.title.toLowerCase().includes(search.value.toLowerCase()))continue;const row=document.createElement('article');row.className='project-card';const icon=document.createElement('span');icon.className='project-icon';icon.textContent='◇';const title=document.createElement('strong');title.textContent=p.title;const info=document.createElement('small');info.textContent=`${p.serial} iterations · ${new Date(p.updatedAt).toLocaleString()}`;const label=document.createElement('div');label.append(title,info);const open=document.createElement('button');open.textContent='Open';open.setAttribute('aria-label',`Open project ${p.title}`);open.onclick=()=>action(async()=>{const revision=await store.getRevision(p.headId);if(!revision)throw new Error('Saved project is missing');await restore(revision);dialog.close();});row.append(icon,label,open);projects.append(row);}if(!projects.childElementCount)projects.textContent='No projects match.';}
+ async function refresh(projectId=getEditor()?.session.state.document.id,headId?:string,older=false){
+  if(!projectId)return;const token=++revisionToken,store=await historyStore;
+  if(!older||model!==projectId){model=projectId;before=undefined;select.replaceChildren();}
+  const page=await store.listRevisions(projectId,{beforeSerial:before});if(token!==revisionToken)return;
+  select.querySelectorAll('[data-action]').forEach(option=>option.remove());
+  for(const revision of page){const option=document.createElement('option');option.value=revision.id;option.textContent=`#${revision.serial} · ${revision.label}`;option.title=new Date(revision.createdAt).toLocaleString();select.append(option);}
+  if(page.length===50){before=page.at(-1)!.serial;const option=document.createElement('option');option.dataset.action='true';option.value='earlier';option.textContent='Load earlier iterations…';select.append(option);}
+  const name=document.createElement('option');name.dataset.action='true';name.value='name';name.textContent='Name this iteration…';select.append(name);
+  if(headId&&Array.from(select.options).some(option=>option.value===headId))select.value=headId;else if(!older)select.selectedIndex=0;
+ }
+ select.onchange=()=>action(async()=>{const value=select.value,store=await historyStore;if(value==='earlier'){await refresh(model,undefined,true);return;}if(value==='name'){const editor=getEditor();if(!editor)return;const label=prompt('Name this iteration','Milestone');if(label?.trim()){const r=await store.append(editor.session.state.document,label,(await store.getProject(model))?.headId??null);await refresh(model,r.id);}else await refresh();return;}const revision=await store.getRevision(value);if(revision)await restore(revision);});
+ makeButton('New project',()=>{const editor=getEditor();if(!editor)return;void import('@brickwright/cad-core').then(({createDocument})=>{editor.session.load(createDocument());dialog.close();});});
+ makeButton('Open file…',()=>file.click());makeButton('Save copy with history…',()=>action(async()=>{const editor=getEditor();if(editor)await saveProject(editor.session.state.document);}));
+ file.onchange=()=>action(async()=>{const selected=file.files?.[0];file.value='';if(!selected)return;if(selected.size>64*1024*1024)throw new Error('Project exceeds 64 MiB');await getEditor()?.openFile(selected.name,new Uint8Array(await selected.arrayBuffer()));dialog.close();});
+ search.oninput=()=>action(showProjects);
+ return {refresh,open(){dialog.showModal();action(async()=>{await recoverLibrary();await showProjects();});}};
 }

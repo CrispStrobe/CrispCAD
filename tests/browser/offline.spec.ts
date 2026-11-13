@@ -1,3 +1,4 @@
+import {addShape,clickTool} from './ui.js';
 import { expect, test } from '@playwright/test';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -20,11 +21,11 @@ test('reopens and edits the saved solid after its HTTP server has stopped', asyn
   await new Promise<void>(r => server.listen(0, '127.0.0.1', r)); const port = (server.address() as { port: number }).port; const origin = `http://127.0.0.1:${port}`;
   try {
     await page.goto(origin); await expect(page.locator('#cad-root')).toHaveAttribute('data-state', 'ready');
-    await page.getByRole('button', { name: 'Box', exact: true }).click(); await expect(page.locator('#cad-root')).toHaveAttribute('data-state', 'ready');
+    await addShape(page,'Box'); await expect(page.locator('#cad-root')).toHaveAttribute('data-state', 'ready');
     await page.evaluate(async () => { await navigator.serviceWorker.ready; if (!navigator.serviceWorker.controller) await new Promise<void>(r => navigator.serviceWorker.addEventListener('controllerchange', () => r(), { once: true })); });
     server.closeAllConnections(); await new Promise<void>((r, j) => server.close(e => e ? j(e) : r())); stopped = true;
     await expect(fetch(origin)).rejects.toThrow(); // Node has no service worker: the server really is unavailable.
     await page.reload(); await expect(page.locator('#cad-root')).toHaveAttribute('data-state', 'ready'); await expect(page.locator('[data-testid="object-name"]')).toHaveCount(1);
-    await page.getByRole('button', { name: 'Sphere', exact: true }).click(); await expect(page.locator('#cad-root')).toHaveAttribute('data-state', 'ready'); await expect(page.locator('[data-testid="object-name"]')).toHaveCount(2);
+    await addShape(page,'Sphere'); await expect(page.locator('#cad-root')).toHaveAttribute('data-state', 'ready'); await expect(page.locator('[data-testid="object-name"]')).toHaveCount(2);
   } finally { if (!stopped) { server.closeAllConnections(); server.close(); } }
 });
