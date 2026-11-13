@@ -1,0 +1,31 @@
+import {expect,test} from '@playwright/test';
+
+test('German controls and dialogs preserve user code and history when switching to English',async({page})=>{
+ await page.addInitScript(()=>{if(!localStorage.getItem('brickwright-cad:locale'))localStorage.setItem('brickwright-cad:locale','de');});
+ await page.goto('/');const root=page.locator('#cad-root');const ready=()=>expect(root).toHaveAttribute('data-state','ready');await ready();
+ await expect(page.locator('html')).toHaveAttribute('lang','de');
+ await page.getByRole('button',{name:'Formen',exact:true}).click();const shapes=page.getByRole('dialog',{name:'Formenbibliothek'});
+ await shapes.getByLabel('Formen suchen',{exact:true}).fill('Quader');await expect(shapes.getByRole('button',{name:'Quader hinzufügen',exact:true})).toBeVisible();
+ await shapes.getByRole('button',{name:'Quader hinzufügen',exact:true}).click();await ready();
+ await page.getByRole('button',{name:'Parameter',exact:true}).click();const params=page.getByRole('dialog',{name:'Modellparameter',exact:true});await expect(params).toBeVisible();
+ await params.getByRole('button',{name:'Parameter hinzufügen',exact:true}).click();await params.getByLabel('Parametername',{exact:true}).fill('myWidth');await params.getByLabel('Parameterausdruck',{exact:true}).fill('42');await params.getByRole('button',{name:'Parameter anwenden',exact:true}).click();await ready();await params.getByRole('button',{name:'Parameter schließen',exact:true}).click();
+ await page.getByRole('button',{name:'Skizze',exact:true}).click();const sketch=page.getByRole('dialog',{name:'Skizze und Extrusion',exact:true});await expect(sketch.getByLabel('Skizzenbreite (mm)',{exact:true})).toBeVisible();await sketch.getByRole('button',{name:'Skizze schließen',exact:true}).click();
+ const source='param width:mm=20; return box(width,20,10);',name='Mein custom model';await page.getByRole('button',{name:'Code',exact:true}).click();const code=page.getByRole('dialog',{name:'Codeobjekt',exact:true});await code.getByLabel('Name des Codeobjekts',{exact:true}).fill(name);await code.getByLabel('CAD-Quellcode',{exact:true}).fill(source);await code.getByRole('button',{name:'Codeobjekt erstellen',exact:true}).click();await expect(code).toBeHidden();await ready();
+ await expect.poll(async()=>page.evaluate(()=>{const d=JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!);return Object.values(d.nodes).some((n:any)=>n.program?.source==='param width:mm=20; return box(width,20,10);');})).toBe(true);
+ const before=await page.evaluate(()=>JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!));
+ const iterations=page.getByLabel('Modellversion',{exact:true});await expect.poll(()=>iterations.locator('option:not([data-action])').count()).toBeGreaterThan(1);const oldIds=await iterations.locator('option:not([data-action])').evaluateAll(options=>options.map(o=>(o as HTMLOptionElement).value));
+ await page.getByRole('button',{name:'Projektbibliothek',exact:true}).click();const library=page.getByRole('dialog',{name:'Projektbibliothek'});await expect(library.getByLabel('Projekte suchen',{exact:true})).toBeVisible();await library.getByRole('button',{name:'Projektbibliothek schließen',exact:true}).click();
+ await page.getByLabel('Anwendungsmenü',{exact:true}).click();await page.getByRole('button',{name:'Über Brickwright CAD',exact:true}).click();const about=page.getByRole('dialog',{name:'Über Brickwright CAD'});await expect(about.getByText('Erstellt mit',{exact:true})).toBeVisible();await about.getByRole('button',{name:'Schließen',exact:true}).click();
+ await page.getByLabel('Anwendungsmenü',{exact:true}).click();await page.getByRole('button',{name:'Einstellungen…',exact:true}).click();const settings=page.getByRole('dialog',{name:'Einstellungen',exact:true});const language=settings.getByLabel('Sprache',{exact:true});await expect(language).toHaveValue('de');await language.selectOption('en');await expect(page.locator('html')).toHaveAttribute('lang','en');await ready();
+ await expect(page.getByRole('button',{name:'Shapes',exact:true})).toBeVisible();await expect(page.getByTestId('object-name').filter({hasText:name})).toBeVisible();
+ const after=await page.evaluate(()=>JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!));expect(after).toEqual(before);expect(Object.values(after.nodes).some((n:any)=>n.program?.source===source)).toBe(true);expect(after.parametric.parameters.myWidth.expression).toBe('42');
+ const englishIds=await page.getByLabel('Model iteration',{exact:true}).locator('option:not([data-action])').evaluateAll(options=>options.map(o=>(o as HTMLOptionElement).value));for(const id of oldIds)expect(englishIds).toContain(id);
+ await page.getByTestId('object-name').filter({hasText:name}).click();await page.getByRole('button',{name:'Code',exact:true}).click();const englishCode=page.getByRole('dialog',{name:'Code object',exact:true});await expect(englishCode.getByLabel('CAD code source',{exact:true})).toHaveValue(source);
+});
+
+test('German axis controls update the inspector and saved numeric transform',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('brickwright-cad:locale','de'));await page.goto('/');const root=page.locator('#cad-root');await expect(root).toHaveAttribute('data-state','ready');
+ await page.getByRole('button',{name:'Formen',exact:true}).click();const shapes=page.getByRole('dialog',{name:'Formenbibliothek'});await shapes.getByLabel('Formen suchen',{exact:true}).fill('Quader');await shapes.getByRole('button',{name:'Quader hinzufügen',exact:true}).click();await expect(root).toHaveAttribute('data-state','ready');
+ await page.getByLabel('Parameter im Zeichenbereich anzeigen',{exact:true}).check();const x=page.getByLabel('Position X an der Achse',{exact:true});await expect(x).toBeVisible();await x.fill('12.5');await x.press('Enter');await expect(root).toHaveAttribute('data-state','ready');
+ await expect.poll(async()=>page.evaluate(()=>{const d=JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!);return d.nodes[d.roots[0]].transform.position[0];})).toBe(12.5);const inspector=page.locator('.inspector');if(await inspector.isVisible())await expect(inspector.getByLabel('Position X',{exact:true})).toHaveValue('12.5');
+});

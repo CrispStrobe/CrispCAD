@@ -1,8 +1,10 @@
+import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 // Independently authored constructions from geometric definitions, not Layerling source.
 import * as T from 'three';
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import {fontLettering,roundedPlate} from './lettering.js';
 import {iconGeometry} from './svg-icon.js';
 import qrcode from 'qrcode-generator';
 import { createDocument, identityTransform, newId, defaultPartPhysics,defaultGenerator,checkGenerator } from '@brickwright/cad-core';
@@ -70,7 +72,7 @@ function threadRidge(radius=5,pitch=2,turns=10,clearance=0,depth=1,hand=1,phase=
 }
 // Original 5×7 block alphabet, encoded directly here; no font assets or font software.
 const alphabet:Record<string,string>={A:'01110/10001/10001/11111/10001/10001/10001',B:'11110/10001/10001/11110/10001/10001/11110',C:'01111/10000/10000/10000/10000/10000/01111',D:'11110/10001/10001/10001/10001/10001/11110',E:'11111/10000/10000/11110/10000/10000/11111',F:'11111/10000/10000/11110/10000/10000/10000',G:'01111/10000/10000/10111/10001/10001/01111',H:'10001/10001/10001/11111/10001/10001/10001',I:'11111/00100/00100/00100/00100/00100/11111',J:'00111/00010/00010/00010/10010/10010/01100',K:'10001/10010/10100/11000/10100/10010/10001',L:'10000/10000/10000/10000/10000/10000/11111',M:'10001/11011/10101/10101/10001/10001/10001',N:'10001/11001/10101/10011/10001/10001/10001',O:'01110/10001/10001/10001/10001/10001/01110',P:'11110/10001/10001/11110/10000/10000/10000',Q:'01110/10001/10001/10001/10101/10010/01101',R:'11110/10001/10001/11110/10100/10010/10001',S:'01111/10000/10000/01110/00001/00001/11110',T:'11111/00100/00100/00100/00100/00100/00100',U:'10001/10001/10001/10001/10001/10001/01110',V:'10001/10001/10001/10001/10001/01010/00100',W:'10001/10001/10001/10101/10101/11011/10001',X:'10001/10001/01010/00100/01010/10001/10001',Y:'10001/10001/01010/00100/00100/00100/00100',Z:'11111/00001/00010/00100/01000/10000/11111','0':'01110/10001/10011/10101/11001/10001/01110','1':'00100/01100/00100/00100/00100/00100/01110','2':'01110/10001/00001/00110/01000/10000/11111','3':'11110/00001/00001/01110/00001/00001/11110','4':'00010/00110/01010/10010/11111/00010/00010','5':'11111/10000/10000/11110/00001/00001/11110','6':'01110/10000/10000/11110/10001/10001/01110','7':'11111/00001/00010/00100/01000/01000/01000','8':'01110/10001/10001/01110/10001/10001/01110','9':'01110/10001/10001/01111/00001/00001/01110','-':'00000/00000/00000/11111/00000/00000/00000','.':'00000/00000/00000/00000/00000/00110/00110'};
-function letters(text:string,z=0){const clean=text.trim().toUpperCase();if(!clean||clean.length>24||/[^A-Z0-9 .-]/.test(clean))throw new Error('Lettering supports 1–24 characters: A–Z, 0–9, spaces, dots and hyphens.');const parts:T.BufferGeometry[]=[];for(let k=0;k<clean.length;k++){const pattern=alphabet[clean[k]];if(!pattern)continue;pattern.split('/').forEach((row,y)=>{let start=-1;for(let x=0;x<=5;x++){if(row[x]==='1'){if(start<0)start=x;}else if(start>=0){parts.push(box((x-start)*1.2,1.2,2,[k*7.2+(start+x-1)*.6, (6-y)*1.2,z+1]));start=-1;}}});}return parts;}
+function letters(text:string,z=0){const clean=text.trim().toUpperCase();if(!clean||clean.length>24||/[^A-Z0-9 .-]/.test(clean))throw new Error(t('Lettering supports 1–24 characters: A–Z, 0–9, spaces, dots and hyphens.'));const parts:T.BufferGeometry[]=[];for(let k=0;k<clean.length;k++){const pattern=alphabet[clean[k]];if(!pattern)continue;pattern.split('/').forEach((row,y)=>{let start=-1;for(let x=0;x<=5;x++){if(row[x]==='1'){if(start<0)start=x;}else if(start>=0){parts.push(box((x-start)*1.2,1.2,2,[k*7.2+(start+x-1)*.6, (6-y)*1.2,z+1]));start=-1;}}});}return parts;}
 export interface Construction { add:T.BufferGeometry[]; cut?:T.BufferGeometry[]; after?:T.BufferGeometry[]; separate?:boolean; reference?:boolean }
 export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string,recipe?:GeneratorRecipe):Construction {
  const values=recipe?.values??defaultGenerator(id)?.values;
@@ -118,8 +120,13 @@ export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string,
  case 'gt2-pulley':{const add=[ring(20*2/(2*Math.PI),2.5,6).translate(0,0,1)],after=[ring(8,2.5,1),ring(8,2.5,1).translate(0,0,7)],cut=[];for(let i=0;i<20;i++){const a=i*Math.PI/10;cut.push(cylinder(.65,6.2,[6.4*Math.cos(a),6.4*Math.sin(a),4]));}return {add,cut,after};}
  case 'grid-bin':return {add:[box(41.5,41.5,28,[0,0,14])],cut:[box(37.5,37.5,30,[0,0,18])]};
  case 'sbc':return {add:[box(85,56,1.6),box(20,20,2,[0,0,1.7]),box(14,15,10,[28,18,5.7]),box(14,15,10,[28,-18,5.7])],cut:[...[-39,39].flatMap(x=>[-24.5,24.5].map(y=>cylinder(1.5,8,[x,y,0])))]};
- case 'text':return {add:letters(text)};
- case 'name-tag':{const length=Math.max(24,text.trim().length*7.2+10);return {add:[box(length,16,3,[(length-10)/2,3.6,0]),...letters(text,1.4)],cut:[cylinder(2,10,[-2,3.6,0])]};}
+ case 'text':case 'name-tag':{const p=recipe??defaultGenerator(id)!,v=p.values,content=recipe?.text??text,font=p.font??'sans',relief=v.textDepth+(id==='name-tag'?.05:0);
+  let glyphs:T.BufferGeometry[];if(font==='block'){glyphs=letters(content);const scale=v.textHeight/8.4;glyphs.forEach(g=>{g.scale(scale,scale,relief/2);});}else glyphs=[fontLettering(content,font,v.textHeight,relief)];
+  const bounds=new T.Box3();for(const g of glyphs){g.computeBoundingBox();bounds.union(g.boundingBox!);}const size=bounds.getSize(new T.Vector3());glyphs.forEach(g=>g.translate(-bounds.min.x,-bounds.min.y,-bounds.min.z));
+  if(id==='text')return {add:glyphs};
+  const hole=v.holeRadius,padding=v.padding,left=hole*2+padding*2,width=size.x+left+padding,height=Math.max(size.y+padding*2,hole*2+padding*2);
+  glyphs.forEach(g=>g.translate(left,(height-size.y)/2,v.baseThickness-.05));
+  return {add:[roundedPlate(width,height,v.cornerRadius,v.baseThickness),...glyphs],cut:[cylinder(hole,v.baseThickness*4,[hole+padding,height/2,v.baseThickness/2])]};}
  case 'icon-tag':return {add:[cylinder(20,3),...(svg?iconGeometry(svg):[extrude(star(),2).translate(0,0,1.4)])],cut:[cylinder(2,10,[0,17,0])]};
  case 'qr':{const qr=qrcode(0,'M'),previousEncoding=qrcode.stringToBytes;try{qrcode.stringToBytes=value=>Array.from(new TextEncoder().encode(value));qr.addData(text||'BRICKWRIGHT','Byte');qr.make();}finally{qrcode.stringToBytes=previousEncoding;}const n=qr.getModuleCount(),unit=1;const add=[box((n+8)*unit,(n+8)*unit,2,[(n-1)*unit/2,(n-1)*unit/2,0])];for(let y=0;y<n;y++){let start=-1;for(let x=0;x<=n;x++){if(x<n&&qr.isDark(y,x)){if(start<0)start=x;}else if(start>=0){add.push(box((x-start)*unit,unit,1,[(start+x-1)*unit/2,(n-1-y)*unit,1.4]));start=-1;}}}return {add};}
  case 'star':return {add:[extrude(star(),5)]};
@@ -127,20 +134,21 @@ export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string,
  case 'crescent':{const s=new T.Shape();s.absarc(0,0,16,Math.PI/3,Math.PI*5/3,false);s.quadraticCurveTo(-5,0,8,16*Math.sin(Math.PI/3));s.closePath();return {add:[extrude(s,5)]};}
  case 'knurl':{const add:T.BufferGeometry[]=[cylinder(12,25,[0,0,12.5])];for(let k=0;k<12;k++)for(const turn of [-.5,.5]){const g=closedTube(new Helix(11.8,25,turn,k*Math.PI/6),preview?12:24,.65,4);g.userData.collisionHint.stride=2;add.push(g);};return {add};}
  case 'ruler':return {reference:true,add:[box(100,6,1),...Array.from({length:101},(_,i)=>box(.18,i%10===0?4:i%5===0?3:1.5,.35,[-50+i,0,.65]))]};
- default:throw new Error(`Unknown construction: ${id}`);
+ default:throw new Error(t`Unknown construction: ${id}`);
  }
 }
 export function constructionPreview(id:string):T.BufferGeometry {
  const c=advancedGeometry(id,['text','name-tag'].includes(id)?'ABC':'BW',true);const geometries=[...c.add,...(c.after??[])].map(g=>{const non=g.index?g.toNonIndexed():g;const clean=new T.BufferGeometry();clean.setAttribute('position',non.getAttribute('position').clone());if(non!==g)non.dispose();g.dispose();return clean;});const merged=mergeGeometries(geometries)!;geometries.forEach(g=>g.dispose());return merged;
 }
-export function constructionDocument(id:string,name:string,color:string,text:string,svg?:string,recipe=defaultGenerator(id)):CadDocument {
- if(recipe)checkGenerator(recipe);const c=advancedGeometry(id,text,false,svg,recipe);const doc=createDocument(name);let component=0;const addNode=(g:T.BufferGeometry)=>{const key=newId();doc.nodes[key]={id:key,name:`${name} component ${++component}`,kind:'mesh',color,transform:identityTransform(),positions:Array.from(g.getAttribute('position').array),indices:g.index?Array.from(g.index.array):Array.from({length:g.getAttribute('position').count},(_,i)=>i),...(g.userData.collisionHint?{physics:{...defaultPartPhysics(),sourcePreset:id,collisionHint:g.userData.collisionHint}}:{})};g.dispose();return key;};
+export function constructionDocument(id:string,name:string,color:string,text:string,svg?:string,recipe?:GeneratorRecipe):CadDocument {
+ const provided=recipe;recipe??=defaultGenerator(id);if(recipe&&!provided&&['text','name-tag'].includes(id))recipe={...recipe,text};
+ if(recipe&&['text','name-tag'].includes(id))recipe={...recipe,text:recipe.text??text};if(recipe)checkGenerator(recipe);const c=advancedGeometry(id,text,false,svg,recipe);const doc=createDocument(name);let component=0;const addNode=(g:T.BufferGeometry)=>{const key=newId();doc.nodes[key]={id:key,name:t`${name} component ${++component}`,kind:'mesh',color,transform:identityTransform(),positions:Array.from(g.getAttribute('position').array),indices:g.index?Array.from(g.index.array):Array.from({length:g.getAttribute('position').count},(_,i)=>i),...(g.userData.collisionHint?{physics:{...defaultPartPhysics(),sourcePreset:id,collisionHint:g.userData.collisionHint}}:{})};g.dispose();return key;};
  const combine=(operation:'union'|'subtract',inputs:string[]):string=>{if(inputs.length===1)return inputs[0];if(inputs.length>100){const groups=[];for(let i=0;i<inputs.length;i+=100)groups.push(combine('union',inputs.slice(i,i+100)));return combine(operation,groups);}const key=newId();doc.nodes[key]={id:key,name,kind:'boolean',operation,inputs,color,transform:identityTransform()};return key;};
  if(id==='hinge') {
   c.add.forEach(g=>g.dispose());
   const leaf=(side:number,zs:number[])=>{const parts=[box(19,3,30,[side*12.5,0,0]),...zs.map(z=>cylinder(5,5.7,[0,0,z]))];const body=combine('union',parts.map(addNode));return combine('subtract',[body,addNode(cylinder(3,40))]);};
   const a=leaf(-1,[-12,0,12]),b=leaf(1,[-6,6]),pin=combine('union',[addNode(cylinder(2.5,32)),addNode(cylinder(4,1,[0,0,16.4]))]);
-  doc.roots=[a,b,pin];doc.nodes[a].name='Hinge leaf A';doc.nodes[b].name='Hinge leaf B';doc.nodes[pin].name='Hinge pin';
+  doc.roots=[a,b,pin];doc.nodes[a].name=t('Hinge leaf A');doc.nodes[b].name=t('Hinge leaf B');doc.nodes[pin].name=t('Hinge pin');
   const frame={anchorA:[0,0,0] as Vec3,anchorB:[0,0,0] as Vec3,axisA:[0,0,1] as Vec3,axisB:[0,0,1] as Vec3};
   doc.joints=[{id:newId(),kind:'hinge',bodyA:a,bodyB:b,...frame,limits:[-2.3,2.3]},{id:newId(),kind:'fixed',bodyA:a,bodyB:pin,...structuredClone(frame)}];
  } else {const roots=c.add.map(addNode);doc.roots=c.separate?roots:[combine('union',roots)];}
@@ -148,7 +156,7 @@ export function constructionDocument(id:string,name:string,color:string,text:str
  if(c.after?.length)doc.roots=[combine('union',[doc.roots[0],...c.after.map(addNode)])];
  for(const root of doc.roots){const node=doc.nodes[root];if(c.reference)node.reference=true;else node.physics={...defaultPartPhysics(),...(node.physics?.collisionHint?{collisionHint:node.physics.collisionHint}:{}),sourcePreset:id,intent:id==='hinge'?'hinge':id==='spring'?'spring':id==='snap-fit'?'snap-fit':['thread','screw','nut'].includes(id)?'thread':id==='gear'?'gear':id==='gt2-pulley'?'belt':id==='hirth'?'face-coupling':id==='dovetail'?'sliding-fit':'rigid',...(['thread','screw','nut'].includes(id)?{parameters:{pitchMm:2,starts:1}}:id==='gear'?{parameters:{teeth:20,moduleMm:1.5,pressureAngleDeg:20}}:id==='spring'?{parameters:{wireDiameterMm:2.8,meanDiameterMm:20,activeTurns:6}}:id==='gt2-pulley'?{parameters:{teeth:20,pitchMm:2}}:{})};}
  const root=doc.nodes[doc.roots[0]];if(root.physics&&id==='spring')root.physics.collisionHint={kind:'tube-grid',segments:288,sides:12,layout:'rows',closed:false};
- if(recipe){doc.version=2;root.generator=structuredClone(recipe);root.name=name;if(root.physics&&id!=='heart')root.physics.parameters={pitchMm:recipe.values.pitch,starts:recipe.values.starts,coreDiameterMm:recipe.values.diameter,lengthMm:recipe.values.length,threadDepthMm:recipe.values.threadDepth,hand:recipe.values.hand};}
+ if(recipe){doc.version=2;root.generator=structuredClone(recipe);root.name=name;if(root.physics&&['screw','thread','nut'].includes(id))root.physics.parameters={pitchMm:recipe.values.pitch,starts:recipe.values.starts,coreDiameterMm:recipe.values.diameter,lengthMm:recipe.values.length,threadDepthMm:recipe.values.threadDepth,hand:recipe.values.hand};}
  const profileLengths:Record<string,number>={counterbore:6,countersink:6,'finishing-washer':6};if(root.physics&&profileLengths[id])root.physics.collisionHint={kind:'radial-profile',segments:64,sides:profileLengths[id]-1,layout:'rows',closed:true};
  return doc;
 }

@@ -1,0 +1,965 @@
+{
+  "recordedAt": "2026-11-13T07:20:25.314Z",
+  "runtime": "v26.4.0",
+  "platform": "darwin",
+  "arch": "arm64",
+  "dart": "3.12.2",
+  "solverCommit": "13f2b04925443a75b6766c969b10aefc65978a0e",
+  "samples": 7,
+  "warmups": 2,
+  "artifacts": {
+    "bench.js": 79923,
+    "bench.wasm": 57005,
+    "bench.mjs": 11841
+  },
+  "runs": [
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "js",
+      "kind": "linear-chain",
+      "size": 10,
+      "result": {
+        "kind": "linear-chain",
+        "size": 10,
+        "decisionVariables": 20,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0,
+          "p95Ms": 1,
+          "maxMs": 1
+        },
+        "solve": {
+          "medianMs": 1,
+          "p95Ms": 6,
+          "maxMs": 6
+        },
+        "worstResidual": 0,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 28.200000047683716,
+      "startupMs": 27.30000001192093,
+      "totalRequestMs": 76.5
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "js",
+      "kind": "linear-chain",
+      "size": 100,
+      "result": {
+        "kind": "linear-chain",
+        "size": 100,
+        "decisionVariables": 200,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 1,
+          "p95Ms": 2,
+          "maxMs": 2
+        },
+        "solve": {
+          "medianMs": 3,
+          "p95Ms": 5,
+          "maxMs": 5
+        },
+        "worstResidual": 0,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 53.59999996423721,
+      "startupMs": 9.599999964237213,
+      "totalRequestMs": 70.80000001192093
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "js",
+      "kind": "linear-chain",
+      "size": 500,
+      "result": {
+        "kind": "linear-chain",
+        "size": 500,
+        "decisionVariables": 1000,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 5,
+          "p95Ms": 5,
+          "maxMs": 5
+        },
+        "solve": {
+          "medianMs": 8,
+          "p95Ms": 11,
+          "maxMs": 11
+        },
+        "worstResidual": 0,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 159.5999999642372,
+      "startupMs": 12.399999976158142,
+      "totalRequestMs": 179.69999998807907
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "js",
+      "kind": "circle-line",
+      "size": 1,
+      "result": {
+        "kind": "circle-line",
+        "size": 1,
+        "decisionVariables": 2,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0,
+          "p95Ms": 1,
+          "maxMs": 1
+        },
+        "solve": {
+          "medianMs": 5,
+          "p95Ms": 7,
+          "maxMs": 7
+        },
+        "worstResidual": 0.0000013113013181964561,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 68.69999998807907,
+      "startupMs": 14.100000023841858,
+      "totalRequestMs": 92
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "js",
+      "kind": "circle-line",
+      "size": 10,
+      "result": {
+        "kind": "circle-line",
+        "size": 10,
+        "decisionVariables": 20,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0,
+          "p95Ms": 1,
+          "maxMs": 1
+        },
+        "solve": {
+          "medianMs": 2353,
+          "p95Ms": 2455,
+          "maxMs": 2455
+        },
+        "worstResidual": null,
+        "validatedSolutions": 0,
+        "status": "unknown: null may mean exhausted or infeasible",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 20173.5,
+      "startupMs": 16.80000001192093,
+      "totalRequestMs": 20199.80000001192
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "js",
+      "kind": "circle-line",
+      "size": 50,
+      "error": "30-second worker deadline exceeded"
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "js",
+      "kind": "free-chain",
+      "size": 10,
+      "result": {
+        "kind": "free-chain",
+        "size": 10,
+        "decisionVariables": 20,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0,
+          "p95Ms": 0,
+          "maxMs": 0
+        },
+        "solve": {
+          "medianMs": 18,
+          "p95Ms": 20,
+          "maxMs": 20
+        },
+        "worstResidual": 3.552713678800501e-15,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 203.89999997615814,
+      "startupMs": 15.600000023841858,
+      "totalRequestMs": 241.20000004768372
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "js",
+      "kind": "free-chain",
+      "size": 50,
+      "result": {
+        "kind": "free-chain",
+        "size": 50,
+        "decisionVariables": 100,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 1,
+          "p95Ms": 1,
+          "maxMs": 1
+        },
+        "solve": {
+          "medianMs": 388,
+          "p95Ms": 426,
+          "maxMs": 426
+        },
+        "worstResidual": 3.552713678800501e-15,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 3729.699999988079,
+      "startupMs": 14.199999988079071,
+      "totalRequestMs": 3761.300000011921
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "js",
+      "kind": "free-chain",
+      "size": 100,
+      "result": {
+        "kind": "free-chain",
+        "size": 100,
+        "decisionVariables": 200,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 1,
+          "p95Ms": 2,
+          "maxMs": 2
+        },
+        "solve": {
+          "medianMs": 1550,
+          "p95Ms": 1630,
+          "maxMs": 1630
+        },
+        "worstResidual": 3.552713678800501e-15,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 14076.900000035763,
+      "startupMs": 22.399999976158142,
+      "totalRequestMs": 14117.800000011921
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "wasm",
+      "kind": "linear-chain",
+      "size": 10,
+      "result": {
+        "kind": "linear-chain",
+        "size": 10,
+        "decisionVariables": 20,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0.1,
+          "p95Ms": 0.8,
+          "maxMs": 0.8
+        },
+        "solve": {
+          "medianMs": 0.49999999999999994,
+          "p95Ms": 0.799,
+          "maxMs": 0.799
+        },
+        "worstResidual": 0,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 13.399999976158142,
+      "startupMs": 58.5,
+      "totalRequestMs": 96.69999998807907
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "wasm",
+      "kind": "linear-chain",
+      "size": 100,
+      "result": {
+        "kind": "linear-chain",
+        "size": 100,
+        "decisionVariables": 200,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0.899,
+          "p95Ms": 3.201,
+          "maxMs": 3.201
+        },
+        "solve": {
+          "medianMs": 2.1,
+          "p95Ms": 3.3989999999999996,
+          "maxMs": 3.3989999999999996
+        },
+        "worstResidual": 0,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 46.19999998807907,
+      "startupMs": 36.69999998807907,
+      "totalRequestMs": 101.19999998807907
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "wasm",
+      "kind": "linear-chain",
+      "size": 500,
+      "result": {
+        "kind": "linear-chain",
+        "size": 500,
+        "decisionVariables": 1000,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 2.5,
+          "p95Ms": 5,
+          "maxMs": 5
+        },
+        "solve": {
+          "medianMs": 3.9,
+          "p95Ms": 7.801,
+          "maxMs": 7.801
+        },
+        "worstResidual": 0,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 107.10000002384186,
+      "startupMs": 13.700000047683716,
+      "totalRequestMs": 131.0999999642372
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "wasm",
+      "kind": "circle-line",
+      "size": 1,
+      "result": {
+        "kind": "circle-line",
+        "size": 1,
+        "decisionVariables": 2,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0.1,
+          "p95Ms": 0.2,
+          "maxMs": 0.2
+        },
+        "solve": {
+          "medianMs": 3.8,
+          "p95Ms": 5.3,
+          "maxMs": 5.3
+        },
+        "worstResidual": 0.0000013113013181964561,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 52,
+      "startupMs": 13.600000023841858,
+      "totalRequestMs": 75.89999997615814
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "wasm",
+      "kind": "circle-line",
+      "size": 10,
+      "result": {
+        "kind": "circle-line",
+        "size": 10,
+        "decisionVariables": 20,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0.101,
+          "p95Ms": 0.199,
+          "maxMs": 0.199
+        },
+        "solve": {
+          "medianMs": 1354,
+          "p95Ms": 1450.399,
+          "maxMs": 1450.399
+        },
+        "worstResidual": null,
+        "validatedSolutions": 0,
+        "status": "unknown: null may mean exhausted or infeasible",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 12434.199999988079,
+      "startupMs": 11.800000011920929,
+      "totalRequestMs": 12453.699999988079
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "wasm",
+      "kind": "circle-line",
+      "size": 50,
+      "error": "30-second worker deadline exceeded"
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "wasm",
+      "kind": "free-chain",
+      "size": 10,
+      "result": {
+        "kind": "free-chain",
+        "size": 10,
+        "decisionVariables": 20,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0,
+          "p95Ms": 0.101,
+          "maxMs": 0.101
+        },
+        "solve": {
+          "medianMs": 10.699,
+          "p95Ms": 11.6,
+          "maxMs": 11.6
+        },
+        "worstResidual": 3.552713678800501e-15,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 107.80000001192093,
+      "startupMs": 20.5,
+      "totalRequestMs": 149.5
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "wasm",
+      "kind": "free-chain",
+      "size": 50,
+      "error": "RangeError: Maximum call stack size exceeded"
+    },
+    {
+      "browser": "chromium",
+      "browserVersion": "151.0.7922.34",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "wasm",
+      "kind": "free-chain",
+      "size": 100,
+      "error": "RangeError: Maximum call stack size exceeded"
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "js",
+      "kind": "linear-chain",
+      "size": 10,
+      "result": {
+        "kind": "linear-chain",
+        "size": 10,
+        "decisionVariables": 20,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 1,
+          "p95Ms": 1,
+          "maxMs": 1
+        },
+        "solve": {
+          "medianMs": 0,
+          "p95Ms": 1,
+          "maxMs": 1
+        },
+        "worstResidual": 0,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 23,
+      "startupMs": 23,
+      "totalRequestMs": 69
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "js",
+      "kind": "linear-chain",
+      "size": 100,
+      "result": {
+        "kind": "linear-chain",
+        "size": 100,
+        "decisionVariables": 200,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 1,
+          "p95Ms": 2,
+          "maxMs": 2
+        },
+        "solve": {
+          "medianMs": 2,
+          "p95Ms": 17,
+          "maxMs": 17
+        },
+        "worstResidual": 0,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 71,
+      "startupMs": 14,
+      "totalRequestMs": 94
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "js",
+      "kind": "linear-chain",
+      "size": 500,
+      "result": {
+        "kind": "linear-chain",
+        "size": 500,
+        "decisionVariables": 1000,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 6,
+          "p95Ms": 7,
+          "maxMs": 7
+        },
+        "solve": {
+          "medianMs": 8,
+          "p95Ms": 10,
+          "maxMs": 10
+        },
+        "worstResidual": 0,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 209,
+      "startupMs": 16,
+      "totalRequestMs": 240
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "js",
+      "kind": "circle-line",
+      "size": 1,
+      "result": {
+        "kind": "circle-line",
+        "size": 1,
+        "decisionVariables": 2,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0,
+          "p95Ms": 2,
+          "maxMs": 2
+        },
+        "solve": {
+          "medianMs": 5,
+          "p95Ms": 16,
+          "maxMs": 16
+        },
+        "worstResidual": 0.0000013113013181964561,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 79,
+      "startupMs": 18,
+      "totalRequestMs": 109
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "js",
+      "kind": "circle-line",
+      "size": 10,
+      "result": {
+        "kind": "circle-line",
+        "size": 10,
+        "decisionVariables": 20,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 1,
+          "p95Ms": 1,
+          "maxMs": 1
+        },
+        "solve": {
+          "medianMs": 1269,
+          "p95Ms": 1328,
+          "maxMs": 1328
+        },
+        "worstResidual": null,
+        "validatedSolutions": 0,
+        "status": "unknown: null may mean exhausted or infeasible",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 11490,
+      "startupMs": 16,
+      "totalRequestMs": 11515
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "js",
+      "kind": "circle-line",
+      "size": 50,
+      "error": "30-second worker deadline exceeded"
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "js",
+      "kind": "free-chain",
+      "size": 10,
+      "result": {
+        "kind": "free-chain",
+        "size": 10,
+        "decisionVariables": 20,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0,
+          "p95Ms": 1,
+          "maxMs": 1
+        },
+        "solve": {
+          "medianMs": 13,
+          "p95Ms": 16,
+          "maxMs": 16
+        },
+        "worstResidual": 3.552713678800501e-15,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 182,
+      "startupMs": 14,
+      "totalRequestMs": 211
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "js",
+      "kind": "free-chain",
+      "size": 50,
+      "error": "RangeError: Maximum call stack size exceeded."
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "js",
+      "kind": "free-chain",
+      "size": 100,
+      "error": "RangeError: Maximum call stack size exceeded."
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "wasm",
+      "kind": "linear-chain",
+      "size": 10,
+      "result": {
+        "kind": "linear-chain",
+        "size": 10,
+        "decisionVariables": 20,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0,
+          "p95Ms": 1,
+          "maxMs": 1
+        },
+        "solve": {
+          "medianMs": 0,
+          "p95Ms": 1,
+          "maxMs": 1
+        },
+        "worstResidual": 0,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 13,
+      "startupMs": 19,
+      "totalRequestMs": 41
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "wasm",
+      "kind": "linear-chain",
+      "size": 100,
+      "result": {
+        "kind": "linear-chain",
+        "size": 100,
+        "decisionVariables": 200,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 1,
+          "p95Ms": 4,
+          "maxMs": 4
+        },
+        "solve": {
+          "medianMs": 1,
+          "p95Ms": 2,
+          "maxMs": 2
+        },
+        "worstResidual": 0,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 34,
+      "startupMs": 12,
+      "totalRequestMs": 52
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "wasm",
+      "kind": "linear-chain",
+      "size": 500,
+      "result": {
+        "kind": "linear-chain",
+        "size": 500,
+        "decisionVariables": 1000,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 2,
+          "p95Ms": 2,
+          "maxMs": 2
+        },
+        "solve": {
+          "medianMs": 4,
+          "p95Ms": 7,
+          "maxMs": 7
+        },
+        "worstResidual": 0,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 87,
+      "startupMs": 12,
+      "totalRequestMs": 108
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "wasm",
+      "kind": "circle-line",
+      "size": 1,
+      "result": {
+        "kind": "circle-line",
+        "size": 1,
+        "decisionVariables": 2,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0,
+          "p95Ms": 1,
+          "maxMs": 1
+        },
+        "solve": {
+          "medianMs": 2,
+          "p95Ms": 3,
+          "maxMs": 3
+        },
+        "worstResidual": 0.0000013113013181964561,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 38,
+      "startupMs": 11,
+      "totalRequestMs": 55
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "wasm",
+      "kind": "circle-line",
+      "size": 10,
+      "result": {
+        "kind": "circle-line",
+        "size": 10,
+        "decisionVariables": 20,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0,
+          "p95Ms": 1,
+          "maxMs": 1
+        },
+        "solve": {
+          "medianMs": 1390,
+          "p95Ms": 1657,
+          "maxMs": 1657
+        },
+        "worstResidual": null,
+        "validatedSolutions": 0,
+        "status": "unknown: null may mean exhausted or infeasible",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 12924,
+      "startupMs": 11,
+      "totalRequestMs": 12944
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "wasm",
+      "kind": "circle-line",
+      "size": 50,
+      "error": "30-second worker deadline exceeded"
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "wasm",
+      "kind": "free-chain",
+      "size": 10,
+      "result": {
+        "kind": "free-chain",
+        "size": 10,
+        "decisionVariables": 20,
+        "samples": 7,
+        "warmups": 2,
+        "build": {
+          "medianMs": 0,
+          "p95Ms": 0,
+          "maxMs": 0
+        },
+        "solve": {
+          "medianMs": 13,
+          "p95Ms": 16,
+          "maxMs": 16
+        },
+        "worstResidual": 3.552713678800501e-15,
+        "validatedSolutions": 9,
+        "status": "satisfied",
+        "epsilon": 0.000001,
+        "maxSplits": 4096
+      },
+      "workerRoundtripMs": 161,
+      "startupMs": 28,
+      "totalRequestMs": 218
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "wasm",
+      "kind": "free-chain",
+      "size": 50,
+      "error": "RangeError: Maximum call stack size exceeded."
+    },
+    {
+      "browser": "ipad-webkit",
+      "browserVersion": "26.5",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "backend": "wasm",
+      "kind": "free-chain",
+      "size": 100,
+      "error": "RangeError: Maximum call stack size exceeded."
+    }
+  ]
+}

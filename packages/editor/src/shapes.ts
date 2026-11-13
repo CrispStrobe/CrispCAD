@@ -1,3 +1,5 @@
+import {defaultGenerator} from '@brickwright/cad-core';
+import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 // Independently authored presets. Geometry constructors are from Three.js (MIT).
 // Simple presets and retained sketch templates share the versioned CAD document.
@@ -94,11 +96,11 @@ export function createPresetShape(id: string): { shape: Primitive | MeshShape; h
   } finally { geometry.dispose(); }
 }
 const previews = new Map<string,string>();
-export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: {svg?:string;recipe?:GeneratorRecipe} = {}) {
-  const preset = shapeCatalog.find(p => p.id === id); if (!preset) throw new Error('Unknown shape');
-  if(['l-bracket','mounting-plate','spacer'].includes(id))return createDesignTemplate(id as import('@brickwright/cad-core').DesignTemplate);
-  if (advancedCatalog.some(p => p[0] === id)) return constructionDocument(id, preset.name, preset.color, text, options.svg,options.recipe);
-  const session = createCadSession(); session.add(createPresetShape(id).shape, { name: preset.name, color: preset.color }); const doc = structuredClone(session.state.document); const node=doc.nodes[doc.roots[0]];node.physics = {...defaultPartPhysics(),sourcePreset:id};
+export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: {svg?:string;recipe?:GeneratorRecipe;font?:GeneratorRecipe['font']} = {}) {
+  const preset = shapeCatalog.find(p => p.id === id); if (!preset) throw new Error(t('Unknown shape'));
+  if(['l-bracket','mounting-plate','spacer'].includes(id)){const doc=structuredClone(createDesignTemplate(id as import('@brickwright/cad-core').DesignTemplate));doc.title=t(doc.title);for(const node of Object.values(doc.nodes))node.name=t(node.name);for(const sketch of Object.values(doc.sketches??{}))sketch.name=t(sketch.name);return doc;}
+  if (advancedCatalog.some(p => p[0] === id)){let recipe=options.recipe;if(!recipe&&['text','name-tag'].includes(id)){recipe=defaultGenerator(id)!;recipe={...recipe,text,font:options.font??'sans'};}return constructionDocument(id, t(preset.name), preset.color, text, options.svg,recipe);}
+  const session = createCadSession(); session.add(createPresetShape(id).shape, { name: t(preset.name), color: preset.color }); const doc = structuredClone(session.state.document); const node=doc.nodes[doc.roots[0]];node.physics = {...defaultPartPhysics(),sourcePreset:id};
   if(id==='torus')node.physics.collisionHint={kind:'tube-grid',segments:64,sides:24,layout:'columns',closed:true};
   const profileLengths:Record<string,number>={'curved-cone':18,hemisphere:18,paraboloid:26,tube:5,vase:14,washer:5};
   if(profileLengths[id])node.physics.collisionHint={kind:'radial-profile',segments:64,sides:profileLengths[id]-1,layout:'rows',closed:true}; session.dispose(); return doc;

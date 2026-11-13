@@ -18,7 +18,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check": "npm run build && npm test && npm run test:e2e",
+    "check": "npm run build && npm run check:i18n && npm test && npm run test:e2e",
     "verify:packages": "node scripts/verify-packages.mjs",
     "verify:brickwright": "node scripts/verify-brickwright.mjs",
     "ipad:sync": "npm run build && cap sync ios",
@@ -30,7 +30,8 @@
     "mac:run": "npm run mac:install",
     "mac:verify": "\"apps/macos/build/Brickwright CAD.app/Contents/MacOS/BrickwrightCAD\" --smoke-test",
     "mac:install": "node scripts/install-macos.mjs",
-    "mcp": "node apps/mcp/server.mjs"
+    "mcp": "node apps/mcp/server.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",

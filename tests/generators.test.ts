@@ -26,3 +26,9 @@ describe('editable shape recipes',()=>{
   expect(()=>validateDocument({...s.state.document,version:1})).toThrow('version 2');
  });
 });
+
+it('retains rounded name tags, Unicode text and selectable bundled fonts through regeneration and undo',()=>{
+ const s=createCadSession(createPresetDocument('name-tag','Grüße',{font:'sans'})),id=s.state.document.roots[0],before=s.serialize();const original=s.state.document.nodes[id].generator!;expect(original.text).toBe('Grüße');expect(original.font).toBe('sans');expect(original.values.cornerRadius).toBe(3);const first=kernel.evaluate(s.state.document);expect(first.volume).toBeGreaterThan(100);expect(first.bodies[0].bounds.max[2]-first.bodies[0].bounds.min[2]).toBeCloseTo(original.values.baseThickness+original.values.textDepth,5);
+ s.update(id,{name:'My tag',transform:{position:[12,8,4],rotation:[0,0,25],scale:[1.1,1,1]}});const recipe=structuredClone(original);recipe.text='Hallo';recipe.font='serif';recipe.values.cornerRadius=5;s.replaceGenerated(id,createPresetDocument('name-tag','unused',{recipe}));expect(s.state.document.nodes[id].generator?.text).toBe('Hallo');expect(s.state.document.nodes[id].name).toBe('My tag');expect(s.state.document.nodes[id].transform.position).toEqual([12,8,4]);expect(kernel.evaluate(s.state.document).volume).toBeGreaterThan(100);expect(parseDocument(s.serialize()).nodes[id].generator?.font).toBe('serif');s.undo();expect(s.state.document.nodes[id].generator?.text).toBe('Grüße');
+ const mono=createPresetDocument('text','Hallo',{font:'mono'});expect(kernel.evaluate(mono).volume).toBeGreaterThan(0);const invalid=structuredClone(recipe);invalid.font='block';invalid.text='Grüße';expect(()=>checkGenerator(invalid)).toThrow('block');expect(before).toContain('Grüße');
+});

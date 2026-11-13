@@ -1,3 +1,4 @@
+import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 import { createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode } from '@brickwright/cad-core';
 import type { CadDocument, CadSession, Primitive, SolidNode, Transform, Vec3 } from '@brickwright/cad-core';
@@ -17,6 +18,7 @@ export interface CadFile { name: string; bytes: Uint8Array; mime: string }
 export interface CadEditorOptions {
   headerContent?: HTMLElement;
   showTransformReadout?:boolean;
+  appearance?:{background:string;baseplate:string};
   onTransformReadoutChange?:(visible:boolean)=>void;
   saveProject?: () => Promise<void>;
   decodeProject?: (bytes:Uint8Array) => Promise<CadDocument>;
@@ -44,13 +46,13 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?
 export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const session = options.session ?? createCadSession(options.document); const ownsSession = !options.session;
   const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
-  if (shadow.childElementCount) throw new Error('Mount target is already in use');
+  if (shadow.childElementCount) throw new Error(t('Mount target is already in use'));
   const style = el('style'); style.textContent = editorStyle; const shell = el('section', 'editor'); shell.setAttribute('aria-label', 'CAD editor');
   const toolbar = el('div', 'toolbar'); toolbar.setAttribute('role', 'toolbar'); toolbar.setAttribute('aria-label', 'Model tools');
   const main = el('div', 'main'); const tree = el('aside', 'panel tree'); const viewHost = el('div', 'viewport'); const inspector = el('aside', 'panel inspector');
-  const status = el('div', 'status'); const message = el('span'); message.setAttribute('role', 'status');message.setAttribute('aria-label','Editor status'); message.setAttribute('aria-live', 'polite'); const stats = el('span', 'stats'); status.append(message, stats);
+  const status = el('div', 'status'); const message = el('span'); message.setAttribute('role', 'status');message.setAttribute('aria-label',t('Editor status')); message.setAttribute('aria-live', 'polite'); const stats = el('span', 'stats'); status.append(message, stats);
   const designBar = el('div', 'design-bar');
-  const titleInput = el('input'); titleInput.setAttribute('aria-label', 'Design title'); titleInput.addEventListener('keydown',event=>{if(event.key==='Enter')titleInput.blur();else if(event.key==='Escape'){titleInput.value=session.state.document.title;titleInput.blur();}}); titleInput.addEventListener('change', () => run(() => session.rename(titleInput.value))); designBar.append(titleInput, el('span', 'units-label', 'mm · Z up'));
+  const titleInput = el('input'); titleInput.setAttribute('aria-label', 'Design title'); titleInput.addEventListener('keydown',event=>{if(event.key==='Enter')titleInput.blur();else if(event.key==='Escape'){titleInput.value=session.state.document.title;titleInput.blur();}}); titleInput.addEventListener('change', () => run(() => session.rename(titleInput.value))); designBar.append(titleInput, el('span', 'units-label', t('mm · Z up')));
   main.append(tree, viewHost, inspector); designBar.append(toolbar);shell.append(designBar, main, status); shadow.append(style, shell);
   let disposed = false; let builtRevision = -1; let built: GeometryResult | null = null; let running = false; let lastRevision = -1; let lastSelection = ''; let geometryError = ''; let mode: 'select' | 'translate' | 'rotate' | 'scale' = 'select'; let grid = 1;
   const waiters = new Set<{ resolve: (r: GeometryResult) => void; reject: (e: Error) => void }>();
@@ -59,42 +61,42 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const run = (fn: () => unknown) => { try { const result = fn(); if (result instanceof Promise) result.catch(report); } catch (e) { report(e); } };
   const client = createGeometryClient(new URL(options.wasmURL, document.baseURI).href, options.createWorker);
   let viewport: ReturnType<typeof mountViewport>;
-  try { viewport = mountViewport(viewHost, session, report); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
-  const empty = el('div', 'empty'); empty.append(el('strong', '', 'Your next idea starts here.'), document.createTextNode('Pick a shape above. Set its dimensions in Properties. Drag to orbit; pinch to zoom.')); viewHost.append(empty);
-  const busy = el('div', 'busy', 'Building solid…'); busy.hidden = true; viewHost.append(busy);
+  try { viewport = mountViewport(viewHost, session, report,options.appearance); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
+  const empty = el('div', 'empty'); empty.append(el('strong', '', t('Your next idea starts here.')), document.createTextNode(t('Pick a shape above. Set its dimensions in Properties. Drag to orbit; pinch to zoom.'))); viewHost.append(empty);
+  const busy = el('div', 'busy', t('Building solid…')); busy.hidden = true; viewHost.append(busy);
   const errorPanel = el('div', 'error'); errorPanel.hidden = true; errorPanel.setAttribute('role', 'alert'); viewHost.append(errorPanel);
   let toolParent: HTMLElement = toolbar;
   const menus:HTMLDetailsElement[]=[];
   function toolGroup(label: string, className = '') {
     if(['File','Edit','Combine'].includes(label)){
-      const group=el('details',`command-menu ${className}`);const trigger=el('summary','',`${label} ▾`);trigger.setAttribute('aria-label',`${label} menu`);
+      const group=el('details',`command-menu ${className}`);const trigger=el('summary','',`${t(label)} ▾`);trigger.setAttribute('aria-label',t`${t(label)} menu`);
       const tools=el('div','command-popup');group.append(trigger,tools);toolbar.append(group);toolParent=tools;menus.push(group);
       group.addEventListener('toggle',()=>{if(group.open)menus.forEach(menu=>{if(menu!==group)menu.open=false;});});
       tools.addEventListener('click',event=>{if((event.target as Element).closest('button:not(:disabled)'))group.open=false;});return;
     }
-    const group = el('div', `tool-group ${className}`); group.setAttribute('role', 'group'); group.setAttribute('aria-label', label); const tools = el('div', 'group-tools'); group.append(tools); toolbar.append(group); toolParent = tools;
+    const group = el('div', `tool-group ${className}`); group.setAttribute('role', 'group'); group.setAttribute('aria-label', t(label)); const tools = el('div', 'group-tools'); group.append(tools); toolbar.append(group); toolParent = tools;
   }
-  function button(label: string, action: () => unknown, parent: HTMLElement = toolParent, className = '') {
-    const b = el('button', className); const icon = toolIcon(label); if (icon) b.append(icon); b.append(el('span', '', label)); b.type = 'button'; b.title = label; b.setAttribute('aria-label', label); b.addEventListener('click', () => run(action)); parent.append(b); return b;
+  function button(label: string, action: () => unknown, parent: HTMLElement = toolParent, className = '', translate = true) {
+    const b = el('button', className); const icon = toolIcon(label); if (icon) b.append(icon); const display = translate ? t(label) : label; b.append(el('span', '', display)); b.type = 'button'; b.title = display; b.setAttribute('aria-label', display); b.addEventListener('click', () => run(action)); parent.append(b); return b;
   }
   function togglePanel(panel: HTMLElement, toggle: HTMLButtonElement) { const visible = getComputedStyle(panel).display !== 'none'; panel.classList.toggle('closed', visible); panel.classList.toggle('open', !visible); toggle.setAttribute('aria-pressed', String(!visible)); }
   const partsToggle = button('Objects', () => togglePanel(tree, partsToggle), status, 'panel-toggle objects-toggle');
-  partsToggle.title = 'Show objects';
+  partsToggle.title = t('Show objects');
   const propertiesToggle = button('Properties', () => togglePanel(inspector, propertiesToggle), status, 'panel-toggle properties-toggle');
   const parametersPanel=mountParametersPanel(shell,session);
   const sketchPanel=mountSketchPanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();});
-  button('Sketch',()=>sketchPanel.open(),toolbar,'compact-icon').title='Create a dimensioned sketch and extrusion';
+  button('Sketch',()=>sketchPanel.open(),toolbar,'compact-icon').title=t('Create a dimensioned sketch and extrusion');
   const codePanel=mountCodePanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();});
-  button('Code',()=>codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined),toolbar,'compact-icon').title='Code an object';
-  const parametersButton=button('Parameters',()=>parametersPanel.open(),toolbar,'compact-icon');parametersButton.title='Model parameters and formulas';
+  button('Code',()=>codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined),toolbar,'compact-icon').title=t('Code an object');
+  const parametersButton=button('Parameters',()=>parametersPanel.open(),toolbar,'compact-icon');parametersButton.title=t('Model parameters and formulas');
   if(options.headerContent){options.headerContent.classList.add('host-actions');designBar.append(options.headerContent);}
   toolGroup('Shapes', 'shapes-tools');
   const shapesButton = button('Shapes', () => picker.toggle(), toolParent, 'shape-library-toggle');
   const previewCache = new Map<string, Promise<string>>();
-  const picker = mountShapePicker(main, shapesButton, async (preset, text, svg) => {
-    const projectId=session.state.document.id,wasEmpty=!session.state.document.roots.length;const doc = createPresetDocument(preset.id, text, {svg}); const result = await client.evaluate(doc);
+  const picker = mountShapePicker(main, shapesButton, async (preset, text, svg,font) => {
+    const projectId=session.state.document.id,wasEmpty=!session.state.document.roots.length;const doc = createPresetDocument(preset.id, text, {svg,font}); const result = await client.evaluate(doc);
     if (disposed) return;
-    if(session.state.document.id!==projectId)throw new Error('Shape insertion was canceled because a different model was opened');
+    if(session.state.document.id!==projectId)throw new Error(t('Shape insertion was canceled because a different model was opened'));
     const minZ = Math.min(...result.bodies.map(body => body.bounds.min[2]));
     session.insert(doc, [session.state.document.roots.length * 12, 0, -minZ],{mergeParameters:true});
     await whenIdle();
@@ -107,20 +109,20 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   toolGroup('Combine');
   const opButtons = (['union', 'subtract', 'intersect'] as const).map(operation => {
     const b = button(operation[0].toUpperCase() + operation.slice(1), () => session.combine(operation));
-    b.title = operation === 'subtract' ? 'First selected body is the base. Later selected bodies cut it.' : `${operation} the selected bodies`; return b;
+    b.title = operation === 'subtract' ? t('First selected body is the base. Later selected bodies cut it.') : t(operation === 'union' ? 'Union' : 'Intersect'); return b;
   });
   toolGroup('Transform');
   const modeButtons = (['select', 'translate', 'rotate', 'scale'] as const).map((m, i) => {
-    const b = button(['Select', 'Move', 'Rotate', 'Scale'][i], () => setMode(m)); b.title = ['Select and drag (V / Esc)', 'Move (W)', 'Rotate (E)', 'Scale (R)'][i]; return b;
+    const b = button(['Select', 'Move', 'Rotate', 'Scale'][i], () => setMode(m)); b.title = t(['Select and drag (V / Esc)', 'Move (W)', 'Rotate (E)', 'Scale (R)'][i]); return b;
   });
   const dropButton = button('Drop to workplane', () => viewport.dropSelection());
-  const readout=mountTransformReadout(viewHost,session,report,visible=>{numbersToggle.checked=visible;options.onTransformReadoutChange?.(visible);});
-  const numbersLabel=el('label','numbers-toggle','XYZ');numbersLabel.title='Show on-canvas parameters';const numbersToggle=el('input');numbersToggle.type='checkbox';numbersToggle.setAttribute('aria-label','Show on-canvas parameters');numbersToggle.onchange=()=>readout.setVisible(numbersToggle.checked);numbersLabel.prepend(numbersToggle);
+  const readout=mountTransformReadout(viewHost,session,report,visible=>{numbersToggle.checked=visible;viewport.setReadoutVisible(visible);options.onTransformReadoutChange?.(visible);});
+  const numbersLabel=el('label','numbers-toggle','XYZ');numbersLabel.title=t('Show on-canvas parameters');const numbersToggle=el('input');numbersToggle.type='checkbox';numbersToggle.setAttribute('aria-label',t('Show on-canvas parameters'));numbersToggle.onchange=()=>readout.setVisible(numbersToggle.checked);numbersLabel.prepend(numbersToggle);
   readout.setVisible(options.showTransformReadout??false);
-  viewport.setTransformPreviewListener(preview=>{readout.update(preview);const pose=preview.poses[0]?.transform;if(!pose)return;for(const [key,name] of [['position','Position'],['rotation','Rotation'],['scale','Scale']] as const)for(const [i,axis] of ['X','Y','Z'].entries()){const input=Array.from(inspector.querySelectorAll('input')).find(el=>el.getAttribute('aria-label')===`${name} ${axis}`);if(input){input.readOnly=preview.dragging;if(shadow.activeElement!==input||preview.dragging)input.value=String(Number(pose[key][i].toFixed(5)));}}});
-  const planeBar = el('div', 'plane-bar'); planeBar.append(el('span', 'plate-size', '400 × 400 mm workplane'));
-  const gridLabel = el('label', '', 'Snap Grid'); const gridSelect = el('select'); gridSelect.setAttribute('aria-label', 'Grid spacing');
-  for (const n of [0, 0.1, 1, 5, 10]) { const o = el('option', '', n === 0 ? 'Off' : `${n} mm`); o.value = String(n); gridSelect.append(o); } gridSelect.value = '1';
+  viewport.setTransformPreviewListener(preview=>{readout.update(preview);if(preview.bounds)for(const [i,axis] of ['X','Y','Z'].entries()){const input=inspector.querySelector<HTMLInputElement>(`[data-size-axis=${axis}]`);if(input)input.value=String(Number((preview.bounds.max[i]-preview.bounds.min[i]).toFixed(3)));}const pose=preview.poses[0]?.transform;if(!pose)return;for(const [key,name] of [['position','Position'],['rotation','Rotation'],['scale','Scale']] as const)for(const [i,axis] of ['X','Y','Z'].entries()){const input=Array.from(inspector.querySelectorAll('input')).find(el=>el.getAttribute('aria-label')===`${t(name)} ${axis}`);if(input){input.readOnly=preview.dragging;if(shadow.activeElement!==input||preview.dragging)input.value=String(Number(pose[key][i].toFixed(5)));}}});
+  const planeBar = el('div', 'plane-bar'); planeBar.append(el('span', 'plate-size', t('400 × 400 mm workplane')));
+  const gridLabel = el('label', '', t('Snap Grid')); const gridSelect = el('select'); gridSelect.setAttribute('aria-label', 'Grid spacing');
+  for (const n of [0, 0.1, 1, 5, 10]) { const o = el('option', '', n === 0 ? t('Off') : `${n} mm`); o.value = String(n); gridSelect.append(o); } gridSelect.value = '1';
   gridSelect.addEventListener('change', () => { grid = Number(gridSelect.value); viewport.setGrid(grid); }); gridLabel.append(gridSelect); planeBar.append(numbersLabel,gridLabel, el('span', 'unit-chip', 'mm')); viewHost.append(planeBar);
   const undoButton = button('Undo', () => session.undo(),toolbar,'compact-icon'); const redoButton = button('Redo', () => session.redo(),toolbar,'compact-icon');
   toolGroup('Edit');
@@ -129,17 +131,17 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   toolGroup('File', 'file-tools');
   async function newProject(){if(!options.requestNew||await options.requestNew())session.load(createDocument());}
   button('New',newProject);
-  const input = el('input'); input.type = 'file'; input.setAttribute('aria-label','Open CAD project or STL'); input.accept = '.bcad,.json,.stl'; input.hidden = true; shell.append(input);
+  const input = el('input'); input.type = 'file'; input.setAttribute('aria-label',t('Open CAD project or STL')); input.accept = '.bcad,.json,.stl'; input.hidden = true; shell.append(input);
   async function chooseOpen(){if(options.requestOpen){const file=await options.requestOpen();if(file)await openFile(file.name,file.bytes);}else input.click();}
   button('Open',chooseOpen);
-  input.accept='.bcad,.bcadhistory,.json,.stl';input.addEventListener('change', () => { const file = input.files?.[0]; input.value = ''; if (file) run(async () => { if (file.size > 64 * 1024 * 1024) throw new Error('Project exceeds 64 MiB'); await openFile(file.name, new Uint8Array(await file.arrayBuffer())); }); });
+  input.accept='.bcad,.bcadhistory,.json,.stl';input.addEventListener('change', () => { const file = input.files?.[0]; input.value = ''; if (file) run(async () => { if (file.size > 64 * 1024 * 1024) throw new Error(t('Project exceeds 64 MiB')); await openFile(file.name, new Uint8Array(await file.arrayBuffer())); }); });
   const save = button('Save project', () => deliver('bcad'), toolParent, 'primary'); save.disabled = !options.onExport;
-  const importInput=el('input');importInput.type='file';importInput.accept='.stl';importInput.hidden=true;importInput.setAttribute('aria-label','Import STL geometry');shell.append(importInput);
-  importInput.onchange=()=>{const file=importInput.files?.[0];importInput.value='';if(file)run(async()=>{if(file.size>16*1024*1024)throw new Error('STL exceeds 16 MiB');await importFile(file.name,new Uint8Array(await file.arrayBuffer()));});};
+  const importInput=el('input');importInput.type='file';importInput.accept='.stl';importInput.hidden=true;importInput.setAttribute('aria-label',t('Import STL geometry'));shell.append(importInput);
+  importInput.onchange=()=>{const file=importInput.files?.[0];importInput.value='';if(file)run(async()=>{if(file.size>16*1024*1024)throw new Error(t('STL exceeds 16 MiB'));await importFile(file.name,new Uint8Array(await file.arrayBuffer()));});};
   async function chooseImport(){if(options.requestImport){const file=await options.requestImport();if(file)await importFile(file.name,file.bytes);}else importInput.click();}
   button('Import geometry…',chooseImport);
-  const exportDialog=el('dialog','export-dialog');exportDialog.setAttribute('aria-label','Export model');exportDialog.append(el('h2','','Export model'));
-  const exportFormat=el('select');exportFormat.setAttribute('aria-label','Export format');for(const [value,label] of [['stl','STL · triangle mesh'],['3mf','3MF · packaged mesh']]){const option=el('option','',label);option.value=value;exportFormat.append(option);}exportDialog.append(exportFormat);
+  const exportDialog=el('dialog','export-dialog');exportDialog.setAttribute('aria-label',t('Export model'));exportDialog.append(el('h2','',t('Export model')));
+  const exportFormat=el('select');exportFormat.setAttribute('aria-label',t('Export format'));for(const [value,label] of [['stl','STL · triangle mesh'],['3mf','3MF · packaged mesh']]){const option=el('option','',label);option.value=value;exportFormat.append(option);}exportDialog.append(exportFormat);
   const exportActions=el('footer');button('Cancel export',()=>exportDialog.close(),exportActions);
   const exportRun=button('Export',async()=>{await deliver(exportFormat.value as 'stl'|'3mf');exportDialog.close();},exportActions,'primary');exportDialog.append(exportActions);exportDialog.addEventListener('keydown',event=>event.stopPropagation());shell.append(exportDialog);
   const exportButton=button('Export…',()=>exportDialog.showModal());exportButton.disabled=true;
@@ -150,31 +152,31 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   let planeVisible = true; const planeButton = button('Show workplane', () => { planeVisible = !planeVisible; viewport.setWorkplaneVisible(planeVisible); planeButton.setAttribute('aria-pressed', String(planeVisible)); }, viewActions); planeButton.setAttribute('aria-pressed', 'true');
   let multi = false; const multiButton = button('Multi-select', () => { multi = !multi; viewport.setMultiSelect(multi); multiButton.setAttribute('aria-pressed', String(multi)); }, viewActions); multiButton.setAttribute('aria-pressed', 'false');
   const viewSelect = el('select'); viewSelect.setAttribute('aria-label', 'View direction');
-  for (const name of ['iso', 'top', 'front', 'right', 'back', 'left', 'bottom'] as const) { const option = el('option', '', name === 'iso' ? '3D view' : `${name[0].toUpperCase()}${name.slice(1)} view`); option.value = name; viewSelect.append(option); }
+  for (const name of ['iso', 'top', 'front', 'right', 'back', 'left', 'bottom'] as const) { const option = el('option', '', t(name === 'iso' ? '3D view' : `${name[0].toUpperCase()}${name.slice(1)} view`)); option.value = name; viewSelect.append(option); }
   viewSelect.addEventListener('change', () => viewport.setView(viewSelect.value as import('./viewport.js').ViewDirection)); planeBar.prepend(viewSelect);
   viewport.setViewListener(view => { viewSelect.value = view; });
   function setMode(next: typeof mode) { mode = next; viewport.setMode(mode); modeButtons.forEach((b, i) => b.setAttribute('aria-pressed', String((['select', 'translate', 'rotate', 'scale'] as const)[i] === mode)));shell.dataset.mode=mode;if(mode==='rotate'||mode==='scale'){inspector.classList.remove('closed');inspector.classList.add('open');}buildInspector(); }
   setMode('select');
   const browserExpanded=new Set<string>();let browserProject="";
   function buildTree() {
-    tree.replaceChildren(); const header = el('div', 'panel-header'); header.append(el('h2', '', 'Objects')); button('Close objects', () => { tree.classList.remove('open'); tree.classList.add('closed'); partsToggle.setAttribute('aria-pressed', 'false'); }, header); tree.append(header);
+    tree.replaceChildren(); const header = el('div', 'panel-header'); header.append(el('h2', '', t('Objects'))); button('Close objects', () => { tree.classList.remove('open'); tree.classList.add('closed'); partsToggle.setAttribute('aria-pressed', 'false'); }, header); tree.append(header);
     titleInput.value = session.state.document.title;
     const selected = session.state.selection; const doc = session.state.document;
     if(browserProject!==doc.id){browserExpanded.clear();browserProject=doc.id;}
     const section=(key:string,label:string,parent:HTMLElement,defaultOpen=false)=>{
       const details=el('details','browser-section');details.open=browserExpanded.has(key)||defaultOpen&&!browserExpanded.has(`closed:${key}`);
-      const summary=el('summary','',label);details.append(summary);parent.append(details);
+      const summary=el('summary','',t(label));details.append(summary);parent.append(details);
       details.addEventListener('toggle',()=>{if(!details.isConnected)return;if(details.open){browserExpanded.add(key);browserExpanded.delete(`closed:${key}`);}else{browserExpanded.delete(key);browserExpanded.add(`closed:${key}`);}});return details;
     };
-    const bodies=section('bodies',`Bodies · ${doc.roots.length}`,tree,true);
+    const bodies=section('bodies',t`Bodies · ${doc.roots.length}`,tree,true);
 
     const seenNames=new Map<string,number>();const counts=new Map<string,number>();doc.roots.forEach(id=>counts.set(doc.nodes[id].name,(counts.get(doc.nodes[id].name)??0)+1));
     const append = (id: string, parent: HTMLElement, child = false) => {
       const n = doc.nodes[id]; const item = el('div', 'node'); const row = el('div', 'node-row'); item.dataset.objectId = id;
       const number=(seenNames.get(n.name)??0)+1;seenNames.set(n.name,number);const displayName=(counts.get(n.name)??0)>1?`${n.name} (${number})`:n.name;
-      if (!child) { const check = el('input'); check.type = 'checkbox'; check.checked = selected.includes(id); check.setAttribute('aria-label', `Select ${displayName}`); check.addEventListener('change', () => {session.select(check.checked ? [...selected, id] : selected.filter(x => x !== id));viewport.canvas.focus({preventScroll:true});}); row.append(check); }
-      const select = button(displayName, () => {session.select([id]);viewport.canvas.focus({preventScroll:true});}, row);
-      const icon=toolIcon(n.kind==='code'?'Code':n.kind==='extrusion'?'Sketch':n.kind==='boolean'?'Union':n.kind==='cylinder'?'Cylinder':n.kind==='sphere'?'Sphere':'Box');if(icon&&!select.querySelector('svg'))select.prepend(icon); select.classList.toggle('selected', selected.includes(id)); select.setAttribute('aria-pressed',String(selected.includes(id)));row.classList.toggle('selected',selected.includes(id));select.title = `${displayName} · ${n.kind}`; select.dataset.testid = child?'construction-name':'object-name'; item.append(row);
+      if (!child) { const check = el('input'); check.type = 'checkbox'; check.checked = selected.includes(id); check.setAttribute('aria-label', t`Select ${displayName}`); check.addEventListener('change', () => {session.select(check.checked ? [...selected, id] : selected.filter(x => x !== id));viewport.canvas.focus({preventScroll:true});}); row.append(check); }
+      const select = button(displayName, () => {session.select([id]);viewport.canvas.focus({preventScroll:true});}, row, '', false);
+      const icon=toolIcon(n.kind==='code'?'Code':n.kind==='extrusion'?'Sketch':n.kind==='boolean'?'Union':n.kind==='cylinder'?'Cylinder':n.kind==='sphere'?'Sphere':'Box');if(icon&&!select.querySelector('svg'))select.prepend(icon); select.classList.toggle('selected', selected.includes(id)); select.setAttribute('aria-pressed',String(selected.includes(id)));row.classList.toggle('selected',selected.includes(id));select.title = `${displayName} · ${t(n.kind)}`; select.dataset.testid = child?'construction-name':'object-name'; item.append(row);
       parent.append(item);
       // A generated preset is one editable part. Its implementation operands are
       // deliberately hidden; user-authored booleans retain browsable inputs.
@@ -184,53 +186,59 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
         const definition=section(`code:${id}`,'Code & parameters',item);button('Edit code definition',()=>codePanel.open(id),definition);
         const compiled=compileCode(n.program);for(const [name,value] of Object.entries(compiled.values)){const entry=el('div','browser-value');entry.append(el('span','',name),el('span','',`${Number(value.value.toFixed(4))} ${compiled.parameters[name].unit==='scalar'?'':compiled.parameters[name].unit}`));definition.append(entry);}
       }else if(n.kind==='extrusion'){
-        const definition=section(`extrusion:${id}`,'Sketch & extrusion',item);const sketch=doc.sketches?.[n.sketchId];if(sketch)button(`Edit sketch: ${sketch.name}`,()=>sketchPanel.open(id),definition);
+        const definition=section(`extrusion:${id}`,'Sketch & extrusion',item);const sketch=doc.sketches?.[n.sketchId];if(sketch)button(t`Edit sketch: ${sketch.name}`,()=>sketchPanel.open(id),definition);
       }
     };
     doc.roots.forEach(id => append(id, bodies));
-    const sketches=Object.values(doc.sketches??{});if(sketches.length){const group=section('sketches',`Sketches · ${sketches.length}`,tree);for(const sketch of sketches){const feature=Object.values(doc.nodes).find(n=>n.kind==='extrusion'&&n.sketchId===sketch.id);if(feature)button(`Sketch: ${sketch.name}`,()=>sketchPanel.open(feature.id),group);else group.append(el('div','browser-value',sketch.name));}}
-    const parameters=Object.entries(doc.parametric?.parameters??{});if(parameters.length){const group=section('parameters',`Parameters · ${parameters.length}`,tree);button('Edit model parameters',()=>parametersPanel.open(),group);for(const [name,p] of parameters){const entry=el('div','browser-value');entry.append(el('span','',name),el('span','',p.expression));group.append(entry);}}
+    const sketches=Object.values(doc.sketches??{});if(sketches.length){const group=section('sketches',t`Sketches · ${sketches.length}`,tree);for(const sketch of sketches){const feature=Object.values(doc.nodes).find(n=>n.kind==='extrusion'&&n.sketchId===sketch.id);if(feature)button(t`Sketch: ${sketch.name}`,()=>sketchPanel.open(feature.id),group);else group.append(el('div','browser-value',sketch.name));}}
+    const parameters=Object.entries(doc.parametric?.parameters??{});if(parameters.length){const group=section('parameters',t`Parameters · ${parameters.length}`,tree);button('Edit model parameters',()=>parametersPanel.open(),group);for(const [name,p] of parameters){const entry=el('div','browser-value');entry.append(el('span','',name),el('span','',p.expression));group.append(entry);}}
 
-    if (!doc.roots.length) tree.append(el('p', 'hint', 'No objects yet. Start with a box.'));
+    if (!doc.roots.length) tree.append(el('p', 'hint', t('No objects yet. Start with a box.')));
   }
   function field(parent: HTMLElement, label: string, value: string | number, change: (value: string) => void, type = 'number', step = '1') {
-    const wrap = el('label', 'field', label); const input = el('input'); input.type = type; input.value = String(value); input.setAttribute('aria-label', label); input.step = step;
-    input.addEventListener('change', () => run(() => change(input.value)));input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();event.stopPropagation();const apply=input.closest('.shape-parameters')?.querySelector<HTMLButtonElement>('[aria-label="Apply shape parameters"]');input.blur();apply?.click();viewport.canvas.focus({preventScroll:true});}}); wrap.append(input); parent.append(wrap); return input;
+    const wrap = el('label', 'field', t(label)); const input = el('input'); input.type = type; input.value = String(value); input.setAttribute('aria-label', t(label)); input.step = step;
+    input.addEventListener('change', () => run(() => change(input.value)));input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();event.stopPropagation();const apply=input.closest('.shape-parameters')?.querySelector<HTMLButtonElement>(`[aria-label="${t('Apply shape parameters')}"]`);input.blur();apply?.click();viewport.canvas.focus({preventScroll:true});}}); wrap.append(input); parent.append(wrap); return input;
   }
   function buildInspector() {
-    inspector.replaceChildren(); const header = el('div', 'panel-header'); header.append(el('h2', '', 'Properties')); button('Close properties', () => { inspector.classList.remove('open'); inspector.classList.add('closed'); propertiesToggle.setAttribute('aria-pressed', 'false'); }, header); inspector.append(header);
+    inspector.replaceChildren(); const header = el('div', 'panel-header'); header.append(el('h2', '', t('Properties'))); button('Close properties', () => { inspector.classList.remove('open'); inspector.classList.add('closed'); propertiesToggle.setAttribute('aria-pressed', 'false'); }, header); inspector.append(header);
     const selection = session.state.selection;
+    if(selection.some(id=>session.state.document.roots.includes(id))){inspector.append(el('div','inspect-title',t('Dimensions after transform (mm)')));const dimensions=el('div','triple');inspector.append(dimensions);for(const axis of ['X','Y','Z']){const bodies=built?.bodies.filter(body=>selection.includes(body.id))??[];const i=['X','Y','Z'].indexOf(axis),size=bodies.length?Math.max(...bodies.map(body=>body.bounds.max[i]))-Math.min(...bodies.map(body=>body.bounds.min[i])):'';const input=field(dimensions,t`Size ${axis} (mm)`,typeof size==='number'?Number(size.toFixed(3)):'',()=>{},'number','.1');input.readOnly=true;input.dataset.sizeAxis=axis;}}
     const activeKey=mode==='rotate'?'rotation':mode==='scale'?'scale':'position';
     function transformFields(ids:readonly string[],key:'position'|'rotation'|'scale'){
-      const title=key==='rotation'?'Rotation':key==='scale'?'Scale':'Position';inspector.append(el('div','inspect-title',`${title} (${key==='rotation'?'°':key==='scale'?'×':'mm'})`));const group=el('div','triple');inspector.append(group);
-      ['X','Y','Z'].forEach((axis,i)=>field(group,`${title} ${axis}`,session.state.document.nodes[ids[0]].transform[key][i],value=>{session.transform(ids.map(id=>{const transform=structuredClone(session.state.document.nodes[id].transform);transform[key][i]=Number(value);return {id,transform};}));},'number',key==='rotation'?'1':'0.1'));
+      const title=key==='rotation'?'Rotation':key==='scale'?'Scale':'Position';inspector.append(el('div','inspect-title',`${t(title)} (${key==='rotation'?'°':key==='scale'?'×':'mm'})`));const group=el('div','triple');inspector.append(group);
+      ['X','Y','Z'].forEach((axis,i)=>field(group,`${t(title)} ${axis}`,session.state.document.nodes[ids[0]].transform[key][i],value=>{session.transform(ids.map(id=>{const transform=structuredClone(session.state.document.nodes[id].transform);transform[key][i]=Number(value);return {id,transform};}));},'number',key==='rotation'?'1':'0.1'));
     }
-    if (selection.length !== 1) { inspector.append(el('p', 'selection-count', selection.length ? `${selection.length} selected · per-object values` : 'Nothing selected'));if(selection.length)transformFields(selection,activeKey);return; }
+    if (selection.length !== 1) { inspector.append(el('p', 'selection-count', selection.length ? t`${selection.length} selected · per-object values` : t('Nothing selected')));if(selection.length)transformFields(selection,activeKey);return; }
     const id = selection[0], n = session.state.document.nodes[id];
-    if(!session.state.document.roots.includes(id)){const parent=Object.values(session.state.document.nodes).find(node=>node.kind==='boolean'&&node.inputs.includes(id));if(parent)button(`Back to ${parent.name}`,()=>{session.select([parent.id]);viewport.canvas.focus({preventScroll:true});},inspector);}
-    inspector.append(el('div', 'selection-count', `${n.name} · selected`));
+    if(!session.state.document.roots.includes(id)){const parent=Object.values(session.state.document.nodes).find(node=>node.kind==='boolean'&&node.inputs.includes(id));if(parent)button(t`Back to ${parent.name}`,()=>{session.select([parent.id]);viewport.canvas.focus({preventScroll:true});},inspector);}
+    inspector.append(el('div', 'selection-count', t`${n.name} · selected`));
     field(inspector, 'Object name', n.name, value => session.update(id, { name: value }), 'text');
     transformFields([id],activeKey);
     const recipe=n.generator??(session.state.document.roots.includes(id)?defaultGenerator(n.physics?.sourcePreset??''):undefined);
     if(recipe){
-      const draft=structuredClone(recipe);const form=el('div','shape-parameters');form.append(el('div','inspect-title',`${recipe.preset[0].toUpperCase()+recipe.preset.slice(1)} parameters`));
+      const draft=structuredClone(recipe);const legacyLettering=!n.generator&&['text','name-tag'].includes(recipe.preset);if(legacyLettering)draft.text='';const form=el('div','shape-parameters');form.append(el('div','inspect-title',t`${t(recipe.preset[0].toUpperCase()+recipe.preset.slice(1))} parameters`));
+      if(legacyLettering)form.append(el('p','hint',t('This older object did not retain its text. Enter the lettering to make it editable; the existing solid stays unchanged until Apply.')));
+      if(draft.preset==='text'||draft.preset==='name-tag'){
+        field(form,'Text',draft.text??'',value=>draft.text=value,'text');const label=el('label','field',t('Font')),select=el('select');select.setAttribute('aria-label',t('Font'));
+        for(const [value,name] of [['sans','Droid Sans'],['serif','Droid Serif'],['mono','Droid Sans Mono'],['block',t('Original block letters')]]){const option=el('option','',name);option.value=value;select.append(option);}select.value=draft.font??'sans';select.onchange=()=>draft.font=select.value as typeof draft.font;label.append(select);form.append(label);
+      }
       for(const parameter of generatorFields(recipe.preset)){
-        if(parameter.key==='hand'){const label=el('label','field','Thread handedness');const select=el('select');select.setAttribute('aria-label','Thread handedness');for(const [value,name] of [[1,'Right hand'],[-1,'Left hand']] as const){const option=el('option','',name);option.value=String(value);select.append(option);}select.value=String(draft.values.hand);select.onchange=()=>draft.values.hand=Number(select.value);label.append(select);form.append(label);}
+        if(parameter.key==='hand'){const label=el('label','field',t('Thread handedness'));const select=el('select');select.setAttribute('aria-label',t('Thread handedness'));for(const [value,name] of [[1,'Right hand'],[-1,'Left hand']] as const){const option=el('option','',t(name));option.value=String(value);select.append(option);}select.value=String(draft.values.hand);select.onchange=()=>draft.values.hand=Number(select.value);label.append(select);form.append(label);}
         else{const input=field(form,parameter.label,draft.values[parameter.key],value=>draft.values[parameter.key]=Number(value),'number',String(parameter.step));input.min=String(parameter.min);input.max=String(parameter.max);}
       }
-      const apply=button('Apply shape parameters',async()=>{const expected=session.state.revision;apply.disabled=true;try{const fragment=createPresetDocument(draft.preset,'BRICKWRIGHT',{recipe:draft});await client.evaluate(fragment);if(disposed)return;if(session.state.revision!==expected)throw new Error('The model changed while generating this shape. Apply again.');session.replaceGenerated(id,fragment);await whenIdle();}finally{apply.disabled=false;}},form,'primary');if(n.generator){const advanced=el('details');advanced.append(el('summary','','Advanced'));button('Detach generator',()=>session.detachGenerator(id),advanced);form.append(advanced);}inspector.append(form);
+      const apply=button('Apply shape parameters',async()=>{const expected=session.state.revision;apply.disabled=true;try{const fragment=createPresetDocument(draft.preset,'BRICKWRIGHT',{recipe:draft});await client.evaluate(fragment);if(disposed)return;if(session.state.revision!==expected)throw new Error(t('The model changed while generating this shape. Apply again.'));session.replaceGenerated(id,fragment);await whenIdle();}finally{apply.disabled=false;}},form,'primary');if(n.generator){const advanced=el('details');advanced.append(el('summary','',t('Advanced')));button('Detach generator',()=>session.detachGenerator(id),advanced);form.append(advanced);}inspector.append(form);
     }
     if(n.kind==='code')button('Edit code',()=>codePanel.open(id),inspector);
     if(n.kind==='extrusion'){
-      const sketch=session.state.document.sketches![n.sketchId];inspector.append(el('p','hint',`${sketch.name} · ${sketch.profile.kind} · ${sketch.plane} plane`));
+      const sketch=session.state.document.sketches![n.sketchId];inspector.append(el('p','hint',t`${sketch.name} · ${t(sketch.profile.kind)} · ${sketch.plane} plane`));
       button('Edit sketch & extrusion',()=>sketchPanel.open(id),inspector);
     }
     const graph=designGraph(session.state.document),entries=new Map(graph.map(e=>[e.key,e])),upstream=new Set<string>();
     const visitInput=(key:string)=>{if(upstream.has(key))return;upstream.add(key);entries.get(key)?.dependencies.forEach(visitInput);};visitInput(`feature:${id}`);
     const dimensions=graph.filter(e=>e.kind==='parameter'&&upstream.has(e.key));
     if(dimensions.length&&session.state.document.parametric){
-      const design=el('details','design-inputs');design.open=true;design.append(el('summary','','Design inputs'));const values=evaluateParameters(session.state.document.parametric);
-      for(const parameter of dimensions){const p=session.state.document.parametric.parameters[parameter.id];const input=field(design,`Parameter ${parameter.label} (${p.unit})`,p.expression,expression=>{const next=structuredClone(session.state.document.parametric!);next.parameters[parameter.id].expression=expression;session.setParametric(next);},'text');input.parentElement?.append(el('small','',`${Number(values[parameter.id].value.toFixed(5))} ${p.unit==='scalar'?'':p.unit}`));}inspector.append(design);
+      const design=el('details','design-inputs');design.open=true;design.append(el('summary','',t('Design inputs')));const values=evaluateParameters(session.state.document.parametric);
+      for(const parameter of dimensions){const p=session.state.document.parametric.parameters[parameter.id];const input=field(design,t`Parameter ${parameter.label} (${p.unit})`,p.expression,expression=>{const next=structuredClone(session.state.document.parametric!);next.parameters[parameter.id].expression=expression;session.setParametric(next);},'text');input.parentElement?.append(el('small','',`${Number(values[parameter.id].value.toFixed(5))} ${p.unit==='scalar'?'':p.unit}`));}inspector.append(design);
     }
     field(inspector, 'Color', n.color, value => session.update(id, { color: value }), 'color');
     if (n.kind === 'box') {
@@ -240,25 +248,25 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       if (n.kind === 'cylinder') field(inspector, 'Height (mm)', n.height, value => session.update(id, { height: Number(value) }), 'number', '0.1');
       field(inspector, 'Segments', n.segments, value => session.update(id, { segments: Number(value) }), 'number', '4');
     } else if (n.kind === 'boolean'&&!recipe&&!n.physics?.sourcePreset&&!n.reference) {
-      const sources=el('details','construction-sources');sources.append(el('summary','','Edit source shapes'));for(const sourceId of n.inputs){const source=session.state.document.nodes[sourceId];button(`Edit ${source.name}`,()=>{session.select([sourceId]);viewport.canvas.focus({preventScroll:true});},sources);}inspector.append(sources);
+      const sources=el('details','construction-sources');sources.append(el('summary','',t('Edit source shapes')));for(const sourceId of n.inputs){const source=session.state.document.nodes[sourceId];button(t`Edit ${source.name}`,()=>{session.select([sourceId]);viewport.canvas.focus({preventScroll:true});},sources);}inspector.append(sources);
       button('Separate operands', () => session.separate(id), inspector);
     }
     for (const [key, title, units, step] of [['position', 'Position', 'mm', '0.1'], ['rotation', 'Rotation', '°', '1'], ['scale', 'Scale', '×', '0.1']] as const) {
       if(key===activeKey)continue;
-      inspector.append(el('div', 'inspect-title', `${title} (${units})`)); const group = el('div', 'triple'); inspector.append(group);
-      ['X', 'Y', 'Z'].forEach((axis, i) => field(group, `${title} ${axis}`, n.transform[key][i], value => { const transform = structuredClone(n.transform); transform[key][i] = Number(value); session.update(id, { transform }); }, 'number', step));
+      inspector.append(el('div', 'inspect-title', `${t(title)} (${units})`)); const group = el('div', 'triple'); inspector.append(group);
+      ['X', 'Y', 'Z'].forEach((axis, i) => field(group, `${t(title)} ${axis}`, n.transform[key][i], value => { const transform = structuredClone(n.transform); transform[key][i] = Number(value); session.update(id, { transform }); }, 'number', step));
     }
     button('Reset transform', () => session.update(id, { transform: identityTransform() }), inspector);
     if(!n.reference && session.state.document.roots.includes(id)) {
-      const physics=el('details','physics-settings');physics.append(el('summary','','Physics material'));inspector.append(physics);
+      const physics=el('details','physics-settings');physics.append(el('summary','',t('Physics material')));inspector.append(physics);
       const p=n.physics??defaultPartPhysics();
       for(const [key,label,step] of [['densityKgM3','Density (kg/m³)','10'],['friction','Friction','0.05'],['restitution','Restitution','0.05']] as const)field(physics,label,p[key],value=>session.update(id,{physics:{...p,[key]:Number(value)}}),'number',step);
-      const label=el('label','field','Body motion');const select=el('select');select.setAttribute('aria-label','Body motion');for(const motion of ['dynamic','static'] as const){const option=el('option','',motion==='dynamic'?'Dynamic':'Fixed in world');option.value=motion;select.append(option);}select.value=p.motion;select.addEventListener('change',()=>run(()=>session.update(id,{physics:{...p,motion:select.value as 'dynamic'|'static'}})));label.append(select);physics.append(label);
-      if(p.intent!=='rigid')physics.append(el('p','hint',`Mechanical role: ${p.intent}. Rigid collision preview does not qualify elastic behavior, mating fit or a complete mechanism.`));
+      const label=el('label','field',t('Body motion'));const select=el('select');select.setAttribute('aria-label',t('Body motion'));for(const motion of ['dynamic','static'] as const){const option=el('option','',t(motion==='dynamic'?'Dynamic':'Fixed in world'));option.value=motion;select.append(option);}select.value=p.motion;select.addEventListener('change',()=>run(()=>session.update(id,{physics:{...p,motion:select.value as 'dynamic'|'static'}})));label.append(select);physics.append(label);
+      if(p.intent!=='rigid')physics.append(el('p','hint',t`Mechanical role: ${t(p.intent)}. Rigid collision preview does not qualify elastic behavior, mating fit or a complete mechanism.`));
       if(session.state.document.joints?.some(j=>j.bodyA===id||j.bodyB===id))button('Detach joints',()=>session.detachJoints([id]),inspector);
     }
     const bindings=session.state.document.parametric?.bindings.filter(binding=>binding.nodeId===id)??[];
-    for(const binding of bindings){const label=propertyLabels[binding.property];const input=Array.from(inspector.querySelectorAll('input')).find(input=>input.getAttribute('aria-label')===label);if(input){input.disabled=true;input.title=`Driven by ${binding.expression}`;input.parentElement?.append(el('small','driven-expression',`= ${binding.expression}`));}}
+    for(const binding of bindings){const label=propertyLabels[binding.property];const input=Array.from(inspector.querySelectorAll('input')).find(input=>input.getAttribute('aria-label')===t(label));if(input){input.disabled=true;input.title=t`Driven by ${binding.expression}`;input.parentElement?.append(el('small','driven-expression',`= ${binding.expression}`));}}
     if(bindings.length)button('Edit driving expressions',()=>parametersPanel.open(),inspector);
   }
   async function buildLatest() {
@@ -271,13 +279,13 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
         if (disposed) break;
         if (revision !== session.state.revision) continue;
         built = result; builtRevision = revision; geometryError = ''; errorPanel.hidden = true; viewport.update(result); empty.hidden = !!doc.roots.length;
-        stats.textContent = `${doc.roots.length} ${doc.roots.length === 1 ? 'body' : 'bodies'} · ${result.triangles.toLocaleString()} triangles · ${result.volume.toLocaleString(undefined, { maximumFractionDigits: 1 })} mm³`;
+        stats.textContent = doc.roots.length === 1 ? t`${doc.roots.length} body · ${result.triangles.toLocaleString()} triangles · ${result.volume.toLocaleString(undefined, { maximumFractionDigits: 1 })} mm³` : t`${doc.roots.length} bodies · ${result.triangles.toLocaleString()} triangles · ${result.volume.toLocaleString(undefined, { maximumFractionDigits: 1 })} mm³`;
         message.textContent = operationError || (doc.roots.length ? 'Ready · mm · Z up' : 'Add a solid to begin');
         host.dataset.state = 'ready'; host.dataset.triangles = String(result.triangles);
         for (const w of waiters) w.resolve(result); waiters.clear();
       } catch (e) {
         if (disposed) break; if (revision !== session.state.revision) continue;
-        builtRevision = revision; built = null; geometryError = e instanceof Error ? e.message : String(e); errorPanel.textContent = `${geometryError} Showing the previous geometry. Fix the edit or Undo.`; errorPanel.hidden = false; host.dataset.state = 'error'; report(e);
+        builtRevision = revision; built = null; geometryError = e instanceof Error ? e.message : String(e); errorPanel.textContent = t`${geometryError} Showing the previous geometry. Fix the edit or Undo.`; errorPanel.hidden = false; host.dataset.state = 'error'; report(e);
         for (const w of waiters) w.reject(new Error(geometryError)); waiters.clear();
       }
     }
@@ -328,7 +336,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     if (action) { event.preventDefault(); event.stopPropagation(); run(action); }
   }; shell.addEventListener('keydown', keyboard);
   function whenIdle(): Promise<GeometryResult> {
-    if (disposed) return Promise.reject(new Error('Editor was disposed'));
+    if (disposed) return Promise.reject(new Error(t('Editor was disposed')));
     if (!running && builtRevision === session.state.revision) return built ? Promise.resolve(built) : Promise.reject(new Error(geometryError));
     return new Promise((resolve, reject) => { waiters.add({ resolve, reject }); });
   }
@@ -340,33 +348,33 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       doc.nodes[id] = { id, name: doc.title, kind: 'mesh', ...mesh, color: '#eea52b', transform: identityTransform() }; doc.roots = [id];
     } else doc = options.decodeProject?await options.decodeProject(bytes):parseDocument(new TextDecoder().decode(bytes));
     // Geometry errors in imported meshes must not destroy the current project.
-    await client.evaluate(doc); if (disposed) return;if(session.state.revision!==expectedRevision)throw new Error('The model changed while opening the file. Try opening it again.'); session.load(doc); await whenIdle(); viewport.frame();viewport.canvas.focus({preventScroll:true});
+    await client.evaluate(doc); if (disposed) return;if(session.state.revision!==expectedRevision)throw new Error(t('The model changed while opening the file. Try opening it again.')); session.load(doc); await whenIdle(); viewport.frame();viewport.canvas.focus({preventScroll:true});
   }
   async function importFile(name:string,bytes:Uint8Array){
-    if(!/\.stl$/i.test(name))throw new Error('Geometry import currently accepts closed STL meshes');if(bytes.length>16*1024*1024)throw new Error('STL exceeds 16 MiB');
+    if(!/\.stl$/i.test(name))throw new Error(t('Geometry import currently accepts closed STL meshes'));if(bytes.length>16*1024*1024)throw new Error(t('STL exceeds 16 MiB'));
     const expected=session.state.revision,fragment=createDocument(name.replace(/\.stl$/i,'')),id=newId();fragment.nodes[id]={...importSTL(bytes),id,kind:'mesh',name:fragment.title,color:'#eea52b',transform:identityTransform()};fragment.roots=[id];
-    const geometry=await client.evaluate(fragment);if(disposed)return;if(session.state.revision!==expected)throw new Error('The model changed while importing. Try importing again.');
+    const geometry=await client.evaluate(fragment);if(disposed)return;if(session.state.revision!==expected)throw new Error(t('The model changed while importing. Try importing again.'));
     session.insert(fragment,[session.state.document.roots.length*12,0,-geometry.bodies[0].bounds.min[2]],{label:'Import geometry'});await whenIdle();viewport.frame();
   }
   let clipboardText='',pasteCount=0;
   async function copySelection(cut=false){
     const expected=session.state.revision,ids=[...session.state.selection],fragment=session.fragment(ids);serializeDocument(fragment);
     const text=JSON.stringify({format:'brickwright-cad-clipboard',version:1,document:fragment});
-    if(options.writeClipboard)await options.writeClipboard(text);else if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);else throw new Error('Clipboard access is unavailable in this host');
-    if(cut){if(session.state.revision!==expected)throw new Error('The model changed: objects were copied, but cutting was canceled');session.remove(ids,'Cut objects');}
+    if(options.writeClipboard)await options.writeClipboard(text);else if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);else throw new Error(t('Clipboard access is unavailable in this host'));
+    if(cut){if(session.state.revision!==expected)throw new Error(t('The model changed: objects were copied, but cutting was canceled'));session.remove(ids,'Cut objects');}
     viewport.canvas.focus({preventScroll:true});message.textContent=cut?'Cut objects':'Copied objects';
   }
   async function pasteSelection(){
     const expected=session.state.revision,text=options.readClipboard?await options.readClipboard():navigator.clipboard?.readText?await navigator.clipboard.readText():null;
-    if(!text||new TextEncoder().encode(text).length>16*1024*1024)throw new Error('Clipboard does not contain a supported CAD selection');
-    let value:unknown;try{value=JSON.parse(text);}catch{throw new Error('Clipboard does not contain CAD objects');}
-    const payload=value as {format?:string;version?:number;document?:unknown};if(payload?.format!=='brickwright-cad-clipboard'||payload.version!==1)throw new Error('Clipboard does not contain CAD objects');
-    const fragment=validateDocument(payload.document);await client.evaluate(fragment);if(disposed)return;if(session.state.revision!==expected)throw new Error('The model changed while pasting. Try pasting again.');
+    if(!text||new TextEncoder().encode(text).length>16*1024*1024)throw new Error(t('Clipboard does not contain a supported CAD selection'));
+    let value:unknown;try{value=JSON.parse(text);}catch{throw new Error(t('Clipboard does not contain CAD objects'));}
+    const payload=value as {format?:string;version?:number;document?:unknown};if(payload?.format!=='brickwright-cad-clipboard'||payload.version!==1)throw new Error(t('Clipboard does not contain CAD objects'));
+    const fragment=validateDocument(payload.document);await client.evaluate(fragment);if(disposed)return;if(session.state.revision!==expected)throw new Error(t('The model changed while pasting. Try pasting again.'));
     pasteCount=text===clipboardText?pasteCount+1:1;clipboardText=text;session.insert(fragment,[10*pasteCount,0,0],{mergeParameters:true,label:'Paste objects'});await whenIdle();viewport.canvas.focus({preventScroll:true});viewport.frame();
   }
   async function executeCommand(command:CadCommand){
     switch(command){
-      case 'new':await newProject();break;case 'open':await chooseOpen();break;case 'save':await deliver('bcad');break;case 'import':await chooseImport();break;case 'export':if(exportButton.disabled)throw new Error('Build a solid before exporting');exportDialog.showModal();break;
+      case 'new':await newProject();break;case 'open':await chooseOpen();break;case 'save':await deliver('bcad');break;case 'import':await chooseImport();break;case 'export':if(exportButton.disabled)throw new Error(t('Build a solid before exporting'));exportDialog.showModal();break;
       case 'undo':session.undo();break;case 'redo':session.redo();break;case 'cut':await copySelection(true);break;case 'copy':await copySelection();break;case 'paste':await pasteSelection();break;case 'duplicate':session.duplicate();break;case 'delete':session.remove();break;
       case 'select-all':session.select(session.state.document.roots);break;case 'deselect':session.select([]);break;
       case 'select':setMode('select');break;case 'move':setMode('translate');break;case 'rotate':setMode('rotate');break;case 'scale':setMode('scale');break;
@@ -374,24 +382,24 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'projection':projectionButton.click();break;case 'workplane':planeButton.click();break;case 'objects':partsToggle.click();break;case 'properties':propertiesToggle.click();break;case 'drop':viewport.dropSelection();break;case 'parameters':parametersPanel.open();break;case 'sketch':sketchPanel.open();break;case 'code':codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);break;case 'readout':readout.setVisible(!readout.visible);break;
       case 'shapes':picker.open(true);break;
       case 'union':case 'subtract':case 'intersect':session.combine(command);break;
-      default:throw new Error('Unknown editor command');
+      default:throw new Error(t('Unknown editor command'));
     }
     if(!['open','import','save','export','parameters','shapes','code','sketch'].includes(command))viewport.canvas.focus({preventScroll:true});
   }
   async function deliver(format: 'bcad' | 'stl' | '3mf') {
     if(format==='bcad'&&options.saveProject){await options.saveProject();return;}
-    if (!options.onExport) throw new Error('This host has not provided file export');
+    if (!options.onExport) throw new Error(t('This host has not provided file export'));
     const title = session.state.document.title.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '-').trim() || 'design';
     const bytes = format === 'bcad' ? new TextEncoder().encode(session.serialize()) : format === 'stl' ? exportSTL((await whenIdle()).bodies) : export3MF((await whenIdle()).bodies);
     await options.onExport({ name: `${title}.${format}`, bytes, mime: format === 'bcad' ? 'application/vnd.brickwright.cad+json' : format === 'stl' ? 'model/stl' : 'model/3mf' });
   }
   buildTree(); buildInspector(); lastRevision = session.state.revision; lastSelection = JSON.stringify(session.state.selection); viewport.setSelection(session.state.selection); void buildLatest(); refreshButtons();
   return {
-    session, whenIdle, openFile,importFile,executeCommand,get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
+    session, whenIdle, openFile,importFile,executeCommand,setAppearance:viewport.setAppearance,get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return; disposed = true; unsubscribe(); shell.removeEventListener('keydown', keyboard); picker.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); codePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error('Editor was disposed')); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return; disposed = true; unsubscribe(); shell.removeEventListener('keydown', keyboard); picker.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); codePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;

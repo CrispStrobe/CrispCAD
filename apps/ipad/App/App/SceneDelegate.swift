@@ -24,7 +24,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 }
 
 final class CadSafeAreaController: UIViewController {
-    private let content = CAPBridgeViewController()
+    private let content = CadBridgeController()
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(red: 16/255, green: 26/255, blue: 36/255, alpha: 1)
@@ -42,4 +42,17 @@ final class CadSafeAreaController: UIViewController {
     }
     override var childForStatusBarStyle: UIViewController? { content }
     override var childForStatusBarHidden: UIViewController? { content }
+}
+
+final class CadBridgeController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        guard let webView = webView else { return }
+        webView.scrollView.isScrollEnabled = false
+        webView.scrollView.bounces = false
+        webView.scrollView.bouncesZoom = false
+        webView.scrollView.minimumZoomScale = 1
+        webView.scrollView.maximumZoomScale = 1
+        webView.scrollView.pinchGestureRecognizer?.isEnabled = false
+        webView.pageZoom = 1
+    }
 }

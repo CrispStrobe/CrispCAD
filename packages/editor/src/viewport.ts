@@ -2,22 +2,23 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
-import {assertDrivenEdit} from '@brickwright/cad-core';
+import {assertDrivenEdit,t} from '@brickwright/cad-core';
 import type { CadSession, Transform, Vec3 } from '@brickwright/cad-core';
 import type { GeometryResult } from '@brickwright/cad-geometry';
 import { TOUCH_SLOP_PX, createTouchTracker } from './vendor/touch-gestures.js';
 import {scalePivotRotation,applyGizmoDelta} from './transform-selection.js';
-import type {TransformPreview} from './transform-readout.js';
+import type {TransformPreview,TransformAxisAnchor} from './transform-readout.js';
 import { snapDelta } from './vendor/transform-math.js';
 const RAD = Math.PI / 180;
 export type ViewDirection = 'top' | 'bottom' | 'front' | 'back' | 'right' | 'left' | 'iso';
 const directions: Record<ViewDirection, [number, number, number]> = { top: [0, -0.00001, 1], bottom: [0, -0.00001, -1], front: [0, -1, 0], back: [0, 1, 0], right: [1, 0, 0], left: [-1, 0, 0], iso: [1, -1.4, 1] };
-export function mountViewport(container: HTMLElement, session: CadSession, onError: (e: unknown) => void) {
-  const scene = new THREE.Scene(); scene.background = new THREE.Color('#111e29');
+export function mountViewport(container: HTMLElement, session: CadSession, onError: (e: unknown) => void,appearance?:{background:string;baseplate:string}) {
+  const colours={background:'#111e29',baseplate:'#233644',...appearance};const validColour=(value:string)=>/^#[0-9a-f]{6}$/i.test(value);if(!validColour(colours.background)||!validColour(colours.baseplate))throw new Error(t('Choose a six-digit colour'));
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(colours.background);
   let camera: THREE.PerspectiveCamera | THREE.OrthographicCamera = new THREE.PerspectiveCamera(42, 1, 0.1, 200000); camera.up.set(0, 0, 1); camera.position.set(180, -250, 220);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false }); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace; const canvas = renderer.domElement;
-  canvas.tabIndex = 0; canvas.setAttribute('aria-label', '3D workplane'); canvas.dataset.testid = 'cad-canvas'; container.append(canvas);
+  canvas.tabIndex = 0; canvas.setAttribute('aria-label', t('3D workplane')); canvas.dataset.testid = 'cad-canvas'; container.append(canvas);
   const orbit = new OrbitControls(camera, canvas); orbit.target.set(0, 0, 10); orbit.enableDamping = false;
   orbit.maxPolarAngle = Math.PI * 0.98; orbit.minDistance = 2; orbit.maxDistance = 100000;
   orbit.touches.ONE = THREE.TOUCH.ROTATE; orbit.touches.TWO = THREE.TOUCH.DOLLY_PAN;
@@ -25,7 +26,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const key = new THREE.DirectionalLight(0xffe9ca, 3.2); key.position.set(-70, -90, 150); scene.add(key);
   const fill = new THREE.DirectionalLight(0x91c9ff, 1.5); fill.position.set(80, 50, 50); scene.add(fill);
   const workplane = new THREE.Group(); scene.add(workplane);
-  const plate = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ color: '#233644', side: THREE.DoubleSide })); plate.position.z = -0.14; workplane.add(plate);
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ color: colours.baseplate, side: THREE.DoubleSide })); plate.position.z = -0.14; workplane.add(plate);canvas.dataset.backgroundColour=colours.background;canvas.dataset.baseplateColour=colours.baseplate;
   const grid = new THREE.GridHelper(400, 400, '#52677a', '#2f4655'); grid.rotation.x = Math.PI / 2; grid.position.z = -0.1; workplane.add(grid);
   const majorGrid = new THREE.GridHelper(400, 40, '#8c9c99', '#536861'); majorGrid.rotation.x = Math.PI / 2; majorGrid.position.z = -0.08; workplane.add(majorGrid);
   plate.material.depthWrite=false;plate.renderOrder=-10;
@@ -49,13 +50,13 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const selectionBoxes=new Map<string,THREE.BoxHelper>();let activeMode:'select'|'translate'|'rotate'|'scale'='select';
   let directDrag:{pointerId:number;start:THREE.Vector3;plane:THREE.Plane;transforms:Map<string,Transform>;offset:Vec3;moved:boolean}|null=null;
   let disposed = false; let selected: string[] = []; let drag: { matrix: THREE.Matrix4; transforms: Map<string, Transform> } | null = null; let gridStep = 1; let multiSelect = false; let viewListener: ((view: ViewDirection) => void) | undefined;
-  let previewListener:((preview:TransformPreview)=>void)|undefined;
+  let previewListener:((preview:TransformPreview)=>void)|undefined;let annotationsVisible=false;
   // Project an original SVG cube from the camera basis. The controls rotate with
   // the actual camera, including free orbit, without a second WebGL context.
   const ns = 'http://www.w3.org/2000/svg';
-  const cube = document.createElement('div'); cube.className = 'view-cube'; cube.setAttribute('role', 'group'); cube.setAttribute('aria-label', 'View cube');
+  const cube = document.createElement('div'); cube.className = 'view-cube'; cube.setAttribute('role', 'group'); cube.setAttribute('aria-label', t('View cube'));
   const svg = document.createElementNS(ns, 'svg'); svg.setAttribute('viewBox', '0 0 132 132');
-  const cubeCaption = document.createElement('span'); cubeCaption.className = 'cube-caption'; cubeCaption.textContent = 'VIEW'; cube.append(svg, cubeCaption); container.append(cube);
+  const cubeCaption = document.createElement('span'); cubeCaption.className = 'cube-caption'; cubeCaption.textContent = t('VIEW'); cube.append(svg, cubeCaption); container.append(cube);
   const faceSpecs: { name: Exclude<ViewDirection, 'iso'>; normal: number[]; corners: number[][] }[] = [
     { name:'top',normal:[0,0,1],corners:[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]] },
     { name:'bottom',normal:[0,0,-1],corners:[[-1,1,-1],[1,1,-1],[1,-1,-1],[-1,-1,-1]] },
@@ -65,8 +66,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     { name:'left',normal:[-1,0,0],corners:[[-1,1,-1],[-1,-1,-1],[-1,-1,1],[-1,1,1]] },
   ];
   const faces = faceSpecs.map(spec => {
-    const group = document.createElementNS(ns, 'g'); group.setAttribute('role', 'button'); group.setAttribute('aria-label', spec.name[0].toUpperCase() + spec.name.slice(1)); group.setAttribute('tabindex', '0');
-    const polygon = document.createElementNS(ns, 'polygon'); const text = document.createElementNS(ns, 'text'); text.textContent = spec.name.toUpperCase(); text.setAttribute('text-anchor', 'middle'); text.setAttribute('dy', '.35em'); group.append(polygon, text); svg.append(group);
+    const group = document.createElementNS(ns, 'g'); group.setAttribute('role', 'button'); group.setAttribute('aria-label', t(spec.name[0].toUpperCase() + spec.name.slice(1))); group.setAttribute('tabindex', '0');
+    const polygon = document.createElementNS(ns, 'polygon'); const text = document.createElementNS(ns, 'text'); text.textContent = t(spec.name.toUpperCase()); text.setAttribute('text-anchor', 'middle'); text.setAttribute('dy', '.35em'); group.append(polygon, text); svg.append(group);
     group.addEventListener('click', () => setView(spec.name)); group.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setView(spec.name); } }); return { ...spec, group, polygon, text };
   });
   function updateCube() {
@@ -86,9 +87,35 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     if(drag){try{const d=delta();poses=[...drag.transforms].map(([id,original])=>({id,transform:applyGizmoDelta(original,d,activeMode==='select'?'translate':activeMode,pivot.scale.toArray() as Vec3)}));}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}}
     else if(directDrag)poses=[...directDrag.transforms].map(([id,t])=>({id,transform:{...t,position:t.position.map((v,i)=>v+directDrag!.offset[i]) as Vec3}}));
     if(drag||directDrag?.moved)try{for(const {id,transform} of poses)assertDrivenEdit(session.state.document,{...session.state.document.nodes[id],transform});}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}
-    const box=new THREE.Box3();for(const {id} of poses){const mesh=meshes.get(id);if(mesh)box.union(new THREE.Box3().setFromObject(mesh));}
-    const center=box.isEmpty()?new THREE.Vector3():box.getCenter(new THREE.Vector3());center.project(camera);
-    previewListener({mode:activeMode,poses,dragging:!!drag||!!directDrag?.moved,valid,warning,anchor:[(center.x+1)*container.clientWidth/2,(1-center.y)*container.clientHeight/2]});
+    const box=new THREE.Box3();for(const {id} of poses){const mesh=meshes.get(id);if(mesh)box.union(new THREE.Box3().setFromObject(mesh,true));}
+    const center=box.isEmpty()?new THREE.Vector3():box.getCenter(new THREE.Vector3());
+    const project=(point:THREE.Vector3):[number,number]=>{const p=point.clone().project(camera);return [(p.x+1)*container.clientWidth/2,(1-p.y)*container.clientHeight/2];};
+    const origin=project(center),anchors:TransformAxisAnchor[]=[];
+    const axes=['X','Y','Z'] as const,key=activeMode==='rotate'?'rotation':activeMode==='scale'?'scale':'position';
+    const widths=axes.map((_,i)=>Math.max(34,Math.min(92,String(Number((poses[0]?.transform[key][i]??0).toFixed(5))).length*7+12)));
+    const fits=(point:[number,number],i:number)=>{const dx=point[0]-origin[0],dy=point[1]-origin[1],length=Math.hypot(dx,dy);if(length<12)return false;const distance=8+Math.abs(dx/length)*widths[i]/2+Math.abs(dy/length)*11,x=point[0]+dx/length*distance,y=point[1]+dy/length*distance;return x-widths[i]/2>=2&&x+widths[i]/2<=container.clientWidth-2&&y>=16&&y<=container.clientHeight-44;};
+    if(annotationsVisible&&activeMode==='select'){
+      const size=box.isEmpty()?new THREE.Vector3(20,20,20):box.getSize(new THREE.Vector3());
+      axes.forEach((axis,i)=>{let point=origin,visible=false;
+        for(const fraction of [1,.75,.5]){for(const sign of [1,-1]){const end=center.clone();end.setComponent(i,end.getComponent(i)+sign*fraction*Math.max(8,size.getComponent(i)*.65));const candidate=project(end);if(fits(candidate,i)){point=candidate;visible=true;break;}}if(visible)break;}
+        const dx=point[0]-origin[0],dy=point[1]-origin[1],length=Math.hypot(dx,dy);anchors.push({axis,point,direction:[dx/(length||1),dy/(length||1)],visible,guide:{from:origin,to:point}});
+      });
+    }else if(annotationsVisible&&gizmo.object){
+      // Read projected vertices from the actual visible helper, so rotation,
+      // local scale, zoom and Three's camera-aligned rings stay synchronized.
+      const helper=gizmo.getHelper();helper.updateMatrixWorld(true);
+      const preferred=[[-.85,-.5],[.85,-.5],[.5,.86]];
+      axes.forEach((axis,i)=>{let best=-Infinity,point:[number,number]=origin;
+        helper.traverseVisible(object=>{if(object.name!==axis||!(object instanceof THREE.Mesh))return;const positions=object.geometry.getAttribute('position');if(!positions)return;
+          for(let j=0;j<positions.count;j++){const p=project(new THREE.Vector3().fromBufferAttribute(positions,j).applyMatrix4(object.matrixWorld)),dx=p[0]-origin[0],dy=p[1]-origin[1];
+            if(!fits(p,i))continue;const score=activeMode==='rotate'?dx*preferred[i][0]+dy*preferred[i][1]:Math.hypot(dx,dy)+(dx*preferred[i][0]+dy*preferred[i][1])*.01;
+            if(score>best){best=score;point=p;}
+          }
+        });
+        const dx=point[0]-origin[0],dy=point[1]-origin[1],length=Math.hypot(dx,dy);anchors.push({axis,point,direction:[dx/(length||1),dy/(length||1)],visible:best>-Infinity&&length>12});
+      });
+    }
+    previewListener({mode:activeMode,poses,dragging:!!drag||!!directDrag?.moved,valid,warning,axes:anchors,...(!box.isEmpty()?{bounds:{min:box.min.toArray() as Vec3,max:box.max.toArray() as Vec3}}:{})});
   }
   const placeGizmo = () => {
     if (drag) return;
@@ -194,6 +221,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   }
   draw();
   return { canvas, update, setSelection, frame, setView, cancelTransform,
+    get appearance(){return {...colours};},setAppearance(value:{background:string;baseplate:string}){if(!validColour(value.background)||!validColour(value.baseplate))throw new Error(t('Choose a six-digit colour'));Object.assign(colours,value);(scene.background as THREE.Color).set(value.background);plate.material.color.set(value.baseplate);canvas.dataset.backgroundColour=value.background;canvas.dataset.baseplateColour=value.baseplate;draw();},
+    setReadoutVisible(visible:boolean){annotationsVisible=visible;draw();},
     setTransformPreviewListener(listener:(preview:TransformPreview)=>void){previewListener=listener;draw();},
     setViewListener(listener: (view: ViewDirection) => void) { viewListener = listener; draw(); },
     setMultiSelect(enabled: boolean) { multiSelect = enabled; },

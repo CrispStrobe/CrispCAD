@@ -68,6 +68,20 @@ final class AssetServer {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandlerWithReply, NSMenuItemValidation {
+    private var language: String { smoke ? "en" : (UserDefaults.standard.string(forKey:"CADLanguage") ?? (Locale.preferredLanguages.first ?? "en")).lowercased().hasPrefix("de") ? "de" : "en" }
+    private func L(_ key:String)->String {
+        guard let path=Bundle.main.path(forResource:language,ofType:"lproj"),let bundle=Bundle(path:path) else {return key}
+        return bundle.localizedString(forKey:key,value:key,table:nil)
+    }
+    private var menuTitles: [ObjectIdentifier:String] = [:]
+    private func localizeMenu(_ menu:NSMenu) {
+        for item in menu.items {
+            let id=ObjectIdentifier(item)
+            if menuTitles[id] == nil { menuTitles[id]=item.title }
+            if let source=menuTitles[id], !source.isEmpty { item.title=L(source) }
+            if let submenu=item.submenu { localizeMenu(submenu) }
+        }
+    }
     private var window: NSWindow!
     private var webView: WKWebView!
     private var server: AssetServer?
@@ -106,7 +120,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         let windowItem = NSMenuItem(title:"Window",action:nil,keyEquivalent:""); menu.addItem(windowItem); let windowMenu = NSMenu(title: "Window"); windowItem.submenu = windowMenu
         windowMenu.addItem(withTitle: "Minimize", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
         let help=section("Help");addCommand(help,"Workbench Help","help");NSApp.helpMenu=help
-        NSApp.mainMenu = menu; NSApp.windowsMenu = windowMenu
+        NSApp.mainMenu = menu; NSApp.windowsMenu = windowMenu; localizeMenu(menu)
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = smoke ? .nonPersistent() : .default()
         configuration.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: "cadSave")
@@ -115,7 +129,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         // The capability marker is host-owned; the JS editor stays host independent.
         let info=["version":Bundle.main.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String ?? "0.1.0","build":Bundle.main.object(forInfoDictionaryKey:"CFBundleVersion") as? String ?? "dev"]
         let infoJSON=String(data:try! JSONSerialization.data(withJSONObject:info),encoding:.utf8)!
-        configuration.userContentController.addUserScript(WKUserScript(source: "window.brickwrightDesktop = true;window.brickwrightDesktopInfo=\(infoJSON);", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        configuration.userContentController.addUserScript(WKUserScript(source: "window.brickwrightDesktop = true;window.brickwrightDesktopInfo=\(infoJSON);\(smoke ? "localStorage.setItem('brickwright-cad:locale','en');" : "")", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = self; webView.uiDelegate = self; webView.isInspectable = true
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1440, height: 920), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
@@ -127,14 +141,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             guard let root = Bundle.main.resourceURL?.appendingPathComponent("web") else { throw NSError(domain: "CAD", code: 1) }
             server = try AssetServer(root: root, port: port) { [weak self] error in
                 guard let self else { return }
-                if let error { self.fail("Cannot start the local asset server on port \(self.port). Close other CAD copies and retry. \(error)"); return }
+                if let error { self.fail(String(format:self.L("Cannot start the local asset server on port %d. Close other CAD copies and retry. %@"),Int(self.port),String(describing:error))); return }
                 self.webView.load(URLRequest(url: URL(string: self.origin)!))
             }
         } catch { fail(error.localizedDescription) }
     }
     private func fail(_ message: String) {
         if smoke { fputs("FAIL: \(message)\n", stderr); exit(1) }
-        let alert = NSAlert(); alert.messageText = "Brickwright CAD could not start"; alert.informativeText = message; alert.runModal()
+        let alert = NSAlert(); alert.messageText = L("Brickwright CAD could not start"); alert.informativeText = message; alert.runModal()
     }
     @objc private func showAbout(){webView?.evaluateJavaScript("document.querySelector('#cad-root')?.shadowRoot?.querySelector('#about')?.click();")}
     @objc private func showSettings(){webView?.evaluateJavaScript("document.querySelector('#cad-root')?.shadowRoot?.querySelector('#settings')?.click();")}
@@ -185,9 +199,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             switch result {
             case .success: sender.reply(toApplicationShouldTerminate: true)
             case .failure(let error):
-                let alert = NSAlert(); alert.messageText = "The last model save could not finish"
-                alert.informativeText = "\(error.localizedDescription) You can keep editing and export a project file."
-                alert.addButton(withTitle: "Keep editing"); alert.addButton(withTitle: "Quit anyway")
+                let alert = NSAlert(); alert.messageText = self.L("The last model save could not finish")
+                alert.informativeText = "\(error.localizedDescription) \(self.L("You can keep editing and export a project file."))"
+                alert.addButton(withTitle: self.L("Keep editing")); alert.addButton(withTitle: self.L("Quit anyway"))
                 alert.beginSheetModal(for: self.window) { sender.reply(toApplicationShouldTerminate: $0 == .alertSecondButtonReturn) }
             }
         }
@@ -202,11 +216,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         let alert = NSAlert(); alert.messageText = message; alert.beginSheetModal(for: window) { _ in completionHandler() }
     }
     func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
-        let alert = NSAlert(); alert.messageText = message; alert.addButton(withTitle: "Continue"); alert.addButton(withTitle: "Cancel")
+        let alert = NSAlert(); alert.messageText = message; alert.addButton(withTitle: L("Continue")); alert.addButton(withTitle: L("Cancel"))
         alert.beginSheetModal(for: window) { completionHandler($0 == .alertFirstButtonReturn) }
     }
     func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
-        let alert = NSAlert(); alert.messageText = prompt; alert.addButton(withTitle: "Save"); alert.addButton(withTitle: "Cancel")
+        let alert = NSAlert(); alert.messageText = prompt; alert.addButton(withTitle: L("Save")); alert.addButton(withTitle: L("Cancel"))
         let field = NSTextField(string: defaultText ?? ""); field.frame = NSRect(x: 0, y: 0, width: 320, height: 24); alert.accessoryView = field
         alert.beginSheetModal(for: window) { completionHandler($0 == .alertFirstButtonReturn ? field.stringValue : nil) }
         alert.window.makeFirstResponder(field)
@@ -217,16 +231,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     }
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
         if message.name == "cadHost" {
-            guard message.frameInfo.isMainFrame,message.frameInfo.securityOrigin.host == "127.0.0.1",message.frameInfo.securityOrigin.port == Int(port),message.frameInfo.securityOrigin.protocol == "http",let body=message.body as? [String:String] else{replyHandler(nil,"Invalid host request");return}
+            guard message.frameInfo.isMainFrame,message.frameInfo.securityOrigin.host == "127.0.0.1",message.frameInfo.securityOrigin.port == Int(port),message.frameInfo.securityOrigin.protocol == "http",let body=message.body as? [String:String] else{replyHandler(nil,L("Invalid host request"));return}
             hostRequest(body,reply:replyHandler);return
         }
         if message.name == "cadLibrary" {
-            guard message.frameInfo.isMainFrame, message.frameInfo.securityOrigin.host == "127.0.0.1", message.frameInfo.securityOrigin.port == Int(port), message.frameInfo.securityOrigin.protocol == "http", let body = message.body as? [String:String] else { replyHandler(nil,"Invalid library request"); return }
+            guard message.frameInfo.isMainFrame, message.frameInfo.securityOrigin.host == "127.0.0.1", message.frameInfo.securityOrigin.port == Int(port), message.frameInfo.securityOrigin.protocol == "http", let body = message.body as? [String:String] else { replyHandler(nil,L("Invalid library request")); return }
             libraryRequest(body, reply: replyHandler); return
         }
         guard message.frameInfo.isMainFrame, message.frameInfo.securityOrigin.protocol == "http", message.frameInfo.securityOrigin.host == "127.0.0.1", message.frameInfo.securityOrigin.port == Int(port),
               let body = message.body as? [String: String], let name = body["name"], let base64 = body["data"], base64.utf8.count <= 90 * 1024 * 1024,
-              let bytes = Data(base64Encoded: base64), bytes.count <= 64 * 1024 * 1024 else { replyHandler(nil, "Invalid export request"); return }
+              let bytes = Data(base64Encoded: base64), bytes.count <= 64 * 1024 * 1024 else { replyHandler(nil, L("Invalid export request")); return }
         let panel = NSSavePanel(); panel.nameFieldStringValue = URL(fileURLWithPath: name).lastPathComponent; panel.canCreateDirectories = true
         panel.beginSheetModal(for: window) { result in
             guard result == .OK, let url = panel.url else { replyHandler(["saved":false], nil); return }
@@ -236,20 +250,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     }
     private func hostRequest(_ body:[String:String],reply:@escaping(Any?,String?)->Void){
         switch body["action"] {
+        case "locale":
+            guard let value=body["data"], ["en","de"].contains(value) else {reply(nil,L("Invalid language"));return}
+            if !smoke {UserDefaults.standard.set(value,forKey:"CADLanguage")}
+            if let menu=NSApp.mainMenu {localizeMenu(menu)}
+            reply(true,nil)
         case "state":
             if let text=body["data"],text.utf8.count<4096,let data=text.data(using:.utf8),let value=(try? JSONSerialization.jsonObject(with:data)) as? [String:Bool] {editorState=value};reply(true,nil)
         case "clipboard-read":
             let text=pasteboard.string(forType:clipboardType) ?? pasteboard.string(forType:.string)
-            if let text,text.utf8.count>16*1024*1024 {reply(nil,"Clipboard selection exceeds 16 MiB")}else{reply(text as Any?,nil)}
+            if let text,text.utf8.count>16*1024*1024 {reply(nil,L("Clipboard selection exceeds 16 MiB"))}else{reply(text as Any?,nil)}
         case "clipboard-write":
-            guard let text=body["data"],text.utf8.count<=16*1024*1024 else {reply(nil,"Clipboard selection exceeds 16 MiB");return}
-            let item=NSPasteboardItem();item.setString(text,forType:clipboardType);item.setString(text,forType:.string);pasteboard.clearContents();guard pasteboard.writeObjects([item]) else{reply(nil,"The clipboard could not be written; the model was kept");return};reply(true,nil)
+            guard let text=body["data"],text.utf8.count<=16*1024*1024 else {reply(nil,L("Clipboard selection exceeds 16 MiB"));return}
+            let item=NSPasteboardItem();item.setString(text,forType:clipboardType);item.setString(text,forType:.string);pasteboard.clearContents();guard pasteboard.writeObjects([item]) else{reply(nil,L("The clipboard could not be written; the model was kept"));return};reply(true,nil)
         case "open":
             let panel=NSOpenPanel();panel.canChooseDirectories=false;panel.allowsMultipleSelection=false
-            let geometry=body["mode"] == "geometry";panel.title=geometry ? "Import STL Geometry" : "Open CAD Project"
+            let geometry=body["mode"] == "geometry";panel.title=geometry ? L("Import STL Geometry") : L("Open CAD Project")
             panel.allowedContentTypes=geometry ? [UTType(filenameExtension:"stl") ?? .data] : [.json,UTType(filenameExtension:"bcad") ?? .data,UTType(filenameExtension:"bcadhistory") ?? .data]
-            panel.beginSheetModal(for:window){result in guard result == .OK,let url=panel.url else{reply(NSNull(),nil);return};do{let size=try url.resourceValues(forKeys:[.fileSizeKey]).fileSize ?? 0;guard size<=(geometry ? 16:64)*1024*1024 else{reply(nil,"File exceeds the import limit");return};reply(["name":url.lastPathComponent,"data":try Data(contentsOf:url).base64EncodedString()],nil)}catch{reply(nil,error.localizedDescription)}}
-        default:reply(nil,"Unknown host request")
+            panel.beginSheetModal(for:window){result in guard result == .OK,let url=panel.url else{reply(NSNull(),nil);return};do{let size=try url.resourceValues(forKeys:[.fileSizeKey]).fileSize ?? 0;guard size<=(geometry ? 16:64)*1024*1024 else{reply(nil,self.L("File exceeds the import limit"));return};reply(["name":url.lastPathComponent,"data":try Data(contentsOf:url).base64EncodedString()],nil)}catch{reply(nil,error.localizedDescription)}}
+        default:reply(nil,L("Unknown host request"))
         }
     }
     private func libraryFolder() throws -> URL {
@@ -266,7 +285,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             switch body["action"] {
             case "settings": reply(["path":folder.path],nil)
             case "choose-folder":
-                let panel = NSOpenPanel(); panel.canChooseFiles=false;panel.canChooseDirectories=true;panel.canCreateDirectories=true;panel.allowsMultipleSelection=false;panel.directoryURL=folder;panel.prompt="Use as library"
+                let panel = NSOpenPanel(); panel.canChooseFiles=false;panel.canChooseDirectories=true;panel.canCreateDirectories=true;panel.allowsMultipleSelection=false;panel.directoryURL=folder;panel.prompt=L("Use as library")
                 panel.beginSheetModal(for:window) { result in
                     guard result == .OK, let selected=panel.url else { reply(["path":folder.path,"canceled":true],nil); return }
                     UserDefaults.standard.set(selected.path,forKey:"CADLibraryFolder");reply(["path":selected.path],nil)
@@ -280,23 +299,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
                     result.append(["name":file.lastPathComponent,"id":id])
                 };reply(result,nil)
             case "read":
-                guard let name=body["name"],URL(fileURLWithPath:name).lastPathComponent == name,name.hasSuffix(".bcad") else { throw NSError(domain:"Invalid library filename",code:1) }
+                guard let name=body["name"],URL(fileURLWithPath:name).lastPathComponent == name,name.hasSuffix(".bcad") else { throw NSError(domain:"CAD",code:1,userInfo:[NSLocalizedDescriptionKey:L("Invalid library filename")]) }
                 let file=folder.appendingPathComponent(name).resolvingSymlinksInPath()
-                guard file.deletingLastPathComponent() == folder,let size=try file.resourceValues(forKeys:[.fileSizeKey]).fileSize,size <= 64*1024*1024 else { throw NSError(domain:"Library project exceeds the file limit",code:1) }
+                guard file.deletingLastPathComponent() == folder,let size=try file.resourceValues(forKeys:[.fileSizeKey]).fileSize,size <= 64*1024*1024 else { throw NSError(domain:"CAD",code:1,userInfo:[NSLocalizedDescriptionKey:L("Library project exceeds the file limit")]) }
                 reply(try Data(contentsOf:file).base64EncodedString(),nil)
             case "write":
                 guard let id=body["id"],id.range(of:"^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$",options:.regularExpression) != nil,
                       let encoded=body["data"],encoded.utf8.count<=90*1024*1024,let data=Data(base64Encoded:encoded),data.count<=64*1024*1024,
-                      let archive=try JSONSerialization.jsonObject(with:data) as? [String:Any],archive["format"] as? String == "brickwright-cad-history",let project=archive["project"] as? [String:Any],project["id"] as? String == id,let revisions=archive["revisions"] as? [[String:Any]] else { throw NSError(domain:"Invalid library project",code:1) }
+                      let archive=try JSONSerialization.jsonObject(with:data) as? [String:Any],archive["format"] as? String == "brickwright-cad-history",let project=archive["project"] as? [String:Any],project["id"] as? String == id,let revisions=archive["revisions"] as? [[String:Any]] else { throw NSError(domain:"CAD",code:1,userInfo:[NSLocalizedDescriptionKey:L("Invalid library project")]) }
                 let file=folder.appendingPathComponent(id+".bcad")
-                guard file.resolvingSymlinksInPath().deletingLastPathComponent() == folder else {throw NSError(domain:"Library file points outside its folder",code:1)}
+                guard file.resolvingSymlinksInPath().deletingLastPathComponent() == folder else {throw NSError(domain:"CAD",code:1,userInfo:[NSLocalizedDescriptionKey:L("Library file points outside its folder")])}
                 if FileManager.default.fileExists(atPath:file.path) {
-                    guard let existing=try JSONSerialization.jsonObject(with:Data(contentsOf:file)) as? [String:Any],existing["format"] as? String == "brickwright-cad-history",let oldProject=existing["project"] as? [String:Any],oldProject["id"] as? String == id,let oldRevisions=existing["revisions"] as? [[String:Any]] else {throw NSError(domain:"Existing library file needs recovery; it was not overwritten",code:1)}
+                    guard let existing=try JSONSerialization.jsonObject(with:Data(contentsOf:file)) as? [String:Any],existing["format"] as? String == "brickwright-cad-history",let oldProject=existing["project"] as? [String:Any],oldProject["id"] as? String == id,let oldRevisions=existing["revisions"] as? [[String:Any]] else {throw NSError(domain:"CAD",code:1,userInfo:[NSLocalizedDescriptionKey:L("Existing library file needs recovery; it was not overwritten")])}
                     var incoming:[String:String]=[:];for revision in revisions{if let key=revision["id"] as? String,let hash=revision["snapshotHash"] as? String {incoming[key]=hash}}
-                    guard oldRevisions.allSatisfy({old in guard let key=old["id"] as? String,let hash=old["snapshotHash"] as? String else{return false};return incoming[key]==hash}) else {throw NSError(domain:"Library file has another history branch. Open it as a separate project before saving; existing history was preserved",code:1)}
+                    guard oldRevisions.allSatisfy({old in guard let key=old["id"] as? String,let hash=old["snapshotHash"] as? String else{return false};return incoming[key]==hash}) else {throw NSError(domain:"CAD",code:1,userInfo:[NSLocalizedDescriptionKey:L("Library file has another history branch. Open it as a separate project before saving; existing history was preserved")])}
                 }
                 try data.write(to:file,options:.atomic);reply(["saved":true],nil)
-            default: reply(nil,"Unknown library operation")
+            default: reply(nil,L("Unknown library operation"))
             }
         } catch { reply(nil,error.localizedDescription) }
     }

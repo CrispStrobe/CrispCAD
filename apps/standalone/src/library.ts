@@ -1,3 +1,4 @@
+import {t} from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 import {parseDocument} from '@brickwright/cad-core';
 import type {CadDocument} from '@brickwright/cad-core';
@@ -6,10 +7,10 @@ import {download} from './files.js';
 export interface LibrarySettings {path:string;native:boolean}
 type Request={action:string;id?:string;name?:string;data?:string};
 function bridge(){return (window.webkit?.messageHandlers as unknown as {cadLibrary?:{postMessage(request:Request):Promise<unknown>}}|undefined)?.cadLibrary;}
-async function native<T>(request:Request):Promise<T>{const handler=bridge();if(!handler)throw new Error('Native library folders are available in the macOS app');return await handler.postMessage(request) as T;}
+async function native<T>(request:Request):Promise<T>{const handler=bridge();if(!handler)throw new Error(t('Native library folders are available in the macOS app'));return await handler.postMessage(request) as T;}
 const bytes=(base64:string)=>Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
 function base64(data:Uint8Array){let text='';for(let i=0;i<data.length;i+=16384)text+=String.fromCharCode(...data.subarray(i,i+16384));return btoa(text);}
-export async function getLibrarySettings():Promise<LibrarySettings>{return bridge()?{...await native<{path:string}>({action:'settings'}),native:true}:{path:'On this device · browser/app storage',native:false};}
+export async function getLibrarySettings():Promise<LibrarySettings>{return bridge()?{...await native<{path:string}>({action:'settings'}),native:true}:{path:t('On this device · browser/app storage'),native:false};}
 export async function chooseLibraryFolder(){const result=await native<{path:string;canceled?:boolean}>({action:'choose-folder'});if(!result.canceled){await recoverLibrary();const store=await historyStore;for(const project of await store.listProjects())await mirror(project.id);}return result;}
 export async function recoverLibrary(){
  if(!bridge())return;const store=await historyStore;const files=await native<{name:string;id:string}[]>({action:'list'});

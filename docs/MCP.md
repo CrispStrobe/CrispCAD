@@ -28,7 +28,7 @@ node apps/mcp/server.mjs --project /absolute/path/design.bcad
 }
 ```
 
-Requires Node 22.18+. Omitting `--project` gives an in-memory session; export it
+Requires Node 22.18+. Add `--locale de` for German tool descriptions, help and diagnostics; protocol identifiers and source remain unchanged. Omitting `--project` gives an in-memory session; export it
 before closing. Avoid wrappers that write npm startup messages to stdout.
 The configured file is created if absent, or resumed with its entire saved
 history. Use a dedicated file: this process is its writer until closed.

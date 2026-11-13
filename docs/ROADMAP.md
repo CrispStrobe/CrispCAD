@@ -113,3 +113,9 @@ Browser interaction and staged UX acceptance are in [Model browser](MODEL-BROWSE
 records executable Dart/JS probes, and specifies the retained entity model and
 optional geometric solver extension. This is the next constrained-sketch path,
 not a claim that a general sketch solver is already integrated.
+
+The measured [constraint performance](CONSTRAINT-PERFORMANCE.md) confirms Wasm
+feasibility, while nonlinear search/recursion limits require an algorithm change
+before interactive adoption. [Localization](LOCALIZATION.md) and
+[workbench preferences](WORKBENCH-PREFERENCES.md) record the current English/German,
+editable lettering, projected numbers, transformed dimensions and appearance APIs.

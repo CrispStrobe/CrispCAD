@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {t} from './i18n.js';
 import {validateDocument} from './document.js';
 import type {CadDocument} from './document.js';
 import {sketchExpressions,rewriteSketchExpressions} from './features.js';
@@ -7,13 +8,13 @@ import {evaluateExpression,evaluateParameters} from './parameters.js';
 export function uniqueObjectName(base:string,used:ReadonlySet<string>,limit=160):string {
   const stem=base.slice(0,limit-8);if(!used.has(base)&&base.length<=limit)return base;
   for(let index=2;index<10000;index++){const name=`${stem} ${index}`;if(!used.has(name))return name;}
-  throw new Error('Too many objects with the same name');
+  throw new Error(t('Too many objects with the same name'));
 }
 export function offsetPositionExpression(expression:string,design:NonNullable<CadDocument['parametric']>,offset:number){const values=evaluateParameters(design),q=evaluateExpression(expression,name=>values[name]);return `(${expression})${q.length===0&&q.angle===0?' * 1 mm':''} + ${offset} mm`;}
 /** A complete, independently valid selection, with only referenced parameters. */
 export function selectionFragment(input:CadDocument,selection:readonly string[]):CadDocument {
  const doc=validateDocument(input),chosen=new Set(selection);doc.roots=doc.roots.filter(id=>chosen.has(id));
- if(!doc.roots.length)throw new Error('Select an object to copy');
+ if(!doc.roots.length)throw new Error(t('Select an object to copy'));
  const keep=new Set<string>();const visit=(id:string)=>{if(keep.has(id))return;keep.add(id);const node=doc.nodes[id];if(node.kind==='boolean')node.inputs.forEach(visit);};doc.roots.forEach(visit);
  for(const id of Object.keys(doc.nodes))if(!keep.has(id))delete doc.nodes[id];
  const sketches=new Set(Object.values(doc.nodes).flatMap(n=>n.kind==='extrusion'?[n.sketchId]:[]));if(doc.sketches)doc.sketches=Object.fromEntries(Object.entries(doc.sketches).filter(([id])=>sketches.has(id)));

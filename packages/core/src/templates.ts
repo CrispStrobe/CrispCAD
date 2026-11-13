@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {t} from './i18n.js';
 import {createCadSession} from './session.js';
 import {newId,identityTransform} from './document.js';
 import type {ParametricDesign} from './parameters.js';
@@ -22,7 +23,7 @@ export function createDesignTemplate(kind:DesignTemplate){
   if(kind==='l-bracket'){
    const upright=rectangle('Upright profile','width','thickness','height');design.bindings.push({nodeId:upright,property:'positionY',expression:'(depth - thickness) / 2'});s.setParametric(design);root=s.combine('union',[base,upright]);
   }else {
-   const first=circle('Shared bore profile','holeDiameter / 2','thickness + 2 mm'),n=s.state.document.nodes[first];if(n.kind!=='extrusion')throw new Error('Expected extrusion');const second=s.extrudeSketch(n.sketchId,{distance:'thickness + 2 mm'});
+   const first=circle('Shared bore profile','holeDiameter / 2','thickness + 2 mm'),n=s.state.document.nodes[first];if(n.kind!=='extrusion')throw new Error(t('Expected extrusion'));const second=s.extrudeSketch(n.sketchId,{distance:'thickness + 2 mm'});
    for(const id of [first,second]){const t=identityTransform();t.position[2]=-1;s.update(id,{transform:t});}
    design.bindings.push({nodeId:first,property:'positionX',expression:'-width / 4'},{nodeId:second,property:'positionX',expression:'width / 4'});s.setParametric(design);root=s.combine('subtract',[base,first,second]);
   }

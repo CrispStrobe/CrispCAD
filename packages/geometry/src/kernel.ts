@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {t} from '@brickwright/cad-core';
 import Module from 'manifold-3d';
 import type { Manifold, ManifoldToplevel } from 'manifold-3d';
 import { validateDocument, documentGeometryKey, evaluateExtrusion, FeatureEvaluationError, compileCode } from '@brickwright/cad-core';
@@ -20,7 +21,7 @@ export async function createGeometryKernel(options: { wasmURL?: string; wasmBina
   return { evaluate: (doc: CadDocument) => evaluateDocument(module, doc), partitionConvex: (mesh: Pick<BodyMesh,'positions'|'indices'>, maxPieces=2048) => partitionConvex(module,mesh.positions,mesh.indices,maxPieces).map(remember),
     isConvexPiece(piece:{positions:Float64Array;indices:Uint32Array}){const snapshot=convexRegistry.get(piece);return !!snapshot&&snapshot.positions.length===piece.positions.length&&snapshot.indices.length===piece.indices.length&&snapshot.positions.every((v,i)=>v===piece.positions[i])&&snapshot.indices.every((v,i)=>v===piece.indices[i]);},
     collisionCSG: collisionCSG(module,remember),
-    hullPoints(points: readonly [number,number,number][]) { if(points.length<4||points.length>4096||points.some(p=>p.length!==3||p.some(v=>!Number.isFinite(v)||Math.abs(v)>1e6)))throw new Error('Collision hull points exceed the finite geometry budget');const hull=module.Manifold.hull(points);try{if(hull.isEmpty())throw new Error('Collision segment is degenerate');const mesh=hull.getMesh();return remember({positions:new Float64Array(Array.from({length:mesh.numVert*3},(_,i)=>mesh.vertProperties[Math.floor(i/3)*mesh.numProp+i%3])),indices:new Uint32Array(mesh.triVerts)});}finally{hull.delete();} },
+    hullPoints(points: readonly [number,number,number][]) { if(points.length<4||points.length>4096||points.some(p=>p.length!==3||p.some(v=>!Number.isFinite(v)||Math.abs(v)>1e6)))throw new Error(t('Collision hull points exceed the finite geometry budget'));const hull=module.Manifold.hull(points);try{if(hull.isEmpty())throw new Error(t('Collision segment is degenerate'));const mesh=hull.getMesh();return remember({positions:new Float64Array(Array.from({length:mesh.numVert*3},(_,i)=>mesh.vertProperties[Math.floor(i/3)*mesh.numProp+i%3])),indices:new Uint32Array(mesh.triVerts)});}finally{hull.delete();} },
   };
 }
 export type GeometryKernel = Awaited<ReturnType<typeof createGeometryKernel>>;
@@ -46,7 +47,7 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
       case 'box': solid = keep(module.Manifold.cube(node.size, true)); break;
       case 'cylinder': solid = keep(module.Manifold.cylinder(node.height, node.radius, node.radius, node.segments, true)); break;
       case 'sphere': solid = keep(module.Manifold.sphere(node.radius, node.segments)); break;
-      case 'code': solid=buildCode(compileCode(node.program).shape);if(solid.isEmpty()||solid.volume()<=1e-8)throw new Error('Code produces no printable solid');break;
+      case 'code': solid=buildCode(compileCode(node.program).shape);if(solid.isEmpty()||solid.volume()<=1e-8)throw new Error(t('Code produces no printable solid'));break;
       case 'extrusion': {
         const profile=evaluateExtrusion(node,doc);
         solid=keep(module.Manifold.extrude([profile.contour],profile.distance));
@@ -69,8 +70,8 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
     const rotated = keep(scaled.rotate(node.transform.rotation));
     const result = keep(rotated.translate(node.transform.position));
     const status = result.status();
-    if (status !== 'NoError') throw new Error(`${node.name}: ${status}. Import a closed, consistently oriented solid mesh.`);
-    if(result.volume()< -1e-8)throw new Error(`${node.name}: reversed solid winding produces negative volume. Reorient the mesh faces before importing.`);
+    if (status !== 'NoError') throw new Error(t`${node.name}: ${status}. Import a closed, consistently oriented solid mesh.`);
+    if(result.volume()< -1e-8)throw new Error(t`${node.name}: reversed solid winding produces negative volume. Reorient the mesh faces before importing.`);
     cache.set(id, result); return result;
     } catch(error){if(error instanceof FeatureEvaluationError)throw error;throw new FeatureEvaluationError({source:'feature',id,message:`${node.name}: ${error instanceof Error?error.message:String(error)}`});}
   };

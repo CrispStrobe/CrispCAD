@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {t} from '@brickwright/cad-core';
 // Original bounded BSP partitioner. Manifold (Apache-2.0) performs exact solid
 // splits. A hull is accepted only when its added volume is below tolerance;
 // nonconvex voids are never replaced by a single unqualified hull.
 import type { Manifold, ManifoldToplevel } from 'manifold-3d';
 export interface ConvexPiece {positions:Float64Array;indices:Uint32Array}
 export function partitionConvex(module:ManifoldToplevel,positions:ArrayLike<number>,indices:ArrayLike<number>,maxPieces=2048,maxVertices=64):ConvexPiece[]{
- if(!Number.isInteger(maxPieces)||maxPieces<1||maxPieces>2048||!Number.isInteger(maxVertices)||maxVertices<4||maxVertices>64)throw new Error('Invalid convex partition budget');
+ if(!Number.isInteger(maxPieces)||maxPieces<1||maxPieces>2048||!Number.isInteger(maxVertices)||maxVertices<4||maxVertices>64)throw new Error(t('Invalid convex partition budget'));
  const owned=new Set<Manifold>();const keep=(s:Manifold)=>{owned.add(s);return s;};
  try {
-  const mesh=new module.Mesh({numProp:3,vertProperties:new Float32Array(positions),triVerts:new Uint32Array(indices)});mesh.merge();const source=keep(new module.Manifold(mesh));if(source.status()!=='NoError'||source.volume()<=0)throw new Error('Convex partition requires a closed positive-volume solid');
+  const mesh=new module.Mesh({numProp:3,vertProperties:new Float32Array(positions),triVerts:new Uint32Array(indices)});mesh.merge();const source=keep(new module.Manifold(mesh));if(source.status()!=='NoError'||source.volume()<=0)throw new Error(t('Convex partition requires a closed positive-volume solid'));
   const queue=source.decompose().map(keep),out:ConvexPiece[]=[];let steps=0;
-  while(queue.length){if(++steps>maxPieces*8||out.length+queue.length>maxPieces)throw new Error('Exact convex collision exceeds its piece budget; simplify the model or supply a qualified collision assembly');
+  while(queue.length){if(++steps>maxPieces*8||out.length+queue.length>maxPieces)throw new Error(t('Exact convex collision exceeds its piece budget; simplify the model or supply a qualified collision assembly'));
    const solid=queue.pop()!,volume=solid.volume();if(volume<=1e-5)continue;const hull=keep(solid.hull());const excess=Math.max(0,hull.volume()-volume);
    if(excess<=Math.max(1e-7,volume*1e-3)&&hull.numVert()<=maxVertices){const m=hull.getMesh();out.push({positions:new Float64Array(Array.from({length:m.numVert*3},(_,i)=>m.vertProperties[Math.floor(i/3)*m.numProp+i%3])),indices:new Uint32Array(m.triVerts)});continue;}
    const m=solid.getMesh(),points=Array.from({length:m.numVert},(_,i)=>[m.vertProperties[i*m.numProp],m.vertProperties[i*m.numProp+1],m.vertProperties[i*m.numProp+2]]);let plane:{normal:[number,number,number];offset:number}|undefined,best=-Infinity;
@@ -32,7 +33,7 @@ export function partitionConvex(module:ManifoldToplevel,positions:ArrayLike<numb
    if(!plane){const b=solid.boundingBox(),sizes=b.max.map((v,i)=>v-b.min[i]),axis=sizes.indexOf(Math.max(...sizes));const normal:[number,number,number]=[0,0,0];normal[axis]=1;plane={normal,offset:(b.max[axis]+b.min[axis])/2};}
    let [a,b]=solid.splitByPlane(plane.normal,plane.offset).map(keep);
    if(a.isEmpty()||b.isEmpty()||Math.max(a.volume(),b.volume())>volume*(1-1e-9)){const bounds=solid.boundingBox(),sizes=bounds.max.map((value,i)=>value-bounds.min[i]),axis=sizes.indexOf(Math.max(...sizes)),normal:[number,number,number]=[0,0,0];normal[axis]=1;[a,b]=solid.splitByPlane(normal,(bounds.max[axis]+bounds.min[axis])/2).map(keep);}
-   if(a.isEmpty()||b.isEmpty()||Math.max(a.volume(),b.volume())>volume*(1-1e-9))throw new Error('Exact convex collision could not partition this feature robustly');queue.push(...a.decompose().map(keep),...b.decompose().map(keep));
+   if(a.isEmpty()||b.isEmpty()||Math.max(a.volume(),b.volume())>volume*(1-1e-9))throw new Error(t('Exact convex collision could not partition this feature robustly'));queue.push(...a.decompose().map(keep),...b.decompose().map(keep));
   }
   return out;
  }finally{for(const s of [...owned].reverse())s.delete();}

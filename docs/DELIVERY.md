@@ -343,3 +343,48 @@ standalone Dart and dart2js/Node probes verify geometric residuals and demonstra
 nearest-pose/status gaps. Dart analysis passes. This development-only experiment
 adds no production dependency. See [CONSTRAINTS.md](CONSTRAINTS.md) for the concrete
 entity schema, solver extension and acceptance path. Private Actions remains off.
+
+## Axis annotations, lettering, localization and device delivery — 2026-11-13
+
+- Floating XYZ panel replaced by small numeric-only annotations attached to actual
+  projected handles/rings, or visible axis guides in Select. Narrow layouts can
+  use the opposite guide end; values preserve numeric editing, live previews,
+  driven-field protection and Escape cancellation. Properties shows transformed
+  X/Y/Z mesh dimensions in millimetres beside the editable scale factors.
+- New name tags have rounded corners and retained text/font/dimensional recipes.
+  Droid Sans, Serif and Mono are bundled under Apache-2.0 alongside the original
+  block font. Text preserves case/German characters; missing glyphs are refused.
+  Text/font changes preserve identity, placement, appearance and history. Older
+  labels offer an explicit text-entry/Apply path, preserving their existing solid
+  until acceptance. Raised-text depth includes overlap compensation so the measured
+  relief height equals the requested value.
+- English/German localization covers editor/host/native/MCP UI and diagnostics,
+  with 869 catalog messages and 557 checked literal/template references. Language
+  changes flush history before reload; user names, code and canonical values stay
+  unchanged. System history labels translate for display without rewriting archives.
+- Settings stores background/baseplate colours independently of model/history,
+  with a reset action and corresponding embedding APIs.
+- iPad web-content zoom/scroll bounce is locked while model pinch stays available.
+  System Accessibility Zoom remains an OS setting; see WORKBENCH-PREFERENCES.md.
+- The Dart constraint experiment now compiles/runs JS and Wasm in browser workers.
+  Results expose nonlinear search-budget/recursion limits despite quick linear
+  solves. Prioritize a warm-started geometric module, decomposition and bounded
+  execution over a language port; see CONSTRAINT-PERFORMANCE.md. No solver dependency
+  was added to the production app.
+
+Verification: 152 headless tests; full 66-workflow Chromium/iPad WebKit suite, then
+10 focused localization/preferences/legacy-label workflows; one actual CDP pinch/
+three-touch workflow passed (WebKit skips that CDP-only case); six Jolt lettering
+qualifications across all three bundled fonts; catalog/placeholder audit; native
+Mac menu/clipboard/sketch/code/library checks; independent offline SDK installation
+including a font-generated name tag. Final exact relief height is covered by a
+kernel assertion and repeated font physics qualification.
+
+Device delivery: CAD build 5 was installed/launched over WLAN, followed by build 6
+with localization and the new workbench features. Build 7 adds the legacy-label
+editing path and exact relief height; its installation succeeded. macOS build 10
+is installed/running with existing projects/history retained. The separate latest
+Layerling checkout (upstream 42a50d18f, version 1.161.0) was built with the existing
+iPad wrapper as build 2 and installed/launched over WLAN. The original modified
+Layerling checkout was preserved; its implementation/assets were not incorporated
+into this CAD. All builds/checks remain local and private-repository Actions stays off.

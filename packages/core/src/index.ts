@@ -10,3 +10,7 @@ export * from './fragments.js';
 export * from './features.js';
 export * from './templates.js';
 export * from './code.js';
+
+export * from "./i18n.js";
+
+export * from "./i18n-history.js";

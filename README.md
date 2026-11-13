@@ -54,6 +54,10 @@ CrispMesh scan-to-CAD path, is in [docs/ROADMAP.md](docs/ROADMAP.md).
   geometry preview and retained source. The same compiler is available through a
   headless stdio MCP server. See [Code mode](docs/CODE-MODE.md) and
   [MCP setup](docs/MCP.md).
+- Switch between English and German in Settings; choose background/baseplate
+  colours without changing model history. See [localization](docs/LOCALIZATION.md).
+- Edit name-tag text, rounded corners and bundled Apache-licensed fonts in Properties.
+  See [workbench preferences](docs/WORKBENCH-PREFERENCES.md).
 - Retain and edit the operands of union, subtract and intersection operations.
 - Optionally drive primitive dimensions and transforms with named parameters,
   unit-aware formulas and dependency recomputation, including retained boolean

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {FeatureEvaluationError} from '@brickwright/cad-core';
+import {FeatureEvaluationError,getLocale,t} from '@brickwright/cad-core';
 import type {FeatureDiagnostic} from '@brickwright/cad-core';
 import type { CadDocument } from '@brickwright/cad-core';
 import type { GeometryResult } from '@brickwright/cad-geometry';
@@ -19,19 +19,19 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
       if (!request) return; pending.delete(data.request); clearTimeout(request.timer);
       if (data.error) request.reject(data.diagnostic?new FeatureEvaluationError(data.diagnostic):new Error(data.error)); else request.resolve(data.result!);
     };
-    worker.onerror = event => fail(new Error(event.message || 'Geometry worker failed'));
+    worker.onerror = event => fail(new Error(event.message || t('Geometry worker failed')));
     return worker;
   };
   return {
     evaluate(document: CadDocument): Promise<GeometryResult> {
-      if (disposed) return Promise.reject(new Error('Editor was disposed'));
+      if (disposed) return Promise.reject(new Error(t('Editor was disposed')));
       const request = ++sequence;
       return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => fail(new Error('Geometry exceeded 30 seconds. Simplify the edit or Undo.')), 30000);
+        const timer = setTimeout(() => fail(new Error(t('Geometry exceeded 30 seconds. Simplify the edit or Undo.'))), 30000);
         pending.set(request, { resolve, reject, timer });
-        try { ensure().postMessage({ request, document, wasmURL }); } catch (e) { fail(e instanceof Error ? e : new Error(String(e))); }
+        try { ensure().postMessage({ request, document, wasmURL,locale:getLocale() }); } catch (e) { fail(e instanceof Error ? e : new Error(String(e))); }
       });
     },
-    dispose() { disposed = true; fail(new Error('Editor was disposed')); },
+    dispose() { disposed = true; fail(new Error(t('Editor was disposed'))); },
   };
 }

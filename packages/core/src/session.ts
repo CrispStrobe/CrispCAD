@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {t} from './i18n.js';
 import { checkDocument, createDocument, freezeDocument, identityTransform, newId, parseDocument, pruneDocument, serializeDocument, validateDocument } from './document.js';
 import type { CadDocument, Primitive, SolidNode, Transform } from './document.js';
 import { defaultPartPhysics } from './physics.js';
@@ -22,13 +23,13 @@ const equivalent = (a: SolidNode, b: SolidNode) => {
 };
 type Snapshot = { document: CadDocument; selection: string[]; label: string };
 function guardConstructionEdit(doc:CadDocument,id:string){
-  for(const root of Object.values(doc.nodes)){if(!root.generator||root.id===id)continue;const visited=new Set<string>();const contains=(key:string):boolean=>{if(key===id)return true;if(visited.has(key))return false;visited.add(key);const n=doc.nodes[key];return n.kind==='boolean'&&n.inputs.some(contains);};if(contains(root.id))throw new Error(`Edit ${root.name} through its shape parameters, or detach its generator first`);}
+  for(const root of Object.values(doc.nodes)){if(!root.generator||root.id===id)continue;const visited=new Set<string>();const contains=(key:string):boolean=>{if(key===id)return true;if(visited.has(key))return false;visited.add(key);const n=doc.nodes[key];return n.kind==='boolean'&&n.inputs.some(contains);};if(contains(root.id))throw new Error(t`Edit ${root.name} through its shape parameters, or detach its generator first`);}
 }
 function editSketch(d:CadDocument,id:string,patch:Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>) {
-  const sketch=d.sketches?.[id];if(!sketch)throw new Error('Sketch does not exist');
+  const sketch=d.sketches?.[id];if(!sketch)throw new Error(t('Sketch does not exist'));
   const uses=(key:string):boolean=>{const n=d.nodes[key];return n.kind==='extrusion'?n.sketchId===id:n.kind==='boolean'&&n.inputs.some(uses);};
-  if(d.joints?.some(j=>uses(j.bodyA)||uses(j.bodyB)))throw new Error('Detach joints before editing their sketches');
-  const next={...sketch,...structuredClone(patch)};if(next.profile.id!==sketch.profile.id||next.profile.kind!==sketch.profile.kind)throw new Error('Keep sketch profile identity and kind when editing');d.sketches![id]=next;
+  if(d.joints?.some(j=>uses(j.bodyA)||uses(j.bodyB)))throw new Error(t('Detach joints before editing their sketches'));
+  const next={...sketch,...structuredClone(patch)};if(next.profile.id!==sketch.profile.id||next.profile.kind!==sketch.profile.kind)throw new Error(t('Keep sketch profile identity and kind when editing'));d.sketches![id]=next;
 }
 export function createCadSession(initial: CadDocument = createDocument()) {
   let document = freezeDocument(validateDocument(initial)); let selection: string[] = []; let revision = 0; let label = 'Opened';
@@ -56,15 +57,15 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     select(ids: readonly string[]) { selection = [...new Set(ids)].filter(id => Object.hasOwn(document.nodes, id)); emit(); },
     rename(title: string) { commit('Rename design', d => { d.title = title; }); },
     setParametric(design: ParametricDesign) {commit('Edit parameters',d=>{if(d.version===1)d.version=2;d.parametric=structuredClone(design);});},
-    detachGenerator(id:string){commit('Detach shape generator',d=>{if(!d.nodes[id]?.generator)throw new Error('No generator to detach');delete d.nodes[id].generator;if(d.nodes[id].physics)d.nodes[id].physics={...d.nodes[id].physics!,sourcePreset:undefined};});},
+    detachGenerator(id:string){commit('Detach shape generator',d=>{if(!d.nodes[id]?.generator)throw new Error(t('No generator to detach'));delete d.nodes[id].generator;if(d.nodes[id].physics)d.nodes[id].physics={...d.nodes[id].physics!,sourcePreset:undefined};});},
     replaceGenerated(id:string,fragment:CadDocument){
-      const source=validateDocument(fragment);if(source.roots.length!==1||source.joints?.length||source.parametric||source.sketches)throw new Error('Expected one generated body');
+      const source=validateDocument(fragment);if(source.roots.length!==1||source.joints?.length||source.parametric||source.sketches)throw new Error(t('Expected one generated body'));
       commit('Edit shape parameters',d=>{
-        const previous=d.nodes[id];if(!previous)throw new Error('Object does not exist');
+        const previous=d.nodes[id];if(!previous)throw new Error(t('Object does not exist'));
         const descendants=new Set<string>();const walk=(key:string)=>{if(descendants.has(key))return;descendants.add(key);const n=d.nodes[key];if(n.kind==='boolean')n.inputs.forEach(walk);};walk(id);
-        if(d.parametric?.bindings.some(b=>descendants.has(b.nodeId)&&b.nodeId!==id))throw new Error('Detach driving expressions on the construction operands before regenerating');
+        if(d.parametric?.bindings.some(b=>descendants.has(b.nodeId)&&b.nodeId!==id))throw new Error(t('Detach driving expressions on the construction operands before regenerating'));
         const connected=(key:string,seen=new Set<string>()):boolean=>{if(key===id)return true;if(seen.has(key))return false;seen.add(key);const n=d.nodes[key];return n?.kind==='boolean'&&n.inputs.some(child=>connected(child,seen));};
-        if(d.joints?.some(j=>connected(j.bodyA)||connected(j.bodyB)))throw new Error('Detach joints before regenerating their bodies');
+        if(d.joints?.some(j=>connected(j.bodyA)||connected(j.bodyB)))throw new Error(t('Detach joints before regenerating their bodies'));
         const map=new Map(Object.keys(source.nodes).map(key=>[key,key===source.roots[0]?id:newId()]));
         for(const [key,node] of Object.entries(source.nodes)){const next=cloneNode(node);next.id=map.get(key)!;if(next.kind==='boolean')next.inputs=next.inputs.map(input=>map.get(input)!);d.nodes[next.id]=next;}
         const next=d.nodes[id];next.name=previous.name;next.color=previous.color;next.transform=structuredClone(previous.transform);
@@ -73,24 +74,24 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       });
     },
     addCode(program:CodeProgram,name='Code object'){const id=newId();commit('Add code object',d=>{d.version=4;d.nodes[id]={id,kind:'code',program:structuredClone(program),name:uniqueObjectName(name,new Set(d.roots.map(key=>d.nodes[key].name))),color:'#76b7ce',transform:identityTransform()};d.roots.push(id);return [id];});return id;},
-    updateCode(id:string,program:CodeProgram){commit('Edit code object',d=>{if(d.nodes[id]?.kind!=='code')throw new Error('Select a code object');guardConstructionEdit(d,id);d.nodes[id]={...d.nodes[id],program:structuredClone(program)};});},
+    updateCode(id:string,program:CodeProgram){commit('Edit code object',d=>{if(d.nodes[id]?.kind!=='code')throw new Error(t('Select a code object'));guardConstructionEdit(d,id);d.nodes[id]={...d.nodes[id],program:structuredClone(program)};});},
     addSketch(profile:SketchProfile,options:{name?:string;plane?:PlanarSketch['plane']}={}) {const id=newId();commit('Add sketch',d=>{d.version=Math.max(d.version,3) as CadDocument['version'];d.sketches??={};d.sketches[id]={version:1,id,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile)};});return id;},
     extrudeSketch(sketchId:string,options:{distance?:FeatureScalar;symmetric?:boolean}={}) {const id=newId();commit('Extrude sketch',d=>{
-      d.version=Math.max(d.version,3) as CadDocument['version'];d.nodes[id]={id,kind:'extrusion',featureVersion:1,sketchId,distance:options.distance??10,symmetric:options.symmetric??false,name:uniqueObjectName('Extrusion',new Set(d.roots.map(key=>d.nodes[key].name))),color:'#eea52b',transform:identityTransform()};d.roots.push(id);return [id];});return id;},
+      d.version=Math.max(d.version,3) as CadDocument['version'];d.nodes[id]={id,kind:'extrusion',featureVersion:1,sketchId,distance:options.distance??10,symmetric:options.symmetric??false,name:uniqueObjectName(t('Extrusion'),new Set(d.roots.map(key=>d.nodes[key].name))),color:'#eea52b',transform:identityTransform()};d.roots.push(id);return [id];});return id;},
     addSketchExtrusion(profile:SketchProfile,options:{name?:string;plane?:PlanarSketch['plane'];distance?:FeatureScalar;symmetric?:boolean}={}) {
       const sketchId=newId(),id=newId();
       commit('Add sketch extrusion',d=>{d.version=Math.max(d.version,3) as CadDocument['version'];d.sketches??={};d.sketches[sketchId]={version:1,id:sketchId,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile)};
-        d.nodes[id]={id,kind:'extrusion',featureVersion:1,sketchId,distance:options.distance??10,symmetric:options.symmetric??false,name:uniqueObjectName('Extrusion',new Set(d.roots.map(id=>d.nodes[id].name))),color:'#eea52b',transform:identityTransform()};d.roots.push(id);return [id];});return id;
+        d.nodes[id]={id,kind:'extrusion',featureVersion:1,sketchId,distance:options.distance??10,symmetric:options.symmetric??false,name:uniqueObjectName(t('Extrusion'),new Set(d.roots.map(id=>d.nodes[id].name))),color:'#eea52b',transform:identityTransform()};d.roots.push(id);return [id];});return id;
     },
     updateSketch(id:string,patch:Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>) {commit('Edit sketch',d=>{editSketch(d,id,patch);});},
     editExtrusion(id:string,inputs:{sketch?:Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>;distance:FeatureScalar;symmetric:boolean}) {commit('Edit sketch extrusion',d=>{
-      const n=d.nodes[id];if(n?.kind!=='extrusion')throw new Error('Object is not an extrusion');guardConstructionEdit(d,id);
+      const n=d.nodes[id];if(n?.kind!=='extrusion')throw new Error(t('Object is not an extrusion'));guardConstructionEdit(d,id);
       if(inputs.sketch)editSketch(d,n.sketchId,inputs.sketch);n.distance=inputs.distance;n.symmetric=inputs.symmetric;
     });},
     fragment(ids:readonly string[]=selection){return selectionFragment(document,ids);},
     insert(fragment: CadDocument, offset: [number, number, number] = [0, 0, 0],options:{mergeParameters?:boolean;label?:string}={}) {
       const source = validateDocument(fragment); const ids = new Map(Object.keys(source.nodes).map(id => [id, newId()]));
-      if(source.parametric&&!options.mergeParameters)throw new Error('Enable parameter namespace merging when inserting a parametric model');
+      if(source.parametric&&!options.mergeParameters)throw new Error(t('Enable parameter namespace merging when inserting a parametric model'));
       commit(options.label??'Add shape', d => {
         d.version=Math.max(d.version,source.version) as CadDocument['version'];
         const sketches=new Map(Object.keys(source.sketches??{}).map(id=>[id,newId()]));
@@ -112,37 +113,37 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       }); return id;
     },
     update(id: string, patch: Partial<SolidNode>) { commit('Edit object', d => {
-      if (!d.nodes[id]) throw new Error('Object does not exist');
+      if (!d.nodes[id]) throw new Error(t('Object does not exist'));
       guardConstructionEdit(d,id);
-      if('program' in patch)throw new Error('Use updateCode to edit a code program');
-      if(patch.generator)throw new Error('Use shape regeneration to change generator inputs');
+      if('program' in patch)throw new Error(t('Use updateCode to edit a code program'));
+      if(patch.generator)throw new Error(t('Use shape regeneration to change generator inputs'));
       // Kind and identity cannot be changed by inspector edits.
-      if ((patch.id && patch.id !== id) || (patch.kind && patch.kind !== d.nodes[id].kind)) throw new Error('Cannot change object identity or kind');
+      if ((patch.id && patch.id !== id) || (patch.kind && patch.kind !== d.nodes[id].kind)) throw new Error(t('Cannot change object identity or kind'));
       const next = { ...d.nodes[id], ...structuredClone(patch) } as SolidNode;
       assertDrivenEdit(d,next); d.nodes[id] = next;
     }); },
-    transform(updates: Array<{ id: string; transform: Transform }>) { commit('Transform selection', d => { for (const { id, transform } of updates) { if (!d.nodes[id]) throw new Error('Object does not exist');guardConstructionEdit(d,id); const next={...d.nodes[id],transform:structuredClone(transform)};assertDrivenEdit(d,next);d.nodes[id]=next; } }); },
+    transform(updates: Array<{ id: string; transform: Transform }>) { commit('Transform selection', d => { for (const { id, transform } of updates) { if (!d.nodes[id]) throw new Error(t('Object does not exist'));guardConstructionEdit(d,id); const next={...d.nodes[id],transform:structuredClone(transform)};assertDrivenEdit(d,next);d.nodes[id]=next; } }); },
     combine(operation: 'union' | 'subtract' | 'intersect', ids: readonly string[] = selection) {
       const chosen = [...new Set(ids)]; const id = newId();
       commit(operation === 'subtract' ? 'Subtract (first selected is the base)' : operation, d => {
-        if (chosen.length < 2 || !chosen.every(x => d.roots.includes(x))) throw new Error('Select at least two top-level bodies');
-        if (chosen.some(x => d.nodes[x].reference)) throw new Error('Reference helpers cannot be combined into printable solids');
-        if (d.joints?.some(j => chosen.includes(j.bodyA) || chosen.includes(j.bodyB))) throw new Error('Detach the selected bodies’ joints before combining them');
+        if (chosen.length < 2 || !chosen.every(x => d.roots.includes(x))) throw new Error(t('Select at least two top-level bodies'));
+        if (chosen.some(x => d.nodes[x].reference)) throw new Error(t('Reference helpers cannot be combined into printable solids'));
+        if (d.joints?.some(j => chosen.includes(j.bodyA) || chosen.includes(j.bodyB))) throw new Error(t('Detach the selected bodies’ joints before combining them'));
         const material = d.nodes[chosen[0]].physics ?? defaultPartPhysics();
-        if(chosen.some(x=>{const p=d.nodes[x].physics??defaultPartPhysics();return p.densityKgM3!==material.densityKgM3||p.friction!==material.friction||p.restitution!==material.restitution||p.motion!==material.motion;}))throw new Error('Combined solids must share density, contact material and motion type. Keep different materials as separate bodies.');
+        if(chosen.some(x=>{const p=d.nodes[x].physics??defaultPartPhysics();return p.densityKgM3!==material.densityKgM3||p.friction!==material.friction||p.restitution!==material.restitution||p.motion!==material.motion;}))throw new Error(t('Combined solids must share density, contact material and motion type. Keep different materials as separate bodies.'));
         d.nodes[id] = { id, kind: 'boolean', operation, inputs: chosen, name: operation[0].toUpperCase() + operation.slice(1), color: d.nodes[chosen[0]].color, transform: identityTransform(), physics:{...material,intent:'rigid',parameters:undefined,sourcePreset:undefined,collisionHint:undefined} };
         const at = Math.min(...chosen.map(x => d.roots.indexOf(x)));
         d.roots = d.roots.filter(x => !chosen.includes(x)); d.roots.splice(at, 0, id); return [id];
       }); return id;
     },
     separate(id: string) { commit('Separate operands', d => {
-      const node = d.nodes[id]; if (node?.kind !== 'boolean' || !d.roots.includes(id)) throw new Error('Select a top-level operation');
-      if(d.joints?.some(j=>j.bodyA===id||j.bodyB===id))throw new Error('Detach this body’s joints before separating its operands');
-      if (JSON.stringify(node.transform) !== JSON.stringify(identityTransform())) throw new Error('Reset the operation transform before separating its operands');
+      const node = d.nodes[id]; if (node?.kind !== 'boolean' || !d.roots.includes(id)) throw new Error(t('Select a top-level operation'));
+      if(d.joints?.some(j=>j.bodyA===id||j.bodyB===id))throw new Error(t('Detach this body’s joints before separating its operands'));
+      if (JSON.stringify(node.transform) !== JSON.stringify(identityTransform())) throw new Error(t('Reset the operation transform before separating its operands'));
       d.roots.splice(d.roots.indexOf(id), 1, ...node.inputs); delete d.nodes[id];if(d.parametric)d.parametric.bindings=d.parametric.bindings.filter(b=>b.nodeId!==id); return [...node.inputs];
     }); },
     duplicate(ids: readonly string[] = selection) { commit('Duplicate', d => {
-      const roots = ids.filter(id => d.roots.includes(id)); if (!roots.length) throw new Error('Select a top-level body');
+      const roots = ids.filter(id => d.roots.includes(id)); if (!roots.length) throw new Error(t('Select a top-level body'));
       const sourceBindings=d.parametric?.bindings.slice()??[];
       const copied: string[] = []; const copiedSketches=new Map<string,string>(); const allCopied = new Map<string,string>();
       for (const root of roots) {
@@ -154,14 +155,14 @@ export function createCadSession(initial: CadDocument = createDocument()) {
           if(n.kind==='extrusion'){let sketchId=copiedSketches.get(n.sketchId);if(!sketchId){sketchId=newId();copiedSketches.set(n.sketchId,sketchId);const sketch=structuredClone(d.sketches![n.sketchId]);sketch.id=sketchId;sketch.profile.id=newId();d.sketches![sketchId]=sketch;}n.sketchId=sketchId;}
           d.nodes[next] = n; return next;
         };
-        const id = copy(root); const n = d.nodes[id]; n.name=uniqueObjectName(n.name.replace(/ copy(?: \d+)?$/,'')+' copy',new Set(d.roots.map(id=>d.nodes[id].name))); n.transform.position[0] += 10; d.roots.push(id); copied.push(id); for(const [old,next] of map)allCopied.set(old,next);
+        const id = copy(root); const n = d.nodes[id]; n.name=uniqueObjectName(n.name.replace(/(?: copy| Kopie)(?: \d+)?$/,'')+t(' copy'),new Set(d.roots.map(id=>d.nodes[id].name))); n.transform.position[0] += 10; d.roots.push(id); copied.push(id); for(const [old,next] of map)allCopied.set(old,next);
         if(d.parametric)d.parametric.bindings.push(...sourceBindings.filter(b=>map.has(b.nodeId)).map(b=>({...b,nodeId:map.get(b.nodeId)!,expression:b.nodeId===root&&b.property==='positionX'?offsetPositionExpression(b.expression,d.parametric!,10):b.expression})));
       }
       if(d.joints)d.joints.push(...d.joints.filter(j=>roots.includes(j.bodyA)&&roots.includes(j.bodyB)).map(j=>({...structuredClone(j),id:newId(),bodyA:allCopied.get(j.bodyA)!,bodyB:allCopied.get(j.bodyB)!})));
       return copied;
     }); },
     remove(ids: readonly string[] = selection,title='Delete') { commit(title, d => {
-      if (!ids.some(id => d.roots.includes(id))) throw new Error('Select a top-level body');
+      if (!ids.some(id => d.roots.includes(id))) throw new Error(t('Select a top-level body'));
       d.roots = d.roots.filter(id => !ids.includes(id)); if(d.joints)d.joints=d.joints.filter(j=>d.roots.includes(j.bodyA)&&d.roots.includes(j.bodyB)); pruneDocument(d); return [];
     }); },
     detachJoints(ids: readonly string[] = selection) { commit('Detach joints',d=>{if(d.joints)d.joints=d.joints.filter(j=>!ids.includes(j.bodyA)&&!ids.includes(j.bodyB));}); },

@@ -6,6 +6,7 @@ if(process.platform!=='darwin')throw Error('The native macOS build requires macO
 const app=resolve('apps/macos/build/Brickwright CAD.app'),contents=join(app,'Contents');
 await rm(app,{recursive:true,force:true});await mkdir(join(contents,'MacOS'),{recursive:true});await mkdir(join(contents,'Resources'),{recursive:true});
 await cp('apps/macos/Info.plist',join(contents,'Info.plist'));
+for(const language of ['en','de'])await cp(`apps/macos/${language}.lproj`,join(contents,'Resources',`${language}.lproj`),{recursive:true});
 await cp('dist',join(contents,'Resources/web'),{recursive:true,filter:source=>!source.startsWith(resolve('dist/packages'))&&!source.endsWith('/packages')});
 const build=process.env.BW_CAD_MAC_BUILD_NUMBER??'1';if(!/^\d+$/.test(build))throw Error('Invalid build number');
 execFileSync('/usr/libexec/PlistBuddy',['-c',`Set :CFBundleVersion ${build}`,join(contents,'Info.plist')]);
