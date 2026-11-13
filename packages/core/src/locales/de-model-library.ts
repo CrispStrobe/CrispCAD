@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+  'Browse reviewed models. Bundled editable sources work offline; remote STL files download only when inserted.':'Geprüfte Modelle durchsuchen. Mitgelieferte bearbeitbare Quellen funktionieren offline; entfernte STL-Dateien werden erst beim Einfügen geladen.',
+  'Bundled editable source. Insertion verifies its hash and evaluates the code; no mesh download or collision qualification.':'Mitgelieferte bearbeitbare Quelle. Beim Einfügen werden Hash und Codegeometrie geprüft; kein Netzdownload oder Kollisionsnachweis.',
+  'OpenSCAD source is converted to editable CAD Script using the supported subset. The original artifact hash is retained.':'OpenSCAD-Quelltext wird mit der unterstützten Teilmenge in bearbeitbares CAD Script umgewandelt. Der Hash des Originalartefakts bleibt erhalten.',
+  'Insert editable source':'Bearbeitbare Quelle einfügen',
+  'Editable source is not bundled in this host.':'Die bearbeitbare Quelle ist in dieser Anwendung nicht enthalten.',
+  'Editable source inserted with provenance. Available offline.':'Bearbeitbare Quelle mit Herkunftsnachweis eingefügt. Offline verfügbar.',
   'Selected STL conversion to millimetres, Z up':'Umrechnung der gewählten STL in Millimeter, Z oben',
   'Curated limits: {0} triangles; {1} mm span per axis; {2} analysis bytes. Translation is preserved; no centering or repair.':'Kuratierte Grenzen: {0} Dreiecke; {1} mm Ausdehnung je Achse; {2} Analyse-Bytes. Die Verschiebung bleibt erhalten; keine Zentrierung oder Reparatur.',
   'Model library':'Modellbibliothek',

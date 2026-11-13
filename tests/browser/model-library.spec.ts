@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {test,expect,type Page} from '@playwright/test';
+import {readFile} from 'node:fs/promises';
+import {unzipSync} from 'fflate';
 import {createHash} from 'node:crypto';
 import {checkModelLibrarySTL} from '@brickwright/cad-geometry';
 import type {ModelLibraryCatalogue} from '@brickwright/cad-core';
@@ -24,7 +26,7 @@ test('browse without fetching, insert one verified model with provenance, undo a
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  await addShape(page,'Box');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  const before=await saved(page),dialog=await open(page);
- await expect(dialog).toContainText('No published catalogue is bundled');await load(page,await catalogue());
+ await expect(dialog.getByRole('button',{name:/ · (BSD-3-Clause|CC0-1.0)$/})).toHaveCount(35);await load(page,await catalogue());
  await page.getByLabel('Search models',{exact:true}).fill('missing');await expect(dialog).toContainText('No matching models.');await page.getByLabel('Search models',{exact:true}).fill('fixture');
  await dialog.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();
  await expect(dialog).toContainText('Selected STL conversion to millimetres, Z up');await expect(dialog).toContainText('Curated limits:');
@@ -52,4 +54,36 @@ test('closing an in-flight download cancels insertion',async({page})=>{
  let release!:()=>void,started!:()=>void;const requested=new Promise<void>(resolve=>{started=resolve;});const waiting=new Promise<void>(resolve=>{release=resolve;});
  await page.route(endpoint,async route=>{started();await waiting;await route.fulfill({body:bytes,headers:{'access-control-allow-origin':'*'}}).catch(()=>{});});
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');const before=await saved(page),dialog=await open(page);await load(page,await catalogue());await dialog.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();await dialog.getByLabel('Incorporation modification notes',{exact:true}).fill('Unchanged.');await dialog.getByRole('button',{name:'Insert selected STL',exact:true}).click();await requested;await dialog.getByRole('button',{name:'Close model library'}).click();release();await expect(dialog).toBeHidden();await open(page);await expect(dialog.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true})).toBeEnabled();expect(await saved(page)).toEqual(before);
+});
+
+test('bundled CAD and OpenSCAD sources insert offline, stay editable through undo/reload and export attribution',async({page,context})=>{
+ await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ const before=await saved(page),dialog=await open(page);
+ await expect(dialog.getByRole('button',{name:/ · (BSD-3-Clause|CC0-1.0)$/})).toHaveCount(35);
+ let requests=0;page.on('request',()=>requests++);await context.setOffline(true);
+ const selected=['10 mm geometric cube fixture · CC0-1.0','Named dependencies · BSD-3-Clause'];
+ for(const name of selected){
+  await dialog.getByRole('button',{name,exact:true}).click();
+  if(name.includes('cube'))await expect(dialog).toContainText('OpenSCAD source is converted');
+  const insert=dialog.getByRole('button',{name:'Insert editable source',exact:true});await expect(insert).toBeDisabled();await dialog.getByLabel('Incorporation modification notes',{exact:true}).fill('Default parameters, unchanged coordinates.');await insert.click();await expect(dialog.getByRole('status')).toContainText('Editable source inserted with provenance. Available offline.');
+ }
+ expect(requests).toBe(0);const inserted=await saved(page);expect(inserted.roots).toHaveLength(before.roots.length+2);expect(inserted.provenance.records).toHaveLength(2);
+ for(const record of inserted.provenance.records){expect(record.selectedFile.path).toMatch(/^sources\//);expect(record.selectedFile.url).toBeUndefined();}
+ expect(inserted.provenance.records[0].modificationNotes).toContain('OpenSCAD translated');
+ const code=inserted.nodes[inserted.roots.at(-1)];expect(code.kind).toBe('code');expect(code.program.source).toContain('let');
+ await dialog.getByRole('button',{name:'Close model library'}).click();
+ await page.getByRole('button',{name:'Undo',exact:true}).click();await page.getByRole('button',{name:'Undo',exact:true}).click();expect(await saved(page)).toEqual(before);
+ await page.getByRole('button',{name:'Redo',exact:true}).click();await page.getByRole('button',{name:'Redo',exact:true}).click();expect(await saved(page)).toEqual(inserted);
+ await context.setOffline(false);await page.reload();await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');expect(await saved(page)).toEqual(inserted);
+ await page.getByLabel('File menu',{exact:true}).click();await page.getByRole('button',{name:'Export…',exact:true}).click();const exporting=page.getByRole('dialog',{name:'Export model',exact:true});await exporting.getByLabel('Changes since insertion',{exact:true}).fill('Unchanged since source insertion.');await exporting.getByLabel('Export format',{exact:true}).selectOption('stl');
+ const pending=page.waitForEvent('download');await exporting.getByRole('button',{name:'Export',exact:true}).click();const download=await pending,entries=unzipSync(new Uint8Array(await readFile((await download.path())!)));const sidecar=JSON.parse(new TextDecoder().decode(entries[Object.keys(entries).find(name=>name.endsWith('.attribution.json'))!]));expect(sidecar.records).toEqual(inserted.provenance.records);
+});
+
+test('closing while bundled source hash verification awaits cancels without changing model or redo',async({page})=>{
+ await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');await addShape(page,'Box');await page.getByRole('button',{name:'Undo',exact:true}).click();const before=await saved(page),dialog=await open(page);
+ await dialog.getByRole('button',{name:'10 mm geometric cube fixture · CC0-1.0',exact:true}).click();await dialog.getByLabel('Incorporation modification notes',{exact:true}).fill('Unchanged.');
+ await page.evaluate(()=>{const host=window as unknown as {pendingHashes:(()=>void)[]};host.pendingHashes=[];const digest=crypto.subtle.digest.bind(crypto.subtle);crypto.subtle.digest=async(algorithm,data)=>{await new Promise<void>(resolve=>host.pendingHashes.push(resolve));return digest(algorithm,data);};});
+ await dialog.getByRole('button',{name:'Insert editable source',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as unknown as {pendingHashes:unknown[]}).pendingHashes.length)).toBe(1);
+ await dialog.getByRole('button',{name:'Close model library'}).click();await page.evaluate(()=>(window as unknown as {pendingHashes:(()=>void)[]}).pendingHashes.splice(0).forEach(resolve=>resolve()));
+ await open(page);await expect(dialog.getByLabel('Incorporation modification notes',{exact:true})).toBeEnabled();await dialog.getByLabel('Incorporation modification notes',{exact:true}).fill('Retry after canceled verification.');await expect(dialog.getByRole('button',{name:'Insert editable source',exact:true})).toBeEnabled();expect(await saved(page)).toEqual(before);await dialog.getByRole('button',{name:'Close model library'}).click();await expect(page.getByRole('button',{name:'Redo',exact:true})).toBeEnabled();
 });

@@ -11,8 +11,7 @@ export type ModelLibrarySourceFormat = typeof MODEL_LIBRARY_SOURCE_FORMATS[numbe
 export function isModelLibrarySourceFormat(format: string): format is ModelLibrarySourceFormat {
   return (MODEL_LIBRARY_SOURCE_FORMATS as readonly string[]).includes(format);
 }
-export interface ModelLibraryFile {
-  url: string;
+export type ModelLibraryFile = ({url: string; path?: never} | {path: string; url?: never}) & {
   format: string;
   sha256: string;
   bytes: number;
@@ -89,7 +88,9 @@ const date = (v: unknown): boolean => {
   const parsed = new Date(v); return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === v;
 };
 const keys = (v: Record<string, unknown>, allowed: string): boolean => Object.keys(v).every(key => allowed.split(' ').includes(key));
-const file = (v: unknown): v is unknown & ModelLibraryFile => object(v) && keys(v, 'url format sha256 bytes') && url(v.url) && text(v.format, 80) && /^[a-zA-Z0-9][a-zA-Z0-9.+_-]*$/.test(v.format) && hash(v.sha256) && Number.isSafeInteger(v.bytes) && (v.bytes as number) > 0;
+/** Local identities are rooted at library/, never OS paths or network endpoints. */
+export const isModelLibraryLocalPath = (v: unknown): v is string => typeof v === 'string' && v.length <= 512 && /^(?:sources|meshes|evidence)\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.[A-Za-z0-9._-]+$/.test(v);
+const file = (v: unknown): v is unknown & ModelLibraryFile => object(v) && keys(v, 'url path format sha256 bytes') && ((Object.hasOwn(v, 'url') && !Object.hasOwn(v, 'path') && url(v.url)) || (Object.hasOwn(v, 'path') && !Object.hasOwn(v, 'url') && isModelLibraryLocalPath(v.path))) && text(v.format, 80) && /^[a-zA-Z0-9][a-zA-Z0-9.+_-]*$/.test(v.format) && hash(v.sha256) && Number.isSafeInteger(v.bytes) && (v.bytes as number) > 0;
 function invertibleAffine(value: unknown): boolean {
   if (!Array.isArray(value) || value.length !== 16 || !value.every(n => typeof n === 'number' && Number.isFinite(n)) || value[3] !== 0 || value[7] !== 0 || value[11] !== 0 || value[15] !== 1) return false;
   const m = value;
