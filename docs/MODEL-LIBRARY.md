@@ -447,3 +447,12 @@ incorporation notes and uses the geometry worker for trial evaluation. Closing t
 panel cancels pending work; an intervening edit also prevents the final commit.
 A successful insert is one undoable edit with its source snapshot; re-screening
 does not establish printability or collision qualification.
+
+For a selected STL, the panel distinguishes a complete recorded Jolt report, a
+legacy summary, and absent or different-file evidence. A complete report exposes
+its file and geometry identities, conversion, screening and compound limits,
+engine and qualifier versions, and the native step's scope. This is displayed
+without fetching the model or running physics. It is a curator's recorded assertion,
+not a reusable runtime collision proof; runtime shapes still require fresh
+qualification. The one-step preview does not establish contacts, fit, printability,
+or mechanical behavior. Local source records do not inherit a mesh's qualification.

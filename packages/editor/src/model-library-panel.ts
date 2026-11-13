@@ -47,6 +47,34 @@ export function mountModelLibraryPanel(parent:HTMLElement, session:CadSession,
     if(!matches.length)list.append(el('p',catalogue.assets.length?t('No matching models.'):t('No published catalogue is bundled. Open a reviewed remote catalogue JSON to browse models.')));
     for(const asset of matches){const button=el('button',`${asset.title} · ${asset.licence.spdx}`);button.type='button';button.disabled=working;button.setAttribute('aria-pressed',String(selected?.id===asset.id));button.onclick=()=>{selected=asset;renderList();renderDetails();};list.append(button);}
   }
+  function renderCollisionReport(container:HTMLElement,asset:ModelLibraryAsset,selectedFile:ModelLibraryFile|undefined){
+    container.replaceChildren();
+    container.append(el('h4',t('Recorded collision evidence')));
+    const quality=asset.quality,report=quality?.collisionReport;
+    container.append(el('p',t('Browsing and insertion do not run collision qualification.')));
+    if(report||quality?.physics)container.append(el('p',t('Serialized curator evidence only. Recorded metadata is not a reusable runtime collision proof or a certification of collision safety, printability or mechanical accuracy.')));
+    const sameFile=report&&selectedFile&&report.selectedFile.sha256===selectedFile.sha256&&report.selectedFile.bytes===selectedFile.bytes&&report.selectedFile.format===selectedFile.format&&report.selectedFile.url===selectedFile.url&&report.selectedFile.path===selectedFile.path;
+    if(!sameFile){
+      container.append(el('p',report?t('A complete report is recorded for a different STL selection; it does not apply to this file.'):quality?.physics?t('Only a legacy physics summary is recorded. No complete collision report is available for this selection.'):t('No complete collision report is recorded for this selection.')));
+      if(!report&&quality?.physics){const summary=quality.physics;container.append(el('p',t`Legacy summary: ${summary.engine} ${summary.engineVersion}; ${summary.qualifierVersion}; reported qualified: ${String(summary.qualified)}.`));}
+      return;
+    }
+    const evidence=report.evidence,certificate=evidence.certificate,screen=report.quality;
+    container.append(el('p',t('Runtime collisions require fresh immutable proofs. Changed bytes, conversion, geometry or toolchain require requalification.')));
+    const expanded=el('details');expanded.className='model-library-collision-report';expanded.append(el('summary',t('Inspect complete recorded collision report')));
+    expanded.append(el('p',t`Report version ${report.version}; checked ${evidence.checkedOn}; scope: ${evidence.scope}.`),
+      el('p',t`Engine: ${evidence.engine} ${evidence.engineVersion}; qualifier: ${evidence.qualifierVersion}; mesh checker: ${screen.toolVersion}.`),
+      el('p',t`Native check: ${evidence.nativeCheck.build} build; ${evidence.nativeCheck.steps} rigid step of ${evidence.nativeCheck.stepSeconds} s; no ground.`),
+      el('p',t('No ground settling, cavity clearance, contacts, mechanisms, elasticity, printability or manufacturing accuracy were tested. Native capacity/error telemetry is unavailable.')),
+      el('p',t`STL SHA-256: ${evidence.fileSha256}`),el('p',t`Converted geometry SHA-256: ${evidence.geometrySha256}`),
+      el('p',t`Evaluated source volume: ${evidence.sourceVolumeMm3} mm³; hulls: ${evidence.hulls} / ${certificate.maxHulls}; algorithm: ${certificate.algorithm}; strategy: ${certificate.strategy}.`),
+      el('p',t`Missing volume: ${certificate.missingVolumeMm3} mm³; extra volume: ${certificate.extraVolumeMm3} mm³; relative error: ${certificate.relativeError}; allowed volume fraction: ${certificate.tolerance.volumeFraction}.`),
+      el('p',t`Bounds error: ${certificate.boundsErrorMm} mm; allowed bounds error: ${certificate.tolerance.boundsMm} mm.`),
+      el('p',t`Screened mesh: ${screen.triangles} triangles; signed volume: ${screen.signedVolumeMm3} mm³; bounds min: ${screen.boundsMm.min.join(', ')} mm; max: ${screen.boundsMm.max.join(', ')} mm.`),
+      el('p',t('The complete record below retains the exact file identity, conversion matrix, screening limits, checks, diagnostics, bindings and tolerances. Metadata consistency does not verify that the reported run occurred.')),
+      el('pre',JSON.stringify(report,null,2)));
+    container.append(expanded);
+  }
   function renderDetails(){
     details.replaceChildren();const asset=selected;if(!asset)return;
     details.append(el('h3',asset.title),el('p',`${asset.author} · ${asset.licence.spdx} · ${asset.version}`),el('p',asset.licence.attribution),link(t('Original source'),asset.sourceUrl),document.createTextNode(' · '),link(t('Licence evidence'),asset.licence.evidenceUrl),el('p',asset.modificationNotes),el('p',asset.conversion.unitAssumption));
@@ -60,6 +88,7 @@ export function mountModelLibraryPanel(parent:HTMLElement, session:CadSession,
     choices.forEach(({file},i)=>{const option=el('option',`${i+1}: STL · ${file.bytes.toLocaleString()} bytes · ${file.sha256.slice(0,12)}`);option.value=String(i);files.append(option);});
     const identity=el('p');identity.className='model-library-hash';
     const conversion=el('div');conversion.className='model-library-conversion';
+    const collision=el('section');collision.setAttribute('aria-label',t('Recorded collision evidence'));
     const noteLabel=el('label',t('Incorporation modification notes'));const notes=el('input');notes.type='text';notes.maxLength=4096;notes.setAttribute('aria-label',t('Incorporation modification notes'));notes.placeholder=t('Describe conversion and any changes');noteLabel.append(notes);
     const offlineLabel=el('label',t('Use cached files only'));const offline=el('input');offline.type='checkbox';offlineLabel.prepend(offline);
     const insert=el('button',t('Insert selected STL'));insert.type='button';insert.className='primary';
@@ -69,7 +98,7 @@ export function mountModelLibraryPanel(parent:HTMLElement, session:CadSession,
       conversion.replaceChildren();
       if(chosen&&q?.fileSha256===chosen.file.sha256&&q.screeningPolicy){const policy=q.screeningPolicy;conversion.append(el('h4',t('Selected STL conversion to millimetres, Z up')),el('pre',Array.from({length:4},(_,row)=>Array.from({length:4},(_,column)=>String(policy.toMillimetresZUp[column*4+row])).join('  ')).join('\n')),el('p',t`Curated limits: ${policy.maxTriangles} triangles; ${policy.maxExtentMm} mm span per axis; ${policy.maxAnalysisBytes} analysis bytes. Translation is preserved; no centering or repair.`));}
       insert.disabled=working||!admitted||!notes.value.trim();eligibility.textContent=admitted?t('Selected STL has passing curated checks and a recorded conversion.'):t('Insertion unavailable: select an STL with passing quality, a recorded conversion and at most 16 MiB.');}
-    files.onchange=refresh;notes.oninput=refresh;
+    files.onchange=()=>{renderCollisionReport(collision,asset,choices[Number(files.value)]?.file);refresh();};notes.oninput=refresh;
     insert.onclick=async()=>{
       if(working||insert.disabled)return;
       const chosen=choices[Number(files.value)],initial=session.state,modificationNotes=notes.value.trim(),offlineOnly=offline.checked;
@@ -83,10 +112,11 @@ export function mountModelLibraryPanel(parent:HTMLElement, session:CadSession,
         try{await inserted();}catch(error){if(!disposed)status.textContent=t('Model inserted with provenance; viewport refresh failed. Close this panel to inspect the editor status.');}
       }catch(error){if(!disposed)report(error);}finally{working=false;controller=undefined;file.disabled=false;search.disabled=false;files.disabled=false;notes.disabled=false;offline.disabled=false;refresh();renderList();}
     };
-    details.append(files,identity,conversion,eligibility,noteLabel,offlineLabel,insert);refresh();
+    details.append(files,identity,conversion,collision,eligibility,noteLabel,offlineLabel,insert);renderCollisionReport(collision,asset,choices[Number(files.value)]?.file);refresh();
   }
   function renderSource(asset:ModelLibraryAsset,source:ModelLibraryFile){
     const bytes=source.path?localFiles.get(source.path):undefined;
+    const collision=el('section');collision.setAttribute('aria-label',t('Recorded collision evidence'));renderCollisionReport(collision,asset,source);details.append(collision);
     details.append(el('p',t('Bundled editable source. Insertion verifies its hash and evaluates the code; no mesh download or collision qualification.')),el('p',`${source.format} · ${source.bytes} bytes · ${source.path}`),el('pre',source.sha256));
     if(source.format==='openscad')details.append(el('p',t('OpenSCAD source is converted to editable CAD Script using the supported subset. The original artifact hash is retained.')));
     if(source.format==='jscad'){
