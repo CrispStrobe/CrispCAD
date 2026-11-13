@@ -5,6 +5,7 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import type { CadSession, Transform, Vec3 } from '@brickwright/cad-core';
 import type { GeometryResult } from '@brickwright/cad-geometry';
 import { TOUCH_SLOP_PX, createTouchTracker } from './vendor/touch-gestures.js';
+import {scalePivotRotation,applyGizmoDelta} from './transform-selection.js';
 import { snapDelta } from './vendor/transform-math.js';
 const RAD = Math.PI / 180;
 export type ViewDirection = 'top' | 'bottom' | 'front' | 'back' | 'right' | 'left' | 'iso';
@@ -45,7 +46,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const outlines = new Map<string, THREE.LineSegments>(); const ray = new THREE.Raycaster(); const pointer = new THREE.Vector2();
   const selectionBoxes=new Map<string,THREE.BoxHelper>();let activeMode:'select'|'translate'|'rotate'|'scale'='select';
   let directDrag:{pointerId:number;start:THREE.Vector3;plane:THREE.Plane;transforms:Map<string,Transform>;offset:Vec3;moved:boolean}|null=null;
-  let disposed = false; let selected: string[] = []; let drag: { matrix: THREE.Matrix4; transforms: Map<string, THREE.Matrix4> } | null = null; let gridStep = 1; let multiSelect = false; let viewListener: ((view: ViewDirection) => void) | undefined;
+  let disposed = false; let selected: string[] = []; let drag: { matrix: THREE.Matrix4; transforms: Map<string, Transform> } | null = null; let gridStep = 1; let multiSelect = false; let viewListener: ((view: ViewDirection) => void) | undefined;
   // Project an original SVG cube from the camera basis. The controls rotate with
   // the actual camera, including free orbit, without a second WebGL context.
   const ns = 'http://www.w3.org/2000/svg';
@@ -76,19 +77,18 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     const exact = Object.entries(directions).find(([name, d]) => name !== 'iso' && new THREE.Vector3(...d).normalize().dot(toward) > 0.99999)?.[0];
     const view = (exact ?? 'iso') as ViewDirection; canvas.dataset.view = view; viewListener?.(view); canvas.dataset.projection = camera instanceof THREE.OrthographicCamera ? 'orthographic' : 'perspective';
   }
-  const draw = () => { if (!disposed) { updateCube();const distance=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:camera.position.distanceTo(orbit.target);grid.material.opacity=THREE.MathUtils.clamp((240-distance)/200,0,.4);for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
-  const matrixFor = (t: Transform) => new THREE.Matrix4().compose(new THREE.Vector3(...t.position), new THREE.Quaternion().setFromEuler(new THREE.Euler(t.rotation[0] * RAD, t.rotation[1] * RAD, t.rotation[2] * RAD, 'ZYX')), new THREE.Vector3(...t.scale));
+  const draw = () => { if (!disposed) { canvas.dataset.transformAxis=gizmo.axis??'';updateCube();const distance=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:camera.position.distanceTo(orbit.target);grid.material.opacity=THREE.MathUtils.clamp((240-distance)/200,0,.4);for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
   const placeGizmo = () => {
     if (drag) return;
     const roots = selected.filter(id => session.state.document.roots.includes(id) && meshes.has(id));
     if (!roots.length || activeMode==='select') { gizmo.detach(); draw(); return; }
     const box = new THREE.Box3(); for (const id of roots) box.union(new THREE.Box3().setFromObject(meshes.get(id)!));
-    pivot.position.copy(box.getCenter(new THREE.Vector3())); pivot.quaternion.identity(); pivot.scale.set(1, 1, 1); pivot.updateMatrixWorld(); gizmo.attach(pivot); draw();
+    pivot.position.copy(box.getCenter(new THREE.Vector3())); pivot.quaternion.copy(activeMode==='scale'?scalePivotRotation(roots.map(id=>session.state.document.nodes[id].transform)):new THREE.Quaternion()); pivot.scale.set(1, 1, 1); pivot.updateMatrixWorld(); gizmo.attach(pivot); draw();
   };
   const onDrag = (event: { value: unknown }) => { orbit.enabled = !event.value; };
   const startTransform = () => {
-    const transforms = new Map<string, THREE.Matrix4>();
-    for (const id of selected) if (session.state.document.roots.includes(id)) transforms.set(id, matrixFor(session.state.document.nodes[id].transform));
+    const transforms = new Map<string, Transform>();
+    for (const id of selected) if (session.state.document.roots.includes(id)) transforms.set(id, structuredClone(session.state.document.nodes[id].transform));
     pivot.updateMatrixWorld(); drag = { matrix: pivot.matrixWorld.clone(), transforms };
   };
   const delta = () => { pivot.updateMatrixWorld(); return new THREE.Matrix4().multiplyMatrices(pivot.matrixWorld, drag!.matrix.clone().invert()); };
@@ -105,16 +105,9 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   };
   const endTransform = () => {
     if (!drag) return; const d = delta(); const updates: { id: string; transform: Transform }[] = [];
-    for (const [id, matrix] of drag.transforms) {
-      const p = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3(); d.clone().multiply(matrix).decompose(p, q, s);
-      const rebuilt = new THREE.Matrix4().compose(p, q, s);
-      const desired = d.clone().multiply(matrix);
-      if (rebuilt.elements.some((v, i) => Math.abs(v - desired.elements[i]) > 1e-5)) {
-        cancelTransform(); onError(new Error('This transform would shear the object. Scale rotated bodies individually.')); return;
-      }
-      const e = new THREE.Euler().setFromQuaternion(q, 'ZYX');
-      updates.push({ id, transform: { position: p.toArray() as Vec3, rotation: [e.x / RAD, e.y / RAD, e.z / RAD], scale: s.toArray() as Vec3 } });
-    }
+    try {
+      for (const [id, original] of drag.transforms) updates.push({id,transform:applyGizmoDelta(original,d,activeMode==='select'?'translate':activeMode,pivot.scale.toArray() as Vec3)});
+    } catch(error){cancelTransform();onError(error);return;}
     drag = null;
     try { session.transform(updates); } catch (e) { for (const mesh of meshes.values()) { mesh.matrix.identity(); mesh.matrixWorldNeedsUpdate = true; } onError(e); placeGizmo(); }
   };

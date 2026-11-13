@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {checkFeatures} from './features.js';
+import type {PlanarSketch,ExtrusionFeature} from './features.js';
 import { checkPhysics } from './physics.js';
 import { checkParametricDesign } from './parameters.js';
 import type { ParametricDesign } from './parameters.js';
@@ -8,9 +10,9 @@ import type { PartPhysics, CadJoint } from './physics.js';
 export type Vec3 = [number, number, number];
 export interface Transform { position: Vec3; rotation: Vec3; scale: Vec3 }
 export type Primitive = { kind: 'box'; size: Vec3 } | { kind: 'cylinder'; radius: number; height: number; segments: number } | { kind: 'sphere'; radius: number; segments: number };
-export type Shape = Primitive | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[] } | { kind: 'mesh'; positions: number[]; indices: number[] };
+export type Shape = Primitive | ExtrusionFeature | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[] } | { kind: 'mesh'; positions: number[]; indices: number[] };
 export type SolidNode = { id: string; name: string; color: string; transform: Transform; reference?: boolean; physics?: PartPhysics; generator?:GeneratorRecipe } & Shape;
-export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign }
+export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch> }
 export const MAX_DOCUMENT_BYTES = 16 * 1024 * 1024;
 export const identityTransform = (): Transform => ({ position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] });
 export function newId(): string {
@@ -22,7 +24,7 @@ export function newId(): string {
 export const createDocument = (title = 'Untitled design'): CadDocument => ({ format: 'brickwright-cad', version: 1, units: 'mm', id: newId(), title, nodes: {}, roots: [] });
 /** Fast stale-result guard, not an authenticity/signing mechanism. */
 export function documentGeometryKey(doc: CadDocument): string {
-  const source=JSON.stringify([doc.id,doc.roots,Object.entries(doc.nodes).map(([id,n])=>{const {physics,...geometry}=n;return [id,geometry];})]);let a=2166136261,b=3339675911;
+  const source=JSON.stringify([doc.id,doc.roots,doc.sketches,doc.parametric,Object.entries(doc.nodes).map(([id,n])=>{const {physics,...geometry}=n;return [id,geometry];})]);let a=2166136261,b=3339675911;
   for(let i=0;i<source.length;i++){a=Math.imul(a^source.charCodeAt(i),16777619);b=Math.imul(b^source.charCodeAt(i),2246822519);}return `${source.length}:${a>>>0}:${b>>>0}`;
 }
 function fail(message: string): never { throw new Error(`Invalid CAD project: ${message}`); }
@@ -34,7 +36,7 @@ const vec = (v: unknown, min = -1e6, max = 1e6): v is Vec3 => Array.isArray(v) &
 
 /** Validate before replacing any live state. Unknown versions are refused, never downgraded. */
 export function checkDocument(value: unknown): CadDocument {
-  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2].includes(value.version as number) || value.units !== 'mm') fail('unsupported format, version or units');
+  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2,3].includes(value.version as number) || value.units !== 'mm') fail('unsupported format, version or units');
   if (!idOk(value.id) || !text(value.title) || !record(value.nodes) || !Array.isArray(value.roots)) fail('missing document identity, nodes or roots');
   const nodes = value.nodes as Record<string, unknown>;
   const entries = Object.entries(nodes);
@@ -42,7 +44,7 @@ export function checkDocument(value: unknown): CadDocument {
   for (const [id, raw] of entries) {
     if (!idOk(id) || !record(raw) || raw.id !== id || !text(raw.name) || typeof raw.color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(raw.color)) fail(`bad node ${id}`);
     const t = raw.transform;
-    if(raw.generator!==undefined){if(value.version!==2)fail('shape recipes require version 2');checkGenerator(raw.generator);}
+    if(raw.generator!==undefined){if(value.version===1)fail('shape recipes require version 2 or later');checkGenerator(raw.generator);}
     if (!record(t) || !vec(t.position) || !vec(t.rotation, -360000, 360000) || !vec(t.scale, 0.001, 1000)) fail(`bad transform on ${id}`);
     switch (raw.kind) {
       case 'box': if (!vec(raw.size, 0.01, 100000)) fail(`bad box dimensions on ${id}`); break;
@@ -50,6 +52,7 @@ export function checkDocument(value: unknown): CadDocument {
         if (!num(raw.radius, 0.01, 50000) || !num(raw.height, 0.01, 100000) || !Number.isInteger(raw.segments) || !num(raw.segments, 12, 256)) fail(`bad cylinder on ${id}`); break;
       case 'sphere':
         if (!num(raw.radius, 0.01, 50000) || !Number.isInteger(raw.segments) || !num(raw.segments, 12, 256)) fail(`bad sphere on ${id}`); break;
+      case 'extrusion': break; // Full versioned feature validation follows graph validation.
       case 'boolean':
         if (!['union', 'subtract', 'intersect'].includes(String(raw.operation)) || !Array.isArray(raw.inputs) || raw.inputs.length < 2 || raw.inputs.length > 100 || new Set(raw.inputs).size !== raw.inputs.length || !raw.inputs.every(x => idOk(x) && Object.hasOwn(nodes, x))) fail(`bad boolean inputs on ${id}`); break;
       case 'mesh':
@@ -77,6 +80,7 @@ export function checkDocument(value: unknown): CadDocument {
   if (reachable.size !== entries.length) fail('orphaned nodes');
   checkPhysics(value as unknown as CadDocument);
   checkParametricDesign(value as unknown as CadDocument);
+  checkFeatures(value as unknown as CadDocument);
   return value as unknown as CadDocument;
 }
 export function validateDocument(value: unknown): CadDocument {

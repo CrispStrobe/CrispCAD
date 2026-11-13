@@ -1,0 +1,181 @@
+{
+  "format": "brickwright-cad",
+  "version": 3,
+  "units": "mm",
+  "id": "sketch-plate-example",
+  "title": "Parametric sketch mounting plate",
+  "nodes": {
+    "plate": {
+      "id": "plate",
+      "kind": "extrusion",
+      "featureVersion": 1,
+      "name": "Plate extrusion",
+      "color": "#e9a743",
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "sketchId": "plate-sketch",
+      "distance": "thickness",
+      "symmetric": false
+    },
+    "bore-left": {
+      "id": "bore-left",
+      "kind": "extrusion",
+      "featureVersion": 1,
+      "name": "Left bore",
+      "color": "#e9a743",
+      "transform": {
+        "position": [
+          -15,
+          0,
+          -1
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "sketchId": "bore-sketch",
+      "distance": "thickness + 2 mm",
+      "symmetric": false
+    },
+    "bore-right": {
+      "id": "bore-right",
+      "kind": "extrusion",
+      "featureVersion": 1,
+      "name": "Right bore",
+      "color": "#e9a743",
+      "transform": {
+        "position": [
+          15,
+          0,
+          -1
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "sketchId": "bore-sketch",
+      "distance": "thickness + 2 mm",
+      "symmetric": false
+    },
+    "finished-plate": {
+      "id": "finished-plate",
+      "kind": "boolean",
+      "operation": "subtract",
+      "inputs": [
+        "plate",
+        "bore-left",
+        "bore-right"
+      ],
+      "name": "Mounting plate",
+      "color": "#e9a743",
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    }
+  },
+  "roots": [
+    "finished-plate"
+  ],
+  "parametric": {
+    "version": 1,
+    "parameters": {
+      "width": {
+        "expression": "60",
+        "unit": "mm"
+      },
+      "depth": {
+        "expression": "width / 2",
+        "unit": "mm"
+      },
+      "thickness": {
+        "expression": "5",
+        "unit": "mm"
+      },
+      "holeDiameter": {
+        "expression": "6",
+        "unit": "mm"
+      }
+    },
+    "bindings": [
+      {
+        "nodeId": "bore-left",
+        "property": "positionX",
+        "expression": "-width / 4"
+      },
+      {
+        "nodeId": "bore-right",
+        "property": "positionX",
+        "expression": "width / 4"
+      }
+    ]
+  },
+  "sketches": {
+    "plate-sketch": {
+      "version": 1,
+      "id": "plate-sketch",
+      "name": "Plate outline",
+      "plane": "XY",
+      "profile": {
+        "kind": "rectangle",
+        "id": "plate-profile",
+        "width": "width",
+        "depth": "depth"
+      }
+    },
+    "bore-sketch": {
+      "version": 1,
+      "id": "bore-sketch",
+      "name": "Shared bore profile",
+      "plane": "XY",
+      "profile": {
+        "kind": "circle",
+        "id": "bore-profile",
+        "radius": "holeDiameter / 2",
+        "segments": 64
+      }
+    }
+  }
+}

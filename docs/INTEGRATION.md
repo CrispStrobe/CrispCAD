@@ -184,3 +184,15 @@ remaps identities and merges namespaces in one undoable transaction. Duplicate
 keeps links to existing model parameters; paste captures its own parameter values
 and renames collisions. Both retain generator recipes. Native document Edit
 commands defer to the system text responder when editing a field.
+
+## Retained parametric features
+
+Document version 3 adds analytic sketches and versioned extrusion definitions.
+All hosts must retain the complete document (including `sketches`) in editable
+sidecars and revision storage. Never replace these definitions with the evaluated
+mesh when saving. Hosts on an older core must reject version 3 explicitly.
+
+The exported core session APIs, derived dependency graph, semantic reference
+contract, expression rules and simulation invalidation boundary are specified in
+[PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md). The editor command `sketch` opens the
+same definition UI as the Sketch button; native hosts route it like `parameters`.

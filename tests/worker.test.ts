@@ -20,3 +20,9 @@ it('discards a hung kernel and starts a new worker for the next evaluation', asy
   const first = client.evaluate(createDocument()); const failure = expect(first).rejects.toThrow(/30 seconds/); await vi.advanceTimersByTimeAsync(30000); await failure; expect(workers[0].terminated).toBe(true);
   const second = client.evaluate(createDocument()); const next = workers[1]; next.onmessage!({ data: { request: next.messages[0].request, result: { bodies: [], volume: 0, triangles: 0 } } }); expect((await second).volume).toBe(0); client.dispose();
 });
+it('retains stable feature diagnostics across worker replies and accepts a later recomputation',async()=>{
+ const w=new MockWorker(),client=createGeometryClient('wasm',()=>w as unknown as Worker),first=client.evaluate(createDocument());
+ const rejected=expect(first).rejects.toMatchObject({name:'FeatureEvaluationError',diagnostic:{source:'feature',id:'extrude-plate',message:'Invalid profile'}});
+ w.onmessage!({data:{request:w.messages[0].request,error:'Invalid profile',diagnostic:{source:'feature',id:'extrude-plate',message:'Invalid profile'}}});await rejected;expect(w.terminated).toBe(false);
+ const second=client.evaluate(createDocument());w.onmessage!({data:{request:w.messages[1].request,result:{bodies:[],volume:0,triangles:0}}});expect((await second).volume).toBe(0);client.dispose();
+});

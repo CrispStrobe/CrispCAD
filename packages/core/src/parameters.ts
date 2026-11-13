@@ -132,7 +132,7 @@ function setProperty(node: SolidNode, property: DrivenProperty, value: number) {
 function solvedBindings(doc: CadDocument) {
   const design = doc.parametric;
   if (design === undefined) return [];
-  if (doc.version !== 2) error('parametric designs require document version 2');
+  if (doc.version === 1) error('parametric designs require document version 2');
   const values = evaluateParameters(design), used = new Set<string>();
   // Until joint frames have parametric references, require an explicit detach.
   const connected = new Set<string>();

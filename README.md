@@ -41,6 +41,10 @@ CrispMesh scan-to-CAD path, is in [docs/ROADMAP.md](docs/ROADMAP.md).
   Box/cylinder/sphere expose dimensions. Screws, threads, nuts and hearts expose
   editable generator controls; remaining catalog presets currently expose transforms
   and retained operands rather than complete generator parameters.
+- Create rectangle/circle sketches and retained extrusions with dimensions or
+  formulas, principal planes and symmetry. Reopen their inputs after booleans,
+  save/reload and history restore. See [the parametric model](docs/PARAMETRIC-MODEL.md)
+  and [sketch mounting plate](examples/parametric-sketch-plate.bcad).
 - Retain and edit the operands of union, subtract and intersection operations.
 - Optionally drive primitive dimensions and transforms with named parameters,
   unit-aware formulas and dependency recomputation, including retained boolean

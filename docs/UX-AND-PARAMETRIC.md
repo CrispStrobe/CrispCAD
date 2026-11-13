@@ -51,8 +51,9 @@ Continue the versioned, headless design-intent graph beside evaluated geometry:
    arithmetic expressions and explicit dependency edges. Validate cycles and
    invalid dimensions without executing arbitrary JavaScript.
    Named values, arithmetic dependencies, unit validation and primitive/transform
-   bindings are implemented in document version 2. Stable topology references
-   and parametric sketch/feature identity are still required.
+   bindings are implemented in document version 2. Document version 3 now adds stable sketch/profile/extrusion identities and a
+   derived dependency graph; arbitrary topology references remain ahead. See
+   [PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md).
 2. Versioned feature definitions for primitives, catalog generators, sketches,
    extrude/revolve/sweep, booleans and later edge features. Keep user inputs,
    generator/kernel versions and external source assets, not just tessellation.
@@ -74,7 +75,7 @@ Continue the versioned, headless design-intent graph beside evaluated geometry:
 Move headless catalog generation out of the DOM editor before making it the
 canonical parametric evaluator. Store complete recipes in a versioned schema;
 the current physics sourcePreset tag is provenance, not a regeneration feature.
-A future schema migration must preserve old documents and all archived iterations.
+New schema versions must preserve old documents and all archived iterations.
 A full constraint/B-rep CAD is a substantial later project, not a toolbar change.
 
 ## Iterations: behavior and persistence contract

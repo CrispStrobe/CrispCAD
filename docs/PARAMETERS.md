@@ -58,7 +58,13 @@ driven properties; edit or detach a binding instead. Geometry evaluation and
 physics continue to use the validated evaluated document. A geometry change
 invalidates collision qualification, mass and inertia; old proofs cannot be reused.
 
-This is the first parametric milestone. Catalog generator recipes, sketch
-constraints, extrude/revolve/sweep feature history, stable topology references,
-exact B-rep/STEP and full FreeCAD equivalence remain separate work. See
+Sketch-based modeling is now available through **Sketch**. Rectangle and circle
+profiles, formulas, reusable sketch identities and retained extrusion definitions
+are implemented in document version 3. See [the parametric data model](PARAMETRIC-MODEL.md)
+and [sketch mounting plate](../examples/parametric-sketch-plate.bcad). Sketch and
+extrusion formulas are edited directly in their definition dialog; the bindings
+list above controls primitive dimensions and node transforms.
+
+General sketch constraints, other feature kinds, arbitrary stable topology
+references, exact B-rep/STEP and full FreeCAD equivalence remain separate work. See
 [UX-AND-PARAMETRIC.md](UX-AND-PARAMETRIC.md).

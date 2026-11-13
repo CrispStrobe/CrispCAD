@@ -53,3 +53,12 @@ qualification and its limits; UX-AND-PARAMETRIC.md defines the remaining UX and
 optional parametric scope. The first-delivery exclusions above describe the
 initial MVP and do not claim that the later mechanical or exact-CAD milestones
 are finished.
+
+
+## Parametric definition milestone
+
+The current model additionally retains rectangle/circle sketch definitions and
+versioned extrusion features with expressions and reusable identities. The
+original parametric-extrusion exclusion above applied to the first delivery.
+[PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md) specifies the delivered schema, editor
+workflow and remaining general constraint, topology and exact-kernel work.

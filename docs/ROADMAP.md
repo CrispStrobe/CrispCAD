@@ -4,7 +4,7 @@
 
 Implemented in the current workbench update: labeled tool groups, a camera-synchronized front/right/top view cube, other principal views, a millimetre baseplate, framing and zoom, perspective/orthographic projection, snap controls, and placing bodies on the workplane. Keep navigation and view preferences outside the CAD document and undo history. Keep the editor embeddable with instance-local events and complete disposal.
 
-The Layerling screenshot supplied by the owner is a visual workflow reference. Implement our own UI and interaction code; do not copy its implementation, assets, or translations. This milestone does not add sketching, fillets, STEP, or the other advanced operations visible in that reference.
+The Layerling screenshot supplied by the owner is a visual workflow reference. Implement our own UI and interaction code; do not copy its implementation, assets, or translations. That navigation milestone did not add advanced modeling operations. The sketch-template/extrusion foundation below is now implemented; general sketch constraints, fillets and STEP remain ahead.
 
 ## Possible later path: CrispMesh integration
 
@@ -53,3 +53,18 @@ Screw/thread/nut and heart recipes are editable and regenerate transactionally;
 other catalog generators still need their specific controls. Normal saved `.bcad`
 files include history. macOS mirrors the library to a configurable filesystem
 folder and refuses file updates that discard or rewrite saved iterations.
+
+## Parametric foundation: implemented 2026-11-13
+
+Document version 3 retains separately identified analytic sketches and versioned
+extrusion features, with unit-aware expressions and deterministic dependency
+analysis. A shared sketch can drive several extrusions and retained booleans.
+The Sketch dialog preflights the whole solid and commits one undoable edit;
+reopen, archive history, duplicate, paste and Jolt collision invalidation retain
+the definition. Existing version 1/2 projects remain supported.
+
+The concrete schema, headless APIs, reference boundaries and next implementation
+order are in [PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md). Prioritize headless catalog
+features and sketch entity/constraint contracts next, then further solid features,
+semantic attachments/mates and incremental recomputation. The current profiles
+are rectangle/circle templates, not a freehand constrained sketch editor.

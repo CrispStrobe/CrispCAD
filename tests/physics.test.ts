@@ -9,6 +9,13 @@ import {createPhysicsWorld,prepareDocumentCollisions,solidMassProperties} from '
 let kernel:GeometryKernel,J:Awaited<ReturnType<typeof initJolt>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});J=await initJolt();});
 describe('qualified Jolt physics boundary',()=>{
+ it('qualifies parametric extrusions and refuses old collision proofs after sketch recomputation',async()=>{
+  const s=createCadSession();s.setParametric({version:1,parameters:{width:{expression:'20',unit:'mm'}},bindings:[]});const id=s.addSketchExtrusion({kind:'rectangle',id:'profile',width:'width',depth:10},{distance:'width / 2'});s.update(id,{transform:{position:[0,0,50],rotation:[0,0,0],scale:[1,1,1]}});
+  const before=kernel.evaluate(s.state.document),old=await prepareDocumentCollisions(s.state.document,before,kernel);
+  const p=structuredClone(s.state.document.parametric!);p.parameters.width.expression='40';s.setParametric(p);const result=kernel.evaluate(s.state.document);expect(solidMassProperties(result.bodies[0],1050).massKg).toBeCloseTo(.0084,10);
+  await expect(createPhysicsWorld(s.state.document,result,old,{J})).rejects.toThrow();const prepared=await prepareDocumentCollisions(s.state.document,result,kernel),world=await createPhysicsWorld(s.state.document,result,prepared,{J});try{for(let i=0;i<200;i++)world.step();expect(world.geometryBoundsMm(id).min[2]).toBeGreaterThan(-.25);}finally{world.dispose();}
+ });
+
  it('qualifies edited screw threads and a bent heart against their regenerated solids',async()=>{
   for(const preset of ['screw','heart'] as const){const recipe=defaultGenerator(preset)!;if(preset==='screw'){recipe.values.pitch=2.5;recipe.values.starts=2;recipe.values.hand=-1;}else recipe.values.bend=30;
    const doc=createPresetDocument(preset,'BW',{recipe});doc.nodes[doc.roots[0]].transform.position[2]=60;

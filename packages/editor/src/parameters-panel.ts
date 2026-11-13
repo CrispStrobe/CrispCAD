@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {drivenProperties, evaluateParameters} from '@brickwright/cad-core';
+import {drivenProperties, evaluateParameters, designGraph} from '@brickwright/cad-core';
 import type {CadSession, DrivenProperty, NamedParameter, ParameterUnit, ParametricDesign} from '@brickwright/cad-core';
 
 export const propertyLabels: Record<DrivenProperty,string> = {
@@ -63,11 +63,14 @@ export function mountParametersPanel(parent:HTMLElement, session:CadSession) {
         for(const row of bindingList.children){const fields=row.querySelectorAll('select');next.bindings.push({nodeId:fields[0].value,property:fields[1].value as DrivenProperty,expression:row.querySelector('input')!.value.trim()});}
         session.setParametric(next);expectedRevision=session.state.revision;
         status.textContent='Parameters applied. Geometry is recomputing; this edit is saved in model history.';
-        const values=evaluateParameters(next);
+        updateGraph();const values=evaluateParameters(next);
         for(const row of parameterList.children){const name=row.querySelector('input')!.value.trim(),unit=next.parameters[name].unit;row.querySelector('output')!.textContent=`${values[name].value.toLocaleString(undefined,{maximumFractionDigits:5})} ${unit==='scalar'?'':unit}`;}
       } catch(error) {status.textContent=error instanceof Error?error.message:String(error);}
     });apply.className='primary';actions.append(button('Cancel',()=>dialog.close()),apply);
-    dialog.append(heading,help,element('h3','Named dimensions and values'),parameterList,button('Add parameter',()=>addParameter()),element('h3','Driving expressions'),bindingList,addBindingButton,status,actions);
+    const graph=element('details');graph.className='design-dependencies';
+    function updateGraph(){graph.replaceChildren(element('summary','Feature dependencies'));const dependencies=designGraph(session.state.document);for(const entry of dependencies){const row=element('p',`${entry.kind}: ${entry.label}${entry.dependencies.length?' ← '+entry.dependencies.map(key=>dependencies.find(e=>e.key===key)?.label??key).join(', '):''}`);row.title=entry.key;graph.append(row);}}
+    updateGraph();
+    dialog.append(heading,help,graph,element('h3','Named dimensions and values'),parameterList,button('Add parameter',()=>addParameter()),element('h3','Driving expressions'),bindingList,addBindingButton,status,actions);
     dialog.showModal();
   }
   // Keep editor shortcuts from acting on the model behind this modal.

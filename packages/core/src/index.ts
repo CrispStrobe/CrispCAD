@@ -6,3 +6,5 @@ export {sha256Hex} from './hash.js';
 export * from './parameters.js';
 export * from './generators.js';
 export * from './fragments.js';
+
+export * from './features.js';

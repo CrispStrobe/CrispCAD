@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import Module from 'manifold-3d';
 import type { Manifold, ManifoldToplevel } from 'manifold-3d';
-import { validateDocument, documentGeometryKey } from '@brickwright/cad-core';
+import { validateDocument, documentGeometryKey, evaluateExtrusion, FeatureEvaluationError } from '@brickwright/cad-core';
 import type { CadDocument, SolidNode } from '@brickwright/cad-core';
 import { collisionCSG } from './collision-csg.js';
 import { partitionConvex } from './convex.js';
@@ -30,10 +30,19 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
   const build = (id: string): Manifold => {
     const cached = cache.get(id); if (cached) return cached;
     const node = doc.nodes[id]; let solid: Manifold;
+    try {
     switch (node.kind) {
       case 'box': solid = keep(module.Manifold.cube(node.size, true)); break;
       case 'cylinder': solid = keep(module.Manifold.cylinder(node.height, node.radius, node.radius, node.segments, true)); break;
       case 'sphere': solid = keep(module.Manifold.sphere(node.radius, node.segments)); break;
+      case 'extrusion': {
+        const profile=evaluateExtrusion(node,doc);
+        solid=keep(module.Manifold.extrude([profile.contour],profile.distance));
+        if(profile.start)solid=keep(solid.translate([0,0,profile.start]));
+        if(profile.plane==='XZ')solid=keep(solid.rotate([90,0,0]));
+        else if(profile.plane==='YZ')solid=keep(solid.rotate([90,0,90]));
+        break;
+      }
       case 'mesh': {
         const mesh = new module.Mesh({ numProp: 3, vertProperties: new Float32Array(node.positions), triVerts: new Uint32Array(node.indices) });
         mesh.merge(); solid = keep(new module.Manifold(mesh)); break;
@@ -51,6 +60,7 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
     if (status !== 'NoError') throw new Error(`${node.name}: ${status}. Import a closed, consistently oriented solid mesh.`);
     if(result.volume()< -1e-8)throw new Error(`${node.name}: reversed solid winding produces negative volume. Reorient the mesh faces before importing.`);
     cache.set(id, result); return result;
+    } catch(error){if(error instanceof FeatureEvaluationError)throw error;throw new FeatureEvaluationError({source:'feature',id,message:`${node.name}: ${error instanceof Error?error.message:String(error)}`});}
   };
   try {
     const bodies = doc.roots.map(id => {

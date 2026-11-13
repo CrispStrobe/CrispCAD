@@ -219,3 +219,46 @@ and direct-device installation are in IPAD.md.
   its complete saved iteration journal retained.
 - Final follow-up checks: 114 headless tests, 36 Chromium/iPad WebKit workflows,
   empty-cache SDK package installation and real geometry/Jolt stepping pass.
+
+
+## Parametric definition foundation — 2026-11-13
+
+- Saved document version 3: independently identified rectangle/circle sketches,
+  reusable by several versioned extrusion features. Formulas use the existing
+  bounded, unit-aware parser and named parameters. Retained booleans recompute
+  from definitions rather than replacing them with meshes.
+- Exported headless sketch/edit/extrusion APIs, semantic profile/output references,
+  deterministic topological graph and transitive invalidation queries. Structured
+  sketch/feature diagnostics survive the worker boundary. Future arbitrary
+  topology references, a general constraint solver and B-rep remain explicit work.
+- A Sketch dialog includes a 2D profile preview, numeric/formula inputs, plane and
+  symmetry. Whole-model geometry preflight precedes one atomic undoable commit.
+  Invalid drafts stay open. Native Object menu also exposes the action.
+- Duplicate/paste retain and remap definitions and expression namespaces. History
+  archives keep sketches and formulas; v1/v2 documents remain supported. Includes
+  a two-bore mounting plate example sharing one circle sketch.
+- The existing Jolt qualification path handles these evaluated solids. Regression
+  coverage checks changed mass, rejection of stale collision data and a real
+  floor drop after parameter changes.
+- See [PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md) for schema, boundaries and next
+  implementation sequence. No additional dependencies or reference-app source.
+
+
+### Rotated-body scaling correction
+
+Mac build 6 aligns the scale gizmo with the selected body's local axes (also
+shared by a selection whose bodies have the same orientation). Scaling preserves
+the stored rotation and unchanged numeric inputs exactly. Uniform scaling also
+works across differently oriented selections; nonuniform scaling that would
+actually require shear is still rejected without changing the document.
+Regression coverage drags the real local X handle on a rotated, already
+nonuniformly scaled screw in Chromium and iPad WebKit, then verifies Undo.
+The native smoke test also creates a formula-driven sketch extrusion through
+Object → Sketch and Extrude and verifies filesystem history retention.
+
+
+Final verification for this update: 132 headless tests, 42 Chromium/iPad WebKit
+workflows, native macOS menu/clipboard/sketch/library smoke checks, and independent
+empty-cache offline installation of all six packed SDKs with real parametric
+geometry and SI Jolt physics. Mac build 6 was installed and launched with the
+existing project library retained.

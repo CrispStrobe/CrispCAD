@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {FeatureEvaluationError} from '@brickwright/cad-core';
+import type {FeatureDiagnostic} from '@brickwright/cad-core';
 import type { CadDocument } from '@brickwright/cad-core';
 import type { GeometryResult } from '@brickwright/cad-geometry';
 /** A timed-out/crashed kernel is discarded; the next edit starts a fresh worker. */
@@ -13,9 +15,9 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
     if (worker) return worker;
     worker = createWorker ? createWorker() : new Worker(new URL('./geometry.worker.js', import.meta.url), { type: 'module' });
     worker.onmessage = e => {
-      const data = e.data as { request: number; result?: GeometryResult; error?: string }; const request = pending.get(data.request);
+      const data = e.data as { request: number; result?: GeometryResult; error?: string; diagnostic?:FeatureDiagnostic }; const request = pending.get(data.request);
       if (!request) return; pending.delete(data.request); clearTimeout(request.timer);
-      if (data.error) request.reject(new Error(data.error)); else request.resolve(data.result!);
+      if (data.error) request.reject(data.diagnostic?new FeatureEvaluationError(data.diagnostic):new Error(data.error)); else request.resolve(data.result!);
     };
     worker.onerror = event => fail(new Error(event.message || 'Geometry worker failed'));
     return worker;
