@@ -196,10 +196,10 @@ No reference application's source or assets were used for this collection.
 This is a **local collection manifest**, format
 `brickwright-local-example-library` version 1. File `path` values are relative to
 `library/`; they deliberately do not claim HTTPS download endpoints for files
-that have not been published at an immutable revision. It is separate from the
-network catalogue schema, cannot be passed to `fetchModelLibraryFile`, and is not
-a catalogue insertion UI. Publication and reviewed immutable download URLs are
-still required to admit these generated files to the remote catalogue. The source
+that have not been published at an immutable revision. The standalone host projects
+this manifest to local file identities and bundles the editable sources, not the
+derived meshes. It does not pass local paths to `fetchModelLibraryFile`. Publication
+and reviewed immutable download URLs are still required for a remote catalogue. The source
 repository remains private; its provenance links require repository access.
 
 Run locally from the repository root, with the lockfile-installed dependencies:
@@ -343,24 +343,35 @@ The returned fresh quality result contains no physics evidence. Retained catalog
 quality (including any separate curation assertions) remains the curator's snapshot;
 insertion does not independently verify licence grants, establish mechanical
 accuracy, detect all intersections, prove printability or qualify physics/collisions.
-Automatic source compilation and bulk ingestion remain pending.
+Bulk ingestion remains pending.
 
 
 ## Editor catalogue interface
 
 The editor's File → Model library panel browses a host-supplied reviewed network
-catalogue or a catalogue JSON file selected by the user. No remote catalogue is
-bundled: the checked-in local example and fixture manifests are different formats
-and do not assert published download URLs. Browsing metadata makes no requests.
+catalogue or a catalogue JSON file selected by the user. Standalone also includes
+the 34 pinned editable CAD Script examples and the CC0 slicer fixture as local
+sources; no remote catalogue or fabricated download URLs are bundled. Browsing
+metadata makes no requests.
 The panel shows the source, grant evidence, attribution, exact selected STL URL and
 hash, and the selected mesh's screening conversion and limits separately from the
 original source assumptions. Only an explicit insertion fetches the selected file.
 
-Standalone uses its persistent browser cache; “Use cached files only” performs no
+Local sources are resolved only from a fixed build-time map and verified by size
+and SHA-256 before a trial worker evaluation and atomic insertion. CAD Script
+remains editable. The OpenSCAD fixture is translated to editable CAD Script; the
+original source remains in the repository and its hash and provenance are retained,
+but the original OpenSCAD bytes are not embedded in the project. Local identities
+are not filesystem paths to be opened by a host, and remote fetching refuses them.
+Older readers that cannot validate these identities reject the project rather than
+discard attribution. Local insertion does not establish physics qualification.
+
+Standalone uses its persistent browser cache for remote files; “Use cached files only” performs no
 network access. Other hosts can provide `modelLibrary: {catalogue, cache, fetch}`
 through `CadEditorOptions`. The catalogue is validated and snapshotted, but metadata
-is a curator assertion, not independent verification of rights. Eligible files must
-have passing hash-bound quality and a recorded conversion. Insertion requires
+is a curator assertion, not independent verification of rights. Eligible remote STL files must
+have passing hash-bound quality and a recorded conversion; local editable sources
+are verified and evaluated before insertion. Insertion requires
 incorporation notes and uses the geometry worker for trial evaluation. Closing the
 panel cancels pending work; an intervening edit also prevents the final commit.
 A successful insert is one undoable edit with its source snapshot; re-screening

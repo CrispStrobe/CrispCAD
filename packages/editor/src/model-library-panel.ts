@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {fetchModelLibraryFile, parseModelLibraryCatalogue, validateModelLibraryCatalogue, t} from '@brickwright/cad-core';
 import type {CadDocument, CadSession, ModelLibraryCatalogue, ModelLibraryAsset, ModelLibraryFile, ModelLibraryFileSelection, ModelLibraryFileCache} from '@brickwright/cad-core';
-import {insertModelLibrarySTL, MODEL_LIBRARY_MESH_MAX_BYTES} from '@brickwright/cad-geometry';
+import {insertModelLibrarySource, insertModelLibrarySTL, MODEL_LIBRARY_MESH_MAX_BYTES} from '@brickwright/cad-geometry';
 import type {GeometryResult} from '@brickwright/cad-geometry';
 
 export interface ModelLibraryOptions {
-  /** Reviewed remote catalogue only; local collection manifests are a separate format. */
+  /** Reviewed remote/local catalogue. Convert collection manifests explicitly first. */
   catalogue?: ModelLibraryCatalogue;
+  /** Explicit host-bundled bytes keyed by validated library-relative identity. */
+  localFiles?: ReadonlyMap<string, Uint8Array>;
   cache: ModelLibraryFileCache;
   fetch?: typeof globalThis.fetch;
 }
@@ -22,11 +24,12 @@ export function mountModelLibraryPanel(parent:HTMLElement, session:CadSession,
   let catalogue:ModelLibraryCatalogue={format:'brickwright-model-library',version:1,assets:[]};
   let initialError='';
   if(options?.catalogue){const result=validateModelLibraryCatalogue(options.catalogue);if(!result.valid)initialError=result.errors.join(' ');else catalogue=result.catalogue;}
+  const localFiles=new Map([...options?.localFiles??[]].map(([path,bytes])=>[path,bytes.slice()]));
   let disposed=false, working=false, selected:ModelLibraryAsset|undefined, controller:AbortController|undefined;
   const dialog=el('dialog');dialog.className='model-library-dialog';dialog.setAttribute('aria-label',t('Model library'));
   const heading=el('header'),title=el('h2',t('Model library')),close=el('button',t('Close model library'));
   close.type='button';close.onclick=()=>{controller?.abort();dialog.close();};heading.append(title,close);
-  const help=el('p',t('Browse reviewed catalogue metadata. Only Insert downloads the selected STL. Source programs and local collection manifests are separate.'));
+  const help=el('p',t('Browse reviewed models. Bundled editable sources work offline; remote STL files download only when inserted.'));
   const tools=el('div');tools.className='model-library-tools';
   const search=el('input');search.type='search';search.setAttribute('aria-label',t('Search models'));search.placeholder=t('Search models');
   const load=el('label',t('Open catalogue JSON'));const file=el('input');file.type='file';file.accept='.json,application/json';file.setAttribute('aria-label',t('Open catalogue JSON'));load.append(file);
@@ -47,6 +50,7 @@ export function mountModelLibraryPanel(parent:HTMLElement, session:CadSession,
   function renderDetails(){
     details.replaceChildren();const asset=selected;if(!asset)return;
     details.append(el('h3',asset.title),el('p',`${asset.author} · ${asset.licence.spdx} · ${asset.version}`),el('p',asset.licence.attribution),link(t('Original source'),asset.sourceUrl),document.createTextNode(' · '),link(t('Licence evidence'),asset.licence.evidenceUrl),el('p',asset.modificationNotes),el('p',asset.conversion.unitAssumption));
+    if(asset.original.path && ['cad-script','openscad'].includes(asset.original.format)){renderSource(asset);return;}
     const quality=asset.quality;
     details.append(el('p',t('Mesh checks are curator evidence; insertion repeats the checks. They do not prove printability, mechanical accuracy or collision safety.')));
     if(quality)details.append(el('p',`${quality.toolVersion} · ${quality.checkedOn}`));
@@ -59,8 +63,8 @@ export function mountModelLibraryPanel(parent:HTMLElement, session:CadSession,
     const offlineLabel=el('label',t('Use cached files only'));const offline=el('input');offline.type='checkbox';offlineLabel.prepend(offline);
     const insert=el('button',t('Insert selected STL'));insert.type='button';insert.className='primary';
     const eligibility=el('p');
-    function refresh(){const chosen=choices[Number(files.value)];const q=asset!.quality;const admitted=!!chosen&&chosen.file.bytes<=MODEL_LIBRARY_MESH_MAX_BYTES&&!!q?.screeningPolicy&&chosen.file.bytes<=q.screeningPolicy.maxAnalysisBytes&&q.fileSha256===chosen.file.sha256&&q.parseable&&q.closedPositiveVolume&&q.withinSizeLimits&&q.withinTriangleLimits;
-      identity.textContent=chosen?`${chosen.file.sha256}\n${chosen.file.url}`:'';
+    function refresh(){const chosen=choices[Number(files.value)];const q=asset!.quality;const admitted=!!chosen&&!chosen.file.path&&chosen.file.bytes<=MODEL_LIBRARY_MESH_MAX_BYTES&&!!q?.screeningPolicy&&chosen.file.bytes<=q.screeningPolicy.maxAnalysisBytes&&q.fileSha256===chosen.file.sha256&&q.parseable&&q.closedPositiveVolume&&q.withinSizeLimits&&q.withinTriangleLimits;
+      identity.textContent=chosen?`${chosen.file.sha256}\n${chosen.file.url??chosen.file.path}`:'';
       conversion.replaceChildren();
       if(chosen&&q?.fileSha256===chosen.file.sha256&&q.screeningPolicy){const policy=q.screeningPolicy;conversion.append(el('h4',t('Selected STL conversion to millimetres, Z up')),el('pre',Array.from({length:4},(_,row)=>Array.from({length:4},(_,column)=>String(policy.toMillimetresZUp[column*4+row])).join('  ')).join('\n')),el('p',t`Curated limits: ${policy.maxTriangles} triangles; ${policy.maxExtentMm} mm span per axis; ${policy.maxAnalysisBytes} analysis bytes. Translation is preserved; no centering or repair.`));}
       insert.disabled=working||!admitted||!notes.value.trim();eligibility.textContent=admitted?t('Selected STL has passing curated checks and a recorded conversion.'):t('Insertion unavailable: select an STL with passing quality, a recorded conversion and at most 16 MiB.');}
@@ -79,6 +83,25 @@ export function mountModelLibraryPanel(parent:HTMLElement, session:CadSession,
       }catch(error){if(!disposed)report(error);}finally{working=false;controller=undefined;file.disabled=false;search.disabled=false;files.disabled=false;notes.disabled=false;offline.disabled=false;refresh();renderList();}
     };
     details.append(files,identity,conversion,eligibility,noteLabel,offlineLabel,insert);refresh();
+  }
+  function renderSource(asset:ModelLibraryAsset){
+    const source=asset.original,bytes=source.path?localFiles.get(source.path):undefined;
+    details.append(el('p',t('Bundled editable source. Insertion verifies its hash and evaluates the code; no mesh download or collision qualification.')),el('p',`${source.format} · ${source.bytes} bytes · ${source.path}`),el('pre',source.sha256));
+    if(source.format==='openscad')details.append(el('p',t('OpenSCAD source is converted to editable CAD Script using the supported subset. The original artifact hash is retained.')));
+    const label=el('label',t('Incorporation modification notes')),notes=el('input');notes.type='text';notes.maxLength=3900;notes.setAttribute('aria-label',t('Incorporation modification notes'));notes.placeholder=t('Describe conversion and any changes');label.append(notes);
+    const insert=el('button',t('Insert editable source'));insert.type='button';insert.className='primary';
+    const refresh=()=>{insert.disabled=working||!bytes||!notes.value.trim();};notes.oninput=refresh;
+    if(!bytes)details.append(el('p',t('Editable source is not bundled in this host.')));
+    insert.onclick=async()=>{
+      if(insert.disabled||!bytes)return;
+      working=true;controller=new AbortController();file.disabled=search.disabled=notes.disabled=true;refresh();renderList();status.textContent=t('Verifying selected model…');
+      try{
+        await insertModelLibrarySource(session,catalogue,{assetId:asset.id,file:'original'},bytes,{signal:controller.signal,modificationNotes:notes.value.trim(),evaluate:async doc=>{const result=await evaluate(doc);if(disposed)throw new Error(t('Editor was disposed'));return result;}});
+        status.textContent=t('Editable source inserted with provenance. Available offline.');
+        try{await inserted();}catch{if(!disposed)status.textContent=t('Model inserted with provenance; viewport refresh failed. Close this panel to inspect the editor status.');}
+      }catch(error){if(!disposed)report(error);}finally{working=false;controller=undefined;file.disabled=search.disabled=notes.disabled=false;refresh();renderList();}
+    };
+    details.append(label,insert);refresh();
   }
   search.oninput=renderList;
   file.onchange=async()=>{const chosen=file.files?.[0];file.value='';if(!chosen||working)return;try{if(chosen.size>4*1024*1024)throw new Error(t('Catalogue exceeds 4 MiB'));const parsed=parseModelLibraryCatalogue(await chosen.text());if(disposed||working)return;if(!parsed.valid)throw new Error(parsed.errors.join(' '));catalogue=parsed.catalogue;selected=undefined;search.value='';status.textContent='';renderList();renderDetails();}catch(error){report(error);}};

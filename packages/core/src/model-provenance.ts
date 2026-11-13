@@ -15,7 +15,7 @@ export interface ModelProvenance {version: 1; records: ModelProvenanceRecord[]}
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const keys=(v:Record<string,unknown>,allowed:string)=>Object.keys(v).every(k=>allowed.split(' ').includes(k));
 const id=(v:unknown):v is string=>typeof v==='string'&&/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,95}$/.test(v)&&!['constructor','prototype','__proto__'].includes(v);
-const sameFile=(a:ModelLibraryFile,b:ModelLibraryFile)=>a.url===b.url&&a.format===b.format&&a.sha256===b.sha256&&a.bytes===b.bytes;
+const sameFile=(a:ModelLibraryFile,b:ModelLibraryFile)=>a.url===b.url&&a.path===b.path&&a.format===b.format&&a.sha256===b.sha256&&a.bytes===b.bytes;
 /** Validate references and their complete source snapshots; never mutate old documents. */
 export function checkModelProvenance(document:CadDocument):void {
   function fail(reason:string):never {throw new Error(`Invalid CAD project provenance: ${reason}`);}
@@ -34,7 +34,7 @@ export function checkModelProvenance(document:CadDocument):void {
     const checked=validateModelLibraryCatalogue({format:'brickwright-model-library',version:1,assets:[raw.asset]});
     if(!checked.valid)fail(checked.errors.join(' '));
     const asset=checked.catalogue.assets[0];
-    if(!object(raw.selectedFile)||!keys(raw.selectedFile,'url format sha256 bytes')||![asset.original,asset.editableSource,...asset.derivatives].some(f=>f&&sameFile(f,raw.selectedFile as unknown as ModelLibraryFile)))fail('selected file must exactly identify a retained asset file');
+    if(!object(raw.selectedFile)||!keys(raw.selectedFile,'url path format sha256 bytes')||![asset.original,asset.editableSource,...asset.derivatives].some(f=>f&&sameFile(f,raw.selectedFile as unknown as ModelLibraryFile)))fail('selected file must exactly identify a retained asset file');
   }
   const used=new Set<string>();
   for(const node of nodes){

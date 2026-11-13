@@ -69,6 +69,7 @@ export async function fetchModelLibraryFile(
     : choice && typeof choice === 'object' && Number.isInteger(choice.derivative) && choice.derivative >= 0
       ? asset.derivatives[choice.derivative] : undefined;
   if (!file) throw new Error('Unknown model library file selection.');
+  if (!file.url) throw new Error('Local library files require an explicit host resolver; remote fetching is refused.');
   const maxBytes = options.maxBytes ?? MAX_MODEL_LIBRARY_FILE_BYTES;
   if (!Number.isSafeInteger(maxBytes) || maxBytes <= 0 || file.bytes > maxBytes) throw new Error('Model library file exceeds the configured byte limit.');
   options.signal?.throwIfAborted();
