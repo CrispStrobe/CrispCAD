@@ -83,3 +83,8 @@ and [tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tool
 IDs, localized titles, retained source and empty initial parameter overrides.
 Use a source with `cad_preview_code`, then create with the expected current
 revision. Listing examples never changes the headless project or history.
+
+`cad_convert_code` is read-only. Supply source, inputFormat (cadcode/openscad/jscad),
+outputFormat (cadcode/openscad/jscad), optional parameter overrides and optional
+JSCAD entryPoint/arguments. Results identify snapshots and return warnings plus
+JSCAD separate-output metadata. It neither modifies the model nor adds history.

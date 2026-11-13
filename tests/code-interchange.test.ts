@@ -15,7 +15,7 @@ it('retains parameter expressions and accepts scalar scale, comments and named v
  const p=importOpenSCAD('/* source */ width=20; height=width/2; $fn=48; difference(){ translate(v=[0,0,height/2]) cube([width,width,height],true); cylinder(h=50,r=3,center=true); }');expect(compileCode(p).values.height.value).toBe(10);p.parameters.width='30';expect(compileCode(p).values.height.value).toBe(15);expect(geometry('scale(2) cube(10);').volume).toBeCloseTo(8000);
 });
 it('refuses unsupported geometry and language features rather than approximating or executing them',()=>{
- for(const source of ['include <foo.scad>;','module part(){cube(1);} part();','for(i=[0:10]) cube(i);','hull(){sphere(1);sphere(2);}','linear_extrude(5) square(2);','cylinder(h=10,r1=4,r2=1);','rotate(45,[1,0,0]) cube(3);','a=10; a=20; cube(a);','sphere($fn=300);','cube(1);height=2;','import("https://example.com/a.stl");','union(){}'])expect(()=>importOpenSCAD(source),source).toThrow();
+ for(const source of ['include <foo.scad>;','module part(){cube(1);} part();','for(i=[0:10]) cube(i);','hull(){sphere(1);sphere(2);}','linear_extrude(height=5,twist=90) square(2);','cylinder(h=10,r1=4,r2=1);','rotate(45,[1,0,0]) cube(3);','a=10; a=20; cube(a);','sphere($fn=300);','cube(1);height=2;','import("https://example.com/a.stl");','union(){}'])expect(()=>importOpenSCAD(source),source).toThrow();
 });
 it('exports effective overrides as readable native defaults, preserving dependencies and comments',()=>{
  const p=codeExampleProgram('box');p.parameters={width:'40',height:'width / 2'};const text=exportCodeSource(p);expect(text).toContain('\n');const values=compileCode({...p,source:text,parameters:{}}).values;expect(values.width.value).toBe(40);expect(values.height.value).toBe(20);
@@ -27,6 +27,11 @@ for(const example of codeExamples)it(`round-trips OpenSCAD snapshot without losi
 it('exports all example snapshots to actual JSCAD solids with compatible dimensions and volume',async()=>{
  const {createRequire}=await import('node:module'),{runInNewContext}=await import('node:vm');const require=createRequire(import.meta.url),modeling=require('@jscad/modeling');
  for(const example of codeExamples){const p=codeExampleProgram(example.id),session=createCadSession();session.addCode(p);const expected=kernel.evaluate(session.state.document),context={module:{exports:{} as any},require:(id:string)=>{if(id!=='@jscad/modeling')throw Error('Unexpected package');return modeling;}};
-  runInNewContext(exportJSCAD(p)+'\nmodule.exports.solid = main();',context,{timeout:4000});const solid=context.module.exports.solid,volume=modeling.measurements.measureVolume(solid);expect(volume,example.id).toBeGreaterThan(0);expect(Math.abs(volume-expected.volume)/expected.volume,example.id).toBeLessThan(.025);
+  runInNewContext(exportJSCAD(p)+'\nmodule.exports.solid = main();',context,{timeout:4000});const solid=context.module.exports.solid,volume=modeling.measurements.measureVolume(solid);expect(volume,example.id).toBeGreaterThan(0);expect(Math.abs(volume-expected.volume)/expected.volume,example.id).toBeLessThan(.025);const bounds=modeling.measurements.measureBoundingBox(solid);for(let i=0;i<3;i++){const tolerance=Math.max(.1,(expected.bodies[0].bounds.max[i]-expected.bodies[0].bounds.min[i])*.005);expect(Math.abs(bounds[0][i]-expected.bodies[0].bounds.min[i]),example.id).toBeLessThan(tolerance);expect(Math.abs(bounds[1][i]-expected.bodies[0].bounds.max[i]),example.id).toBeLessThan(tolerance);}
  }
 },20000);
+
+it('converts planar polygon, square and circle extrusions with explicit centering',()=>{
+ expect(geometry('linear_extrude(height=5) polygon(points=[[0,0],[20,0],[20,10],[0,10]]);').volume).toBeCloseTo(1000);expect(geometry('linear_extrude(height=5,center=true) square([20,10],center=true);').bodies[0].bounds).toEqual({min:[-10,-5,-2.5],max:[10,5,2.5]});expect(geometry('linear_extrude(10) circle(d=12,$fn=6);').volume).toBeGreaterThan(0);
+ for(const source of ['linear_extrude(5) square([-2,3]);','linear_extrude(5) circle(r=-2);','linear_extrude(5) polygon([[0,0],[1,1],[0,1],[1,0]]);'])expect(()=>geometry(source)).toThrow();
+});

@@ -95,3 +95,9 @@ are placed on the workplane; subsequent definition edits preserve their pose.
 The core exports `codeExamples` and `codeExampleProgram(id)`; MCP `cad_code_help`
 returns the same sources with locale-specific titles. Every shipped example is
 compiled, evaluated and STL-round-tripped as a positive-volume solid in tests.
+
+Source interchange now supports the documented OpenSCAD/JSCAD subsets. Code Import
+accepts .scad, .js, .jscad and .cadcode. Source Export offers native editable source
+or evaluated OpenSCAD/JSCAD snapshots. `extrude(height, [[x,y], ...])` builds a
+simple planar polygon, with 3–256 points. See [converter coverage](CODE-CONVERTERS.md)
+for exact limits, parameter semantics, provenance and the VPS ingestion interface.

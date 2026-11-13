@@ -167,3 +167,8 @@ workplane. Code an object includes 34 original, tested examples with German titl
 About includes build details, imprint/privacy, our apps and offline legal texts.
 See [precision controls](docs/PRECISION-AND-WORKSPACE.md) and the
 [model-library source and licensing plan](docs/MODEL-LIBRARY.md).
+
+OpenSCAD/JSCAD source converters are available in the code dialog, core SDK, CLI
+and read-only MCP API. See the [converter coverage and VPS handoff](docs/CODE-CONVERTERS.md).
+The small pinned corpus currently has six solid conversions and three explicit
+gaps; JSCAD imports and foreign-language exports are evaluated snapshots.

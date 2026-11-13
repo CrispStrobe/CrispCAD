@@ -31,7 +31,9 @@
     "mac:verify": "\"apps/macos/build/Brickwright CAD.app/Contents/MacOS/BrickwrightCAD\" --smoke-test",
     "mac:install": "node scripts/install-macos.mjs",
     "mcp": "node apps/mcp/server.mjs",
-    "check:i18n": "node scripts/check-i18n.mjs"
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "convert:code": "node scripts/convert-code.mjs",
+    "verify:code-corpus": "node scripts/check-code-corpus.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",

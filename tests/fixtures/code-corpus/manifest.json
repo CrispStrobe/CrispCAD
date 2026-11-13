@@ -12,7 +12,7 @@
       "licenseFile": "jscad/LICENSE",
       "sha256": "e269dbe7fa16fb1c80bef0cdd6ba4f94796e8cd1d3b87932b396e215343c0ec6",
       "format": "jscad",
-      "expected": "supported"
+      "expected": "converted"
     },
     {
       "id": "jscad-mountPlate",
@@ -25,7 +25,7 @@
       "licenseFile": "jscad/LICENSE",
       "sha256": "8a3a752610bec651e8cf6084f8c0d136ed83433ee5f3f2c26ebd40c1cac4adfd",
       "format": "jscad",
-      "expected": "supported",
+      "expected": "converted",
       "entryPoint": "create",
       "arguments": [
         25
@@ -42,7 +42,7 @@
       "licenseFile": "jscad/LICENSE",
       "sha256": "f96facf6dc85be7260a5b5e7648dd157abb9bc74e27da7d4cf78cdb0aa3df5ba",
       "format": "jscad",
-      "expectedGap": "JavaScript runtime/API adapter"
+      "expectedGap": "extrusions.extrudeFromSlices"
     },
     {
       "id": "jscad-gear",
@@ -55,7 +55,7 @@
       "licenseFile": "jscad/LICENSE",
       "sha256": "7867e3df0c6e43449e3dad46f5985269a8726658d5fc35a2f93d8a808a2ca9ec",
       "format": "jscad",
-      "expectedGap": "JavaScript runtime/API adapter"
+      "expected": "converted"
     },
     {
       "id": "belfryscad-boolean_geometry",
@@ -94,7 +94,7 @@
       "licenseFile": "jscad/LICENSE",
       "sha256": "a26aac3cc37c24dea98f8403f5b90547eb9903debf5dde77eedf914b6abd77c3",
       "format": "openscad",
-      "expected": "supported"
+      "expected": "converted"
     },
     {
       "id": "jscad-scaleEx1",
@@ -107,7 +107,7 @@
       "licenseFile": "jscad/LICENSE",
       "sha256": "0e9d3c5265754a7f88c778d6e1e08aced81491de32d37933bf30beadd3ffb96b",
       "format": "openscad",
-      "expected": "supported"
+      "expected": "converted"
     },
     {
       "id": "jscad-rotateEx1",
@@ -120,7 +120,7 @@
       "licenseFile": "jscad/LICENSE",
       "sha256": "b724d6d863a23ec1dca57725416ee6bf7d29ab6c87ea99e61ea79114d96430da",
       "format": "openscad",
-      "expected": "supported"
+      "expected": "converted"
     }
   ]
 }

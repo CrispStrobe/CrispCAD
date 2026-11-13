@@ -24,8 +24,20 @@ it('refuses host access, external imports, dynamic execution and unbounded progr
  for(const source of ["require('fs');",'process.exit();','globalThis.fetch("x");',"eval('1');","new Function('return 1')();","import fs from 'node:fs';",'const main=()=>{while(true){}};module.exports={main};','function f(){return f();}module.exports.main=f;','module.exports.main=()=>{const a=1;a=2;return a;};','module.exports.main=()=>{for(let i=0;i<1000;i++){}return 1;};',"module.exports.main=()=>require('@jscad/modeling').constructor('return 1')();"]){expect(()=>importJSCAD(source),source).toThrow();}
 });
 it('reports unsupported upstream geometry APIs with source locations',()=>{
- for(const file of ['nutsAndBolts','gear']){const source=readFileSync(`tests/fixtures/code-corpus/jscad/${file}.js`,'utf8');expect(()=>importJSCAD(source)).toThrow(/Line .*JSCAD|Line .*12.*96/);}
+ for(const file of ['nutsAndBolts']){const source=readFileSync(`tests/fixtures/code-corpus/jscad/${file}.js`,'utf8');expect(()=>importJSCAD(source)).toThrow(/Line .*JSCAD|Line .*12.*96/);}
 });
 for(const example of codeExamples)it(`imports our real JSCAD export: ${example.id}`,()=>{
  const p=codeExampleProgram(example.id),s=createCadSession();s.addCode(p);expect(geometry(exportJSCAD(p)).volume).toBeCloseTo(kernel.evaluate(s.state.document).volume,4);
+});
+
+it('converts the upstream module-design component through its explicit create entry point',()=>{
+ const source=readFileSync('tests/fixtures/code-corpus/jscad/mountPlate.js','utf8'),imported=importJSCAD(source,{}, {entryPoint:'create',arguments:[25]}),s=createCadSession();s.addCode(imported.program);expect(kernel.evaluate(s.state.document).volume).toBeCloseTo(250);
+});
+it('brings up the upstream involute gear including 2D maths, polygon extrusion and parameters',()=>{
+ const source=readFileSync('tests/fixtures/code-corpus/jscad/gear.js','utf8'),result=geometry(source);expect(result.volume).toBeGreaterThan(0);expect(result.imported.parameters.numTeeth).toBe(10);
+ const modeling=createRequire(import.meta.url)('@jscad/modeling'),context={module:{exports:{} as any},require:()=>modeling};runInNewContext(source+'\nmodule.exports.result=main(Object.fromEntries(getParameterDefinitions().map(p=>[p.name,p.initial])));',context,{timeout:10000});const expected=modeling.measurements.measureVolume(context.module.exports.result);expect(Math.abs(result.volume-expected)/expected).toBeLessThan(.002);const bounds=modeling.measurements.measureBoundingBox(context.module.exports.result);for(let i=0;i<3;i++){expect(result.bodies[0].bounds.min[i]).toBeCloseTo(bounds[0][i],4);expect(result.bodies[0].bounds.max[i]).toBeCloseTo(bounds[1][i],4);}
+ const larger=geometry(source,{numTeeth:20});expect(larger.volume).toBeGreaterThan(result.volume);expect(()=>geometry(source,{numTeeth:21})).toThrow('declared range');expect(geometry(source,{numTeeth:'10'} as any).volume).toBeCloseTo(result.volume,4);
+},20000);
+it('bounds deeply nested or excessively large ASTs before evaluation and rejects nontext input',()=>{
+ const source='module.exports.main=()=>'+ '['.repeat(200)+'1'+']'.repeat(200)+';';try{importJSCAD(source);throw Error('Expected resource failure');}catch(error:any){expect(error.code).toBe('resource-limit');}expect(()=>importJSCAD(null as any)).toThrow('source text');
 });

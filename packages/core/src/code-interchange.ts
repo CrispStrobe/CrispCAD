@@ -3,9 +3,10 @@
 import {CadCodeError,CODE_LIMITS,compileCode} from './code.js';
 import type {CodeProgram,CodeShape} from './code.js';
 import {t} from './i18n.js';
-type Value=string|string[];
+type Value=string|Value[];
 /** Bounded declarative OpenSCAD subset. Unsupported constructs fail closed. */
 export function importOpenSCAD(source:string):CodeProgram{
+ if(typeof source!=='string')throw new CadCodeError(t('Expected source text'),0,'');
  const tokens:{text:string;at:number}[]=[];let position=0,cursor=0,statements=0,fn='48';const assignments=new Map<string,string>();
  const fail=(message:string,at=tokens[cursor]?.at??source.length):never=>{throw new CadCodeError(message,at,source);};
  if(new TextEncoder().encode(source).length>CODE_LIMITS.sourceBytes)fail(t('Source exceeds 32 KiB'),0);
@@ -15,25 +16,35 @@ export function importOpenSCAD(source:string):CodeProgram{
  const peek=(ahead=0)=>tokens[cursor+ahead]?.text;
  const take=()=>{const next=tokens[cursor++];if(!next)fail(t('Unexpected end of source'));return next!;};
  const expect=(value:string)=>{if(peek()!==value)fail(t`Expected “${value}”`);take();};
- const unsupported=(name:string,at?:number):never=>fail(t`Unsupported OpenSCAD feature “${name}”`,at);
+ const unsupported=(name:string,at=tokens[cursor]?.at??source.length):never=>{throw new CadCodeError(t`Unsupported OpenSCAD feature “${name}”`,at,source,'unsupported-feature');};
  function expr(stops:string[]):string{const out:string[]=[];let nesting=0;while(cursor<tokens.length){const next=peek()!;if(nesting===0&&stops.includes(next))break;if(next==='(')nesting++;if(next===')'){if(!nesting)break;nesting--;}if(!/^[A-Za-z][A-Za-z0-9_]*$|^(?:\d|\.\d)|^[()+*/-]$/.test(next))unsupported(next);out.push(take().text);if(out.length>256||nesting>32)fail(t('Expression nesting exceeds 32'));}if(!out.length||nesting)fail(t('Expected a complete dimensional expression'));return out.join(' ');}
- function value():Value{if(peek()!=='[')return expr([',',')']);take();const values:string[]=[];while(peek()!==']'){values.push(expr([',',']']));if(values.length>3)unsupported('vectors longer than 3');if(peek()!==',')break;take();}expect(']');return values;}
+ function value(depth=0):Value{if(depth>32)fail(t('OpenSCAD array nesting limit exceeded'));if(peek()!=='[')return expr([',',')',']']);take();const values:Value[]=[];while(peek()!==']'){values.push(value(depth+1));if(values.length>256)fail(t('OpenSCAD array limit exceeded'));if(peek()!==',')break;take();}expect(']');return values;}
  const scalar=(v:Value|undefined,fallback?:string):string=>{if(v===undefined&&fallback!==undefined)return fallback;if(typeof v!=='string')return fail(t('Expected a numeric OpenSCAD argument'));return v;};
- const vector=(v:Value|undefined,allowScalar=false):string[]=>{if(Array.isArray(v)&&v.length===3)return v;if(allowScalar&&typeof v==='string')return [v,v,v];return fail(t('Expected a three-component OpenSCAD vector'));};
+ const vector=(v:Value|undefined,allowScalar=false):string[]=>{if(Array.isArray(v)&&v.length===3&&v.every(x=>typeof x==='string'))return v as string[];if(allowScalar&&typeof v==='string')return [v,v,v];return fail(t('Expected a three-component OpenSCAD vector'));};
  function union(shapes:string[]):string{if(!shapes.length)fail(t('OpenSCAD block contains no supported solid'));return shapes.length===1?shapes[0]:`union(${shapes.join(', ')})`;}
  function block(depth:number):string{expect('{');const shapes:string[]=[];while(peek()!=='}'){if(!peek())fail(t('Unclosed OpenSCAD block'));shapes.push(shape(depth+1));}expect('}');return union(shapes);}
- function shape(depth=0):string{
-  if(depth>32||++statements>CODE_LIMITS.statements)fail(t('OpenSCAD construction limit exceeded'));if(peek()==='{')return block(depth);
-  const token=take(),name=token.text;
-  if(!['cube','sphere','cylinder','translate','rotate','scale','union','difference','intersection'].includes(name))unsupported(name,token.at);
+ function argumentsFor(name:string,at:number){
   expect('(');const named=new Map<string,Value>(),positional:Value[]=[];
   while(peek()!==')'){if(peek(1)==='='){const key=take().text;take();if(named.has(key))fail(t`Duplicate OpenSCAD argument “${key}”`);named.set(key,value());}else{if(named.size)fail(t('Positional OpenSCAD arguments must precede named arguments'));positional.push(value());}if(peek()!==',')break;take();}expect(')');
   const use=(key:string,index:number,fallback?:Value):Value|undefined=>{if(named.has(key)&&positional[index]!==undefined)fail(t`Duplicate OpenSCAD argument “${key}”`);return named.get(key)??positional[index]??fallback;};
-  const allowed=(keys:string[],max:number)=>{for(const key of named.keys())if(!keys.includes(key))unsupported(`${name}.${key}`,token.at);if(positional.length>max)unsupported(`${name}: too many arguments`,token.at);};
+  const allowed=(keys:string[],max:number)=>{for(const key of named.keys())if(!keys.includes(key))unsupported(`${name}.${key}`,at);if(positional.length>max)unsupported(`${name}: too many arguments`,at);};
+return {named,positional,use,allowed};
+ }
+ function profile(depth:number,height:string):string{if(depth>32||++statements>128)fail(t('OpenSCAD construction limit exceeded'));if(peek()==='{'){take();const result=profile(depth+1,height);expect('}');return result;}const token=take(),name=token.text;if(!['polygon','square','circle'].includes(name))unsupported(`linear_extrude profile: ${name}`,token.at);const {named,use,allowed}=argumentsFor(name,token.at);expect(';');
+  if(name==='polygon'){allowed(['points'],1);const points=use('points',0);if(!Array.isArray(points)||points.length<3||!points.every(p=>Array.isArray(p)&&p.length===2&&p.every(v=>typeof v==='string')))fail(t('Expected an OpenSCAD polygon point list'),token.at);return `extrude(${height}, [${(points as string[][]).map(p=>`[${p.join(', ')}]`).join(', ')}])`;}
+  if(name==='square'){allowed(['size','center'],2);const raw=use('size',0,'1'),size=typeof raw==='string'?[raw,raw]:raw;if(!Array.isArray(size)||size.length!==2||!size.every(v=>typeof v==='string'))fail(t('Expected an OpenSCAD square size'),token.at);const [w,d]=size as string[],center=use('center',1,'false');if(center!=='true'&&center!=='false')unsupported('computed center flag',token.at);return `move([${center==='true'?'0':`(${w}) / 2`}, ${center==='true'?'0':`(${d}) / 2`}, (${height}) / 2], box(${w}, ${d}, ${height}))`;}
+  allowed(['r','d','$fn'],1);if(named.has('d')&&(named.has('r')||use('r',0)!==undefined))unsupported('circle: both radius and diameter',token.at);const radius=named.has('d')?`(${scalar(named.get('d'))}) / 2`:scalar(use('r',0,'1')),count=scalar(named.get('$fn'),fn);return `move([0, 0, (${height}) / 2], cylinder(${radius}, ${height}, ${count}))`;
+ }
+ function shape(depth=0):string{
+  if(depth>32||++statements>CODE_LIMITS.statements)fail(t('OpenSCAD construction limit exceeded'));if(peek()==='{')return block(depth);
+  const token=take(),name=token.text;
+  if(!['cube','sphere','cylinder','translate','rotate','scale','union','difference','intersection','linear_extrude'].includes(name))unsupported(name,token.at);
+  const {named,positional,use,allowed}=argumentsFor(name,token.at);
   const centered=(v:Value|undefined)=>{if(v===undefined||v==='false')return false;if(v==='true')return true;return unsupported('computed center flag',token.at);};
   const segments=()=>scalar(named.get('$fn'),fn);
   if(['union','difference','intersection'].includes(name)){allowed([],0);const parts:string[]=[];if(peek()==='{'){take();while(peek()!=='}'){if(!peek())fail(t('Unclosed OpenSCAD block'));parts.push(shape(depth+1));}take();}else parts.push(shape(depth+1));if(!parts.length)fail(t('OpenSCAD block contains no supported solid'));if(parts.length===1)return parts[0];return `${name==='difference'?'subtract':name==='intersection'?'intersect':'union'}(${parts.join(', ')})`;}
   if(['translate','rotate','scale'].includes(name)){allowed([name==='rotate'?'a':'v'],1);const v=use(name==='rotate'?'a':'v',0);const vec=name==='rotate'&&typeof v==='string'?['0','0',v]:vector(v,name==='scale');const child=peek()==='{'?block(depth):shape(depth+1);return `${name==='translate'?'move':name}([${vec.join(', ')}], ${child})`;}
+  if(name==='linear_extrude'){allowed(['height','center'],2);const height=scalar(use('height',0,'1')),body=profile(depth+1,height);return centered(use('center',1))?`move([0, 0, -(${height}) / 2], ${body})`:body;}
   expect(';');
   if(name==='cube'){allowed(['size','center'],2);const size=vector(use('size',0,'1'),true),body=`box(${size.join(', ')})`;return centered(use('center',1))?body:`move([${size.map(v=>`(${v}) / 2`).join(', ')}], ${body})`;}
   if(name==='sphere'){allowed(['r','d','$fn'],1);if(named.has('d')&&(named.has('r')||positional.length))unsupported('sphere: both radius and diameter',token.at);const radius=named.has('d')?`(${scalar(named.get('d'))}) / 2`:scalar(use('r',0,'1'));return `sphere(${radius}, ${segments()})`;}
