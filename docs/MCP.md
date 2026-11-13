@@ -78,3 +78,8 @@ tool discovery, coded geometry creation and stale-revision refusal.
 
 Protocol references: [stdio transport](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports)
 and [tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tools).
+
+`cad_code_help` also returns `examples`: the 34 original GUI examples with stable
+IDs, localized titles, retained source and empty initial parameter overrides.
+Use a source with `cad_preview_code`, then create with the expected current
+revision. Listing examples never changes the headless project or history.

@@ -388,3 +388,41 @@ Layerling checkout (upstream 42a50d18f, version 1.161.0) was built with the exis
 iPad wrapper as build 2 and installed/launched over WLAN. The original modified
 Layerling checkout was preserved; its implementation/assets were not incorporated
 into this CAD. All builds/checks remain local and private-repository Actions stays off.
+
+## Workspace usability delivery — 2026-11-13
+
+Source commit 893ad7b: independent Objects/canvas columns, outside pointer/focus
+menu dismissal, icon-only Shapes/Combine/Edit controls and adaptive selection
+shortcuts. Projects moves to File; history moves into the browser footer. New
+code/sketch objects start on the workplane. Shift/Fine provides incremental
+one-tenth-speed pointer travel and fine snapping/nudging/number steppers.
+
+34 original code examples ship through the core, GUI and MCP help. Every example
+passes compile, positive-volume kernel, STL round-trip and floor placement checks.
+About follows the owner's Brickwright-lite content structure: version/build/git
+receipt, imprint/privacy, local app cards, grouped component credits and full
+bundled legal texts, including fonts and native IONFilesystemLib MIT notice.
+German additions pass the 933-message catalogue/placeholder audit.
+
+Local validation: 188 headless tests, six-package offline install/geometry/Jolt
+smoke, native macOS command/clipboard/project/history smoke and desktop/iPad
+browser workflows. An interim broad browser run had 75 passes, one intentional
+WebKit/CDP skip and two stale-bundle missing-Copy-icon assertions; the icon was
+fixed and the final bundle rechecked with the complete usability/localization
+subset, including real fine drag/rotation on both browsers. No cloud CI used.
+
+Mac build 11 is installed and running. iPad build 8 uses the same source and
+existing Brickwright keychain/profile. Wireless installation status is recorded
+in the delivery follow-up below. No Layerling implementation/assets were used.
+Third-party model-library ingestion remains a documented follow-up; see
+MODEL-LIBRARY.md for content licence filtering, provenance and hosting boundaries.
+
+WLAN follow-up: signing/archive/export of iPad build 8 succeeded and its receipt
+matches clean source 893ad7b. Device pairing/transport is `localNetwork`. iPadOS
+rejected installation with IXUserPresentableErrorDomain 11: 5,076,356 bytes needed,
+775,808 bytes available, 4,300,548 additional bytes required. No app/data was
+removed to force installation. The owner was asked to free storage; installation
+is pending that external condition. The signed IPA is apps/ipad/build/adhoc/App.ipa.
+Mac build 11 native smoke passed and installation/launch succeeded. The final
+16-workflow desktop/iPad usability and localization subset passed completely,
+including the previously stale Copy icon assertions and actual fine gestures.

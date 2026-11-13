@@ -86,3 +86,12 @@ These comparisons concern public documentation, not copied implementation:
 The first milestone uses our existing BSD core and Apache-licensed Manifold;
 there are no new production dependencies. See [CAD strategy](PARAMETRIC-CAD-STRATEGY.md)
 and the [MCP interface](MCP.md) for the shared headless path.
+
+The Code an object dialog now includes 34 original examples: primitives, units,
+forward references, mounting plates, washers, spacers, sleeves, brackets, trays,
+lids, handles, clips, guides, patterns and Boolean constructions. Load example
+replaces only the current draft; Preview is noncommitting. New created code bodies
+are placed on the workplane; subsequent definition edits preserve their pose.
+The core exports `codeExamples` and `codeExampleProgram(id)`; MCP `cad_code_help`
+returns the same sources with locale-specific titles. Every shipped example is
+compiled, evaluated and STL-round-tripped as a positive-volume solid in tests.
