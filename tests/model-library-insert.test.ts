@@ -83,3 +83,18 @@ describe('atomic headless catalogue insertion',()=>{
     }
   });
 });
+
+it('awaits worker evaluation and refuses cancellation or edits before the commit',async()=>{
+  for(const action of ['complete','cancel','edit','reject'] as const){
+    const f=await fixture(),before=f.session.serialize(),controller=new AbortController();
+    let evaluated!:()=>void,release!:()=>void,reject!:(error:Error)=>void;
+    const entered=new Promise<void>(resolve=>{evaluated=resolve;});
+    const pending=insertModelLibrarySTL(f.session,f.catalogue,selection,f.bytes,{...f.options,signal:controller.signal,evaluate:doc=>{const result=kernel.evaluate(doc);evaluated();return new Promise((resolve,fail)=>{release=()=>resolve(result);reject=fail;});}});
+    await entered;expect(f.session.serialize()).toBe(before);
+    if(action==='cancel')controller.abort();if(action==='edit')f.session.rename('Intervening edit');
+    const expected=f.session.serialize();
+    if(action==='reject')reject(new Error('Worker failed'));else release();
+    if(action==='complete'){await pending;expect(f.session.state.document.roots).toHaveLength(2);f.session.undo();expect(f.session.serialize()).toBe(before);}
+    else{await expect(pending).rejects.toThrow();expect(f.session.serialize()).toBe(expected);}
+  }
+});
