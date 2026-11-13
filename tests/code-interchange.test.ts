@@ -15,7 +15,7 @@ it('retains parameter expressions and accepts scalar scale, comments and named v
  const p=importOpenSCAD('/* source */ width=20; height=width/2; $fn=48; difference(){ translate(v=[0,0,height/2]) cube([width,width,height],true); cylinder(h=50,r=3,center=true); }');expect(compileCode(p).values.height.value).toBe(10);p.parameters.width='30';expect(compileCode(p).values.height.value).toBe(15);expect(geometry('scale(2) cube(10);').volume).toBeCloseTo(8000);
 });
 it('refuses unsupported geometry and language features rather than approximating or executing them',()=>{
- for(const source of ['include <foo.scad>;','module part(){cube(1);} part();','for(i=[0:10]) cube(i);','hull(){sphere(1);sphere(2);}','linear_extrude(height=5,twist=90) square(2);','cylinder(h=10,r1=4,r2=1);','rotate(45,[1,0,0]) cube(3);','a=10; a=20; cube(a);','sphere($fn=300);','cube(1);height=2;','import("https://example.com/a.stl");','union(){}'])expect(()=>importOpenSCAD(source),source).toThrow();
+ for(const source of ['include <foo.scad>;','for(i=[0:10]) cube(i);','hull(){sphere(1);sphere(2);}','linear_extrude(height=5,twist=90) square(2);','cylinder(h=10,r1=4,r2=1);','rotate(45,[1,0,0]) cube(3);','a=10; a=20; cube(a);','sphere($fn=300);','cube(1);height=2;','import("https://example.com/a.stl");','union(){}'])expect(()=>importOpenSCAD(source),source).toThrow();
 });
 it('exports effective overrides as readable native defaults, preserving dependencies and comments',()=>{
  const p=codeExampleProgram('box');p.parameters={width:'40',height:'width / 2'};const text=exportCodeSource(p);expect(text).toContain('\n');const values=compileCode({...p,source:text,parameters:{}}).values;expect(values.width.value).toBe(40);expect(values.height.value).toBe(20);
@@ -34,4 +34,49 @@ it('exports all example snapshots to actual JSCAD solids with compatible dimensi
 it('converts planar polygon, square and circle extrusions with explicit centering',()=>{
  expect(geometry('linear_extrude(height=5) polygon(points=[[0,0],[20,0],[20,10],[0,10]]);').volume).toBeCloseTo(1000);expect(geometry('linear_extrude(height=5,center=true) square([20,10],center=true);').bodies[0].bounds).toEqual({min:[-10,-5,-2.5],max:[10,5,2.5]});expect(geometry('linear_extrude(10) circle(d=12,$fn=6);').volume).toBeGreaterThan(0);
  for(const source of ['linear_extrude(5) square([-2,3]);','linear_extrude(5) circle(r=-2);','linear_extrude(5) polygon([[0,0],[1,1],[0,1],[1,0]]);'])expect(()=>geometry(source)).toThrow();
+});
+
+it('expands reusable modules symbolically, hoists definitions, and preserves parameter overrides',()=>{
+ const p=importOpenSCAD('width=8; part(width); module part(size=4){ translate([size/2,0,0]) cube([size,2,3],center=true); }');
+ expect(compileCode(p).values.width.value).toBe(8);p.parameters.width='12';
+ const session=createCadSession();session.addCode(p);const result=kernel.evaluate(session.state.document);
+ expect(result.volume).toBeCloseTo(72);expect(result.bodies[0].bounds).toEqual({min:[0,-1,-1.5],max:[12,1,1.5]});
+ expect(geometry('module a(s=3){b(s);} module b(t){cube(t);} a();').volume).toBeCloseTo(27);
+});
+it('keeps module lexical globals separate from caller arguments and evaluates defaults in the definition scope',()=>{
+ expect(geometry('size=2; module inner(){cube(size);} module outer(size=9){inner();} outer();').volume).toBeCloseTo(8);
+ expect(geometry('size=2; module part(size=9,height=size){cube([size,height,1]);} part();').volume).toBeCloseTo(18);
+ expect(geometry('size=2; module part(size=9,height=size){cube([size,height,1]);} part(height=4);').volume).toBeCloseTo(36);
+});
+it('accepts symbolic vectors, indexing, boolean flags and module vector defaults',()=>{
+ const p=importOpenSCAD('width=10; size=[width,width/2,3]; centered=true; module part(v=size){cube(v,centered);} part();');
+ p.parameters.width='20';const session=createCadSession();session.addCode(p);const result=kernel.evaluate(session.state.document);
+ expect(result.volume).toBeCloseTo(600);expect(result.bodies[0].bounds.min).toEqual([-10,-5,-1.5]);
+ expect(geometry('v=[[2,3,4],[5,6,7]]; module part(s){cube([s[0],s[1]+1,s[2]]);} part(v[0]);').volume).toBeCloseTo(32);
+});
+it('supports degree math and keeps expressions live through source interchange',()=>{
+ const p=importOpenSCAD('angle=30; side=sin(angle)*10; cube([side,max(2,3),sqrt(16)]);');
+ expect(compileCode(p).values.side.value).toBeCloseTo(5);p.parameters.angle='90';expect(compileCode(p).values.side.value).toBeCloseTo(10);
+ expect(geometry('cube([abs(round(-2.5)),pow(2,3),cos(0)*2]);').volume).toBeCloseTo(48);
+ expect(geometry('cube([2*PI,1,1]);').volume).toBeCloseTo(2*Math.PI);
+ expect(geometry('width=PI; PI=4; cube([width,1,1]);').volume).toBeCloseTo(4);
+});
+it('bounds module recursion and refuses child modules, bad arguments and unsupported scope semantics',()=>{
+ for(const source of [
+  'module a(){a();} a();',
+  'module a(s){cube(s);} a();',
+  'module a(s=2){cube(s);} a(2,s=3);',
+  'module a(s=2){cube(s);} a(other=3);',
+  'module a(){cube(1);} a() cube(3);',
+  'module a(){module b(){cube(1);} b();} a();',
+  'module a(){size=2; cube(size);} a();',
+  'v=[1,2,3]; cube(v[5]);',
+  'cube(sqrt(-1));',
+  'cube(random(1));',
+ ])expect(()=>importOpenSCAD(source),source).toThrow();
+});
+
+it('caps symbolic argument expansion before recursive expressions can exhaust memory',()=>{
+ try{importOpenSCAD('module a(x){a(x+x);} a(1);');throw Error('Expected resource failure');}catch(error:any){expect(error.code).toBe('resource-limit');}
+ expect(geometry('module b(){cylinder(2,1);} module a($fn=6){b();} a();').volume).toBeCloseTo(3*Math.sqrt(3));
 });

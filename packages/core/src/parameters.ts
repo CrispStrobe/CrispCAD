@@ -20,7 +20,7 @@ const record = (v: unknown): v is Record<string, unknown> => !!v && typeof v ===
 const validName = (name: string) => /^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(name) && !Object.hasOwn(units, name) && !['constructor','prototype','__proto__'].includes(name);
 function error(message: string): never {throw new Error(t`Parameters: ${message}`);}
 function finite(q: Quantity): Quantity {
-  if (!Number.isFinite(q.value) || Math.abs(q.value) > 1e9 || Math.abs(q.length) > 8 || Math.abs(q.angle) > 8) error(t('result is outside the supported range'));
+  if (!Number.isInteger(q.length) || !Number.isInteger(q.angle) || !Number.isFinite(q.value) || Math.abs(q.value) > 1e9 || Math.abs(q.length) > 8 || Math.abs(q.angle) > 8) error(t('result is outside the supported range'));
   return q;
 }
 function asUnit(q: Quantity, unit: ParameterUnit): Quantity {
@@ -31,6 +31,34 @@ function asUnit(q: Quantity, unit: ParameterUnit): Quantity {
   return q;
 }
 
+/** Trigonometry uses degrees, matching the editor's angular properties. */
+function evaluateMathFunction(name: string, args: Quantity[]): Quantity {
+  const unary = ['sin','cos','tan','asin','acos','atan','sqrt','abs','floor','ceil','round','exp','ln','log'];
+  const count = unary.includes(name) ? 1 : ['atan2','pow'].includes(name) ? 2 : ['min','max'].includes(name) ? -1 : 0;
+  if (!count) return error(t`unknown mathematical function “${name}”`);
+  if (count > 0 ? args.length !== count : args.length < 1) return error(t`invalid arguments for “${name}”`);
+  const a = args[0], b = args[1];
+  const scalar = (q: Quantity) => {if (q.length || q.angle) error(t('function requires a dimensionless argument')); return q.value;};
+  const matching = () => {if (args.some(q => q.length !== a.length || q.angle !== a.angle)) error(t('function arguments must have matching units'));};
+  const result = (value: number, length = 0, angle = 0) => finite({value, length, angle});
+  if (['sin','cos','tan'].includes(name)) {
+    if (a.length || (a.angle !== 0 && a.angle !== 1)) error(t('trigonometry requires degrees or a scalar angle'));
+    const radians = a.value * Math.PI / 180;
+    return result(name === 'sin' ? Math.sin(radians) : name === 'cos' ? Math.cos(radians) : Math.tan(radians));
+  }
+  if (['asin','acos','atan'].includes(name)) {
+    const value = scalar(a);
+    return result((name === 'asin' ? Math.asin(value) : name === 'acos' ? Math.acos(value) : Math.atan(value)) * 180 / Math.PI);
+  }
+  if (name === 'atan2') {matching(); return result(Math.atan2(a.value, b.value) * 180 / Math.PI);}
+  if (name === 'sqrt') return result(Math.sqrt(a.value), a.length / 2, a.angle / 2);
+  if (name === 'pow') {const exponent = scalar(b); return result(Math.pow(a.value, exponent), a.length * exponent, a.angle * exponent);}
+  if (name === 'min' || name === 'max') {matching(); return result((name === 'min' ? Math.min : Math.max)(...args.map(q => q.value)), a.length, a.angle);}
+  if (['abs','floor','ceil','round'].includes(name)) return result((name === 'abs' ? Math.abs : name === 'floor' ? Math.floor : name === 'ceil' ? Math.ceil : (v: number) => Math.sign(v) * Math.floor(Math.abs(v) + .5))(a.value), a.length, a.angle);
+  const value = scalar(a);
+  return result(name === 'exp' ? Math.exp(value) : name === 'ln' ? Math.log(value) : Math.log10(value));
+}
+
 /** Original bounded arithmetic parser. Never evals JS or accesses object members. */
 export function evaluateExpression(source: string, lookup: (name: string) => Quantity): Quantity {
   if (typeof source !== 'string' || !source.trim() || source.length > 256) error(t('expression must contain 1–256 characters'));
@@ -38,7 +66,7 @@ export function evaluateExpression(source: string, lookup: (name: string) => Qua
   let at = 0;
   while (at < source.length) {
     if (/\s/.test(source[at])) {at++; continue;}
-    const token = /^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|^[A-Za-z][A-Za-z0-9_]*|^[()+*/-]/.exec(source.slice(at))?.[0];
+    const token = /^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|^[A-Za-z][A-Za-z0-9_]*|^[(),+*/-]/.exec(source.slice(at))?.[0];
     if (!token) error(t`unsupported expression near “${source.slice(at, at + 12)}”`);
     tokens.push(token); at += token.length;
     if (tokens.length > 128) error(t('expression has too many tokens'));
@@ -55,6 +83,17 @@ export function evaluateExpression(source: string, lookup: (name: string) => Qua
       return finite(q);
     }
     if (token && /^[A-Za-z]/.test(token)) {
+      if (tokens[cursor] === '(') {
+        cursor++; const args: Quantity[] = [];
+        if (tokens[cursor] !== ')') do {
+          args.push(sum(depth + 1));
+          if (args.length > 32) error(t('too many function arguments'));
+          if (tokens[cursor] !== ',') break;
+          cursor++;
+        } while (true);
+        if (tokens[cursor++] !== ')') error(t('missing closing parenthesis'));
+        return evaluateMathFunction(token, args);
+      }
       if (Object.hasOwn(units, token)) error(t('put a number before a unit'));
       return finite(lookup(token));
     }

@@ -72,3 +72,13 @@ describe('optional parameter design intent',()=>{
     const imported=await store.importArchive(await store.exportArchive(s.state.document.id));const restored=await store.readDocument(imported.headId);expect(restored.version).toBe(2);expect((restored.nodes[id] as {size:number[]}).size[0]).toBe(40);await store.close();
   });
 });
+
+it('evaluates safe degree math with dimensional checks and bounded function arguments',()=>{
+ const lookup=(name:string)=>{throw Error(name);};
+ expect(evaluateExpression('sin(30 deg) * 20 mm',lookup)).toEqual({value:expect.closeTo(10),length:1,angle:0});
+ expect(evaluateExpression('sqrt(9 mm * 9 mm)',lookup)).toEqual({value:9,length:1,angle:0});
+ expect(evaluateExpression('max(2 cm, 15 mm)',lookup)).toEqual({value:20,length:1,angle:0});
+ expect(evaluateExpression('atan2(1 mm, 1 mm)',lookup).value).toBe(45);
+ expect(evaluateExpression('abs(round(-2.5))',lookup).value).toBe(3);
+ for(const source of ['sin(2 mm)','max(1 mm, 2 deg)','sqrt(1 mm)','sqrt(-1)','ln(0)','sin()','pow(1)','nope(1)','sin('.repeat(34)+'0'+')'.repeat(34)])expect(()=>evaluateExpression(source,lookup),source).toThrow();
+});

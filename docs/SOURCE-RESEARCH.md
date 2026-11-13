@@ -30,7 +30,8 @@ Do not use the upstream shell benchmark's headline throughput as proof: it joins
 the upstream fixtures (including invalid files), while bench_file discards parse
 errors and the comparison CLI does not check its return status. Our harness first
 requires a successful parse and measures only successful repeated parses. Syntax,
-conversion, process startup and geometry timings are distinct phases.
+conversion, process startup and geometry timings are distinct phases. Oracle
+source spans use UTF-8 byte offsets; our JavaScript diagnostics use UTF-16 offsets.
 
 ```sh
 node scripts/research/build-openscad-oracle.mjs --cache /tmp/brickwright-scad-oracle
@@ -54,6 +55,14 @@ extraction produced 7,929 files / 7,864 unique source hashes. One row had an
 unrecognized/partial wrapper and was excluded. Multi-file rows are not
 concatenated, and fakeprompt is ignored. Original row/file boundaries, author,
 licence, dataset revision, raw-cell hash and extracted-source hash are retained.
+Among unique files, the lexical census finds module definitions in 6,070,
+conditionals in 4,387, loops in 4,335, and hull calls in 2,009. This makes
+module/function scopes, value types and control flow higher priorities than more
+primitive tiles. The one conversion failure is a missing scalar sin evaluator.
+Five oracle rejections occur around empty/missing comma-separated elements or
+arguments; the sixth is in comment syntax. These remain triage cases, not proof
+that the original upstream models are invalid.
+
 Parquet SHA-256: 5815a78f668abcb8ec1373e2bd49a468521ef732eee8e53104132f71373f8ef7.
 
 Initial deterministic sample: 256 evenly-spaced unique extracted files, not a
@@ -91,3 +100,17 @@ gaps are JSCAD extrudeFromSlices and OpenSCAD function/module semantics needed b
 the CC0 threads demo. The runner only reads local archived files and verifies
 hashes. This complements, rather than replaces, library provenance, mesh screening
 and collision qualification. It makes no network fetches or source-requested IO.
+
+### Symbolic-module converter follow-up
+
+Replaying the same 256 deduplicated files after adding file-scope module expansion,
+named vectors and degree math yields 8 positive-solid conversions (previously 5),
+245 unsupported, 2 limited and 1 construction-validation failure. Every previously
+converted file still converts. The remaining validation failure exceeds the native
+cylinder tessellation range; a syntax oracle accepting it does not establish our
+geometry support. Module child operators and short vectors are reported as explicit
+unsupported features. Reports remain outside the repo at
+`/tmp/brickwright-cad-research/thingiverse-openscad/probe-256-modules-final.json`.
+The report records built converter artifact hashes, git state and oracle binary
+hash. These figures are a bring-up sample, not a general compatibility score.
+No dataset source has been copied into runtime assets or application fixtures.

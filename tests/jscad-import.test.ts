@@ -57,3 +57,21 @@ it('brings up the upstream involute gear including 2D maths, polygon extrusion a
 it('bounds deeply nested or excessively large ASTs before evaluation and rejects nontext input',()=>{
  const source='module.exports.main=()=>'+ '['.repeat(200)+'1'+']'.repeat(200)+';';try{importJSCAD(source);throw Error('Expected resource failure');}catch(error:any){expect(error.code).toBe('resource-limit');}expect(()=>importJSCAD(null as any)).toThrow('source text');
 });
+
+for(const profile of [
+ 'rectangle({size:[12,8],center:[2,3]})',
+ 'circle({radius:4,segments:24,center:[3,-2]})',
+ 'ellipse({radius:[8,3],segments:40,center:[-5,4]})',
+ 'translate([3,4],rotateZ(Math.PI/4,scale([2,3],rectangle({size:[5,7]}))))',
+ 'translateX(5,rotate([0,0,Math.PI/3],circle({radius:4,segments:32})))',
+])it(`qualifies JSCAD planar profile extrusion against the independent library: ${profile}`,()=>{
+ const source=`const {primitives:{rectangle,circle,ellipse},transforms:{translate,translateX,rotate,rotateZ,scale},extrusions:{extrudeLinear}}=require('@jscad/modeling'); module.exports.main=()=>extrudeLinear({height:6},${profile});`;
+ const result=geometry(source),modeling=createRequire(import.meta.url)('@jscad/modeling'),context={module:{exports:{} as any},require:()=>modeling};
+ runInNewContext(source+';module.exports.solid=module.exports.main();',context,{timeout:3000});
+ const expected=context.module.exports.solid,volume=modeling.measurements.measureVolume(expected),bounds=modeling.measurements.measureBoundingBox(expected);
+ expect(result.volume).toBeCloseTo(volume,5);for(let i=0;i<3;i++){expect(result.bodies[0].bounds.min[i]).toBeCloseTo(bounds[0][i],6);expect(result.bodies[0].bounds.max[i]).toBeCloseTo(bounds[1][i],6);}
+});
+it('refuses invalid profile dimensions, excess tessellation and unimplemented profile operations',()=>{
+ const prefix="const {primitives:{circle,ellipse,rectangle},extrusions:{extrudeLinear},transforms:{rotateX,scale}}=require('@jscad/modeling');module.exports.main=()=>extrudeLinear({height:3},";
+ for(const expression of ['circle({radius:-2})','rectangle({size:[0,2]})','ellipse({radius:[2,-1]})','circle({segments:300})','circle({segments:3.5})','circle({startAngle:1})','rotateX(1,rectangle())','scale([-1,2],rectangle())'])expect(()=>importJSCAD(prefix+expression+');'),expression).toThrow();
+});

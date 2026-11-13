@@ -21,7 +21,13 @@ references to named parameters. Explicit literals accept `mm`, `cm`, `m`, `in`,
 `deg` and `rad`. A bare numeric result uses the field's declared unit; addition
 and subtraction otherwise require matching dimensions: `width + 5 mm`, rather
 than `width + 5`. Lengths are stored in mm and angles in degrees; `scalar` is
-dimensionless. There are no script evaluation, property accesses or JS functions.
+dimensionless. A bounded math whitelist supports `sin/cos/tan`, `asin/acos/atan`,
+`atan2`, `sqrt`, `abs`, `floor/ceil/round`, `exp/ln/log`, `pow` and `min/max`.
+Trigonometry takes degrees (bare scalars or angular quantities); inverse functions
+return scalar degree values. Functions check dimensions and finite results:
+`sin(30 deg) * 20 mm`, `max(2 cm, 15 mm)` and `sqrt(9 mm * 9 mm)` are valid;
+`sin(2 mm)` and `sqrt(1 mm)` fail. `round` resolves half values away from zero.
+No submitted JavaScript is evaluated; property access and arbitrary calls are refused.
 
 Parameters may reference later rows. Cycles, unknown names, incompatible units,
 division by zero, out-of-range dimensions and duplicate bindings fail before

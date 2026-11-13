@@ -426,3 +426,42 @@ is pending that external condition. The signed IPA is apps/ipad/build/adhoc/App.
 Mac build 11 native smoke passed and installation/launch succeeded. The final
 16-workflow desktop/iPad usability and localization subset passed completely,
 including the previously stale Copy icon assertions and actual fine gestures.
+
+## Mac build 12 and source-converter checkpoint — 2026-11-13
+
+Build 12 is installed and running from clean source 44eb631. Build 11 predates
+the native trackpad changes. An AppKit local magnification monitor now intercepts
+pinch before WebKit internal views, and routes it to the canvas camera. Native
+smoke verifies that this route changes camera distance, keeps page scale at 1,
+and leaves project data unchanged; existing native menu/library/history smoke
+also passes. Physical user trackpad inspection remains the hardware check.
+
+The VPS library was merged without replacing its immutable source/evidence or
+provenance policies. All 384 then-current integrated unit tests passed; reviewed
+source checks convert 36/38 sources and keep the slice-extrusion and SCAD-function
+gaps explicit. Both archived source/example reproduction checks pass. Optional
+research tooling builds a pinned permissive Rust syntax oracle and probes a
+research-only dataset outside the repo; see SOURCE-RESEARCH.md. Locale catalogue
+conflicts introduced by the concurrent work were consolidated afterward.
+
+## Symbolic source conversion and product README — 2026-11-13
+
+README now describes this editor's modeling workflow, source interchange, projects,
+library, navigation, native hosts, SDK packages and limits. Competitor-review
+references were removed from the product introduction.
+
+OpenSCAD file-scope modules now expand symbolically with positional/named/default
+arguments, lexical globals and propagated special `$fn` arguments. Named vectors,
+literal indexing, boolean flags and degree math retain scalar dependencies.
+Recursive expansion is bounded before strings can exhaust memory. Native parameter
+formulas share the safe math whitelist, including unit/domain validation.
+JSCAD adds rectangle/circle/ellipse profiles and planar transforms before extrusion;
+independent JSCAD-library geometry checks compare volumes and bounds.
+
+Local validation: production build, 400 unit tests (including the optional external
+syntax oracle), 10 desktop/iPad WebKit source-import and camera workflows, and the
+1,078-message German catalogue audit pass. The reviewed library remains 36/38
+converted; the two known feature gaps stay explicit. The isolated 256-file research
+sample improves from 5 to 8 positive-solid conversions without losing previous
+successes. No GitHub Actions or protected application implementation was used.
+These source changes follow installed Mac build 12; see its separate receipt above.

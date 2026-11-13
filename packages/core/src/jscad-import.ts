@@ -82,6 +82,28 @@ export function importJSCAD(source:string,overrides:Record<string,number|string|
    if(path==='utils.degToRad')return number(args[0])*Math.PI/180;if(path==='utils.radToDeg')return number(args[0])*180/Math.PI;
    if(fn.receiver){const values=fn.receiver;switch(path){case 'array.push':array([...values,...args]);values.push(...args);return values.length;case 'array.concat':return array(values.concat(...args.map(v=>Array.isArray(v)?v:[v])));case 'array.slice':return values.slice(args[0]===undefined?0:number(args[0]),args[1]===undefined?undefined:number(args[1]));case 'array.map':return array(values.map((value,i)=>call(args[0],[value,i,values])));}return unsupported(path);}
    if(path.startsWith('maths.vec2.')){const method=path.slice(11);if(method==='create')return [0,0];const out=list(args[0]);if(out.length!==2)return unsupported(path);let result:number[];if(method==='fromAngleRadians'){const angle=number(args[1]);result=[Math.cos(angle),Math.sin(angle)];}else if(method==='normal'){const a=vector(args[1],2);result=[-a[1],a[0]];}else if(method==='scale'){const a=vector(args[1],2),factor=number(args[2]);result=a.map(v=>v*factor);}else return unsupported(path);out[0]=number(result[0]);out[1]=number(result[1]);return out;}
+   if(['primitives.rectangle','primitives.circle','primitives.ellipse'].includes(path)){
+    const opts=args[0]===undefined?record():args[0];if(!plain(opts)||args.length>1)return unsupported(`${path} arguments`);
+    const rectangle=path==='primitives.rectangle',allowed=rectangle?['size','center']:['radius','center','segments'];
+    for(const key of Object.keys(opts))if(!allowed.includes(key))return unsupported(`${path}.${key}`);
+    const center=vector(opts.center??[0,0],2),size=rectangle?vector(opts.size??[2,2],2):path==='primitives.circle'?[number(opts.radius??1),number(opts.radius??1)]:vector(opts.radius??[1,1],2);
+    if(size.some(n=>n<=0))fail(t('Expected positive JSCAD profile dimensions'));
+    if(rectangle){const [x,y]=size.map(n=>n/2);return new Profile([[-x,-y],[x,-y],[x,y],[-x,y]].map(p=>p.map((n,i)=>number(n+center[i]))));}
+    const count=number(opts.segments??32);if(!Number.isInteger(count)||count<3||count>256)fail(t('JSCAD profile segments must be an integer from 3 to 256'));
+    return new Profile(Array.from({length:count},(_,i)=>{const angle=2*Math.PI*i/count;return [number(center[0]+size[0]*Math.cos(angle)),number(center[1]+size[1]*Math.sin(angle))];}));
+   }
+   if(path.startsWith('transforms.')&&args.slice(1).some(arg=>arg instanceof Profile)){
+    const profiles=args.slice(1);if(!profiles.length||!profiles.every(arg=>arg instanceof Profile))return unsupported(`${path} mixed profiles/solids`);
+    const method=path.slice(11);let offset=[0,0],factor=[1,1],angle=0;
+    if(method==='translate')offset=vector(args[0],2);
+    else if(method==='translateX'||method==='translateY')offset[method==='translateX'?0:1]=number(args[0]);
+    else if(method==='scale'){factor=vector(args[0],2);if(factor.some(n=>n<=0))return unsupported('profile scale must be positive');}
+    else if(method==='rotateZ')angle=number(args[0]);
+    else if(method==='rotate'){const v=vector(args[0]);if(v[0]!==0||v[1]!==0)return unsupported('profile rotation outside XY plane');angle=v[2];}
+    else return unsupported(path);
+    const c=Math.cos(angle),s=Math.sin(angle),out=profiles.map(profile=>new Profile((profile as Profile).points.map(([x,y])=>[number(offset[0]+factor[0]*(x*c-y*s)),number(offset[1]+factor[1]*(x*s+y*c))])));
+    return out.length===1?out[0]:out;
+   }
    if(path==='primitives.polygon'){const opts=args[0];if(!plain(opts)||Object.keys(opts).some(key=>!['points','closed'].includes(key))||opts.closed===false)return unsupported('primitives.polygon options');return new Profile(list(opts.points).map(p=>vector(p,2)));}
    if(path==='extrusions.extrudeLinear'){const opts=args[0],profile=args[1];if(!plain(opts)||!(profile instanceof Profile)||Object.keys(opts).some(key=>key!=='height')||args.length!==2)return unsupported('extrusions.extrudeLinear options/profile');const points=profile.points.map(p=>`[${p.join(', ')}]`).join(', ');return geometry(`extrude(${number(opts.height??1)}, [${points}])`);}
    const bools:Record<string,string>={'booleans.union':'union','booleans.subtract':'subtract','booleans.intersect':'intersect'};if(bools[path])return merged(bools[path],geometries(args));
