@@ -69,7 +69,6 @@ it('bounds module recursion and refuses child modules, bad arguments and unsuppo
   'module a(s=2){cube(s);} a(other=3);',
   'module a(){cube(1);} a() cube(3);',
   'module a(){module b(){cube(1);} b();} a();',
-  'module a(){size=2; cube(size);} a();',
   'v=[1,2,3]; cube(v[5]);',
   'cube(sqrt(-1));',
   'cube(random(1));',
@@ -79,4 +78,42 @@ it('bounds module recursion and refuses child modules, bad arguments and unsuppo
 it('caps symbolic argument expansion before recursive expressions can exhaust memory',()=>{
  try{importOpenSCAD('module a(x){a(x+x);} a(1);');throw Error('Expected resource failure');}catch(error:any){expect(error.code).toBe('resource-limit');}
  expect(geometry('module b(){cylinder(2,1);} module a($fn=6){b();} a();').volume).toBeCloseTo(3*Math.sqrt(3));
+});
+it('inlines user scalar/vector functions symbolically, with hoisted definitions and lexical defaults',()=>{
+ const p=importOpenSCAD('width=5; dimensions=size(width); cube(dimensions); function twice(x)=x*2; function size(w=width)=[w,twice(w),3];');
+ p.parameters.width='7';const session=createCadSession();session.addCode(p);expect(kernel.evaluate(session.state.document).volume).toBeCloseTo(294);
+ expect(geometry('global=2; function size(x=global)=x; module part(global=9){cube(size());} part();').volume).toBeCloseTo(8);
+ expect(geometry('function size(x=3,y=4)=[x,y,2]; cube(size(y=5));').volume).toBeCloseTo(30);
+ expect(geometry('function size()=[2,3,4]; cube(size()[1]);').volume).toBeCloseTo(27);
+ expect(geometry('function profile(w)=[[0,0],[w,0],[w,w],[0,w]]; linear_extrude(3) polygon(profile(4));').volume).toBeCloseTo(48);
+ expect(geometry('module part(){cylinder(2,1);} part($fn=6);').volume).toBeCloseTo(3*Math.sqrt(3));
+});
+it('bounds user-function recursion and diagnoses unsupported conditionals without executing them',()=>{
+ for(const source of ['function f(x)=f(x+x); cube(f(1));','function f(x)=x; cube('+'f('.repeat(33)+'1'+')'.repeat(33)+');']){
+  try{importOpenSCAD(source);throw Error('Expected resource failure');}catch(error:any){expect(error.code).toBe('resource-limit');}
+ }
+ for(const source of ['function f(x)=x>0?x:1; cube(f(2));','function f(x)=x; cube(f());','function f(x)=x; cube(f(1,x=2));','function f(x)=x; cube(f(y=1));'])expect(()=>importOpenSCAD(source),source).toThrow();
+});
+
+it('retains local declarative dependencies, lexical shadowing and last assignments across module instances',()=>{
+ const p=importOpenSCAD('width=4; module part(n){cube(size); size=[w,w,1]; w=n*width; w=n*width+1;} part(2); translate([20,0,0]) part(3);');
+ p.parameters.width='5';const session=createCadSession();session.addCode(p);expect(kernel.evaluate(session.state.document).volume).toBeCloseTo(121+256);
+ expect(geometry('width=2; module part(width=3){cube(width); translate([10,0,0]){width=4; cube(width);} translate([20,0,0]) cube(width);} part();').volume).toBeCloseTo(27+64+27);
+ expect(geometry('module part(){difference(){size=6; cube(size); translate([2,2,-1]) cube([2,2,8]);}} part();').volume).toBeCloseTo(216-24);
+ expect(geometry('module part(){cylinder(2,1); $fn=6;} part();').volume).toBeCloseTo(3*Math.sqrt(3));
+});
+it('refuses cyclic local bindings and bounds deep local dependency chains',()=>{
+ for(const source of ['module a(){x=x+1; cube(x);} a();','module a(){x=y; y=x; cube(x);} a();','module a(){v=[v]; cube(v);} a();'])expect(()=>importOpenSCAD(source),source).toThrow('dependency cycle');
+ const definitions=Array.from({length:34},(_,i)=>`v${i}=${i===33?'1':`v${i+1}`};`).join('');
+ try{importOpenSCAD(`module a(){${definitions} cube(v0);} a();`);throw Error('Expected resource failure');}catch(error:any){expect(error.code).toBe('resource-limit');}
+});
+
+it('keeps captured local bindings independent of later inner shadowing and refuses anonymous assignment scopes',()=>{
+ expect(geometry('module a(width=3){size=width; translate([10,0,0]){width=8; cube(size);}} a();').volume).toBeCloseTo(27);
+ expect(()=>importOpenSCAD('module a(){ {size=4;} cube(size);} a();')).toThrow('anonymous blocks');
+});
+
+it('expands nested scalar calls once per use and retains their arithmetic context',()=>{
+ let expression='1';for(let i=0;i<8;i++)expression=`f(${expression})+1`;
+ expect(geometry(`function f(x)=x; cube(${expression});`).volume).toBeCloseTo(729);
 });

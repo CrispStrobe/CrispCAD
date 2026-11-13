@@ -465,3 +465,24 @@ converted; the two known feature gaps stay explicit. The isolated 256-file resea
 sample improves from 5 to 8 positive-solid conversions without losing previous
 successes. No GitHub Actions or protected application implementation was used.
 These source changes follow installed Mac build 12; see its separate receipt above.
+
+## Mac build 13; symbolic functions and lexical bindings — 2026-11-13
+
+Mac build 13 was installed and launched from clean checkpoint 5c17d15. Native
+magnification/camera isolation and menu/clipboard/library/history smoke passed.
+The README rewrite and the first module/profile converter extensions are included.
+
+The next source checkpoint adds original bounded OpenSCAD scalar/vector function
+expansion, named/default arguments, generated polygon profiles, implicit `$fn`
+arguments, and lazy module/operator-local bindings. Final local assignments apply
+throughout their lexical scope; captured bindings retain their defining scope.
+Cycles, recursive expansion and deep binding chains are bounded. Anonymous-block
+assignment scopes, loops/conditionals, nested definitions and other unsupported
+features remain explicit gaps. The importer lives in openscad-import.ts; public
+SDK, GUI, CLI and MCP APIs are unchanged.
+
+Validation: production build, 406 unit tests with optional syntax oracle, 10
+Chromium/iPad WebKit source-import/camera workflows, 1,079-message German audit,
+and all six SDK packages installed offline with an empty npm cache, including
+actual geometry/physics checks. The research sample improves to 10/256 positive
+solids without losing prior successes. Full language compatibility is not claimed.

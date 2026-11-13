@@ -114,3 +114,16 @@ unsupported features. Reports remain outside the repo at
 The report records built converter artifact hashes, git state and oracle binary
 hash. These figures are a bring-up sample, not a general compatibility score.
 No dataset source has been copied into runtime assets or application fixtures.
+
+### Function and local-binding follow-up
+
+The same 256-file replay now yields 10 positive-solid conversions, 242 unsupported,
+2 limited and 2 non-conversions reported as validation failures. All previous
+successes remain successful. One validation case exceeds native tessellation
+limits; the other is a declarations-only library with no solid to instantiate.
+The final report is external:
+`/tmp/brickwright-cad-research/thingiverse-openscad/probe-256-functions-final.json`.
+It fingerprints the separate OpenSCAD importer as well as the core compiler,
+interchange layer, JSCAD interpreter and parameter engine. These sources remain
+research-only; the regression fixtures added to the application tests are original
+small examples of the documented language behavior.

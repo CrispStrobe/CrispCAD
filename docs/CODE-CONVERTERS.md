@@ -11,7 +11,7 @@ The GUI, SDK, CLI and MCP share the converters.
 
 | Input | Supported |
 | --- | --- |
-| OpenSCAD | Scalar/vector/boolean assignments before geometry; arithmetic, degree math and dependent parameters; top-level reusable modules with positional/named/default arguments; fixed vector indexing; cube/sphere/cylinder; centering and radius/diameter arguments; translate, XYZ/scalar-Z rotation, positive scale; union/difference/intersection; linear_extrude of a simple polygon, square or circle. |
+| OpenSCAD | Scalar/vector/boolean assignments before geometry; arithmetic, degree math and dependent parameters; top-level reusable modules and scalar/vector functions with positional/named/default arguments; declarative module/operator-local bindings; fixed vector indexing; cube/sphere/cylinder; centering and radius/diameter arguments; translate, XYZ/scalar-Z rotation, positive scale; union/difference/intersection; linear_extrude of a simple polygon, square or circle. |
 | JSCAD | CommonJS/ES imports of @jscad/modeling; exported main or explicitly selected entry; helper functions, destructuring/default arguments, arithmetic/Math; bounded loops and arrays; scalar input parameters; cube/cuboid/cylinder/sphere/polygon, rectangle/circle/ellipse profiles and planar profile transforms; Booleans; translate/rotate/scale and axis shortcuts; flat output colours; basic vec2 maths and untwisted extrudeLinear. |
 | Native CAD Script | Existing primitives/CSG/transforms/repeat, plus extrude(height, [[x,y], ...]) for a simple XY profile. Profile closes automatically, needs 3–256 points, and rejects zero edges/area and self-intersections. |
 
@@ -30,7 +30,9 @@ limits are distinct from unsupported features and malformed input.
 
 Known gaps, deliberately diagnosed:
 
-- OpenSCAD include/use, user functions, for/if, nested modules, module child operators, local/reassigned variables,
+- OpenSCAD include/use, for/if, conditional expressions, nested definitions, module
+  child operators, global reassignment/assignment after geometry, assignments in
+  anonymous blocks, 2D-profile-local bindings,
   2D profile Booleans/holes, twisted/scaled extrusion, hull/minkowski, imported
   meshes and arbitrary-axis transforms. BOSL2 library execution is not supported.
 - JSCAD external/local modules, arbitrary JavaScript/host APIs, unsupported math
@@ -48,8 +50,18 @@ symbolically: changing a retained parameter recomputes every expanded use, rathe
 than baking it into a snapshot. Named vectors retain their scalar dependencies;
 vector indices currently require literal nonnegative integers. Module defaults
 use the definition scope; regular caller arguments do not leak into called modules.
-Special `$fn` parameters propagate through calls. Only file-scope module definitions
-are supported; local assignments and `children()` remain explicit gaps.
+Special `$fn` parameters propagate through calls. Only file-scope module/function definitions are supported; `children()` and nested
+definitions remain explicit gaps. User functions expand scalar or vector results,
+including generated polygon points, while retaining scalar dependencies.
+
+Module and operator block assignments use lexical scope. The final assignment
+applies throughout that scope, so geometry can precede its local declarations.
+Captured bindings resolve in their defining scope even when an inner scope shadows
+the same name. Cycles and dependency chains deeper than 32 are diagnosed. Anonymous
+blocks have different scope behavior in OpenSCAD: assignments there are explicitly
+rejected until scope flattening is implemented. Global assignments still need to
+precede geometry and cannot be reassigned. Unused declarations/definitions need
+not produce geometry; a library-only file is not an instantiable solid.
 
 Math functions include degree-based sin/cos/tan and inverse trigonometry, atan2,
 sqrt, abs, floor/ceil/round, exp/ln/log, pow and min/max. This bounded whitelist is
@@ -140,7 +152,7 @@ Basic Booleans retains five output records and flat colour metadata. All 34 nati
 examples round-trip via the supported OpenSCAD and JSCAD syntax. Exported JSCAD is
 checked against the actual MIT modeling library for volume and bounds.
 
-Next valuable work is bounded OpenSCAD local-scope/loop/function semantics,
+Next valuable work is bounded OpenSCAD loops/conditionals, anonymous-scope flattening,
 callback/slice loft IR and 2D profile operations. Add a small pinned failing fixture with exact
 licence/provenance for each capability before changing the converter. Never turn
 an unsupported operation into an unreported approximation or execute source JS.
@@ -149,7 +161,8 @@ Historical checkpoint: d946a9b was pushed while the extrusion work was in progre
 Current validation and delivery notes are recorded in DELIVERY.md.
 
 Language behavior references: [OpenSCAD modules and functions](https://files.openscad.org/documentation/manual/User-Defined_Functions_and_Modules.html),
-[mathematical functions](https://files.openscad.org/documentation/manual/Mathematical_Functions.html).
+[mathematical functions](https://files.openscad.org/documentation/manual/Mathematical_Functions.html) and
+[variable scope](https://files.openscad.org/documentation/manual/General.html#Scope_of_variables).
 The installed MIT JSCAD 2.13.0 API and independent test geometry establish the
 profile defaults, centering and radian transform behavior. No GPL implementation
 was used.

@@ -35,7 +35,8 @@ The same modeling compiler is available through the core SDK and a headless MCP 
 
 Bounded converters import supported OpenSCAD/JSCAD source and export native CAD
 Script or evaluated OpenSCAD/JSCAD snapshots. Unsupported constructs produce
-explicit diagnostics. Importing source is not a promise of complete language
+explicit diagnostics. Supported OpenSCAD modules, functions and local formulas
+retain their scalar parameter dependencies. Importing source is not a promise of complete language
 compatibility or preserved foreign parametric behavior.
 
 ```sh
