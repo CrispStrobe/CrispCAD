@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "The model changed while exporting. Export again from the current model.": "Das Modell wurde während des Exports geändert. Exportieren Sie das aktuelle Modell erneut.",
+  "Return printable binary STL as base64. Recorded library sources automatically include a paired attribution JSON file; supply accurate modificationNotes describing changes since insertion (including when unchanged) and distribute both files together.": "Gibt druckbares binäres STL als Base64 zurück. Aufgezeichnete Bibliotheksquellen enthalten automatisch eine zugehörige JSON-Datei mit Quellenangaben; geben Sie zutreffende modificationNotes zu Änderungen seit dem Einfügen an (auch bei unverändertem Modell) und geben Sie beide Dateien zusammen weiter.",
+
+  "This editor cannot export meshes with recorded library sources yet. Save the project, then use MCP cad_export_stl with accurate modificationNotes to obtain STL and attribution together. 3MF attribution export is not supported.": "Dieser Editor kann Netze mit aufgezeichneten Bibliotheksquellen noch nicht exportieren. Speichern Sie das Projekt und verwenden Sie MCP cad_export_stl mit zutreffenden modificationNotes, um STL und Quellenangaben zusammen zu erhalten. Ein 3MF-Export mit Quellenangaben wird nicht unterstützt.",
+  "Recorded library sources require accurate modificationNotes describing changes since insertion, including when unchanged.": "Aufgezeichnete Bibliotheksquellen erfordern zutreffende modificationNotes zu Änderungen seit dem Einfügen, auch bei unverändertem Modell.",
+  "Attributed STL exceeds the MCP 3 MiB limit; reduce model complexity. GUI attributed mesh export is not supported yet.": "STL mit Quellenangaben überschreitet die MCP-Grenze von 3 MiB; verringern Sie die Modellkomplexität. Der GUI-Netzexport mit Quellenangaben wird noch nicht unterstützt.",
+  "STL and attribution exceed the MCP 3 MiB limit; no partial export was returned. Reduce model or source metadata size.": "STL und Quellenangaben überschreiten die MCP-Grenze von 3 MiB; es wurde kein Teilexport zurückgegeben. Verringern Sie die Modell- oder Quellenmetadatengröße.",
+  "Distribute both files together. Retain any licence texts and notices required by the recorded grants.": "Geben Sie beide Dateien zusammen weiter. Bewahren Sie alle durch die aufgezeichneten Lizenzen vorgeschriebenen Lizenztexte und Hinweise auf.",
+
   "Get the CAD Script grammar, modeling functions, limits and an example.": "CAD-Script-Grammatik, Modellierungsfunktionen, Grenzen und ein Beispiel abrufen.",
   "Get current revision and object metadata; call before changing the model.": "Aktuelle Version und Objektmetadaten abrufen; vor Änderungen am Modell aufrufen.",
   "Read a coded feature, its source and evaluated local parameters.": "Ein Codeobjekt, seinen Quelltext und seine berechneten lokalen Parameter lesen.",

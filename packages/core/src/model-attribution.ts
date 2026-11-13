@@ -27,6 +27,22 @@ export interface ModelAttributionSidecar {
   records: ModelProvenanceRecord[];
 }
 
+/** Whether any printable root or boolean operand retains recorded library sources.
+ * Legacy extension fields are opaque. Validate before deciding to omit a sidecar.
+ */
+export function hasModelAttribution(input: CadDocument): boolean {
+  const document = validateDocument(input);
+  if (document.version !== 5) return false;
+  const seen = new Set<string>();
+  const visit = (id: string): boolean => {
+    if (seen.has(id)) return false;
+    seen.add(id);
+    const node = document.nodes[id];
+    return !!node.provenance?.length || (node.kind === 'boolean' && node.inputs.some(visit));
+  };
+  return document.roots.filter(id => !document.nodes[id].reference).some(visit);
+}
+
 /**
  * Build metadata for caller-supplied export bytes without changing the project.
  * The caller must export exactly these roots from this document, in millimetres.
