@@ -33,3 +33,7 @@ To add a language, add its catalog set and native resources, extend the supporte
 locale registry/normalization, and exercise those workflows. Keep identifiers and
 parameter/source serialization language-neutral. English fallback is intentional;
 a missing translation must never corrupt a model or reject a valid archive.
+
+The precision, example picker and expanded About sections have German messages;
+example names and the owner app catalogue carry explicit English/German text.
+Original legal notices and CAD language syntax are intentionally preserved.

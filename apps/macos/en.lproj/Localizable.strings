@@ -79,3 +79,5 @@
 "Library file has another history branch. Open it as a separate project before saving; existing history was preserved" = "Library file has another history branch. Open it as a separate project before saving; existing history was preserved";
 "Invalid language" = "Invalid language";
 "Cannot start the local asset server on port %d. Close other CAD copies and retry. %@" = "Cannot start the local asset server on port %d. Close other CAD copies and retry. %@";
+
+"Import STL…" = "Import STL…";

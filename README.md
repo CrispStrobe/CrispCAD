@@ -158,3 +158,12 @@ portable backups; local autosave is not off-device backup.
 The [parametric CAD strategy](docs/PARAMETRIC-CAD-STRATEGY.md) compares modeling
 workflows, records the FluidCAD/Solidcraft/Macad3D reviews and defines the next solver,
 feature, component and exact-kernel milestones.
+
+Recent workspace improvements: Objects keeps the canvas visible; history sits in
+its browser footer, Projects is in File, and Edit/Combine use compact dismissible
+menus. Common selection actions appear when the bar has room. Shift/Fine controls
+provide finer movement and transforms. New code/sketch objects start on the
+workplane. Code an object includes 34 original, tested examples with German titles.
+About includes build details, imprint/privacy, our apps and offline legal texts.
+See [precision controls](docs/PRECISION-AND-WORKSPACE.md) and the
+[model-library source and licensing plan](docs/MODEL-LIBRARY.md).

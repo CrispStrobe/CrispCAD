@@ -2,7 +2,7 @@
 import {Worker} from 'node:worker_threads';
 import {readFile,writeFile,open,rename,unlink,stat,lstat,mkdir} from 'node:fs/promises';
 import {dirname,resolve} from 'node:path';
-import {createCadSession,createDocument,compileCode,defaultCodeProgram,newId,serializeDocument,CODE_LIMITS,t,getLocale} from '@brickwright/cad-core';
+import {createCadSession,createDocument,compileCode,defaultCodeProgram,codeExamples,newId,serializeDocument,CODE_LIMITS,t,getLocale} from '@brickwright/cad-core';
 import {appendPortableRevision,readPortableHistory} from '@brickwright/cad-history';
 import {exportSTL} from '@brickwright/cad-geometry';
 
@@ -56,7 +56,7 @@ export async function createCodeHost(options={}){
  function info(){return {revision:metadata.project.serial,projectId:session.state.document.id,title:session.state.document.title,projectFile:projectPath??null,objects:session.state.document.roots.map(id=>{const n=session.state.document.nodes[id];return {id,name:n.name,kind:n.kind,transform:n.transform};})};}
  async function accept(doc,label,signal,parent){cancelled(signal);if(new TextEncoder().encode(serializeDocument(doc)).length>1024*1024)throw new Error(t('MCP editable model exceeds 1 MiB; the GUI supports larger projects'));const nextArchive=await appendPortableRevision(archive,doc,label,parent);const nextMetadata=await readPortableHistory(nextArchive);cancelled(signal);await persist(nextArchive);archive=nextArchive;metadata=nextMetadata;session.load(doc);}
  const definitions=toolDefinitions.map(definition=>({...definition,description:t(definition.description)}));
- const localizedHelp={...codeHelp,notes:codeHelp.notes.map(note=>t(note))};
+ const localizedHelp={...codeHelp,examples:codeExamples.map(e=>({id:e.id,title:e.title[getLocale()],source:e.source,parameters:{}})),notes:codeHelp.notes.map(note=>t(note))};
  return {definitions,async call(name,args={},signal){if(disposed)throw new Error(t('MCP host is closed'));const definition=toolDefinitions.find(t=>t.name===name);if(!definition)throw new Error(t('Unknown tool'));validateArguments(definition,args);cancelled(signal);
   if(name==='cad_code_help')return localizedHelp;if(name==='cad_get_model')return info();
   if(name==='cad_get_code_object'){const n=session.state.document.nodes[args.objectId];if(n?.kind!=='code')throw new Error(t('Code object not found'));const compiled=compileCode(n.program);return {revision:metadata.project.serial,id:n.id,name:n.name,program:n.program,parameters:compiled.parameters,values:compiled.values,transform:n.transform};}

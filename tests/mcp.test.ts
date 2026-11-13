@@ -9,6 +9,7 @@ import {readPortableHistory} from '@brickwright/cad-history';
 const cleanups:Array<()=>Promise<unknown>>=[];afterEach(async()=>{for(const cleanup of cleanups.splice(0).reverse())await cleanup();});
 it('previews without edits, validates expected revisions and resumes full history from its one configured file',async()=>{
  const folder=await mkdtemp(join(tmpdir(),'cad-mcp-')),path=join(folder,'project.bcad');cleanups.push(()=>rm(folder,{recursive:true,force:true}));let host=await createCodeHost({project:path});cleanups.push(()=>host.dispose());const before=await readFile(path),initial=await host.call('cad_get_model');
+ const help=await host.call('cad_code_help');expect(help.examples).toHaveLength(34);expect(help.examples.find((e:any)=>e.id==='washer').source).toContain('subtract');
  const preview=await host.call('cad_preview_code',{source:defaultCodeProgram().source});expect(preview.committed).toBe(false);expect(await readFile(path)).toEqual(before);
  const created=await host.call('cad_create_code_object',{source:defaultCodeProgram().source,expectedRevision:initial.revision});expect(created.objects).toHaveLength(1);
  await expect(host.call('cad_update_code_object',{objectId:created.objectId,parameters:{width:'80'},expectedRevision:initial.revision})).rejects.toThrow('Stale');

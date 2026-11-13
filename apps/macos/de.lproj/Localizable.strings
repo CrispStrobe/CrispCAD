@@ -79,3 +79,5 @@
 "Library file has another history branch. Open it as a separate project before saving; existing history was preserved" = "Die Bibliotheksdatei enthält einen anderen Verlaufszweig. Öffnen Sie sie vor dem Speichern als separates Projekt; der vorhandene Verlauf wurde erhalten";
 "Invalid language" = "Ungültige Sprache";
 "Cannot start the local asset server on port %d. Close other CAD copies and retry. %@" = "Der lokale Ressourcenserver auf Port %d konnte nicht gestartet werden. Schließen Sie andere CAD-Instanzen und versuchen Sie es erneut. %@";
+
+"Import STL…" = "STL importieren…";

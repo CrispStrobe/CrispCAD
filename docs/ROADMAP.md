@@ -119,3 +119,17 @@ feasibility, while nonlinear search/recursion limits require an algorithm change
 before interactive adoption. [Localization](LOCALIZATION.md) and
 [workbench preferences](WORKBENCH-PREFERENCES.md) record the current English/German,
 editable lettering, projected numbers, transformed dimensions and appearance APIs.
+
+## Workspace and library follow-up (2026-11-13)
+
+Delivered compact dismissible menus, independent browser/canvas columns, browser
+history footer, Projects in File, adaptive selection actions, Shift/Fine controls,
+34 tested original code examples, new-code/sketch workplane placement and expanded
+About with offline notices. STL import/export remain mesh workflows.
+
+Next library milestone: per-asset provenance in documents, a validated catalogue
+manifest, attributed export sidecars and hash-checked local cache before remote
+catalogue insertion. Start with original code examples and CC0 calibration parts;
+review native FreeCAD assets and individual Thingi10K grants. Storage and content
+licence boundaries are in MODEL-LIBRARY.md. No mass dataset import or new remote
+library repository is implied by this plan.

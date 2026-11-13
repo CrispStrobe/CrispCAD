@@ -1,3 +1,4 @@
+import {fineNumberKeys} from './precision.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import type {CadSession,Transform} from '@brickwright/cad-core';
 import {t} from '@brickwright/cad-core';
@@ -11,7 +12,7 @@ export function mountTransformReadout(parent:HTMLElement,session:CadSession,onEr
  const lines=['X','Y','Z'].map(axis=>{const line=document.createElementNS(ns,'line');line.dataset.axis=axis;guides.append(line);return line;});
  const inputs=['X','Y','Z'].map((axis,index)=>{const input=document.createElement('input');input.type='number';input.step='.1';input.className='axis-number';input.dataset.axis=axis;panel.append(input);
   input.addEventListener('change',()=>{if(!last||last.dragging)return;const key=last.mode==='rotate'?'rotation':last.mode==='scale'?'scale':'position';try{const value=Number(input.value);if(!input.value.trim()||!Number.isFinite(value))throw new Error(t('Enter a finite numeric value'));session.transform(last.poses.map(({id})=>{const transform=structuredClone(session.state.document.nodes[id].transform);transform[key][index]=value;return {id,transform};}));}catch(error){onError(error);}refresh({...last,poses:last.poses.filter(p=>!!session.state.document.nodes[p.id]).map(p=>({id:p.id,transform:structuredClone(session.state.document.nodes[p.id].transform)}))});});
-  input.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'){e.preventDefault();input.blur();}else if(e.key==='Escape'){input.value=String(last?.poses[0]?.transform[last.mode==='rotate'?'rotation':last.mode==='scale'?'scale':'position'][index]??0);input.blur();}});return input;});
+  input.addEventListener('keydown',e=>{if(fineNumberKeys(input,e))return;e.stopPropagation();if(e.key==='Enter'){e.preventDefault();input.blur();}else if(e.key==='Escape'){input.value=String(last?.poses[0]?.transform[last.mode==='rotate'?'rotation':last.mode==='scale'?'scale':'position'][index]??0);input.blur();}});return input;});
  function refresh(next:TransformPreview){last=next;panel.hidden=!visible||!next.poses.length;if(panel.hidden)return;const key=next.mode==='rotate'?'rotation':next.mode==='scale'?'scale':'position',name=key==='rotation'?'Rotation':key==='scale'?'Scale':'Position';
   panel.dataset.dragging=String(next.dragging);panel.dataset.valid=String(next.valid);
   inputs.forEach((input,i)=>{const axis=['X','Y','Z'][i],property=`${key}${axis}`,anchor=next.axes.find(a=>a.axis===axis),line=lines[i];

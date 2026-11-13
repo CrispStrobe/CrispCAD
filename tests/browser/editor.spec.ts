@@ -116,9 +116,9 @@ test('compact iterations restore a branch and project saves include full history
  await page.locator('[data-testid=object-name]').first().click();const width=page.getByLabel('Width (mm)',{exact:true});if(!await width.isVisible())await page.getByRole('button',{name:'Properties',exact:true}).click();await expect(width).toHaveValue('30');
  await page.reload();await ready(page);await expect(page.getByLabel('Model iteration',{exact:true}).locator('option').filter({hasText:/^#3 ·/})).toHaveCount(1);
  const event=page.waitForEvent('download');await clickTool(page,'Save project');const saved=await event;expect(saved.suggestedFilename()).toMatch(/\.bcad$/);
- await page.getByRole('button',{name:'Project library',exact:true}).click();const library=page.getByRole('dialog',{name:'Project library',exact:true});
+ await page.getByLabel('File menu',{exact:true}).click();await page.getByRole('button',{name:'Project library',exact:true}).click();const library=page.getByRole('dialog',{name:'Project library',exact:true});
  await library.locator('input[type=file]').setInputFiles((await saved.path())!);await expect(library).toBeHidden();await ready(page);
- await page.getByRole('button',{name:'Project library',exact:true}).click();await expect(library.locator('.project-card')).toHaveCount(2);
+ await page.getByLabel('File menu',{exact:true}).click();await page.getByRole('button',{name:'Project library',exact:true}).click();await expect(library.locator('.project-card')).toHaveCount(2);
 });
 
 test('native-style hosts without randomUUID or WebCrypto still create and retain model iterations',async({page})=>{

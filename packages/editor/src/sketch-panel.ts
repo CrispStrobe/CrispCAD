@@ -5,7 +5,7 @@ import type {CadSession,FeatureScalar,PlanarSketch,SketchPlane,SketchProfile,Cad
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
 const scalar=(source:string):FeatureScalar=>source.trim()!==''&&Number.isFinite(Number(source))?Number(source):source.trim();
 /** Definition editor: complete draft + kernel preflight before the real session changes. */
-export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:(doc:CadDocument)=>Promise<unknown>,afterApply:()=>Promise<unknown>) {
+export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:(doc:CadDocument)=>Promise<import('@brickwright/cad-geometry').GeometryResult>,afterApply:()=>Promise<unknown>) {
  const dialog=element('dialog');dialog.className='sketch-dialog';dialog.setAttribute('aria-label',t('Sketch and extrusion'));parent.append(dialog);
  let disposed=false;
  function open(featureId?:string){
@@ -38,11 +38,11 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const apply=element('button',t(existing?'Apply sketch changes':'Create extrusion'));apply.className='primary';
   apply.onclick=async()=>{apply.disabled=true;try{
    if(session.state.revision!==expected)throw new Error(t('The model changed. Close and reopen this dialog before applying.'));
-   const {trial}=draft();await evaluate(trial.state.document);if(disposed)return;
+   const {trial}=draft();const geometry=await evaluate(trial.state.document);const created=geometry.bodies.find(body=>body.id===trial.state.document.roots.at(-1));if(disposed)return;
    if(session.state.revision!==expected)throw new Error(t('The model changed while checking geometry. Close and reopen this dialog.'));
    // One transaction, including sketch and extrusion inputs.
    if(existing&&featureId)session.editExtrusion(featureId,{sketch:{name:name.value.trim(),plane:plane.value as SketchPlane,profile:definition()},distance:scalar(length.value),symmetric:symmetric.checked});
-   else session.addSketchExtrusion({...definition(),id:newId()},{name:name.value.trim(),plane:plane.value as SketchPlane,distance:scalar(length.value),symmetric:symmetric.checked});
+   else session.addSketchExtrusion({...definition(),id:newId()},{name:name.value.trim(),plane:plane.value as SketchPlane,distance:scalar(length.value),symmetric:symmetric.checked,position:[0,0,-(created?.bounds.min[2]??0)]});
    dialog.close();await afterApply();
   }catch(error){if(!disposed)status.textContent=error instanceof Error?error.message:String(error);}finally{apply.disabled=false;}};
   const footer=element('footer');footer.append(status,apply);const body=element('div');body.className='sketch-body';body.append(help,form,preview);dialog.append(header,body,footer);draw();dialog.showModal();

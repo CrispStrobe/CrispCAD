@@ -1,3 +1,4 @@
+import {fineNumberKeys} from './precision.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 import { createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode } from '@brickwright/cad-core';
@@ -49,6 +50,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   if (shadow.childElementCount) throw new Error(t('Mount target is already in use'));
   const style = el('style'); style.textContent = editorStyle; const shell = el('section', 'editor'); shell.setAttribute('aria-label', 'CAD editor');
   const toolbar = el('div', 'toolbar'); toolbar.setAttribute('role', 'toolbar'); toolbar.setAttribute('aria-label', 'Model tools');
+  const iterationControl=options.headerContent?.querySelector<HTMLSelectElement>('#iterations');const projectsControl=options.headerContent?.querySelector<HTMLButtonElement>('#library');
   const main = el('div', 'main'); const tree = el('aside', 'panel tree'); const viewHost = el('div', 'viewport'); const inspector = el('aside', 'panel inspector');
   const status = el('div', 'status'); const message = el('span'); message.setAttribute('role', 'status');message.setAttribute('aria-label',t('Editor status')); message.setAttribute('aria-live', 'polite'); const stats = el('span', 'stats'); status.append(message, stats);
   const designBar = el('div', 'design-bar');
@@ -69,7 +71,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const menus:HTMLDetailsElement[]=[];
   function toolGroup(label: string, className = '') {
     if(['File','Edit','Combine'].includes(label)){
-      const group=el('details',`command-menu ${className}`);const trigger=el('summary','',`${t(label)} ▾`);trigger.setAttribute('aria-label',t`${t(label)} menu`);
+      const group=el('details',`command-menu ${className}`);const trigger=el('summary','',`${t(label)} ▾`);trigger.setAttribute('aria-label',t`${t(label)} menu`);if(label!=='File'){trigger.textContent='';const icon=toolIcon(label==='Combine'?'Union':'Edit');if(icon)trigger.append(icon);trigger.title=t(label);}
       const tools=el('div','command-popup');group.append(trigger,tools);toolbar.append(group);toolParent=tools;menus.push(group);
       group.addEventListener('toggle',()=>{if(group.open)menus.forEach(menu=>{if(menu!==group)menu.open=false;});});
       tools.addEventListener('click',event=>{if((event.target as Element).closest('button:not(:disabled)'))group.open=false;});return;
@@ -123,12 +125,17 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const planeBar = el('div', 'plane-bar'); planeBar.append(el('span', 'plate-size', t('400 × 400 mm workplane')));
   const gridLabel = el('label', '', t('Snap Grid')); const gridSelect = el('select'); gridSelect.setAttribute('aria-label', 'Grid spacing');
   for (const n of [0, 0.1, 1, 5, 10]) { const o = el('option', '', n === 0 ? t('Off') : `${n} mm`); o.value = String(n); gridSelect.append(o); } gridSelect.value = '1';
-  gridSelect.addEventListener('change', () => { grid = Number(gridSelect.value); viewport.setGrid(grid); }); gridLabel.append(gridSelect); planeBar.append(numbersLabel,gridLabel, el('span', 'unit-chip', 'mm')); viewHost.append(planeBar);
+  gridSelect.addEventListener('change', () => { grid = Number(gridSelect.value); viewport.setGrid(grid); }); gridLabel.append(gridSelect); const fineLabel=el('label','numbers-toggle',t('Fine')),fineToggle=el('input');fineToggle.type='checkbox';fineToggle.setAttribute('aria-label',t('Fine adjustments'));fineLabel.title=t('One-tenth-speed movement and finer transform increments. Hold Shift for temporary precision.');fineToggle.onchange=()=>viewport.setFine(fineToggle.checked);fineLabel.prepend(fineToggle);planeBar.append(numbersLabel,fineLabel,gridLabel, el('span', 'unit-chip', 'mm')); viewHost.append(planeBar);
   const undoButton = button('Undo', () => session.undo(),toolbar,'compact-icon'); const redoButton = button('Redo', () => session.redo(),toolbar,'compact-icon');
   toolGroup('Edit');
   const cutButton=button('Cut',()=>copySelection(true));const copyButton=button('Copy',()=>copySelection());const pasteButton=button('Paste',()=>pasteSelection());
   const duplicateButton = button('Duplicate', () => executeCommand('duplicate')); const deleteButton = button('Delete', () => executeCommand('delete'));
+  const contextActions=el('div','context-actions');contextActions.setAttribute('role','group');contextActions.setAttribute('aria-label',t('Selection actions'));toolbar.append(contextActions);for(const [label,command] of [['Copy','copy'],['Duplicate','duplicate'],['Delete','delete']] as const)button(label,()=>executeCommand(command),contextActions,'compact-icon');
+  const fitSelectionActions=()=>{const other=[...toolbar.children].filter(child=>child!==contextActions).reduce((sum,child)=>sum+(child as HTMLElement).getBoundingClientRect().width,0);const gap=parseFloat(getComputedStyle(toolbar).gap)||0;contextActions.dataset.room=String(toolbar.clientWidth>=other+112+gap*toolbar.children.length);};
+  const toolbarResize=new ResizeObserver(fitSelectionActions);toolbarResize.observe(toolbar);
   toolGroup('File', 'file-tools');
+  if(projectsControl){projectsControl.textContent=t('Projects');toolParent.append(projectsControl);}
+  if(iterationControl)button('History…',()=>{tree.classList.remove('closed');tree.classList.add('open');partsToggle.setAttribute('aria-pressed','true');iterationControl.focus();});
   async function newProject(){if(!options.requestNew||await options.requestNew())session.load(createDocument());}
   button('New',newProject);
   const input = el('input'); input.type = 'file'; input.setAttribute('aria-label',t('Open CAD project or STL')); input.accept = '.bcad,.json,.stl'; input.hidden = true; shell.append(input);
@@ -139,9 +146,9 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const importInput=el('input');importInput.type='file';importInput.accept='.stl';importInput.hidden=true;importInput.setAttribute('aria-label',t('Import STL geometry'));shell.append(importInput);
   importInput.onchange=()=>{const file=importInput.files?.[0];importInput.value='';if(file)run(async()=>{if(file.size>16*1024*1024)throw new Error(t('STL exceeds 16 MiB'));await importFile(file.name,new Uint8Array(await file.arrayBuffer()));});};
   async function chooseImport(){if(options.requestImport){const file=await options.requestImport();if(file)await importFile(file.name,file.bytes);}else importInput.click();}
-  button('Import geometry…',chooseImport);
+  button('Import STL…',chooseImport);
   const exportDialog=el('dialog','export-dialog');exportDialog.setAttribute('aria-label',t('Export model'));exportDialog.append(el('h2','',t('Export model')));
-  const exportFormat=el('select');exportFormat.setAttribute('aria-label',t('Export format'));for(const [value,label] of [['stl','STL · triangle mesh'],['3mf','3MF · packaged mesh']]){const option=el('option','',label);option.value=value;exportFormat.append(option);}exportDialog.append(exportFormat);
+  const exportFormat=el('select');exportFormat.setAttribute('aria-label',t('Export format'));for(const [value,label] of [['stl','STL · triangle mesh'],['3mf','3MF · packaged mesh']]){const option=el('option','',t(label));option.value=value;exportFormat.append(option);}exportDialog.append(exportFormat);
   const exportActions=el('footer');button('Cancel export',()=>exportDialog.close(),exportActions);
   const exportRun=button('Export',async()=>{await deliver(exportFormat.value as 'stl'|'3mf');exportDialog.close();},exportActions,'primary');exportDialog.append(exportActions);exportDialog.addEventListener('keydown',event=>event.stopPropagation());shell.append(exportDialog);
   const exportButton=button('Export…',()=>exportDialog.showModal());exportButton.disabled=true;
@@ -159,7 +166,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   setMode('select');
   const browserExpanded=new Set<string>();let browserProject="";
   function buildTree() {
-    tree.replaceChildren(); const header = el('div', 'panel-header'); header.append(el('h2', '', t('Objects'))); button('Close objects', () => { tree.classList.remove('open'); tree.classList.add('closed'); partsToggle.setAttribute('aria-pressed', 'false'); }, header); tree.append(header);
+    tree.replaceChildren();const content=el('div','browser-content'); const header = el('div', 'panel-header'); header.append(el('h2', '', t('Objects'))); button('Close objects', () => { tree.classList.remove('open'); tree.classList.add('closed'); partsToggle.setAttribute('aria-pressed', 'false'); }, header); tree.append(header,content);if(iterationControl){const footer=el('div','browser-history');footer.append(el('span','',t('History')),iterationControl);tree.append(footer);}
     titleInput.value = session.state.document.title;
     const selected = session.state.selection; const doc = session.state.document;
     if(browserProject!==doc.id){browserExpanded.clear();browserProject=doc.id;}
@@ -168,7 +175,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       const summary=el('summary','',t(label));details.append(summary);parent.append(details);
       details.addEventListener('toggle',()=>{if(!details.isConnected)return;if(details.open){browserExpanded.add(key);browserExpanded.delete(`closed:${key}`);}else{browserExpanded.delete(key);browserExpanded.add(`closed:${key}`);}});return details;
     };
-    const bodies=section('bodies',t`Bodies · ${doc.roots.length}`,tree,true);
+    const bodies=section('bodies',t`Bodies · ${doc.roots.length}`,content,true);
 
     const seenNames=new Map<string,number>();const counts=new Map<string,number>();doc.roots.forEach(id=>counts.set(doc.nodes[id].name,(counts.get(doc.nodes[id].name)??0)+1));
     const append = (id: string, parent: HTMLElement, child = false) => {
@@ -190,14 +197,14 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       }
     };
     doc.roots.forEach(id => append(id, bodies));
-    const sketches=Object.values(doc.sketches??{});if(sketches.length){const group=section('sketches',t`Sketches · ${sketches.length}`,tree);for(const sketch of sketches){const feature=Object.values(doc.nodes).find(n=>n.kind==='extrusion'&&n.sketchId===sketch.id);if(feature)button(t`Sketch: ${sketch.name}`,()=>sketchPanel.open(feature.id),group);else group.append(el('div','browser-value',sketch.name));}}
-    const parameters=Object.entries(doc.parametric?.parameters??{});if(parameters.length){const group=section('parameters',t`Parameters · ${parameters.length}`,tree);button('Edit model parameters',()=>parametersPanel.open(),group);for(const [name,p] of parameters){const entry=el('div','browser-value');entry.append(el('span','',name),el('span','',p.expression));group.append(entry);}}
+    const sketches=Object.values(doc.sketches??{});if(sketches.length){const group=section('sketches',t`Sketches · ${sketches.length}`,content);for(const sketch of sketches){const feature=Object.values(doc.nodes).find(n=>n.kind==='extrusion'&&n.sketchId===sketch.id);if(feature)button(t`Sketch: ${sketch.name}`,()=>sketchPanel.open(feature.id),group);else group.append(el('div','browser-value',sketch.name));}}
+    const parameters=Object.entries(doc.parametric?.parameters??{});if(parameters.length){const group=section('parameters',t`Parameters · ${parameters.length}`,content);button('Edit model parameters',()=>parametersPanel.open(),group);for(const [name,p] of parameters){const entry=el('div','browser-value');entry.append(el('span','',name),el('span','',p.expression));group.append(entry);}}
 
-    if (!doc.roots.length) tree.append(el('p', 'hint', t('No objects yet. Start with a box.')));
+    if (!doc.roots.length) content.append(el('p', 'hint', t('No objects yet. Start with a box.')));
   }
   function field(parent: HTMLElement, label: string, value: string | number, change: (value: string) => void, type = 'number', step = '1') {
     const wrap = el('label', 'field', t(label)); const input = el('input'); input.type = type; input.value = String(value); input.setAttribute('aria-label', t(label)); input.step = step;
-    input.addEventListener('change', () => run(() => change(input.value)));input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();event.stopPropagation();const apply=input.closest('.shape-parameters')?.querySelector<HTMLButtonElement>(`[aria-label="${t('Apply shape parameters')}"]`);input.blur();apply?.click();viewport.canvas.focus({preventScroll:true});}}); wrap.append(input); parent.append(wrap); return input;
+    input.addEventListener('change', () => run(() => change(input.value)));input.addEventListener('keydown',event=>{if(fineNumberKeys(input,event))return;if(event.key==='Enter'){event.preventDefault();event.stopPropagation();const apply=input.closest('.shape-parameters')?.querySelector<HTMLButtonElement>(`[aria-label="${t('Apply shape parameters')}"]`);input.blur();apply?.click();viewport.canvas.focus({preventScroll:true});}}); wrap.append(input); parent.append(wrap); return input;
   }
   function buildInspector() {
     inspector.replaceChildren(); const header = el('div', 'panel-header'); header.append(el('h2', '', t('Properties'))); button('Close properties', () => { inspector.classList.remove('open'); inspector.classList.add('closed'); propertiesToggle.setAttribute('aria-pressed', 'false'); }, header); inspector.append(header);
@@ -297,6 +304,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     cutButton.disabled=copyButton.disabled=!roots.length;
     dropButton.disabled = !roots.length || running || builtRevision !== state.revision || !built;
     opButtons.forEach(b => { b.disabled = roots.length < 2; });
+    fitSelectionActions();contextActions.hidden=!state.selection.some(id=>state.document.roots.includes(id));for(const control of contextActions.querySelectorAll<HTMLButtonElement>('button'))control.disabled=running;
     exportButton.disabled = exportRun.disabled = !options.onExport || running || !built || !built.triangles || builtRevision !== state.revision;
     run(()=>options.onCommandStateChange?.(commandState()));
   }
@@ -332,9 +340,10 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     else if (key === 'w') action = () => setMode('translate');
     else if (key === 'e') action = () => setMode('rotate');
     else if (key === 'r') action = () => setMode('scale');
-    else if (key.startsWith('arrow') && session.state.selection.length) action = () => { const d = (grid || 0.1) * (event.shiftKey ? 10 : 1); viewport.nudge(key === 'arrowleft' ? -d : key === 'arrowright' ? d : 0, key === 'arrowup' && !event.altKey ? d : key === 'arrowdown' && !event.altKey ? -d : 0, event.altKey ? (key === 'arrowup' ? d : key === 'arrowdown' ? -d : 0) : 0); };
+    else if (key.startsWith('arrow') && session.state.selection.length) action = () => { const fine=event.shiftKey||viewport.fine,d = (grid || .1)/(fine?10:1); viewport.nudge(key === 'arrowleft' ? -d : key === 'arrowright' ? d : 0, key === 'arrowup' && !event.altKey ? d : key === 'arrowdown' && !event.altKey ? -d : 0, event.altKey ? (key === 'arrowup' ? d : key === 'arrowdown' ? -d : 0) : 0,fine); };
     if (action) { event.preventDefault(); event.stopPropagation(); run(action); }
   }; shell.addEventListener('keydown', keyboard);
+  const dismissMenus=(event:Event)=>{const path=event.composedPath();for(const menu of menus)if(menu.open&&!path.includes(menu))menu.open=false;};document.addEventListener('pointerdown',dismissMenus,true);document.addEventListener('focusin',dismissMenus,true);
   function whenIdle(): Promise<GeometryResult> {
     if (disposed) return Promise.reject(new Error(t('Editor was disposed')));
     if (!running && builtRevision === session.state.revision) return built ? Promise.resolve(built) : Promise.reject(new Error(geometryError));
@@ -399,7 +408,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return; disposed = true; unsubscribe(); shell.removeEventListener('keydown', keyboard); picker.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); codePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return; disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); codePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;

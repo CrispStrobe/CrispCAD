@@ -5,6 +5,7 @@ import { newId } from '@brickwright/cad-core';
 declare global {
   interface Window {
     brickwrightDesktop?: boolean;
+    brickwrightNativeInfo?: {version:string;build:string};
     brickwrightDesktopInfo?: {version:string;build:string};
     brickwrightPrepareToClose?: () => Promise<void>;
     brickwrightExecuteCommand?: (command:string)=>Promise<void>;

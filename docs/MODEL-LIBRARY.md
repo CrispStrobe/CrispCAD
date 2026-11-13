@@ -1,0 +1,68 @@
+# A curated reusable model library
+
+Research checked 2026-11-13. Mesh content licences are independent of repository
+code licences. Do not import a dataset merely because its loader is MIT/Apache.
+STL has no reliable unit, author or licence metadata and does not recover the
+source model's editable features. Keep original CAD alongside derived STL.
+
+## Candidate sources
+
+| Source | Content rights / suitability |
+| --- | --- |
+| [3DBenchy](https://www.3dbenchy.com/license/) | Current official model is CC0. Good calibration seed; check current evidence rather than historic BY-ND descriptions. |
+| [FreeCAD library](https://github.com/FreeCAD/FreeCAD-library/blob/master/LICENSE-Assets) | Asset licence CC-BY-3.0. Native CAD is useful for retaining source intent; convert selected assets and preserve attribution. |
+| [Thingi10K](https://github.com/Thingi10K/Thingi10K) | 10,000 real print models, mostly STL, with individual licences. The Apache code licence does not cover every model. Includes broken meshes: quality screening required. |
+| [Smithsonian Open Access](https://www.si.edu/openaccess/faq) | Use media explicitly marked CC0. CC0 metadata alone does not establish media rights. Often needs format conversion and simplification. |
+| [Poly Haven](https://polyhaven.com/license) | CC0 assets, primarily visual rather than engineering/print models. Live API has separate terms; downloaded assets need printability checks. |
+| [LDraw](https://www.ldraw.org/pt-policies.html) | Per-part CC-BY / CC0 notices; legacy files may use CC-BY-2.0. Not STL: keep part provenance through conversion. Existing Brickwright ecosystem, useful later. |
+| [Objaverse](https://huggingface.co/datasets/allenai/objaverse/blob/main/README.md) | Dataset/database licence is not a blanket object licence. Mixed per-object Creative Commons rights, often GLB; too noisy for an initial print library. |
+| [ABC](https://deep-geometry.github.io/abc-dataset/) | CAD creators retain rights under the stated source terms. MIT processing code is not a blanket MIT licence for the CAD files. Exclude from automatic ingestion. |
+| [STEMFIE](https://stemfie.org/license/) | Current part files use CERN-OHL-W-2.0. Treat separately from the initial simple content allowlist. |
+
+Printables/Thingiverse-style community sites select licences per upload; they are
+not a single freely redistributable corpus. FreeCAD distributes native parts;
+LDraw distributes a curated part system; Thingi10K is a research corpus. These
+serve different needs. We should curate a small reliable set, not mirror a site.
+
+Initial automatic content allowlist: CC0-1.0 and explicit MIT/Apache-2.0/BSD
+asset grants, plus CC-BY-3.0/4.0 with attribution. CC-BY-SA assets can be a separate
+collection: retain licence, attribution and changes, and license adaptations
+accordingly ([licence](https://creativecommons.org/licenses/by-sa/4.0/)). Exclude
+NC, ND, unknown and contradictory grants. A mesh content licence does not change
+our editor's BSD licence. Do not infer legal rights solely from a filename/tag.
+
+## Storage and provenance
+
+Use GitHub for catalogue metadata, schemas, curation scripts and a small seed set.
+Use a versioned Hugging Face dataset for large mesh blobs if the library grows;
+[storage limits](https://huggingface.co/docs/hub/storage-limits) still apply.
+Publish a [dataset card](https://huggingface.co/docs/hub/datasets-cards) recording
+scope and limitations. Keep private GitHub Actions disabled. No external library
+repository or bulk download has been created by this change.
+
+Each catalogue record needs:
+
+- Stable asset ID, title, author and exact original download/source URLs.
+- Exact content licence SPDX ID, attribution, archived grant/evidence URL and
+  capture date. Resolve conflicts manually before admitting an asset.
+- Original and derivative SHA-256, byte sizes, version and modification notes.
+- Source format, explicit unit assumption, up axis and conversion transform.
+- Original STEP/FCStd/other editable source where available, plus derived mesh.
+- Separate quality results: parseable mesh, closed positive-volume solid,
+  size/triangle limits and optional Jolt collision qualification/version.
+
+Fetch selected files on demand, verify hashes, and cache locally for offline use.
+Do not label a successful import as a physics certification. Non-convex dynamic
+parts need qualified compound/decomposed collision shapes; visual meshes alone
+are insufficient. Export attribution sidecars with library-derived STL, and keep
+provenance in project documents before enabling catalogue insertion. Plain STL
+alone cannot carry these obligations reliably. The current STL importer/exporter
+is for user-provided geometry and does not yet implement catalogue provenance.
+
+## Immediate useful library
+
+Start with our 34 original, editable CAD Script examples (BSD-3-Clause), then a
+small independently checked CC0 calibration collection. Add selected attributed
+FreeCAD parts and filtered Thingi10K models only after manifest/quality tooling
+and project provenance support are implemented. Do not promise that corpus
+imports become parametric or mechanically accurate automatically.

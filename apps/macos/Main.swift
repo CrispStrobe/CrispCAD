@@ -108,7 +108,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         func section(_ title:String)->NSMenu {let item=NSMenuItem(title:title,action:nil,keyEquivalent:"");menu.addItem(item);let submenu=NSMenu(title:title);item.submenu=submenu;return submenu}
         let file=section("File")
         addCommand(file,"New Project","new","n");addCommand(file,"Open Project…","open","o");addCommand(file,"Project Library…","projects","o",[.command,.shift]);file.addItem(.separator())
-        addCommand(file,"Save Project…","save","s");file.addItem(.separator());addCommand(file,"Import Geometry…","import","i");addCommand(file,"Export…","export","e",[.command,.shift])
+        addCommand(file,"Save Project…","save","s");file.addItem(.separator());addCommand(file,"Import STL…","import","i");addCommand(file,"Export…","export","e",[.command,.shift])
         let edit=section("Edit")
         addCommand(edit,"Undo","undo","z");addCommand(edit,"Redo","redo","z",[.command,.shift]);edit.addItem(.separator())
         addCommand(edit,"Cut","cut","x");addCommand(edit,"Copy","copy","c");addCommand(edit,"Paste","paste","v");addCommand(edit,"Duplicate","duplicate","d");addCommand(edit,"Delete","delete","\u{7f}",[]);edit.addItem(.separator());addCommand(edit,"Select All","select-all","a");addCommand(edit,"Deselect All","deselect")
