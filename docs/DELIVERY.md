@@ -486,3 +486,9 @@ Chromium/iPad WebKit source-import/camera workflows, 1,079-message German audit,
 and all six SDK packages installed offline with an empty npm cache, including
 actual geometry/physics checks. The research sample improves to 10/256 positive
 solids without losing prior successes. Full language compatibility is not claimed.
+
+Mac build 14 follow-up: built, verified, installed and launched from clean source
+ff362ef5595fe59be03ef3ce19863bcafb2d8095. The running app's asset receipt reports
+that revision with dirty=false, and its native bundle reports build 14. Native
+magnification isolation and the complete native menu/clipboard/library/history
+smoke passed. Existing projects and their histories were retained.
