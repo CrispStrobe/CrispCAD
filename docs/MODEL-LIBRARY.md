@@ -58,8 +58,7 @@ are insufficient. Export attribution sidecars with library-derived STL, and keep
 provenance in project documents before enabling catalogue insertion. Plain STL
 alone cannot carry these obligations reliably. The current STL importer/exporter
 is for user-provided geometry. Headless project provenance and a standalone
-[attribution sidecar helper](MODEL-ATTRIBUTION.md) are available; catalogue insertion
-remains pending; browser/native STL export delivers one ZIP with STL and attribution,
+[attribution sidecar helper](MODEL-ATTRIBUTION.md) are available; headless STL catalogue insertion is available (see below); its UI remains pending; browser/native STL export delivers one ZIP with STL and attribution,
 and MCP returns both files for recorded printable sources (see MODEL-ATTRIBUTION.md).
 
 ## Immediate useful library
@@ -83,9 +82,9 @@ offline cache (see below). Headless STL quality screening is also available
 (see below). The 34 original editable examples now have a reproducible local collection
 (see below). A small CC0 calibration set remains to be implemented. Preserve original files and derived meshes with their respective
 hashes. Project provenance now retains reviewed source snapshots in version 5 documents,
-and a standalone attribution sidecar helper is available. Catalogue insertion remains pending. Browser/native STL export packages STL and
+and a standalone attribution sidecar helper is available. Headless STL catalogue insertion is available below; its UI remains pending. Browser/native STL export packages STL and
 attribution together, and MCP returns both files for recorded printable sources; the catalogue contract alone
-does not provide insertion.
+does not itself provide insertion.
 
 
 ## Selected-file retrieval and offline storage
@@ -137,7 +136,7 @@ headless hosts or tests.
 This is a retrieval API, not catalogue insertion UI. Verified bytes establish file
 identity only: they do not establish legal rights, mesh quality or physics
 qualification. Retrieval changes no STL importer, saved project definition or history revision.
-Insertion still requires host integration with project provenance. MCP now
+The headless insertion API below integrates project provenance; host insertion UI remains pending. MCP now
 integrates the sidecar helper for attributed STL; browser/native delivery now
 packages STL and attribution together in one ZIP.
 
@@ -230,7 +229,7 @@ coordinates are preserved, including negative Z coordinates; meshes are not
 moved onto a print bed or repaired. The screens do not establish self-intersection
 freedom, printability, mechanical accuracy or physics/collision qualification.
 Project provenance and the standalone attribution sidecar helper are separate
-from this collection. Catalogue insertion remains pending; browser/native STL export packages STL and
+from this collection. Headless STL catalogue insertion is available below; its UI remains pending; browser/native STL export packages STL and
 attribution in one ZIP, and MCP returns both files for recorded printable sources.
 
 
@@ -271,9 +270,9 @@ the existing history header and content storage, including portable backup, rest
 and branch operations. No database schema upgrade or old revision rewrite is
 required. UI preferences and transient drag previews remain outside model history.
 
-This slice provides persistence and graph propagation only. It does not expose
-library insertion UI, fetch or convert an asset, track a complete narrative of
-subsequent edits.
+The provenance API provides persistence and graph propagation; the headless STL
+insertion API below supplies verified conversion and atomic insertion. Library
+insertion UI and a complete narrative of subsequent edits remain pending.
 The MCP host now automatically pairs STL with attribution for recorded printable
 sources and requires explicit export modification notes; see
 [attribution export](MODEL-ATTRIBUTION.md). The editor now packages attributed STL and its JSON sidecar in one ZIP after
@@ -294,3 +293,54 @@ This is a geometric/slicer fixture: upstream explicitly excludes calibration
 from its scope. The small external calibration collection remains pending.
 The fixture audit documents why reviewed Benchy and Innerscene candidates were
 not admitted. No source identity conflict was overridden by a passing mesh screen.
+
+
+## Atomic headless STL catalogue insertion
+
+`insertModelLibrarySTL` in `@brickwright/cad-geometry` accepts a session, catalogue,
+one explicit original/derivative STL selection, and its bytes. It performs no
+network IO. Hosts can obtain those bytes with `fetchModelLibraryFile` first;
+insertion independently verifies their exact size and SHA-256 again. Editable
+program sources and non-STL files are refused. The ordinary user STL importer
+remains separate and never gains catalogue provenance implicitly.
+
+```ts
+await insertModelLibrarySTL(session, catalogue,
+  {assetId: 'selected-id', file: {derivative: 0}}, verified.bytes, {
+    evaluate: kernel.evaluate,
+    toMillimetresZUp: selectedStlConversion,
+    checkedOn: '2026-11-13',
+    modificationNotes: 'Applied recorded unit/up-axis conversion; no repair.',
+  });
+```
+
+Admission requires passing curated quality for the selected hash and its retained
+`screeningPolicy`. The caller must explicitly supply the selected STL conversion,
+which must match that policy. A derivative's conversion can differ from the
+original editable source's `asset.conversion`; insertion never guesses units from
+STL or applies the original conversion to a derivative. It applies the selected
+matrix once to mesh vertices, retaining its translation without centering or
+repairing the model. Optional `maxTriangles` and `maxExtentMm` can tighten the
+curated limits. Current hard analysis budgets and document coordinate limits
+still apply, including the curated analysis byte budget.
+
+Metadata, bytes, conversion, notes and policy are snapshotted before asynchronous
+hashing. Insertion reruns the strict versioned STL screen on those exact bytes and
+that conversion. It validates the complete candidate in an isolated trial session
+and calls the injected geometry kernel evaluator before changing the live model.
+A missing, empty, non-finite or non-positive-volume inserted kernel body is refused.
+Hosts must supply their actual kernel evaluator. An intervening project edit/load
+causes insertion to fail so the host can explicitly retry against the new revision.
+
+Success makes one undoable version-5 model edit containing both geometry and its
+complete reviewed source snapshot, exact selected file identity and explicit
+incorporation notes. Rejection leaves the existing document, selection, revision,
+undo and redo stacks intact. Legacy opaque provenance collisions are refused.
+Undo/redo retains geometry and attribution together. Existing saved definitions
+and archived revisions are never rewritten.
+
+The returned fresh quality result contains no physics evidence. Retained catalogue
+quality (including any separate curation assertions) remains the curator's snapshot;
+insertion does not independently verify licence grants, establish mechanical
+accuracy, detect all intersections, prove printability or qualify physics/collisions.
+Catalogue insertion UI, source compilation and bulk ingestion remain pending.

@@ -29,7 +29,8 @@ export interface ModelLibraryMeshQualityResult {
 }
 const NUMBER = '[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?';
 const vector = new RegExp(`^(${NUMBER})\\s+(${NUMBER})\\s+(${NUMBER})$`);
-function parseSTL(bytes: Uint8Array): number[] {
+/** Internal strict parser shared by quality screening and catalogue insertion. */
+export function parseModelLibrarySTL(bytes: Uint8Array): number[] {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const count = bytes.length >= 84 ? view.getUint32(80, true) : 0;
   if (count && bytes.length === 84 + count * 50) {
@@ -94,7 +95,7 @@ export async function checkModelLibrarySTL(bytes: Uint8Array, options: ModelLibr
     checks: {parseable: 'unchecked', closedPositiveVolume: 'unchecked', withinSizeLimits: 'unchecked', withinTriangleLimits: 'unchecked'}, diagnostics: [],
   };
   let positions: number[];
-  try { positions = parseSTL(snapshot); }
+  try { positions = parseModelLibrarySTL(snapshot); }
   catch (error) {
     const message = error instanceof Error ? error.message : 'STL parse failed.';
     // Resource exhaustion is not proof of malformed geometry.
