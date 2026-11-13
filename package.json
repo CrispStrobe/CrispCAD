@@ -33,7 +33,9 @@
     "mcp": "node apps/mcp/server.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
     "library:examples:generate": "npm run build:packages && node scripts/generate-example-library.mjs --write",
-    "library:examples:check": "npm run build:packages && node scripts/generate-example-library.mjs --check"
+    "library:examples:check": "npm run build:packages && node scripts/generate-example-library.mjs --check",
+    "library:fixtures:generate": "npm run build:packages && node scripts/generate-fixture-library.mjs --write",
+    "library:fixtures:check": "npm run build:packages && node scripts/generate-fixture-library.mjs --check"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",
