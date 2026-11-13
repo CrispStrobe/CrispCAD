@@ -350,7 +350,8 @@ Bulk ingestion remains pending.
 
 The editor's File → Model library panel browses a host-supplied reviewed network
 catalogue or a catalogue JSON file selected by the user. Standalone also includes
-the 34 pinned editable CAD Script examples and the CC0 slicer fixture as local
+the 34 pinned editable CAD Script examples, the CC0 slicer fixture and the
+[supported reviewed JSCAD gear snapshot](../library/README.md#supported-offline-gear-snapshot) as local
 sources; no remote catalogue or fabricated download URLs are bundled. Browsing
 metadata makes no requests.
 The panel shows the source, grant evidence, attribution, exact selected STL URL and
@@ -364,7 +365,13 @@ original source remains in the repository and its hash and provenance are retain
 but the original OpenSCAD bytes are not embedded in the project. Local identities
 are not filesystem paths to be opened by a host, and remote fetching refuses them.
 Older readers that cannot validate these identities reject the project rather than
-discard attribution. Local insertion does not establish physics qualification.
+discard attribution. The JSCAD gear is translated with default parameters into an editable CAD Script
+evaluated snapshot; original JavaScript parameter definitions are not project
+parameters. Its exact original remains archived in the repository and build bundle. Its immutable upstream
+original URL, selected local hash, conversion/default parameter notes, and full
+original MIT notice wording (line breaks explicitly normalized to spaces) remain in
+project provenance and attribution sidecars. Unsupported seed models remain archival
+and unavailable for insertion. Local insertion does not establish physics qualification.
 
 Standalone uses its persistent browser cache for remote files; “Use cached files only” performs no
 network access. Other hosts can provide `modelLibrary: {catalogue, cache, fetch}`

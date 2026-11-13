@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+  'JSCAD is converted with default parameters to an editable CAD Script snapshot. Original JavaScript parameters and face colours are not retained; unsupported features are refused.':'JSCAD wird mit Standardparametern in einen bearbeitbaren CAD-Script-Schnappschuss umgewandelt. Ursprüngliche JavaScript-Parameter und Flächenfarben bleiben nicht erhalten; nicht unterstützte Funktionen werden abgelehnt.',
   'Browse reviewed models. Bundled editable sources work offline; remote STL files download only when inserted.':'Geprüfte Modelle durchsuchen. Mitgelieferte bearbeitbare Quellen funktionieren offline; entfernte STL-Dateien werden erst beim Einfügen geladen.',
   'Bundled editable source. Insertion verifies its hash and evaluates the code; no mesh download or collision qualification.':'Mitgelieferte bearbeitbare Quelle. Beim Einfügen werden Hash und Codegeometrie geprüft; kein Netzdownload oder Kollisionsnachweis.',
   'OpenSCAD source is converted to editable CAD Script using the supported subset. The original artifact hash is retained.':'OpenSCAD-Quelltext wird mit der unterstützten Teilmenge in bearbeitbares CAD Script umgewandelt. Der Hash des Originalartefakts bleibt erhalten.',

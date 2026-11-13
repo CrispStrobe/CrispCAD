@@ -50,7 +50,8 @@ export function mountModelLibraryPanel(parent:HTMLElement, session:CadSession,
   function renderDetails(){
     details.replaceChildren();const asset=selected;if(!asset)return;
     details.append(el('h3',asset.title),el('p',`${asset.author} · ${asset.licence.spdx} · ${asset.version}`),el('p',asset.licence.attribution),link(t('Original source'),asset.sourceUrl),document.createTextNode(' · '),link(t('Licence evidence'),asset.licence.evidenceUrl),el('p',asset.modificationNotes),el('p',asset.conversion.unitAssumption));
-    if(asset.original.path && ['cad-script','openscad'].includes(asset.original.format)){renderSource(asset);return;}
+    const localSource=[asset.editableSource,asset.original].find(source=>source?.path&&['cad-script','openscad','jscad'].includes(source.format));
+    if(localSource){renderSource(asset,localSource);return;}
     const quality=asset.quality;
     details.append(el('p',t('Mesh checks are curator evidence; insertion repeats the checks. They do not prove printability, mechanical accuracy or collision safety.')));
     if(quality)details.append(el('p',`${quality.toolVersion} · ${quality.checkedOn}`));
@@ -84,11 +85,14 @@ export function mountModelLibraryPanel(parent:HTMLElement, session:CadSession,
     };
     details.append(files,identity,conversion,eligibility,noteLabel,offlineLabel,insert);refresh();
   }
-  function renderSource(asset:ModelLibraryAsset){
-    const source=asset.original,bytes=source.path?localFiles.get(source.path):undefined;
+  function renderSource(asset:ModelLibraryAsset,source:ModelLibraryFile){
+    const bytes=source.path?localFiles.get(source.path):undefined;
     details.append(el('p',t('Bundled editable source. Insertion verifies its hash and evaluates the code; no mesh download or collision qualification.')),el('p',`${source.format} · ${source.bytes} bytes · ${source.path}`),el('pre',source.sha256));
     if(source.format==='openscad')details.append(el('p',t('OpenSCAD source is converted to editable CAD Script using the supported subset. The original artifact hash is retained.')));
-    const label=el('label',t('Incorporation modification notes')),notes=el('input');notes.type='text';notes.maxLength=3900;notes.setAttribute('aria-label',t('Incorporation modification notes'));notes.placeholder=t('Describe conversion and any changes');label.append(notes);
+    if(source.format==='jscad'){
+      details.append(el('p',t('JSCAD is converted with default parameters to an editable CAD Script snapshot. Original JavaScript parameters and face colours are not retained; unsupported features are refused.')));
+    }
+    const label=el('label',t('Incorporation modification notes')),notes=el('input');notes.type='text';notes.maxLength=source.format==='jscad'?3500:3900;notes.setAttribute('aria-label',t('Incorporation modification notes'));notes.placeholder=t('Describe conversion and any changes');label.append(notes);
     const insert=el('button',t('Insert editable source'));insert.type='button';insert.className='primary';
     const refresh=()=>{insert.disabled=working||!bytes||!notes.value.trim();};notes.oninput=refresh;
     if(!bytes)details.append(el('p',t('Editable source is not bundled in this host.')));
@@ -96,7 +100,7 @@ export function mountModelLibraryPanel(parent:HTMLElement, session:CadSession,
       if(insert.disabled||!bytes)return;
       working=true;controller=new AbortController();file.disabled=search.disabled=notes.disabled=true;refresh();renderList();status.textContent=t('Verifying selected model…');
       try{
-        await insertModelLibrarySource(session,catalogue,{assetId:asset.id,file:'original'},bytes,{signal:controller.signal,modificationNotes:notes.value.trim(),evaluate:async doc=>{const result=await evaluate(doc);if(disposed)throw new Error(t('Editor was disposed'));return result;}});
+        await insertModelLibrarySource(session,catalogue,{assetId:asset.id,file:source===asset.original?'original':'editableSource'},bytes,{signal:controller.signal,modificationNotes:notes.value.trim(),evaluate:async doc=>{const result=await evaluate(doc);if(disposed)throw new Error(t('Editor was disposed'));return result;}});
         status.textContent=t('Editable source inserted with provenance. Available offline.');
         try{await inserted();}catch{if(!disposed)status.textContent=t('Model inserted with provenance; viewport refresh failed. Close this panel to inspect the editor status.');}
       }catch(error){if(!disposed)report(error);}finally{working=false;controller=undefined;file.disabled=search.disabled=notes.disabled=false;refresh();renderList();}
