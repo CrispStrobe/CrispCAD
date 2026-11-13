@@ -75,9 +75,62 @@ records; it cannot independently establish that a grant is genuine, that bytes
 match their hashes, or that a mesh passes its reported checks. Curators must
 verify evidence and files before admitting records.
 
-Next, add selected-file fetching with hash verification and an offline cache,
-mesh quality checks, and records for the 34 editable examples and a small CC0
-calibration set. Preserve original files and derived meshes with their respective
+The next slice now provides selected-file fetching with hash verification and an
+offline cache (see below). Mesh quality checks and records for the 34 editable
+examples and a small CC0 calibration set remain to be implemented. Preserve original files and derived meshes with their respective
 hashes. Before catalogue insertion or attributed STL export, implement project
 provenance and attribution sidecars. These later steps are not provided by the
 catalogue contract alone.
+
+
+## Selected-file retrieval and offline storage
+
+`fetchModelLibraryFile` in `@brickwright/cad-core` accepts a catalogue, one explicit
+file selection and an injected cache. It validates and snapshots the catalogue
+before any IO. Select `{assetId, file: 'original'}`, `{assetId, file:
+'editableSource'}` or `{assetId, file: {derivative: 0}}`; it never retrieves the
+other files. No catalogue files, external repositories or bulk downloads are
+created by this implementation.
+
+The standalone host adapter `apps/standalone/src/model-library-cache.ts` provides
+`createModelLibraryBrowserCache()`, using browser CacheStorage under the separate
+`brickwright-model-library-files-v1` namespace. For example, in that host:
+
+```ts
+import {fetchModelLibraryFile} from '@brickwright/cad-core';
+import {createModelLibraryBrowserCache} from './model-library-cache.js';
+
+const cache = createModelLibraryBrowserCache();
+const result = await fetchModelLibraryFile(catalogue,
+  {assetId: 'selected-id', file: 'original'}, {cache});
+// Reuse the verified file without any network request:
+const offline = await fetchModelLibraryFile(catalogue,
+  {assetId: 'selected-id', file: 'original'}, {cache, offline: true});
+```
+
+Files are addressed by SHA-256, so identical content can be reused across asset
+versions. Every cache hit is checked against both the selected record's exact
+byte size and SHA-256. Corrupt entries are removed where possible; normal mode
+then downloads just that selection, while explicit `offline: true` fails without
+network access. A changed hash cannot reuse a stale version. A cache read failure
+is treated as a miss. A write/quota failure returns verified bytes with
+`cached: false`; successful persistence or a verified hit returns `cached: true`.
+Browser storage can still be evicted or cleared by the user; offline availability
+is not guaranteed until a later verified read succeeds. Other hosts provide the
+same small `ModelLibraryFileCache` interface without browser storage dependencies.
+
+Network requests omit credentials, bypass the HTTP cache, and reject redirects
+entirely to prevent intermediate HTTPS-to-HTTP requests. Catalogue download URLs
+must therefore be direct HTTPS endpoints that support browser CORS; redirected
+provider links must be resolved and curated separately. Failed HTTP responses,
+truncated bodies and hash mismatches are never cached. Streaming is bounded by
+the declared byte size regardless of Content-Length, with a default per-file
+admission cap of 64 MiB (`maxBytes` may explicitly override it). Oversized streams
+are cancelled. Callers can also provide an AbortSignal and an injected fetch for
+headless hosts or tests.
+
+This is a retrieval API, not catalogue insertion UI. Verified bytes establish file
+identity only: they do not establish legal rights, mesh quality or physics
+qualification. No STL importer, saved project definition or history revision is
+changed; insertion and attributed export still require project provenance and
+sidecar support.

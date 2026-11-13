@@ -4,6 +4,13 @@ export const MODEL_LIBRARY_CONTENT_LICENCES = [
   'CC0-1.0', 'MIT', 'Apache-2.0', 'BSD-2-Clause', 'BSD-3-Clause', 'CC-BY-3.0', 'CC-BY-4.0',
 ] as const;
 export type ModelLibraryContentLicence = typeof MODEL_LIBRARY_CONTENT_LICENCES[number];
+/** Program formats are explicit: a .js suffix alone does not establish JSCAD. */
+export const MODEL_LIBRARY_SOURCE_FORMATS = ['cad-script', 'openscad', 'jscad'] as const;
+export type ModelLibrarySourceFormat = typeof MODEL_LIBRARY_SOURCE_FORMATS[number];
+/** Classify metadata only; this never compiles or executes a source file. */
+export function isModelLibrarySourceFormat(format: string): format is ModelLibrarySourceFormat {
+  return (MODEL_LIBRARY_SOURCE_FORMATS as readonly string[]).includes(format);
+}
 export interface ModelLibraryFile {
   url: string;
   format: string;
@@ -16,6 +23,8 @@ export interface ModelLibraryAsset {
   title: string;
   author: string;
   sourceUrl: string;
+  /** Optional for legacy records; curated repository sources use a full immutable commit. */
+  sourceRevision?: {repositoryUrl: string; commit: string};
   licence: {
     spdx: ModelLibraryContentLicence;
     /** A curator's assertion that the grant covers this asset, not just loader code. */
@@ -90,11 +99,15 @@ function checkModelLibraryCatalogue(value: unknown): ModelLibraryValidation {
   value.assets.forEach((asset: unknown, index: number) => {
     const error = (message: string) => errors.push(`assets[${index}]: ${message}`);
     if (!object(asset)) { error('Expected an asset record.'); return; }
-    if (!keys(asset, 'id version title author sourceUrl licence original editableSource derivatives modificationNotes conversion quality')) error('Unknown asset fields; review the schema before extending it.');
+    if (!keys(asset, 'id version title author sourceUrl sourceRevision licence original editableSource derivatives modificationNotes conversion quality')) error('Unknown asset fields; review the schema before extending it.');
     if (!text(asset.id, 96) || !/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(asset.id) || ['__proto__', 'prototype', 'constructor'].includes(asset.id)) error('Invalid stable asset ID.');
     else if (ids.has(asset.id)) error('Duplicate asset ID.');
     else ids.add(asset.id);
     if (!text(asset.version, 96) || !text(asset.title, 240) || !text(asset.author, 1000) || !url(asset.sourceUrl)) error('Missing identity or HTTPS source URL.');
+    if (asset.sourceRevision !== undefined) {
+      const revision = asset.sourceRevision;
+      if (!object(revision) || !keys(revision, 'repositoryUrl commit') || !url(revision.repositoryUrl) || typeof revision.commit !== 'string' || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(revision.commit)) error('Source revision requires an HTTPS repository URL and full lowercase Git commit hash.');
+    }
     const licence = asset.licence;
     if (!object(licence) || !keys(licence, 'spdx scope attribution evidenceUrl capturedOn review reviewer') || !(MODEL_LIBRARY_CONTENT_LICENCES as readonly unknown[]).includes(licence.spdx) || licence.scope !== 'asset' || licence.review !== 'accepted' || !text(licence.reviewer, 240) || !text(licence.attribution) || !url(licence.evidenceUrl) || !date(licence.capturedOn)) error('An allowlisted exact content licence, asset grant, attribution and reviewed evidence are required.');
     if (!file(asset.original)) error('Invalid original file identity.');
@@ -117,6 +130,7 @@ function checkModelLibraryCatalogue(value: unknown): ModelLibraryValidation {
       else {
         const files = [asset.original, ...(Array.isArray(asset.derivatives) ? asset.derivatives : [])];
         if (!files.some(f => file(f) && f.sha256 === q.fileSha256)) error('Quality evidence must name an original or derivative hash.');
+        if (files.some(f => file(f) && f.sha256 === q.fileSha256 && isModelLibrarySourceFormat(f.format))) error('Geometry quality evidence must identify rendered geometry, not program source.');
         if (!q.parseable && (q.closedPositiveVolume || q.withinSizeLimits || q.withinTriangleLimits)) error('Unparseable geometry cannot pass geometry checks.');
         if (q.physics !== undefined) {
           const p = q.physics;

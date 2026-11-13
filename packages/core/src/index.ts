@@ -18,3 +18,4 @@ export * from "./i18n-history.js";
 export * from "./code-examples.js";
 
 export * from './model-library.js';
+export * from './model-library-fetch.js';

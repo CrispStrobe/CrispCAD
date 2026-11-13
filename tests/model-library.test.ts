@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {describe, expect, it} from 'vitest';
-import {MODEL_LIBRARY_CONTENT_LICENCES, parseModelLibraryCatalogue, validateModelLibraryCatalogue} from '../packages/core/src/model-library.js';
+import {isModelLibrarySourceFormat, MODEL_LIBRARY_SOURCE_FORMATS, MODEL_LIBRARY_CONTENT_LICENCES, parseModelLibraryCatalogue, validateModelLibraryCatalogue} from '../packages/core/src/model-library.js';
 import type {ModelLibraryCatalogue} from '../packages/core/src/model-library.js';
 
 function catalogue(): ModelLibraryCatalogue {
@@ -27,6 +27,54 @@ describe('model library metadata admission', () => {
     input.assets[0].title = 'Changed';
     expect(result.catalogue.assets[0].title).toBe('Calibration block');
     expect(parseModelLibraryCatalogue(JSON.stringify(catalogue())).valid).toBe(true);
+  });
+  it.each([
+    ['openscad', 'scad'], ['jscad', 'js'],
+  ])('preserves %s sources and immutable repository provenance without geometry qualification', (format, extension) => {
+    const c = catalogue();
+    const asset = c.assets[0];
+    asset.sourceRevision = {repositoryUrl: 'https://github.com/example/models', commit: 'c'.repeat(40)};
+    asset.original = {url: `https://example.org/model.${extension}`, format, sha256: 'c'.repeat(64), bytes: 512};
+    asset.editableSource = {...asset.original};
+    asset.derivatives = [];
+    const result = parseModelLibraryCatalogue(JSON.stringify(c));
+    expect(result.valid).toBe(true);
+    if (!result.valid) return;
+    expect(result.catalogue.assets[0]).toEqual(asset);
+    expect(result.catalogue.assets[0].quality).toBeUndefined();
+    expect(isModelLibrarySourceFormat(format)).toBe(true);
+  });
+  it('distinguishes supported program metadata from arbitrary JavaScript and archival formats', () => {
+    expect(MODEL_LIBRARY_SOURCE_FORMATS).toEqual(['cad-script', 'openscad', 'jscad']);
+    for (const format of ['js', 'javascript', 'stl', 'step', 'fcstd']) {
+      expect(isModelLibrarySourceFormat(format)).toBe(false);
+      const c = catalogue(); c.assets[0].original.format = format;
+      expect(validateModelLibraryCatalogue(c).valid).toBe(true);
+    }
+  });
+  it('rejects mutable, abbreviated, malformed or insecure repository revisions', () => {
+    for (const revision of [
+      {repositoryUrl: 'https://github.com/example/models', commit: 'main'},
+      {repositoryUrl: 'https://github.com/example/models', commit: 'abcdef0'},
+      {repositoryUrl: 'https://github.com/example/models', commit: 'C'.repeat(40)},
+      {repositoryUrl: 'http://github.com/example/models', commit: 'c'.repeat(40)},
+      {repositoryUrl: 'https://user:secret@github.com/example/models', commit: 'c'.repeat(40)},
+      {repositoryUrl: 'https://github.com/example/models', commit: 'c'.repeat(40), branch: 'main'},
+      null,
+    ]) {
+      const c = catalogue() as any; c.assets[0].sourceRevision = revision;
+      expect(validateModelLibraryCatalogue(c).valid).toBe(false);
+    }
+    const c = catalogue();
+    c.assets[0].sourceRevision = {repositoryUrl: 'https://example.org/models', commit: 'd'.repeat(64)};
+    expect(validateModelLibraryCatalogue(c).valid).toBe(true);
+  });
+  it.each(MODEL_LIBRARY_SOURCE_FORMATS)('requires geometry quality evidence to reference a rendered derivative for %s', format => {
+    const c = catalogue(); c.assets[0].original.format = format;
+    c.assets[0].quality = {fileSha256: 'a'.repeat(64), toolVersion: 'mesh-check-1', checkedOn: '2026-11-13', parseable: true, closedPositiveVolume: true, withinSizeLimits: true, withinTriangleLimits: true};
+    expect(validateModelLibraryCatalogue(c).valid).toBe(false);
+    c.assets[0].quality.fileSha256 = 'b'.repeat(64);
+    expect(validateModelLibraryCatalogue(c).valid).toBe(true);
   });
   it.each(MODEL_LIBRARY_CONTENT_LICENCES)('admits exact content grant %s', spdx => {
     const c = catalogue(); c.assets[0].licence.spdx = spdx;
