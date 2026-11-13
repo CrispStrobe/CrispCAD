@@ -2,8 +2,9 @@
 
 This small collection preserves three unmodified parametric source assets. Content
 rights are separate from Brickwright's BSD-3-Clause implementation licence. The
-catalogue is archival input; it does not register built-in shapes or install a
-renderer. These files are not Brickwright CAD Script and must not be passed to its
+catalogue preserves archival input; the standalone library now additionally
+admits the supported gear as an offline evaluated snapshot (see below). It does
+not register built-in shapes or install an upstream renderer. These files are not Brickwright CAD Script and must not be passed to its
 compiler. No upstream application implementation, UI, or assets were copied.
 
 `seed-catalogue.json` uses the core model library metadata schema. Each original
@@ -39,7 +40,7 @@ Evidence and source links, all pinned to the audited revision:
 - [Threads source grant](https://github.com/rcolyer/threads-scad/blob/4ae9aeb3b136f9858200f77a304b909a000ce3b4/threads.scad)
 - [Threads CC0 legal code](https://github.com/rcolyer/threads-scad/blob/4ae9aeb3b136f9858200f77a304b909a000ce3b4/LICENSE.txt)
 
-No files were executed and no meshes were produced. `derivatives` is empty and
+During the archival capture, no files were executed and no meshes were produced. `derivatives` is empty and
 `quality` is absent: syntax, manifoldness, triangle count, physical suitability,
 and collision behaviour have not been qualified. The SCAD file includes its
 upstream `Demo()` call and uses built-in language features without `include` or
@@ -47,17 +48,17 @@ upstream `Demo()` call and uses built-in language features without `include` or
 implementation.
 
 Both JSCAD sources require `@jscad/modeling`. This collection does not install that
-package or audit its runtime dependency closure. Any future rendering must first
-pin and audit that complete closure and run in an isolated, resource-limited
-conversion service. The gear's parameter defaults are declared by upstream's
-`getParameterDefinitions`; invoking `main` requires those values. No evaluator,
-JavaScript execution, package download, or OpenSCAD renderer is enabled here.
+package or audit its runtime dependency closure. Running an upstream renderer would first require
+a pinned, audited runtime dependency closure and isolated, resource-limited
+conversion service. The independently implemented bounded AST translator does
+not load or execute that package. The gear's parameter defaults are declared by upstream's
+`getParameterDefinitions`; invoking `main` requires those values. No arbitrary JavaScript execution, package download, or OpenSCAD renderer is
+enabled here.
 
 The JSCAD models do not explicitly declare physical units. The catalogue records
-an explicit curator assumption of millimetres and Z up; no conversion has been
-performed. The SCAD file explicitly annotates millimetres. Identity transforms
-record the intended interpretation for a future conversion, not measured mesh
-results. Future derivatives must record renderer/version, parameters, unit
+an explicit curator assumption of millimetres and Z up; the archival seed has no
+pre-rendered derivative. The SCAD file explicitly annotates millimetres. Identity transforms
+record the intended interpretation for conversion, not measured mesh results. Future derivatives must record renderer/version, parameters, unit
 choices, output bytes/hashes, modification notes, and independent geometry checks.
 
 The initial audit also inspected dotSCAD's root licence at revision
@@ -70,3 +71,36 @@ remain uncollected; this seed does not claim their dependency closures are audit
 A separate [reviewed CC0 geometric fixture](FIXTURES.md) retains a pinned editable
 cube and independently screened local derivative. It is a slicer fixture; the
 external calibration collection remains pending.
+
+
+## Supported offline gear snapshot
+
+The standalone Model library admits only `jscad-involute-gear` from this seed.
+Its `original` keeps the immutable upstream download URL; `editableSource` records
+an exact hash/size-matched local copy at `sources/jscad/gear.js`. The exact original remains in the repository and build bundle. No source or evidence
+archive is rewritten. The panel links to upstream; no source-download action is offered.
+
+Insertion uses Brickwright's bounded, independent AST interpreter, with no upstream
+JSCAD runtime execution or new runtime dependency. The default parameters are
+recorded in incorporation notes. The inserted code is editable CAD Script geometry
+with evaluated numeric values: the original JavaScript parameter definitions are
+not editable project parameters. The panel explains this limitation. The original
+remains archived separately for subsequent source edits; it is not embedded in the
+project document.
+
+Complete applicable original JSCAD MIT copyright, permission and warranty wording
+is retained in the projected catalogue attribution, saved provenance, and exported
+attribution sidecars; line breaks are explicitly normalized to spaces to satisfy
+the existing single-line metadata contract. This notice identifies the original
+JSCAD work; it does not claim those authors made subsequent Brickwright changes.
+Conversion notes and caller-supplied later export notes remain separate. The exact
+original notice and file header remain archived without normalization.
+
+Existing differential tests compare the pinned gear's volume and bounds with the
+reference package for defaults and an alternative parameter set. Insertion performs
+a trial kernel evaluation before one atomic edit and rejects unsupported source
+features without changing the model or redo stack. Nuts and Bolts (slice extrusion)
+and Metric Threads Demo remain archival and are deliberately absent from the
+bundled insertion catalogue. No simplified substitutes or partial conversions are
+admitted. No mesh screen, printability or physics qualification is claimed for the
+inserted gear; a passing positive-volume trial is separate from those checks.

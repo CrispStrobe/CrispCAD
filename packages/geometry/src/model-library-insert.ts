@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {compileCode, importOpenSCAD, identityTransform, newId, sha256Hex, validateModelLibraryCatalogue, type CadDocument, type ModelLibraryFileSelection, createCadSession} from '@brickwright/cad-core';
+import {compileCode, importOpenSCAD, importJSCAD, identityTransform, newId, sha256Hex, validateModelLibraryCatalogue, type CadDocument, type ModelLibraryFileSelection, createCadSession} from '@brickwright/cad-core';
 import {checkModelLibrarySTL, MODEL_LIBRARY_MESH_MAX_BYTES, MODEL_LIBRARY_MESH_MAX_TRIANGLES, parseModelLibrarySTL, type ModelLibraryMeshQualityResult} from './model-library-quality.js';
 import type {GeometryResult} from './kernel.js';
 
@@ -84,7 +84,8 @@ export interface ModelLibrarySourceInsertOptions {
 }
 /** Verify and compile an original local source, evaluate its complete candidate,
  * then retain CAD Script as an editable code node with provenance in one edit.
- * OpenSCAD is translated by the supported importer; the original local artifact
+ * OpenSCAD is translated by the supported importer; JSCAD becomes a bounded
+ * evaluated default-parameter snapshot, not editable original JS. The local artifact
  * remains identified by its provenance hash rather than embedded in the node.
  * Source conversion is deliberately restricted to millimetres/Z-up identity.
  */
@@ -101,15 +102,16 @@ export async function insertModelLibrarySource(
   const asset = checked.catalogue.assets.find(asset => asset.id === selection.assetId);
   if (!asset) throw new Error('Unknown model library asset.');
   const file = selection.file === 'original' ? asset.original : selection.file === 'editableSource' ? asset.editableSource : undefined;
-  if (!file?.path || !['cad-script', 'openscad'].includes(file.format)) throw new Error('Select a local editable CAD Script or supported OpenSCAD source.');
+  if (!file?.path || !['cad-script', 'openscad', 'jscad'].includes(file.format)) throw new Error('Select a local editable CAD Script, supported OpenSCAD or JSCAD source.');
   if (file.bytes > 32768 || bytes.byteLength !== file.bytes) throw new Error('Source exceeds 32 KiB or file size mismatch.');
   if (JSON.stringify(asset.conversion.toMillimetresZUp) !== JSON.stringify([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]) || asset.conversion.sourceUnits !== 'mm' || asset.conversion.sourceUpAxis !== 'Z') throw new Error('Editable source requires millimetres/Z-up identity conversion.');
   const snapshot = bytes.slice();
   if (await sha256Hex(snapshot) !== file.sha256) throw new Error('Model library file size or SHA-256 mismatch.');
   const source = new TextDecoder('utf-8', {fatal: true}).decode(snapshot);
-  const incorporationNotes = modificationNotes + (file.format === 'openscad' ? ' OpenSCAD translated to editable CAD Script by the supported subset importer.' : '');
+  const jscad = file.format === 'jscad' ? importJSCAD(source) : undefined;
+  const incorporationNotes = modificationNotes + (file.format === 'openscad' ? ' OpenSCAD translated to editable CAD Script by the supported subset importer.' : jscad ? ` JSCAD converted by the bounded subset interpreter to an editable CAD Script evaluated snapshot with default parameters ${JSON.stringify(jscad.parameters)}. Original JavaScript parameter definitions are not retained in the code node; no collision qualification.` : '');
   if (incorporationNotes.length > 4096) throw new Error('Incorporation modification notes exceed the provenance limit after recording source conversion.');
-  const program = file.format === 'openscad' ? importOpenSCAD(source) : {version: 1 as const, language: 'brickwright-cad-script' as const, source, parameters: {}};
+  const program = jscad ? jscad.program : file.format === 'openscad' ? importOpenSCAD(source) : {version: 1 as const, language: 'brickwright-cad-script' as const, source, parameters: {}};
   compileCode(program);
   const nodeId = newId(), recordId = newId();
   const fragment: CadDocument = {format: 'brickwright-cad', id: newId(), version: 5, title: asset.title, units: 'mm', roots: [nodeId], nodes: {

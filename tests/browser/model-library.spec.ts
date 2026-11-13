@@ -87,3 +87,19 @@ test('closing while bundled source hash verification awaits cancels without chan
  await dialog.getByRole('button',{name:'Close model library'}).click();await page.evaluate(()=>(window as unknown as {pendingHashes:(()=>void)[]}).pendingHashes.splice(0).forEach(resolve=>resolve()));
  await open(page);await expect(dialog.getByLabel('Incorporation modification notes',{exact:true})).toBeEnabled();await dialog.getByLabel('Incorporation modification notes',{exact:true}).fill('Retry after canceled verification.');await expect(dialog.getByRole('button',{name:'Insert editable source',exact:true})).toBeEnabled();expect(await saved(page)).toEqual(before);await dialog.getByRole('button',{name:'Close model library'}).click();await expect(page.getByRole('button',{name:'Redo',exact:true})).toBeEnabled();
 });
+
+test('reviewed gear inserts offline as a default snapshot and exports its MIT notice',async({page,context})=>{
+ await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');const before=await saved(page),dialog=await open(page);
+ await dialog.getByRole('button',{name:'Parametric Involute Gear · MIT',exact:true}).click();
+ await expect(dialog).toContainText('Original JavaScript parameters and face colours are not retained');
+ await expect(dialog.getByRole('link',{name:'Original source',exact:true})).toHaveAttribute('href',/720f3688312ed3bad1702fe83906be153b8ab8fc/);
+ let requests=0;page.on('request',()=>requests++);await context.setOffline(true);
+ await dialog.getByLabel('Incorporation modification notes',{exact:true}).fill('Default gear snapshot; original coordinates preserved.');
+ await dialog.getByRole('button',{name:'Insert editable source',exact:true}).click();await expect(dialog.getByRole('status')).toContainText('Editable source inserted with provenance. Available offline.');expect(requests).toBe(0);
+ const inserted=await saved(page),record=inserted.provenance.records[0],node=inserted.nodes[inserted.roots.at(-1)];
+ expect(inserted.roots).toHaveLength(before.roots.length+1);expect(node.kind).toBe('code');expect(node.program.parameters).toEqual({});expect(node.program.source).toContain('Converted JSCAD snapshot');expect(record.selectedFile.path).toBe('sources/jscad/gear.js');expect(record.modificationNotes).toContain('"numTeeth":10');
+ await dialog.getByRole('button',{name:'Close model library'}).click();await page.getByRole('button',{name:'Undo',exact:true}).click();expect(await saved(page)).toEqual(before);await page.getByRole('button',{name:'Redo',exact:true}).click();expect(await saved(page)).toEqual(inserted);
+ await context.setOffline(false);await page.reload();await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');expect(await saved(page)).toEqual(inserted);
+ await page.getByLabel('File menu',{exact:true}).click();await page.getByRole('button',{name:'Export…',exact:true}).click();const exporting=page.getByRole('dialog',{name:'Export model',exact:true});await exporting.getByLabel('Changes since insertion',{exact:true}).fill('Unchanged since default snapshot insertion.');await exporting.getByLabel('Export format',{exact:true}).selectOption('stl');
+ const pending=page.waitForEvent('download');await exporting.getByRole('button',{name:'Export',exact:true}).click();const download=await pending,entries=unzipSync(new Uint8Array(await readFile((await download.path())!)));const sidecar=JSON.parse(new TextDecoder().decode(entries[Object.keys(entries).find(name=>name.endsWith('.attribution.json'))!]));expect(sidecar.records).toEqual(inserted.provenance.records);expect(sidecar.records[0].asset.licence.attribution).toContain((await readFile('library/evidence/jscad-LICENSE.txt','utf8')).replace(/\r?\n/g,' '));
+});
