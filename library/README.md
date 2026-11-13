@@ -66,3 +66,7 @@ The initial audit also inspected dotSCAD's root licence at revision
 so no dotSCAD source assets were admitted. No broad repository licence was used
 to override a conflicting per-file licence. MCAD, NopSCADlib and BOSL2 assets
 remain uncollected; this seed does not claim their dependency closures are audited.
+
+A separate [reviewed CC0 geometric fixture](FIXTURES.md) retains a pinned editable
+cube and independently screened local derivative. It is a slicer fixture; the
+external calibration collection remains pending.

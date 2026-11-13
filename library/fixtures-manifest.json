@@ -1,0 +1,145 @@
+{
+  "format": "brickwright-local-fixture-library",
+  "version": 1,
+  "capturedOn": "2026-11-13",
+  "pathBase": "library/",
+  "reproduction": {
+    "command": "npm run library:fixtures:check",
+    "generator": {
+      "path": "../scripts/generate-fixture-library.mjs",
+      "sha256": "a20c59239ba26802d1be238f754875b2200094af293f61e0fc16b327ca6eaf06"
+    },
+    "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
+    "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+  },
+  "assets": [
+    {
+      "id": "slicer-test-models-cube-10",
+      "title": "10 mm geometric cube fixture",
+      "author": "Ghostkeeper",
+      "version": "e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/Ghostkeeper/SlicerTestModels",
+        "commit": "e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d",
+        "sourceUrl": "https://github.com/Ghostkeeper/SlicerTestModels/blob/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/basic/cube.scad"
+      },
+      "authorEvidence": {
+        "path": "evidence/slicer-test-models-cube-author.json",
+        "sha256": "b2a1f6fecd268b57021d59acef8c5a86827e9e12db99bbffce2f149141a70f7c",
+        "bytes": 335
+      },
+      "licence": {
+        "spdx": "CC0-1.0",
+        "scope": "asset",
+        "attribution": "Cube by Ghostkeeper, SlicerTestModels; CC0-1.0. Voluntary credit retained.",
+        "evidenceUrl": "https://github.com/Ghostkeeper/SlicerTestModels/blob/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/README.md",
+        "localEvidence": [
+          {
+            "path": "evidence/slicer-test-models-README.md",
+            "sha256": "0b106b8a989e50360e58379504af6adec203916c3dd2b410abaf2ff11b34a302",
+            "bytes": 5530,
+            "url": "https://raw.githubusercontent.com/Ghostkeeper/SlicerTestModels/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/README.md"
+          },
+          {
+            "path": "evidence/slicer-test-models-LICENSE.md",
+            "sha256": "868ac549cfeb406ca91595670341fd468ac2e49147b8eebff098752110ae626d",
+            "bytes": 6992,
+            "url": "https://raw.githubusercontent.com/Ghostkeeper/SlicerTestModels/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/LICENSE.md"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex pinned per-model origin and repository model grant audit"
+      },
+      "original": {
+        "path": "sources/slicer-test-models/cube.scad",
+        "sha256": "a07e6cec5cad312fc338cc4779f0163a44edce73b35dab03e1b16129ac543330",
+        "bytes": 9,
+        "url": "https://raw.githubusercontent.com/Ghostkeeper/SlicerTestModels/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/basic/cube.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/slicer-test-models/cube.stl",
+          "sha256": "5b4aaa293e19b68a38ea2942a2b27741ff70fae4d1ed48d9b150ecf64a23416e",
+          "bytes": 684,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Unmodified editable source retained; translated by Brickwright importOpenSCAD and rendered using its CAD Script compiler and Manifold kernel. No upstream compiler executed, repair, simplification or placement applied. Source coordinates preserved. Upstream calls this a slicer fixture and explicitly excludes calibration from its scope.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "Source cube(10) has no unit declaration. Curator assumes millimetres and Z up; source origin remains [0,0,0]. This is not upstream physical calibration certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "5b4aaa293e19b68a38ea2942a2b27741ff70fae4d1ed48d9b150ecf64a23416e",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-13",
+        "screeningPolicy": {
+          "maxTriangles": 100,
+          "maxExtentMm": 10,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 12,
+        "boundsMm": {
+          "min": [
+            0,
+            0,
+            0
+          ],
+          "max": [
+            10,
+            10,
+            10
+          ]
+        },
+        "signedVolumeMm3": 999.9999999999999
+      },
+      "diagnostics": []
+    }
+  ]
+}

@@ -279,3 +279,19 @@ The MCP host now automatically pairs STL with attribution for recorded printable
 sources and requires explicit export modification notes; see
 [attribution export](MODEL-ATTRIBUTION.md). The editor refuses attributed STL/3MF
 until paired host delivery is implemented.
+
+
+## Reviewed external geometric fixture
+
+A separate [local CC0 fixture collection](../library/FIXTURES.md) now retains
+Ghostkeeper's pinned nine-byte editable `cube(10);` source, full model-grant
+evidence, author metadata and a reproducible 12-triangle STL. The existing
+independent OpenSCAD translator and CAD Script/Manifold pipeline preserve corner
+origin and explicitly assumed millimetres/Z up. Focused tests independently
+check 10 mm spans and 1,000 mm³ volume; all four existing mesh screens pass.
+No physics qualification or network derivative URL is claimed.
+
+This is a geometric/slicer fixture: upstream explicitly excludes calibration
+from its scope. The small external calibration collection remains pending.
+The fixture audit documents why reviewed Benchy and Innerscene candidates were
+not admitted. No source identity conflict was overridden by a passing mesh screen.
