@@ -57,7 +57,9 @@ parts need qualified compound/decomposed collision shapes; visual meshes alone
 are insufficient. Export attribution sidecars with library-derived STL, and keep
 provenance in project documents before enabling catalogue insertion. Plain STL
 alone cannot carry these obligations reliably. The current STL importer/exporter
-is for user-provided geometry and does not yet implement catalogue provenance.
+is for user-provided geometry. Headless project provenance and a standalone
+[attribution sidecar helper](MODEL-ATTRIBUTION.md) are available; catalogue insertion
+and host export integration remain pending.
 
 ## Immediate useful library
 
@@ -79,9 +81,10 @@ The next slice now provides selected-file fetching with hash verification and an
 offline cache (see below). Headless STL quality screening is also available
 (see below). The 34 original editable examples now have a reproducible local collection
 (see below). A small CC0 calibration set remains to be implemented. Preserve original files and derived meshes with their respective
-hashes. Before catalogue insertion or attributed STL export, implement project
-provenance and attribution sidecars. These later steps are not provided by the
-catalogue contract alone.
+hashes. Project provenance now retains reviewed source snapshots in version 5 documents,
+and a standalone attribution sidecar helper is available. Catalogue insertion and
+host export integration remain pending; the catalogue contract alone does not
+provide either workflow.
 
 
 ## Selected-file retrieval and offline storage
@@ -132,9 +135,9 @@ headless hosts or tests.
 
 This is a retrieval API, not catalogue insertion UI. Verified bytes establish file
 identity only: they do not establish legal rights, mesh quality or physics
-qualification. No STL importer, saved project definition or history revision is
-changed; insertion and attributed export still require project provenance and
-sidecar support.
+qualification. Retrieval changes no STL importer, saved project definition or history revision.
+Insertion and attributed export still require host integration with project
+provenance and the sidecar helper.
 
 ## Headless STL quality screening
 
@@ -174,7 +177,7 @@ This screen does not detect intersections between nonadjacent triangles or
 shells, establish shell nesting, prove printability or mechanical accuracy, or
 qualify collisions. A passing topology/volume screen can still contain overlapping
 or self-intersecting surfaces and requires further curation. No `physics` evidence
-is produced. Source rights, project provenance, attributed exports and Jolt
+is produced. Source rights, retained project provenance, attributed exports and Jolt
 qualification remain separate requirements.
 
 ## Original editable example collection
@@ -222,4 +225,50 @@ explicit inch/centimetre literals to millimetres before export. Default source
 coordinates are preserved, including negative Z coordinates; meshes are not
 moved onto a print bed or repaired. The screens do not establish self-intersection
 freedom, printability, mechanical accuracy or physics/collision qualification.
-Project provenance, insertion and attribution sidecars remain separate work.
+Project provenance and the standalone attribution sidecar helper are separate
+from this collection. Catalogue insertion and host export integration remain
+pending.
+
+
+## Retained project provenance
+
+`CadDocument` version 5 adds optional `provenance: {version: 1, records: [...]}`
+and node `provenance` reference IDs. Each `ModelProvenanceRecord` retains a complete
+validated catalogue asset snapshot, an exact `selectedFile` identity from that
+asset, a local record ID, and explicit incorporation `modificationNotes`. This
+keeps licence, attribution, evidence, conversion, original and derivative hashes,
+and optional quality evidence together. The snapshots record curator assertions;
+they neither verify grants nor prove that existing project geometry matches a
+selected file.
+
+`session.attachProvenance(nodeIds, record)` records sources for existing geometry
+as one validated undoable edit. It performs no IO or catalogue insertion and never
+overwrites a conflicting record identity. Generic inspector updates cannot replace
+source references. Source metadata does not change geometry keys or establish
+physics qualification.
+
+Sources remain on boolean operands, are retained by transforms and duplication,
+and follow selection fragments and paste with remapped local record IDs. Separating
+a boolean propagates its own sources to the operands. Regeneration conservatively
+retains all replaced construction sources on the replacement body; it does not
+claim the replacement is unchanged. Removing geometry drops only source snapshots
+no remaining node references. Unrelated selection copies omit those snapshots.
+An attributed fragment is refused as a generated replacement until that separate
+merge workflow is implemented.
+
+The source metadata contract requires version 5 so older readers refuse these
+documents instead of editing away attribution. Existing versions 1–4 open without
+migration or rewriting. These older schemas previously permitted arbitrary
+extension fields named `provenance`; such fields remain opaque and are never
+validated, remapped or interpreted as library sources. Upgrading a document or
+inserting a fragment with colliding legacy fields into version 5 is refused
+rather than overwriting those fields. Sidecar generation requires version 5. New document snapshots and node source references are preserved by
+the existing history header and content storage, including portable backup, restore
+and branch operations. No database schema upgrade or old revision rewrite is
+required. UI preferences and transient drag previews remain outside model history.
+
+This slice provides persistence and graph propagation only. It does not expose
+library insertion UI, fetch or convert an asset, track a complete narrative of
+subsequent edits, or automatically couple STL downloads to attribution sidecars.
+Hosts must integrate [the sidecar helper](MODEL-ATTRIBUTION.md) before offering
+attributed STL export.

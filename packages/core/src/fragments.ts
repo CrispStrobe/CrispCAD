@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
+import {pruneModelProvenance} from './model-provenance.js';
 import {validateDocument} from './document.js';
 import type {CadDocument} from './document.js';
 import {sketchExpressions,rewriteSketchExpressions} from './features.js';
@@ -27,6 +28,7 @@ export function selectionFragment(input:CadDocument,selection:readonly string[])
   original.parameters=Object.fromEntries(Object.entries(original.parameters).filter(([name])=>required.has(name)));
   if(!original.bindings.length&&!required.size)delete doc.parametric;
  }
+ pruneModelProvenance(doc);
  return validateDocument(doc);
 }
 /** Keep formulas on paste; collisions get a separate parameter namespace. */

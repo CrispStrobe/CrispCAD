@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
+import type {ModelProvenanceRecord} from './model-provenance.js';
+import {assertProvenanceUpgrade,pruneModelProvenance} from './model-provenance.js';
 import { checkDocument, createDocument, freezeDocument, identityTransform, newId, parseDocument, pruneDocument, serializeDocument, validateDocument } from './document.js';
 import type { CadDocument, Primitive, SolidNode, Transform, Vec3 } from './document.js';
 import { defaultPartPhysics } from './physics.js';
@@ -10,6 +12,7 @@ import type { ParametricDesign } from './parameters.js';
 import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositionExpression} from './fragments.js';
 export interface SessionState { document: CadDocument; selection: readonly string[]; revision: number; canUndo: boolean; canRedo: boolean; label: string }
 const cloneNode = (node: SolidNode): SolidNode => ({ ...node,
+  ...(node.provenance!==undefined?{provenance:structuredClone(node.provenance)}:{}),
   transform: { position: [...node.transform.position], rotation: [...node.transform.rotation], scale: [...node.transform.scale] },
   ...(node.kind === 'box' ? { size: [...node.size] } : {}),
   ...(node.kind === 'boolean' ? { inputs: [...node.inputs] } : {}),
@@ -46,7 +49,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       const previous = document.nodes[id];
       if (previous && equivalent(node, previous)) draft.nodes[id] = previous;
     }
-    if (draft.version === document.version && JSON.stringify(draft.sketches)===JSON.stringify(document.sketches) && JSON.stringify(draft.parametric) === JSON.stringify(document.parametric) && draft.title === document.title && JSON.stringify(draft.roots) === JSON.stringify(document.roots) && JSON.stringify(draft.joints) === JSON.stringify(document.joints) && Object.keys(draft.nodes).length === Object.keys(document.nodes).length && Object.entries(draft.nodes).every(([id, node]) => document.nodes[id] === node)) return;
+    if (JSON.stringify(draft.provenance) === JSON.stringify(document.provenance) && draft.version === document.version && JSON.stringify(draft.sketches)===JSON.stringify(document.sketches) && JSON.stringify(draft.parametric) === JSON.stringify(document.parametric) && draft.title === document.title && JSON.stringify(draft.roots) === JSON.stringify(document.roots) && JSON.stringify(draft.joints) === JSON.stringify(document.joints) && Object.keys(draft.nodes).length === Object.keys(document.nodes).length && Object.entries(draft.nodes).every(([id, node]) => document.nodes[id] === node)) return;
     const validated = freezeDocument(draft);
     undo.push(snapshot()); if (undo.length > 100) undo.shift(); redo.length = 0;
     document = validated; selection = nextSelection ?? selection.filter(id => !!document.nodes[id]); label = title; revision++; emit();
@@ -55,12 +58,22 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     get state() { return state(); },
     subscribe(listener: (state: SessionState) => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     select(ids: readonly string[]) { selection = [...new Set(ids)].filter(id => Object.hasOwn(document.nodes, id)); emit(); },
+    /** Record reviewed source metadata for existing geometry; no fetching or insertion. */
+    attachProvenance(ids:readonly string[],record:ModelProvenanceRecord) {commit('Record model provenance',d=>{
+      if(!ids.length||!ids.every(id=>Object.hasOwn(d.nodes,id)))throw new Error('Select existing objects for model provenance');
+      assertProvenanceUpgrade(d);
+      const source=structuredClone(record),existing=d.provenance?.records.find(r=>r.id===source.id);
+      if(existing&&JSON.stringify(existing)!==JSON.stringify(source))throw new Error('Source record identity already exists with different metadata');
+      d.version=5;d.provenance={version:1,records:[...(d.provenance?.records??[]),...(existing?[]:[source])]};
+      for(const id of ids)d.nodes[id].provenance=[...new Set([...(d.nodes[id].provenance??[]),source.id])];
+    });},
     rename(title: string) { commit('Rename design', d => { d.title = title; }); },
     setParametric(design: ParametricDesign) {commit('Edit parameters',d=>{if(d.version===1)d.version=2;d.parametric=structuredClone(design);});},
     detachGenerator(id:string){commit('Detach shape generator',d=>{if(!d.nodes[id]?.generator)throw new Error(t('No generator to detach'));delete d.nodes[id].generator;if(d.nodes[id].physics)d.nodes[id].physics={...d.nodes[id].physics!,sourcePreset:undefined};});},
     replaceGenerated(id:string,fragment:CadDocument){
-      const source=validateDocument(fragment);if(source.roots.length!==1||source.joints?.length||source.parametric||source.sketches)throw new Error(t('Expected one generated body'));
+      const source=validateDocument(fragment);if(source.roots.length!==1||source.joints?.length||source.parametric||source.sketches||(source.version===5&&source.provenance))throw new Error(t('Expected one generated body'));
       commit('Edit shape parameters',d=>{
+        if(d.version===5)assertProvenanceUpgrade(source);
         const previous=d.nodes[id];if(!previous)throw new Error(t('Object does not exist'));
         const descendants=new Set<string>();const walk=(key:string)=>{if(descendants.has(key))return;descendants.add(key);const n=d.nodes[key];if(n.kind==='boolean')n.inputs.forEach(walk);};walk(id);
         if(d.parametric?.bindings.some(b=>descendants.has(b.nodeId)&&b.nodeId!==id))throw new Error(t('Detach driving expressions on the construction operands before regenerating'));
@@ -68,12 +81,14 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         if(d.joints?.some(j=>connected(j.bodyA)||connected(j.bodyB)))throw new Error(t('Detach joints before regenerating their bodies'));
         const map=new Map(Object.keys(source.nodes).map(key=>[key,key===source.roots[0]?id:newId()]));
         for(const [key,node] of Object.entries(source.nodes)){const next=cloneNode(node);next.id=map.get(key)!;if(next.kind==='boolean')next.inputs=next.inputs.map(input=>map.get(input)!);d.nodes[next.id]=next;}
-        const next=d.nodes[id];next.name=previous.name;next.color=previous.color;next.transform=structuredClone(previous.transform);
+        const retained=d.version===5?[...new Set([...descendants].flatMap(key=>document.nodes[key]?.provenance??[]))]:[];
+        if(d.version<5&&Object.hasOwn(previous,'provenance'))d.nodes[id].provenance=structuredClone(previous.provenance);
+        const next=d.nodes[id];if(retained.length)next.provenance=retained;next.name=previous.name;next.color=previous.color;next.transform=structuredClone(previous.transform);
         if(previous.physics&&next.physics)next.physics={...next.physics,densityKgM3:previous.physics.densityKgM3,friction:previous.physics.friction,restitution:previous.physics.restitution,motion:previous.physics.motion};
         if(d.version===1)d.version=2;pruneDocument(d);return [id];
       });
     },
-    addCode(program:CodeProgram,name='Code object',options:{position?:Vec3}={}){const id=newId();commit('Add code object',d=>{d.version=4;d.nodes[id]={id,kind:'code',program:structuredClone(program),name:uniqueObjectName(name,new Set(d.roots.map(key=>d.nodes[key].name))),color:'#76b7ce',transform:{...identityTransform(),position:options.position??[0,0,0]}};d.roots.push(id);return [id];});return id;},
+    addCode(program:CodeProgram,name='Code object',options:{position?:Vec3}={}){const id=newId();commit('Add code object',d=>{d.version=Math.max(d.version,4) as CadDocument['version'];d.nodes[id]={id,kind:'code',program:structuredClone(program),name:uniqueObjectName(name,new Set(d.roots.map(key=>d.nodes[key].name))),color:'#76b7ce',transform:{...identityTransform(),position:options.position??[0,0,0]}};d.roots.push(id);return [id];});return id;},
     updateCode(id:string,program:CodeProgram){commit('Edit code object',d=>{if(d.nodes[id]?.kind!=='code')throw new Error(t('Select a code object'));guardConstructionEdit(d,id);d.nodes[id]={...d.nodes[id],program:structuredClone(program)};});},
     addSketch(profile:SketchProfile,options:{name?:string;plane?:PlanarSketch['plane']}={}) {const id=newId();commit('Add sketch',d=>{d.version=Math.max(d.version,3) as CadDocument['version'];d.sketches??={};d.sketches[id]={version:1,id,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile)};});return id;},
     extrudeSketch(sketchId:string,options:{distance?:FeatureScalar;symmetric?:boolean}={}) {const id=newId();commit('Extrude sketch',d=>{
@@ -93,11 +108,14 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       const source = validateDocument(fragment); const ids = new Map(Object.keys(source.nodes).map(id => [id, newId()]));
       if(source.parametric&&!options.mergeParameters)throw new Error(t('Enable parameter namespace merging when inserting a parametric model'));
       commit(options.label??'Add shape', d => {
+        if(Math.max(d.version,source.version)===5){assertProvenanceUpgrade(d);assertProvenanceUpgrade(source);}
         d.version=Math.max(d.version,source.version) as CadDocument['version'];
+        const provenanceIds=new Map((source.version===5?source.provenance?.records??[]:[]).map(r=>[r.id,newId()]));
+        if(source.version===5&&source.provenance)d.provenance={version:1,records:[...(d.provenance?.records??[]),...source.provenance.records.map(r=>({...structuredClone(r),id:provenanceIds.get(r.id)!}))]};
         const sketches=new Map(Object.keys(source.sketches??{}).map(id=>[id,newId()]));
         for(const [id,sketch] of Object.entries(source.sketches??{})){d.sketches??={};const next=structuredClone(sketch);next.id=sketches.get(id)!;next.profile.id=newId();d.sketches[next.id]=next;}
         const names=new Set(d.roots.map(id=>d.nodes[id].name));
-        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); node.id = ids.get(id)!; if(node.kind==='extrusion')node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if (source.roots.includes(id)) node.transform.position = node.transform.position.map((v, i) => v + offset[i]) as [number, number, number]; d.nodes[node.id] = node; }
+        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version===5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(node.kind==='extrusion')node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if (source.roots.includes(id)) node.transform.position = node.transform.position.map((v, i) => v + offset[i]) as [number, number, number]; d.nodes[node.id] = node; }
         const roots = source.roots.map(id => ids.get(id)!); d.roots.push(...roots);
         for(const id of roots){d.nodes[id].name=uniqueObjectName(d.nodes[id].name,names);names.add(d.nodes[id].name);}
         if(options.mergeParameters)mergeFragmentParameters(d,source,ids,offset,sketches);
@@ -115,6 +133,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     update(id: string, patch: Partial<SolidNode>) { commit('Edit object', d => {
       if (!d.nodes[id]) throw new Error(t('Object does not exist'));
       guardConstructionEdit(d,id);
+      if(d.version===5&&'provenance' in patch)throw new Error('Use attachProvenance to record sources');
       if('program' in patch)throw new Error(t('Use updateCode to edit a code program'));
       if(patch.generator)throw new Error(t('Use shape regeneration to change generator inputs'));
       // Kind and identity cannot be changed by inspector edits.
@@ -140,7 +159,8 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       const node = d.nodes[id]; if (node?.kind !== 'boolean' || !d.roots.includes(id)) throw new Error(t('Select a top-level operation'));
       if(d.joints?.some(j=>j.bodyA===id||j.bodyB===id))throw new Error(t('Detach this body’s joints before separating its operands'));
       if (JSON.stringify(node.transform) !== JSON.stringify(identityTransform())) throw new Error(t('Reset the operation transform before separating its operands'));
-      d.roots.splice(d.roots.indexOf(id), 1, ...node.inputs); delete d.nodes[id];if(d.parametric)d.parametric.bindings=d.parametric.bindings.filter(b=>b.nodeId!==id); return [...node.inputs];
+      if(d.version===5&&node.provenance)for(const child of node.inputs)d.nodes[child].provenance=[...new Set([...(d.nodes[child].provenance??[]),...node.provenance])];
+      d.roots.splice(d.roots.indexOf(id), 1, ...node.inputs); delete d.nodes[id];pruneModelProvenance(d);if(d.parametric)d.parametric.bindings=d.parametric.bindings.filter(b=>b.nodeId!==id); return [...node.inputs];
     }); },
     duplicate(ids: readonly string[] = selection) { commit('Duplicate', d => {
       const roots = ids.filter(id => d.roots.includes(id)); if (!roots.length) throw new Error(t('Select a top-level body'));

@@ -19,3 +19,6 @@ export * from "./code-examples.js";
 
 export * from './model-library.js';
 export * from './model-library-fetch.js';
+
+export * from './model-provenance.js';
+export * from './model-attribution.js';
