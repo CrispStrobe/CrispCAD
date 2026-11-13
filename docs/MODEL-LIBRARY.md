@@ -245,6 +245,56 @@ need independent probes. The native step API currently exposes no capacity/error
 telemetry. No external content, bundled qualification collection or editor physics
 interface is introduced by this API.
 
+## Offline selected-STL curation command
+
+After `npm run build:packages`, a curator can explicitly qualify one cached local
+STL and save a **new** catalogue:
+
+```sh
+node scripts/qualify-library-stl.mjs \
+  --catalogue /absolute/path/reviewed-catalogue.json \
+  --stl /absolute/path/cached-selected.stl \
+  --asset selected-asset-id --file derivative:0 \
+  --checked-on 2026-11-13 --output /absolute/path/new-qualified-catalogue.json
+```
+
+The input must be a validated `brickwright-model-library` catalogue, rather than
+a local fixture/example manifest. Use `createLocalModelLibraryCatalogue` to
+project those manifests first. `--file original` selects an original STL;
+`derivative:N` selects exactly one zero-based derivative. Paths are explicit and
+resolved from the working directory; catalogue paths/URLs are never used to
+locate or download a mesh. The command verifies the selected byte size and SHA-256
+before qualification and requires its retained screening policy. It reuses that
+policy's exact conversion, triangle limit and extent limit. The fresh report
+retains those limits plus the collision budget (2048 hulls, 2% volume difference,
+0.2 mm bounds tolerance). No cache files or input catalogues are modified.
+
+Only regular local input files are accepted; final-component symlinks are refused.
+Catalogue input/output is capped at 4 MiB and mesh input at 16 MiB before analysis.
+The disposable Node worker has a 256 MiB old-generation heap limit, 64 MiB young
+generation limit and 4 MiB stack limit. These are JavaScript heap limits, **not**
+a hard total-process/native/WASM memory quota; run the command within an OS memory
+limit when processing untrusted local content. The geometry checker additionally
+retains its hard 83,333-triangle analysis limit. The default wall-clock worker
+deadline is 30 seconds; `--timeout-ms` accepts 1–120000. Timeout, SIGINT or SIGTERM
+discards the worker, including synchronous native work, and produces no catalogue.
+
+After fresh `qualifyModelLibrarySTLAndAttach` and validation succeed, the host
+writes and syncs a private sibling temporary file and publishes it by an atomic
+exclusive hard link. The output must not exist, including a dangling symlink;
+concurrent creation also fails without replacement. The output directory must
+already exist and support hard links. The temporary file is cleaned up. Keep
+the original catalogue for review and choose a different output path for each run.
+Publication gives complete-file visibility; this is not a power-loss durability
+guarantee for the directory entry.
+
+The full report stays in the selected asset's quality record. Console output
+states the narrow one-step debug Jolt rigid-preview scope. This command is
+separate from `verify:physics`'s built-in catalogue/drop report and changes no
+editor, browser-worker timeout, project definition or history revision. It
+establishes neither source rights nor fit, contact, printability or mechanical
+certification, and serialized reports never authorize runtime collisions.
+
 ## Original editable example collection
 
 `library/examples-manifest.json` inventories all 34 original BSD-3-Clause CAD
