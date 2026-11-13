@@ -58,7 +58,7 @@ are insufficient. Export attribution sidecars with library-derived STL, and keep
 provenance in project documents before enabling catalogue insertion. Plain STL
 alone cannot carry these obligations reliably. The current STL importer/exporter
 is for user-provided geometry. Headless project provenance and a standalone
-[attribution sidecar helper](MODEL-ATTRIBUTION.md) are available; headless STL catalogue insertion is available (see below); its UI remains pending; browser/native STL export delivers one ZIP with STL and attribution,
+[attribution sidecar helper](MODEL-ATTRIBUTION.md) are available; headless STL catalogue insertion and its editor UI are available (see below); browser/native STL export delivers one ZIP with STL and attribution,
 and MCP returns both files for recorded printable sources (see MODEL-ATTRIBUTION.md).
 
 ## Immediate useful library
@@ -82,7 +82,7 @@ offline cache (see below). Headless STL quality screening is also available
 (see below). The 34 original editable examples now have a reproducible local collection
 (see below). A small CC0 calibration set remains to be implemented. Preserve original files and derived meshes with their respective
 hashes. Project provenance now retains reviewed source snapshots in version 5 documents,
-and a standalone attribution sidecar helper is available. Headless STL catalogue insertion is available below; its UI remains pending. Browser/native STL export packages STL and
+and a standalone attribution sidecar helper is available. Headless STL catalogue insertion and its editor UI are available below. Browser/native STL export packages STL and
 attribution together, and MCP returns both files for recorded printable sources; the catalogue contract alone
 does not itself provide insertion.
 
@@ -136,7 +136,7 @@ headless hosts or tests.
 This is a retrieval API, not catalogue insertion UI. Verified bytes establish file
 identity only: they do not establish legal rights, mesh quality or physics
 qualification. Retrieval changes no STL importer, saved project definition or history revision.
-The headless insertion API below integrates project provenance; host insertion UI remains pending. MCP now
+The headless insertion API and editor interface below integrate project provenance. MCP now
 integrates the sidecar helper for attributed STL; browser/native delivery now
 packages STL and attribution together in one ZIP.
 
@@ -229,7 +229,7 @@ coordinates are preserved, including negative Z coordinates; meshes are not
 moved onto a print bed or repaired. The screens do not establish self-intersection
 freedom, printability, mechanical accuracy or physics/collision qualification.
 Project provenance and the standalone attribution sidecar helper are separate
-from this collection. Headless STL catalogue insertion is available below; its UI remains pending; browser/native STL export packages STL and
+from this collection. Headless STL catalogue insertion and its editor UI are available below; browser/native STL export packages STL and
 attribution in one ZIP, and MCP returns both files for recorded printable sources.
 
 
@@ -272,7 +272,7 @@ required. UI preferences and transient drag previews remain outside model histor
 
 The provenance API provides persistence and graph propagation; the headless STL
 insertion API below supplies verified conversion and atomic insertion. Library
-insertion UI and a complete narrative of subsequent edits remain pending.
+automatic attribution of later modifications and a complete narrative of subsequent edits remain pending.
 The MCP host now automatically pairs STL with attribution for recorded printable
 sources and requires explicit export modification notes; see
 [attribution export](MODEL-ATTRIBUTION.md). The editor now packages attributed STL and its JSON sidecar in one ZIP after
@@ -343,4 +343,25 @@ The returned fresh quality result contains no physics evidence. Retained catalog
 quality (including any separate curation assertions) remains the curator's snapshot;
 insertion does not independently verify licence grants, establish mechanical
 accuracy, detect all intersections, prove printability or qualify physics/collisions.
-Catalogue insertion UI, source compilation and bulk ingestion remain pending.
+Automatic source compilation and bulk ingestion remain pending.
+
+
+## Editor catalogue interface
+
+The editor's File → Model library panel browses a host-supplied reviewed network
+catalogue or a catalogue JSON file selected by the user. No remote catalogue is
+bundled: the checked-in local example and fixture manifests are different formats
+and do not assert published download URLs. Browsing metadata makes no requests.
+The panel shows the source, grant evidence, attribution, exact selected STL URL and
+hash, and the selected mesh's screening conversion and limits separately from the
+original source assumptions. Only an explicit insertion fetches the selected file.
+
+Standalone uses its persistent browser cache; “Use cached files only” performs no
+network access. Other hosts can provide `modelLibrary: {catalogue, cache, fetch}`
+through `CadEditorOptions`. The catalogue is validated and snapshotted, but metadata
+is a curator assertion, not independent verification of rights. Eligible files must
+have passing hash-bound quality and a recorded conversion. Insertion requires
+incorporation notes and uses the geometry worker for trial evaluation. Closing the
+panel cancels pending work; an intervening edit also prevents the final commit.
+A successful insert is one undoable edit with its source snapshot; re-screening
+does not establish printability or collision qualification.

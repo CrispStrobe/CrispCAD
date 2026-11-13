@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {prepareMeshExport} from './export-policy.js';
+import {mountModelLibraryPanel, type ModelLibraryOptions} from './model-library-panel.js';
+export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
 import { t } from '@brickwright/cad-core';
 import { createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution } from '@brickwright/cad-core';
@@ -21,6 +23,7 @@ import { mountParametersPanel, propertyLabels } from './parameters-panel.js';
 export interface CadFile { name: string; bytes: Uint8Array; mime: string }
 export interface CadEditorOptions {
   headerContent?: HTMLElement;
+  modelLibrary?: ModelLibraryOptions;
   navigationPreset?:NavigationPreset;
   showTransformReadout?:boolean;
   appearance?:{background:string;baseplate:string};
@@ -89,6 +92,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const partsToggle = button('Objects', () => togglePanel(tree, partsToggle), status, 'panel-toggle objects-toggle');
   partsToggle.title = t('Show objects');
   const propertiesToggle = button('Properties', () => togglePanel(inspector, propertiesToggle), status, 'panel-toggle properties-toggle');
+  const modelLibraryPanel=mountModelLibraryPanel(shell,session,doc=>client.evaluate(doc),options.modelLibrary,async()=>{await whenIdle();viewport.frame();});
   const parametersPanel=mountParametersPanel(shell,session);
   const sketchPanel=mountSketchPanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();});
   button('Sketch',()=>sketchPanel.open(),toolbar,'compact-icon').title=t('Create a dimensioned sketch and extrusion');
@@ -138,6 +142,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const fitSelectionActions=()=>{const other=[...toolbar.children].filter(child=>child!==contextActions).reduce((sum,child)=>sum+(child as HTMLElement).getBoundingClientRect().width,0);const gap=parseFloat(getComputedStyle(toolbar).gap)||0;contextActions.dataset.room=String(toolbar.clientWidth>=other+112+gap*toolbar.children.length);};
   const toolbarResize=new ResizeObserver(fitSelectionActions);toolbarResize.observe(toolbar);
   toolGroup('File', 'file-tools');
+  button('Model library',()=>modelLibraryPanel.open());
   if(projectsControl){projectsControl.textContent=t('Projects');toolParent.append(projectsControl);}
   if(iterationControl)button('History…',()=>{tree.classList.remove('closed');tree.classList.add('open');partsToggle.setAttribute('aria-pressed','true');iterationControl.focus();});
   async function newProject(){if(!options.requestNew||await options.requestNew())session.load(createDocument());}
@@ -447,7 +452,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return; disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); codePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return; disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); codePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;
