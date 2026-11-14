@@ -20,27 +20,50 @@ Cylinder/taper tessellation supports 3–4096 segments and sphere tessellation
 rounded by Manifold; triangle layout is not promised. OpenSCAD uses 48 segments
 if all fragment controls are absent, differing from OpenSCAD adaptive defaults. Explicit
 $fa/$fs use radius-dependent fragment calculations for circles and cylinders;
-$fn takes precedence. Small sphere meshes still use native tessellation. Extrusion profiles retain
+An explicit positive $fn takes precedence. Small sphere meshes still use native tessellation. Extrusion profiles retain
 the 256-point limit. Zero-sized boxes/cylinders/spheres contribute empty geometry;
 a whole code object must still produce a printable solid for insertion.
 
-OpenSCAD `color()` accepts validated named/hex strings, constant RGB/RGBA
-vectors in [0,1], and optional constant alpha. Appearance is omitted and disclosed
-in conversion notes. Strings remain distinct from numeric expressions; they cannot
-supply dimensions. Typed palettes and vectors may flow through lexical bindings,
-module/function arguments, loops, and computed or parameter-driven indices.
-Indices must resolve to valid integers; boolean indices are refused. Numeric
-selectors retain lazy choices rather than flattening parametric geometry.
-Immutable binding evaluation is memoized, with a shared 16,384-value visit guard.
+OpenSCAD strings remain typed values, separate from numeric CAD expressions.
+Global settings, local bindings, module/function results, string indexing and
+bounded string helpers can feed colour selectors or geometry conditions. Numeric
+selectors may retain choices between string, vector and profile values; numeric
+coordinates keep their parameter dependencies. Strings are never coerced into
+numeric dimensions or interpolated as executable native source. Array indexing
+accepts supported scalar expressions, including global/local parameters, loop
+bindings and function results. Missing or out-of-range entries produce undefined
+values that can be guarded with `is_undef`; an unhandled undefined numeric
+dimension is rejected. Mixed typed arrays are supported without making their
+string members numeric.
 
-Conversion uses a full-render context: read-only `$preview` is `false`, with a
-note only when it is read. Source assignments and argument/parameter overrides
-of `$preview` are refused. Supported fragment controls pass through module,
-transform and extrusion scopes; nested scopes restore the enclosing values and
-explicit primitive counts take precedence. Export snapshots resolve facet counts.
-The `#` modifier retains geometry with an omitted-appearance note; `%` and `*`
-exclude their child geometry from the rendered solid; `!` selects a 3D root.
-These semantics follow the official language documentation for
+`color()` validates named/hex strings or constant RGB/RGBA components in [0,1],
+with optional constant alpha. Supported computed selectors and string flows
+reach that same validation. Appearance colours and transparency are omitted from
+the solid conversion, and notices survive in generated source and through
+`getOpenSCADImportWarnings`. `echo()` console output is also omitted with a notice.
+Local bindings are memoized within their lexical invocation, and cumulative
+16,384-value-visit, array-size, depth and native construction limits bound actual
+work; compact alias graphs do not permit unbounded expansion.
+
+Source conversion uses the full-render context: the read-only `$preview` builtin
+is `false`, and a note is added to converted CAD Script only when the builtin is
+read. Source assignments and parameter/named-argument overrides are rejected;
+the boolean builtin cannot supply a numeric index. Exported OpenSCAD/JSCAD
+snapshots contain explicit resolved facet counts, so they do not depend on
+preview mode. This adds no UI preview-mode setting. The fixed context follows
+the official [`$preview` documentation](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#$preview)
+for full rendering; this subset diagnoses upstream-style overrides instead of
+supporting a configurable source context.
+
+Supported special fragment controls propagate through module and transform
+calls. Nested scopes restore the enclosing values, and an explicit positive
+`$fn` takes precedence over adaptive `$fa`/`$fs` calculations. Curved geometry
+keeps the stated finite segment and mesh budgets. The `#` highlight modifier
+retains its child geometry and records omitted highlight appearance. `%`
+background and `*` disabled geometry are excluded from full-render output;
+`!` selects root geometry instead of retaining unrelated roots. These are
+render semantics, not blanket permission to ignore an unsupported active
+operation. The language references cover
 [special variables](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Special_variables)
 and [modifiers](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Debug_Modifier).
 
@@ -48,6 +71,16 @@ SCAD source is bounded to 32 KiB / 8,192 tokens, construction translation to
 4,096 visits and recursion to 32 levels. Native execution permits 256 statements,
 1,024 expanded nodes and 16,384 evaluation steps; expressions permit 1,024
 characters / 512 tokens. The 200,000 estimated-face budget remains in force.
+
+For the built-in 3D `translate()` only, Brickwright normalizes a numeric `[x,y]`
+vector to `[x,y,0]` and records that interpretation in converted CAD Script.
+Named arguments, symbolic coordinates, lexical module bindings and scoped `$fn`
+keep their existing behavior. This compatibility rule does not relax rotation,
+scale or primitive size vectors, and does not repair original source files.
+The official [OpenSCAD mailing-list discussion](https://lists.openscad.org/empathy/thread/SDXLQNVUH347BJKWM2J3VAUXTNH4NVUT)
+describes translation lists of two or three numbers. The independent importer
+tests establish Brickwright's XY/zero-Z interpretation; they do not claim a
+native OpenSCAD execution or parity with every upstream version.
 
 Source limit is 32 KiB. JSCAD has 20,000 interpreter steps, 64 iterations per loop,
 256 array items and call depth 32. The parsed AST is bounded to 8,192 nodes
@@ -196,8 +229,8 @@ Basic Booleans retains five output records and flat colour metadata. All 34 nati
 examples round-trip via the supported OpenSCAD and JSCAD syntax. Exported JSCAD is
 checked against the actual MIT modeling library for volume and bounds.
 
-Next valuable work is typed source-expression/list handling, anonymous-scope flattening,
-callback/slice loft IR and 2D profile operations. Add a small pinned failing fixture with exact
+Next valuable work includes bounded list comprehensions, anonymous-scope flattening,
+callback/slice loft IR and the remaining profile/export gaps. Add a small pinned failing fixture with exact
 licence/provenance for each capability before changing the converter. Never turn
 an unsupported operation into an unreported approximation or execute source JS.
 
@@ -211,16 +244,20 @@ The installed MIT JSCAD 2.13.0 API and independent test geometry establish the
 profile defaults, centering and radian transform behavior. No GPL implementation
 was used.
 
-## Profile engine and measured coverage — 2026-11-14
+## Earlier profile-engine checkpoint — 2026-11-14
 
-Profiles now remain a native 2D construction tree through parameter recomputation.
+This measured checkpoint predates the expanded language pass below. Its counts
+and refusals record that evaluation; they are not current capability claims.
+
+Profiles remain a native 2D construction tree through parameter recomputation.
 `rectangle2d`, `circle2d`, `polygon2d(points, paths)`, planar transforms and
 `union2d`/`subtract2d`/`intersect2d`/`hull2d` evaluate through Manifold CrossSection.
 Polygon contours use even/odd filling, including holes. Each contour must be simple;
 self-intersection is rejected. Extrusions have 1–256 steps. Evaluated profiles are
 capped at 16,384 vertices and post-clipping extrusion/revolution estimates at
-200,000 faces, in addition to source and expansion budgets. Profile-local named
-references, loops, module calls and local bindings are not implemented yet.
+200,000 faces, in addition to source and expansion budgets. At this checkpoint,
+profile-local named references, loops, module calls and local bindings were not
+implemented; the expanded language pass now supports them.
 
 SCAD twist uses its documented left-hand convention; the native kernel and JSCAD
 use right-hand angles. Conversion changes the sign. Revolution segment counts
@@ -243,14 +280,15 @@ now convert; two now reach explicit resource limits. Final counts: 42 converted,
 204 unsupported, 7 limited, 3 failed. This is a deterministic evenly spaced sample
 of deduplicated files, **not** a general compatibility percentage or fidelity score.
 Sources, raw reports and generated research geometry remain outside the repository.
-Reviewed local corpus: **39 converted, two explicitly unsupported seeds**. The GUI
-admits those 39 working sources, including three new CC0 files with independently
+At that checkpoint the reviewed local corpus had **39 converted, two explicitly
+unsupported seeds**. Its GUI admitted those 39 working sources, including three new CC0 files with independently
 checked volumes, exact source hashes, licence evidence and previews.
 
-The remaining research blockers include strings, colour/echo operators, library
+That research run recorded blockers in strings, colour/echo operators, library
 include/use, module children, reassignment, profile-local constructs and mesh/sweep
-features. The underlying kernel can already perform many operations; converter
-language semantics and the exposed construction IR remain the larger coverage gap.
+features. Several language blockers are resolved by the expanded pass below; the
+historical report has not been relabelled as a new screening run. The current
+gaps listed above still require explicit converter or kernel work.
 JSCAD parameters still become evaluated snapshots; per-face colours and original
 foreign feature identities are not retained. Tapered profiles round-trip through
 native CAD/SCAD; JSCAD export refuses them until slice extrusion is supported.
@@ -292,10 +330,11 @@ shows a brief status and collapsed notes. Source colours/transparency and previe
 highlights are omitted explicitly; render-disabled/background geometry is excluded.
 Actual kernel resource refusals carry `resource-limit` through feature diagnostics.
 
-The integrated offline library includes the VPS agent's 74 reviewed MIT source
-models alongside the existing 39 entries. A corrected scoped-$fn walking-stick
+That integration included the VPS agent's 74 reviewed MIT source models alongside
+the existing 39 entries. Subsequent explicitly screened additions are tracked in
+[the library catalogue notes](../library/README.md#external-corpus-models-available-in-the-editor). A corrected scoped-$fn walking-stick
 mesh uses a new derivative path; the previous file remains byte-identical for
-historical provenance. Archived sources are unchanged and qualification is
+historical provenance; the [previous qualification record](../library/corpus-audit/qualification-history/walking-stick-v1.json) is retained. Archived sources are unchanged and qualification is
 separate from admission and runtime collision checks.
 
 ## Measured engine expansion — 2026-11-14

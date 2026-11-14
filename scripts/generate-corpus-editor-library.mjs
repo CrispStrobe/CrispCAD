@@ -93,6 +93,10 @@ export const corpusEditorSelection = [
   ['Sauce_Bottle', '5bd635f4e9179b0a9716a6ec38c4b346b989f94d48d41c7e9ab6522926f59e23'],
   ['Pipe_00', '1dcd758ab9c4f969c099ccbe6936de341a7dc004751607f2464db28cf5bb5381'],
   ['Flange_02', '9c3a3c5d4c767d2eca1fadcca92f51dc8d83c971196f2c343bda46015d0edede'],
+  ['Cup_01', '12f442660d6c5fd577a5e69f9c11e0a51a4fc242cc15938d9b11113877686379'],
+  ['Ring', '4123a8998c6ce0a0b3e562f3e7a12198a4542f2cccc86ce6610c3d2a034e82cf'],
+  ['Pipe_90', '7ecb93cf2a98f86eed7bf94af4c6ce59f56f3ff76276406634421ba7a5ced64e'],
+  ['Key_Old_01', '3d1268c24366ec678a8e18e748e1281596c9aa65a502cb5ef901da8daaf0d323'],
 ];
 export async function generateCorpusEditorLibrary() {
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
@@ -120,7 +124,10 @@ export async function generateCorpusEditorLibrary() {
       ? ' Street 03 and Street 06 are distinct upstream source files with identical derived geometry; this collection counts source files, not unique shapes.'
       : name === 'Raccordo' ? ' OpenSCAD # highlighting is omitted; the highlighted solid geometry is retained.'
       : name === 'Pipe_00' ? ' Translation uses the fixed full-render context $preview=false, preserving the source-selected 30-segment circular profiles.'
-      : name === 'Flange_02' ? ' Translation uses the fixed full-render context $preview=false and the source constant dimension selector Size=0; the authored 64-segment outer profile and four 60-segment holes are retained.' : '';
+      : name === 'Flange_02' ? ' Translation uses the fixed full-render context $preview=false and the source constant dimension selector Size=0; the authored 64-segment outer profile and four 60-segment holes are retained.'
+      : ['Cup_01', 'Ring', 'Pipe_90', 'Key_Old_01'].includes(name)
+        ? ' Brickwright interprets the authored two-component 3D translations [0,0] as [0,0,0]. Translation uses the fixed full-render context $preview=false. Qualification covers only the instantiated default top-level model.'
+          + (['Ring', 'Pipe_90'].includes(name) ? ' Original unused repeat helpers containing an unresolved ring call are retained unchanged and are outside this qualification.' : '') : '';
     const session = createCadSession();
     session.addCode(importOpenSCAD(bytes.toString('utf8')), title);
     const evaluated = kernel.evaluate(session.state.document);
@@ -155,7 +162,15 @@ export async function generateCorpusEditorLibrary() {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const write = process.argv.includes('--write');
   if (!write && !process.argv.includes('--check')) throw new Error('Use --write or --check.');
-  for (const [path, expected] of await generateCorpusEditorLibrary()) {
+  const outputs = await generateCorpusEditorLibrary();
+  // Published mesh paths are immutable: corrections need an explicit new derivative path.
+  if (write) for (const [path, expected] of outputs) {
+    if (!path.startsWith('meshes/')) continue;
+    let current;
+    try { current = await read(path); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+    if (current && !current.equals(expected)) throw new Error(`Existing mesh differs; preserve ${path} and select a new derivative version path.`);
+  }
+  for (const [path, expected] of outputs) {
     const target = new URL(`library/${path}`, root);
     if (write) { await mkdir(dirname(fileURLToPath(target)), {recursive: true}); await writeFile(target, expected); }
     else if (!(await read(path)).equals(expected)) throw new Error(`Selected corpus output differs: ${path}`);

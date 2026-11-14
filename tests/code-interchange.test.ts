@@ -99,6 +99,22 @@ it('indexes numeric vectors with module-local literal provenance while retaining
  const aliases=Array.from({length:34},(_,i)=>`i${i}=${i===33?'0':`i${i+1}`};`).join('');
  try{importOpenSCAD(`module part(){${aliases}vector=[2,3];cube(vector[i0]);}part();`);throw Error('Expected resource failure');}catch(error:any){expect(error.code).toBe('resource-limit');}
 });
+it('normalizes only two-component translations to XY with zero Z and preserves lexical dimensions',()=>{
+ expect(geometry('translate([0,0])cube([2,3,4]);').bodies[0].bounds).toEqual({min:[0,0,0],max:[2,3,4]});
+ const source='translate([7,-3])cube([2,4,6],true);',program=importOpenSCAD(source);
+ expect(geometry(source).bodies[0].bounds).toEqual({min:[6,-5,-3],max:[8,-1,3]});
+ expect(program.source).toContain('Two-component translations interpreted as [x,y,0].');
+ expect(exportOpenSCAD(program)).toContain('[7, -3, 0]');expect(exportJSCAD(program)).toContain('[7, -3, 0]');
+ expect(geometry(exportOpenSCAD(program)).bodies[0].bounds).toEqual(geometry(source).bodies[0].bounds);
+ const parametric=importOpenSCAD('x=4;module part(v=[x,2]){alias=v;translate(v=alias,$fn=20)sphere(1);}part();');parametric.parameters.x='9';
+ expect(compileCode(parametric).shape).toMatchObject({kind:'move',vector:[9,2,0],shape:{kind:'sphere',segments:20}});
+ expect(geometry('module outer(x=3){offset=[x,2];module inner(){translate(offset)cube(2,true);}translate([10,0]){x=9;inner();}}outer();').bodies[0].bounds).toEqual({min:[12,1,-1],max:[14,3,1]});
+ const counts=(shape:any):number[]=>'segments'in shape?[shape.segments]:'shapes'in shape?shape.shapes.flatMap(counts):'shape'in shape?counts(shape.shape):[];
+ expect(counts(compileCode(importOpenSCAD('$fn=12;translate([1,2],$fn=20)sphere(1);translate([4,5,6])sphere(1);')).shape)).toEqual([20,12]);
+ for(const source of ['translate([])cube(2);','translate([1])cube(2);','translate([1,2,3,4])cube(2);','translate(2)cube(2);','translate(["1",2])cube(2);','translate(["red","blue"])cube(2);','translate([1,[2]])cube(2);','translate([1/0,2])cube(2);','translate([1e8,2])cube(2);','rotate([1,2])cube(2);','scale([1,2])cube(2);','cube([1,2]);'])expect(()=>importOpenSCAD(source),source).toThrow();
+ expect(importOpenSCAD('translate([1,2,3])cube(2);').source).not.toContain('Two-component translations interpreted');
+ expect(importOpenSCAD('module unused(){translate([1,2])cube(2);}cube(2);').source).not.toContain('Two-component translations interpreted');
+});
 it('scopes transform fragment counts through child modules and restores each enclosing scope',()=>{
  const counts=(shape:any):number[]=>'segments'in shape?[shape.segments]:'shapes'in shape?shape.shapes.flatMap(counts):'shape'in shape?counts(shape.shape):[];
  const source='$fn=12; module part(){sphere(1);} translate([0,0,0],$fn=20){part(); rotate([0,0,45],$fn=24){scale(2,$fn=28) part(); part();} sphere(1,$fn=16); part();} translate([8,0,0]) part();';

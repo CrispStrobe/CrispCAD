@@ -107,7 +107,7 @@ inserted gear; a passing positive-volume trial is separate from those checks.
 
 ## Browser previews
 
-All 113 host-bundled items have static PNG previews generated from their actual
+All 117 host-bundled items have static PNG previews generated from their actual
 bounded source conversion and evaluated solids. Previews are keyed by original
 source SHA-256; the standalone host refuses a bundled item without its thumbnail.
 They are presentation assets, not geometry/printability/physics qualification.
@@ -127,12 +127,17 @@ placeholder; the editor does not invent an image or fetch their STL automaticall
 
 ## External corpus models available in the editor
 
-The source archive contains **1,406** files. A reviewed subset of **74** is
-independently dependency-complete (no external includes/assets) and **74** are
+The source archive contains **1,406** files. A reviewed subset of **78** is
+independently dependency-complete (no external includes/assets) and **78** are
 bundled for selection and insertion in File → Model library. These are separate
-counts: the other 1,332 archived files have not been admitted for editor insertion.
+counts: the other 1,328 archived files have not been admitted for editor insertion.
 422 archive records lack a recorded dependency blocker; that is not proof of
 dependency completeness or renderability. The 984 recorded blockers remain.
+
+The batches below are admission history: they describe the converter available
+when those sources were qualified. Later language support does not silently
+qualify additional sources or replace recorded screening evidence. See the
+[current bounded language coverage](../docs/CODE-CONVERTERS.md#current-coverage).
 
 The first twelve MIT selections from Angelo Nicoli's Asset Collection are
 Beam Angular, Beam H,
@@ -161,29 +166,43 @@ defaults preserve child geometry; `#` highlighting preserves the rendered solid
 and records omitted preview appearance. Original files remain unchanged.
 These counts are source entries: Street 03 and Street 06 have identical derived
 geometry and remain separate records for their distinct original files. The
-74 selected source entries currently have 73 distinct derived STL hashes.
+78 selected source entries currently have 77 distinct derived STL hashes.
 
 The sixth batch adds Street 04, Eyebolt, Ladder 02, Wall 04, Fence 01,
 Fence 02, Building 02 and Walking Stick. Bounded local module declarations
 retain lexical bindings and isolated module registries while caller `$fn`
-remains dynamic. This batch qualifies eight sources, rather than assuming twelve.
+remains dynamic. This batch qualified eight sources, rather than assuming twelve.
+Walking Stick later received a corrected scoped-`$fn` derivative at a new path.
+Its [previous qualification record](corpus-audit/qualification-history/walking-stick-v1.json),
+old mesh and preview remain preserved; the upstream source is unchanged.
 
-The seventh batch adds Ingot 01, Coin 01, LED 01 and Sauce Bottle. Tagged
-literal colour palettes support bounded nested palettes and literal integer
-selection inside module scopes. Palettes can reach only validated `color()`;
-numeric arrays, numeric geometry, functions and loops retain their separate
-rules. Alias evaluation has a cumulative budget to bound branching expansion.
-Original colour is omitted as before; original source bytes remain intact.
+The seventh batch added Ingot 01, Coin 01, LED 01 and Sauce Bottle using the
+then-supported tagged constant palettes and literal integer selection in module
+scopes. The current converter also supports bounded computed colour/string
+selectors, functions, loops and mixed typed arrays; string values still cannot
+supply numeric dimensions. Memoized lexical bindings and cumulative evaluation
+limits bound alias work. Appearance colour is omitted with a notice, and original
+source bytes remain intact.
 
 The eighth batch adds Pipe 00 and Flange 02 in an explicit full-render context
-with readonly `$preview=false`. Numeric vector selection accepts literal-proven
-module arguments/local aliases; computed/global/loop/function-derived indices
-remain rejected. Pipe uses its authored 30-facet render branch; Flange uses its
+with readonly `$preview=false`. At qualification, numeric vector selection used
+literal-proven module arguments/local aliases. Current bounded scalar indexing
+also accepts supported computed, global, loop and function-derived selectors;
+source overrides of `$preview` remain rejected. Pipe uses its authored 30-facet
+render branch; Flange uses its
 64-facet outer branch and authored default `Size=0`, with a measured 200 mm
 extent under the unchanged policy. No preview-dependent source text was edited.
 
-Of the 1,332 archive sources outside this editor selection, 984 have recorded
-dependency blockers and 348 have no recorded blocker but are not admitted for
+The ninth batch adds Cup 01, Ring, Pipe 90 and Key Old 01. Brickwright interprets
+their two-component built-in 3D translations as XY with zero Z; the authored
+short vectors are all `[0,0]`. Conversion notes record that interpretation and
+the existing full-render context, without claiming native-version parity.
+Only the authored top-level/default models are qualified: Ring and Pipe 90
+retain unused helpers with undefined calls, which are not certified helper APIs.
+Original source bytes and notices remain intact.
+
+Of the 1,328 archive sources outside this editor selection, 984 have recorded
+dependency blockers and 344 have no recorded blocker but are not admitted for
 editor use. Nine licence-quarantined staged sources remain outside the archive.
 `Shaft_01.scad` and `Shaft_02_With_Keyway.scad` remain deferred because their
 signed radial profiles are unsupported; these remain archival originals,
@@ -195,9 +214,11 @@ editor selection: their converted meshes failed closed-solid topology checks.
 These are geometry screening failures, separate from dependency or licence
 exclusions; no repairs or source substitutions were applied.
 `Notebook.scad` produced 16,406 triangles, exceeding this selection's unchanged
-10,000-triangle policy. Abacus and Arc 01/02 still exceed the existing native
-node budget. These recorded limits are preserved; helper-module support does
-not qualify every source that can now parse.
+10,000-triangle policy. At their recorded screening, Abacus and Arc 01/02
+exceeded the then-applicable native node budget. Those refusals remain recorded;
+expanded language support does not qualify these files without another explicit
+screening. The selection limits and other recorded geometry exclusions are
+unchanged.
 
 Each selected model passes the existing bounded importer, Manifold evaluation,
 and hash-bound STL screening for a closed positive-volume solid, at most 10,000
@@ -216,12 +237,12 @@ npm run library:corpus:check
 node scripts/generate-library-previews.mjs --corpus-only
 ```
 
-The second command updates only the 74 selected thumbnails. Neither command
+The second command updates only the 78 selected thumbnails. Neither command
 downloads assets or executes the upstream OpenSCAD application.
 
 ## Supported CC0 additions — 2026-11-14
 
-The offline gallery now contains 113 editable-source models. The new
+The offline gallery now contains 117 editable-source models. The new
 `supported-models-manifest.json` admits **Quarter cylinder**, **Square pyramid** and
 **Nested open frames** from Ghostkeeper/SlicerTestModels at pinned revision
 `e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d`. Sources are unmodified, including
@@ -234,7 +255,7 @@ STLs offline, checks pinned source/licence hashes, screens closed positive-volum
 meshes, and compares volumes with independent polygon geometry or rectangle-cell
 integration. `--write` regenerates the same outputs. New source or grant identities
 require a new review. `npm run library:previews:generate` renders actual evaluated
-geometry for all 113 gallery entries. Browsing and insertion use bundled bytes;
+geometry for all 117 gallery entries. Browsing and insertion use bundled bytes;
 research-only datasets and unsupported seeds are not gallery entries.
 
 STL screening is separate from Jolt qualification. These models do not carry a
