@@ -96,3 +96,14 @@ it('refuses root selection that could bypass an enclosing assertion guard',()=>{
  for(const source of ['n=2;assert(n>0)!cube(2);','n=2;module p(v){!cube(2);}p(assert(n>0)1);','n=2;translate([assert(n>0)0,0,0])!cube(2);'])expect(()=>importOpenSCAD(source)).toThrow('assertions combined with root modifier');
  expect(evaluate('cube(3);!cube(2);').volume).toBeCloseTo(8);
 });
+
+it('ignores text center as a warned unknown argument while keeping its assertion guard',()=>{
+ const omitted=evaluate('linear_extrude(2)text("A",size=10);');
+ for(const center of ['true','false']){
+  const result=evaluate(`linear_extrude(2)text("A",size=10,center=${center});`);
+  expect(result.volume).toBeCloseTo(omitted.volume);expect(result.bodies[0].bounds).toEqual(omitted.bodies[0].bounds);
+ }
+ expect(getOpenSCADImportWarnings(importOpenSCAD('linear_extrude(2)text("A",center=true);')).join(' ')).toContain('arguments are ignored');
+ rejectsEdit('n=2;linear_extrude(1)text("A",center=assert(n>0)true);');
+ expect(()=>importOpenSCAD('linear_extrude(1)text("A",invented=1);')).toThrow('text.invented');
+});

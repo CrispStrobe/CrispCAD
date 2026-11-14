@@ -81,8 +81,16 @@ export function importOpenSCAD(source:string):CodeProgram{
  }
  function skipValue(extraStops:string[]=[]):void{const stops=new Set([',',')',']',';',...extraStops]);let parens=0,brackets=0,questions=0;while(cursor<tokens.length){const n=peek()!;if(parens===0&&brackets===0&&stops.has(n)&&!(n===':'&&questions>0))break;if(n==='(')parens++;if(n===')'){if(!parens)break;parens--;}if(n==='[')brackets++;if(n===']'){if(!brackets)break;brackets--;}if(!parens&&!brackets){if(n==='?')questions++;if(n===':'&&questions)questions--;}take();}}
  function comprehension(depth:number):Value[]{
-  if(depth>32)limited(t('OpenSCAD array nesting limit exceeded'));expect('for');expect('(');const variable=take();
-  if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(variable.text)||variable.text==='$preview')unsupported('comprehension variable',variable.at);expect('=');
+  if(depth>32)limited(t('OpenSCAD array nesting limit exceeded'));expect('for');expect('(');
+  const bindings:{variable:{text:string;at:number};start:number;end:number}[]=[];
+  while(true){
+   const variable=take();if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(variable.text)||variable.text==='$preview'||bindings.some(b=>b.variable.text===variable.text))unsupported('comprehension variable',variable.at);expect('=');
+   const start=cursor;skipValue();if(cursor===start)fail(t('Expected a complete dimensional expression'));bindings.push({variable,start,end:cursor});if(bindings.length>8)limited(t('OpenSCAD construction limit exceeded'));if(peek()!==',')break;take();
+  }
+  expect(')');if(peek()==='if')unsupported('comprehension filters',tokens[cursor].at);
+  const begin=cursor,outer=locals,result:Value[]=[];let end:number|undefined;
+  const append=(values:Value[])=>{if(result.length+values.length>256)limited(t('OpenSCAD array limit exceeded'));result.push(...values);};
+  function input(variable:{text:string;at:number}):Value[]{
   const items:Value[]=[];
   const rangeNumber=(v:Value):number=>{const n=constant(v);if(typeof v!=='string'||v==='true'||v==='false'||n===undefined||!Number.isFinite(n)||Math.abs(n)>1e6)return unsupported('comprehension range must be finite and independent of parameters',variable.at);return n;};
   if(peek()==='['){take();if(peek()!==']'){
@@ -99,15 +107,25 @@ export function importOpenSCAD(source:string):CodeProgram{
     }
    }expect(']');
   }else{const list=value(depth+1);if(!Array.isArray(list))unsupported('comprehension requires a fixed-length vector',variable.at);if(assertionCondition([list]))unsupported('asserted comprehension input',variable.at);items.push(...list as Value[]);}
-  if(assertionCondition(items))unsupported('asserted comprehension input',variable.at);if(items.length>64)limited(t('Loop exceeds 64 values'));if(peek()===',')unsupported('multiple comprehension bindings',variable.at);expect(')');
-  if(['for','if','each'].includes(peek()!))unsupported('comprehension filters, each, or chained generators',variable.at);
-  const begin=cursor,outer=locals,result:Value[]=[];let end:number|undefined;
-  try{
-   if(!items.length){if(peek()===']')fail(t('Expected a complete dimensional expression'));skipValue();return result;}
-   for(const item of items){chargeValues();cursor=begin;locals=new Map(outer);locals.set(variable.text,item);result.push(value(depth+1));if(end!==undefined&&cursor!==end)unsupported('comprehension body',variable.at);end=cursor;if(result.length>256)limited(t('OpenSCAD array limit exceeded'));}
-   return result;
-  }finally{locals=outer;}
+  if(assertionCondition(items))unsupported('asserted comprehension input',variable.at);if(items.length>64)limited(t('Loop exceeds 64 values'));
+   return items;
+  }
+  function expand(index:number):void{
+   chargeValues();
+   if(index===bindings.length){
+    cursor=begin;
+    if(peek()==='for')append(comprehension(depth+1));
+    else if(peek()==='each'){take();const list=value(depth+1);if(!Array.isArray(list))unsupported('each requires a fixed-length vector');append(list as Value[]);}
+    else append([value(depth+1)]);
+    if(end!==undefined&&cursor!==end)unsupported('comprehension body');end=cursor;return;
+   }
+   const binding=bindings[index];cursor=binding.start;const items=input(binding.variable);if(cursor!==binding.end)unsupported('comprehension input',binding.variable.at);
+   const scope=locals;
+   try{for(const item of items){locals=new Map(scope);locals.set(binding.variable.text,item);expand(index+1);}}finally{locals=scope;}
+  }
+  try{expand(0);if(end===undefined){cursor=begin;if(peek()===']')fail(t('Expected a complete dimensional expression'));skipValue();}else cursor=end;return result;}finally{locals=outer;}
  }
+
  function value(depth=0,extraStops:string[]=[]):Value{chargeValues();
   if(depth>32)limited(t('OpenSCAD array nesting limit exceeded'));const stop=new Set([',',')',']',';',...extraStops]);
   const precedences:Record<string,number>={'||':1,'&&':2,'==':3,'!=':3,'<':4,'>':4,'<=':4,'>=':4,'+':5,'-':5,'*':6,'/':6,'%':6,'^':7};
@@ -309,7 +327,7 @@ return {named,positional,use,allowed};
    return `${name==='translate'?'move2d':name+'2d'}(${components!.join(', ')}, ${withSpecials(named,()=>profile(depth+1))})`;
   }
   expect(';');
-  if(name==='text'){allowed(['text','size','font','halign','valign','spacing','direction','language','script','$fn'],9);const content=use('text',0),requested=use('font',2,new TextValue('Liberation Sans'));const direction=use('direction',6,new TextValue('ltr'));if(!(direction instanceof TextValue)||direction.text!=='ltr')unsupported('text direction',token.at);warnings.add(t('Text uses bundled Droid fonts; source font metrics, styling and kerning can differ.'));const align=(key:string,fallback:string)=>{const v=use(key,key==='halign'?3:4,new TextValue(fallback));if(!(v instanceof TextValue))unsupported('text alignment',token.at);return JSON.stringify((v as TextValue).text);};const render=(text:Value|undefined,requested:Value|undefined):string=>{if(text instanceof ChoiceValue)return `choose2d(${text.condition}, ${render(text.yes,requested)}, ${render(text.no,requested)})`;if(requested instanceof ChoiceValue)return `choose2d(${requested.condition}, ${render(text,requested.yes)}, ${render(text,requested.no)})`;if(text instanceof UndefinedValue)return 'union2d()';if(!(text instanceof TextValue)||!(requested instanceof TextValue))return unsupported('text must resolve to a string',token.at);const font=requested.text.toLowerCase(),family=font.includes('mono')?'mono':font.includes('serif')?'serif':'sans';return `text2d(${JSON.stringify(text.text)}, ${scalar(use('size',1,'10'))}, ${JSON.stringify(family)}, ${align('halign','left')}, ${align('valign','baseline')}, ${scalar(use('spacing',5),'1')}, 8)`;};return render(content,requested);}
+  if(name==='text'){if(named.has('center'))warnings.add(t('Extra or unknown module/function arguments are ignored, as in OpenSCAD.'));allowed(['text','size','font','halign','valign','spacing','direction','language','script','$fn','center'],9);const content=use('text',0),requested=use('font',2,new TextValue('Liberation Sans'));const direction=use('direction',6,new TextValue('ltr'));if(!(direction instanceof TextValue)||direction.text!=='ltr')unsupported('text direction',token.at);warnings.add(t('Text uses bundled Droid fonts; source font metrics, styling and kerning can differ.'));const align=(key:string,fallback:string)=>{const v=use(key,key==='halign'?3:4,new TextValue(fallback));if(!(v instanceof TextValue))unsupported('text alignment',token.at);return JSON.stringify((v as TextValue).text);};const render=(text:Value|undefined,requested:Value|undefined):string=>{if(text instanceof ChoiceValue)return `choose2d(${text.condition}, ${render(text.yes,requested)}, ${render(text.no,requested)})`;if(requested instanceof ChoiceValue)return `choose2d(${requested.condition}, ${render(text,requested.yes)}, ${render(text,requested.no)})`;if(text instanceof UndefinedValue)return 'union2d()';if(!(text instanceof TextValue)||!(requested instanceof TextValue))return unsupported('text must resolve to a string',token.at);const font=requested.text.toLowerCase(),family=font.includes('mono')?'mono':font.includes('serif')?'serif':'sans';return `text2d(${JSON.stringify(text.text)}, ${scalar(use('size',1,'10'))}, ${JSON.stringify(family)}, ${align('halign','left')}, ${align('valign','baseline')}, ${scalar(use('spacing',5),'1')}, 8)`;};return render(content,requested);}
   if(name==='polygon'){allowed(['points','paths','convexity'],2);const points=use('points',0),paths=use('paths',1);const render=(points:Value|undefined,paths:Value|undefined):string=>{if(points instanceof ChoiceValue)return `choose2d(${points.condition}, ${render(points.yes,paths)}, ${render(points.no,paths)})`;if(paths instanceof ChoiceValue)return `choose2d(${paths.condition}, ${render(points,paths.yes)}, ${render(points,paths.no)})`;if(points instanceof UndefinedValue||Array.isArray(points)&&points.length<3){warnings.add(t('Undefined or empty polygon inputs contribute no geometry.'));return 'union2d()';}if(!Array.isArray(points)||!points.every(p=>Array.isArray(p)&&p.length===2))return fail(t('Expected an OpenSCAD polygon point list'),token.at);if(paths!==undefined&&!(paths instanceof UndefinedValue)&&(!Array.isArray(paths)||!paths.every(p=>Array.isArray(p))))unsupported('polygon paths',token.at);return `polygon2d([${points.map(row=>'['+(row as Value[]).map(v=>scalar(v)).join(',')+']').join(',')}]${Array.isArray(paths)?', ['+paths.map(row=>'['+(row as Value[]).map(v=>scalar(v)).join(',')+']').join(',')+']':''})`;};return render(points,paths);}
   if(name==='square'){allowed(['size','center'],2);const raw=use('size',0,'1'),size=typeof raw==='string'?[raw,raw]:raw;if(!Array.isArray(size)||size.length!==2||!size.every(v=>typeof v==='string'))fail(t('Expected an OpenSCAD square size'),token.at);return positiveShape(`rectangle2d(${(size as string[]).join(', ')}, ${scalar(use('center',1,'false'))})`,size as string[],true);}
   allowed(['r','d','center','$fn','$fa','$fs'],1);if(named.has('d')&&(named.has('r')||use('r',0)!==undefined))unsupported('circle: both radius and diameter',token.at);return `circle2d(${named.has('d')?'('+scalar(named.get('d'))+') / 2':scalar(use('r',0,'1'))}, ${specialSegments(named,named.has('d')?'('+scalar(named.get('d'))+') / 2':scalar(use('r',0,'1')))})`;
