@@ -14,7 +14,7 @@ type Definition={scope?:Map<string,ScopeValue>;moduleScope:Map<string,Definition
 /** Bounded declarative OpenSCAD subset. Unsupported constructs fail closed. */
 export function importOpenSCAD(source:string):CodeProgram{
  if(typeof source!=='string')throw new CadCodeError(t('Expected source text'),0,'');
- const tokens:{text:string;at:number}[]=[];let position=0,cursor=0,statements=0,fn='48';const warnings=new Set<string>(),rootObjects:string[]=[];const localCache=new WeakMap<LocalBinding,Value>();const assignments=new Map<string,string>();
+ const tokens:{text:string;at:number}[]=[];let position=0,cursor=0,statements=0,fn='48',fullRenderPreviewUsed=false;const warnings=new Set<string>(),rootObjects:string[]=[];const localCache=new WeakMap<LocalBinding,Value>();const assignments=new Map<string,string>();
  const globals=new Map<string,LocalBinding>(),globalCache=new Map<string,Value>(),globalDeclarations=new Map<number,number>(),nativeNames=new Map<string,string>();
  const vectors=new Map<string,Value>();let locals=new Map<string,ScopeValue>();const resolving=new Set<LocalBinding>();
  let modules=new Map<string,Definition>(),functions=new Map<string,Definition>();let functionDepth=0;
@@ -29,6 +29,7 @@ export function importOpenSCAD(source:string):CodeProgram{
  const take=()=>{const next=tokens[cursor++];if(!next)fail(t('Unexpected end of source'));return next!;};
  const expect=(value:string)=>{if(peek()!==value)fail(t`Expected “${value}”`);take();};
  const unsupported=(name:string,at=tokens[cursor]?.at??source.length):never=>{throw new CadCodeError(t`Unsupported OpenSCAD feature “${name}”`,at,source,'unsupported-feature');};
+ for(let i=0;i<tokens.length;i++)if(tokens[i].text==='$preview'&&tokens[i+1]?.text==='=')unsupported('assignment to readonly $preview',tokens[i].at);
  function localValue(name:string):Value|undefined{chargeValues();
   const binding=locals.get(name);if(binding===undefined&&globals.has(name)){const v=globalValue(name);return typeof v==='string'&&!name.startsWith('$')?nativeNames.get(name)!:v;}if(!(binding instanceof LocalBinding))return binding;const cached=localCache.get(binding);if(cached!==undefined)return cached;
   if(resolving.has(binding)){if(binding.outer?.has(name)){const previous=locals;locals=binding.outer;try{return localValue(name);}finally{locals=previous;}}if(globals.has(name)){const result=globalValue(name);return typeof result==='string'&&!name.startsWith('$')?nativeNames.get(name)!:result;}if(name==='$fn')return '0';return new UndefinedValue('local variable dependency cycle');}
@@ -57,7 +58,7 @@ export function importOpenSCAD(source:string):CodeProgram{
   if(typeof a!=='string'||typeof b!=='string')unsupported('numeric operation on string or undef');
   const result=op==='^'?`pow(${a}, ${b})`:`(${a}) ${op} (${b})`,n=constant(result);if(n!==undefined&&Number.isFinite(n))return ['==','!=','<','>','<=','>=','&&','||'].includes(op)?n?'true':'false':String(n);return bounded(result);
  }
- function indexValue(v:Value,index:Value):Value{chargeValues();if(v instanceof ChoiceValue)return conditional(v.condition,indexValue(v.yes,index),indexValue(v.no,index));const key=scalar(index),n=constant(key),items=v instanceof TextValue?[...v.text].map(ch=>new TextValue(ch)):Array.isArray(v)?v:undefined;if(!items)return new UndefinedValue();if(n!==undefined)return Number.isInteger(n)&&n>=0&&n<items.length?items[n]:new UndefinedValue();let out:Value=new UndefinedValue();for(let i=items.length-1;i>=0;i--)out=conditional(`(${key}) == ${i}`,items[i],out);return out;}
+ function indexValue(v:Value,index:Value):Value{chargeValues();if(v instanceof ChoiceValue)return conditional(v.condition,indexValue(v.yes,index),indexValue(v.no,index));const key=scalar(index);if(key==='true'||key==='false')return unsupported('boolean vector index');const n=constant(key),items=v instanceof TextValue?[...v.text].map(ch=>new TextValue(ch)):Array.isArray(v)?v:undefined;if(!items)return new UndefinedValue();if(n!==undefined)return Number.isInteger(n)&&n>=0&&n<items.length?items[n]:new UndefinedValue();let out:Value=new UndefinedValue();for(let i=items.length-1;i>=0;i--)out=conditional(`(${key}) == ${i}`,items[i],out);return out;}
  function builtin(name:string,args:Value[]):Value{chargeValues();
   const variant=args.findIndex(v=>v instanceof ChoiceValue);if(variant>=0){const v=args[variant] as ChoiceValue;return conditional(v.condition,builtin(name,args.map((a,i)=>i===variant?v.yes:a)),builtin(name,args.map((a,i)=>i===variant?v.no:a)));}
   if(name==='len'){if(args.length!==1||!Array.isArray(args[0])&&!(args[0] instanceof TextValue))unsupported('len argument');return String(args[0] instanceof TextValue?[...args[0].text].length:(args[0] as Value[]).length);}
@@ -82,7 +83,7 @@ export function importOpenSCAD(source:string):CodeProgram{
    else if(token==='undef'){take();result=new UndefinedValue();}
    else if(token&&functions.has(token)&&peek(1)==='(')result=callFunction();
    else if(token&&peek(1)==='('){take();take();const args:Value[]=[];while(peek()!==')'){args.push(value(depth+1));if(peek()!==',')break;take();}expect(')');result=builtin(token,args);}
-   else if(token&&/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(token)){take();result=localValue(token)??vectors.get(token)??(token==='PI'&&!declaredGlobals.has('PI')?'3.141592653589793':token==='true'||token==='false'?token:token==='$fn'||token==='$t'||token==='$children'?'0':token==='$preview'?'false':new UndefinedValue());}
+   else if(token&&/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(token)){take();if(token==='$preview')fullRenderPreviewUsed=true;result=localValue(token)??vectors.get(token)??(token==='PI'&&!declaredGlobals.has('PI')?'3.141592653589793':token==='true'||token==='false'?token:token==='$fn'||token==='$t'||token==='$children'?'0':token==='$preview'?'false':new UndefinedValue());}
    else if(token&&/^(?:\d|\.\d)/.test(token)){take();result=token;}
    else return fail(t('Expected a complete dimensional expression'));
    while(peek()==='['||peek()==='.'){if(peek()==='.'){take();const component=take();const index=['x','y','z'].indexOf(component.text);if(index<0)unsupported('vector component',component.at);result=indexValue(result,String(index));}else{take();const index=value(depth+1);expect(']');result=indexValue(result,index);}}return result;
@@ -98,7 +99,7 @@ export function importOpenSCAD(source:string):CodeProgram{
  const definitions=new Map<number,number>(),declaredGlobals=new Set<string>();
  function scanDefinition(scope?:Map<string,ScopeValue>){const begin=cursor,kind=take().text,collection=kind==='module'?modules:functions;const name=take();if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name.text))unsupported(`${kind} name`,name.at);expect('(');
   const parameters:{name:string;start?:number;end?:number}[]=[];
-  while(peek()!==')'){const parameter=take();if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(parameter.text)||parameters.some(p=>p.name===parameter.text))unsupported('module parameter',parameter.at);
+  while(peek()!==')'){const parameter=take();if(parameter.text==='$preview')unsupported('readonly $preview parameter',parameter.at);if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(parameter.text)||parameters.some(p=>p.name===parameter.text))unsupported('module parameter',parameter.at);
    const entry:{name:string;start?:number;end?:number}={name:parameter.text};
    if(peek()==='='){take();entry.start=cursor;let depth=0;while(cursor<tokens.length){const n=peek()!;if(depth===0&&(n===','||n===')'))break;if(n==='('||n==='[')depth++;if(n===')'||n===']')depth--;if(depth<0||depth>32)limited(t('Expression nesting exceeds 32'));take();}entry.end=cursor;if(entry.start===entry.end)fail(t('Expected a complete dimensional expression'));}
    parameters.push(entry);if(parameters.length>64)limited(t('OpenSCAD construction limit exceeded'));if(peek()!==',')break;take();
@@ -267,7 +268,7 @@ return {named,positional,use,allowed};
  }
  let constructionAt=0;const shapes:string[]=[];while(cursor<tokens.length){const end=definitions.get(cursor)??globalDeclarations.get(cursor);if(end!==undefined){cursor=end;continue;}constructionAt=tokens[cursor]?.at??0;shapes.push(shape());}
  if(!shapes.length)fail(t('OpenSCAD block contains no supported solid'));
- const program:CodeProgram={version:1,language:'brickwright-cad-script',parameters:{},source:`// Converted from the supported OpenSCAD subset.\n// Curved and twisted surfaces use the native kernel tessellation.\n${[...warnings].map(w=>'// Import warning: '+JSON.stringify(w)).join('\n')}\n${warnings.has(t('Source colours and transparency are not retained; solid geometry is preserved.'))?'// Appearance colors omitted; solid geometry retained.\n':''}${warnings.has(t('Preview highlights are omitted; rendered geometry is retained.'))?'// Preview highlights omitted; solid geometry retained.\n':''}${[...assignments].map(([name,v])=>`param ${name}: scalar = ${v};`).join('\n')}\nreturn ${union(rootObjects.length?rootObjects:shapes)};\n`};try{compileCode(program);}catch(error){if(error instanceof CadCodeError)throw new CadCodeError(t`Converted OpenSCAD construction: ${error.detail}`,constructionAt,source,error.code);throw error;}return program;
+ const program:CodeProgram={version:1,language:'brickwright-cad-script',parameters:{},source:`// Converted from the supported OpenSCAD subset.\n// Curved and twisted surfaces use the native kernel tessellation.\n${fullRenderPreviewUsed?'// Full-render import context: $preview = false.\n':''}${[...warnings].map(w=>'// Import warning: '+JSON.stringify(w)).join('\n')}\n${warnings.has(t('Source colours and transparency are not retained; solid geometry is preserved.'))?'// Appearance colors omitted; solid geometry retained.\n':''}${warnings.has(t('Preview highlights are omitted; rendered geometry is retained.'))?'// Preview highlights omitted; solid geometry retained.\n':''}${[...assignments].map(([name,v])=>`param ${name}: scalar = ${v};`).join('\n')}\nreturn ${union(rootObjects.length?rootObjects:shapes)};\n`};try{compileCode(program);}catch(error){if(error instanceof CadCodeError)throw new CadCodeError(t`Converted OpenSCAD construction: ${error.detail}`,constructionAt,source,error.code);throw error;}return program;
 }
 
 /** Conversion losses are retained in generated source and exposed to every host. */

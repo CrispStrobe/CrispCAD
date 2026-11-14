@@ -34,12 +34,26 @@ become numeric CAD Script expressions. Constant palettes use a separate tag and
 contain only literal color strings or nested palettes. A palette index must be a
 nonnegative integer literal or a module-local binding/argument with literal
 integer provenance; computed indices and global parameter lookup are rejected.
-Numeric vector indexing remains literal-only. Palette selection ends at the same
+Numeric vector indexing accepts that same literal-provenance scope. Palette selection ends at the same
 validated `color()` endpoint and omission disclosure. Mixed numeric/color arrays,
 string indexing, arithmetic, functions, loops, global color data, and numeric
 coercion remain unsupported. Existing 256-item/32-depth limits still apply;
 local-binding evaluation and color data construction also share an 8,192-step
 budget, charged before recursive alias evaluation to bound branching aliases.
+
+Source conversion uses the full-render context: the read-only `$preview` builtin
+is `false`, and a note is added to converted CAD Script only when the builtin is
+read. Source assignments, parameter/named-argument overrides, and dynamic index
+use are rejected. Exported OpenSCAD/JSCAD snapshots contain explicit resolved
+facet counts, so they do not depend on preview mode. This adds no UI preview-mode
+setting. Numeric and palette indices may use literal integer module defaults,
+arguments or lexical local aliases; computed, global, loop and function-derived
+indices remain unsupported. Function parameter indices do not acquire module
+argument provenance. Numeric coordinate expressions retain their existing units,
+parameter dependencies and bounds, and color values cannot supply coordinates.
+The fixed context follows the official [`$preview` documentation](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#$preview)
+for full rendering; this subset diagnoses upstream-style overrides instead of
+supporting a configurable source context.
 
 `translate`, `rotate`, and `scale` accept a scoped `$fn` argument for their child
 geometry, including calls to local modules. Nested scopes restore the enclosing
@@ -79,36 +93,28 @@ to make missing capabilities reproducible, then extend coverage from real files.
 
 ## Retained parameters and outputs
 
-OpenSCAD scalar assignments become editable native parameters. Modules expand
-symbolically: changing a retained parameter recomputes every expanded use, rather
-than baking it into a snapshot. Named vectors retain their scalar dependencies;
-vector indices currently require literal nonnegative integers. Module defaults
-use the definition scope; regular caller arguments do not leak into called modules.
-Special `$fn` parameters propagate through calls. Direct module definitions are
-hoisted within each lexical block and capture that block's bindings and module
-registry. Forward references and inner name shadowing stay local to the block;
-top-level helpers retain their own declaration environment. Duplicate module
-definitions in one block are rejected. Calls restore local bindings, module
-registries and source position, including on failure, and retain the existing
-recursion, statement and expansion limits. Nested functions, `children()`, and
-module calls within 2D extrusion profiles remain explicit gaps. These scope rules
-follow the official [language scope documentation](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Scope).
-User functions expand scalar or vector results,
-including generated polygon points, while retaining scalar dependencies.
+OpenSCAD numeric assignments become editable native parameters. Modules and
+functions expand symbolically, retaining dependencies. Nested definitions capture
+their declaring variable/function/module environments; defaults use the definition
+scope. Duplicate definitions and assignments use the final declaration in that
+scope. `children()` evaluates caller geometry in the dimensional context of its
+consumer. String, vector and component/index expressions retain supported numeric
+selectors. Missing values can be guarded with `is_undef`; unselected constant
+branches are not evaluated. `$fn` and other supported special controls pass through
+module and transform scopes. `$preview` is a read-only full-render false value.
 
 Module and operator block assignments use lexical scope. The final assignment
 applies throughout that scope, so geometry can precede its local declarations.
 Captured bindings resolve in their defining scope even when an inner scope shadows
 the same name. Cycles and dependency chains deeper than 32 are diagnosed. Anonymous
 blocks have different scope behavior in OpenSCAD: assignments there are explicitly
-rejected until scope flattening is implemented. Global assignments still need to
-precede geometry and cannot be reassigned. Unused declarations/definitions need
+rejected until scope flattening is implemented. File assignments are hoisted and their final definitions apply even after geometry. Unused declarations/definitions need
 not produce geometry; a library-only file is not an instantiable solid.
 
 Range and scalar-list loops lower to native forRange/forValues templates and
 recompute their instance counts, positions and dimensions after parameter edits.
 Fixed vector-list loops expand symbolically. Loops allow at most 64 values each,
-with global expansion/node/face budgets and a 4,096-evaluation guard against nested
+with global expansion/node/face budgets and a 16,384-evaluation guard against nested
 explosion. Two-component descending ranges retain the documented legacy OpenSCAD
 endpoint-swapping behavior; explicit stepped ranges remain directional.
 
@@ -304,7 +310,7 @@ shows a brief status and collapsed notes. Source colours/transparency and previe
 highlights are omitted explicitly; render-disabled/background geometry is excluded.
 Actual kernel resource refusals carry `resource-limit` through feature diagnostics.
 
-The integrated offline library includes the VPS agent's 72 reviewed MIT source
+The integrated offline library includes the VPS agent's 74 reviewed MIT source
 models alongside the existing 39 entries. A corrected scoped-$fn walking-stick
 mesh uses a new derivative path; the previous file remains byte-identical for
 historical provenance. Archived sources are unchanged and qualification is
