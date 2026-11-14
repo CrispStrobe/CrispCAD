@@ -184,9 +184,14 @@
     },
     "iPadOS": {
       "build": 12,
-      "status": "archive/export succeeded; two WLAN installation attempts disconnected before installation",
+      "status": "Installed in place over WLAN on third attempt; iPadOS refused launch because device was locked",
       "transport": "localNetwork",
       "device": "F0E7765C-F625-51B0-8F56-1E04F3B02B70"
+    },
+    "merge": {
+      "pr": 32,
+      "main": "600619c206c22f8861d80d5c72b9544801a4998c",
+      "treeMatchesValidatedHead": true
     }
   }
 }

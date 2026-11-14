@@ -731,7 +731,7 @@ data was retained; no uninstall or storage reset was performed. This build conta
 the retained 2D/3D resize and converter checkpoint with 144 gallery entries.
 Later loft and library integration work follows this delivered source.
 
-## Cube and screw families — Mac build 22 / prepared iPad build 12
+## Cube and screw families — Mac build 22 / iPad build 12
 
 Both bundles were built from clean source
 `7f8b75e6ccccf70d96d49e1c32c89d2e50e8e058`. They include linked Cube edges,
@@ -744,6 +744,8 @@ Native verification covers trackpad magnification, menus, clipboard, model sourc
 gallery thumbnails and history retention. Installation retained app data.
 
 **iPad build 12** archived and exported with the existing Brickwright signing
-keychain. The paired iPad reports `transportType: localNetwork`, but two attempts
-to install disconnected before installation. This receipt does not claim delivery
-of build 12; waking/unlocking the device was requested before another attempt.
+keychain. After two tunnel disconnects, the third attempt installed successfully
+in place over WLAN (`transportType: localNetwork`) on device
+`F0E7765C-F625-51B0-8F56-1E04F3B02B70`. App data was retained. iPadOS refused
+launch because the device was locked; unlocking is still needed to inspect it.
+The feature and validation changes are merged in PR #32, main `600619c`.
