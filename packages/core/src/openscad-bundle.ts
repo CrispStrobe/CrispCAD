@@ -23,6 +23,8 @@ export interface OpenSCADBundleOriginal extends OpenSCADBundleFile {
 }
 export interface OpenSCADIncludeOccurrence {
   readonly kind?: 'use';
+  /** Present only when the relative candidate was absent and a supplied root file matched. */
+  readonly resolution?: 'bundle-root';
   readonly fromPath: string;
   readonly path: string;
   readonly sourceOffset: number;
@@ -183,10 +185,17 @@ export async function importOpenSCADBundle(bundle: OpenSCADSourceBundle): Promis
         const close = source.indexOf('>', open + 1);
         if (close < 0) fail('Unclosed include path', path, start, source);
         const raw = source.slice(open + 1, close);
-        const target = normalizePath(raw, path.split('/').slice(0, -1), path, start, source);
+        let target = normalizePath(raw, path.split('/').slice(0, -1), path, start, source);
+        let resolution: 'bundle-root' | undefined;
+        // A deterministic second candidate within the verified virtual files only.
+        // Parent traversal remains relative-only; no ambient library search or aliases.
+        if (!files.has(target) && !raw.split('/').includes('..')) {
+          const candidate = normalizePath(raw, [], path, start, source);
+          if (files.has(candidate)) {target = candidate; resolution = 'bundle-root';}
+        }
         if (!files.has(target)) fail(`Included source file is missing: ${target}`, path, start, source);
         if (includes.length >= OPENSCAD_BUNDLE_LIMITS.includes) fail('Include occurrences exceed the existing token budget', path, start, source, 'resource-limit');
-        includes.push(Object.freeze({...(token === 'use' ? {kind: 'use' as const} : {}), fromPath: path, path: target, sourceOffset: start, ...location(file.lines, start), depth: depth + 1}));
+        includes.push(Object.freeze({...(resolution ? {resolution} : {}), ...(token === 'use' ? {kind: 'use' as const} : {}), fromPath: path, path: target, sourceOffset: start, ...location(file.lines, start), depth: depth + 1}));
         append(source.slice(chunkStart, start), path, chunkStart);
         // Boundaries prevent an included EOF comment or adjacent identifier from swallowing caller code.
         append('\n', path, start);

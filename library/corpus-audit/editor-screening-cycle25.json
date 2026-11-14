@@ -1,0 +1,493 @@
+{
+  "version": 1,
+  "capturedOn": "2026-11-14",
+  "baselineDeliveredMain": "8351a862029486a7922f370972f715426f961881",
+  "scope": "Smallest feasible ranked alternate: exact authored Scene_City_Street default and five independently reviewed dependencies. One root, not six admissions. No source/parameter/fragment/placement overrides or library aliases.",
+  "rankedGapQuestion": {
+    "confirmedLookupAdmissionCount": 0,
+    "confirmedVersionNumAdmissionCount": 0,
+    "lookup": {
+      "root": "threads-scad/threads.scad",
+      "actualFirstBlocker": "lookup (cycle24 before.json)",
+      "downstreamStaticBudgetEvidence": "Authored Demo includes MetricBoltSet(8,8). ScrewThread uses ceil(2*pi*(8+.25*.4)/2/.2)=128 points per loop, beyond64. This is a static source bound, not a newly rendered result. No retry or implementation attempted."
+    },
+    "versionNum": {
+      "roots": [
+        "thehans--FunctionalOpenSCAD/functional.scad",
+        "thehans--FunctionalOpenSCAD/double_fillet.scad"
+      ],
+      "actualFirstBlocker": "version_num (cycle20/cycle24 reports)",
+      "downstreamStaticBudgetEvidence": "functional.scad first sphere($fn=30): floor((30+1)/2)*30=450 flattened vertices, beyond256. double_fillet has no confirmed all-other-gates pass. No invented compatibility version, branch override or expected admission credit."
+    },
+    "selectedAlternate": {
+      "gap": "Resolve exact supplied bundle-root dependency only after the relative candidate is absent",
+      "roots": [
+        "AngeloNicoli--OpenSCAD-Snippet/Projects/Scene_City_Street.scad"
+      ],
+      "rootCount": 1,
+      "sourceAndDependencyBytes": 7975,
+      "expectedAdditionalRoots": 0
+    }
+  },
+  "summary": {
+    "cohortRoots": 1,
+    "beforePass": 0,
+    "beforeFail": 1,
+    "afterPass": 1,
+    "afterFail": 0,
+    "geometryProduced": 1,
+    "strictStlPass": 1,
+    "editorPass": 1,
+    "candidateSources": 105,
+    "candidateDistinctStlHashes": 103,
+    "candidatePreviews": 144,
+    "baselineDeliveredSources": 104,
+    "baselineDistinctStlHashes": 102,
+    "deltaSources": 1,
+    "deltaDistinctStlHashes": 1
+  },
+  "before": {
+    "version": 1,
+    "phase": "before",
+    "head": "81f838d6f99eed4453c42db32232a5f86629fbd9",
+    "policy": {
+      "timeoutMs": 5000,
+      "maxTriangles": 10000,
+      "maxExtentMm": 200,
+      "defaults": "unchanged authored root"
+    },
+    "runtimeBefore": {
+      "packages/core/dist/openscad-import.js": "da1c694fd064c963a87d29b1aa57c9b8ee0372958ad3a64c21676b411c2da844",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeAfter": {
+      "packages/core/dist/openscad-import.js": "da1c694fd064c963a87d29b1aa57c9b8ee0372958ad3a64c21676b411c2da844",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeStable": true,
+    "results": [
+      {
+        "name": "Scene_City_Street",
+        "files": [
+          {
+            "path": "Projects/Scene_City_Street.scad",
+            "sha256": "2b33c97c3eab119a88159929bfe6927510636f0d626ac57ca025995087653743",
+            "bytes": 363
+          },
+          {
+            "path": "Asset_SCAD/Street_01.scad",
+            "sha256": "4901bec62feb143eafb7758557b6f88942234771e06ed4a98d596d76e54da37d",
+            "bytes": 1194
+          },
+          {
+            "path": "Asset_SCAD/Street_02.scad",
+            "sha256": "9c114a059e7a07b137e11bde20c9ddc047631de9309ec8b99f2b4fc556da3060",
+            "bytes": 1703
+          },
+          {
+            "path": "Asset_SCAD/Street_03.scad",
+            "sha256": "5e2efcd002e43aafc5ad52fecb0f5425413872fb0e38169ef98b45d22675ac9d",
+            "bytes": 1303
+          },
+          {
+            "path": "Asset_SCAD/Street_04.scad",
+            "sha256": "9560ea338991cc8a202a620a3ede99e199120f253dd7cff4d7d84111c376d033",
+            "bytes": 1737
+          },
+          {
+            "path": "Asset_SCAD/Street_05.scad",
+            "sha256": "26b28e095a3a9d571a5842152baaf7e6a247e45d185173a1ddfd525f3d953ec8",
+            "bytes": 1675
+          }
+        ],
+        "phase": "convert",
+        "status": "failed",
+        "error": {
+          "code": "invalid-source",
+          "message": "Line 1, column 1: Projects/Scene_City_Street.scad: Included source file is missing: Projects/Asset_SCAD/Street_01.scad",
+          "path": "Projects/Scene_City_Street.scad",
+          "line": 1,
+          "column": 1
+        }
+      }
+    ]
+  },
+  "diagnostic": {
+    "version": 1,
+    "phase": "diagnostic-root-fallback",
+    "head": "81f838d6f99eed4453c42db32232a5f86629fbd9",
+    "policy": {
+      "timeoutMs": 5000,
+      "maxTriangles": 10000,
+      "maxExtentMm": 200,
+      "defaults": "unchanged authored root"
+    },
+    "runtimeBefore": {
+      "packages/core/dist/openscad-import.js": "da1c694fd064c963a87d29b1aa57c9b8ee0372958ad3a64c21676b411c2da844",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeAfter": {
+      "packages/core/dist/openscad-import.js": "da1c694fd064c963a87d29b1aa57c9b8ee0372958ad3a64c21676b411c2da844",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeStable": true,
+    "results": [
+      {
+        "name": "Scene_City_Street",
+        "files": [
+          {
+            "path": "Projects/Scene_City_Street.scad",
+            "sha256": "2b33c97c3eab119a88159929bfe6927510636f0d626ac57ca025995087653743",
+            "bytes": 363
+          },
+          {
+            "path": "Asset_SCAD/Street_01.scad",
+            "sha256": "4901bec62feb143eafb7758557b6f88942234771e06ed4a98d596d76e54da37d",
+            "bytes": 1194
+          },
+          {
+            "path": "Asset_SCAD/Street_02.scad",
+            "sha256": "9c114a059e7a07b137e11bde20c9ddc047631de9309ec8b99f2b4fc556da3060",
+            "bytes": 1703
+          },
+          {
+            "path": "Asset_SCAD/Street_03.scad",
+            "sha256": "5e2efcd002e43aafc5ad52fecb0f5425413872fb0e38169ef98b45d22675ac9d",
+            "bytes": 1303
+          },
+          {
+            "path": "Asset_SCAD/Street_04.scad",
+            "sha256": "9560ea338991cc8a202a620a3ede99e199120f253dd7cff4d7d84111c376d033",
+            "bytes": 1737
+          },
+          {
+            "path": "Asset_SCAD/Street_05.scad",
+            "sha256": "26b28e095a3a9d571a5842152baaf7e6a247e45d185173a1ddfd525f3d953ec8",
+            "bytes": 1675
+          }
+        ],
+        "phase": "stl",
+        "warnings": [
+          "Source colours and transparency are not retained; solid geometry is preserved."
+        ],
+        "volumeMm3": 9.927364671286085,
+        "mesh": {
+          "sha256": "27c31bed500181d6207e8b020897515bb79cbe264c2387626c00dc79d3e5118f",
+          "bytes": 42184
+        },
+        "screening": {
+          "fileSha256": "27c31bed500181d6207e8b020897515bb79cbe264c2387626c00dc79d3e5118f",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 842,
+          "boundsMm": {
+            "min": [
+              -6.099999904632568,
+              -1.100000023841858,
+              -0.10999999940395355
+            ],
+            "max": [
+              2.299999952316284,
+              7.300000190734863,
+              0.10999999940395355
+            ]
+          },
+          "signedVolumeMm3": 9.927364844426387,
+          "quality": {
+            "fileSha256": "27c31bed500181d6207e8b020897515bb79cbe264c2387626c00dc79d3e5118f",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified"
+      }
+    ]
+  },
+  "after": {
+    "version": 1,
+    "phase": "final",
+    "head": "81f838d6f99eed4453c42db32232a5f86629fbd9",
+    "policy": {
+      "timeoutMs": 5000,
+      "maxTriangles": 10000,
+      "maxExtentMm": 200,
+      "defaults": "unchanged authored root"
+    },
+    "runtimeBefore": {
+      "packages/core/dist/openscad-bundle.js": "f23b85b039dd0d3e11a685331cbf28de7d6e261e63da9b40323eb634b313c9e6",
+      "packages/core/dist/openscad-import.js": "da1c694fd064c963a87d29b1aa57c9b8ee0372958ad3a64c21676b411c2da844",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeAfter": {
+      "packages/core/dist/openscad-bundle.js": "f23b85b039dd0d3e11a685331cbf28de7d6e261e63da9b40323eb634b313c9e6",
+      "packages/core/dist/openscad-import.js": "da1c694fd064c963a87d29b1aa57c9b8ee0372958ad3a64c21676b411c2da844",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeStable": true,
+    "results": [
+      {
+        "name": "Scene_City_Street",
+        "files": [
+          {
+            "path": "Projects/Scene_City_Street.scad",
+            "sha256": "2b33c97c3eab119a88159929bfe6927510636f0d626ac57ca025995087653743",
+            "bytes": 363
+          },
+          {
+            "path": "Asset_SCAD/Street_01.scad",
+            "sha256": "4901bec62feb143eafb7758557b6f88942234771e06ed4a98d596d76e54da37d",
+            "bytes": 1194
+          },
+          {
+            "path": "Asset_SCAD/Street_02.scad",
+            "sha256": "9c114a059e7a07b137e11bde20c9ddc047631de9309ec8b99f2b4fc556da3060",
+            "bytes": 1703
+          },
+          {
+            "path": "Asset_SCAD/Street_03.scad",
+            "sha256": "5e2efcd002e43aafc5ad52fecb0f5425413872fb0e38169ef98b45d22675ac9d",
+            "bytes": 1303
+          },
+          {
+            "path": "Asset_SCAD/Street_04.scad",
+            "sha256": "9560ea338991cc8a202a620a3ede99e199120f253dd7cff4d7d84111c376d033",
+            "bytes": 1737
+          },
+          {
+            "path": "Asset_SCAD/Street_05.scad",
+            "sha256": "26b28e095a3a9d571a5842152baaf7e6a247e45d185173a1ddfd525f3d953ec8",
+            "bytes": 1675
+          }
+        ],
+        "phase": "stl",
+        "warnings": [
+          "Source colours and transparency are not retained; solid geometry is preserved."
+        ],
+        "volumeMm3": 9.927364671286085,
+        "mesh": {
+          "sha256": "27c31bed500181d6207e8b020897515bb79cbe264c2387626c00dc79d3e5118f",
+          "bytes": 42184
+        },
+        "screening": {
+          "fileSha256": "27c31bed500181d6207e8b020897515bb79cbe264c2387626c00dc79d3e5118f",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 842,
+          "boundsMm": {
+            "min": [
+              -6.099999904632568,
+              -1.100000023841858,
+              -0.10999999940395355
+            ],
+            "max": [
+              2.299999952316284,
+              7.300000190734863,
+              0.10999999940395355
+            ]
+          },
+          "signedVolumeMm3": 9.927364844426387,
+          "quality": {
+            "fileSha256": "27c31bed500181d6207e8b020897515bb79cbe264c2387626c00dc79d3e5118f",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified"
+      }
+    ]
+  },
+  "licenceAndContentReview": {
+    "repository": "AngeloNicoli--OpenSCAD-Snippet",
+    "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+    "grant": "MIT",
+    "evidencePath": "library/evidence/corpus-selection-MIT-LICENSE.txt",
+    "evidenceSha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+    "review": "Full authored root read and five exact prior independently reviewed MIT dependency originals retained. Root uses only these five files. No conflicting grants or external data/assets. Every dependency retains its own source URL, hash, author and accepted full MIT grant. Dependency originals reuse their existing immutable paths, with no extra source admission count."
+  },
+  "implementation": "Containing-file relative resolution takes precedence. Only when absent, paths without any parent traversal try the exact supplied bundle-root path. All inputs verified before resolution. No ambient lookup/aliases; path escapes, duplicate paths, original/expanded byte/token/depth/occurrence/cycle checks and scoped use behavior remain unchanged. Fallback records resolution=bundle-root.",
+  "editorEvidence": {
+    "test": "tests/model-library-city.test.ts",
+    "result": "PASS",
+    "checks": [
+      "Actual offline catalogue/source-bundle insertion",
+      "Positive geometry and exact cold-qualified STL hash",
+      "Four strict STL screens at original10000triangle/200mm policy",
+      "Valid native code scale edit doubles bounds and multiplies volume8",
+      "Invalid assertion edit leaves document, full session state and redo unchanged",
+      "All five dependency grants and root identity in provenance and STL attribution sidecar",
+      "History-inclusive serialization round trip and exact undo/redo"
+    ]
+  },
+  "preservation": {
+    "completePriorRecords": 104,
+    "priorPreviews": 143,
+    "allPriorAngelo96RecordsEqual": true,
+    "allPriorPreviewValuesEqual": true,
+    "unchangedFileSha256": {
+      "library/a2d-editor-manifest.json": "fb803ee9a44ae19362caab8c36ca5e0490d12dd187cdfb93ee5c2c79f8a718d8",
+      "library/scon-editor-manifest.json": "bd1f91a694881bed63faf47e960b79c33b8181138c7717cb6fc907a4c076b185",
+      "package-lock.json": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
+      "packages/core/src/openscad-import.ts": "8ada8eb5aa877d05a7460648f7d8849da6c996908c7a9db8cff19424d41c49dd",
+      "packages/core/src/code.ts": "df59636c95e7fb7bc94ef981cd2fd5396ac533ddc60887f7212604d62fe72033",
+      "packages/core/src/parameters.ts": "cda0b7f7aa5c27913e825ad269c716bc79af6b43ad2e3a527092dc06807a9b09",
+      "packages/geometry/src/kernel.ts": "02fc5b469c1ca25ae24cf4b76f62246719d69e914d41019148d2fd55fb4fe85a",
+      "library/corpus-audit/editor-screening-cycle18.json": "961b543ccb5417304da8371b7ebc2f2b275c9ac906b2e65a7feefe4a8c1a36e0",
+      "library/corpus-audit/editor-screening-cycle17.json": "1e2683ae5e160f4deae6799b12991bc452c2faa988e96fe5bbc4b90ddde87651",
+      "library/corpus-audit/editor-screening-cycle15.json": "75d91dd71e238ce5d55bdc57932041af893d67a67644c4298cdf253988ae306e",
+      "library/corpus-audit/editor-screening-cycle19.json": "0ac4e33121fa861e15cf1a52b3217321dd8e11efb0bde748fbe1ed34a7b4a2c8",
+      "library/corpus-audit/editor-screening-cycle23.json": "22062df2e7b742cb5e07ad2107a0b453f3e1984b68be6aa2d6ba505d657316da",
+      "library/corpus-audit/editor-screening-cycle16.json": "c810568c6124856f79ceb5abd8c350755bd69491e0c8698c1927aa0a6f327375",
+      "library/corpus-audit/editor-screening-cycle20.json": "75a1000e23ca31f391f592358cac8115109da2ef118b3731ab78504c9953f84c",
+      "library/corpus-audit/editor-screening-cycle21.json": "9be1b7a564ad2aa7823cb76c659a9ebe8dfa2f58b36c7a4334c7f2367da127dd",
+      "library/corpus-audit/editor-screening-cycle13.json": "a31db8bb8fee717ff8ff5c0b99b256af5012a81543affc3ba0a136b2ad70dc0a"
+    },
+    "historicalRefusals": "KnurledKnob32KiB/webbing64loop/Box16384work/SCONex5depth32/all topology reports unchanged. No retries of these roots."
+  },
+  "validation": {
+    "focusedBundleScopeCityTests": "43/43 PASS",
+    "focusedManifestIdentityControls": "2/2 PASS; four other cases skipped to avoid broad repeat",
+    "build": "PASS",
+    "i18n": "PASS:1251 messages/1004 references",
+    "browser": "4/4 PASS: Chromium and iPad gallery checks retained; corrected group25 dependency-count assertion then reran only the two insertion cases (19.2s/33.0s) at normal45s limits.",
+    "reproduction": "Only city geometry evaluated; exact old96 records pinned by canonical digest, old original and derivative bytes hash-verified; old A2D/SCON validations reused. One new preview rendered.",
+    "browserInitialFailure": "Two insertion cases inserted the city successfully, then failed historical hard-coded1-dependency expectation. Assertion now verifies every declared dependency; five city dependencies checked. No product change needed.",
+    "finalCityMetadataControls": "4/4 PASS after final grant metadata update; same four cases included in43 unique focused tests, not extra admissions or unique test credit."
+  },
+  "rawDirectory": "/mnt/storage/brickwright-cycle25-alternate"
+}

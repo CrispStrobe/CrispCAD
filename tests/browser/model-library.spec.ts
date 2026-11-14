@@ -143,20 +143,20 @@ test('recorded collision reports expose bindings and limits without qualifying o
 // Gallery acceptance: actual bundled images, a usable primary action and compact details.
 test('every bundled model has a preview and inserts without mandatory notes',async({page})=>{
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');const before=await saved(page),dialog=await open(page);
- const cards=dialog.locator('.model-library-card');await expect(cards).toHaveCount(143);await expect(cards.locator('img')).toHaveCount(143);expect((await cards.first().boundingBox())!.height).toBeGreaterThanOrEqual(170);expect(await cards.first().evaluate(card=>{const outer=card.getBoundingClientRect(),label=card.querySelector('strong')!.getBoundingClientRect();return label.top>=outer.top&&label.bottom<=outer.bottom;})).toBe(true);
+ const cards=dialog.locator('.model-library-card');await expect(cards).toHaveCount(144);await expect(cards.locator('img')).toHaveCount(144);expect((await cards.first().boundingBox())!.height).toBeGreaterThanOrEqual(170);expect(await cards.first().evaluate(card=>{const outer=card.getBoundingClientRect(),label=card.querySelector('strong')!.getBoundingClientRect();return label.top>=outer.top&&label.bottom<=outer.bottom;})).toBe(true);
  await expect.poll(()=>cards.locator('img').evaluateAll((images:any[])=>images.every(image=>image.complete&&image.naturalWidth>0))).toBe(true);
  expect(await saved(page)).toEqual(before);await expect(dialog.getByRole('button',{name:'Close model library'})).toHaveText('×');
  await cards.filter({hasText:'Named dependencies'}).click();const insert=dialog.getByRole('button',{name:'Insert editable source',exact:true});await expect(insert).toBeEnabled();
  await expect(dialog.locator('.model-library-technical')).not.toHaveAttribute('open');await expect(dialog.getByRole('textbox',{name:'Licence & attribution',exact:true})).toHaveValue(/Copyright/);
  expect(await dialog.evaluate(node=>{const action=node.querySelector('.library-insert')!,licence=node.querySelector('.model-library-licence')!;return !!(action.compareDocumentPosition(licence)&Node.DOCUMENT_POSITION_FOLLOWING);})).toBe(true);
  await insert.click();await expect(dialog.getByRole('status')).toContainText('Editable source inserted');const added=await saved(page);expect(added.roots).toHaveLength(before.roots.length+1);expect(added.provenance.records[0].modificationNotes).toContain('no manual changes');
- await dialog.getByLabel('Model type',{exact:true}).selectOption('mesh');await expect(cards).toHaveCount(0);await dialog.getByLabel('Model type',{exact:true}).selectOption('source');await expect(cards).toHaveCount(143);
+ await dialog.getByLabel('Model type',{exact:true}).selectOption('mesh');await expect(cards).toHaveCount(0);await dialog.getByLabel('Model type',{exact:true}).selectOption('source');await expect(cards).toHaveCount(144);
  expect(await dialog.evaluate(node=>node.scrollWidth<=node.clientWidth)).toBe(true);
 });
 
-for(let group=0;group<26;group++)test(`reviewed dependency-complete external sources insert offline: group ${group+1}`,async({page,context})=>{
+for(let group=0;group<27;group++)test(`reviewed dependency-complete external sources insert offline: group ${group+1}`,async({page,context})=>{
  const assets=[...JSON.parse(readFileSync('library/editor-corpus-manifest.json','utf8')).assets,...JSON.parse(readFileSync('library/a2d-editor-manifest.json','utf8')).assets,...JSON.parse(readFileSync('library/scon-editor-manifest.json','utf8')).assets];
- expect(assets).toHaveLength(104);
+ expect(assets).toHaveLength(105);
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  const before=await saved(page);let requests=0;await context.setOffline(true);page.on('request',()=>requests++);
  // Four complete UI cycles per case keep the normal 45-second test budget.
@@ -169,7 +169,7 @@ for(let group=0;group<26;group++)test(`reviewed dependency-complete external sou
   const inserted=await saved(page),record=inserted.provenance.records[0];
   expect(inserted.roots).toHaveLength(before.roots.length+1);expect(record.asset.id).toBe(asset.id);
   expect(record.selectedFile.sha256).toBe(asset.original.sha256);expect(record.asset.sourceRevision.commit).toBe(asset.version);
-  if(asset.sourceBundle){expect(record.asset.sourceBundle.dependencies).toHaveLength(1);expect(record.asset.sourceBundle.dependencies[0].file.sha256).toBe(asset.sourceBundle.dependencies[0].file.sha256);expect(record.asset.sourceBundle.dependencies[0].licence.spdx).toBe('MIT');}
+  if(asset.sourceBundle){expect(record.asset.sourceBundle.dependencies).toHaveLength(asset.sourceBundle.dependencies.length);for(const [index,dependency] of asset.sourceBundle.dependencies.entries()){expect(record.asset.sourceBundle.dependencies[index].path).toBe(dependency.path);expect(record.asset.sourceBundle.dependencies[index].file.sha256).toBe(dependency.file.sha256);expect(record.asset.sourceBundle.dependencies[index].licence.spdx).toBe('MIT');}}
   await dialog.getByRole('button',{name:'Close model library'}).click();
   await page.getByRole('button',{name:'Undo',exact:true}).click();expect(await saved(page)).toEqual(before);
  }
