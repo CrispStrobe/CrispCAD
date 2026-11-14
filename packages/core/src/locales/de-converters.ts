@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+  "Assertion failed": "Zusicherung fehlgeschlagen",
+  "Assertion requires condition and value": "Die Zusicherung erfordert eine Bedingung und einen Wert",
+  "Assertion requires a condition": "Die Zusicherung erfordert eine Bedingung",
+  "Assertion messages are archived; failures use a generic diagnostic.": "Meldungen von Zusicherungen werden archiviert; Fehler verwenden eine allgemeine Diagnose.",
   "OpenSCAD construction nesting exceeds 32": "Die OpenSCAD-Konstruktion ist mehr als 32 Ebenen tief verschachtelt",
   "Unbound animation time uses $t=0; motion is not retained.": "Nicht gebundene Animationszeit verwendet $t=0; Bewegung bleibt nicht erhalten.",
   "Tapers: frustum(bottom, top, height[,segments]). Convex hull: hull(a,...). empty() contributes no solid.": "Kegelstümpfe: frustum(unten, oben, höhe[,segmente]). Konvexe Hülle: hull(a,...). empty() trägt keinen Körper bei.",

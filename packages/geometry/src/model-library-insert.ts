@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {compileCode, importOpenSCAD, getOpenSCADImportWarnings, importJSCAD, identityTransform, newId, sha256Hex, validateModelLibraryCatalogue, type CadDocument, type ModelLibraryFileSelection, createCadSession} from '@brickwright/cad-core';
+import {compileCode, importOpenSCAD, importOpenSCADBundle, getOpenSCADImportWarnings, importJSCAD, identityTransform, newId, sha256Hex, validateModelLibraryCatalogue, type CadDocument, type ModelLibraryFileSelection, createCadSession} from '@brickwright/cad-core';
 import {checkModelLibrarySTL, MODEL_LIBRARY_MESH_MAX_BYTES, MODEL_LIBRARY_MESH_MAX_TRIANGLES, parseModelLibrarySTL, type ModelLibraryMeshQualityResult} from './model-library-quality.js';
 import type {GeometryResult} from './kernel.js';
 
@@ -81,6 +81,8 @@ export interface ModelLibrarySourceInsertOptions {
   evaluate: (document: CadDocument) => GeometryResult | Promise<GeometryResult>;
   signal?: AbortSignal;
   modificationNotes: string;
+  /** Exact local dependency bytes; every declared identity is verified before conversion. */
+  sourceFiles?: ReadonlyMap<string, Uint8Array>;
 }
 /** Verify and compile an original local source, evaluate its complete candidate,
  * then retain CAD Script as an editable code node with provenance in one edit.
@@ -107,9 +109,17 @@ export async function insertModelLibrarySource(
   if (JSON.stringify(asset.conversion.toMillimetresZUp) !== JSON.stringify([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]) || asset.conversion.sourceUnits !== 'mm' || asset.conversion.sourceUpAxis !== 'Z') throw new Error('Editable source requires millimetres/Z-up identity conversion.');
   const snapshot = bytes.slice();
   if (await sha256Hex(snapshot) !== file.sha256) throw new Error('Model library file size or SHA-256 mismatch.');
-  const source = new TextDecoder('utf-8', {fatal: true}).decode(snapshot);
+  const source = new TextDecoder('utf-8', {fatal: true, ignoreBOM: true}).decode(snapshot);
   const jscad = file.format === 'jscad' ? importJSCAD(source) : undefined;
-  const program = jscad ? jscad.program : file.format === 'openscad' ? importOpenSCAD(source) : {version: 1 as const, language: 'brickwright-cad-script' as const, source, parameters: {}};
+  const bundle = asset.sourceBundle;
+  const dependencySnapshots = bundle?.dependencies.map(dependency => {
+    const data = options.sourceFiles?.get(dependency.file.path!);
+    if (!data || data.byteLength !== dependency.file.bytes) throw new Error('OpenSCAD dependency is not available offline or its size differs.');
+    return {path: dependency.path, source: new TextDecoder('utf-8', {fatal: true, ignoreBOM: true}).decode(data.slice()), sha256: dependency.file.sha256};
+  });
+  const bundled = bundle ? await importOpenSCADBundle({version: 1, rootPath: bundle.rootPath, files: [{path: bundle.rootPath, source, sha256: file.sha256}, ...dependencySnapshots!]}) : undefined;
+  signal?.throwIfAborted();
+  const program = bundled ? bundled.program : jscad ? jscad.program : file.format === 'openscad' ? importOpenSCAD(source) : {version: 1 as const, language: 'brickwright-cad-script' as const, source, parameters: {}};
   const conversionWarnings = file.format === 'openscad' ? getOpenSCADImportWarnings(program) : jscad?.warnings ?? [];
   const incorporationNotes = (modificationNotes + (file.format === 'openscad' ? ' OpenSCAD translated to editable CAD Script by the supported subset importer.' : jscad ? ` JSCAD converted by the bounded subset interpreter to an editable CAD Script evaluated snapshot with default parameters ${JSON.stringify(jscad.parameters)}. Original JavaScript parameter definitions are not retained in the code node; no collision qualification.` : '')) + (conversionWarnings.length ? ' '+conversionWarnings.join(' ') : '');
   if (incorporationNotes.length > 4096) throw new Error('Incorporation modification notes exceed the provenance limit after recording source conversion.');

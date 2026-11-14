@@ -107,7 +107,7 @@ inserted gear; a passing positive-volume trial is separate from those checks.
 
 ## Browser previews
 
-All 132 host-bundled items have static PNG previews generated from their actual
+All 134 host-bundled items have static PNG previews generated from their actual
 bounded source conversion and evaluated solids. Previews are keyed by original
 source SHA-256; the standalone host refuses a bundled item without its thumbnail.
 They are presentation assets, not geometry/printability/physics qualification.
@@ -285,7 +285,7 @@ These commands do not download assets or execute the upstream OpenSCAD applicati
 
 ## Supported CC0 additions — 2026-11-14
 
-The offline gallery now contains 132 editable-source models. The new
+The offline gallery now contains 134 editable-source models. The new
 `supported-models-manifest.json` admits **Quarter cylinder**, **Square pyramid** and
 **Nested open frames** from Ghostkeeper/SlicerTestModels at pinned revision
 `e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d`. Sources are unmodified, including
@@ -298,9 +298,57 @@ STLs offline, checks pinned source/licence hashes, screens closed positive-volum
 meshes, and compares volumes with independent polygon geometry or rectangle-cell
 integration. `--write` regenerates the same outputs. New source or grant identities
 require a new review. `npm run library:previews:generate` renders actual evaluated
-geometry for all 132 gallery entries. Browsing and insertion use bundled bytes;
+geometry for all 134 gallery entries. Browsing and insertion use bundled bytes;
 research-only datasets and unsupported seeds are not gallery entries.
 
 STL screening is separate from Jolt qualification. These models do not carry a
 reusable physics certificate; simulation must qualify their actual regenerated
 geometry through the existing collision pipeline.
+
+## A2D authored roots with pinned include dependencies
+
+The separate `a2d-editor-manifest.json` admits **Grill Square** and **Point
+Generators** from ridercz/A2D at `4ad48205fefd841a468b7916521596f09383add9`.
+Both are original MIT sources with their original defaults. Runnable originals
+retain their directory layout under `sources/a2d/Samples/`; `A2D.scad` is retained
+once at `sources/a2d/A2D.scad`. The dependency carries its own pinned file identity,
+author, full grant, evidence URL and capture date in each asset's `sourceBundle`.
+The editor verifies the root and dependency before compiling only in-memory text;
+originals are never rewritten or replaced by a flattened upstream source.
+
+There are **95** editor-enabled archive source entries and **93** distinct STL
+hashes across the 93-entry original subset plus these two additions. The shared
+library dependency is not an extra model. The full source archive remains 1,406;
+1,311 files remain outside editor selection: 984 recorded dependency blockers and
+327 with no recorded blocker. Nine staged licence quarantines remain separate.
+
+The exact nine-root default run is retained in
+[the screening report](corpus-audit/editor-screening-cycle17.json). Only the two
+passes are reproduced on the final guarded runtime; no broad cohort rerun is
+needed for unchanged failures.
+
+| Authored root | Observed default outcome / first failure |
+| --- | --- |
+| GrillSquare | PASS: 1,756 triangles; all four STL checks pass |
+| PointGenerators | PASS: 412 triangles; all four STL checks pass |
+| GrillCircle | Resource limit: expanded expression exceeds 1,024 characters |
+| KnurledKnob | Unsupported: parameter-dependent comprehension range |
+| MakeRound | Resource limit: estimated mesh exceeds 200,000 faces |
+| ParametricBoxWithLid | Unsupported: numeric operation on undefined indexed value |
+| CircleText | Unsupported unextruded text root |
+| MultiLineText | Unsupported unextruded text root |
+| Stars | Unsupported unextruded polygon root |
+
+Planar roots are not extruded for qualification. Alternate parameters, fragment
+settings, time values and helper entry points are not substituted. These are
+converted default geometry screens, not native-renderer, font, fit, manufacturing
+or collision equivalence. Assertions remain active in editable CAD Script;
+invalid edits retain the prior project/history. Dependency notices survive export
+in attribution sidecars, separate from the STL importer/exporter.
+
+Reproduce the two admitted roots offline:
+
+```sh
+node scripts/generate-a2d-editor-library.mjs --check
+node scripts/generate-library-previews.mjs --asset-id corpus-a2d-grill-square --asset-id corpus-a2d-point-generators
+```

@@ -586,3 +586,29 @@ The host bundles exact selected source bytes, previews and the
 correct asset-specific MIT notice. Insertion verifies hashes, evaluates the
 candidate, and preserves provenance, attribution and undo/redo through the
 existing source-insertion path. No whole-corpus rendering gate is used.
+
+### Bounded A2D dependency collection
+
+Two authored MIT A2D roots, `Samples/GrillSquare.scad` and
+`Samples/PointGenerators.scad`, are projected separately in
+`library/a2d-editor-manifest.json`. Together with the unchanged 93-entry corpus
+selection this gives 95 editor-enabled source entries and 93 distinct mesh
+hashes (134 gallery entries including the other seeds). A2D.scad is retained as
+one shared dependency, not counted as an additional model.
+
+Each root retains its exact original bytes and relative directory structure.
+`sourceBundle` records its logical root and every local dependency's file hash,
+size, author, source URL, pinned commit and independent reviewed licence grant.
+Insertion verifies all originals before in-memory include expansion and preserves
+that metadata in project provenance and attribution sidecars. The pure bundle API
+has no ambient file access, search path or network loading; `use` remains refused.
+Both aggregate original and expanded source stay within 32 KiB and expanded
+lexical tokens within 8,192. Existing construction, geometry and timeout limits
+are unchanged. Assertions remain live and failing edits abort atomically.
+
+The [nine-root measurement report](../library/corpus-audit/editor-screening-cycle17.json)
+retains two strict STL passes, five unsupported roots and two resource refusals.
+Only the two passes are reproduced on the final runtime and inserted. The three
+planar samples receive no invented extrusion; source parameters, time, fragment
+settings and entry points remain unchanged. Unused A2D library helpers are outside
+these two default-root qualifications.

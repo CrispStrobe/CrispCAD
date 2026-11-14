@@ -25,6 +25,29 @@ export interface ModelLibraryScreeningPolicy {
   maxAnalysisBytes: number;
   maxAnalysisTriangles: number;
 }
+export interface ModelLibraryContentGrant {
+  spdx: ModelLibraryContentLicence;
+  scope: 'asset';
+  attribution: string;
+  evidenceUrl: string;
+  capturedOn: string;
+  review: 'accepted';
+  reviewer: string;
+}
+/** Exact local originals used by a bounded OpenSCAD include closure. */
+export interface ModelLibrarySourceBundle {
+  format: 'brickwright-openscad-bundle';
+  version: 1;
+  rootPath: string;
+  dependencies: {
+    path: string;
+    file: ModelLibraryFile;
+    author: string;
+    sourceUrl: string;
+    sourceRevision: {repositoryUrl: string; commit: string};
+    licence: ModelLibraryContentGrant;
+  }[];
+}
 export interface ModelLibraryAsset {
   id: string;
   version: string;
@@ -33,17 +56,10 @@ export interface ModelLibraryAsset {
   sourceUrl: string;
   /** Optional for legacy records; curated repository sources use a full immutable commit. */
   sourceRevision?: {repositoryUrl: string; commit: string};
-  licence: {
-    spdx: ModelLibraryContentLicence;
-    /** A curator's assertion that the grant covers this asset, not just loader code. */
-    scope: 'asset';
-    attribution: string;
-    evidenceUrl: string;
-    capturedOn: string;
-    review: 'accepted';
-    reviewer: string;
-  };
+  /** A curator's assertion that the grant covers the asset, not just loader code. */
+  licence: ModelLibraryContentGrant;
   original: ModelLibraryFile;
+  sourceBundle?: ModelLibrarySourceBundle;
   /** Preserve editable CAD here when the primary original is a mesh. */
   editableSource?: ModelLibraryFile;
   derivatives: ModelLibraryFile[];
@@ -94,6 +110,9 @@ const keys = (v: Record<string, unknown>, allowed: string): boolean => Object.ke
 /** Local identities are rooted at library/, never OS paths or network endpoints. */
 export const isModelLibraryLocalPath = (v: unknown): v is string => typeof v === 'string' && v.length <= 512 && /^(?:sources|meshes|evidence)\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.[A-Za-z0-9._-]+$/.test(v);
 const file = (v: unknown): v is unknown & ModelLibraryFile => object(v) && keys(v, 'url path format sha256 bytes') && ((Object.hasOwn(v, 'url') && !Object.hasOwn(v, 'path') && url(v.url)) || (Object.hasOwn(v, 'path') && !Object.hasOwn(v, 'url') && isModelLibraryLocalPath(v.path))) && text(v.format, 80) && /^[a-zA-Z0-9][a-zA-Z0-9.+_-]*$/.test(v.format) && hash(v.sha256) && Number.isSafeInteger(v.bytes) && (v.bytes as number) > 0;
+const grant = (v: unknown): boolean => object(v) && keys(v, 'spdx scope attribution evidenceUrl capturedOn review reviewer') && (MODEL_LIBRARY_CONTENT_LICENCES as readonly unknown[]).includes(v.spdx) && v.scope === 'asset' && v.review === 'accepted' && text(v.reviewer, 240) && text(v.attribution) && url(v.evidenceUrl) && date(v.capturedOn);
+const revision = (v: unknown): boolean => object(v) && keys(v, 'repositoryUrl commit') && url(v.repositoryUrl) && typeof v.commit === 'string' && /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(v.commit);
+const bundlePath = (v: unknown): v is string => typeof v === 'string' && v.length <= 512 && /^(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.scad$/.test(v);
 function invertibleAffine(value: unknown): boolean {
   if (!Array.isArray(value) || value.length !== 16 || !value.every(n => typeof n === 'number' && Number.isFinite(n)) || value[3] !== 0 || value[7] !== 0 || value[11] !== 0 || value[15] !== 1) return false;
   const m = value;
@@ -118,7 +137,7 @@ function checkModelLibraryCatalogue(value: unknown): ModelLibraryValidation {
   value.assets.forEach((asset: unknown, index: number) => {
     const error = (message: string) => errors.push(`assets[${index}]: ${message}`);
     if (!object(asset)) { error('Expected an asset record.'); return; }
-    if (!keys(asset, 'id version title author sourceUrl sourceRevision licence original editableSource derivatives modificationNotes conversion quality')) error('Unknown asset fields; review the schema before extending it.');
+    if (!keys(asset, 'id version title author sourceUrl sourceRevision licence original sourceBundle editableSource derivatives modificationNotes conversion quality')) error('Unknown asset fields; review the schema before extending it.');
     if (!text(asset.id, 96) || !/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(asset.id) || ['__proto__', 'prototype', 'constructor'].includes(asset.id)) error('Invalid stable asset ID.');
     else if (ids.has(asset.id)) error('Duplicate asset ID.');
     else ids.add(asset.id);
@@ -128,8 +147,21 @@ function checkModelLibraryCatalogue(value: unknown): ModelLibraryValidation {
       if (!object(revision) || !keys(revision, 'repositoryUrl commit') || !url(revision.repositoryUrl) || typeof revision.commit !== 'string' || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(revision.commit)) error('Source revision requires an HTTPS repository URL and full lowercase Git commit hash.');
     }
     const licence = asset.licence;
-    if (!object(licence) || !keys(licence, 'spdx scope attribution evidenceUrl capturedOn review reviewer') || !(MODEL_LIBRARY_CONTENT_LICENCES as readonly unknown[]).includes(licence.spdx) || licence.scope !== 'asset' || licence.review !== 'accepted' || !text(licence.reviewer, 240) || !text(licence.attribution) || !url(licence.evidenceUrl) || !date(licence.capturedOn)) error('An allowlisted exact content licence, asset grant, attribution and reviewed evidence are required.');
+    if (!grant(licence)) error('An allowlisted exact content licence, asset grant, attribution and reviewed evidence are required.');
     if (!file(asset.original)) error('Invalid original file identity.');
+    if (asset.sourceBundle !== undefined) {
+      const bundle = asset.sourceBundle;
+      if (!object(bundle) || !keys(bundle, 'format version rootPath dependencies') || bundle.format !== 'brickwright-openscad-bundle' || bundle.version !== 1 || !bundlePath(bundle.rootPath) || !Array.isArray(bundle.dependencies) || !bundle.dependencies.length || bundle.dependencies.length > 31 || !file(asset.original) || !asset.original.path || asset.original.format !== 'openscad' || asset.editableSource !== undefined) error('Invalid local OpenSCAD source bundle (maximum 32 original files).');
+      else {
+        const paths = new Set([bundle.rootPath]), files = new Set([asset.original.path]);
+        let total = asset.original.bytes;
+        for (const dependency of bundle.dependencies) {
+          if (!object(dependency) || !keys(dependency, 'path file author sourceUrl sourceRevision licence') || !bundlePath(dependency.path) || paths.has(dependency.path) || !file(dependency.file) || !dependency.file.path || dependency.file.format !== 'openscad' || files.has(dependency.file.path) || !text(dependency.author, 1000) || !url(dependency.sourceUrl) || !revision(dependency.sourceRevision) || !grant(dependency.licence)) { error('Every source dependency requires a distinct local original, pinned revision and reviewed grant.'); continue; }
+          paths.add(dependency.path); files.add(dependency.file.path); total += dependency.file.bytes;
+        }
+        if (total > 32768) error('OpenSCAD original source bundle exceeds 32 KiB.');
+      }
+    }
     if (asset.editableSource !== undefined && !file(asset.editableSource)) error('Invalid editable source identity.');
     if (!Array.isArray(asset.derivatives) || asset.derivatives.length > 32 || !asset.derivatives.every(file)) error('Invalid derivative file identities (maximum 32).');
     if (!text(asset.modificationNotes)) error('Explicit modification notes are required, including when unchanged.');

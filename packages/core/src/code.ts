@@ -42,6 +42,7 @@ export function compileCode(program:CodeProgram):CompiledCode {
  function shape(depth=0):ShapeAst {if(depth>CODE_LIMITS.depth)limited(t('Shape nesting exceeds 32'),offset());const token=take();if(!safeName(token.text))fail(t('Expected a shape function or named shape'),token.at);if(peek()!=='(')return {kind:'reference',name:token.text,at:token.at};expect('(');
   const call:Extract<ShapeAst,{kind:'call'}>={kind:'call',name:token.text,at:token.at,scalars:[],shapes:[]};
   if(call.name==='empty'){}
+  else if(call.name==='assertShape'){call.scalars.push(scalar([',']));expect(',');call.shapes.push(shape(depth+1));}
   else if(call.name==='choose'){call.scalars.push(scalar([',']));expect(',');call.shapes.push(shape(depth+1));expect(',');call.shapes.push(shape(depth+1));}
   else if(call.name==='forRange'||call.name==='forValues'){
    call.variable=name();expect(',');
@@ -81,6 +82,7 @@ export function compileCode(program:CodeProgram):CompiledCode {
  function resolve(ast:ShapeAst,depth=0):CodeShape {if(++evaluationSteps>16384)throw new CadCodeError(t('Code evaluation budget exceeded'),ast.at,source,'resource-limit');if(depth>32)limited(t('Dependency depth exceeds 32'),ast.at);if(ast.kind==='reference'){if(built.has(ast.name))return built.get(ast.name)!;if(visiting.has(ast.name))fail(t`Shape dependency cycle at “${ast.name}”`,ast.at);const definition=definitions.get(ast.name);if(!definition)fail(t`Unknown shape “${ast.name}”`,ast.at);visiting.add(ast.name);const result=resolve(definition!,depth+1);visiting.delete(ast.name);built.set(ast.name,result);return result;}
   const n=ast.scalars.length,arity=(min:number,max=min)=>{if(n<min||n>max)fail(t`${ast.name} requires ${min}${max===min?'':`–${max}`} numeric arguments`,ast.at);},mm=(i:number)=>number(ast.scalars[i],'mm',.01,100000),segments=(i:number,min=4,max=4096)=>ast.scalars[i]?number(ast.scalars[i],'scalar',min,max,true):48;
   if(ast.name==='empty'){arity(0);return {kind:'empty'};}
+  if(ast.name==='assertShape'){arity(1);if(!number(ast.scalars[0],'scalar',-1e9,1e9,false,true))fail(t('Assertion failed'),ast.at);return resolve(ast.shapes[0],depth+1);}
   if(ast.name==='choose'){arity(1);return resolve(ast.shapes[number(ast.scalars[0],'scalar',-1e9,1e9,false,true)!==0?0:1],depth+1);}
   if(ast.name==='forRange'||ast.name==='forValues'){
    let items:number[];

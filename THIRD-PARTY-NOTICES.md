@@ -145,3 +145,15 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+
+### A2D sample roots and shared source dependency — MIT
+
+The two authored A2D sample roots and shared A2D.scad source are by Michal Altair
+Valášek and contributors, pinned at `4ad48205fefd841a468b7916521596f09383add9`
+from https://github.com/ridercz/A2D. Original headers and full MIT grant are
+retained under `library/sources/a2d/` and
+`library/evidence/a2d-MIT-LICENSE.txt`. Exact source/dependency identities and
+reviewed grants are recorded in `library/a2d-editor-manifest.json` and carried
+into insertion provenance and attribution exports. Their default-root geometry
+qualification does not certify the remaining A2D helpers or samples.
