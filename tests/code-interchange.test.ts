@@ -77,7 +77,6 @@ it('rejects computed palette indices and keeps palettes outside numeric, loop, f
   'function palette()=["red"];color(palette()[0])cube(2);',
   'palette=["red"];color(palette[0])cube(2);',
   'module part(){palette=["not a color"];color(palette[0])cube(2);}part();',
-  'module part(i=0){vector=[2,3,4];cube(vector[i]);}part();',
  ])expect(()=>importOpenSCAD(source),source).toThrow();
 });
 it('bounds palette alias expansion before a compact branching source can exhaust resources',()=>{
@@ -88,6 +87,34 @@ it('bounds palette alias expansion before a compact branching source can exhaust
   `module part(){palette=${'['.repeat(34)}"red"${']'.repeat(34)};cube(2);}part();`,
  ]){try{importOpenSCAD(source);throw Error('Expected resource failure');}catch(error:any){expect(error.code,source).toBe('resource-limit');}}
  expect(()=>importOpenSCAD('module part(){palette=[palette];color(palette[0])cube(2);}part();')).toThrow('dependency cycle');
+});
+it('specializes the readonly preview builtin to full rendering and exports explicit facet counts',()=>{
+ const counts=(shape:any):number[]=>'segments'in shape?[shape.segments]:'shapes'in shape?shape.shapes.flatMap(counts):'shape'in shape?counts(shape.shape):[];
+ for(const segments of [30,64]){
+  const program=importOpenSCAD(`cylinder(2,1,$fn=$preview?90:${segments});`);
+  expect(program.source).toContain('Full-render import context: $preview = false.');
+  expect(counts(compileCode(program).shape)).toEqual([segments]);
+  const scad=exportOpenSCAD(program),jscad=exportJSCAD(program);
+  expect(scad).toMatch(new RegExp(`\\$fn\\s*=\\s*${segments}`));expect(jscad).toMatch(new RegExp(`segments:\\s*${segments}`));
+  expect(scad+jscad).not.toContain('$preview');expect(counts(compileCode(importOpenSCAD(scad)).shape)).toEqual([segments]);
+ }
+ expect(geometry('cube($preview?1/0:3);').volume).toBeCloseTo(27);
+ expect(importOpenSCAD('module unused(){cube($preview?1:2);}cube(3);').source).not.toContain('Full-render import context');
+ const session=createCadSession(),before=structuredClone(session.state.document);
+ for(const source of ['$preview=true;cube(2);','module part(){$preview=true;cube(2);}part();','module part($preview){cube(2);}part(false);','module part($preview=false){cube(2);}part();','cube(2,$preview=true);','for($preview=[0])cube(2);','vector=[2,3];cube(vector[$preview]);','module part(i=$preview){vector=[2,3];cube(vector[i]);}part();','module unused(){$preview=true;}cube(2);'])expect(()=>session.addCode(importOpenSCAD(source)),source).toThrow();
+ expect(session.state.document).toEqual(before);expect(importOpenSCAD('cube(2);').source).not.toContain('Full-render import context');
+});
+it('indexes numeric vectors with module-local literal provenance while retaining symbolic coordinates',()=>{
+ const source='width=4;module part(Size=0){table=[[width,2,1],[6,3,2]];cube(table[Size]);}part();';
+ const program=importOpenSCAD(source);program.parameters.width='5';expect(compileCode(program).shape).toMatchObject({kind:'move',shape:{kind:'box',size:[5,2,1]}});
+ expect(geometry(source.replace('part();','part(Size=1);')).volume).toBeCloseTo(36);
+ expect(geometry('module part(){index=1;alias=index;vector=[2,3];cube(vector[alias]);}part();').volume).toBeCloseTo(27);
+ expect(geometry('module outer(i=0){vector=[2,3];module inner(){cube(vector[i]);}translate([10,0,0]){i=1;inner();}}outer();').volume).toBeCloseTo(8);
+ const wrap=(index:string)=>`module part(i=0){vector=[2,3];cube(vector[${index}]);}part();`;
+ for(const index of ['-1','.5','1.0','2','i+0','unknown','$preview','"0"','fetch()'])expect(()=>importOpenSCAD(wrap(index)),index).toThrow();
+ for(const source of ['global=0;module part(){vector=[2,3];cube(vector[global]);}part();','function index()=0;module part(i){vector=[2,3];cube(vector[i]);}part(index());','module part(i=0+0){vector=[2,3];cube(vector[i]);}part();','module part(){vector=[2,3];for(i=[0])cube(vector[i]);}part();','vector=[2,3];function size(i)=vector[i];cube(size(0));','module part(){vector=["2","3"];cube(vector[0]);}part();'])expect(()=>importOpenSCAD(source),source).toThrow();
+ const aliases=Array.from({length:34},(_,i)=>`i${i}=${i===33?'0':`i${i+1}`};`).join('');
+ try{importOpenSCAD(`module part(){${aliases}vector=[2,3];cube(vector[i0]);}part();`);throw Error('Expected resource failure');}catch(error:any){expect(error.code).toBe('resource-limit');}
 });
 it('scopes transform fragment counts through child modules and restores each enclosing scope',()=>{
  const counts=(shape:any):number[]=>'segments'in shape?[shape.segments]:'shapes'in shape?shape.shapes.flatMap(counts):'shape'in shape?counts(shape.shape):[];

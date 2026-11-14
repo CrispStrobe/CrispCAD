@@ -91,6 +91,8 @@ export const corpusEditorSelection = [
   ['Coin_01', '951c586e3b1b6257d90ab7feb3b4307946c379ed740368dfb4c8689f3059ad7b'],
   ['Led_01', '8aad38e223ae0cfeb7e00f3bd8e594cc3a531120b51c8ebac96d3123074071d7'],
   ['Sauce_Bottle', '5bd635f4e9179b0a9716a6ec38c4b346b989f94d48d41c7e9ab6522926f59e23'],
+  ['Pipe_00', '1dcd758ab9c4f969c099ccbe6936de341a7dc004751607f2464db28cf5bb5381'],
+  ['Flange_02', '9c3a3c5d4c767d2eca1fadcca92f51dc8d83c971196f2c343bda46015d0edede'],
 ];
 export async function generateCorpusEditorLibrary() {
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
@@ -115,7 +117,9 @@ export async function generateCorpusEditorLibrary() {
     const title = name === 'x' ? 'Crossed cubes (x)' : name.replaceAll('_', ' ');
     const selectionNote = ['Street_03', 'Street_06'].includes(name)
       ? ' Street 03 and Street 06 are distinct upstream source files with identical derived geometry; this collection counts source files, not unique shapes.'
-      : name === 'Raccordo' ? ' OpenSCAD # highlighting is omitted; the highlighted solid geometry is retained.' : '';
+      : name === 'Raccordo' ? ' OpenSCAD # highlighting is omitted; the highlighted solid geometry is retained.'
+      : name === 'Pipe_00' ? ' Translation uses the fixed full-render context $preview=false, preserving the source-selected 30-segment circular profiles.'
+      : name === 'Flange_02' ? ' Translation uses the fixed full-render context $preview=false and the source constant dimension selector Size=0; the authored 64-segment outer profile and four 60-segment holes are retained.' : '';
     const session = createCadSession();
     session.addCode(importOpenSCAD(bytes.toString('utf8')), title);
     const evaluated = kernel.evaluate(session.state.document);

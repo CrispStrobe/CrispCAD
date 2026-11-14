@@ -529,10 +529,10 @@ described above. No additional JSCAD models were present in these staged subsets
 
 ### Editor-enabled corpus subset
 
-Seventy-two dependency-complete MIT Asset Collection originals now project into a
+Seventy-four dependency-complete MIT Asset Collection originals now project into a
 separate `library/editor-corpus-manifest.json` and are selectable in the bundled
 editor catalogue. See [exact model names and reproduction commands](../library/README.md#external-corpus-models-available-in-the-editor).
-Only these 72 archive selections receive local importer, Manifold and STL screening evidence;
+Only these 74 archive selections receive local importer, Manifold and STL screening evidence;
 the archival manifest remains unchanged and unqualified. The bounded OpenSCAD
 importer accepts validated constant `color()` wrappers and discloses omitted
 appearance. Transform `$fn` bindings are scoped to their children and restored
@@ -549,6 +549,11 @@ Tagged constant colour palettes admit Ingot, Coin, LED and Sauce Bottle through
 literal integer selection in module scope. Palettes never become numeric CAD
 Script expressions; cumulative value-evaluation fuel bounds alias expansion.
 Floor 01 still fails converted-mesh topology screening and remains excluded.
+Pipe 00 and Flange 02 use an explicitly recorded readonly full-render
+`$preview=false` context and literal-proven module-local numeric vector indices.
+Source overrides and computed/global/loop/function-derived indices remain
+unsupported; evaluated exports retain the selected facet counts. The original
+conditional source bytes and all previous qualification records remain intact.
 The host bundles exact selected source bytes, previews and the
 correct asset-specific MIT notice. Insertion verifies hashes, evaluates the
 candidate, and preserves provenance, attribution and undo/redo through the
