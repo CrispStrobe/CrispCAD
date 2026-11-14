@@ -1,0 +1,330 @@
+{
+  "version": 1,
+  "capturedOn": "2026-11-14",
+  "baselineDeliveredMain": "592d62519bd3e48cb02629a89d78c727827196c3",
+  "scope": "One exact authored Bricks root, six draws across two instantiations, no dependencies. Qualifies one reproducible import snapshot, not all random outcomes or upstream random-sequence fidelity.",
+  "summary": {
+    "cohortRoots": 1,
+    "beforePass": 0,
+    "beforeFail": 1,
+    "afterPass": 1,
+    "afterFail": 0,
+    "geometryProduced": 1,
+    "strictStlPass": 1,
+    "editorPass": 1,
+    "baselineSources": 105,
+    "baselineDistinctStlHashes": 103,
+    "candidateSources": 106,
+    "candidateDistinctStlHashes": 104,
+    "candidatePreviews": 145,
+    "deltaSources": 1,
+    "deltaDistinctStlHashes": 1
+  },
+  "rankBeforeCoding": [
+    {
+      "rank": 1,
+      "gap": "Constant-argument random snapshots and constant fractional palette indexing",
+      "roots": [
+        "AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Bricks.scad"
+      ],
+      "sourceCount": 1,
+      "sourceBytes": 1451,
+      "actualFirstBlocker": {
+        "code": "unsupported-feature",
+        "message": "Line 7, column 31: Asset_SCAD/Bricks.scad: Unsupported OpenSCAD feature \u201crands\u201d",
+        "path": "Asset_SCAD/Bricks.scad",
+        "line": 7,
+        "column": 31
+      },
+      "otherBudgetAssessment": "Two rectangles extruded3mm; six one-value random draws in authored ranges5..10 and0..3. No dependencies; finite sampling and low primitive count. Only this root credited."
+    },
+    {
+      "rank": 2,
+      "gap": "Large installed shared-library closures",
+      "namedRoots": [
+        "stoneagelib/examples/DemonstrationCylinder.scad",
+        "stoneagelib/examples/DemonstrationFrame.scad",
+        "dinther--pathbuilder/demo/project_case.scad",
+        "mrWheel--YAPP_Box/examples/YAPP_TEST_BoxTypes_v32.scad"
+      ],
+      "potentialCredit": 0,
+      "staticBlocker": "StoneAgeLib includes font.scad49550bytes, pathbuilder.scad62324bytes, YAPPgenerator_v3.scad221114bytes. Each closure exceeds existing32768 aggregate-original cap. No pruning/alias/source rewrite or renderer retry attempted."
+    }
+  ],
+  "before": {
+    "version": 1,
+    "phase": "before",
+    "head": "ffe371c62528631087d0e1635b75cdf8d33c1707",
+    "policy": {
+      "timeoutMs": 5000,
+      "maxTriangles": 10000,
+      "maxExtentMm": 200,
+      "defaults": "unchanged authored root"
+    },
+    "runtimeBefore": {
+      "packages/core/dist/openscad-bundle.js": "f23b85b039dd0d3e11a685331cbf28de7d6e261e63da9b40323eb634b313c9e6",
+      "packages/core/dist/openscad-import.js": "da1c694fd064c963a87d29b1aa57c9b8ee0372958ad3a64c21676b411c2da844",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeAfter": {
+      "packages/core/dist/openscad-bundle.js": "f23b85b039dd0d3e11a685331cbf28de7d6e261e63da9b40323eb634b313c9e6",
+      "packages/core/dist/openscad-import.js": "da1c694fd064c963a87d29b1aa57c9b8ee0372958ad3a64c21676b411c2da844",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeStable": true,
+    "results": [
+      {
+        "name": "Bricks",
+        "files": [
+          {
+            "path": "Asset_SCAD/Bricks.scad",
+            "sha256": "97cd7d74ef9492d8f29bcbccc7cdd972f83818d48cf947e47f0ef62229355545",
+            "bytes": 1451
+          }
+        ],
+        "phase": "convert",
+        "status": "unsupported",
+        "error": {
+          "code": "unsupported-feature",
+          "message": "Line 7, column 31: Asset_SCAD/Bricks.scad: Unsupported OpenSCAD feature \u201crands\u201d",
+          "path": "Asset_SCAD/Bricks.scad",
+          "line": 7,
+          "column": 31
+        }
+      }
+    ]
+  },
+  "after": {
+    "version": 1,
+    "phase": "final",
+    "head": "ffe371c62528631087d0e1635b75cdf8d33c1707",
+    "policy": {
+      "timeoutMs": 5000,
+      "maxTriangles": 10000,
+      "maxExtentMm": 200,
+      "defaults": "unchanged authored root"
+    },
+    "runtimeBefore": {
+      "packages/core/dist/openscad-bundle.js": "f23b85b039dd0d3e11a685331cbf28de7d6e261e63da9b40323eb634b313c9e6",
+      "packages/core/dist/openscad-import.js": "6b71d36850d0b44c6d8ee25accd144a2f59c3e0565f4426555be16d2d432e6bb",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeAfter": {
+      "packages/core/dist/openscad-bundle.js": "f23b85b039dd0d3e11a685331cbf28de7d6e261e63da9b40323eb634b313c9e6",
+      "packages/core/dist/openscad-import.js": "6b71d36850d0b44c6d8ee25accd144a2f59c3e0565f4426555be16d2d432e6bb",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeStable": true,
+    "results": [
+      {
+        "name": "Bricks",
+        "files": [
+          {
+            "path": "Asset_SCAD/Bricks.scad",
+            "sha256": "97cd7d74ef9492d8f29bcbccc7cdd972f83818d48cf947e47f0ef62229355545",
+            "bytes": 1451
+          }
+        ],
+        "phase": "stl",
+        "warnings": [
+          "Random samples use Brickwright\u2019s generator and are fixed in the imported snapshot.",
+          "Unseeded random calls use a source-derived stream for reproducible imports.",
+          "Source colours and transparency are not retained; solid geometry is preserved."
+        ],
+        "nativeProgramSha256": "5f97281789987673043e311139049fb5a07113126cfc8c4306210fe8efa11a6f",
+        "volumeMm3": 264.357610779193,
+        "mesh": {
+          "sha256": "0a405aa894512686e543462e230dee07406b5e81b0b306746f06391c481e0fe7",
+          "bytes": 1284
+        },
+        "screening": {
+          "fileSha256": "0a405aa894512686e543462e230dee07406b5e81b0b306746f06391c481e0fe7",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 24,
+          "boundsMm": {
+            "min": [
+              0,
+              0,
+              0
+            ],
+            "max": [
+              15.6600923538208,
+              8.717482566833496,
+              3
+            ]
+          },
+          "signedVolumeMm3": 264.3576210264655,
+          "quality": {
+            "fileSha256": "0a405aa894512686e543462e230dee07406b5e81b0b306746f06391c481e0fe7",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified"
+      }
+    ]
+  },
+  "samplingPolicy": {
+    "argumentSemanticsReference": "https://files.openscad.org/documentation/manual/Mathematical_Functions.html",
+    "implementation": "Independent FNV-1a32 UTF-8 source seeding and xorshift32 draws; no upstream compiler/generator code, host RNG, network or new dependency. Explicit seeds produce repeatable independent streams; unseeded calls advance an import-local source-derived stream.",
+    "snapshotMeaning": "Generated CAD Script retains numeric draws; saving/undo/redo/geometry export never resamples the imported object. This is a disclosed independent import policy, not an authored seed insertion or an OpenSCAD random-sequence equivalence claim.",
+    "guards": "All arguments finite constant numbers, ordered finite-width range, integer0..64 count. Each draw charged to the existing16384 work guard. Parameter-dependent inputs rejected, not frozen. Assertions and lexical bindings preserved.",
+    "originals": "Exact authored source/ranges/calls/positions unchanged. No source or public parameter overrides. No extra seed argument inserted.",
+    "fractionalIndexSubset": "Known nonnegative fractional indices use integer part; negative/boolean/text/out-of-range remain refused/undefined as appropriate. Symbolic index handling remains unchanged.",
+    "nativeProgramSha256": "5f97281789987673043e311139049fb5a07113126cfc8c4306210fe8efa11a6f"
+  },
+  "actualGeometry": {
+    "triangles": 24,
+    "volumeMm3": 264.357610779193,
+    "boundsMm": {
+      "min": [
+        0,
+        0,
+        0
+      ],
+      "max": [
+        15.6600923538208,
+        8.717482566833496,
+        3
+      ]
+    },
+    "stl": {
+      "sha256": "0a405aa894512686e543462e230dee07406b5e81b0b306746f06391c481e0fe7",
+      "bytes": 1284
+    },
+    "analyticControl": "Exact kernel/STL points split at authored x=10 into two boxes: each planar dimension5..10mm, z=0..3mm, first origin[0,0,0], second[10,0,0]. Sum of component rectangular volumes agrees with kernel volume within float32 coordinate tolerance."
+  },
+  "licenceReview": {
+    "repository": "AngeloNicoli--OpenSCAD-Snippet",
+    "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+    "grant": "MIT",
+    "sourceSha256": "97cd7d74ef9492d8f29bcbccc7cdd972f83818d48cf947e47f0ef62229355545",
+    "sourceBytes": 1451,
+    "evidence": "library/evidence/corpus-selection-MIT-LICENSE.txt",
+    "evidenceSha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+    "content": "Full root read; inline full MIT notice and reviewed repository evidence agree. No includes/imports/third-party content or dependencies."
+  },
+  "editorEvidence": {
+    "test": "tests/model-library-bricks.test.ts",
+    "result": "PASS",
+    "checks": [
+      "Actual offline exact-source catalogue insertion",
+      "Analytic component volumes and original ranges/positions",
+      "Exact cold-qualified STL hash and four strict screens",
+      "Native code scale edit multiplies volume8; source snapshot retained",
+      "Invalid assertion edit leaves full session state, document and redo intact",
+      "Serialization plus reloaded geometry export reproduces exact STL hash",
+      "Root/source identity and disclosed snapshot policy in attribution sidecar",
+      "Exact undo/redo returns original and inserted states"
+    ]
+  },
+  "preservation": {
+    "priorCompleteRecords": 105,
+    "priorPreviews": 144,
+    "priorAngelo97RecordsExactlyEqual": true,
+    "priorPreviewValuesExactlyEqual": true,
+    "unchangedFileSha256": {
+      "library/a2d-editor-manifest.json": "fb803ee9a44ae19362caab8c36ca5e0490d12dd187cdfb93ee5c2c79f8a718d8",
+      "library/scon-editor-manifest.json": "bd1f91a694881bed63faf47e960b79c33b8181138c7717cb6fc907a4c076b185",
+      "package-lock.json": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
+      "packages/core/src/code.ts": "df59636c95e7fb7bc94ef981cd2fd5396ac533ddc60887f7212604d62fe72033",
+      "packages/core/src/parameters.ts": "cda0b7f7aa5c27913e825ad269c716bc79af6b43ad2e3a527092dc06807a9b09",
+      "packages/core/src/openscad-bundle.ts": "7f8bbdc5f0c6237086751d04d0d9f9475257b95b6f33a8516e5fff0e8018f82f",
+      "packages/geometry/src/kernel.ts": "02fc5b469c1ca25ae24cf4b76f62246719d69e914d41019148d2fd55fb4fe85a",
+      "library/corpus-audit/editor-screening-cycle18.json": "961b543ccb5417304da8371b7ebc2f2b275c9ac906b2e65a7feefe4a8c1a36e0",
+      "library/corpus-audit/editor-screening-cycle17.json": "1e2683ae5e160f4deae6799b12991bc452c2faa988e96fe5bbc4b90ddde87651",
+      "library/corpus-audit/editor-screening-cycle15.json": "75d91dd71e238ce5d55bdc57932041af893d67a67644c4298cdf253988ae306e",
+      "library/corpus-audit/editor-screening-cycle19.json": "0ac4e33121fa861e15cf1a52b3217321dd8e11efb0bde748fbe1ed34a7b4a2c8",
+      "library/corpus-audit/editor-screening-cycle23.json": "22062df2e7b742cb5e07ad2107a0b453f3e1984b68be6aa2d6ba505d657316da",
+      "library/corpus-audit/editor-screening-cycle25.json": "a77f64d82c360faf0fa77903f497f7ccdf7dafe74c6e7efdfb269134fb2b83ab",
+      "library/corpus-audit/editor-screening-cycle16.json": "c810568c6124856f79ceb5abd8c350755bd69491e0c8698c1927aa0a6f327375",
+      "library/corpus-audit/editor-screening-cycle20.json": "75a1000e23ca31f391f592358cac8115109da2ef118b3731ab78504c9953f84c",
+      "library/corpus-audit/editor-screening-cycle21.json": "9be1b7a564ad2aa7823cb76c659a9ebe8dfa2f58b36c7a4334c7f2367da127dd",
+      "library/corpus-audit/editor-screening-cycle13.json": "a31db8bb8fee717ff8ff5c0b99b256af5012a81543affc3ba0a136b2ad70dc0a"
+    },
+    "refusals": "No Knob/webbing/Box/depth/topology retries. All historical refusal reports preserved. No expected extra credit for lookup/version_num or blocked shared closures."
+  },
+  "validation": {
+    "focusedLanguageControls": "70 unique selected controls PASS across rands/assertion/comprehension/interchange; changed only obsolete literal-fraction refusal expectations. Reran the single failed numeric-index case after updating that expectation; retained69 completed passes.",
+    "newModelControls": "3/3 PASS (after preview generation completed), including focused one-root reproduction and exact prior97 record digest.",
+    "manifestControls": "2/2 PASS; skipped four broader cases.",
+    "finalGuardedRandsControls": "5/5 PASS after adding asserted-argument coverage; same five cases included in70, no extra unique credit.",
+    "build": "PASS",
+    "i18n": "PASS:1253messages/1007references",
+    "browser": "4/4 PASS at original45s limits: Chromium gallery9.4s/group25 14.5s; iPad gallery22.7s/group25 34.9s. Both offline insertion/history and145preview checks complete.",
+    "unchangedChecksReuse": "No prior105 model geometry rerender suite; exact historical record digests/original+mesh hashes verified and previous qualifications reused. Only Bricks geometry and its new preview generated."
+  },
+  "rawDirectory": "/mnt/storage/brickwright-cycle26-ranked"
+}

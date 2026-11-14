@@ -21,7 +21,10 @@ export function importOpenSCAD(source:string,libraryRanges:readonly OpenSCADLibr
  const globals=new Map<string,LocalBinding>(),globalCache=new Map<string,Value>(),globalDeclarations=new Map<number,number>(),nativeNames=new Map<string,string>();
  const vectors=new Map<string,Value>();let locals=new Map<string,ScopeValue>();const resolving=new Set<LocalBinding>();
  const libraryFunctionScopes=new WeakSet<Map<string,Definition>>();
- let modules=new Map<string,Definition>(),functions=new Map<string,Definition>();let functionDepth=0;
+ let modules=new Map<string,Definition>(),functions=new Map<string,Definition>();let functionDepth=0,randomState:number|undefined;
+ // Independent deterministic sampling; no upstream PRNG implementation or host RNG.
+ const sampleSeed=(text:string)=>{let state=2166136261;for(const byte of new TextEncoder().encode(text))state=Math.imul(state^byte,16777619);return (state>>>0)||0x6d2b79f5;};
+ const nextSample=(state:number)=>{state^=state<<13;state^=state>>>17;state^=state<<5;return state>>>0;};
  const fail=(message:string,at=tokens[cursor]?.at??source.length):never=>{throw new CadCodeError(message,at,source);};
  const limited=(message:string,at=tokens[cursor]?.at??source.length):never=>{throw new CadCodeError(message,at,source,'resource-limit');};
  let valueEvaluations=0;const chargeValues=(count=1)=>{valueEvaluations+=count;if(valueEvaluations>16384)limited(t('OpenSCAD construction limit exceeded'));};
@@ -72,9 +75,23 @@ export function importOpenSCAD(source:string,libraryRanges:readonly OpenSCADLibr
   if(typeof a!=='string'||typeof b!=='string')unsupported('numeric operation on string or undef');
   const result=op==='^'?`pow(${a}, ${b})`:`(${a}) ${op} (${b})`,n=constant(result);if(n!==undefined&&Number.isFinite(n))return ['==','!=','<','>','<=','>=','&&','||'].includes(op)?n?'true':'false':String(n);return bounded(result);
  }
- function indexValue(v:Value,index:Value):Value{chargeValues();const guard=assertionCondition([v,index]);if(guard)return guardValue(guard,indexValue(withoutAssertions(v),withoutAssertions(index)));if(v instanceof ChoiceValue)return conditional(v.condition,indexValue(v.yes,index),indexValue(v.no,index));const key=scalar(index);if(key==='true'||key==='false')return unsupported('boolean vector index');const n=constant(key),items=v instanceof TextValue?[...v.text].map(ch=>new TextValue(ch)):Array.isArray(v)?v:undefined;if(!items)return new UndefinedValue();if(n!==undefined)return Number.isInteger(n)&&n>=0&&n<items.length?items[n]:new UndefinedValue();let out:Value=new UndefinedValue();for(let i=items.length-1;i>=0;i--)out=conditional(`(${key}) == ${i}`,items[i],out);return out;}
+ function indexValue(v:Value,index:Value):Value{chargeValues();const guard=assertionCondition([v,index]);if(guard)return guardValue(guard,indexValue(withoutAssertions(v),withoutAssertions(index)));if(v instanceof ChoiceValue)return conditional(v.condition,indexValue(v.yes,index),indexValue(v.no,index));const key=scalar(index);if(key==='true'||key==='false')return unsupported('boolean vector index');const rawIndex=constant(key),n=rawIndex===undefined?undefined:Math.floor(rawIndex),items=v instanceof TextValue?[...v.text].map(ch=>new TextValue(ch)):Array.isArray(v)?v:undefined;if(!items)return new UndefinedValue();if(n!==undefined)return Number.isInteger(n)&&n>=0&&n<items.length?items[n]:new UndefinedValue();let out:Value=new UndefinedValue();for(let i=items.length-1;i>=0;i--)out=conditional(`(${key}) == ${i}`,items[i],out);return out;}
  function builtin(name:string,args:Value[]):Value{chargeValues();const guard=assertionCondition(args);if(guard)return guardValue(guard,builtin(name,args.map(withoutAssertions)));
   const variant=args.findIndex(v=>v instanceof ChoiceValue);if(variant>=0){const v=args[variant] as ChoiceValue,yes=builtin(name,args.map((a,i)=>i===variant?v.yes:a)),no=builtin(name,args.map((a,i)=>i===variant?v.no:a));if(name.startsWith('is_')&&yes===no)return yes;return conditional(v.condition,yes,no);}
+  if(name==='rands'){
+   if(args.length<3||args.length>4||args.some(v=>typeof v!=='string'||v==='true'||v==='false'))unsupported('rands requires three or four constant numeric arguments');
+   const numbers=args.map(constant);
+   if(numbers.some(v=>v===undefined||!Number.isFinite(v)))unsupported('rands arguments must be finite and independent of parameters');
+   const [low,high,count,seed]=numbers as number[];
+   if(low>high||!Number.isFinite(high-low)||!Number.isSafeInteger(count)||count<0)unsupported('rands range and integer count');
+   if(count>64)limited(t('Loop exceeds 64 values'));chargeValues(count);
+   warnings.add(t('Random samples use Brickwright’s generator and are fixed in the imported snapshot.'));
+   let state:number;
+   if(seed===undefined){warnings.add(t('Unseeded random calls use a source-derived stream for reproducible imports.'));state=randomState??sampleSeed(source);}
+   else state=sampleSeed(String(seed));
+   const result:Value[]=[];for(let i=0;i<count;i++){state=nextSample(state);result.push(String(low+(high-low)*(state/4294967296)));}
+   if(seed===undefined)randomState=state;return result;
+  }
   if(name==='search'){
    if(args.length<2||args.length>4||!Array.isArray(args[0])||!Array.isArray(args[1]))unsupported('search requires fixed needle and table lists');
    const needles=args[0] as Value[],table=args[1] as Value[],limit=args.length>2?constant(args[2]):1,column=args.length>3?constant(args[3]):0;

@@ -116,9 +116,10 @@ export const corpusEditorSelection = [
   ['Shaft_02_With_Keyway', '7d48549ed36d24d8b399e7ffcf4e18b55bf93d2cc8bef43a17bf9cc64aa923b7'],
   ['Coin_02', '92421043b2f2c5d6574e752a5e04454b5146a39452e57d21566c193ab60799bd'],
   ['Scene_City_Street', '2b33c97c3eab119a88159929bfe6927510636f0d626ac57ca025995087653743', 'Projects/Scene_City_Street.scad'],
+  ['Bricks', '97cd7d74ef9492d8f29bcbccc7cdd972f83818d48cf947e47f0ef62229355545'],
 ];
 // Only this admission batch gains warning metadata; earlier qualification records stay immutable.
-const warningQualifiedNames = new Set(['Scene_City_Street', 'Coin_02', 'Shaft_01', 'Shaft_02_With_Keyway', 'Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ', 'Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01']);
+const warningQualifiedNames = new Set(['Bricks', 'Scene_City_Street', 'Coin_02', 'Shaft_01', 'Shaft_02_With_Keyway', 'Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ', 'Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01']);
 const cityDependencies = {
   "Asset_SCAD/Street_02.scad": "9c114a059e7a07b137e11bde20c9ddc047631de9309ec8b99f2b4fc556da3060",
   "Asset_SCAD/Street_03.scad": "5e2efcd002e43aafc5ad52fecb0f5425413872fb0e38169ef98b45d22675ac9d",
@@ -126,11 +127,11 @@ const cityDependencies = {
   "Asset_SCAD/Street_05.scad": "26b28e095a3a9d571a5842152baaf7e6a247e45d185173a1ddfd525f3d953ec8",
   "Asset_SCAD/Street_04.scad": "9560ea338991cc8a202a620a3ede99e199120f253dd7cff4d7d84111c376d033"
 };
-const preserved96Hash = '80f5317fac526a8e9380e040170ba69f63e237226f410a9157aa5c98b1490308';
+const preserved97Hash = '2794018f5d2c74e1c8b7588391d7da10092ed46de712749ee0661fa8ed0de044';
 export async function generateCorpusEditorLibrary({assetId} = {}) {
   const previous = assetId ? JSON.parse((await read('editor-corpus-manifest.json')).toString()) : undefined;
-  if (previous && hash(Buffer.from(JSON.stringify(previous.assets.slice(0,96)))) !== preserved96Hash) throw new Error('Review required: historical 96 records changed.');
-  if (assetId && assetId !== 'corpus-angelo-scene-city-street') throw new Error('Focused reproduction is restricted to the new city source.');
+  if (previous && hash(Buffer.from(JSON.stringify(previous.assets.slice(0,97)))) !== preserved97Hash) throw new Error('Review required: historical 97 records changed.');
+  if (assetId && !['corpus-angelo-scene-city-street','corpus-angelo-bricks'].includes(assetId)) throw new Error('Focused reproduction is restricted to the city and Bricks sources.');
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
   const repository = corpus.repositories.find(item => item.id === repositoryId);
   if (!repository || repository.commit !== commit || repository.url !== repositoryUrl || repository.license !== 'MIT') throw new Error('Review required: selected corpus repository identity changed.');
@@ -158,7 +159,7 @@ export async function generateCorpusEditorLibrary({assetId} = {}) {
     // Preserve the previous derivative bytes and their history/provenance identity.
     const meshPath = `meshes/corpus-selection/${slug}${name === 'Walking_Stick' ? '-scoped-fn-v2' : ''}.stl`;
     const title = name === 'x' ? 'Crossed cubes (x)' : name.replaceAll('_', ' ');
-    const selectionNote = name === 'Coin_02' ? ' The authored unsupported text center argument is ignored with a warning; default left/baseline text alignment is retained. Text uses the bundled Droid Sans substitute; font metrics and appearance are not upstream-certified.' : ['Street_03', 'Street_06'].includes(name)
+    const selectionNote = name === 'Bricks' ? ' Random dimensions are a reproducible import snapshot from Brickwright’s source-derived unseeded stream. The authored source, ranges, two invocations and positions are unchanged; this is not an upstream random-sequence equivalence claim. Random values are fixed in generated CAD Script; reimport changed source to sample its source-derived stream. Appearance colours are omitted as elsewhere.' : name === 'Coin_02' ? ' The authored unsupported text center argument is ignored with a warning; default left/baseline text alignment is retained. Text uses the bundled Droid Sans substitute; font metrics and appearance are not upstream-certified.' : ['Street_03', 'Street_06'].includes(name)
       ? ' Street 03 and Street 06 are distinct upstream source files with identical derived geometry; this collection counts source files, not unique shapes.'
       : name === 'Raccordo' ? ' OpenSCAD # highlighting is omitted; the highlighted solid geometry is retained.'
       : name === 'Pipe_00' ? ' Translation uses the fixed full-render context $preview=false, preserving the source-selected 30-segment circular profiles.'
@@ -187,6 +188,7 @@ export async function generateCorpusEditorLibrary({assetId} = {}) {
     const evaluated = kernel.evaluate(session.state.document);
     if (!evaluated.bodies.length || !(evaluated.volume > 0)) throw new Error(`Selected source produced no positive solid: ${name}`);
     const mesh = Buffer.from(exportSTL(evaluated.bodies));
+    if (name === 'Bricks' && hash(mesh) !== '0a405aa894512686e543462e230dee07406b5e81b0b306746f06391c481e0fe7') throw new Error('Bricks snapshot changed from cold-qualified STL.');
     if (name === 'Scene_City_Street' && hash(mesh) !== '27c31bed500181d6207e8b020897515bb79cbe264c2387626c00dc79d3e5118f') throw new Error('City default changed from cold-qualified STL.');
     const screening = await checkModelLibrarySTL(mesh, {checkedOn: '2026-11-14', toMillimetresZUp: identity, maxTriangles: 10000, maxExtentMm: 200});
     if (!screening.quality || Object.values(screening.checks).some(result => result !== 'pass')) throw new Error(`Selected mesh screening failed: ${name}: ${JSON.stringify(screening.diagnostics)}`);

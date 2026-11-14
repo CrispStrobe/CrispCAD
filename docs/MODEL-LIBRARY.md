@@ -724,3 +724,32 @@ See `library/corpus-audit/editor-screening-cycle25.json` for the ranked alternat
 actual before/after measurements and validation reuse. The remaining five
 ClosePoints defaults and catchnhole retain independent loop/list or missing
 JSON/data blockers; no additional admission credit is assigned to them.
+
+### Authored Bricks random snapshot — 2026-11-14
+
+`Asset_SCAD/Bricks.scad` adds one byte-identical MIT source root without
+dependencies. The authored ranges, six calls, two instantiations and placement
+are unchanged. Brickwright resolves its unseeded draws into a reproducible
+source-derived import snapshot and discloses that policy in the generated code
+and model provenance. This qualifies the retained snapshot; it is not an
+upstream random-sequence equivalence claim or a qualification of every draw.
+
+The measured cohort improves **0/1 → 1/1 strict STL and editor passes**: 24 triangles,
+264.357610779 mm³, bounds [0,0,0] to approximately [15.6601,8.7175,3] mm. Independent
+component bounds confirm two 5–10 mm rectangular profiles at height 3 mm and the
+authored second origin [10,0,0]. Export identity survives serialization and
+undo/redo; edits do not resample an already imported snapshot.
+
+Totals are **106 source roots / 104 distinct STL hashes / 145 gallery entries**:
+98 Angelo, three A2D and five SCON roots. All 105 prior complete records, 144 previews
+and historical refusals remain unchanged. Only the new preview was rendered.
+Focused reproduction evaluates Bricks and hash-verifies the 97 earlier Angelo
+records and their exact original/derivative bytes:
+
+```sh
+node scripts/generate-corpus-editor-library.mjs --check --asset-id corpus-angelo-bricks
+```
+
+See `library/corpus-audit/editor-screening-cycle26.json` and the disclosed
+conversion policy in `docs/CODE-CONVERTERS.md`. No Knob, webbing, Box, depth or
+topology refusals were retried.

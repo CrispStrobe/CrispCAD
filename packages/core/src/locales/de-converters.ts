@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+  "Random samples use Brickwright’s generator and are fixed in the imported snapshot.": "Zufallswerte verwenden den Generator von Brickwright und bleiben im importierten Modell fest.",
+  "Unseeded random calls use a source-derived stream for reproducible imports.": "Zufallsaufrufe ohne Startwert verwenden für reproduzierbare Importe einen aus dem Quelltext abgeleiteten Zahlenstrom.",
   "Assertion failed": "Zusicherung fehlgeschlagen",
   "Assertion requires condition and value": "Die Zusicherung erfordert eine Bedingung und einen Wert",
   "Assertion requires a condition": "Die Zusicherung erfordert eine Bedingung",
