@@ -137,3 +137,15 @@ Use `move2d`, `rotate2d`, `scale2d`, `union2d`, `subtract2d`, `intersect2d`,
 are inline trees; named profile references and profile loops are future work.
 See [converter coverage](CODE-CONVERTERS.md#profile-engine-and-measured-coverage--2026-11-14)
 for tessellation differences, resource limits and export gaps.
+
+
+The native profile language also supports `text2d("label", size, "sans", "center",
+"baseline", spacing, curveSteps)`, `offset2d(distance, roundFlag, segments, profile)`,
+`minkowski2d`, `choose2d`, `forRange2d` and `forValues2d`. Fonts are `sans`, `serif`
+or `mono`; alignment strings and text remain literal source values. Numbers and
+profile choices can depend on code parameters. New 3D operations are
+`minkowski(a,b,...)`, `polyhedron(points,faces)` (native faces counterclockwise from
+outside), `mirror([nx,ny,nz],shape)`, `axisRotate([nx,ny,nz],angle,shape)` and
+`resize([width,depth,height],shape)` (zero preserves an axis). These use actual solid
+geometry and existing worker/preflight/history/collision boundaries. Unsupported
+foreign export operations fail explicitly; see CODE-CONVERTERS.md.

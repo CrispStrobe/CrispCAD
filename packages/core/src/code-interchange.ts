@@ -6,6 +6,8 @@ export {importOpenSCAD} from './openscad-import.js';
 const vec=(v:readonly number[])=>`[${v.join(', ')}]`;
 
 function scadProfile(p:CodeProfile):string{
+ if(p.kind==='offset')return `offset(${p.round?'r':'delta'}=${p.distance},$fn=${p.segments}) ${scadProfile(p.profile)}`;
+ if(p.kind==='text')return `text(${JSON.stringify(p.text)},size=${p.size},font=${JSON.stringify(p.font==='serif'?'Droid Serif':p.font==='mono'?'Droid Sans Mono':'Droid Sans')},halign=${JSON.stringify(p.halign)},valign=${JSON.stringify(p.valign)},spacing=${p.spacing});`;
  if(p.kind==='empty')return 'union() {}';
  if(p.kind==='rectangle')return `square(${vec(p.size)}, center=${p.center});`;
  if(p.kind==='circle')return `circle(r=${p.radius}, $fn=${p.segments});`;
@@ -14,6 +16,8 @@ function scadProfile(p:CodeProfile):string{
  return `${p.kind==='move'?'translate':p.kind}(${p.kind==='rotate'?p.angle:vec(p.vector)}) ${scadProfile(p.profile)}`;
 }
 function jscadProfile(p:CodeProfile):string{
+ if(p.kind==='offset'||p.kind==='minkowski')throw new CadCodeError(t('This profile operation cannot yet be exported to JSCAD'),0,'','unsupported-feature');
+ if(p.kind==='text')throw new CadCodeError(t('Text profiles cannot yet be exported to JSCAD'),0,'','unsupported-feature');
  if(p.kind==='empty')return 'geom2.create()';if(p.kind==='rectangle')return `translate(${vec(p.center?[0,0]:p.size.map(v=>v/2))}, rectangle({size:${vec(p.size)}}))`;
  if(p.kind==='circle')return `circle({radius:${p.radius}, segments:${p.segments}})`;
  if(p.kind==='polygon'){const parts=p.contours.map(c=>{const area=c.reduce((a,p,i)=>a+p[0]*c[(i+1)%c.length][1]-c[(i+1)%c.length][0]*p[1],0);return `polygon({points:[${(area<0?[...c].reverse():c).map(vec).join(', ')}]})`;});return parts.length?parts.reduce((a,b)=>`xorProfile(${a},${b})`):'geom2.create()';}
@@ -21,10 +25,13 @@ function jscadProfile(p:CodeProfile):string{
  return `${p.kind==='move'?'translate':p.kind==='rotate'?'rotateZ':'scale'}(${p.kind==='rotate'?p.angle*Math.PI/180:vec(p.vector)}, ${jscadProfile(p.profile)})`;
 }
 
+function axisEuler(axis:readonly number[],degrees:number):number[]{const length=Math.hypot(...axis),[x,y,z]=axis.map(v=>v/length),a=degrees*Math.PI/180,c=Math.cos(a),s=Math.sin(a),t=1-c,yAngle=Math.asin(Math.max(-1,Math.min(1,-(t*x*z-s*y))));return Math.abs(Math.cos(yAngle))>1e-8?[Math.atan2(t*y*z+s*x,t*z*z+c),yAngle,Math.atan2(t*x*y+s*z,t*x*x+c)]:[0,yAngle,Math.atan2(-(t*x*y-s*z),t*y*y+c)];}
 /** Evaluated CSG snapshot: explicit values, operation order, centering and segments. */
 export function exportOpenSCAD(program:CodeProgram):string{
  const root=compileCode(program).shape;
  function shape(s:CodeShape,depth=0):string{const pad='  '.repeat(depth),child=(node:CodeShape)=>shape(node,depth+1);
+  if(s.kind==='polyhedron')return `${pad}polyhedron(points=[${s.points.map(vec).join(',')}],faces=[${s.faces.map(face=>vec([...face].reverse())).join(',')}]);`;
+  if(s.kind==='axisRotate')return `${pad}rotate(a=${s.angle}, v=${vec(s.vector)}) ${child(s.shape)}`;
   if(s.kind==='empty')return `${pad}union() {}`;
   if(s.kind==='profile-extrude')return `${pad}linear_extrude(height=${s.height}, twist=${-s.twist}, slices=${s.steps}, scale=${vec(s.scaleTop)}) ${scadProfile(s.profile)}`;
   if(s.kind==='revolve')return `${pad}rotate_extrude(angle=${s.angle}, $fn=${s.segments}) ${scadProfile(s.profile)}`;
@@ -33,15 +40,15 @@ export function exportOpenSCAD(program:CodeProgram):string{
   if(s.kind==='cylinder')return `${pad}cylinder(h = ${s.height}, r = ${s.radius}, center = true, $fn = ${s.segments});`;
   if(s.kind==='frustum')return `${pad}cylinder(h = ${s.height}, r1 = ${s.bottom}, r2 = ${s.top}, center = true, $fn = ${s.segments});`;
   if(s.kind==='sphere')return `${pad}sphere(r = ${s.radius}, $fn = ${s.segments});`;
-  if('shapes'in s)return `${pad}${s.kind==='hull'?'hull':s.kind==='subtract'?'difference':s.kind==='intersect'?'intersection':'union'}() {\n${s.shapes.map(child).join('\n')}\n${pad}}`;
+  if('shapes'in s)return `${pad}${s.kind==='minkowski'?'minkowski':s.kind==='hull'?'hull':s.kind==='subtract'?'difference':s.kind==='intersect'?'intersection':'union'}() {\n${s.shapes.map(child).join('\n')}\n${pad}}`;
   if(s.kind==='repeat')return `${pad}union() {\n${Array.from({length:s.count},(_,i)=>`${pad}  translate(${vec(s.step.map(v=>v*i))})\n${shape(s.shape,depth+2)}`).join('\n')}\n${pad}}`;
   return `${pad}${s.kind==='move'?'translate':s.kind}(${vec(s.vector)})\n${child(s.shape)}`;
  }
  return '// Evaluated construction snapshot from Brickwright CAD. Units: mm / degrees.\n// Source parameters are resolved; keep the native source for further parametric edits.\n'+shape(root)+'\n';
 }
 export function exportJSCAD(program:CodeProgram):string{
- function shape(s:CodeShape):string{if(s.kind==='profile-extrude'){if(s.scaleTop.some(v=>v!==1))throw new CadCodeError(t('JSCAD export of tapered profiles requires slice extrusion'),0,program.source,'unsupported-feature');return `extrudeLinear({height:${s.height},twistAngle:${s.twist*Math.PI/180},twistSteps:${s.steps}}, ${jscadProfile(s.profile)})`;}if(s.kind==='revolve'&&s.angle===0)return 'geom3.create()';if(s.kind==='revolve')return `extrudeRotate({angle:${s.angle*Math.PI/180},segments:${s.segments}}, ${jscadProfile(s.profile)})`;if(s.kind==='empty')return 'geom3.create()';if(s.kind==='extrude')return `extrudeLinear({height: ${s.height}}, polygon({points: [${s.points.map(vec).join(', ')}]}))`;if(s.kind==='box')return `cuboid({size: ${vec(s.size)}})`;if(s.kind==='cylinder')return `cylinder({radius: ${s.radius}, height: ${s.height}, segments: ${s.segments}})`;if(s.kind==='frustum')return `cylinderElliptic({height: ${s.height}, startRadius: [${s.bottom}, ${s.bottom}], endRadius: [${s.top}, ${s.top}], segments: ${s.segments}})`;if(s.kind==='sphere')return `sphere({radius: ${s.radius}, segments: ${s.segments}})`;if('shapes'in s)return `${s.kind==='intersect'?'intersect':s.kind}(${s.shapes.map(shape).join(',\n    ')})`;if(s.kind==='repeat')return `union(${Array.from({length:s.count},(_,i)=>`translate(${vec(s.step.map(v=>v*i))}, ${shape(s.shape)})`).join(',\n    ')})`;return `${s.kind==='move'?'translate':s.kind}(${vec(s.vector.map(v=>s.kind==='rotate'?v*Math.PI/180:v))}, ${shape(s.shape)})`;}
- return `// Evaluated construction snapshot. Dimensions: mm. Rotation: radians.\n// Keep the native source for further parametric edits.\nconst {geometries: {geom2, geom3}, primitives: {cuboid, cylinder, cylinderElliptic, sphere, polygon, rectangle, circle}, extrusions: {extrudeLinear, extrudeRotate}, booleans: {union, subtract, intersect}, hulls: {hull}, transforms: {translate, rotate, rotateZ, scale}} = require('@jscad/modeling');\n\nconst xorProfile = (a,b) => union(subtract(a,b),subtract(b,a));\nconst main = () => ${shape(compileCode(program).shape)};\nmodule.exports = {main};\n`;
+ function shape(s:CodeShape):string{if(s.kind==='polyhedron')return `polyhedron({points:[${s.points.map(vec).join(',')}],faces:[${s.faces.map(vec).join(',')}],orientation:'outward'})`;if(s.kind==='minkowski'||s.kind==='resize')throw new CadCodeError(t('This construction cannot yet be exported to JSCAD'),0,program.source,'unsupported-feature');if(s.kind==='axisRotate')return `rotate(${vec(axisEuler(s.vector,s.angle))}, ${shape(s.shape)})`;if(s.kind==='mirror')return `mirror({normal:${vec(s.vector)}}, ${shape(s.shape)})`;if(s.kind==='profile-extrude'){if(s.scaleTop.some(v=>v!==1))throw new CadCodeError(t('JSCAD export of tapered profiles requires slice extrusion'),0,program.source,'unsupported-feature');return `extrudeLinear({height:${s.height},twistAngle:${s.twist*Math.PI/180},twistSteps:${s.steps}}, ${jscadProfile(s.profile)})`;}if(s.kind==='revolve'&&s.angle===0)return 'geom3.create()';if(s.kind==='revolve')return `extrudeRotate({angle:${s.angle*Math.PI/180},segments:${s.segments}}, ${jscadProfile(s.profile)})`;if(s.kind==='empty')return 'geom3.create()';if(s.kind==='extrude')return `extrudeLinear({height: ${s.height}}, polygon({points: [${s.points.map(vec).join(', ')}]}))`;if(s.kind==='box')return `cuboid({size: ${vec(s.size)}})`;if(s.kind==='cylinder')return `cylinder({radius: ${s.radius}, height: ${s.height}, segments: ${s.segments}})`;if(s.kind==='frustum')return `cylinderElliptic({height: ${s.height}, startRadius: [${s.bottom}, ${s.bottom}], endRadius: [${s.top}, ${s.top}], segments: ${s.segments}})`;if(s.kind==='sphere')return `sphere({radius: ${s.radius}, segments: ${s.segments}})`;if('shapes'in s)return `${s.kind==='intersect'?'intersect':s.kind}(${s.shapes.map(shape).join(',\n    ')})`;if(s.kind==='repeat')return `union(${Array.from({length:s.count},(_,i)=>`translate(${vec(s.step.map(v=>v*i))}, ${shape(s.shape)})`).join(',\n    ')})`;return `${s.kind==='move'?'translate':s.kind}(${vec(s.vector.map(v=>s.kind==='rotate'?v*Math.PI/180:v))}, ${shape(s.shape)})`;}
+ return `// Evaluated construction snapshot. Dimensions: mm. Rotation: radians.\n// Keep the native source for further parametric edits.\nconst {geometries: {geom2, geom3}, primitives: {cuboid, cylinder, cylinderElliptic, sphere, polygon, polyhedron, rectangle, circle}, extrusions: {extrudeLinear, extrudeRotate}, booleans: {union, subtract, intersect}, hulls: {hull}, transforms: {translate, rotate, rotateZ, mirror, scale}} = require('@jscad/modeling');\n\nconst xorProfile = (a,b) => union(subtract(a,b),subtract(b,a));\nconst main = () => ${shape(compileCode(program).shape)};\nmodule.exports = {main};\n`;
 }
 /** Text source with local overrides applied as new defaults, preserving formulas. */
 export function exportCodeSource(program:CodeProgram):string{

@@ -25,7 +25,7 @@ describe('optional parameter design intent',()=>{
     d.parameters.width.expression='missing';expect(()=>evaluateParameters(d)).toThrow('unknown');
   });
   it('bounds input and rejects scripts, property access and prototype names',()=>{
-    for(const expression of ['globalThis.alert(1)','constructor.constructor(1)','width[0]','1; 2','1e999','('.repeat(34)+'1'+')'.repeat(34),'1+'.repeat(128)+'1'])expect(()=>evaluateExpression(expression,()=>({value:1,length:0,angle:0}))).toThrow();
+    for(const expression of ['globalThis.alert(1)','constructor.constructor(1)','width[0]','1; 2','1e999','('.repeat(34)+'1'+')'.repeat(34),'1+'.repeat(512)+'1'])expect(()=>evaluateExpression(expression,()=>({value:1,length:0,angle:0}))).toThrow();
     const d=design();d.parameters.constructor={expression:'2',unit:'mm'};expect(()=>evaluateParameters(d)).toThrow('invalid parameter');
   });
   it('recomputes a retained boolean and invalidates its physical geometry key',()=>{

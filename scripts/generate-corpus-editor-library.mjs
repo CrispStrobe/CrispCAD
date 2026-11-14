@@ -117,7 +117,8 @@ export async function generateCorpusEditorLibrary() {
     if (!record || record.sha256 !== expectedHash || hash(bytes) !== expectedHash || record.size_bytes !== bytes.length || record.spdx !== 'MIT' || record.commit !== commit || record.dependency_blockers?.length || !record.license_evidence.includes('LICENSE')) throw new Error(`Review required: selected source changed: ${upstreamPath}`);
     const slug = name.toLowerCase().replace(/[ _]+/g, '-');
     const sourcePath = `sources/corpus-selection/${slug}.scad`;
-    const meshPath = `meshes/corpus-selection/${slug}.stl`;
+    // Preserve the previous derivative bytes and their history/provenance identity.
+    const meshPath = `meshes/corpus-selection/${slug}${name === 'Walking_Stick' ? '-scoped-fn-v2' : ''}.stl`;
     const title = name === 'x' ? 'Crossed cubes (x)' : name.replaceAll('_', ' ');
     const selectionNote = ['Street_03', 'Street_06'].includes(name)
       ? ' Street 03 and Street 06 are distinct upstream source files with identical derived geometry; this collection counts source files, not unique shapes.'
@@ -145,7 +146,7 @@ export async function generateCorpusEditorLibrary() {
         review: 'accepted', reviewer: `${repository.reviewed_by}; explicit standalone editor selection and runtime screening 2026-11-14`},
       original: {...file(sourcePath, bytes), url: record.source_url, format: 'openscad'},
       derivatives: [{...file(meshPath, mesh), format: 'stl'}],
-      modificationNotes: 'Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.' + selectionNote,
+      modificationNotes: 'Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.' + selectionNote + (name === 'Walking_Stick' ? ' Corrected scoped $fn propagation uses a new derivative path; the earlier walking-stick.stl remains unchanged for historical provenance.' : ''),
       conversion: {sourceUnits: 'mm', sourceUpAxis: 'Z', unitAssumption: 'The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.', toMillimetresZUp: identity},
       quality: screening.quality, measurements: {triangles: screening.triangles, boundsMm: screening.boundsMm, signedVolumeMm3: screening.signedVolumeMm3}, diagnostics: screening.diagnostics,
     });
@@ -161,7 +162,15 @@ export async function generateCorpusEditorLibrary() {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const write = process.argv.includes('--write');
   if (!write && !process.argv.includes('--check')) throw new Error('Use --write or --check.');
-  for (const [path, expected] of await generateCorpusEditorLibrary()) {
+  const outputs = await generateCorpusEditorLibrary();
+  // Published mesh paths are immutable: corrections need an explicit new derivative path.
+  if (write) for (const [path, expected] of outputs) {
+    if (!path.startsWith('meshes/')) continue;
+    let current;
+    try { current = await read(path); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+    if (current && !current.equals(expected)) throw new Error(`Existing mesh differs; preserve ${path} and select a new derivative version path.`);
+  }
+  for (const [path, expected] of outputs) {
     const target = new URL(`library/${path}`, root);
     if (write) { await mkdir(dirname(fileURLToPath(target)), {recursive: true}); await writeFile(target, expected); }
     else if (!(await read(path)).equals(expected)) throw new Error(`Selected corpus output differs: ${path}`);

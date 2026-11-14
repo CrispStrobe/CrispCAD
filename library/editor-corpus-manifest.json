@@ -8,7 +8,7 @@
     "command": "node scripts/generate-corpus-editor-library.mjs --check",
     "generator": {
       "path": "../scripts/generate-corpus-editor-library.mjs",
-      "sha256": "110bcee1b8586830e5a597548e4fc6b02e8b8f359072a60357aa96cfb42aa86b"
+      "sha256": "4bbbe99aed240d4bd74ef65719a46c9f12be4aee71fa5b93957f9a7dba6f601c"
     },
     "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
@@ -8304,13 +8304,13 @@
       },
       "derivatives": [
         {
-          "path": "meshes/corpus-selection/walking-stick.stl",
-          "sha256": "8901e38895159c7eab8de5002c741c3019e0ec587fa55667cdfa28fc2a15627a",
-          "bytes": 95884,
+          "path": "meshes/corpus-selection/walking-stick-scoped-fn-v2.stl",
+          "sha256": "ba81390e703302fc5fa99afbe0bd0bb6dcca3c9def9e300294ba5d6a4356adbb",
+          "bytes": 59884,
           "format": "stl"
         }
       ],
-      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics. Corrected scoped $fn propagation uses a new derivative path; the earlier walking-stick.stl remains unchanged for historical provenance.",
       "conversion": {
         "sourceUnits": "mm",
         "sourceUpAxis": "Z",
@@ -8335,7 +8335,7 @@
         ]
       },
       "quality": {
-        "fileSha256": "8901e38895159c7eab8de5002c741c3019e0ec587fa55667cdfa28fc2a15627a",
+        "fileSha256": "ba81390e703302fc5fa99afbe0bd0bb6dcca3c9def9e300294ba5d6a4356adbb",
         "toolVersion": "brickwright-stl-quality/1",
         "checkedOn": "2026-11-14",
         "screeningPolicy": {
@@ -8368,20 +8368,20 @@
         "withinTriangleLimits": true
       },
       "measurements": {
-        "triangles": 1916,
+        "triangles": 1196,
         "boundsMm": {
           "min": [
             -42,
             -6,
-            -1.2000000476837158
+            -1.193426251411438
           ],
           "max": [
             6,
             6.199999809265137,
-            1.2000000476837158
+            1.193426251411438
           ]
         },
-        "signedVolumeMm3": 183.21875638477735
+        "signedVolumeMm3": 182.4026824914966
       },
       "diagnostics": []
     },

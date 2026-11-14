@@ -63,14 +63,14 @@ function evaluateMathFunction(name: string, args: Quantity[]): Quantity {
 
 /** Original bounded expression AST. Evaluation short-circuits inactive branches. */
 export function evaluateExpression(source: string, lookup: (name: string) => Quantity, options:{references?:Set<string>}={}): Quantity {
-  if (typeof source !== 'string' || !source.trim() || source.length > 256) error(t('expression must contain 1–256 characters'));
+  if (typeof source !== 'string' || !source.trim() || source.length > 1024) error(t('expression must contain 1–1024 characters'));
   const tokens: string[] = []; let at = 0;
   while (at < source.length) {
     if (/\s/.test(source[at])) {at++; continue;}
     const token = /^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|^[A-Za-z][A-Za-z0-9_]*|^(?:==|!=|<=|>=|&&|\|\|)|^[(),+*/%!?<>:-]/.exec(source.slice(at))?.[0];
     if (!token) error(t`unsupported expression near “${source.slice(at, at + 12)}”`);
     tokens.push(token); at += token.length;
-    if (tokens.length > 128) error(t('expression has too many tokens'));
+    if (tokens.length > 512) error(t('expression has too many tokens'));
   }
   type Expr = {kind:'literal';value:Quantity}|{kind:'name';name:string}|{kind:'unary';op:string;value:Expr}|{kind:'binary';op:string;a:Expr;b:Expr}|{kind:'call';name:string;args:Expr[]}|{kind:'conditional';test:Expr;yes:Expr;no:Expr};
   let cursor = 0;

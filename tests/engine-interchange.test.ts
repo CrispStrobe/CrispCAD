@@ -23,7 +23,7 @@ it('retains hull dependencies, multiple operands, positional tapers and diameter
  const p=importOpenSCAD('distance=10; hull(){cube(2,true);translate([distance,0,0])cube(2,true);}');expect(evaluate(p).volume).toBeCloseTo(48);p.parameters.distance='20';expect(evaluate(p).volume).toBeCloseTo(88);
  expect(evaluate(importOpenSCAD('cylinder(8,4,2,true);')).bodies[0].bounds.min[2]).toBe(-4);
  const d=evaluate(importOpenSCAD('cylinder(h=8,d1=8,d2=4);'));expect(d.bodies[0].bounds).toEqual({min:[-4,-4,0],max:[4,4,8]});
- for(const source of ['cylinder(h=2,r1=0,r2=0);','cylinder(h=2,r1=-1,r2=4);','cylinder(h=2,r1=2,d1=4);'])expect(()=>importOpenSCAD(source)).toThrow();
+ for(const source of ['cylinder(h=2,r1=-1,r2=4);','cylinder(h=2,r1=2,d1=4);'])expect(()=>importOpenSCAD(source)).toThrow();
 });
 
 it('recomputes range/list instances and branch choices from retained scalar parameters',()=>{

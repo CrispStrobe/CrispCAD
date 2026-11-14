@@ -134,6 +134,11 @@ counts: the other 1,328 archived files have not been admitted for editor inserti
 422 archive records lack a recorded dependency blocker; that is not proof of
 dependency completeness or renderability. The 984 recorded blockers remain.
 
+The batches below are admission history: they describe the converter available
+when those sources were qualified. Later language support does not silently
+qualify additional sources or replace recorded screening evidence. See the
+[current bounded language coverage](../docs/CODE-CONVERTERS.md#current-coverage).
+
 The first twelve MIT selections from Angelo Nicoli's Asset Collection are
 Beam Angular, Beam H,
 Key Simple, Roll Holder, Angle Shelf, Sign 01, Sign 02, Washer, Transistor,
@@ -166,19 +171,25 @@ geometry and remain separate records for their distinct original files. The
 The sixth batch adds Street 04, Eyebolt, Ladder 02, Wall 04, Fence 01,
 Fence 02, Building 02 and Walking Stick. Bounded local module declarations
 retain lexical bindings and isolated module registries while caller `$fn`
-remains dynamic. This batch qualifies eight sources, rather than assuming twelve.
+remains dynamic. This batch qualified eight sources, rather than assuming twelve.
+Walking Stick later received a corrected scoped-`$fn` derivative at a new path.
+Its [previous qualification record](corpus-audit/qualification-history/walking-stick-v1.json),
+old mesh and preview remain preserved; the upstream source is unchanged.
 
-The seventh batch adds Ingot 01, Coin 01, LED 01 and Sauce Bottle. Tagged
-literal colour palettes support bounded nested palettes and literal integer
-selection inside module scopes. Palettes can reach only validated `color()`;
-numeric arrays, numeric geometry, functions and loops retain their separate
-rules. Alias evaluation has a cumulative budget to bound branching expansion.
-Original colour is omitted as before; original source bytes remain intact.
+The seventh batch added Ingot 01, Coin 01, LED 01 and Sauce Bottle using the
+then-supported tagged constant palettes and literal integer selection in module
+scopes. The current converter also supports bounded computed colour/string
+selectors, functions, loops and mixed typed arrays; string values still cannot
+supply numeric dimensions. Memoized lexical bindings and cumulative evaluation
+limits bound alias work. Appearance colour is omitted with a notice, and original
+source bytes remain intact.
 
 The eighth batch adds Pipe 00 and Flange 02 in an explicit full-render context
-with readonly `$preview=false`. Numeric vector selection accepts literal-proven
-module arguments/local aliases; computed/global/loop/function-derived indices
-remain rejected. Pipe uses its authored 30-facet render branch; Flange uses its
+with readonly `$preview=false`. At qualification, numeric vector selection used
+literal-proven module arguments/local aliases. Current bounded scalar indexing
+also accepts supported computed, global, loop and function-derived selectors;
+source overrides of `$preview` remain rejected. Pipe uses its authored 30-facet
+render branch; Flange uses its
 64-facet outer branch and authored default `Size=0`, with a measured 200 mm
 extent under the unchanged policy. No preview-dependent source text was edited.
 
@@ -203,9 +214,11 @@ editor selection: their converted meshes failed closed-solid topology checks.
 These are geometry screening failures, separate from dependency or licence
 exclusions; no repairs or source substitutions were applied.
 `Notebook.scad` produced 16,406 triangles, exceeding this selection's unchanged
-10,000-triangle policy. Abacus and Arc 01/02 still exceed the existing native
-node budget. These recorded limits are preserved; helper-module support does
-not qualify every source that can now parse.
+10,000-triangle policy. At their recorded screening, Abacus and Arc 01/02
+exceeded the then-applicable native node budget. Those refusals remain recorded;
+expanded language support does not qualify these files without another explicit
+screening. The selection limits and other recorded geometry exclusions are
+unchanged.
 
 Each selected model passes the existing bounded importer, Manifold evaluation,
 and hash-bound STL screening for a closed positive-volume solid, at most 10,000

@@ -56,6 +56,28 @@ describe('explicit corpus to editor selection', () => {
     }
   });
 
+  it('retains the complete Walking Stick v1 qualification, original mesh and preview after scoped-fn correction', () => {
+    const history = JSON.parse(read('corpus-audit/qualification-history/walking-stick-v1.json').toString());
+    expect(history.format).toBe('brickwright-model-library-qualification-history');
+    expect(history.sourceManifest.gitCommit).toBe('23d27d7794356ce0aaf9727e637326df739e3028');
+    // Canonical digest covers the entire original record, including grant evidence and measurements.
+    expect(hash(Buffer.from(JSON.stringify(history.asset)))).toBe('6a46b4b147acfd8ebb39834a7508c9e57b90e91a05ca842928dba991a685acf8');
+    const legacy = history.asset;
+    expect(legacy.derivatives[0].path).toBe('meshes/corpus-selection/walking-stick.stl');
+    expect(legacy.derivatives[0].sha256).toBe('8901e38895159c7eab8de5002c741c3019e0ec587fa55667cdfa28fc2a15627a');
+    const mesh = read(legacy.derivatives[0].path);
+    expect(hash(mesh)).toBe(legacy.derivatives[0].sha256);
+    expect(mesh.length).toBe(legacy.derivatives[0].bytes);
+    expect(legacy.quality.fileSha256).toBe(legacy.derivatives[0].sha256);
+    const preview = read(history.preview.path);
+    expect(preview.length).toBe(history.preview.bytes);
+    expect(hash(preview)).toBe(history.preview.sha256);
+    const current = manifest.assets.find((asset: any) => asset.id === legacy.id);
+    expect(current.original).toEqual(legacy.original);
+    expect(current.derivatives[0].path).toBe('meshes/corpus-selection/walking-stick-scoped-fn-v2.stl');
+    expect(current.derivatives[0].sha256).not.toBe(legacy.derivatives[0].sha256);
+  });
+
   it('screens all selected meshes independently and keeps physics qualification absent', async () => {
     for (const asset of manifest.assets) {
       const mesh = asset.derivatives.find((file: any) => file.format === 'stl');

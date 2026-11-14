@@ -36,7 +36,7 @@ the previous model and expressions intact. Geometry-kernel errors still preserve
 the last good display, with the editor's existing error message and Undo recovery.
 
 Up to 64 named parameters and 256 bindings are supported. Expressions are bounded
-to 256 characters, 128 tokens and 32 nesting levels. One expression drives each
+to 1,024 characters, 512 tokens and 32 nesting levels. One expression drives each
 bound property. Renaming a parameter requires updating expressions that refer to
 it; unresolved references are refused, not silently renamed.
 
