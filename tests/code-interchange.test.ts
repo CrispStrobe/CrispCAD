@@ -25,6 +25,48 @@ it('preserves solid geometry through explicit constant color wrappers and disclo
  expect(geometry('module color(){cube(3);} color();').volume).toBeCloseTo(27);
  for(const unsupported of ['color("red",alpha=2) cube(2);','color(c="red",0.5) cube(2);','color([1,0]) cube(2);','color([1.1,0,0]) cube(2);','color("red",other=1) cube(2);','color("red") import("file.stl");','color("red") cube(-1);','color(fetch()) cube(2);'])expect(()=>importOpenSCAD(unsupported),unsupported).toThrow();
 });
+it('propagates tagged literal module colors without coercing strings into CAD expressions',()=>{
+ const source='module part(col="#3b4747"){shade=col;color(shade) cube([4,2,.2],true);} part();';
+ expect(geometry(source).volume).toBeCloseTo(1.6,12);
+ expect(geometry(source.replace('part();','part(col="white");')).bodies[0].bounds).toEqual({min:[-2,-1,-.1],max:[2,1,.1]});
+ expect(geometry('module inner(c){color(c)cube(2);} module outer(c="red"){local=c;inner(local);} outer("#fff");').volume).toBeCloseTo(8);
+ expect(geometry('module part(){shade="red";color(shade)cube(2);}part();').volume).toBeCloseTo(8);
+ const converted=importOpenSCAD(source);expect(converted.source).not.toContain('#3b4747');expect(converted.source).toContain('Appearance colors omitted');
+ for(const source of [
+  'module part(c="2"){cube(c);}part();',
+  'module part(c="2"){cylinder(c,1);}part();',
+  'module part(c="true"){cube(2,center=c);}part();',
+  'module part(c="red"){cube(c+1);}part();',
+  'module part(c="not a color"){color(c)cube(2);}part();',
+  'module part(c="red"+"blue"){color(c)cube(2);}part();',
+  'color(str("red"))cube(2);',
+  'color(fetch("red"))cube(2);',
+  'function shade()="red";color(shade())cube(2);',
+  'function size(c)=2;cube(size("red"));',
+  'for(c=["red","blue"])color(c)cube(2);',
+  'module part(c="red"){color(c[0])cube(2);}part();',
+  'module part(){colors=["red"];color(colors[0])cube(2);}part();',
+  'module part(c="2); return box(9,9,9); //"){cube(c);}part();',
+ ])expect(()=>importOpenSCAD(source),source).toThrow();
+});
+it('scopes transform fragment counts through child modules and restores each enclosing scope',()=>{
+ const counts=(shape:any):number[]=>'segments'in shape?[shape.segments]:'shapes'in shape?shape.shapes.flatMap(counts):'shape'in shape?counts(shape.shape):[];
+ const source='$fn=12; module part(){sphere(1);} translate([0,0,0],$fn=20){part(); rotate([0,0,45],$fn=24){scale(2,$fn=28) part(); part();} sphere(1,$fn=16); part();} translate([8,0,0]) part();';
+ expect(counts(compileCode(importOpenSCAD(source)).shape)).toEqual([20,28,24,16,20,12]);
+ const parametric=importOpenSCAD('count=20; translate([0,0,0],$fn=count) sphere(1);');parametric.parameters.count='24';expect(counts(compileCode(parametric).shape)).toEqual([24]);
+ expect(geometry('linear_extrude(2) translate([1,0],$fn=4) circle(1);').volume).toBeCloseTo(4);
+ for(const source of ['translate([0,0,0],$fn=[20]) sphere(1);','translate([0,0,0],$fn=5000) sphere(1);','rotate(0,$fn=3) sphere(1);','scale(1,$fn=20.5) cylinder(2,1);','translate([0,0,0],$fn=1/0) sphere(1);','translate([0,0,0],$fa=20) sphere(1);'])expect(()=>importOpenSCAD(source),source).toThrow();
+});
+it('retains highlighted intersection operands and reports omitted preview appearance',()=>{
+ const source='intersection(){#cube(0.5,center=false,);cylinder(1,0.5,0.5,$fn=40,center=true);}';
+ const converted=importOpenSCAD(source),result=geometry(source);
+ expect(converted.source).toContain('Preview highlights omitted; solid geometry retained.');
+ expect(result.bodies[0].bounds).toEqual({min:[0,0,0],max:[0.5,0.5,0.5]});
+ expect(result.volume).toBeCloseTo(.625*Math.sin(Math.PI/20),12);
+ expect(geometry('linear_extrude(2) #square(3);').volume).toBeCloseTo(18);
+ for(const modifier of ['%','!','*'])expect(()=>importOpenSCAD(`${modifier}cube(2);`),modifier).toThrow();
+ expect(()=>importOpenSCAD('#import("file.stl");')).toThrow();
+});
 it('refuses unsupported geometry and language features rather than approximating or executing them',()=>{
  for(const source of ['include <foo.scad>;','linear_extrude(height=5,v=[1,0,0]) square(2);','rotate(45,[1,0,0]) cube(3);','a=10; a=20; cube(a);','sphere($fn=300);','cube(1);height=2;','import("https://example.com/a.stl");'])expect(()=>importOpenSCAD(source),source).toThrow();
 });

@@ -26,6 +26,22 @@ OpenSCAD `color()` wrappers accept literal named/hex colors, constant RGB/RGBA
 vectors in [0,1], and optional constant alpha. They preserve solid geometry while
 omitting appearance; the converted CAD Script records that omission explicitly.
 Computed color expressions and unsupported arguments are diagnosed.
+Literal color strings may pass through module defaults, module arguments, and
+local bindings into `color()`. They retain a separate tagged type and never
+become numeric CAD Script expressions. String arithmetic, functions, indexing,
+arrays, and string use in numeric geometry remain unsupported.
+
+`translate`, `rotate`, and `scale` accept a scoped `$fn` argument for their child
+geometry, including calls to local modules. Nested scopes restore the enclosing
+fragment count, and explicit primitive counts take precedence. Curved geometry
+keeps the existing finite integer segment limits and mesh budgets; unsupported
+transform arguments are rejected. The `#` preview highlight modifier retains its
+entire child geometry and records omitted highlight appearance in the converted
+source. `%`, `!`, and `*` modifiers remain unsupported because their semantics
+cannot be discarded while preserving the modeled solid.
+These semantics follow the official language documentation for
+[special variables](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Special_variables)
+and the [debug modifier](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Debug_Modifier).
 
 Source limit is 32 KiB. JSCAD has 20,000 interpreter steps, 64 iterations per loop,
 256 array items and call depth 32. The parsed AST is bounded to 8,192 nodes
