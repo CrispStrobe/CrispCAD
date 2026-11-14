@@ -591,3 +591,9 @@ all six file-action workflows passed again, covering save/new/reopen, reachable
 390 px phone controls during toolbar scrolling, initial Shapes visibility, and
 native Open routing with visible file buttons. Desktop and phone screenshots were
 inspected before delivery.
+
+Mac build **17** was built from clean source
+`dbc3a9a01d4e566ca0024153682cdcf61cf79292`, passed native smoke checks including
+the three visible project controls, was locally signed, installed and launched.
+The running receipt reports that revision with dirty=false and the installed
+bundle reports 17. Existing user projects/history were retained.
