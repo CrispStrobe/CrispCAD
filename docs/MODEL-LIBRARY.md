@@ -753,3 +753,38 @@ node scripts/generate-corpus-editor-library.mjs --check --asset-id corpus-angelo
 See `library/corpus-audit/editor-screening-cycle26.json` and the disclosed
 conversion policy in `docs/CODE-CONVERTERS.md`. No Knob, webbing, Box, depth or
 topology refusals were retried.
+
+### Archived JSCAD example and transformation fixtures — 2026-11-14
+
+Four already archived MIT roots are now admitted in
+`library/jscad-editor-manifest.json`: `basicBooleans.js` and the upstream
+transformation test fixtures `translateEx1.scad`, `scaleEx1.scad` and
+`rotateEx1.scad`. Fixture titles explicitly identify them as fixtures. Their
+original bytes, authored default roots/main, coordinates, source URLs and pinned
+JSCAD revision are retained. The existing JSCAD MIT notice is included in full.
+No new source was downloaded and no compiler/runtime changes were needed.
+
+These roots already converted on the delivered compiler. This is an offline
+library admission change: **0/4 previously shipped → 4/4 strict STL/editor
+admissions**, not a claim of four compiler repairs. Actual baseline geometry and
+STL hashes remain identical after editor insertion. The Boolean demonstration
+has 1,532 triangles and volume 29.769003 mm³; the three transformed cubes have
+12 triangles each and volumes 1,000 / 8,000 / 1,000 mm³. The existing editor
+combines the Boolean demonstration's five outputs into one body, as disclosed.
+All four retain exact provenance, export identity, serialization and undo/redo.
+
+Delivered source counts now require all four explicit manifests: **110 roots /
+108 distinct STL hashes**, from 98 Angelo + 3 A2D + 5 SCON + 4 JSCAD example/fixture
+roots; there are 149 gallery entries. The earlier bundled JSCAD gear is unchanged
+and is not counted again. Every previous 106 complete record, 145 preview and
+historical refusal is preserved.
+
+```sh
+node scripts/generate-jscad-editor-library.mjs --check
+```
+
+The earlier Round-Anything cohort produced no geometry/STL admission under the
+fixed guards. Its unsupported filter/sign/format and memoization experiment was
+preserved externally and entirely reverted. No cache/work-counter change is
+shipped. See `library/corpus-audit/editor-screening-cycle28.json` for the separate
+failed cohort and successful admission evidence.

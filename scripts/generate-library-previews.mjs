@@ -27,7 +27,7 @@ export function selectPreviewAssets(assets,assetIds) {
 async function main() {
 const {corpusOnly,assetIds}=parsePreviewArguments(process.argv.slice(2));
 const json=async path=>JSON.parse(await readFile(path,'utf8'));
-const corpusAssets=[...createLocalModelLibraryCatalogue(await json('library/editor-corpus-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/a2d-editor-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/scon-editor-manifest.json')).assets];
+const corpusAssets=[...createLocalModelLibraryCatalogue(await json('library/editor-corpus-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/a2d-editor-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/scon-editor-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/jscad-editor-manifest.json')).assets];
 const candidates=corpusOnly?corpusAssets:[...createLocalModelLibraryCatalogue(await json('library/examples-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/fixtures-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/supported-models-manifest.json')).assets,(await json('library/seed-catalogue.json')).assets.find(a=>a.id==='jscad-involute-gear'),...corpusAssets];
 const assets=selectPreviewAssets(candidates,assetIds);
 const kernel=await createGeometryKernel({wasmBinary:await readFile('node_modules/manifold-3d/manifold.wasm')});

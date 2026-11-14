@@ -548,3 +548,12 @@ and editor passes**. Its reproducible snapshot consists of two separate boxes,
 24 triangles and 264.357610779 mm³. Both planar dimensions of each box remain
 within the authored 5–10 mm range; height 3 mm and second origin [10,0,0] are retained.
 See `library/corpus-audit/editor-screening-cycle26.json`.
+
+Cycle 28 adds no converter behavior. Four exact archived JSCAD examples/SCAD
+transformation fixtures are newly packaged for offline library insertion using
+the existing converters. Their baseline and editor-export STL identities agree.
+The attempted Round-Anything filter/sign/format/memoization changes were reverted;
+construction/work and other resource limits, random snapshot semantics and all
+historical refusals remain unchanged. Admission measurements and distinct
+compiler-versus-library outcomes are recorded in
+`library/corpus-audit/editor-screening-cycle28.json`.
