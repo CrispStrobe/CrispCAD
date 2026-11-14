@@ -4,7 +4,7 @@ import {mountModelLibraryPanel, type ModelLibraryOptions} from './model-library-
 export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
 import { t } from '@brickwright/cad-core';
-import { createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution } from '@brickwright/cad-core';
+import { createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube } from '@brickwright/cad-core';
 import type { CadDocument, CadSession, Primitive, SolidNode, Transform, Vec3 } from '@brickwright/cad-core';
 import { importSTL } from '@brickwright/cad-geometry';
 import type { GeometryResult } from '@brickwright/cad-geometry';
@@ -268,16 +268,23 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     field(inspector, 'Object name', n.name, value => session.update(id, { name: value }), 'text');
     transformFields([id],activeKey);
     const recipe=n.generator??(session.state.document.roots.includes(id)?defaultGenerator(n.physics?.sourcePreset??''):undefined);
-    if(recipe){
+    if(recipe&&!isCube(n)){
       const draft=structuredClone(recipe);const legacyLettering=!n.generator&&['text','name-tag'].includes(recipe.preset);if(legacyLettering)draft.text='';const form=el('div','shape-parameters');form.append(el('div','inspect-title',t`${t(recipe.preset[0].toUpperCase()+recipe.preset.slice(1))} parameters`));
       if(legacyLettering)form.append(el('p','hint',t('This older object did not retain its text. Enter the lettering to make it editable; the existing solid stays unchanged until Apply.')));
       if(draft.preset==='text'||draft.preset==='name-tag'){
         field(form,'Text',draft.text??'',value=>draft.text=value,'text');const label=el('label','field',t('Font')),select=el('select');select.setAttribute('aria-label',t('Font'));
         for(const [value,name] of [['sans','Droid Sans'],['serif','Droid Serif'],['mono','Droid Sans Mono'],['block',t('Original block letters')]]){const option=el('option','',name);option.value=value;select.append(option);}select.value=draft.font??'sans';select.onchange=()=>draft.font=select.value as typeof draft.font;label.append(select);form.append(label);
       }
+      if(draft.preset==='screw'){
+       for(const [key,label,choices]of [['headStyle','Head type',[['cylindrical','Cylindrical head'],['hex','External hex head'],['countersunk','Countersunk head'],['pan','Pan head']]],['driveStyle','Drive type',[['slot','Slotted'],['cross','Cross recess'],['hex','Hex socket'],['none','No recess']]]] as const){const wrap=el('label','field',t(label)),select=el('select');select.setAttribute('aria-label',t(label));for(const [value,name]of choices){const option=el('option','',t(name));option.value=value;select.append(option);}select.value=String(draft[key]??(key==='headStyle'?'cylindrical':'slot'));select.onchange=()=>{if(draft.version===1)draft.orientation='legacy';draft.version=2;draft.headStyle??='cylindrical';draft.driveStyle??='slot';draft.driveDepth??=draft.values.headHeight*.3;draft.headAngle??=90;draft.threadAngle??=60;(draft as any)[key]=select.value;};wrap.append(select);form.append(wrap);}
+       if(draft.version===2){if(draft.driveStyle!=='none')field(form,'Drive recess depth (mm)',draft.driveDepth!,value=>draft.driveDepth=Number(value),'number','.1');field(form,'Thread angle (°)',draft.threadAngle!,value=>draft.threadAngle=Number(value),'number','1');if(draft.headStyle==='countersunk')field(form,'Countersink angle (°)',draft.headAngle!,value=>draft.headAngle=Number(value),'number','1');}
+      }
       for(const parameter of generatorFields(recipe.preset)){
+        if(draft.version===2&&draft.preset==='screw'&&(parameter.key==='headHeight'&&draft.headStyle==='countersunk'||parameter.key==='slotWidth'&&draft.driveStyle==='none'))continue;
+        if(draft.version===2&&draft.preset==='screw'&&parameter.key==='diameter'){field(form,'Thread diameter (mm)',draft.values.diameter+2*draft.values.threadDepth,value=>draft.values.diameter=Number(value)-2*draft.values.threadDepth,'number','.1');continue;}
+        if(draft.version===2&&draft.preset==='screw'&&parameter.key==='threadDepth'){field(form,parameter.label,draft.values.threadDepth,value=>{const diameter=draft.values.diameter+2*draft.values.threadDepth;draft.values.threadDepth=Number(value);draft.values.diameter=diameter-2*draft.values.threadDepth;},'number',String(parameter.step));continue;}
         if(parameter.key==='hand'){const label=el('label','field',t('Thread handedness'));const select=el('select');select.setAttribute('aria-label',t('Thread handedness'));for(const [value,name] of [[1,'Right hand'],[-1,'Left hand']] as const){const option=el('option','',t(name));option.value=String(value);select.append(option);}select.value=String(draft.values.hand);select.onchange=()=>draft.values.hand=Number(select.value);label.append(select);form.append(label);}
-        else{const input=field(form,parameter.label,draft.values[parameter.key],value=>draft.values[parameter.key]=Number(value),'number',String(parameter.step));input.min=String(parameter.min);input.max=String(parameter.max);}
+        else{const input=field(form,draft.preset==='screw'&&parameter.key==='slotWidth'&&draft.driveStyle==='hex'?'Socket width across flats (mm)':draft.preset==='screw'&&parameter.key==='slotWidth'&&draft.driveStyle==='cross'?'Drive width (mm)':draft.preset==='screw'&&parameter.key==='headDiameter'&&draft.headStyle==='hex'?'Head width across flats (mm)':parameter.label,draft.values[parameter.key],value=>draft.values[parameter.key]=Number(value),'number',String(parameter.step));input.min=String(parameter.min);input.max=String(parameter.max);}
       }
       const apply=button('Apply shape parameters',async()=>{const expected=session.state.revision;apply.disabled=true;try{const fragment=createPresetDocument(draft.preset,'BRICKWRIGHT',{recipe:draft});await client.evaluate(fragment);if(disposed)return;if(session.state.revision!==expected)throw new Error(t('The model changed while generating this shape. Apply again.'));session.replaceGenerated(id,fragment);await whenIdle();}finally{apply.disabled=false;}},form,'primary');if(n.generator){const advanced=el('details');advanced.append(el('summary','',t('Advanced')));button('Detach generator',()=>session.detachGenerator(id),advanced);form.append(advanced);}inspector.append(form);
     }
@@ -294,7 +301,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       for(const parameter of dimensions){const p=session.state.document.parametric.parameters[parameter.id];const input=field(design,t`Parameter ${parameter.label} (${p.unit})`,p.expression,expression=>{const next=structuredClone(session.state.document.parametric!);next.parameters[parameter.id].expression=expression;session.setParametric(next);},'text');input.parentElement?.append(el('small','',`${Number(values[parameter.id].value.toFixed(5))} ${p.unit==='scalar'?'':p.unit}`));}inspector.append(design);
     }
     field(inspector, 'Color', n.color, value => session.update(id, { color: value }), 'color');
-    if (n.kind === 'box') {
+    if(isCube(n)&&n.kind==='box'){field(inspector,'Edge length (mm)',n.size[0]*n.transform.scale[0],value=>{const edge=Number(value)/n.transform.scale[0];session.update(id,{size:[edge,edge,edge]});},'number','0.1');}
+    else if (n.kind === 'box') {
       (['Width', 'Depth', 'Height'] as const).forEach((label, i) => field(inspector, `${label} (mm)`, n.size[i], value => { const size = [...n.size] as Vec3; size[i] = Number(value); session.update(id, { size }); }, 'number', '0.1'));
     } else if (n.kind === 'cylinder' || n.kind === 'sphere') {
       field(inspector, 'Radius (mm)', n.radius, value => session.update(id, { radius: Number(value) }), 'number', '0.1');
@@ -319,7 +327,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       if(session.state.document.joints?.some(j=>j.bodyA===id||j.bodyB===id))button('Detach joints',()=>session.detachJoints([id]),inspector);
     }
     const bindings=session.state.document.parametric?.bindings.filter(binding=>binding.nodeId===id)??[];
-    for(const binding of bindings){const label=propertyLabels[binding.property];const input=Array.from(inspector.querySelectorAll('input')).find(input=>input.getAttribute('aria-label')===t(label));if(input){input.disabled=true;input.title=t`Driven by ${binding.expression}`;input.parentElement?.append(el('small','driven-expression',`= ${binding.expression}`));}}
+    for(const binding of bindings){const label=isCube(n)&&binding.property==='width'?'Edge length (mm)':propertyLabels[binding.property];const input=Array.from(inspector.querySelectorAll('input')).find(input=>input.getAttribute('aria-label')===t(label));if(input){input.disabled=true;input.title=t`Driven by ${binding.expression}`;input.parentElement?.append(el('small','driven-expression',`= ${binding.expression}`));}}
     if(bindings.length)button('Edit driving expressions',()=>parametersPanel.open(),inspector);
   }
   async function buildLatest() {

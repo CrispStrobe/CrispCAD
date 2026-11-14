@@ -1,4 +1,4 @@
-import {defaultGenerator} from '@brickwright/cad-core';
+import {defaultGenerator,screwVariant,checkGenerator} from '@brickwright/cad-core';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 // Independently authored presets. Geometry constructors are from Three.js (MIT).
@@ -12,6 +12,7 @@ import { advancedCatalog, constructionDocument, constructionPreview } from './ad
 type MeshShape = Extract<SolidNode, { kind: 'mesh' }>;
 export interface ShapePreset { additional?:boolean; id: string; name: string; category: string; description: string; keywords: string; color: string }
 const originalCatalog = [
+  ['cube','Cube','Basic solids','A cube with one linked edge length.','cube equal edges square','#f1b84b'],
   ['box','Box','Basic solids','A rectangular solid with editable width, depth and height.','cube block rectangular','#e9a743'],
   ['rounded-box','Rounded box','Basic solids','A box with rounded corners.','filleted soft rectangle','#ef8763'],
   ['cylinder','Cylinder','Basic solids','A circular solid with editable radius and height.','round disk rod','#db933b'],
@@ -35,9 +36,9 @@ const originalCatalog = [
 
 const essentials:Record<string,string[]>={
  'Start a part':['l-bracket','mounting-plate','spacer'],
- 'Build solids':['box','cylinder','rounded-box','capsule','sphere','wedge','cone','polygon'],
+ 'Build solids':['cube','box','cylinder','rounded-box','capsule','sphere','wedge','cone','polygon'],
  'Holes & hollow parts':['tube','washer','counterbore','countersink','port','teardrop'],
- 'Supports & connections':['rib','boss','screw','nut','hinge','dovetail','snap-fit'],
+ 'Supports & connections':['rib','boss','screw','hex-head-screw','socket-head-screw','countersunk-screw','pan-head-screw','nut','hinge','dovetail','snap-fit'],
  'Motion parts':['gear','spring'],
  'Labels & outlines':['text','name-tag','star','heart'],
 };
@@ -46,7 +47,8 @@ const templates:ShapePreset[]=[
  {id:'mounting-plate',name:'Mounting plate',category:'',description:'A dimensioned plate with two bores. Edit the plate and hole dimensions in Parameters.',keywords:'mount base holes flange parametric',color:'#74b7cb'},
  {id:'spacer',name:'Spacer',category:'',description:'A dimensioned ring with an editable outer radius, bore radius and length.',keywords:'bushing sleeve standoff bearing parametric',color:'#abc1cd'},
 ];
-const entries=[...templates,...originalCatalog];
+const screwNames=[['hex-head-screw','Hex-head screw'],['socket-head-screw','Socket-head screw'],['countersunk-screw','Countersunk screw'],['pan-head-screw','Pan-head screw']];
+const entries=[...templates,...screwNames.map(([id,name])=>({id,name,category:'',description:'A screw with editable head, drive and V-thread dimensions.',keywords:'screw bolt thread fastener hex socket countersunk pan',color:'#b0b7c2'})),...originalCatalog];
 export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
  ...Object.entries(essentials).flatMap(([category,ids])=>ids.map(id=>Object.freeze({...entries.find(p=>p.id===id)!,category,additional:false}))),
  ...entries.filter(p=>!Object.values(essentials).flat().includes(p.id)).map(p=>Object.freeze({...p,category:'Additional shapes',additional:true})),
@@ -58,8 +60,10 @@ function tube(outer: number, inner: number, height: number, detail: number) {
 }
 /** Caller owns and disposes the returned geometry. All geometry is Z-up. */
 export function presetGeometry(id: string, preview = false): THREE.BufferGeometry {
+  const variant=screwVariant(id);if(variant)return constructionPreview('screw',variant);
   const n = preview ? 20 : 64;
   switch (id) {
+    case 'cube': return new THREE.BoxGeometry(30,30,30);
     case 'box': return new THREE.BoxGeometry(30,30,20);
     case 'rounded-box': return new RoundedBoxGeometry(30,24,20, preview ? 2 : 4, 3);
     case 'cylinder': return new THREE.CylinderGeometry(10,10,30,n).rotateX(Math.PI/2);
@@ -86,6 +90,7 @@ export function presetGeometry(id: string, preview = false): THREE.BufferGeometr
   }
 }
 export function createPresetShape(id: string): { shape: Primitive | MeshShape; height: number } {
+  if (id==='cube')return {shape:{kind:'box',size:[30,30,30]},height:30};
   if (id==='box') return {shape:{kind:'box',size:[30,30,20]},height:20};
   if (id==='cylinder') return {shape:{kind:'cylinder',radius:10,height:30,segments:64},height:30};
   if (id==='sphere') return {shape:{kind:'sphere',radius:15,segments:48},height:30};
@@ -98,9 +103,10 @@ export function createPresetShape(id: string): { shape: Primitive | MeshShape; h
 const previews = new Map<string,string>();
 export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: {svg?:string;recipe?:GeneratorRecipe;font?:GeneratorRecipe['font']} = {}) {
   const preset = shapeCatalog.find(p => p.id === id); if (!preset) throw new Error(t('Unknown shape'));
+  const variant=screwVariant(id);if(variant)return constructionDocument('screw',t(preset.name),preset.color,text,options.svg,options.recipe??variant);
   if(['l-bracket','mounting-plate','spacer'].includes(id)){const doc=structuredClone(createDesignTemplate(id as import('@brickwright/cad-core').DesignTemplate));doc.title=t(doc.title);for(const node of Object.values(doc.nodes))node.name=t(node.name);for(const sketch of Object.values(doc.sketches??{}))sketch.name=t(sketch.name);return doc;}
   if (advancedCatalog.some(p => p[0] === id)){let recipe=options.recipe;if(!recipe&&['text','name-tag'].includes(id)){recipe=defaultGenerator(id)!;recipe={...recipe,text,font:options.font??'sans'};}return constructionDocument(id, t(preset.name), preset.color, text, options.svg,recipe);}
-  const session = createCadSession(); session.add(createPresetShape(id).shape, { name: t(preset.name), color: preset.color }); const doc = structuredClone(session.state.document); const node=doc.nodes[doc.roots[0]];node.physics = {...defaultPartPhysics(),sourcePreset:id};
+  const session = createCadSession(); const base=createPresetShape(id).shape;if(id==='cube'){const recipe=checkGenerator(options.recipe??defaultGenerator('cube')!);if(recipe.preset!=='cube')throw new Error(t('Invalid shape generator'));const edge=recipe.values.edge;if(base.kind==='box')base.size=[edge,edge,edge];}session.add(base, { name: t(preset.name), color: preset.color }); const doc = structuredClone(session.state.document); const node=doc.nodes[doc.roots[0]];node.physics = {...defaultPartPhysics(),sourcePreset:id};if(id==='cube'){doc.version=2;node.generator=structuredClone(options.recipe??defaultGenerator('cube')!);}
   if(id==='torus')node.physics.collisionHint={kind:'tube-grid',segments:64,sides:24,layout:'columns',closed:true};
   const profileLengths:Record<string,number>={'curved-cone':18,hemisphere:18,paraboloid:26,tube:5,vase:14,washer:5};
   if(profileLengths[id])node.physics.collisionHint={kind:'radial-profile',segments:64,sides:profileLengths[id]-1,layout:'rows',closed:true}; session.dispose(); return doc;

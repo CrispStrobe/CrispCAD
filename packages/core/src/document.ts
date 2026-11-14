@@ -20,6 +20,10 @@ export type Primitive = { kind: 'box'; size: Vec3 } | { kind: 'cylinder'; radius
 export type Shape = Primitive | ExtrusionFeature | {kind:'code';program:CodeProgram} | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[]; useHoleRoles?:true } | { kind: 'mesh'; positions: number[]; indices: number[] };
 export type SolidNode = { id: string; name: string; color: string; transform: Transform; reference?: boolean; role?: 'solid'|'hole'; provenance?: string[]; physics?: PartPhysics; generator?:GeneratorRecipe } & Shape;
 export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3 | 4 | 5 | 6 | 7; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch>; provenance?:ModelProvenance; modelSource?:ModelSource }
+export const isCube=(node:SolidNode)=>node.kind==='box'&&node.generator?.preset==='cube';
+function linkedCubeValue(previous:readonly number[],next:readonly number[]):number{const changed=next.filter((v,i)=>Math.abs(v-previous[i])>1e-10*Math.max(1,Math.abs(v)));if(changed.some(v=>Math.abs(v-changed[0])>1e-10*Math.max(1,Math.abs(v))))throw new Error(translate('Cube edges are linked; use a Box for independent dimensions'));return changed[0]??next[0];}
+export function constrainCubeTransform(node:SolidNode,next:Transform):Transform{if(!isCube(node))return next;if(!vec(next.scale,.001,1000))throw new Error(translate('Cube edges are linked; use a Box for independent dimensions'));const axis=next.scale.map((v,i)=>Math.abs(v/node.transform.scale[i]-1)).reduce((best,v,i,a)=>v>a[best]?i:best,0),scale=next.scale[axis];return {...next,scale:[scale,scale,scale]};}
+export function constrainCubeEdit(node:SolidNode,next:SolidNode):SolidNode{if(!isCube(node)||node.kind!=='box'||next.kind!=='box')return next;if(!vec(next.size,.01,100000))throw new Error(translate('Cube edges are linked; use a Box for independent dimensions'));const edge=linkedCubeValue(node.size,next.size);return {...next,size:[edge,edge,edge],transform:constrainCubeTransform(node,next.transform),generator:{...node.generator!,values:{edge}}};}
 export const MAX_DOCUMENT_BYTES = 16 * 1024 * 1024;
 export const identityTransform = (): Transform => ({ position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] });
 export function newId(): string {
@@ -55,6 +59,7 @@ export function checkDocument(value: unknown): CadDocument {
     const t = raw.transform;
     if(raw.generator!==undefined){if(value.version===1)fail(translate('shape recipes require version 2 or later'));checkGenerator(raw.generator);}
     if (!record(t) || !vec(t.position) || !vec(t.rotation, -360000, 360000) || !vec(t.scale, 0.001, 1000)) fail(translate`bad transform on ${id}`);
+    if((raw.generator as GeneratorRecipe|undefined)?.preset==='cube'){const size=raw.size as Vec3,edge=(raw.generator as GeneratorRecipe).values.edge;if(raw.kind!=='box'||!vec(size,.01,100000)||size.some(v=>v!==edge)||(t.scale as Vec3).some(v=>v!==(t.scale as Vec3)[0]))fail(translate('Cube edges are linked; use a Box for independent dimensions'));}
     switch (raw.kind) {
       case 'box': if (!vec(raw.size, 0.01, 100000)) fail(translate`bad box dimensions on ${id}`); break;
       case 'cylinder':

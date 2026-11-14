@@ -63,9 +63,10 @@ function closedTube(curve:T.Curve<T.Vector3>,segments:number,radius:number,sides
  tube.dispose();let volume=0;for(let i=0;i<indices.length;i+=3){const a=new T.Vector3().fromArray(positions,indices[i]*3),b=new T.Vector3().fromArray(positions,indices[i+1]*3),c=new T.Vector3().fromArray(positions,indices[i+2]*3);volume+=a.dot(b.cross(c));}if(volume<0)for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.userData.collisionHint={kind:'tube-grid',segments,sides,layout:'rows',closed:false,stride:1};return g;
 }
-function threadRidge(radius=5,pitch=2,turns=10,clearance=0,depth=1,hand=1,phase=0,spacing=pitch){
+function threadRidge(radius=5,pitch=2,turns=10,clearance=0,depth=1,hand=1,phase=0,spacing=pitch,flankAngle?:number){
  const count=Math.ceil(turns*48),positions:number[]=[],indices:number[]=[];
- for(let i=0;i<=count;i++){const a=hand*i/count*turns*2*Math.PI+phase,z=i/count*turns*pitch;for(const [r,dz] of [[radius-.3,-spacing*.38],[radius+depth+clearance,0],[radius-.3,spacing*.38]])positions.push(r*Math.cos(a),r*Math.sin(a),z+dz);}
+ const halfWidth=flankAngle===undefined?spacing*.38:(depth+.3)*Math.tan(flankAngle*Math.PI/360);
+ for(let i=0;i<=count;i++){const a=hand*i/count*turns*2*Math.PI+phase,z=i/count*turns*pitch;for(const [r,dz] of [[radius-.3,-halfWidth],[radius+depth+clearance,0],[radius-.3,halfWidth]])positions.push(r*Math.cos(a),r*Math.sin(a),z+dz);}
  for(let i=0;i<count;i++)for(let j=0;j<3;j++){const a=i*3+j,b=i*3+(j+1)%3,c=(i+1)*3+j,d=(i+1)*3+(j+1)%3;indices.push(a,b,c,b,d,c);}indices.push(0,2,1,count*3,count*3+1,count*3+2);
  let volume=0;for(let i=0;i<indices.length;i+=3){const a=new T.Vector3().fromArray(positions,indices[i]*3),b=new T.Vector3().fromArray(positions,indices[i+1]*3),c=new T.Vector3().fromArray(positions,indices[i+2]*3);volume+=a.dot(b.cross(c));}if(volume<0)for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.userData.collisionHint={kind:'tube-grid',segments:count,sides:3,layout:'rows',closed:false,seam:false,stride:1};return g;
@@ -76,8 +77,17 @@ function letters(text:string,z=0){const clean=text.trim().toUpperCase();if(!clea
 export interface Construction { add:T.BufferGeometry[]; cut?:T.BufferGeometry[]; after?:T.BufferGeometry[]; separate?:boolean; reference?:boolean }
 export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string,recipe?:GeneratorRecipe):Construction {
  const values=recipe?.values??defaultGenerator(id)?.values;
- if(['thread','screw','nut'].includes(id)&&values){const p=values,r=p.diameter/2,lead=p.pitch*p.starts;const ridges=()=>Array.from({length:p.starts},(_,i)=>threadRidge(r+(id==='nut'?p.clearance:0),lead,p.length/lead,id==='nut'?.15:0,p.threadDepth,p.hand,i*2*Math.PI/p.starts,p.pitch));
+ if(['thread','screw','nut'].includes(id)&&values){const p=values,r=p.diameter/2,lead=p.pitch*p.starts;const ridges=()=>Array.from({length:p.starts},(_,i)=>threadRidge(r+(id==='nut'?p.clearance:0),lead,p.length/lead,id==='nut'?.15:0,p.threadDepth,p.hand,i*2*Math.PI/p.starts,p.pitch,recipe?.threadAngle));
   if(id==='thread')return {add:[cylinder(r,p.length,[0,0,p.length/2]),...ridges()]};
+  if(id==='screw'&&recipe?.version===2){
+   const style=recipe.headStyle!,drive=recipe.driveStyle!,headR=style==='hex'?p.headDiameter/Math.sqrt(3):p.headDiameter/2,neck=r+p.threadDepth,h=style==='countersunk'?(headR-neck)/Math.tan(recipe.headAngle!*Math.PI/360):p.headHeight;
+   const head=style==='pan'?lathe([[0,0],[headR,0],...Array.from({length:17},(_,i)=>{const a=i*Math.PI/32;return [i===16?0:headR*Math.cos(a),h*(.3+.7*Math.sin(a))];}),[0,0]]):cylinder(style==='countersunk'?neck:headR,h,[0,0,h/2],style==='hex'?6:64,headR);
+   const depth=recipe.driveDepth!,z=h-depth/2+.1,cuts:T.BufferGeometry[]=[];
+   if(drive==='slot')cuts.push(box(p.slotWidth,p.headDiameter+2,depth+.2,[0,0,z]));
+   if(drive==='cross')cuts.push(box(p.slotWidth,p.headDiameter*.65,depth+.2,[0,0,z]),box(p.headDiameter*.65,p.slotWidth,depth+.2,[0,0,z]));
+   if(drive==='hex')cuts.push(cylinder(p.slotWidth/Math.sqrt(3),depth+.2,[0,0,z],6));
+   const add=[cylinder(r,p.length,[0,0,-p.length/2]),...ridges().map(g=>g.rotateX(Math.PI)),head];if(recipe.orientation==='legacy')[...add,...cuts].forEach(g=>g.rotateX(Math.PI));return {add,...(cuts.length?{cut:cuts}:{})};
+  }
   if(id==='screw')return {add:[cylinder(r,p.length,[0,0,p.length/2]),...ridges(),cylinder(p.headDiameter/2,p.headHeight,[0,0,-p.headHeight/2])],cut:[box(p.slotWidth,p.headDiameter*.8,p.headHeight*.3+1,[0,0,-p.headHeight+(p.headHeight*.3-1)/2])]};
   return {add:[cylinder(r+p.threadDepth+4,p.length,[0,0,p.length/2],6)],cut:[cylinder(r+p.clearance,p.length+4,[0,0,p.length/2]),...ridges()]};
  }
@@ -137,8 +147,8 @@ export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string,
  default:throw new Error(t`Unknown construction: ${id}`);
  }
 }
-export function constructionPreview(id:string):T.BufferGeometry {
- const c=advancedGeometry(id,['text','name-tag'].includes(id)?'ABC':'BW',true);const geometries=[...c.add,...(c.after??[])].map(g=>{const non=g.index?g.toNonIndexed():g;const clean=new T.BufferGeometry();clean.setAttribute('position',non.getAttribute('position').clone());if(non!==g)non.dispose();g.dispose();return clean;});const merged=mergeGeometries(geometries)!;geometries.forEach(g=>g.dispose());return merged;
+export function constructionPreview(id:string,recipe?:GeneratorRecipe):T.BufferGeometry {
+ const c=advancedGeometry(id,['text','name-tag'].includes(id)?'ABC':'BW',true,undefined,recipe);const geometries=[...c.add,...(c.after??[])].map(g=>{const non=g.index?g.toNonIndexed():g;const clean=new T.BufferGeometry();clean.setAttribute('position',non.getAttribute('position').clone());if(non!==g)non.dispose();g.dispose();return clean;});c.cut?.forEach(g=>g.dispose());const merged=mergeGeometries(geometries)!;geometries.forEach(g=>g.dispose());return merged;
 }
 export function constructionDocument(id:string,name:string,color:string,text:string,svg?:string,recipe?:GeneratorRecipe):CadDocument {
  const provided=recipe;recipe??=defaultGenerator(id);if(recipe&&!provided&&['text','name-tag'].includes(id))recipe={...recipe,text};

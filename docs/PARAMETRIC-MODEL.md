@@ -191,3 +191,30 @@ open CAD workflow comparisons and a pinned FluidCAD/Solidcraft architecture revi
 Practical `createDesignTemplate` factories now expose their upstream driving inputs
 in Properties. On-canvas transforms remain independent of design dimensions:
 scaling geometry does not silently rewrite a width equation.
+
+## Cube and fastener recipes
+
+A Cube is a box with generator recipe version 2, preset `cube`, and one `edge`
+value. The core validates equal intrinsic edges and uniform local scale. Numeric
+edits, gizmo previews/commits and parameter bindings share the constraint. Cube
+bindings expose `width` for the edge and `scaleX` for uniform scale; redundant
+independent depth/height/scaleY/scaleZ bindings are refused. A normal Box remains
+independent in all three dimensions. Model source, copies and history retain the
+recipe. Older readers reject the unknown recipe version instead of silently
+losing the constraint.
+
+New screw presets are hex-head, socket-head, countersunk and pan-head. Version-2
+screw recipes retain `headStyle`, `driveStyle`, `driveDepth`, `headAngle`,
+`threadAngle` and orientation alongside the existing numeric thread inputs.
+Drive choices are slot, cross recess, hex socket and no recess. The UI exposes the
+major thread diameter; stored `values.diameter` remains the core diameter, so the
+major diameter is core diameter plus twice the radial thread depth. Hex head and
+socket dimensions are widths across flats. Countersunk height follows its angle;
+V-thread flank angle, pitch, depth, handedness and starts remain editable.
+
+New family presets are head-up. Explicitly upgrading a legacy screw retains its
+old orientation. Version-1 recipes and their generated geometry remain unchanged.
+These are editable representative fastener geometries, with a simplified V-thread;
+they do not claim ISO/DIN tolerance classes, crest/root truncations or mating-fit
+certification. Real Jolt tests verify the new drive recesses in rigid preview;
+thread engagement still requires a qualified mechanism model.
