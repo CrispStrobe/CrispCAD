@@ -626,3 +626,23 @@ entries / 95 distinct mesh hashes**, and 136 total gallery entries. All earlier
 records and previews are preserved. See `editor-screening-cycle18.json` for the
 two original failures and final measurements. Partial-turn and crossing-axis
 profiles remain refused; this is static geometry qualification only.
+
+
+### SCON function-valued configurations — 2026-11-14
+
+The separate `library/scon-editor-manifest.json` admits five MIT authored defaults
+from Warren MacEvoy's pinned openscad-scon revision
+`c954e07bf0faf571d8eccc259d47e61938666cef`: `examples/ex1.scad`, `ex2.scad`,
+`ex3.scad`, `ex4.scad` and `tldr.scad`. Every root includes only the independently
+retained 5,595-byte `scon.scad`; all exact original bytes and the complete MIT
+notice remain local and are hash-checked before insertion. No JSON file, external
+renderer, parameter override, repair or alternate entrypoint is used.
+
+The six-root report `library/corpus-audit/editor-screening-cycle19.json` retains
+0/6 before and 5/6 after. The remaining `ex5` refuses construction depth beyond
+32. The admitted meshes have 5000, 524, 524, 5084 and 5000 triangles, respectively,
+and pass parse, closed positive-volume, 200mm extent and 10,000-triangle screens.
+They add five distinct hashes: 95 Angelo + 2 A2D + 5 SCON = **102 source entries /
+100 distinct meshes**, and 141 total gallery entries. The prior 97 records,
+136 previews and seven historical A2D refusals remain unchanged. All counts refer
+to these static authored defaults; no manufacturing, motion or physics claim.

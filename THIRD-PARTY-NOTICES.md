@@ -157,3 +157,14 @@ retained under `library/sources/a2d/` and
 reviewed grants are recorded in `library/a2d-editor-manifest.json` and carried
 into insertion provenance and attribution exports. Their default-root geometry
 qualification does not certify the remaining A2D helpers or samples.
+
+
+### SCON model sources (MIT)
+
+Five unchanged authored example roots and their shared `scon.scad` dependency
+are retained from Warren MacEvoy's openscad-scon revision
+`c954e07bf0faf571d8eccc259d47e61938666cef`. The exact full copyright, permission
+and warranty notice is in `library/evidence/scon-MIT-LICENSE.txt`. Model sources
+and derivatives carry the independently reviewed MIT grant and complete notice
+in catalogue/project attribution. This is model content, not an added runtime
+dependency. Source details and qualifications: `library/scon-editor-manifest.json`.
