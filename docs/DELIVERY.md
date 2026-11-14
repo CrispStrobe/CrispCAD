@@ -597,3 +597,27 @@ Mac build **17** was built from clean source
 the three visible project controls, was locally signed, installed and launched.
 The running receipt reports that revision with dirty=false and the installed
 bundle reports 17. Existing user projects/history were retained.
+
+## Project import/export and recoverable removal — 2026-11-14
+
+Projects now offers multi-file Import and a per-project ⋯ menu for Export,
+Duplicate, Rename and Move to Trash. Export targets that project's entire journal
+without opening it; import adds a separate project without changing the editor.
+Rename supports current and inactive projects. Trash can restore/export and keeps
+every revision, head and snapshot hash. Late appends to trashed projects reject.
+Opening an existing project reuses its saved head without appending a restoration
+iteration. Close is ×; phone menus are bounded and dismiss on outside click.
+
+Trash is project metadata, mirrored to the native history-inclusive archive.
+Recovery retains it and prefers the canonical autosave over stale exported copies
+of the same project. Mirrors share the close-time flush queue. Moving the current
+project first switches to a new workspace. No permanent purge or expiry exists.
+
+Verification: production build, 435 unit tests (one optional external oracle
+skipped), 1,196-message German audit and all six SDKs installed/executed offline.
+Sixteen Chromium/iPad WebKit code/parameter/project workflows passed, plus six
+file-action workflows. The final eight project workflows were rerun after sync and
+Open semantics changes: all pass. They cover complete history on duplicate/export,
+active/inactive rename, partial multi-file import failures, current-model retention,
+Trash/reload/restore with identical revisions, native folder recovery after IndexedDB
+rebuild with a stale duplicate backup, and phone menu bounds/rename cancellation.

@@ -69,3 +69,20 @@ the working project, while Save writes a portable history-inclusive file. The
 project-action group is outside the horizontally scrolling modeling toolbar, with
 44 px touch targets. The complete native File menu on Mac and in-window File menu
 on touch/browser hosts remain available. No additional toolbar row is introduced.
+
+## Project management — 2026-11-14
+
+Projects has New, multi-file Import and Trash controls. Each project row keeps
+Open visible and puts Export, Duplicate, Rename and Move to Trash in its ⋯ menu.
+Export targets the selected project without loading it. Import adds separate
+projects and retains the current editor; invalid files report individually.
+Duplicate keeps the complete history and adds a renamed head. Inline rename
+updates either the current design or the selected saved project.
+
+Trash retains every revision/content object and can export or restore a project.
+Removing the active design switches to a new workspace before marking the old
+project. The marker is mirrored inside its native .bcad archive so storage recovery
+does not silently resurrect it. There is no expiry or automatic permanent purge.
+Operations flush pending edits; exports include history. Opening an existing
+project is navigation and adds no restoration iteration. English/German labels,
+outside-click dismissal and phone-bounded per-project menus are provided.

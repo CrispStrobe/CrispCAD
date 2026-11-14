@@ -59,6 +59,9 @@ a sidecar. See [coverage and converter APIs](docs/CODE-CONVERTERS.md) and
 
 Projects autosave locally. Editable `.bcad` files contain the model and its complete
 saved iteration history. Restoring an older iteration preserves later work.
+Projects supports multi-file import and per-project export, duplication, rename
+and recoverable removal through Trash. Importing a backup creates a separate
+project; exporting includes every saved iteration.
 On macOS, Settings selects the project-library folder. Stored iterations are
 separate from the bounded editing undo stack; portable history archives currently
 have a 64 MiB limit.

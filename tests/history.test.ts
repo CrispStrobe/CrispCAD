@@ -28,3 +28,17 @@ describe('persistent model revisions',()=>{
   const name=`history-${crypto.randomUUID()}`,a=await openHistoryStore(name),b=await openHistoryStore(name),s=createCadSession();const first=s.state.document;const second={...first,title:'Second writer'};const revisions=await Promise.all([a.append(first),b.append(second)]);expect(revisions.map(r=>r.serial).sort()).toEqual([1,2]);expect(await a.listRevisions(first.id)).toHaveLength(2);await a.close();await b.close();
  });
 });
+
+describe('recoverable project removal',()=>{
+ it('keeps every revision in Trash, blocks late edits and restores without rewriting history',async()=>{
+  const store=await openHistoryStore('trash-'+crypto.randomUUID()),s=createCadSession();s.add({kind:'box',size:[10,20,30]});const first=await store.append(s.state.document,'First');s.rename('Archived');const last=await store.append(s.state.document,'Second');const revisions=await store.listRevisions(s.state.document.id);
+  await store.setProjectTrashed(s.state.document.id,true);expect(await store.listProjects()).toHaveLength(0);expect(await store.listProjects({trashedOnly:true})).toHaveLength(1);expect((await store.getProject(s.state.document.id))!.headId).toBe(last.id);expect(await store.listRevisions(s.state.document.id)).toEqual(revisions);
+  await expect(store.append({...s.state.document,title:'Late autosave'})).rejects.toThrow('Trash');expect((await store.getProject(s.state.document.id))!.headId).toBe(last.id);
+  const archive=await store.exportArchive(s.state.document.id),target=await openHistoryStore('trash-recover-'+crypto.randomUUID());await target.importArchive(archive,{preserveIdentity:true});expect(await target.listProjects()).toHaveLength(0);expect((await target.listProjects({includeTrashed:true}))[0].trashedAt).toBeGreaterThan(0);expect(await target.readDocument(first.id)).toEqual(await store.readDocument(first.id));
+  await target.setProjectTrashed(s.state.document.id,false);expect(await target.listProjects()).toHaveLength(1);expect(await target.listRevisions(s.state.document.id)).toEqual(revisions);await target.append({...s.state.document,title:'Restored edit'});expect((await target.getProject(s.state.document.id))!.serial).toBe(3);
+  const copy=await store.importArchive(archive);expect(copy.trashedAt).toBeUndefined();expect(copy.id).not.toBe(s.state.document.id);expect(await store.listProjects()).toHaveLength(1);expect(await store.listRevisions(copy.id)).toHaveLength(2);await target.close();await store.close();
+ });
+ it('rejects invalid trash metadata and missing targets without changing existing projects',async()=>{
+  const store=await openHistoryStore('trash-invalid-'+crypto.randomUUID()),s=createCadSession();await store.append(s.state.document);const archive=JSON.parse(new TextDecoder().decode(await store.exportArchive(s.state.document.id)));archive.project.trashedAt='invalid';await expect(store.importArchive(new TextEncoder().encode(JSON.stringify(archive)))).rejects.toThrow('trash metadata');await expect(store.setProjectTrashed('missing',true)).rejects.toThrow('Model not found');expect(await store.listProjects()).toHaveLength(1);await store.close();
+ });
+});

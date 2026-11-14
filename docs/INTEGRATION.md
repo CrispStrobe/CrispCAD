@@ -236,3 +236,22 @@ the STL and its attribution JSON. Programmatic callers use
 `editor.export('stl', modificationNotes)`. Attributed 3MF is refused. Hosts must
 save/share this ZIP intact; plain mesh and project export contracts are unchanged.
 See [attribution export](MODEL-ATTRIBUTION.md) for snapshot and cancellation behavior.
+
+## Recoverable project removal
+
+The history store adds optional `ModelProject.trashedAt` metadata; documents and
+revision contents remain unchanged. `listProjects()` returns active projects;
+`listProjects({trashedOnly:true})` returns Trash and `includeTrashed:true` includes
+both. `setProjectTrashed(id, true/false)` is serialized with journal writes and
+changes no revision IDs, heads or snapshot hashes. Appending to a trashed project
+is refused, including late autosaves. Hosts should flush and switch away from an
+active design before moving it to Trash.
+
+History-inclusive exports carry the marker. Native folder recovery imports with
+`preserveIdentity:true` and retains it. Ordinary backup import creates a new active
+project with remapped IDs and the full original revision history. No IndexedDB
+schema migration, history pruning or permanent removal was introduced.
+
+Native recovery prefers the canonical `<project-id>.bcad` autosave over exported
+copies with the same identity. Import/rename/duplicate/trash mirrors share the
+serialized file queue and are included in the host's close-time flush.

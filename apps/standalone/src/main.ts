@@ -25,7 +25,7 @@ const historyUI=mountHistoryUI(()=>editor,async revision=>{
  const current=editor;if(!current)return;const expectedRevision=current.session.state.revision;const store=await historyStore;
  await store.append(current.session.state.document,'Before restoring an iteration');
  const doc=await store.readDocument(revision.id);if(editor!==current||current.session.state.revision!==expectedRevision)throw new Error(t('The model changed while loading this iteration. Try restoring again.'));restoring=revision;current.session.load(doc);await lastSave;await current.whenIdle();current.frame();
-});
+},prepareToClose);
 document.querySelector('#library')!.addEventListener('click',()=>historyUI.open());
 let showReadout=false;try{showReadout=localStorage.getItem('brickwright-cad:view:readout')==='true';}catch{}
 function saveReadout(visible:boolean){showReadout=visible;try{localStorage.setItem('brickwright-cad:view:readout',String(visible));}catch{}}
