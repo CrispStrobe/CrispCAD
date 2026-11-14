@@ -546,3 +546,23 @@ a model edit, complete library files and refusal to prune existing history.
 Four additional desktop-host browser checks passed in Chromium/WebKit, including
 registration of the native Model Source command. Existing user projects were
 retained during graceful replacement of the previous app.
+
+## Image-led model library and one desktop File menu — 2026-11-14
+
+The library now uses preview cards, compact licence tags, search/type filtering
+and a selection/insert panel. All 36 bundled sources have cached PNG thumbnails
+rendered from their evaluated geometry, keyed by original source SHA-256. Optional
+notes no longer gate insertion; accurate default incorporation/conversion notes
+are recorded automatically. Licence text scrolls below Insert; complete technical
+and collision records remain available in a collapsed section. Close is an
+accessible × control. The macOS native File menu gains Model Library and replaces
+the in-window File menu; browser/iPad and ordinary embedded hosts retain theirs.
+
+Verification: production build, 433 unit tests (one optional external oracle
+skipped), 1,165-message German audit and 22 Chromium/iPad WebKit workflows. The
+20 gallery/desktop cases passed; two collision-report cases were updated to open
+the newly collapsed technical section after changing catalogue selections and
+passed on rerun. Visual inspection caught and fixed card compression and filter
+width before delivery; geometry checks now protect card height/label placement.
+Actual image decoding, insertion without notes, cancellation, offline reuse, undo,
+attributed exports and native menu command routing are covered.

@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+  "Model type":"Modelltyp",
+  "All models":"Alle Modelle",
+  "Preview unavailable":"Keine Vorschau verfügbar",
+  "Editable source":"Bearbeitbarer Quelltext",
+  "Mesh":"Dreiecksnetz",
+  "Licence & attribution":"Lizenz & Urheberangaben",
+  "Technical details":"Technische Details",
+  "Notes (optional)":"Notizen (optional)",
+  "Select a model to insert.":"Ein Modell zum Einfügen auswählen.",
+  "Catalogue file":"Katalogdatei",
+
   "Recorded collision evidence":"Dokumentierte Kollisionsnachweise",
   "A complete report is recorded for a different STL selection; it does not apply to this file.":"Ein vollständiger Bericht ist für eine andere STL-Auswahl dokumentiert; er gilt nicht für diese Datei.",
   "Only a legacy physics summary is recorded. No complete collision report is available for this selection.":"Es ist nur eine ältere Physikzusammenfassung dokumentiert. Für diese Auswahl liegt kein vollständiger Kollisionsbericht vor.",

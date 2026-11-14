@@ -25,7 +25,7 @@ async function reportedCatalogue():Promise<ModelLibraryCatalogue>{
  return value;
 }
 async function open(page:Page){await page.getByLabel('File menu',{exact:true}).click();await page.getByRole('button',{name:'Model library',exact:true}).click();return page.getByRole('dialog',{name:'Model library',exact:true});}
-async function load(page:Page,value:unknown){await page.getByLabel('Open catalogue JSON',{exact:true}).setInputFiles({name:'catalogue.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(value))});}
+async function load(page:Page,value:unknown){await page.getByLabel('Catalogue file',{exact:true}).setInputFiles({name:'catalogue.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(value))});}
 async function saved(page:Page){return page.evaluate(()=>JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!));}
 
 test('browse without fetching, insert one verified model with provenance, undo and reuse cached bytes offline',async({page})=>{
@@ -38,13 +38,13 @@ test('browse without fetching, insert one verified model with provenance, undo a
  await dialog.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();
  await expect(dialog).toContainText('Selected STL conversion to millimetres, Z up');await expect(dialog).toContainText('Curated limits:');
  await expect(dialog.getByRole('link',{name:'Licence evidence'})).toHaveAttribute('href','https://library-test.example/evidence');
- const insert=dialog.getByRole('button',{name:'Insert selected STL',exact:true});await expect(insert).toBeDisabled();
+ const insert=dialog.getByRole('button',{name:'Insert selected STL',exact:true});await expect(insert).toBeEnabled();
  await page.getByLabel('Incorporation modification notes',{exact:true}).fill('Applied recorded millimetres/Z-up conversion; no repair.');expect(requests).toBe(0);
  await insert.click();await expect(dialog.getByRole('status')).toContainText('Inserted with provenance');expect(requests).toBe(1);
  const inserted=await saved(page);expect(inserted.roots).toHaveLength(2);expect(inserted.provenance.records[0].asset.id).toBe('test-tetrahedron');expect(inserted.provenance.records[0].asset.quality.collisionReport).toEqual(reviewed.assets[0].quality!.collisionReport);
  await dialog.getByRole('button',{name:'Close model library'}).click();await page.getByRole('button',{name:'Undo',exact:true}).click();expect(await saved(page)).toEqual(before);
  await page.getByRole('button',{name:'Redo',exact:true}).click();expect(await saved(page)).toEqual(inserted);
- const reopened=await open(page);await load(page,reviewed);await reopened.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();await reopened.getByLabel('Incorporation modification notes',{exact:true}).fill('Reused verified cached model unchanged.');await reopened.getByLabel('Use cached files only',{exact:true}).check();await reopened.getByRole('button',{name:'Insert selected STL',exact:true}).click();await expect(reopened.getByRole('status')).toContainText('Inserted with provenance');expect(requests).toBe(1);expect((await saved(page)).roots).toHaveLength(3);
+ const reopened=await open(page);await load(page,reviewed);await reopened.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();await reopened.getByLabel('Incorporation modification notes',{exact:true}).fill('Reused verified cached model unchanged.');await reopened.getByText('Technical details',{exact:true}).click();await reopened.getByLabel('Use cached files only',{exact:true}).check();await reopened.getByRole('button',{name:'Insert selected STL',exact:true}).click();await expect(reopened.getByRole('status')).toContainText('Inserted with provenance');expect(requests).toBe(1);expect((await saved(page)).roots).toHaveLength(3);
  const reused=await saved(page);await page.reload();await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');expect(await saved(page)).toEqual(reused);
 });
 
@@ -53,7 +53,7 @@ test('bad metadata, missing quality, offline misses and corrupt bytes preserve t
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');const before=await saved(page),dialog=await open(page);
  await load(page,{format:'brickwright-local-example-library',version:1,assets:[]});await expect(dialog.getByRole('status')).toContainText('Unsupported');
  const value=await catalogue();delete value.assets[0].quality;await load(page,value);await dialog.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();await dialog.getByLabel('Incorporation modification notes',{exact:true}).fill('Unchanged.');await expect(dialog.getByRole('button',{name:'Insert selected STL',exact:true})).toBeDisabled();
- await load(page,await catalogue());await dialog.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();await dialog.getByLabel('Incorporation modification notes',{exact:true}).fill('Unchanged.');await dialog.getByLabel('Use cached files only',{exact:true}).check();await dialog.getByRole('button',{name:'Insert selected STL',exact:true}).click();await expect(dialog.getByRole('status')).toContainText('unavailable offline');expect(requests).toBe(0);
+ await load(page,await catalogue());await dialog.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();await dialog.getByLabel('Incorporation modification notes',{exact:true}).fill('Unchanged.');await dialog.getByText('Technical details',{exact:true}).click();await dialog.getByLabel('Use cached files only',{exact:true}).check();await dialog.getByRole('button',{name:'Insert selected STL',exact:true}).click();await expect(dialog.getByRole('status')).toContainText('unavailable offline');expect(requests).toBe(0);
  await dialog.getByLabel('Use cached files only',{exact:true}).uncheck();await dialog.getByRole('button',{name:'Insert selected STL',exact:true}).click();await expect(dialog.getByRole('status')).toContainText('SHA-256 mismatch');expect(requests).toBe(1);expect(await saved(page)).toEqual(before);
 });
 
@@ -72,7 +72,7 @@ test('bundled CAD and OpenSCAD sources insert offline, stay editable through und
  for(const name of selected){
   await dialog.getByRole('button',{name,exact:true}).click();
   if(name.includes('cube'))await expect(dialog).toContainText('OpenSCAD source is converted');
-  const insert=dialog.getByRole('button',{name:'Insert editable source',exact:true});await expect(insert).toBeDisabled();await dialog.getByLabel('Incorporation modification notes',{exact:true}).fill('Default parameters, unchanged coordinates.');await insert.click();await expect(dialog.getByRole('status')).toContainText('Editable source inserted with provenance. Available offline.');
+  const insert=dialog.getByRole('button',{name:'Insert editable source',exact:true});await expect(insert).toBeEnabled();await dialog.getByLabel('Incorporation modification notes',{exact:true}).fill('Default parameters, unchanged coordinates.');await insert.click();await expect(dialog.getByRole('status')).toContainText('Editable source inserted with provenance. Available offline.');
  }
  expect(requests).toBe(0);const inserted=await saved(page);expect(inserted.roots).toHaveLength(before.roots.length+2);expect(inserted.provenance.records).toHaveLength(2);
  for(const record of inserted.provenance.records){expect(record.selectedFile.path).toMatch(/^sources\//);expect(record.selectedFile.url).toBeUndefined();}
@@ -119,6 +119,7 @@ test('recorded collision reports expose bindings and limits without qualifying o
  // Same bytes at a different identity do not inherit the first file's full report.
  asset.derivatives.push({...asset.original,url:'https://library-test.example/another.stl'});
  await load(page,value);await dialog.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();
+ await dialog.getByText('Technical details',{exact:true}).click();
  const report=dialog.getByRole('region',{name:'Recorded collision evidence',exact:true});
  await expect(report).toContainText('not a reusable runtime collision proof');await expect(report).toContainText('Changed bytes, conversion, geometry or toolchain require requalification.');
  await report.getByText('Inspect complete recorded collision report',{exact:true}).click();
@@ -131,9 +132,23 @@ test('recorded collision reports expose bindings and limits without qualifying o
  await dialog.getByLabel('Selected library STL',{exact:true}).selectOption('0');await expect(report.getByText('Inspect complete recorded collision report',{exact:true})).toBeVisible();
  for(const qualified of [true,false]){
   const legacy=await catalogue();legacy.assets[0].quality!.physics={engine:'Jolt',engineVersion:'historic-engine',qualifierVersion:'historic-qualifier',qualified};
-  await load(page,legacy);await dialog.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();
+  await load(page,legacy);await dialog.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();await dialog.getByText('Technical details',{exact:true}).click();
   await expect(report).toContainText('Only a legacy physics summary is recorded.');await expect(report).toContainText(`historic-engine; historic-qualifier; reported qualified: ${qualified}.`);await expect(report.locator('details')).toHaveCount(0);
  }
- await load(page,await catalogue());await dialog.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();await expect(report).toContainText('No complete collision report is recorded for this selection.');
+ await load(page,await catalogue());await dialog.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();await dialog.getByText('Technical details',{exact:true}).click();await expect(report).toContainText('No complete collision report is recorded for this selection.');
  expect(requests).toBe(0);expect(await saved(page)).toEqual(before);
+});
+
+// Gallery acceptance: actual bundled images, a usable primary action and compact details.
+test('every bundled model has a preview and inserts without mandatory notes',async({page})=>{
+ await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');const before=await saved(page),dialog=await open(page);
+ const cards=dialog.locator('.model-library-card');await expect(cards).toHaveCount(36);await expect(cards.locator('img')).toHaveCount(36);expect((await cards.first().boundingBox())!.height).toBeGreaterThanOrEqual(170);expect(await cards.first().evaluate(card=>{const outer=card.getBoundingClientRect(),label=card.querySelector('strong')!.getBoundingClientRect();return label.top>=outer.top&&label.bottom<=outer.bottom;})).toBe(true);
+ await expect.poll(()=>cards.locator('img').evaluateAll((images:any[])=>images.every(image=>image.complete&&image.naturalWidth>0))).toBe(true);
+ expect(await saved(page)).toEqual(before);await expect(dialog.getByRole('button',{name:'Close model library'})).toHaveText('×');
+ await cards.filter({hasText:'Named dependencies'}).click();const insert=dialog.getByRole('button',{name:'Insert editable source',exact:true});await expect(insert).toBeEnabled();
+ await expect(dialog.locator('.model-library-technical')).not.toHaveAttribute('open');await expect(dialog.getByRole('textbox',{name:'Licence & attribution',exact:true})).toHaveValue(/Copyright/);
+ expect(await dialog.evaluate(node=>{const action=node.querySelector('.library-insert')!,licence=node.querySelector('.model-library-licence')!;return !!(action.compareDocumentPosition(licence)&Node.DOCUMENT_POSITION_FOLLOWING);})).toBe(true);
+ await insert.click();await expect(dialog.getByRole('status')).toContainText('Editable source inserted');const added=await saved(page);expect(added.roots).toHaveLength(before.roots.length+1);expect(added.provenance.records[0].modificationNotes).toContain('no manual changes');
+ await dialog.getByLabel('Model type',{exact:true}).selectOption('mesh');await expect(cards).toHaveCount(0);await dialog.getByLabel('Model type',{exact:true}).selectOption('source');await expect(cards).toHaveCount(36);
+ expect(await dialog.evaluate(node=>node.scrollWidth<=node.clientWidth)).toBe(true);
 });

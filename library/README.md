@@ -104,3 +104,23 @@ and Metric Threads Demo remain archival and are deliberately absent from the
 bundled insertion catalogue. No simplified substitutes or partial conversions are
 admitted. No mesh screen, printability or physics qualification is claimed for the
 inserted gear; a passing positive-volume trial is separate from those checks.
+
+## Browser previews
+
+All 36 host-bundled items have static PNG previews generated from their actual
+bounded source conversion and evaluated solids. Previews are keyed by original
+source SHA-256; the standalone host refuses a bundled item without its thumbnail.
+They are presentation assets, not geometry/printability/physics qualification.
+The original catalogue attribution and licences apply to model-derived previews.
+
+Regenerate locally after building packages (requires the pinned Playwright Chromium
+browser; set `PLAYWRIGHT_BROWSERS_PATH` when using an external browser cache):
+
+```sh
+npm run library:previews:generate
+```
+
+The reusable editor accepts host-provided `previews` and `licenceTexts` maps.
+Thumbnail browsing performs no model downloads or project/history writes. Imported
+external catalogues without a host-supplied preview show an explicit unavailable
+placeholder; the editor does not invent an image or fetch their STL automatically.

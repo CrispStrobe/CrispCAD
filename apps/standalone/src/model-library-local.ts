@@ -3,6 +3,9 @@ import {createLocalModelLibraryCatalogue, parseModelLibraryCatalogue, validateMo
 import manifestText from '../../../library/examples-manifest.json?raw';
 import fixtureText from '../../../library/fixtures-manifest.json?raw';
 import seedText from '../../../library/seed-catalogue.json?raw';
+import previewText from '../../../library/previews.json?raw';
+import bsdNotice from '../../../library/evidence/brickwright-examples-LICENSE.txt?raw';
+import cc0Notice from '../../../library/evidence/slicer-test-models-LICENSE.md?raw';
 import mitNotice from '../../../library/evidence/jscad-LICENSE.txt?raw';
 
 // Only exact files bundled at build time are exposed; no path is read from a host filesystem.
@@ -26,5 +29,7 @@ export function createBundledModelLibrary() {
   gear.licence.attribution += ` Applicable original JSCAD MIT notice (retained for source and converted geometry; line breaks normalized to spaces): ${mitNotice.replace(/\r?\n/g, ' ')}`;
   const checked = validateModelLibraryCatalogue({...examples, assets: [...examples.assets, ...fixtures.assets, gear]});
   if (!checked.valid) throw new Error(checked.errors.join(' '));
-  return {catalogue: checked.catalogue, localFiles};
+  const previews=new Map<string,string>(Object.entries(JSON.parse(previewText).previews));
+  for(const asset of checked.catalogue.assets)if(!previews.has(asset.original.sha256))throw new Error('Missing bundled model preview: '+asset.id);
+  return {catalogue: checked.catalogue, localFiles, previews, licenceTexts:new Map([['BSD-3-Clause',bsdNotice],['CC0-1.0',cc0Notice],['MIT',mitNotice]])};
 }

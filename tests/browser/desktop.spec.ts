@@ -26,6 +26,12 @@ test('native Model Source command opens the synchronized dock without editing th
  await page.addInitScript(()=>{(window as any).brickwrightDesktop=true;(window as any).webkit={messageHandlers:{cadHost:{postMessage:async()=>null}}};});
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');await addShape(page,'Box');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  const before=await page.evaluate(()=>localStorage.getItem('brickwright-cad:standalone:v1'));
- await page.evaluate(async()=>{await (window as any).brickwrightExecuteCommand('model-source');});await expect(page.getByLabel('Design source',{exact:true})).toBeVisible();await expect(page.getByLabel('Design source',{exact:true})).toHaveValue(/box\(/);
+ await page.evaluate(async()=>{await (window as any).brickwrightExecuteCommand('model-source');});await expect(page.getByLabel('File menu',{exact:true})).toBeHidden();await expect(page.getByLabel('Design source',{exact:true})).toBeVisible();await expect(page.getByLabel('Design source',{exact:true})).toHaveValue(/box\(/);
  expect(await page.evaluate(()=>localStorage.getItem('brickwright-cad:standalone:v1'))).toBe(before);
+});
+
+test('native Model Library command replaces the duplicate in-window File menu',async({page})=>{
+ await page.addInitScript(()=>{(window as any).brickwrightDesktop=true;(window as any).webkit={messageHandlers:{cadHost:{postMessage:async()=>null}}};});
+ await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');await expect(page.getByLabel('File menu',{exact:true})).toBeHidden();
+ await page.evaluate(async()=>{await (window as any).brickwrightExecuteCommand('model-library');});const dialog=page.getByRole('dialog',{name:'Model library',exact:true});await expect(dialog).toBeVisible();await expect(dialog.locator('.model-library-card img')).toHaveCount(36);
 });

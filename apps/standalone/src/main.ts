@@ -62,7 +62,7 @@ function start(doc?: CadDocument) {
     editor = mountCadEditor(root, {
       modelLibrary:{cache:createModelLibraryBrowserCache(),...createBundledModelLibrary()},
       document: doc, wasmURL: new URL('../cad-assets/manifold.wasm', import.meta.url).href,
-      headerContent:hostActions,navigationPreset,
+      headerContent:hostActions,navigationPreset,nativeMenus:desktop.available,
       showTransformReadout:showReadout,onTransformReadoutChange:saveReadout,appearance,
       saveProject:async()=>{if(editor)await saveProject(editor.session.state.document);},
       decodeProject,

@@ -123,7 +123,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         func section(_ title:String)->NSMenu {let item=NSMenuItem(title:title,action:nil,keyEquivalent:"");menu.addItem(item);let submenu=NSMenu(title:title);item.submenu=submenu;return submenu}
         let file=section("File")
         addCommand(file,"New Project","new","n");addCommand(file,"Open Project…","open","o");addCommand(file,"Project Library…","projects","o",[.command,.shift]);file.addItem(.separator())
-        addCommand(file,"Save Project…","save","s");file.addItem(.separator());addCommand(file,"Import STL…","import","i");addCommand(file,"Export…","export","e",[.command,.shift])
+        addCommand(file,"Model Library…","model-library");file.addItem(.separator());addCommand(file,"Save Project…","save","s");file.addItem(.separator());addCommand(file,"Import STL…","import","i");addCommand(file,"Export…","export","e",[.command,.shift])
         let edit=section("Edit")
         addCommand(edit,"Undo","undo","z");addCommand(edit,"Redo","redo","z",[.command,.shift]);edit.addItem(.separator())
         addCommand(edit,"Cut","cut","x");addCommand(edit,"Copy","copy","c");addCommand(edit,"Paste","paste","v");addCommand(edit,"Duplicate","duplicate","d");addCommand(edit,"Delete","delete","\u{7f}",[]);edit.addItem(.separator());addCommand(edit,"Select All","select-all","a");addCommand(edit,"Deselect All","deselect")
@@ -400,7 +400,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
           }
           if (\(smokeStage) === 13) {const panel=root.querySelector('.code-dialog[open]');if(!panel)return 'waiting';Array.from(panel.querySelectorAll('button')).find(b=>b.textContent==='Create code object').click();return 'code-created';}
           if (\(smokeStage) === 14) {const code=Object.values(doc.nodes).find(n=>n.kind==='code');return objects.length===4 && doc.version===4 && code?.program.language==='brickwright-cad-script' ? 'model-source-command':'waiting';}
-          if (\(smokeStage) === 15) {const pane=root.querySelector('.model-source-pane:not([hidden])');return pane?.querySelector('textarea')?.value.includes('cad`') && doc.version===4 ? 'passed':'waiting';}
+          if (\(smokeStage) === 15) {const pane=root.querySelector('.model-source-pane:not([hidden])');return pane?.querySelector('textarea')?.value.includes('cad`') && doc.version===4 ? 'model-library-command':'waiting';}
+          if (\(smokeStage) === 16) {const gallery=root.querySelector('.model-library-dialog[open]');if(!gallery||gallery.querySelectorAll('.model-library-card img').length!==36||!root.querySelector('.file-tools')?.hidden)return 'waiting';gallery.close();return 'passed';}
           if (!Array.from(root.querySelectorAll('#iterations option')).some(option => option.textContent.startsWith('#3 ·'))) return 'waiting';
           if (!document.querySelector('.library-dialog .project-card')) return 'waiting';
           return window.brickwrightDesktop && !!window.webkit.messageHandlers.cadSave && !!window.brickwrightPrepareToClose ? 'passed' : 'bridge missing';
@@ -430,7 +431,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
                         guard files.count==1,let archive=try JSONSerialization.jsonObject(with:Data(contentsOf:files[0])) as? [String:Any],archive["format"] as? String == "brickwright-cad-history",let revisions=archive["revisions"] as? [Any],revisions.count>=3 else {self.fail("Native library file/history verification failed");return}
                         let original=try Data(contentsOf:files[0]);var pruned=archive;pruned["revisions"]=Array(revisions.dropFirst());let encoded=try JSONSerialization.data(withJSONObject:pruned).base64EncodedString();let project=archive["project"] as! [String:Any]
                         self.webView.callAsyncJavaScript("try {await window.webkit.messageHandlers.cadLibrary.postMessage({action:'write',id,data});return false;} catch(error){return true;}",arguments:["id":project["id"]!,"data":encoded],in:nil,in:.page){result in
-                            do {guard case .success(let value)=result,value as? Bool == true,try Data(contentsOf:files[0])==original else {self.fail("Native library accepted a history-pruning write");return};try FileManager.default.removeItem(at:folder);self.pasteboard.releaseGlobally();print("PASS: native menus, private system clipboard Copy/Paste, Duplicate/Delete/Undo/Redo, parameters, native sketch/extrusion and coded-object creation, model-source menu/dock without a modeling edit, library files and refusal to prune history");exit(0)}catch{self.fail(error.localizedDescription)}
+                            do {guard case .success(let value)=result,value as? Bool == true,try Data(contentsOf:files[0])==original else {self.fail("Native library accepted a history-pruning write");return};try FileManager.default.removeItem(at:folder);self.pasteboard.releaseGlobally();print("PASS: native menus, private system clipboard Copy/Paste, Duplicate/Delete/Undo/Redo, parameters, native sketch/extrusion and coded-object creation, model-source menu/dock without a modeling edit, sole native File menu and model gallery thumbnails, library files and refusal to prune history");exit(0)}catch{self.fail(error.localizedDescription)}
                         };return
                     }catch{self.fail(error.localizedDescription)}
                 };return
@@ -455,6 +456,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             if result as? String == "code-command" {self.smokeStage=13;perform("code")}
             if result as? String == "code-created" {self.smokeStage=14}
             if result as? String == "model-source-command" {self.smokeStage=15;perform("model-source")}
+            if result as? String == "model-library-command" {self.smokeStage=16;perform("model-library")}
             if ["parameter failure", "feature failure", "bridge missing"].contains(result as? String ?? "") { self.fail(result as? String ?? "Verification failed"); return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.pollSmoke() }
         }

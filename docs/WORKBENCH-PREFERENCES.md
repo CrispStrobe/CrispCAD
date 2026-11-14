@@ -40,3 +40,23 @@ switch off. If that is what enlarged the entire display, three-finger double-tap
 returns from Zoom; its setting is under Settings → Accessibility → Zoom. See
 [Apple's Zoom guide](https://support.apple.com/en-euro/guide/ipad/ipad9a245e3e/ipados).
 The browser/native guards do not claim to override that accessibility feature.
+
+## Model browser and desktop menus — 2026-11-14
+
+The model library uses image cards with short labels and coloured licence tags,
+search/type filtering and a separate selection/insert panel. Notes are optional;
+the host records truthful default-parameter/conversion provenance automatically.
+Licence/attribution text scrolls below Insert. Technical metadata and collision
+records remain available in a collapsed section. The close control is an accessible
+× button. Cards use bounded images without a renderer per item.
+
+The standalone macOS host sets `nativeMenus`; its native File menu is the sole
+File menu and includes Model Library. Browser/iPad and ordinary embedded hosts
+retain their in-window File menu. Other applications can choose this editor option
+and route the `model-library` command through their own menus.
+
+The interaction pattern was checked against Brickwright-lite's BSD Robot Lab
+example gallery and item-card layout (repository checkpoint
+`e7b7cd420fc28c63c1a7a214bcae3c769897ec66`). The local Brickwright-lite path was an
+unmounted-volume symlink, so those files were inspected through the connected
+GitHub repository. No Brickwright checkout was modified.
