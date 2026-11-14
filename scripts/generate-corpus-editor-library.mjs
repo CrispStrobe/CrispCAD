@@ -17,6 +17,7 @@ const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const read = path => readFile(new URL(`library/${path}`, root));
 const file = (path, bytes) => ({path, sha256: hash(bytes), bytes: bytes.length});
 // Upstream basenames and hashes are deliberately pinned, not inferred from a glob.
+// An optional third field records an explicit upstream path outside Asset_SCAD/.
 export const corpusEditorSelection = [
   ['Beam_Angular', '8142509187db00f7fb9ff29d724860057f08635dbc5f53c1e5c886f369c1c167'],
   ['Beam_H', '153a723f5a51db683a5e3ec6ead8335cba4b97d3f594371e816460a3fcb2cf21'],
@@ -66,6 +67,18 @@ export const corpusEditorSelection = [
   ['Stairs_03', '4dd7b321fae87319e812f0efe2d639c276e3efa9a4cef0d34241ad02150ce3e1'],
   ['Traffic_Light', '1d2f42b407266586ae8f92e783230c5921545b85c9608395fc2a589f485a2774'],
   ['Tootbrush', '78ef474639a08e177e2d9b30c4032f4b20fbb06b9329e40f5602069e6f04c44d'],
+  ['Electric_Wire_Plug', '1c3212ab39e2f94694253387fd7a87e79e6d0d997c0f5365c493bf3ef4542fd2'],
+  ['Flange_03', '4e02943239e0eb8445fc45fd096e57099b23c8f1e2e9d169a6d1419214ba95e7'],
+  ['Resistor', '7a996ef79fc368c1332daa8b284aafcd004090aadc2f5b7aec25f07d5beaf363'],
+  ['Street_02', '9c114a059e7a07b137e11bde20c9ddc047631de9309ec8b99f2b4fc556da3060'],
+  ['Street_03', '5e2efcd002e43aafc5ad52fecb0f5425413872fb0e38169ef98b45d22675ac9d'],
+  ['Street_06', '68fcc501eccb2cf50fde2f2dd479569e0a3a9d8967b75a2db598d70aff4c3d88'],
+  ['Sword_01', 'a45892b776435978d1b95920b6be5d885770485b7d69d15ca243b35059e26667'],
+  ['x', '7f2e6f3bc1fad63176233084c00d562d81637db7b32ca667b75e5e11dee2efdb'],
+  ['Banner_01', 'd81bfa138ae7a43ea33c09e6ddbd06585fd4d1fbe53336427c18f0a8c920f6a1'],
+  ['Raccordo', '0ef3163346d94601be2f9bae46aaf072bc6a4e3903d88063c2ab76d63998f69d', 'Basic Example/Raccordo.scad'],
+  ['Street_01', '4901bec62feb143eafb7758557b6f88942234771e06ed4a98d596d76e54da37d'],
+  ['Street_05', '26b28e095a3a9d571a5842152baaf7e6a247e45d185173a1ddfd525f3d953ec8'],
 ];
 export async function generateCorpusEditorLibrary() {
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
@@ -79,15 +92,18 @@ export async function generateCorpusEditorLibrary() {
   const wasm = await readFile(new URL('node_modules/manifold-3d/manifold.wasm', root));
   const kernel = await createGeometryKernel({wasmBinary: wasm});
   const assets = [];
-  for (const [name, expectedHash] of corpusEditorSelection) {
-    const upstreamPath = `Asset_SCAD/${name}.scad`;
+  for (const [name, expectedHash, selectedPath] of corpusEditorSelection) {
+    const upstreamPath = selectedPath ?? `Asset_SCAD/${name}.scad`;
     const record = repository.files.find(item => item.path === upstreamPath);
     const bytes = await read(`corpus/repos/${repositoryId}/${upstreamPath}`);
     if (!record || record.sha256 !== expectedHash || hash(bytes) !== expectedHash || record.size_bytes !== bytes.length || record.spdx !== 'MIT' || record.commit !== commit || record.dependency_blockers?.length || !record.license_evidence.includes('LICENSE')) throw new Error(`Review required: selected source changed: ${upstreamPath}`);
     const slug = name.toLowerCase().replace(/[ _]+/g, '-');
     const sourcePath = `sources/corpus-selection/${slug}.scad`;
     const meshPath = `meshes/corpus-selection/${slug}.stl`;
-    const title = name.replaceAll('_', ' ');
+    const title = name === 'x' ? 'Crossed cubes (x)' : name.replaceAll('_', ' ');
+    const selectionNote = ['Street_03', 'Street_06'].includes(name)
+      ? ' Street 03 and Street 06 are distinct upstream source files with identical derived geometry; this collection counts source files, not unique shapes.'
+      : name === 'Raccordo' ? ' OpenSCAD # highlighting is omitted; the highlighted solid geometry is retained.' : '';
     const session = createCadSession();
     session.addCode(importOpenSCAD(bytes.toString('utf8')), title);
     const evaluated = kernel.evaluate(session.state.document);
@@ -106,7 +122,7 @@ export async function generateCorpusEditorLibrary() {
         review: 'accepted', reviewer: `${repository.reviewed_by}; explicit standalone editor selection and runtime screening 2026-11-14`},
       original: {...file(sourcePath, bytes), url: record.source_url, format: 'openscad'},
       derivatives: [{...file(meshPath, mesh), format: 'stl'}],
-      modificationNotes: 'Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.',
+      modificationNotes: 'Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.' + selectionNote,
       conversion: {sourceUnits: 'mm', sourceUpAxis: 'Z', unitAssumption: 'The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.', toMillimetresZUp: identity},
       quality: screening.quality, measurements: {triangles: screening.triangles, boundsMm: screening.boundsMm, signedVolumeMm3: screening.signedVolumeMm3}, diagnostics: screening.diagnostics,
     });

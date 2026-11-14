@@ -13,13 +13,19 @@ const manifest = JSON.parse(read('editor-corpus-manifest.json').toString());
 const corpus = JSON.parse(read('corpus/manifest.json').toString());
 const repository = corpus.repositories.find((item: any) => item.id === 'AngeloNicoli--OpenSCAD-Snippet');
 const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
-const selected = ['beam-angular', 'beam-h', 'key-simple', 'roll-holder', 'angle-shelf', 'sign-01', 'sign-02', 'washer', 'transistor', 'stairs-01', 'bookshelf-01', 'chalkboard-01', 'arrow-01', 'base-cabinet-01', 'beam-c', 'bookshelf-02', 'box-wood-01', 'chair-01', 'door-01', 'flange-01', 'ladder-01', 'sofa', 'table-01', 'vent-grid', 'base-cabinet-02', 'bed-01', 'bed-02', 'bench-01', 'bench-02', 'chair-02', 'chair-03', 'fireplace-01', 'table-02', 'table-03', 'table-small-01', 'window-01', 'building-01', 'chalkboard-02', 'cone-01', 'crystal', 'key', 'lamp-01', 'lever-handle', 'soda-cup-01', 'stairs-02', 'stairs-03', 'traffic-light', 'tootbrush'];
+const selected = ['beam-angular', 'beam-h', 'key-simple', 'roll-holder', 'angle-shelf', 'sign-01', 'sign-02', 'washer', 'transistor', 'stairs-01', 'bookshelf-01', 'chalkboard-01', 'arrow-01', 'base-cabinet-01', 'beam-c', 'bookshelf-02', 'box-wood-01', 'chair-01', 'door-01', 'flange-01', 'ladder-01', 'sofa', 'table-01', 'vent-grid', 'base-cabinet-02', 'bed-01', 'bed-02', 'bench-01', 'bench-02', 'chair-02', 'chair-03', 'fireplace-01', 'table-02', 'table-03', 'table-small-01', 'window-01', 'building-01', 'chalkboard-02', 'cone-01', 'crystal', 'key', 'lamp-01', 'lever-handle', 'soda-cup-01', 'stairs-02', 'stairs-03', 'traffic-light', 'tootbrush', 'electric-wire-plug', 'flange-03', 'resistor', 'street-02', 'street-03', 'street-06', 'sword-01', 'x', 'banner-01', 'raccordo', 'street-01', 'street-05'];
 
 describe('explicit corpus to editor selection', () => {
-  it('admits exactly forty-eight selected standalone sources with unchanged pinned originals and full MIT grants', () => {
-    expect(selected).toHaveLength(48);
+  it('admits exactly sixty selected standalone sources with unchanged pinned originals and full MIT grants', () => {
+    expect(selected).toHaveLength(60);
     expect(manifest.selection).toMatchObject({count: selected.length, runtimeChecked: selected.length, complete: true});
     expect(manifest.assets.map((asset: any) => asset.id)).toEqual(selected.map(slug => `corpus-angelo-${slug}`));
+    const street03 = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-street-03');
+    const street06 = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-street-06');
+    expect(street03.original.sha256).not.toBe(street06.original.sha256);
+    expect(street03.derivatives[0].sha256).toBe(street06.derivatives[0].sha256);
+    for (const street of [street03, street06]) expect(street.modificationNotes).toContain('counts source files, not unique shapes');
+    expect(manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-x').title).toBe('Crossed cubes (x)');
     const catalogue = createLocalModelLibraryCatalogue(manifest);
     expect(catalogue.assets).toHaveLength(selected.length);
     const fullNotice = read('evidence/corpus-selection-MIT-LICENSE.txt').toString().replace(/\s+/g, ' ').trim();
@@ -68,6 +74,17 @@ describe('explicit corpus to editor selection', () => {
     expect(c.measurements.signedVolumeMm3).toBeCloseTo(0.0252, 7);
     c.measurements.boundsMm.min.forEach((value: number, index: number) => expect(value).toBeCloseTo([0, 0, -0.5][index], 6));
     c.measurements.boundsMm.max.forEach((value: number, index: number) => expect(value).toBeCloseTo([0.3, 0.3, 0.5][index], 6));
+    // Raccordo intersects a 0.5 mm cube with one quarter of a regular 40-gon prism.
+    // The # modifier highlights the cube and must retain that intersection operand.
+    const raccordo = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-raccordo');
+    expect(raccordo.corpusSelection.upstreamPath).toBe('Basic Example/Raccordo.scad');
+    expect(raccordo.measurements.signedVolumeMm3).toBeCloseTo(40 * 0.25 * Math.sin(Math.PI / 20) / 16, 7);
+    expect(raccordo.measurements.boundsMm).toEqual({min: [0, 0, 0], max: [0.5, 0.5, 0.5]});
+    expect(raccordo.modificationNotes).toContain('highlighted solid geometry is retained');
+    const street01 = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-street-01');
+    expect(street01.measurements.signedVolumeMm3).toBeCloseTo(4 * 2 * 0.2, 6);
+    street01.measurements.boundsMm.min.forEach((value: number, index: number) => expect(value).toBeCloseTo([-2, -1, -0.1][index], 6));
+    street01.measurements.boundsMm.max.forEach((value: number, index: number) => expect(value).toBeCloseTo([2, 1, 0.1][index], 6));
   });
 
   it('reproduces selected archives, meshes and manifest locally without writes or network', () => {
