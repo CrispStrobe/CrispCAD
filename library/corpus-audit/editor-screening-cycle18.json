@@ -1,0 +1,327 @@
+{
+  "version": 1,
+  "capturedAt": "2026-11-14T15:06:01.165256+00:00",
+  "baselineCommit": "bc5a6d941394e69f9dfc91e84e0aa1f3f09e16cb",
+  "scope": "Exactly two unchanged authored shaft defaults; full-turn negative-side revolution support. No source, fragment, entrypoint or resource-limit overrides. Static STL qualification only.",
+  "policy": {
+    "timeoutMs": 5000,
+    "maxTriangles": 10000,
+    "maxExtentMm": 200
+  },
+  "before": [
+    {
+      "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Shaft_01.scad",
+      "runtimeWarnings": [],
+      "warnings": [
+        "Source colours and transparency are not retained; solid geometry is preserved."
+      ],
+      "sourceSha256": "41b9cf67da8fd47d263966280fce9af1dfcaa1e1b05e8a182d8e9cba1257aee7",
+      "sourceBytes": 1324,
+      "codeLimits": {
+        "sourceBytes": 32768,
+        "tokens": 8192,
+        "statements": 256,
+        "depth": 32,
+        "expandedNodes": 1024,
+        "estimatedFaces": 200000,
+        "repeat": 64
+      },
+      "parseMs": 12.080278000000021,
+      "convertedSourceBytes": 397,
+      "expandedNodes": 4,
+      "estimatedFaces": 1152,
+      "status": "failed",
+      "error": {
+        "phase": "evaluate",
+        "code": null,
+        "message": "Revolved profiles must stay on the nonnegative radial axis",
+        "line": null,
+        "column": null
+      },
+      "elapsedMs": 172.07176800000002,
+      "rssBytes": 78041088
+    },
+    {
+      "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Shaft_02_With_Keyway.scad",
+      "runtimeWarnings": [],
+      "warnings": [
+        "Source colours and transparency are not retained; solid geometry is preserved."
+      ],
+      "sourceSha256": "7d48549ed36d24d8b399e7ffcf4e18b55bf93d2cc8bef43a17bf9cc64aa923b7",
+      "sourceBytes": 1771,
+      "codeLimits": {
+        "sourceBytes": 32768,
+        "tokens": 8192,
+        "statements": 256,
+        "depth": 32,
+        "expandedNodes": 1024,
+        "estimatedFaces": 200000,
+        "repeat": 64
+      },
+      "parseMs": 13.80019900000002,
+      "convertedSourceBytes": 583,
+      "expandedNodes": 15,
+      "estimatedFaces": 1484,
+      "status": "failed",
+      "error": {
+        "phase": "evaluate",
+        "code": null,
+        "message": "Revolved profiles must stay on the nonnegative radial axis",
+        "line": null,
+        "column": null
+      },
+      "elapsedMs": 144.04266099999998,
+      "rssBytes": 78274560
+    }
+  ],
+  "after": [
+    {
+      "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Shaft_01.scad",
+      "runtimeWarnings": [],
+      "warnings": [
+        "Source colours and transparency are not retained; solid geometry is preserved."
+      ],
+      "sourceSha256": "41b9cf67da8fd47d263966280fce9af1dfcaa1e1b05e8a182d8e9cba1257aee7",
+      "sourceBytes": 1324,
+      "codeLimits": {
+        "sourceBytes": 32768,
+        "tokens": 8192,
+        "statements": 256,
+        "depth": 32,
+        "expandedNodes": 1024,
+        "estimatedFaces": 200000,
+        "repeat": 64
+      },
+      "parseMs": 12.115400000000022,
+      "convertedSourceBytes": 397,
+      "expandedNodes": 4,
+      "estimatedFaces": 1152,
+      "evaluated": {
+        "bodies": 1,
+        "volumeMm3": 101810.42993164023,
+        "triangles": 384
+      },
+      "mesh": {
+        "sha256": "5fa547faa44b3363c3c3e4886eeb571cd62859d12497f1407cad195358a4348b",
+        "bytes": 19284
+      },
+      "screening": {
+        "fileSha256": "5fa547faa44b3363c3c3e4886eeb571cd62859d12497f1407cad195358a4348b",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "policy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "checks": {
+          "parseable": "pass",
+          "closedPositiveVolume": "pass",
+          "withinSizeLimits": "pass",
+          "withinTriangleLimits": "pass"
+        },
+        "diagnostics": [],
+        "triangles": 384,
+        "boundsMm": {
+          "min": [
+            -20,
+            -80,
+            -20
+          ],
+          "max": [
+            20,
+            20,
+            20
+          ]
+        },
+        "signedVolumeMm3": 101810.42986672257,
+        "quality": {
+          "fileSha256": "5fa547faa44b3363c3c3e4886eeb571cd62859d12497f1407cad195358a4348b",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "screeningPolicy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "parseable": true,
+          "closedPositiveVolume": true,
+          "withinSizeLimits": true,
+          "withinTriangleLimits": true
+        }
+      },
+      "status": "qualified",
+      "elapsedMs": 485.520168,
+      "rssBytes": 79826944,
+      "admittedAssetId": "corpus-angelo-shaft-01"
+    },
+    {
+      "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Shaft_02_With_Keyway.scad",
+      "runtimeWarnings": [],
+      "warnings": [
+        "Source colours and transparency are not retained; solid geometry is preserved."
+      ],
+      "sourceSha256": "7d48549ed36d24d8b399e7ffcf4e18b55bf93d2cc8bef43a17bf9cc64aa923b7",
+      "sourceBytes": 1771,
+      "codeLimits": {
+        "sourceBytes": 32768,
+        "tokens": 8192,
+        "statements": 256,
+        "depth": 32,
+        "expandedNodes": 1024,
+        "estimatedFaces": 200000,
+        "repeat": 64
+      },
+      "parseMs": 18.51979799999998,
+      "convertedSourceBytes": 583,
+      "expandedNodes": 15,
+      "estimatedFaces": 1484,
+      "evaluated": {
+        "bodies": 1,
+        "volumeMm3": 101235.30953836555,
+        "triangles": 568
+      },
+      "mesh": {
+        "sha256": "76e2408ca0208ff1b6aa7da04f60953fea0bb4aedb9b41b5bafa572c02ad8df2",
+        "bytes": 28484
+      },
+      "screening": {
+        "fileSha256": "76e2408ca0208ff1b6aa7da04f60953fea0bb4aedb9b41b5bafa572c02ad8df2",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "policy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "checks": {
+          "parseable": "pass",
+          "closedPositiveVolume": "pass",
+          "withinSizeLimits": "pass",
+          "withinTriangleLimits": "pass"
+        },
+        "diagnostics": [],
+        "triangles": 568,
+        "boundsMm": {
+          "min": [
+            -20,
+            -80,
+            -20
+          ],
+          "max": [
+            20,
+            20,
+            20
+          ]
+        },
+        "signedVolumeMm3": 101235.30946207658,
+        "quality": {
+          "fileSha256": "76e2408ca0208ff1b6aa7da04f60953fea0bb4aedb9b41b5bafa572c02ad8df2",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "screeningPolicy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "parseable": true,
+          "closedPositiveVolume": true,
+          "withinSizeLimits": true,
+          "withinTriangleLimits": true
+        }
+      },
+      "status": "qualified",
+      "elapsedMs": 444.607519,
+      "rssBytes": 86827008,
+      "admittedAssetId": "corpus-angelo-shaft-02-with-keyway"
+    }
+  ],
+  "finalRuntimeArtifacts": {
+    "packages/core/dist/openscad-import.js": "2f2b0df7d51b74171015b03ab20ea1b97389b3cb2c50b13f4ce9183faefa61ce",
+    "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+    "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+    "packages/geometry/dist/model-library-quality.js": "d81e57a8d472bce72f60edc7b28832c615f7e6bd802b322e45e6167f03f51e3e",
+    "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+  },
+  "summary": {
+    "measured": 2,
+    "beforeQualified": 0,
+    "afterQualified": 2
+  }
+}

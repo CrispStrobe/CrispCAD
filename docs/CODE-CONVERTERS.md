@@ -312,7 +312,13 @@ implemented; the expanded language pass now supports them.
 SCAD twist uses its documented left-hand convention; the native kernel and JSCAD
 use right-hand angles. Conversion changes the sign. Revolution segment counts
 refer to a complete turn and are proportionally reduced for a partial turn.
-Negative/cross-axis radial profiles are refused rather than silently clipped.
+Complete 360-degree revolutions accept profiles wholly on either side of the
+radial axis. Left-side profiles are reflected radially before evaluation.
+Negative partial-turn and crossing-axis profiles remain refused. JSCAD export
+uses an explicit planar radial mirror for a wholly left-side full turn;
+conservative profile bounds may refuse an export when the side is uncertain.
+This implements the documented [OpenSCAD half-plane rule](https://files.openscad.org/documentation/manual/2D_to_3D_Extrusion.html)
+for full turns without inspecting the upstream implementation.
 `convexity` is preview-only and does not affect our rendered solid.
 
 Curved meshes are **not bit-identical upstream reproductions**. Manifold and JSCAD

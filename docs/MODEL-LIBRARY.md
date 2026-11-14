@@ -612,3 +612,17 @@ Only the two passes are reproduced on the final runtime and inserted. The three
 planar samples receive no invented extrusion; source parameters, time, fragment
 settings and entry points remain unchanged. Unused A2D library helpers are outside
 these two default-root qualifications.
+
+
+### Full-turn shaft admission — 2026-11-14
+
+Two further unchanged MIT defaults, `Shaft_01.scad` and
+`Shaft_02_With_Keyway.scad`, pass strict STL screening after support for full
+revolutions of wholly left-side profiles. Their six-point authored profiles and
+48-segment full turns remain unchanged; no source edits, repairs or tessellation
+overrides were used. They add 384- and 568-triangle meshes respectively. The
+standalone corpus now has 95 entries plus the two separate A2D entries: **97 source
+entries / 95 distinct mesh hashes**, and 136 total gallery entries. All earlier
+records and previews are preserved. See `editor-screening-cycle18.json` for the
+two original failures and final measurements. Partial-turn and crossing-axis
+profiles remain refused; this is static geometry qualification only.

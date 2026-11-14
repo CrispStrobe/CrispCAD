@@ -55,7 +55,17 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
     else if(shape.kind==='cylinder')solid=keep(module.Manifold.cylinder(shape.height,shape.radius,shape.radius,shape.segments,true));
     else if(shape.kind==='frustum')solid=keep(module.Manifold.cylinder(shape.height,shape.bottom,shape.top,shape.segments,true));
     else if(shape.kind==='profile-extrude'){const profile=buildProfile(shape.profile);if(4*profile.numVert()*(shape.steps+1)>200000)throw new GeometryResourceLimitError(t('Evaluated extrusion exceeds 200000 faces'));solid=keep(profile.extrude(shape.height,shape.steps-1,shape.twist,shape.scaleTop));}
-    else if(shape.kind==='revolve'){const profile=buildProfile(shape.profile);if(4*profile.numVert()*shape.segments>200000)throw new GeometryResourceLimitError(t('Evaluated revolution exceeds 200000 faces'));if(profile.numVert()&&profile.bounds().min[0]<-1e-8)throw new Error(t('Revolved profiles must stay on the nonnegative radial axis'));solid=keep(shape.angle===0?module.Manifold.union([]):profile.revolve(Math.max(1,Math.ceil(shape.segments*shape.angle/360)),shape.angle));}
+    else if(shape.kind==='revolve'){
+      let profile=buildProfile(shape.profile);
+      if(4*profile.numVert()*shape.segments>200000)throw new GeometryResourceLimitError(t('Evaluated revolution exceeds 200000 faces'));
+      if(profile.numVert()&&profile.bounds().min[0]<-1e-8){
+        // A complete turn of an entirely left-hand profile has the same solid
+        // as its radial reflection. Keep partial/cross-axis cases fail-closed.
+        if(shape.angle!==360||profile.bounds().max[0]>1e-8)throw new Error(t('Revolved profiles must stay on the nonnegative radial axis'));
+        profile=keepProfile(profile.scale([-1,1]));
+      }
+      solid=keep(shape.angle===0?module.Manifold.union([]):profile.revolve(Math.max(1,Math.ceil(shape.segments*shape.angle/360)),shape.angle));
+    }
     else if(shape.kind==='extrude')solid=keep(module.Manifold.extrude([shape.points],shape.height));
     else if(shape.kind==='sphere')solid=keep(module.Manifold.sphere(shape.radius,shape.segments));
     else if(shape.kind==='mirror')solid=keep(buildCode(shape.shape).mirror(shape.vector));
