@@ -73,5 +73,9 @@ for(const profile of [
 });
 it('refuses invalid profile dimensions, excess tessellation and unimplemented profile operations',()=>{
  const prefix="const {primitives:{circle,ellipse,rectangle},extrusions:{extrudeLinear},transforms:{rotateX,scale}}=require('@jscad/modeling');module.exports.main=()=>extrudeLinear({height:3},";
- for(const expression of ['circle({radius:-2})','rectangle({size:[0,2]})','ellipse({radius:[2,-1]})','circle({segments:300})','circle({segments:3.5})','circle({startAngle:1})','rotateX(1,rectangle())','scale([-1,2],rectangle())'])expect(()=>importJSCAD(prefix+expression+');'),expression).toThrow();
+ for(const expression of ['circle({radius:-2})','rectangle({size:[0,2]})','ellipse({radius:[2,-1]})','circle({segments:300})','circle({segments:3.5})','circle({startAngle:1})','rotateX(1,rectangle())'])expect(()=>importJSCAD(prefix+expression+');'),expression).toThrow();
+});
+
+it('reflects planar profiles with signed scale and retains affine JSCAD transforms',()=>{
+ const source="const {primitives:{rectangle},extrusions:{extrudeLinear},transforms:{scale,transform}}=require('@jscad/modeling');module.exports.main=()=>transform([1,0,0,0,.5,2,0,0,0,0,1,0,3,4,5,1],extrudeLinear({height:3},scale([-1,2],rectangle({size:[2,4]}))));";const result=geometry(source);expect(result.volume).toBeCloseTo(96);
 });

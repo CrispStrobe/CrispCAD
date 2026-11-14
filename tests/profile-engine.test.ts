@@ -26,7 +26,7 @@ it('retains profile dimensions, taper and twist parameters with the documented S
 });
 it('keeps profile budgets, units and invalid geometry explicit',()=>{
  for(const source of ['return extrudeProfile(5, polygon2d([[0,0],[1,1],[0,1],[1,0]]));','return extrudeProfile(5,circle2d(2,4096),90,256);','return extrudeProfile(5,circle2d(2),0,0);','return extrudeProfile(5,rectangle2d(10,10),0,2,-1);'])expect(()=>compileCode({version:1,language:'brickwright-cad-script',source,parameters:{}})).toThrow();
- expect(()=>evaluate(importOpenSCAD('rotate_extrude()translate([-5,0])square([1,2]);'))).toThrow('nonnegative');
+ expect(evaluate(importOpenSCAD('rotate_extrude($fn=64)translate([-5,0])square([1,2]);')).volume).toBeCloseTo(9*64*Math.sin(2*Math.PI/64),4);expect(()=>evaluate(importOpenSCAD('rotate_extrude()translate([-1,0])square([2,2]);'))).toThrow('one side');
  expect(evaluate(importOpenSCAD('linear_extrude(2)union(){square([2,3]);circle(0);}')).volume).toBeCloseTo(12);
 });
 it('exposes coarse twist triangulation differences rather than claiming identical meshes',()=>{

@@ -14,7 +14,7 @@ export async function geometryHash(mesh:BodyMesh){const data=new Uint8Array(mesh
  * The error gate rejects approximations; it never silently substitutes an AABB
  * or single hull. Certification is geometric, not material/fit qualification. */
 export async function prepareCollision(mesh:BodyMesh,kernel:GeometryKernel,options:{maxHulls?:number;volumeFraction?:number;boundsMm?:number;candidates?:ConvexPiece[]}={}):Promise<PreparedCollision>{
- if(mesh.reference)throw new Error(t('Reference helpers are not physics bodies'));
+ if(mesh.reference||mesh.hole)throw new Error(t('Reference helpers are not physics bodies'));
  if(!Number.isFinite(mesh.volume)||mesh.volume<=0||!mesh.indices.length||mesh.indices.length>1500000||mesh.indices.length%3||mesh.positions.length%3||mesh.positions.length>750000||Array.from(mesh.positions).some(v=>!Number.isFinite(v)||Math.abs(v)>1e6)||Array.from(mesh.indices).some(i=>!Number.isInteger(i)||i<0||i>=mesh.positions.length/3))throw new Error(t('Collision mesh is empty or exceeds the geometry budget'));
  const maxHulls=options.maxHulls??2048,tolerance={volumeFraction:options.volumeFraction??.02,boundsMm:options.boundsMm??.2};
  if(!Number.isInteger(maxHulls)||maxHulls<1||maxHulls>2048||!Number.isFinite(tolerance.volumeFraction)||tolerance.volumeFraction<=0||tolerance.volumeFraction>.1||!Number.isFinite(tolerance.boundsMm)||tolerance.boundsMm<=0||tolerance.boundsMm>1)throw new Error(t('Invalid collision qualification limits'));

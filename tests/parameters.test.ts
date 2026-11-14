@@ -91,3 +91,7 @@ it('checks conditional dimensions while short-circuiting inactive expressions',(
  expect(evaluateExpression('-5 % 3',noLookup).value).toBe(-2);
  for(const source of ['2 mm < 3 deg','1 mm ? 2 : 3','4 % 0','true ? 1','1 ? : 2'])expect(()=>evaluateExpression(source,noLookup),source).toThrow();
 });
+it('caches parsed expressions without retaining lookup values or leaking range bindings',()=>{
+ expect(evaluateExpression('width * 2',()=>({value:2,length:0,angle:0})).value).toBe(4);expect(evaluateExpression('width * 2',()=>({value:7,length:0,angle:0})).value).toBe(14);
+ const refs=new Set<string>(),lookup=(name:string)=>{if(name==='i')return {value:99,length:0,angle:0};throw Error(name);};expect(evaluateExpression('sumRange(i,0,1,1,sumRange(i,0,2,1,i)+i)',lookup,{references:refs}).value).toBe(7);expect(refs.size).toBe(0);expect(evaluateExpression('filterAt(i,0,6,1,i%2==0,2)',lookup).value).toBe(4);expect(()=>evaluateExpression('sumRange(i,0,300,1,i)',lookup)).toThrow('256');
+});

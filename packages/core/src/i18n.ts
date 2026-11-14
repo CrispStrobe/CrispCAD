@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {messages as engineWorkflows} from './locales/de-engine-workflows.js';
 import {messages as modelSource} from './locales/de-model-source.js';
 import {messages as modelLibrary} from './locales/de-model-library.js';
 import {messages as converters} from './locales/de-converters.js';
@@ -20,7 +21,7 @@ export function t(message:string):string;
 export function t(parts:TemplateStringsArray,...values:unknown[]):string;
 export function t(message:string|TemplateStringsArray,...values:unknown[]):string {
  const key=typeof message==='string'?message:message.reduce((s,part,i)=>s+(i?`{${i-1}}`:'')+part,'');
- const translated=locale==='de'?(modelSource[key]??converters[key]??modelLibrary[key]??additions[key]??editor[key]??diagnostics[key]??host[key]??readout[key]??mcp[key]??workbench[key]??history[key]??key):key;
+ const translated=locale==='de'?(engineWorkflows[key]??modelSource[key]??converters[key]??modelLibrary[key]??additions[key]??editor[key]??diagnostics[key]??host[key]??readout[key]??mcp[key]??workbench[key]??history[key]??key):key;
  return typeof message==='string'?translated:translated.replace(/\{(\d+)\}/g,(_,index)=>String(values[Number(index)]));
 }
 /** Locale-specific display only. Saved model values and source use canonical syntax. */

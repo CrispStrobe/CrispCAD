@@ -52,4 +52,6 @@ export const editorStyle = `
 @container(max-width:720px){.design-bar{grid-template-columns:76px auto minmax(0,1fr) auto;gap:3px;padding-left:6px;padding-right:6px}}
 .project-actions{display:flex;gap:2px;flex:none;background:#14212b;border-right:1px solid #405565;padding-right:5px;margin-right:3px}.project-actions .project-action{display:flex;align-items:center;justify-content:center;flex:none;width:32px;height:34px;min-height:34px;padding:6px;background:transparent;border:1px solid transparent}.project-actions .project-action>span{display:none}.project-actions .project-action:hover:not(:disabled){background:#344c60;border-color:#81949e}.project-actions .project-action .tool-icon{width:20px;height:20px}
 @media(pointer:coarse){.design-bar{padding-top:2px;padding-bottom:2px}.project-actions{gap:0;padding-right:2px}.project-actions .project-action{width:44px;height:44px;min-height:44px;padding:11px}}
+
+.shape-role{display:flex;gap:6px;margin:8px 0}.shape-role button{flex:1}.shape-role button[aria-pressed=true]{border-color:#ffc45c;background:#594426}.hole-tag{color:#b9d4e4;font-size:10px;border:1px dashed #89a4b5;border-radius:4px;padding:1px 4px}.cad-selection-rectangle{position:absolute;pointer-events:none;z-index:7;border:1px solid #67d9ff;background:#67d9ff25;box-sizing:border-box}
 `;

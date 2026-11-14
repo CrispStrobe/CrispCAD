@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {formatSCADNumber} from './scad-numbers.js';
 import {t} from './i18n.js';
 import type {CadDocument, SolidNode} from './document.js';
 
@@ -34,10 +35,12 @@ function asUnit(q: Quantity, unit: ParameterUnit): Quantity {
 
 /** Trigonometry uses degrees, matching the editor's angular properties. */
 function evaluateMathFunction(name: string, args: Quantity[]): Quantity {
-  const unary = ['sin','cos','tan','asin','acos','atan','sqrt','abs','floor','ceil','round','exp','ln','log'];
-  const count = unary.includes(name) ? 1 : ['atan2','pow'].includes(name) ? 2 : ['min','max'].includes(name) ? -1 : 0;
+  const unary = ['isNumber','isBoolean','formatLengthSCAD','formatLength','sin','cos','tan','asin','acos','atan','sqrt','abs','floor','ceil','round','exp','ln','log'];
+  const count = unary.includes(name) ? 1 : ['atan2','pow'].includes(name) ? 2 : name==='rangeCount'?3 : ['randomValue','rangeAt'].includes(name) ? 4 : ['min','max'].includes(name) ? -1 : 0;
   if (!count) return error(t`unknown mathematical function “${name}”`);
   if (count > 0 ? args.length !== count : args.length < 1) return error(t`invalid arguments for “${name}”`);
+  if(name==='isNumber'||name==='isBoolean')return {value:name==='isBoolean'?(args[0].boolean?1:0):(args[0].boolean?0:1),length:0,angle:0,boolean:true};
+  if(name==='formatLength'||name==='formatLengthSCAD'){const q=args[0],text=q.boolean?String(q.value!==0):name==='formatLengthSCAD'?formatSCADNumber(q.value):String(q.value);return {value:[...text].length,length:0,angle:0};}
   if(args.some(q=>q.boolean))error(t('function requires numeric arguments'));
   const a = args[0], b = args[1];
   const scalar = (q: Quantity) => {if (q.length || q.angle) error(t('function requires a dimensionless argument')); return q.value;};
@@ -52,6 +55,9 @@ function evaluateMathFunction(name: string, args: Quantity[]): Quantity {
     const value = scalar(a);
     return result((name === 'asin' ? Math.asin(value) : name === 'acos' ? Math.acos(value) : Math.atan(value)) * 180 / Math.PI);
   }
+  if(name==='rangeCount'){const [start,end,step]=args.map(scalar);if(!step)error(t('Range step must be nonzero'));const q=(end-start)/step;return result(Math.max(0,Math.floor(q+4*Number.EPSILON*Math.max(1,Math.abs(q)))+1));}
+  if(name==='rangeAt'){const [start,end,step,index]=args.map(scalar);const q=(end-start)/step,count=step===0?0:Math.max(0,Math.floor(q+4*Number.EPSILON*Math.max(1,Math.abs(q)))+1);if(!Number.isInteger(index)||index<0||index>=count)error(t('List index is outside the available values'));return result(start+step*index);}
+  if(name==='randomValue'){if(a.length!==b.length||a.angle!==b.angle)error(t('function arguments must have matching units'));const seed=scalar(args[2]),index=scalar(args[3]);if(!Number.isInteger(index)||index<0||index>1000000)error(t('List index is outside the available values'));const bytes=new DataView(new ArrayBuffer(8));bytes.setFloat64(0,seed,true);let hash=bytes.getUint32(0,true)^bytes.getUint32(4,true)^Math.imul(index+1,0x9e3779b1);hash=Math.imul(hash^(hash>>>16),0x21f0aaad);hash=Math.imul(hash^(hash>>>15),0x735a2d97);hash^=hash>>>15;return result(Math.min(a.value,b.value)+((hash>>>0)/4294967296)*Math.abs(a.value-b.value),a.length,a.angle);}
   if (name === 'atan2') {matching(); return result(Math.atan2(a.value, b.value) * 180 / Math.PI);}
   if (name === 'sqrt') return result(Math.sqrt(a.value), a.length / 2, a.angle / 2);
   if (name === 'pow') {const exponent = scalar(b); return result(Math.pow(a.value, exponent), a.length * exponent, a.angle * exponent);}
@@ -62,8 +68,9 @@ function evaluateMathFunction(name: string, args: Quantity[]): Quantity {
 }
 
 /** Original bounded expression AST. Evaluation short-circuits inactive branches. */
-export function evaluateExpression(source: string, lookup: (name: string) => Quantity, options:{references?:Set<string>}={}): Quantity {
-  if (typeof source !== 'string' || !source.trim() || source.length > 1024) error(t('expression must contain 1–1024 characters'));
+type Expr = {kind:'literal';value:Quantity}|{kind:'name';name:string}|{kind:'unary';op:string;value:Expr}|{kind:'binary';op:string;a:Expr;b:Expr}|{kind:'call';name:string;args:Expr[]}|{kind:'conditional';test:Expr;yes:Expr;no:Expr};
+const parsedExpressions=new Map<string,Expr>();
+function parseExpression(source:string):Expr{
   const tokens: string[] = []; let at = 0;
   while (at < source.length) {
     if (/\s/.test(source[at])) {at++; continue;}
@@ -72,7 +79,7 @@ export function evaluateExpression(source: string, lookup: (name: string) => Qua
     tokens.push(token); at += token.length;
     if (tokens.length > 512) error(t('expression has too many tokens'));
   }
-  type Expr = {kind:'literal';value:Quantity}|{kind:'name';name:string}|{kind:'unary';op:string;value:Expr}|{kind:'binary';op:string;a:Expr;b:Expr}|{kind:'call';name:string;args:Expr[]}|{kind:'conditional';test:Expr;yes:Expr;no:Expr};
+
   let cursor = 0;
   const scalar = (value:number):Quantity => ({value,length:0,angle:0});
   const expect = (token:string) => {if(tokens[cursor++]!==token)error(t('expected a number, parameter or parenthesis'));};
@@ -87,7 +94,7 @@ export function evaluateExpression(source: string, lookup: (name: string) => Qua
     }
     if(token&&/^[A-Za-z]/.test(token)){
       if(tokens[cursor]==='('){cursor++;const args:Expr[]=[];
-        if(tokens[cursor]!==')')do{args.push(conditional(depth+1));if(args.length>32)error(t('too many function arguments'));if(tokens[cursor]!==',')break;cursor++;}while(true);
+        if(tokens[cursor]!==')')do{args.push(conditional(depth+1));if(args.length>(token==='pick'?257:32))error(t('too many function arguments'));if(tokens[cursor]!==',')break;cursor++;}while(true);
         if(tokens[cursor++]!==')')error(t('missing closing parenthesis'));return {kind:'call',name:token,args};
       }
       if(Object.hasOwn(units,token))error(t('put a number before a unit'));
@@ -105,15 +112,23 @@ export function evaluateExpression(source: string, lookup: (name: string) => Qua
     const test=binary(0,depth);if(tokens[cursor]!=='?')return test;cursor++;
     const yes=conditional(depth+1);expect(':');return {kind:'conditional',test,yes,no:conditional(depth+1)};
   }
-  const root=conditional(0);if(options.references){const pending=[root];while(pending.length){const node=pending.pop()!;if(node.kind==='name')options.references.add(node.name);else if(node.kind==='unary')pending.push(node.value);else if(node.kind==='binary')pending.push(node.a,node.b);else if(node.kind==='conditional')pending.push(node.test,node.yes,node.no);else if(node.kind==='call')pending.push(...node.args);}}if(cursor!==tokens.length)error(t`unexpected token “${tokens[cursor]}”`);
+  const root=conditional(0);if(cursor!==tokens.length)error(t`unexpected token “${tokens[cursor]}”`);return root;
+}
+export function evaluateExpression(source: string, lookup: (name: string, scope?:ReadonlyMap<string,Quantity>) => Quantity, options:{references?:Set<string>;bindings?:ReadonlyMap<string,Quantity>}={}): Quantity {
+  if (typeof source !== 'string' || !source.trim() || source.length > 1024) error(t('expression must contain 1–1024 characters'));
+  let root=parsedExpressions.get(source);if(!root){root=parseExpression(source);if(parsedExpressions.size>=256)parsedExpressions.delete(parsedExpressions.keys().next().value!);parsedExpressions.set(source,root);}
+  if(options.references){const pending:{node:Expr;bound:Set<string>}[]=[{node:root,bound:new Set()}];while(pending.length){const {node,bound}=pending.pop()!;if(node.kind==='name'){if(!bound.has(node.name))options.references.add(node.name);}else if(node.kind==='unary')pending.push({node:node.value,bound});else if(node.kind==='binary')pending.push({node:node.a,bound},{node:node.b,bound});else if(node.kind==='conditional')pending.push({node:node.test,bound},{node:node.yes,bound},{node:node.no,bound});else if(node.kind==='call'){if((node.name==='sumRange'||node.name==='filterAt')&&node.args[0]?.kind==='name'){const nested=new Set([...bound,node.args[0].name]);node.args.slice(1).forEach((arg,i)=>pending.push({node:arg,bound:i===3?nested:bound}));}else node.args.forEach(arg=>pending.push({node:arg,bound}));}}}
+  const scalar = (value:number):Quantity => ({value,length:0,angle:0});
   const truth=(q:Quantity):boolean=>{if(q.length||q.angle)error(t('condition requires a dimensionless value'));return q.value!==0;};
   const bool=(value:boolean):Quantity=>({...scalar(value?1:0),boolean:true});
   const numeric=(q:Quantity)=>{if(q.boolean)error(t('arithmetic requires numeric values'));};
   const matching=(a:Quantity,b:Quantity)=>{if(a.length!==b.length||a.angle!==b.angle)error(t('comparison requires matching units'));};
+  const expressionBindings=new Map<string,Quantity>(options.bindings);let evaluationSteps=0;
   function evaluate(node:Expr):Quantity {
+    if(++evaluationSteps>65536)error(t('expression evaluation budget exceeded'));
     if(node.kind==='literal')return node.value;
-    if(node.kind==='name')return finite(lookup(node.name));
-    if(node.kind==='call')return evaluateMathFunction(node.name,node.args.map(evaluate));
+    if(node.kind==='name')return finite(expressionBindings.get(node.name)??lookup(node.name,expressionBindings));
+    if(node.kind==='call'){if(node.name==='sumRange'||node.name==='filterAt'){const arity=node.name==='sumRange'?5:6;if(node.args.length!==arity||node.args[0].kind!=='name')error(t('Invalid range reduction'));const variable=node.args[0].name,[start,end,increment]=node.args.slice(1,4).map(arg=>{const q=evaluate(arg);if(q.boolean||q.length||q.angle)error(t('function requires a dimensionless argument'));return q.value;}),q=(end-start)/increment,count=increment===0?0:Math.max(0,Math.floor(q+4*Number.EPSILON*Math.max(1,Math.abs(q)))+1);if(!increment||!Number.isSafeInteger(count)||count>256)error(t('Range reduction exceeds 256 values'));const target=node.name==='filterAt'?evaluate(node.args[5]):undefined;if(target&&(target.boolean||target.length||target.angle||!Number.isInteger(target.value)||target.value<0))error(t('List index is outside the available values'));const previous=expressionBindings.get(variable);let sum=0,found=0;try{for(let i=0;i<count;i++){const value=start+i*increment;expressionBindings.set(variable,scalar(value));const result=evaluate(node.args[4]);if(node.name==='sumRange'){if(result.boolean||result.length||result.angle)error(t('function requires a dimensionless argument'));sum+=result.value;}else if(truth(result)){if(found++===target!.value)return scalar(value);}}if(target)error(t('List index is outside the available values'));return finite(scalar(sum));}finally{if(previous)expressionBindings.set(variable,previous);else expressionBindings.delete(variable);}}if(node.name==='pick'){if(node.args.length<2)error(t('pick requires an index and values'));const index=evaluate(node.args[0]);if(index.boolean||index.length||index.angle||!Number.isInteger(index.value)||index.value<0||index.value>=node.args.length-1)error(t('List index is outside the available values'));return evaluate(node.args[index.value+1]);}return evaluateMathFunction(node.name,node.args.map(evaluate));}
     if(node.kind==='conditional')return evaluate(truth(evaluate(node.test))?node.yes:node.no);
     if(node.kind==='unary'){const q=evaluate(node.value);if(node.op==='!')return bool(!truth(q));numeric(q);return finite({...q,value:node.op==='-'?-q.value:q.value});}
     const a=evaluate(node.a),op=node.op;
@@ -133,10 +148,10 @@ export function evaluateExpression(source: string, lookup: (name: string) => Qua
   return evaluate(root);
 }
 
-export function evaluateParameters(design: ParametricDesign): Record<string, Quantity> {
+export function evaluateParameters(design: ParametricDesign, options:{declarationLimit?:64|256}={}): Record<string, Quantity> {
   if (!record(design) || design.version !== 1 || !record(design.parameters) || !Array.isArray(design.bindings) || design.bindings.length > 256) error(t('invalid design schema'));
   const entries = Object.entries(design.parameters);
-  if (entries.length > 64) error(t('at most 64 named parameters are supported'));
+  const limit=options.declarationLimit===256?256:64;if(entries.length>limit)error(limit===64?t('at most 64 named parameters are supported'):t('at most 256 code values are supported'));
   for (const [name, parameter] of entries) {
     if (!validName(name) || !record(parameter) || !['mm','deg','scalar'].includes(String(parameter.unit)) || typeof parameter.expression !== 'string') error(t`invalid parameter “${name}”`);
   }

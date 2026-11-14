@@ -38,7 +38,7 @@ and duplicate declarations are errors. `//` starts a comment.
 | `hull(a, ...)` | 3D convex hull, including a single concave input |
 | `empty()` | No solid, useful in branches |
 | `choose(condition, a, b)` | Resolve only the selected branch |
-| `forRange(i,start,end,step,shape)` | Parametric directed range, at most 64 values |
+| `forRange(i,start,end,step,shape)` | Parametric directed range, at most 256 values |
 | `forValues(i,[values],shape)` | Parametric scalar-list instances |
 | `sphere(radius[, segments])` | Centred sphere |
 | `union(a, b, ...)` | Combine solids |
@@ -46,7 +46,7 @@ and duplicate declarations are errors. `//` starts a comment.
 | `intersect(a, b, ...)` | Common solid |
 | `move([x,y,z], shape)` | Translate in millimetres |
 | `rotate([x,y,z], shape)` | Rotate in degrees |
-| `scale([x,y,z], shape)` | Positive axis scale |
+| `scale([x,y,z], shape)` | Signed axis scale |
 | `repeat(count, [dx,dy,dz], shape)` | Union a bounded linear repetition |
 
 Nested transforms execute from the inside out. Each returned construction is
@@ -64,7 +64,7 @@ no saved iteration. Restoring an iteration retains later work.
 The interpreter accepts a bounded modeling language, not JavaScript, Haskell or
 `.scad` files. There is no `eval`, arbitrary imports, filesystem or network access.
 Current limits: 32 KiB UTF-8 source, 8,192 tokens, 128 statements, depth 32,
-256 expanded shape nodes, 200,000 estimated faces, repeat count 64 and curve
+4,096 expanded shape nodes, 200,000 estimated faces, repeat count 64 and curve
 segments 12–96 (default 48). The normal expression and document limits also apply.
 General user-defined modules, conditional modeling, arbitrary loops, 2D code
 profiles and implicit surfaces are future work.
@@ -130,7 +130,7 @@ return extrudeProfile(height,
 
 `extrudeProfile(height, profile[, twistDegrees, steps, topScaleX, topScaleY])`
 starts at Z=0; positive twist follows the right-hand convention.
-`revolve(profile[, angleDegrees, segmentsPerFullTurn])` revolves positive radial
+`revolve(profile[, angleDegrees, segmentsPerFullTurn])` revolves one-sided radial
 X coordinates around the profile Y axis and maps that axis to world Z.
 Use `move2d`, `rotate2d`, `scale2d`, `union2d`, `subtract2d`, `intersect2d`,
 `hull2d` and `polygon2d(points[, indexPaths])` for profiles. Profile expressions
@@ -149,3 +149,28 @@ outside), `mirror([nx,ny,nz],shape)`, `axisRotate([nx,ny,nz],angle,shape)` and
 `resize([width,depth,height],shape)` (zero preserves an axis). These use actual solid
 geometry and existing worker/preflight/history/collision boundaries. Unsupported
 foreign export operations fail explicitly; see CODE-CONVERTERS.md.
+
+## Derived expressions and additional construction
+
+`const span: scalar = i * width;` declares a bounded derived numeric expression.
+It resolves when consumed, including inside a loop binding `i`, and does not add
+an editable GUI parameter. `param` declarations remain the public input controls.
+Syntax trees are cached separately from values; dependency cycles and work budgets
+still apply.
+
+`affine([m00,m01,m02,tx,m10,m11,m12,ty,m20,m21,m22,tz], shape)`
+retains a row-major affine transform. `affine2d(a,b,tx,c,d,ty,profile)` applies its
+planar counterpart. `resize([x,y,z],[true,true,false],shape)` optionally scales
+zero target axes from one specified target dimension. Existing two-argument
+resize keeps its previous behavior.
+
+`polygonGenerated2d(pointRange(i,start,end,step,point(x,y)))` retains generated
+vertices. `pointValues`, `pointConcat` and `pointChoose` also compose point lists.
+Native scalar `sumRange` and `filterAt` provide bounded reductions/filtered indices.
+These are produced by supported SCAD comprehensions and remain parametric.
+
+`assertCode(condition, "message", shape)` and `assert2d` retain source assertions.
+A message can use `formatSCAD("width=",width)` for reference-compatible numeric
+lettering/diagnostics; existing `formatText` keeps native number formatting.
+Signed revolutions and wholly negative radial profiles are supported. A profile
+crossing the radial axis is diagnosed rather than replaced with a solid.

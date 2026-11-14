@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "reference": "Official OpenSCAD 2021.01 macOS binary, external test tooling only",
+  "url": "https://files.openscad.org/OpenSCAD-2021.01.dmg",
+  "dmgSha256": "4e4568e19992636ba497c04bc2238399c92314fcb7bf75dc3632aa623ca3635e",
+  "executableSha256": "2990c7deb7059eaea1440a309c9d9ba7fea8bd2833a84e50d4203d73424b2701",
+  "method": "Original BSD synthetic inputs; executable outputs only, no upstream implementation files opened or copied. No research dataset sources included.",
+  "cases": {
+    "check": {
+      "source": "// Original compatibility probes; no application source.\nfor(seed=[42,42.1,42.9,-42,-1.5,0,1,4294967295]) {\n  values=rands(0,4294967296,8,seed);\n  echo(seed=seed, words=[for(v=values) [floor(v/65536),floor(v)%65536]]);\n}\necho(format=[str(1.23456789),str(1e-7),str(12345678.9),str(true)]);\ncylinder(r=2,r2=.5,h=10,$fn=8);\ntranslate([10,0,0])sphere(2,false,$fn=8);\ntranslate([20,0,0])linear_extrude(2)circle(1,h=5,$fn=8);\n",
+      "sourceSha256": "31262a0746d7a26f62a1a87e677c0b00ae34fad31ae515520d3a0d337f16e692",
+      "echo": "ECHO: seed = 42, words = [[52202, 15795], [12021, 38158], [51097, 54343], [39115, 11284], [29218, 6265], [6551, 62678], [30097, 21962], [21869, 60788]]\nECHO: seed = 42.1, words = [[29982, 932], [64513, 55601], [38089, 30270], [41284, 53723], [21009, 8153], [62688, 51299], [55941, 12467], [40637, 24381]]\nECHO: seed = 42.9, words = [[65156, 16164], [880, 25690], [16020, 11489], [18527, 5471], [48828, 41675], [55729, 28787], [55742, 45984], [10495, 23410]]\nECHO: seed = -42, words = [[27464, 63948], [11098, 63814], [60147, 18053], [59205, 11482], [54321, 3489], [19350, 59987], [8367, 38515], [856, 10501]]\nECHO: seed = -1.5, words = [[18652, 45109], [7964, 27267], [64044, 54563], [42761, 56076], [57719, 62559], [42965, 44131], [8472, 52395], [46189, 64695]]\nECHO: seed = 0, words = [[38852, 43567], [55329, 52416], [56226, 21243], [55525, 32103], [40865, 57043], [25190, 55026], [19499, 14935], [3716, 48600]]\nECHO: seed = 1, words = [[65351, 33003], [61116, 5192], [8396, 50057], [65473, 7813], [15472, 21440], [25990, 20609], [25422, 7751], [43892, 31228]]\nECHO: seed = 4.29497e+9, words = [[65351, 33003], [61116, 5192], [8396, 50057], [65473, 7813], [15472, 21440], [25990, 20609], [25422, 7751], [43892, 31228]]\nECHO: format = [\"1.23457\", \"1e-7\", \"1.23457e+7\", \"true\"]\nWARNING: Cylinder parameters ambiguous in file check.scad, line 7\nWARNING: Too many unnamed arguments supplied in file check.scad, line 8\nWARNING: variable h not specified as parameter in file check.scad, line 9\n",
+      "echoSha256": "159a694bc6be677a1647e3ae1d9c9c9daa9f6ef5745303341defaa8991568878"
+    },
+    "number-format": {
+      "source": "echo([for(v=[0,-0,1,100000,999999,999999.5,1000000,.0001,.00001,.000001,1.015625,-1.015625,1.234375,1.23456789,1.23456789e-8,99999.95,1e9])str(v)]);\ncube(1);\n",
+      "sourceSha256": "f9a81263a30cdf8c51b2a7abfdc0e3e2c10e5a9650a469e0f5b1418ec7a34186",
+      "echo": "ECHO: [\"0\", \"0\", \"1\", \"100000\", \"999999\", \"1e+6\", \"1e+6\", \"0.0001\", \"0.00001\", \"1e-6\", \"1.01563\", \"-1.01563\", \"1.23438\", \"1.23457\", \"1.23457e-8\", \"99999.9\", \"1e+9\"]\n",
+      "echoSha256": "2e51a028a7df973aa1c638997ab6f2641cdb00ceadc091930f122e41b9061d30"
+    },
+    "number-format-grid": {
+      "source": "echo([for(ex=[-8:8])str(1.23456789*pow(10,ex))]);\necho([str(1e-5),str(1.2e-5),str(1e-6),str(1.2e-6),str(1.015625),str(-1.015625)]);\ncube(1);\n",
+      "sourceSha256": "342d5096df9ddaecab6261673af41abf4a444e9e138aeb78d0af197a9b8437af",
+      "echo": "ECHO: [\"1.23457e-8\", \"1.23457e-7\", \"1.23457e-6\", \"0.0000123457\", \"0.000123457\", \"0.00123457\", \"0.0123457\", \"0.123457\", \"1.23457\", \"12.3457\", \"123.457\", \"1234.57\", \"12345.7\", \"123457\", \"1.23457e+6\", \"1.23457e+7\", \"1.23457e+8\"]\nECHO: [\"0.00001\", \"0.000012\", \"1e-6\", \"1.2e-6\", \"1.01563\", \"-1.01563\"]\n",
+      "echoSha256": "b1f815266895f852b2f376ccbf3af31918cd4a06e9a1e0d4321f3ac5770435c1"
+    }
+  },
+  "conclusions": [
+    "The displayed random manual example is not a sufficient modern-stream oracle. Random normalization/call context remains an open gap.",
+    "Mixed cylinder r and r2 resolves bottom radius from r and top from explicit r2, with an upstream ambiguity warning.",
+    "Numeric text boundary/halfway/general-format vectors are retained in tests/scad-numbers.test.ts."
+  ]
+}

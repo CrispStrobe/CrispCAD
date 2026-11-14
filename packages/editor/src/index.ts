@@ -123,7 +123,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   toolGroup('Combine');
   const opButtons = (['union', 'subtract', 'intersect'] as const).map(operation => {
     const b = button(operation[0].toUpperCase() + operation.slice(1), () => session.combine(operation));
-    b.title = operation === 'subtract' ? t('First selected body is the base. Later selected bodies cut it.') : t(operation === 'union' ? 'Union' : 'Intersect'); return b;
+    b.title = operation === 'subtract' ? t('First selected body is the base. Later selected bodies cut it.') : t(operation === 'union' ? 'Union solids and subtract holes' : 'Intersect'); return b;
   });
   toolGroup('Transform');
   const modeButtons = (['select', 'translate', 'rotate', 'scale'] as const).map((m, i) => {
@@ -218,7 +218,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       const number=(seenNames.get(n.name)??0)+1;seenNames.set(n.name,number);const displayName=(counts.get(n.name)??0)>1?`${n.name} (${number})`:n.name;
       if (!child) { const check = el('input'); check.type = 'checkbox'; check.checked = selected.includes(id); check.setAttribute('aria-label', t`Select ${displayName}`); check.addEventListener('change', () => {session.select(check.checked ? [...selected, id] : selected.filter(x => x !== id));viewport.canvas.focus({preventScroll:true});}); row.append(check); }
       const select = button(displayName, () => {session.select([id]);viewport.canvas.focus({preventScroll:true});}, row, '', false);
-      const icon=toolIcon(n.kind==='code'?'Code':n.kind==='extrusion'?'Sketch':n.kind==='boolean'?'Union':n.kind==='cylinder'?'Cylinder':n.kind==='sphere'?'Sphere':'Box');if(icon&&!select.querySelector('svg'))select.prepend(icon); select.classList.toggle('selected', selected.includes(id)); select.setAttribute('aria-pressed',String(selected.includes(id)));row.classList.toggle('selected',selected.includes(id));select.title = `${displayName} · ${t(n.kind)}`; select.dataset.testid = child?'construction-name':'object-name'; item.append(row);
+      const icon=toolIcon(n.kind==='code'?'Code':n.kind==='extrusion'?'Sketch':n.kind==='boolean'?'Union':n.kind==='cylinder'?'Cylinder':n.kind==='sphere'?'Sphere':'Box');if(icon&&!select.querySelector('svg'))select.prepend(icon); select.classList.toggle('selected', selected.includes(id)); select.setAttribute('aria-pressed',String(selected.includes(id)));row.classList.toggle('selected',selected.includes(id));select.title = `${displayName} · ${n.role==='hole'?t('Hole'):t(n.kind)}`;if(n.role==='hole'){const tag=el('small','hole-tag',t('Hole'));row.append(tag);} select.dataset.testid = child?'construction-name':'object-name'; item.append(row);
       parent.append(item);
       // A generated preset is one editable part. Its implementation operands are
       // deliberately hidden; user-authored booleans retain browsable inputs.
@@ -245,6 +245,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     inspector.replaceChildren(); const header = el('div', 'panel-header'); header.append(el('h2', '', t('Properties'))); button('Close properties', () => { inspector.classList.remove('open'); inspector.classList.add('closed'); propertiesToggle.setAttribute('aria-pressed', 'false'); }, header); inspector.append(header);
     const selection = session.state.selection;
     if(selection.some(id=>session.state.document.roots.includes(id))){inspector.append(el('div','inspect-title',t('Dimensions after transform (mm)')));const dimensions=el('div','triple');inspector.append(dimensions);for(const axis of ['X','Y','Z']){const bodies=built?.bodies.filter(body=>selection.includes(body.id))??[];const i=['X','Y','Z'].indexOf(axis),size=bodies.length?Math.max(...bodies.map(body=>body.bounds.max[i]))-Math.min(...bodies.map(body=>body.bounds.min[i])):'';const input=field(dimensions,t`Size ${axis} (mm)`,typeof size==='number'?Number(size.toFixed(3)):'',()=>{},'number','.1');input.readOnly=true;input.dataset.sizeAxis=axis;}}
+    if(selection.length&&selection.every(id=>session.state.document.roots.includes(id)&&!session.state.document.nodes[id].reference)){const roles=el('div','shape-role');roles.setAttribute('role','group');roles.setAttribute('aria-label',t('Solid or hole'));for(const role of ['solid','hole'] as const){const label=role==='solid'?'Solid':'Hole',b=button(label,()=>session.setRole(role),roles);b.setAttribute('aria-pressed',String(selection.every(id=>(session.state.document.nodes[id].role??'solid')===role)));b.dataset.testid=`role-${role}`;b.title=role==='hole'?t('Union subtracts hole shapes from solid shapes'):t('Printable solid');}inspector.append(roles);}
     const activeKey=mode==='rotate'?'rotation':mode==='scale'?'scale':'position';
     function transformFields(ids:readonly string[],key:'position'|'rotation'|'scale'){
       const title=key==='rotation'?'Rotation':key==='scale'?'Scale':'Position';inspector.append(el('div','inspect-title',`${t(title)} (${key==='rotation'?'°':key==='scale'?'×':'mm'})`));const group=el('div','triple');inspector.append(group);
@@ -299,7 +300,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       ['X', 'Y', 'Z'].forEach((axis, i) => field(group, `${t(title)} ${axis}`, n.transform[key][i], value => { const transform = structuredClone(n.transform); transform[key][i] = Number(value); session.update(id, { transform }); }, 'number', step));
     }
     button('Reset transform', () => session.update(id, { transform: identityTransform() }), inspector);
-    if(!n.reference && session.state.document.roots.includes(id)) {
+    if(!n.reference&&n.role!=='hole' && session.state.document.roots.includes(id)) {
       const physics=el('details','physics-settings');physics.append(el('summary','',t('Physics material')));inspector.append(physics);
       const p=n.physics??defaultPartPhysics();
       for(const [key,label,step] of [['densityKgM3','Density (kg/m³)','10'],['friction','Friction','0.05'],['restitution','Restitution','0.05']] as const)field(physics,label,p[key],value=>session.update(id,{physics:{...p,[key]:Number(value)}}),'number',step);
@@ -364,13 +365,16 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     else if (command && key === 'y') action = () => session.redo();
     else if (command && key === 's') action = () => deliver('bcad');
     else if (command && key === 'a') action = () => session.select(session.state.document.roots);
+    else if(command&&key==='g')action=()=>event.shiftKey?session.separate(session.state.selection[0]):session.combine('union');
+    else if(!command&&key==='h'&&session.state.selection.length)action=()=>session.setRole('hole');
+    else if(!command&&key==='s'&&session.state.selection.length)action=()=>session.setRole('solid');
     else if (command && key === 'd') action = () => session.duplicate();
     else if (command && key === 'c') action=()=>copySelection();
     else if (command && key === 'x') action=()=>copySelection(true);
     else if (command && key === 'v') action=()=>pasteSelection();
     else if ((command && key === 'k') || (!command && event.shiftKey && key === 'a')) action = () => picker.open(true);
     else if (key === 'delete' || key === 'backspace') action = () => session.remove();
-    else if (key === 'escape') action = () => { viewport.cancelTransform();menus.forEach(menu=>menu.open=false);if(mode!=='select')setMode('select');else session.select([]); };
+    else if (key === 'escape') action = () => {const cancelled=viewport.interacting; viewport.cancelTransform();menus.forEach(menu=>menu.open=false);if(cancelled)return;if(mode!=='select')setMode('select');else session.select([]); };
     else if (key === 'v') action = () => setMode('select');
     else if (!command&&key === 'f') action = () => viewport.frame(undefined,!event.shiftKey);
     else if (!command&&key==='o')action=()=>projectionButton.click();

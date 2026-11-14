@@ -47,7 +47,7 @@ export async function qualifyModelLibrarySTL(
     });
     signal?.throwIfAborted();
     const document = session.state.document, geometry = kernel.evaluate(document);
-    if (geometry.bodies.length !== 1 || geometry.bodies[0].reference) throw new Error('Library collision qualification requires exactly one physical solid.');
+    if (geometry.bodies.length !== 1 || (geometry.bodies[0].reference||geometry.bodies[0].hole)) throw new Error('Library collision qualification requires exactly one physical solid.');
     const mesh = geometry.bodies[0];
     const prepared = await prepareCollision(mesh, kernel, {maxHulls, volumeFraction, boundsMm});
     signal?.throwIfAborted();

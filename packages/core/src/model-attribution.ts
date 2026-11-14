@@ -40,7 +40,7 @@ export function hasModelAttribution(input: CadDocument): boolean {
     const node = document.nodes[id];
     return !!node.provenance?.length || (node.kind === 'boolean' && node.inputs.some(visit));
   };
-  return document.roots.filter(id => !document.nodes[id].reference).some(visit);
+  return document.roots.filter(id => !document.nodes[id].reference&&document.nodes[id].role!=='hole').some(visit);
 }
 
 /**
@@ -67,9 +67,9 @@ export async function createModelAttributionSidecar(
       output.modificationNotes.length > 4096 || /[\u0000-\u001f]/.test(output.modificationNotes)) {
     throw new Error('Explicit export modification notes are required.');
   }
-  const rootIds = [...(output.rootIds ?? document.roots.filter(id => !document.nodes[id].reference))];
+  const rootIds = [...(output.rootIds ?? document.roots.filter(id => !document.nodes[id].reference&&document.nodes[id].role!=='hole'))];
   if (!rootIds.length || new Set(rootIds).size !== rootIds.length ||
-      rootIds.some(id => !document.roots.includes(id) || document.nodes[id].reference)) {
+      rootIds.some(id => !document.roots.includes(id) || document.nodes[id].reference||document.nodes[id].role==='hole')) {
     throw new Error('Attribution requires distinct printable document roots.');
   }
   const seen = new Set<string>();

@@ -23,7 +23,7 @@ it('preserves solid geometry through explicit constant color wrappers and disclo
  expect(geometry('color(c=[0.2,1,0.4],alpha=.5) cube(3);').volume).toBeCloseTo(27);
  expect(geometry('color([1,0,0,0.5]) cube(2);').volume).toBeCloseTo(8);
  expect(geometry('module color(){cube(3);} color();').volume).toBeCloseTo(27);
- for(const unsupported of ['color("red",alpha=2) cube(2);','color(c="red",0.5) cube(2);','color([1,0]) cube(2);','color([1.1,0,0]) cube(2);','color("red",other=1) cube(2);','color("red") import("file.stl");','color(fetch()) cube(2);'])expect(()=>importOpenSCAD(unsupported),unsupported).toThrow();
+ for(const unsupported of ['color("red",alpha=2) cube(2);','color(c="red",0.5) cube(2);','color([1,0]) cube(2);','color([1.1,0,0]) cube(2);','color("red") import("file.stl");','color(fetch()) cube(2);'])expect(()=>importOpenSCAD(unsupported),unsupported).toThrow();
 });
 it('propagates tagged literal module colors without coercing strings into CAD expressions',()=>{
  const source='module part(col="#3b4747"){shade=col;color(shade) cube([4,2,.2],true);} part();';

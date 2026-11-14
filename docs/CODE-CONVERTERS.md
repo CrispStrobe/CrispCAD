@@ -11,8 +11,8 @@ The GUI, SDK, CLI and MCP share the converters.
 
 | Input | Supported |
 | --- | --- |
-| OpenSCAD | Typed scalar/vector/string values; final file/block assignments and forward references; lexical nested modules/functions and defaults; `children()` and indexed children; parameter-driven conditionals and multi-binding range/list loops; vector arithmetic/components/indexing; primitives including planar-faced polyhedra; reflections, signed scale, arbitrary-axis rotation, resize without automatic axes; hull and bounded 2D/3D Minkowski sums; profile Booleans, holes, loops, modules, text and round/sharp offsets; twisted/tapered linear extrusion and positive-angle revolution. |
-| JSCAD | Bounded CommonJS/ES modeling imports, helper functions, destructuring, arrays, loops and scalar input parameters; existing primitives plus indexed polyhedra; 2D/3D Booleans/hulls/hullChain; planar profiles and twisted extrusion; positive-angle rotational extrusion; 3D reflection and transforms; evaluated snapshots and flat output-colour metadata. |
+| OpenSCAD | Typed scalar/vector/string values; final file/block assignments and forward references; lexical nested modules/functions and defaults; `children()` and indexed children; parameter-driven conditionals and multi-binding range/list loops; vector arithmetic/components/indexing; primitives including planar-faced polyhedra; reflections, signed scale, arbitrary-axis rotation, affine matrices and one-target automatic resize; hull and bounded 2D/3D Minkowski sums; profile Booleans, holes, loops, modules, text and round/sharp offsets; twisted/tapered linear extrusion and signed revolution. |
+| JSCAD | Bounded CommonJS/ES modeling imports, helper functions, destructuring, arrays, loops and scalar input parameters; existing primitives plus indexed polyhedra; 2D/3D Booleans/hulls/hullChain; planar profiles and twisted extrusion; positive-angle rotational extrusion and affine transforms; 3D reflection and transforms; evaluated snapshots and flat output-colour metadata. |
 | Native CAD Script | Retained CSG including Minkowski, indexed planar-faced polyhedra, signed scale, mirror, arbitrary-axis rotation and resize; typed 2D construction trees with holes, text, offsets and profile loops/choices; extrusion/taper/twist/revolution; existing numeric parameters, patterns and lazy branches. |
 
 Cylinder/taper tessellation supports 3–4096 segments and sphere tessellation
@@ -21,7 +21,7 @@ rounded by Manifold; triangle layout is not promised. OpenSCAD uses 48 segments
 if all fragment controls are absent, differing from OpenSCAD adaptive defaults. Explicit
 $fa/$fs use radius-dependent fragment calculations for circles and cylinders;
 $fn takes precedence. Small sphere meshes still use native tessellation. Extrusion profiles retain
-the 256-point limit. Zero-sized boxes/cylinders/spheres contribute empty geometry;
+a bounded generated-point path as well as literal polygons. Zero-sized boxes/cylinders/spheres contribute empty geometry;
 a whole code object must still produce a printable solid for insertion.
 
 OpenSCAD `color()` accepts validated named/hex strings, constant RGB/RGBA
@@ -46,7 +46,7 @@ and [modifiers](https://files.openscad.org/documentation/manual/The_OpenSCAD_Lan
 
 SCAD source is bounded to 32 KiB / 8,192 tokens, construction translation to
 4,096 visits and recursion to 32 levels. Native execution permits 256 statements,
-1,024 expanded nodes and 16,384 evaluation steps; expressions permit 1,024
+4,096 expanded nodes and 16,384 evaluation steps; expressions permit 1,024
 characters / 512 tokens. The 200,000 estimated-face budget remains in force.
 
 Source limit is 32 KiB. JSCAD has 20,000 interpreter steps, 64 iterations per loop,
@@ -59,12 +59,11 @@ limits are distinct from unsupported features and malformed input.
 
 Known gaps, deliberately diagnosed:
 
-- External `include`/`use`, library resolution (including BOSL2), array/list
-  comprehensions, randomness/search helpers, symbolic numeric-to-string formatting,
-  general matrix arithmetic, anonymous-block assignment semantics, external meshes,
-  surface/image geometry, automatic resize axes and arbitrary-axis profile rotations.
+- External `include`/`use`, library resolution (including BOSL2), C-style comprehensions, unrestricted recursion, some dynamic searches and list operations,
+  anonymous-block assignment semantics, external meshes,
+  surface/image geometry and automatic resize with multiple specified target dimensions.
   Parameter-dependent recursive functions remain bounded rather than becoming an
-  unrestricted evaluator. Negative/cross-axis rotational profiles remain refused.
+  unrestricted evaluator. Cross-axis rotational profiles remain refused; wholly negative radial profiles and clockwise sweeps are supported.
 - JSCAD slice/callback extrusion, general lofts/sweeps, external/local modules and
   host APIs remain unsupported. Export to JSCAD refuses native Minkowski/resize,
   text/offset profiles and tapered-profile extrusion where no supported lowering
@@ -95,7 +94,7 @@ not produce geometry; a library-only file is not an instantiable solid.
 
 Range and scalar-list loops lower to native forRange/forValues templates and
 recompute their instance counts, positions and dimensions after parameter edits.
-Fixed vector-list loops expand symbolically. Loops allow at most 64 values each,
+Fixed vector-list loops expand symbolically. SCAD/native geometry loops allow at most 256 values each; native repeat remains capped at 64,
 with global expansion/node/face budgets and a 16,384-evaluation guard against nested
 explosion. Two-component descending ranges retain the documented legacy OpenSCAD
 endpoint-swapping behavior; explicit stepped ranges remain directional.
@@ -217,7 +216,7 @@ Profiles now remain a native 2D construction tree through parameter recomputatio
 `rectangle2d`, `circle2d`, `polygon2d(points, paths)`, planar transforms and
 `union2d`/`subtract2d`/`intersect2d`/`hull2d` evaluate through Manifold CrossSection.
 Polygon contours use even/odd filling, including holes. Each contour must be simple;
-self-intersection is rejected. Extrusions have 1–256 steps. Evaluated profiles are
+self-intersection is rejected. Extrusions have 1–4,096 steps. Evaluated profiles are
 capped at 16,384 vertices and post-clipping extrusion/revolution estimates at
 200,000 faces, in addition to source and expansion budgets. Profile-local named
 references, loops, module calls and local bindings are not implemented yet.
@@ -270,8 +269,8 @@ Local bindings are immutable and memoized within their lexical invocation. Their
 captured module/function environments do not change under inner shadowing. A
 16,384-value-visit budget bounds actual expansion; shared alias DAGs can be indexed
 without expanding every branch. Source is still limited to 32 KiB / 8,192 tokens,
-call/nesting depth 32, 64 values per loop, and 4,096 translator construction visits.
-Native limits are 256 statements, 1,024 expanded nodes, 16,384 evaluation steps and
+call/nesting depth 32, 256 values per geometry loop, and 4,096 translator construction visits.
+Native limits are 256 statements, 4,096 expanded nodes, 16,384 evaluation steps and
 200,000 estimated/evaluated faces. Scalar expressions allow 1,024 characters and
 512 tokens; these are finite execution limits, not complete-language promises.
 
@@ -316,3 +315,27 @@ Aggregate hashes, transitions and caveats are recorded in
 Original analytic fixtures, MIT JSCAD comparisons and real Jolt hole queries
 validate specific operations independently; the corpus itself has no geometry
 oracle. No research models are admitted through this measurement.
+
+## Retained arrays, transforms and notice gaps — current continuation
+
+Generated polygon points retain nested range/list generators, filters, let bindings,
+indexing and supported reductions. Native derived scalar `const` expressions can
+resolve in their consuming loop scope; generated aliases are hidden from editable
+parameter controls. Matrix products, affine transforms, profile projection,
+clockwise/negative-side revolution, one-target automatic resize and assertions
+share the retained native engine. Signed revolution snapshots lower to reflected
+positive sweeps for JSCAD; uncertain radial bounds are explicitly diagnosed.
+
+Native geometry loops permit 256 values, with 4,096 expanded nodes and the unchanged
+200,000 estimated/evaluated face cap. Scalar AST caching stores syntax only, never
+lookup values or host callbacks. Font complexity metadata improves work estimates;
+it does not fix font substitution. Extra harmless argument names are disclosed;
+known unsupported geometry arguments are still refused.
+
+Notices are now stable records retrievable through `getCodeImportNotices`. The
+[gap register](CONVERTER-GAPS.md) covers every notice and its acceptance work.
+Numeric lettering now follows executable-tested SCAD formatting, and custom
+assertion messages survive parameter edits in both solids and profiles. Original
+saved native programs retain their earlier formatting. Random streams, exact
+fonts/shaping, materials, string parameters and JSCAD source-backed parameters
+remain explicit work rather than being hidden behind successful-solid counts.
