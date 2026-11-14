@@ -11,9 +11,9 @@ The GUI, SDK, CLI and MCP share the converters.
 
 | Input | Supported |
 | --- | --- |
-| OpenSCAD | Scalar/vector/boolean assignments before geometry; arithmetic, degree math and dependent parameters; top-level reusable modules and scalar/vector functions with positional/named/default arguments; declarative module/operator-local bindings; fixed vector indexing; cube/sphere/cylinder, including r1/r2 and d1/d2 tapers; parametric range/scalar-list loops, fixed vector-list loops, if/else, scalar conditional/comparison/logic expressions; centering and radius/diameter arguments; translate, XYZ/scalar-Z rotation, positive scale; union/difference/intersection and 3D convex hull; linear_extrude of a simple polygon, square or circle. |
-| JSCAD | CommonJS/ES imports of @jscad/modeling; exported main or explicitly selected entry; helper functions, destructuring/default arguments, arithmetic/Math; bounded loops and arrays; scalar input parameters; cube/cuboid/cylinder/sphere/polygon, rectangle/circle/ellipse profiles and planar profile transforms; Booleans and 3D convex hull; circular cylinderElliptic tapers; empty 3D geometry; translate/rotate/scale and axis shortcuts; flat output colours; basic vec2 maths and untwisted extrudeLinear. |
-| Native CAD Script | Primitives/CSG/transforms/repeat, frustum, hull, empty, choose, forRange and forValues, plus extrude(height, [[x,y], ...]) for a simple XY profile. Profile closes automatically, needs 3–256 points, and rejects zero edges/area and self-intersections. |
+| OpenSCAD | Scalar/vector/boolean assignments before geometry; arithmetic, degree math and dependent parameters; top-level reusable modules and scalar/vector functions with positional/named/default arguments; declarative module/operator-local bindings; fixed vector indexing; cube/sphere/cylinder, including r1/r2 and d1/d2 tapers; parametric range/scalar-list loops, fixed vector-list loops, if/else, scalar conditional/comparison/logic expressions; centering and radius/diameter arguments; translate, XYZ/scalar-Z rotation, positive scale; union/difference/intersection and 3D convex hull; 2D profile Booleans, hulls, transforms and polygon paths/holes; linear_extrude with twist, slices and scalar/vector top scale; positive-angle rotate_extrude on nonnegative radial profiles. |
+| JSCAD | CommonJS/ES imports of @jscad/modeling; exported main or explicitly selected entry; helper functions, destructuring/default arguments, arithmetic/Math; bounded loops and arrays; scalar input parameters; cube/cuboid/cylinder/sphere/polygon, rectangle/circle/ellipse profiles and planar profile transforms; 2D/3D Booleans, convex hull and hullChain; circular cylinderElliptic tapers; empty 3D geometry; translate/rotate/scale and axis shortcuts; flat output colours; basic vec2 maths and extrudeLinear with twist and steps; positive-angle extrudeRotate with start angle. |
+| Native CAD Script | Primitives/CSG/transforms/repeat, frustum, hull, empty, choose, forRange and forValues, plus simple extrude, retained extrudeProfile and revolve over bounded 2D profile expressions. Profile closes automatically, needs 3–256 points, and rejects zero edges/area and self-intersections. |
 
 Cylinder/taper tessellation supports 3–4096 segments and sphere tessellation
 4–4096, subject to the 200,000 estimated-face budget. Small sphere counts may be
@@ -42,11 +42,11 @@ Known gaps, deliberately diagnosed:
   nested definitions, module
   child operators, global reassignment/assignment after geometry, assignments in
   anonymous blocks, 2D-profile-local bindings,
-  2D profile Booleans/holes, twisted/scaled extrusion, minkowski, imported
+  negative/cross-axis revolutions, minkowski, imported
   meshes and arbitrary-axis transforms. BOSL2 library execution is not supported.
 - JSCAD external/local modules, arbitrary JavaScript/host APIs, unsupported math
-  helpers and geometry APIs, 2D profile Booleans/holes, slice/callback extrusion,
-  2D hulls/hull chains, lofts, curved sweeps and per-face materials. The pinned nuts-and-bolts
+  helpers and geometry APIs, slice/callback extrusion, tapered-profile export,
+  lofts, curved sweeps and per-face materials. The pinned nuts-and-bolts
   example currently stops specifically at extrusions.extrudeFromSlices.
 
 This is a tested subset, not a full OpenSCAD or JSCAD implementation. The goal is
@@ -189,3 +189,47 @@ Language behavior references: [OpenSCAD modules and functions](https://files.ope
 The installed MIT JSCAD 2.13.0 API and independent test geometry establish the
 profile defaults, centering and radian transform behavior. No GPL implementation
 was used.
+
+## Profile engine and measured coverage — 2026-11-14
+
+Profiles now remain a native 2D construction tree through parameter recomputation.
+`rectangle2d`, `circle2d`, `polygon2d(points, paths)`, planar transforms and
+`union2d`/`subtract2d`/`intersect2d`/`hull2d` evaluate through Manifold CrossSection.
+Polygon contours use even/odd filling, including holes. Each contour must be simple;
+self-intersection is rejected. Extrusions have 1–256 steps. Evaluated profiles are
+capped at 16,384 vertices and post-clipping extrusion/revolution estimates at
+200,000 faces, in addition to source and expansion budgets. Profile-local named
+references, loops, module calls and local bindings are not implemented yet.
+
+SCAD twist uses its documented left-hand convention; the native kernel and JSCAD
+use right-hand angles. Conversion changes the sign. Revolution segment counts
+refer to a complete turn and are proportionally reduced for a partial turn.
+Negative/cross-axis radial profiles are refused rather than silently clipped.
+`convexity` is preview-only and does not affect our rendered solid.
+
+Curved meshes are **not bit-identical upstream reproductions**. Manifold and JSCAD
+triangulate nonplanar twisted side faces differently. The checked off-axis 2×1 mm
+rectangle, height 10 mm, twist 90°, eight steps has native volume 18.246149 mm³
+versus JSCAD 21.497655 mm³. At 128 steps both are within 0.6% of the ideal
+20 mm³ volume, but differ by about 1.03% relative to native. Tests preserve this
+limitation explicitly; JSCAD conversion warns and SCAD-generated source comments
+identify native tessellation. Use adequate resolution and verify critical parts.
+This is tessellation loss, not retained exact B-rep CAD.
+
+The fixed research sample improves from **38/256 to 42/256** positive-solid
+conversions, with no previously converted file regressing. Four unsupported files
+now convert; two now reach explicit resource limits. Final counts: 42 converted,
+204 unsupported, 7 limited, 3 failed. This is a deterministic evenly spaced sample
+of deduplicated files, **not** a general compatibility percentage or fidelity score.
+Sources, raw reports and generated research geometry remain outside the repository.
+Reviewed local corpus: **39 converted, two explicitly unsupported seeds**. The GUI
+admits those 39 working sources, including three new CC0 files with independently
+checked volumes, exact source hashes, licence evidence and previews.
+
+The remaining research blockers include strings, colour/echo operators, library
+include/use, module children, reassignment, profile-local constructs and mesh/sweep
+features. The underlying kernel can already perform many operations; converter
+language semantics and the exposed construction IR remain the larger coverage gap.
+JSCAD parameters still become evaluated snapshots; per-face colours and original
+foreign feature identities are not retained. Tapered profiles round-trip through
+native CAD/SCAD; JSCAD export refuses them until slice extrusion is supported.

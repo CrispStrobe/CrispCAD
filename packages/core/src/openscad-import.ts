@@ -139,10 +139,23 @@ return {named,positional,use,allowed};
    if(end!==undefined)cursor=end;return union(parts);
   }finally{locals=outer;}
  }
- function profile(depth:number,height:string):string{if(depth>32||++statements>128)limited(t('OpenSCAD construction limit exceeded'));if(peek()==='{'){take();const result=profile(depth+1,height);expect('}');return result;}const token=take(),name=token.text;if(!['polygon','square','circle'].includes(name))unsupported(`linear_extrude profile: ${name}`,token.at);const {named,use,allowed}=argumentsFor(name,token.at);expect(';');
-  if(name==='polygon'){allowed(['points'],1);const points=use('points',0);if(!Array.isArray(points)||points.length<3||!points.every(p=>Array.isArray(p)&&p.length===2&&p.every(v=>typeof v==='string')))fail(t('Expected an OpenSCAD polygon point list'),token.at);return `extrude(${height}, [${(points as string[][]).map(p=>`[${p.join(', ')}]`).join(', ')}])`;}
-  if(name==='square'){allowed(['size','center'],2);const raw=use('size',0,'1'),size=typeof raw==='string'?[raw,raw]:raw;if(!Array.isArray(size)||size.length!==2||!size.every(v=>typeof v==='string'))fail(t('Expected an OpenSCAD square size'),token.at);const [w,d]=size as string[],center=use('center',1,'false');const centered=(size:string)=>center==='true'?'0':center==='false'?`(${size}) / 2`:`(${scalar(center)}) ? 0 : (${size}) / 2`;return `move([${centered(w)}, ${centered(d)}, (${height}) / 2], box(${w}, ${d}, ${height}))`;}
-  allowed(['r','d','$fn'],1);if(named.has('d')&&(named.has('r')||use('r',0)!==undefined))unsupported('circle: both radius and diameter',token.at);const radius=named.has('d')?`(${scalar(named.get('d'))}) / 2`:scalar(use('r',0,'1')),count=scalar(named.get('$fn')??localValue('$fn'),fn);return `move([0, 0, (${height}) / 2], cylinder(${radius}, ${height}, ${count}))`;
+ function profile(depth=0):string{
+  if(depth>32||++statements>CODE_LIMITS.statements)limited(t('OpenSCAD construction limit exceeded'));
+  const combine=(parts:string[],kind='union2d')=>parts.length===1&&kind!=='hull2d'?parts[0]:`${kind}(${parts.join(', ')})`;
+  if(peek()==='{'){take();const parts:string[]=[];while(peek()!=='}'){if(!peek())fail(t('Unclosed OpenSCAD block'));parts.push(profile(depth+1));}expect('}');return combine(parts);}
+  const token=take(),name=token.text;if(!['polygon','square','circle','union','difference','intersection','hull','translate','rotate','scale'].includes(name))unsupported(`extrusion profile: ${name}`,token.at);
+  const {named,use,allowed}=argumentsFor(name,token.at);
+  if(['union','difference','intersection','hull'].includes(name)){allowed([],0);const parts:string[]=[];if(peek()==='{'){take();while(peek()!=='}'){if(!peek())fail(t('Unclosed OpenSCAD block'));parts.push(profile(depth+1));}expect('}');}else parts.push(profile(depth+1));return combine(parts,name==='difference'?'subtract2d':name==='intersection'?'intersect2d':name+'2d');}
+  if(['translate','rotate','scale'].includes(name)){
+   allowed([name==='rotate'?'a':'v'],1);const raw=use(name==='rotate'?'a':'v',0);let components:string[];
+   if(name==='rotate'){if(typeof raw==='string')components=[raw];else if(Array.isArray(raw)&&raw.length===3&&raw.slice(0,2).every(v=>v==='0'))components=[scalar(raw[2])];else unsupported('profile rotation outside XY plane',token.at);}
+   else if(typeof raw==='string'&&name==='scale')components=[raw,raw];else if(Array.isArray(raw)&&[2,3].includes(raw.length)&&raw.every(v=>typeof v==='string'))components=(raw as string[]).slice(0,2);else return fail(t('Expected a two-dimensional profile transform'),token.at);
+   return `${name==='translate'?'move2d':name+'2d'}(${components!.join(', ')}, ${profile(depth+1)})`;
+  }
+  expect(';');
+  if(name==='polygon'){allowed(['points','paths','convexity'],2);const points=use('points',0),paths=use('paths',1);if(!Array.isArray(points)||points.length<3||!points.every(p=>Array.isArray(p)&&p.length===2&&p.every(v=>typeof v==='string')))fail(t('Expected an OpenSCAD polygon point list'),token.at);if(paths!==undefined&&(!Array.isArray(paths)||!paths.every(p=>Array.isArray(p)&&p.every(v=>typeof v==='string'))))unsupported('polygon paths',token.at);return `polygon2d([${(points as string[][]).map(p=>`[${p.join(', ')}]`).join(', ')}]${Array.isArray(paths)&&paths.length?', ['+(paths as string[][]).map(p=>'['+p.join(', ')+']').join(', ')+']':''})`;}
+  if(name==='square'){allowed(['size','center'],2);const raw=use('size',0,'1'),size=typeof raw==='string'?[raw,raw]:raw;if(!Array.isArray(size)||size.length!==2||!size.every(v=>typeof v==='string'))fail(t('Expected an OpenSCAD square size'),token.at);return `rectangle2d(${(size as string[]).join(', ')}, ${scalar(use('center',1,'false'))})`;}
+  allowed(['r','d','$fn'],1);if(named.has('d')&&(named.has('r')||use('r',0)!==undefined))unsupported('circle: both radius and diameter',token.at);return `circle2d(${named.has('d')?'('+scalar(named.get('d'))+') / 2':scalar(use('r',0,'1'))}, ${scalar(named.get('$fn')??localValue('$fn'),fn)})`;
  }
  function shape(depth=0):string{
   if(depth>32||++statements>CODE_LIMITS.statements)limited(t('OpenSCAD construction limit exceeded'));if(peek()==='{')return block(depth,true);
@@ -164,7 +177,7 @@ return {named,positional,use,allowed};
    expect(')');omittedColor=true;return peek()==='{'?block(depth+1):shape(depth+1);
   }
 
-  if(!modules.has(name)&&!['cube','sphere','cylinder','translate','rotate','scale','union','difference','intersection','hull','linear_extrude'].includes(name))unsupported(name,token.at);
+  if(!modules.has(name)&&!['cube','sphere','cylinder','translate','rotate','scale','union','difference','intersection','hull','linear_extrude','rotate_extrude'].includes(name))unsupported(name,token.at);
   const {named,positional,use,allowed}=argumentsFor(name,token.at);
   if(modules.has(name)){
    const definition=modules.get(name)!;
@@ -176,7 +189,8 @@ return {named,positional,use,allowed};
   const segments=()=>scalar(named.get('$fn')??localValue('$fn'),fn);
   if(['union','difference','intersection','hull'].includes(name)){allowed([],0);const parts:string[]=[];if(peek()==='{')parts.push(...blockParts(depth));else parts.push(shape(depth+1));if(!parts.length)return 'empty()';if(parts.length===1&&name!=='hull')return parts[0];return `${name==='hull'?'hull':name==='difference'?'subtract':name==='intersection'?'intersect':'union'}(${parts.join(', ')})`;}
   if(['translate','rotate','scale'].includes(name)){allowed([name==='rotate'?'a':'v'],1);const v=use(name==='rotate'?'a':'v',0);const vec=name==='rotate'&&typeof v==='string'?['0','0',v]:vector(v,name==='scale');const child=peek()==='{'?block(depth):shape(depth+1);return `${name==='translate'?'move':name}([${vec.join(', ')}], ${child})`;}
-  if(name==='linear_extrude'){allowed(['height','center'],2);const height=scalar(use('height',0,'1')),body=profile(depth+1,height);const flag=use('center',1);return flag===undefined||flag==='false'?body:`move([0, 0, (${scalar(flag)}) ? -(${height}) / 2 : 0], ${body})`;}
+  if(name==='rotate_extrude'){allowed(['angle','convexity','$fn'],0);return `revolve(${profile(depth+1)}, ${scalar(named.get('angle'),'360')}, ${segments()})`;}
+  if(name==='linear_extrude'){allowed(['height','center','convexity','twist','slices','scale','$fn'],2);const height=scalar(use('height',0,'1')),twist=scalar(named.get('twist'),'0'),top=named.get('scale')??'1',scale=typeof top==='string'?[top,top]:top;if(!Array.isArray(scale)||scale.length!==2||!scale.every(v=>typeof v==='string'))unsupported('linear_extrude scale',token.at);const count=scalar(named.get('slices'),twist==='0'?'1':scalar(named.get('$fn')??localValue('$fn'),fn)),body=`extrudeProfile(${height}, ${profile(depth+1)}, -(${twist}), ${count}, ${(scale as string[]).join(', ')})`;const flag=use('center',1);return flag===undefined||flag==='false'?body:`move([0, 0, (${scalar(flag)}) ? -(${height}) / 2 : 0], ${body})`;}
   expect(';');
   if(name==='cube'){allowed(['size','center'],2);const size=vector(use('size',0,'1'),true),body=`box(${size.join(', ')})`;const flag=use('center',1);return flag==='true'?body:`move([${size.map(v=>centerZ(flag,v)).join(', ')}], ${body})`;}
   if(name==='sphere'){allowed(['r','d','$fn'],1);if(named.has('d')&&(named.has('r')||positional.length))unsupported('sphere: both radius and diameter',token.at);const radius=named.has('d')?`(${scalar(named.get('d'))}) / 2`:scalar(use('r',0,'1'));return `sphere(${radius}, ${segments()})`;}
@@ -190,5 +204,5 @@ return {named,positional,use,allowed};
  }
  let constructionAt=0;const shapes:string[]=[];while(cursor<tokens.length){if(definitions.has(cursor)){cursor=definitions.get(cursor)!;continue;}if(peek(1)==='='){const token=take(),name=token.text;take();if(shapes.length)unsupported('assignment after geometry',token.at);const v=value();expect(';');if(name==='$fn')fn=scalar(v);else{if(!/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(name)||['constructor','prototype'].includes(name))unsupported(name,token.at);if(assignments.has(name)||vectors.has(name))unsupported('variable reassignment',token.at);if(Array.isArray(v))vectors.set(name,v);else assignments.set(name,v);}if(++statements>CODE_LIMITS.statements)limited(t('Too many statements'));}else{constructionAt=tokens[cursor]?.at??0;shapes.push(shape());}}
  if(!shapes.length)fail(t('OpenSCAD block contains no supported solid'));
- const program:CodeProgram={version:1,language:'brickwright-cad-script',parameters:{},source:`// Converted from the supported OpenSCAD subset.\n${omittedColor?'// Appearance colors omitted; solid geometry retained.\n':''}${[...assignments].map(([name,v])=>`param ${name}: scalar = ${v};`).join('\n')}\nreturn ${union(shapes)};\n`};try{compileCode(program);}catch(error){if(error instanceof CadCodeError)throw new CadCodeError(t`Converted OpenSCAD construction: ${error.detail}`,constructionAt,source,error.code);throw error;}return program;
+ const program:CodeProgram={version:1,language:'brickwright-cad-script',parameters:{},source:`// Converted from the supported OpenSCAD subset.\n// Curved and twisted surfaces use the native kernel tessellation.\n${omittedColor?'// Appearance colors omitted; solid geometry retained.\n':''}${[...assignments].map(([name,v])=>`param ${name}: scalar = ${v};`).join('\n')}\nreturn ${union(shapes)};\n`};try{compileCode(program);}catch(error){if(error instanceof CadCodeError)throw new CadCodeError(t`Converted OpenSCAD construction: ${error.detail}`,constructionAt,source,error.code);throw error;}return program;
 }

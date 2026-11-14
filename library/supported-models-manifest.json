@@ -1,0 +1,401 @@
+{
+  "format": "brickwright-local-fixture-library",
+  "version": 1,
+  "capturedOn": "2026-11-14",
+  "pathBase": "library/",
+  "reproduction": {
+    "command": "node scripts/generate-supported-library.mjs --check",
+    "generator": {
+      "path": "../scripts/generate-supported-library.mjs",
+      "sha256": "4c7cad93297b49487d5a36fb9e8e1a98098cf4808ad3e33dde27eb8581c3a751"
+    },
+    "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
+    "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+  },
+  "assets": [
+    {
+      "id": "slicer-test-models-quarter-cylinder",
+      "title": "Quarter cylinder",
+      "author": "Ghostkeeper",
+      "version": "e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/Ghostkeeper/SlicerTestModels",
+        "commit": "e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d",
+        "sourceUrl": "https://github.com/Ghostkeeper/SlicerTestModels/blob/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/basic/quarter_cylinder.scad"
+      },
+      "authorEvidence": {
+        "path": "evidence/slicer-supported-models-authors.json",
+        "bytes": 1034,
+        "sha256": "8913d55f2b273447f1979269278d3f2b0336525d113e0730fe64cedc20055e06"
+      },
+      "licence": {
+        "spdx": "CC0-1.0",
+        "scope": "asset",
+        "attribution": "Quarter cylinder by Ghostkeeper, SlicerTestModels; CC0-1.0. Voluntary credit retained.",
+        "evidenceUrl": "https://github.com/Ghostkeeper/SlicerTestModels/blob/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/README.md",
+        "localEvidence": [
+          {
+            "path": "evidence/slicer-test-models-README.md",
+            "sha256": "0b106b8a989e50360e58379504af6adec203916c3dd2b410abaf2ff11b34a302",
+            "bytes": 5530,
+            "url": "https://raw.githubusercontent.com/Ghostkeeper/SlicerTestModels/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/README.md"
+          },
+          {
+            "path": "evidence/slicer-test-models-LICENSE.md",
+            "sha256": "868ac549cfeb406ca91595670341fd468ac2e49147b8eebff098752110ae626d",
+            "bytes": 6992,
+            "url": "https://raw.githubusercontent.com/Ghostkeeper/SlicerTestModels/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/LICENSE.md"
+          }
+        ],
+        "capturedOn": "2026-11-14",
+        "review": "accepted",
+        "reviewer": "Codex pinned per-model origin and repository model grant audit"
+      },
+      "original": {
+        "path": "sources/slicer-test-models/quarter_cylinder.scad",
+        "bytes": 73,
+        "sha256": "7b1226151805243e1d54e26d9f931c7211845b1b9550c6809debb55b62cf8b74",
+        "format": "openscad",
+        "url": "https://raw.githubusercontent.com/Ghostkeeper/SlicerTestModels/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/basic/quarter_cylinder.scad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/slicer-test-models/quarter_cylinder.stl",
+          "bytes": 10284,
+          "sha256": "d81c5c268f2a3c5e094fcbe747f3acbdc605457fea0f3f491b180f83298267c3",
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Unmodified source retained, converted and evaluated locally. Closed positive-volume mesh screened and volume independently checked against polygon geometry or rectangle-cell integration. Millimetres and Z up assumed. Source coordinates preserved; not a calibration certification or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "Unitless source interpreted as millimetres and Z up; original coordinates preserved.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "d81c5c268f2a3c5e094fcbe747f3acbdc605457fea0f3f491b180f83298267c3",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 300,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 204,
+        "boundsMm": {
+          "min": [
+            0,
+            0,
+            0
+          ],
+          "max": [
+            20,
+            20,
+            40
+          ]
+        },
+        "signedVolumeMm3": 12564.303703036378
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "slicer-test-models-pyramid",
+      "title": "Square pyramid",
+      "author": "Ghostkeeper",
+      "version": "e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/Ghostkeeper/SlicerTestModels",
+        "commit": "e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d",
+        "sourceUrl": "https://github.com/Ghostkeeper/SlicerTestModels/blob/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/basic/pyramid.scad"
+      },
+      "authorEvidence": {
+        "path": "evidence/slicer-supported-models-authors.json",
+        "bytes": 1034,
+        "sha256": "8913d55f2b273447f1979269278d3f2b0336525d113e0730fe64cedc20055e06"
+      },
+      "licence": {
+        "spdx": "CC0-1.0",
+        "scope": "asset",
+        "attribution": "Square pyramid by Ghostkeeper, SlicerTestModels; CC0-1.0. Voluntary credit retained.",
+        "evidenceUrl": "https://github.com/Ghostkeeper/SlicerTestModels/blob/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/README.md",
+        "localEvidence": [
+          {
+            "path": "evidence/slicer-test-models-README.md",
+            "sha256": "0b106b8a989e50360e58379504af6adec203916c3dd2b410abaf2ff11b34a302",
+            "bytes": 5530,
+            "url": "https://raw.githubusercontent.com/Ghostkeeper/SlicerTestModels/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/README.md"
+          },
+          {
+            "path": "evidence/slicer-test-models-LICENSE.md",
+            "sha256": "868ac549cfeb406ca91595670341fd468ac2e49147b8eebff098752110ae626d",
+            "bytes": 6992,
+            "url": "https://raw.githubusercontent.com/Ghostkeeper/SlicerTestModels/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/LICENSE.md"
+          }
+        ],
+        "capturedOn": "2026-11-14",
+        "review": "accepted",
+        "reviewer": "Codex pinned per-model origin and repository model grant audit"
+      },
+      "original": {
+        "path": "sources/slicer-test-models/pyramid.scad",
+        "bytes": 59,
+        "sha256": "97da599bb223bc147ad9d4e50b93a90b00da2f70b7dbd3da4c6c506386fcfdcf",
+        "format": "openscad",
+        "url": "https://raw.githubusercontent.com/Ghostkeeper/SlicerTestModels/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/basic/pyramid.scad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/slicer-test-models/pyramid.stl",
+          "bytes": 384,
+          "sha256": "b7dc629a0915cdec1f0a239cff762f135cc65e9d8bbcb865e3d66ecef7ce7df0",
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Unmodified source retained, converted and evaluated locally. Closed positive-volume mesh screened and volume independently checked against polygon geometry or rectangle-cell integration. Millimetres and Z up assumed. Source coordinates preserved; not a calibration certification or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "Unitless source interpreted as millimetres and Z up; original coordinates preserved.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "b7dc629a0915cdec1f0a239cff762f135cc65e9d8bbcb865e3d66ecef7ce7df0",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 300,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 6,
+        "boundsMm": {
+          "min": [
+            -7.071067810058594,
+            -7.071067810058594,
+            0
+          ],
+          "max": [
+            7.071067810058594,
+            7.071067810058594,
+            20
+          ]
+        },
+        "signedVolumeMm3": 1333.3333326519157
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "slicer-test-models-big-frame",
+      "title": "Nested open frames",
+      "author": "Ghostkeeper",
+      "version": "e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/Ghostkeeper/SlicerTestModels",
+        "commit": "e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d",
+        "sourceUrl": "https://github.com/Ghostkeeper/SlicerTestModels/blob/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/adhesion/big_frame.scad"
+      },
+      "authorEvidence": {
+        "path": "evidence/slicer-supported-models-authors.json",
+        "bytes": 1034,
+        "sha256": "8913d55f2b273447f1979269278d3f2b0336525d113e0730fe64cedc20055e06"
+      },
+      "licence": {
+        "spdx": "CC0-1.0",
+        "scope": "asset",
+        "attribution": "Nested open frames by Ghostkeeper, SlicerTestModels; CC0-1.0. Voluntary credit retained.",
+        "evidenceUrl": "https://github.com/Ghostkeeper/SlicerTestModels/blob/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/README.md",
+        "localEvidence": [
+          {
+            "path": "evidence/slicer-test-models-README.md",
+            "sha256": "0b106b8a989e50360e58379504af6adec203916c3dd2b410abaf2ff11b34a302",
+            "bytes": 5530,
+            "url": "https://raw.githubusercontent.com/Ghostkeeper/SlicerTestModels/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/README.md"
+          },
+          {
+            "path": "evidence/slicer-test-models-LICENSE.md",
+            "sha256": "868ac549cfeb406ca91595670341fd468ac2e49147b8eebff098752110ae626d",
+            "bytes": 6992,
+            "url": "https://raw.githubusercontent.com/Ghostkeeper/SlicerTestModels/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/LICENSE.md"
+          }
+        ],
+        "capturedOn": "2026-11-14",
+        "review": "accepted",
+        "reviewer": "Codex pinned per-model origin and repository model grant audit"
+      },
+      "original": {
+        "path": "sources/slicer-test-models/big_frame.scad",
+        "bytes": 307,
+        "sha256": "15b4cfcdac2584cdb8640528346cb8abab3f76797ccd739de0ec9295876e91bd",
+        "format": "openscad",
+        "url": "https://raw.githubusercontent.com/Ghostkeeper/SlicerTestModels/e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d/adhesion/big_frame.scad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/slicer-test-models/big_frame.stl",
+          "bytes": 9184,
+          "sha256": "cea5ec88f9ec265c29201871b3358e8cc5230a41c20bc7ffb91ae5aebaa7d35c",
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Unmodified source retained, converted and evaluated locally. Closed positive-volume mesh screened and volume independently checked against polygon geometry or rectangle-cell integration. Millimetres and Z up assumed. Source coordinates preserved; not a calibration certification or physics qualification.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "Unitless source interpreted as millimetres and Z up; original coordinates preserved.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "cea5ec88f9ec265c29201871b3358e8cc5230a41c20bc7ffb91ae5aebaa7d35c",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 300,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 182,
+        "boundsMm": {
+          "min": [
+            0,
+            0,
+            0
+          ],
+          "max": [
+            250,
+            150,
+            5
+          ]
+        },
+        "signedVolumeMm3": 40875.00000000003
+      },
+      "diagnostics": []
+    }
+  ]
+}

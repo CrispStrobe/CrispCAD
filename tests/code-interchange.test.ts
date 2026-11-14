@@ -26,7 +26,7 @@ it('preserves solid geometry through explicit constant color wrappers and disclo
  for(const unsupported of ['color("red",alpha=2) cube(2);','color(c="red",0.5) cube(2);','color([1,0]) cube(2);','color([1.1,0,0]) cube(2);','color("red",other=1) cube(2);','color("red") import("file.stl");','color("red") cube(-1);','color(fetch()) cube(2);'])expect(()=>importOpenSCAD(unsupported),unsupported).toThrow();
 });
 it('refuses unsupported geometry and language features rather than approximating or executing them',()=>{
- for(const source of ['include <foo.scad>;','linear_extrude(height=5,twist=90) square(2);','rotate(45,[1,0,0]) cube(3);','a=10; a=20; cube(a);','sphere($fn=300);','cube(1);height=2;','import("https://example.com/a.stl");'])expect(()=>importOpenSCAD(source),source).toThrow();
+ for(const source of ['include <foo.scad>;','linear_extrude(height=5,v=[1,0,0]) square(2);','rotate(45,[1,0,0]) cube(3);','a=10; a=20; cube(a);','sphere($fn=300);','cube(1);height=2;','import("https://example.com/a.stl");'])expect(()=>importOpenSCAD(source),source).toThrow();
 });
 it('exports effective overrides as readable native defaults, preserving dependencies and comments',()=>{
  const p=codeExampleProgram('box');p.parameters={width:'40',height:'width / 2'};const text=exportCodeSource(p);expect(text).toContain('\n');const values=compileCode({...p,source:text,parameters:{}}).values;expect(values.width.value).toBe(40);expect(values.height.value).toBe(20);

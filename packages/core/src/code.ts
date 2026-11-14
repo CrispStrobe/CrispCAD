@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {parseCodeProfile,resolveCodeProfile,profileSize} from './code-profiles.js';
+import type {CodeProfile,ProfileAst} from './code-profiles.js';
+export type {CodeProfile} from './code-profiles.js';
 import {t} from './i18n.js';
 // Original bounded CAD language. No OpenSCAD/JSCAD interpreter or runtime code.
 import {evaluateExpression,evaluateParameters} from './parameters.js';
 import type {NamedParameter,ParameterUnit,Quantity} from './parameters.js';
 import type {Vec3} from './document.js';
 export interface CodeProgram {version:1;language:'brickwright-cad-script';source:string;parameters:Record<string,string>}
-export type CodeShape = {kind:'empty'}| {kind:'box';size:Vec3}|{kind:'cylinder';radius:number;height:number;segments:number}|{kind:'frustum';bottom:number;top:number;height:number;segments:number}|{kind:'sphere';radius:number;segments:number}|{kind:'extrude';height:number;points:[number,number][]}|
+export type CodeShape = {kind:'profile-extrude';height:number;profile:CodeProfile;twist:number;steps:number;scaleTop:[number,number]}|{kind:'revolve';profile:CodeProfile;angle:number;segments:number}| {kind:'empty'}| {kind:'box';size:Vec3}|{kind:'cylinder';radius:number;height:number;segments:number}|{kind:'frustum';bottom:number;top:number;height:number;segments:number}|{kind:'sphere';radius:number;segments:number}|{kind:'extrude';height:number;points:[number,number][]}|
  {kind:'union'|'subtract'|'intersect'|'hull';shapes:CodeShape[]}|{kind:'move'|'rotate'|'scale';vector:Vec3;shape:CodeShape}|{kind:'repeat';count:number;step:Vec3;shape:CodeShape};
 export interface CompiledCode {shape:CodeShape;parameters:Record<string,NamedParameter>;values:Record<string,Quantity>;expandedNodes:number;estimatedFaces:number}
 export class CadCodeError extends Error {
@@ -15,7 +18,7 @@ export class CadCodeError extends Error {
 export const CODE_LIMITS=Object.freeze({sourceBytes:32768,tokens:8192,statements:128,depth:32,expandedNodes:256,estimatedFaces:200000,repeat:64});
 interface Token {text:string;at:number}
 interface Scalar {text:string;at:number}
-type ShapeAst={kind:'reference';name:string;at:number}|{kind:'call';name:string;at:number;scalars:Scalar[];vector?:Scalar[];points?:Scalar[][];variable?:string;shapes:ShapeAst[]};
+type ShapeAst={kind:'reference';name:string;at:number}|{kind:'call';name:string;at:number;scalars:Scalar[];vector?:Scalar[];points?:Scalar[][];profile?:ProfileAst;variable?:string;shapes:ShapeAst[]};
 const safeName=(name:string)=>/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(name)&&!['constructor','prototype','__proto__'].includes(name);
 const object=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value)&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 export function compileCode(program:CodeProgram):CompiledCode {
@@ -44,6 +47,11 @@ export function compileCode(program:CodeProgram):CompiledCode {
    if(call.name==='forRange'){for(let i=0;i<3;i++){call.scalars.push(scalar([',']));expect(',');}}
    else{expect('[');while(peek()!==']'){call.scalars.push(scalar([',',']']));if(call.scalars.length>64)limited(t('Loop exceeds 64 values'),call.at);if(peek()!==',')break;expect(',');}expect(']');expect(',');}
    call.shapes.push(shape(depth+1));
+  }
+  else if(call.name==='extrudeProfile'||call.name==='revolve'){
+   if(call.name==='extrudeProfile'){call.scalars.push(scalar([',']));expect(',');}
+   call.profile=parseCodeProfile({peek,take,expect,scalar,fail,limited});
+   while(peek()===','){expect(',');call.scalars.push(scalar([',',')']));if(call.scalars.length>5)fail(t('Unexpected profile arguments'),call.at);}
   }
   else if(call.name==='extrude'){call.scalars.push(scalar([',']));expect(',');expect('[');call.points=[];while(peek()!==']'){expect('[');call.points.push([scalar([',']),...(expect(','),[scalar([']'])])]);expect(']');if(call.points.length>256)limited(t('Extrusion profile exceeds 256 points'),call.at);if(peek()!==',')break;expect(',');}expect(']');}
   else if(['box','cylinder','sphere','frustum'].includes(call.name)){while(peek()!==')'){call.scalars.push(scalar([',',')']));if(peek()!==',')break;expect(',');}}
@@ -83,6 +91,11 @@ export function compileCode(program:CodeProgram):CompiledCode {
    finally{loopBindings=outer;}
    return shapes.length===0?{kind:'empty'}:shapes.length===1?shapes[0]:{kind:'union',shapes};
   }
+  if(ast.name==='extrudeProfile'||ast.name==='revolve'){
+   const profile=resolveCodeProfile(ast.profile!,number,fail,()=>{if(++evaluationSteps>4096)limited(t('Code evaluation budget exceeded'),ast.at);});
+   if(ast.name==='revolve'){arity(0,2);return {kind:'revolve',profile,angle:ast.scalars[0]?number(ast.scalars[0],'deg',0,360):360,segments:segments(1,3)};}
+   arity(1,5);return {kind:'profile-extrude',height:mm(0),profile,twist:ast.scalars[1]?number(ast.scalars[1],'deg',-360000,360000):0,steps:ast.scalars[2]?number(ast.scalars[2],'scalar',1,256,true):1,scaleTop:[ast.scalars[3]?number(ast.scalars[3],'scalar',0,10000):1,ast.scalars[4]?number(ast.scalars[4],'scalar',0,10000):ast.scalars[3]?number(ast.scalars[3],'scalar',0,10000):1]};
+  }
   if(ast.name==='extrude'){arity(1);let points=ast.points!.map(p=>p.map(v=>number(v,'mm',-100000,100000)) as [number,number]);if(points.length>3&&points[0].every((v,i)=>v===points.at(-1)![i]))points=points.slice(0,-1);if(points.length<3)fail(t('Extrusion profile needs at least three points'),ast.at);const area=points.reduce((a,p,i)=>a+p[0]*points[(i+1)%points.length][1]-points[(i+1)%points.length][0]*p[1],0);if(Math.abs(area)<1e-8)fail(t('Extrusion profile has zero area'),ast.at);const cross=(a:number[],b:number[],c:number[])=> (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+1)%points.length];if(Math.hypot(a[0]-b[0],a[1]-b[1])<1e-9)fail(t('Extrusion profile contains a zero-length edge'),ast.at);for(let j=i+2;j<points.length;j++){if(i===0&&j===points.length-1)continue;const c=points[j],d=points[(j+1)%points.length];const overlap=[0,1].every(k=>Math.max(Math.min(a[k],b[k]),Math.min(c[k],d[k]))<=Math.min(Math.max(a[k],b[k]),Math.max(c[k],d[k]))+1e-9);if(overlap&&cross(a,b,c)*cross(a,b,d)<=1e-10&&cross(c,d,a)*cross(c,d,b)<=1e-10)fail(t('Extrusion profile intersects itself'),ast.at);}}if(area<0)points.reverse();return {kind:'extrude',height:mm(0),points};}
   if(ast.name==='box'){arity(3);const size=ast.scalars.map(v=>number(v,'mm',0,100000)) as Vec3;return size.includes(0)?{kind:'empty'}:{kind:'box',size};}
   if(ast.name==='cylinder'){arity(2,3);const radius=number(ast.scalars[0],'mm',0,100000),height=number(ast.scalars[1],'mm',0,100000),count=segments(2,3,4096);return radius===0||height===0?{kind:'empty'}:{kind:'cylinder',radius,height,segments:count};}
@@ -96,7 +109,7 @@ export function compileCode(program:CodeProgram):CompiledCode {
  // Check unused declarations too; malformed definitions cannot hide behind an unused name.
  for(const [id,ast] of definitions)resolve({kind:'reference',name:id,at:ast.at});
  const result=resolve(output!);let expandedNodes=0,estimatedFaces=0;
- function budget(s:CodeShape,multiplier=1,depth=0){if(depth>32)limited(t('Expanded dependency depth exceeds 32'));expandedNodes+=multiplier;if(expandedNodes>CODE_LIMITS.expandedNodes)limited(t('Expanded shape budget exceeds 256 nodes'));if(s.kind==='empty')return;if(s.kind==='box')estimatedFaces+=12*multiplier;else if((s.kind==='cylinder'||s.kind==='frustum'))estimatedFaces+=4*s.segments*multiplier;else if(s.kind==='sphere')estimatedFaces+=4*s.segments*s.segments*multiplier;else if(s.kind==='extrude')estimatedFaces+=4*s.points.length*multiplier;else if('shapes' in s)s.shapes.forEach(child=>budget(child,multiplier,depth+1));else budget(s.shape,multiplier*(s.kind==='repeat'?s.count:1),depth+1);if(estimatedFaces>CODE_LIMITS.estimatedFaces)limited(t('Estimated mesh budget exceeds 200000 faces'));}
+ function budget(s:CodeShape,multiplier=1,depth=0){if(depth>32)limited(t('Expanded dependency depth exceeds 32'));expandedNodes+=multiplier;if(expandedNodes>CODE_LIMITS.expandedNodes)limited(t('Expanded shape budget exceeds 256 nodes'));if(s.kind==='empty')return;if(s.kind==='box')estimatedFaces+=12*multiplier;else if((s.kind==='cylinder'||s.kind==='frustum'))estimatedFaces+=4*s.segments*multiplier;else if(s.kind==='sphere')estimatedFaces+=4*s.segments*s.segments*multiplier;else if(s.kind==='extrude')estimatedFaces+=4*s.points.length*multiplier;else if(s.kind==='profile-extrude'||s.kind==='revolve'){const size=profileSize(s.profile);expandedNodes+=size.nodes*multiplier;if(expandedNodes>CODE_LIMITS.expandedNodes)limited(t('Expanded shape budget exceeds 256 nodes'));estimatedFaces+=4*size.vertices*(s.kind==='revolve'?s.segments:s.steps+1)*multiplier;}else if('shapes' in s)s.shapes.forEach(child=>budget(child,multiplier,depth+1));else budget(s.shape,multiplier*(s.kind==='repeat'?s.count:1),depth+1);if(estimatedFaces>CODE_LIMITS.estimatedFaces)limited(t('Estimated mesh budget exceeds 200000 faces'));}
  budget(result);return {shape:result,parameters,values:values!,expandedNodes,estimatedFaces};
 }
 export const defaultCodeProgram=():CodeProgram=>({version:1,language:'brickwright-cad-script',parameters:{},source:`// A dimensioned plate with three bores. Coordinates are millimetres.\nparam width: mm = 60;\nparam depth: mm = 30;\nparam thickness: mm = 5;\nparam bore: mm = 3;\nlet plate = move([0, 0, thickness / 2], box(width, depth, thickness));\nlet holes = move([-20, 0, thickness / 2], repeat(3, [20, 0, 0], cylinder(bore, thickness * 2)));\nreturn subtract(plate, holes);\n`});

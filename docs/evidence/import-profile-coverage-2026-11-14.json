@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "measuredOn": "2026-11-14",
+  "scope": "Aggregate research measurements only; raw files, reports and generated research geometry are external. Positive solid is not semantic fidelity.",
+  "dataset": "redcathode/thingiverse-openscad",
+  "revision": "2b4206aae3af7740100a2f0e979dd9cb66cd77f0",
+  "sampling": "deterministic evenly spaced files after exact source-hash deduplication; not random model sampling",
+  "inputRows": 7929,
+  "uniqueFiles": 7864,
+  "sampleFiles": 256,
+  "baseline": {
+    "reportSha256": "b1d7e617c27d87e57f1045c0e593aeddceae5251392a8c0f8cd38b3dea9d4eac",
+    "statuses": {
+      "unsupported": 210,
+      "converted": 38,
+      "limited": 5,
+      "failed": 3
+    }
+  },
+  "after": {
+    "reportSha256": "0f32dd22770a5a9e714bce23a68ea9c2cb1c1359aa9403e2502b6e4e137d0a19",
+    "statuses": {
+      "unsupported": 204,
+      "converted": 42,
+      "limited": 7,
+      "failed": 3
+    },
+    "artifacts": {
+      "code.js": "5c203ca8eb491b93192aee113e7a984830e198f37716da3812be3e8c0ecdfaa6",
+      "code-interchange.js": "4d22ca02ee316e63f2af60eab0f0256f992a7aa57ac93a28ecd7520b06641bb7",
+      "openscad-import.js": "15a2d055ad7dff0e2ced7c3dcae02ab21fb0e4874ea6744cb486d5f4dd2c2740",
+      "jscad-import.js": "5c848d3eade4207c4ba6408b8739bf4594e672c5acfb2251efbe8edcadee2c56",
+      "parameters.js": "23c479aa6bd9d3e56743f72dddf6a76adea9c49ba00168c405eb9c64a7d53893",
+      "code-profiles.js": "0f22a2962c78865b7ac4c899b3a4892bd5507abe0cc9e33e87dd3ff8e446a726",
+      "geometryKernel": "312d7855a2c147ff07e0c201b7674a685beaaed962c1c6634fdb2bc6665c6ec0",
+      "manifoldWasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    }
+  },
+  "transitions": [
+    {
+      "before": "converted",
+      "after": "converted",
+      "count": 38
+    },
+    {
+      "before": "failed",
+      "after": "failed",
+      "count": 3
+    },
+    {
+      "before": "limited",
+      "after": "limited",
+      "count": 5
+    },
+    {
+      "before": "unsupported",
+      "after": "converted",
+      "count": 4
+    },
+    {
+      "before": "unsupported",
+      "after": "limited",
+      "count": 2
+    },
+    {
+      "before": "unsupported",
+      "after": "unsupported",
+      "count": 204
+    }
+  ],
+  "convertedRegressions": 0
+}

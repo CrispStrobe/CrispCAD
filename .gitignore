@@ -11,3 +11,5 @@ apps/standalone/public/cad-assets/
 .DS_Store
 
 artifacts/
+
+__pycache__/

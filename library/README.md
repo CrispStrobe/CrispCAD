@@ -107,7 +107,7 @@ inserted gear; a passing positive-volume trial is separate from those checks.
 
 ## Browser previews
 
-All 48 host-bundled items have static PNG previews generated from their actual
+All 51 host-bundled items have static PNG previews generated from their actual
 bounded source conversion and evaluated solids. Previews are keyed by original
 source SHA-256; the standalone host refuses a bundled item without its thumbnail.
 They are presentation assets, not geometry/printability/physics qualification.
@@ -160,3 +160,24 @@ node scripts/generate-library-previews.mjs --corpus-only
 
 The second command updates only the twelve selected thumbnails. Neither command
 downloads assets or executes the upstream OpenSCAD application.
+## Supported CC0 additions — 2026-11-14
+
+The offline gallery now contains 51 editable-source models. The new
+`supported-models-manifest.json` admits **Quarter cylinder**, **Square pyramid** and
+**Nested open frames** from Ghostkeeper/SlicerTestModels at pinned revision
+`e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d`. Sources are unmodified, including
+original byte identity. The repository's explicit CC0 model grant and complete
+licence are retained alongside per-file author/commit evidence. Millimetres and
+Z up are curator assumptions. These are geometric fixtures, not calibrated parts.
+
+`node scripts/generate-supported-library.mjs --check` reproduces the manifests and
+STLs offline, checks pinned source/licence hashes, screens closed positive-volume
+meshes, and compares volumes with independent polygon geometry or rectangle-cell
+integration. `--write` regenerates the same outputs. New source or grant identities
+require a new review. `npm run library:previews:generate` renders actual evaluated
+geometry for all 51 gallery entries. Browsing and insertion use bundled bytes;
+research-only datasets and unsupported seeds are not gallery entries.
+
+STL screening is separate from Jolt qualification. These models do not carry a
+reusable physics certificate; simulation must qualify their actual regenerated
+geometry through the existing collision pipeline.

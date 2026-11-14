@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from '@brickwright/cad-core';
 import Module from 'manifold-3d';
-import type { Manifold, ManifoldToplevel } from 'manifold-3d';
+import type { Manifold, ManifoldToplevel, CrossSection } from 'manifold-3d';
 import { validateDocument, documentGeometryKey, evaluateExtrusion, FeatureEvaluationError, compileCode } from '@brickwright/cad-core';
-import type { CadDocument, SolidNode, CodeShape } from '@brickwright/cad-core';
+import type { CadDocument, SolidNode, CodeShape,CodeProfile } from '@brickwright/cad-core';
 import { collisionCSG } from './collision-csg.js';
 import { partitionConvex } from './convex.js';
 export interface BodyMesh { id: string; name: string; color: string; reference?: boolean; positions: Float32Array; indices: Uint32Array; volume: number; bounds: { min: number[]; max: number[] } }
@@ -28,6 +28,18 @@ export type GeometryKernel = Awaited<ReturnType<typeof createGeometryKernel>>;
 function evaluateDocument(module: ManifoldToplevel, input: CadDocument): GeometryResult {
   const doc = validateDocument(input); const cache = new Map<string, Manifold>(); const owned = new Set<Manifold>();
   const keep = (m: Manifold) => { owned.add(m); return m; };
+  const profiles=new Set<CrossSection>(),profileCache=new WeakMap<CodeProfile,CrossSection>();
+  const keepProfile=(p:CrossSection)=>{profiles.add(p);return p;};
+  const buildProfile=(p:CodeProfile):CrossSection=>{
+    const previous=profileCache.get(p);if(previous)return previous;let result:CrossSection;
+    if(p.kind==='empty')result=keepProfile(module.CrossSection.square([0,0]));
+    else if(p.kind==='polygon')result=keepProfile(new module.CrossSection(p.contours,'EvenOdd'));
+    else if(p.kind==='rectangle')result=keepProfile(module.CrossSection.square(p.size,p.center));
+    else if(p.kind==='circle')result=keepProfile(module.CrossSection.circle(p.radius,p.segments));
+    else if('profile'in p){const child=buildProfile(p.profile);result=keepProfile(p.kind==='rotate'?child.rotate(p.angle):p.kind==='move'?child.translate(p.vector):child.scale(p.vector));}
+    else{const children=p.profiles.map(buildProfile);result=keepProfile(p.kind==='hull'?module.CrossSection.hull(children):p.kind==='union'?module.CrossSection.union(children):p.kind==='subtract'?module.CrossSection.difference(children):module.CrossSection.intersection(children));}
+    if(result.numVert()>16384)throw new Error(t('Evaluated profile exceeds 16384 vertices'));profileCache.set(p,result);return result;
+  };
   const codeCache=new WeakMap<CodeShape,Manifold>();
   const buildCode=(shape:CodeShape):Manifold=>{
     const previous=codeCache.get(shape);if(previous)return previous;let solid:Manifold;
@@ -35,6 +47,8 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
     else if(shape.kind==='box')solid=keep(module.Manifold.cube(shape.size,true));
     else if(shape.kind==='cylinder')solid=keep(module.Manifold.cylinder(shape.height,shape.radius,shape.radius,shape.segments,true));
     else if(shape.kind==='frustum')solid=keep(module.Manifold.cylinder(shape.height,shape.bottom,shape.top,shape.segments,true));
+    else if(shape.kind==='profile-extrude'){const profile=buildProfile(shape.profile);if(4*profile.numVert()*(shape.steps+1)>200000)throw new Error(t('Evaluated extrusion exceeds 200000 faces'));solid=keep(profile.extrude(shape.height,shape.steps-1,shape.twist,shape.scaleTop));}
+    else if(shape.kind==='revolve'){const profile=buildProfile(shape.profile);if(4*profile.numVert()*shape.segments>200000)throw new Error(t('Evaluated revolution exceeds 200000 faces'));if(profile.numVert()&&profile.bounds().min[0]<-1e-8)throw new Error(t('Revolved profiles must stay on the nonnegative radial axis'));solid=keep(shape.angle===0?module.Manifold.union([]):profile.revolve(Math.max(1,Math.ceil(shape.segments*shape.angle/360)),shape.angle));}
     else if(shape.kind==='extrude')solid=keep(module.Manifold.extrude([shape.points],shape.height));
     else if(shape.kind==='sphere')solid=keep(module.Manifold.sphere(shape.radius,shape.segments));
     else if('shapes' in shape){const inputs=shape.shapes.map(buildCode);solid=keep(shape.kind==='hull'?module.Manifold.hull(inputs):shape.kind==='union'?module.Manifold.union(inputs):shape.kind==='subtract'?module.Manifold.difference(inputs):module.Manifold.intersection(inputs));}
@@ -87,5 +101,5 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
       return { id, name: node.name, color: node.color, reference: node.reference, positions, indices: new Uint32Array(mesh.triVerts), volume: solid.volume(), bounds };
     });
     return { sourceKey:documentGeometryKey(doc), bodies, volume: bodies.filter(b=>!b.reference).reduce((s, b) => s + b.volume, 0), triangles: bodies.filter(b=>!b.reference).reduce((s, b) => s + b.indices.length / 3, 0) };
-  } finally { for (const solid of [...owned].reverse()) solid.delete(); }
+  } finally { for (const solid of [...owned].reverse()) solid.delete();for(const profile of [...profiles].reverse())profile.delete(); }
 }
