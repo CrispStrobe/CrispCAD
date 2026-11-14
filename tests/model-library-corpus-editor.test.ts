@@ -13,11 +13,11 @@ const manifest = JSON.parse(read('editor-corpus-manifest.json').toString());
 const corpus = JSON.parse(read('corpus/manifest.json').toString());
 const repository = corpus.repositories.find((item: any) => item.id === 'AngeloNicoli--OpenSCAD-Snippet');
 const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
-const selected = ['beam-angular', 'beam-h', 'key-simple', 'roll-holder', 'angle-shelf', 'sign-01', 'sign-02', 'washer', 'transistor', 'stairs-01', 'bookshelf-01', 'chalkboard-01', 'arrow-01', 'base-cabinet-01', 'beam-c', 'bookshelf-02', 'box-wood-01', 'chair-01', 'door-01', 'flange-01', 'ladder-01', 'sofa', 'table-01', 'vent-grid', 'base-cabinet-02', 'bed-01', 'bed-02', 'bench-01', 'bench-02', 'chair-02', 'chair-03', 'fireplace-01', 'table-02', 'table-03', 'table-small-01', 'window-01'];
+const selected = ['beam-angular', 'beam-h', 'key-simple', 'roll-holder', 'angle-shelf', 'sign-01', 'sign-02', 'washer', 'transistor', 'stairs-01', 'bookshelf-01', 'chalkboard-01', 'arrow-01', 'base-cabinet-01', 'beam-c', 'bookshelf-02', 'box-wood-01', 'chair-01', 'door-01', 'flange-01', 'ladder-01', 'sofa', 'table-01', 'vent-grid', 'base-cabinet-02', 'bed-01', 'bed-02', 'bench-01', 'bench-02', 'chair-02', 'chair-03', 'fireplace-01', 'table-02', 'table-03', 'table-small-01', 'window-01', 'building-01', 'chalkboard-02', 'cone-01', 'crystal', 'key', 'lamp-01', 'lever-handle', 'soda-cup-01', 'stairs-02', 'stairs-03', 'traffic-light', 'tootbrush'];
 
 describe('explicit corpus to editor selection', () => {
-  it('admits exactly thirty-six selected standalone sources with unchanged pinned originals and full MIT grants', () => {
-    expect(selected).toHaveLength(36);
+  it('admits exactly forty-eight selected standalone sources with unchanged pinned originals and full MIT grants', () => {
+    expect(selected).toHaveLength(48);
     expect(manifest.selection).toMatchObject({count: selected.length, runtimeChecked: selected.length, complete: true});
     expect(manifest.assets.map((asset: any) => asset.id)).toEqual(selected.map(slug => `corpus-angelo-${slug}`));
     const catalogue = createLocalModelLibraryCatalogue(manifest);

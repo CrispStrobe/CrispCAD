@@ -54,6 +54,18 @@ export const corpusEditorSelection = [
   ['Table_03', '42871fd166513f17ab545d477bf54146ac018b9abeda6e6a02434511af0c0ae5'],
   ['Table_Small_01', 'e171e82747b68dcf94cc55b3da1768ac07f66eca08a1794905990a6372f206ad'],
   ['Window_01', '90bac453f7bd0f5dddedcbceaed083852d81074130be3518439db2813e6e1cde'],
+  ['Building_01', 'eba8bbb81ae6386c9ee6b10f3fc10fa7e03570531512cd323d5d5c86c5affb9e'],
+  ['Chalkboard_02', 'a00f5ae45f5e6c3ec12593d6d13edf430e3c78fbbbe4174f8ed95c839eae20a9'],
+  ['Cone_01', '269b04d28730537e908451b7f98d86db1e98688f8276c01a1ef76ec89b2771b8'],
+  ['Crystal', 'e7078daf5d4400417f71b3bac879e378ffde2fb3d1502a6325ce6b579ce49357'],
+  ['Key', 'f4e7eca7c681f802d4f12a863b1cea7ac2e2ec11307860f91bf78baf2cdee193'],
+  ['Lamp_01', 'e071c9c40e71a53ba4e71e9181dbf2f80f9fadb8fc825fc8e4bd7a23321f5d2b'],
+  ['Lever_Handle', '73bfdfda782031cc02f19beaaf09afefa8c70f0cccd7adc94e48f51c4f31952f'],
+  ['Soda_Cup_01', '0c87476d81f593f5c83f7926ba252157e33db9696d2a57441f7be1aa438fb653'],
+  ['Stairs_02', '145a171b992ed382f067b8bf401b2b26c55a1f1f34603b3e2ac8793fcac22a45'],
+  ['Stairs_03', '4dd7b321fae87319e812f0efe2d639c276e3efa9a4cef0d34241ad02150ce3e1'],
+  ['Traffic_Light', '1d2f42b407266586ae8f92e783230c5921545b85c9608395fc2a589f485a2774'],
+  ['Tootbrush', '78ef474639a08e177e2d9b30c4032f4b20fbb06b9329e40f5602069e6f04c44d'],
 ];
 export async function generateCorpusEditorLibrary() {
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());

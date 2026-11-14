@@ -10,7 +10,7 @@ beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('
 
 it('admits only the supported seed, retains exact original bytes and URL, and exports the full original MIT notice',async()=>{
   const {catalogue,localFiles}=createBundledModelLibrary();
-  expect(catalogue.assets).toHaveLength(75);
+  expect(catalogue.assets).toHaveLength(87);
   expect(catalogue.assets.some(asset=>['jscad-nuts-and-bolts','threads-scad-demo'].includes(asset.id))).toBe(false);
   const asset=catalogue.assets.find(asset=>asset.id==='jscad-involute-gear')!;
   expect(asset.original.url).toContain(`/${asset.sourceRevision!.commit}/`);
@@ -34,10 +34,10 @@ it('admits only the supported seed, retains exact original bytes and URL, and ex
   session.undo();expect(session.serialize()).toBe(before);session.redo();expect(session.serialize()).toBe(saved);session.dispose();
 });
 
-it('bundles and inserts all thirty-six reviewed corpus sources with original identities and attribution',async()=>{
+it('bundles and inserts all forty-eight reviewed corpus sources with original identities and attribution',async()=>{
   const manifest=JSON.parse(read('editor-corpus-manifest.json').toString());
   const {catalogue,localFiles,previews,licenceTexts}=createBundledModelLibrary();
-  expect(manifest.assets).toHaveLength(36);
+  expect(manifest.assets).toHaveLength(48);
   for(const raw of manifest.assets){
     const asset=catalogue.assets.find(item=>item.id===raw.id)!;
     expect(asset).toBeDefined();expect(previews.has(asset.original.sha256)).toBe(true);

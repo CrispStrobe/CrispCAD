@@ -107,7 +107,7 @@ inserted gear; a passing positive-volume trial is separate from those checks.
 
 ## Browser previews
 
-All 75 host-bundled items have static PNG previews generated from their actual
+All 87 host-bundled items have static PNG previews generated from their actual
 bounded source conversion and evaluated solids. Previews are keyed by original
 source SHA-256; the standalone host refuses a bundled item without its thumbnail.
 They are presentation assets, not geometry/printability/physics qualification.
@@ -127,10 +127,10 @@ placeholder; the editor does not invent an image or fetch their STL automaticall
 
 ## External corpus models available in the editor
 
-The source archive contains **1,406** files. A reviewed subset of **36** is
-independently dependency-complete (no external includes/assets) and **36** are
+The source archive contains **1,406** files. A reviewed subset of **48** is
+independently dependency-complete (no external includes/assets) and **48** are
 bundled for selection and insertion in File → Model library. These are separate
-counts: the other 1,370 archived files have not been admitted for editor insertion.
+counts: the other 1,358 archived files have not been admitted for editor insertion.
 422 archive records lack a recorded dependency blocker; that is not proof of
 dependency completeness or renderability. The 984 recorded blockers remain.
 
@@ -150,12 +150,20 @@ The third batch adds Base cabinet 02, Bed 01, Bed 02, Bench 01, Bench 02,
 Chair 02, Chair 03, Fireplace 01, Table 02, Table 03, Table Small 01 and
 Window 01. These also use the existing runtime without source adaptations.
 
-Of the 1,370 archive sources outside this editor selection, 984 have recorded
-dependency blockers and 386 have no recorded blocker but are not admitted for
+The fourth batch adds Building 01, Chalkboard 02, Cone 01, Crystal, Key,
+Lamp 01, Lever Handle, Soda Cup 01, Stairs 02, Stairs 03, Traffic Light and
+Tootbrush (the upstream spelling). Original bytes and notices are unchanged.
+
+Of the 1,358 archive sources outside this editor selection, 984 have recorded
+dependency blockers and 374 have no recorded blocker but are not admitted for
 editor use. Nine licence-quarantined staged sources remain outside the archive.
 `Shaft_01.scad` and `Shaft_02_With_Keyway.scad` remain deferred because their
 signed radial profiles are unsupported; these remain archival originals,
 not additional licence quarantines.
+`Wood_Crate.scad`, `Wall_01.scad` and `Sign_03.scad` also remain outside the
+editor selection: their converted meshes failed closed-solid topology checks.
+These are geometry screening failures, separate from dependency or licence
+exclusions; no repairs or source substitutions were applied.
 
 Each selected model passes the existing bounded importer, Manifold evaluation,
 and hash-bound STL screening for a closed positive-volume solid, at most 10,000
@@ -174,12 +182,12 @@ npm run library:corpus:check
 node scripts/generate-library-previews.mjs --corpus-only
 ```
 
-The second command updates only the 36 selected thumbnails. Neither command
+The second command updates only the 48 selected thumbnails. Neither command
 downloads assets or executes the upstream OpenSCAD application.
 
 ## Supported CC0 additions — 2026-11-14
 
-The offline gallery now contains 75 editable-source models. The new
+The offline gallery now contains 87 editable-source models. The new
 `supported-models-manifest.json` admits **Quarter cylinder**, **Square pyramid** and
 **Nested open frames** from Ghostkeeper/SlicerTestModels at pinned revision
 `e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d`. Sources are unmodified, including
@@ -192,7 +200,7 @@ STLs offline, checks pinned source/licence hashes, screens closed positive-volum
 meshes, and compares volumes with independent polygon geometry or rectangle-cell
 integration. `--write` regenerates the same outputs. New source or grant identities
 require a new review. `npm run library:previews:generate` renders actual evaluated
-geometry for all 75 gallery entries. Browsing and insertion use bundled bytes;
+geometry for all 87 gallery entries. Browsing and insertion use bundled bytes;
 research-only datasets and unsupported seeds are not gallery entries.
 
 STL screening is separate from Jolt qualification. These models do not carry a
