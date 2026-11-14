@@ -673,3 +673,16 @@ closed positive-volume STL: 5,220 triangles, 31,972.73095 mm³, bounds
 [-22,-72,0]–[100,22,18]. The historical cycle-16 refusal report is retained;
 `tests/model-library-fragment-screening.test.ts` distinguishes it from current
 execution. This is a qualified candidate, not an implicit gallery admission.
+
+Final frozen replay: **167/256** successful solids, all 167 prior successes
+matching volume and bounds at 1e-6 tolerance. There are 37 unsupported results,
+32 resource limits, 19 failures and one timeout. Two former depth refusals advance
+to later diagnostics; neither counts as a new conversion. One exposed gap is a
+parenthesized generator expression accepted by the official executable, which our
+parser currently misclassifies as invalid source. It is recorded for the next
+parser pass rather than dismissed as a malformed author file.
+
+[Aggregate evidence](evidence/import-engine-curved-2026-11-14.json) records the
+844 passing tests, one optional skip, 28 desktop/iPad browser checks, offline SDK
+execution, independent geometry probes and the 56 rigid-preview preset passes
+plus one reference exclusion. No research geometry is shipped.
