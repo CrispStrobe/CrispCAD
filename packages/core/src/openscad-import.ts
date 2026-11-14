@@ -71,6 +71,34 @@ export function importOpenSCAD(source:string):CodeProgram{
   if(!mathFunctions.has(name))unsupported(name);return bounded(`${name}(${args.map(v=>scalar(v)).join(', ')})`);
  }
  function skipValue(extraStops:string[]=[]):void{const stops=new Set([',',')',']',';',...extraStops]);let parens=0,brackets=0,questions=0;while(cursor<tokens.length){const n=peek()!;if(parens===0&&brackets===0&&stops.has(n)&&!(n===':'&&questions>0))break;if(n==='(')parens++;if(n===')'){if(!parens)break;parens--;}if(n==='[')brackets++;if(n===']'){if(!brackets)break;brackets--;}if(!parens&&!brackets){if(n==='?')questions++;if(n===':'&&questions)questions--;}take();}}
+ function comprehension(depth:number):Value[]{
+  if(depth>32)limited(t('OpenSCAD array nesting limit exceeded'));expect('for');expect('(');const variable=take();
+  if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(variable.text)||variable.text==='$preview')unsupported('comprehension variable',variable.at);expect('=');
+  const items:Value[]=[];
+  const rangeNumber=(v:Value):number=>{const n=constant(v);if(typeof v!=='string'||v==='true'||v==='false'||n===undefined||!Number.isFinite(n)||Math.abs(n)>1e6)return unsupported('comprehension range must be finite and independent of parameters',variable.at);return n;};
+  if(peek()==='['){take();if(peek()!==']'){
+    const first=value(depth+1,[':']);
+    if(peek()===':'){
+     take();const second=value(depth+1,[':']);let start=rangeNumber(first),end=rangeNumber(second),step=1;
+     if(peek()===':'){take();step=rangeNumber(second);end=rangeNumber(value(depth+1));}else [start,end]=[Math.min(start,end),Math.max(start,end)];
+     if(step===0)unsupported('comprehension range step must be nonzero',variable.at);
+     const quotient=(end-start)/step,count=quotient<0?0:Math.floor(quotient+4*Number.EPSILON*Math.max(1,Math.abs(quotient)))+1;
+     if(count>64)limited(t('Loop exceeds 64 values'));chargeValues(count);
+     for(let i=0;i<count;i++)items.push(String(start+i*step));
+    }else{
+     items.push(first);while(peek()===','){take();if(peek()===']')break;items.push(value(depth+1));if(items.length>64)limited(t('Loop exceeds 64 values'));}
+    }
+   }expect(']');
+  }else{const list=value(depth+1);if(!Array.isArray(list))unsupported('comprehension requires a fixed-length vector',variable.at);items.push(...list as Value[]);}
+  if(items.length>64)limited(t('Loop exceeds 64 values'));if(peek()===',')unsupported('multiple comprehension bindings',variable.at);expect(')');
+  if(['for','if','each'].includes(peek()!))unsupported('comprehension filters, each, or chained generators',variable.at);
+  const begin=cursor,outer=locals,result:Value[]=[];let end:number|undefined;
+  try{
+   if(!items.length){if(peek()===']')fail(t('Expected a complete dimensional expression'));skipValue();return result;}
+   for(const item of items){chargeValues();cursor=begin;locals=new Map(outer);locals.set(variable.text,item);result.push(value(depth+1));if(end!==undefined&&cursor!==end)unsupported('comprehension body',variable.at);end=cursor;if(result.length>256)limited(t('OpenSCAD array limit exceeded'));}
+   return result;
+  }finally{locals=outer;}
+ }
  function value(depth=0,extraStops:string[]=[]):Value{chargeValues();
   if(depth>32)limited(t('OpenSCAD array nesting limit exceeded'));const stop=new Set([',',')',']',';',...extraStops]);
   const precedences:Record<string,number>={'||':1,'&&':2,'==':3,'!=':3,'<':4,'>':4,'<=':4,'>=':4,'+':5,'-':5,'*':6,'/':6,'%':6,'^':7};
@@ -78,7 +106,7 @@ export function importOpenSCAD(source:string):CodeProgram{
    if(level>32)limited(t('Expression nesting exceeds 32'));const token=peek();let result:Value;
    if(token==='+'||token==='-'||token==='!'){take();const child=primary(level+1);result=token==='!'?binary('==',truth(child),'false'):Array.isArray(child)?child.map(v=>binary('*',token==='-'?'-1':'1',v)):bounded(`${token}(${scalar(child)})`);}
    else if(token==='('){take();result=expression(0,level+1);expect(')');}
-   else if(token==='['){take();const list:Value[]=[];while(peek()!==']'){list.push(value(depth+1));if(list.length>256)limited(t('OpenSCAD array limit exceeded'));if(peek()!==',')break;take();}expect(']');result=list;}
+   else if(token==='['){take();if(peek()==='for'){result=comprehension(depth+1);expect(']');}else{const list:Value[]=[];while(peek()!==']'){list.push(value(depth+1));if(list.length>256)limited(t('OpenSCAD array limit exceeded'));if(peek()!==',')break;take();}expect(']');result=list;}}
    else if(token?.startsWith('"')){take();try{result=new TextValue(JSON.parse(token));}catch{return fail(t('Invalid OpenSCAD string'),tokens[cursor-1].at);}}
    else if(token==='undef'){take();result=new UndefinedValue();}
    else if(token&&functions.has(token)&&peek(1)==='(')result=callFunction();

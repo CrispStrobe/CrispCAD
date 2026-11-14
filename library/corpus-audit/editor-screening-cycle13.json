@@ -1,0 +1,752 @@
+{
+  "version": 1,
+  "capturedOn": "2026-11-14",
+  "scope": "Explicit bounded candidate cohorts; instantiated default top-level models only. No whole-corpus qualification, native renderer parity, manufacturing or physics claim. Earlier failures may be superseded by a later phase for the same source.",
+  "baselineCommit": "a311e13c9fba49cd9371e5003c8965a021c785b1",
+  "policy": {
+    "timeoutMs": 5000,
+    "maxTriangles": 10000,
+    "maxExtentMm": 200,
+    "sourceBytes": "unchanged archived originals"
+  },
+  "summary": {
+    "distinctCandidates": 17,
+    "qualified": 12,
+    "topologyFailed": 3,
+    "unsupported": 2
+  },
+  "phases": [
+    {
+      "phase": "before-list-comprehensions",
+      "runtimeArtifacts": {
+        "packages/core/dist/openscad-import.js": "775f4b0eaef6f4005851c707cfd6fc71bbc598829f00aa9061aaa08667c3b124",
+        "packages/core/dist/code.js": "d66807c8ca3b0e318be9d8350da1a26fb481a852afab841f38ca97f84f8f8763",
+        "packages/geometry/dist/kernel.js": "986b3804ba93e4c3f9ba90b76e83f0cfbf396539ffe8f44b5da1aa8e129c72b0",
+        "packages/geometry/dist/model-library-quality.js": "d81e57a8d472bce72f60edc7b28832c615f7e6bd802b322e45e6167f03f51e3e",
+        "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "results": [
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Display_Seven_Segments.scad",
+          "sourceSha256": "44105e01b47082fddca6cd7b9e401030b5f5fcf7413017e869f44c8fb2cd6802",
+          "sourceBytes": 1136,
+          "status": "screen-failed",
+          "warnings": [
+            "String settings are resolved during conversion; retain the original source to change them.",
+            "Source colours and transparency are not retained; solid geometry is preserved.",
+            "Echo console output is omitted from the converted model."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 24,
+          "estimatedFaces": 96,
+          "warningExtractionStatus": "converted",
+          "mesh": {
+            "sha256": "7caa797429dd802a8cd03f825c72a46a9b9deb15bce40700d976f47c35405f5a",
+            "bytes": 4884
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "fail",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 96,
+            "boundsMm": {
+              "min": [
+                -15,
+                -0.5,
+                -15
+              ],
+              "max": [
+                15,
+                1.5099999904632568,
+                15
+              ]
+            },
+            "signedVolumeMm3": 969.9999999999993,
+            "diagnostics": [
+              "Mesh must have nondegenerate, consistently oriented closed manifold topology and positive signed volume."
+            ]
+          }
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Hole_Plate.scad",
+          "sourceSha256": "769b1d58cebc6678909c5fbcb299cc1ffad25af502ceb2e3f0a954cf6aeefad2",
+          "sourceBytes": 1919,
+          "status": "qualified",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 17,
+          "estimatedFaces": 780,
+          "warningExtractionStatus": "converted",
+          "mesh": {
+            "sha256": "b0ac4b19f0d523b488b9ff1db6e7e1f986521bc32fb656e40979f4cd42da97f2",
+            "bytes": 39884
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "pass",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 796,
+            "boundsMm": {
+              "min": [
+                -50,
+                -50,
+                -2.5
+              ],
+              "max": [
+                50,
+                50,
+                2.5
+              ]
+            },
+            "signedVolumeMm3": 44909.47851927013,
+            "diagnostics": []
+          }
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Hexagon_socket_screw_keys.scad",
+          "sourceSha256": "15c5182dd02db24adc37f9179fb93a3a8b3231595fb92a39603bd22fc57dcaf1",
+          "sourceBytes": 1815,
+          "status": "failed",
+          "error": {
+            "phase": "parse",
+            "code": "invalid-source",
+            "message": "Line 5, column 26: Expected \u201c)\u201d",
+            "line": 5,
+            "column": 26
+          },
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "warningExtractionStatus": "converted"
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Weights_01.scad",
+          "sourceSha256": "9d65acddd758fe6bdb0424e423caeaae6be9dc94c7a1414bc229f7198a98b0e2",
+          "sourceBytes": 1840,
+          "status": "failed",
+          "error": {
+            "phase": "parse",
+            "code": "invalid-source",
+            "message": "Line 5, column 26: Expected \u201c)\u201d",
+            "line": 5,
+            "column": 26
+          },
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "warningExtractionStatus": "converted"
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Mech_Piece_01.scad",
+          "sourceSha256": "1a7a5d33362e378705d73473efec55b9d4ce08da7f78c358e1a73a9e60cf339e",
+          "sourceBytes": 1916,
+          "status": "qualified",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 42,
+          "estimatedFaces": 1500,
+          "warningExtractionStatus": "converted",
+          "mesh": {
+            "sha256": "1c57dafd58afa560b3752291e89b86d16ba90bde39fbf6f0b4e7d10add262bf9",
+            "bytes": 44184
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "pass",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 882,
+            "boundsMm": {
+              "min": [
+                -5,
+                -5,
+                -0.25
+              ],
+              "max": [
+                5,
+                5,
+                0.75
+              ]
+            },
+            "signedVolumeMm3": 85.38606691133471,
+            "diagnostics": []
+          }
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Mech_Piece_02.scad",
+          "sourceSha256": "1934959de53fdd98aca22ce2051ba2aedc2e0d8255ac53297eb49c7370317774",
+          "sourceBytes": 1804,
+          "status": "qualified",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 43,
+          "estimatedFaces": 1500,
+          "warningExtractionStatus": "converted",
+          "mesh": {
+            "sha256": "c0487dad694357e0b311076f6a1cd831ea7a5390a629e1c74c967cb159eb08ee",
+            "bytes": 43884
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "pass",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 876,
+            "boundsMm": {
+              "min": [
+                -8,
+                -3.5,
+                -0.25
+              ],
+              "max": [
+                8,
+                3.5,
+                0.75
+              ]
+            },
+            "signedVolumeMm3": 97.38606701706713,
+            "diagnostics": []
+          }
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Mech_Piece_03.scad",
+          "sourceSha256": "5f8ea76333397b00933972bbad44ddcaf836ec0913201fe9fdf374a86390c387",
+          "sourceBytes": 1658,
+          "status": "unsupported",
+          "error": {
+            "phase": "parse",
+            "code": "unsupported-feature",
+            "message": "Line 27, column 1: Unsupported OpenSCAD feature \u201ccircle\u201d",
+            "line": 27,
+            "column": 1
+          },
+          "warnings": null,
+          "runtimeWarnings": [],
+          "warningExtractionStatus": "conversion-failed"
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Mech_Piece_04.scad",
+          "sourceSha256": "8ca76077ba24885d28961a4b83d3d0ab9f4cdb881106ec53dfcd16fe7b30e350",
+          "sourceBytes": 1500,
+          "status": "unsupported",
+          "error": {
+            "phase": "parse",
+            "code": "unsupported-feature",
+            "message": "Line 16, column 1: Unsupported OpenSCAD feature \u201ccircle\u201d",
+            "line": 16,
+            "column": 1
+          },
+          "warnings": null,
+          "runtimeWarnings": [],
+          "warningExtractionStatus": "conversion-failed"
+        }
+      ],
+      "warningCapture": {
+        "scope": "warnings contains converter warnings from the explicit current-runtime parse-only follow-up; runtimeWarnings retains the original console/process warnings. Original geometry and error observations remain unchanged. null means conversion failed before a warning-bearing program was available.",
+        "runtimeArtifacts": {
+          "packages/core/dist/openscad-import.js": "e45a6399ea996130f239b646815538d3b9fc3ce367b518cc3fcefc943f637a29",
+          "packages/core/dist/code.js": "d66807c8ca3b0e318be9d8350da1a26fb481a852afab841f38ca97f84f8f8763"
+        }
+      }
+    },
+    {
+      "phase": "before-list-comprehensions",
+      "runtimeArtifacts": {
+        "packages/core/dist/openscad-import.js": "775f4b0eaef6f4005851c707cfd6fc71bbc598829f00aa9061aaa08667c3b124",
+        "packages/core/dist/code.js": "d66807c8ca3b0e318be9d8350da1a26fb481a852afab841f38ca97f84f8f8763",
+        "packages/geometry/dist/kernel.js": "986b3804ba93e4c3f9ba90b76e83f0cfbf396539ffe8f44b5da1aa8e129c72b0",
+        "packages/geometry/dist/model-library-quality.js": "d81e57a8d472bce72f60edc7b28832c615f7e6bd802b322e45e6167f03f51e3e",
+        "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "results": [
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Arc_02.scad",
+          "sourceSha256": "0202799423c511dc55c8caff15e5dfea1cbabd449342eee4bafb3be59104e803",
+          "sourceBytes": 2278,
+          "status": "qualified",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 626,
+          "estimatedFaces": 3696,
+          "warningExtractionStatus": "converted",
+          "mesh": {
+            "sha256": "8b760a3a79a5d1fcc29c9aacf2fa0852b7bd68b5d750b22a5adde4e8992b8e3c",
+            "bytes": 4284
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "pass",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 84,
+            "boundsMm": {
+              "min": [
+                -18,
+                10,
+                -3.5
+              ],
+              "max": [
+                15,
+                15,
+                3.5
+              ]
+            },
+            "signedVolumeMm3": 1104.764598153,
+            "diagnostics": []
+          }
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Circular_Blade.scad",
+          "sourceSha256": "cb24327b57fdaf2aa12968cb23cdbac695a18e89f83e7fb8125c89bad9ea6d53",
+          "sourceBytes": 1740,
+          "status": "qualified",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 412,
+          "estimatedFaces": 3320,
+          "warningExtractionStatus": "converted",
+          "mesh": {
+            "sha256": "33ebdb6f51b24db2fc1d9fb87d4f1b612eb863c0d2ff77adb1d7cc74a93b8b59",
+            "bytes": 18884
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "pass",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 376,
+            "boundsMm": {
+              "min": [
+                -20,
+                -19.021129608154297,
+                -3.5
+              ],
+              "max": [
+                20,
+                19.021129608154297,
+                3.5
+              ]
+            },
+            "signedVolumeMm3": 5009.1425967459345,
+            "diagnostics": []
+          }
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Gear_01.scad",
+          "sourceSha256": "eb63fd7b57dc965f3e1b4ba0ea44714fa76ba009935cb3459cbc88716817d97d",
+          "sourceBytes": 1835,
+          "status": "qualified",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 412,
+          "estimatedFaces": 2680,
+          "warningExtractionStatus": "converted",
+          "mesh": {
+            "sha256": "dbe1072a8117591f9ae3290d6785e89c4e35726b8efbb5414382ca825ad950f2",
+            "bytes": 15784
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "pass",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 314,
+            "boundsMm": {
+              "min": [
+                -21,
+                -20.590221405029297,
+                -3.5
+              ],
+              "max": [
+                21,
+                20.590221405029297,
+                3.5
+              ]
+            },
+            "signedVolumeMm3": 7578.542278585886,
+            "diagnostics": []
+          }
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Gear_02.scad",
+          "sourceSha256": "2abb0cd7ebc2157e780c97156587a72d897f95f0b8a6e38d7bbc7ec36f8bc6bf",
+          "sourceBytes": 2110,
+          "status": "qualified",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 421,
+          "estimatedFaces": 3256,
+          "warningExtractionStatus": "converted",
+          "mesh": {
+            "sha256": "2a81591f20420d0dc559f7c7d81c41d7452ab59a55dc6cd22e8942ed26f58ccf",
+            "bytes": 54184
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "pass",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 1082,
+            "boundsMm": {
+              "min": [
+                -21,
+                -20.590221405029297,
+                -3.5
+              ],
+              "max": [
+                21,
+                20.590221405029297,
+                3.5
+              ]
+            },
+            "signedVolumeMm3": 6140.665710223513,
+            "diagnostics": []
+          }
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Grid_01.scad",
+          "sourceSha256": "07e5759baf7511b67f22cdc6cbd5c0b7cdc68c2bd8edf6fc74637961f290eba2",
+          "sourceBytes": 1541,
+          "status": "screen-failed",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 426,
+          "estimatedFaces": 3232,
+          "warningExtractionStatus": "converted",
+          "mesh": {
+            "sha256": "4966181a1a2f6c4a461944ef80e4eb98e779bb852bfc2d1e4c4b5783c0faa35f",
+            "bytes": 60684
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "fail",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 1212,
+            "boundsMm": {
+              "min": [
+                0,
+                0,
+                -0.15000000596046448
+              ],
+              "max": [
+                10,
+                10,
+                0.05000000074505806
+              ]
+            },
+            "signedVolumeMm3": 19.024998730793676,
+            "diagnostics": [
+              "Mesh must have nondegenerate, consistently oriented closed manifold topology and positive signed volume."
+            ]
+          }
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Mallet.scad",
+          "sourceSha256": "88884ddc1fdf9fe5ab848c118d2ea94e01e70676d72da3b3ebc432fb5b10a832",
+          "sourceBytes": 1475,
+          "status": "qualified",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 13,
+          "estimatedFaces": 480,
+          "warningExtractionStatus": "converted",
+          "mesh": {
+            "sha256": "7add7b5373820f1daa54b5c65ac845f1fed92568a3bb45805bb456beb2c77341",
+            "bytes": 15184
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "pass",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 302,
+            "boundsMm": {
+              "min": [
+                -5,
+                -2.98356556892395,
+                -10
+              ],
+              "max": [
+                5,
+                2.98356556892395,
+                14
+              ]
+            },
+            "signedVolumeMm3": 355.1498835857858,
+            "diagnostics": []
+          }
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Tower.scad",
+          "sourceSha256": "4855a5c04e1d79e5eff5de58a2b5866908ab3a22c31a3ec88a4f99ee12a2b26d",
+          "sourceBytes": 2059,
+          "status": "qualified",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 425,
+          "estimatedFaces": 3240,
+          "warningExtractionStatus": "converted",
+          "mesh": {
+            "sha256": "477283058c760a743e7addbc357ff24e745ba296785e1cfbc98933063b055464",
+            "bytes": 43384
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "pass",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 866,
+            "boundsMm": {
+              "min": [
+                -35,
+                -35,
+                -100
+              ],
+              "max": [
+                35,
+                35,
+                7
+              ]
+            },
+            "signedVolumeMm3": 346278.70957269595,
+            "diagnostics": []
+          }
+        }
+      ],
+      "warningCapture": {
+        "scope": "warnings contains converter warnings from the explicit current-runtime parse-only follow-up; runtimeWarnings retains the original console/process warnings. Original geometry and error observations remain unchanged. null means conversion failed before a warning-bearing program was available.",
+        "runtimeArtifacts": {
+          "packages/core/dist/openscad-import.js": "e45a6399ea996130f239b646815538d3b9fc3ce367b518cc3fcefc943f637a29",
+          "packages/core/dist/code.js": "d66807c8ca3b0e318be9d8350da1a26fb481a852afab841f38ca97f84f8f8763"
+        }
+      }
+    },
+    {
+      "phase": "after-list-comprehensions",
+      "runtimeArtifacts": {
+        "packages/core/dist/openscad-import.js": "e45a6399ea996130f239b646815538d3b9fc3ce367b518cc3fcefc943f637a29",
+        "packages/core/dist/code.js": "d66807c8ca3b0e318be9d8350da1a26fb481a852afab841f38ca97f84f8f8763",
+        "packages/geometry/dist/kernel.js": "986b3804ba93e4c3f9ba90b76e83f0cfbf396539ffe8f44b5da1aa8e129c72b0",
+        "packages/geometry/dist/model-library-quality.js": "d81e57a8d472bce72f60edc7b28832c615f7e6bd802b322e45e6167f03f51e3e",
+        "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "results": [
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Weights_01.scad",
+          "sourceSha256": "9d65acddd758fe6bdb0424e423caeaae6be9dc94c7a1414bc229f7198a98b0e2",
+          "sourceBytes": 1840,
+          "status": "qualified",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 24,
+          "estimatedFaces": 480,
+          "mesh": {
+            "sha256": "b51d0cbafdae03080fc66a509300cbbfd4264b34d6abadddf0c9d13e2e176fda",
+            "bytes": 14284
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "pass",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 284,
+            "boundsMm": {
+              "min": [
+                -1,
+                -0.8660253882408142,
+                -0.20000000298023224
+              ],
+              "max": [
+                1,
+                0.8660253882408142,
+                6.199999809265137
+              ]
+            },
+            "signedVolumeMm3": 7.90160492653854,
+            "diagnostics": []
+          }
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Hexagon_socket_screw_keys.scad",
+          "sourceSha256": "15c5182dd02db24adc37f9179fb93a3a8b3231595fb92a39603bd22fc57dcaf1",
+          "sourceBytes": 1815,
+          "status": "screen-failed",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 13,
+          "estimatedFaces": 816,
+          "mesh": {
+            "sha256": "f2a6385b67e3b770888e000626efe6b26befcdd15de5c2049e56aca96cd13b30",
+            "bytes": 7484
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "fail",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 148,
+            "boundsMm": {
+              "min": [
+                -10,
+                -2,
+                -0.8660253882408142
+              ],
+              "max": [
+                6,
+                6,
+                0.8660253882408142
+              ]
+            },
+            "signedVolumeMm3": 51.45129534075798,
+            "diagnostics": [
+              "Mesh must have nondegenerate, consistently oriented closed manifold topology and positive signed volume."
+            ]
+          }
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Tree_01.scad",
+          "sourceSha256": "31a9130ea9b53c0d503fb86aeec221ec871cb21ea96987262d846ef5ca2bc756",
+          "sourceBytes": 927,
+          "status": "qualified",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 23,
+          "estimatedFaces": 400,
+          "mesh": {
+            "sha256": "d0460816ad77e13a822154029df2fe5c429cf39d371ce1d6641f2d5da9da8fb5",
+            "bytes": 11884
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "pass",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 236,
+            "boundsMm": {
+              "min": [
+                -1,
+                -0.9510565400123596,
+                -1.5
+              ],
+              "max": [
+                1,
+                0.9510565400123596,
+                1.75
+              ]
+            },
+            "signedVolumeMm3": 3.139624093749119,
+            "diagnostics": []
+          }
+        },
+        {
+          "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Nut_LQ.scad",
+          "sourceSha256": "deb3b2a4fe017c0734780512f781edb7809fe9434e72028b13a3f0a52581ea2f",
+          "sourceBytes": 1543,
+          "status": "qualified",
+          "warnings": [
+            "Source colours and transparency are not retained; solid geometry is preserved."
+          ],
+          "runtimeWarnings": [],
+          "expandedNodes": 5,
+          "estimatedFaces": 168,
+          "mesh": {
+            "sha256": "bf92fa9f004358b888e65ccef471d1395f55119d76103414493cab3ef98e1351",
+            "bytes": 7284
+          },
+          "screening": {
+            "checks": {
+              "parseable": "pass",
+              "closedPositiveVolume": "pass",
+              "withinSizeLimits": "pass",
+              "withinTriangleLimits": "pass"
+            },
+            "triangles": 144,
+            "boundsMm": {
+              "min": [
+                -1,
+                -0.8660253882408142,
+                0
+              ],
+              "max": [
+                1,
+                0.8660253882408142,
+                1
+              ]
+            },
+            "signedVolumeMm3": 1.0699252202305547,
+            "diagnostics": []
+          }
+        }
+      ],
+      "warningCapture": {
+        "scope": "warnings contains actual getOpenSCADImportWarnings output; runtimeWarnings contains console/process warnings. null means conversion failed before a warning-bearing program was available.",
+        "runtimeArtifacts": {
+          "packages/core/dist/openscad-import.js": "e45a6399ea996130f239b646815538d3b9fc3ce367b518cc3fcefc943f637a29",
+          "packages/core/dist/code.js": "d66807c8ca3b0e318be9d8350da1a26fb481a852afab841f38ca97f84f8f8763",
+          "packages/geometry/dist/kernel.js": "986b3804ba93e4c3f9ba90b76e83f0cfbf396539ffe8f44b5da1aa8e129c72b0",
+          "packages/geometry/dist/model-library-quality.js": "d81e57a8d472bce72f60edc7b28832c615f7e6bd802b322e45e6167f03f51e3e",
+          "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+        }
+      }
+    }
+  ]
+}

@@ -4,7 +4,7 @@ import {createHash} from 'node:crypto';
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {createCadSession, createLocalModelLibraryCatalogue, importOpenSCAD} from '../packages/core/dist/index.js';
+import {createCadSession, createLocalModelLibraryCatalogue, importOpenSCAD, getOpenSCADImportWarnings} from '../packages/core/dist/index.js';
 import {createGeometryKernel, exportSTL, checkModelLibrarySTL} from '../packages/geometry/dist/index.js';
 
 const root = new URL('../', import.meta.url);
@@ -97,7 +97,21 @@ export const corpusEditorSelection = [
   ['Ring', '4123a8998c6ce0a0b3e562f3e7a12198a4542f2cccc86ce6610c3d2a034e82cf'],
   ['Pipe_90', '7ecb93cf2a98f86eed7bf94af4c6ce59f56f3ff76276406634421ba7a5ced64e'],
   ['Key_Old_01', '3d1268c24366ec678a8e18e748e1281596c9aa65a502cb5ef901da8daaf0d323'],
+  ['Hole_Plate', '769b1d58cebc6678909c5fbcb299cc1ffad25af502ceb2e3f0a954cf6aeefad2'],
+  ['Mech_Piece_01', '1a7a5d33362e378705d73473efec55b9d4ce08da7f78c358e1a73a9e60cf339e'],
+  ['Mech_Piece_02', '1934959de53fdd98aca22ce2051ba2aedc2e0d8255ac53297eb49c7370317774'],
+  ['Arc_02', '0202799423c511dc55c8caff15e5dfea1cbabd449342eee4bafb3be59104e803'],
+  ['Circular_Blade', 'cb24327b57fdaf2aa12968cb23cdbac695a18e89f83e7fb8125c89bad9ea6d53'],
+  ['Gear_01', 'eb63fd7b57dc965f3e1b4ba0ea44714fa76ba009935cb3459cbc88716817d97d'],
+  ['Gear_02', '2abb0cd7ebc2157e780c97156587a72d897f95f0b8a6e38d7bbc7ec36f8bc6bf'],
+  ['Mallet', '88884ddc1fdf9fe5ab848c118d2ea94e01e70676d72da3b3ebc432fb5b10a832'],
+  ['Tower', '4855a5c04e1d79e5eff5de58a2b5866908ab3a22c31a3ec88a4f99ee12a2b26d'],
+  ['Weights_01', '9d65acddd758fe6bdb0424e423caeaae6be9dc94c7a1414bc229f7198a98b0e2'],
+  ['Tree_01', '31a9130ea9b53c0d503fb86aeec221ec871cb21ea96987262d846ef5ca2bc756'],
+  ['Nut_LQ', 'deb3b2a4fe017c0734780512f781edb7809fe9434e72028b13a3f0a52581ea2f'],
 ];
+// Only this admission batch gains warning metadata; earlier qualification records stay immutable.
+const warningQualifiedNames = new Set(['Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ']);
 export async function generateCorpusEditorLibrary() {
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
   const repository = corpus.repositories.find(item => item.id === repositoryId);
@@ -129,7 +143,14 @@ export async function generateCorpusEditorLibrary() {
         ? ' Brickwright interprets the authored two-component 3D translations [0,0] as [0,0,0]. Translation uses the fixed full-render context $preview=false. Qualification covers only the instantiated default top-level model.'
           + (['Ring', 'Pipe_90'].includes(name) ? ' Original unused repeat helpers containing an unresolved ring call are retained unchanged and are outside this qualification.' : '') : '';
     const session = createCadSession();
-    session.addCode(importOpenSCAD(bytes.toString('utf8')), title);
+    const program = importOpenSCAD(bytes.toString('utf8'));
+    const admissionNotes = warningQualifiedNames.has(name)
+      ? ' Qualification covers only the instantiated default top-level model.'
+        + (['Weights_01', 'Tree_01', 'Nut_LQ'].includes(name) ? ' Comprehensions are converted by the bounded fixed-cardinality subset for the authored defaults; alternate cardinality choices are outside this qualification.' : '')
+        + (name === 'Hole_Plate' ? ' The authored % background cube is excluded from rendered geometry; Hole_Diameter retains its authored cylinder-radius meaning.' : '')
+        + ' Import warnings captured at qualification: ' + (getOpenSCADImportWarnings(program).join(' ') || 'None.')
+      : '';
+    session.addCode(program, title);
     const evaluated = kernel.evaluate(session.state.document);
     if (!evaluated.bodies.length || !(evaluated.volume > 0)) throw new Error(`Selected source produced no positive solid: ${name}`);
     const mesh = Buffer.from(exportSTL(evaluated.bodies));
@@ -146,7 +167,7 @@ export async function generateCorpusEditorLibrary() {
         review: 'accepted', reviewer: `${repository.reviewed_by}; explicit standalone editor selection and runtime screening 2026-11-14`},
       original: {...file(sourcePath, bytes), url: record.source_url, format: 'openscad'},
       derivatives: [{...file(meshPath, mesh), format: 'stl'}],
-      modificationNotes: 'Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.' + selectionNote + (name === 'Walking_Stick' ? ' Corrected scoped $fn propagation uses a new derivative path; the earlier walking-stick.stl remains unchanged for historical provenance.' : ''),
+      modificationNotes: 'Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.' + selectionNote + admissionNotes + (name === 'Walking_Stick' ? ' Corrected scoped $fn propagation uses a new derivative path; the earlier walking-stick.stl remains unchanged for historical provenance.' : ''),
       conversion: {sourceUnits: 'mm', sourceUpAxis: 'Z', unitAssumption: 'The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.', toMillimetresZUp: identity},
       quality: screening.quality, measurements: {triangles: screening.triangles, boundsMm: screening.boundsMm, signedVolumeMm3: screening.signedVolumeMm3}, diagnostics: screening.diagnostics,
     });
