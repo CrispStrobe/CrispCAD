@@ -42,6 +42,18 @@ export const corpusEditorSelection = [
   ['Sofa', 'c4078754ea3f646b214376acdce32df6b6eeccb043e0063587f7559a3d790b04'],
   ['Table_01', '86e1f12d8ac487b03ed840232665c17960528c9c565352fb74c245e46109db1e'],
   ['Vent_Grid', '6ada1d7850f6f10ebe6443af6cde6695d077401eccfb49c2f3a5833cfa956fb5'],
+  ['Base_cabinet_02', '006437c80eb43cab07afffa2f0302f5a6a9b5a4031561987677c1ca2da0ff276'],
+  ['Bed_01', '341762d6fd8f6cf85db9e7c3e8c77269337dc2abf03126ddb962305e34f99558'],
+  ['Bed_02', '86e5c3303c974c02254cd42adf3e7c573d25bf3780eaf020f76ae1c8cbc7f71f'],
+  ['Bench_01', 'a98ef5c2538ba30dab1259347f29fe2260f061af70a12ce5486eb1c686b923f9'],
+  ['Bench_02', 'f7d216f47757cd3cb95d95c47f108e188744be9cd87c54ab1c545a212d3364f7'],
+  ['Chair_02', 'e7745e1913a44223b778cea1a3bac81aa8f03f2c5a93f742ea8896b565802887'],
+  ['Chair_03', 'b9790af1e3de2cc8bd95e166a2feb6cd2ce3c68c5a21c5a4a6ac5051763ec2ac'],
+  ['Fireplace_01', '998ed78138fa59f239328a9a4b08f84b6477e3364a6c47057276e2abe91a8e89'],
+  ['Table_02', '0ab12f0be96093ed8a91e3c42b8105c2d9039c21edae89c800f8d9a243944abf'],
+  ['Table_03', '42871fd166513f17ab545d477bf54146ac018b9abeda6e6a02434511af0c0ae5'],
+  ['Table_Small_01', 'e171e82747b68dcf94cc55b3da1768ac07f66eca08a1794905990a6372f206ad'],
+  ['Window_01', '90bac453f7bd0f5dddedcbceaed083852d81074130be3518439db2813e6e1cde'],
 ];
 export async function generateCorpusEditorLibrary() {
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());

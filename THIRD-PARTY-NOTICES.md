@@ -111,7 +111,7 @@ THE SOFTWARE.
 
 ## Selected Asset Collection models
 
-Twenty-four OpenSCAD models and their derived meshes/previews are from Angelo Nicoli's
+Thirty-six OpenSCAD models and their derived meshes/previews are from Angelo Nicoli's
 MIT-licensed OpenSCAD-Snippet at commit
 `4f9e3d4d16b5e427186c1f89e10c2181c437dee6`. Original source paths and per-file
 identities are retained in `library/editor-corpus-manifest.json`; the complete
