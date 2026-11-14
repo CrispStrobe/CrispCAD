@@ -45,3 +45,24 @@ polygon generation and list indexing, affine/profile transforms, signed
 revolutions, selective resize and exact numeric-text formatting. The checked
 limits still bound construction work, lists, scalar evaluation and mesh size.
 No research model was added to the shipped library.
+
+## Reconciled parser checkpoint
+
+The [next frozen replay](evidence/import-engine-reconciled-2026-11-14.json)
+records **165/256 positive solids**, up from 163. All previous 163 remain positive;
+volumes and bounds agree at the stated 1e-6 tolerance. There are 37 unsupported,
+33 limited, 20 failed and one timeout. **72 positive files carry notices**.
+
+This pass combines verified include/use bundles and captured functions with
+retained comprehensions, fixes scalar/shape caches across loop scopes, retains
+expression assertion messages and default/ignored argument checks, and honors
+mixed argument order. JSCAD signed scales export through reflections. The
+[executable probes](evidence/retained-evaluation-oracle-2026-11-14.json) cover
+original argument-order, numeric diagnostic and list/text cases; the full corpus
+has no independent geometry oracle. All 143 gallery items retain their archived
+source and mesh bytes; conversion notes were refreshed where needed.
+
+Dependency support is partial: explicitly supplied, hash-checked source bundles
+work; implicit assets, external meshes and heightmaps still need a bounded asset
+model. Default tessellation, fonts, colours, strings and random sequences remain
+in the register rather than being hidden by the success count.
