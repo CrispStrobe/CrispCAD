@@ -666,3 +666,25 @@ supported; `functional` requires unsupported `version_num`; `Sign_03` fails
 strict topology; `Coin_02` passes geometry, STL and offline editor insertion.
 See `library/corpus-audit/editor-screening-cycle20.json` for the separate measured
 phases, unchanged-result reuse and exact runtime identities.
+
+
+### Authored circular grill default — 2026-11-14
+
+`Samples/GrillCircle.scad` adds a third A2D entry from the same reviewed MIT
+revision and exact shared dependency bytes. Its original 80mm fan-grill default
+passes all four strict STL screens at 3,372 triangles with bounds
+[-40,-40,0] to [40,40,2]mm. Original dimensions, fragments, entrypoint and source
+bytes remain unchanged; no repair or parameter override was used.
+
+The two-root sample is 1 pass / 1 resource refusal after being 0/2 qualified.
+`ParametricBoxWithLid` remains excluded at the original work limit, as does SCON
+`ex5` at depth32. The old 103 records, 142 previews and all historical refusal
+reports remain unchanged. Totals are **104 source entries / 102 distinct STL
+hashes**, and 143 total gallery entries. The new result supersedes only the prior
+GrillCircle refusal for current admission; its historical observation stays in
+the original nine-root report. See `library/corpus-audit/editor-screening-cycle21.json`.
+
+The next bounded scoped-`use` candidate is Angelo `Scene_House.scad` (one authored
+root; geometry and editor outcome unmeasured). Seven other ranked `use` roots
+have independent path, loop/list-size or JSON blockers and are not credited as
+expected admissions. The ranking and exact root names are in the same report.
