@@ -30,9 +30,11 @@ export function importOpenSCAD(source:string):CodeProgram{
  const expect=(value:string)=>{if(peek()!==value)fail(t`Expected “${value}”`);take();};
  const unsupported=(name:string,at=tokens[cursor]?.at??source.length):never=>{throw new CadCodeError(t`Unsupported OpenSCAD feature “${name}”`,at,source,'unsupported-feature');};
  for(let i=0;i<tokens.length;i++)if(tokens[i].text==='$preview'&&tokens[i+1]?.text==='=')unsupported('assignment to readonly $preview',tokens[i].at);
+ // Defaults apply to scalar reads, not absence checks that select legacy tessellation.
+ function fragmentDefault(name:string):string|undefined{return name==='$fn'?'0':name==='$fa'?'12':name==='$fs'?'2':undefined;}
  function localValue(name:string):Value|undefined{chargeValues();
   const binding=locals.get(name);if(binding===undefined&&globals.has(name)){const v=globalValue(name);return typeof v==='string'&&!name.startsWith('$')?nativeNames.get(name)!:v;}if(!(binding instanceof LocalBinding))return binding;const cached=localCache.get(binding);if(cached!==undefined)return cached;
-  if(resolving.has(binding)){if(binding.outer?.has(name)){const previous=locals;locals=binding.outer;try{return localValue(name);}finally{locals=previous;}}if(globals.has(name)){const result=globalValue(name);return typeof result==='string'&&!name.startsWith('$')?nativeNames.get(name)!:result;}if(name==='$fn')return '0';return new UndefinedValue('local variable dependency cycle');}
+  if(resolving.has(binding)){if(binding.outer?.has(name)){const previous=locals;locals=binding.outer;try{return localValue(name);}finally{locals=previous;}}if(globals.has(name)){const result=globalValue(name);return typeof result==='string'&&!name.startsWith('$')?nativeNames.get(name)!:result;}const fallback=fragmentDefault(name);if(fallback!==undefined)return fallback;return new UndefinedValue('local variable dependency cycle');}
   if(resolving.size>=32)limited(t('OpenSCAD construction limit exceeded'));
   const resume=cursor,outer=locals,outerModules=modules,outerFunctions=functions;resolving.add(binding);locals=binding.scope;modules=binding.moduleScope??modules;functions=binding.functionScope??functions;cursor=binding.start;
   try{const result=value();if(cursor!==binding.end)unsupported('local variable expression');localCache.set(binding,result);return result;}
@@ -115,7 +117,7 @@ export function importOpenSCAD(source:string):CodeProgram{
     take();if(token==='$preview')fullRenderPreviewUsed=true;const bound=localValue(token)??vectors.get(token);
     if(bound!==undefined)result=bound;
     else if(token==='$t'){warnings.add(t('Unbound animation time uses $t=0; motion is not retained.'));result='0';}
-    else result=token==='PI'&&!declaredGlobals.has('PI')?'3.141592653589793':token==='true'||token==='false'?token:token==='$fn'||token==='$children'?'0':token==='$preview'?'false':new UndefinedValue();
+    else result=token==='PI'&&!declaredGlobals.has('PI')?'3.141592653589793':token==='true'||token==='false'?token:fragmentDefault(token)??(token==='$children'?'0':token==='$preview'?'false':new UndefinedValue());
    }
    else if(token&&/^(?:\d|\.\d)/.test(token)){take();result=token;}
    else return fail(t('Expected a complete dimensional expression'));
@@ -244,7 +246,7 @@ return {named,positional,use,allowed};
  function withSpecials<T>(named:Map<string,Value>,body:()=>T):T{const outer=locals;locals=new Map(outer);for(const [key,value] of named)if(key.startsWith('$'))locals.set(key,value);try{return body();}finally{locals=outer;}}
  function validateColor(value:Value|undefined,at:number,branch=false):void{chargeValues();const reason=cycle(value);if(reason)unsupported(reason,at);if(value instanceof ChoiceValue){validateColor(value.yes,at,true);validateColor(value.no,at,true);return;}if(branch&&value instanceof UndefinedValue)return;if(value instanceof TextValue){if(!/^(?:[A-Za-z]+|#[0-9A-Fa-f]{3}|#[0-9A-Fa-f]{6}|#[0-9A-Fa-f]{8})$/.test(value.text))unsupported('color string',at);return;}if(!Array.isArray(value)||![3,4].includes(value.length)||value.some(v=>{const n=constant(v);return n===undefined||n<0||n>1;}))unsupported('constant RGB or RGBA color',at);}
  function profile(depth=0):string{
-  if(depth>32||++statements>4096)limited(t('OpenSCAD construction limit exceeded'));
+  if(depth>32)limited(t('OpenSCAD construction nesting exceeds 32'));if(++statements>4096)limited(t('OpenSCAD construction limit exceeded'));
   const combine=(parts:string[],kind='union2d')=>parts.length===1&&kind!=='hull2d'?parts[0]:`${kind}(${parts.join(', ')})`;
   if(peek()==='{')return combine(blockParts(depth,false,true));
   const token=take(),name=token.text;if(name==='#'){warnings.add(t('Preview highlights are omitted; rendered geometry is retained.'));return profile(depth+1);}if(name==='%'||name==='*'){skipStatement();return 'union2d()';}if(name==='for')return controlLoop(depth,true);if(name==='let'||name==='assign')return scopedOperator(name,depth,true);if(name===';')return 'union2d()';if(name==='if'){expect('(');const condition=truth(value());expect(')');const known=constant(condition);let yes='union2d()',no='union2d()';if(known===0)skipStatement();else yes=profile(depth+1);if(peek()==='else'){take();if(known!==undefined&&known!==0)skipStatement();else no=profile(depth+1);}return known!==undefined?known?yes:no:`choose2d(${condition}, ${yes}, ${no})`;}if(name==='children')return children(argumentsFor(name,token.at),token.at,depth,true)+(expect(';'),'');if(modules.has(name))return invokeModule(name,argumentsFor(name,token.at),token.at,depth,true);if(!['offset','minkowski','text','polygon','square','circle','union','difference','intersection','hull','translate','rotate','scale'].includes(name))unsupported(`extrusion profile: ${name}`,token.at);
@@ -264,7 +266,7 @@ return {named,positional,use,allowed};
   allowed(['r','d','center','$fn','$fa','$fs'],1);if(named.has('d')&&(named.has('r')||use('r',0)!==undefined))unsupported('circle: both radius and diameter',token.at);return `circle2d(${named.has('d')?'('+scalar(named.get('d'))+') / 2':scalar(use('r',0,'1'))}, ${specialSegments(named,named.has('d')?'('+scalar(named.get('d'))+') / 2':scalar(use('r',0,'1')))})`;
  }
  function shape(depth=0):string{
-  if(depth>32||++statements>4096)limited(t('OpenSCAD construction limit exceeded'));if(peek()==='{')return block(depth,true);
+  if(depth>32)limited(t('OpenSCAD construction nesting exceeds 32'));if(++statements>4096)limited(t('OpenSCAD construction limit exceeded'));if(peek()==='{')return block(depth,true);
   const token=take(),name=token.text;
   if(name==='%'||name==='*'){skipStatement();return 'empty()';}
   if(name==='#'){warnings.add(t('Preview highlights are omitted; rendered geometry is retained.'));return shape(depth+1);}

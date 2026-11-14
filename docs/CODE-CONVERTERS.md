@@ -67,7 +67,15 @@ only for the source that used the fallback.
 Supported special fragment controls propagate through module and transform
 calls. Nested scopes restore the enclosing values, and an explicit positive
 `$fn` takes precedence over adaptive `$fa`/`$fs` calculations. Curved geometry
-keeps the stated finite segment and mesh budgets. The `#` highlight modifier
+keeps the stated finite segment and mesh budgets. Actual scalar reads of unbound
+`$fa`, `$fs` and `$fn` use 12, 2 and 0 respectively. A self-shadowing local
+fragment assignment first reads its enclosing/caller value, then a file binding,
+then that builtin default; ordinary local dependency cycles remain errors.
+These scalar fallbacks do not make absent fragment controls explicit: geometry
+with no fragment controls still uses the existing 48-segment default. The
+[documented fragment defaults and caller scope](https://files.openscad.org/documentation/manual/Other_Language_Features.html)
+are language references, not a claim of native OpenSCAD execution.
+The `#` highlight modifier
 retains its child geometry and records omitted highlight appearance. `%`
 background and `*` disabled geometry are excluded from full-render output;
 `!` selects root geometry instead of retaining unrelated roots. These are

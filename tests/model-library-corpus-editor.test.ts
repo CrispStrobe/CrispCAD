@@ -81,10 +81,11 @@ describe('explicit corpus to editor selection', () => {
     }
   });
 
-  it('preserves every complete record from the first 90 editor selections', () => {
+  it('preserves every complete record from the first 93 editor selections', () => {
     // Canonical digest pins provenance and qualification together, beyond just mesh identity.
     expect(hash(Buffer.from(JSON.stringify(manifest.assets.slice(0, 78))))).toBe('e9620e4d5abeacff56a9a1fcbe6b70b47e4a1ebb8c3d81d29425d5cbcfcb7c61');
     expect(hash(Buffer.from(JSON.stringify(manifest.assets.slice(0, 90))))).toBe('d11cbd3e39866caf6e7b2c41cabe17daeed22ff1011c9924232f1d7e66ca5e86');
+    expect(hash(Buffer.from(JSON.stringify(manifest.assets.slice(0, 93))))).toBe('80bf476a8360f4a58c54d90961ea49355751b7132feec3825fbc79950335000f');
   });
 
   it('retains the complete Walking Stick v1 qualification, original mesh and preview after scoped-fn correction', () => {

@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "capturedOn": "2026-11-14",
+  "baselineCommit": "247b8369677ecc2a4b4f55baa41804d0326fb330",
+  "scope": "One unchanged authored Demo entry point. This is a conversion-limit observation, not editor admission or geometry/STL/collision qualification. No source, fragment setting or resource limit was changed.",
+  "sourceRevision": {
+    "repositoryId": "smooth-prim",
+    "repositoryUrl": "https://github.com/rcolyer/smooth-prim",
+    "commit": "0d0038f984465f3eb0f6026a4d5de2f79d2dcea8",
+    "sourceUrl": "https://raw.githubusercontent.com/rcolyer/smooth-prim/0d0038f984465f3eb0f6026a4d5de2f79d2dcea8/smooth_prim.scad"
+  },
+  "licence": {
+    "spdx": "CC0-1.0",
+    "author": "Ryan A. Colyer",
+    "capturedOn": "2026-11-13",
+    "evidence": {
+      "path": "library/corpus/repos/smooth-prim/LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/rcolyer/smooth-prim/0d0038f984465f3eb0f6026a4d5de2f79d2dcea8/LICENSE.txt",
+      "sha256": "7179683e8000e6bdc9bbc60d85edf0a4ac8e76f951857f54fcb775d5886f1309",
+      "bytes": 7049
+    }
+  },
+  "policy": {
+    "source": "library/corpus/repos/smooth-prim/smooth_prim.scad",
+    "scope": "Exactly one unchanged authored Demo entrypoint; no other helper entrypoints qualified",
+    "timeoutMs": 5000,
+    "maxTriangles": 10000,
+    "maxExtentMm": 200,
+    "fragmentOverrides": null,
+    "sourceOverrides": null,
+    "phaseDefinition": "The parse phase calls importOpenSCAD, which also validates converted code internally; a resource-limit error may occur before a warning-bearing program is returned."
+  },
+  "runtimeArtifacts": {
+    "packages/core/dist/openscad-import.js": "9d05a778dbe31f7dcb3c3dae552a24891862e1935c71a4ecaff6ff8bb86718a7",
+    "packages/core/dist/code.js": "d66807c8ca3b0e318be9d8350da1a26fb481a852afab841f38ca97f84f8f8763",
+    "packages/geometry/dist/kernel.js": "986b3804ba93e4c3f9ba90b76e83f0cfbf396539ffe8f44b5da1aa8e129c72b0",
+    "packages/geometry/dist/model-library-quality.js": "d81e57a8d472bce72f60edc7b28832c615f7e6bd802b322e45e6167f03f51e3e",
+    "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+  },
+  "result": {
+    "sourcePath": "library/corpus/repos/smooth-prim/smooth_prim.scad",
+    "sourceSha256": "16de0aac3dc3cf8d357d52e1e2d333a2d0e11c21a59efb042bd4604fc341e8e0",
+    "sourceBytes": 8818,
+    "status": "limited",
+    "error": {
+      "phase": "parse",
+      "code": "resource-limit",
+      "message": "Line 274, column 3: OpenSCAD construction nesting exceeds 32",
+      "line": 274,
+      "column": 3
+    },
+    "warnings": null,
+    "runtimeWarnings": []
+  },
+  "guardDiagnostic": {
+    "scope": "Separate read-only instrumented copy of Brickwright's original BSD-3-Clause importer, with unchanged guards and source. Not a successful conversion.",
+    "guard": "constructionDepth",
+    "observed": 33,
+    "maximum": 32,
+    "constructionVisits": 135,
+    "valueEvaluations": 1157
+  },
+  "geometryReached": false,
+  "stlProduced": false,
+  "catalogueChange": {
+    "selectedBefore": 93,
+    "selectedAfter": 93,
+    "distinctMeshesBefore": 91,
+    "distinctMeshesAfter": 91
+  }
+}

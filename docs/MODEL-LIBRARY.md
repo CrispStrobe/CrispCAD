@@ -576,6 +576,12 @@ lexical and module/transform time bindings retain their existing behavior. Rod 0
 Animation Gear 02 and Animation Mechanism 01 pass at the authored default entry
 points with that fallback; their qualifications establish static geometry only.
 Spawing Cube remains excluded because the unchanged default produces no solid.
+Fragment-control scalar reads and self-shadowing `$fa`/`$fs` assignments now
+resolve their enclosing values or builtin defaults without changing unspecified
+48-segment tessellation. This removes a false variable-cycle refusal in the CC0
+Smooth Primitives demo. Its unchanged authored entry point then exceeds the
+existing construction-depth limit (33 versus 32), before geometry or STL
+screening; it remains archival and unqualified, outside the 93 editor selections.
 The host bundles exact selected source bytes, previews and the
 correct asset-specific MIT notice. Insertion verifies hashes, evaluates the
 candidate, and preserves provenance, attribution and undo/redo through the
