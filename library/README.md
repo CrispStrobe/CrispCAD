@@ -251,6 +251,15 @@ The [bounded candidate-screening report](corpus-audit/editor-screening-cycle13.j
 retains observed source/runtime identities and failures without treating the
 remaining archive as screened. The selection limits are unchanged.
 
+The CC0 `smooth-prim/smooth_prim.scad` authored Demo remains outside the editor
+selection. Resolving its self-shadowing fragment defaults removes the earlier
+variable-cycle error; it next reaches construction depth 33 against the fixed
+limit of 32 in its `children()`/`CutCorner` chain. Geometry and STL screening are
+not reached, so no mesh or topology qualification is asserted. Its source,
+defaults and fragment settings remain unchanged. The
+[bounded conversion report](corpus-audit/editor-screening-cycle16.json) records
+the pinned source/grant, final diagnostic and separately measured guard counters.
+
 Each selected model passes the existing bounded importer, Manifold evaluation,
 and hash-bound STL screening for a closed positive-volume solid, at most 10,000
 triangles and 200 mm extent. Coordinates are unchanged; millimetres and Z up are
