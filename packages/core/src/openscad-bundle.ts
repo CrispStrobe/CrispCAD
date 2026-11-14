@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
-// In-memory include expansion only. No filesystem, URL loading or search paths.
+// In-memory include/use bundles only. No filesystem, URL loading or search paths.
 import {CadCodeError, CODE_LIMITS} from './code.js';
 import type {CodeProgram} from './code.js';
 import {sha256Hex} from './hash.js';
 import {importOpenSCAD} from './openscad-import.js';
+import type {OpenSCADLibraryRange} from './openscad-import.js';
 
 export interface OpenSCADBundleFile {
   readonly path: string;
@@ -21,6 +22,7 @@ export interface OpenSCADBundleOriginal extends OpenSCADBundleFile {
   readonly bytes: number;
 }
 export interface OpenSCADIncludeOccurrence {
+  readonly kind?: 'use';
   readonly fromPath: string;
   readonly path: string;
   readonly sourceOffset: number;
@@ -34,7 +36,7 @@ export interface OpenSCADBundleProvenance {
   readonly rootPath: string;
   /** Input order, including declared but unused files; every hash was checked. */
   readonly files: readonly OpenSCADBundleOriginal[];
-  /** Textual traversal order; repeated includes remain separate occurrences. */
+  /** Traversal order; repeated include/use directives remain separate occurrences. */
   readonly includes: readonly OpenSCADIncludeOccurrence[];
   readonly originalBytes: number;
   readonly expandedBytes: number;
@@ -118,7 +120,7 @@ function location(lines: number[], at: number): {line: number; column: number} {
 
 /**
  * Verify and snapshot every declared original before expanding textual includes.
- * No ambient file access exists. `use` is intentionally unsupported. Includes are
+ * No ambient file access exists. `use` retains isolated lexical library scopes. Includes are
  * relative to their containing file and expand at every occurrence, not once.
  * Provenance retains original bytes as lossless text; expanded text is derived.
  */
@@ -131,6 +133,7 @@ export async function importOpenSCADBundle(bundle: OpenSCADSourceBundle): Promis
   const files = new Map(snapshot.files.map(file => [file.original.path, file]));
   const chunks: string[] = [], segments: Segment[] = [], includes: OpenSCADIncludeOccurrence[] = [];
   const active = new Set<string>();
+  const libraries: OpenSCADLibraryRange[] = [];
   let expandedBytes = 0, expandedLength = 0, expandedTokens = 0;
   const append = (text: string, path: string, sourceStart: number) => {
     if (!text) return;
@@ -140,13 +143,13 @@ export async function importOpenSCADBundle(bundle: OpenSCADSourceBundle): Promis
     expandedLength += text.length;
     chunks.push(text);
   };
-  const expand = (path: string, depth: number) => {
+  const expand = (path: string, depth: number, fileScope = true) => {
     if (depth > OPENSCAD_BUNDLE_LIMITS.depth) fail('Include nesting exceeds the existing depth limit', path, 0, files.get(path)?.original.source ?? '', 'resource-limit');
     if (active.has(path)) fail('Cyclic include dependency', path, 0, files.get(path)!.original.source);
     const file = files.get(path)!;
     const source = file.original.source;
     active.add(path);
-    let at = 0, chunkStart = 0;
+    let at = 0, chunkStart = 0, nesting = 0, statementBoundary = true;
     const trivia = (start: number): number => {
       let cursor = start;
       while (cursor < source.length) {
@@ -173,8 +176,8 @@ export async function importOpenSCADBundle(bundle: OpenSCADSourceBundle): Promis
         token = /^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|^[A-Za-z_$][A-Za-z0-9_$]*|^(?:==|!=|<=|>=|&&|\|\|)|^[\s\S]/.exec(source.slice(at))![0];
         at += token.length;
       }
-      if (token === 'use') fail('OpenSCAD use dependencies are unsupported in source bundles', path, start, source, 'unsupported-feature');
-      if (token === 'include') {
+      if (token === 'use' && (!fileScope || nesting !== 0 || !statementBoundary)) fail('OpenSCAD use requires file scope', path, start, source, 'unsupported-feature');
+      if (token === 'include' || token === 'use') {
         const open = trivia(at);
         if (source[open] !== '<') fail('Expected a literal include <relative/path> directive', path, start, source);
         const close = source.indexOf('>', open + 1);
@@ -183,15 +186,21 @@ export async function importOpenSCADBundle(bundle: OpenSCADSourceBundle): Promis
         const target = normalizePath(raw, path.split('/').slice(0, -1), path, start, source);
         if (!files.has(target)) fail(`Included source file is missing: ${target}`, path, start, source);
         if (includes.length >= OPENSCAD_BUNDLE_LIMITS.includes) fail('Include occurrences exceed the existing token budget', path, start, source, 'resource-limit');
-        includes.push(Object.freeze({fromPath: path, path: target, sourceOffset: start, ...location(file.lines, start), depth: depth + 1}));
+        includes.push(Object.freeze({...(token === 'use' ? {kind: 'use' as const} : {}), fromPath: path, path: target, sourceOffset: start, ...location(file.lines, start), depth: depth + 1}));
         append(source.slice(chunkStart, start), path, chunkStart);
         // Boundaries prevent an included EOF comment or adjacent identifier from swallowing caller code.
         append('\n', path, start);
-        expand(target, depth + 1);
+        const range: OpenSCADLibraryRange = {start: expandedLength, end: expandedLength};
+        if (token === 'use') libraries.push(range);
+        expand(target, depth + 1, fileScope && nesting === 0 && statementBoundary);
+        range.end = expandedLength;
         append('\n', path, start);
         at = close + 1;
         chunkStart = at;
       } else {
+        if (['{', '(', '['].includes(token)) nesting++;
+        if (['}', ')', ']'].includes(token)) nesting--;
+        statementBoundary = nesting === 0 && (token === ';' || token === '}');
         expandedTokens++;
         if (expandedTokens > OPENSCAD_BUNDLE_LIMITS.expandedTokens) fail('Expanded include tokens exceed the existing 8192-token limit', path, start, source, 'resource-limit');
       }
@@ -203,7 +212,7 @@ export async function importOpenSCADBundle(bundle: OpenSCADSourceBundle): Promis
   const expanded = chunks.join('');
   const expandedSha256 = await sha256Hex(encoder.encode(expanded));
   let program: CodeProgram;
-  try {program = importOpenSCAD(expanded);}
+  try {program = importOpenSCAD(expanded, libraries);}
   catch (error) {
     if (!(error instanceof CadCodeError)) throw error;
     const segment = segments.find(item => error.offset >= item.start && error.offset < item.end) ?? segments.at(-1);
