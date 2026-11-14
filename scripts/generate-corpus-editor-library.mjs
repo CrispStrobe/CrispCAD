@@ -87,6 +87,10 @@ export const corpusEditorSelection = [
   ['Fence_02', '58464ec8083b253f64de30407e1cbc1b41a2c567239c3e4e7ed6016f120f6728'],
   ['Building_02', '33e61ca81c87958bd63eb9997d462b5ceab7efc5043837f07efbcf30da89fa3e'],
   ['Walking_Stick', 'c03f703be343096ead430017effe50e184518052f25cad0276a8a21ff8a4a986'],
+  ['Ingot_01', '6f3d5d101289b7637c0f8f27b2881bde600b16cddd602bab974d82a9d937cac2'],
+  ['Coin_01', '951c586e3b1b6257d90ab7feb3b4307946c379ed740368dfb4c8689f3059ad7b'],
+  ['Led_01', '8aad38e223ae0cfeb7e00f3bd8e594cc3a531120b51c8ebac96d3123074071d7'],
+  ['Sauce_Bottle', '5bd635f4e9179b0a9716a6ec38c4b346b989f94d48d41c7e9ab6522926f59e23'],
 ];
 export async function generateCorpusEditorLibrary() {
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
