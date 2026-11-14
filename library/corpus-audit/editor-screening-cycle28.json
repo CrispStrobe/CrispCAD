@@ -1,0 +1,1135 @@
+{
+  "version": 1,
+  "capturedOn": "2026-11-14",
+  "baselineDeliveredMain": "87e31413ba87bbcd835a46308039eff3a2e1d430",
+  "scope": "Four exact already archived MIT upstream roots: one authored JavaScript demonstration and three upstream OpenSCAD transformation test fixtures. Titles explicitly identify fixtures. Admission/packaging gap only: compiler behavior unchanged.",
+  "summary": {
+    "cohortRoots": 4,
+    "previouslyShipped": 0,
+    "baselineCompilerGeometryPass": 4,
+    "baselineStrictStlPass": 4,
+    "afterEditorPass": 4,
+    "afterStrictStlPass": 4,
+    "qualifiedAdmissions": 4,
+    "failures": 0,
+    "baselineDeliveredSources": 106,
+    "baselineDistinctStlHashes": 104,
+    "candidateSources": 110,
+    "candidateDistinctStlHashes": 108,
+    "candidatePreviews": 149,
+    "deltaSources": 4,
+    "deltaDistinctStlHashes": 4,
+    "note": "Do not interpret0previous library entries as0compiler conversions. All four already converted; baseline and new editor/export geometry hashes agree. Earlier gear is not counted again."
+  },
+  "selectedCohort": {
+    "version": 1,
+    "policy": {
+      "timeoutMs": 5000,
+      "authoredSourcesUnchanged": true,
+      "maxTriangles": 10000,
+      "maxExtentMm": 200
+    },
+    "runtimeBefore": {
+      "packages/core/dist/openscad-import.js": "6b71d36850d0b44c6d8ee25accd144a2f59c3e0565f4426555be16d2d432e6bb",
+      "packages/core/dist/jscad-import.js": "4256298823c14cb46fc2645bdc4d629558949c83d59fbfbc34622b6a582f39a9",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeAfter": {
+      "packages/core/dist/openscad-import.js": "6b71d36850d0b44c6d8ee25accd144a2f59c3e0565f4426555be16d2d432e6bb",
+      "packages/core/dist/jscad-import.js": "4256298823c14cb46fc2645bdc4d629558949c83d59fbfbc34622b6a582f39a9",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeStable": true,
+    "results": [
+      {
+        "name": "basicBooleans",
+        "sourceFile": "jscad/basicBooleans.js",
+        "sourceSha256": "e269dbe7fa16fb1c80bef0cdd6ba4f94796e8cd1d3b87932b396e215343c0ec6",
+        "sourceBytes": 1008,
+        "upstreamPath": "packages/examples/core/booleans/basicBooleans.js",
+        "sourceUrl": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/core/booleans/basicBooleans.js",
+        "revision": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+        "phase": "stl",
+        "nativeProgramSha256": "290dab494afa5c14341849244a3c2c95e5fc3d48e33e5cba6581e4d429598716",
+        "volumeMm3": 29.769003001472218,
+        "mesh": {
+          "sha256": "862081b025f843a8fa6766dbe09e0b35a6258414abbbc4af66d41db9e5d0e32d",
+          "bytes": 76684
+        },
+        "screening": {
+          "fileSha256": "862081b025f843a8fa6766dbe09e0b35a6258414abbbc4af66d41db9e5d0e32d",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 1532,
+          "boundsMm": {
+            "min": [
+              -6.199999809265137,
+              -1.7999999523162842,
+              -1
+            ],
+            "max": [
+              4.800000190734863,
+              1,
+              1.7999999523162842
+            ]
+          },
+          "signedVolumeMm3": 29.76900301224061,
+          "quality": {
+            "fileSha256": "862081b025f843a8fa6766dbe09e0b35a6258414abbbc4af66d41db9e5d0e32d",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified"
+      },
+      {
+        "name": "translateEx1",
+        "sourceFile": "jscad/translateEx1.scad",
+        "sourceSha256": "a26aac3cc37c24dea98f8403f5b90547eb9903debf5dde77eedf914b6abd77c3",
+        "sourceBytes": 69,
+        "upstreamPath": "packages/io/scad-deserializer/tests/transformations/translateEx1.scad",
+        "sourceUrl": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/translateEx1.scad",
+        "revision": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+        "phase": "stl",
+        "nativeProgramSha256": "fd8f5fcfdfd640ecd6be261cfac99596cd71cc27b7a0ee3aa66da879d6140e52",
+        "volumeMm3": 1000,
+        "mesh": {
+          "sha256": "a5098549ef128f3bcf8ddda352916267d189c52ef06608f289ac0ee2a40ceb6d",
+          "bytes": 684
+        },
+        "screening": {
+          "fileSha256": "a5098549ef128f3bcf8ddda352916267d189c52ef06608f289ac0ee2a40ceb6d",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 12,
+          "boundsMm": {
+            "min": [
+              5,
+              0,
+              -5
+            ],
+            "max": [
+              15,
+              10,
+              5
+            ]
+          },
+          "signedVolumeMm3": 999.9999999999999,
+          "quality": {
+            "fileSha256": "a5098549ef128f3bcf8ddda352916267d189c52ef06608f289ac0ee2a40ceb6d",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified"
+      },
+      {
+        "name": "scaleEx1",
+        "sourceFile": "jscad/scaleEx1.scad",
+        "sourceSha256": "0e9d3c5265754a7f88c778d6e1e08aced81491de32d37933bf30beadd3ffb96b",
+        "sourceBytes": 62,
+        "upstreamPath": "packages/io/scad-deserializer/tests/transformations/scaleEx1.scad",
+        "sourceUrl": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/scaleEx1.scad",
+        "revision": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+        "phase": "stl",
+        "nativeProgramSha256": "63d26f075737c91f07dd72f2ada2ecc57f4940a00657a9dbb700b8640a8233c8",
+        "volumeMm3": 8000,
+        "mesh": {
+          "sha256": "5343e9bbeab8099bd9b36ac79965611126dd04b144cd8f6005264a82517dec42",
+          "bytes": 684
+        },
+        "screening": {
+          "fileSha256": "5343e9bbeab8099bd9b36ac79965611126dd04b144cd8f6005264a82517dec42",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 12,
+          "boundsMm": {
+            "min": [
+              -10,
+              -10,
+              -10
+            ],
+            "max": [
+              10,
+              10,
+              10
+            ]
+          },
+          "signedVolumeMm3": 7999.999999999999,
+          "quality": {
+            "fileSha256": "5343e9bbeab8099bd9b36ac79965611126dd04b144cd8f6005264a82517dec42",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified"
+      },
+      {
+        "name": "rotateEx1",
+        "sourceFile": "jscad/rotateEx1.scad",
+        "sourceSha256": "b724d6d863a23ec1dca57725416ee6bf7d29ab6c87ea99e61ea79114d96430da",
+        "sourceBytes": 61,
+        "upstreamPath": "packages/io/scad-deserializer/tests/transformations/rotateEx1.scad",
+        "sourceUrl": "https://github.com/jscad/OpenJSCAD.org/blob/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/rotateEx1.scad",
+        "revision": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+        "phase": "stl",
+        "nativeProgramSha256": "013577ed6537d4a339dc20153eb3a6cbf1bee6c0987f4137e34e6ea3cec0dc5b",
+        "volumeMm3": 999.9999999999998,
+        "mesh": {
+          "sha256": "b4985de55af3308b0b8b5d3083b78001b54c8059cdd949905dc629244f76779f",
+          "bytes": 684
+        },
+        "screening": {
+          "fileSha256": "b4985de55af3308b0b8b5d3083b78001b54c8059cdd949905dc629244f76779f",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 12,
+          "boundsMm": {
+            "min": [
+              -7.071067810058594,
+              -5,
+              -7.071067810058594
+            ],
+            "max": [
+              7.071067810058594,
+              5,
+              7.071067810058594
+            ]
+          },
+          "signedVolumeMm3": 999.9999994889366,
+          "quality": {
+            "fileSha256": "b4985de55af3308b0b8b5d3083b78001b54c8059cdd949905dc629244f76779f",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified"
+      }
+    ]
+  },
+  "exactGeometryBeforeAfter": [
+    {
+      "name": "basicBooleans",
+      "baselineVolumeMm3": 29.769003001472218,
+      "editorVolumeMm3": 29.769003001472218,
+      "triangles": 1532,
+      "baselineStlSha256": "862081b025f843a8fa6766dbe09e0b35a6258414abbbc4af66d41db9e5d0e32d",
+      "editorExportStlSha256": "862081b025f843a8fa6766dbe09e0b35a6258414abbbc4af66d41db9e5d0e32d",
+      "sourceSha256": "e269dbe7fa16fb1c80bef0cdd6ba4f94796e8cd1d3b87932b396e215343c0ec6",
+      "boundsMm": {
+        "min": [
+          -6.199999809265137,
+          -1.7999999523162842,
+          -1
+        ],
+        "max": [
+          4.800000190734863,
+          1,
+          1.7999999523162842
+        ]
+      }
+    },
+    {
+      "name": "translateEx1",
+      "baselineVolumeMm3": 1000,
+      "editorVolumeMm3": 1000,
+      "triangles": 12,
+      "baselineStlSha256": "a5098549ef128f3bcf8ddda352916267d189c52ef06608f289ac0ee2a40ceb6d",
+      "editorExportStlSha256": "a5098549ef128f3bcf8ddda352916267d189c52ef06608f289ac0ee2a40ceb6d",
+      "sourceSha256": "a26aac3cc37c24dea98f8403f5b90547eb9903debf5dde77eedf914b6abd77c3",
+      "boundsMm": {
+        "min": [
+          5,
+          0,
+          -5
+        ],
+        "max": [
+          15,
+          10,
+          5
+        ]
+      }
+    },
+    {
+      "name": "scaleEx1",
+      "baselineVolumeMm3": 8000,
+      "editorVolumeMm3": 8000,
+      "triangles": 12,
+      "baselineStlSha256": "5343e9bbeab8099bd9b36ac79965611126dd04b144cd8f6005264a82517dec42",
+      "editorExportStlSha256": "5343e9bbeab8099bd9b36ac79965611126dd04b144cd8f6005264a82517dec42",
+      "sourceSha256": "0e9d3c5265754a7f88c778d6e1e08aced81491de32d37933bf30beadd3ffb96b",
+      "boundsMm": {
+        "min": [
+          -10,
+          -10,
+          -10
+        ],
+        "max": [
+          10,
+          10,
+          10
+        ]
+      }
+    },
+    {
+      "name": "rotateEx1",
+      "baselineVolumeMm3": 999.9999999999998,
+      "editorVolumeMm3": 999.9999999999998,
+      "triangles": 12,
+      "baselineStlSha256": "b4985de55af3308b0b8b5d3083b78001b54c8059cdd949905dc629244f76779f",
+      "editorExportStlSha256": "b4985de55af3308b0b8b5d3083b78001b54c8059cdd949905dc629244f76779f",
+      "sourceSha256": "b724d6d863a23ec1dca57725416ee6bf7d29ab6c87ea99e61ea79114d96430da",
+      "boundsMm": {
+        "min": [
+          -7.071067810058594,
+          -5,
+          -7.071067810058594
+        ],
+        "max": [
+          7.071067810058594,
+          5,
+          7.071067810058594
+        ]
+      }
+    }
+  ],
+  "sourceAndGrantReview": {
+    "repository": "jscad/OpenJSCAD.org",
+    "commit": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+    "grant": "MIT",
+    "evidencePath": "library/evidence/jscad-LICENSE.txt",
+    "evidenceSha256": "bf0a7136796ab8f4573a7a77783d7dfebca4d35a595f0ad160d70a855d4c0cbb",
+    "capturedOn": "2026-11-13",
+    "archiveManifest": "tests/fixtures/code-corpus/manifest.json",
+    "content": "Every complete root read. Basic Booleans explicitly names author Simon Clark and MIT licence; three bare transformation fixtures have no contrary notices and retain the exact pinned repository MIT grant and JSCAD Organization attribution. No dependency/model/library sources are imported from the network; @jscad/modeling is interpreted by the existing whitelisted AST interpreter. No authored source, argument, entrypoint, frame, fragment or placement overrides."
+  },
+  "editorEvidence": {
+    "test": "tests/model-library-jscad-reviewed.test.ts",
+    "result": "4/4 actual source insertion/export/edit/history cases PASS",
+    "controls": [
+      "Source and licence bytes/URLs/commit pinned",
+      "Fresh offline source catalogue insertion of all4roots",
+      "Exact baseline STL hash and four strict screens for every editor export",
+      "Analytic cube volumes/bounds for all three transformation fixtures",
+      "Valid native scale edit multiplies volume8 without changing the qualified baseline",
+      "Invalid assertion edit leaves document and complete session/redo state intact",
+      "Attribution sidecar and history-inclusive serialization preserve identity",
+      "Reloaded geometry export retains exact STL hash",
+      "Undo/redo exact document restoration"
+    ]
+  },
+  "boundedAndRevertedRoundCohort": {
+    "roots": [
+      "examples/extrudeWithRadius.scad",
+      "examples/mirrorPoints.scad",
+      "examples/polyRoundExtrude.scad",
+      "examples/beamChain-4.scad",
+      "examples/polyround.scad"
+    ],
+    "sourceCount": 5,
+    "admissions": 0,
+    "geometryProduced": 0,
+    "stlProduced": 0,
+    "editorPass": 0,
+    "actualEvidence": {
+      "before.json": {
+        "version": 1,
+        "runtimeBefore": {
+          "packages/core/dist/openscad-import.js": "6b71d36850d0b44c6d8ee25accd144a2f59c3e0565f4426555be16d2d432e6bb",
+          "packages/core/dist/openscad-bundle.js": "f23b85b039dd0d3e11a685331cbf28de7d6e261e63da9b40323eb634b313c9e6",
+          "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+          "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+          "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+        },
+        "runtimeAfter": {
+          "packages/core/dist/openscad-import.js": "6b71d36850d0b44c6d8ee25accd144a2f59c3e0565f4426555be16d2d432e6bb",
+          "packages/core/dist/openscad-bundle.js": "f23b85b039dd0d3e11a685331cbf28de7d6e261e63da9b40323eb634b313c9e6",
+          "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+          "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+          "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+        },
+        "runtimeStable": true,
+        "policy": {
+          "timeoutMs": 5000,
+          "authoredSourcesUnchanged": true,
+          "maxTriangles": 10000,
+          "maxExtentMm": 200
+        },
+        "results": [
+          {
+            "name": "extrudeWithRadius",
+            "sourceContext": "archive layout",
+            "files": [
+              {
+                "path": "examples/extrudeWithRadius.scad",
+                "archivedPath": "examples/extrudeWithRadius.scad",
+                "sha256": "88ada047d63bcec2c6ce784f90c8fd9f222547402bee888e6bd2c6637d29efbd",
+                "bytes": 285
+              },
+              {
+                "path": "polyround.scad",
+                "archivedPath": "polyround.scad",
+                "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+                "bytes": 30945
+              }
+            ],
+            "phase": "convert",
+            "status": "failed",
+            "error": {
+              "code": "invalid-source",
+              "message": "Line 3, column 1: examples/extrudeWithRadius.scad: Included source file is missing: examples/Round-Anything-1.0.4/polyround.scad",
+              "path": "examples/extrudeWithRadius.scad",
+              "line": 3,
+              "column": 1
+            }
+          },
+          {
+            "name": "mirrorPoints",
+            "sourceContext": "archive layout",
+            "files": [
+              {
+                "path": "examples/mirrorPoints.scad",
+                "archivedPath": "examples/mirrorPoints.scad",
+                "sha256": "a8f532265ab5a97c454474edf53ecf93db77d825a6453fb398caa469ef2fb697",
+                "bytes": 285
+              },
+              {
+                "path": "polyround.scad",
+                "archivedPath": "polyround.scad",
+                "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+                "bytes": 30945
+              }
+            ],
+            "phase": "convert",
+            "status": "failed",
+            "error": {
+              "code": "invalid-source",
+              "message": "Line 3, column 1: examples/mirrorPoints.scad: Included source file is missing: examples/Round-Anything-1.0.4/polyround.scad",
+              "path": "examples/mirrorPoints.scad",
+              "line": 3,
+              "column": 1
+            }
+          },
+          {
+            "name": "polyRoundExtrude",
+            "sourceContext": "archive layout",
+            "files": [
+              {
+                "path": "examples/polyRoundExtrude.scad",
+                "archivedPath": "examples/polyRoundExtrude.scad",
+                "sha256": "7812410567096ede64ef949ab79e4ea3664552ec70e7c0d29104953a86af0d96",
+                "bytes": 254
+              },
+              {
+                "path": "polyround.scad",
+                "archivedPath": "polyround.scad",
+                "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+                "bytes": 30945
+              }
+            ],
+            "phase": "convert",
+            "status": "failed",
+            "error": {
+              "code": "invalid-source",
+              "message": "Line 3, column 1: examples/polyRoundExtrude.scad: Included source file is missing: examples/Round-Anything-1.0.4/polyround.scad",
+              "path": "examples/polyRoundExtrude.scad",
+              "line": 3,
+              "column": 1
+            }
+          },
+          {
+            "name": "beamChain-4",
+            "sourceContext": "archive layout",
+            "files": [
+              {
+                "path": "examples/beamChain-4.scad",
+                "archivedPath": "examples/beamChain-4.scad",
+                "sha256": "12ef8fed0a50701518123ef81fd6804fb8d6b41dd18e414d2aee213455cce52f",
+                "bytes": 463
+              },
+              {
+                "path": "polyround.scad",
+                "archivedPath": "polyround.scad",
+                "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+                "bytes": 30945
+              }
+            ],
+            "phase": "convert",
+            "status": "failed",
+            "error": {
+              "code": "invalid-source",
+              "message": "Line 3, column 1: examples/beamChain-4.scad: Included source file is missing: examples/Round-Anything-1.0.4/polyround.scad",
+              "path": "examples/beamChain-4.scad",
+              "line": 3,
+              "column": 1
+            }
+          }
+        ]
+      },
+      "installed.json": {
+        "version": 1,
+        "runtimeBefore": {
+          "packages/core/dist/openscad-import.js": "6b71d36850d0b44c6d8ee25accd144a2f59c3e0565f4426555be16d2d432e6bb",
+          "packages/core/dist/openscad-bundle.js": "f23b85b039dd0d3e11a685331cbf28de7d6e261e63da9b40323eb634b313c9e6",
+          "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+          "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+          "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+        },
+        "runtimeAfter": {
+          "packages/core/dist/openscad-import.js": "6b71d36850d0b44c6d8ee25accd144a2f59c3e0565f4426555be16d2d432e6bb",
+          "packages/core/dist/openscad-bundle.js": "f23b85b039dd0d3e11a685331cbf28de7d6e261e63da9b40323eb634b313c9e6",
+          "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+          "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+          "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+        },
+        "runtimeStable": true,
+        "policy": {
+          "timeoutMs": 5000,
+          "authoredSourcesUnchanged": true,
+          "maxTriangles": 10000,
+          "maxExtentMm": 200
+        },
+        "results": [
+          {
+            "name": "extrudeWithRadius",
+            "sourceContext": "explicit authored installation path",
+            "files": [
+              {
+                "path": "examples/extrudeWithRadius.scad",
+                "archivedPath": "examples/extrudeWithRadius.scad",
+                "sha256": "88ada047d63bcec2c6ce784f90c8fd9f222547402bee888e6bd2c6637d29efbd",
+                "bytes": 285
+              },
+              {
+                "path": "Round-Anything-1.0.4/polyround.scad",
+                "archivedPath": "polyround.scad",
+                "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+                "bytes": 30945
+              }
+            ],
+            "phase": "convert",
+            "status": "unsupported",
+            "error": {
+              "code": "unsupported-feature",
+              "message": "Line 232, column 27: Round-Anything-1.0.4/polyround.scad: Unsupported OpenSCAD feature \u201ccomprehension filters\u201d",
+              "path": "Round-Anything-1.0.4/polyround.scad",
+              "line": 232,
+              "column": 27
+            }
+          },
+          {
+            "name": "mirrorPoints",
+            "sourceContext": "explicit authored installation path",
+            "files": [
+              {
+                "path": "examples/mirrorPoints.scad",
+                "archivedPath": "examples/mirrorPoints.scad",
+                "sha256": "a8f532265ab5a97c454474edf53ecf93db77d825a6453fb398caa469ef2fb697",
+                "bytes": 285
+              },
+              {
+                "path": "Round-Anything-1.0.4/polyround.scad",
+                "archivedPath": "polyround.scad",
+                "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+                "bytes": 30945
+              }
+            ],
+            "phase": "convert",
+            "status": "unsupported",
+            "error": {
+              "code": "unsupported-feature",
+              "message": "Line 232, column 27: Round-Anything-1.0.4/polyround.scad: Unsupported OpenSCAD feature \u201ccomprehension filters\u201d",
+              "path": "Round-Anything-1.0.4/polyround.scad",
+              "line": 232,
+              "column": 27
+            }
+          },
+          {
+            "name": "polyRoundExtrude",
+            "sourceContext": "explicit authored installation path",
+            "files": [
+              {
+                "path": "examples/polyRoundExtrude.scad",
+                "archivedPath": "examples/polyRoundExtrude.scad",
+                "sha256": "7812410567096ede64ef949ab79e4ea3664552ec70e7c0d29104953a86af0d96",
+                "bytes": 254
+              },
+              {
+                "path": "Round-Anything-1.0.4/polyround.scad",
+                "archivedPath": "polyround.scad",
+                "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+                "bytes": 30945
+              }
+            ],
+            "phase": "convert",
+            "status": "unsupported",
+            "error": {
+              "code": "unsupported-feature",
+              "message": "Line 168, column 263: Round-Anything-1.0.4/polyround.scad: Unsupported OpenSCAD feature \u201cvector string formatting\u201d",
+              "path": "Round-Anything-1.0.4/polyround.scad",
+              "line": 168,
+              "column": 263
+            }
+          },
+          {
+            "name": "beamChain-4",
+            "sourceContext": "explicit authored installation path",
+            "files": [
+              {
+                "path": "examples/beamChain-4.scad",
+                "archivedPath": "examples/beamChain-4.scad",
+                "sha256": "12ef8fed0a50701518123ef81fd6804fb8d6b41dd18e414d2aee213455cce52f",
+                "bytes": 463
+              },
+              {
+                "path": "Round-Anything-1.0.4/polyround.scad",
+                "archivedPath": "polyround.scad",
+                "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+                "bytes": 30945
+              }
+            ],
+            "phase": "convert",
+            "status": "unsupported",
+            "error": {
+              "code": "unsupported-feature",
+              "message": "Line 376, column 27: Round-Anything-1.0.4/polyround.scad: Unsupported OpenSCAD feature \u201csign\u201d",
+              "path": "Round-Anything-1.0.4/polyround.scad",
+              "line": 376,
+              "column": 27
+            }
+          }
+        ]
+      },
+      "after-language.json": {
+        "version": 1,
+        "runtimeBefore": {
+          "packages/core/dist/openscad-import.js": "ddee5ec36a53d059855edc11e7806fb1924c99ce81fdbc8179fd6fb7b553ad4a",
+          "packages/core/dist/openscad-bundle.js": "f23b85b039dd0d3e11a685331cbf28de7d6e261e63da9b40323eb634b313c9e6",
+          "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+          "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+          "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+        },
+        "runtimeAfter": {
+          "packages/core/dist/openscad-import.js": "ddee5ec36a53d059855edc11e7806fb1924c99ce81fdbc8179fd6fb7b553ad4a",
+          "packages/core/dist/openscad-bundle.js": "f23b85b039dd0d3e11a685331cbf28de7d6e261e63da9b40323eb634b313c9e6",
+          "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+          "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+          "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+        },
+        "runtimeStable": true,
+        "policy": {
+          "timeoutMs": 5000,
+          "authoredSourcesUnchanged": true,
+          "maxTriangles": 10000,
+          "maxExtentMm": 200
+        },
+        "results": [
+          {
+            "name": "extrudeWithRadius",
+            "sourceContext": "explicit authored installation path",
+            "files": [
+              {
+                "path": "examples/extrudeWithRadius.scad",
+                "archivedPath": "examples/extrudeWithRadius.scad",
+                "sha256": "88ada047d63bcec2c6ce784f90c8fd9f222547402bee888e6bd2c6637d29efbd",
+                "bytes": 285
+              },
+              {
+                "path": "Round-Anything-1.0.4/polyround.scad",
+                "archivedPath": "polyround.scad",
+                "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+                "bytes": 30945
+              }
+            ],
+            "phase": "convert",
+            "status": "limited",
+            "error": {
+              "code": "resource-limit",
+              "message": "Line 481, column 69: Round-Anything-1.0.4/polyround.scad: OpenSCAD construction limit exceeded",
+              "path": "Round-Anything-1.0.4/polyround.scad",
+              "line": 481,
+              "column": 69
+            }
+          },
+          {
+            "name": "mirrorPoints",
+            "sourceContext": "explicit authored installation path",
+            "files": [
+              {
+                "path": "examples/mirrorPoints.scad",
+                "archivedPath": "examples/mirrorPoints.scad",
+                "sha256": "a8f532265ab5a97c454474edf53ecf93db77d825a6453fb398caa469ef2fb697",
+                "bytes": 285
+              },
+              {
+                "path": "Round-Anything-1.0.4/polyround.scad",
+                "archivedPath": "polyround.scad",
+                "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+                "bytes": 30945
+              }
+            ],
+            "phase": "convert",
+            "status": "unsupported",
+            "error": {
+              "code": "unsupported-feature",
+              "message": "Line 240, column 9: Round-Anything-1.0.4/polyround.scad: Unsupported OpenSCAD feature \u201cparameter-dependent comprehension filter\u201d",
+              "path": "Round-Anything-1.0.4/polyround.scad",
+              "line": 240,
+              "column": 9
+            }
+          },
+          {
+            "name": "polyRoundExtrude",
+            "sourceContext": "explicit authored installation path",
+            "files": [
+              {
+                "path": "examples/polyRoundExtrude.scad",
+                "archivedPath": "examples/polyRoundExtrude.scad",
+                "sha256": "7812410567096ede64ef949ab79e4ea3664552ec70e7c0d29104953a86af0d96",
+                "bytes": 254
+              },
+              {
+                "path": "Round-Anything-1.0.4/polyround.scad",
+                "archivedPath": "polyround.scad",
+                "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+                "bytes": 30945
+              }
+            ],
+            "phase": "convert",
+            "status": "limited",
+            "error": {
+              "code": "resource-limit",
+              "message": "Line 607, column 14: Round-Anything-1.0.4/polyround.scad: OpenSCAD construction limit exceeded",
+              "path": "Round-Anything-1.0.4/polyround.scad",
+              "line": 607,
+              "column": 14
+            }
+          },
+          {
+            "name": "beamChain-4",
+            "sourceContext": "explicit authored installation path",
+            "files": [
+              {
+                "path": "examples/beamChain-4.scad",
+                "archivedPath": "examples/beamChain-4.scad",
+                "sha256": "12ef8fed0a50701518123ef81fd6804fb8d6b41dd18e414d2aee213455cce52f",
+                "bytes": 463
+              },
+              {
+                "path": "Round-Anything-1.0.4/polyround.scad",
+                "archivedPath": "polyround.scad",
+                "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+                "bytes": 30945
+              }
+            ],
+            "phase": "convert",
+            "status": "failed",
+            "error": {
+              "code": "invalid-source",
+              "message": "Line 337, column 29: Round-Anything-1.0.4/polyround.scad: Expected a numeric OpenSCAD argument",
+              "path": "Round-Anything-1.0.4/polyround.scad",
+              "line": 337,
+              "column": 29
+            }
+          }
+        ]
+      },
+      "polyround-before.json": {
+        "name": "polyround",
+        "sourceContext": "archive layout",
+        "files": [
+          {
+            "path": "examples/polyround.scad",
+            "archivedPath": "examples/polyround.scad",
+            "sha256": "98b69b83699b3d4aba229391c922f947f649a71e2965cbaef0a6b73bf5cdafda",
+            "bytes": 258
+          },
+          {
+            "path": "polyround.scad",
+            "archivedPath": "polyround.scad",
+            "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+            "bytes": 30945
+          }
+        ],
+        "phase": "convert",
+        "status": "failed",
+        "error": {
+          "code": "invalid-source",
+          "message": "Line 3, column 1: examples/polyround.scad: Included source file is missing: examples/Round-Anything-1.0.4/polyround.scad",
+          "path": "examples/polyround.scad",
+          "line": 3,
+          "column": 1
+        }
+      },
+      "polyround-after.json": {
+        "name": "polyround",
+        "sourceContext": "explicit authored installation path",
+        "files": [
+          {
+            "path": "examples/polyround.scad",
+            "archivedPath": "examples/polyround.scad",
+            "sha256": "98b69b83699b3d4aba229391c922f947f649a71e2965cbaef0a6b73bf5cdafda",
+            "bytes": 258
+          },
+          {
+            "path": "Round-Anything-1.0.4/polyround.scad",
+            "archivedPath": "polyround.scad",
+            "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+            "bytes": 30945
+          }
+        ],
+        "phase": "convert",
+        "status": "limited",
+        "error": {
+          "code": "resource-limit",
+          "message": "Line 481, column 37: Round-Anything-1.0.4/polyround.scad: OpenSCAD construction limit exceeded",
+          "path": "Round-Anything-1.0.4/polyround.scad",
+          "line": 481,
+          "column": 37
+        }
+      },
+      "polyround-after-memo.json": {
+        "name": "polyround",
+        "sourceContext": "explicit authored installation path",
+        "files": [
+          {
+            "path": "examples/polyround.scad",
+            "archivedPath": "examples/polyround.scad",
+            "sha256": "98b69b83699b3d4aba229391c922f947f649a71e2965cbaef0a6b73bf5cdafda",
+            "bytes": 258
+          },
+          {
+            "path": "Round-Anything-1.0.4/polyround.scad",
+            "archivedPath": "polyround.scad",
+            "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+            "bytes": 30945
+          }
+        ],
+        "phase": "convert",
+        "status": "limited",
+        "error": {
+          "code": "resource-limit",
+          "message": "Line 481, column 37: Round-Anything-1.0.4/polyround.scad: OpenSCAD construction limit exceeded",
+          "path": "Round-Anything-1.0.4/polyround.scad",
+          "line": 481,
+          "column": 37
+        }
+      },
+      "polyround-after-pure-reuse.json": {
+        "name": "polyround",
+        "sourceContext": "explicit authored installation path",
+        "files": [
+          {
+            "path": "examples/polyround.scad",
+            "archivedPath": "examples/polyround.scad",
+            "sha256": "98b69b83699b3d4aba229391c922f947f649a71e2965cbaef0a6b73bf5cdafda",
+            "bytes": 258
+          },
+          {
+            "path": "Round-Anything-1.0.4/polyround.scad",
+            "archivedPath": "polyround.scad",
+            "sha256": "010c0976bb19aca3cb1a9fa0d66c9dd01c21bc4baaace1cb85c81b430307ee77",
+            "bytes": 30945
+          }
+        ],
+        "phase": "convert",
+        "status": "limited",
+        "error": {
+          "code": "resource-limit",
+          "message": "Line 480, column 34: Round-Anything-1.0.4/polyround.scad: OpenSCAD construction limit exceeded",
+          "path": "Round-Anything-1.0.4/polyround.scad",
+          "line": 480,
+          "column": 34
+        }
+      }
+    },
+    "disposition": "Stopped at fixed work/unsupported/invalid-value barriers. Experimental static filters/sign/vector-format/memoization code and compiled module saved outside repository and entirely reverted. No compiler/work-counter/cache change shipped; no unsupported-to-limit credit.",
+    "patchPath": "/mnt/storage/brickwright-cycle27-round/unsupported-experiment.patch",
+    "compiledDiagnosticPath": "/mnt/storage/brickwright-cycle27-round/experimental-import.js"
+  },
+  "preservation": {
+    "priorRecords": 106,
+    "priorPreviews": 145,
+    "allPriorThreeManifestBytesEqual": true,
+    "allPriorPreviewValuesEqual": true,
+    "unchangedFileSha256": {
+      "library/editor-corpus-manifest.json": "8b8f3fbe9c1c8a2493866e1afdf26947990b28f7a012006892a37fc60cc318a7",
+      "library/a2d-editor-manifest.json": "fb803ee9a44ae19362caab8c36ca5e0490d12dd187cdfb93ee5c2c79f8a718d8",
+      "library/scon-editor-manifest.json": "bd1f91a694881bed63faf47e960b79c33b8181138c7717cb6fc907a4c076b185",
+      "library/seed-catalogue.json": "771d4fb82c451138f884b442fbbd8a66226f20d8bb269b615449dc94f14bc5de",
+      "package-lock.json": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
+      "packages/core/src/openscad-import.ts": "a8c8f7d5efb4eb5c589430672b9f1b3603849f7e478c9a7528ac2b585da70cd4",
+      "packages/core/src/jscad-import.ts": "49769365c1d982fb17c47689a7dbca26dbfab34001001531d480cbc9126ab22a",
+      "packages/core/src/code.ts": "df59636c95e7fb7bc94ef981cd2fd5396ac533ddc60887f7212604d62fe72033",
+      "packages/core/src/parameters.ts": "cda0b7f7aa5c27913e825ad269c716bc79af6b43ad2e3a527092dc06807a9b09",
+      "packages/core/src/openscad-bundle.ts": "7f8bbdc5f0c6237086751d04d0d9f9475257b95b6f33a8516e5fff0e8018f82f",
+      "packages/geometry/src/kernel.ts": "02fc5b469c1ca25ae24cf4b76f62246719d69e914d41019148d2fd55fb4fe85a",
+      "library/corpus-audit/editor-screening-cycle26.json": "1d3b18135d321f0e44fd7a6de4f4ac9559e5cb1bc037bb467f45556071f7f580",
+      "library/corpus-audit/editor-screening-cycle18.json": "961b543ccb5417304da8371b7ebc2f2b275c9ac906b2e65a7feefe4a8c1a36e0",
+      "library/corpus-audit/editor-screening-cycle17.json": "1e2683ae5e160f4deae6799b12991bc452c2faa988e96fe5bbc4b90ddde87651",
+      "library/corpus-audit/editor-screening-cycle15.json": "75d91dd71e238ce5d55bdc57932041af893d67a67644c4298cdf253988ae306e",
+      "library/corpus-audit/editor-screening-cycle19.json": "0ac4e33121fa861e15cf1a52b3217321dd8e11efb0bde748fbe1ed34a7b4a2c8",
+      "library/corpus-audit/editor-screening-cycle23.json": "22062df2e7b742cb5e07ad2107a0b453f3e1984b68be6aa2d6ba505d657316da",
+      "library/corpus-audit/editor-screening-cycle25.json": "a77f64d82c360faf0fa77903f497f7ccdf7dafe74c6e7efdfb269134fb2b83ab",
+      "library/corpus-audit/editor-screening-cycle16.json": "c810568c6124856f79ceb5abd8c350755bd69491e0c8698c1927aa0a6f327375",
+      "library/corpus-audit/editor-screening-cycle20.json": "75a1000e23ca31f391f592358cac8115109da2ef118b3731ab78504c9953f84c",
+      "library/corpus-audit/editor-screening-cycle21.json": "9be1b7a564ad2aa7823cb76c659a9ebe8dfa2f58b36c7a4334c7f2367da127dd",
+      "library/corpus-audit/editor-screening-cycle13.json": "a31db8bb8fee717ff8ff5c0b99b256af5012a81543affc3ba0a136b2ad70dc0a"
+    },
+    "historicalRefusals": "All old reports untouched; Knob/webbing/Box/depth/topology and old unsupported seeds remain excluded. Random snapshot semantics and every compiler/kernel/resource guard unchanged."
+  },
+  "validation": {
+    "newModelAndManifestCases": "6/6 PASS, including4actual model/editor cases and four-root reproduction",
+    "build": "PASS",
+    "i18n": "PASS:1253messages/1007references",
+    "browser": "6/6 PASS at original45s limits: Chromium149gallery9.6s/group27 12.9s/group28 7.7s; iPad149gallery21.6s/group27 31.6s/group28 18.7s. All four new roots inserted offline and undo restored exact prior document.",
+    "reuse": "All prior106 complete manifest records, original/derivative hashes and145preview values preserved; no broad old-model rerender or repeated compiler suite. Only four new previews rendered."
+  },
+  "countingManifests": [
+    "library/editor-corpus-manifest.json",
+    "library/a2d-editor-manifest.json",
+    "library/scon-editor-manifest.json",
+    "library/jscad-editor-manifest.json"
+  ],
+  "rawDirectory": "/mnt/storage/brickwright-cycle28-jscad"
+}
