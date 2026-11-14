@@ -1,0 +1,583 @@
+{
+  "version": 1,
+  "capturedOn": "2026-11-14",
+  "baselineDeliveredCommit": "a1756cd69c9764001c86d59ab47d58d7594256d4",
+  "scope": "Four exact authored defaults: initial generated-list cohort meshbuilder and functional, then Coin_02 and Sign_03 fallback. No source, parameter, frame, fragment, entrypoint or limit overrides. Existing topology pinches remain failures; one independently qualified fallback model is admitted.",
+  "summary": {
+    "sample": 4,
+    "beforeQualified": 0,
+    "afterQualified": 1,
+    "afterLimited": 1,
+    "afterUnsupported": 1,
+    "afterTopologyFailed": 1
+  },
+  "generatedListCohort": {
+    "before": {
+      "version": 1,
+      "phase": "before",
+      "baseline": "278f7339b9eaf208cde6f93979cb397a3f476f2b",
+      "policy": {
+        "timeoutMs": 5000,
+        "maxTriangles": 10000,
+        "maxExtentMm": 200,
+        "defaults": "unchanged authored root; no source, fragment, parameter or entrypoint overrides"
+      },
+      "runtimeBefore": {
+        "packages/core/dist/openscad-import.js": "96704a287549b0c4e7c629ee5324865cb972a737c9abb6f37bd309cecabfe2e5",
+        "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+        "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+        "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "results": [
+        {
+          "sourcePath": "library/corpus/repos/dinther--pathbuilder/meshbuilder.scad",
+          "runtimeWarnings": [],
+          "warnings": null,
+          "sourceSha256": "e96e817fd39f6df7c184bda688b8b64b863f607c87bf0ddf7d0b7fb90bffd065",
+          "sourceBytes": 2979,
+          "codeLimits": {
+            "sourceBytes": 32768,
+            "tokens": 8192,
+            "statements": 256,
+            "depth": 32,
+            "expandedNodes": 1024,
+            "estimatedFaces": 200000,
+            "repeat": 64
+          },
+          "status": "unsupported",
+          "error": {
+            "phase": "parse",
+            "code": "unsupported-feature",
+            "message": "Line 37, column 17: Unsupported OpenSCAD feature \u201ccomprehension filters, each, or chained generators\u201d",
+            "line": 37,
+            "column": 17
+          },
+          "elapsedMs": 202.936538,
+          "rssBytes": 78741504,
+          "name": "meshbuilder"
+        },
+        {
+          "sourcePath": "library/corpus/repos/thehans--FunctionalOpenSCAD/functional.scad",
+          "runtimeWarnings": [],
+          "warnings": null,
+          "sourceSha256": "94ac4e7d8d04b5e7a467914cfc40f8f9252a78393ccd6bb8e8560302071107d3",
+          "sourceBytes": 17931,
+          "codeLimits": {
+            "sourceBytes": 32768,
+            "tokens": 8192,
+            "statements": 256,
+            "depth": 32,
+            "expandedNodes": 1024,
+            "estimatedFaces": 200000,
+            "repeat": 64
+          },
+          "status": "unsupported",
+          "error": {
+            "phase": "parse",
+            "code": "unsupported-feature",
+            "message": "Line 59, column 35: Unsupported OpenSCAD feature \u201cversion_num\u201d",
+            "line": 59,
+            "column": 35
+          },
+          "elapsedMs": 134.39813099999998,
+          "rssBytes": 76349440,
+          "name": "functional"
+        }
+      ],
+      "runtimeAfter": {
+        "packages/core/dist/openscad-import.js": "96704a287549b0c4e7c629ee5324865cb972a737c9abb6f37bd309cecabfe2e5",
+        "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+        "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+        "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "runtimeStable": true
+    },
+    "after": {
+      "version": 1,
+      "phase": "after-final",
+      "baseline": "278f7339b9eaf208cde6f93979cb397a3f476f2b",
+      "policy": {
+        "timeoutMs": 5000,
+        "maxTriangles": 10000,
+        "maxExtentMm": 200,
+        "defaults": "unchanged authored root; no source, fragment, parameter or entrypoint overrides"
+      },
+      "runtimeBefore": {
+        "packages/core/dist/openscad-import.js": "dba473f2cbc85c6f96f9f1aae4613f80304e2cfb3751f5990cf92b2d832605d3",
+        "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+        "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+        "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "results": [
+        {
+          "sourcePath": "library/corpus/repos/dinther--pathbuilder/meshbuilder.scad",
+          "runtimeWarnings": [],
+          "warnings": null,
+          "sourceSha256": "e96e817fd39f6df7c184bda688b8b64b863f607c87bf0ddf7d0b7fb90bffd065",
+          "sourceBytes": 2979,
+          "codeLimits": {
+            "sourceBytes": 32768,
+            "tokens": 8192,
+            "statements": 256,
+            "depth": 32,
+            "expandedNodes": 1024,
+            "estimatedFaces": 200000,
+            "repeat": 64
+          },
+          "status": "limited",
+          "error": {
+            "phase": "parse",
+            "code": "resource-limit",
+            "message": "Line 38, column 112: OpenSCAD construction limit exceeded",
+            "line": 38,
+            "column": 112
+          },
+          "elapsedMs": 132.098409,
+          "rssBytes": 80097280,
+          "name": "meshbuilder"
+        },
+        {
+          "sourcePath": "library/corpus/repos/thehans--FunctionalOpenSCAD/functional.scad",
+          "runtimeWarnings": [],
+          "warnings": null,
+          "sourceSha256": "94ac4e7d8d04b5e7a467914cfc40f8f9252a78393ccd6bb8e8560302071107d3",
+          "sourceBytes": 17931,
+          "codeLimits": {
+            "sourceBytes": 32768,
+            "tokens": 8192,
+            "statements": 256,
+            "depth": 32,
+            "expandedNodes": 1024,
+            "estimatedFaces": 200000,
+            "repeat": 64
+          },
+          "status": "unsupported",
+          "error": {
+            "phase": "parse",
+            "code": "unsupported-feature",
+            "message": "Line 59, column 35: Unsupported OpenSCAD feature \u201cversion_num\u201d",
+            "line": 59,
+            "column": 35
+          },
+          "elapsedMs": 127.02081,
+          "rssBytes": 77144064,
+          "name": "functional"
+        }
+      ],
+      "runtimeAfter": {
+        "packages/core/dist/openscad-import.js": "dba473f2cbc85c6f96f9f1aae4613f80304e2cfb3751f5990cf92b2d832605d3",
+        "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+        "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+        "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "runtimeStable": true
+    }
+  },
+  "fallbackBefore": {
+    "runtimeArtifacts": {
+      "packages/core/dist/openscad-import.js": "fd885d16116618f9b8a939cc0d719398b83106abd0e50d73be6969012c28c7b0",
+      "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "results": [
+      {
+        "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Coin_02.scad",
+        "runtimeWarnings": [],
+        "warnings": null,
+        "sourceSha256": "92421043b2f2c5d6574e752a5e04454b5146a39452e57d21566c193ab60799bd",
+        "sourceBytes": 1875,
+        "codeLimits": {
+          "sourceBytes": 32768,
+          "tokens": 8192,
+          "statements": 256,
+          "depth": 32,
+          "expandedNodes": 1024,
+          "estimatedFaces": 200000,
+          "repeat": 64
+        },
+        "status": "unsupported",
+        "error": {
+          "phase": "parse",
+          "code": "unsupported-feature",
+          "message": "Line 29, column 5: Unsupported OpenSCAD feature \u201ctext.center\u201d",
+          "line": 29,
+          "column": 5
+        },
+        "elapsedMs": 116.44667399999997,
+        "rssBytes": 72646656
+      },
+      {
+        "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Sign_03.scad",
+        "runtimeWarnings": [],
+        "warnings": [
+          "Source colours and transparency are not retained; solid geometry is preserved."
+        ],
+        "sourceSha256": "78b28f433cf0fe1807864af8c060a346b4326103cd25c18eb9aa92e964eae32b",
+        "sourceBytes": 418,
+        "codeLimits": {
+          "sourceBytes": 32768,
+          "tokens": 8192,
+          "statements": 256,
+          "depth": 32,
+          "expandedNodes": 1024,
+          "estimatedFaces": 200000,
+          "repeat": 64
+        },
+        "parseMs": 24.321562,
+        "convertedSourceBytes": 629,
+        "expandedNodes": 15,
+        "estimatedFaces": 812,
+        "evaluated": {
+          "bodies": 1,
+          "volumeMm3": 2.507244681013565,
+          "triangles": 632
+        },
+        "mesh": {
+          "sha256": "03f1d546e2850ada8d2471d1763ed368b0831a85c443d0a0b71dd6dce9579a39",
+          "bytes": 31684,
+          "tempPath": "/mnt/storage/brickwright-cycle20-comprehensions/Sign_03.stl"
+        },
+        "screening": {
+          "fileSha256": "03f1d546e2850ada8d2471d1763ed368b0831a85c443d0a0b71dd6dce9579a39",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "fail",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [
+            "Mesh must have nondegenerate, consistently oriented closed manifold topology and positive signed volume."
+          ],
+          "triangles": 632,
+          "boundsMm": {
+            "min": [
+              -2,
+              -1.9960534572601318,
+              0
+            ],
+            "max": [
+              2,
+              1.9960534572601318,
+              0.20499999821186066
+            ]
+          },
+          "signedVolumeMm3": 2.5072447089106253,
+          "quality": {
+            "fileSha256": "03f1d546e2850ada8d2471d1763ed368b0831a85c443d0a0b71dd6dce9579a39",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": false,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "screen-failed",
+        "elapsedMs": 343.18169800000004,
+        "rssBytes": 88489984
+      }
+    ]
+  },
+  "fallbackAfter": {
+    "runtimeArtifacts": {
+      "packages/core/dist/openscad-import.js": "dba473f2cbc85c6f96f9f1aae4613f80304e2cfb3751f5990cf92b2d832605d3",
+      "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "results": [
+      {
+        "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Coin_02.scad",
+        "runtimeWarnings": [],
+        "warnings": [
+          "Source colours and transparency are not retained; solid geometry is preserved.",
+          "Extra or unknown module/function arguments are ignored, as in OpenSCAD.",
+          "Text uses bundled Droid fonts; source font metrics, styling and kerning can differ."
+        ],
+        "sourceSha256": "92421043b2f2c5d6574e752a5e04454b5146a39452e57d21566c193ab60799bd",
+        "sourceBytes": 1875,
+        "codeLimits": {
+          "sourceBytes": 32768,
+          "tokens": 8192,
+          "statements": 256,
+          "depth": 32,
+          "expandedNodes": 1024,
+          "estimatedFaces": 200000,
+          "repeat": 64
+        },
+        "parseMs": 14.502224000000012,
+        "convertedSourceBytes": 803,
+        "expandedNodes": 15,
+        "estimatedFaces": 1504,
+        "evaluated": {
+          "bodies": 1,
+          "volumeMm3": 2458.9368068391996,
+          "triangles": 3132
+        },
+        "mesh": {
+          "sha256": "da5671e053b2f5454c4d5f53256eb988f6d49665c5bc000145d3608b6468b7fe",
+          "bytes": 156684
+        },
+        "screening": {
+          "fileSha256": "da5671e053b2f5454c4d5f53256eb988f6d49665c5bc000145d3608b6468b7fe",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 3132,
+          "boundsMm": {
+            "min": [
+              -20,
+              -20,
+              -1.5
+            ],
+            "max": [
+              20,
+              20,
+              1.5
+            ]
+          },
+          "signedVolumeMm3": 2458.9368026141065,
+          "quality": {
+            "fileSha256": "da5671e053b2f5454c4d5f53256eb988f6d49665c5bc000145d3608b6468b7fe",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified",
+        "elapsedMs": 706.5503239999999,
+        "rssBytes": 104189952
+      },
+      {
+        "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Sign_03.scad",
+        "runtimeWarnings": [],
+        "warnings": [
+          "Source colours and transparency are not retained; solid geometry is preserved."
+        ],
+        "sourceSha256": "78b28f433cf0fe1807864af8c060a346b4326103cd25c18eb9aa92e964eae32b",
+        "sourceBytes": 418,
+        "codeLimits": {
+          "sourceBytes": 32768,
+          "tokens": 8192,
+          "statements": 256,
+          "depth": 32,
+          "expandedNodes": 1024,
+          "estimatedFaces": 200000,
+          "repeat": 64
+        },
+        "parseMs": 24.321562,
+        "convertedSourceBytes": 629,
+        "expandedNodes": 15,
+        "estimatedFaces": 812,
+        "evaluated": {
+          "bodies": 1,
+          "volumeMm3": 2.507244681013565,
+          "triangles": 632
+        },
+        "mesh": {
+          "sha256": "03f1d546e2850ada8d2471d1763ed368b0831a85c443d0a0b71dd6dce9579a39",
+          "bytes": 31684,
+          "tempPath": "/mnt/storage/brickwright-cycle20-comprehensions/Sign_03.stl"
+        },
+        "screening": {
+          "fileSha256": "03f1d546e2850ada8d2471d1763ed368b0831a85c443d0a0b71dd6dce9579a39",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "fail",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [
+            "Mesh must have nondegenerate, consistently oriented closed manifold topology and positive signed volume."
+          ],
+          "triangles": 632,
+          "boundsMm": {
+            "min": [
+              -2,
+              -1.9960534572601318,
+              0
+            ],
+            "max": [
+              2,
+              1.9960534572601318,
+              0.20499999821186066
+            ]
+          },
+          "signedVolumeMm3": 2.5072447089106253,
+          "quality": {
+            "fileSha256": "03f1d546e2850ada8d2471d1763ed368b0831a85c443d0a0b71dd6dce9579a39",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": false,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "screen-failed",
+        "elapsedMs": 343.18169800000004,
+        "rssBytes": 88489984
+      }
+    ],
+    "unchangedSign03ResultReused": true
+  },
+  "implementation": "Bounded multiple-binding/chained comprehensions and one-level each. Each binding retains64 values, combined output256, existing value-work16384, depth32. Original cycle work charging is preserved. Meshbuilder remains resource-limited. text center is accepted only as a warned ignored unknown argument; default left/baseline alignment is retained. Existing bundled Droid-font metrics differ from upstream; no glyph parity claim."
+}

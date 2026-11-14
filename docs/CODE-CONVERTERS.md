@@ -41,8 +41,11 @@ expansion. Exported geometry is an already validated snapshot.
 Simple fixed-cardinality comprehensions can also appear among literal list
 members, for example `[[0,0], for(i=[0:2]) points[i]]`; their generated elements
 are flattened into that list. Each generator retains the 64-iteration bound and
-the complete resulting list retains the 256-item bound. Filters, `each` and
-chained comprehension generators remain unsupported.
+the complete resulting list retains the 256-item bound. Up to eight sequential
+bindings per generator and chained `for` generators are supported; inner binding
+ranges can depend on already resolved outer values. One-level `each` accepts
+fixed vectors and preserves contained assertion guards. Filters and C-style
+generators remain unsupported.
 
 OpenSCAD strings remain typed values, separate from numeric CAD expressions.
 Global settings, local bindings, module/function results, string indexing and
@@ -130,7 +133,7 @@ limits are distinct from unsupported features and malformed input.
 Known gaps, deliberately diagnosed:
 
 - Ambient library resolution and `use` (including BOSL2); explicit local
-  `include` bundles are supported. Comprehension filters/`each`/C-style and
+  `include` bundles are supported. Comprehension filters/C-style and
   variable-cardinality generators, randomness, search outside fixed tables,
   symbolic numeric-to-string formatting,
   general matrix arithmetic, anonymous-block assignment semantics, external meshes,
@@ -440,3 +443,22 @@ The six unchanged SCON example roots improved from 0/6 to 5/6 strict STL passes.
 `ex1`, `ex2`, `ex3`, `ex4` and `tldr` are admitted separately; `ex5` reaches the
 unchanged construction-depth limit of 32 and remains excluded. This does not
 qualify arbitrary SCON configuration edits, JSON import or unused helpers.
+
+
+### Generated-list cohort and warned text argument — 2026-11-14
+
+The authored `dinther--pathbuilder/meshbuilder.scad` default now parses its
+multi-binding and `each` syntax, then hits the unchanged 16,384-step value-work
+limit. It remains excluded. `thehans--FunctionalOpenSCAD/functional.scad` first
+requires unsupported `version_num` and also remains excluded. This pass changes
+no source, iteration, output-list, depth, token or work limits, and does not claim
+that either generated-list demo produces a qualified solid.
+
+The unchanged Angelo `Coin_02.scad` default does pass after accepting the
+nonstandard `text(center=...)` argument as a warned ignored argument. Default
+left/baseline alignment is retained; `center` is not converted into text alignment.
+Its argument assertion checks are retained even though the argument value is not
+used. Other unknown text arguments remain refused. The existing bundled Droid
+font fallback and font-metric warning still apply. The authored `Sign_03.scad`
+remains a strict topology failure. Outcomes and runtime identities are retained in
+`library/corpus-audit/editor-screening-cycle20.json`.

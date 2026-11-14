@@ -646,3 +646,23 @@ They add five distinct hashes: 95 Angelo + 2 A2D + 5 SCON = **102 source entries
 100 distinct meshes**, and 141 total gallery entries. The prior 97 records,
 136 previews and seven historical A2D refusals remain unchanged. All counts refer
 to these static authored defaults; no manufacturing, motion or physics claim.
+
+
+### Coin default and retained cycle20 refusals — 2026-11-14
+
+`Asset_SCAD/Coin_02.scad` adds one unchanged MIT authored default, with a
+3,132-triangle mesh passing all four strict STL screens. Its nonstandard text
+`center` argument is warned and ignored, retaining the original default left /
+baseline alignment; existing Droid-font substitution can change glyph metrics.
+No source edit, font download, model repair, parameter override or limit change
+was used. The first 95 Angelo records, two A2D records and five SCON records,
+their 141 previews, all historical refusals and SCON `ex5`'s depth exclusion remain
+unchanged. Totals are **103 source entries / 101 distinct STL hashes**, and 142
+gallery entries. This is static authored-default qualification only.
+
+The bounded four-root measurement improved from no qualified defaults to one:
+`meshbuilder` reaches the fixed work limit after its generated-list syntax is
+supported; `functional` requires unsupported `version_num`; `Sign_03` fails
+strict topology; `Coin_02` passes geometry, STL and offline editor insertion.
+See `library/corpus-audit/editor-screening-cycle20.json` for the separate measured
+phases, unchanged-result reuse and exact runtime identities.

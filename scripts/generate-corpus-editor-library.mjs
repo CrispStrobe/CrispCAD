@@ -114,9 +114,10 @@ export const corpusEditorSelection = [
   ['Animation_Mechanism_01', '2072ec9e27a91885decf095635cf0f20458f2d6c64dfe32f98062a3e067e0a7c', 'Animation_SCAD/Mechanism_01.scad'],
   ['Shaft_01', '41b9cf67da8fd47d263966280fce9af1dfcaa1e1b05e8a182d8e9cba1257aee7'],
   ['Shaft_02_With_Keyway', '7d48549ed36d24d8b399e7ffcf4e18b55bf93d2cc8bef43a17bf9cc64aa923b7'],
+  ['Coin_02', '92421043b2f2c5d6574e752a5e04454b5146a39452e57d21566c193ab60799bd'],
 ];
 // Only this admission batch gains warning metadata; earlier qualification records stay immutable.
-const warningQualifiedNames = new Set(['Shaft_01', 'Shaft_02_With_Keyway', 'Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ', 'Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01']);
+const warningQualifiedNames = new Set(['Coin_02', 'Shaft_01', 'Shaft_02_With_Keyway', 'Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ', 'Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01']);
 export async function generateCorpusEditorLibrary() {
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
   const repository = corpus.repositories.find(item => item.id === repositoryId);
@@ -139,7 +140,7 @@ export async function generateCorpusEditorLibrary() {
     // Preserve the previous derivative bytes and their history/provenance identity.
     const meshPath = `meshes/corpus-selection/${slug}${name === 'Walking_Stick' ? '-scoped-fn-v2' : ''}.stl`;
     const title = name === 'x' ? 'Crossed cubes (x)' : name.replaceAll('_', ' ');
-    const selectionNote = ['Street_03', 'Street_06'].includes(name)
+    const selectionNote = name === 'Coin_02' ? ' The authored unsupported text center argument is ignored with a warning; default left/baseline text alignment is retained. Text uses the bundled Droid Sans substitute; font metrics and appearance are not upstream-certified.' : ['Street_03', 'Street_06'].includes(name)
       ? ' Street 03 and Street 06 are distinct upstream source files with identical derived geometry; this collection counts source files, not unique shapes.'
       : name === 'Raccordo' ? ' OpenSCAD # highlighting is omitted; the highlighted solid geometry is retained.'
       : name === 'Pipe_00' ? ' Translation uses the fixed full-render context $preview=false, preserving the source-selected 30-segment circular profiles.'
