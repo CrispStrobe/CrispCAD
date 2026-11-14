@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from '@brickwright/cad-core';
-import { validateDocument, newId, sha256Hex } from '@brickwright/cad-core';
+import { validateDocument, newId, sha256Hex,updateModelSource } from '@brickwright/cad-core';
 import type { CadDocument, SolidNode } from '@brickwright/cad-core';
 export interface ModelRevision {id:string;projectId:string;parentId:string|null;serial:number;createdAt:number;label:string;header:Omit<CadDocument,'nodes'>;nodeRefs:Record<string,string>;snapshotHash:string}
 export interface ModelProject {id:string;title:string;headId:string;serial:number;updatedAt:number}
@@ -85,7 +85,7 @@ export async function openHistoryStore(name='brickwright-cad-history-v1'){
    // Import as a new model: an old backup can never overwrite current history.
    const projectId=options.preserveIdentity?archive.project.id:newId();
    if(options.preserveIdentity&&await request(db.transaction('projects').objectStore('projects').get(projectId)))throw new Error(t('This model already exists; refusing to replace its history'));
-   const remap=new Map(archive.revisions.map(r=>[r.id,options.preserveIdentity?r.id:newId()]));const revisions:ModelRevision[]=[];for(const original of archive.revisions){const header={...original.header,id:projectId};revisions.push({...original,id:remap.get(original.id)!,projectId,parentId:original.parentId?remap.get(original.parentId)!:null,header,snapshotHash:await hash(JSON.stringify([header,original.nodeRefs]))});}
+   const remap=new Map(archive.revisions.map(r=>[r.id,options.preserveIdentity?r.id:newId()]));const revisions:ModelRevision[]=[];for(const original of archive.revisions){const header={...original.header,id:projectId};if(header.version>=6&&header.modelSource){const document={...decode(original,objects),id:projectId};header.modelSource={...header.modelSource,source:updateModelSource(header.modelSource.source,document)};}revisions.push({...original,id:remap.get(original.id)!,projectId,parentId:original.parentId?remap.get(original.parentId)!:null,header,snapshotHash:await hash(JSON.stringify([header,original.nodeRefs]))});}
    const project:ModelProject={id:projectId,title:oldHead.header.title,headId:remap.get(oldHead.id)!,serial:revisions.reduce((max,r)=>Math.max(max,r.serial),0),updatedAt:Date.now()};
    const tx=write(['projects','revisions','objects']);const done=complete(tx);for(const object of objects.values())tx.objectStore('objects').put(object);for(const revision of revisions)tx.objectStore('revisions').add(revision);tx.objectStore('projects').add(project);await done;return project;
   });},

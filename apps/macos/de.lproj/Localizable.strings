@@ -81,3 +81,5 @@
 "Cannot start the local asset server on port %d. Close other CAD copies and retry. %@" = "Der lokale Ressourcenserver auf Port %d konnte nicht gestartet werden. Schließen Sie andere CAD-Instanzen und versuchen Sie es erneut. %@";
 
 "Import STL…" = "STL importieren…";
+
+"Model Source" = "Modellquelltext";

@@ -32,7 +32,7 @@ export interface ModelAttributionSidecar {
  */
 export function hasModelAttribution(input: CadDocument): boolean {
   const document = validateDocument(input);
-  if (document.version !== 5) return false;
+  if (document.version < 5) return false;
   const seen = new Set<string>();
   const visit = (id: string): boolean => {
     if (seen.has(id)) return false;
@@ -54,7 +54,7 @@ export async function createModelAttributionSidecar(
   output: ModelAttributionExport,
 ): Promise<ModelAttributionSidecar> {
   const document = validateDocument(input);
-  if(document.version!==5)throw new Error('No recorded library provenance for selected geometry; legacy fields are opaque.');
+  if(document.version<5)throw new Error('No recorded library provenance for selected geometry; legacy fields are opaque.');
   if (output.format !== 'stl' || typeof output.filename !== 'string' ||
       !output.filename.trim() || output.filename.length > 240 ||
       /[\u0000-\u001f\u007f/\\]/.test(output.filename) || !/\.stl$/i.test(output.filename)) {

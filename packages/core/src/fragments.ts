@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {updateModelSource} from './model-source.js';
 import {t} from './i18n.js';
 import {pruneModelProvenance} from './model-provenance.js';
 import {validateDocument} from './document.js';
@@ -22,13 +23,14 @@ export function selectionFragment(input:CadDocument,selection:readonly string[])
  if(doc.joints)doc.joints=doc.joints.filter(j=>doc.roots.includes(j.bodyA)&&doc.roots.includes(j.bodyB));
  if(doc.parametric){
   const original=doc.parametric,values=evaluateParameters(original);original.bindings=original.bindings.filter(binding=>keep.has(binding.nodeId));
-  const required=new Set<string>();const references=(expression:string)=>evaluateExpression(expression,name=>{required.add(name);return values[name];});
+  const required=new Set<string>();const references=(expression:string)=>{const names=new Set<string>();evaluateExpression(expression,name=>values[name],{references:names});for(const name of names)if(Object.hasOwn(original.parameters,name))required.add(name);};
   original.bindings.forEach(binding=>references(binding.expression));for(const s of Object.values(doc.sketches??{}))sketchExpressions(s).forEach(references);for(const n of Object.values(doc.nodes))if(n.kind==='extrusion'&&typeof n.distance==='string')references(n.distance);const scanned=new Set<string>();
   while([...required].some(name=>!scanned.has(name)))for(const name of [...required])if(!scanned.has(name)){scanned.add(name);references(original.parameters[name].expression);}
   original.parameters=Object.fromEntries(Object.entries(original.parameters).filter(([name])=>required.has(name)));
   if(!original.bindings.length&&!required.size)delete doc.parametric;
  }
  pruneModelProvenance(doc);
+ if(doc.version>=6&&doc.modelSource)doc.modelSource={...doc.modelSource,source:updateModelSource(doc.modelSource.source,doc)};
  return validateDocument(doc);
 }
 /** Keep formulas on paste; collisions get a separate parameter namespace. */

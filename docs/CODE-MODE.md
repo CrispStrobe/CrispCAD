@@ -107,3 +107,10 @@ accepts .scad, .js, .jscad and .cadcode. Source Export offers native editable so
 or evaluated OpenSCAD/JSCAD snapshots. `extrude(height, [[x,y], ...])` builds a
 simple planar polygon, with 3–256 points. See [converter coverage](CODE-CONVERTERS.md)
 for exact limits, parameter semantics, provenance and the VPS ingestion interface.
+
+## Code alongside manual modeling
+
+[Model source](UNIFIED-DESIGN-SOURCE.md) is the design-level companion to Code an
+object. It keeps GUI edits and retained source synchronized, embeds native code
+bodies as multiline templates and applies an accepted source change as one saved
+modeling step. It does not require exporting/reimporting the project.

@@ -31,6 +31,12 @@ See [parameters](docs/PARAMETERS.md), [code mode](docs/CODE-MODE.md) and the
 
 **Code an object** provides editable source, parameter fields, geometry preview
 and 34 original examples. Preview does not change the project or its history.
+**File → Model source** links coding and manual modeling: GUI edits patch retained
+source, and an accepted source edit becomes one undo/history step. The dock stays
+open beside the canvas, preserves comments and can merge independent GUI changes
+into a pending draft. Generated parts expose their recipes instead of construction
+clutter. See [the shared source workflow](docs/UNIFIED-DESIGN-SOURCE.md).
+
 The same modeling compiler is available through the core SDK and a headless MCP server.
 
 Bounded converters import supported OpenSCAD/JSCAD source and export native CAD

@@ -36,6 +36,8 @@ history. Use a dedicated file: this process is its writer until closed.
 | Tool | Purpose |
 | --- | --- |
 | `cad_code_help` | Grammar, constructors, limits and example |
+| `cad_get_model_source` | Read the complete retained design source and revision |
+| `cad_apply_model_source` | Preflight a source draft, or accept it as one history step |
 | `cad_get_model` | Current revision and root object metadata |
 | `cad_get_code_object` | Object source, local parameters and placement |
 | `cad_preview_code` | Compile/evaluate source without saving |
@@ -93,3 +95,13 @@ revision. Listing examples never changes the headless project or history.
 outputFormat (cadcode/openscad/jscad), optional parameter overrides and optional
 JSCAD entryPoint/arguments. Results identify snapshots and return warnings plus
 JSCAD separate-output metadata. It neither modifies the model nor adds history.
+
+## Shared design source
+
+`cad_get_model_source` returns the same stable-ID design language used by the GUI
+source dock. Send `source` and its `expectedRevision` to `cad_apply_model_source`.
+With `preview: true`, it evaluates without saving; otherwise an accepted change
+creates one iteration. No-op edits do not append history. Generated recipes use
+the same part factory as the editor. Source input is capped at 65,536 characters;
+project-contained mesh assets and immutable attribution stay in the project.
+See [the language and GUI workflow](UNIFIED-DESIGN-SOURCE.md).

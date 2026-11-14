@@ -5,12 +5,12 @@ import type {CadSession,CodeProgram,CadDocument} from '@brickwright/cad-core';
 import type {GeometryResult} from '@brickwright/cad-geometry';
 import {evaluatedPreview} from './shapes.js';
 const el=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
-export function mountCodePanel(parent:HTMLElement,session:CadSession,evaluate:(doc:CadDocument)=>Promise<GeometryResult>,after:()=>Promise<unknown>,onExport?:(file:{name:string;bytes:Uint8Array;mime:string})=>void|Promise<void>){
+export function mountCodePanel(parent:HTMLElement,session:CadSession,evaluate:(doc:CadDocument)=>Promise<GeometryResult>,after:()=>Promise<unknown>,onExport?:(file:{name:string;bytes:Uint8Array;mime:string})=>void|Promise<void>,onModelSource?:()=>void){
  const dialog=el('dialog');dialog.className='code-dialog';dialog.setAttribute('aria-label',t('Code object'));parent.append(dialog);let disposed=false;
  function open(id?:string){
   const expected=session.state.revision,document=session.state.document,node=id?document.nodes[id]:undefined;if(id&&node?.kind!=='code')throw new Error(t('Select a code object'));
   const original=node?.kind==='code'?node.program:defaultCodeProgram();let overrides=structuredClone(original.parameters),busy=false;
-  dialog.replaceChildren();const header=el('header'),heading=el('h2',t(id?'Edit code object':'Code an object')),close=el('button',t('Close code'));close.onclick=()=>dialog.close();header.append(heading,close);
+  dialog.replaceChildren();const header=el('header'),heading=el('h2',t(id?'Edit code object':'Code an object')),close=el('button',t('Close code'));close.onclick=()=>dialog.close();header.append(heading);if(onModelSource){const linked=el('button',t(id?'Apply & show model source':'Create & show model source'));linked.onclick=async()=>{await build(true);if(!dialog.open)onModelSource();};header.append(linked);}header.append(close);
   const layout=el('div');layout.className='code-layout';const left=el('div'),right=el('div');left.className='code-source-pane';right.className='code-preview-pane';
   const name=el('input');name.value=node?.name??t('Coded plate');name.setAttribute('aria-label',t('Code object name'));name.disabled=!!id;
   const source=el('textarea');source.setAttribute('aria-label',t('CAD code source'));source.spellcheck=false;source.wrap='off';source.value=original.source;

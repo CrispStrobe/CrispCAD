@@ -62,7 +62,7 @@ function evaluateMathFunction(name: string, args: Quantity[]): Quantity {
 }
 
 /** Original bounded expression AST. Evaluation short-circuits inactive branches. */
-export function evaluateExpression(source: string, lookup: (name: string) => Quantity): Quantity {
+export function evaluateExpression(source: string, lookup: (name: string) => Quantity, options:{references?:Set<string>}={}): Quantity {
   if (typeof source !== 'string' || !source.trim() || source.length > 256) error(t('expression must contain 1–256 characters'));
   const tokens: string[] = []; let at = 0;
   while (at < source.length) {
@@ -105,7 +105,7 @@ export function evaluateExpression(source: string, lookup: (name: string) => Qua
     const test=binary(0,depth);if(tokens[cursor]!=='?')return test;cursor++;
     const yes=conditional(depth+1);expect(':');return {kind:'conditional',test,yes,no:conditional(depth+1)};
   }
-  const root=conditional(0);if(cursor!==tokens.length)error(t`unexpected token “${tokens[cursor]}”`);
+  const root=conditional(0);if(options.references){const pending=[root];while(pending.length){const node=pending.pop()!;if(node.kind==='name')options.references.add(node.name);else if(node.kind==='unary')pending.push(node.value);else if(node.kind==='binary')pending.push(node.a,node.b);else if(node.kind==='conditional')pending.push(node.test,node.yes,node.no);else if(node.kind==='call')pending.push(...node.args);}}if(cursor!==tokens.length)error(t`unexpected token “${tokens[cursor]}”`);
   const truth=(q:Quantity):boolean=>{if(q.length||q.angle)error(t('condition requires a dimensionless value'));return q.value!==0;};
   const bool=(value:boolean):Quantity=>({...scalar(value?1:0),boolean:true});
   const numeric=(q:Quantity)=>{if(q.boolean)error(t('arithmetic requires numeric values'));};

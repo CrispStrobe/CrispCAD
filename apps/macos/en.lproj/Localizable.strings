@@ -81,3 +81,5 @@
 "Cannot start the local asset server on port %d. Close other CAD copies and retry. %@" = "Cannot start the local asset server on port %d. Close other CAD copies and retry. %@";
 
 "Import STL…" = "Import STL…";
+
+"Model Source" = "Model Source";

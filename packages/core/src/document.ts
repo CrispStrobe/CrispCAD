@@ -2,6 +2,8 @@
 import {checkModelProvenance,pruneModelProvenance} from './model-provenance.js';
 import type {ModelProvenance} from './model-provenance.js';
 import {t as translate} from './i18n.js';
+import {checkModelSource} from './model-source.js';
+import type {ModelSource} from './model-source.js';
 import {compileCode} from './code.js';
 import type {CodeProgram} from './code.js';
 import {checkFeatures} from './features.js';
@@ -17,7 +19,7 @@ export interface Transform { position: Vec3; rotation: Vec3; scale: Vec3 }
 export type Primitive = { kind: 'box'; size: Vec3 } | { kind: 'cylinder'; radius: number; height: number; segments: number } | { kind: 'sphere'; radius: number; segments: number };
 export type Shape = Primitive | ExtrusionFeature | {kind:'code';program:CodeProgram} | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[] } | { kind: 'mesh'; positions: number[]; indices: number[] };
 export type SolidNode = { id: string; name: string; color: string; transform: Transform; reference?: boolean; provenance?: string[]; physics?: PartPhysics; generator?:GeneratorRecipe } & Shape;
-export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3 | 4 | 5; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch>; provenance?:ModelProvenance }
+export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3 | 4 | 5 | 6; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch>; provenance?:ModelProvenance; modelSource?:ModelSource }
 export const MAX_DOCUMENT_BYTES = 16 * 1024 * 1024;
 export const identityTransform = (): Transform => ({ position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] });
 export function newId(): string {
@@ -29,7 +31,7 @@ export function newId(): string {
 export const createDocument = (title = translate('Untitled design')): CadDocument => ({ format: 'brickwright-cad', version: 1, units: 'mm', id: newId(), title, nodes: {}, roots: [] });
 /** Fast stale-result guard, not an authenticity/signing mechanism. */
 export function documentGeometryKey(doc: CadDocument): string {
-  const source=JSON.stringify([doc.id,doc.roots,doc.sketches,doc.parametric,Object.entries(doc.nodes).map(([id,n])=>{const {physics,...geometry}=n;if(doc.version===5)delete geometry.provenance;return [id,geometry];})]);let a=2166136261,b=3339675911;
+  const source=JSON.stringify([doc.id,doc.roots,doc.sketches,doc.parametric,Object.entries(doc.nodes).map(([id,n])=>{const {physics,...geometry}=n;if(doc.version>=5)delete geometry.provenance;return [id,geometry];})]);let a=2166136261,b=3339675911;
   for(let i=0;i<source.length;i++){a=Math.imul(a^source.charCodeAt(i),16777619);b=Math.imul(b^source.charCodeAt(i),2246822519);}return `${source.length}:${a>>>0}:${b>>>0}`;
 }
 function fail(message: string): never { throw new Error(translate`Invalid CAD project: ${message}`); }
@@ -41,7 +43,7 @@ const vec = (v: unknown, min = -1e6, max = 1e6): v is Vec3 => Array.isArray(v) &
 
 /** Validate before replacing any live state. Unknown versions are refused, never downgraded. */
 export function checkDocument(value: unknown): CadDocument {
-  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2,3,4,5].includes(value.version as number) || value.units !== 'mm') fail(translate('unsupported format, version or units'));
+  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2,3,4,5,6].includes(value.version as number) || value.units !== 'mm') fail(translate('unsupported format, version or units'));
   if (!idOk(value.id) || !text(value.title) || !record(value.nodes) || !Array.isArray(value.roots)) fail(translate('missing document identity, nodes or roots'));
   const nodes = value.nodes as Record<string, unknown>;
   const entries = Object.entries(nodes);
@@ -88,6 +90,7 @@ export function checkDocument(value: unknown): CadDocument {
   checkPhysics(value as unknown as CadDocument);
   checkParametricDesign(value as unknown as CadDocument);
   checkFeatures(value as unknown as CadDocument);
+  checkModelSource(value as unknown as CadDocument);
   return value as unknown as CadDocument;
 }
 export function validateDocument(value: unknown): CadDocument {

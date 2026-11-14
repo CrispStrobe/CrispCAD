@@ -4,14 +4,17 @@ import {readFile,writeFile,open,rename,unlink,stat,lstat,mkdir} from 'node:fs/pr
 import {dirname,resolve} from 'node:path';
 import {createCadSession,createDocument,compileCode,defaultCodeProgram,codeExamples,importOpenSCAD,importJSCAD,exportOpenSCAD,exportJSCAD,exportCodeSource,newId,serializeDocument,CODE_LIMITS,t,getLocale,hasModelAttribution,createModelAttributionSidecar,validateDocument} from '@brickwright/cad-core';
 import {appendPortableRevision,readPortableHistory} from '@brickwright/cad-history';
+import {createPresetDocument} from '@brickwright/cad-editor';
 import {exportSTL} from '@brickwright/cad-geometry';
 
-export const codeHelp={language:'brickwright-cad-script',version:1,example:defaultCodeProgram().source,syntax:['param name: mm|deg|scalar = expression;','let name = shape;','return shape;'],functions:['box(width,depth,height)','cylinder(radius,height[,segments])','sphere(radius[,segments])','extrude(height,[[x,y],...])','union(a,b,...)','subtract(base,cut,...)','intersect(a,b,...)','move([x,y,z],shape)','rotate([x,y,z],shape)','scale([x,y,z],shape)','repeat(count,[dx,dy,dz],shape)'],limits:CODE_LIMITS,notes:['// comments; unit-aware + - * / and parentheses','Named shapes and parameters can reference later declarations; cycles are refused','Code-local parameters are independent of global model parameters','One returned construction produces one rigid body','This is not JavaScript or .scad; imports, files, network and arbitrary script execution are unsupported']};
+export const codeHelp={language:'brickwright-cad-script',version:1,example:defaultCodeProgram().source,syntax:['param name: mm|deg|scalar = expression;','let name = shape;','return shape;'],functions:['frustum(bottom,top,height[,segments])','hull(a,...)','choose(condition,a,b)','forRange(i,start,end,step,shape)','forValues(i,[values],shape)','empty()','box(width,depth,height)','cylinder(radius,height[,segments])','sphere(radius[,segments])','extrude(height,[[x,y],...])','union(a,b,...)','subtract(base,cut,...)','intersect(a,b,...)','move([x,y,z],shape)','rotate([x,y,z],shape)','scale([x,y,z],shape)','repeat(count,[dx,dy,dz],shape)'],limits:CODE_LIMITS,notes:['// comments; unit-aware + - * / and parentheses','Named shapes and parameters can reference later declarations; cycles are refused','Code-local parameters are independent of global model parameters','One returned construction produces one rigid body','This is not JavaScript or .scad; imports, files, network and arbitrary script execution are unsupported']};
 const source={type:'string',minLength:1,maxLength:32768},id={type:'string',minLength:1,maxLength:96},parameters={type:'object',additionalProperties:{type:'string',minLength:1,maxLength:256}},revision={type:'integer',minimum:1};
 const spec=(name,description,properties={},required=[],readOnly=true)=>({name,description,inputSchema:{type:'object',properties,required,additionalProperties:false},annotations:{readOnlyHint:readOnly,destructiveHint:!readOnly,openWorldHint:false}});
 export const toolDefinitions=[
  spec('cad_code_help','Get the CAD Script grammar, modeling functions, limits and an example.'),
  spec('cad_convert_code','Convert supported OpenSCAD, JSCAD or native CAD source without changing the model.',{source,parameters,entryPoint:id,arguments:{type:'array',maxItems:64,items:{type:['number','string','boolean']}},inputFormat:{type:'string',enum:['cadcode','openscad','jscad']},outputFormat:{type:'string',enum:['cadcode','openscad','jscad']}},['source','inputFormat','outputFormat']),
+ spec('cad_get_model_source','Read the current design source with stable object IDs and the current history revision.'),
+ spec('cad_apply_model_source','Preflight and apply a complete declarative design edit as one saved history step.',{source:{type:'string',minLength:1,maxLength:65536},expectedRevision:revision,preview:{type:'boolean'}},['source','expectedRevision'],false),
  spec('cad_get_model','Get current revision and object metadata; call before changing the model.'),
  spec('cad_get_code_object','Read a coded feature, its source and evaluated local parameters.',{objectId:id},['objectId']),
  spec('cad_preview_code','Compile and evaluate source without modifying the model or its history.',{source,parameters},['source']),
@@ -27,6 +30,7 @@ function validateArguments(definition,args){
  for(const key of Object.keys(args))if(!Object.hasOwn(schema.properties,key))throw new Error(t`Unknown argument ${key}`);
  for(const key of schema.required)if(!Object.hasOwn(args,key))throw new Error(t`Missing argument ${key}`);
  for(const [key,value] of Object.entries(args)){const s=schema.properties[key];if(s.enum&&!s.enum.includes(value))throw new Error(t`Invalid ${key}`);if(s.type==='string'&&(typeof value!=='string'||value.length<(s.minLength??0)||value.length>(s.maxLength??Infinity)))throw new Error(t`Invalid ${key}`);
+  if(s.type==='boolean'&&typeof value!=='boolean')throw new Error(t`Invalid ${key}`);
   if(s.type==='integer'&&(!Number.isSafeInteger(value)||value<(s.minimum??-Infinity)||value>(s.maximum??Infinity)))throw new Error(t`Invalid ${key}`);
   if(s.type==='array'&&(!Array.isArray(value)||value.length>s.maxItems||value.some(v=>!['number','boolean','string'].includes(typeof v)||typeof v==='number'&&!Number.isFinite(v)||typeof v==='string'&&v.length>1024)))throw new Error(t`Invalid ${key}`);
   if(s.type==='object'){if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).length>64||Object.values(value).some(v=>typeof v!=='string'||!v.trim()||v.length>256))throw new Error(t`Invalid ${key}`);}
@@ -62,6 +66,7 @@ export async function createCodeHost(options={}){
  return {definitions,async call(name,args={},signal){if(disposed)throw new Error(t('MCP host is closed'));const definition=toolDefinitions.find(t=>t.name===name);if(!definition)throw new Error(t('Unknown tool'));validateArguments(definition,args);cancelled(signal);
   if(name==='cad_convert_code'){const imported=args.inputFormat==='jscad'?importJSCAD(args.source,args.parameters??{},{entryPoint:args.entryPoint,arguments:args.arguments}):undefined;const p=imported?.program??(args.inputFormat==='openscad'?importOpenSCAD(args.source):program(args.source));if(!imported)p.parameters=structuredClone(args.parameters??{});compileCode(p);return {format:args.outputFormat,evaluatedSnapshot:!!imported||args.outputFormat!=='cadcode',warnings:imported?.warnings??[],outputs:imported?.outputs,source:args.outputFormat==='openscad'?exportOpenSCAD(p):args.outputFormat==='jscad'?exportJSCAD(p):exportCodeSource(p)};}
   if(name==='cad_code_help')return localizedHelp;if(name==='cad_get_model')return info();
+  if(name==='cad_get_model_source')return {revision:metadata.project.serial,projectId:session.state.document.id,language:'brickwright-design',source:session.modelSource,maxEditableSourceCharacters:65536};
   if(name==='cad_get_code_object'){const n=session.state.document.nodes[args.objectId];if(n?.kind!=='code')throw new Error(t('Code object not found'));const compiled=compileCode(n.program);return {revision:metadata.project.serial,id:n.id,name:n.name,program:n.program,parameters:compiled.parameters,values:compiled.values,transform:n.transform};}
   if(name==='cad_list_revisions')return {revision:metadata.project.serial,revisions:metadata.revisions.filter(r=>!args.beforeSerial||r.serial<args.beforeSerial).sort((a,b)=>b.serial-a.serial).slice(0,args.limit??50).map(({id,parentId,serial,label,createdAt})=>({id,parentId,serial,label,createdAt}))};
   if(name==='cad_export_project'){if(archive.length>3*1024*1024)throw new Error(t('Use the configured project file for archives above 3 MiB; no history was removed'));return {name:'coded-project.bcad',mime:'application/json',base64:Buffer.from(archive).toString('base64'),revision:metadata.project.serial};}
@@ -82,6 +87,14 @@ export async function createCodeHost(options={}){
   }
   if(name==='cad_preview_code'){const p=program(args.source,args.parameters),compiled=compileCode(p),trial=createCadSession();trial.addCode(p);return {...summary(await geometry.evaluate(trial.state.document,signal)),parameters:compiled.parameters,values:compiled.values,committed:false,revision:metadata.project.serial};}
   if(args.expectedRevision!==metadata.project.serial)throw new Error(t`Stale model revision. Current revision is ${metadata.project.serial}; read the model and retry.`);
+  if(name==='cad_apply_model_source'){
+   const expected=metadata.project.serial,trial=createCadSession(session.state.document);
+   try{const prepared=trial.prepareModelSource(args.source,{regenerate:(recipe,name)=>createPresetDocument(recipe.preset,name,{recipe})}),result=await geometry.evaluate(prepared.document,signal);cancelled(signal);
+    if(expected!==metadata.project.serial)throw new Error(t`Stale model revision. Current revision is ${metadata.project.serial}; read the model and retry.`);
+    if(args.preview)return {revision:expected,committed:false,geometry:summary(result)};
+    if(!trial.applyPreparedModelSource(prepared))return {...info(),committed:false,source:session.modelSource,geometry:summary(result)};await accept(trial.state.document,'Edit model source',signal);return {...info(),committed:true,source:session.modelSource,geometry:summary(result)};
+   }finally{trial.dispose();}
+  }
   const trial=createCadSession(session.state.document);let objectId=args.objectId;
   if(name==='cad_create_code_object')objectId=trial.addCode(program(args.source,args.parameters),args.name??'Code object');
   else if(name==='cad_update_code_object'){const n=trial.state.document.nodes[args.objectId];if(n?.kind!=='code')throw new Error(t('Code object not found'));trial.updateCode(n.id,{...n.program,...(args.source!==undefined?{source:args.source}:{}),...(args.parameters!==undefined?{parameters:structuredClone(args.parameters)}:{})});}

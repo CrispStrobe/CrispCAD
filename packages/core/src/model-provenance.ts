@@ -46,7 +46,7 @@ export function checkModelProvenance(document:CadDocument):void {
 }
 /** Called only on a mutable draft: dropping geometry drops its unused source snapshots. */
 export function pruneModelProvenance(document:CadDocument):void {
-  if(document.version!==5||!document.provenance)return;
+  if(document.version<5||!document.provenance)return;
   const used=new Set(Object.values(document.nodes).flatMap(n=>n.provenance??[]));
   document.provenance={version:1,records:document.provenance.records.filter(r=>used.has(r.id))};
 }

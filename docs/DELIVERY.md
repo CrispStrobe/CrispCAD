@@ -514,3 +514,24 @@ native and in JS/Wasm workers with independent residual/freedom checks. Fresh
 results and qualified recommendations supersede the old interval-only assessment.
 The solver remains an isolated development experiment pending our sketch/worker
 integration; see CONSTRAINTS.md and CONSTRAINT-PERFORMANCE.md.
+
+## Shared GUI/source workflow — 2026-11-14
+
+File → Model source adds a nonmodal source dock on the retained document graph.
+GUI edits minimally patch source values/calls; accepted source edits preflight the
+whole model and commit once into undo and archived history. Code an object links
+directly into this view. Generated parts use compact editable recipes, rebuilding
+through the same factory as Properties. Dirty drafts survive GUI changes and can
+merge independent edits; conflicts preserve the saved model and draft. Stable-ID
+selection follows in both directions. Schema 6 stores source with the graph;
+versions 1–5 remain readable, including their complete existing revisions.
+
+Local checks: production build; 433 unit tests passed (one optional external-oracle
+test skipped); 42 Chromium/iPad WebKit workflows passed, including source/GUI
+round trips, dirty-draft merging, rejected drafts, converter imports, provenance,
+parameters and German UI. The 1,155-message German audit passed, and all six SDK
+packages installed and ran offline from an empty cache. Unit coverage also checks
+source-preserving portable archives, identity remapping, clipboard fragments,
+generator guards, template escapes, attribution and reference helpers. MCP gets
+read/preview/apply source tools with one saved iteration per accepted edit, using
+its existing separate headless project session.

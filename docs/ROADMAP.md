@@ -114,9 +114,9 @@ records executable Dart/JS probes, and specifies the retained entity model and
 optional geometric solver extension. This is the next constrained-sketch path,
 not a claim that a general sketch solver is already integrated.
 
-The measured [constraint performance](CONSTRAINT-PERFORMANCE.md) confirms Wasm
-feasibility, while nonlinear search/recursion limits require an algorithm change
-before interactive adoption. [Localization](LOCALIZATION.md) and
+The updated [constraint performance](CONSTRAINT-PERFORMANCE.md) probes qualify
+current dart_csp geometric sessions in JS/Wasm workers. Production integration
+still needs our retained sketch entities, worker adapter and coupled-sketch acceptance. [Localization](LOCALIZATION.md) and
 [workbench preferences](WORKBENCH-PREFERENCES.md) record the current English/German,
 editable lettering, projected numbers, transformed dimensions and appearance APIs.
 
@@ -133,3 +133,17 @@ catalogue insertion. Start with original code examples and CC0 calibration parts
 review native FreeCAD assets and individual Thingi10K grants. Storage and content
 licence boundaries are in MODEL-LIBRARY.md. No mass dataset import or new remote
 library repository is implied by this plan.
+
+## Shared GUI and source milestone (2026-11-14)
+
+File → Model source now provides a nonmodal projection of the retained model. GUI
+actions patch source fields/calls; an accepted source Apply is one normal modeling
+transaction with undo and saved history. Source recipes reconstruct generated parts
+through the same factory as Properties. Draft conflict checks, semantic merging,
+project-contained assets and complete source/history round trips are implemented.
+See [the workflow and schema](UNIFIED-DESIGN-SOURCE.md).
+
+Next: integrate constrained sketch entities and the qualified geometric worker
+through these same transactions; add feature suppression/rollback and richer
+source mapping only with their retained dependency models. Existing source-backed
+primitives, sketches, booleans and generators provide the shared foundation.

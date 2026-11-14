@@ -128,7 +128,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         addCommand(edit,"Undo","undo","z");addCommand(edit,"Redo","redo","z",[.command,.shift]);edit.addItem(.separator())
         addCommand(edit,"Cut","cut","x");addCommand(edit,"Copy","copy","c");addCommand(edit,"Paste","paste","v");addCommand(edit,"Duplicate","duplicate","d");addCommand(edit,"Delete","delete","\u{7f}",[]);edit.addItem(.separator());addCommand(edit,"Select All","select-all","a");addCommand(edit,"Deselect All","deselect")
         let view=section("View")
-        addCommand(view,"Fit Model","fit","0");addCommand(view,"Home View","home","0",[.command,.shift]);view.addItem(.separator());addCommand(view,"Top","top","1");addCommand(view,"Front","front","2");addCommand(view,"Right","right","3");addCommand(view,"Back","back");addCommand(view,"Left","left");addCommand(view,"Bottom","bottom");view.addItem(.separator());addCommand(view,"Toggle Orthographic Projection","projection");addCommand(view,"Show / Hide Workplane","workplane");addCommand(view,"On-canvas Parameters","readout");addCommand(view,"Show / Hide Objects","objects");addCommand(view,"Show / Hide Properties","properties")
+        addCommand(view,"Fit Model","fit","0");addCommand(view,"Home View","home","0",[.command,.shift]);view.addItem(.separator());addCommand(view,"Top","top","1");addCommand(view,"Front","front","2");addCommand(view,"Right","right","3");addCommand(view,"Back","back");addCommand(view,"Left","left");addCommand(view,"Bottom","bottom");view.addItem(.separator());addCommand(view,"Toggle Orthographic Projection","projection");addCommand(view,"Show / Hide Workplane","workplane");addCommand(view,"On-canvas Parameters","readout");addCommand(view,"Show / Hide Objects","objects");addCommand(view,"Show / Hide Properties","properties");addCommand(view,"Model Source","model-source")
         let object=section("Object")
         addCommand(object,"Add Shape…","shapes","a",[.command,.shift]);addCommand(object,"Sketch and Extrude…","sketch");addCommand(object,"Code an Object…","code");object.addItem(.separator())
         addCommand(object,"Select / Drag","select");addCommand(object,"Move","move");addCommand(object,"Rotate","rotate");addCommand(object,"Scale","scale");addCommand(object,"Drop to Workplane","drop");object.addItem(.separator());addCommand(object,"Union","union");addCommand(object,"Subtract","subtract");addCommand(object,"Intersect","intersect");object.addItem(.separator());addCommand(object,"Model Parameters…","parameters")
@@ -399,7 +399,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             return extrusion?.distance==='width / 8' && doc.sketches?.[extrusion.sketchId]?.profile.width==='width' ? 'code-command' : 'feature failure';
           }
           if (\(smokeStage) === 13) {const panel=root.querySelector('.code-dialog[open]');if(!panel)return 'waiting';Array.from(panel.querySelectorAll('button')).find(b=>b.textContent==='Create code object').click();return 'code-created';}
-          if (\(smokeStage) === 14) {const code=Object.values(doc.nodes).find(n=>n.kind==='code');return objects.length===4 && doc.version===4 && code?.program.language==='brickwright-cad-script' ? 'passed':'waiting';}
+          if (\(smokeStage) === 14) {const code=Object.values(doc.nodes).find(n=>n.kind==='code');return objects.length===4 && doc.version===4 && code?.program.language==='brickwright-cad-script' ? 'model-source-command':'waiting';}
+          if (\(smokeStage) === 15) {const pane=root.querySelector('.model-source-pane:not([hidden])');return pane?.querySelector('textarea')?.value.includes('cad`') && doc.version===4 ? 'passed':'waiting';}
           if (!Array.from(root.querySelectorAll('#iterations option')).some(option => option.textContent.startsWith('#3 ·'))) return 'waiting';
           if (!document.querySelector('.library-dialog .project-card')) return 'waiting';
           return window.brickwrightDesktop && !!window.webkit.messageHandlers.cadSave && !!window.brickwrightPrepareToClose ? 'passed' : 'bridge missing';
@@ -429,7 +430,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
                         guard files.count==1,let archive=try JSONSerialization.jsonObject(with:Data(contentsOf:files[0])) as? [String:Any],archive["format"] as? String == "brickwright-cad-history",let revisions=archive["revisions"] as? [Any],revisions.count>=3 else {self.fail("Native library file/history verification failed");return}
                         let original=try Data(contentsOf:files[0]);var pruned=archive;pruned["revisions"]=Array(revisions.dropFirst());let encoded=try JSONSerialization.data(withJSONObject:pruned).base64EncodedString();let project=archive["project"] as! [String:Any]
                         self.webView.callAsyncJavaScript("try {await window.webkit.messageHandlers.cadLibrary.postMessage({action:'write',id,data});return false;} catch(error){return true;}",arguments:["id":project["id"]!,"data":encoded],in:nil,in:.page){result in
-                            do {guard case .success(let value)=result,value as? Bool == true,try Data(contentsOf:files[0])==original else {self.fail("Native library accepted a history-pruning write");return};try FileManager.default.removeItem(at:folder);self.pasteboard.releaseGlobally();print("PASS: native menus, private system clipboard Copy/Paste, Duplicate/Delete/Undo/Redo, parameters, native sketch/extrusion and coded-object creation, library files and refusal to prune history");exit(0)}catch{self.fail(error.localizedDescription)}
+                            do {guard case .success(let value)=result,value as? Bool == true,try Data(contentsOf:files[0])==original else {self.fail("Native library accepted a history-pruning write");return};try FileManager.default.removeItem(at:folder);self.pasteboard.releaseGlobally();print("PASS: native menus, private system clipboard Copy/Paste, Duplicate/Delete/Undo/Redo, parameters, native sketch/extrusion and coded-object creation, model-source menu/dock without a modeling edit, library files and refusal to prune history");exit(0)}catch{self.fail(error.localizedDescription)}
                         };return
                     }catch{self.fail(error.localizedDescription)}
                 };return
@@ -453,6 +454,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             if result as? String == "sketch-created" {self.smokeStage=12}
             if result as? String == "code-command" {self.smokeStage=13;perform("code")}
             if result as? String == "code-created" {self.smokeStage=14}
+            if result as? String == "model-source-command" {self.smokeStage=15;perform("model-source")}
             if ["parameter failure", "feature failure", "bridge missing"].contains(result as? String ?? "") { self.fail(result as? String ?? "Verification failed"); return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.pollSmoke() }
         }
