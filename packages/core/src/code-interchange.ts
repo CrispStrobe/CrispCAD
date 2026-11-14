@@ -6,6 +6,7 @@ export {importOpenSCAD} from './openscad-import.js';
 const vec=(v:readonly number[])=>`[${v.join(', ')}]`;
 
 function scadProfile(p:CodeProfile):string{
+ if(p.kind==='resize')return `resize(${vec(p.size)},auto=[${p.auto.join(',')}]) ${scadProfile(p.profile)}`;
  if(p.kind==='affine'){const m=p.matrix;return `multmatrix([[${m[0]},${m[1]},0,${m[2]}],[${m[3]},${m[4]},0,${m[5]}],[0,0,1,0],[0,0,0,1]]) ${scadProfile(p.profile)}`;}
  if(p.kind==='offset')return `offset(${p.round?'r':'delta'}=${p.distance},$fn=${p.segments}) ${scadProfile(p.profile)}`;
  if(p.kind==='text')return `text(${JSON.stringify(p.text)},size=${p.size},font=${JSON.stringify(p.font==='serif'?'Droid Serif':p.font==='mono'?'Droid Sans Mono':'Droid Sans')},halign=${JSON.stringify(p.halign)},valign=${JSON.stringify(p.valign)},spacing=${p.spacing});`;
@@ -19,7 +20,7 @@ function scadProfile(p:CodeProfile):string{
 function jscadScale(vector:number[],body:string):string{let result=`scale(${vec(vector.map(Math.abs))}, ${body})`;for(let axis=0;axis<vector.length;axis++)if(vector[axis]<0)result=`mirror({normal:${vec([0,1,2].map(i=>i===axis?1:0))}}, ${result})`;return result;}
 function jscadProfile(p:CodeProfile):string{
  if(p.kind==='affine'){const m=p.matrix;return `transform(${vec([m[0],m[3],0,0,m[1],m[4],0,0,0,0,1,0,m[2],m[5],0,1])}, ${jscadProfile(p.profile)})`;}
- if(p.kind==='offset'||p.kind==='minkowski')throw new CadCodeError(t('This profile operation cannot yet be exported to JSCAD'),0,'','unsupported-feature');
+ if(p.kind==='resize'||p.kind==='offset'||p.kind==='minkowski')throw new CadCodeError(t('This profile operation cannot yet be exported to JSCAD'),0,'','unsupported-feature');
  if(p.kind==='text')throw new CadCodeError(t('Text profiles cannot yet be exported to JSCAD'),0,'','unsupported-feature');
  if(p.kind==='empty')return 'geom2.create()';if(p.kind==='rectangle')return `translate(${vec(p.center?[0,0]:p.size.map(v=>v/2))}, rectangle({size:${vec(p.size)}}))`;
  if(p.kind==='circle')return `circle({radius:${p.radius}, segments:${p.segments}})`;
@@ -31,7 +32,7 @@ function jscadProfile(p:CodeProfile):string{
 
 /** Conservative bounds; unresolved clipping is diagnosed rather than exporting reversed solids. */
 function profileBounds(p:CodeProfile):[number[],number[]]{
- if(p.kind==='empty')return [[0,0],[0,0]];
+ if(p.kind==='resize')throw new CadCodeError(t('This profile operation cannot yet be exported to JSCAD'),0,'','unsupported-feature');if(p.kind==='empty')return [[0,0],[0,0]];
  if(p.kind==='rectangle')return p.center?[p.size.map(v=>-v/2),p.size.map(v=>v/2)]:[[0,0],[...p.size]];
  if(p.kind==='circle')return [[-p.radius,-p.radius],[p.radius,p.radius]];
  if(p.kind==='polygon'){const points=p.contours.flat();return [ [0,1].map(i=>Math.min(...points.map(v=>v[i]))),[0,1].map(i=>Math.max(...points.map(v=>v[i]))) ];}

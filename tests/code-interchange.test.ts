@@ -31,11 +31,11 @@ it('propagates tagged literal module colors without coercing strings into CAD ex
  expect(geometry(source.replace('part();','part(col="white");')).bodies[0].bounds).toEqual({min:[-2,-1,-.1],max:[2,1,.1]});
  expect(geometry('module inner(c){color(c)cube(2);} module outer(c="red"){local=c;inner(local);} outer("#fff");').volume).toBeCloseTo(8);
  expect(geometry('module part(){shade="red";color(shade)cube(2);}part();').volume).toBeCloseTo(8);
+ expect(geometry('module part(c="true"){cube(2,center=c);}part();').bodies[0].bounds.min).toEqual([0,0,0]);
  const converted=importOpenSCAD(source);expect(converted.source).not.toContain('#3b4747');expect(converted.source).toContain('Appearance colors omitted');
  for(const source of [
   'module part(c="2"){cube(c);}part();',
   'module part(c="2"){cylinder(c,1);}part();',
-  'module part(c="true"){cube(2,center=c);}part();',
   'module part(c="red"){cube(c+1);}part();',
   'module part(c="not a color"){color(c)cube(2);}part();',
   'module part(c="red"+"blue"){color(c)cube(2);}part();',

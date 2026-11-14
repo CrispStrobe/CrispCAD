@@ -11,7 +11,7 @@ The GUI, SDK, CLI and MCP share the converters.
 
 | Input | Supported |
 | --- | --- |
-| OpenSCAD | Typed scalar/vector/string values; final file/block assignments and forward references; lexical nested modules/functions and defaults; `children()` and indexed children; parameter-driven conditionals and multi-binding range/list loops; vector arithmetic/components/indexing; primitives including planar-faced polyhedra; reflections, signed scale, arbitrary-axis rotation, affine matrices and one-target automatic resize; hull and bounded 2D/3D Minkowski sums; profile Booleans, holes, loops, modules, text and round/sharp offsets; twisted/tapered linear extrusion and signed revolution. |
+| OpenSCAD | Typed scalar/vector/string values; final file/block assignments and forward references; lexical nested modules/functions and defaults; `children()` and indexed children; parameter-driven conditionals and multi-binding range/list loops; vector arithmetic/components/indexing; primitives including planar-faced polyhedra; reflections, signed scale, arbitrary-axis rotation, affine matrices and automatic 2D/3D resize; hull and bounded 2D/3D Minkowski sums; profile Booleans, holes, loops, modules, text and round/sharp offsets; twisted/tapered linear extrusion and signed revolution. |
 | JSCAD | Bounded CommonJS/ES modeling imports, helper functions, destructuring, arrays, loops and scalar input parameters; existing primitives plus indexed polyhedra; 2D/3D Booleans/hulls/hullChain; planar profiles and twisted extrusion; positive-angle rotational extrusion and affine transforms; 3D reflection and transforms; evaluated snapshots and flat output-colour metadata. |
 | Native CAD Script | Retained CSG including Minkowski, indexed planar-faced polyhedra, signed scale, mirror, arbitrary-axis rotation and resize; typed 2D construction trees with holes, text, offsets and profile loops/choices; extrusion/taper/twist/revolution; existing numeric parameters, patterns and lazy branches. |
 
@@ -511,3 +511,38 @@ count positional slots independently of named ones, and the later assignment
 wins when both target the same parameter. Function memoization includes this
 order; a guard on an overwritten argument is still checked. Repeated explicit
 keyword names remain diagnosed rather than guessed.
+
+Explicit bundles now try a second, deterministic candidate when a relative
+`include`/`use` target is absent: the exact same path at the supplied bundle root.
+Relative files take precedence. Paths containing `..` remain relative-only;
+escaped/absolute/URL paths still fail. Both candidates are restricted to the
+hash-verified input files. No filesystem lookup, dependency alias, source rewrite
+or library-root geometry execution is introduced. Fallback occurrences record
+`resolution: "bundle-root"` in bundle provenance.
+
+This resolves one measured authored default, Angelo `Projects/Scene_City_Street.scad`,
+with its five exact Street dependencies: **0/1 → 1/1 strict passes**, 842 triangles,
+9.927364671 mm³ of evaluated volume. Offline editor insertion, native code edits,
+atomic invalid edits, provenance, serialization and undo/redo pass. The five
+shared dependencies are not counted as additional admissions. The `lookup` and
+`version_num` cohorts have no confirmed admission-ready default; their existing
+refusals are unchanged. See `library/corpus-audit/editor-screening-cycle25.json`.
+
+## Resize and extrusion option semantics
+
+Retained 3D automatic resize supports several target dimensions and all-zero
+targets. A new retained `resize2d` operator handles profile resizing before
+extrusion/revolution, using the bounds of the evaluated boolean/offset result.
+Automatic axes follow the largest requested scale, not the first target.
+
+Boolean option handling now matches executable probes: primitive/extrusion
+`center` accepts actual Booleans, scalar numeric `auto` is ignored, and numeric
+entries in auto vectors retain their documented nonzero behavior. Explicit
+fractional slice counts truncate; nonpositive straight-extrusion counts use one
+geometrically equivalent step. Twisted/tapered automatic slicing is not guessed.
+
+Original synthetic probes against the official 2021.01 executable are recorded
+in [the resize/extrusion evidence](evidence/resize-extrusion-oracle-2026-11-14.json). New sources use corrected
+option lowering; existing saved native programs keep their existing instructions.
+JSCAD export of resize is still an explicit gap; SCAD and native round trips,
+parameter/history edits and resized Jolt cutouts have regression coverage.

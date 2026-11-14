@@ -4,7 +4,7 @@ import {createHash} from 'node:crypto';
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {createCadSession, createLocalModelLibraryCatalogue, importOpenSCAD, getOpenSCADImportWarnings} from '../packages/core/dist/index.js';
+import {createCadSession, createLocalModelLibraryCatalogue, importOpenSCAD, importOpenSCADBundle, getOpenSCADImportWarnings} from '../packages/core/dist/index.js';
 import {createGeometryKernel, exportSTL, checkModelLibrarySTL} from '../packages/geometry/dist/index.js';
 
 const root = new URL('../', import.meta.url);
@@ -115,10 +115,22 @@ export const corpusEditorSelection = [
   ['Shaft_01', '41b9cf67da8fd47d263966280fce9af1dfcaa1e1b05e8a182d8e9cba1257aee7'],
   ['Shaft_02_With_Keyway', '7d48549ed36d24d8b399e7ffcf4e18b55bf93d2cc8bef43a17bf9cc64aa923b7'],
   ['Coin_02', '92421043b2f2c5d6574e752a5e04454b5146a39452e57d21566c193ab60799bd'],
+  ['Scene_City_Street', '2b33c97c3eab119a88159929bfe6927510636f0d626ac57ca025995087653743', 'Projects/Scene_City_Street.scad'],
 ];
 // Only this admission batch gains warning metadata; earlier qualification records stay immutable.
-const warningQualifiedNames = new Set(['Coin_02', 'Shaft_01', 'Shaft_02_With_Keyway', 'Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ', 'Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01']);
-export async function generateCorpusEditorLibrary() {
+const warningQualifiedNames = new Set(['Scene_City_Street', 'Coin_02', 'Shaft_01', 'Shaft_02_With_Keyway', 'Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ', 'Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01']);
+const cityDependencies = {
+  "Asset_SCAD/Street_02.scad": "9c114a059e7a07b137e11bde20c9ddc047631de9309ec8b99f2b4fc556da3060",
+  "Asset_SCAD/Street_03.scad": "5e2efcd002e43aafc5ad52fecb0f5425413872fb0e38169ef98b45d22675ac9d",
+  "Asset_SCAD/Street_01.scad": "4901bec62feb143eafb7758557b6f88942234771e06ed4a98d596d76e54da37d",
+  "Asset_SCAD/Street_05.scad": "26b28e095a3a9d571a5842152baaf7e6a247e45d185173a1ddfd525f3d953ec8",
+  "Asset_SCAD/Street_04.scad": "9560ea338991cc8a202a620a3ede99e199120f253dd7cff4d7d84111c376d033"
+};
+const preserved96Hash = '34fbd5ceb1fc679fa25c1ff4f85a3ac5d2294e8a399a4757bde7854c0eed9854';
+export async function generateCorpusEditorLibrary({assetId} = {}) {
+  const previous = assetId ? JSON.parse((await read('editor-corpus-manifest.json')).toString()) : undefined;
+  if (previous && hash(Buffer.from(JSON.stringify(previous.assets.slice(0,96)))) !== preserved96Hash) throw new Error('Review required: historical 96 records changed.');
+  if (assetId && assetId !== 'corpus-angelo-scene-city-street') throw new Error('Focused reproduction is restricted to the new city source.');
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
   const repository = corpus.repositories.find(item => item.id === repositoryId);
   if (!repository || repository.commit !== commit || repository.url !== repositoryUrl || repository.license !== 'MIT') throw new Error('Review required: selected corpus repository identity changed.');
@@ -137,6 +149,12 @@ export async function generateCorpusEditorLibrary() {
     if (!record || record.sha256 !== expectedHash || hash(bytes) !== expectedHash || record.size_bytes !== bytes.length || record.spdx !== 'MIT' || record.commit !== commit || record.dependency_blockers?.length || !record.license_evidence.includes('LICENSE')) throw new Error(`Review required: selected source changed: ${upstreamPath}`);
     const slug = name.toLowerCase().replace(/[ _]+/g, '-');
     const sourcePath = `sources/corpus-selection/${slug}.scad`;
+    if (assetId && assetId !== `corpus-angelo-${slug}`) {
+      const old = previous.assets.find(asset => asset.id === `corpus-angelo-${slug}`);
+      if (!old || old.original.sha256 !== expectedHash || !(await read(old.original.path)).equals(bytes)) throw new Error('Historical source changed: '+name);
+      for (const derivative of old.derivatives) if (hash(await read(derivative.path)) !== derivative.sha256) throw new Error('Historical derivative changed: '+name);
+      assets.push(old); continue;
+    }
     // Preserve the previous derivative bytes and their history/provenance identity.
     const meshPath = `meshes/corpus-selection/${slug}${name === 'Walking_Stick' ? '-scoped-fn-v2' : ''}.stl`;
     const title = name === 'x' ? 'Crossed cubes (x)' : name.replaceAll('_', ' ');
@@ -149,7 +167,14 @@ export async function generateCorpusEditorLibrary() {
         ? ' Brickwright interprets the authored two-component 3D translations [0,0] as [0,0,0]. Translation uses the fixed full-render context $preview=false. Qualification covers only the instantiated default top-level model.'
           + (['Ring', 'Pipe_90'].includes(name) ? ' Original unused repeat helpers containing an unresolved ring call are retained unchanged and are outside this qualification.' : '') : '';
     const session = createCadSession();
-    const program = importOpenSCAD(bytes.toString('utf8'));
+    const dependencies = [];
+    if (name === 'Scene_City_Street') for (const [path, expected] of Object.entries(cityDependencies)) {
+      const record = repository.files.find(file => file.path === path), original = await read(`corpus/repos/${repositoryId}/${path}`);
+      if (!record || record.sha256 !== expected || hash(original) !== expected || record.size_bytes !== original.length || record.spdx !== 'MIT' || record.commit !== commit || record.dependency_blockers?.length || !record.license_evidence.includes('LICENSE')) throw new Error('City dependency review required: '+path);
+      dependencies.push({path, record, original});
+    }
+    const imported = dependencies.length ? await importOpenSCADBundle({version:1,rootPath:upstreamPath,files:[{path:upstreamPath,source:bytes.toString('utf8'),sha256:expectedHash},...dependencies.map(dep=>({path:dep.path,source:dep.original.toString('utf8'),sha256:hash(dep.original)}))]}) : undefined;
+    const program = imported?.program ?? importOpenSCAD(bytes.toString('utf8'));
     const admissionNotes = warningQualifiedNames.has(name)
       ? ' Qualification covers only the instantiated default top-level model.'
         + (['Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01'].includes(name) ? ' The unchanged authored default is evaluated at the builtin unbound-time fallback $t=0; motion and alternate frames are not retained or qualified. Gear engagement, kinematics and mechanical performance are not certified.' : '')
@@ -162,20 +187,35 @@ export async function generateCorpusEditorLibrary() {
     const evaluated = kernel.evaluate(session.state.document);
     if (!evaluated.bodies.length || !(evaluated.volume > 0)) throw new Error(`Selected source produced no positive solid: ${name}`);
     const mesh = Buffer.from(exportSTL(evaluated.bodies));
+    if (name === 'Scene_City_Street' && hash(mesh) !== '27c31bed500181d6207e8b020897515bb79cbe264c2387626c00dc79d3e5118f') throw new Error('City default changed from cold-qualified STL.');
     const screening = await checkModelLibrarySTL(mesh, {checkedOn: '2026-11-14', toMillimetresZUp: identity, maxTriangles: 10000, maxExtentMm: 200});
     if (!screening.quality || Object.values(screening.checks).some(result => result !== 'pass')) throw new Error(`Selected mesh screening failed: ${name}: ${JSON.stringify(screening.diagnostics)}`);
     outputs.set(sourcePath, bytes);
     outputs.set(meshPath, mesh);
+    const sourceBundle = dependencies.length ? {
+      format:'brickwright-openscad-bundle', version:1, rootPath:upstreamPath,
+      dependencies:dependencies.map(dep=>({
+        path:dep.path,
+        file:{...file(`sources/corpus-selection/${dep.path.split('/').at(-1).replace('.scad','').toLowerCase().replaceAll('_','-')}.scad`,dep.original),format:'openscad'},
+        author:dep.record.author_attribution, sourceUrl:dep.record.source_url,
+        sourceRevision:{repositoryUrl,commit},
+        licence:{spdx:'MIT',scope:'asset',
+          attribution:`${dep.record.author_attribution}. Source: ${dep.record.source_url}. ${evidence.toString('utf8').replace(/\s+/g,' ').trim()}`,
+          evidenceUrl:evidenceRecord.source_url, capturedOn:repository.captured_at, review:'accepted',
+          reviewer:`${repository.reviewed_by}; exact city use dependency and default STL review 2026-11-14`},
+      })),
+    } : undefined;
     assets.push({
       id: `corpus-angelo-${slug}`, title, author: record.author_attribution, version: commit,
       sourceRevision: {repositoryUrl, commit, sourceUrl: record.source_url},
       corpusSelection: {repositoryId, upstreamPath, archivedPath: `corpus/repos/${repositoryId}/${upstreamPath}`, sha256: expectedHash},
       licence: {spdx: 'MIT', scope: 'asset', attribution: `${record.author_attribution}. Source: ${record.source_url}. ${evidence.toString('utf8').replace(/\s+/g, ' ').trim()}`,
         evidenceUrl: evidenceRecord.source_url, localEvidence: [{...file(evidencePath, evidence), url: evidenceRecord.source_url}], capturedOn: repository.captured_at,
-        review: 'accepted', reviewer: `${repository.reviewed_by}; explicit standalone editor selection and runtime screening 2026-11-14`},
+        review: 'accepted', reviewer: name === 'Scene_City_Street' ? `${repository.reviewed_by}; explicit city root and five use dependencies, default STL screening 2026-11-14` : `${repository.reviewed_by}; explicit standalone editor selection and runtime screening 2026-11-14`},
       original: {...file(sourcePath, bytes), url: record.source_url, format: 'openscad'},
+      ...(sourceBundle ? {sourceBundle} : {}),
       derivatives: [{...file(meshPath, mesh), format: 'stl'}],
-      modificationNotes: 'Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.' + selectionNote + admissionNotes + (name === 'Walking_Stick' ? ' Corrected scoped $fn propagation uses a new derivative path; the earlier walking-stick.stl remains unchanged for historical provenance.' : ''),
+      modificationNotes: 'Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.' + selectionNote + admissionNotes + (name === 'Scene_City_Street' ? ' Five exact use dependencies retain independent MIT grants. Relative files take precedence; the first use resolves only from an exact supplied bundle-root file. Used library root demos are not executed. No source edits or dependency aliases.' : '') + (name === 'Walking_Stick' ? ' Corrected scoped $fn propagation uses a new derivative path; the earlier walking-stick.stl remains unchanged for historical provenance.' : ''),
       conversion: {sourceUnits: 'mm', sourceUpAxis: 'Z', unitAssumption: 'The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.', toMillimetresZUp: identity},
       quality: screening.quality, measurements: {triangles: screening.triangles, boundsMm: screening.boundsMm, signedVolumeMm3: screening.signedVolumeMm3}, diagnostics: screening.diagnostics,
     });
@@ -191,7 +231,8 @@ export async function generateCorpusEditorLibrary() {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const write = process.argv.includes('--write');
   if (!write && !process.argv.includes('--check')) throw new Error('Use --write or --check.');
-  const outputs = await generateCorpusEditorLibrary();
+  const selectedIndex = process.argv.indexOf('--asset-id');
+  const outputs = await generateCorpusEditorLibrary({assetId:selectedIndex < 0 ? undefined : process.argv[selectedIndex+1]});
   // Published mesh paths are immutable: corrections need an explicit new derivative path.
   if (write) for (const [path, expected] of outputs) {
     if (!path.startsWith('meshes/')) continue;

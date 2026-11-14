@@ -61,3 +61,23 @@ it('measures exact authored Scene_House geometry and editor history while refusi
   session.undo();expect(session.serialize()).toBe(before);session.redo();expect(session.serialize()).toBe(saved);
  }finally{session.dispose();}
 });
+
+it('resolves an exact supplied bundle-root file only after the relative candidate is absent',async()=>{
+ const root=file('Projects/root.scad','use <lib/part.scad> part();'),library=file('lib/part.scad','module part(){cube(2);}assert(false);cube(100);');
+ const imported=await importOpenSCADBundle({version:1,rootPath:root.path,files:[root,library]});
+ expect(imported.provenance.includes[0]).toMatchObject({kind:'use',resolution:'bundle-root',path:'lib/part.scad'});
+ const session=createCadSession();try{session.addCode(imported.program);expect(kernel.evaluate(session.state.document).volume).toBeCloseTo(8);}finally{session.dispose();}
+ const local=file('Projects/lib/part.scad','module part(){cube(3);}');
+ const preferred=await importOpenSCADBundle({version:1,rootPath:root.path,files:[root,library,local]});
+ expect(preferred.provenance.includes[0].path).toBe(local.path);expect(preferred.provenance.includes[0].resolution).toBeUndefined();
+ const s=createCadSession();try{s.addCode(preferred.program);expect(kernel.evaluate(s.state.document).volume).toBeCloseTo(27);}finally{s.dispose();}
+});
+it('applies bundle-root resolution to textual includes without fallback for parent traversal',async()=>{
+ const root=file('Projects/root.scad','include <lib.scad> cube(size);'),library=file('lib.scad','size=2;');
+ const imported=await importOpenSCADBundle({version:1,rootPath:root.path,files:[root,library]});expect(imported.provenance.includes[0]).toMatchObject({resolution:'bundle-root',path:'lib.scad'});
+ await expect(importOpenSCADBundle({version:1,rootPath:'deep/dir/root.scad',files:[file('deep/dir/root.scad','use <../lib.scad>'),library]})).rejects.toThrow('missing');
+ await expect(importOpenSCADBundle({version:1,rootPath:root.path,files:[root,{...library,sha256:'0'.repeat(64)}]})).rejects.toThrow('SHA-256');
+});
+it('retains active dependency cycle refusal when a bundle-root fallback participates',async()=>{
+ await expect(importOpenSCADBundle({version:1,rootPath:'Projects/root.scad',files:[file('Projects/root.scad','use <lib.scad>'),file('lib.scad','use <Projects/root.scad>')]})).rejects.toThrow('Cyclic');
+});

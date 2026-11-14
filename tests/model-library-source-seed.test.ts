@@ -12,7 +12,7 @@ beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('
 
 it('admits only the supported seed, retains exact original bytes and URL, and exports the full original MIT notice',async()=>{
   const {catalogue,localFiles}=createBundledModelLibrary();
-  expect(catalogue.assets).toHaveLength(143);
+  expect(catalogue.assets).toHaveLength(144);
   expect(catalogue.assets.some(asset=>['jscad-nuts-and-bolts','threads-scad-demo'].includes(asset.id))).toBe(false);
   const asset=catalogue.assets.find(asset=>asset.id==='jscad-involute-gear')!;
   expect(asset.original.url).toContain(`/${asset.sourceRevision!.commit}/`);
@@ -36,9 +36,9 @@ it('admits only the supported seed, retains exact original bytes and URL, and ex
   session.undo();expect(session.serialize()).toBe(before);session.redo();expect(session.serialize()).toBe(saved);session.dispose();
 });
 
-it('bundles exactly ninety-three reviewed corpus entries',()=>{
-  expect(corpusManifest.assets).toHaveLength(96);
-  expect(bundledCorpus.catalogue.assets).toHaveLength(143);
+it('bundles exactly ninety-seven reviewed corpus entries',()=>{
+  expect(corpusManifest.assets).toHaveLength(97);
+  expect(bundledCorpus.catalogue.assets).toHaveLength(144);
 });
 
 it.each(corpusManifest.assets)('bundles and inserts reviewed corpus source $id with original identity and attribution',async(raw:any)=>{
@@ -49,7 +49,7 @@ it.each(corpusManifest.assets)('bundles and inserts reviewed corpus source $id w
     expect(bytes).toEqual(new Uint8Array(read(asset.original.path!)));
     expect(licenceTexts.get(asset.id)).toBe(read('evidence/corpus-selection-MIT-LICENSE.txt').toString());
     const session=createCadSession(),before=session.serialize();
-    await insertModelLibrarySource(session,catalogue,{assetId:asset.id,file:'original'},bytes,{evaluate:kernel.evaluate,modificationNotes:'Default source geometry; colour omitted by translator; coordinates preserved.'});
+    await insertModelLibrarySource(session,catalogue,{assetId:asset.id,file:'original'},bytes,{sourceFiles:localFiles,evaluate:kernel.evaluate,modificationNotes:'Default source geometry; colour omitted by translator; coordinates preserved.'});
     expect(kernel.evaluate(session.state.document).volume).toBeGreaterThan(0);
     const record=session.state.document.provenance!.records[0];
     expect(record.selectedFile).toEqual(asset.original);expect(record.asset.sourceRevision!.commit).toBe(raw.version);

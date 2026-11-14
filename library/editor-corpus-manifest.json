@@ -8,7 +8,7 @@
     "command": "node scripts/generate-corpus-editor-library.mjs --check",
     "generator": {
       "path": "../scripts/generate-corpus-editor-library.mjs",
-      "sha256": "e4ade319f3304805e0224c0b68917a737333ef82533e7b89eda64c8132e5c09d"
+      "sha256": "f22d54130e81a7c4d10c0e24b492a11af554c1de4e3bbacae9da9148b9716419"
     },
     "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
@@ -16,8 +16,8 @@
   "selection": {
     "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
     "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
-    "count": 96,
-    "runtimeChecked": 96,
+    "count": 97,
+    "runtimeChecked": 97,
     "complete": true
   },
   "assets": [
@@ -11826,6 +11826,256 @@
           ]
         },
         "signedVolumeMm3": 2458.9368026141065
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-angelo-scene-city-street",
+      "title": "Scene City Street",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Projects/Scene_City_Street.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Projects/Scene_City_Street.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Projects/Scene_City_Street.scad",
+        "sha256": "2b33c97c3eab119a88159929bfe6927510636f0d626ac57ca025995087653743"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Projects/Scene_City_Street.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit city root and five use dependencies, default STL screening 2026-11-14"
+      },
+      "original": {
+        "path": "sources/corpus-selection/scene-city-street.scad",
+        "sha256": "2b33c97c3eab119a88159929bfe6927510636f0d626ac57ca025995087653743",
+        "bytes": 363,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Projects/Scene_City_Street.scad",
+        "format": "openscad"
+      },
+      "sourceBundle": {
+        "format": "brickwright-openscad-bundle",
+        "version": 1,
+        "rootPath": "Projects/Scene_City_Street.scad",
+        "dependencies": [
+          {
+            "path": "Asset_SCAD/Street_02.scad",
+            "file": {
+              "path": "sources/corpus-selection/street-02.scad",
+              "sha256": "9c114a059e7a07b137e11bde20c9ddc047631de9309ec8b99f2b4fc556da3060",
+              "bytes": 1703,
+              "format": "openscad"
+            },
+            "author": "Angelo Nicoli (Gengio), 2023-2024",
+            "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Street_02.scad",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+              "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6"
+            },
+            "licence": {
+              "spdx": "MIT",
+              "scope": "asset",
+              "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Street_02.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+              "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+              "capturedOn": "2026-11-13",
+              "review": "accepted",
+              "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact city use dependency and default STL review 2026-11-14"
+            }
+          },
+          {
+            "path": "Asset_SCAD/Street_03.scad",
+            "file": {
+              "path": "sources/corpus-selection/street-03.scad",
+              "sha256": "5e2efcd002e43aafc5ad52fecb0f5425413872fb0e38169ef98b45d22675ac9d",
+              "bytes": 1303,
+              "format": "openscad"
+            },
+            "author": "Angelo Nicoli (Gengio), 2023-2024",
+            "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Street_03.scad",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+              "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6"
+            },
+            "licence": {
+              "spdx": "MIT",
+              "scope": "asset",
+              "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Street_03.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+              "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+              "capturedOn": "2026-11-13",
+              "review": "accepted",
+              "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact city use dependency and default STL review 2026-11-14"
+            }
+          },
+          {
+            "path": "Asset_SCAD/Street_01.scad",
+            "file": {
+              "path": "sources/corpus-selection/street-01.scad",
+              "sha256": "4901bec62feb143eafb7758557b6f88942234771e06ed4a98d596d76e54da37d",
+              "bytes": 1194,
+              "format": "openscad"
+            },
+            "author": "Angelo Nicoli (Gengio), 2023-2024",
+            "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Street_01.scad",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+              "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6"
+            },
+            "licence": {
+              "spdx": "MIT",
+              "scope": "asset",
+              "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Street_01.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+              "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+              "capturedOn": "2026-11-13",
+              "review": "accepted",
+              "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact city use dependency and default STL review 2026-11-14"
+            }
+          },
+          {
+            "path": "Asset_SCAD/Street_05.scad",
+            "file": {
+              "path": "sources/corpus-selection/street-05.scad",
+              "sha256": "26b28e095a3a9d571a5842152baaf7e6a247e45d185173a1ddfd525f3d953ec8",
+              "bytes": 1675,
+              "format": "openscad"
+            },
+            "author": "Angelo Nicoli (Gengio), 2023-2024",
+            "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Street_05.scad",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+              "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6"
+            },
+            "licence": {
+              "spdx": "MIT",
+              "scope": "asset",
+              "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Street_05.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+              "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+              "capturedOn": "2026-11-13",
+              "review": "accepted",
+              "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact city use dependency and default STL review 2026-11-14"
+            }
+          },
+          {
+            "path": "Asset_SCAD/Street_04.scad",
+            "file": {
+              "path": "sources/corpus-selection/street-04.scad",
+              "sha256": "9560ea338991cc8a202a620a3ede99e199120f253dd7cff4d7d84111c376d033",
+              "bytes": 1737,
+              "format": "openscad"
+            },
+            "author": "Angelo Nicoli (Gengio), 2023-2024",
+            "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Street_04.scad",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+              "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6"
+            },
+            "licence": {
+              "spdx": "MIT",
+              "scope": "asset",
+              "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Street_04.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+              "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+              "capturedOn": "2026-11-13",
+              "review": "accepted",
+              "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact city use dependency and default STL review 2026-11-14"
+            }
+          }
+        ]
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/scene-city-street.stl",
+          "sha256": "27c31bed500181d6207e8b020897515bb79cbe264c2387626c00dc79d3e5118f",
+          "bytes": 42184,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics. Qualification covers only the instantiated default top-level model. Import warnings captured at qualification: Source colours and transparency are not retained; solid geometry is preserved. Five exact use dependencies retain independent MIT grants. Relative files take precedence; the first use resolves only from an exact supplied bundle-root file. Used library root demos are not executed. No source edits or dependency aliases.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "27c31bed500181d6207e8b020897515bb79cbe264c2387626c00dc79d3e5118f",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 842,
+        "boundsMm": {
+          "min": [
+            -6.099999904632568,
+            -1.100000023841858,
+            -0.10999999940395355
+          ],
+          "max": [
+            2.299999952316284,
+            7.300000190734863,
+            0.10999999940395355
+          ]
+        },
+        "signedVolumeMm3": 9.927364844426387
       },
       "diagnostics": []
     }

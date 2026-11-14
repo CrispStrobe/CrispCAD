@@ -164,7 +164,7 @@ still apply.
 `affine([m00,m01,m02,tx,m10,m11,m12,ty,m20,m21,m22,tz], shape)`
 retains a row-major affine transform. `affine2d(a,b,tx,c,d,ty,profile)` applies its
 planar counterpart. `resize([x,y,z],[true,true,false],shape)` optionally scales
-zero target axes from one specified target dimension. Existing two-argument
+zero target axes by the largest scale factor among specified target dimensions. Existing two-argument
 resize keeps its previous behavior.
 
 `polygonGenerated2d(pointRange(i,start,end,step,point(x,y)))` retains generated
@@ -204,3 +204,22 @@ loop-dependent references are checked when consumed. `assertValue(condition,valu
 checks lazily, including an optional literal or `formatSCAD` diagnostic message.
 Text in this expression form is diagnostic data; it cannot supply a numeric
 modeling argument or execute code.
+
+## Evaluated profile resize
+
+`resize2d(width,depth,autoX,autoY,profile)` resizes the evaluated profile, including
+its boolean cuts and offsets. Zero targets keep their size unless the matching
+auto flag is true. Automatic axes follow the largest specified scale factor;
+all-zero targets are an identity. Empty input stays empty. The existing
+`resize([x,y,z],[autoX,autoY,autoZ],shape)` follows the same rule in 3D.
+
+SCAD import/export retains these operations and parameter dependencies. JSCAD
+export of resize remains explicitly unsupported until it has evaluated bounds;
+conservative profile bounds must not be used to guess the scaling of a cut body.
+
+OpenSCAD Boolean options such as `center` use actual Boolean values; numeric
+`center=1` means the default false. Numeric entries inside a resize auto vector
+use their nonzero values, while a numeric scalar `auto` is ignored. Explicit
+fractional extrusion slices are truncated. Nonpositive slice counts for straight,
+untwisted, untapered extrusions use an equivalent one-step construction. Automatic
+slices for twisted/tapered profiles remain part of the tessellation gap.

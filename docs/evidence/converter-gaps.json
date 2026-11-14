@@ -170,9 +170,10 @@
       "id": "engine.tessellation.defaults",
       "state": "open",
       "area": "geometry",
-      "current": "Absent SCAD fragment controls still use native 48 segments, not reference adaptive defaults.",
+      "current": "Absent SCAD fragment controls retain native 48 segments. Explicit fractional slices truncate and straight untwisted untapered nonpositive slices are handled equivalently; automatic twisted/tapered slicing remains unsupported.",
       "tests": [
-        "tests/openscad-language.test.ts"
+        "tests/openscad-language.test.ts",
+        "tests/resize-engine.test.ts"
       ],
       "nextOrEvidence": "Next: radius-aware default $fa/$fs across all curved primitives, text curves and extrusions; preserve old saved native programs."
     },
@@ -229,6 +230,27 @@
         "tests/openscad-animation-context.test.ts"
       ],
       "nextOrEvidence": "Retain an explicit animation-time parameter and time-dependent feature evaluation; integrate mechanism/motion constraints rather than claiming a static frame simulates authored animation."
+    },
+    {
+      "id": "engine.resize",
+      "state": "closed",
+      "area": "geometry",
+      "current": "Retained 2D/3D resize uses evaluated bounds, supports several targets, automatic masks and all-zero identity, preserving empty inputs and parameter edits.",
+      "tests": [
+        "tests/resize-engine.test.ts",
+        "tests/physics.test.ts"
+      ],
+      "nextOrEvidence": "Original official-2021.01 executable probes verify the largest requested scale, 2D third-axis handling and Boolean/numeric option distinctions. Jolt rays verify resized holes and stale-collision rejection."
+    },
+    {
+      "id": "engine.export.resize",
+      "state": "open",
+      "area": "export",
+      "current": "Native and SCAD resize round trips are retained. JSCAD snapshot export refuses resize because conservative bounds cannot determine exact scaling after cuts or offsets.",
+      "tests": [
+        "tests/resize-engine.test.ts"
+      ],
+      "nextOrEvidence": "Next: supply evaluated bounds/geometry through the export boundary, or a compatible bounded runtime measurement contract, without freezing parameters or guessing CSG bounds."
     }
   ]
 }

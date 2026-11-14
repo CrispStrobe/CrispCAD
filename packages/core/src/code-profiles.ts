@@ -3,7 +3,7 @@ import {parseCodeText,resolveCodeText} from './code-text.js';
 import type {CodeTextAst} from './code-text.js';
 import {textVertexBudget} from './font-budgets.js';
 import {t} from './i18n.js';
-export type CodeProfile={kind:'affine';matrix:number[];profile:CodeProfile}|{kind:'offset';distance:number;round:boolean;segments:number;profile:CodeProfile}|{kind:'text';text:string;size:number;font:'sans'|'serif'|'mono';halign:'left'|'center'|'right';valign:'baseline'|'top'|'center'|'bottom';spacing:number;curveSteps:number}|{kind:'empty'}|{kind:'polygon';contours:[number,number][][]}|{kind:'circle';radius:number;segments:number}|{kind:'rectangle';size:[number,number];center:boolean}|{kind:'union'|'subtract'|'intersect'|'hull'|'minkowski';profiles:CodeProfile[]}|{kind:'move'|'scale';vector:[number,number];profile:CodeProfile}|{kind:'rotate';angle:number;profile:CodeProfile};
+export type CodeProfile={kind:'resize';size:[number,number];auto:[boolean,boolean];profile:CodeProfile}|{kind:'affine';matrix:number[];profile:CodeProfile}|{kind:'offset';distance:number;round:boolean;segments:number;profile:CodeProfile}|{kind:'text';text:string;size:number;font:'sans'|'serif'|'mono';halign:'left'|'center'|'right';valign:'baseline'|'top'|'center'|'bottom';spacing:number;curveSteps:number}|{kind:'empty'}|{kind:'polygon';contours:[number,number][][]}|{kind:'circle';radius:number;segments:number}|{kind:'rectangle';size:[number,number];center:boolean}|{kind:'union'|'subtract'|'intersect'|'hull'|'minkowski';profiles:CodeProfile[]}|{kind:'move'|'scale';vector:[number,number];profile:CodeProfile}|{kind:'rotate';angle:number;profile:CodeProfile};
 interface Scalar{text:string;at:number}
 export interface ProfileAst{name:string;at:number;scalars:Scalar[];texts?:string[];textParts?:(string|Scalar)[];scadFormat?:boolean;message?:CodeTextAst;variable?:string;points?:Scalar[][];paths?:Scalar[][];sequence?:PointSequenceAst;profiles:ProfileAst[]}
 type PointSequenceAst={name:string;at:number;variable?:string;scalars:Scalar[];parts:PointSequenceAst[]};
@@ -24,6 +24,7 @@ export function parseCodeProfile(p:Parser,depth=0):ProfileAst{
  else if(a.name==='choose2d'){a.scalars.push(p.scalar([',']));p.expect(',');a.profiles.push(parseCodeProfile(p,depth+1));p.expect(',');a.profiles.push(parseCodeProfile(p,depth+1));}
  else if(a.name==='forRange2d'||a.name==='forValues2d'){a.variable=p.take().text;if(!/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(a.variable))p.fail(t('Expected a name'),a.at);p.expect(',');if(a.name==='forRange2d'){for(let i=0;i<3;i++){a.scalars.push(p.scalar([',']));p.expect(',');}}else{p.expect('[');while(p.peek()!==']'){a.scalars.push(p.scalar([',',']']));if(a.scalars.length>256)p.limited(t('Loop exceeds 256 values'),a.at);if(p.peek()!==',')break;p.expect(',');}p.expect(']');p.expect(',');}a.profiles.push(parseCodeProfile(p,depth+1));}
  else if(a.name==='affine2d'){for(let i=0;i<6;i++){a.scalars.push(p.scalar([',']));p.expect(',');}a.profiles.push(parseCodeProfile(p,depth+1));}
+ else if(a.name==='resize2d'){for(let i=0;i<4;i++){a.scalars.push(p.scalar([',']));p.expect(',');}a.profiles.push(parseCodeProfile(p,depth+1));}
  else if(a.name==='offset2d'){for(let i=0;i<3;i++){a.scalars.push(p.scalar([',']));p.expect(',');}a.profiles.push(parseCodeProfile(p,depth+1));}
  else if(a.name==='polygonGenerated2d'){a.sequence=parsePointSequence(p);if(p.peek()===','){p.expect(',');a.paths=lists();}}
  else if(a.name==='polygon2d'){a.points=lists();if(p.peek()===','){p.expect(',');a.paths=lists();}}
@@ -62,6 +63,7 @@ export function resolveCodeProfile(a:ProfileAst,number:(s:Scalar,unit:'mm'|'deg'
  const profiles=a.profiles.map(child=>resolveCodeProfile(child,number,fail,step,bind,format));
  if(a.name.endsWith('2d')&&['union2d','subtract2d','intersect2d','hull2d','minkowski2d'].includes(a.name)){if(!profiles.length)return {kind:'empty'};if(profiles.length===1&&a.name!=='hull2d')return profiles[0];return {kind:a.name.slice(0,-2) as 'union'|'subtract'|'intersect'|'hull'|'minkowski',profiles};}
  if(a.name==='affine2d')return {kind:'affine',matrix:a.scalars.map((_,i)=>n(i,i%3===2?'mm':'scalar',-100000)),profile:profiles[0]};
+ if(a.name==='resize2d')return {kind:'resize',size:[n(0,'mm',0),n(1,'mm',0)],auto:[n(2,'scalar',0,1,true,true)!==0,n(3,'scalar',0,1,true,true)!==0],profile:profiles[0]};
  if(a.name==='offset2d')return {kind:'offset',distance:n(0,'mm',-100000),round:n(1,'scalar',0,1,true,true)!==0,segments:n(2,'scalar',3,4096,true),profile:profiles[0]};
  if(a.name==='rotate2d')return {kind:'rotate',angle:n(0,'deg',-360000,360000),profile:profiles[0]};
  const result:CodeProfile={kind:a.name==='move2d'?'move':'scale',vector:[n(0,a.name==='move2d'?'mm':'scalar',-100000),n(1,a.name==='move2d'?'mm':'scalar',-100000)],profile:profiles[0]};return result.kind==='scale'&&result.vector.includes(0)?{kind:'empty'}:result;
