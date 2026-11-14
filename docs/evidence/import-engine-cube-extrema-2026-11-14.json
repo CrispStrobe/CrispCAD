@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "measuredOn": "2026-11-14",
+  "scope": "Aggregate research execution only. Sources, per-file records and research geometry remain external. Positive solids are not upstream fidelity certification.",
+  "dataset": "redcathode/thingiverse-openscad",
+  "revision": "2b4206aae3af7740100a2f0e979dd9cb66cd77f0",
+  "sampling": "deterministic evenly spaced files after exact source-hash deduplication; not random model sampling",
+  "inputRows": 7929,
+  "uniqueFiles": 7864,
+  "sampleFiles": 256,
+  "sameSourceHashes": true,
+  "baseline": {
+    "reportSha256": "f303f32dfed11e4fbd7dbb1a2e65eb02fe591e3de7f205a61094b00bd38fe1d6",
+    "statuses": {
+      "unsupported": 37,
+      "converted": 166,
+      "failed": 18,
+      "limited": 33,
+      "process-failure": 2
+    },
+    "limits": {
+      "converterTimeoutMs": 15000,
+      "maxOldSpaceSizeMb": 256
+    },
+    "commit": "b507d71f8f128bda948ae3dd20bd62e2ad1f5bb4"
+  },
+  "after": {
+    "reportSha256": "5a139324e256a3df80a8170e45085e513e25f3b5efbd8b7f70fcb00a1a9cd98c",
+    "statuses": {
+      "unsupported": 37,
+      "converted": 167,
+      "failed": 17,
+      "limited": 34,
+      "process-failure": 1
+    },
+    "limits": {
+      "converterTimeoutMs": 15000,
+      "maxOldSpaceSizeMb": 256
+    },
+    "converterBuild": {
+      "commit": "7f8b75e6ccccf70d96d49e1c32c89d2e50e8e058",
+      "dirty": false,
+      "artifacts": {
+        "code.js": "65eb8a1a6cbbfe84562195292a0b6ee3735dbad181ff7c1e00b522b43adfece7",
+        "code-loft.js": "fbdd29db83623c7148f02626b2c943cd04a31c5280f538992135e1974907a75b",
+        "code-elliptic.js": "66d465e26d7d7c15b08a1d5c34c7268e5d1adee45b6fd65fee8b3e138a091cb3",
+        "code-text.js": "ae581f3a92a4a65edeb9416bc74998a1ad76a4d67956854094aeab2ce8c62240",
+        "scad-numbers.js": "8886a27b2e86394927c5e56a7b7f4f0d5a1071592f7b94a7651567efefb0fafd",
+        "conversion-notices.js": "50ee6e1c0f427acc3a78d7247dc3a4b03b0056d71dbb13928ee2b7c97f954c4e",
+        "code-interchange.js": "be4703045286764ca4054edb4991f0d66e748ca9eb565940f0362d9896a6ffc0",
+        "openscad-import.js": "bb4ffdb0da307cfc2d7afdc1d37f3e039b77942e684367aedb27540c75b7f6be",
+        "jscad-import.js": "ffddefab56831ed90686f627208526d64249963908b33761ffd9f6ea7912b5ba",
+        "parameters.js": "505ed030c6580b30378ce110c23ee4565dc88b183a64152ab47854d2d96b6e5b",
+        "font-budgets.js": "995412ad96947af2e3947ac41fc34e3d2881147e67b888e216fc7f4fe893878b",
+        "code-profiles.js": "403ab11bb4b5e86ae3e5b1c3df3e701f1661b823ba5cdfb1086129423581a29c",
+        "features.js": "724e4fc258961b700f598295698aec1c5dcd982d09a30f1838953d0e48ec0cd8",
+        "geometryKernel": "115db4783b95cb20ad6b313b30f43c2f2d89c8512b0fa29f26cc562fb475d946",
+        "geometry/font-profile.js": "de836295ab0c0f8364927dac7b0a95829f6b04548bd09da6fb97351bddfbd9d8",
+        "geometry/polyhedron.js": "c975596e22ca662b933fedac0519172d3778aab511b9fa1ef4ba183fa4e09382",
+        "geometry/limits.js": "ab598a640df9cfb58c5dff20f0a608c013a08b0e1e78b46f39a69a231fa20569",
+        "geometry/fonts/droid_sans_regular.typeface.json": "5532f318b78eeb2215dcb0ae6ebdfb8f82e369187731c28f53e37784a044459a",
+        "geometry/fonts/droid_serif_regular.typeface.json": "10d747ee765ad60e1acec86c31187ac5084b96c376d911c1c46e3f80308b08e4",
+        "geometry/fonts/droid_sans_mono_regular.typeface.json": "69fd4dc9782cfe281f9a96b40e3ae3e4392ea05c1082fbea4c04f369f52feaf2",
+        "manifoldWasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "node": "v26.4.0",
+      "platform": "darwin",
+      "architecture": "arm64"
+    }
+  },
+  "transitions": [
+    {
+      "before": "converted",
+      "after": "converted",
+      "count": 166
+    },
+    {
+      "before": "failed",
+      "after": "failed",
+      "count": 17
+    },
+    {
+      "before": "failed",
+      "after": "limited",
+      "count": 1
+    },
+    {
+      "before": "limited",
+      "after": "limited",
+      "count": 33
+    },
+    {
+      "before": "process-failure",
+      "after": "converted",
+      "count": 1
+    },
+    {
+      "before": "process-failure",
+      "after": "process-failure",
+      "count": 1
+    },
+    {
+      "before": "unsupported",
+      "after": "unsupported",
+      "count": 37
+    }
+  ],
+  "convertedRegressions": 0,
+  "newPositiveSolids": 1,
+  "changedPriorConvertedVolumesAt1e6Tolerance": 0,
+  "changedPriorConvertedBoundsAt1e6Tolerance": 0,
+  "positiveSolidsWithNotices": 73,
+  "noticeOccurrences": {
+    "scad.appearance.colours": 16,
+    "scad.parameters.strings": 43,
+    "scad.console.echo": 10,
+    "scad.preview.highlight": 7,
+    "scad.random.sequence": 1,
+    "scad.text.font": 19,
+    "scad.arguments.ignored": 5,
+    "scad.module.arguments-ignored": 5,
+    "scad.polygon.empty-input": 2
+  },
+  "caveats": [
+    "Same frozen 256 source hashes and 15-second per-file limit; unchanged production budgets. Shared-host deadline outcomes are not performance benchmarks.",
+    "Positive solids and matching bounds/volume do not establish topology or complete OpenSCAD fidelity. No upstream oracle ran over this whole research sample.",
+    "Nested/vector extrema, ellipse line ends and angular intervals, full source fonts, seeded random parity and dynamic string parameters remain gaps.",
+    "Dataset sources, per-file records and generated geometry remain external. No research model is added to the shipped gallery.",
+    "Local harness deadlines were raised for loaded-host tests only; production resource limits unchanged. GitHub Actions remain disabled."
+  ],
+  "featureCheckpoint": "7f8b75e6ccccf70d96d49e1c32c89d2e50e8e058",
+  "verification": {
+    "fullNative": {
+      "passed": 820,
+      "skipped": 1,
+      "files": 73,
+      "command": "npm test -- --maxWorkers=1 --testTimeout=15000",
+      "logSha256": "7c2658762c96e375cd80dad6c574980256ab06870f663ba7a20fb9d5148ce95d"
+    },
+    "finalFollowup": {
+      "passed": 29,
+      "files": [
+        "tests/next-engine.test.ts",
+        "tests/mcp.test.ts"
+      ],
+      "scope": "Includes final malformed Cube-vector guards and MCP recipe discovery/application. Overlaps full suite; not 849 unique tests."
+    },
+    "browser": {
+      "passed": 16,
+      "platforms": [
+        "desktop Chromium",
+        "iPad WebKit"
+      ],
+      "scope": "Linked Cube numeric/gizmo edits, live axis scale, undo, reload; four screw families; retained SCAD extrema; compact JSCAD elliptic constructor. Includes two repeated hex-head checks after contextual field labels were finalized.",
+      "harnessTimeoutMs": 180000
+    },
+    "i18n": {
+      "messages": 1358,
+      "status": "passed"
+    },
+    "sdk": {
+      "packages": 6,
+      "status": "passed",
+      "scope": "Offline empty-cache tarball install; fonts, retained parameters/features, linked Cube, elliptical taper, socket screw, SI physics."
+    },
+    "jolt": "Real Jolt raycasts preserve the taper bore and screw drive recesses. Screw mode is rigid-preview, not qualified thread engagement.",
+    "independentJscad": "Installed MIT @jscad/modeling 2.13.0 compares bounds and volume for three elliptical tapers including both tip orientations; nested axis transforms and 2D profile aliases.",
+    "officialScad": "Official OpenSCAD 2021.01 executable, original synthetic empty/literal/filtered extrema probe. Empty min/max return undef; numeric example returns 1 and 4. No upstream implementation consulted."
+  },
+  "timingInterpretation": "167 solids versus 166 in the baseline; the extra result was a prior timeout. All 166 common positives retain volume/bounds. One min/max failure advances to the construction budget, not conversion. No new semantic coverage is claimed from the timeout recovery.",
+  "contracts": [
+    "Cube is a version-2 recipe on an existing box node, with one edge and uniform local scale. Core edits, parameter bindings and gizmo preview share the constraint. Conflicting edits are rejected without committing history.",
+    "Four editable screw families retain head/drive/profile inputs, local orientation, save/history and headless source recipes. Version-1 geometry is preserved; these are simplified representative fasteners, not certified ISO/DIN tolerance or fit.",
+    "Bounded minRange/maxRange preserve units and loop scopes. Empty native ranges fail; imported SCAD empty extrema retain undef guards.",
+    "Elliptic tapers remain compact native source; line ends and angular intervals remain unsupported. Large mesh snapshot exports may exceed unchanged reimport limits."
+  ],
+  "nativeDelivery": {
+    "source": "7f8b75e6ccccf70d96d49e1c32c89d2e50e8e058",
+    "workingTree": "clean at build time",
+    "macOS": {
+      "build": 22,
+      "status": "native smoke passed; installed and launched",
+      "scope": "Native trackpad magnification, menus, clipboard, history retention, model gallery and model-source checks."
+    },
+    "iPadOS": {
+      "build": 12,
+      "status": "archive/export succeeded; two WLAN installation attempts disconnected before installation",
+      "transport": "localNetwork",
+      "device": "F0E7765C-F625-51B0-8F56-1E04F3B02B70"
+    }
+  }
+}

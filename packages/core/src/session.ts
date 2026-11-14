@@ -3,7 +3,7 @@ import {generateModelSource,compileModelSource,updateModelSource,sameModelValue}
 import {t} from './i18n.js';
 import type {ModelProvenanceRecord} from './model-provenance.js';
 import {assertProvenanceUpgrade,pruneModelProvenance} from './model-provenance.js';
-import { checkDocument, createDocument, freezeDocument, identityTransform, newId, parseDocument, pruneDocument, serializeDocument, validateDocument } from './document.js';
+import {isCube,constrainCubeEdit,constrainCubeTransform, checkDocument, createDocument, freezeDocument, identityTransform, newId, parseDocument, pruneDocument, serializeDocument, validateDocument } from './document.js';
 import type { CadDocument, Primitive, SolidNode, Transform, Vec3 } from './document.js';
 import { defaultPartPhysics } from './physics.js';
 import { applyParametricBindings, assertDrivenEdit } from './parameters.js';
@@ -111,7 +111,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     });},
     rename(title: string) { commit('Rename design', d => { d.title = title; }); },
     setParametric(design: ParametricDesign) {commit('Edit parameters',d=>{if(d.version===1)d.version=2;d.parametric=structuredClone(design);});},
-    detachGenerator(id:string){commit('Detach shape generator',d=>{if(!d.nodes[id]?.generator)throw new Error(t('No generator to detach'));delete d.nodes[id].generator;if(d.nodes[id].physics)d.nodes[id].physics={...d.nodes[id].physics!,sourcePreset:undefined};});},
+    detachGenerator(id:string){commit('Detach shape generator',d=>{if(!d.nodes[id]?.generator)throw new Error(t('No generator to detach'));if(isCube(d.nodes[id]))throw new Error(t('Cube edges are linked; use a Box for independent dimensions'));delete d.nodes[id].generator;if(d.nodes[id].physics)d.nodes[id].physics={...d.nodes[id].physics!,sourcePreset:undefined};});},
     replaceGenerated(id:string,fragment:CadDocument){
       const source=validateDocument(fragment);if(source.roots.length!==1||source.joints?.length||source.parametric||source.sketches||(source.version>=5&&source.provenance))throw new Error(t('Expected one generated body'));
       commit('Edit shape parameters',d=>{
@@ -177,13 +177,13 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       guardConstructionEdit(d,id);
       if(d.version>=5&&'provenance' in patch)throw new Error('Use attachProvenance to record sources');
       if('program' in patch)throw new Error(t('Use updateCode to edit a code program'));
-      if(patch.generator)throw new Error(t('Use shape regeneration to change generator inputs'));
+      if('generator' in patch)throw new Error(t('Use shape regeneration to change generator inputs'));
       // Kind and identity cannot be changed by inspector edits.
       if ((patch.id && patch.id !== id) || (patch.kind && patch.kind !== d.nodes[id].kind)) throw new Error(t('Cannot change object identity or kind'));
-      const next = { ...d.nodes[id], ...structuredClone(patch) } as SolidNode;
+      const next = constrainCubeEdit(d.nodes[id],{ ...d.nodes[id], ...structuredClone(patch) } as SolidNode);
       assertDrivenEdit(d,next); d.nodes[id] = next;
     }); },
-    transform(updates: Array<{ id: string; transform: Transform }>) { commit('Transform selection', d => { for (const { id, transform } of updates) { if (!d.nodes[id]) throw new Error(t('Object does not exist'));guardConstructionEdit(d,id); const next={...d.nodes[id],transform:structuredClone(transform)};assertDrivenEdit(d,next);d.nodes[id]=next; } }); },
+    transform(updates: Array<{ id: string; transform: Transform }>) { commit('Transform selection', d => { for (const { id, transform } of updates) { if (!d.nodes[id]) throw new Error(t('Object does not exist'));guardConstructionEdit(d,id); const next={...d.nodes[id],transform:constrainCubeTransform(d.nodes[id],structuredClone(transform))};assertDrivenEdit(d,next);d.nodes[id]=next; } }); },
     setRole(role:'solid'|'hole',ids:readonly string[]=selection){commit('Change solid/hole role',d=>{const chosen=[...new Set(ids)];if(!chosen.length||!chosen.every(id=>d.roots.includes(id)))throw new Error(t('Select a top-level body'));if(chosen.some(id=>d.nodes[id].reference))throw new Error(t('Reference helpers cannot be hole cutters'));if(role==='hole'&&d.joints?.some(j=>chosen.includes(j.bodyA)||chosen.includes(j.bodyB)))throw new Error(t('Detach the selected bodies’ joints before changing them to holes'));d.version=7;for(const id of chosen)d.nodes[id]={...d.nodes[id],role};});},
     combine(operation: 'union' | 'subtract' | 'intersect', ids: readonly string[] = selection) {
       const chosen = [...new Set(ids)]; const id = newId();

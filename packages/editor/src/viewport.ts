@@ -7,11 +7,11 @@ import {PrecisionControls} from './precision-controls.js';
 import {cameraWheelAction,cameraPointerAction} from './camera-input.js';
 import type {NavigationPreset,CameraWheel} from './camera-input.js';
 import {precisionTracker} from './precision.js';
-import {assertDrivenEdit,t} from '@brickwright/cad-core';
+import {assertDrivenEdit,isCube,constrainCubeTransform,t} from '@brickwright/cad-core';
 import type { CadSession, Transform, Vec3 } from '@brickwright/cad-core';
 import type { GeometryResult } from '@brickwright/cad-geometry';
 import { TOUCH_SLOP_PX, createTouchTracker } from './vendor/touch-gestures.js';
-import {scalePivotRotation,applyGizmoDelta} from './transform-selection.js';
+import {scalePivotRotation,applyGizmoDelta,transformMatrix} from './transform-selection.js';
 import type {TransformPreview,TransformAxisAnchor} from './transform-readout.js';
 import { snapDelta } from './vendor/transform-math.js';
 const RAD = Math.PI / 180;
@@ -97,7 +97,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const draw = () => { if (!disposed) {canvas.dataset.cameraPosition=JSON.stringify(camera.position.toArray());canvas.dataset.cameraTarget=JSON.stringify(orbit.target.toArray());canvas.dataset.cameraZoom=String(camera instanceof THREE.OrthographicCamera?camera.zoom:camera.position.distanceTo(orbit.target));canvas.dataset.navigation=navigationPreset; canvas.dataset.transformAxis=gizmo.axis??'';surfacePlacement.refresh();updateCube();publishPreview();const distance=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:camera.position.distanceTo(orbit.target);grid.material.opacity=THREE.MathUtils.clamp((240-distance)/200,0,.4);for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
   function publishPreview(){
     if(!previewListener)return;let poses=selected.filter(id=>session.state.document.roots.includes(id)).map(id=>({id,transform:structuredClone(session.state.document.nodes[id].transform)})),valid=true,warning:string|undefined;
-    if(drag){try{const d=delta();poses=[...drag.transforms].map(([id,original])=>({id,transform:applyGizmoDelta(original,d,activeMode==='select'?'translate':activeMode,pivot.scale.toArray() as Vec3)}));}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}}
+    if(drag){try{const d=delta();poses=[...drag.transforms].map(([id,original])=>({id,transform:constrainCubeTransform(session.state.document.nodes[id],applyGizmoDelta(original,d,activeMode==='select'?'translate':activeMode,pivot.scale.toArray() as Vec3))}));}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}}
     else if(directDrag)poses=[...directDrag.transforms].map(([id,t])=>({id,transform:{...t,position:t.position.map((v,i)=>v+directDrag!.offset[i]) as Vec3}}));
     if(drag||directDrag?.moved)try{for(const {id,transform} of poses)assertDrivenEdit(session.state.document,{...session.state.document.nodes[id],transform});}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}
     const box=new THREE.Box3();for(const {id} of poses){const mesh=meshes.get(id);if(mesh)box.union(new THREE.Box3().setFromObject(mesh,true));}
@@ -146,7 +146,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const delta = () => { pivot.updateMatrixWorld(); return new THREE.Matrix4().multiplyMatrices(pivot.matrixWorld, drag!.matrix.clone().invert()); };
   const previewTransform = () => {
     if (!drag) return; const d = delta();
-    for (const id of drag.transforms.keys()) { const mesh = meshes.get(id); if (mesh) { mesh.matrixAutoUpdate = false; mesh.matrix.copy(d); mesh.matrixWorldNeedsUpdate = true; } }
+    for (const id of drag.transforms.keys()) { const mesh = meshes.get(id); if (mesh) { mesh.matrixAutoUpdate = false; try{const node=session.state.document.nodes[id],original=drag.transforms.get(id)!;const next=isCube(node)?constrainCubeTransform(node,applyGizmoDelta(original,d,activeMode==='select'?'translate':activeMode,pivot.scale.toArray() as Vec3)):undefined;mesh.matrix.copy(next?transformMatrix(next).multiply(transformMatrix(original).invert()):d);}catch{mesh.matrix.copy(d);} mesh.matrixWorldNeedsUpdate = true; } }
     draw();
   };
   const cancelTransform = () => {endBox();
@@ -158,7 +158,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const endTransform = () => {
     if (!drag) return; const d = delta(); const updates: { id: string; transform: Transform }[] = [];
     try {
-      for (const [id, original] of drag.transforms) updates.push({id,transform:applyGizmoDelta(original,d,activeMode==='select'?'translate':activeMode,pivot.scale.toArray() as Vec3)});
+      for (const [id, original] of drag.transforms) updates.push({id,transform:constrainCubeTransform(session.state.document.nodes[id],applyGizmoDelta(original,d,activeMode==='select'?'translate':activeMode,pivot.scale.toArray() as Vec3))});
     } catch(error){cancelTransform();onError(error);return;}
     drag = null;
     try { session.transform(updates); draw(); } catch (e) { for (const mesh of meshes.values()) { mesh.matrix.identity(); mesh.matrixWorldNeedsUpdate = true; } onError(e); placeGizmo(); }

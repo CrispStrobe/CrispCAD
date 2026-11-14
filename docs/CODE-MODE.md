@@ -249,3 +249,18 @@ reoriented. General tilted sections, changing
 vertex counts, section holes, default callbacks and open/closed sweep modes remain
 gaps. The full archived nuts-and-bolts demonstration still exceeds existing work
 or generated-source budgets; its authored resolution is not reduced silently.
+
+### Bounded extrema and elliptical tapers
+
+`minRange(i,start,end,step,value)` and `maxRange(...)` retain an extrema reduction.
+The six-argument form inserts a predicate before `value`. Reductions preserve the
+value's units, bind the index only inside the predicate/value, and visit at most
+256 inputs under the expression work budget. Empty native reductions fail;
+OpenSCAD list reductions retain undefined/guard behavior for empty results.
+
+`ellipticFrustum(rx0,ry0,rx1,ry1,height[,segments])` retains the dimensions of an
+elliptical taper. It uses centered Z placement and 4–4096 segments, subject to the
+normal face budget. Ends accept two positive radii or a point `[0,0]`; line ends
+are not supported. Construction produces an indexed mesh in linear space/time,
+without expanding thousands of coordinates into the source. Large evaluated
+polyhedron exports may exceed the existing reimport source/point budgets.

@@ -172,3 +172,8 @@ Model content has its own per-asset grants and attribution requirements.
 
 Models stay on your device unless you export or share them. Keep portable backups:
 local autosave is not an off-device backup.
+
+The shape browser includes a Cube with a single linked edge length, alongside the
+independently sized Box. Hex-head, socket-head, countersunk and pan-head screw
+presets retain editable head/drive geometry, thread diameter, pitch, depth,
+handedness and flank angle. Existing saved screw definitions are preserved.

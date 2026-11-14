@@ -730,3 +730,20 @@ The device application receipt confirms bundle version 11. Existing application
 data was retained; no uninstall or storage reset was performed. This build contains
 the retained 2D/3D resize and converter checkpoint with 144 gallery entries.
 Later loft and library integration work follows this delivered source.
+
+## Cube and screw families — Mac build 22 / prepared iPad build 12
+
+Both bundles were built from clean source
+`7f8b75e6ccccf70d96d49e1c32c89d2e50e8e058`. They include linked Cube edges,
+hex-head/socket-head/countersunk/pan-head screw recipes, retained numeric list
+extrema and elliptical tapers. Existing version-1 screw geometry is preserved.
+
+**Mac build 22** passed native smoke verification and is installed and running in
+`~/Applications/Brickwright CAD.app`; its live asset receipt confirms that source.
+Native verification covers trackpad magnification, menus, clipboard, model source,
+gallery thumbnails and history retention. Installation retained app data.
+
+**iPad build 12** archived and exported with the existing Brickwright signing
+keychain. The paired iPad reports `transportType: localNetwork`, but two attempts
+to install disconnected before installation. This receipt does not claim delivery
+of build 12; waking/unlocking the device was requested before another attempt.

@@ -263,6 +263,37 @@
         "tests/physics.test.ts"
       ],
       "nextOrEvidence": "Real MIT JSCAD volume and bounds, analytic loft volume, parameter/history round trips and Jolt cutout tests. General tilted sections, changing vertex counts, holes in sections, default callbacks, open/closed sweeps and the full authored nutsAndBolts workload remain unsupported or resource-limited."
+    },
+    {
+      "id": "engine.extrema-reduction",
+      "state": "partial",
+      "area": "language",
+      "current": "Numeric range/comprehension min/max reductions, simple numeric filters, mixed literal/generated lists and guarded empty results retain parameter dependencies. Native extrema retain units and lexical scope under 256-input/work limits.",
+      "tests": [
+        "tests/next-engine.test.ts"
+      ],
+      "nextOrEvidence": "Official executable probes confirm empty list reductions are undefined. Nested generator bodies and vector/lexicographic extrema remain unsupported."
+    },
+    {
+      "id": "jscad.elliptic-tapers",
+      "state": "partial",
+      "area": "geometry",
+      "current": "Full-turn noncircular cylinderElliptic radii lower to a compact retained native elliptical taper, including point tips.",
+      "tests": [
+        "tests/next-engine.test.ts",
+        "tests/physics.test.ts"
+      ],
+      "nextOrEvidence": "Direct MIT JSCAD volume/bounds checks and real Jolt bore rays. Line ends, angle intervals and fractional elliptic tessellation remain unsupported."
+    },
+    {
+      "id": "jscad.axis-transform-aliases",
+      "state": "partial",
+      "area": "language",
+      "current": "Axis scale/mirror aliases, nested transform targets and padded scale vectors work for supported planar profiles and solids.",
+      "tests": [
+        "tests/next-engine.test.ts"
+      ],
+      "nextOrEvidence": "Direct MIT JSCAD comparisons. Mixed profile/solid targets and transformations outside the supported profile plane remain refused."
     }
   ]
 }
