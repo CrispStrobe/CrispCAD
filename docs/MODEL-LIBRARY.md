@@ -506,3 +506,23 @@ without fetching the model or running physics. It is a curator's recorded assert
 not a reusable runtime collision proof; runtime shapes still require fresh
 qualification. The one-step preview does not establish contacts, fit, printability,
 or mechanical behavior. Local source records do not inherit a mesh's qualification.
+
+## Reviewed archival source corpus
+
+The November 14 admission adds 1,406 pinned OpenSCAD source files from 20
+permissive libraries under `library/corpus/repos/`, with 34 retained licence and
+README files (9,240,831 bytes before manifest/configuration metadata). This is a
+source archive: files include reusable modules, examples and assemblies, rather
+than 1,406 independently runnable solids. Each file has a pinned source URL,
+commit, SHA-256, size, author attribution, SPDX grant and retained evidence.
+Directories and original bytes are preserved.
+
+See the [per-library admission report](../library/corpus-audit/admission-report.md),
+[individual exclusions](../library/corpus-audit/blocked-sources.md), and
+[offline ingest/validation commands](SOURCE-CORPUS-TOOLING.md). This admission
+uses already staged files and performs no network access or source execution.
+The manifest records unresolved dependency blockers separately from a file's own
+permissive grant. All sources are render-unqualified; archive admission does not
+make them insertable in the editor or establish mesh or collision quality.
+The editor's supported seed collection and its bounded translators remain as
+described above. No additional JSCAD models were present in these staged subsets.
