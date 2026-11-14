@@ -17,7 +17,9 @@ class CorpusTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        # macOS exposes its temporary directory through /var -> /private/var.
+        # Canonicalize the test fixture root; symlinks within fixtures stay forbidden.
+        self.root = Path(self.temp.name).resolve()
         self.stage = self.root / "stage"
         self.stage.mkdir()
         self.destination = self.root / "corpus"

@@ -663,3 +663,16 @@ ray queries and verify hits on material. Their collision certificates meet the
 existing 2% volume / 0.2 mm bounds policy; these checks are not exact-contact or
 reusable library physics certification. Supported-library regeneration passes.
 GitHub Actions remain disabled.
+
+Mac build **19** from clean source
+`50dda23e742f6a8637adfa1ebf8dcf6e80d8e5b2` passed the native menu, clipboard,
+camera, source/parameter and 39-preview gallery smoke checks. It is installed and
+running in `~/Applications/Brickwright CAD.app`; the running receipt confirms
+that revision, dirty=false, and the installed bundle reports build 19. Existing
+projects/history were retained.
+
+The concurrent VPS archival-corpus update was merged without changing its bytes.
+Offline validation verifies 21 repositories / 1,440 files / 9,240,831 bytes. Its
+8 admission tests also pass locally after canonicalizing the temporary fixture
+root for macOS's `/var` alias; internal symlink rejection is preserved. Archival
+admission does not add those unqualified sources to the working gallery.
