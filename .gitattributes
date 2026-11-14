@@ -1,0 +1,2 @@
+# Preserve pinned upstream archive bytes, including original line endings.
+library/corpus/repos/** -text -whitespace
