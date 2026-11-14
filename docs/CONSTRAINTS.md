@@ -1,5 +1,34 @@
 # Constraint solving: concrete next architecture
 
+## Follow-up review — 2026-11-14
+
+Reviewed current main `5dc27dc0b297683d47e94ade2b4ca22ed530d429` against our
+`894a11d` qualification baseline. Production library changes are confined to
+checked placement and mesh validation; numerical solver and feature-graph source
+are unchanged. The latest AOT allocation improvements are useful upstream evidence,
+but do not establish new browser drag latency. Retain the geometric worker-adapter
+recommendation rather than porting/recreating the solver.
+
+The new pin's geometric-sketch, parametric-bracket and parametric-linkage examples
+passed locally, including rejected edits retaining the last accepted model. A fresh
+external probe compiled the existing original harness against the new pin and
+passed all 16 JS/Wasm cases in local Chromium and iPad-profile WebKit. Results,
+source/artifact hashes and qualifications are retained in
+[the new evidence](../experiments/constraints/results/geometric-macos-arm64-2026-11-14.json).
+This does not qualify the complete upstream platform suite, arbitrary coupled
+sketches, placement/mesh changes in browsers, or a physical iPad. The committed
+experiment manifest still pins the earlier baseline; the follow-up used a separate
+checkout and harness outside the app.
+
+First product use: constrained points/segments and dimensions in entity-based
+sketches, through the existing model-source/session history transaction. Follow
+with circles and assembly mates. Keep solver caches and drag targets transient;
+validate a candidate solve and its downstream geometry before accepting one edit.
+The app remains the authoritative design graph, Manifold its mesh-solid backend,
+and Jolt its dynamic simulation engine. The CSP reference extrusion kernel remains
+a limited fixture backend, not a replacement CAD kernel. Production integration
+is still pending.
+
 ## Updated assessment — 2026-11-13
 
 Integrate the owner's MIT `dart_csp` geometric module behind a worker adapter;
