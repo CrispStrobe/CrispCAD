@@ -135,4 +135,6 @@ export const messages:Record<string,string>={
   "Polyhedron faces must be planar": "Polyederflächen müssen eben sein",
   "Polyhedron face intersects itself": "Eine Polyederfläche schneidet sich selbst",
   "Cannot triangulate polyhedron face": "Die Polyederfläche kann nicht trianguliert werden",
+  "Torus tube radius must be smaller than its major radius": "Der Rohrradius des Torus muss kleiner als sein Hauptradius sein",
+  "Cylinder rounding must be smaller than its radius and half its height": "Die Zylinderabrundung muss kleiner als der Radius und die halbe Höhe sein",
 };

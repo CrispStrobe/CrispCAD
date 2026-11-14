@@ -268,11 +268,12 @@
       "id": "engine.extrema-reduction",
       "state": "partial",
       "area": "language",
-      "current": "Numeric range/comprehension min/max reductions, simple numeric filters, mixed literal/generated lists and guarded empty results retain parameter dependencies. Native extrema retain units and lexical scope under 256-input/work limits.",
+      "current": "Numeric ranges, nested scalar comprehensions, each, filters and joined lists retain parameter dependencies and guarded empty results under existing range/work limits.",
       "tests": [
-        "tests/next-engine.test.ts"
+        "tests/next-engine.test.ts",
+        "tests/curved-primitives.test.ts"
       ],
-      "nextOrEvidence": "Official executable probes confirm empty list reductions are undefined. Nested generator bodies and vector/lexicographic extrema remain unsupported."
+      "nextOrEvidence": "Original official-2021.01 executable confirms nested/filter/empty/each/negative probes. Vector/lexicographic extrema and C-style comprehensions remain unsupported."
     },
     {
       "id": "jscad.elliptic-tapers",
@@ -294,6 +295,38 @@
         "tests/next-engine.test.ts"
       ],
       "nextOrEvidence": "Direct MIT JSCAD comparisons. Mixed profile/solid targets and transformations outside the supported profile plane remain refused."
+    },
+    {
+      "id": "jscad.curved-primitives",
+      "state": "partial",
+      "area": "geometry",
+      "current": "Torus, ellipsoid without custom axes, and roundedCylinder lower to compact native constructors; partial rings and coarse/odd resolutions are compared against MIT JSCAD.",
+      "tests": [
+        "tests/curved-primitives.test.ts",
+        "tests/physics.test.ts"
+      ],
+      "nextOrEvidence": "Native sphere geometry is unchanged. Custom ellipsoid axes, fractional segment handling, self-touching/spindle tori and arbitrary swept profiles remain unsupported. Large evaluated mesh exports retain existing text budgets."
+    },
+    {
+      "id": "engine.module-depth-accounting",
+      "state": "closed",
+      "area": "language",
+      "current": "Module dispatch does not consume an emitted-shape depth level. Independent 32-call module recursion, construction depth, work and compiler limits remain enforced.",
+      "tests": [
+        "tests/curved-primitives.test.ts",
+        "tests/openscad-fragment-defaults.test.ts"
+      ],
+      "nextOrEvidence": "Original 24-wrapper synthetic model reduces to a box; unbounded recursion and deeply transformed recursion remain resource-limit errors."
+    },
+    {
+      "id": "physics.compound-axis-seams",
+      "state": "partial",
+      "area": "physics",
+      "current": "Per-axis hull conditioning fixes a reproduced rounded-part ray miss on an axis-aligned internal seam; exact seam and nearby rays are retained regressions.",
+      "tests": [
+        "tests/physics.test.ts"
+      ],
+      "nextOrEvidence": "No Jolt fork change. General oblique seam/contact qualification and dynamic long-run mechanism fixtures remain separate work."
     }
   ]
 }

@@ -2,7 +2,8 @@
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {expect,it} from 'vitest';
-import {importOpenSCAD} from '@brickwright/cad-core';
+import {importOpenSCAD,createCadSession} from '@brickwright/cad-core';
+import {createGeometryKernel,exportSTL,checkModelLibrarySTL} from '@brickwright/cad-geometry';
 
 const report=JSON.parse(readFileSync('library/corpus-audit/editor-screening-cycle16.json','utf8'));
 
@@ -15,9 +16,8 @@ it('binds the withheld fragment-default demo to unchanged CC0 source and evidenc
  expect(report.geometryReached).toBe(false);expect(report.stlProduced).toBe(false);
 });
 
-it('retains the actual depth refusal without treating conversion progress as admission',()=>{
- try{importOpenSCAD(readFileSync(report.result.sourcePath,'utf8'));throw Error('Expected resource limit');}
- catch(error:any){expect(error.code).toBe('resource-limit');expect(error.detail).toBe('OpenSCAD construction nesting exceeds 32');expect(error.line).toBe(274);}
+it('advances the unchanged demo without rewriting historical refusal or admitting it implicitly',async()=>{
+ const session=createCadSession();try{session.addCode(importOpenSCAD(readFileSync(report.result.sourcePath,'utf8')));const kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')}),g=kernel.evaluate(session.state.document),screening=await checkModelLibrarySTL(exportSTL(g.bodies),{checkedOn:'2026-11-14',toMillimetresZUp:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],maxTriangles:10000,maxExtentMm:200});expect(g.triangles).toBe(5220);expect(g.volume).toBeCloseTo(31972.73095294236,5);expect(Object.values(screening.checks)).toEqual(['pass','pass','pass','pass']);expect(screening.fileSha256).toBe('4391dafaed2d22f011eb280d2c0124f658326f62babca82324e6da6391640d0d');}finally{session.dispose();}
  expect(report.result.error).toMatchObject({phase:'parse',code:'resource-limit',line:274});
  expect(report.guardDiagnostic).toMatchObject({guard:'constructionDepth',observed:33,maximum:32,constructionVisits:135,valueEvaluations:1157});
  const manifest=JSON.parse(readFileSync('library/editor-corpus-manifest.json','utf8'));

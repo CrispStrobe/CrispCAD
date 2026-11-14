@@ -89,9 +89,8 @@ export function importOpenSCAD(source:string,libraryRanges:readonly OpenSCADLibr
   if(v instanceof GeneratedList){
    if(Array.isArray(v.input)){const parts=v.input.map(item=>substitute(v.body,v.variable,item));return listExtrema(name,new JoinedList(parts),depth+1);}
    if(!(v.input instanceof RangeValue))return unsupported('list reduction input');
-   let body=v.body,predicate:string|undefined;if(body instanceof ChoiceValue){if(Array.isArray(body.yes)&&body.yes.length===1&&Array.isArray(body.no)&&!body.no.length){predicate=body.condition;body=body.yes;}else if(Array.isArray(body.no)&&body.no.length===1&&Array.isArray(body.yes)&&!body.yes.length){predicate=bounded(`!(${body.condition})`);body=body.no;}else return unsupported('filtered list reduction');}
-   if(!Array.isArray(body)||body.length!==1||typeof body[0]!=='string')return unsupported('list reduction body');
-   const input=v.input,args=`${v.variable},${input.start},${input.end},${input.step}`,count=predicate?bounded(`sumRange(${args},(${predicate})?1:0)`):scalar(listLength(input)),value=bounded(`${name}Range(${args},${predicate?predicate+',':''}${body[0]})`);
+   const child=listExtrema(name,v.body,depth+1);if(child.value instanceof UndefinedValue)return {value:child.value,count:'0'};
+   const input=v.input,args=`${v.variable},${input.start},${input.end},${input.step}`,knownCount=constant(child.count),count=knownCount!==undefined?scalar(binary('*',listLength(input),child.count)):bounded(`sumRange(${args},${child.count})`),value=bounded(`${name}Range(${args},${knownCount!==undefined&&knownCount>0?'':`(${child.count})>0,`}${scalar(child.value)})`);
    return {count,value:conditional(binary('>',count,'0'),value,new UndefinedValue())};
   }
   if(Array.isArray(v)){if(!v.length)return {value:new UndefinedValue(),count:'0'};return {value:builtin(name,v.map(item=>scalar(item))),count:String(v.length)};}
@@ -337,13 +336,14 @@ return {named,positional,use,allowed,order};
  }
  function scopedOperator(name:string,depth:number,planar=false):string{expect('(');const outer=locals,scope=new Map(outer),values:Value[]=[];if(name==='let')locals=scope;try{while(peek()!==')'){const key=take().text;expect('=');const v=value();values.push(v);scope.set(key,v);if(peek()!==',')break;take();}expect(')');locals=scope;constructionGuard=assertionCondition(values);return planar?profile(depth+1):peek()==='{'?block(depth+1):shape(depth+1);}finally{locals=outer;}}
  interface ChildrenContext{start:number;end:number;scope:Map<string,ScopeValue>;moduleScope:Map<string,Definition>;functionScope:Map<string,Definition>;parent?:ChildrenContext;planar:boolean}
- let childrenContext:ChildrenContext|undefined;
+ let childrenContext:ChildrenContext|undefined;let moduleDepth=0;
  function childCount(context:ChildrenContext):number{const resume=cursor;cursor=context.start;let count=0;try{if(peek()!=='{')return 1;take();while(peek()!=='}'){const declaration=peek(1)==='='||peek()==='module'||peek()==='function';skipStatement();if(!declaration)count++;}return count;}finally{cursor=resume;}}
  function invokeModule(name:string,args:ReturnType<typeof argumentsFor>,at:number,depth:number,planar=false):string{
+  if(++moduleDepth>32)limited(t('OpenSCAD construction nesting exceeds 32'),at);
   const parent=childrenContext,start=cursor,scope=new Map(locals);let context:ChildrenContext|undefined;
   if(peek()===';')take();else{skipStatement();context={start,end:cursor,scope,moduleScope:modules,functionScope:functions,parent,planar};}
   const outer=childrenContext;childrenContext=context;
-  try{return invokeDefinition('module',modules.get(name)!,args,at,()=>{locals.set('$children',String(context?childCount(context):0));const result=planar?profile(depth+1):peek()==='{'?block(depth+1):shape(depth+1),guard=assertionCondition([...modules.get(name)!.parameters.map(p=>localValue(p.name)!),...args.positional,...args.named.values()]);return guard?`assert${planar?'2d':'Shape'}(${guard}, ${result})`:result;});}finally{childrenContext=outer;}
+  try{return invokeDefinition('module',modules.get(name)!,args,at,()=>{locals.set('$children',String(context?childCount(context):0));const result=planar?profile(depth):peek()==='{'?block(depth):shape(depth),guard=assertionCondition([...modules.get(name)!.parameters.map(p=>localValue(p.name)!),...args.positional,...args.named.values()]);return guard?`assert${planar?'2d':'Shape'}(${guard}, ${result})`:result;});}finally{childrenContext=outer;moduleDepth--;}
  }
  function children(args:ReturnType<typeof argumentsFor>,at:number,depth:number,planar=false):string{
   args.allowed(['index'],1);const context=childrenContext;if(!context)return planar?'union2d()':'empty()';

@@ -641,3 +641,35 @@ budget. No production limit was raised and no research model was shipped.
 820 full-suite passes plus 29 overlapping final checks, 16 desktop/iPad browser
 checks, real Jolt recess/bore tests, the 1,358-message German audit, and offline
 installation/execution of all six SDK packages. GitHub Actions remain disabled.
+
+## Curved solids and nested reductions
+
+JSCAD `torus`, `ellipsoid` without custom axes, and `roundedCylinder` now lower to
+compact native constructors. Supported torus options include tube/ring resolution,
+tube rotation, sweep and start angle. Independent installed MIT JSCAD comparisons
+cover volumes and bounds, partial rings, off-centre parts and coarse/odd segment
+counts. The reference rounded-cylinder zero-rounding branch uses a 32-segment
+straight cylinder even when another segment count was supplied; import retains
+that observed behavior. Native zero-rounding uses its explicit segment argument.
+
+OpenSCAD numeric extrema now support nested scalar comprehensions, `each` lists,
+filters and joined lists, retaining parameter changes and guarded empty results.
+Vector/lexicographic extrema remain refused. Original probes against the official
+2021.01 executable confirm nested/filter/empty/each/negative results. Module
+invocation no longer adds an emitted-shape depth level by itself; a separate
+32-call module-recursion bound and the existing 32-level construction/compiler
+bounds remain enforced. This avoids charging a macro dispatch as a shape.
+
+A new real-Jolt regression exposed a ray-query crack on axis-aligned seams between
+rounded-part collision hulls. Each hull is now conditioned to unit size per axis
+before Jolt construction, preserving shared axis-aligned bounds more precisely
+when converting back to SI units. Rays on the former seam, away from it, and
+through the actual torus opening are checked. This does not certify arbitrary
+oblique seams or full mechanism/thread-contact behavior.
+
+The unchanged, archived CC0 `smooth-prim` demo previously stopped at the module
+construction-depth guard. It now compiles and produces a strictly checked,
+closed positive-volume STL: 5,220 triangles, 31,972.73095 mm³, bounds
+[-22,-72,0]–[100,22,18]. The historical cycle-16 refusal report is retained;
+`tests/model-library-fragment-screening.test.ts` distinguishes it from current
+execution. This is a qualified candidate, not an implicit gallery admission.

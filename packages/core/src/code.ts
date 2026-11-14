@@ -6,6 +6,7 @@ import type {CodeProfile,ProfileAst} from './code-profiles.js';
 export type {CodeProfile} from './code-profiles.js';
 import {t} from './i18n.js';
 import {loftPolyhedron} from './code-loft.js';
+import {ellipsoidMesh} from './code-curved.js';
 import {ellipticFrustumMesh} from './code-elliptic.js';
 // Original bounded CAD language. No OpenSCAD/JSCAD interpreter or runtime code.
 import {formatSCADNumber} from './scad-numbers.js';
@@ -65,7 +66,7 @@ function compileCodeInner(program:CodeProgram):CompiledCode {
   else if(call.name==='loft'){expect('[');call.sections=[];let vertices=0;while(peek()!==']'){expect('[');const ring:Scalar[][]=[];while(peek()!==']'){ring.push(vector());vertices++;if(ring.length>256||vertices>4096)limited(t('Loft exceeds the section or vertex budget'),call.at);if(peek()!==',')break;expect(',');}expect(']');call.sections.push(ring);if(call.sections.length>128)limited(t('Loft exceeds the section or vertex budget'),call.at);if(peek()!==',')break;expect(',');}expect(']');}
   else if(call.name==='polyhedron'){const rows=(columns:number|undefined)=>{expect('[');const result:Scalar[][]=[];while(peek()!==']'){expect('[');const row:Scalar[]=[];while(peek()!==']'){row.push(scalar([',',']']));if(row.length>64)limited(t('Polyhedron face budget exceeded'),call.at);if(peek()!==',')break;expect(',');}expect(']');if(columns&&row.length!==columns)fail(t('Polyhedron points need three coordinates'),call.at);result.push(row);if(result.length>512)limited(t('Polyhedron point or face budget exceeded'),call.at);if(peek()!==',')break;expect(',');}expect(']');return result;};call.points=rows(3);expect(',');call.faces=rows(undefined);}
   else if(call.name==='extrude'){call.scalars.push(scalar([',']));expect(',');expect('[');call.points=[];while(peek()!==']'){expect('[');call.points.push([scalar([',']),...(expect(','),[scalar([']'])])]);expect(']');if(call.points.length>256)limited(t('Extrusion profile exceeds 256 points'),call.at);if(peek()!==',')break;expect(',');}expect(']');}
-  else if(['box','cylinder','sphere','frustum','ellipticFrustum'].includes(call.name)){while(peek()!==')'){call.scalars.push(scalar([',',')']));if(peek()!==',')break;expect(',');}}
+  else if(['box','cylinder','sphere','frustum','ellipticFrustum','torus','ellipsoid','roundedCylinder'].includes(call.name)){while(peek()!==')'){call.scalars.push(scalar([',',')']));if(peek()!==',')break;expect(',');}}
   else if(call.name==='affine'){expect('[');for(let i=0;i<12;i++){call.scalars.push(scalar([',',']']));if(i<11)expect(',');}expect(']');expect(',');call.shapes.push(shape(depth+1));}
   else if(call.name==='axisRotate'){call.vector=vector();expect(',');call.scalars.push(scalar([',']));expect(',');call.shapes.push(shape(depth+1));}
   else if(['move','rotate','scale','mirror','resize'].includes(call.name)){call.vector=vector();expect(',');if(call.name==='resize'&&peek()==='['){call.scalars.push(...vector());expect(',');}call.shapes.push(shape(depth+1));}
@@ -132,6 +133,22 @@ function compileCodeInner(program:CodeProgram):CompiledCode {
   if(ast.name==='cylinder'){arity(2,3);const radius=number(ast.scalars[0],'mm',0,100000),height=number(ast.scalars[1],'mm',0,100000),count=segments(2,3,4096);return radius===0||height===0?{kind:'empty'}:{kind:'cylinder',radius,height,segments:count};}
   if(ast.name==='frustum'){arity(3,4);const bottom=number(ast.scalars[0],'mm',0,100000),top=number(ast.scalars[1],'mm',0,100000);const height=number(ast.scalars[2],'mm',0,100000),count=segments(3,3,4096);return !Math.max(bottom,top)||!height?{kind:'empty'}:{kind:'frustum',bottom,top,height,segments:count};}
   if(ast.name==='ellipticFrustum'){arity(5,6);const start=[number(ast.scalars[0],'mm',0,100000),number(ast.scalars[1],'mm',0,100000)],end=[number(ast.scalars[2],'mm',0,100000),number(ast.scalars[3],'mm',0,100000)],height=number(ast.scalars[4],'mm',0,100000),count=segments(5,4,4096);if([start,end].some(r=>r.some(v=>v===0)&&r.some(v=>v!==0)))fail(t('Elliptical taper ends need two positive radii or a point'),ast.at);return !height||!Math.max(...start,...end)?{kind:'empty'}:{kind:'polyhedron',...ellipticFrustumMesh(start,end,height,count)};}
+  if(ast.name==='ellipsoid'){arity(3,4);const radius=[0,1,2].map(i=>number(ast.scalars[i],'mm',0,100000)) as Vec3,count=segments(3);if(radius.some(r=>!r))return {kind:'empty'};if(count*(4*Math.ceil(count/4)-2)>CODE_LIMITS.estimatedFaces)limited(t('Estimated mesh budget exceeds 200000 faces'),ast.at);return {kind:'polyhedron',...ellipsoidMesh(radius,count)};}
+  if(ast.name==='torus'){
+   arity(2,7);const major=mm(0),minor=mm(1),inner=segments(2,3),outer=segments(3,3),rotation=ast.scalars[4]?number(ast.scalars[4],'deg',-360000,360000):0,sweep=ast.scalars[5]?number(ast.scalars[5],'deg',0,360):360,start=ast.scalars[6]?number(ast.scalars[6],'deg',-360000,360000):0;
+   if(minor>=major)fail(t('Torus tube radius must be smaller than its major radius'),ast.at);
+   const profile:CodeProfile={kind:'move',vector:[major,0],profile:{kind:'rotate',angle:rotation,profile:{kind:'circle',radius:minor,segments:inner}}};
+   const shape:CodeShape={kind:'revolve',profile,angle:sweep,segments:outer};return {kind:'rotate',vector:[0,0,start],shape};
+  }
+  if(ast.name==='roundedCylinder'){
+   arity(3,4);const radius=mm(0),height=mm(1),round=number(ast.scalars[2],'mm',0,100000),count=segments(3),quarters=Math.floor(count/4);
+   if(round>=radius||round>=height/2)fail(t('Cylinder rounding must be smaller than its radius and half its height'),ast.at);
+   if(!round)return {kind:'rotate',vector:[0,0,90],shape:{kind:'cylinder',radius,height,segments:count}};
+   const points:[number,number][]=[[0,-height/2]];
+   for(let i=1;i<=quarters;i++){const angle=-Math.PI/2+i*Math.PI/(2*quarters);points.push([radius*Math.cos(angle),-height/2+round+round*Math.sin(angle)]);}
+   for(let i=0;i<quarters;i++){const angle=i*Math.PI/(2*quarters);points.push([radius*Math.cos(angle),height/2-round+round*Math.sin(angle)]);}
+   points.push([0,height/2]);return {kind:'rotate',vector:[0,0,90],shape:{kind:'revolve',profile:{kind:'polygon',contours:[points]},angle:360,segments:count}};
+  }
   if(ast.name==='sphere'){arity(1,2);const radius=number(ast.scalars[0],'mm',0,100000),count=segments(1);return radius===0?{kind:'empty'}:{kind:'sphere',radius,segments:count};}
   if(['union','subtract','intersect','hull','minkowski'].includes(ast.name)){if(ast.shapes.length<(ast.name==='hull'?1:2))fail(t('Boolean operations need at least two shapes'),ast.at);return {kind:ast.name as 'union'|'subtract'|'intersect'|'hull'|'minkowski',shapes:ast.shapes.map(child=>resolve(child,depth+1))};}
   if(['mirror','axisRotate','resize'].includes(ast.name)){const vector=ast.vector!.map(v=>number(v,ast.name==='resize'?'mm':'scalar',ast.name==='resize'?0:-100000,100000)) as Vec3;if(ast.name!=='resize'&&Math.hypot(...vector)<1e-12)fail(t('Transform axis must be nonzero'),ast.at);const child=resolve(ast.shapes[0],depth+1);if(ast.name==='resize'&&ast.scalars.length){const auto=ast.scalars.map(v=>!!number(v,'scalar',0,1,false,true)) as [boolean,boolean,boolean];return {kind:'resize',vector,auto,shape:child};}return ast.name==='axisRotate'?{kind:'axisRotate',vector,angle:number(ast.scalars[0],'deg',-360000,360000),shape:child}:{kind:ast.name as 'mirror'|'resize',vector,shape:child};}
