@@ -676,3 +676,45 @@ Offline validation verifies 21 repositories / 1,440 files / 9,240,831 bytes. Its
 8 admission tests also pass locally after canonicalizing the temporary fixture
 root for macOS's `/var` alias; internal symlink rejection is preserved. Archival
 admission does not add those unqualified sources to the working gallery.
+
+## Typed SCAD and geometry expansion; WLAN delivery — 2026-11-14
+
+The fixed 256-file research sample advances from 42 to **137 positive-solid
+conversions**, retaining all 42 previous successes. The final per-file deadline
+is 15 seconds versus the historical five; a separate five-second pre-merge replay
+produces 134. These counts measure bounded execution, not upstream fidelity or
+speed. See `docs/evidence/import-engine-coverage-2026-11-14.json` for hashes,
+transitions and limitations. Research-only source and geometry remain external.
+
+Original implementations add typed/lexical SCAD evaluation, module children,
+profile control flow, text outlines, round/miter offsets, 2D/3D Minkowski sums,
+planar-faced polyhedra, signed scale, reflection, axis rotation and bounded resize.
+Parameters remain retained through supported SCAD constructions. Diagnostics carry
+resource codes and concise expandable conversion notes. Bundled Apache-2.0 fonts
+are shared with the manual lettering editor. Specific geometry has independent
+analytic/MIT JSCAD checks; imported lettering counters pass real Jolt ray queries
+and stale collision certificates are rejected after edits.
+
+Main includes **113 previewed gallery entries**, including 74 independently
+reviewed MIT sources integrated from the concurrent VPS work. The original
+walking-stick derivative is retained; corrected scoped-facet geometry uses a new
+versioned STL. Source bytes and attribution remain unchanged.
+
+Local verification: **560 unit tests passed**, one optional external syntax
+oracle skipped; 1,245 German messages audited; all six SDK packages installed and
+executed offline. Browser verification includes 70 Chromium/iPad WebKit workflows
+on the 111-entry merge, 26 code/source/German workflows, and four final gallery
+checks on the 113-entry build. GitHub Actions remain disabled.
+
+**iPad build 9** was archived, exported, installed in place and launched over WLAN
+on iPad (3), device `F0E7765C-F625-51B0-8F56-1E04F3B02B70`. Device details report
+`transportType: localNetwork`; the installation receipt confirms bundle version 9.
+Its clean source is `231bb20b6e1582fddfbdb31950f8633c49e15221` and it contains
+111 gallery entries. The two later gallery additions are in Mac build 20/main.
+Existing app data and histories were retained.
+
+**Mac build 20** passed native smoke verification and is installed and running in
+`~/Applications/Brickwright CAD.app`. Its running asset receipt confirms clean
+source `143a3da98e8a0a0a7e65d9654c6b40a86e0eb092`; it contains 113 gallery entries.
+The research release probe fingerprints that same clean source. The main branch
+and checkpoint branch `codex/scad-engine-expansion` were pushed to GitHub.

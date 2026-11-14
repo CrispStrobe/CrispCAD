@@ -65,7 +65,12 @@ background and `*` disabled geometry are excluded from full-render output;
 render semantics, not blanket permission to ignore an unsupported active
 operation. The language references cover
 [special variables](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Special_variables)
-and the [debug modifier](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Debug_Modifier).
+and [modifiers](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Debug_Modifier).
+
+SCAD source is bounded to 32 KiB / 8,192 tokens, construction translation to
+4,096 visits and recursion to 32 levels. Native execution permits 256 statements,
+1,024 expanded nodes and 16,384 evaluation steps; expressions permit 1,024
+characters / 512 tokens. The 200,000 estimated-face budget remains in force.
 
 For the built-in 3D `translate()` only, Brickwright normalizes a numeric `[x,y]`
 vector to `[x,y,0]` and records that interpretation in converted CAD Script.
@@ -331,3 +336,22 @@ the existing 39 entries. Subsequent explicitly screened additions are tracked in
 mesh uses a new derivative path; the previous file remains byte-identical for
 historical provenance; the [previous qualification record](../library/corpus-audit/qualification-history/walking-stick-v1.json) is retained. Archived sources are unchanged and qualification is
 separate from admission and runtime collision checks.
+
+## Measured engine expansion — 2026-11-14
+
+The frozen 256-file research sample now yields **137 positive solids**, versus
+42 before this pass: 95 newly successful, all 42 previous successes retained.
+Remaining outcomes are 74 unsupported, 29 resource-limited, 15 failures and one
+15-second process timeout. The final run uses a 15-second per-file deadline;
+the baseline used five seconds with no timeouts. A separate five-second replay
+on the pre-merge implementation produced 134 positive solids and four timeouts.
+These are execution outcomes, not semantic-equivalence or speed claims.
+
+The main remaining blockers include external `use`/`include` dependencies,
+comprehensions, `rands`/`search`, matrix/vector operations outside the supported
+subset, source/expansion/mesh budgets, and empty or invalid constructions.
+Aggregate hashes, transitions and caveats are recorded in
+[evidence/import-engine-coverage-2026-11-14.json](evidence/import-engine-coverage-2026-11-14.json).
+Original analytic fixtures, MIT JSCAD comparisons and real Jolt hole queries
+validate specific operations independently; the corpus itself has no geometry
+oracle. No research models are admitted through this measurement.
