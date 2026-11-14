@@ -593,3 +593,27 @@ construction/work and other resource limits, random snapshot semantics and all
 historical refusals remain unchanged. Admission measurements and distinct
 compiler-versus-library outcomes are recorded in
 `library/corpus-audit/editor-screening-cycle28.json`.
+
+## Matched-section loft construction and integration
+
+Native `loft` keeps parameter-driven matching XY sections and lowers them to a
+bounded watertight polyhedron. JSCAD imports can use explicit `extrudeFromSlices`
+callbacks, `slice.fromPoints`, affine slice transforms, translation/scaling matrices
+and safe record spread. Concave profiles, intermediate skipped sections and CSG
+cuts are supported. Inside-out JSCAD shells are refused. Open shells, changing
+vertex counts, tilted sections, section holes and the full authored nuts/bolts
+workload remain gaps. See [CAD Script lofts](CODE-MODE.md#matched-section-lofts).
+
+Unseeded snapshot effects now prevent direct/transitive function memoization from
+reusing a consumed draw. Pure calls keep the existing cache. Existing live random
+parameters and large lazy length queries remain supported; no production work or
+source budget was increased.
+
+The final frozen replay remains **166/256**: 37 unsupported, 33 limited, 18 failed,
+two timeouts. 165 common positives retain volume/bounds at 1e-6 tolerance. One
+prior timeout recovers and another model misses the deadline; its identical native
+program/kernel and four matching paired rechecks are recorded without replacing
+the timeout. This batch claims new native/JSCAD capabilities, not a frozen SCAD
+coverage gain. The [complete aggregate evidence](evidence/import-engine-loft-2026-11-14.json)
+records the 787-test full run, 79 final follow-up checks, 14 platform checks, SDK
+and Jolt checks, harness deadlines, limitations and iPad build 11 receipt.

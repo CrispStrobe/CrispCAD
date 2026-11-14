@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "measuredOn": "2026-11-14",
+  "scope": "Aggregate research execution only. Sources, per-file records and research geometry remain external. Positive solids are not upstream fidelity certification.",
+  "dataset": "redcathode/thingiverse-openscad",
+  "revision": "2b4206aae3af7740100a2f0e979dd9cb66cd77f0",
+  "sampling": "deterministic evenly spaced files after exact source-hash deduplication; not random model sampling",
+  "inputRows": 7929,
+  "uniqueFiles": 7864,
+  "sampleFiles": 256,
+  "sameSourceHashes": true,
+  "baseline": {
+    "reportSha256": "3d7b0f0c5f7039d124e58c677b9ec49fad1ce56381c62d54a3a15d79259a7a70",
+    "statuses": {
+      "unsupported": 37,
+      "converted": 166,
+      "failed": 18,
+      "limited": 33,
+      "process-failure": 2
+    },
+    "limits": {
+      "converterTimeoutMs": 15000,
+      "maxOldSpaceSizeMb": 256
+    },
+    "commit": "5032caa0808e34ed8fd3a56ee72f88bf1890c1a4"
+  },
+  "after": {
+    "reportSha256": "f303f32dfed11e4fbd7dbb1a2e65eb02fe591e3de7f205a61094b00bd38fe1d6",
+    "statuses": {
+      "unsupported": 37,
+      "converted": 166,
+      "failed": 18,
+      "limited": 33,
+      "process-failure": 2
+    },
+    "limits": {
+      "converterTimeoutMs": 15000,
+      "maxOldSpaceSizeMb": 256
+    },
+    "converterBuild": {
+      "commit": "b507d71f8f128bda948ae3dd20bd62e2ad1f5bb4",
+      "dirty": false,
+      "artifacts": {
+        "code.js": "f7d732098c4801f2093964d72b2c91d88d81166cbdf95279dc979dbf5703b2e5",
+        "code-loft.js": "fbdd29db83623c7148f02626b2c943cd04a31c5280f538992135e1974907a75b",
+        "code-text.js": "ae581f3a92a4a65edeb9416bc74998a1ad76a4d67956854094aeab2ce8c62240",
+        "scad-numbers.js": "8886a27b2e86394927c5e56a7b7f4f0d5a1071592f7b94a7651567efefb0fafd",
+        "conversion-notices.js": "50ee6e1c0f427acc3a78d7247dc3a4b03b0056d71dbb13928ee2b7c97f954c4e",
+        "code-interchange.js": "be4703045286764ca4054edb4991f0d66e748ca9eb565940f0362d9896a6ffc0",
+        "openscad-import.js": "a20ef21c92baa38329f3676e3051eac6e02af66e3caf1d764b9637f28b79415c",
+        "jscad-import.js": "a9275fba933932adfafe245d60b0619aeb1750c394a0586a92fc0b49bbd1fac3",
+        "parameters.js": "033a10b22e329a479361909c716494eef58a6d846deeab2433ba3d79b15833e0",
+        "font-budgets.js": "995412ad96947af2e3947ac41fc34e3d2881147e67b888e216fc7f4fe893878b",
+        "code-profiles.js": "403ab11bb4b5e86ae3e5b1c3df3e701f1661b823ba5cdfb1086129423581a29c",
+        "features.js": "724e4fc258961b700f598295698aec1c5dcd982d09a30f1838953d0e48ec0cd8",
+        "geometryKernel": "115db4783b95cb20ad6b313b30f43c2f2d89c8512b0fa29f26cc562fb475d946",
+        "geometry/font-profile.js": "de836295ab0c0f8364927dac7b0a95829f6b04548bd09da6fb97351bddfbd9d8",
+        "geometry/polyhedron.js": "c975596e22ca662b933fedac0519172d3778aab511b9fa1ef4ba183fa4e09382",
+        "geometry/limits.js": "ab598a640df9cfb58c5dff20f0a608c013a08b0e1e78b46f39a69a231fa20569",
+        "geometry/fonts/droid_sans_regular.typeface.json": "5532f318b78eeb2215dcb0ae6ebdfb8f82e369187731c28f53e37784a044459a",
+        "geometry/fonts/droid_serif_regular.typeface.json": "10d747ee765ad60e1acec86c31187ac5084b96c376d911c1c46e3f80308b08e4",
+        "geometry/fonts/droid_sans_mono_regular.typeface.json": "69fd4dc9782cfe281f9a96b40e3ae3e4392ea05c1082fbea4c04f369f52feaf2",
+        "manifoldWasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "node": "v26.4.0",
+      "platform": "darwin",
+      "architecture": "arm64"
+    }
+  },
+  "transitions": [
+    {
+      "before": "converted",
+      "after": "converted",
+      "count": 165
+    },
+    {
+      "before": "converted",
+      "after": "process-failure",
+      "count": 1
+    },
+    {
+      "before": "failed",
+      "after": "failed",
+      "count": 18
+    },
+    {
+      "before": "limited",
+      "after": "limited",
+      "count": 33
+    },
+    {
+      "before": "process-failure",
+      "after": "converted",
+      "count": 1
+    },
+    {
+      "before": "process-failure",
+      "after": "process-failure",
+      "count": 1
+    },
+    {
+      "before": "unsupported",
+      "after": "unsupported",
+      "count": 37
+    }
+  ],
+  "changedPriorConvertedVolumesAt1e6Tolerance": 0,
+  "changedPriorConvertedBoundsAt1e6Tolerance": 0,
+  "positiveSolidsWithNotices": 72,
+  "noticeOccurrences": {
+    "scad.appearance.colours": 16,
+    "scad.parameters.strings": 42,
+    "scad.console.echo": 10,
+    "scad.preview.highlight": 7,
+    "scad.random.sequence": 1,
+    "scad.text.font": 19,
+    "scad.arguments.ignored": 5,
+    "scad.module.arguments-ignored": 5,
+    "scad.polygon.empty-input": 2
+  },
+  "caveats": [
+    "Same sample and 15-second per-file deadline. No converter or production geometry budget increased. This is coverage execution, not a speed benchmark.",
+    "165 previous positives complete in both frozen runs with volume/bounds agreement at 1e-6 relative/absolute tolerance. A different prior positive times out, while an earlier timeout recovers. The changed timeout case has identical generated native code and kernel artifacts; all four paired rechecks match its prior volume, bounds and triangles.",
+    "No net frozen OpenSCAD coverage gain is attributed to this batch. New loft support is measured with original native/JSCAD fixtures and the independent MIT JSCAD runtime.",
+    "72 of 166 positive solids carry notices. Fonts, appearances, random-stream parity, typed strings and other registered gaps remain.",
+    "Full authored nutsAndBolts remains resource-limited. Inputs are not resampled and open/tilted/unmatched/holed section lofts remain outside the supported subset.",
+    "The complete corpus has no upstream geometry oracle; positive execution is not fidelity certification.",
+    "Research dataset card is CC-BY-NC-SA-4.0 and individual model grants vary. No research source or generated research mesh is admitted to the shipped gallery."
+  ],
+  "priorPositiveDeadlineFailures": 1,
+  "recoveredDeadlineCases": 1,
+  "engineCoverageGainInFrozenSample": 0,
+  "deadlineRecheck": {
+    "method": "A prior-positive case missed the unchanged 15-second deadline. Alternating baseline/current checks use our 5032caa source transpiled with installed TypeScript, the same dependencies, fonts and Manifold binary. No upstream implementation. Research sources and detailed reports remain external.",
+    "compiledNativeProgramsIdentical": true,
+    "geometryKernelArtifactIdentical": true,
+    "pairedRuns": [
+      {
+        "revision": "baseline",
+        "status": "converted",
+        "wallMs": 3580.7951669999998,
+        "evaluationMs": 3460.411375
+      },
+      {
+        "revision": "current",
+        "status": "converted",
+        "wallMs": 3719.6095000000005,
+        "evaluationMs": 3431.933041
+      },
+      {
+        "revision": "baseline",
+        "status": "converted",
+        "wallMs": 6115.5536250000005,
+        "evaluationMs": 5960.528042
+      },
+      {
+        "revision": "current",
+        "status": "converted",
+        "wallMs": 6488.289792000001,
+        "evaluationMs": 6106.301167
+      }
+    ],
+    "allRechecksMatchPriorVolumeBoundsAndTriangles": true,
+    "interpretation": "All four checks complete under the same deadline. Keep the frozen run at 166/256 and retain its two timeouts. Do not replace them with retries or claim an execution-speed improvement."
+  },
+  "validation": {
+    "engineSourceCommit": "b507d71f8f128bda948ae3dd20bd62e2ad1f5bb4",
+    "fullUnit": {
+      "command": "npm test -- --maxWorkers=1 --testTimeout=15000",
+      "filesPassed": 72,
+      "passed": 787,
+      "skippedOptionalSyntaxOracle": 1,
+      "scope": "Loft/random integration before the final lazy-list compatibility follow-up. Earlier default-five-second runs hit existing gallery/curation deadlines on the shared host; that timing evidence is retained. The larger deadline changes the test harness only."
+    },
+    "followUp": {
+      "command": "npx vitest run tests/openscad-rands.test.ts tests/openscad-language.test.ts tests/retained-evaluation.test.ts tests/loft-engine.test.ts tests/physics.test.ts --maxWorkers=1 --testTimeout=15000",
+      "passed": 79,
+      "filesPassed": 5,
+      "scope": "Final compiled source including preserved lazy list length and parameter behavior."
+    },
+    "researchFingerprintAudit": {
+      "passed": 2,
+      "skippedOptionalSyntaxOracle": 1,
+      "newArtifact": "code-loft.js"
+    },
+    "browser": {
+      "command": "PLAYWRIGHT_BROWSERS_PATH=/tmp/brickwright-cad-browsers npx playwright test tests/browser/code-import.spec.ts tests/browser/model-library.spec.ts --timeout=180000 --grep \"slice callback imports|resized cut profiles|every bundled model has a preview|external sources insert offline: group (25|27|28)$\"",
+      "passed": 12,
+      "platforms": [
+        "desktop Chromium",
+        "iPad WebKit"
+      ],
+      "additionalFinalLazyListChecksPassed": 2,
+      "scope": "Initial 45-second multi-insertion batches timed out; the final 180-second harness run passes. This is functional testing, not a platform performance certificate."
+    },
+    "productionBuild": "passed",
+    "germanMessages": {
+      "passed": true,
+      "messages": 1328
+    },
+    "sdk": "All six packages install offline into an empty cache with exact runtime tarballs; geometry, fonts, retained features/code and real SI physics pass.",
+    "library": "149 previewed items. Full 98-root corpus reproduction and separate reviewed JSCAD reproduction pass. Historical source and mesh bytes retained.",
+    "loft": "Analytic tapered and concave volumes, direct MIT JSCAD volume/bounds comparisons, orientation/refusal checks, serialization, parameter edits, undo/redo, safe record spread, callbacks and bounded work pass.",
+    "physics": "Loft CSG cutout remains empty in real Jolt rays; SI mass matches volume. Height edit invalidates stale collision preparation."
+  },
+  "ipadDelivery": {
+    "nativeBuild": 11,
+    "version": "0.1.0",
+    "sourceCommit": "bd03ee7b76b89cdd3fc4850020a9212bbd4b7575",
+    "dirty": false,
+    "transport": "localNetwork",
+    "installed": true,
+    "launched": true,
+    "ipaSha256": "f28e5ce66f8ac0044249eb8e5904b0b81bd8dba1cd2a292c5b958b4722f0d75a",
+    "scope": "Delivered first, before subsequent loft integration. Existing app data retained."
+  }
+}
