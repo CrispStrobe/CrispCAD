@@ -2,11 +2,9 @@
 import * as THREE from 'three';
 import {Font} from 'three/addons/loaders/FontLoader.js';
 import type {FontData} from 'three/addons/loaders/FontLoader.js';
-import sans from './fonts/droid_sans_regular.typeface.json' with {type:'json'};
-import serif from './fonts/droid_serif_regular.typeface.json' with {type:'json'};
-import mono from './fonts/droid_sans_mono_regular.typeface.json' with {type:'json'};
+import {getBundledFontData} from '@brickwright/cad-geometry';
 import {t} from '@brickwright/cad-core';
-const fonts={sans:new Font(sans as unknown as FontData),serif:new Font(serif as unknown as FontData),mono:new Font(mono as unknown as FontData)};
+const fonts={sans:new Font(getBundledFontData('sans') as unknown as FontData),serif:new Font(getBundledFontData('serif') as unknown as FontData),mono:new Font(getBundledFontData('mono') as unknown as FontData)};
 /** Bundled Apache-2.0 fonts. Preserve case and validate every glyph explicitly. */
 export function fontLettering(text:string,font:'sans'|'serif'|'mono',height:number,depth:number){
  const selected=fonts[font];for(const character of [...text])if(!selected.data.glyphs[character])throw new Error(t`The selected font has no glyph for “${character}”`);

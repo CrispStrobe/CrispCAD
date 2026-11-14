@@ -14,9 +14,10 @@ export type SketchProfile =
  * closure are enforced by construction; a general constraint solver comes later. */
 export interface PlanarSketch {version:1; id:string; name:string; plane:SketchPlane; profile:SketchProfile}
 export interface ExtrusionFeature {kind:'extrusion'; featureVersion:1; sketchId:string; distance:FeatureScalar; symmetric:boolean}
-export interface FeatureDiagnostic {source:'sketch'|'feature'; id:string; message:string}
+export interface FeatureDiagnostic {source:'sketch'|'feature'; id:string; message:string; code?:string}
 export class FeatureEvaluationError extends Error {
-  constructor(readonly diagnostic:FeatureDiagnostic) {super(t`${diagnostic.source === 'sketch' ? t('sketch') : t('feature')} ${diagnostic.id}: ${diagnostic.message}`);this.name='FeatureEvaluationError';}
+  readonly code?:string;
+  constructor(readonly diagnostic:FeatureDiagnostic) {super(t`${diagnostic.source === 'sketch' ? t('sketch') : t('feature')} ${diagnostic.id}: ${diagnostic.message}`);this.name='FeatureEvaluationError';this.code=diagnostic.code;}
 }
 const idOk=(v:unknown):v is string=>typeof v==='string'&&/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,95}$/.test(v)&&!['constructor','prototype','__proto__'].includes(v);
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);

@@ -77,3 +77,8 @@ it('qualifies imported profile holes and partial revolutions and preserves their
   const world=await createPhysicsWorld(doc,result,prepared,{J,ground:false});try{expect(world.raycast([0,0,20],[0,0,-5])).toBeNull();expect(world.raycast([9,1,20],[9,1,-5])?.bodyId).toBe(id);world.step();}finally{world.dispose();session.dispose();}
  }
 });
+it('qualifies imported font contours without filling their counter and invalidates stale colliders after a live size edit',async()=>{
+ const session=createCadSession(),program=importOpenSCAD('size=10;linear_extrude(3)text("O",size=size,halign="center",valign="center");'),id=session.addCode(program),doc=session.state.document,result=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,result,kernel),world=await createPhysicsWorld(doc,result,prepared,{J,ground:false});
+ try{expect(world.raycast([0,0,10],[0,0,-5])).toBeNull();const side=result.bodies[0].bounds.max[0]*.92;expect(world.raycast([side,0,10],[side,0,-5])?.bodyId).toBe(id);expect(solidMassProperties(result.bodies[0],1050).massKg).toBeCloseTo(result.volume*1050e-9,10);world.step();}finally{world.dispose();}
+ program.parameters.size='20';session.updateCode(id,program);const changed=kernel.evaluate(session.state.document);await expect(createPhysicsWorld(session.state.document,changed,prepared,{J,ground:false})).rejects.toThrow();session.dispose();
+});

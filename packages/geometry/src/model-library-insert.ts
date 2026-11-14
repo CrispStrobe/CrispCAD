@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {compileCode, importOpenSCAD, importJSCAD, identityTransform, newId, sha256Hex, validateModelLibraryCatalogue, type CadDocument, type ModelLibraryFileSelection, createCadSession} from '@brickwright/cad-core';
+import {compileCode, importOpenSCAD, getOpenSCADImportWarnings, importJSCAD, identityTransform, newId, sha256Hex, validateModelLibraryCatalogue, type CadDocument, type ModelLibraryFileSelection, createCadSession} from '@brickwright/cad-core';
 import {checkModelLibrarySTL, MODEL_LIBRARY_MESH_MAX_BYTES, MODEL_LIBRARY_MESH_MAX_TRIANGLES, parseModelLibrarySTL, type ModelLibraryMeshQualityResult} from './model-library-quality.js';
 import type {GeometryResult} from './kernel.js';
 
@@ -109,9 +109,11 @@ export async function insertModelLibrarySource(
   if (await sha256Hex(snapshot) !== file.sha256) throw new Error('Model library file size or SHA-256 mismatch.');
   const source = new TextDecoder('utf-8', {fatal: true}).decode(snapshot);
   const jscad = file.format === 'jscad' ? importJSCAD(source) : undefined;
-  const incorporationNotes = modificationNotes + (file.format === 'openscad' ? ' OpenSCAD translated to editable CAD Script by the supported subset importer.' : jscad ? ` JSCAD converted by the bounded subset interpreter to an editable CAD Script evaluated snapshot with default parameters ${JSON.stringify(jscad.parameters)}. Original JavaScript parameter definitions are not retained in the code node; no collision qualification.` : '');
-  if (incorporationNotes.length > 4096) throw new Error('Incorporation modification notes exceed the provenance limit after recording source conversion.');
   const program = jscad ? jscad.program : file.format === 'openscad' ? importOpenSCAD(source) : {version: 1 as const, language: 'brickwright-cad-script' as const, source, parameters: {}};
+  const conversionWarnings = file.format === 'openscad' ? getOpenSCADImportWarnings(program) : jscad?.warnings ?? [];
+  const incorporationNotes = (modificationNotes + (file.format === 'openscad' ? ' OpenSCAD translated to editable CAD Script by the supported subset importer.' : jscad ? ` JSCAD converted by the bounded subset interpreter to an editable CAD Script evaluated snapshot with default parameters ${JSON.stringify(jscad.parameters)}. Original JavaScript parameter definitions are not retained in the code node; no collision qualification.` : '')) + (conversionWarnings.length ? ' '+conversionWarnings.join(' ') : '');
+  if (incorporationNotes.length > 4096) throw new Error('Incorporation modification notes exceed the provenance limit after recording source conversion.');
+
   compileCode(program);
   const nodeId = newId(), recordId = newId();
   const fragment: CadDocument = {format: 'brickwright-cad', id: newId(), version: 5, title: asset.title, units: 'mm', roots: [nodeId], nodes: {
