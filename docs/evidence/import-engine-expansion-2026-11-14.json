@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "measuredOn": "2026-11-14",
+  "scope": "Aggregate research execution only. No dataset source, per-file records or generated research geometry are shipped. Positive solids are not fidelity certification.",
+  "dataset": "redcathode/thingiverse-openscad",
+  "revision": "2b4206aae3af7740100a2f0e979dd9cb66cd77f0",
+  "sampling": "deterministic evenly spaced files after exact source-hash deduplication; not random model sampling",
+  "inputRows": 7929,
+  "uniqueFiles": 7864,
+  "sampleFiles": 256,
+  "sameSourceHashes": true,
+  "baseline": {
+    "reportSha256": "66ee7c9d8a914f29856644bc7aa79a0af229743c034d90d7cb006fd273c4509d",
+    "statuses": {
+      "unsupported": 74,
+      "converted": 137,
+      "limited": 29,
+      "failed": 15,
+      "process-failure": 1
+    },
+    "converterTimeoutMs": 15000,
+    "converterBuild": {
+      "commit": "143a3da98e8a0a0a7e65d9654c6b40a86e0eb092",
+      "dirty": false,
+      "artifacts": {
+        "code.js": "d66807c8ca3b0e318be9d8350da1a26fb481a852afab841f38ca97f84f8f8763",
+        "code-interchange.js": "29800fc0a9ad9bd7552edb143ca442c8c8098c097acb7a5fbf4cba0105b94a11",
+        "openscad-import.js": "148a5caeec0425f2620410006ef9b8fb7542c2dac4efd7da9191aae3d1d31785",
+        "jscad-import.js": "560f5c0f8ebf20b4175d70e29ae15ea6be8e0740ec245376c11c79b9ebc0702f",
+        "parameters.js": "a38cd399e1072095d3e6d526a45d838452bb11f5368615be2d03a3c268ff8550",
+        "code-profiles.js": "ea5e8c897579d1c1950936a688598e309f2527d9bea1e173d404c9fd7c855ae3",
+        "features.js": "724e4fc258961b700f598295698aec1c5dcd982d09a30f1838953d0e48ec0cd8",
+        "geometryKernel": "986b3804ba93e4c3f9ba90b76e83f0cfbf396539ffe8f44b5da1aa8e129c72b0",
+        "geometry/font-profile.js": "de836295ab0c0f8364927dac7b0a95829f6b04548bd09da6fb97351bddfbd9d8",
+        "geometry/polyhedron.js": "1b0a9ab03b764aebdde589e789637fbd39a843a9e24ff2141f85e0e1de7d1eab",
+        "geometry/limits.js": "ab598a640df9cfb58c5dff20f0a608c013a08b0e1e78b46f39a69a231fa20569",
+        "geometry/fonts/droid_sans_regular.typeface.json": "5532f318b78eeb2215dcb0ae6ebdfb8f82e369187731c28f53e37784a044459a",
+        "geometry/fonts/droid_serif_regular.typeface.json": "10d747ee765ad60e1acec86c31187ac5084b96c376d911c1c46e3f80308b08e4",
+        "geometry/fonts/droid_sans_mono_regular.typeface.json": "69fd4dc9782cfe281f9a96b40e3ae3e4392ea05c1082fbea4c04f369f52feaf2",
+        "manifoldWasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "node": "v26.4.0",
+      "platform": "darwin",
+      "architecture": "arm64"
+    }
+  },
+  "after": {
+    "reportSha256": "cc54eaf5030191407aee77c9820ddb1187ba873d3895ea83dd62f71c34aeca07",
+    "statuses": {
+      "unsupported": 37,
+      "converted": 163,
+      "failed": 22,
+      "limited": 33,
+      "process-failure": 1
+    },
+    "limits": {
+      "converterTimeoutMs": 15000,
+      "maxOldSpaceSizeMb": 256
+    },
+    "converterBuild": {
+      "commit": "902ebb199904036f19ff87db441aae7527f86231",
+      "dirty": false,
+      "artifacts": {
+        "code.js": "863d091a9a71f63f8235ecd58d4844402300a4d309a1ea725fb36ec7a5c83567",
+        "code-text.js": "ae581f3a92a4a65edeb9416bc74998a1ad76a4d67956854094aeab2ce8c62240",
+        "scad-numbers.js": "8886a27b2e86394927c5e56a7b7f4f0d5a1071592f7b94a7651567efefb0fafd",
+        "conversion-notices.js": "50ee6e1c0f427acc3a78d7247dc3a4b03b0056d71dbb13928ee2b7c97f954c4e",
+        "code-interchange.js": "1f90ce94fa61bed14e47e846b385d8b941aeb51074b229f16c5c6156762e92e3",
+        "openscad-import.js": "27a398f7bea1ec9123d53e2555f04a3a734f5e231e5bcb1729ee0c33e8a4993f",
+        "jscad-import.js": "f347b74b9e03ef1c116bf9b229493373576ec6731732dfc328de619318ab1be9",
+        "parameters.js": "17b58c1462d37713134130678ba64f247c0714fe82f237760e8e6444f2b13a43",
+        "font-budgets.js": "995412ad96947af2e3947ac41fc34e3d2881147e67b888e216fc7f4fe893878b",
+        "code-profiles.js": "fc5f1dfc091d32d26c5518ecf4e5a26e060167aa979cbb51a4e119c27a662f34",
+        "features.js": "724e4fc258961b700f598295698aec1c5dcd982d09a30f1838953d0e48ec0cd8",
+        "geometryKernel": "83ba493729f66621717cec2c4ec3e1f0b999e4f9ea49c9325a781306022f13a3",
+        "geometry/font-profile.js": "de836295ab0c0f8364927dac7b0a95829f6b04548bd09da6fb97351bddfbd9d8",
+        "geometry/polyhedron.js": "c975596e22ca662b933fedac0519172d3778aab511b9fa1ef4ba183fa4e09382",
+        "geometry/limits.js": "ab598a640df9cfb58c5dff20f0a608c013a08b0e1e78b46f39a69a231fa20569",
+        "geometry/fonts/droid_sans_regular.typeface.json": "5532f318b78eeb2215dcb0ae6ebdfb8f82e369187731c28f53e37784a044459a",
+        "geometry/fonts/droid_serif_regular.typeface.json": "10d747ee765ad60e1acec86c31187ac5084b96c376d911c1c46e3f80308b08e4",
+        "geometry/fonts/droid_sans_mono_regular.typeface.json": "69fd4dc9782cfe281f9a96b40e3ae3e4392ea05c1082fbea4c04f369f52feaf2",
+        "manifoldWasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "node": "v26.4.0",
+      "platform": "darwin",
+      "architecture": "arm64"
+    }
+  },
+  "transitions": [
+    {
+      "before": "converted",
+      "after": "converted",
+      "count": 137
+    },
+    {
+      "before": "failed",
+      "after": "converted",
+      "count": 1
+    },
+    {
+      "before": "failed",
+      "after": "failed",
+      "count": 13
+    },
+    {
+      "before": "failed",
+      "after": "limited",
+      "count": 1
+    },
+    {
+      "before": "limited",
+      "after": "converted",
+      "count": 7
+    },
+    {
+      "before": "limited",
+      "after": "limited",
+      "count": 21
+    },
+    {
+      "before": "limited",
+      "after": "unsupported",
+      "count": 1
+    },
+    {
+      "before": "process-failure",
+      "after": "process-failure",
+      "count": 1
+    },
+    {
+      "before": "unsupported",
+      "after": "converted",
+      "count": 18
+    },
+    {
+      "before": "unsupported",
+      "after": "failed",
+      "count": 9
+    },
+    {
+      "before": "unsupported",
+      "after": "limited",
+      "count": 11
+    },
+    {
+      "before": "unsupported",
+      "after": "unsupported",
+      "count": 36
+    }
+  ],
+  "convertedRegressions": 0,
+  "changedPriorConvertedVolumesAt1e6Tolerance": 0,
+  "positiveSolidsWithNotices": 71,
+  "noticeOccurrences": {
+    "scad.appearance.colours": 16,
+    "scad.arguments.ignored": 4,
+    "scad.console.echo": 9,
+    "scad.module.arguments-ignored": 5,
+    "scad.parameters.strings": 42,
+    "scad.polygon.empty-input": 2,
+    "scad.preview.highlight": 7,
+    "scad.random.sequence": 1,
+    "scad.text.font": 18
+  },
+  "caveats": [
+    "Both comparisons use the same frozen sample and 15-second per-file limit; this is an execution coverage check, not a speed benchmark.",
+    "71 of 163 positive solids carry notices; font substitution, appearances, string parameter typing and seeded random parity remain open gaps. Notice-free imports are not independently certified either.",
+    "One file still times out. The 37 unsupported, 33 limited and 22 failed results are separately retained; invalid source, missing dependencies and unsupported engine behavior are not conflated.",
+    "Official OpenSCAD executable vectors validate original synthetic numeric-formatting, assertion and cylinder fixtures, not the corpus as a whole. No upstream geometry oracle ran for the 256 files.",
+    "Dataset card is CC-BY-NC-SA-4.0 and per-file licences vary. Research files remain external and are not admitted to the application library."
+  ]
+}

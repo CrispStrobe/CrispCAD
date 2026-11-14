@@ -29,3 +29,19 @@ Only published documentation and binary behavior are used for OpenSCAD itself.
 The downloaded oracle is external tooling under `/tmp`, never an application
 runtime dependency or bundled asset. Mathematical/permissive references are
 reviewed separately. Research files and their generated geometry stay external.
+
+## Retained evaluation checkpoint
+
+The [frozen-sample evidence](evidence/import-engine-expansion-2026-11-14.json)
+records **163/256 positive solids**, up from 137, at the same 15-second limit.
+All 137 previous successes remain positive and their volumes agree at the stated
+1e-6 relative/absolute tolerance. This is a coverage gain, not a fidelity claim:
+**71 positive files carry notices**. The remaining outcomes are 37 unsupported,
+33 limited, 22 failed and one timeout. Keep these separate when choosing the next
+engine change; never erase notices to raise the success count.
+
+This checkpoint retains comprehensions and scalar declarations, bounded dynamic
+polygon generation and list indexing, affine/profile transforms, signed
+revolutions, selective resize and exact numeric-text formatting. The checked
+limits still bound construction work, lists, scalar evaluation and mesh size.
+No research model was added to the shipped library.
