@@ -7,13 +7,13 @@ class LiteralString {constructor(readonly text:string){}}
 type Value=string|LiteralString|Value[];
 type ScopeValue=Value|LocalBinding;
 class LocalBinding {constructor(readonly start:number,readonly end:number,readonly scope:Map<string,ScopeValue>){}}
-type Definition={parameters:{name:string;start?:number;end?:number}[];start:number;end:number};
+type Definition={parameters:{name:string;start?:number;end?:number}[];start:number;end:number;localScope?:Map<string,ScopeValue>;moduleScope:Map<string,Definition>};
 /** Bounded declarative OpenSCAD subset. Unsupported constructs fail closed. */
 export function importOpenSCAD(source:string):CodeProgram{
  if(typeof source!=='string')throw new CadCodeError(t('Expected source text'),0,'');
  const tokens:{text:string;at:number}[]=[];let position=0,cursor=0,statements=0,fn='48',omittedColor=false,omittedHighlight=false;const assignments=new Map<string,string>();
  const vectors=new Map<string,Value>();let locals=new Map<string,ScopeValue>();const resolving=new Set<LocalBinding>();
- const modules=new Map<string,Definition>(),functions=new Map<string,Definition>();let functionDepth=0;
+ let modules=new Map<string,Definition>();const functions=new Map<string,Definition>();let functionDepth=0;
  const fail=(message:string,at=tokens[cursor]?.at??source.length):never=>{throw new CadCodeError(message,at,source);};
  const limited=(message:string,at=tokens[cursor]?.at??source.length):never=>{throw new CadCodeError(message,at,source,'resource-limit');};
  if(new TextEncoder().encode(source).length>CODE_LIMITS.sourceBytes)limited(t('Source exceeds 32 KiB'),0);
@@ -55,41 +55,48 @@ export function importOpenSCAD(source:string):CodeProgram{
  const vector=(v:Value|undefined,allowScalar=false):string[]=>{if(v instanceof LiteralString)return unsupported('string used as a numeric vector');if(Array.isArray(v)&&v.length===3&&v.every(x=>typeof x==='string'))return v as string[];if(allowScalar&&typeof v==='string')return [v,v,v];if(Array.isArray(v))return unsupported('vector length other than three');return fail(t('Expected a three-component OpenSCAD vector'));};
  // Definitions are hoisted in the file scope, so calls may precede declarations.
  const definitions=new Map<number,number>(),declaredGlobals=new Set<string>();
- function scanDefinition(){const begin=cursor,kind=take().text,collection=kind==='module'?modules:functions;const name=take();if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name.text)||collection.has(name.text))unsupported(`${kind} name`,name.at);expect('(');
+ function scanDefinition(localScope?:Map<string,ScopeValue>,declared?:Set<string>){const begin=cursor,kind=take().text,collection=kind==='module'?modules:functions;if(localScope&&kind!=='module')unsupported('nested functions');const name=take();if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name.text)||(declared?declared.has(name.text):collection.has(name.text)))unsupported(`${kind} name`,name.at);declared?.add(name.text);expect('(');
   const parameters:{name:string;start?:number;end?:number}[]=[];
   while(peek()!==')'){const parameter=take();if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(parameter.text)||parameters.some(p=>p.name===parameter.text))unsupported('module parameter',parameter.at);
    const entry:{name:string;start?:number;end?:number}={name:parameter.text};
    if(peek()==='='){take();entry.start=cursor;let depth=0;while(cursor<tokens.length){const n=peek()!;if(depth===0&&(n===','||n===')'))break;if(n==='('||n==='[')depth++;if(n===')'||n===']')depth--;if(depth<0||depth>32)limited(t('Expression nesting exceeds 32'));take();}entry.end=cursor;if(entry.start===entry.end)fail(t('Expected a complete dimensional expression'));}
    parameters.push(entry);if(parameters.length>64)limited(t('OpenSCAD construction limit exceeded'));if(peek()!==',')break;take();
-  }expect(')');if(kind==='function'){expect('=');const start=cursor;while(peek()!==';'){if(!peek())fail(t('Unexpected end of source'));take();}if(cursor===start)fail(t('Expected a complete dimensional expression'));collection.set(name.text,{parameters,start,end:cursor});expect(';');definitions.set(begin,cursor);return;}const start=cursor;
+  }expect(')');if(kind==='function'){expect('=');const start=cursor;while(peek()!==';'){if(!peek())fail(t('Unexpected end of source'));take();}if(cursor===start)fail(t('Expected a complete dimensional expression'));collection.set(name.text,{parameters,start,end:cursor,localScope,moduleScope:modules});expect(';');definitions.set(begin,cursor);return;}const start=cursor;
   // A module body is one statement; braces contain arbitrarily nested statements.
   let depth=0;do{const n=take().text;if(n==='{')depth++;if(n==='}')depth--;if(depth<0)fail(t('Unclosed OpenSCAD block'));if(depth===0&&(n===';'||n==='}'))break;}while(cursor<tokens.length);
   if(depth||cursor===start||![';','}'].includes(tokens[cursor-1].text))fail(t('Unclosed OpenSCAD block'));
-  collection.set(name.text,{parameters,start,end:cursor});definitions.set(begin,cursor);
+  collection.set(name.text,{parameters,start,end:cursor,localScope,moduleScope:modules});definitions.set(begin,cursor);
  }
  {let depth=0;while(cursor<tokens.length){const n=peek();if(depth===0&&(n==='module'||n==='function')){scanDefinition();continue;}if(depth===0&&peek(1)==='=')declaredGlobals.add(n!);if(n==='{')depth++;if(n==='}')depth--;take();}cursor=0;}
  function union(shapes:string[]):string{if(!shapes.length)return 'empty()';return shapes.length===1?shapes[0]:`union(${shapes.join(', ')})`;}
  function blockParts(depth:number,anonymous=false):string[]{
-  expect('{');const begin=cursor,outer=locals,scope=new Map<string,ScopeValue>(outer),declarations=new Map<number,number>();
-  // Predeclare all direct assignments. OpenSCAD's last assignment wins throughout
-  // its lexical scope, including uses appearing before the assignment.
-  let braces=0,parentheses=0,brackets=0;
-  while(cursor<tokens.length){const next=peek()!;if(next==='}'&&braces===0)break;
-   if(braces===0&&parentheses===0&&brackets===0&&peek(1)==='='){
-    const statement=cursor,name=take();if(anonymous)unsupported('assignments in anonymous blocks',name.at);if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name.text))unsupported('local variable name',name.at);take();const start=cursor;
-    let nesting=0;while(peek()!==';'||nesting!==0){const n=peek();if(!n||n==='{'||n==='}')unsupported('local variable expression',name.at);if(n==='('||n==='[')nesting++;if(n===')'||n===']')nesting--;if(nesting<0||nesting>32)limited(t('Expression nesting exceeds 32'));take();}
-    const end=cursor;expect(';');if(start===end)fail(t('Expected a complete dimensional expression'),name.at);
-    scope.set(name.text,new LocalBinding(start,end,scope));declarations.set(statement,cursor);
-    if(++statements>CODE_LIMITS.statements)limited(t('OpenSCAD construction limit exceeded'));continue;
+  expect('{');const begin=cursor,outer=locals,outerModules=modules,scope=new Map<string,ScopeValue>(outer),declarations=new Map<number,number>(),declaredModules=new Set<string>();
+  // Capture the block's declarative bindings and module registry by reference;
+  // all direct definitions are visible before their textual declarations.
+  locals=scope;modules=new Map(outerModules);
+  try{
+   let braces=0,parentheses=0,brackets=0;
+   while(cursor<tokens.length){const next=peek()!;if(next==='}'&&braces===0)break;
+    if(braces===0&&parentheses===0&&brackets===0&&(next==='module'||next==='function')){
+     const statement=cursor;scanDefinition(scope,declaredModules);declarations.set(statement,cursor);
+     if(++statements>CODE_LIMITS.statements)limited(t('OpenSCAD construction limit exceeded'));continue;
+    }
+    // OpenSCAD's last assignment wins throughout its lexical scope.
+    if(braces===0&&parentheses===0&&brackets===0&&peek(1)==='='){
+     const statement=cursor,name=take();if(anonymous)unsupported('assignments in anonymous blocks',name.at);if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name.text))unsupported('local variable name',name.at);take();const start=cursor;
+     let nesting=0;while(peek()!==';'||nesting!==0){const n=peek();if(!n||n==='{'||n==='}')unsupported('local variable expression',name.at);if(n==='('||n==='[')nesting++;if(n===')'||n===']')nesting--;if(nesting<0||nesting>32)limited(t('Expression nesting exceeds 32'));take();}
+     const end=cursor;expect(';');if(start===end)fail(t('Expected a complete dimensional expression'),name.at);
+     scope.set(name.text,new LocalBinding(start,end,scope));declarations.set(statement,cursor);
+     if(++statements>CODE_LIMITS.statements)limited(t('OpenSCAD construction limit exceeded'));continue;
+    }
+    if(next==='{')braces++;if(next==='}')braces--;if(next==='(')parentheses++;if(next===')')parentheses--;if(next==='[')brackets++;if(next===']')brackets--;take();
    }
-   if(next==='{')braces++;if(next==='}')braces--;if(next==='(')parentheses++;if(next===')')parentheses--;if(next==='[')brackets++;if(next===']')brackets--;take();
-  }
-  cursor=begin;locals=scope;
-  try{const shapes:string[]=[];while(peek()!=='}'){
+   cursor=begin;const shapes:string[]=[];while(peek()!=='}'){
     if(!peek())fail(t('Unclosed OpenSCAD block'));const end=declarations.get(cursor);if(end!==undefined){cursor=end;continue;}shapes.push(shape(depth+1));
    }expect('}');return shapes;
-  }finally{locals=outer;}
+  }finally{locals=outer;modules=outerModules;}
  }
+
  function block(depth:number,anonymous=false):string{return union(blockParts(depth,anonymous));}
  function argumentsFor(name:string,at:number){
   expect('(');const named=new Map<string,Value>(),positional:Value[]=[];
@@ -100,16 +107,17 @@ return {named,positional,use,allowed};
  }
  function invokeDefinition<T>(kind:string,definition:Definition,args:ReturnType<typeof argumentsFor>,at:number,body:()=>T):T{
   args.allowed([...definition.parameters.map(p=>p.name),'$fn'],definition.parameters.length);
-  const resume=cursor,outer=locals,specials:[string,Value][]=[...outer.keys()].filter(key=>key.startsWith('$')).map(key=>[key,localValue(key)!]);
+  const resume=cursor,outer=locals,outerModules=modules,specials:[string,Value][]=[...outer.keys()].filter(key=>key.startsWith('$')).map(key=>[key,localValue(key)!]);
   if(args.named.has('$fn'))specials.push(['$fn',args.named.get('$fn')!]);
-  const scope=new Map<string,ScopeValue>(specials);locals=scope;
+  const defaults=new Map<string,ScopeValue>(definition.localScope);for(const [key,v] of specials)defaults.set(key,v);
+  const scope=new Map(defaults);locals=scope;modules=definition.moduleScope;
   try{for(let i=0;i<definition.parameters.length;i++){
     const parameter=definition.parameters[i];let v=args.use(parameter.name,i);
-    if(v===undefined&&parameter.start!==undefined){cursor=parameter.start;locals=new Map(specials);try{v=value();}finally{locals=scope;}if(cursor!==parameter.end)unsupported(`${kind} default expression`);}
+    if(v===undefined&&parameter.start!==undefined){cursor=parameter.start;locals=new Map(defaults);try{v=value();}finally{locals=scope;}if(cursor!==parameter.end)unsupported(`${kind} default expression`);}
     if(v===undefined)unsupported(`missing ${kind} argument: ${parameter.name}`,at);if(kind==='function'&&v instanceof LiteralString)unsupported('string function argument',at);scope.set(parameter.name,v!);
    }
    cursor=definition.start;const result=body();if(cursor!==definition.end)unsupported(`${kind} body`,at);return result;
-  }finally{locals=outer;cursor=resume;}
+  }finally{locals=outer;modules=outerModules;cursor=resume;}
  }
  function callFunction():Value{
   if(++functionDepth>32||++statements>CODE_LIMITS.statements)limited(t('OpenSCAD construction limit exceeded'));

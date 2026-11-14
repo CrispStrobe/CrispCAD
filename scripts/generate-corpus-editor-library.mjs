@@ -79,6 +79,14 @@ export const corpusEditorSelection = [
   ['Raccordo', '0ef3163346d94601be2f9bae46aaf072bc6a4e3903d88063c2ab76d63998f69d', 'Basic Example/Raccordo.scad'],
   ['Street_01', '4901bec62feb143eafb7758557b6f88942234771e06ed4a98d596d76e54da37d'],
   ['Street_05', '26b28e095a3a9d571a5842152baaf7e6a247e45d185173a1ddfd525f3d953ec8'],
+  ['Street_04', '9560ea338991cc8a202a620a3ede99e199120f253dd7cff4d7d84111c376d033'],
+  ['Eyebolt', 'b213df3b014b63a5387cae3d7d317a0b0b78f48d1c2876d7ff7ff45168165370'],
+  ['Ladder_02', '984c71e0c8673964304653c73d9614896a55fd6da2f7e3579826532b9ac120d0'],
+  ['Wall_04', 'c0c86bf56cee50e83215477ba5446999c02436718227f31023dd061596dcfa5b'],
+  ['Fence_01', '4eea49150404cc80f3ba1ef96c18f7b503f7adf97e3070be24289efb5ce1460d'],
+  ['Fence_02', '58464ec8083b253f64de30407e1cbc1b41a2c567239c3e4e7ed6016f120f6728'],
+  ['Building_02', '33e61ca81c87958bd63eb9997d462b5ceab7efc5043837f07efbcf30da89fa3e'],
+  ['Walking_Stick', 'c03f703be343096ead430017effe50e184518052f25cad0276a8a21ff8a4a986'],
 ];
 export async function generateCorpusEditorLibrary() {
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());

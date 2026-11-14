@@ -101,6 +101,32 @@ it('keeps module lexical globals separate from caller arguments and evaluates de
  expect(geometry('size=2; module part(size=9,height=size){cube([size,height,1]);} part();').volume).toBeCloseTo(18);
  expect(geometry('size=2; module part(size=9,height=size){cube([size,height,1]);} part(height=4);').volume).toBeCloseTo(36);
 });
+it('hoists nested modules and captures each declaration scope across separate outer instances',()=>{
+ const source='module outer(width=5){part();size=width+1;module part(){cube([size,2,1]);}} outer();translate([20,0,0])outer(8);';
+ expect(geometry(source).volume).toBeCloseTo(30);
+ expect(geometry('module outer(){part();module part(size=side){cube(size);}side=3;}outer();').volume).toBeCloseTo(27);
+ expect(geometry('module outer(size=3){module inner(n=size){cube([n,n,1]);}module caller(size=10){inner();}caller();translate([20,0,0])inner(4);}outer();').volume).toBeCloseTo(25);
+});
+it('resolves module names in the definition environment and restores sibling block registries',()=>{
+ const source='module part(){cube(2);}module helper(){part();}module outer(){module part(){cube(9);}translate([20,0,0])helper();part();}outer();';
+ expect(geometry(source).volume).toBeCloseTo(737);
+ expect(geometry('module outer(){module part(){cube(2);}translate([10,0,0]){module part(){cube(3);}part();}part();}outer();').volume).toBeCloseTo(35);
+ expect(geometry('module outer(){module first(){second();}module second(){cube(2);}first();}outer();').volume).toBeCloseTo(8);
+ for(const source of ['module outer(){module hidden(){cube(2);}hidden();}outer();hidden();','translate([10,0,0]){module hidden(){cube(2);}hidden();}translate([20,0,0])hidden();'])expect(()=>importOpenSCAD(source),source).toThrow();
+});
+it('retains caller fragment scope in nested modules while bounding recursion and rejecting unsupported definitions',()=>{
+ const counts=(shape:any):number[]=>'segments'in shape?[shape.segments]:'shapes'in shape?shape.shapes.flatMap(counts):'shape'in shape?counts(shape.shape):[];
+ const source='$fn=12;module outer(){module inner(){sphere(1);}inner();translate([3,0,0],$fn=20)inner();inner();}outer($fn=16);translate([9,0,0])sphere(1);';
+ expect(counts(compileCode(importOpenSCAD(source)).shape)).toEqual([16,20,16,12]);
+ try{importOpenSCAD('module outer(){module a(){b();}module b(){a();}a();}outer();');throw Error('Expected resource failure');}catch(error:any){expect(error.code).toBe('resource-limit');}
+ for(const source of [
+  'module outer(){module part(){cube(1);}module part(){cube(2);}part();}outer();',
+  'module outer(){function size()=2;cube(size());}outer();',
+  'module outer(){module part(){children();}part()cube(2);}outer();',
+  'module outer(){module part(){include <file.scad>;}part();}outer();',
+  'module outer(){module profile(){square(2);}linear_extrude(2)profile();}outer();',
+ ])expect(()=>importOpenSCAD(source),source).toThrow();
+});
 it('accepts symbolic vectors, indexing, boolean flags and module vector defaults',()=>{
  const p=importOpenSCAD('width=10; size=[width,width/2,3]; centered=true; module part(v=size){cube(v,centered);} part();');
  p.parameters.width='20';const session=createCadSession();session.addCode(p);const result=kernel.evaluate(session.state.document);
@@ -121,7 +147,6 @@ it('bounds module recursion and refuses child modules, bad arguments and unsuppo
   'module a(s=2){cube(s);} a(2,s=3);',
   'module a(s=2){cube(s);} a(other=3);',
   'module a(){cube(1);} a() cube(3);',
-  'module a(){module b(){cube(1);} b();} a();',
   'v=[1,2,3]; cube(v[5]);',
   'cube(sqrt(-1));',
   'cube(random(1));',
