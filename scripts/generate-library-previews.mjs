@@ -7,10 +7,12 @@ import {chromium} from '@playwright/test';
 import {createCadSession,createLocalModelLibraryCatalogue,importOpenSCAD,importJSCAD} from '../packages/core/dist/index.js';
 import {createGeometryKernel} from '../packages/geometry/dist/index.js';
 const json=async path=>JSON.parse(await readFile(path,'utf8'));
-const assets=[...createLocalModelLibraryCatalogue(await json('library/examples-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/fixtures-manifest.json')).assets,(await json('library/seed-catalogue.json')).assets.find(a=>a.id==='jscad-involute-gear')];
+const corpusOnly=process.argv.includes('--corpus-only');
+const corpusAssets=createLocalModelLibraryCatalogue(await json('library/editor-corpus-manifest.json')).assets;
+const assets=corpusOnly?corpusAssets:[...createLocalModelLibraryCatalogue(await json('library/examples-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/fixtures-manifest.json')).assets,(await json('library/seed-catalogue.json')).assets.find(a=>a.id==='jscad-involute-gear'),...corpusAssets];
 const kernel=await createGeometryKernel({wasmBinary:await readFile('node_modules/manifold-3d/manifold.wasm')});
 const eye=new THREE.Vector3(1,-1.5,1.15).normalize(),right=new THREE.Vector3().crossVectors(new THREE.Vector3(0,0,1),eye).normalize(),up=new THREE.Vector3().crossVectors(eye,right).normalize(),light=new THREE.Vector3(-.4,-.6,1).normalize();
-const previews={};
+const previews=corpusOnly?(await json('library/previews.json')).previews:{};
 const browser=await chromium.launch({headless:true}),page=await browser.newPage();
 try{
 for(const asset of assets){

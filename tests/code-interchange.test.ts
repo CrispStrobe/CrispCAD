@@ -14,6 +14,17 @@ it('preserves OpenSCAD default origins, explicit centres, dimensions, diameters 
 it('retains parameter expressions and accepts scalar scale, comments and named vectors',()=>{
  const p=importOpenSCAD('/* source */ width=20; height=width/2; $fn=48; difference(){ translate(v=[0,0,height/2]) cube([width,width,height],true); cylinder(h=50,r=3,center=true); }');expect(compileCode(p).values.height.value).toBe(10);p.parameters.width='30';expect(compileCode(p).values.height.value).toBe(15);expect(geometry('scale(2) cube(10);').volume).toBeCloseTo(8000);
 });
+it('preserves solid geometry through explicit constant color wrappers and discloses omitted appearance',()=>{
+ const source='module part(size=4){color("#a8b0b2",alpha=0.8){cube(size,true); translate([size,0,0]) cylinder(2,1,1,$fn=30,center=true);}} part();';
+ const plain='module part(size=4){{cube(size,true); translate([size,0,0]) cylinder(2,1,1,$fn=30,center=true);}} part();';
+ expect(geometry(source).volume).toBeCloseTo(geometry(plain).volume);
+ expect(geometry(source).bodies[0].bounds).toEqual(geometry(plain).bodies[0].bounds);
+ expect(importOpenSCAD(source).source).toContain('Appearance colors omitted; solid geometry retained.');
+ expect(geometry('color(c=[0.2,1,0.4],alpha=.5) cube(3);').volume).toBeCloseTo(27);
+ expect(geometry('color([1,0,0,0.5]) cube(2);').volume).toBeCloseTo(8);
+ expect(geometry('module color(){cube(3);} color();').volume).toBeCloseTo(27);
+ for(const unsupported of ['color("red",alpha=2) cube(2);','color(c="red",0.5) cube(2);','color([1,0]) cube(2);','color([1.1,0,0]) cube(2);','color("red",other=1) cube(2);','color("red") import("file.stl");','color("red") cube(-1);','color(fetch()) cube(2);'])expect(()=>importOpenSCAD(unsupported),unsupported).toThrow();
+});
 it('refuses unsupported geometry and language features rather than approximating or executing them',()=>{
  for(const source of ['include <foo.scad>;','linear_extrude(height=5,twist=90) square(2);','rotate(45,[1,0,0]) cube(3);','a=10; a=20; cube(a);','sphere($fn=300);','cube(1);height=2;','import("https://example.com/a.stl");'])expect(()=>importOpenSCAD(source),source).toThrow();
 });

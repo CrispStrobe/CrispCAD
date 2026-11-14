@@ -526,3 +526,16 @@ permissive grant. All sources are render-unqualified; archive admission does not
 make them insertable in the editor or establish mesh or collision quality.
 The editor's supported seed collection and its bounded translators remain as
 described above. No additional JSCAD models were present in these staged subsets.
+
+### Editor-enabled corpus subset
+
+Twelve dependency-complete MIT Asset Collection originals now project into a
+separate `library/editor-corpus-manifest.json` and are selectable in the bundled
+editor catalogue. See [exact model names and reproduction commands](../library/README.md#twelve-external-corpus-models-available-in-the-editor).
+Only these twelve receive local importer, Manifold and STL screening evidence;
+the archival manifest remains unchanged and unqualified. The bounded OpenSCAD
+importer accepts validated constant `color()` wrappers and discloses omitted
+appearance. The host bundles exact selected source bytes, previews and the
+correct asset-specific MIT notice. Insertion verifies hashes, evaluates the
+candidate, and preserves provenance, attribution and undo/redo through the
+existing source-insertion path. No whole-corpus rendering gate is used.

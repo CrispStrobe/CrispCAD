@@ -10,14 +10,14 @@ type Definition={parameters:{name:string;start?:number;end?:number}[];start:numb
 /** Bounded declarative OpenSCAD subset. Unsupported constructs fail closed. */
 export function importOpenSCAD(source:string):CodeProgram{
  if(typeof source!=='string')throw new CadCodeError(t('Expected source text'),0,'');
- const tokens:{text:string;at:number}[]=[];let position=0,cursor=0,statements=0,fn='48';const assignments=new Map<string,string>();
+ const tokens:{text:string;at:number}[]=[];let position=0,cursor=0,statements=0,fn='48',omittedColor=false;const assignments=new Map<string,string>();
  const vectors=new Map<string,Value>();let locals=new Map<string,ScopeValue>();const resolving=new Set<LocalBinding>();
  const modules=new Map<string,Definition>(),functions=new Map<string,Definition>();let functionDepth=0;
  const fail=(message:string,at=tokens[cursor]?.at??source.length):never=>{throw new CadCodeError(message,at,source);};
  const limited=(message:string,at=tokens[cursor]?.at??source.length):never=>{throw new CadCodeError(message,at,source,'resource-limit');};
  if(new TextEncoder().encode(source).length>CODE_LIMITS.sourceBytes)limited(t('Source exceeds 32 KiB'),0);
  while(position<source.length){if(/\s/.test(source[position])){position++;continue;}if(source.startsWith('//',position)){const end=source.indexOf('\n',position);position=end<0?source.length:end+1;continue;}if(source.startsWith('/*',position)){const end=source.indexOf('*/',position+2);if(end<0)fail(t('Unclosed OpenSCAD comment'),position);position=end+2;continue;}
-  const text=/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|^[A-Za-z_$][A-Za-z0-9_$]*|^(?:==|!=|<=|>=|&&|\|\|)|^[{}\[\](),;=+*/%!?<>:-]|^[\s\S]/.exec(source.slice(position))?.[0];if(!text)fail(t('Unsupported OpenSCAD token'),position);tokens.push({text:text!,at:position});position+=text!.length;if(tokens.length>CODE_LIMITS.tokens)limited(t('Too many source tokens'),position);
+  const text=/^"(?:[^"\\]|\\.)*"|^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|^[A-Za-z_$][A-Za-z0-9_$]*|^(?:==|!=|<=|>=|&&|\|\|)|^[{}\[\](),;=+*/%!?<>:-]|^[\s\S]/.exec(source.slice(position))?.[0];if(!text)fail(t('Unsupported OpenSCAD token'),position);tokens.push({text:text!,at:position});position+=text!.length;if(tokens.length>CODE_LIMITS.tokens)limited(t('Too many source tokens'),position);
  }
  const peek=(ahead=0)=>tokens[cursor+ahead]?.text;
  const take=()=>{const next=tokens[cursor++];if(!next)fail(t('Unexpected end of source'));return next!;};
@@ -150,6 +150,20 @@ return {named,positional,use,allowed};
   if(name==='for')return controlLoop(depth);
   if(name==='if'){expect('(');const condition=scalar(value());expect(')');const yes=peek()==='{'?block(depth+1):shape(depth+1);let no='empty()';if(peek()==='else'){take();no=peek()==='{'?block(depth+1):shape(depth+1);}return `choose(${condition}, ${yes}, ${no})`;}
   if(name===';')return 'empty()';
+  if(name==='color'&&!modules.has(name)){
+   // Appearance does not alter a solid. Accept explicit constant appearance only,
+   // and disclose its omission in the converted source rather than claiming colors survive.
+   expect('(');const namedColor=peek()==='c'&&peek(1)==='=';if(namedColor){take();take();}
+   if(peek()?.startsWith('"')){
+    const color=take();let text:string;try{text=JSON.parse(color.text);}catch{unsupported('color string',color.at);}
+    if(!/^(?:[A-Za-z]+|#[0-9A-Fa-f]{3}|#[0-9A-Fa-f]{6}|#[0-9A-Fa-f]{8})$/.test(text!))unsupported('color string',color.at);
+   }else{
+    const color=value();if(!Array.isArray(color)||![3,4].includes(color.length)||!color.every(component=>typeof component==='string'&&/^(?:0(?:\.\d*)?|1(?:\.0*)?|\.\d+)$/.test(component)))unsupported('constant RGB or RGBA color',token.at);
+   }
+   if(peek()===','){take();const namedAlpha=peek()==='alpha'&&peek(1)==='=';if(namedColor&&!namedAlpha)unsupported('positional color argument after named color',token.at);if(namedAlpha){take();take();}const alpha=scalar(value());if(!/^(?:0(?:\.\d*)?|1(?:\.0*)?|\.\d+)$/.test(alpha))unsupported('constant color alpha',token.at);}
+   expect(')');omittedColor=true;return peek()==='{'?block(depth+1):shape(depth+1);
+  }
+
   if(!modules.has(name)&&!['cube','sphere','cylinder','translate','rotate','scale','union','difference','intersection','hull','linear_extrude'].includes(name))unsupported(name,token.at);
   const {named,positional,use,allowed}=argumentsFor(name,token.at);
   if(modules.has(name)){
@@ -176,5 +190,5 @@ return {named,positional,use,allowed};
  }
  let constructionAt=0;const shapes:string[]=[];while(cursor<tokens.length){if(definitions.has(cursor)){cursor=definitions.get(cursor)!;continue;}if(peek(1)==='='){const token=take(),name=token.text;take();if(shapes.length)unsupported('assignment after geometry',token.at);const v=value();expect(';');if(name==='$fn')fn=scalar(v);else{if(!/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(name)||['constructor','prototype'].includes(name))unsupported(name,token.at);if(assignments.has(name)||vectors.has(name))unsupported('variable reassignment',token.at);if(Array.isArray(v))vectors.set(name,v);else assignments.set(name,v);}if(++statements>CODE_LIMITS.statements)limited(t('Too many statements'));}else{constructionAt=tokens[cursor]?.at??0;shapes.push(shape());}}
  if(!shapes.length)fail(t('OpenSCAD block contains no supported solid'));
- const program:CodeProgram={version:1,language:'brickwright-cad-script',parameters:{},source:`// Converted from the supported OpenSCAD subset.\n${[...assignments].map(([name,v])=>`param ${name}: scalar = ${v};`).join('\n')}\nreturn ${union(shapes)};\n`};try{compileCode(program);}catch(error){if(error instanceof CadCodeError)throw new CadCodeError(t`Converted OpenSCAD construction: ${error.detail}`,constructionAt,source,error.code);throw error;}return program;
+ const program:CodeProgram={version:1,language:'brickwright-cad-script',parameters:{},source:`// Converted from the supported OpenSCAD subset.\n${omittedColor?'// Appearance colors omitted; solid geometry retained.\n':''}${[...assignments].map(([name,v])=>`param ${name}: scalar = ${v};`).join('\n')}\nreturn ${union(shapes)};\n`};try{compileCode(program);}catch(error){if(error instanceof CadCodeError)throw new CadCodeError(t`Converted OpenSCAD construction: ${error.detail}`,constructionAt,source,error.code);throw error;}return program;
 }

@@ -22,6 +22,11 @@ if $fn is absent, differing from its adaptive defaults. Extrusion profiles retai
 the 256-point limit. Zero-sized boxes/cylinders/spheres contribute empty geometry;
 a whole code object must still produce a printable solid for insertion.
 
+OpenSCAD `color()` wrappers accept literal named/hex colors, constant RGB/RGBA
+vectors in [0,1], and optional constant alpha. They preserve solid geometry while
+omitting appearance; the converted CAD Script records that omission explicitly.
+Computed color expressions and unsupported arguments are diagnosed.
+
 Source limit is 32 KiB. JSCAD has 20,000 interpreter steps, 64 iterations per loop,
 256 array items and call depth 32. The parsed AST is bounded to 8,192 nodes
 and depth 128. Existing native expansion/mesh budgets also apply.

@@ -1,0 +1,1501 @@
+{
+  "format": "brickwright-local-fixture-library",
+  "version": 1,
+  "collection": "selected-source-corpus",
+  "capturedOn": "2026-11-14",
+  "pathBase": "library/",
+  "reproduction": {
+    "command": "node scripts/generate-corpus-editor-library.mjs --check",
+    "generator": {
+      "path": "../scripts/generate-corpus-editor-library.mjs",
+      "sha256": "49182e9d657a3d81bf40ffabe8d1b59c2869fd088eb98c84fbb7dbf7f23d70d9"
+    },
+    "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
+    "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+  },
+  "selection": {
+    "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+    "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+    "count": 12,
+    "runtimeChecked": 12,
+    "complete": true
+  },
+  "assets": [
+    {
+      "id": "corpus-angelo-beam-angular",
+      "title": "Beam Angular",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Beam_Angular.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Beam_Angular.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Beam_Angular.scad",
+        "sha256": "8142509187db00f7fb9ff29d724860057f08635dbc5f53c1e5c886f369c1c167"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Beam_Angular.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit standalone editor selection and runtime screening 2026-11-14"
+      },
+      "original": {
+        "path": "sources/corpus-selection/beam-angular.scad",
+        "sha256": "8142509187db00f7fb9ff29d724860057f08635dbc5f53c1e5c886f369c1c167",
+        "bytes": 160,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Beam_Angular.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/beam-angular.stl",
+          "sha256": "4fdf0a0209d9bf9015821af4632fc38f0d9c702aff46abe12f1b81e9df63f998",
+          "bytes": 1384,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "4fdf0a0209d9bf9015821af4632fc38f0d9c702aff46abe12f1b81e9df63f998",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 26,
+        "boundsMm": {
+          "min": [
+            -0.05000000074505806,
+            -0.5,
+            -2
+          ],
+          "max": [
+            0.949999988079071,
+            0.550000011920929,
+            2
+          ]
+        },
+        "signedVolumeMm3": 0.7800000917911518
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-angelo-beam-h",
+      "title": "Beam H",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Beam_H.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Beam_H.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Beam_H.scad",
+        "sha256": "153a723f5a51db683a5e3ec6ead8335cba4b97d3f594371e816460a3fcb2cf21"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Beam_H.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit standalone editor selection and runtime screening 2026-11-14"
+      },
+      "original": {
+        "path": "sources/corpus-selection/beam-h.scad",
+        "sha256": "153a723f5a51db683a5e3ec6ead8335cba4b97d3f594371e816460a3fcb2cf21",
+        "bytes": 209,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Beam_H.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/beam-h.stl",
+          "sha256": "cd3597c4a963ea71cbd1dc9ed02e1ea986e6414b74339ea3cb932df64349934f",
+          "bytes": 2884,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "cd3597c4a963ea71cbd1dc9ed02e1ea986e6414b74339ea3cb932df64349934f",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 56,
+        "boundsMm": {
+          "min": [
+            -0.5,
+            -0.550000011920929,
+            -2
+          ],
+          "max": [
+            0.5,
+            0.550000011920929,
+            2
+          ]
+        },
+        "signedVolumeMm3": 1.1600001865625378
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-angelo-key-simple",
+      "title": "Key Simple",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Key_Simple.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Key_Simple.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Key_Simple.scad",
+        "sha256": "524aec01efaf1757485c8855d74c77599d07c6c06e6972a6273f13d974650200"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Key_Simple.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit standalone editor selection and runtime screening 2026-11-14"
+      },
+      "original": {
+        "path": "sources/corpus-selection/key-simple.scad",
+        "sha256": "524aec01efaf1757485c8855d74c77599d07c6c06e6972a6273f13d974650200",
+        "bytes": 294,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Key_Simple.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/key-simple.stl",
+          "sha256": "e5d83df1f58a59f5409f968dfac3d79c75563a1b0223e2f22eab8d583833203b",
+          "bytes": 19784,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "e5d83df1f58a59f5409f968dfac3d79c75563a1b0223e2f22eab8d583833203b",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 394,
+        "boundsMm": {
+          "min": [
+            -5,
+            -5,
+            -0.5
+          ],
+          "max": [
+            7,
+            33,
+            0.5
+          ]
+        },
+        "signedVolumeMm3": 191.55015240663118
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-angelo-roll-holder",
+      "title": "Roll Holder",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Roll_Holder.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Roll_Holder.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Roll_Holder.scad",
+        "sha256": "321dc8517eb2a5ae2a6f8ef2779a8103b800843911f5e828905310ac2b4ee17e"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Roll_Holder.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit standalone editor selection and runtime screening 2026-11-14"
+      },
+      "original": {
+        "path": "sources/corpus-selection/roll-holder.scad",
+        "sha256": "321dc8517eb2a5ae2a6f8ef2779a8103b800843911f5e828905310ac2b4ee17e",
+        "bytes": 316,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Roll_Holder.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/roll-holder.stl",
+          "sha256": "db2ecc7ddf7f83b18d0288a271720cd00c2a17be8836f212ad47a75d38e5f596",
+          "bytes": 23884,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "db2ecc7ddf7f83b18d0288a271720cd00c2a17be8836f212ad47a75d38e5f596",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 476,
+        "boundsMm": {
+          "min": [
+            -3.5,
+            -3.4808266162872314,
+            -5.599999904632568
+          ],
+          "max": [
+            3.5,
+            3.4808266162872314,
+            5.5
+          ]
+        },
+        "signedVolumeMm3": 264.05823895545376
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-angelo-angle-shelf",
+      "title": "Angle Shelf",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Angle%20Shelf.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Angle Shelf.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Angle Shelf.scad",
+        "sha256": "c6f96091369c15109983dc38858360770412f2796b806ac8950bb02ddc8b33a8"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Angle%20Shelf.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit standalone editor selection and runtime screening 2026-11-14"
+      },
+      "original": {
+        "path": "sources/corpus-selection/angle-shelf.scad",
+        "sha256": "c6f96091369c15109983dc38858360770412f2796b806ac8950bb02ddc8b33a8",
+        "bytes": 349,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Angle%20Shelf.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/angle-shelf.stl",
+          "sha256": "21b7db7e7d25eb978bb86157e956f1f6af843941a92b88ccf636b411ae40b31d",
+          "bytes": 15084,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "21b7db7e7d25eb978bb86157e956f1f6af843941a92b88ccf636b411ae40b31d",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 300,
+        "boundsMm": {
+          "min": [
+            0,
+            -1,
+            0
+          ],
+          "max": [
+            1,
+            0,
+            4.099999904632568
+          ]
+        },
+        "signedVolumeMm3": 1.074263591933288
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-angelo-sign-01",
+      "title": "Sign 01",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Sign_01.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Sign_01.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Sign_01.scad",
+        "sha256": "6d4e32ed84be5cbebc2c770479a6b0335d7a60d12f65c1baa217c342770534e0"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Sign_01.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit standalone editor selection and runtime screening 2026-11-14"
+      },
+      "original": {
+        "path": "sources/corpus-selection/sign-01.scad",
+        "sha256": "6d4e32ed84be5cbebc2c770479a6b0335d7a60d12f65c1baa217c342770534e0",
+        "bytes": 475,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Sign_01.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/sign-01.stl",
+          "sha256": "4d058ac2ff8f7a29f4845cb49b6329b3a6ccd1edc7c545c12a6377095355efc0",
+          "bytes": 38084,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "4d058ac2ff8f7a29f4845cb49b6329b3a6ccd1edc7c545c12a6377095355efc0",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 760,
+        "boundsMm": {
+          "min": [
+            -2,
+            -1.9960534572601318,
+            0
+          ],
+          "max": [
+            2,
+            1.9960534572601318,
+            0.20000000298023224
+          ]
+        },
+        "signedVolumeMm3": 2.4239447376306105
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-angelo-sign-02",
+      "title": "Sign 02",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Sign_02.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Sign_02.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Sign_02.scad",
+        "sha256": "a38bc139438edd67eeb04e9b101b493cc36bbed1d238d9b4220a9f698a4f186f"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Sign_02.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit standalone editor selection and runtime screening 2026-11-14"
+      },
+      "original": {
+        "path": "sources/corpus-selection/sign-02.scad",
+        "sha256": "a38bc139438edd67eeb04e9b101b493cc36bbed1d238d9b4220a9f698a4f186f",
+        "bytes": 564,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Sign_02.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/sign-02.stl",
+          "sha256": "9bfa2fcac804574304243e07fa5e6257bd12a0925b2117ce4314d174e41f7d0c",
+          "bytes": 38284,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "9bfa2fcac804574304243e07fa5e6257bd12a0925b2117ce4314d174e41f7d0c",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 764,
+        "boundsMm": {
+          "min": [
+            -2,
+            -1.9960534572601318,
+            0
+          ],
+          "max": [
+            2,
+            1.9960534572601318,
+            0.20000000298023224
+          ]
+        },
+        "signedVolumeMm3": 2.4388553513000915
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-angelo-washer",
+      "title": "Washer",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Washer.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Washer.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Washer.scad",
+        "sha256": "0549eed9f9084c2b96c6ff38b1078648a2a251f6eac3be014a21643a29489aa8"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Washer.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit standalone editor selection and runtime screening 2026-11-14"
+      },
+      "original": {
+        "path": "sources/corpus-selection/washer.scad",
+        "sha256": "0549eed9f9084c2b96c6ff38b1078648a2a251f6eac3be014a21643a29489aa8",
+        "bytes": 1293,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Washer.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/washer.stl",
+          "sha256": "03153572c0a41f654e400864d9cc0904d8cecb8ebb79d1fd4c9b02a0037b161a",
+          "bytes": 16084,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "03153572c0a41f654e400864d9cc0904d8cecb8ebb79d1fd4c9b02a0037b161a",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 320,
+        "boundsMm": {
+          "min": [
+            -20,
+            -20,
+            -1.5
+          ],
+          "max": [
+            20,
+            20,
+            1.5
+          ]
+        },
+        "signedVolumeMm3": 2402.8334203040067
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-angelo-transistor",
+      "title": "Transistor",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Transistor.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Transistor.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Transistor.scad",
+        "sha256": "05a5aaee99cbacf9d841368a3155911e7ee8959cdbedbcd69c793bc03f29c868"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Transistor.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit standalone editor selection and runtime screening 2026-11-14"
+      },
+      "original": {
+        "path": "sources/corpus-selection/transistor.scad",
+        "sha256": "05a5aaee99cbacf9d841368a3155911e7ee8959cdbedbcd69c793bc03f29c868",
+        "bytes": 1416,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Transistor.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/transistor.stl",
+          "sha256": "711dc9546ae6d6c6ad5a77ab4598c6e313fe3b8d5cc2732f4a2766f8f4361080",
+          "bytes": 3084,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "711dc9546ae6d6c6ad5a77ab4598c6e313fe3b8d5cc2732f4a2766f8f4361080",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 60,
+        "boundsMm": {
+          "min": [
+            -0.15000000596046448,
+            -0.5,
+            -3
+          ],
+          "max": [
+            0.15000000596046448,
+            0.5,
+            0.5
+          ]
+        },
+        "signedVolumeMm3": 0.3750000104308129
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-angelo-stairs-01",
+      "title": "Stairs 01",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Stairs_01.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Stairs_01.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Stairs_01.scad",
+        "sha256": "051e38d01a320faf319723e8dc257eb3df35e365b82c5226cec05c410f990b08"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Stairs_01.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit standalone editor selection and runtime screening 2026-11-14"
+      },
+      "original": {
+        "path": "sources/corpus-selection/stairs-01.scad",
+        "sha256": "051e38d01a320faf319723e8dc257eb3df35e365b82c5226cec05c410f990b08",
+        "bytes": 1392,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Stairs_01.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/stairs-01.stl",
+          "sha256": "17cb67f972692d2cf8e2e7c3ffc7e4014fbd1ce4b6799a95e94d130885cdc94f",
+          "bytes": 3084,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "17cb67f972692d2cf8e2e7c3ffc7e4014fbd1ce4b6799a95e94d130885cdc94f",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 60,
+        "boundsMm": {
+          "min": [
+            -4,
+            0,
+            0
+          ],
+          "max": [
+            1,
+            2,
+            2.5
+          ]
+        },
+        "signedVolumeMm3": 14.999999999999998
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-angelo-bookshelf-01",
+      "title": "Bookshelf 01",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Bookshelf_01.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Bookshelf_01.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Bookshelf_01.scad",
+        "sha256": "6ec7ca3193e9821ee281e8ea1c8183fc418892b38b6701863be77cbaf209631e"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Bookshelf_01.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit standalone editor selection and runtime screening 2026-11-14"
+      },
+      "original": {
+        "path": "sources/corpus-selection/bookshelf-01.scad",
+        "sha256": "6ec7ca3193e9821ee281e8ea1c8183fc418892b38b6701863be77cbaf209631e",
+        "bytes": 1514,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Bookshelf_01.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/bookshelf-01.stl",
+          "sha256": "213bd59790143fdd671f7e8b976f470805fd83c22a377e93a074b1f1c782a04c",
+          "bytes": 3184,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "213bd59790143fdd671f7e8b976f470805fd83c22a377e93a074b1f1c782a04c",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 62,
+        "boundsMm": {
+          "min": [
+            -5,
+            -5,
+            -10
+          ],
+          "max": [
+            5,
+            5,
+            10
+          ]
+        },
+        "signedVolumeMm3": 1328
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-angelo-chalkboard-01",
+      "title": "Chalkboard 01",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Chalkboard_01.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Chalkboard_01.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Chalkboard_01.scad",
+        "sha256": "23c77731a79447bc6ad6a5d74e9e7c77ccb852bc63056cf23b236ec4f2de80b6"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Chalkboard_01.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit standalone editor selection and runtime screening 2026-11-14"
+      },
+      "original": {
+        "path": "sources/corpus-selection/chalkboard-01.scad",
+        "sha256": "23c77731a79447bc6ad6a5d74e9e7c77ccb852bc63056cf23b236ec4f2de80b6",
+        "bytes": 1454,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Chalkboard_01.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/chalkboard-01.stl",
+          "sha256": "b5b73dc45f37e557884bd8851bb26cfb0a2a76e48de00df1190b1cc57d6b001a",
+          "bytes": 3684,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "b5b73dc45f37e557884bd8851bb26cfb0a2a76e48de00df1190b1cc57d6b001a",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 72,
+        "boundsMm": {
+          "min": [
+            -1,
+            -0.050999999046325684,
+            -0.5
+          ],
+          "max": [
+            1,
+            0.15000000596046448,
+            0.5
+          ]
+        },
+        "signedVolumeMm3": 0.20694000044286257
+      },
+      "diagnostics": []
+    }
+  ]
+}

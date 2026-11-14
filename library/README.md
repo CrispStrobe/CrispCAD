@@ -107,7 +107,7 @@ inserted gear; a passing positive-volume trial is separate from those checks.
 
 ## Browser previews
 
-All 36 host-bundled items have static PNG previews generated from their actual
+All 48 host-bundled items have static PNG previews generated from their actual
 bounded source conversion and evaluated solids. Previews are keyed by original
 source SHA-256; the standalone host refuses a bundled item without its thumbnail.
 They are presentation assets, not geometry/printability/physics qualification.
@@ -124,3 +124,39 @@ The reusable editor accepts host-provided `previews` and `licenceTexts` maps.
 Thumbnail browsing performs no model downloads or project/history writes. Imported
 external catalogues without a host-supplied preview show an explicit unavailable
 placeholder; the editor does not invent an image or fetch their STL automatically.
+
+## Twelve external corpus models available in the editor
+
+The source archive contains **1,406** files. A reviewed subset of **12** is
+independently dependency-complete (no external includes/assets) and **12** is
+bundled for selection and insertion in File → Model library. These are separate
+counts: the other 1,394 archived files have not been admitted for editor insertion.
+422 archive records lack a recorded dependency blocker; that is not proof of
+dependency completeness or renderability. The 984 recorded blockers remain.
+
+The MIT selection from Angelo Nicoli's Asset Collection is Beam Angular, Beam H,
+Key Simple, Roll Holder, Angle Shelf, Sign 01, Sign 02, Washer, Transistor,
+Stairs 01, Bookshelf 01 and Chalkboard 01. The byte-identical OpenSCAD originals
+are in `sources/corpus-selection/`; exact upstream paths, commit, source hashes
+and retained licence evidence are in `editor-corpus-manifest.json`. Full MIT
+notice text travels with project provenance and attribution export.
+
+Each selected model passes the existing bounded importer, Manifold evaluation,
+and hash-bound STL screening for a closed positive-volume solid, at most 10,000
+triangles and 200 mm extent. Coordinates are unchanged; millimetres and Z up are
+explicit curator assumptions. Some upstream models are very small scene props;
+insertion does not certify real-world dimensions or manufacturability. Constant
+colour wrappers preserve geometry while appearance colours are omitted. Jolt
+collision, printing and dimensional equivalence to the upstream renderer are
+not qualified by these checks. The original editable source stays archived;
+the editor inserts the independent translator's editable CAD Script conversion.
+
+Reproduce just this subset using installed local runtimes:
+
+```sh
+npm run library:corpus:check
+node scripts/generate-library-previews.mjs --corpus-only
+```
+
+The second command updates only the twelve selected thumbnails. Neither command
+downloads assets or executes the upstream OpenSCAD application.
