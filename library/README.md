@@ -107,7 +107,7 @@ inserted gear; a passing positive-volume trial is separate from those checks.
 
 ## Browser previews
 
-All 117 host-bundled items have static PNG previews generated from their actual
+All 129 host-bundled items have static PNG previews generated from their actual
 bounded source conversion and evaluated solids. Previews are keyed by original
 source SHA-256; the standalone host refuses a bundled item without its thumbnail.
 They are presentation assets, not geometry/printability/physics qualification.
@@ -127,10 +127,10 @@ placeholder; the editor does not invent an image or fetch their STL automaticall
 
 ## External corpus models available in the editor
 
-The source archive contains **1,406** files. A reviewed subset of **78** is
-independently dependency-complete (no external includes/assets) and **78** are
+The source archive contains **1,406** files. A reviewed subset of **90** is
+independently dependency-complete (no external includes/assets) and **90** are
 bundled for selection and insertion in File → Model library. These are separate
-counts: the other 1,328 archived files have not been admitted for editor insertion.
+counts: the other 1,316 archived files have not been admitted for editor insertion.
 422 archive records lack a recorded dependency blocker; that is not proof of
 dependency completeness or renderability. The 984 recorded blockers remain.
 
@@ -166,7 +166,7 @@ defaults preserve child geometry; `#` highlighting preserves the rendered solid
 and records omitted preview appearance. Original files remain unchanged.
 These counts are source entries: Street 03 and Street 06 have identical derived
 geometry and remain separate records for their distinct original files. The
-78 selected source entries currently have 77 distinct derived STL hashes.
+90 selected source entries currently have 89 distinct derived STL hashes.
 
 The sixth batch adds Street 04, Eyebolt, Ladder 02, Wall 04, Fence 01,
 Fence 02, Building 02 and Walking Stick. Bounded local module declarations
@@ -201,24 +201,42 @@ Only the authored top-level/default models are qualified: Ring and Pipe 90
 retain unused helpers with undefined calls, which are not certified helper APIs.
 Original source bytes and notices remain intact.
 
-Of the 1,328 archive sources outside this editor selection, 984 have recorded
-dependency blockers and 344 have no recorded blocker but are not admitted for
+The tenth batch adds Hole Plate, Mech Piece 01/02, Arc 02, Circular Blade,
+Gear 01/02, Mallet and Tower through the expanded original importer, plus
+Weights 01, Tree 01 and Nut LQ through bounded fixed-cardinality list
+comprehensions. All twelve qualify only their authored default entry points.
+Hole Plate excludes its `%` background/reference cube and preserves the source
+variable `Hole_Diameter` as the cylinder radius it actually supplies. Import
+notices are captured per new record; original geometry is neither repaired nor
+optimized. The first 78 complete records and every previous preview remain
+unchanged. Hexagon Socket Screw Keys now parses but fails topology screening
+and remains excluded.
+
+Of the 1,316 archive sources outside this editor selection, 984 have recorded
+dependency blockers and 332 have no recorded blocker but are not admitted for
 editor use. Nine licence-quarantined staged sources remain outside the archive.
 `Shaft_01.scad` and `Shaft_02_With_Keyway.scad` remain deferred because their
 signed radial profiles are unsupported; these remain archival originals,
 not additional licence quarantines.
 `Wood_Crate.scad`, `Wall_01.scad`, `Wall_02.scad`, `Sign_03.scad`,
-`Wall_03.scad`, `Flag_France.scad`, `Flag_Italy.scad` and `Floor_01.scad`
+`Wall_03.scad`, `Flag_France.scad`, `Flag_Italy.scad`, `Floor_01.scad`,
+`Display_Seven_Segments.scad`, `Grid_01.scad` and
+`Hexagon_socket_screw_keys.scad`
 also remain outside the
 editor selection: their converted meshes failed closed-solid topology checks.
 These are geometry screening failures, separate from dependency or licence
 exclusions; no repairs or source substitutions were applied.
 `Notebook.scad` produced 16,406 triangles, exceeding this selection's unchanged
-10,000-triangle policy. At their recorded screening, Abacus and Arc 01/02
-exceeded the then-applicable native node budget. Those refusals remain recorded;
-expanded language support does not qualify these files without another explicit
-screening. The selection limits and other recorded geometry exclusions are
-unchanged.
+10,000-triangle policy. Earlier Abacus and Arc 01/02 node-budget refusals remain
+historical evidence. Arc 02 now passes an explicit screen under the expanded
+converter and unchanged 1,024-node limit; Arc 01 still exceeds that limit. Abacus
+now compiles but its 89,968 estimated faces are not a passing STL qualification.
+`Mech_Piece_03.scad`, `Mech_Piece_04.scad` and `Screw.scad` contain unextruded
+2D geometry in the 3D root path, which remains unsupported. These language and
+geometry refusals are separate from the licence and dependency holds.
+The [bounded candidate-screening report](corpus-audit/editor-screening-cycle13.json)
+retains observed source/runtime identities and failures without treating the
+remaining archive as screened. The selection limits are unchanged.
 
 Each selected model passes the existing bounded importer, Manifold evaluation,
 and hash-bound STL screening for a closed positive-volume solid, at most 10,000
@@ -235,14 +253,17 @@ Reproduce just this subset using installed local runtimes:
 ```sh
 npm run library:corpus:check
 node scripts/generate-library-previews.mjs --corpus-only
+# Or render only named additions while preserving every other preview:
+node scripts/generate-library-previews.mjs --corpus-only --asset-id corpus-angelo-nut-lq
 ```
 
-The second command updates only the 78 selected thumbnails. Neither command
-downloads assets or executes the upstream OpenSCAD application.
+The unfiltered preview command updates the 90 selected thumbnails; repeated
+`--asset-id` arguments render only the named models and retain all other entries.
+These commands do not download assets or execute the upstream OpenSCAD application.
 
 ## Supported CC0 additions — 2026-11-14
 
-The offline gallery now contains 117 editable-source models. The new
+The offline gallery now contains 129 editable-source models. The new
 `supported-models-manifest.json` admits **Quarter cylinder**, **Square pyramid** and
 **Nested open frames** from Ghostkeeper/SlicerTestModels at pinned revision
 `e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d`. Sources are unmodified, including
@@ -255,7 +276,7 @@ STLs offline, checks pinned source/licence hashes, screens closed positive-volum
 meshes, and compares volumes with independent polygon geometry or rectangle-cell
 integration. `--write` regenerates the same outputs. New source or grant identities
 require a new review. `npm run library:previews:generate` renders actual evaluated
-geometry for all 117 gallery entries. Browsing and insertion use bundled bytes;
+geometry for all 129 gallery entries. Browsing and insertion use bundled bytes;
 research-only datasets and unsupported seeds are not gallery entries.
 
 STL screening is separate from Jolt qualification. These models do not carry a

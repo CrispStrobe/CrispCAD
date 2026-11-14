@@ -529,10 +529,10 @@ described above. No additional JSCAD models were present in these staged subsets
 
 ### Editor-enabled corpus subset
 
-Seventy-eight dependency-complete MIT Asset Collection originals now project into a
+Ninety dependency-complete MIT Asset Collection originals now project into a
 separate `library/editor-corpus-manifest.json` and are selectable in the bundled
 editor catalogue. See [exact model names and reproduction commands](../library/README.md#external-corpus-models-available-in-the-editor).
-Only these 78 archive selections receive local importer, Manifold and STL screening evidence;
+Only these 90 archive selections receive local importer, Manifold and STL screening evidence;
 the archival manifest remains unchanged and unqualified.
 
 The current bounded OpenSCAD converter supports typed string/colour selectors,
@@ -564,6 +564,12 @@ derivative path; its [previous qualification record](../library/corpus-audit/qua
 mesh and preview remain preserved. Existing per-model topology exclusions and
 triangle/extent screening policies are unchanged.
 
+Simple list comprehensions now build bounded profile/vector values from a fixed
+range or fixed-length vector. The importer retains symbolic coordinate expressions,
+restores lexical bindings after iteration and rejects parameter-dependent range
+cardinality. This shares the existing loop, array, depth and evaluation budgets;
+filters, `each` and multiple iterator bindings remain outside this subset.
+Only independently screened default entry points enter the editor selection.
 The host bundles exact selected source bytes, previews and the
 correct asset-specific MIT notice. Insertion verifies hashes, evaluates the
 candidate, and preserves provenance, attribution and undo/redo through the

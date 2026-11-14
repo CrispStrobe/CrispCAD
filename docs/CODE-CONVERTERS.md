@@ -11,7 +11,7 @@ The GUI, SDK, CLI and MCP share the converters.
 
 | Input | Supported |
 | --- | --- |
-| OpenSCAD | Typed scalar/vector/string values; final file/block assignments and forward references; lexical nested modules/functions and defaults; `children()` and indexed children; parameter-driven conditionals and multi-binding range/list loops; vector arithmetic/components/indexing; primitives including planar-faced polyhedra; reflections, signed scale, arbitrary-axis rotation, resize without automatic axes; hull and bounded 2D/3D Minkowski sums; profile Booleans, holes, loops, modules, text and round/sharp offsets; twisted/tapered linear extrusion and positive-angle revolution. |
+| OpenSCAD | Typed scalar/vector/string values; final file/block assignments and forward references; lexical nested modules/functions and defaults; `children()` and indexed children; parameter-driven conditionals and multi-binding range/list loops; simple fixed-cardinality list comprehensions; vector arithmetic/components/indexing; primitives including planar-faced polyhedra; reflections, signed scale, arbitrary-axis rotation, resize without automatic axes; hull and bounded 2D/3D Minkowski sums; profile Booleans, holes, loops, modules, text and round/sharp offsets; twisted/tapered linear extrusion and positive-angle revolution. |
 | JSCAD | Bounded CommonJS/ES modeling imports, helper functions, destructuring, arrays, loops and scalar input parameters; existing primitives plus indexed polyhedra; 2D/3D Booleans/hulls/hullChain; planar profiles and twisted extrusion; positive-angle rotational extrusion; 3D reflection and transforms; evaluated snapshots and flat output-colour metadata. |
 | Native CAD Script | Retained CSG including Minkowski, indexed planar-faced polyhedra, signed scale, mirror, arbitrary-axis rotation and resize; typed 2D construction trees with holes, text, offsets and profile loops/choices; extrusion/taper/twist/revolution; existing numeric parameters, patterns and lazy branches. |
 
@@ -92,8 +92,9 @@ limits are distinct from unsupported features and malformed input.
 
 Known gaps, deliberately diagnosed:
 
-- External `include`/`use`, library resolution (including BOSL2), array/list
-  comprehensions, randomness/search helpers, symbolic numeric-to-string formatting,
+- External `include`/`use`, library resolution (including BOSL2), comprehension
+  filters/`each`/C-style and variable-cardinality generators, randomness/search
+  helpers, symbolic numeric-to-string formatting,
   general matrix arithmetic, anonymous-block assignment semantics, external meshes,
   surface/image geometry, automatic resize axes and arbitrary-axis profile rotations.
   Parameter-dependent recursive functions remain bounded rather than becoming an
@@ -132,6 +133,18 @@ Fixed vector-list loops expand symbolically. Loops allow at most 64 values each,
 with global expansion/node/face budgets and a 16,384-evaluation guard against nested
 explosion. Two-component descending ranges retain the documented legacy OpenSCAD
 endpoint-swapping behavior; explicit stepped ranges remain directional.
+
+Simple `[for (item = range_or_vector) expression]` comprehensions produce typed
+arrays with fixed cardinality. Direct range bounds/steps must resolve to finite
+constants within the existing loop bounds; a fixed-length vector may retain
+symbolic coordinate values. Each generator has at most 64 iterations, arrays
+retain the 256-item limit, and existing depth/value-evaluation budgets still
+apply. Each body has an isolated lexical binding; surrounding bindings are
+restored. Empty iterations do not evaluate the body. Symbolic range bounds or
+variable-length choices are refused instead of freezing a native parameter's
+initial value. Coordinates in a fixed result remain editable. Nested typed list
+results are supported; filters, `each`, C-style headers, multiple bindings and
+chained generators within one comprehension are not implemented.
 
 Native choose resolves only the selected shape branch. Scalar conditions use an
 AST with short-circuit &&/|| and lazy ternary evaluation, retaining native parameter
@@ -229,7 +242,7 @@ Basic Booleans retains five output records and flat colour metadata. All 34 nati
 examples round-trip via the supported OpenSCAD and JSCAD syntax. Exported JSCAD is
 checked against the actual MIT modeling library for volume and bounds.
 
-Next valuable work includes bounded list comprehensions, anonymous-scope flattening,
+Next valuable work includes broader comprehension forms, anonymous-scope flattening,
 callback/slice loft IR and the remaining profile/export gaps. Add a small pinned failing fixture with exact
 licence/provenance for each capability before changing the converter. Never turn
 an unsupported operation into an unreported approximation or execute source JS.
