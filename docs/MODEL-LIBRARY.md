@@ -529,10 +529,10 @@ described above. No additional JSCAD models were present in these staged subsets
 
 ### Editor-enabled corpus subset
 
-Seventy-four dependency-complete MIT Asset Collection originals now project into a
+Seventy-eight dependency-complete MIT Asset Collection originals now project into a
 separate `library/editor-corpus-manifest.json` and are selectable in the bundled
 editor catalogue. See [exact model names and reproduction commands](../library/README.md#external-corpus-models-available-in-the-editor).
-Only these 74 archive selections receive local importer, Manifold and STL screening evidence;
+Only these 78 archive selections receive local importer, Manifold and STL screening evidence;
 the archival manifest remains unchanged and unqualified. The bounded OpenSCAD
 importer accepts validated constant `color()` wrappers and discloses omitted
 appearance. Transform `$fn` bindings are scoped to their children and restored
@@ -554,6 +554,10 @@ Pipe 00 and Flange 02 use an explicitly recorded readonly full-render
 Source overrides and computed/global/loop/function-derived indices remain
 unsupported; evaluated exports retain the selected facet counts. The original
 conditional source bytes and all previous qualification records remain intact.
+Translate-only XY/zero-Z interpretation admits Cup, Ring, Pipe 90 and Key Old
+through their default authored entry points. Rotation, scale and primitive size
+vector rules are unchanged; the source originals are not rewritten. Ring and
+Pipe 90's retained unused helpers are outside the recorded qualification scope.
 The host bundles exact selected source bytes, previews and the
 correct asset-specific MIT notice. Insertion verifies hashes, evaluates the
 candidate, and preserves provenance, attribution and undo/redo through the

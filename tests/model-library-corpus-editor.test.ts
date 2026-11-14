@@ -13,11 +13,11 @@ const manifest = JSON.parse(read('editor-corpus-manifest.json').toString());
 const corpus = JSON.parse(read('corpus/manifest.json').toString());
 const repository = corpus.repositories.find((item: any) => item.id === 'AngeloNicoli--OpenSCAD-Snippet');
 const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
-const selected = ['beam-angular', 'beam-h', 'key-simple', 'roll-holder', 'angle-shelf', 'sign-01', 'sign-02', 'washer', 'transistor', 'stairs-01', 'bookshelf-01', 'chalkboard-01', 'arrow-01', 'base-cabinet-01', 'beam-c', 'bookshelf-02', 'box-wood-01', 'chair-01', 'door-01', 'flange-01', 'ladder-01', 'sofa', 'table-01', 'vent-grid', 'base-cabinet-02', 'bed-01', 'bed-02', 'bench-01', 'bench-02', 'chair-02', 'chair-03', 'fireplace-01', 'table-02', 'table-03', 'table-small-01', 'window-01', 'building-01', 'chalkboard-02', 'cone-01', 'crystal', 'key', 'lamp-01', 'lever-handle', 'soda-cup-01', 'stairs-02', 'stairs-03', 'traffic-light', 'tootbrush', 'electric-wire-plug', 'flange-03', 'resistor', 'street-02', 'street-03', 'street-06', 'sword-01', 'x', 'banner-01', 'raccordo', 'street-01', 'street-05', 'street-04', 'eyebolt', 'ladder-02', 'wall-04', 'fence-01', 'fence-02', 'building-02', 'walking-stick', 'ingot-01', 'coin-01', 'led-01', 'sauce-bottle', 'pipe-00', 'flange-02'];
+const selected = ['beam-angular', 'beam-h', 'key-simple', 'roll-holder', 'angle-shelf', 'sign-01', 'sign-02', 'washer', 'transistor', 'stairs-01', 'bookshelf-01', 'chalkboard-01', 'arrow-01', 'base-cabinet-01', 'beam-c', 'bookshelf-02', 'box-wood-01', 'chair-01', 'door-01', 'flange-01', 'ladder-01', 'sofa', 'table-01', 'vent-grid', 'base-cabinet-02', 'bed-01', 'bed-02', 'bench-01', 'bench-02', 'chair-02', 'chair-03', 'fireplace-01', 'table-02', 'table-03', 'table-small-01', 'window-01', 'building-01', 'chalkboard-02', 'cone-01', 'crystal', 'key', 'lamp-01', 'lever-handle', 'soda-cup-01', 'stairs-02', 'stairs-03', 'traffic-light', 'tootbrush', 'electric-wire-plug', 'flange-03', 'resistor', 'street-02', 'street-03', 'street-06', 'sword-01', 'x', 'banner-01', 'raccordo', 'street-01', 'street-05', 'street-04', 'eyebolt', 'ladder-02', 'wall-04', 'fence-01', 'fence-02', 'building-02', 'walking-stick', 'ingot-01', 'coin-01', 'led-01', 'sauce-bottle', 'pipe-00', 'flange-02', 'cup-01', 'ring', 'pipe-90', 'key-old-01'];
 
 describe('explicit corpus to editor selection', () => {
-  it('admits exactly seventy-four selected standalone sources with unchanged pinned originals and full MIT grants', () => {
-    expect(selected).toHaveLength(74);
+  it('admits exactly seventy-eight selected standalone sources with unchanged pinned originals and full MIT grants', () => {
+    expect(selected).toHaveLength(78);
     expect(manifest.selection).toMatchObject({count: selected.length, runtimeChecked: selected.length, complete: true});
     expect(manifest.assets.map((asset: any) => asset.id)).toEqual(selected.map(slug => `corpus-angelo-${slug}`));
     const street03 = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-street-03');
@@ -26,6 +26,13 @@ describe('explicit corpus to editor selection', () => {
     expect(street03.derivatives[0].sha256).toBe(street06.derivatives[0].sha256);
     for (const street of [street03, street06]) expect(street.modificationNotes).toContain('counts source files, not unique shapes');
     expect(manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-x').title).toBe('Crossed cubes (x)');
+    for (const slug of ['cup-01', 'ring', 'pipe-90', 'key-old-01']) {
+      const asset = manifest.assets.find((asset: any) => asset.id === `corpus-angelo-${slug}`);
+      expect(asset.modificationNotes).toContain('Brickwright interprets the authored two-component 3D translations [0,0] as [0,0,0]');
+      expect(asset.modificationNotes).toContain('fixed full-render context $preview=false');
+      expect(asset.modificationNotes).toContain('only the instantiated default top-level model');
+      if (slug === 'ring' || slug === 'pipe-90') expect(asset.modificationNotes).toContain('unresolved ring call');
+    }
     const catalogue = createLocalModelLibraryCatalogue(manifest);
     expect(catalogue.assets).toHaveLength(selected.length);
     const fullNotice = read('evidence/corpus-selection-MIT-LICENSE.txt').toString().replace(/\s+/g, ' ').trim();

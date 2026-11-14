@@ -107,7 +107,7 @@ inserted gear; a passing positive-volume trial is separate from those checks.
 
 ## Browser previews
 
-All 113 host-bundled items have static PNG previews generated from their actual
+All 117 host-bundled items have static PNG previews generated from their actual
 bounded source conversion and evaluated solids. Previews are keyed by original
 source SHA-256; the standalone host refuses a bundled item without its thumbnail.
 They are presentation assets, not geometry/printability/physics qualification.
@@ -127,10 +127,10 @@ placeholder; the editor does not invent an image or fetch their STL automaticall
 
 ## External corpus models available in the editor
 
-The source archive contains **1,406** files. A reviewed subset of **74** is
-independently dependency-complete (no external includes/assets) and **74** are
+The source archive contains **1,406** files. A reviewed subset of **78** is
+independently dependency-complete (no external includes/assets) and **78** are
 bundled for selection and insertion in File → Model library. These are separate
-counts: the other 1,332 archived files have not been admitted for editor insertion.
+counts: the other 1,328 archived files have not been admitted for editor insertion.
 422 archive records lack a recorded dependency blocker; that is not proof of
 dependency completeness or renderability. The 984 recorded blockers remain.
 
@@ -161,7 +161,7 @@ defaults preserve child geometry; `#` highlighting preserves the rendered solid
 and records omitted preview appearance. Original files remain unchanged.
 These counts are source entries: Street 03 and Street 06 have identical derived
 geometry and remain separate records for their distinct original files. The
-74 selected source entries currently have 73 distinct derived STL hashes.
+78 selected source entries currently have 77 distinct derived STL hashes.
 
 The sixth batch adds Street 04, Eyebolt, Ladder 02, Wall 04, Fence 01,
 Fence 02, Building 02 and Walking Stick. Bounded local module declarations
@@ -182,8 +182,16 @@ remain rejected. Pipe uses its authored 30-facet render branch; Flange uses its
 64-facet outer branch and authored default `Size=0`, with a measured 200 mm
 extent under the unchanged policy. No preview-dependent source text was edited.
 
-Of the 1,332 archive sources outside this editor selection, 984 have recorded
-dependency blockers and 348 have no recorded blocker but are not admitted for
+The ninth batch adds Cup 01, Ring, Pipe 90 and Key Old 01. Brickwright interprets
+their two-component built-in 3D translations as XY with zero Z; the authored
+short vectors are all `[0,0]`. Conversion notes record that interpretation and
+the existing full-render context, without claiming native-version parity.
+Only the authored top-level/default models are qualified: Ring and Pipe 90
+retain unused helpers with undefined calls, which are not certified helper APIs.
+Original source bytes and notices remain intact.
+
+Of the 1,328 archive sources outside this editor selection, 984 have recorded
+dependency blockers and 344 have no recorded blocker but are not admitted for
 editor use. Nine licence-quarantined staged sources remain outside the archive.
 `Shaft_01.scad` and `Shaft_02_With_Keyway.scad` remain deferred because their
 signed radial profiles are unsupported; these remain archival originals,
@@ -216,12 +224,12 @@ npm run library:corpus:check
 node scripts/generate-library-previews.mjs --corpus-only
 ```
 
-The second command updates only the 74 selected thumbnails. Neither command
+The second command updates only the 78 selected thumbnails. Neither command
 downloads assets or executes the upstream OpenSCAD application.
 
 ## Supported CC0 additions — 2026-11-14
 
-The offline gallery now contains 113 editable-source models. The new
+The offline gallery now contains 117 editable-source models. The new
 `supported-models-manifest.json` admits **Quarter cylinder**, **Square pyramid** and
 **Nested open frames** from Ghostkeeper/SlicerTestModels at pinned revision
 `e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d`. Sources are unmodified, including
@@ -234,7 +242,7 @@ STLs offline, checks pinned source/licence hashes, screens closed positive-volum
 meshes, and compares volumes with independent polygon geometry or rectangle-cell
 integration. `--write` regenerates the same outputs. New source or grant identities
 require a new review. `npm run library:previews:generate` renders actual evaluated
-geometry for all 113 gallery entries. Browsing and insertion use bundled bytes;
+geometry for all 117 gallery entries. Browsing and insertion use bundled bytes;
 research-only datasets and unsupported seeds are not gallery entries.
 
 STL screening is separate from Jolt qualification. These models do not carry a

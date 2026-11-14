@@ -65,6 +65,16 @@ These semantics follow the official language documentation for
 [special variables](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Special_variables)
 and the [debug modifier](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Debug_Modifier).
 
+For the built-in 3D `translate()` only, Brickwright normalizes a numeric `[x,y]`
+vector to `[x,y,0]` and records that interpretation in converted CAD Script.
+Named arguments, symbolic coordinates, lexical module bindings and scoped `$fn`
+keep their existing behavior. This compatibility rule does not relax rotation,
+scale or primitive size vectors, and does not repair original source files.
+The official [OpenSCAD mailing-list discussion](https://lists.openscad.org/empathy/thread/SDXLQNVUH347BJKWM2J3VAUXTNH4NVUT)
+describes translation lists of two or three numbers. The independent importer
+tests establish Brickwright's XY/zero-Z interpretation; they do not claim a
+native OpenSCAD execution or parity with every upstream version.
+
 Source limit is 32 KiB. JSCAD has 20,000 interpreter steps, 64 iterations per loop,
 256 array items and call depth 32. The parsed AST is bounded to 8,192 nodes
 and depth 128. Existing native expansion/mesh budgets also apply.
