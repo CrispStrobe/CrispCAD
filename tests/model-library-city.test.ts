@@ -12,7 +12,7 @@ const raw=manifest.assets.find((a:any)=>a.id==='corpus-angelo-scene-city-street'
 let kernel:Awaited<ReturnType<typeof createGeometryKernel>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 it('pins the city root, five exact independent dependency grants and all prior96 complete records',()=>{
- expect(createHash('sha256').update(JSON.stringify(manifest.assets.slice(0,96))).digest('hex')).toBe('80f5317fac526a8e9380e040170ba69f63e237226f410a9157aa5c98b1490308');
+ expect(createHash('sha256').update(JSON.stringify(manifest.assets.slice(0,96))).digest('hex')).toBe('34fbd5ceb1fc679fa25c1ff4f85a3ac5d2294e8a399a4757bde7854c0eed9854');
  expect(raw.original.sha256).toBe('2b33c97c3eab119a88159929bfe6927510636f0d626ac57ca025995087653743');
  expect(raw.sourceBundle.rootPath).toBe('Projects/Scene_City_Street.scad');expect(raw.sourceBundle.dependencies).toHaveLength(5);
  const corpus=JSON.parse(readFileSync('library/corpus/manifest.json','utf8')).repositories.find((r:any)=>r.id==='AngeloNicoli--OpenSCAD-Snippet');
@@ -40,5 +40,5 @@ it('refuses missing/corrupt dependencies before evaluation without altering proj
  }}finally{session.dispose();}
 });
 it('reproduces only the new city geometry while reusing hash-verified unchanged96 qualifications',()=>{
- expect(execFileSync(process.execPath,['scripts/generate-corpus-editor-library.mjs','--check','--asset-id',raw.id],{encoding:'utf8',timeout:15000})).toContain('97 selected corpus sources complete');
+ expect(execFileSync(process.execPath,['scripts/generate-corpus-editor-library.mjs','--check','--asset-id',raw.id],{encoding:'utf8',timeout:15000})).toContain('98 selected corpus sources complete');
 });

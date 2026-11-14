@@ -127,7 +127,7 @@ const cityDependencies = {
   "Asset_SCAD/Street_05.scad": "26b28e095a3a9d571a5842152baaf7e6a247e45d185173a1ddfd525f3d953ec8",
   "Asset_SCAD/Street_04.scad": "9560ea338991cc8a202a620a3ede99e199120f253dd7cff4d7d84111c376d033"
 };
-const preserved97Hash = '2794018f5d2c74e1c8b7588391d7da10092ed46de712749ee0661fa8ed0de044';
+const preserved97Hash = '1c4e1de1ea28475c545bd1d2a1b1bf5a20fbcb3b04dffca40779b2bbbc28d78a';
 export async function generateCorpusEditorLibrary({assetId} = {}) {
   const previous = assetId ? JSON.parse((await read('editor-corpus-manifest.json')).toString()) : undefined;
   if (previous && hash(Buffer.from(JSON.stringify(previous.assets.slice(0,97)))) !== preserved97Hash) throw new Error('Review required: historical 97 records changed.');

@@ -20,10 +20,10 @@ claim of feature or usability parity.
 
 | Workflow | Current foundation | Required before parity acceptance |
 | --- | --- | --- |
-| Discover and insert | Searchable categorized catalog, geometry-derived previews, pin, SVG/text/QR options | Place on click and faces, drag placement, recent/custom shapes, remembered categories, shape-specific parameter controls |
+| Discover and insert | Searchable catalog, editable recipes, optional lower-right dock, drag/tap surface placement with live ghost and highlighting | Recent/custom shapes, remembered categories, active construction workplanes |
 | Find tools | Labeled task ribbon and keyboard shortcuts | Search tools/settings as well as shapes, contextual disabled reasons and in-place help; adaptive groups rather than a long scrolling ribbon |
-| Manipulate | View cube, numeric transforms, gizmos, snap, drop, multi-select | Direct drag, face placement, selection bounds with dimension handles, align/mirror/pattern and precise measurement |
-| Construct | Closed mesh solids, retained boolean operands, imported STL | Clear solid/hole roles, grouping/bundling, locking/hiding, split/hollow, edge operations and appropriate exact-body support |
+| Manipulate | View cube, numeric/live transforms, direct drag, gizmos, snap, drop, rectangle selection, surface placement | Persistent workplanes, selection bounds with dimension handles, align/mirror/pattern and precise measurement |
+| Construct | Closed mesh solids, retained boolean operands, imported STL, Solid/Hole cutters | Grouping/bundling, locking/hiding, split/hollow, edge operations and appropriate exact-body support |
 | Draw | SVG-to-solid path | Editable planar sketches, arcs/curves, construction geometry, extrude/revolve/sweep and diagnostics |
 | Touch | Tap/long-press, persistent multi-select, pinch/pan, onscreen controls | Finger/Pencil hit-target qualification, explicit gesture modes, tablet context menus, keyboard-free completion and focus/simple modes |
 | Keep work | Local autosave plus append-only revision journal, model list, restore and portable history backup | Streaming large-history backups and further native recovery/performance qualification, thumbnails, folder organization and cross-device backup/sync |
@@ -107,3 +107,28 @@ A full constraint/B-rep CAD is a substantial later project, not a toolbar change
 `@brickwright/cad-history` is host independent. The standalone host supplies the
 IndexedDB journal and UI; Brickwright and CrispMesh can reuse the same revision
 contract with their own native/project storage providers.
+
+## Fast construction workflows (2026-11-14)
+
+Original interaction code, guided by common CAD conventions and the official
+[Tinkercad shortcut sheet](https://assets.ctfassets.net/jl5ii4oqrdmc/6TNFVIF89KMN9CPLLH97U0/cc996201b4d443c63c84b54a26c1891b/Tinkercad_keyboard_shortcuts_1_up.pdf).
+
+| Workflow | Status / next acceptance task |
+| --- | --- |
+| Drag shape to grid or existing face | Implemented: evaluated ghost, highlighted target, outward face normal, tangent grid snapping and one committed edit. Curved surfaces use the actual tessellated face normal. |
+| Tablet insertion without dragging | Docked browser: tap a shape, then tap a target. Drag thumbnails; swipe labels/category areas to scroll. |
+| Keep shapes beside the model | Optional lower-right dock via pin or Settings. Preference is host-owned and remembered without a model revision. Popup click-to-add remains available. |
+| Fine placement / recovery | Shift gives one tenth of grid spacing. Alt ignores surfaces and targets Z=0. Escape, outside drop, blur or model changes cancel the preview. H/S chooses cutter/solid before dropping. |
+| Cut with intuitive holes | Solid/Hole controls, H/S, role-aware Union (Cmd/Ctrl+G), retained editable operands and Separate (Cmd/Ctrl+Shift+G). |
+| Quick selection and navigation | Select-mode rectangle, Shift-additive selection, touch multi-select, default direct dragging, F/Shift+F, view cube, trackpad/pinch and camera presets. D drops selection to baseplate. |
+| Align shapes | Next: on-canvas edge/centre handles with preview; first-selected or explicit fixed reference, one undo entry and driven-position handling. |
+| Persistent face workplane | Next: pick/reset construction plane; reuse it for insertion, movement, dimension annotations and D. Current automatic face placement does not establish a persistent workplane. |
+| Duplicate and repeat | Duplicate exists. Next: retain last translation/rotation pattern for repeat duplication, including parameter bindings. |
+| Lock / hide / isolate | Next: compact contextual actions and browser states, with explicit export and selection semantics. |
+| Direct dimension handles | Numeric dimensions and live annotations exist. Next: corner/edge resizing handles in Select mode, preserving rotated bodies and actual sizes. |
+
+Face placement retains generator recipes, code, bindings, provenance and local
+joint frames. It composes driven translations/rotations rather than freezing them.
+No intersections are silently merged. Snapping is a placement aid, not a contact
+constraint or collision certificate. New modeling features must keep the same
+command/history/source path for GUI, script and MCP access.

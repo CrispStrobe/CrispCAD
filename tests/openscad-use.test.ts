@@ -34,11 +34,11 @@ it('preserves caller children scope and dynamic specials inside a used module',a
  expect(await volume('size=3;module helper(){cube(size);}use <a.scad> a($width=2){helper();}',{'a.scad':'size=99;module a(){assert($width==2);children();}'})).toBeCloseTo(27);
 });
 it('retains live guards, source diagnostics, dependency cycles and fixed construction limits',async()=>{
- await expect(load('use <a.scad> a();',{'a.scad':'module a(){assert(false);cube(1);}'})).rejects.toThrow('Assertion failed');
+ await expect(load('use <a.scad> a();',{'a.scad':'module a(){assert(false);cube(1);}'})).rejects.toThrow(/assertion failed/i);
  await expect(load('use <a.scad> a();',{'a.scad':'module a(){not_supported();}'})).rejects.toMatchObject({path:'a.scad'});
  await expect(load('use <a.scad>',{'a.scad':'use <root.scad>'})).rejects.toThrow('Cyclic include dependency');
  await expect(load('use <a.scad> a();',{'a.scad':'module a(){a();}'})).rejects.toMatchObject({code:'resource-limit'});
- await expect(load('use <a.scad> a();',{'a.scad':'module a(){for(i=[0:65])cube(1);}'})).rejects.toMatchObject({code:'resource-limit'});
+ await expect(load('use <a.scad> a();',{'a.scad':'module a(){for(i=[0:256])cube(1);}'})).rejects.toMatchObject({code:'resource-limit'});
 });
 it.each(['module a(){use <a.scad> cube(1);}a();','{use <a.scad> cube(1);}','translate([0,0,0]) use <a.scad> cube(1);','if(true) use <a.scad> cube(1);'])('refuses use outside file scope: %s',async source=>{
  await expect(load(source,{'a.scad':'module x(){cube(1);}'})).rejects.toMatchObject({code:'unsupported-feature'});

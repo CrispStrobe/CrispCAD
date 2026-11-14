@@ -45,7 +45,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     const draft = { ...document, roots: [...document.roots], ...(document.joints ? {joints: structuredClone(document.joints)} : {}), ...(document.parametric ? {parametric:structuredClone(document.parametric)} : {}), ...(document.sketches?{sketches:structuredClone(document.sketches)}:{}), nodes: Object.fromEntries(Object.entries(document.nodes).map(([id, node]) => [id, cloneNode(node)])) };
     const nextSelection = edit(draft);
     applyParametricBindings(draft);
-    if(liveModelSource||draft.version>=6&&draft.modelSource){assertProvenanceUpgrade(draft);draft.version=6;draft.modelSource={version:1,language:'brickwright-design',source:updateModelSource(draft.modelSource?.source,draft)};}
+    if(liveModelSource||draft.version>=6&&draft.modelSource){assertProvenanceUpgrade(draft);draft.version=Math.max(6,draft.version) as CadDocument['version'];draft.modelSource={version:1,language:'brickwright-design',source:updateModelSource(draft.modelSource?.source,draft)};}
     checkDocument(draft);
     for (const [id, node] of Object.entries(draft.nodes)) {
       const previous = document.nodes[id];
@@ -125,7 +125,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         for(const [key,node] of Object.entries(source.nodes)){const next=cloneNode(node);next.id=map.get(key)!;if(next.kind==='boolean')next.inputs=next.inputs.map(input=>map.get(input)!);d.nodes[next.id]=next;}
         const retained=d.version>=5?[...new Set([...descendants].flatMap(key=>document.nodes[key]?.provenance??[]))]:[];
         if(d.version<5&&Object.hasOwn(previous,'provenance'))d.nodes[id].provenance=structuredClone(previous.provenance);
-        const next=d.nodes[id];if(retained.length)next.provenance=retained;next.name=previous.name;next.color=previous.color;next.transform=structuredClone(previous.transform);
+        const next=d.nodes[id];if(retained.length)next.provenance=retained;next.name=previous.name;next.color=previous.color;if(previous.role)next.role=previous.role;next.transform=structuredClone(previous.transform);
         if(previous.physics&&next.physics)next.physics={...next.physics,densityKgM3:previous.physics.densityKgM3,friction:previous.physics.friction,restitution:previous.physics.restitution,motion:previous.physics.motion};
         if(d.version===1)d.version=2;pruneDocument(d);return [id];
       });
@@ -184,15 +184,19 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       assertDrivenEdit(d,next); d.nodes[id] = next;
     }); },
     transform(updates: Array<{ id: string; transform: Transform }>) { commit('Transform selection', d => { for (const { id, transform } of updates) { if (!d.nodes[id]) throw new Error(t('Object does not exist'));guardConstructionEdit(d,id); const next={...d.nodes[id],transform:structuredClone(transform)};assertDrivenEdit(d,next);d.nodes[id]=next; } }); },
+    setRole(role:'solid'|'hole',ids:readonly string[]=selection){commit('Change solid/hole role',d=>{const chosen=[...new Set(ids)];if(!chosen.length||!chosen.every(id=>d.roots.includes(id)))throw new Error(t('Select a top-level body'));if(chosen.some(id=>d.nodes[id].reference))throw new Error(t('Reference helpers cannot be hole cutters'));if(role==='hole'&&d.joints?.some(j=>chosen.includes(j.bodyA)||chosen.includes(j.bodyB)))throw new Error(t('Detach the selected bodies’ joints before changing them to holes'));d.version=7;for(const id of chosen)d.nodes[id]={...d.nodes[id],role};});},
     combine(operation: 'union' | 'subtract' | 'intersect', ids: readonly string[] = selection) {
       const chosen = [...new Set(ids)]; const id = newId();
       commit(operation === 'subtract' ? 'Subtract (first selected is the base)' : operation, d => {
         if (chosen.length < 2 || !chosen.every(x => d.roots.includes(x))) throw new Error(t('Select at least two top-level bodies'));
         if (chosen.some(x => d.nodes[x].reference)) throw new Error(t('Reference helpers cannot be combined into printable solids'));
         if (d.joints?.some(j => chosen.includes(j.bodyA) || chosen.includes(j.bodyB))) throw new Error(t('Detach the selected bodies’ joints before combining them'));
-        const material = d.nodes[chosen[0]].physics ?? defaultPartPhysics();
-        if(chosen.some(x=>{const p=d.nodes[x].physics??defaultPartPhysics();return p.densityKgM3!==material.densityKgM3||p.friction!==material.friction||p.restitution!==material.restitution||p.motion!==material.motion;}))throw new Error(t('Combined solids must share density, contact material and motion type. Keep different materials as separate bodies.'));
-        d.nodes[id] = { id, kind: 'boolean', operation, inputs: chosen, name: operation[0].toUpperCase() + operation.slice(1), color: d.nodes[chosen[0]].color, transform: identityTransform(), physics:{...material,intent:'rigid',parameters:undefined,sourcePreset:undefined,collisionHint:undefined} };
+        const holes=operation==='union'?chosen.filter(id=>d.nodes[id].role==='hole'):[],solids=chosen.filter(id=>!holes.includes(id)),useHoleRoles=holes.length>0;
+        const materialIds=solids.length?solids:chosen,first=materialIds[0];
+        const material = d.nodes[first].physics ?? defaultPartPhysics();
+        if(materialIds.some(x=>{const p=d.nodes[x].physics??defaultPartPhysics();return p.densityKgM3!==material.densityKgM3||p.friction!==material.friction||p.restitution!==material.restitution||p.motion!==material.motion;}))throw new Error(t('Combined solids must share density, contact material and motion type. Keep different materials as separate bodies.'));
+        d.nodes[id] = { id, kind: 'boolean', operation, inputs: chosen,...(useHoleRoles?{useHoleRoles:true,...(!solids.length?{role:'hole' as const}:{})}:{}), name: operation[0].toUpperCase() + operation.slice(1), color: d.nodes[first].color, transform: identityTransform(), physics:{...material,intent:'rigid',parameters:undefined,sourcePreset:undefined,collisionHint:undefined} };
+        if(useHoleRoles)d.version=7;
         const at = Math.min(...chosen.map(x => d.roots.indexOf(x)));
         d.roots = d.roots.filter(x => !chosen.includes(x)); d.roots.splice(at, 0, id); return [id];
       }); return id;

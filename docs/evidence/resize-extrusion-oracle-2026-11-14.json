@@ -1,0 +1,223 @@
+{
+  "version": 1,
+  "date": "2026-11-14",
+  "method": "Original synthetic sources evaluated by the official OpenSCAD 2021.01 macOS executable. No upstream implementation source was consulted or copied. The oracle binary and full generated meshes remain external tooling.",
+  "oracle": {
+    "version": "2021.01",
+    "binarySha256": "2990c7deb7059eaea1440a309c9d9ba7fea8bd2833a84e50d4203d73424b2701"
+  },
+  "resizeRule": "Unspecified automatic axes follow max(target[i]/extent[i]) across specified dimensions; no specified dimension means identity. Scaling is around the original origin.",
+  "resizeProbes": [
+    {
+      "source": "resize([10,20,0],auto=true)cube([2,3,4]);\n",
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          10.0,
+          20.0,
+          26.6667
+        ]
+      }
+    },
+    {
+      "source": "resize([10,6,0],auto=true)cube([2,3,4]);\n",
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          10.0,
+          6.0,
+          20.0
+        ]
+      }
+    },
+    {
+      "source": "resize([0,6,20],auto=true)cube([2,3,4]);\n",
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          10.0,
+          6.0,
+          20.0
+        ]
+      }
+    },
+    {
+      "source": "resize([0,0,0],auto=true)cube([2,3,4]);\n",
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          2.0,
+          3.0,
+          4.0
+        ]
+      }
+    },
+    {
+      "source": "resize([10,20,0],auto=[true,false,true])cube([2,3,4]);\n",
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          10.0,
+          20.0,
+          26.6667
+        ]
+      }
+    },
+    {
+      "source": "resize([10,0,0],auto=[false,true,false])cube([2,3,4]);\n",
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          10.0,
+          15.0,
+          4.0
+        ]
+      }
+    },
+    {
+      "source": "linear_extrude(2)resize([10,0],true)square([2,3]);",
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          10.0,
+          15.0,
+          2.0
+        ]
+      }
+    },
+    {
+      "source": "linear_extrude(2)resize([10,0,200],true)square([2,3]);",
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          10.0,
+          15.0,
+          2.0
+        ]
+      }
+    },
+    {
+      "source": "resize([10,0,0],auto=2)cube([2,3,4]);",
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          10.0,
+          3.0,
+          4.0
+        ]
+      }
+    },
+    {
+      "source": "resize([10,0,0],auto=[1,1,1])cube([2,3,4]);",
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          10.0,
+          15.0,
+          20.0
+        ]
+      }
+    },
+    {
+      "source": "resize([10,0,0],auto=[true,1,true])cube([2,3,4]);",
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          10.0,
+          15.0,
+          20.0
+        ]
+      }
+    },
+    {
+      "source": "resize([0,10,0],auto=[true])cube([2,3,4]);",
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          6.66667,
+          10.0,
+          4.0
+        ]
+      }
+    },
+    {
+      "source": "linear_extrude(2)resize([0,10],auto=[true,false])square([2,3]);",
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          6.66667,
+          10.0,
+          2.0
+        ]
+      }
+    }
+  ],
+  "resizeTolerance": "The official ASCII STL vertices have six significant digits; these small probe bounds are recorded at that precision (absolute comparison tolerance 5e-5 mm). Analytic native tests use exact fractions where possible.",
+  "booleanOptions": {
+    "source": "cube(2,1);\ncube(2,2);\nresize([10,0,0],auto=[1,1,1])cube([2,3,4]);\nresize([10,0,0],auto=[true,1,true])cube([2,3,4]);\ncylinder(h=4,r=2,center=1);\nlinear_extrude(4,center=1)square([2,3],center=1);\n",
+    "observation": "Primitive and extrusion numeric centre arguments use false. Numeric scalar resize auto uses false; numeric mask entries use nonzero values. Short masks pad missing entries with false.",
+    "csgSha256": "7712edf4fec41eaac61b8b2271a9ff6defa272a61b91f0968345fbf8766bcf31"
+  },
+  "sliceOptions": {
+    "source": "linear_extrude(height=5,twist=60,slices=-1,$fn=12)square([2,3]);\nlinear_extrude(height=5,twist=60,slices=0,$fn=12)square([2,3]);\nlinear_extrude(height=5,twist=60,slices=0.8,$fn=12)square([2,3]);\nlinear_extrude(height=5,twist=60,slices=1.8,$fn=12)square([2,3]);\nlinear_extrude(height=5,twist=60,slices=2.8,$fn=12)square([2,3]);",
+    "observation": "Explicit 1.8 and 2.8 truncate to 1 and 2. Counts below one omit explicit slices and request automatic construction. Only the equivalent straight untapered case is newly lowered; automatic twisted/tapered slicing stays unsupported.",
+    "csgSha256": "b7a45db1ca74af1170e408afbbe0ca042723132609ff58839007da5e7572ee27"
+  },
+  "regressions": [
+    "tests/resize-engine.test.ts",
+    "tests/physics.test.ts"
+  ],
+  "limits": "These are scoped behavioral checks, not complete upstream geometry, font or manufacturing certification."
+}

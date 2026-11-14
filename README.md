@@ -11,10 +11,14 @@ full constrained sketches and an exact surface/solid backend remain roadmap work
 
 ## Modeling
 
-- Searchable shapes, practical part templates and editable generators for screws,
+- Searchable shapes with an optional lower-right dock. Drag shapes onto highlighted
+  faces, or tap a shape and then a surface on tablets. Placement previews snap,
+  orient to faces and commit as one undoable edit.
+- Practical part templates and editable generators for screws,
   threads, lettering and other parts. Name tags support rounded corners and bundled
   fonts; their text remains editable in Properties.
-- Retained union, subtraction and intersection inputs. Edit source dimensions after
+- Solid/Hole cutters and rectangle selection, with retained union, subtraction and
+  intersection inputs. Edit source dimensions after
   combining parts, and drive dimensions or transforms with named, unit-aware formulas.
 - Rectangle/circle sketches and retained extrusions on principal planes.
 - Move, rotate and resize through handles or numbers. Optional on-canvas values
@@ -39,7 +43,7 @@ clutter. See [the shared source workflow](docs/UNIFIED-DESIGN-SOURCE.md).
 
 The same modeling compiler is available through the core SDK and a headless MCP server.
 
-The offline model library includes 113 source models with previews and retained
+The offline model library includes 149 source models with previews and retained
 licence/provenance information, including CC0 geometric fixtures.
 
 Bounded converters import supported OpenSCAD/JSCAD source, including lexical

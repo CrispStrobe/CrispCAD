@@ -5,7 +5,7 @@ import { strToU8, zipSync } from 'fflate';
 import type { BodyMesh } from './kernel.js';
 /** Binary STL, world-space millimetres. Normals are calculated from winding. */
 export function exportSTL(bodies: readonly BodyMesh[]): Uint8Array {
-  bodies = bodies.filter(body=>!body.reference);
+  bodies = bodies.filter(body=>!body.reference&&!body.hole);
   const triangles = bodies.reduce((s, b) => s + b.indices.length / 3, 0);
   if (!triangles) throw new Error(t('The design has no solid triangles to export'));
   const bytes = new Uint8Array(84 + triangles * 50); const view = new DataView(bytes.buffer);
@@ -36,7 +36,7 @@ export function importSTL(bytes: Uint8Array): { positions: number[]; indices: nu
 const escape = (s: string) => s.replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' })[c]!);
 export function export3MF(bodies: readonly BodyMesh[]): Uint8Array {
   // Empty boolean results have no printable object in the 3MF core format.
-  bodies = bodies.filter(body => !body.reference && body.indices.length > 0);
+  bodies = bodies.filter(body => !body.reference&&!body.hole && body.indices.length > 0);
   if (!bodies.some(b => b.indices.length)) throw new Error(t('The design has no solid triangles to export'));
   const objects = bodies.map((b, i) => `<object id="${i + 1}" type="model" name="${escape(b.name)}"><mesh><vertices>${Array.from({ length: b.positions.length / 3 }, (_, n) => `<vertex x="${b.positions[n * 3]}" y="${b.positions[n * 3 + 1]}" z="${b.positions[n * 3 + 2]}"/>`).join('')}</vertices><triangles>${Array.from({ length: b.indices.length / 3 }, (_, n) => `<triangle v1="${b.indices[n * 3]}" v2="${b.indices[n * 3 + 1]}" v3="${b.indices[n * 3 + 2]}"/>`).join('')}</triangles></mesh></object>`).join('');
   const model = `<?xml version="1.0" encoding="UTF-8"?><model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"><resources>${objects}</resources><build>${bodies.map((_, i) => `<item objectid="${i + 1}"/>`).join('')}</build></model>`;

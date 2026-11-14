@@ -23,9 +23,9 @@ it('supports ES imports, helper functions, parameters, radians and bounded geome
 it('refuses host access, external imports, dynamic execution and unbounded programs',()=>{
  for(const source of ["require('fs');",'process.exit();','globalThis.fetch("x");',"eval('1');","new Function('return 1')();","import fs from 'node:fs';",'const main=()=>{while(true){}};module.exports={main};','function f(){return f();}module.exports.main=f;','module.exports.main=()=>{const a=1;a=2;return a;};','module.exports.main=()=>{for(let i=0;i<1000;i++){}return 1;};',"module.exports.main=()=>require('@jscad/modeling').constructor('return 1')();"]){expect(()=>importJSCAD(source),source).toThrow();}
 });
-it('reports unsupported upstream slice extrusion with a source location',()=>{
+it('reports the unchanged upstream slice demo work limit with a source location',()=>{
  const source=readFileSync('tests/fixtures/code-corpus/jscad/nutsAndBolts.js','utf8');
- expect(()=>importJSCAD(source)).toThrow(/Line .*JSCAD feature “extrusions\.extrudeFromSlices”/);
+ expect(()=>importJSCAD(source)).toThrow(/Line .*JSCAD evaluation budget exceeded/);
 });
 for(const parameters of [{},{numTeeth:12,thickness:7,centerholeradius:0}])it(`qualifies upstream gear extrusion and vec2 arithmetic: ${JSON.stringify(parameters)}`,()=>{
  const source=readFileSync('tests/fixtures/code-corpus/jscad/gear.js','utf8'),result=geometry(source,parameters);
@@ -73,5 +73,9 @@ for(const profile of [
 });
 it('refuses invalid profile dimensions, excess tessellation and unimplemented profile operations',()=>{
  const prefix="const {primitives:{circle,ellipse,rectangle},extrusions:{extrudeLinear},transforms:{rotateX,scale}}=require('@jscad/modeling');module.exports.main=()=>extrudeLinear({height:3},";
- for(const expression of ['circle({radius:-2})','rectangle({size:[0,2]})','ellipse({radius:[2,-1]})','circle({segments:300})','circle({segments:3.5})','circle({startAngle:1})','rotateX(1,rectangle())','scale([-1,2],rectangle())'])expect(()=>importJSCAD(prefix+expression+');'),expression).toThrow();
+ for(const expression of ['circle({radius:-2})','rectangle({size:[0,2]})','ellipse({radius:[2,-1]})','circle({segments:300})','circle({segments:3.5})','circle({startAngle:1})','rotateX(1,rectangle())'])expect(()=>importJSCAD(prefix+expression+');'),expression).toThrow();
+});
+
+it('reflects planar profiles with signed scale and retains affine JSCAD transforms',()=>{
+ const source="const {primitives:{rectangle},extrusions:{extrudeLinear},transforms:{scale,transform}}=require('@jscad/modeling');module.exports.main=()=>transform([1,0,0,0,.5,2,0,0,0,0,1,0,3,4,5,1],extrudeLinear({height:3},scale([-1,2],rectangle({size:[2,4]}))));";const result=geometry(source);expect(result.volume).toBeCloseTo(96);
 });

@@ -42,7 +42,7 @@ const copyNode=(node:SolidNode):SolidNode=>({...node,transform:structuredClone(n
 /** Canonical graph records, with buffers referenced rather than duplicated in code. */
 function modelRecords(document:CadDocument):RecordSpec[]{
  const doc=document;let header:any={...doc};for(const key of ['nodes','roots','sketches','joints','provenance','modelSource'])delete header[key];
- header=clean(header);header.version=6;if(header.parametric)header.parametric={version:1,parameters:{},bindings:[]};
+ header=clean(header);header.version=Math.max(6,doc.version);if(header.parametric)header.parametric={version:1,parameters:{},bindings:[]};
  const generators=compactGenerators(doc),hidden=new Set([...generators.values()].flatMap(ids=>[...ids]));
  const records:RecordSpec[]=[{key:'project',kind:'project',args:[header]}];
  for(const [name,value] of Object.entries(doc.parametric?.parameters??{}))records.push({key:`parameter:${name}`,kind:'parameter',args:[name,value]});
@@ -116,8 +116,8 @@ function parseRecords(source:string):SourceRecord[]{
 export function compileModelSource(source:string,context:CadDocument,options:{regenerate?:(recipe:GeneratorRecipe,name:string)=>CadDocument}={}):CadDocument{
  const records=parseRecords(source),fail=(detail:string,record?:SourceRecord):never=>{throw new CadCodeError(detail,record?.node.start??0,source);};
  const project=records.find(r=>r.key==='project')!;if(project.args.length!==1||!project.args[0]||typeof project.args[0]!=='object'||Array.isArray(project.args[0]))fail(t('Invalid project declaration'),project);
- if(project.args[0].version!==6)fail(t('Model source uses project version 6'),project);
- const doc:any={...project.args[0],version:6,nodes:Object.create(null),roots:[],modelSource:{version:1,language:'brickwright-design',source}};
+ if(![6,7].includes(project.args[0].version))fail(t('Model source uses project version 6 or 7'),project);
+ const doc:any={...project.args[0],nodes:Object.create(null),roots:[],modelSource:{version:1,language:'brickwright-design',source}};
  if(doc.id!==context.id)fail(t('Keep the current project identity in model source'),project);
  delete doc.provenance;delete doc.sketches;delete doc.joints;
  const declaredNodeIds=new Set(records.filter(r=>r.key.startsWith('node:')).map(r=>r.args[0]));

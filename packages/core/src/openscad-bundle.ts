@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // In-memory include/use bundles only. No filesystem, URL loading or search paths.
+import {t} from './i18n.js';
 import {CadCodeError, CODE_LIMITS} from './code.js';
 import type {CodeProgram} from './code.js';
 import {sha256Hex} from './hash.js';
@@ -76,7 +77,7 @@ const keys = (value: Record<string, unknown>, expected: string[]) => Object.keys
   return !!descriptor?.enumerable && Object.hasOwn(descriptor, 'value');
 });
 const encoder = new TextEncoder();
-function fail(detail: string, path = '(bundle)', offset = 0, source = '', code = 'invalid-source'): never {throw new OpenSCADBundleError(detail, path, offset, source, code);}
+function fail(detail: string, path = '(bundle)', offset = 0, source = '', code = 'invalid-source'): never {throw new OpenSCADBundleError(t(detail), path, offset, source, code);}
 
 function normalizePath(value: unknown, base: string[], contextPath = '(bundle)', offset = 0, source = ''): string {
   if (typeof value !== 'string' || !value || value.length > CODE_LIMITS.sourceBytes || value.trim() !== value || /[\u0000-\u001f\u007f\\:<>]/.test(value) || value.startsWith('/')) fail('Expected a relative bundle path, without control characters, URLs or absolute paths', contextPath, offset, source);
@@ -93,7 +94,7 @@ function normalizePath(value: unknown, base: string[], contextPath = '(bundle)',
 }
 function snapshotBundle(value: OpenSCADSourceBundle): {rootPath: string; files: Snapshot[]; originalBytes: number} {
   if (!object(value) || !keys(value, ['version', 'rootPath', 'files']) || value.version !== 1 || !Array.isArray(value.files)) fail('Unsupported source bundle schema');
-  if (!value.files.length || value.files.length > OPENSCAD_BUNDLE_LIMITS.files) fail(`Source bundle must contain 1–${OPENSCAD_BUNDLE_LIMITS.files} files`, '(bundle)', 0, '', 'resource-limit');
+  if (!value.files.length || value.files.length > OPENSCAD_BUNDLE_LIMITS.files) fail(t`Source bundle must contain 1–${OPENSCAD_BUNDLE_LIMITS.files} files`, '(bundle)', 0, '', 'resource-limit');
   const rootPath = normalizePath(value.rootPath, []);
   const paths = new Set<string>();
   let originalBytes = 0;
@@ -193,7 +194,7 @@ export async function importOpenSCADBundle(bundle: OpenSCADSourceBundle): Promis
           const candidate = normalizePath(raw, [], path, start, source);
           if (files.has(candidate)) {target = candidate; resolution = 'bundle-root';}
         }
-        if (!files.has(target)) fail(`Included source file is missing: ${target}`, path, start, source);
+        if (!files.has(target)) fail(t`Included source file is missing: ${target}`, path, start, source);
         if (includes.length >= OPENSCAD_BUNDLE_LIMITS.includes) fail('Include occurrences exceed the existing token budget', path, start, source, 'resource-limit');
         includes.push(Object.freeze({...(resolution ? {resolution} : {}), ...(token === 'use' ? {kind: 'use' as const} : {}), fromPath: path, path: target, sourceOffset: start, ...location(file.lines, start), depth: depth + 1}));
         append(source.slice(chunkStart, start), path, chunkStart);

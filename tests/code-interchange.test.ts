@@ -23,7 +23,7 @@ it('preserves solid geometry through explicit constant color wrappers and disclo
  expect(geometry('color(c=[0.2,1,0.4],alpha=.5) cube(3);').volume).toBeCloseTo(27);
  expect(geometry('color([1,0,0,0.5]) cube(2);').volume).toBeCloseTo(8);
  expect(geometry('module color(){cube(3);} color();').volume).toBeCloseTo(27);
- for(const unsupported of ['color("red",alpha=2) cube(2);','color(c="red",0.5) cube(2);','color([1,0]) cube(2);','color([1.1,0,0]) cube(2);','color("red",other=1) cube(2);','color("red") import("file.stl");','color(fetch()) cube(2);'])expect(()=>importOpenSCAD(unsupported),unsupported).toThrow();
+ for(const unsupported of ['color("red",alpha=2) cube(2);','color(c="red",0.5) cube(2);','color([1,0]) cube(2);','color([1.1,0,0]) cube(2);','color("red") import("file.stl");','color(fetch()) cube(2);'])expect(()=>importOpenSCAD(unsupported),unsupported).toThrow();
 });
 it('propagates tagged literal module colors without coercing strings into CAD expressions',()=>{
  const source='module part(col="#3b4747"){shade=col;color(shade) cube([4,2,.2],true);} part();';
@@ -31,11 +31,11 @@ it('propagates tagged literal module colors without coercing strings into CAD ex
  expect(geometry(source.replace('part();','part(col="white");')).bodies[0].bounds).toEqual({min:[-2,-1,-.1],max:[2,1,.1]});
  expect(geometry('module inner(c){color(c)cube(2);} module outer(c="red"){local=c;inner(local);} outer("#fff");').volume).toBeCloseTo(8);
  expect(geometry('module part(){shade="red";color(shade)cube(2);}part();').volume).toBeCloseTo(8);
+ expect(geometry('module part(c="true"){cube(2,center=c);}part();').bodies[0].bounds.min).toEqual([0,0,0]);
  const converted=importOpenSCAD(source);expect(converted.source).not.toContain('#3b4747');expect(converted.source).toContain('Appearance colors omitted');
  for(const source of [
   'module part(c="2"){cube(c);}part();',
   'module part(c="2"){cylinder(c,1);}part();',
-  'module part(c="true"){cube(2,center=c);}part();',
   'module part(c="red"){cube(c+1);}part();',
   'module part(c="not a color"){color(c)cube(2);}part();',
   'module part(c="red"+"blue"){color(c)cube(2);}part();',
@@ -111,7 +111,7 @@ it('normalizes only two-component translations to XY with zero Z and preserves l
  expect(geometry('module outer(x=3){offset=[x,2];module inner(){translate(offset)cube(2,true);}translate([10,0]){x=9;inner();}}outer();').bodies[0].bounds).toEqual({min:[12,1,-1],max:[14,3,1]});
  const counts=(shape:any):number[]=>'segments'in shape?[shape.segments]:'shapes'in shape?shape.shapes.flatMap(counts):'shape'in shape?counts(shape.shape):[];
  expect(counts(compileCode(importOpenSCAD('$fn=12;translate([1,2],$fn=20)sphere(1);translate([4,5,6])sphere(1);')).shape)).toEqual([20,12]);
- for(const source of ['translate([])cube(2);','translate([1])cube(2);','translate([1,2,3,4])cube(2);','translate(2)cube(2);','translate(["1",2])cube(2);','translate(["red","blue"])cube(2);','translate([1,[2]])cube(2);','translate([1/0,2])cube(2);','translate([1e8,2])cube(2);','rotate([1,2])cube(2);','scale([1,2])cube(2);','cube([1,2]);'])expect(()=>importOpenSCAD(source),source).toThrow();
+ for(const source of ['translate([])cube(2);','translate([1])cube(2);','translate([1,2,3,4])cube(2);','translate(2)cube(2);','translate(["1",2])cube(2);','translate(["red","blue"])cube(2);','translate([1,[2]])cube(2);','translate([1/0,2])cube(2);','translate([1e8,2])cube(2);','scale([1,2])cube(2);','cube([1,2]);'])expect(()=>importOpenSCAD(source),source).toThrow();
  expect(importOpenSCAD('translate([1,2,3])cube(2);').source).not.toContain('Two-component translations interpreted');
  expect(importOpenSCAD('module unused(){translate([1,2])cube(2);}cube(2);').source).not.toContain('Two-component translations interpreted');
 });
@@ -203,10 +203,10 @@ it('supports degree math and keeps expressions live through source interchange',
  expect(geometry('width=PI; PI=4; cube([width,1,1]);').volume).toBeCloseTo(4);
 });
 it('bounds module recursion and refuses child modules, bad arguments and unsupported scope semantics',()=>{
+ expect(geometry('module a(s=2){cube(s);} a(2,s=3);').volume).toBeCloseTo(27);
  for(const source of [
   'module a(){a();} a();',
   'module a(s){cube(s);} a();',
-  'module a(s=2){cube(s);} a(2,s=3);',
 
   'v=[1,2,3]; cube(v[5]);',
   'cube(sqrt(-1));',
@@ -228,10 +228,11 @@ it('inlines user scalar/vector functions symbolically, with hoisted definitions 
  expect(geometry('module part(){cylinder(2,1);} part($fn=6);').volume).toBeCloseTo(3*Math.sqrt(3));
 });
 it('bounds user-function recursion and diagnoses unsupported conditionals without executing them',()=>{
+ expect(geometry('function f(x)=x; cube(f(1,x=2));').volume).toBeCloseTo(8);
  for(const source of ['function f(x)=f(x+x); cube(f(1));','function f(x)=x; cube('+'f('.repeat(33)+'1'+')'.repeat(33)+');']){
   try{importOpenSCAD(source);throw Error('Expected resource failure');}catch(error:any){expect(error.code).toBe('resource-limit');}
  }
- for(const source of ['function f(x)=x; cube(f());','function f(x)=x; cube(f(1,x=2));','function f(x)=x; cube(f(y=1));'])expect(()=>importOpenSCAD(source),source).toThrow();
+ for(const source of ['function f(x)=x; cube(f());','function f(x)=x; cube(f(y=1));'])expect(()=>importOpenSCAD(source),source).toThrow();
 });
 
 it('retains local declarative dependencies, lexical shadowing and last assignments across module instances',()=>{

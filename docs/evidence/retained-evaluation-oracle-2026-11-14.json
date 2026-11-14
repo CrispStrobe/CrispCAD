@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "date": "2026-11-14",
+  "method": "Original synthetic probes against the official OpenSCAD 2021.01 macOS executable. No upstream implementation source consulted or copied. Binary and full generated outputs remain external tooling.",
+  "oracle": {
+    "version": "2021.01",
+    "binarySha256": "2990c7deb7059eaea1440a309c9d9ba7fea8bd2833a84e50d4203d73424b2701"
+  },
+  "probes": [
+    {
+      "source": "n=2;\nfunction size(x)=assert(x>0,str(\"bad n=\",x))x;\ncube(size(n));\n",
+      "override": "n=-3.141592653589793",
+      "expectedMessage": "bad n=-3.14159",
+      "actualStderrSha256": "d9430bace3636b8782ba5451efe2afa0d217d00155cbbadf3e7fae0feb40e943"
+    },
+    {
+      "source": "echo([for(i=[0])each 2]);\necho([0,for(i=[1,2])each [i,i+1],5]);\nlinear_extrude(1)text(\"A\",10,\"Liberation Sans\",\"center\",\"top\",1,\"ltr\");\n",
+      "expectedEchoes": [
+        "[2]",
+        "[0, 1, 2, 2, 3, 5]"
+      ],
+      "expectedTextProperties": {
+        "halign": "left",
+        "valign": "baseline",
+        "direction": "ltr"
+      },
+      "expectedWarning": "Too many unnamed arguments supplied",
+      "actualStderrSha256": "8a4afba12f890dc8b5297a183af59ab644128bb51b4eb44c807a15361d0042fd",
+      "actualCSGSha256": "2b43be929560d8d5a86bb29852952458ee221aea28681e9cc4827f09d0adee7d"
+    },
+    {
+      "source": "module p(a=10,b=20,c=30){echo(a,b,c);}\np(b=5,2);\np(b=5,2,3);\np(a=5,2);\np(1,c=7,2);\nfunction f(a=10,b=20,c=30)=[a,b,c];\necho(f(b=5,2));\ncube(size=2,3);\n",
+      "expectedEchoes": [
+        "2, 5, 30",
+        "2, 3, 30",
+        "2, 20, 30",
+        "1, 2, 7",
+        "[2, 5, 30]"
+      ],
+      "expectedCubeSize": [
+        3,
+        3,
+        3
+      ],
+      "actualStderrSha256": "b01a2884308b9564613804af2ffab4ad47526c2249bb39f212293b837b1580ab",
+      "actualCSGSha256": "f5392493bd91bc4a90c9e0b3e6a472a5d8c43f885690008b9bd376c1d19350fe"
+    }
+  ],
+  "tests": [
+    "tests/retained-evaluation.test.ts",
+    "tests/openscad-comprehension.test.ts",
+    "tests/openscad-assertions.test.ts"
+  ],
+  "limits": "These validate the stated semantics, not complete mesh/font equivalence or current-version behavior beyond 2021.01."
+}

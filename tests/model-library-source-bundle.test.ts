@@ -45,7 +45,7 @@ it('inserts verified originals offline and retains dependency attribution throug
   expect(kernel.evaluate(session.state.document).volume).toBeCloseTo(8);
   const record=session.state.document.provenance!.records[0];expect(record.asset.sourceBundle).toEqual(f.asset.sourceBundle);expect(record.selectedFile).toEqual(f.asset.original);
   const node=session.state.document.nodes[session.state.selection[0]];if(node.kind!=='code')throw Error('Expected code');
-  const invalid=structuredClone(node.program);invalid.parameters.size='-1';const saved=session.serialize();expect(()=>session.updateCode(node.id,invalid)).toThrow('Assertion failed');expect(session.serialize()).toBe(saved);
+  const invalid=structuredClone(node.program);invalid.parameters.size='-1';const saved=session.serialize();expect(()=>session.updateCode(node.id,invalid)).toThrow(/assertion failed/i);expect(session.serialize()).toBe(saved);
   const sidecar=await createModelAttributionSidecar(session.state.document,{filename:'fixture.stl',format:'stl',bytes:new Uint8Array([1]),modificationNotes:'Synthetic output identity only.'});
   expect(sidecar.records[0].asset.sourceBundle).toEqual(f.asset.sourceBundle);expect(createCadSession(JSON.parse(saved)).serialize()).toBe(saved);
   session.undo();expect(session.serialize()).toBe(before);session.redo();expect(session.serialize()).toBe(saved);

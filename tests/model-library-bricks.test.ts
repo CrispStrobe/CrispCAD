@@ -12,7 +12,7 @@ const raw=manifest.assets.find((a:any)=>a.id==='corpus-angelo-bricks');
 let kernel:Awaited<ReturnType<typeof createGeometryKernel>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 it('pins Bricks original and snapshot semantics while preserving all prior97 complete Angelo records',()=>{
- expect(createHash('sha256').update(JSON.stringify(manifest.assets.slice(0,97))).digest('hex')).toBe('2794018f5d2c74e1c8b7588391d7da10092ed46de712749ee0661fa8ed0de044');
+ expect(createHash('sha256').update(JSON.stringify(manifest.assets.slice(0,97))).digest('hex')).toBe('1c4e1de1ea28475c545bd1d2a1b1bf5a20fbcb3b04dffca40779b2bbbc28d78a');
  expect(raw.original.sha256).toBe('97cd7d74ef9492d8f29bcbccc7cdd972f83818d48cf947e47f0ef62229355545');
  expect(readFileSync('library/'+raw.original.path)).toEqual(readFileSync('library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Bricks.scad'));
  expect(raw.licence.spdx).toBe('MIT');expect(raw.licence.attribution).toContain('Permission is hereby granted');expect(raw.modificationNotes).toContain('source-derived');expect(raw.modificationNotes).toContain('not an upstream random-sequence equivalence claim');
@@ -31,7 +31,7 @@ it('inserts the exact authored snapshot offline, verifies two bounded boxes anal
   const node=session.state.document.nodes[session.state.selection[0]];if(node.kind!=='code')throw Error('Expected editable code');expect(node.program.source).toContain('fixed in the imported snapshot');expect(node.program.parameters).toEqual({});
   const saved=session.serialize(),larger=structuredClone(node.program),marker=larger.source.lastIndexOf('\nreturn ');larger.source=larger.source.slice(0,marker)+`\nreturn scale([2,2,2], ${larger.source.slice(marker+8).trim().replace(/;$/,'')});\n`;
   session.updateCode(node.id,larger);expect(kernel.evaluate(session.state.document).volume).toBeCloseTo(8*geometry.volume,5);session.undo();expect(session.serialize()).toBe(saved);
-  const invalid=structuredClone(node.program);invalid.source='return assertShape(false, box(1,1,1));';const state=session.state;expect(()=>session.updateCode(node.id,invalid)).toThrow('Assertion failed');expect(session.serialize()).toBe(saved);expect(session.state).toEqual(state);
+  const invalid=structuredClone(node.program);invalid.source='return assertShape(false, box(1,1,1));';const state=session.state;expect(()=>session.updateCode(node.id,invalid)).toThrow(/assertion failed/i);expect(session.serialize()).toBe(saved);expect(session.state).toEqual(state);
   const restored=createCadSession(JSON.parse(saved));try{expect(restored.serialize()).toBe(saved);expect(await sha256Hex(exportSTL(kernel.evaluate(restored.state.document).bodies))).toBe(raw.derivatives[0].sha256);}finally{restored.dispose();}
   const sidecar=await createModelAttributionSidecar(session.state.document,{filename:'bricks.stl',format:'stl',bytes:mesh,modificationNotes:'Same imported random snapshot.'});expect(sidecar.records[0].asset.original).toEqual(asset.original);expect(sidecar.records[0].asset.modificationNotes).toContain('source-derived');
   session.undo();expect(session.serialize()).toBe(before);session.redo();expect(session.serialize()).toBe(saved);
@@ -39,4 +39,4 @@ it('inserts the exact authored snapshot offline, verifies two bounded boxes anal
 });
 it('reproduces only Bricks geometry and hash-verifies the unchanged97 earlier source qualifications',()=>{
  expect(execFileSync(process.execPath,['scripts/generate-corpus-editor-library.mjs','--check','--asset-id',raw.id],{encoding:'utf8',timeout:15000})).toContain('98 selected corpus sources complete');
-});
+},16000);

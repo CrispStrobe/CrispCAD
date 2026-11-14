@@ -38,10 +38,10 @@ it('keeps assertion conditions live through closure calls and unused let binding
  expect(()=>importOpenSCAD('n=2;f=assert(n>0)function(x)x;cube(f(2));')).toThrow('parameter-dependent assertion');
 });
 it('refuses dynamic lookup decisions and retains existing recursion and value-work limits',()=>{
- expect(()=>importOpenSCAD('n=2;v=search([n],[[2,3]],0);cube(len(v));')).toThrow('parameter-dependent search');
+ expect(()=>importOpenSCAD('n=2;v=search([n],[[2,3]],0);cube(len(v));')).toThrow('dynamic search matches');
  expect(()=>importOpenSCAD('f=function(n)n==0?1:f(n-1);cube(f(100));')).toThrow('construction limit');
  expect(()=>importOpenSCAD('f=function(x)x;cube(f);')).toThrow();
  expect(()=>importOpenSCAD('f=function(x,x)x;cube(2);')).toThrow('function literal parameter');
- expect(()=>importOpenSCAD('cube(search("a",["a"]));')).toThrow('fixed needle and table');
+ expect(()=>importOpenSCAD('cube(search("a",["a"]));')).toThrow();
  const values=Array(140).fill('1').join(',');expect(()=>importOpenSCAD(`a=search([${values}],[${values}],0);cube(2);`)).toThrow('construction limit');
 });

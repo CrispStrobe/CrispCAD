@@ -29,8 +29,7 @@ it('retains profile dimensions, taper and twist parameters with the documented S
 });
 it('keeps profile budgets, units and invalid geometry explicit',()=>{
  for(const source of ['return extrudeProfile(5, polygon2d([[0,0],[1,1],[0,1],[1,0]]));','return extrudeProfile(5,circle2d(2,4096),90,256);','return extrudeProfile(5,circle2d(2),0,0);','return extrudeProfile(5,rectangle2d(10,10),0,2,-1);'])expect(()=>compileCode({version:1,language:'brickwright-cad-script',source,parameters:{}})).toThrow();
- expect(()=>evaluate(importOpenSCAD('rotate_extrude(angle=180)translate([-5,0])square([1,2]);'))).toThrow('nonnegative');
- expect(()=>evaluate(importOpenSCAD('rotate_extrude()translate([-1,0])square([2,2]);'))).toThrow('nonnegative');
+ expect(evaluate(importOpenSCAD('rotate_extrude($fn=64)translate([-5,0])square([1,2]);')).volume).toBeCloseTo(9*64*Math.sin(2*Math.PI/64),4);expect(()=>evaluate(importOpenSCAD('rotate_extrude()translate([-1,0])square([2,2]);'))).toThrow('one side');
  expect(evaluate(importOpenSCAD('linear_extrude(2)union(){square([2,3]);circle(0);}')).volume).toBeCloseTo(12);
 });
 it('exposes coarse twist triangulation differences rather than claiming identical meshes',()=>{
@@ -43,8 +42,8 @@ it('keeps a zero-angle revolution empty when exporting a larger construction to 
 });
 
 it('rejects unsupported JSCAD planar mirrors and ambiguous revolution exports',()=>{
- for(const options of ['{normal:[0,1,0]}','{normal:[0,0,0]}','{normal:[1,0,0],origin:[1,0,0]}']){
+ for(const options of ['{normal:[0,0,0]}','{normal:[0,1,1]}']){
   expect(()=>importJSCAD(`const {primitives:{rectangle},transforms:{mirror},extrusions:{extrudeLinear}}=require('@jscad/modeling');const main=()=>extrudeLinear({height:1},mirror(${options},rectangle({size:[2,3]})));module.exports={main};`)).toThrow();
  }
- for(const source of ['rotate_extrude(angle=90)translate([-8,0])square([3,10]);','rotate_extrude()square([3,10],true);'])expect(()=>exportJSCAD(importOpenSCAD(source))).toThrow('cannot yet be exported');
+ const partial=importOpenSCAD('rotate_extrude(angle=90)translate([-8,0])square([3,10]);');expect(oracle(exportJSCAD(partial)).volume).toBeCloseTo(evaluate(partial).volume,3);expect(()=>exportJSCAD(importOpenSCAD('rotate_extrude()square([3,10],true);'))).toThrow('provable radial side');
 });

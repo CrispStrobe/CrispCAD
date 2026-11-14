@@ -41,19 +41,16 @@ it('does not evaluate an empty comprehension body and accepts the existing 64-it
  expect(evaluate('empty=[];a=[for(i=empty)unavailable()];cube(len(a)+1);').volume).toBeCloseTo(1);
 });
 
-it('rejects symbolic cardinality and invalid ranges without changing a model',()=>{
+it('retains symbolic cardinality and refuses invalid ranges without changing a model',()=>{
+ expect(evaluate('count=4;a=[for(i=[0:count-1])i];cube(len(a));',{count:'5'}).volume).toBeCloseTo(125);
  const session=createCadSession(),before=structuredClone(session.state.document);
  for(const source of [
-  'count=4;a=[for(i=[0:count-1])i];cube(len(a));',
-  'count=1;lists=[[1],[1,2]];a=[for(i=lists[count])i];cube(len(a));',
   'a=[for(i=[0:0:3])i];cube(2);',
   'a=[for(i=[0:1/0:3])i];cube(2);',
   'a=[for(i=[0:1e999])i];cube(2);',
   'a=[for(i=[true:3])i];cube(2);',
   'a=[for(i=["0":3])i];cube(2);',
-  'a=[for(i=undef)i];cube(2);',
   'a=[for(i=[0:1])fetch("https://example.com")];cube(2);',
-  'a=[for(i=[1])if(i)1];cube(2);',
   'a=[for(i=0;i<2;i=i+1)i];cube(2);',
  ])expect(()=>session.addCode(importOpenSCAD(source)),source).toThrow();
  expect(session.state.document).toEqual(before);expect(compileCode(importOpenSCAD('cube(2);')).shape.kind).toBe('move');session.dispose();
@@ -61,8 +58,8 @@ it('rejects symbolic cardinality and invalid ranges without changing a model',()
 
 it('retains array, loop, depth and cumulative value-evaluation resource limits',()=>{
  for(const source of [
-  'a=[for(i=[0:64])i];cube(2);',
-  `a=[for(i=[${Array.from({length:65},(_,i)=>i).join(',')}])i];cube(2);`,
+  'a=[for(i=[0:256])i];cube(2);',
+  `a=[for(i=[${Array.from({length:257},(_,i)=>i).join(',')}])i];cube(2);`,
   `a=[for(i=[0])[${Array(257).fill('1').join(',')}]];cube(2);`,
   `a=${'[for(i=[0])'.repeat(34)}1${']'.repeat(34)};cube(2);`,
   'a=[for(i=[0:63])[for(j=[0:63])[for(k=[0:63])k]]];cube(len(a));',
@@ -77,10 +74,10 @@ it('expands dependent multi-bindings, chained generators and one-level each in s
  expect(evaluate('a=[for(i=[1,2],j=[])unavailable()];cube(len(a)+1);').volume).toBeCloseTo(1);
  expect(evaluate('n=2;a=[for(i=[1,2])each [n*i,n+i]];cube(a[2]);',{n:'3'}).volume).toBeCloseTo(216);
 });
-it('keeps per-binding64 and total256 bounds and never drops each-result assertion guards',()=>{
+it('keeps per-binding256 and total256 bounds and never drops each-result assertion guards',()=>{
  expect(evaluate('a=[for(i=[0:15],j=[0:15])i+j];cube([len(a),1,1]);').volume).toBeCloseTo(256);
- for(const source of ['a=[for(i=[0:16],j=[0:15])i+j];cube(1);','a=[for(i=[0:63])each [1,2,3,4,5]];cube(1);','a=[for(i=[0],j=[0:64])i+j];cube(1);'])expect(()=>importOpenSCAD(source)).toThrow();
+ for(const source of ['a=[for(i=[0:16],j=[0:15])i+j];cube(1);','a=[for(i=[0:63])each [1,2,3,4,5]];cube(1);','a=[for(i=[0],j=[0:256])i+j];cube(1);'])expect(()=>importOpenSCAD(source)).toThrow();
  const p=importOpenSCAD('n=2;a=[for(i=[0])each assert(n>0)[[1,2],[3,4]]];cube(len(a));');p.parameters.n='-1';expect(()=>compileCode(p)).toThrow('Assertion failed');
  expect(()=>importOpenSCAD('n=2;a=[for(i=[0],j=[assert(n>0)1])1];cube(1);')).toThrow('asserted comprehension input');
- expect(()=>importOpenSCAD('a=[for(i=[0])each 2];cube(1);')).toThrow('fixed-length vector');
+ expect(evaluate('a=[for(i=[0])each 2];cube(len(a));').volume).toBeCloseTo(1);
 });

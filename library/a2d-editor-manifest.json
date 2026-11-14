@@ -100,7 +100,7 @@
           "format": "stl"
         }
       ],
-      "modificationNotes": "Exact root and dependency bytes retained independently. Includes are expanded only in memory by the bounded virtual-file importer; no flattened upstream source is invented. The authored default root and its existing extrusion are retained without parameter, frame, fragment or placement overrides, repair or simplification. Qualification covers this default root only, not every A2D helper or alternate configuration, manufacturing or physics. Archived assertion-message text does not indicate an assertion failure. Import warnings captured at qualification: Assertion messages are archived; failures use a generic diagnostic. Assertion message: Please upgrade A2D library to version 1.5.0 or higher. Assertion message: size must be number or list with two items Assertion message: hsize must be number or list with two items Assertion message: spacing must be number or list with two items Assertion message: count must be number or list with two items",
+      "modificationNotes": "Exact root and dependency bytes retained independently. Includes are expanded only in memory by the bounded virtual-file importer; no flattened upstream source is invented. The authored default root and its existing extrusion are retained without parameter, frame, fragment or placement overrides, repair or simplification. Qualification covers this default root only, not every A2D helper or alternate configuration, manufacturing or physics. Archived assertion-message text does not indicate an assertion failure. Import warnings captured at qualification: None.",
       "conversion": {
         "sourceUnits": "mm",
         "sourceUpAxis": "Z",
@@ -478,7 +478,7 @@
           "format": "stl"
         }
       ],
-      "modificationNotes": "Exact root and dependency bytes retained independently. Includes are expanded only in memory by the bounded virtual-file importer; no flattened upstream source is invented. The authored default root and its existing extrusion are retained without parameter, frame, fragment or placement overrides, repair or simplification. Qualification covers this default root only, not every A2D helper or alternate configuration, manufacturing or physics. Archived assertion-message text does not indicate an assertion failure. Import warnings captured at qualification: Assertion messages are archived; failures use a generic diagnostic. Assertion message: Please upgrade A2D library to version 1.5.0 or higher.",
+      "modificationNotes": "Exact root and dependency bytes retained independently. Includes are expanded only in memory by the bounded virtual-file importer; no flattened upstream source is invented. The authored default root and its existing extrusion are retained without parameter, frame, fragment or placement overrides, repair or simplification. Qualification covers this default root only, not every A2D helper or alternate configuration, manufacturing or physics. Archived assertion-message text does not indicate an assertion failure. Import warnings captured at qualification: None.",
       "conversion": {
         "sourceUnits": "mm",
         "sourceUpAxis": "Z",

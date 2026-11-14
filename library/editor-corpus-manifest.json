@@ -8,7 +8,7 @@
     "command": "node scripts/generate-corpus-editor-library.mjs --check",
     "generator": {
       "path": "../scripts/generate-corpus-editor-library.mjs",
-      "sha256": "6ec0402bd0a504ae3af9bed30c702dc561663aed127d016f4c97d60169b35a09"
+      "sha256": "3829fa60b9228aa2a538c9378c1c5d50c9d45d76c6162f8d4684667c0882ad8b"
     },
     "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
@@ -11754,7 +11754,7 @@
           "format": "stl"
         }
       ],
-      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics. The authored unsupported text center argument is ignored with a warning; default left/baseline text alignment is retained. Text uses the bundled Droid Sans substitute; font metrics and appearance are not upstream-certified. Qualification covers only the instantiated default top-level model. Import warnings captured at qualification: Source colours and transparency are not retained; solid geometry is preserved. Extra or unknown module/function arguments are ignored, as in OpenSCAD. Text uses bundled Droid fonts; source font metrics, styling and kerning can differ.",
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics. The authored unsupported text center argument is ignored with a warning; default left/baseline text alignment is retained. Text uses the bundled Droid Sans substitute; font metrics and appearance are not upstream-certified. Qualification covers only the instantiated default top-level model. Import warnings captured at qualification: Source colours and transparency are not retained; solid geometry is preserved. Unrecognized arguments to text are ignored: center. Text uses bundled Droid fonts; source font metrics, styling and kerning can differ.",
       "conversion": {
         "sourceUnits": "mm",
         "sourceUpAxis": "Z",

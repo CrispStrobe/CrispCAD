@@ -170,5 +170,5 @@ describe('explicit corpus to editor selection', () => {
 
   it('reproduces selected archives, meshes and manifest locally without writes or network', () => {
     expect(execFileSync(process.execPath, ['scripts/generate-corpus-editor-library.mjs', '--check'], {cwd: fileURLToPath(root), encoding: 'utf8', timeout: 60000})).toContain(`${selected.length} selected corpus sources complete; ${selected.length} runtime-checked`);
-  });
+  },65000); // Match the child process's 60-second integration budget.
 });

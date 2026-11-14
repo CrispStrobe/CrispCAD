@@ -22,5 +22,5 @@ it('retains the actual depth refusal without treating conversion progress as adm
  expect(report.guardDiagnostic).toMatchObject({guard:'constructionDepth',observed:33,maximum:32,constructionVisits:135,valueEvaluations:1157});
  const manifest=JSON.parse(readFileSync('library/editor-corpus-manifest.json','utf8'));
  expect(manifest.assets.some((asset:any)=>asset.corpusSelection.repositoryId==='smooth-prim')).toBe(false);
- expect(manifest.selection.runtimeChecked).toBe(93);
+ expect(manifest.selection.runtimeChecked).toBe(98);
 });

@@ -402,7 +402,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
           if (\(smokeStage) === 13) {const panel=root.querySelector('.code-dialog[open]');if(!panel)return 'waiting';Array.from(panel.querySelectorAll('button')).find(b=>b.textContent==='Create code object').click();return 'code-created';}
           if (\(smokeStage) === 14) {const code=Object.values(doc.nodes).find(n=>n.kind==='code');return objects.length===4 && doc.version===4 && code?.program.language==='brickwright-cad-script' ? 'model-source-command':'waiting';}
           if (\(smokeStage) === 15) {const pane=root.querySelector('.model-source-pane:not([hidden])');return pane?.querySelector('textarea')?.value.includes('cad`') && doc.version===4 ? 'model-library-command':'waiting';}
-          if (\(smokeStage) === 16) {const gallery=root.querySelector('.model-library-dialog[open]');if(!gallery||gallery.querySelectorAll('.model-library-card img').length!==113||!root.querySelector('.file-tools')?.hidden)return 'waiting';gallery.close();return 'passed';}
+          if (\(smokeStage) === 16) {const gallery=root.querySelector('.model-library-dialog[open]');if(!gallery||gallery.querySelectorAll('.model-library-card img').length!==149||!root.querySelector('.file-tools')?.hidden)return 'waiting';gallery.close();return 'passed';}
           if (!Array.from(root.querySelectorAll('#iterations option')).some(option => option.textContent.startsWith('#3 ·'))) return 'waiting';
           if (!document.querySelector('.library-dialog .project-card')) return 'waiting';
           return window.brickwrightDesktop && !!window.webkit.messageHandlers.cadSave && !!window.brickwrightPrepareToClose ? 'passed' : 'bridge missing';

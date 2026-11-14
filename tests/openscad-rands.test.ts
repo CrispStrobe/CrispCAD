@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {readFileSync} from 'node:fs';
 import {beforeAll,expect,it} from 'vitest';
-import {createCadSession,importOpenSCAD,getOpenSCADImportWarnings,compileCode} from '@brickwright/cad-core';
+import {createCadSession,importOpenSCAD,getOpenSCADImportWarnings,getOpenSCADImportNotices,compileCode} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 let kernel:Awaited<ReturnType<typeof createGeometryKernel>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
@@ -29,17 +29,23 @@ it('floors constant fractional indices while retaining invalid-index and typed-n
  expect(evaluate('cube(is_undef([1,2][-0.1])?2:1);').volume).toBeCloseTo(8);
  for(const source of ['cube([2,3][true]);','cube([2,3]["0"]);','cube([2,3][-1]);','cube([2,3][2]);'])expect(()=>importOpenSCAD(source)).toThrow();
 });
-it('fails closed on symbolic/invalid sampling arguments and keeps the original64 and work limits',()=>{
+it('fails closed on invalid sampling arguments and bounds unseeded snapshots and work',()=>{
  const session=createCadSession(),before=session.serialize(),state=session.state;
- try{for(const source of ['cube(rands(0,1)[0]);','cube(rands(1,0,1)[0]);','cube(rands(0,1,-1)[0]);','cube(rands(0,1,.5)[0]);','cube(rands(0,1,true)[0]);','cube(rands(0,1,1,"s")[0]);','cube(rands(0,1/0,1)[0]);','low=1;cube(rands(low,2,1)[0]);','seed=1;cube(rands(1,2,1,seed)[0]);'])expect(()=>session.addCode(importOpenSCAD(source))).toThrow();
-  expect(()=>importOpenSCAD('cube(len(rands(0,1,65,1)));')).toThrow('Loop exceeds 64');
+ try{for(const source of ['cube(rands(0,1)[0]);','cube(rands(1,0,1)[0]);','cube(rands(0,1,-1)[0]);','cube(rands(0,1,.5)[0]);','cube(rands(0,1,true)[0]);','cube(rands(0,1,1,"s")[0]);','cube(rands(0,1/0,1)[0]);',])expect(()=>session.addCode(importOpenSCAD(source))).toThrow();
+  expect(evaluate('cube([len(rands(0,1,65)),1,1]);').volume).toBeCloseTo(65);expect(evaluate('cube([len(rands(0,1,3000)),1,1]);').volume).toBeCloseTo(3000);
   expect(()=>importOpenSCAD('a=[for(i=[0:63],j=[0:63])rands(0,1,64,1)];cube(1);')).toThrow();
   expect(session.serialize()).toBe(before);expect(session.state).toEqual(state);
  }finally{session.dispose();}
 });
 it('does not sample or evaluate missing operations in inactive branches and retains live assertions',()=>{
  expect(evaluate('if(false)cube(rands(fetch(),0,1)[0]);else cube(2);').volume).toBeCloseTo(8);
- const p=importOpenSCAD('size=2;cube(assert(size>0)rands(2,3,1,42)[0]);');p.parameters.size='-1';expect(()=>compileCode(p)).toThrow('Assertion failed');
- const guarded=importOpenSCAD('size=2;a=rands(assert(size>0)2,3,1,42);cube(a[0]);');guarded.parameters.size='-1';expect(()=>compileCode(guarded)).toThrow('Assertion failed');
+ const p=importOpenSCAD('size=2;cube(assert(size>0)rands(2,3,1,42)[0]);');p.parameters.size='-1';expect(()=>compileCode(p)).toThrow(/assertion failed/i);
+ const guarded=importOpenSCAD('size=2;a=rands(assert(size>0)2,3,1,42);cube(a[0]);');guarded.parameters.size='-1';expect(()=>compileCode(guarded)).toThrow(/assertion failed/i);
  const shadow=importOpenSCAD('function rands(a,b,c)=[3];cube(rands(0,1,1)[0]);');expect(getOpenSCADImportWarnings(shadow)).toEqual([]);
 });
+
+it('preserves seeded and dynamic random parameters instead of replacing them with constant snapshots',()=>{const p=importOpenSCAD('seed=1;low=1;cube(rands(low,2,1,seed)[0]);'),a=createCadSession();try{a.addCode(p);const before=kernel.evaluate(a.state.document).volume;p.parameters.seed='2';a.updateCode(a.state.document.roots[0],p);expect(kernel.evaluate(a.state.document).volume).not.toBe(before);expect(p.source).toContain('randomValue');}finally{a.dispose();}});
+
+it('does not memoize direct or transitive functions that consume unseeded snapshot draws',()=>{for(const declarations of ['function sample()=rands(2,3,1)[0];','function inner()=rands(2,3,1)[0];function sample()=inner();']){const g=evaluate(declarations+'cube([sample(),sample(),1]);');expect(g.bodies[0].bounds.max[0]).not.toBe(g.bodies[0].bounds.max[1]);}});
+
+it('retains machine-readable random substitution notices for snapshot calls',()=>{expect(getOpenSCADImportNotices(importOpenSCAD('cube(rands(2,3,1)[0]);')).map(n=>n.id)).toContain('scad.random.sequence');});

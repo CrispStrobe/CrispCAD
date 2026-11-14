@@ -44,6 +44,6 @@ export async function prepareDocumentCollisions(input:CadDocument,result:Geometr
   }
   return kernel.partitionConvex(worldMesh(id,parents));
  }
- for(const mesh of result.bodies.filter(b=>!b.reference)){try{prepared.set(mesh.id,await prepareCollision(mesh,kernel,{candidates:candidatesFor(mesh.id,[])}));}catch(first){try{prepared.set(mesh.id,await prepareCollision(mesh,kernel));}catch(second){throw new Error(t`${mesh.name}: source construction failed (${first instanceof Error?first.message:String(first)}); whole-mesh preparation also failed. ${second instanceof Error?second.message:String(second)}`);}}}
+ for(const mesh of result.bodies.filter(b=>!b.reference&&!b.hole)){try{prepared.set(mesh.id,await prepareCollision(mesh,kernel,{candidates:candidatesFor(mesh.id,[])}));}catch(first){try{prepared.set(mesh.id,await prepareCollision(mesh,kernel));}catch(second){throw new Error(t`${mesh.name}: source construction failed (${first instanceof Error?first.message:String(first)}); whole-mesh preparation also failed. ${second instanceof Error?second.message:String(second)}`);}}}
  return prepared;
 }

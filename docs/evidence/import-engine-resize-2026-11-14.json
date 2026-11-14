@@ -1,0 +1,196 @@
+{
+  "version": 1,
+  "measuredOn": "2026-11-14",
+  "scope": "Aggregate research execution only. Sources, per-file records and research geometry remain external. Positive solids are not upstream fidelity certification.",
+  "dataset": "redcathode/thingiverse-openscad",
+  "revision": "2b4206aae3af7740100a2f0e979dd9cb66cd77f0",
+  "sampling": "deterministic evenly spaced files after exact source-hash deduplication; not random model sampling",
+  "inputRows": 7929,
+  "uniqueFiles": 7864,
+  "sampleFiles": 256,
+  "sameSourceHashes": true,
+  "baseline": {
+    "reportSha256": "087ce4de25e3edaf7e3d84c4392302ddb0c666e64e5e9295ea28780865a774e4",
+    "statuses": {
+      "unsupported": 37,
+      "converted": 165,
+      "failed": 20,
+      "limited": 33,
+      "process-failure": 1
+    },
+    "limits": {
+      "converterTimeoutMs": 15000,
+      "maxOldSpaceSizeMb": 256
+    },
+    "commit": "ff96b253eae3e336283c07143e79d9855906067f"
+  },
+  "after": {
+    "reportSha256": "3d7b0f0c5f7039d124e58c677b9ec49fad1ce56381c62d54a3a15d79259a7a70",
+    "statuses": {
+      "unsupported": 37,
+      "converted": 166,
+      "failed": 18,
+      "limited": 33,
+      "process-failure": 2
+    },
+    "limits": {
+      "converterTimeoutMs": 15000,
+      "maxOldSpaceSizeMb": 256
+    },
+    "converterBuild": {
+      "commit": "5032caa0808e34ed8fd3a56ee72f88bf1890c1a4",
+      "dirty": false,
+      "artifacts": {
+        "code.js": "a6bde9ac8c49d4e71b737d866ca8c1d40c3db3d7fa4970f188c75020984a8cd2",
+        "code-text.js": "ae581f3a92a4a65edeb9416bc74998a1ad76a4d67956854094aeab2ce8c62240",
+        "scad-numbers.js": "8886a27b2e86394927c5e56a7b7f4f0d5a1071592f7b94a7651567efefb0fafd",
+        "conversion-notices.js": "50ee6e1c0f427acc3a78d7247dc3a4b03b0056d71dbb13928ee2b7c97f954c4e",
+        "code-interchange.js": "be4703045286764ca4054edb4991f0d66e748ca9eb565940f0362d9896a6ffc0",
+        "openscad-import.js": "7d4cedb6341182d0c196939669300b37515720b358e580c154015a9671cb7b00",
+        "jscad-import.js": "f347b74b9e03ef1c116bf9b229493373576ec6731732dfc328de619318ab1be9",
+        "parameters.js": "033a10b22e329a479361909c716494eef58a6d846deeab2433ba3d79b15833e0",
+        "font-budgets.js": "995412ad96947af2e3947ac41fc34e3d2881147e67b888e216fc7f4fe893878b",
+        "code-profiles.js": "403ab11bb4b5e86ae3e5b1c3df3e701f1661b823ba5cdfb1086129423581a29c",
+        "features.js": "724e4fc258961b700f598295698aec1c5dcd982d09a30f1838953d0e48ec0cd8",
+        "geometryKernel": "115db4783b95cb20ad6b313b30f43c2f2d89c8512b0fa29f26cc562fb475d946",
+        "geometry/font-profile.js": "de836295ab0c0f8364927dac7b0a95829f6b04548bd09da6fb97351bddfbd9d8",
+        "geometry/polyhedron.js": "c975596e22ca662b933fedac0519172d3778aab511b9fa1ef4ba183fa4e09382",
+        "geometry/limits.js": "ab598a640df9cfb58c5dff20f0a608c013a08b0e1e78b46f39a69a231fa20569",
+        "geometry/fonts/droid_sans_regular.typeface.json": "5532f318b78eeb2215dcb0ae6ebdfb8f82e369187731c28f53e37784a044459a",
+        "geometry/fonts/droid_serif_regular.typeface.json": "10d747ee765ad60e1acec86c31187ac5084b96c376d911c1c46e3f80308b08e4",
+        "geometry/fonts/droid_sans_mono_regular.typeface.json": "69fd4dc9782cfe281f9a96b40e3ae3e4392ea05c1082fbea4c04f369f52feaf2",
+        "manifoldWasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "node": "v26.4.0",
+      "platform": "darwin",
+      "architecture": "arm64"
+    }
+  },
+  "transitions": [
+    {
+      "before": "converted",
+      "after": "converted",
+      "count": 164
+    },
+    {
+      "before": "converted",
+      "after": "process-failure",
+      "count": 1
+    },
+    {
+      "before": "failed",
+      "after": "converted",
+      "count": 2
+    },
+    {
+      "before": "failed",
+      "after": "failed",
+      "count": 18
+    },
+    {
+      "before": "limited",
+      "after": "limited",
+      "count": 33
+    },
+    {
+      "before": "process-failure",
+      "after": "process-failure",
+      "count": 1
+    },
+    {
+      "before": "unsupported",
+      "after": "unsupported",
+      "count": 37
+    }
+  ],
+  "convertedRegressions": 1,
+  "newPositiveSolids": 2,
+  "changedPriorConvertedVolumesAt1e6Tolerance": 0,
+  "changedPriorConvertedBoundsAt1e6Tolerance": 0,
+  "positiveSolidsWithNotices": 73,
+  "noticeOccurrences": {
+    "scad.appearance.colours": 16,
+    "scad.parameters.strings": 43,
+    "scad.console.echo": 10,
+    "scad.preview.highlight": 7,
+    "scad.random.sequence": 1,
+    "scad.text.font": 19,
+    "scad.arguments.ignored": 5,
+    "scad.module.arguments-ignored": 5,
+    "scad.polygon.empty-input": 2
+  },
+  "caveats": [
+    "Same frozen sample and 15-second per-file limit; no production resource budget was increased. This replay is not a speed benchmark.",
+    "The frozen run has one previous-positive deadline failure. Alternating baseline/current diagnostics both pass and time out; the successful new-engine recheck matches its prior volume, bounds and triangles. Keep this timing uncertainty visible.",
+    "Bounds and volume comparisons do not establish topology or complete OpenSCAD fidelity.",
+    "Resizing, Boolean options and extrusion slices have separate original official-executable probes and retained regression tests.",
+    "JSCAD resize export, adaptive default tessellation, appearance, fonts, dynamic strings and seeded random parity remain tracked gaps.",
+    "Missing standalone dependencies are refused; explicit hash-checked source bundles are tested separately.",
+    "No upstream geometry oracle ran for the complete corpus.",
+    "Dataset card is CC-BY-NC-SA-4.0 and individual model grants vary. No research source or generated research model is admitted to the shipped gallery."
+  ],
+  "deadlineRecheck": {
+    "method": "One previously converted model hit the unchanged 15-second deadline. Three isolated current retries and two alternating baseline/current pairs followed. Baseline runtime uses our ff96b25 source transpiled with the installed TypeScript compiler, the same runtime dependency closure, fonts and Manifold binary; no upstream implementation.",
+    "compiledNativeProgramsIdentical": true,
+    "isolatedCurrentStatuses": [
+      "process-failure",
+      "process-failure",
+      "process-failure"
+    ],
+    "pairedRuns": [
+      {
+        "revision": "baseline",
+        "status": "process-failure",
+        "wallMs": 15022.803416
+      },
+      {
+        "revision": "current",
+        "status": "converted",
+        "wallMs": 12370.577082999996,
+        "evaluationMs": 12093.602792
+      },
+      {
+        "revision": "baseline",
+        "status": "converted",
+        "wallMs": 14321.952583999999,
+        "evaluationMs": 13975.894833
+      },
+      {
+        "revision": "current",
+        "status": "process-failure",
+        "wallMs": 15102.201834
+      }
+    ],
+    "positiveRechecksMatchBaselineVolumeBoundsAndTriangleCount": true,
+    "interpretation": "Both revisions alternately pass and time out on this shared host. This does not isolate a new geometry regression or establish a speed improvement. Retain the observed 166/256 frozen-run result and its additional timeout; do not substitute retry success into that report."
+  },
+  "validation": {
+    "sourceCommit": "5032caa0808e34ed8fd3a56ee72f88bf1890c1a4",
+    "unit": {
+      "command": "npm test -- --maxWorkers=2",
+      "filesPassed": 68,
+      "passed": 756,
+      "skippedOptionalSyntaxOracle": 1
+    },
+    "browser": {
+      "newResizeImportAndParameterHistoryFlow": {
+        "chromium": "passed",
+        "ipadWebkit": "passed"
+      },
+      "gallery144PreviewAndOfflineGroup25Insertion": {
+        "chromium": "passed",
+        "ipadWebkit": "passed"
+      },
+      "passed": 6,
+      "note": "Initial new-test failure corrected a selection assumption after reload; production code did not change."
+    },
+    "build": "passed",
+    "germanMessageAudit": {
+      "passed": true,
+      "messages": 1323
+    },
+    "sdk": "All six packages install offline into an empty cache; real SI physics, geometry, retained features, code and bundled fonts pass.",
+    "library": "All 97 corpus roots freshly reproduced against archived original and mesh bytes with no reproduction metadata mismatches; 144 total gallery items at this checkpoint.",
+    "physics": "Resized ring mass and raycasts preserve the central hole; later dimension edit invalidates old collision preparation."
+  }
+}

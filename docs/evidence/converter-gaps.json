@@ -1,0 +1,268 @@
+{
+  "version": 1,
+  "updated": "2026-11-14",
+  "policy": "Every emitted notice is tracked. Positive-solid execution is not semantic fidelity. A closed gap needs a retained regression and evidence; source-behavior diagnostics may remain visible. Research sources/reports remain external.",
+  "order": [
+    "scad.text.number-format",
+    "scad.assert.message",
+    "scad.random.sequence",
+    "engine.tessellation.defaults",
+    "scad.text.font",
+    "scad.appearance.colours",
+    "scad.parameters.strings",
+    "jscad.parameters.snapshot",
+    "engine.dependencies"
+  ],
+  "gaps": [
+    {
+      "id": "scad.text.number-format",
+      "state": "closed",
+      "area": "geometry",
+      "current": "Numeric lettering now retains six-significant-digit SCAD formatting, including exponent boundaries and halfway rounding.",
+      "tests": [
+        "tests/scad-numbers.test.ts",
+        "tests/openscad-language.test.ts"
+      ],
+      "nextOrEvidence": "Original probes against the official OpenSCAD 2021.01 executable; no formatter implementation copied."
+    },
+    {
+      "id": "scad.assert.message",
+      "state": "closed",
+      "area": "diagnostics",
+      "current": "Literal and parameter-driven messages are retained in solid, profile and scalar expression assertions, including default and ignored arguments.",
+      "tests": [
+        "tests/openscad-language.test.ts",
+        "tests/retained-evaluation.test.ts"
+      ],
+      "nextOrEvidence": "Official 2021.01 executable confirms six-significant-digit expression assertion messages. Guarded failed edits preserve the last valid model and its history."
+    },
+    {
+      "id": "scad.random.sequence",
+      "state": "open",
+      "area": "geometry",
+      "current": "Disclosed native repeatable randomness remains a substitution. New constant small calls can use bounded deterministic snapshots; constant unseeded snapshots use a source-derived stream. Live seeded/range parameters retain native symbolic behavior. None claims upstream stream parity.",
+      "tests": [
+        "tests/openscad-language.test.ts",
+        "tests/openscad-rands.test.ts"
+      ],
+      "nextOrEvidence": "Next: match integer, fractional, negative and large seeds plus sequential-call context against an executable oracle; do not remove the notice before conformance."
+    },
+    {
+      "id": "scad.text.font",
+      "state": "open",
+      "area": "geometry",
+      "current": "Bundled Droid family substitution; requested fonts, styles, shaping and kerning are not fully reproduced.",
+      "tests": [
+        "tests/openscad-language.test.ts"
+      ],
+      "nextOrEvidence": "Next: bounded supplied-font assets with licence/provenance, exact face selection, outline/shaping tests. Complexity metadata is not font-fidelity support."
+    },
+    {
+      "id": "scad.appearance.colours",
+      "state": "open",
+      "area": "appearance",
+      "current": "Source colour and alpha are validated but not retained in SCAD CSG.",
+      "tests": [
+        "tests/code-interchange.test.ts"
+      ],
+      "nextOrEvidence": "Next: retained appearance nodes, material/face propagation, viewport and multicolour export round trips."
+    },
+    {
+      "id": "scad.parameters.strings",
+      "state": "open",
+      "area": "parametric",
+      "current": "Numeric selectors are retained; original string settings require source reimport.",
+      "tests": [
+        "tests/openscad-language.test.ts"
+      ],
+      "nextOrEvidence": "Next: typed string/enum parameters through core, GUI, source synchronisation, CLI/MCP, save/history."
+    },
+    {
+      "id": "scad.console.echo",
+      "state": "open",
+      "area": "diagnostics",
+      "current": "Echo geometry is preserved but diagnostic output is omitted.",
+      "tests": [
+        "tests/openscad-language.test.ts"
+      ],
+      "nextOrEvidence": "Next: bounded retained diagnostics with parameter-aware formatting, source spans and optional console UI."
+    },
+    {
+      "id": "scad.preview.highlight",
+      "state": "open",
+      "area": "preview",
+      "current": "Full-render geometry is retained; preview highlight styling is omitted.",
+      "tests": [
+        "tests/openscad-language.test.ts"
+      ],
+      "nextOrEvidence": "Next: optional preview annotations separate from printable geometry/history."
+    },
+    {
+      "id": "scad.arguments.ignored",
+      "state": "verified-source-behavior",
+      "area": "source-diagnostic",
+      "current": "Harmless unrecognized names/extra arguments are diagnosed and ignored. Known unsupported geometry arguments such as linear_extrude(v=...) remain refused.",
+      "tests": [
+        "tests/openscad-language.test.ts"
+      ],
+      "nextOrEvidence": "Executable probes confirm circle(h=...) and extra sphere arguments; expand the conformance set as signatures evolve."
+    },
+    {
+      "id": "scad.module.arguments-ignored",
+      "state": "verified-source-behavior",
+      "area": "source-diagnostic",
+      "current": "Extra module/function arguments are ignored with a notice.",
+      "tests": [
+        "tests/openscad-language.test.ts"
+      ],
+      "nextOrEvidence": "Retain diagnostics rather than claiming the original source was typo-free."
+    },
+    {
+      "id": "scad.polygon.empty-input",
+      "state": "needs-oracle",
+      "area": "source-diagnostic",
+      "current": "Undefined/empty polygon values contribute empty geometry with a notice.",
+      "tests": [
+        "tests/openscad-language.test.ts"
+      ],
+      "nextOrEvidence": "Verify complete edge cases against reference rendering; a nonempty final solid does not prove no shape was unintentionally lost."
+    },
+    {
+      "id": "jscad.parameters.snapshot",
+      "state": "open",
+      "area": "parametric",
+      "current": "Conversion evaluates selected JSCAD inputs; original JS is needed for later parametric edits.",
+      "tests": [
+        "tests/jscad-import.test.ts"
+      ],
+      "nextOrEvidence": "Next: retained restricted AST/source-backed features with invalidation and GUI parameter editing."
+    },
+    {
+      "id": "jscad.extrusion.tessellation",
+      "state": "open",
+      "area": "geometry",
+      "current": "Coarse twist triangulation can differ from the MIT reference.",
+      "tests": [
+        "tests/profile-engine.test.ts"
+      ],
+      "nextOrEvidence": "A measured discrepancy is retained. Next: equivalent slice topology and sampling, with volume/bounds/mesh tests."
+    },
+    {
+      "id": "jscad.outputs.combined",
+      "state": "open",
+      "area": "workflow",
+      "current": "Core/CLI expose separate outputs; the code editor combines them into one rigid body.",
+      "tests": [
+        "tests/jscad-import.test.ts"
+      ],
+      "nextOrEvidence": "Next: choose separate editable bodies in GUI insertion; preserve colours, transforms and provenance."
+    },
+    {
+      "id": "jscad.appearance.face-colours",
+      "state": "open",
+      "area": "appearance",
+      "current": "Only flat whole-output colours are retained in metadata.",
+      "tests": [
+        "tests/jscad-import.test.ts"
+      ],
+      "nextOrEvidence": "Share the retained appearance/material work with SCAD; verify viewport and 3MF, not just metadata."
+    },
+    {
+      "id": "engine.tessellation.defaults",
+      "state": "open",
+      "area": "geometry",
+      "current": "Absent SCAD fragment controls retain native 48 segments. Explicit fractional slices truncate and straight untwisted untapered nonpositive slices are handled equivalently; automatic twisted/tapered slicing remains unsupported.",
+      "tests": [
+        "tests/openscad-language.test.ts",
+        "tests/resize-engine.test.ts"
+      ],
+      "nextOrEvidence": "Next: radius-aware default $fa/$fs across all curved primitives, text curves and extrusions; preserve old saved native programs."
+    },
+    {
+      "id": "engine.dependencies",
+      "state": "partial",
+      "area": "language",
+      "current": "Explicit hash-checked in-memory SCAD include/use bundles now retain lexical scopes, original files and provenance. Implicit host/network resolution, external meshes, SVG/DXF imports and heightmaps remain unsupported.",
+      "tests": [
+        "tests/openscad-bundle.test.ts",
+        "tests/openscad-use.test.ts",
+        "tests/model-library-source-bundle.test.ts",
+        "tests/model-library-a2d-insert.test.ts"
+      ],
+      "nextOrEvidence": "Verified paths, hashes, cycles and aggregate size/depth/token budgets; original dependency grants survive insertion/export/history. Next: bounded geometry/heightmap asset records and exact source-to-asset references; never implicit host IO."
+    },
+    {
+      "id": "engine.resource-limits",
+      "state": "open",
+      "area": "capacity",
+      "current": "4,096 expanded nodes, 200,000 estimated/evaluated faces, bounded loops, expressions and source remain deliberate limits.",
+      "tests": [
+        "tests/code.test.ts",
+        "tests/engine-interchange.test.ts"
+      ],
+      "nextOrEvidence": "Optimize shared expressions/geometry first; measure complete operations and memory before changing a limit. Distinguish resource limits from malformed inputs."
+    },
+    {
+      "id": "engine.language-remaining",
+      "state": "open",
+      "area": "language",
+      "current": "General recursion, C-style comprehensions, dynamic searches/strings and some matrix/list operations remain incomplete.",
+      "tests": [
+        "tests/openscad-language.test.ts"
+      ],
+      "nextOrEvidence": "Keep first-blocker aggregates and add an original reproducer for each implemented class."
+    },
+    {
+      "id": "engine.source-invalid-or-empty",
+      "state": "needs-oracle",
+      "area": "source-diagnostic",
+      "current": "Some corpus files are malformed, declarations-only, empty, or reference missing author modules/assets.",
+      "tests": [
+        "tests/source-research.test.ts"
+      ],
+      "nextOrEvidence": "Do not invent replacement geometry, skip dependencies, or count source repairs as engine coverage."
+    },
+    {
+      "id": "scad.animation.default-time",
+      "state": "open",
+      "area": "animation",
+      "current": "Unbound $t imports the static full-render frame at zero; authored overrides are respected.",
+      "tests": [
+        "tests/openscad-animation-context.test.ts"
+      ],
+      "nextOrEvidence": "Retain an explicit animation-time parameter and time-dependent feature evaluation; integrate mechanism/motion constraints rather than claiming a static frame simulates authored animation."
+    },
+    {
+      "id": "engine.resize",
+      "state": "closed",
+      "area": "geometry",
+      "current": "Retained 2D/3D resize uses evaluated bounds, supports several targets, automatic masks and all-zero identity, preserving empty inputs and parameter edits.",
+      "tests": [
+        "tests/resize-engine.test.ts",
+        "tests/physics.test.ts"
+      ],
+      "nextOrEvidence": "Original official-2021.01 executable probes verify the largest requested scale, 2D third-axis handling and Boolean/numeric option distinctions. Jolt rays verify resized holes and stale-collision rejection."
+    },
+    {
+      "id": "engine.export.resize",
+      "state": "open",
+      "area": "export",
+      "current": "Native and SCAD resize round trips are retained. JSCAD snapshot export refuses resize because conservative bounds cannot determine exact scaling after cuts or offsets.",
+      "tests": [
+        "tests/resize-engine.test.ts"
+      ],
+      "nextOrEvidence": "Next: supply evaluated bounds/geometry through the export boundary, or a compatible bounded runtime measurement contract, without freezing parameters or guessing CSG bounds."
+    },
+    {
+      "id": "jscad.slice-loft",
+      "state": "partial",
+      "area": "geometry",
+      "current": "Retained native loft and bounded JSCAD extrudeFromSlices callbacks accept matching simple planar XY sections ordered on Z, capped at both ends. slice.fromPoints, slice.transform, translation/scaling matrices and safe record spread are supported. No source is resampled.",
+      "tests": [
+        "tests/loft-engine.test.ts",
+        "tests/physics.test.ts"
+      ],
+      "nextOrEvidence": "Real MIT JSCAD volume and bounds, analytic loft volume, parameter/history round trips and Jolt cutout tests. General tilted sections, changing vertex counts, holes in sections, default callbacks, open/closed sweeps and the full authored nutsAndBolts workload remain unsupported or resource-limited."
+    }
+  ]
+}

@@ -36,4 +36,7 @@ export type {ModelSource} from './model-source.js';
 
 export {getOpenSCADImportWarnings} from './openscad-import.js';
 
+export * from './conversion-notices.js';
+export {getOpenSCADImportNotices} from './openscad-import.js';
+
 export * from './openscad-bundle.js';

@@ -44,8 +44,8 @@ it('supports lazy expression domains, no-else empty branches, local loop binding
  expect(evaluate(importOpenSCAD('flag=true; linear_extrude(3,flag) square([2,4],flag);')).bodies[0].bounds).toEqual({min:[-1,-2,-1.5],max:[1,2,1.5]});
 });
 it('bounds nested runtime expansion and refuses invalid loop steps instead of freezing defaults',()=>{
- for(const source of ['for(i=[0:0:4]) cube(2);','for(i=[0:100])cube(2);','for(i=[0:63])for(j=[0:63])cube(2);'])expect(()=>importOpenSCAD(source),source).toThrow();
- const p=importOpenSCAD('n=3; for(i=[0:n-1]) translate([i*4,0,0]) cube(2);');p.parameters.n='100';expect(()=>evaluate(p)).toThrow('64');
+ for(const source of ['for(i=[0:0:4]) cube(2);','for(i=[0:300])cube(2);','for(i=[0:63])for(j=[0:63])cube(2);'])expect(()=>importOpenSCAD(source),source).toThrow();
+ const p=importOpenSCAD('n=3; for(i=[0:n-1]) translate([i*4,0,0]) cube(2);');p.parameters.n='300';expect(()=>evaluate(p)).toThrow('256');
 });
 
 it('round-trips empty branches through actual JSCAD without inventing geometry',()=>{
@@ -56,6 +56,6 @@ it('round-trips empty branches through actual JSCAD without inventing geometry',
 it('accepts finer tessellation within the global mesh budget and reports limits distinctly',()=>{
  expect(evaluate(importOpenSCAD('sphere(3,$fn=128);')).volume).toBeGreaterThan(100);
  expect(evaluate(importOpenSCAD('cylinder(h=5,r1=4,r2=2,$fn=512);')).volume).toBeGreaterThan(140);
- try{importOpenSCAD('sphere(3,$fn=512);');throw Error('Expected budget failure');}catch(error:any){expect(error.code).toBe('resource-limit');}
+ try{importOpenSCAD('sphere(3,$fn=640);');throw Error('Expected budget failure');}catch(error:any){expect(error.code).toBe('resource-limit');}
  for(const source of ['cube(true);','cylinder(h=2,r=false);'])expect(()=>importOpenSCAD(source),source).toThrow('numeric');
 });
