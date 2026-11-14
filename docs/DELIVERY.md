@@ -566,3 +566,11 @@ passed on rerun. Visual inspection caught and fixed card compression and filter
 width before delivery; geometry checks now protect card height/label placement.
 Actual image decoding, insertion without notes, cancellation, offline reuse, undo,
 attributed exports and native menu command routing are covered.
+
+Mac build **16**, from clean source
+`54fef9890fc1501bf58da488c38f05bdbda76217`, passed native smoke checks for the
+sole native File menu and gallery thumbnails, model source, clipboard, camera,
+geometry creation and preservation of complete library history. It was locally
+signed, installed at `~/Applications/Brickwright CAD.app` and launched. The running
+asset receipt reports that revision with dirty=false; the installed bundle reports
+16. Graceful replacement retained existing user projects and histories.
