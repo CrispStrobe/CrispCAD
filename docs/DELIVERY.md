@@ -574,3 +574,20 @@ geometry creation and preservation of complete library history. It was locally
 signed, installed at `~/Applications/Brickwright CAD.app` and launched. The running
 asset receipt reports that revision with dirty=false; the installed bundle reports
 16. Graceful replacement retained existing user projects and histories.
+
+## Visible New/Open/Save actions — 2026-11-14
+
+All hosts now expose three compact project-action icons using the same underlying
+New/Open/Save handlers as menus and shortcuts. On Mac the native File menu remains;
+touch/browser hosts retain their in-window File menu. The three icons stay outside
+the scrolling modeling toolbar, use 44 px touch targets, and keep Shapes prominent
+on narrow screens. Save is labelled as a portable project file including history;
+working-project autosave remains unchanged. A host-provided save callback also
+enables Save without requiring a second export callback.
+
+Checks: production build and 1,169-message German audit pass. Twelve desktop/file
+workflows passed in Chromium and iPad WebKit. After the final Shapes-order change,
+all six file-action workflows passed again, covering save/new/reopen, reachable
+390 px phone controls during toolbar scrolling, initial Shapes visibility, and
+native Open routing with visible file buttons. Desktop and phone screenshots were
+inspected before delivery.

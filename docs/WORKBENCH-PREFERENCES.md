@@ -60,3 +60,12 @@ example gallery and item-card layout (repository checkpoint
 `e7b7cd420fc28c63c1a7a214bcae3c769897ec66`). The local Brickwright-lite path was an
 unmounted-volume symlink, so those files were inspected through the connected
 GitHub repository. No Brickwright checkout was modified.
+
+## Visible project actions — 2026-11-14
+
+New, Open and Save project file remain visible as compact icons in every host,
+including macOS. They share the existing menu actions; autosave continues to retain
+the working project, while Save writes a portable history-inclusive file. The
+project-action group is outside the horizontally scrolling modeling toolbar, with
+44 px touch targets. The complete native File menu on Mac and in-window File menu
+on touch/browser hosts remain available. No additional toolbar row is introduced.

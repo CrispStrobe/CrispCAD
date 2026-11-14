@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+ 'Project actions':'Projektaktionen','New project':'Neues Projekt','Open project':'Projekt öffnen','Save project file':'Projektdatei speichern',
+ 'Save a portable project file, including history. Your working project autosaves.':'Eine portable Projektdatei einschließlich Verlauf speichern. Das Arbeitsprojekt wird automatisch gespeichert.',
+
  'Untitled design':'Unbenanntes Modell',' copy':' Kopie',
  'This older object did not retain its text. Enter the lettering to make it editable; the existing solid stays unchanged until Apply.':'Dieses ältere Objekt hat seinen Text nicht gespeichert. Geben Sie die Beschriftung ein, um sie bearbeitbar zu machen. Der vorhandene Körper bleibt bis zum Anwenden unverändert.',
  'Font':'Schriftart','Lettering font':'Schriftart für Beschriftung','Original block letters':'Original-Blockschrift',

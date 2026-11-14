@@ -355,6 +355,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
           const host = document.querySelector('#cad-root');
           if (host?.dataset.state !== 'ready') return 'waiting';
           const root = host.shadowRoot;
+          if(root.querySelectorAll('.project-actions button').length!==3||[...root.querySelectorAll('.project-actions button')].some(b=>b.getBoundingClientRect().width<30))return 'waiting';
           if (\(smokeStage) === 0 && !\(cameraSmokeDone)) {
             if (!root.querySelector('#save-state').textContent.includes('Saved · iteration')) return 'waiting';
             const canvas=root.querySelector('canvas[data-testid="cad-canvas"]'),box=canvas.getBoundingClientRect();

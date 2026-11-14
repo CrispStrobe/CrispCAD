@@ -156,7 +156,12 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   async function chooseOpen(){if(options.requestOpen){const file=await options.requestOpen();if(file)await openFile(file.name,file.bytes);}else input.click();}
   button('Open',chooseOpen);
   input.accept='.bcad,.bcadhistory,.json,.stl';input.addEventListener('change', () => { const file = input.files?.[0]; input.value = ''; if (file) run(async () => { if (file.size > 64 * 1024 * 1024) throw new Error(t('Project exceeds 64 MiB')); await openFile(file.name, new Uint8Array(await file.arrayBuffer())); }); });
-  const save = button('Save project', () => deliver('bcad'), toolParent, 'primary'); save.disabled = !options.onExport;
+  const save = button('Save project', () => deliver('bcad'), toolParent, 'primary'); save.disabled = !options.onExport&&!options.saveProject;
+  const projectActions=el('div','project-actions');projectActions.setAttribute('role','group');projectActions.setAttribute('aria-label',t('Project actions'));
+  const quickAction=(icon:string,label:string,action:()=>unknown)=>{const control=button(icon,action,projectActions,'project-action');control.setAttribute('aria-label',t(label));control.title=t(label);return control;};
+  quickAction('New','New project',newProject);quickAction('Open','Open project',chooseOpen);
+  const quickSave=quickAction('Save project','Save project file',()=>deliver('bcad'));quickSave.disabled=save.disabled;quickSave.title=t('Save a portable project file, including history. Your working project autosaves.');
+  designBar.insertBefore(projectActions,toolbar);
   const importInput=el('input');importInput.type='file';importInput.accept='.stl';importInput.hidden=true;importInput.setAttribute('aria-label',t('Import STL geometry'));shell.append(importInput);
   importInput.onchange=()=>{const file=importInput.files?.[0];importInput.value='';if(file)run(async()=>{if(file.size>16*1024*1024)throw new Error(t('STL exceeds 16 MiB'));await importFile(file.name,new Uint8Array(await file.arrayBuffer()));});};
   async function chooseImport(){if(options.requestImport){const file=await options.requestImport();if(file)await importFile(file.name,file.bytes);}else importInput.click();}

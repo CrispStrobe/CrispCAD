@@ -44,4 +44,12 @@ export const editorStyle = `
 .model-source-pane{min-height:0;display:flex;flex-direction:column;border-top:1px solid #526c7c;background:#14232e;padding:8px 12px;gap:6px}
 .model-source-pane header,.model-source-pane footer{display:flex;align-items:center;gap:8px;flex:none;min-width:0}.model-source-pane header strong{margin-right:auto;color:var(--accent)}.model-source-pane label{display:flex;align-items:center;gap:5px;font-size:11px}.model-source-pane button{min-height:28px;font-size:11px;padding:4px 8px}.model-source-pane p{font-size:11px;margin:0}.model-source-pane textarea{flex:1;min-height:60px;resize:none;overflow:auto;white-space:pre;font:12px/1.5 ui-monospace,Menlo,monospace;background:#0e1922;color:#e1ebf1;border:1px solid #405565;border-radius:5px;padding:8px;tab-size:2}.model-source-pane footer [role=status]{flex:1;min-width:0;font-size:11px;overflow-wrap:anywhere}
 @container(max-width:700px){.model-source-pane{padding:6px}.model-source-pane footer{flex-wrap:wrap}.model-source-pane footer [role=status]{flex-basis:100%}.model-source-pane header label{font-size:10px}.model-source-pane header button{font-size:0}.model-source-pane header button:after{content:'×';font-size:18px}.model-source-pane p{display:none}}
+
+.toolbar>.shapes-tools{order:-1}
+/* Frequent document actions stay outside the scrolling modeling tools. */
+.design-bar{grid-template-columns:minmax(90px,180px) auto minmax(0,1fr) auto}
+@container(max-width:1100px){.design-bar{grid-template-columns:110px auto minmax(0,1fr) auto}}
+@container(max-width:720px){.design-bar{grid-template-columns:76px auto minmax(0,1fr) auto;gap:3px;padding-left:6px;padding-right:6px}}
+.project-actions{display:flex;gap:2px;flex:none;background:#14212b;border-right:1px solid #405565;padding-right:5px;margin-right:3px}.project-actions .project-action{display:flex;align-items:center;justify-content:center;flex:none;width:32px;height:34px;min-height:34px;padding:6px;background:transparent;border:1px solid transparent}.project-actions .project-action>span{display:none}.project-actions .project-action:hover:not(:disabled){background:#344c60;border-color:#81949e}.project-actions .project-action .tool-icon{width:20px;height:20px}
+@media(pointer:coarse){.design-bar{padding-top:2px;padding-bottom:2px}.project-actions{gap:0;padding-right:2px}.project-actions .project-action{width:44px;height:44px;min-height:44px;padding:11px}}
 `;
