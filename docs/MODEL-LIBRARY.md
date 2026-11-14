@@ -695,3 +695,32 @@ Delivered counts remain **104 sources / 102 distinct STL hashes / 143 previews**
 See `library/corpus-audit/editor-screening-cycle23.json`. Seven other ranked `use` roots
 have independent path, loop/list-size or JSON blockers and are not credited as
 expected admissions. Their ranking and exact root names remain in the cycle 21 report.
+
+### Authored city scene default — 2026-11-14
+
+`Projects/Scene_City_Street.scad` adds one Angelo source root with five existing,
+independently retained MIT Street dependencies. All six original files remain
+byte-identical. The first `use` resolves an exact supplied bundle-root file after
+its relative candidate is absent; other directives resolve relatively. Relative
+files take precedence, parent paths retain their original guards, and used
+library demos never execute. No dependency aliases or source edits are used.
+
+The one-root cohort improves **0/1 → 1/1 strict STL and editor passes**. The authored
+assembly produces 842 triangles and 9.927364671 mm³, with bounds approximately
+[-6.1,-1.1,-0.11] to [2.3,7.3,0.11] mm. Only this new preview was rendered.
+Totals are **105 source roots / 103 distinct STL hashes / 144 gallery entries**:
+97 Angelo, three A2D and five SCON roots. All prior 104 complete records, 143
+previews and historical refusal reports remain unchanged. KnurledKnob's 32 KiB,
+webbing's 64-item, Box's work, SCON's depth and all topology refusals remain.
+
+The focused reproduction command evaluates only this new root while verifying
+the exact historical 96 Angelo records, original bytes and derivative hashes:
+
+```sh
+node scripts/generate-corpus-editor-library.mjs --check --asset-id corpus-angelo-scene-city-street
+```
+
+See `library/corpus-audit/editor-screening-cycle25.json` for the ranked alternate,
+actual before/after measurements and validation reuse. The remaining five
+ClosePoints defaults and catchnhole retain independent loop/list or missing
+JSON/data blockers; no additional admission credit is assigned to them.
