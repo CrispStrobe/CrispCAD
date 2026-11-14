@@ -535,3 +535,14 @@ source-preserving portable archives, identity remapping, clipboard fragments,
 generator guards, template escapes, attribution and reference helpers. MCP gets
 read/preview/apply source tools with one saved iteration per accepted edit, using
 its existing separate headless project session.
+
+Mac build **15** was built from clean source
+`9d000b24f529cc6cd751ff8f8500c1efb787790b`, locally signed, installed in
+`~/Applications/Brickwright CAD.app` and launched. The running asset receipt
+reports that revision with dirty=false, and the installed bundle reports build
+15. Native smoke checks passed for camera magnification at fixed page scale,
+menus/clipboard, sketch/code creation, the new Model Source menu/dock without
+a model edit, complete library files and refusal to prune existing history.
+Four additional desktop-host browser checks passed in Chromium/WebKit, including
+registration of the native Model Source command. Existing user projects were
+retained during graceful replacement of the previous app.
