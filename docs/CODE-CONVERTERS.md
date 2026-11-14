@@ -24,48 +24,30 @@ $fn takes precedence. Small sphere meshes still use native tessellation. Extrusi
 the 256-point limit. Zero-sized boxes/cylinders/spheres contribute empty geometry;
 a whole code object must still produce a printable solid for insertion.
 
-OpenSCAD `color()` wrappers accept literal named/hex colors, constant RGB/RGBA
-vectors in [0,1], and optional constant alpha. They preserve solid geometry while
-omitting appearance; the converted CAD Script records that omission explicitly.
-Computed color expressions and unsupported arguments are diagnosed.
-Literal color strings may pass through module defaults, module arguments, and
-local bindings into `color()`. They retain a separate tagged type and never
-become numeric CAD Script expressions. Constant palettes use a separate tag and
-contain only literal color strings or nested palettes. A palette index must be a
-nonnegative integer literal or a module-local binding/argument with literal
-integer provenance; computed indices and global parameter lookup are rejected.
-Numeric vector indexing accepts that same literal-provenance scope. Palette selection ends at the same
-validated `color()` endpoint and omission disclosure. Mixed numeric/color arrays,
-string indexing, arithmetic, functions, loops, global color data, and numeric
-coercion remain unsupported. Existing 256-item/32-depth limits still apply;
-local-binding evaluation and color data construction also share an 8,192-step
-budget, charged before recursive alias evaluation to bound branching aliases.
+OpenSCAD `color()` accepts validated named/hex strings, constant RGB/RGBA
+vectors in [0,1], and optional constant alpha. Appearance is omitted and disclosed
+in conversion notes. Strings remain distinct from numeric expressions; they cannot
+supply dimensions. Typed palettes and vectors may flow through lexical bindings,
+module/function arguments, loops, and computed or parameter-driven indices.
+Indices must resolve to valid integers; boolean indices are refused. Numeric
+selectors retain lazy choices rather than flattening parametric geometry.
+Immutable binding evaluation is memoized, with a shared 16,384-value visit guard.
 
-Source conversion uses the full-render context: the read-only `$preview` builtin
-is `false`, and a note is added to converted CAD Script only when the builtin is
-read. Source assignments, parameter/named-argument overrides, and dynamic index
-use are rejected. Exported OpenSCAD/JSCAD snapshots contain explicit resolved
-facet counts, so they do not depend on preview mode. This adds no UI preview-mode
-setting. Numeric and palette indices may use literal integer module defaults,
-arguments or lexical local aliases; computed, global, loop and function-derived
-indices remain unsupported. Function parameter indices do not acquire module
-argument provenance. Numeric coordinate expressions retain their existing units,
-parameter dependencies and bounds, and color values cannot supply coordinates.
-The fixed context follows the official [`$preview` documentation](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#$preview)
-for full rendering; this subset diagnoses upstream-style overrides instead of
-supporting a configurable source context.
-
-`translate`, `rotate`, and `scale` accept a scoped `$fn` argument for their child
-geometry, including calls to local modules. Nested scopes restore the enclosing
-fragment count, and explicit primitive counts take precedence. Curved geometry
-keeps the existing finite integer segment limits and mesh budgets; unsupported
-transform arguments are rejected. The `#` preview highlight modifier retains its
-entire child geometry and records omitted highlight appearance in the converted
-source. `%`, `!`, and `*` modifiers remain unsupported because their semantics
-cannot be discarded while preserving the modeled solid.
+Conversion uses a full-render context: read-only `$preview` is `false`, with a
+note only when it is read. Source assignments and argument/parameter overrides
+of `$preview` are refused. Supported fragment controls pass through module,
+transform and extrusion scopes; nested scopes restore the enclosing values and
+explicit primitive counts take precedence. Export snapshots resolve facet counts.
+The `#` modifier retains geometry with an omitted-appearance note; `%` and `*`
+exclude their child geometry from the rendered solid; `!` selects a 3D root.
 These semantics follow the official language documentation for
 [special variables](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Special_variables)
-and the [debug modifier](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Debug_Modifier).
+and [modifiers](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Debug_Modifier).
+
+SCAD source is bounded to 32 KiB / 8,192 tokens, construction translation to
+4,096 visits and recursion to 32 levels. Native execution permits 256 statements,
+1,024 expanded nodes and 16,384 evaluation steps; expressions permit 1,024
+characters / 512 tokens. The 200,000 estimated-face budget remains in force.
 
 Source limit is 32 KiB. JSCAD has 20,000 interpreter steps, 64 iterations per loop,
 256 array items and call depth 32. The parsed AST is bounded to 8,192 nodes
@@ -315,3 +297,22 @@ models alongside the existing 39 entries. A corrected scoped-$fn walking-stick
 mesh uses a new derivative path; the previous file remains byte-identical for
 historical provenance. Archived sources are unchanged and qualification is
 separate from admission and runtime collision checks.
+
+## Measured engine expansion — 2026-11-14
+
+The frozen 256-file research sample now yields **137 positive solids**, versus
+42 before this pass: 95 newly successful, all 42 previous successes retained.
+Remaining outcomes are 74 unsupported, 29 resource-limited, 15 failures and one
+15-second process timeout. The final run uses a 15-second per-file deadline;
+the baseline used five seconds with no timeouts. A separate five-second replay
+on the pre-merge implementation produced 134 positive solids and four timeouts.
+These are execution outcomes, not semantic-equivalence or speed claims.
+
+The main remaining blockers include external `use`/`include` dependencies,
+comprehensions, `rands`/`search`, matrix/vector operations outside the supported
+subset, source/expansion/mesh budgets, and empty or invalid constructions.
+Aggregate hashes, transitions and caveats are recorded in
+[evidence/import-engine-coverage-2026-11-14.json](evidence/import-engine-coverage-2026-11-14.json).
+Original analytic fixtures, MIT JSCAD comparisons and real Jolt hole queries
+validate specific operations independently; the corpus itself has no geometry
+oracle. No research models are admitted through this measurement.

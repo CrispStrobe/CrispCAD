@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "measuredOn": "2026-11-14",
+  "scope": "Aggregate research execution only. Sources, full reports and derived research geometry remain external. Positive solid does not establish OpenSCAD semantic fidelity.",
+  "dataset": "redcathode/thingiverse-openscad",
+  "revision": "2b4206aae3af7740100a2f0e979dd9cb66cd77f0",
+  "sampling": "deterministic evenly spaced files after exact source-hash deduplication; not random model sampling",
+  "inputRows": 7929,
+  "uniqueFiles": 7864,
+  "sampleFiles": 256,
+  "sameSourceHashes": true,
+  "baseline": {
+    "reportSha256": "0f32dd22770a5a9e714bce23a68ea9c2cb1c1359aa9403e2502b6e4e137d0a19",
+    "statuses": {
+      "unsupported": 204,
+      "converted": 42,
+      "limited": 7,
+      "failed": 3
+    },
+    "converterTimeoutMs": 5000,
+    "timedOut": 0
+  },
+  "after": {
+    "reportSha256": "66ee7c9d8a914f29856644bc7aa79a0af229743c034d90d7cb006fd273c4509d",
+    "statuses": {
+      "unsupported": 74,
+      "converted": 137,
+      "limited": 29,
+      "failed": 15,
+      "process-failure": 1
+    },
+    "limits": {
+      "converterTimeoutMs": 15000,
+      "maxOldSpaceSizeMb": 256
+    },
+    "converterBuild": {
+      "commit": "143a3da98e8a0a0a7e65d9654c6b40a86e0eb092",
+      "dirty": false,
+      "artifacts": {
+        "code.js": "d66807c8ca3b0e318be9d8350da1a26fb481a852afab841f38ca97f84f8f8763",
+        "code-interchange.js": "29800fc0a9ad9bd7552edb143ca442c8c8098c097acb7a5fbf4cba0105b94a11",
+        "openscad-import.js": "148a5caeec0425f2620410006ef9b8fb7542c2dac4efd7da9191aae3d1d31785",
+        "jscad-import.js": "560f5c0f8ebf20b4175d70e29ae15ea6be8e0740ec245376c11c79b9ebc0702f",
+        "parameters.js": "a38cd399e1072095d3e6d526a45d838452bb11f5368615be2d03a3c268ff8550",
+        "code-profiles.js": "ea5e8c897579d1c1950936a688598e309f2527d9bea1e173d404c9fd7c855ae3",
+        "features.js": "724e4fc258961b700f598295698aec1c5dcd982d09a30f1838953d0e48ec0cd8",
+        "geometryKernel": "986b3804ba93e4c3f9ba90b76e83f0cfbf396539ffe8f44b5da1aa8e129c72b0",
+        "geometry/font-profile.js": "de836295ab0c0f8364927dac7b0a95829f6b04548bd09da6fb97351bddfbd9d8",
+        "geometry/polyhedron.js": "1b0a9ab03b764aebdde589e789637fbd39a843a9e24ff2141f85e0e1de7d1eab",
+        "geometry/limits.js": "ab598a640df9cfb58c5dff20f0a608c013a08b0e1e78b46f39a69a231fa20569",
+        "geometry/fonts/droid_sans_regular.typeface.json": "5532f318b78eeb2215dcb0ae6ebdfb8f82e369187731c28f53e37784a044459a",
+        "geometry/fonts/droid_serif_regular.typeface.json": "10d747ee765ad60e1acec86c31187ac5084b96c376d911c1c46e3f80308b08e4",
+        "geometry/fonts/droid_sans_mono_regular.typeface.json": "69fd4dc9782cfe281f9a96b40e3ae3e4392ea05c1082fbea4c04f369f52feaf2",
+        "manifoldWasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "node": "v26.4.0",
+      "platform": "darwin",
+      "architecture": "arm64"
+    }
+  },
+  "transitions": [
+    {
+      "before": "converted",
+      "after": "converted",
+      "count": 42
+    },
+    {
+      "before": "failed",
+      "after": "failed",
+      "count": 3
+    },
+    {
+      "before": "limited",
+      "after": "converted",
+      "count": 3
+    },
+    {
+      "before": "limited",
+      "after": "limited",
+      "count": 4
+    },
+    {
+      "before": "unsupported",
+      "after": "converted",
+      "count": 92
+    },
+    {
+      "before": "unsupported",
+      "after": "failed",
+      "count": 12
+    },
+    {
+      "before": "unsupported",
+      "after": "limited",
+      "count": 25
+    },
+    {
+      "before": "unsupported",
+      "after": "process-failure",
+      "count": 1
+    },
+    {
+      "before": "unsupported",
+      "after": "unsupported",
+      "count": 74
+    }
+  ],
+  "convertedRegressions": 0,
+  "caveats": [
+    "Final run allows 15 seconds per file versus historical 5 seconds. A separate 5-second replay on the pre-merge implementation produced 134 positive solids and four timeouts; intermediate runs varied between 134 and 137. This is not a performance benchmark.",
+    "One final file timed out at 15 seconds; no syntax/geometry oracle ran for this corpus.",
+    "One of the original 42 successful files changes volume because linear_extrude-scoped $fn now reaches its child circle. Other original success volumes agree within 1e-6 relative/absolute tolerance.",
+    "Dataset card is CC-BY-NC-SA-4.0 and per-file licences vary; no research source or generated research model is shipped."
+  ]
+}

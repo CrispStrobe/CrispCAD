@@ -143,3 +143,27 @@ Positive geometry is not an independent OpenSCAD semantic-equivalence oracle.
 Analytic volumes/bounds and the MIT JSCAD implementation independently check the
 new taper/hull/empty export cases; a parameterized imported hull/taper/loop object
 passes actual Jolt collision qualification and rejects stale certificates.
+
+### Typed language and geometry expansion — 2026-11-14
+
+The same 256 source hashes now produce 137 positive solids (previously 42),
+74 unsupported, 29 limited, 15 failures and one process timeout. All previous
+42 still convert. One prior volume changes because extrusion-scoped `$fn` now
+correctly reaches its child circle; the other 41 agree within the recorded tolerance.
+This does not establish independent upstream geometry equivalence.
+
+The clean-source release probe uses a 15-second deadline and 256 MiB Node heap.
+The historical baseline used five seconds and had no timeouts. A separate
+five-second pre-merge replay produced 134 solids/four timeouts; intermediate runs
+varied from 134 to 137. Timing variability and the changed deadline prevent a
+speed comparison. The final report fingerprints core, geometry, font assets and
+Manifold at source `143a3da98e8a0a0a7e65d9654c6b40a86e0eb092`.
+
+Reproduce with `node scripts/research/probe-corpus.mjs --input /external/extracted.jsonl
+--report /external/probe.json --limit 256 --geometry --timeout-ms 15000` (one line).
+The full report remains external at
+`/tmp/brickwright-cad-research/thingiverse-openscad/probe-256-release-2026-11-14.json`;
+only aggregate evidence is committed in
+`docs/evidence/import-engine-coverage-2026-11-14.json`. Research-only source and
+geometry stay outside the shipped application. Independently reviewed MIT gallery
+sources follow the separate provenance and reproducible-mesh admission process.
