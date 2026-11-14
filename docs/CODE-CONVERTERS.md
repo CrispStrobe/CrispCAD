@@ -129,13 +129,15 @@ limits are distinct from unsupported features and malformed input.
 
 Known gaps, deliberately diagnosed:
 
-- External `include`/`use`, library resolution (including BOSL2), comprehension
-  filters/`each`/C-style and variable-cardinality generators, randomness/search
-  helpers, symbolic numeric-to-string formatting,
+- Ambient library resolution and `use` (including BOSL2); explicit local
+  `include` bundles are supported. Comprehension filters/`each`/C-style and
+  variable-cardinality generators, randomness, search outside fixed tables,
+  symbolic numeric-to-string formatting,
   general matrix arithmetic, anonymous-block assignment semantics, external meshes,
   surface/image geometry, automatic resize axes and arbitrary-axis profile rotations.
   Parameter-dependent recursive functions remain bounded rather than becoming an
-  unrestricted evaluator. Negative/cross-axis rotational profiles remain refused.
+  unrestricted evaluator. Negative partial-turn and cross-axis rotational profiles
+  remain refused; wholly left-side complete turns are supported.
 - JSCAD slice/callback extrusion, general lofts/sweeps, external/local modules and
   host APIs remain unsupported. Export to JSCAD refuses native Minkowski/resize,
   text/offset profiles and tapered-profile extrusion where no supported lowering
@@ -411,3 +413,30 @@ Aggregate hashes, transitions and caveats are recorded in
 Original analytic fixtures, MIT JSCAD comparisons and real Jolt hole queries
 validate specific operations independently; the corpus itself has no geometry
 oracle. No research models are admitted through this measurement.
+
+
+### Bounded function values and SCON defaults — 2026-11-14
+
+Function literals (`function(x) expression`) can be stored in variables, passed
+as arguments and returned by functions. Calling a named function-valued variable
+uses the existing bounded function evaluator and a captured lexical environment.
+Numeric dimensions can remain symbolic through closure calls. Expression-level
+`let` evaluates bindings sequentially; `is_function` distinguishes function values.
+Immediate chained calls and parameter-dependent choices between callable values
+remain unsupported. Function values never become executable JavaScript or new
+runtime geometry kinds. Assertions on unsupported typed returns are refused.
+
+`search` supports a fixed needle list and a fixed list/table, optional constant
+match count (zero means all), and an optional constant column. Only matches that
+resolve during conversion are accepted; parameter-dependent match membership is
+refused. Every comparison consumes the existing evaluation budget. Existing
+32-level function/construction depth and source, token and array limits remain.
+These semantics were implemented from published language documentation, without
+reading the GPL implementation:
+[function literals](https://files.openscad.org/documentation/manual/User-Defined_Functions_and_Modules.html),
+[search](https://files.openscad.org/documentation/manual/Other_Language_Features.html).
+
+The six unchanged SCON example roots improved from 0/6 to 5/6 strict STL passes.
+`ex1`, `ex2`, `ex3`, `ex4` and `tldr` are admitted separately; `ex5` reaches the
+unchanged construction-depth limit of 32 and remains excluded. This does not
+qualify arbitrary SCON configuration edits, JSON import or unused helpers.

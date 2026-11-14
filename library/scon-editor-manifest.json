@@ -1,0 +1,970 @@
+{
+  "format": "brickwright-local-fixture-library",
+  "version": 1,
+  "collection": "selected-scon-source-bundles",
+  "capturedOn": "2026-11-14",
+  "pathBase": "library/",
+  "reproduction": {
+    "command": "node scripts/generate-scon-editor-library.mjs --check",
+    "generator": {
+      "path": "../scripts/generate-scon-editor-library.mjs",
+      "sha256": "778f89ca05ad4816c3458f941a0352ad13e66f92d1ca1176518e88099ed29424"
+    },
+    "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
+    "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+  },
+  "selection": {
+    "repositoryId": "wmacevoy--openscad-scon",
+    "commit": "c954e07bf0faf571d8eccc259d47e61938666cef",
+    "count": 5,
+    "runtimeChecked": 5,
+    "complete": true
+  },
+  "assets": [
+    {
+      "id": "corpus-scon-ex1",
+      "title": "SCON configured sphere",
+      "author": "Warren MacEvoy, 2024",
+      "version": "c954e07bf0faf571d8eccc259d47e61938666cef",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/wmacevoy/openscad-scon",
+        "commit": "c954e07bf0faf571d8eccc259d47e61938666cef",
+        "sourceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/ex1.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "wmacevoy--openscad-scon",
+        "upstreamPath": "examples/ex1.scad",
+        "archivedPath": "corpus/repos/wmacevoy--openscad-scon/examples/ex1.scad",
+        "sha256": "789200891e04fcd20a9b216adde28c54c7fddf3ad8e5b3d4c10173a96bad5686"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Warren MacEvoy, 2024. Source: https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/ex1.scad. MIT License Copyright (c) 2024 Warren MacEvoy Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE",
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact five-root include closure and default-model screening 2026-11-14",
+        "localEvidence": [
+          {
+            "path": "evidence/scon-MIT-LICENSE.txt",
+            "sha256": "306253c7d0f088f7d06a580450aedca0ecc91e88d2d97491eafdd68117497a58",
+            "bytes": 1071,
+            "url": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE"
+          }
+        ]
+      },
+      "original": {
+        "path": "sources/scon/examples/ex1.scad",
+        "sha256": "789200891e04fcd20a9b216adde28c54c7fddf3ad8e5b3d4c10173a96bad5686",
+        "bytes": 242,
+        "url": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/ex1.scad",
+        "format": "openscad"
+      },
+      "sourceBundle": {
+        "format": "brickwright-openscad-bundle",
+        "version": 1,
+        "rootPath": "examples/ex1.scad",
+        "dependencies": [
+          {
+            "path": "scon.scad",
+            "file": {
+              "path": "sources/scon/scon.scad",
+              "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+              "bytes": 5595,
+              "format": "openscad"
+            },
+            "author": "Warren MacEvoy, 2024",
+            "sourceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/scon.scad",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/wmacevoy/openscad-scon",
+              "commit": "c954e07bf0faf571d8eccc259d47e61938666cef"
+            },
+            "licence": {
+              "spdx": "MIT",
+              "scope": "asset",
+              "attribution": "Warren MacEvoy, 2024. Source: https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/scon.scad. MIT License Copyright (c) 2024 Warren MacEvoy Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+              "evidenceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE",
+              "capturedOn": "2026-11-13",
+              "review": "accepted",
+              "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact five-root include closure and default-model screening 2026-11-14"
+            }
+          }
+        ]
+      },
+      "derivatives": [
+        {
+          "path": "meshes/scon/ex1.stl",
+          "sha256": "20b6b6cd8233a18062a7dc4cbfdf2c5742b791039ec04c06f1b18e04c9497d9a",
+          "bytes": 250084,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Exact root and dependency bytes retained independently. Includes are expanded only in memory by the bounded virtual-file importer; no flattened upstream source is invented. The authored default root and its shape configuration are retained without parameter, frame, fragment or placement overrides, repair or simplification. Qualification covers this default root only, not every SCON helper or alternate configuration, manufacturing or physics. Archived assertion-message text does not indicate an assertion failure. Import warnings captured at qualification: None.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The sample has no explicit unit declaration. Curator assumes millimetres and Z up; authored coordinates are preserved without placement changes.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "bundleProvenance": {
+        "format": "brickwright-openscad-source-bundle",
+        "version": 1,
+        "rootPath": "examples/ex1.scad",
+        "files": [
+          {
+            "path": "examples/ex1.scad",
+            "originalPath": "examples/ex1.scad",
+            "source": "include <../scon.scad>\n\ncfg_scon = [[\"fn\", 100],[\"radius\",10],[\"center\",[1,2,3]]];\n\nfn=scon_value(cfg_scon,[\"fn\"]);\nradius=scon_value(cfg_scon,[\"radius\"]);\ncenter=scon_value(cfg_scon,[\"center\"]);\n\ntranslate(center) sphere(r=radius,$fn=fn);\n\n\n",
+            "sha256": "789200891e04fcd20a9b216adde28c54c7fddf3ad8e5b3d4c10173a96bad5686",
+            "bytes": 242
+          },
+          {
+            "path": "scon.scad",
+            "originalPath": "scon.scad",
+            "source": "function scon_value(scon,path,missing = function(path) undef,dist = 0) =\n  is_undef(path) ? missing :\n  (len(path) <= dist || is_undef(scon)) ?\n    (is_undef(scon) ? missing(path) : scon) :\n    let (\n      key = path[dist],\n      next = is_undef(key) ?\n        scon :\n\tis_string(key) ?\n          _scon_map(scon, key, path) :\n          _scon_index(scon, key, path)\n    ) scon_value(next, path, missing, dist + 1);\n\n// Make a property-extractor function from an SCON value.\n// Basic usage:\n//\n//   cfg_scon = [[\"x\",1],[\"y\",true]];\n//   cfg = scon_make([[\"x\",1],[\"y\",true]]);\n//   x=cfg([\"x\"]);\n//   y=cfg([\"y\"]);\n//   z=cfg([\"z\"], 3); // z = 3 because it is not in cfg_scon.\n//\n// Advanced Meta-programming note:\n//   - cfg([])   ⇒ returns the full SCON data structure.\n//   - cfg(undef)⇒ returns the configured missing-fallback function.\n// This allows for introspection of the data used to make cfg function.\n//\nfunction scon_make(scon,base=undef)=\n  is_undef(base) ?\n    function(path,missing=undef)\n      scon_value(scon,path,function (missing_path) missing)\n  :\n    function(path,missing=undef)\n      scon_value(scon,path,function (missing_path) base(missing_path,missing));\n\n//\n// Convert a scon value to a json string\n//\n// Ex: scon_to_json(true) == \"true\"\n//     scon_to_json(17) == \"17\"\n//     scon_to_json(\"length\") == \"\\\"length\\\"\"\n//     scon_to_json([[\"x\",1],[\"y\",2]]) == \"{\\\"x\\\":1,\\\"y\\\":2}\"\n//     scon_to_json([2,3,5,8]) == \"[2,3,5,8]\"\n//\n//  List/object ambiguity! Since OpenSCAD has no native map, there must be an\n//  ambiguity in the conversion to the distinct [item[0],item[1],...] list\n//  and the {\"name0\":value0,\"name1\":value1,..} object notation in JSON.\n//\n//  The rule Scon uses is:\n//\n//    If every element of a Vector is a [string,value] pair, then it is converted\n//    to an object.  Otherwise it is a list.\n//\n//    So [], [[\"x\",1],[\"y\",2]], are maps and become \"{}\" and \"{\\\"x\\\":1,\\\"y\\\":2}\"\n//    any other Vector is converted to a list.\n//\nfunction scon_to_json(scon) =\n  is_undef(scon) ? \"null\" :\n  is_bool(scon) ? str(scon) :\n  is_num(scon) ? str(scon) :\n  is_string(scon) ? _scon_json_str(scon) :\n  _scon_is_map(scon) ? _scon_json_map(scon) :\n  is_list(scon) ? _scon_json_list(scon) :\n  _scon_json_str(str(\"??? \",scon,\" ???\"));\n\n//\n// Development builds of OpenSCAD with the import-function feature enabled\n// can import Json directly.  To convert this import to SCON, you can use this\n// function.\n//\n// The scon_from_json.js and scon_from_json.py scripts create a back-portable way to\n// do this by externally converting to\n//\n// Developer Build usage:\n//\n//   cfg = scon_make(scon_from_json(import(\"config.json\")));\n//\n// Portable usage:\n//\n//   # from terminal or build script\n//   python3 scon_from_json.py <config.json >config.scon\n//   # or\n//   node scon_from_json.js <config.json >config.scon\n//   # or (quickjs)\n//   qjs --std -m scon_from_json.js <config.json >config.scon\n//\n//   # in OpenSCAD\n//   cfg = scon_make(include \"config.scon\");\n//\nfunction scon_from_json(json) =\n  is_object(json)\n    ? [ for (k = json) [ k, scon_from_json(json[k]) ] ]\n  : is_list(json)\n    ? [ for (i = [0:len(json)-1]) scon_from_json(json[i]) ]\n  : json;\n\nfunction _scon_map(scon_map, key, path) =\n    let (result = search([key], scon_map,0)[0])\n      len(result) > 0 ? scon_map[result[len(result)-1]][1] : undef;\n\nfunction _scon_index(scon_list, index, path) =\n    (is_list(scon_list) && 0 <= index && index < len(scon_list)) ? scon_list[index] : undef;\n\nfunction _scon_is_mapping(scon) =\n    is_list(scon) && len(scon) == 2 && is_string(scon[0]);\n\nfunction _scon_all_seq(seq,begin,end) =\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? (_scon_all_seq(seq,begin,begin+m) && _scon_all_seq(seq,begin+m,end)) :\n  n == 1 ? seq(begin) : true;\n\nfunction _scon_is_map(scon) =\n    is_list(scon) &&\n    _scon_all_seq(function(i) _scon_is_mapping(scon[i]),0,len(scon));\n\n\nfunction _scon_str_seq(seq,begin,end) = // str(seq(begin),...,seq(end-1))\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? str(_scon_str_seq(seq,begin,begin+m),_scon_str_seq(seq,begin+m,end)) :\n  n == 1 ? str(seq(begin)) : \"\";\n\nfunction _scon_str_list(list,begin=0,_end=undef) =\n  let (seq = function (i) list[i],end = is_undef(_end) ? len(list) : _end)\n  _scon_str_seq(seq,begin,end);\n\n// sep can also be a lambda function of the index\nfunction _scon_str_join_seq(seq,begin,end,sep=\",\") =\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? str(_scon_str_join_seq(seq,begin,begin+m,sep),is_function(sep) ? sep(begin+m-1) : sep,_scon_str_join_seq(seq,begin+m,end,sep)) :\n  n == 1 ? str(seq(begin)) : \"\";\n\nfunction _scon_str_join_list(list,begin=0,_end=undef,sep=\",\") =\n  let (seq = function (i) list[i],end = is_undef(_end) ? len(list) : _end)\n  _scon_str_join_seq(seq,begin,end,sep);\n  \nfunction _scon_json_chr(c) =\n  (c == \"\\\"\") ? \"\\\\\\\"\" :\n  (c == \"\\\\\") ? \"\\\\\\\\\" :\n  (c == \"/\") ? \"\\\\/\" :\n  (c == \"\\x08\") ? \"\\\\b\" :\n  (c == \"\\x0c\") ? \"\\\\f\" :\n  (c == \"\\n\") ? \"\\\\n\" :\n  (c == \"\\r\") ? \"\\\\r\" :\n  (c == \"\\x09\") ? \"\\\\t\" :\n  c;  \n\nfunction _scon_json_str(scon) =\n  let (seq=function (i) _scon_json_chr(scon[i]))\n  str(\"\\\"\",_scon_str_seq(seq,0,len(scon)),\"\\\"\");\n\nfunction _scon_json_map(scon) =\n  let(seq=function(i) str(_scon_json_str(scon[i][0]),\":\",scon_to_json(scon[i][1])))\n  str(\"{\",_scon_str_join_seq(seq,0,len(scon)),\"}\");\n\nfunction _scon_json_list(scon) =\n  let(seq=function(i) scon_to_json(scon[i]))\n  str(\"[\",_scon_str_join_seq(seq,0,len(scon)),\"]\");\n",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "includes": [
+          {
+            "fromPath": "examples/ex1.scad",
+            "path": "scon.scad",
+            "sourceOffset": 0,
+            "line": 1,
+            "column": 1,
+            "depth": 1
+          }
+        ],
+        "originalBytes": 5837,
+        "expandedBytes": 5817,
+        "expandedTokens": 1151,
+        "expandedSha256": "29c9796d6f1d9d2a60f70fbe8a874e71349579d6eb05dd53c276ee27cc054f95"
+      },
+      "quality": {
+        "fileSha256": "20b6b6cd8233a18062a7dc4cbfdf2c5742b791039ec04c06f1b18e04c9497d9a",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 5000,
+        "boundsMm": {
+          "min": [
+            -9,
+            -8,
+            -7
+          ],
+          "max": [
+            11,
+            12,
+            13
+          ]
+        },
+        "signedVolumeMm3": 4179.080338350149
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-scon-ex2",
+      "title": "SCON nested shape configuration",
+      "author": "Warren MacEvoy, 2024",
+      "version": "c954e07bf0faf571d8eccc259d47e61938666cef",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/wmacevoy/openscad-scon",
+        "commit": "c954e07bf0faf571d8eccc259d47e61938666cef",
+        "sourceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/ex2.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "wmacevoy--openscad-scon",
+        "upstreamPath": "examples/ex2.scad",
+        "archivedPath": "corpus/repos/wmacevoy--openscad-scon/examples/ex2.scad",
+        "sha256": "d5e1cc34d67fda3524fdd88c26bbdecf338d3dad8d012d1c127570f7571114b0"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Warren MacEvoy, 2024. Source: https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/ex2.scad. MIT License Copyright (c) 2024 Warren MacEvoy Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE",
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact five-root include closure and default-model screening 2026-11-14",
+        "localEvidence": [
+          {
+            "path": "evidence/scon-MIT-LICENSE.txt",
+            "sha256": "306253c7d0f088f7d06a580450aedca0ecc91e88d2d97491eafdd68117497a58",
+            "bytes": 1071,
+            "url": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE"
+          }
+        ]
+      },
+      "original": {
+        "path": "sources/scon/examples/ex2.scad",
+        "sha256": "d5e1cc34d67fda3524fdd88c26bbdecf338d3dad8d012d1c127570f7571114b0",
+        "bytes": 784,
+        "url": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/ex2.scad",
+        "format": "openscad"
+      },
+      "sourceBundle": {
+        "format": "brickwright-openscad-bundle",
+        "version": 1,
+        "rootPath": "examples/ex2.scad",
+        "dependencies": [
+          {
+            "path": "scon.scad",
+            "file": {
+              "path": "sources/scon/scon.scad",
+              "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+              "bytes": 5595,
+              "format": "openscad"
+            },
+            "author": "Warren MacEvoy, 2024",
+            "sourceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/scon.scad",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/wmacevoy/openscad-scon",
+              "commit": "c954e07bf0faf571d8eccc259d47e61938666cef"
+            },
+            "licence": {
+              "spdx": "MIT",
+              "scope": "asset",
+              "attribution": "Warren MacEvoy, 2024. Source: https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/scon.scad. MIT License Copyright (c) 2024 Warren MacEvoy Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+              "evidenceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE",
+              "capturedOn": "2026-11-13",
+              "review": "accepted",
+              "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact five-root include closure and default-model screening 2026-11-14"
+            }
+          }
+        ]
+      },
+      "derivatives": [
+        {
+          "path": "meshes/scon/ex2.stl",
+          "sha256": "cb972f26a73bc6539cae5a9a302cf8fc1d98436ae05354c0832f97373e99730d",
+          "bytes": 26284,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Exact root and dependency bytes retained independently. Includes are expanded only in memory by the bounded virtual-file importer; no flattened upstream source is invented. The authored default root and its shape configuration are retained without parameter, frame, fragment or placement overrides, repair or simplification. Qualification covers this default root only, not every SCON helper or alternate configuration, manufacturing or physics. Archived assertion-message text does not indicate an assertion failure. Import warnings captured at qualification: Source colours and transparency are not retained; solid geometry is preserved.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The sample has no explicit unit declaration. Curator assumes millimetres and Z up; authored coordinates are preserved without placement changes.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "bundleProvenance": {
+        "format": "brickwright-openscad-source-bundle",
+        "version": 1,
+        "rootPath": "examples/ex2.scad",
+        "files": [
+          {
+            "path": "examples/ex2.scad",
+            "originalPath": "examples/ex2.scad",
+            "source": "include <../scon.scad>\n\nsphere_scon = [\n  [\"radius\",1],\n  [\"center\",[1,2,3]],\n  [\"color\",[1,1,0]],\n  [\"fn\",32]\n];\n\ncube_scon = [\n  [\"size\",1],\n  [\"center\",[-1,-2,-3]],\n  [\"color\",[0,0,1]],\n];\n\ncfg_scon = [\n  [\"sphere\", sphere_scon],\n  [\"cube\", cube_scon]\n];\n\n// makes a convenient accessor function\ncfg = scon_make(cfg_scon);\n\nsphere_radius=cfg([\"sphere\",\"radius\"],1);\nsphere_center=cfg([\"sphere\",\"center\"],[0,0,0]);\nsphere_color=cfg([\"sphere\",\"color\"],[1,1,0]);\nsphere_fn=cfg([\"sphere\",\"fn\"],32);\ncolor(sphere_color) translate(sphere_center) sphere(r=sphere_radius,$fn=sphere_fn);\n\ncube_size=cfg([\"cube\",\"size\"],[1,1,1]);\ncube_center=cfg([\"cube\",\"center\"],[0,0,0]);\ncube_color=cfg([\"cube\",\"color\"],[1,1,0]);\ncolor(cube_color) translate(cube_center) cube(size=cube_size,center=true);\n",
+            "sha256": "d5e1cc34d67fda3524fdd88c26bbdecf338d3dad8d012d1c127570f7571114b0",
+            "bytes": 784
+          },
+          {
+            "path": "scon.scad",
+            "originalPath": "scon.scad",
+            "source": "function scon_value(scon,path,missing = function(path) undef,dist = 0) =\n  is_undef(path) ? missing :\n  (len(path) <= dist || is_undef(scon)) ?\n    (is_undef(scon) ? missing(path) : scon) :\n    let (\n      key = path[dist],\n      next = is_undef(key) ?\n        scon :\n\tis_string(key) ?\n          _scon_map(scon, key, path) :\n          _scon_index(scon, key, path)\n    ) scon_value(next, path, missing, dist + 1);\n\n// Make a property-extractor function from an SCON value.\n// Basic usage:\n//\n//   cfg_scon = [[\"x\",1],[\"y\",true]];\n//   cfg = scon_make([[\"x\",1],[\"y\",true]]);\n//   x=cfg([\"x\"]);\n//   y=cfg([\"y\"]);\n//   z=cfg([\"z\"], 3); // z = 3 because it is not in cfg_scon.\n//\n// Advanced Meta-programming note:\n//   - cfg([])   ⇒ returns the full SCON data structure.\n//   - cfg(undef)⇒ returns the configured missing-fallback function.\n// This allows for introspection of the data used to make cfg function.\n//\nfunction scon_make(scon,base=undef)=\n  is_undef(base) ?\n    function(path,missing=undef)\n      scon_value(scon,path,function (missing_path) missing)\n  :\n    function(path,missing=undef)\n      scon_value(scon,path,function (missing_path) base(missing_path,missing));\n\n//\n// Convert a scon value to a json string\n//\n// Ex: scon_to_json(true) == \"true\"\n//     scon_to_json(17) == \"17\"\n//     scon_to_json(\"length\") == \"\\\"length\\\"\"\n//     scon_to_json([[\"x\",1],[\"y\",2]]) == \"{\\\"x\\\":1,\\\"y\\\":2}\"\n//     scon_to_json([2,3,5,8]) == \"[2,3,5,8]\"\n//\n//  List/object ambiguity! Since OpenSCAD has no native map, there must be an\n//  ambiguity in the conversion to the distinct [item[0],item[1],...] list\n//  and the {\"name0\":value0,\"name1\":value1,..} object notation in JSON.\n//\n//  The rule Scon uses is:\n//\n//    If every element of a Vector is a [string,value] pair, then it is converted\n//    to an object.  Otherwise it is a list.\n//\n//    So [], [[\"x\",1],[\"y\",2]], are maps and become \"{}\" and \"{\\\"x\\\":1,\\\"y\\\":2}\"\n//    any other Vector is converted to a list.\n//\nfunction scon_to_json(scon) =\n  is_undef(scon) ? \"null\" :\n  is_bool(scon) ? str(scon) :\n  is_num(scon) ? str(scon) :\n  is_string(scon) ? _scon_json_str(scon) :\n  _scon_is_map(scon) ? _scon_json_map(scon) :\n  is_list(scon) ? _scon_json_list(scon) :\n  _scon_json_str(str(\"??? \",scon,\" ???\"));\n\n//\n// Development builds of OpenSCAD with the import-function feature enabled\n// can import Json directly.  To convert this import to SCON, you can use this\n// function.\n//\n// The scon_from_json.js and scon_from_json.py scripts create a back-portable way to\n// do this by externally converting to\n//\n// Developer Build usage:\n//\n//   cfg = scon_make(scon_from_json(import(\"config.json\")));\n//\n// Portable usage:\n//\n//   # from terminal or build script\n//   python3 scon_from_json.py <config.json >config.scon\n//   # or\n//   node scon_from_json.js <config.json >config.scon\n//   # or (quickjs)\n//   qjs --std -m scon_from_json.js <config.json >config.scon\n//\n//   # in OpenSCAD\n//   cfg = scon_make(include \"config.scon\");\n//\nfunction scon_from_json(json) =\n  is_object(json)\n    ? [ for (k = json) [ k, scon_from_json(json[k]) ] ]\n  : is_list(json)\n    ? [ for (i = [0:len(json)-1]) scon_from_json(json[i]) ]\n  : json;\n\nfunction _scon_map(scon_map, key, path) =\n    let (result = search([key], scon_map,0)[0])\n      len(result) > 0 ? scon_map[result[len(result)-1]][1] : undef;\n\nfunction _scon_index(scon_list, index, path) =\n    (is_list(scon_list) && 0 <= index && index < len(scon_list)) ? scon_list[index] : undef;\n\nfunction _scon_is_mapping(scon) =\n    is_list(scon) && len(scon) == 2 && is_string(scon[0]);\n\nfunction _scon_all_seq(seq,begin,end) =\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? (_scon_all_seq(seq,begin,begin+m) && _scon_all_seq(seq,begin+m,end)) :\n  n == 1 ? seq(begin) : true;\n\nfunction _scon_is_map(scon) =\n    is_list(scon) &&\n    _scon_all_seq(function(i) _scon_is_mapping(scon[i]),0,len(scon));\n\n\nfunction _scon_str_seq(seq,begin,end) = // str(seq(begin),...,seq(end-1))\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? str(_scon_str_seq(seq,begin,begin+m),_scon_str_seq(seq,begin+m,end)) :\n  n == 1 ? str(seq(begin)) : \"\";\n\nfunction _scon_str_list(list,begin=0,_end=undef) =\n  let (seq = function (i) list[i],end = is_undef(_end) ? len(list) : _end)\n  _scon_str_seq(seq,begin,end);\n\n// sep can also be a lambda function of the index\nfunction _scon_str_join_seq(seq,begin,end,sep=\",\") =\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? str(_scon_str_join_seq(seq,begin,begin+m,sep),is_function(sep) ? sep(begin+m-1) : sep,_scon_str_join_seq(seq,begin+m,end,sep)) :\n  n == 1 ? str(seq(begin)) : \"\";\n\nfunction _scon_str_join_list(list,begin=0,_end=undef,sep=\",\") =\n  let (seq = function (i) list[i],end = is_undef(_end) ? len(list) : _end)\n  _scon_str_join_seq(seq,begin,end,sep);\n  \nfunction _scon_json_chr(c) =\n  (c == \"\\\"\") ? \"\\\\\\\"\" :\n  (c == \"\\\\\") ? \"\\\\\\\\\" :\n  (c == \"/\") ? \"\\\\/\" :\n  (c == \"\\x08\") ? \"\\\\b\" :\n  (c == \"\\x0c\") ? \"\\\\f\" :\n  (c == \"\\n\") ? \"\\\\n\" :\n  (c == \"\\r\") ? \"\\\\r\" :\n  (c == \"\\x09\") ? \"\\\\t\" :\n  c;  \n\nfunction _scon_json_str(scon) =\n  let (seq=function (i) _scon_json_chr(scon[i]))\n  str(\"\\\"\",_scon_str_seq(seq,0,len(scon)),\"\\\"\");\n\nfunction _scon_json_map(scon) =\n  let(seq=function(i) str(_scon_json_str(scon[i][0]),\":\",scon_to_json(scon[i][1])))\n  str(\"{\",_scon_str_join_seq(seq,0,len(scon)),\"}\");\n\nfunction _scon_json_list(scon) =\n  let(seq=function(i) scon_to_json(scon[i]))\n  str(\"[\",_scon_str_join_seq(seq,0,len(scon)),\"]\");\n",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "includes": [
+          {
+            "fromPath": "examples/ex2.scad",
+            "path": "scon.scad",
+            "sourceOffset": 0,
+            "line": 1,
+            "column": 1,
+            "depth": 1
+          }
+        ],
+        "originalBytes": 6379,
+        "expandedBytes": 6359,
+        "expandedTokens": 1335,
+        "expandedSha256": "bddf9361015df6cb672e39f54d367bf4812680515f2a5c5c1764237c076366dc"
+      },
+      "quality": {
+        "fileSha256": "cb972f26a73bc6539cae5a9a302cf8fc1d98436ae05354c0832f97373e99730d",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 524,
+        "boundsMm": {
+          "min": [
+            -1.5,
+            -2.5,
+            -3.5
+          ],
+          "max": [
+            2,
+            3,
+            4
+          ]
+        },
+        "signedVolumeMm3": 5.095220284804604
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-scon-ex3",
+      "title": "SCON inherited shape configuration",
+      "author": "Warren MacEvoy, 2024",
+      "version": "c954e07bf0faf571d8eccc259d47e61938666cef",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/wmacevoy/openscad-scon",
+        "commit": "c954e07bf0faf571d8eccc259d47e61938666cef",
+        "sourceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/ex3.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "wmacevoy--openscad-scon",
+        "upstreamPath": "examples/ex3.scad",
+        "archivedPath": "corpus/repos/wmacevoy--openscad-scon/examples/ex3.scad",
+        "sha256": "7e2ea0f5ec9907a476b2db5030580f3cba30402d02428140c1517f3b950868c5"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Warren MacEvoy, 2024. Source: https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/ex3.scad. MIT License Copyright (c) 2024 Warren MacEvoy Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE",
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact five-root include closure and default-model screening 2026-11-14",
+        "localEvidence": [
+          {
+            "path": "evidence/scon-MIT-LICENSE.txt",
+            "sha256": "306253c7d0f088f7d06a580450aedca0ecc91e88d2d97491eafdd68117497a58",
+            "bytes": 1071,
+            "url": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE"
+          }
+        ]
+      },
+      "original": {
+        "path": "sources/scon/examples/ex3.scad",
+        "sha256": "7e2ea0f5ec9907a476b2db5030580f3cba30402d02428140c1517f3b950868c5",
+        "bytes": 883,
+        "url": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/ex3.scad",
+        "format": "openscad"
+      },
+      "sourceBundle": {
+        "format": "brickwright-openscad-bundle",
+        "version": 1,
+        "rootPath": "examples/ex3.scad",
+        "dependencies": [
+          {
+            "path": "scon.scad",
+            "file": {
+              "path": "sources/scon/scon.scad",
+              "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+              "bytes": 5595,
+              "format": "openscad"
+            },
+            "author": "Warren MacEvoy, 2024",
+            "sourceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/scon.scad",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/wmacevoy/openscad-scon",
+              "commit": "c954e07bf0faf571d8eccc259d47e61938666cef"
+            },
+            "licence": {
+              "spdx": "MIT",
+              "scope": "asset",
+              "attribution": "Warren MacEvoy, 2024. Source: https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/scon.scad. MIT License Copyright (c) 2024 Warren MacEvoy Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+              "evidenceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE",
+              "capturedOn": "2026-11-13",
+              "review": "accepted",
+              "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact five-root include closure and default-model screening 2026-11-14"
+            }
+          }
+        ]
+      },
+      "derivatives": [
+        {
+          "path": "meshes/scon/ex3.stl",
+          "sha256": "aee0dbfb248f5ab4c7da98ae8284b6f7d0b197695937dd36ebbff6d01b4d551f",
+          "bytes": 26284,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Exact root and dependency bytes retained independently. Includes are expanded only in memory by the bounded virtual-file importer; no flattened upstream source is invented. The authored default root and its shape configuration are retained without parameter, frame, fragment or placement overrides, repair or simplification. Qualification covers this default root only, not every SCON helper or alternate configuration, manufacturing or physics. Archived assertion-message text does not indicate an assertion failure. Import warnings captured at qualification: Source colours and transparency are not retained; solid geometry is preserved.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The sample has no explicit unit declaration. Curator assumes millimetres and Z up; authored coordinates are preserved without placement changes.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "bundleProvenance": {
+        "format": "brickwright-openscad-source-bundle",
+        "version": 1,
+        "rootPath": "examples/ex3.scad",
+        "files": [
+          {
+            "path": "examples/ex3.scad",
+            "originalPath": "examples/ex3.scad",
+            "source": "include <../scon.scad>\n\n// base configuration values for shapes\nshape = scon_make([\n  [\"center\",[0,0,0]],\n  [\"color\",[1,1,0]],\n  [\"fn\", 32]\n]);\n\nsphere1 = scon_make([\n  [\"radius\",1]\n], shape);\n\nsphere2 = scon_make([\n  [\"radius\",2],\n  [\"color\",[1,0,0,0.25]],\n], shape);\n\ncube1 = scon_make([\n  [\"size\",[1,1,1]],\n  [\"center\",[-1,-2,-3]],\n  [\"color\",[0,0,1]]\n], shape);\n\n// common steps for shapes\nmodule shape_draw(me) {\n  let (me_center=me([\"center\"]), me_color=me([\"color\"])) {\n    color(me_color) translate(me_center) children();\n  }\n}\n\nmodule sphere_draw(me) {\n  let(me_radius = me([\"radius\"]), me_fn = me([\"fn\"]))\n  {\n    shape_draw(me) { sphere(r=me_radius,$fn=me_fn); }\n  }\n}\n\nmodule cube_draw(me) {\n  let(me_size = me([\"size\"]), me_fn = me([\"fn\"])) {\n    shape_draw(me) { cube(size=me_size, center = true); }\n  }\n}\n\nsphere_draw(sphere1);\nsphere_draw(sphere2);\ncube_draw(cube1);\n",
+            "sha256": "7e2ea0f5ec9907a476b2db5030580f3cba30402d02428140c1517f3b950868c5",
+            "bytes": 883
+          },
+          {
+            "path": "scon.scad",
+            "originalPath": "scon.scad",
+            "source": "function scon_value(scon,path,missing = function(path) undef,dist = 0) =\n  is_undef(path) ? missing :\n  (len(path) <= dist || is_undef(scon)) ?\n    (is_undef(scon) ? missing(path) : scon) :\n    let (\n      key = path[dist],\n      next = is_undef(key) ?\n        scon :\n\tis_string(key) ?\n          _scon_map(scon, key, path) :\n          _scon_index(scon, key, path)\n    ) scon_value(next, path, missing, dist + 1);\n\n// Make a property-extractor function from an SCON value.\n// Basic usage:\n//\n//   cfg_scon = [[\"x\",1],[\"y\",true]];\n//   cfg = scon_make([[\"x\",1],[\"y\",true]]);\n//   x=cfg([\"x\"]);\n//   y=cfg([\"y\"]);\n//   z=cfg([\"z\"], 3); // z = 3 because it is not in cfg_scon.\n//\n// Advanced Meta-programming note:\n//   - cfg([])   ⇒ returns the full SCON data structure.\n//   - cfg(undef)⇒ returns the configured missing-fallback function.\n// This allows for introspection of the data used to make cfg function.\n//\nfunction scon_make(scon,base=undef)=\n  is_undef(base) ?\n    function(path,missing=undef)\n      scon_value(scon,path,function (missing_path) missing)\n  :\n    function(path,missing=undef)\n      scon_value(scon,path,function (missing_path) base(missing_path,missing));\n\n//\n// Convert a scon value to a json string\n//\n// Ex: scon_to_json(true) == \"true\"\n//     scon_to_json(17) == \"17\"\n//     scon_to_json(\"length\") == \"\\\"length\\\"\"\n//     scon_to_json([[\"x\",1],[\"y\",2]]) == \"{\\\"x\\\":1,\\\"y\\\":2}\"\n//     scon_to_json([2,3,5,8]) == \"[2,3,5,8]\"\n//\n//  List/object ambiguity! Since OpenSCAD has no native map, there must be an\n//  ambiguity in the conversion to the distinct [item[0],item[1],...] list\n//  and the {\"name0\":value0,\"name1\":value1,..} object notation in JSON.\n//\n//  The rule Scon uses is:\n//\n//    If every element of a Vector is a [string,value] pair, then it is converted\n//    to an object.  Otherwise it is a list.\n//\n//    So [], [[\"x\",1],[\"y\",2]], are maps and become \"{}\" and \"{\\\"x\\\":1,\\\"y\\\":2}\"\n//    any other Vector is converted to a list.\n//\nfunction scon_to_json(scon) =\n  is_undef(scon) ? \"null\" :\n  is_bool(scon) ? str(scon) :\n  is_num(scon) ? str(scon) :\n  is_string(scon) ? _scon_json_str(scon) :\n  _scon_is_map(scon) ? _scon_json_map(scon) :\n  is_list(scon) ? _scon_json_list(scon) :\n  _scon_json_str(str(\"??? \",scon,\" ???\"));\n\n//\n// Development builds of OpenSCAD with the import-function feature enabled\n// can import Json directly.  To convert this import to SCON, you can use this\n// function.\n//\n// The scon_from_json.js and scon_from_json.py scripts create a back-portable way to\n// do this by externally converting to\n//\n// Developer Build usage:\n//\n//   cfg = scon_make(scon_from_json(import(\"config.json\")));\n//\n// Portable usage:\n//\n//   # from terminal or build script\n//   python3 scon_from_json.py <config.json >config.scon\n//   # or\n//   node scon_from_json.js <config.json >config.scon\n//   # or (quickjs)\n//   qjs --std -m scon_from_json.js <config.json >config.scon\n//\n//   # in OpenSCAD\n//   cfg = scon_make(include \"config.scon\");\n//\nfunction scon_from_json(json) =\n  is_object(json)\n    ? [ for (k = json) [ k, scon_from_json(json[k]) ] ]\n  : is_list(json)\n    ? [ for (i = [0:len(json)-1]) scon_from_json(json[i]) ]\n  : json;\n\nfunction _scon_map(scon_map, key, path) =\n    let (result = search([key], scon_map,0)[0])\n      len(result) > 0 ? scon_map[result[len(result)-1]][1] : undef;\n\nfunction _scon_index(scon_list, index, path) =\n    (is_list(scon_list) && 0 <= index && index < len(scon_list)) ? scon_list[index] : undef;\n\nfunction _scon_is_mapping(scon) =\n    is_list(scon) && len(scon) == 2 && is_string(scon[0]);\n\nfunction _scon_all_seq(seq,begin,end) =\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? (_scon_all_seq(seq,begin,begin+m) && _scon_all_seq(seq,begin+m,end)) :\n  n == 1 ? seq(begin) : true;\n\nfunction _scon_is_map(scon) =\n    is_list(scon) &&\n    _scon_all_seq(function(i) _scon_is_mapping(scon[i]),0,len(scon));\n\n\nfunction _scon_str_seq(seq,begin,end) = // str(seq(begin),...,seq(end-1))\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? str(_scon_str_seq(seq,begin,begin+m),_scon_str_seq(seq,begin+m,end)) :\n  n == 1 ? str(seq(begin)) : \"\";\n\nfunction _scon_str_list(list,begin=0,_end=undef) =\n  let (seq = function (i) list[i],end = is_undef(_end) ? len(list) : _end)\n  _scon_str_seq(seq,begin,end);\n\n// sep can also be a lambda function of the index\nfunction _scon_str_join_seq(seq,begin,end,sep=\",\") =\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? str(_scon_str_join_seq(seq,begin,begin+m,sep),is_function(sep) ? sep(begin+m-1) : sep,_scon_str_join_seq(seq,begin+m,end,sep)) :\n  n == 1 ? str(seq(begin)) : \"\";\n\nfunction _scon_str_join_list(list,begin=0,_end=undef,sep=\",\") =\n  let (seq = function (i) list[i],end = is_undef(_end) ? len(list) : _end)\n  _scon_str_join_seq(seq,begin,end,sep);\n  \nfunction _scon_json_chr(c) =\n  (c == \"\\\"\") ? \"\\\\\\\"\" :\n  (c == \"\\\\\") ? \"\\\\\\\\\" :\n  (c == \"/\") ? \"\\\\/\" :\n  (c == \"\\x08\") ? \"\\\\b\" :\n  (c == \"\\x0c\") ? \"\\\\f\" :\n  (c == \"\\n\") ? \"\\\\n\" :\n  (c == \"\\r\") ? \"\\\\r\" :\n  (c == \"\\x09\") ? \"\\\\t\" :\n  c;  \n\nfunction _scon_json_str(scon) =\n  let (seq=function (i) _scon_json_chr(scon[i]))\n  str(\"\\\"\",_scon_str_seq(seq,0,len(scon)),\"\\\"\");\n\nfunction _scon_json_map(scon) =\n  let(seq=function(i) str(_scon_json_str(scon[i][0]),\":\",scon_to_json(scon[i][1])))\n  str(\"{\",_scon_str_join_seq(seq,0,len(scon)),\"}\");\n\nfunction _scon_json_list(scon) =\n  let(seq=function(i) scon_to_json(scon[i]))\n  str(\"[\",_scon_str_join_seq(seq,0,len(scon)),\"]\");\n",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "includes": [
+          {
+            "fromPath": "examples/ex3.scad",
+            "path": "scon.scad",
+            "sourceOffset": 0,
+            "line": 1,
+            "column": 1,
+            "depth": 1
+          }
+        ],
+        "originalBytes": 6478,
+        "expandedBytes": 6458,
+        "expandedTokens": 1353,
+        "expandedSha256": "cc7228f406083a46cdb8108f3001b5c62817a29e4cb48d3f0ad2bb3e9e3bd842"
+      },
+      "quality": {
+        "fileSha256": "aee0dbfb248f5ab4c7da98ae8284b6f7d0b197695937dd36ebbff6d01b4d551f",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 524,
+        "boundsMm": {
+          "min": [
+            -2,
+            -2.5,
+            -3.5
+          ],
+          "max": [
+            2,
+            2,
+            2
+          ]
+        },
+        "signedVolumeMm3": 33.76175960744992
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-scon-ex4",
+      "title": "SCON configuration factories",
+      "author": "Warren MacEvoy, 2024",
+      "version": "c954e07bf0faf571d8eccc259d47e61938666cef",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/wmacevoy/openscad-scon",
+        "commit": "c954e07bf0faf571d8eccc259d47e61938666cef",
+        "sourceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/ex4.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "wmacevoy--openscad-scon",
+        "upstreamPath": "examples/ex4.scad",
+        "archivedPath": "corpus/repos/wmacevoy--openscad-scon/examples/ex4.scad",
+        "sha256": "09282461aab2db14ca3e6140155ca3b481b89d257584a8bd578a8c0f864ce271"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Warren MacEvoy, 2024. Source: https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/ex4.scad. MIT License Copyright (c) 2024 Warren MacEvoy Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE",
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact five-root include closure and default-model screening 2026-11-14",
+        "localEvidence": [
+          {
+            "path": "evidence/scon-MIT-LICENSE.txt",
+            "sha256": "306253c7d0f088f7d06a580450aedca0ecc91e88d2d97491eafdd68117497a58",
+            "bytes": 1071,
+            "url": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE"
+          }
+        ]
+      },
+      "original": {
+        "path": "sources/scon/examples/ex4.scad",
+        "sha256": "09282461aab2db14ca3e6140155ca3b481b89d257584a8bd578a8c0f864ce271",
+        "bytes": 1549,
+        "url": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/ex4.scad",
+        "format": "openscad"
+      },
+      "sourceBundle": {
+        "format": "brickwright-openscad-bundle",
+        "version": 1,
+        "rootPath": "examples/ex4.scad",
+        "dependencies": [
+          {
+            "path": "scon.scad",
+            "file": {
+              "path": "sources/scon/scon.scad",
+              "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+              "bytes": 5595,
+              "format": "openscad"
+            },
+            "author": "Warren MacEvoy, 2024",
+            "sourceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/scon.scad",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/wmacevoy/openscad-scon",
+              "commit": "c954e07bf0faf571d8eccc259d47e61938666cef"
+            },
+            "licence": {
+              "spdx": "MIT",
+              "scope": "asset",
+              "attribution": "Warren MacEvoy, 2024. Source: https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/scon.scad. MIT License Copyright (c) 2024 Warren MacEvoy Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+              "evidenceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE",
+              "capturedOn": "2026-11-13",
+              "review": "accepted",
+              "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact five-root include closure and default-model screening 2026-11-14"
+            }
+          }
+        ]
+      },
+      "derivatives": [
+        {
+          "path": "meshes/scon/ex4.stl",
+          "sha256": "7e40fe219349e54fdb8224a6300d1fba46d009b5138789ba34786f111e27fbc9",
+          "bytes": 254284,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Exact root and dependency bytes retained independently. Includes are expanded only in memory by the bounded virtual-file importer; no flattened upstream source is invented. The authored default root and its shape configuration are retained without parameter, frame, fragment or placement overrides, repair or simplification. Qualification covers this default root only, not every SCON helper or alternate configuration, manufacturing or physics. Archived assertion-message text does not indicate an assertion failure. Import warnings captured at qualification: Source colours and transparency are not retained; solid geometry is preserved.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The sample has no explicit unit declaration. Curator assumes millimetres and Z up; authored coordinates are preserved without placement changes.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "bundleProvenance": {
+        "format": "brickwright-openscad-source-bundle",
+        "version": 1,
+        "rootPath": "examples/ex4.scad",
+        "files": [
+          {
+            "path": "examples/ex4.scad",
+            "originalPath": "examples/ex4.scad",
+            "source": "include <../scon.scad>\n\n//\n//     shape\n//    /     \\\n//   cube    sphere\n//  /       /      \\\n// cube1   sphere1  sphere2\n//\n\n// base configuration values for shapes\nshape = scon_make([\n  [\"kind\",undef],\n  [\"center\",[0,0,0]],\n  [\"color\",[1,1,0]],\n  [\"fn\", 100],\n]);\n\nshape_make = function(scon) scon_make(scon,shape);\n\nmodule shape_draw(me) {\n  let (me_center=me([\"center\"]), me_color=me([\"color\"])) {\n    color(me_color) translate(me_center) children();\n  }\n}\n\nsphere = scon_make([\n  [\"kind\",\"sphere\"],\n  [\"radius\",1],\n], shape);\n\nsphere_make = function(scon) scon_make(scon,sphere);\n\nmodule sphere_draw(me) {\n  let(me_radius = me([\"radius\"]), me_fn = me([\"fn\"]))\n  {\n     shape_draw(me) sphere(r=me_radius,$fn=me_fn);\n  }\n}\n\ncube = scon_make([\n  [\"kind\",\"cube\"],\n  [\"size\",[1,1,1]],\n], shape);\n\ncube_make = function(scon) scon_make(scon,cube);\n\nmodule cube_draw(me) {\n  let(me_size = me([\"size\"]), me_fn = me([\"fn\"])) {\n    shape_draw(me) { cube(size=me_size, center = true); }\n  }\n}\n\nmodule draw(me) {\n  let(me_kind = me([\"kind\"])) {\n    if (me_kind == \"sphere\") {\n      sphere_draw(me);\n    } else if (me_kind == \"cube\") {\n      cube_draw(me);\n    } else if (me_kind == \"shapes\") {\n      shapes_draw(me);\n    } else {\n      assert(false,str(\"unknown kind: \",me_kind));\n    }\n  }\n}\n\nsphere1 = sphere_make([\n  [\"fn\",12],\n  [\"center\",[10,0,0]],\n]);\n\nsphere2 = sphere_make([\n  [\"radius\",2],\n  [\"color\",[1,0,0,0.25]],\n]);\n\ncube1 = cube_make([\n  [\"center\",[4,0,0]],\n  [\"color\",[0,0,1]],\n]);\n\nfor (shape = [sphere1,sphere2,cube1]) {\n  draw(shape);\n}\n\n",
+            "sha256": "09282461aab2db14ca3e6140155ca3b481b89d257584a8bd578a8c0f864ce271",
+            "bytes": 1549
+          },
+          {
+            "path": "scon.scad",
+            "originalPath": "scon.scad",
+            "source": "function scon_value(scon,path,missing = function(path) undef,dist = 0) =\n  is_undef(path) ? missing :\n  (len(path) <= dist || is_undef(scon)) ?\n    (is_undef(scon) ? missing(path) : scon) :\n    let (\n      key = path[dist],\n      next = is_undef(key) ?\n        scon :\n\tis_string(key) ?\n          _scon_map(scon, key, path) :\n          _scon_index(scon, key, path)\n    ) scon_value(next, path, missing, dist + 1);\n\n// Make a property-extractor function from an SCON value.\n// Basic usage:\n//\n//   cfg_scon = [[\"x\",1],[\"y\",true]];\n//   cfg = scon_make([[\"x\",1],[\"y\",true]]);\n//   x=cfg([\"x\"]);\n//   y=cfg([\"y\"]);\n//   z=cfg([\"z\"], 3); // z = 3 because it is not in cfg_scon.\n//\n// Advanced Meta-programming note:\n//   - cfg([])   ⇒ returns the full SCON data structure.\n//   - cfg(undef)⇒ returns the configured missing-fallback function.\n// This allows for introspection of the data used to make cfg function.\n//\nfunction scon_make(scon,base=undef)=\n  is_undef(base) ?\n    function(path,missing=undef)\n      scon_value(scon,path,function (missing_path) missing)\n  :\n    function(path,missing=undef)\n      scon_value(scon,path,function (missing_path) base(missing_path,missing));\n\n//\n// Convert a scon value to a json string\n//\n// Ex: scon_to_json(true) == \"true\"\n//     scon_to_json(17) == \"17\"\n//     scon_to_json(\"length\") == \"\\\"length\\\"\"\n//     scon_to_json([[\"x\",1],[\"y\",2]]) == \"{\\\"x\\\":1,\\\"y\\\":2}\"\n//     scon_to_json([2,3,5,8]) == \"[2,3,5,8]\"\n//\n//  List/object ambiguity! Since OpenSCAD has no native map, there must be an\n//  ambiguity in the conversion to the distinct [item[0],item[1],...] list\n//  and the {\"name0\":value0,\"name1\":value1,..} object notation in JSON.\n//\n//  The rule Scon uses is:\n//\n//    If every element of a Vector is a [string,value] pair, then it is converted\n//    to an object.  Otherwise it is a list.\n//\n//    So [], [[\"x\",1],[\"y\",2]], are maps and become \"{}\" and \"{\\\"x\\\":1,\\\"y\\\":2}\"\n//    any other Vector is converted to a list.\n//\nfunction scon_to_json(scon) =\n  is_undef(scon) ? \"null\" :\n  is_bool(scon) ? str(scon) :\n  is_num(scon) ? str(scon) :\n  is_string(scon) ? _scon_json_str(scon) :\n  _scon_is_map(scon) ? _scon_json_map(scon) :\n  is_list(scon) ? _scon_json_list(scon) :\n  _scon_json_str(str(\"??? \",scon,\" ???\"));\n\n//\n// Development builds of OpenSCAD with the import-function feature enabled\n// can import Json directly.  To convert this import to SCON, you can use this\n// function.\n//\n// The scon_from_json.js and scon_from_json.py scripts create a back-portable way to\n// do this by externally converting to\n//\n// Developer Build usage:\n//\n//   cfg = scon_make(scon_from_json(import(\"config.json\")));\n//\n// Portable usage:\n//\n//   # from terminal or build script\n//   python3 scon_from_json.py <config.json >config.scon\n//   # or\n//   node scon_from_json.js <config.json >config.scon\n//   # or (quickjs)\n//   qjs --std -m scon_from_json.js <config.json >config.scon\n//\n//   # in OpenSCAD\n//   cfg = scon_make(include \"config.scon\");\n//\nfunction scon_from_json(json) =\n  is_object(json)\n    ? [ for (k = json) [ k, scon_from_json(json[k]) ] ]\n  : is_list(json)\n    ? [ for (i = [0:len(json)-1]) scon_from_json(json[i]) ]\n  : json;\n\nfunction _scon_map(scon_map, key, path) =\n    let (result = search([key], scon_map,0)[0])\n      len(result) > 0 ? scon_map[result[len(result)-1]][1] : undef;\n\nfunction _scon_index(scon_list, index, path) =\n    (is_list(scon_list) && 0 <= index && index < len(scon_list)) ? scon_list[index] : undef;\n\nfunction _scon_is_mapping(scon) =\n    is_list(scon) && len(scon) == 2 && is_string(scon[0]);\n\nfunction _scon_all_seq(seq,begin,end) =\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? (_scon_all_seq(seq,begin,begin+m) && _scon_all_seq(seq,begin+m,end)) :\n  n == 1 ? seq(begin) : true;\n\nfunction _scon_is_map(scon) =\n    is_list(scon) &&\n    _scon_all_seq(function(i) _scon_is_mapping(scon[i]),0,len(scon));\n\n\nfunction _scon_str_seq(seq,begin,end) = // str(seq(begin),...,seq(end-1))\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? str(_scon_str_seq(seq,begin,begin+m),_scon_str_seq(seq,begin+m,end)) :\n  n == 1 ? str(seq(begin)) : \"\";\n\nfunction _scon_str_list(list,begin=0,_end=undef) =\n  let (seq = function (i) list[i],end = is_undef(_end) ? len(list) : _end)\n  _scon_str_seq(seq,begin,end);\n\n// sep can also be a lambda function of the index\nfunction _scon_str_join_seq(seq,begin,end,sep=\",\") =\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? str(_scon_str_join_seq(seq,begin,begin+m,sep),is_function(sep) ? sep(begin+m-1) : sep,_scon_str_join_seq(seq,begin+m,end,sep)) :\n  n == 1 ? str(seq(begin)) : \"\";\n\nfunction _scon_str_join_list(list,begin=0,_end=undef,sep=\",\") =\n  let (seq = function (i) list[i],end = is_undef(_end) ? len(list) : _end)\n  _scon_str_join_seq(seq,begin,end,sep);\n  \nfunction _scon_json_chr(c) =\n  (c == \"\\\"\") ? \"\\\\\\\"\" :\n  (c == \"\\\\\") ? \"\\\\\\\\\" :\n  (c == \"/\") ? \"\\\\/\" :\n  (c == \"\\x08\") ? \"\\\\b\" :\n  (c == \"\\x0c\") ? \"\\\\f\" :\n  (c == \"\\n\") ? \"\\\\n\" :\n  (c == \"\\r\") ? \"\\\\r\" :\n  (c == \"\\x09\") ? \"\\\\t\" :\n  c;  \n\nfunction _scon_json_str(scon) =\n  let (seq=function (i) _scon_json_chr(scon[i]))\n  str(\"\\\"\",_scon_str_seq(seq,0,len(scon)),\"\\\"\");\n\nfunction _scon_json_map(scon) =\n  let(seq=function(i) str(_scon_json_str(scon[i][0]),\":\",scon_to_json(scon[i][1])))\n  str(\"{\",_scon_str_join_seq(seq,0,len(scon)),\"}\");\n\nfunction _scon_json_list(scon) =\n  let(seq=function(i) scon_to_json(scon[i]))\n  str(\"[\",_scon_str_join_seq(seq,0,len(scon)),\"]\");\n",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "includes": [
+          {
+            "fromPath": "examples/ex4.scad",
+            "path": "scon.scad",
+            "sourceOffset": 0,
+            "line": 1,
+            "column": 1,
+            "depth": 1
+          }
+        ],
+        "originalBytes": 7144,
+        "expandedBytes": 7124,
+        "expandedTokens": 1520,
+        "expandedSha256": "4c390764e9b49daeb894fb94e66c146452f54cf77eea7d65154a1c0de29d6c7b"
+      },
+      "quality": {
+        "fileSha256": "7e40fe219349e54fdb8224a6300d1fba46d009b5138789ba34786f111e27fbc9",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 5084,
+        "boundsMm": {
+          "min": [
+            -2,
+            -2,
+            -2
+          ],
+          "max": [
+            11,
+            2,
+            2
+          ]
+        },
+        "signedVolumeMm3": 38.00999220887641
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-scon-tldr",
+      "title": "SCON nested defaults",
+      "author": "Warren MacEvoy, 2024",
+      "version": "c954e07bf0faf571d8eccc259d47e61938666cef",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/wmacevoy/openscad-scon",
+        "commit": "c954e07bf0faf571d8eccc259d47e61938666cef",
+        "sourceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/tldr.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "wmacevoy--openscad-scon",
+        "upstreamPath": "examples/tldr.scad",
+        "archivedPath": "corpus/repos/wmacevoy--openscad-scon/examples/tldr.scad",
+        "sha256": "9ee049e3b62af2232bfb2f9eefa9a7f19edb05ab42506271bdb64d58f5a44f9a"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Warren MacEvoy, 2024. Source: https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/tldr.scad. MIT License Copyright (c) 2024 Warren MacEvoy Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE",
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact five-root include closure and default-model screening 2026-11-14",
+        "localEvidence": [
+          {
+            "path": "evidence/scon-MIT-LICENSE.txt",
+            "sha256": "306253c7d0f088f7d06a580450aedca0ecc91e88d2d97491eafdd68117497a58",
+            "bytes": 1071,
+            "url": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE"
+          }
+        ]
+      },
+      "original": {
+        "path": "sources/scon/examples/tldr.scad",
+        "sha256": "9ee049e3b62af2232bfb2f9eefa9a7f19edb05ab42506271bdb64d58f5a44f9a",
+        "bytes": 375,
+        "url": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/examples/tldr.scad",
+        "format": "openscad"
+      },
+      "sourceBundle": {
+        "format": "brickwright-openscad-bundle",
+        "version": 1,
+        "rootPath": "examples/tldr.scad",
+        "dependencies": [
+          {
+            "path": "scon.scad",
+            "file": {
+              "path": "sources/scon/scon.scad",
+              "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+              "bytes": 5595,
+              "format": "openscad"
+            },
+            "author": "Warren MacEvoy, 2024",
+            "sourceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/scon.scad",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/wmacevoy/openscad-scon",
+              "commit": "c954e07bf0faf571d8eccc259d47e61938666cef"
+            },
+            "licence": {
+              "spdx": "MIT",
+              "scope": "asset",
+              "attribution": "Warren MacEvoy, 2024. Source: https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/scon.scad. MIT License Copyright (c) 2024 Warren MacEvoy Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+              "evidenceUrl": "https://raw.githubusercontent.com/wmacevoy/openscad-scon/c954e07bf0faf571d8eccc259d47e61938666cef/LICENSE",
+              "capturedOn": "2026-11-13",
+              "review": "accepted",
+              "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact five-root include closure and default-model screening 2026-11-14"
+            }
+          }
+        ]
+      },
+      "derivatives": [
+        {
+          "path": "meshes/scon/tldr.stl",
+          "sha256": "de15cc31c7c09ac618379ec7524c9262a87e2148c15e052091e8dcbab573e534",
+          "bytes": 250084,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Exact root and dependency bytes retained independently. Includes are expanded only in memory by the bounded virtual-file importer; no flattened upstream source is invented. The authored default root and its shape configuration are retained without parameter, frame, fragment or placement overrides, repair or simplification. Qualification covers this default root only, not every SCON helper or alternate configuration, manufacturing or physics. Archived assertion-message text does not indicate an assertion failure. Import warnings captured at qualification: None.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The sample has no explicit unit declaration. Curator assumes millimetres and Z up; authored coordinates are preserved without placement changes.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "bundleProvenance": {
+        "format": "brickwright-openscad-source-bundle",
+        "version": 1,
+        "rootPath": "examples/tldr.scad",
+        "files": [
+          {
+            "path": "examples/tldr.scad",
+            "originalPath": "examples/tldr.scad",
+            "source": "include <../scon.scad>\n\ncfg_scon = [\n  [\"fn\",100],\n  [\"sphere\",[\n    [\"radius\",1],\n    [\"center\",[1,2,3]],\n  ]],\n];\n\ncfg=scon_make(cfg_scon);\n\nfn = cfg([\"fn\"]);\n\nsphere_center = cfg([\"sphere\",\"center\"]);\nsphere_radius = cfg([\"sphere\",\"radius\"]);\nsphere_fn = cfg([\"sphere\",\"fn\"],fn); // missing value replacement\n\ntranslate(sphere_center) sphere(sphere_radius,$fn=sphere_fn);\n",
+            "sha256": "9ee049e3b62af2232bfb2f9eefa9a7f19edb05ab42506271bdb64d58f5a44f9a",
+            "bytes": 375
+          },
+          {
+            "path": "scon.scad",
+            "originalPath": "scon.scad",
+            "source": "function scon_value(scon,path,missing = function(path) undef,dist = 0) =\n  is_undef(path) ? missing :\n  (len(path) <= dist || is_undef(scon)) ?\n    (is_undef(scon) ? missing(path) : scon) :\n    let (\n      key = path[dist],\n      next = is_undef(key) ?\n        scon :\n\tis_string(key) ?\n          _scon_map(scon, key, path) :\n          _scon_index(scon, key, path)\n    ) scon_value(next, path, missing, dist + 1);\n\n// Make a property-extractor function from an SCON value.\n// Basic usage:\n//\n//   cfg_scon = [[\"x\",1],[\"y\",true]];\n//   cfg = scon_make([[\"x\",1],[\"y\",true]]);\n//   x=cfg([\"x\"]);\n//   y=cfg([\"y\"]);\n//   z=cfg([\"z\"], 3); // z = 3 because it is not in cfg_scon.\n//\n// Advanced Meta-programming note:\n//   - cfg([])   ⇒ returns the full SCON data structure.\n//   - cfg(undef)⇒ returns the configured missing-fallback function.\n// This allows for introspection of the data used to make cfg function.\n//\nfunction scon_make(scon,base=undef)=\n  is_undef(base) ?\n    function(path,missing=undef)\n      scon_value(scon,path,function (missing_path) missing)\n  :\n    function(path,missing=undef)\n      scon_value(scon,path,function (missing_path) base(missing_path,missing));\n\n//\n// Convert a scon value to a json string\n//\n// Ex: scon_to_json(true) == \"true\"\n//     scon_to_json(17) == \"17\"\n//     scon_to_json(\"length\") == \"\\\"length\\\"\"\n//     scon_to_json([[\"x\",1],[\"y\",2]]) == \"{\\\"x\\\":1,\\\"y\\\":2}\"\n//     scon_to_json([2,3,5,8]) == \"[2,3,5,8]\"\n//\n//  List/object ambiguity! Since OpenSCAD has no native map, there must be an\n//  ambiguity in the conversion to the distinct [item[0],item[1],...] list\n//  and the {\"name0\":value0,\"name1\":value1,..} object notation in JSON.\n//\n//  The rule Scon uses is:\n//\n//    If every element of a Vector is a [string,value] pair, then it is converted\n//    to an object.  Otherwise it is a list.\n//\n//    So [], [[\"x\",1],[\"y\",2]], are maps and become \"{}\" and \"{\\\"x\\\":1,\\\"y\\\":2}\"\n//    any other Vector is converted to a list.\n//\nfunction scon_to_json(scon) =\n  is_undef(scon) ? \"null\" :\n  is_bool(scon) ? str(scon) :\n  is_num(scon) ? str(scon) :\n  is_string(scon) ? _scon_json_str(scon) :\n  _scon_is_map(scon) ? _scon_json_map(scon) :\n  is_list(scon) ? _scon_json_list(scon) :\n  _scon_json_str(str(\"??? \",scon,\" ???\"));\n\n//\n// Development builds of OpenSCAD with the import-function feature enabled\n// can import Json directly.  To convert this import to SCON, you can use this\n// function.\n//\n// The scon_from_json.js and scon_from_json.py scripts create a back-portable way to\n// do this by externally converting to\n//\n// Developer Build usage:\n//\n//   cfg = scon_make(scon_from_json(import(\"config.json\")));\n//\n// Portable usage:\n//\n//   # from terminal or build script\n//   python3 scon_from_json.py <config.json >config.scon\n//   # or\n//   node scon_from_json.js <config.json >config.scon\n//   # or (quickjs)\n//   qjs --std -m scon_from_json.js <config.json >config.scon\n//\n//   # in OpenSCAD\n//   cfg = scon_make(include \"config.scon\");\n//\nfunction scon_from_json(json) =\n  is_object(json)\n    ? [ for (k = json) [ k, scon_from_json(json[k]) ] ]\n  : is_list(json)\n    ? [ for (i = [0:len(json)-1]) scon_from_json(json[i]) ]\n  : json;\n\nfunction _scon_map(scon_map, key, path) =\n    let (result = search([key], scon_map,0)[0])\n      len(result) > 0 ? scon_map[result[len(result)-1]][1] : undef;\n\nfunction _scon_index(scon_list, index, path) =\n    (is_list(scon_list) && 0 <= index && index < len(scon_list)) ? scon_list[index] : undef;\n\nfunction _scon_is_mapping(scon) =\n    is_list(scon) && len(scon) == 2 && is_string(scon[0]);\n\nfunction _scon_all_seq(seq,begin,end) =\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? (_scon_all_seq(seq,begin,begin+m) && _scon_all_seq(seq,begin+m,end)) :\n  n == 1 ? seq(begin) : true;\n\nfunction _scon_is_map(scon) =\n    is_list(scon) &&\n    _scon_all_seq(function(i) _scon_is_mapping(scon[i]),0,len(scon));\n\n\nfunction _scon_str_seq(seq,begin,end) = // str(seq(begin),...,seq(end-1))\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? str(_scon_str_seq(seq,begin,begin+m),_scon_str_seq(seq,begin+m,end)) :\n  n == 1 ? str(seq(begin)) : \"\";\n\nfunction _scon_str_list(list,begin=0,_end=undef) =\n  let (seq = function (i) list[i],end = is_undef(_end) ? len(list) : _end)\n  _scon_str_seq(seq,begin,end);\n\n// sep can also be a lambda function of the index\nfunction _scon_str_join_seq(seq,begin,end,sep=\",\") =\n  let (n = (begin < end) ? end - begin : 0,\n       m = ((n % 2) == 0) ? n/2 : (n-1) / 2)\n  n > 1 ? str(_scon_str_join_seq(seq,begin,begin+m,sep),is_function(sep) ? sep(begin+m-1) : sep,_scon_str_join_seq(seq,begin+m,end,sep)) :\n  n == 1 ? str(seq(begin)) : \"\";\n\nfunction _scon_str_join_list(list,begin=0,_end=undef,sep=\",\") =\n  let (seq = function (i) list[i],end = is_undef(_end) ? len(list) : _end)\n  _scon_str_join_seq(seq,begin,end,sep);\n  \nfunction _scon_json_chr(c) =\n  (c == \"\\\"\") ? \"\\\\\\\"\" :\n  (c == \"\\\\\") ? \"\\\\\\\\\" :\n  (c == \"/\") ? \"\\\\/\" :\n  (c == \"\\x08\") ? \"\\\\b\" :\n  (c == \"\\x0c\") ? \"\\\\f\" :\n  (c == \"\\n\") ? \"\\\\n\" :\n  (c == \"\\r\") ? \"\\\\r\" :\n  (c == \"\\x09\") ? \"\\\\t\" :\n  c;  \n\nfunction _scon_json_str(scon) =\n  let (seq=function (i) _scon_json_chr(scon[i]))\n  str(\"\\\"\",_scon_str_seq(seq,0,len(scon)),\"\\\"\");\n\nfunction _scon_json_map(scon) =\n  let(seq=function(i) str(_scon_json_str(scon[i][0]),\":\",scon_to_json(scon[i][1])))\n  str(\"{\",_scon_str_join_seq(seq,0,len(scon)),\"}\");\n\nfunction _scon_json_list(scon) =\n  let(seq=function(i) scon_to_json(scon[i]))\n  str(\"[\",_scon_str_join_seq(seq,0,len(scon)),\"]\");\n",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "includes": [
+          {
+            "fromPath": "examples/tldr.scad",
+            "path": "scon.scad",
+            "sourceOffset": 0,
+            "line": 1,
+            "column": 1,
+            "depth": 1
+          }
+        ],
+        "originalBytes": 5970,
+        "expandedBytes": 5950,
+        "expandedTokens": 1175,
+        "expandedSha256": "5eb0a23ee62b9896ad164435e6639beda243da5af575396fe09597ecd49839bd"
+      },
+      "quality": {
+        "fileSha256": "de15cc31c7c09ac618379ec7524c9262a87e2148c15e052091e8dcbab573e534",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 5000,
+        "boundsMm": {
+          "min": [
+            0,
+            1,
+            2
+          ],
+          "max": [
+            2,
+            3,
+            4
+          ]
+        },
+        "signedVolumeMm3": 4.1790802921235635
+      },
+      "diagnostics": []
+    }
+  ]
+}
