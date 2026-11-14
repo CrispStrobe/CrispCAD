@@ -132,6 +132,9 @@ return extrudeProfile(height,
 starts at Z=0; positive twist follows the right-hand convention.
 `revolve(profile[, angleDegrees, segmentsPerFullTurn])` revolves positive radial
 X coordinates around the profile Y axis and maps that axis to world Z.
+Complete 360-degree turns also accept wholly nonpositive radial profiles,
+reflected before revolution; crossing-axis and negative partial-turn profiles
+remain refused.
 Use `move2d`, `rotate2d`, `scale2d`, `union2d`, `subtract2d`, `intersect2d`,
 `hull2d` and `polygon2d(points[, indexPaths])` for profiles. Profile expressions
 are inline trees; named profile references and profile loops are future work.

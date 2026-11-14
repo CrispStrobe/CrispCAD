@@ -15,6 +15,9 @@ for(const input of [
  'linear_extrude(5) intersection(){square([20,10],true);translate([8,0])circle(7,$fn=32);}',
  'linear_extrude(height=10,twist=90,slices=128) translate([5,0]) square([2,1],true);',
  'rotate_extrude($fn=48) translate([5,0]) square([3,10]);',
+ 'rotate_extrude($fn=48) translate([-8,0]) square([3,10]);',
+ 'rotate_extrude($fn=48)translate([-8,0])difference(){square([3,10]);translate([1,4])square([1,2]);}',
+ 'rotate_extrude(angle=360,$fn=48)rotate([0,0,90])polygon([[0,0],[5,0],[5,3],[0,2]]);',
  'rotate_extrude(angle=180,$fn=48) translate([5,0]) square([3,10]);',
  'linear_extrude(3) polygon(points=[[0,0],[20,0],[20,20],[0,20],[5,5],[15,5],[15,15],[5,15]],paths=[[0,1,2,3],[4,5,6,7]]);'
 ])it('preserves profile operations through SCAD/native/JSCAD: '+input.slice(0,55),()=>{
@@ -26,7 +29,8 @@ it('retains profile dimensions, taper and twist parameters with the documented S
 });
 it('keeps profile budgets, units and invalid geometry explicit',()=>{
  for(const source of ['return extrudeProfile(5, polygon2d([[0,0],[1,1],[0,1],[1,0]]));','return extrudeProfile(5,circle2d(2,4096),90,256);','return extrudeProfile(5,circle2d(2),0,0);','return extrudeProfile(5,rectangle2d(10,10),0,2,-1);'])expect(()=>compileCode({version:1,language:'brickwright-cad-script',source,parameters:{}})).toThrow();
- expect(()=>evaluate(importOpenSCAD('rotate_extrude()translate([-5,0])square([1,2]);'))).toThrow('nonnegative');
+ expect(()=>evaluate(importOpenSCAD('rotate_extrude(angle=180)translate([-5,0])square([1,2]);'))).toThrow('nonnegative');
+ expect(()=>evaluate(importOpenSCAD('rotate_extrude()translate([-1,0])square([2,2]);'))).toThrow('nonnegative');
  expect(evaluate(importOpenSCAD('linear_extrude(2)union(){square([2,3]);circle(0);}')).volume).toBeCloseTo(12);
 });
 it('exposes coarse twist triangulation differences rather than claiming identical meshes',()=>{
@@ -36,4 +40,11 @@ it('exposes coarse twist triangulation differences rather than claiming identica
 it('keeps a zero-angle revolution empty when exporting a larger construction to JSCAD',()=>{
  const program={version:1 as const,language:'brickwright-cad-script' as const,parameters:{},source:'return union(box(2,3,4),revolve(move2d(5,0,rectangle2d(2,3)),0,48));'};
  expect(evaluate(program).volume).toBeCloseTo(24);expect(oracle(exportJSCAD(program)).volume).toBeCloseTo(24);
+});
+
+it('rejects unsupported JSCAD planar mirrors and ambiguous revolution exports',()=>{
+ for(const options of ['{normal:[0,1,0]}','{normal:[0,0,0]}','{normal:[1,0,0],origin:[1,0,0]}']){
+  expect(()=>importJSCAD(`const {primitives:{rectangle},transforms:{mirror},extrusions:{extrudeLinear}}=require('@jscad/modeling');const main=()=>extrudeLinear({height:1},mirror(${options},rectangle({size:[2,3]})));module.exports={main};`)).toThrow();
+ }
+ for(const source of ['rotate_extrude(angle=90)translate([-8,0])square([3,10]);','rotate_extrude()square([3,10],true);'])expect(()=>exportJSCAD(importOpenSCAD(source))).toThrow('cannot yet be exported');
 });

@@ -112,9 +112,11 @@ export const corpusEditorSelection = [
   ['Rod_01', '11cf0a57740fc1805fe86c6a424602b0799ae0f561f573e246a0bd49abef9eaa'],
   ['Animation_Gear_02', '88e34079b1cc328209d4b2ce38a1fe38a2bfd3f57853afabe04b401cccec535f', 'Animation_SCAD/Gear_02.scad'],
   ['Animation_Mechanism_01', '2072ec9e27a91885decf095635cf0f20458f2d6c64dfe32f98062a3e067e0a7c', 'Animation_SCAD/Mechanism_01.scad'],
+  ['Shaft_01', '41b9cf67da8fd47d263966280fce9af1dfcaa1e1b05e8a182d8e9cba1257aee7'],
+  ['Shaft_02_With_Keyway', '7d48549ed36d24d8b399e7ffcf4e18b55bf93d2cc8bef43a17bf9cc64aa923b7'],
 ];
 // Only this admission batch gains warning metadata; earlier qualification records stay immutable.
-const warningQualifiedNames = new Set(['Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ', 'Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01']);
+const warningQualifiedNames = new Set(['Shaft_01', 'Shaft_02_With_Keyway', 'Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ', 'Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01']);
 export async function generateCorpusEditorLibrary() {
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
   const repository = corpus.repositories.find(item => item.id === repositoryId);

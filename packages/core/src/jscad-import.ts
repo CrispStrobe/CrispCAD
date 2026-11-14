@@ -99,6 +99,10 @@ export function importJSCAD(source:string,overrides:Record<string,number|string|
     if(method==='translate'){const raw=list(args[0]);if(raw.length===3&&number(raw[2])===0)offset=vector(raw.slice(0,2),2);else offset=vector(raw,2);}
     else if(method==='translateX'||method==='translateY')offset[method==='translateX'?0:1]=number(args[0]);
     else if(method==='scale'){factor=vector(args[0],2);if(factor.some(n=>n<=0))return unsupported('profile scale must be positive');}
+    else if(method==='mirror'){
+     const opts=args[0];if(!plain(opts)||Object.keys(opts).some(k=>k!=='normal'))return unsupported('profile mirror options');
+     const normal=vector(opts.normal);if(!normal[0]||normal[1]!==0||normal[2]!==0)return unsupported('profile mirror normal');factor=[-1,1];
+    }
     else if(method==='rotateZ')angle=number(args[0]);
     else if(method==='rotate'){const v=vector(args[0]);if(v[0]!==0||v[1]!==0)return unsupported('profile rotation outside XY plane');angle=v[2];}
     else return unsupported(path);
