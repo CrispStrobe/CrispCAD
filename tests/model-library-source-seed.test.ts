@@ -10,7 +10,7 @@ beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('
 
 it('admits only the supported seed, retains exact original bytes and URL, and exports the full original MIT notice',async()=>{
   const {catalogue,localFiles}=createBundledModelLibrary();
-  expect(catalogue.assets).toHaveLength(39);
+  expect(catalogue.assets).toHaveLength(87);
   expect(catalogue.assets.some(asset=>['jscad-nuts-and-bolts','threads-scad-demo'].includes(asset.id))).toBe(false);
   const asset=catalogue.assets.find(asset=>asset.id==='jscad-involute-gear')!;
   expect(asset.original.url).toContain(`/${asset.sourceRevision!.commit}/`);
@@ -32,6 +32,28 @@ it('admits only the supported seed, retains exact original bytes and URL, and ex
   expect(sidecar.records[0].asset.original).toEqual(asset.original);
   const saved=session.serialize();expect(createCadSession(JSON.parse(saved)).serialize()).toBe(saved);
   session.undo();expect(session.serialize()).toBe(before);session.redo();expect(session.serialize()).toBe(saved);session.dispose();
+});
+
+it('bundles and inserts all forty-eight reviewed corpus sources with original identities and attribution',async()=>{
+  const manifest=JSON.parse(read('editor-corpus-manifest.json').toString());
+  const {catalogue,localFiles,previews,licenceTexts}=createBundledModelLibrary();
+  expect(manifest.assets).toHaveLength(48);
+  for(const raw of manifest.assets){
+    const asset=catalogue.assets.find(item=>item.id===raw.id)!;
+    expect(asset).toBeDefined();expect(previews.has(asset.original.sha256)).toBe(true);
+    const bytes=localFiles.get(asset.original.path!)!;
+    expect(bytes).toEqual(new Uint8Array(read(asset.original.path!)));
+    expect(licenceTexts.get(asset.id)).toBe(read('evidence/corpus-selection-MIT-LICENSE.txt').toString());
+    const session=createCadSession(),before=session.serialize();
+    await insertModelLibrarySource(session,catalogue,{assetId:asset.id,file:'original'},bytes,{evaluate:kernel.evaluate,modificationNotes:'Default source geometry; colour omitted by translator; coordinates preserved.'});
+    expect(kernel.evaluate(session.state.document).volume).toBeGreaterThan(0);
+    const record=session.state.document.provenance!.records[0];
+    expect(record.selectedFile).toEqual(asset.original);expect(record.asset.sourceRevision!.commit).toBe(raw.version);
+    const sidecar=await createModelAttributionSidecar(session.state.document,{filename:'selected.stl',format:'stl',bytes:new Uint8Array([1]),modificationNotes:'Test output identity only.'});
+    expect(sidecar.records[0].asset.licence.attribution).toContain(read('evidence/corpus-selection-MIT-LICENSE.txt').toString().replace(/\s+/g,' ').trim());
+    const saved=session.serialize();expect(createCadSession(JSON.parse(saved)).serialize()).toBe(saved);
+    session.undo();expect(session.serialize()).toBe(before);session.redo();expect(session.serialize()).toBe(saved);session.dispose();
+  }
 });
 
 it('refuses unsupported original seeds without evaluating or changing model, selection, history or redo',async()=>{

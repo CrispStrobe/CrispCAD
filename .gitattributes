@@ -1,2 +1,5 @@
 # Preserve pinned upstream archive bytes, including original line endings.
 library/corpus/repos/** -text -whitespace
+library/sources/corpus-selection/** -text -whitespace
+library/evidence/corpus-selection-MIT-LICENSE.txt -text
+library/meshes/corpus-selection/** -text
