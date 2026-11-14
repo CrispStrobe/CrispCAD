@@ -178,13 +178,16 @@
     },
     {
       "id": "engine.dependencies",
-      "state": "open",
+      "state": "partial",
       "area": "language",
-      "current": "External include/use, meshes, SVG/DXF and heightmaps are not resolved from source bundles.",
+      "current": "Explicit hash-checked in-memory SCAD include/use bundles now retain lexical scopes, original files and provenance. Implicit host/network resolution, external meshes, SVG/DXF imports and heightmaps remain unsupported.",
       "tests": [
-        "tests/code-interchange.test.ts"
+        "tests/openscad-bundle.test.ts",
+        "tests/openscad-use.test.ts",
+        "tests/model-library-source-bundle.test.ts",
+        "tests/model-library-a2d-insert.test.ts"
       ],
-      "nextOrEvidence": "Next: explicit bounded asset/source resolver, lexical library scopes and provenance; no implicit host IO or network execution."
+      "nextOrEvidence": "Verified paths, hashes, cycles and aggregate size/depth/token budgets; original dependency grants survive insertion/export/history. Next: bounded geometry/heightmap asset records and exact source-to-asset references; never implicit host IO."
     },
     {
       "id": "engine.resource-limits",

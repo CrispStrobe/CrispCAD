@@ -203,10 +203,10 @@ it('supports degree math and keeps expressions live through source interchange',
  expect(geometry('width=PI; PI=4; cube([width,1,1]);').volume).toBeCloseTo(4);
 });
 it('bounds module recursion and refuses child modules, bad arguments and unsupported scope semantics',()=>{
+ expect(geometry('module a(s=2){cube(s);} a(2,s=3);').volume).toBeCloseTo(27);
  for(const source of [
   'module a(){a();} a();',
   'module a(s){cube(s);} a();',
-  'module a(s=2){cube(s);} a(2,s=3);',
 
   'v=[1,2,3]; cube(v[5]);',
   'cube(sqrt(-1));',
@@ -228,10 +228,11 @@ it('inlines user scalar/vector functions symbolically, with hoisted definitions 
  expect(geometry('module part(){cylinder(2,1);} part($fn=6);').volume).toBeCloseTo(3*Math.sqrt(3));
 });
 it('bounds user-function recursion and diagnoses unsupported conditionals without executing them',()=>{
+ expect(geometry('function f(x)=x; cube(f(1,x=2));').volume).toBeCloseTo(8);
  for(const source of ['function f(x)=f(x+x); cube(f(1));','function f(x)=x; cube('+'f('.repeat(33)+'1'+')'.repeat(33)+');']){
   try{importOpenSCAD(source);throw Error('Expected resource failure');}catch(error:any){expect(error.code).toBe('resource-limit');}
  }
- for(const source of ['function f(x)=x; cube(f());','function f(x)=x; cube(f(1,x=2));','function f(x)=x; cube(f(y=1));'])expect(()=>importOpenSCAD(source),source).toThrow();
+ for(const source of ['function f(x)=x; cube(f());','function f(x)=x; cube(f(y=1));'])expect(()=>importOpenSCAD(source),source).toThrow();
 });
 
 it('retains local declarative dependencies, lexical shadowing and last assignments across module instances',()=>{

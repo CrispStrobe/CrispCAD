@@ -198,9 +198,9 @@ chains beyond 32 are refused, and resolution uses a 65,536 scalar-work guard in 
 shape evaluation budget. The importer uses aliases to avoid repeating large
 symbolic formulas. No source defaults or geometry limits are changed.
 
-Named shapes are also resolved in the consuming loop scope. Their declaration
-graph is checked for unknown names/cycles without evaluating inactive numeric
-domains or unbound loop variables. `assertValue(condition,value[,message])`
+Named shapes are also resolved in the consuming loop scope. Their active declaration
+graph is checked for unknown names/cycles; inactive conditional branches and
+loop-dependent references are checked when consumed. `assertValue(condition,value[,message])`
 checks lazily, including an optional literal or `formatSCAD` diagnostic message.
 Text in this expression form is diagnostic data; it cannot supply a numeric
 modeling argument or execute code.

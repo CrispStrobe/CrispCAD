@@ -505,3 +505,9 @@ in-memory dependency sets with lexical `use` and original provenance.
 The official 2021.01 executable accepts only text, size and font positionally.
 Other text options are named; extra positional arguments are diagnosed and
 ignored. Numeric formatting and each-scalar fixtures also have executable probes.
+
+Mixed positional/named call arguments retain source order. Unnamed arguments
+count positional slots independently of named ones, and the later assignment
+wins when both target the same parameter. Function memoization includes this
+order; a guard on an overwritten argument is still checked. Repeated explicit
+keyword names remain diagnosed rather than guessed.
