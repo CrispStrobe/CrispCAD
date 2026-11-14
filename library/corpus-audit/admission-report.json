@@ -1,0 +1,335 @@
+{
+  "schema_version": 1,
+  "config_sha256": "ff4e6f6b78d4d601ddee7a7adcccff0d270765d2fdb39a2e77fb57a6566c161d",
+  "render_status": "unqualified",
+  "totals": {
+    "source_files": 1406,
+    "source_bytes": 9092046,
+    "evidence_files": 34,
+    "evidence_bytes": 148785,
+    "sources_with_dependency_blockers": 984,
+    "source_libraries": 20,
+    "evidence_only_repositories": 1
+  },
+  "libraries": [
+    {
+      "id": "bosl",
+      "repository_url": "https://github.com/revarbat/BOSL",
+      "commit": "4ce427a8a38786e5f74b728c1e33d9fe7d4904d2",
+      "captured_at": "2026-11-13",
+      "source_files": 26,
+      "source_bytes": 494192,
+      "evidence_files": 2,
+      "evidence_bytes": 8083,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": [
+        {
+          "path": "involute_gears.scad",
+          "reason": "Explicit public-domain grant differs from root BSD; held pending scope resolution per parent instruction."
+        }
+      ]
+    },
+    {
+      "id": "bosl2",
+      "repository_url": "https://github.com/BelfrySCAD/BOSL2",
+      "commit": "1c8a85b3a87aea1a2d9b9040e38452eacde0a5b1",
+      "captured_at": "2026-11-13",
+      "source_files": 65,
+      "source_bytes": 5158688,
+      "evidence_files": 3,
+      "evidence_bytes": 12280,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": [
+        {
+          "path": "joiners.scad",
+          "reason": "Inline lines 881-883 credit snap pin from Emmett Lalishe/acwest under Creative Commons Attribution Share-Alike; excluded whole file."
+        },
+        {
+          "path": "isosurface.scad",
+          "reason": "Line 82 explicitly adapts dwilliamson gist lookup tables; no captured upstream licence grant."
+        }
+      ]
+    },
+    {
+      "id": "ub-scad",
+      "repository_url": "https://github.com/UBaer21/UB.scad",
+      "commit": "5419befe8b3927d2300e974976ffcb831abaf644",
+      "captured_at": "2026-11-13",
+      "source_files": 14,
+      "source_bytes": 96438,
+      "evidence_files": 4,
+      "evidence_bytes": 18985,
+      "sources_with_dependency_blockers": 14,
+      "skipped_files": [
+        {
+          "path": "libraries/ub.scad",
+          "reason": "Mixed MIT FunctionalOpenSCAD portion; additional LineORG at line 3462 explicitly sourced from Wikibooks Tips and Tricks without captured licence/attribution evidence. Excluded pending provenance review."
+        },
+        {
+          "path": "UBscadDoku/ub22.212Doxy.scad",
+          "reason": "Mixed MIT FunctionalOpenSCAD portion; additional LineORG at line 2792 explicitly sourced from Wikibooks Tips and Tricks without captured licence/attribution evidence. Excluded pending provenance review."
+        }
+      ]
+    },
+    {
+      "id": "stoneagelib",
+      "repository_url": "https://github.com/Stone-Age-Sculptor/StoneAgeLib",
+      "commit": "c3eda9b85ee1d98d1249add707ca6837cab2a02f",
+      "captured_at": "2026-11-13",
+      "source_files": 44,
+      "source_bytes": 231969,
+      "evidence_files": 2,
+      "evidence_bytes": 9139,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": []
+    },
+    {
+      "id": "funcutils",
+      "repository_url": "https://github.com/thehans/funcutils",
+      "commit": "fac6ac1269d3578b839ece088c03f404a76fb43b",
+      "captured_at": "2026-11-13",
+      "source_files": 16,
+      "source_bytes": 43084,
+      "evidence_files": 2,
+      "evidence_bytes": 28229,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": []
+    },
+    {
+      "id": "threads-scad",
+      "repository_url": "https://github.com/rcolyer/threads-scad",
+      "commit": "4ae9aeb3b136f9858200f77a304b909a000ce3b4",
+      "captured_at": "2026-11-13",
+      "source_files": 1,
+      "source_bytes": 19631,
+      "evidence_files": 2,
+      "evidence_bytes": 13618,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": []
+    },
+    {
+      "id": "smooth-prim",
+      "repository_url": "https://github.com/rcolyer/smooth-prim",
+      "commit": "0d0038f984465f3eb0f6026a4d5de2f79d2dcea8",
+      "captured_at": "2026-11-13",
+      "source_files": 1,
+      "source_bytes": 8818,
+      "evidence_files": 2,
+      "evidence_bytes": 7500,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": []
+    },
+    {
+      "id": "plot-function",
+      "repository_url": "https://github.com/rcolyer/plot-function",
+      "commit": "5f78d0399632ded49a03edb7b695c443056ebbbd",
+      "captured_at": "2026-11-13",
+      "source_files": 2,
+      "source_bytes": 11424,
+      "evidence_files": 2,
+      "evidence_bytes": 12668,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": []
+    },
+    {
+      "id": "closepoints",
+      "repository_url": "https://github.com/rcolyer/closepoints",
+      "commit": "8ce827f5a7fec8afe4ab9a13a3427d685bca2ce0",
+      "captured_at": "2026-11-13",
+      "source_files": 6,
+      "source_bytes": 14701,
+      "evidence_files": 2,
+      "evidence_bytes": 11260,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": []
+    },
+    {
+      "id": "scad-utils-mit-notice",
+      "repository_url": "https://github.com/openscad/scad-utils",
+      "commit": "26f8c2cf8124cdafe2fc21f9f9bbf2514e404834",
+      "captured_at": "2026-11-13",
+      "source_files": 0,
+      "source_bytes": 0,
+      "evidence_files": 1,
+      "evidence_bytes": 1068,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": []
+    },
+    {
+      "id": "thehans--FunctionalOpenSCAD",
+      "repository_url": "https://github.com/thehans/FunctionalOpenSCAD",
+      "commit": "51588ffe13d3124b5ea5c04e521cd8e25ab5d0a9",
+      "captured_at": "2026-11-13",
+      "source_files": 6,
+      "source_bytes": 40397,
+      "evidence_files": 1,
+      "evidence_bytes": 1063,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": []
+    },
+    {
+      "id": "AngeloNicoli--OpenSCAD-Snippet",
+      "repository_url": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+      "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "captured_at": "2026-11-13",
+      "source_files": 122,
+      "source_bytes": 182597,
+      "evidence_files": 1,
+      "evidence_bytes": 1079,
+      "sources_with_dependency_blockers": 2,
+      "skipped_files": [
+        {
+          "path": "Asset_SCAD/Pipe_45.scad",
+          "reason": "Contradictory GPL-2.0 at line 1 and MIT at line 42; no single license asserted."
+        }
+      ]
+    },
+    {
+      "id": "pinkfish--openscad_boardgame_toolkit",
+      "repository_url": "https://github.com/pinkfish/openscad_boardgame_toolkit",
+      "commit": "719ebde5d225372be7eff58737172eda81c62b08",
+      "captured_at": "2026-11-13",
+      "source_files": 963,
+      "source_bytes": 1660176,
+      "evidence_files": 1,
+      "evidence_bytes": 11357,
+      "sources_with_dependency_blockers": 924,
+      "skipped_files": [
+        {
+          "path": "scripts/colorscad",
+          "reason": "Submodule excluded pending separate license review"
+        },
+        {
+          "path": "scripts/img2pdf",
+          "reason": "Submodule excluded pending separate license review"
+        },
+        {
+          "path": "wiki",
+          "reason": "Submodule excluded pending separate license review"
+        },
+        {
+          "path": "shapes.scad",
+          "reason": "Cloud code credited to Thingiverse item 641665 at lines 3531-3532; upstream license unresolved."
+        }
+      ]
+    },
+    {
+      "id": "Irev-Dev--Round-Anything",
+      "repository_url": "https://github.com/Irev-Dev/Round-Anything",
+      "commit": "061fef7c429628808e847696bb345a9b0ec6e279",
+      "captured_at": "2026-11-13",
+      "source_files": 16,
+      "source_bytes": 58194,
+      "evidence_files": 1,
+      "evidence_bytes": 1051,
+      "sources_with_dependency_blockers": 12,
+      "skipped_files": []
+    },
+    {
+      "id": "mrWheel--YAPP_Box",
+      "repository_url": "https://github.com/mrWheel/YAPP_Box",
+      "commit": "f9400c419ef1dea7dc0b3607876989b4f3faa2b7",
+      "captured_at": "2026-11-13",
+      "source_files": 46,
+      "source_bytes": 755870,
+      "evidence_files": 1,
+      "evidence_bytes": 1073,
+      "sources_with_dependency_blockers": 2,
+      "skipped_files": []
+    },
+    {
+      "id": "mmalecki--catchnhole",
+      "repository_url": "https://github.com/mmalecki/catchnhole",
+      "commit": "99428972ca2588f5ce33c0df54d097a14acf7f10",
+      "captured_at": "2026-11-13",
+      "source_files": 5,
+      "source_bytes": 7801,
+      "evidence_files": 1,
+      "evidence_bytes": 1062,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": []
+    },
+    {
+      "id": "dinther--pathbuilder",
+      "repository_url": "https://github.com/dinther/pathbuilder",
+      "commit": "a4cb54aa3a5f5c8f74da640fb553ab54bce24436",
+      "captured_at": "2026-11-13",
+      "source_files": 20,
+      "source_bytes": 105618,
+      "evidence_files": 1,
+      "evidence_bytes": 1073,
+      "sources_with_dependency_blockers": 1,
+      "skipped_files": []
+    },
+    {
+      "id": "wmacevoy--openscad-scon",
+      "repository_url": "https://github.com/wmacevoy/openscad-scon",
+      "commit": "c954e07bf0faf571d8eccc259d47e61938666cef",
+      "captured_at": "2026-11-13",
+      "source_files": 8,
+      "source_bytes": 16046,
+      "evidence_files": 1,
+      "evidence_bytes": 1071,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": [
+        {
+          "path": "scon_from_json.js",
+          "reason": "scon_from_json.js is a JSON conversion utility, not a JSCAD model."
+        }
+      ]
+    },
+    {
+      "id": "ridercz--A2D",
+      "repository_url": "https://github.com/ridercz/A2D",
+      "commit": "4ad48205fefd841a468b7916521596f09383add9",
+      "captured_at": "2026-11-13",
+      "source_files": 10,
+      "source_bytes": 26890,
+      "evidence_files": 1,
+      "evidence_bytes": 1080,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": []
+    },
+    {
+      "id": "cfinke--Technic.scad",
+      "repository_url": "https://github.com/cfinke/Technic.scad",
+      "commit": "41f17a4696b582850097a2e3779348bc27c87f47",
+      "captured_at": "2026-11-13",
+      "source_files": 29,
+      "source_bytes": 147656,
+      "evidence_files": 1,
+      "evidence_bytes": 1080,
+      "sources_with_dependency_blockers": 29,
+      "skipped_files": [
+        {
+          "path": "lib/gears",
+          "reason": "Submodule excluded pending separate license review"
+        },
+        {
+          "path": "utils/doxydown",
+          "reason": "Submodule excluded pending separate license review"
+        },
+        {
+          "path": "customizers/Beam.scad",
+          "reason": "Embedded dotSCAD code with LGPL-3.0 license notice; Connector Hub also has unresolved strings.scad lineage."
+        },
+        {
+          "path": "customizers/Connector Hub.scad",
+          "reason": "Embedded dotSCAD code with LGPL-3.0 license notice; Connector Hub also has unresolved strings.scad lineage."
+        }
+      ]
+    },
+    {
+      "id": "adrien-delhorme--openscad-new-dimensions",
+      "repository_url": "https://codeberg.org/adrien-delhorme/openscad-new-dimensions",
+      "commit": "d37828e26df6067fbd872e8e291c6b0b19298243",
+      "captured_at": "2026-11-13",
+      "source_files": 6,
+      "source_bytes": 11856,
+      "evidence_files": 2,
+      "evidence_bytes": 4966,
+      "sources_with_dependency_blockers": 0,
+      "skipped_files": []
+    }
+  ]
+}
