@@ -32,6 +32,40 @@ module/function arguments, loops, and computed or parameter-driven indices.
 Indices must resolve to valid integers; boolean indices are refused. Numeric
 selectors retain lazy choices rather than flattening parametric geometry.
 Immutable binding evaluation is memoized, with a shared 16,384-value visit guard.
+`assert(condition[, message])` supports standalone statements, solid/profile child
+chains and expression chains. Failed assertions abort the whole code object;
+they do not discard just the asserted solid. Parameter-dependent conditions remain
+in native assertion guards and are checked again on edits. Expression guards
+support numeric scalars and nonempty nested numeric vectors, including structural
+inspection and helper arguments. Constant successful assertions can return other
+typed values. Parameter-dependent empty/string results and asserted loop
+or comprehension input vectors, and assertions inside omitted `echo()` output,
+and combinations with the `!` root modifier are rejected rather than losing
+their checks.
+Literal and parameter-driven messages are retained in statement and expression
+assertions. Diagnostic text is parsed data, never executed as JavaScript. The existing resource limits also bound assertion
+expansion. Exported geometry is an already validated snapshot.
+
+Simple fixed-cardinality comprehensions can also appear among literal list
+members, for example `[[0,0], for(i=[0:2]) points[i]]`; their generated elements
+are flattened into that list. Each generator retains the 256-iteration bound and
+the complete resulting list retains the 256-item bound. Up to eight sequential
+bindings per generator and chained `for` generators are supported; inner binding
+ranges can depend on already resolved outer values. One-level `each` accepts
+fixed vectors (or a single scalar) and preserves contained assertion guards.
+Filters retain numeric dependencies; C-style generators remain unsupported.
+
+OpenSCAD strings remain typed values, separate from numeric CAD expressions.
+Global settings, local bindings, module/function results, string indexing and
+bounded string helpers can feed colour selectors or geometry conditions. Numeric
+selectors may retain choices between string, vector and profile values; numeric
+coordinates keep their parameter dependencies. Strings are never coerced into
+numeric dimensions or interpolated as executable native source. Array indexing
+accepts supported scalar expressions, including global/local parameters, loop
+bindings and function results. Missing or out-of-range entries produce undefined
+values that can be guarded with `is_undef`; an unhandled undefined numeric
+dimension is rejected. Mixed typed arrays are supported without making their
+string members numeric.
 
 Conversion uses a full-render context: read-only `$preview` is `false`, with a
 note only when it is read. Source assignments and argument/parameter overrides
@@ -64,6 +98,15 @@ Known gaps, deliberately diagnosed:
   surface/image geometry and automatic resize with multiple specified target dimensions.
   Parameter-dependent recursive functions remain bounded rather than becoming an
   unrestricted evaluator. Cross-axis rotational profiles remain refused; wholly negative radial profiles and clockwise sweeps are supported.
+- Ambient library resolution (including BOSL2); explicit local
+  `include` and file-scope `use` bundles are supported. Comprehension filters/C-style and
+  variable-cardinality generators, randomness, search outside fixed tables,
+  symbolic numeric-to-string formatting,
+  general matrix arithmetic, anonymous-block assignment semantics, external meshes,
+  surface/image geometry, automatic resize axes and arbitrary-axis profile rotations.
+  Parameter-dependent recursive functions remain bounded rather than becoming an
+  unrestricted evaluator. Negative partial-turn and cross-axis rotational profiles
+  remain refused; wholly left-side complete turns are supported.
 - JSCAD slice/callback extrusion, general lofts/sweeps, external/local modules and
   host APIs remain unsupported. Export to JSCAD refuses native Minkowski/resize,
   text/offset profiles and tapered-profile extrusion where no supported lowering
@@ -224,7 +267,13 @@ references, loops, module calls and local bindings are not implemented yet.
 SCAD twist uses its documented left-hand convention; the native kernel and JSCAD
 use right-hand angles. Conversion changes the sign. Revolution segment counts
 refer to a complete turn and are proportionally reduced for a partial turn.
-Negative/cross-axis radial profiles are refused rather than silently clipped.
+Complete 360-degree revolutions accept profiles wholly on either side of the
+radial axis. Left-side profiles are reflected radially before evaluation.
+Negative partial-turn and crossing-axis profiles remain refused. JSCAD export
+uses an explicit planar radial mirror for a wholly left-side full turn;
+conservative profile bounds may refuse an export when the side is uncertain.
+This implements the documented [OpenSCAD half-plane rule](https://files.openscad.org/documentation/manual/2D_to_3D_Extrusion.html)
+for full turns without inspecting the upstream implementation.
 `convexity` is preview-only and does not affect our rendered solid.
 
 Curved meshes are **not bit-identical upstream reproductions**. Manifold and JSCAD
@@ -345,3 +394,114 @@ fragment defaults and distinct construction-depth diagnostics. These are merged
 with retained comprehensions; fixed-cardinality lists materialize symbolically,
 while supported parameter-dependent polygon generators remain live. The animation
 notice is tracked separately from mechanical simulation in CONVERTER-GAPS.md.
+
+### Bounded function values and SCON defaults — 2026-11-14
+
+Function literals (`function(x) expression`) can be stored in variables, passed
+as arguments and returned by functions. Calling a named function-valued variable
+uses the existing bounded function evaluator and a captured lexical environment.
+Numeric dimensions can remain symbolic through closure calls. Expression-level
+`let` evaluates bindings sequentially; `is_function` distinguishes function values.
+Immediate chained calls and parameter-dependent choices between callable values
+remain unsupported. Function values never become executable JavaScript or new
+runtime geometry kinds. Assertions on unsupported typed returns are refused.
+
+`search` supports a fixed needle list and a fixed list/table, optional constant
+match count (zero means all), and an optional constant column. Only matches that
+resolve during conversion are accepted; parameter-dependent match membership is
+refused. Every comparison consumes the existing evaluation budget. Existing
+32-level function/construction depth and source, token and array limits remain.
+These semantics were implemented from published language documentation, without
+reading the GPL implementation:
+[function literals](https://files.openscad.org/documentation/manual/User-Defined_Functions_and_Modules.html),
+[search](https://files.openscad.org/documentation/manual/Other_Language_Features.html).
+
+The six unchanged SCON example roots improved from 0/6 to 5/6 strict STL passes.
+`ex1`, `ex2`, `ex3`, `ex4` and `tldr` are admitted separately; `ex5` reaches the
+unchanged construction-depth limit of 32 and remains excluded. This does not
+qualify arbitrary SCON configuration edits, JSON import or unused helpers.
+
+
+### Generated-list cohort and warned text argument — 2026-11-14
+
+The authored `dinther--pathbuilder/meshbuilder.scad` default now parses its
+multi-binding and `each` syntax, then hits the unchanged 16,384-step value-work
+limit. It remains excluded. `thehans--FunctionalOpenSCAD/functional.scad` first
+requires unsupported `version_num` and also remains excluded. This pass changes
+no source, iteration, output-list, depth, token or work limits, and does not claim
+that either generated-list demo produces a qualified solid.
+
+The unchanged Angelo `Coin_02.scad` default does pass after accepting the
+nonstandard `text(center=...)` argument as a warned ignored argument. Default
+left/baseline alignment is retained; `center` is not converted into text alignment.
+Its argument assertion checks are retained even though the argument value is not
+used. Other unknown text arguments remain refused. The existing bundled Droid
+font fallback and font-metric warning still apply. The authored `Sign_03.scad`
+remains a strict topology failure. Outcomes and runtime identities are retained in
+`library/corpus-audit/editor-screening-cycle20.json`.
+
+
+### Symbolic choices and shared scalar expressions — 2026-11-14
+
+Arithmetic can retain undefined alternatives from symbolic vector indexing;
+string arithmetic stays refused. Type predicates with identical results in all
+alternatives resolve without retaining a redundant type branch. `len` of a
+non-list/non-string value remains undefined. Assertions on conditional values
+and undefined results retain explicit guards through type inspection, arithmetic
+and otherwise unused arguments; failing edits remain atomic.
+
+Long scalar formulas can be shared as lazy native `const` aliases. The importer
+still refuses an individual generated expression above 1,024 characters and the
+native source, token, statement, dependency and work limits still apply. Aliases
+do not become editable parameters or eagerly evaluate inactive branches.
+
+The two unchanged A2D defaults measured in `editor-screening-cycle21.json`
+improved from 0/2 to 1/2 strict STL passes. `GrillCircle` passes at 3,372 triangles
+and 80×80×2mm. `ParametricBoxWithLid` now reaches the unchanged importer work
+limit and stays excluded; this transition is not an admission gain. No further
+retries of that over-budget default are part of this cohort.
+
+## Scoped local `use` bundles (cycle 23)
+
+`importOpenSCADBundle` resolves both `include` and file-scope `use` only from
+explicit, SHA-256-verified in-memory originals. Existing path, aggregate byte/token,
+occurrence, cycle and depth guards remain unchanged. `use` imports only direct
+module/function declarations. Library assignments remain lazy in an isolated file
+scope and do not become caller parameters. Library root geometry and assertions
+are retained as original text but never evaluated. Nested `use` stays within the
+containing library; textual `include` declarations remain exportable. Caller
+`children()` retain their original lexical environment. Ambient loading remains
+unsupported. The implementation follows the published
+[include/use documentation](https://files.openscad.org/documentation/manual/Include_Statement.html),
+without consulting upstream compiler implementation.
+
+The exact archived `Scene_House.scad` and its four dependencies now produce
+26.810686449 mm³ of geometry and a 2,284-triangle STL. Direct editor insertion,
+serialization and undo/redo pass. Strict STL topology fails: 44 invalid edges and
+54 invalid vertex fans, including an edge with four incident faces. The source
+remains excluded: **0/1 qualified before, 0/1 after; no new admission**. See
+`library/corpus-audit/editor-screening-cycle23.json`. No source repair or limit
+change was applied. Seven other ranked `use` roots retain independent blockers
+and receive no expected admission credit.
+
+## Reconciled retained evaluator
+
+Typed `const name: unit = expression` and inferred `const name = expression`
+are lazy, unit-checked declarations. Constants and named shapes resolve in the
+consuming loop scope. Reduction cache keys include bound values, and memoized
+function calls distinguish captured closures. Unused numeric domains remain
+inactive; shape names, reference cycles and dependency limits are still checked.
+
+Fixed vector-valued comprehensions, mixed literal/generated lists and scalar
+sharing preserve parameter dependencies. Expression assertions retain formatted
+messages and checks on default/ignored arguments. Root modifiers combined with
+assertions are refused until their evaluation ordering is modeled fully.
+
+JSCAD snapshot export lowers signed scale to positive scale plus reflections.
+Entirely negative radial profiles and clockwise turns retain placement; profiles
+crossing the axis are refused. Source bundles remain bounded, hash-checked,
+in-memory dependency sets with lexical `use` and original provenance.
+
+The official 2021.01 executable accepts only text, size and font positionally.
+Other text options are named; extra positional arguments are diagnosed and
+ignored. Numeric formatting and each-scalar fixtures also have executable probes.

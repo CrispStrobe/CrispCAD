@@ -7,7 +7,7 @@ export type {CodeProfile} from './code-profiles.js';
 import {t} from './i18n.js';
 // Original bounded CAD language. No OpenSCAD/JSCAD interpreter or runtime code.
 import {formatSCADNumber} from './scad-numbers.js';
-import {evaluateExpression,evaluateParameters} from './parameters.js';
+import {evaluateExpression,ParameterResourceLimitError} from './parameters.js';
 import type {NamedParameter,ParameterUnit,Quantity} from './parameters.js';
 import type {Vec3} from './document.js';
 export interface CodeProgram {version:1;language:'brickwright-cad-script';source:string;parameters:Record<string,string>}
@@ -24,7 +24,8 @@ interface Scalar {text:string;at:number}
 type ShapeAst={kind:'reference';name:string;at:number}|{kind:'call';name:string;at:number;scalars:Scalar[];vector?:Scalar[];message?:CodeTextAst;points?:Scalar[][];faces?:Scalar[][];profile?:ProfileAst;variable?:string;shapes:ShapeAst[]};
 const safeName=(name:string)=>/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(name)&&!['constructor','prototype','__proto__'].includes(name);
 const object=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value)&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
-export function compileCode(program:CodeProgram):CompiledCode {
+export function compileCode(program:CodeProgram):CompiledCode{try{return compileCodeInner(program);}catch(error){if(error instanceof ParameterResourceLimitError)throw new CadCodeError(error.message,0,program?.source??'','resource-limit');throw error;}}
+function compileCodeInner(program:CodeProgram):CompiledCode {
  const source=program?.source;
  const fail=(message:string,at=0):never=>{throw new CadCodeError(message,at,typeof source==='string'?source:'');};
  const limited=(message:string,at=0):never=>{throw new CadCodeError(message,at,typeof source==='string'?source:'','resource-limit');};
@@ -45,6 +46,7 @@ export function compileCode(program:CodeProgram):CompiledCode {
  function shape(depth=0):ShapeAst {if(depth>CODE_LIMITS.depth)limited(t('Shape nesting exceeds 32'),offset());const token=take();if(!safeName(token.text))fail(t('Expected a shape function or named shape'),token.at);if(peek()!=='(')return {kind:'reference',name:token.text,at:token.at};expect('(');
   const call:Extract<ShapeAst,{kind:'call'}>={kind:'call',name:token.text,at:token.at,scalars:[],shapes:[]};
   if(call.name==='empty'){}
+  else if(call.name==='assertShape'){call.scalars.push(scalar([',']));expect(',');call.shapes.push(shape(depth+1));}
   else if(call.name==='assertCode'){call.scalars.push(scalar([',']));expect(',');if(peek()?.startsWith('"')||peek()==='formatText'||peek()==='formatSCAD'){call.message=parseCodeText({peek,take,expect,scalar,fail,limited});expect(',');}call.shapes.push(shape(depth+1));}
   else if(call.name==='choose'){call.scalars.push(scalar([',']));expect(',');call.shapes.push(shape(depth+1));expect(',');call.shapes.push(shape(depth+1));}
   else if(call.name==='forRange'||call.name==='forValues'){
@@ -69,26 +71,37 @@ export function compileCode(program:CodeProgram):CompiledCode {
   else fail(t`Unknown modeling function “${call.name}”`,call.at);
   expect(')');return call;
  }
- const parameters:Record<string,NamedParameter>=Object.create(null),constants:Record<string,NamedParameter>=Object.create(null),parameterOffsets=new Map<string,number>(),definitions=new Map<string,ShapeAst>();let output:ShapeAst|undefined,statements=0;
+ const parameters:Record<string,NamedParameter>=Object.create(null),constants:Record<string,{expression:string;unit?:ParameterUnit}>=Object.create(null),parameterOffsets=new Map<string,number>(),definitions=new Map<string,ShapeAst>();let output:ShapeAst|undefined,statements=0;
  while(cursor<tokens.length){if(++statements>CODE_LIMITS.statements)limited(t('Too many statements'),offset());const statement=take();
   if(output)fail(t('Return must be the final statement'),statement.at);
-  if(statement.text==='param'||statement.text==='const'){const id=name();if(Object.hasOwn(parameters,id)||Object.hasOwn(constants,id)||definitions.has(id))fail(t`Duplicate name “${id}”`,statement.at);expect(':');const unit=take();if(!['mm','deg','scalar'].includes(unit.text))fail(t('Parameter unit must be mm, deg or scalar'),unit.at);expect('=');const value=scalar([';']);(statement.text==='param'?parameters:constants)[id]={unit:unit.text as ParameterUnit,expression:value.text};if(Object.keys(parameters).length>64)limited(t('at most 64 named parameters are supported'),statement.at);parameterOffsets.set(id,value.at);}
+  if(statement.text==='param'||statement.text==='const'){const id=name();if(Object.hasOwn(parameters,id)||Object.hasOwn(constants,id)||definitions.has(id))fail(t`Duplicate name “${id}”`,statement.at);let unit:ParameterUnit|undefined;if(statement.text==='param'||peek()===':'){expect(':');const token=take();if(!['mm','deg','scalar'].includes(token.text))fail(t('Parameter unit must be mm, deg or scalar'),token.at);unit=token.text as ParameterUnit;}expect('=');const value=scalar([';']);if(statement.text==='param')parameters[id]={unit:unit!,expression:value.text};else constants[id]={unit,expression:value.text};if(Object.keys(parameters).length>64)limited(t('at most 64 named parameters are supported'),statement.at);parameterOffsets.set(id,value.at);}
   else if(statement.text==='let'){const id=name();if(definitions.has(id)||Object.hasOwn(parameters,id)||Object.hasOwn(constants,id))fail(t`Duplicate name “${id}”`,statement.at);expect('=');definitions.set(id,shape());}
-  else if(statement.text==='return')output=shape();else fail(t('Expected param, let or return'),statement.at);
+  else if(statement.text==='return')output=shape();else fail(t('Expected param, const, let or return'),statement.at);
   expect(';');
  }
  if(!output)fail(t('Finish the program with return shape;'));
  const resolved=structuredClone({...parameters,...constants});for(const [key,value] of Object.entries(program.parameters)){if(!Object.hasOwn(parameters,key))fail(t`Unknown parameter override “${key}”`);if(typeof value!=='string'||!value.trim())fail(t`Invalid override for “${key}”`);resolved[key].expression=value;}
  let loopBindings=new Map<string,Quantity>();let evaluationSteps=0;
- const deferredConstants=new Set<string>(),constantReferences=new Map<string,Set<string>>();for(const [id,value] of Object.entries(constants)){const refs=new Set<string>();try{evaluateExpression(value.expression,()=>({value:1,length:0,angle:0}),{references:refs});}catch{}constantReferences.set(id,refs);if([...refs].some(key=>!Object.hasOwn(resolved,key)))deferredConstants.add(id);}for(let i=0;i<Object.keys(constants).length;i++){let changed=false;for(const [id,refs] of constantReferences)if(!deferredConstants.has(id)&&[...refs].some(key=>deferredConstants.has(key))){deferredConstants.add(id);changed=true;}if(!changed)break;}
- let values:Record<string,Quantity>;try{values=evaluateParameters({version:1,parameters:Object.fromEntries(Object.entries(resolved).filter(([id])=>!deferredConstants.has(id))),bindings:[]},{declarationLimit:256});}catch(error){const message=error instanceof Error?error.message:String(error);const related=[...parameterOffsets].find(([key])=>message.includes(`“${key}”`));fail(message,related?.[1]??0);}
- let constantSteps=0;const resolvingConstants=new Set<string>();
- function lookupValue(key:string,scope?:ReadonlyMap<string,Quantity>):Quantity{if(scope?.has(key))return scope.get(key)!;if(loopBindings.has(key))return loopBindings.get(key)!;if(Object.hasOwn(values,key))return values[key];if(Object.hasOwn(constants,key)){if(++constantSteps>65536)limited(t('Code evaluation budget exceeded'));if(resolvingConstants.has(key)||resolvingConstants.size>=32)fail(t('Constant expression dependency cycle or depth exceeded'));resolvingConstants.add(key);try{const constant=constants[key],q=evaluateExpression(constant.expression,lookupValue,{bindings:scope}),length=constant.unit==='mm'?1:0,angle=constant.unit==='deg'?1:0;if(q.boolean&&constant.unit!=='scalar'||(q.length||q.angle)&&(q.length!==length||q.angle!==angle))throw new Error(t`Expected ${constant.unit}`);return {...q,length,angle};}finally{resolvingConstants.delete(key);}}throw new Error(t`Unknown parameter “${key}”`);}
- function number(expr:Scalar,unit:ParameterUnit,min:number,max:number,integer=false,allowBoolean=false):number {try{const q=evaluateExpression(expr.text,lookupValue);if(q.boolean&&!allowBoolean)throw new Error(t('Expected a numeric modeling argument'));const length=unit==='mm'?1:0,angle=unit==='deg'?1:0;if((q.length||q.angle)&&(q.length!==length||q.angle!==angle))throw new Error(t`Expected ${unit}`);if(q.value<min||q.value>max||integer&&!Number.isInteger(q.value))throw new Error(t`Expected ${integer?t('an integer'):t('a value')} between ${min} and ${max}`);return q.value;}catch(error){if(error instanceof CadCodeError)throw error;return fail(error instanceof Error?error.message:String(error),expr.at);}}
- const built=new Map<string,CodeShape>(),visiting=new Set<string>();
- function resolve(ast:ShapeAst,depth=0):CodeShape {if(++evaluationSteps>16384)throw new CadCodeError(t('Code evaluation budget exceeded'),ast.at,source,'resource-limit');if(depth>32)limited(t('Dependency depth exceeds 32'),ast.at);if(ast.kind==='reference'){if(built.has(ast.name))return built.get(ast.name)!;if(visiting.has(ast.name))fail(t`Shape dependency cycle at “${ast.name}”`,ast.at);const definition=definitions.get(ast.name);if(!definition)fail(t`Unknown shape “${ast.name}”`,ast.at);visiting.add(ast.name);const result=resolve(definition!,depth+1);visiting.delete(ast.name);built.set(ast.name,result);return result;}
+ // Constants are lazy expressions, evaluated in their consuming loop/reduction scope.
+ // Cache keys include reduction bindings: evaluateExpression mutates those bindings
+ // while walking a retained range; an identity-only cache would reuse stale values.
+ const values:Record<string,Quantity>=Object.create(null),constantCaches=new WeakMap<Map<string,Quantity>,Map<string,Quantity>>(),resolvingConstants=new Set<string>();let constantSteps=0;
+ function lookupValue(key:string,scope?:ReadonlyMap<string,Quantity>):Quantity{
+  if(scope?.has(key))return scope.get(key)!;if(loopBindings.has(key))return loopBindings.get(key)!;if(Object.hasOwn(values,key))return values[key];
+  const declaration=resolved[key];if(!declaration)throw new Error(t`Unknown parameter “${key}”`);
+  if(++constantSteps>65536)limited(t('Code evaluation budget exceeded'),parameterOffsets.get(key));
+  if(resolvingConstants.has(key))fail(t`dependency cycle at “${key}”`,parameterOffsets.get(key));
+  if(resolvingConstants.size>=32)limited(t('Dependency depth exceeds 32'),parameterOffsets.get(key));
+  let cache=constantCaches.get(loopBindings);if(!cache){cache=new Map();constantCaches.set(loopBindings,cache);}const cacheKey=key+'|'+(scope?.size?JSON.stringify([...scope]):'');const cached=cache.get(cacheKey);if(cached)return cached;
+  resolvingConstants.add(key);try{const q=evaluateExpression(declaration.expression,lookupValue,{bindings:scope}),unit=declaration.unit;let result=q;if(unit!==undefined){const length=unit==='mm'?1:0,angle=unit==='deg'?1:0;if(q.boolean&&unit!=='scalar'||(q.length||q.angle)&&(q.length!==length||q.angle!==angle))throw new Error(t`Expected ${unit}`);result={...q,length,angle};}if(cache.size<4096)cache.set(cacheKey,result);if(Object.hasOwn(parameters,key))values[key]=result;return result;}finally{resolvingConstants.delete(key);}
+ }
+ try{for(const key of Object.keys(parameters))lookupValue(key);}catch(error){if(error instanceof CadCodeError)throw error;fail(error instanceof Error?error.message:String(error));}
+ function number(expr:Scalar,unit:ParameterUnit,min:number,max:number,integer=false,allowBoolean=false):number {try{const q=evaluateExpression(expr.text,lookupValue);if(q.boolean&&!allowBoolean)throw new Error(t('Expected a numeric modeling argument'));const length=unit==='mm'?1:0,angle=unit==='deg'?1:0;if((q.length||q.angle)&&(q.length!==length||q.angle!==angle))throw new Error(t`Expected ${unit}`);if(q.value<min||q.value>max||integer&&!Number.isInteger(q.value))throw new Error(t`Expected ${integer?t('an integer'):t('a value')} between ${min} and ${max}`);return q.value;}catch(error){if(error instanceof CadCodeError)throw error;if(error instanceof ParameterResourceLimitError)limited(error.message,expr.at);return fail(error instanceof Error?error.message:String(error),expr.at);}}
+ const builtByScope=new WeakMap<Map<string,Quantity>,Map<string,CodeShape>>(),visiting=new Set<string>();
+ function resolve(ast:ShapeAst,depth=0):CodeShape {if(++evaluationSteps>16384)throw new CadCodeError(t('Code evaluation budget exceeded'),ast.at,source,'resource-limit');if(depth>32)limited(t('Dependency depth exceeds 32'),ast.at);if(ast.kind==='reference'){let built=builtByScope.get(loopBindings);if(!built){built=new Map();builtByScope.set(loopBindings,built);}if(built.has(ast.name))return built.get(ast.name)!;if(visiting.has(ast.name))fail(t`Shape dependency cycle at “${ast.name}”`,ast.at);const definition=definitions.get(ast.name);if(!definition)fail(t`Unknown shape “${ast.name}”`,ast.at);visiting.add(ast.name);const result=resolve(definition!,depth+1);visiting.delete(ast.name);built.set(ast.name,result);return result;}
   const n=ast.scalars.length,arity=(min:number,max=min)=>{if(n<min||n>max)fail(t`${ast.name} requires ${min}${max===min?'':`–${max}`} numeric arguments`,ast.at);},mm=(i:number)=>number(ast.scalars[i],'mm',.01,100000),segments=(i:number,min=4,max=4096)=>ast.scalars[i]?number(ast.scalars[i],'scalar',min,max,true):48;
   if(ast.name==='empty'){arity(0);return {kind:'empty'};}
+  if(ast.name==='assertShape'){arity(1);if(!number(ast.scalars[0],'scalar',-1e9,1e9,false,true))fail(t('Assertion failed'),ast.at);return resolve(ast.shapes[0],depth+1);}
   if(ast.name==='assertCode'){if(!number(ast.scalars[0],'scalar',-1e9,1e9,false,true)){const message=ast.message?resolveCodeText(ast.message,(s,scad)=>{const q=evaluateExpression(s.text,lookupValue);return q.boolean?String(q.value!==0):scad?formatSCADNumber(q.value):String(q.value);}):undefined;fail(message?t`Source assertion failed: ${message}`:t('Source assertion failed'),ast.at);}return resolve(ast.shapes[0],depth+1);}
   if(ast.name==='choose'){arity(1);return resolve(ast.shapes[number(ast.scalars[0],'scalar',-1e9,1e9,false,true)!==0?0:1],depth+1);}
   if(ast.name==='forRange'||ast.name==='forValues'){
@@ -121,8 +134,11 @@ export function compileCode(program:CodeProgram):CompiledCode {
   const child=resolve(ast.shapes[0],depth+1);if(ast.name==='scale'&&vec.includes(0))return {kind:'empty'};if(ast.name==='repeat')return {kind:'repeat',count:number(ast.scalars[0],'scalar',1,CODE_LIMITS.repeat,true),step:vec,shape:child};
   return {kind:ast.name as 'move'|'rotate'|'scale',vector:vec,shape:child};
  }
- // Check unused declarations too; malformed definitions cannot hide behind an unused name.
- for(const [id,ast] of definitions)resolve({kind:'reference',name:id,at:ast.at});
+ // Check the declaration graph without evaluating out-of-scope loop variables
+ // or inactive numerical domains. Numeric values resolve in the consuming scope.
+ const checkedDefinitions=new Set<string>(),checkingDefinitions=new Set<string>();
+ function checkReferences(ast:ShapeAst,depth=0):void{if(depth>32)limited(t('Dependency depth exceeds 32'),ast.at);if(ast.kind==='reference'){if(checkedDefinitions.has(ast.name))return;if(checkingDefinitions.has(ast.name))fail(t`Shape dependency cycle at “${ast.name}”`,ast.at);const definition=definitions.get(ast.name);if(!definition)fail(t`Unknown shape “${ast.name}”`,ast.at);checkingDefinitions.add(ast.name);checkReferences(definition!,depth+1);checkingDefinitions.delete(ast.name);checkedDefinitions.add(ast.name);}else ast.shapes.forEach(child=>checkReferences(child,depth));}
+ for(const [id,ast] of definitions)checkReferences({kind:'reference',name:id,at:ast.at});
  let result=resolve(output!);let expandedNodes=0,estimatedFaces=0;
  function budget(s:CodeShape,multiplier=1,depth=0){if(depth>32)limited(t('Expanded dependency depth exceeds 32'));expandedNodes+=multiplier;if(expandedNodes>CODE_LIMITS.expandedNodes)limited(t`Expanded shape budget exceeds ${CODE_LIMITS.expandedNodes} nodes`);if(s.kind==='empty')return;if(s.kind==='box')estimatedFaces+=12*multiplier;else if((s.kind==='cylinder'||s.kind==='frustum'))estimatedFaces+=4*s.segments*multiplier;else if(s.kind==='sphere')estimatedFaces+=.5*(Math.ceil(s.segments/4)*4)**2*multiplier;else if(s.kind==='polyhedron')estimatedFaces+=s.faces.reduce((sum,face)=>sum+face.length-2,0)*multiplier;else if(s.kind==='extrude')estimatedFaces+=4*s.points.length*multiplier;else if(s.kind==='profile-extrude'||s.kind==='revolve'){const size=profileSize(s.profile);expandedNodes+=size.nodes*multiplier;if(expandedNodes>CODE_LIMITS.expandedNodes)limited(t`Expanded shape budget exceeds ${CODE_LIMITS.expandedNodes} nodes`);estimatedFaces+=2*size.vertices*(s.kind==='revolve'?s.segments+1:s.steps+1)*multiplier;}else if('shapes' in s)s.shapes.forEach(child=>budget(child,multiplier,depth+1));else budget(s.shape,multiplier*(s.kind==='repeat'?s.count:1),depth+1);if(estimatedFaces>CODE_LIMITS.estimatedFaces)limited(t('Estimated mesh budget exceeds 200000 faces'));}
  try{budget(result);}catch(error){if(!(error instanceof CadCodeError)||error.code!=='resource-limit'||!error.detail.includes(String(CODE_LIMITS.expandedNodes)))throw error;

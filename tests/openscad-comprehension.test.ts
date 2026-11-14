@@ -65,3 +65,19 @@ it('retains array, loop, depth and cumulative value-evaluation resource limits',
   'a=[for(i=[0:63])[for(j=[0:63])[for(k=[0:63])k]]];cube(len(a));',
  ]){try{importOpenSCAD(source);throw Error('Expected resource failure');}catch(error:any){expect(error.code,source).toBe('resource-limit');}}
 });
+
+it('expands dependent multi-bindings, chained generators and one-level each in source order',()=>{
+ expect(evaluate('a=[for(i=[1:3],j=[0:i-1])i*10+j];cube([len(a),a[2],1]);').volume).toBeCloseTo(126);
+ expect(evaluate('a=[for(i=[1,2])for(j=[3,4])i*j];cube(a[2]);').volume).toBeCloseTo(216);
+ expect(evaluate('a=[0,for(i=[1,2])each [i,i+1],5];cube([len(a),a[3],1]);').volume).toBeCloseTo(12);
+ expect(evaluate('a=[for(i=[])each unavailable()];cube(len(a)+1);').volume).toBeCloseTo(1);
+ expect(evaluate('a=[for(i=[1,2],j=[])unavailable()];cube(len(a)+1);').volume).toBeCloseTo(1);
+ expect(evaluate('n=2;a=[for(i=[1,2])each [n*i,n+i]];cube(a[2]);',{n:'3'}).volume).toBeCloseTo(216);
+});
+it('keeps per-binding256 and total256 bounds and never drops each-result assertion guards',()=>{
+ expect(evaluate('a=[for(i=[0:15],j=[0:15])i+j];cube([len(a),1,1]);').volume).toBeCloseTo(256);
+ for(const source of ['a=[for(i=[0:16],j=[0:15])i+j];cube(1);','a=[for(i=[0:63])each [1,2,3,4,5]];cube(1);','a=[for(i=[0],j=[0:256])i+j];cube(1);'])expect(()=>importOpenSCAD(source)).toThrow();
+ const p=importOpenSCAD('n=2;a=[for(i=[0])each assert(n>0)[[1,2],[3,4]]];cube(len(a));');p.parameters.n='-1';expect(()=>compileCode(p)).toThrow('Assertion failed');
+ expect(()=>importOpenSCAD('n=2;a=[for(i=[0],j=[assert(n>0)1])1];cube(1);')).toThrow('asserted comprehension input');
+ expect(evaluate('a=[for(i=[0])each 2];cube(len(a));').volume).toBeCloseTo(1);
+});

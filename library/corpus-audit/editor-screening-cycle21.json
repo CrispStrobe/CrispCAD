@@ -1,0 +1,291 @@
+{
+  "version": 1,
+  "capturedOn": "2026-11-14",
+  "baselineDeliveredCommit": "e473a3df0495f10fa689d6461e595c07ae03e509",
+  "scope": "Exactly two unchanged authored A2D defaults, ParametricBoxWithLid and GrillCircle. No source, parameter, frame, fragment, entrypoint, construction-depth, expression-size or work-limit changes. Historical nine-root report remains unchanged. Only GrillCircle is admitted; no credit for unsupported-to-resource-limit transitions.",
+  "summary": {
+    "sample": 2,
+    "beforeQualified": 0,
+    "afterQualified": 1,
+    "afterLimited": 1
+  },
+  "before": {
+    "version": 1,
+    "phase": "before",
+    "head": "12ae39aa5c68147c752f9e92bf7b7f1ece2e4c56",
+    "policy": {
+      "timeoutMs": 5000,
+      "maxTriangles": 10000,
+      "maxExtentMm": 200,
+      "defaults": "unchanged authored root"
+    },
+    "runtimeBefore": {
+      "packages/core/dist/openscad-import.js": "dba473f2cbc85c6f96f9f1aae4613f80304e2cfb3751f5990cf92b2d832605d3",
+      "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeAfter": {
+      "packages/core/dist/openscad-import.js": "dba473f2cbc85c6f96f9f1aae4613f80304e2cfb3751f5990cf92b2d832605d3",
+      "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeStable": true,
+    "results": [
+      {
+        "name": "ParametricBoxWithLid",
+        "files": [
+          {
+            "path": "Samples/ParametricBoxWithLid.scad",
+            "sha256": "65db4781c2f488a08fab31dfdf2c4b50b08757519e76c171144b0f2079705761",
+            "bytes": 2006
+          },
+          {
+            "path": "A2D.scad",
+            "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+            "bytes": 13948
+          }
+        ],
+        "phase": "convert",
+        "status": "unsupported",
+        "error": {
+          "code": "unsupported-feature",
+          "message": "Line 41, column 28: Samples/ParametricBoxWithLid.scad: Unsupported OpenSCAD feature \u201cnumeric operation on string or undef\u201d",
+          "path": "Samples/ParametricBoxWithLid.scad",
+          "line": 41,
+          "column": 28
+        }
+      },
+      {
+        "name": "GrillCircle",
+        "files": [
+          {
+            "path": "Samples/GrillCircle.scad",
+            "sha256": "f1c6e12d4269e5af6f8f2a54b3f366441ce6a54f8c86d6758b9eea8e1f4d3f37",
+            "bytes": 1478
+          },
+          {
+            "path": "A2D.scad",
+            "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+            "bytes": 13948
+          }
+        ],
+        "phase": "convert",
+        "status": "limited",
+        "error": {
+          "code": "resource-limit",
+          "message": "Line 358, column 54: A2D.scad: OpenSCAD expanded expression limit exceeded",
+          "path": "A2D.scad",
+          "line": 358,
+          "column": 54
+        }
+      }
+    ]
+  },
+  "after": {
+    "version": 1,
+    "phase": "after-undefined-guards",
+    "head": "12ae39aa5c68147c752f9e92bf7b7f1ece2e4c56",
+    "policy": {
+      "timeoutMs": 5000,
+      "maxTriangles": 10000,
+      "maxExtentMm": 200,
+      "defaults": "unchanged authored root"
+    },
+    "runtimeBefore": {
+      "packages/core/dist/openscad-import.js": "b677c9e88ff354a8278c524ccbdc0474dcd954701dce0a8778caf36440367aff",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeAfter": {
+      "packages/core/dist/openscad-import.js": "b677c9e88ff354a8278c524ccbdc0474dcd954701dce0a8778caf36440367aff",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeStable": true,
+    "results": [
+      {
+        "name": "ParametricBoxWithLid",
+        "files": [
+          {
+            "path": "Samples/ParametricBoxWithLid.scad",
+            "sha256": "65db4781c2f488a08fab31dfdf2c4b50b08757519e76c171144b0f2079705761",
+            "bytes": 2006
+          },
+          {
+            "path": "A2D.scad",
+            "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+            "bytes": 13948
+          }
+        ],
+        "phase": "convert",
+        "status": "limited",
+        "error": {
+          "code": "resource-limit",
+          "message": "Line 92, column 47: A2D.scad: OpenSCAD construction limit exceeded",
+          "path": "A2D.scad",
+          "line": 92,
+          "column": 47
+        }
+      },
+      {
+        "name": "GrillCircle",
+        "files": [
+          {
+            "path": "Samples/GrillCircle.scad",
+            "sha256": "f1c6e12d4269e5af6f8f2a54b3f366441ce6a54f8c86d6758b9eea8e1f4d3f37",
+            "bytes": 1478
+          },
+          {
+            "path": "A2D.scad",
+            "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+            "bytes": 13948
+          }
+        ],
+        "phase": "stl",
+        "warnings": [
+          "Assertion messages are archived; failures use a generic diagnostic.",
+          "Assertion message: Please upgrade A2D library to version 1.5.0 or higher."
+        ],
+        "volumeMm3": 8841.204571524071,
+        "mesh": {
+          "sha256": "2e4fe957ca95bc2722febcc76da5a05313e9876d9e45d3c45ada44c782dd1652",
+          "bytes": 168684
+        },
+        "screening": {
+          "fileSha256": "2e4fe957ca95bc2722febcc76da5a05313e9876d9e45d3c45ada44c782dd1652",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 3372,
+          "boundsMm": {
+            "min": [
+              -40,
+              -40,
+              0
+            ],
+            "max": [
+              40,
+              40,
+              2
+            ]
+          },
+          "signedVolumeMm3": 8841.204465096798,
+          "quality": {
+            "fileSha256": "2e4fe957ca95bc2722febcc76da5a05313e9876d9e45d3c45ada44c782dd1652",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified"
+      }
+    ]
+  },
+  "sharedGapRanking": [
+    {
+      "rank": 1,
+      "gap": "Symbolic indexing and expression/guard sharing",
+      "roots": [
+        "ridercz--A2D/Samples/ParametricBoxWithLid.scad",
+        "ridercz--A2D/Samples/GrillCircle.scad"
+      ],
+      "candidateCount": 2,
+      "qualified": 1,
+      "limited": 1
+    },
+    {
+      "rank": 2,
+      "gap": "Scoped use with explicit local dependencies",
+      "roots": [
+        "AngeloNicoli--OpenSCAD-Snippet/Scene_House.scad",
+        "AngeloNicoli--OpenSCAD-Snippet/Projects/Scene_City_Street.scad",
+        "closepoints/demo_3D_art.scad",
+        "closepoints/demo_gear_thing.scad",
+        "closepoints/demo_roller_coaster.scad",
+        "closepoints/demo_roller_coaster2.scad",
+        "closepoints/demo_wavy_donut.scad",
+        "mmalecki--catchnhole/examples/simple.scad"
+      ],
+      "candidateCount": 8,
+      "nextBoundedRoot": "AngeloNicoli--OpenSCAD-Snippet/Scene_House.scad",
+      "nextPotentialSourceCount": 1,
+      "otherBlockers": "Scene_City_Street has a nonrelative-to-archive use path; five ClosePoints defaults exceed the existing iteration/list bounds; catchnhole needs JSON import/data. These seven roots are not credited as expected passes."
+    },
+    {
+      "rank": 3,
+      "gap": "Bounded evaluator work reuse",
+      "roots": [
+        "dinther--pathbuilder/meshbuilder.scad"
+      ],
+      "candidateCount": 1,
+      "status": "Existing work-limit refusal remains; not counted as an expected admission."
+    }
+  ],
+  "implementation": "Lazy scalar const aliases share formulas without raising the 1024-character expression bound, 32-depth, 256-statement, 8192-token, 32768-source-byte or 16384-native/importer work bounds. Aliases are not public parameters and evaluate only in their active loop/branch context. Conditional and undefined-result assertion guards remain live; unsafe edits abort atomically. ParametricBoxWithLid remains excluded at the work guard and is not being retried further in this cohort.",
+  "admittedAssetId": "corpus-a2d-grill-circle"
+}

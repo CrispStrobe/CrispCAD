@@ -145,3 +145,26 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+
+### A2D sample roots and shared source dependency — MIT
+
+The two authored A2D sample roots and shared A2D.scad source are by Michal Altair
+Valášek and contributors, pinned at `4ad48205fefd841a468b7916521596f09383add9`
+from https://github.com/ridercz/A2D. Original headers and full MIT grant are
+retained under `library/sources/a2d/` and
+`library/evidence/a2d-MIT-LICENSE.txt`. Exact source/dependency identities and
+reviewed grants are recorded in `library/a2d-editor-manifest.json` and carried
+into insertion provenance and attribution exports. Their default-root geometry
+qualification does not certify the remaining A2D helpers or samples.
+
+
+### SCON model sources (MIT)
+
+Five unchanged authored example roots and their shared `scon.scad` dependency
+are retained from Warren MacEvoy's openscad-scon revision
+`c954e07bf0faf571d8eccc259d47e61938666cef`. The exact full copyright, permission
+and warranty notice is in `library/evidence/scon-MIT-LICENSE.txt`. Model sources
+and derivatives carry the independently reviewed MIT grant and complete notice
+in catalogue/project attribution. This is model content, not an added runtime
+dependency. Source details and qualifications: `library/scon-editor-manifest.json`.

@@ -1,0 +1,779 @@
+{
+  "version": 1,
+  "capturedOn": "2026-11-14",
+  "baselineDeliveredCommit": "3fa42cc89d30994f8b3827659f9ef1ef4e6d3f5f",
+  "scope": "Exactly six unchanged authored SCON examples ex1-ex5 and tldr, sharing scon.scad. No source/parameter/frame/fragment overrides. Function literals, lexical closures, expression let and fixed-table search; no upstream runtime implementation used. Five admitted; ex5 depth refusal retained without changing guards.",
+  "sourceRevision": {
+    "repositoryUrl": "https://github.com/wmacevoy/openscad-scon",
+    "commit": "c954e07bf0faf571d8eccc259d47e61938666cef"
+  },
+  "summary": {
+    "sample": 6,
+    "beforeQualified": 0,
+    "afterQualified": 5,
+    "limited": 1
+  },
+  "before": {
+    "version": 1,
+    "phase": "before",
+    "head": "20243d751717bb530545c3323ef9af4d5b87a5b3",
+    "policy": {
+      "timeoutMs": 5000,
+      "maxTriangles": 10000,
+      "maxExtentMm": 200
+    },
+    "runtimeBefore": {
+      "packages/core/dist/openscad-import.js": "2f2b0df7d51b74171015b03ab20ea1b97389b3cb2c50b13f4ce9183faefa61ce",
+      "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+      "packages/core/dist/parameters.js": "30065ecfcedf8d1d7a130ffe9d2f64b34c0a3ad617f415830d0864fb5a10a555",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeAfter": {
+      "packages/core/dist/openscad-import.js": "2f2b0df7d51b74171015b03ab20ea1b97389b3cb2c50b13f4ce9183faefa61ce",
+      "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+      "packages/core/dist/parameters.js": "30065ecfcedf8d1d7a130ffe9d2f64b34c0a3ad617f415830d0864fb5a10a555",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeStable": true,
+    "results": [
+      {
+        "name": "ex1",
+        "files": [
+          {
+            "path": "examples/ex1.scad",
+            "sha256": "789200891e04fcd20a9b216adde28c54c7fddf3ad8e5b3d4c10173a96bad5686",
+            "bytes": 242
+          },
+          {
+            "path": "scon.scad",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "phase": "convert",
+        "status": "unsupported",
+        "error": {
+          "code": "unsupported-feature",
+          "message": "Line 1, column 56: scon.scad: Unsupported OpenSCAD feature \u201cfunction\u201d",
+          "path": "scon.scad",
+          "line": 1,
+          "column": 56
+        }
+      },
+      {
+        "name": "ex2",
+        "files": [
+          {
+            "path": "examples/ex2.scad",
+            "sha256": "d5e1cc34d67fda3524fdd88c26bbdecf338d3dad8d012d1c127570f7571114b0",
+            "bytes": 784
+          },
+          {
+            "path": "scon.scad",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "phase": "convert",
+        "status": "failed",
+        "error": {
+          "code": "invalid-source",
+          "message": "Line 30, column 26: scon.scad: Expected \u201c)\u201d",
+          "path": "scon.scad",
+          "line": 30,
+          "column": 26
+        }
+      },
+      {
+        "name": "ex3",
+        "files": [
+          {
+            "path": "examples/ex3.scad",
+            "sha256": "7e2ea0f5ec9907a476b2db5030580f3cba30402d02428140c1517f3b950868c5",
+            "bytes": 883
+          },
+          {
+            "path": "scon.scad",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "phase": "convert",
+        "status": "failed",
+        "error": {
+          "code": "invalid-source",
+          "message": "Line 30, column 26: scon.scad: Expected \u201c)\u201d",
+          "path": "scon.scad",
+          "line": 30,
+          "column": 26
+        }
+      },
+      {
+        "name": "ex4",
+        "files": [
+          {
+            "path": "examples/ex4.scad",
+            "sha256": "09282461aab2db14ca3e6140155ca3b481b89d257584a8bd578a8c0f864ce271",
+            "bytes": 1549
+          },
+          {
+            "path": "scon.scad",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "phase": "convert",
+        "status": "failed",
+        "error": {
+          "code": "invalid-source",
+          "message": "Line 30, column 26: scon.scad: Expected \u201c)\u201d",
+          "path": "scon.scad",
+          "line": 30,
+          "column": 26
+        }
+      },
+      {
+        "name": "ex5",
+        "files": [
+          {
+            "path": "examples/ex5.scad",
+            "sha256": "118d31e94500320aa6da99b5c26952cf26ee605ee1b5c5c7e80e330d3f9e79c0",
+            "bytes": 2143
+          },
+          {
+            "path": "scon.scad",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "phase": "convert",
+        "status": "failed",
+        "error": {
+          "code": "invalid-source",
+          "message": "Line 30, column 26: scon.scad: Expected \u201c)\u201d",
+          "path": "scon.scad",
+          "line": 30,
+          "column": 26
+        }
+      },
+      {
+        "name": "tldr",
+        "files": [
+          {
+            "path": "examples/tldr.scad",
+            "sha256": "9ee049e3b62af2232bfb2f9eefa9a7f19edb05ab42506271bdb64d58f5a44f9a",
+            "bytes": 375
+          },
+          {
+            "path": "scon.scad",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "phase": "convert",
+        "status": "failed",
+        "error": {
+          "code": "invalid-source",
+          "message": "Line 30, column 26: scon.scad: Expected \u201c)\u201d",
+          "path": "scon.scad",
+          "line": 30,
+          "column": 26
+        }
+      }
+    ]
+  },
+  "after": {
+    "version": 1,
+    "phase": "after-let",
+    "head": "20243d751717bb530545c3323ef9af4d5b87a5b3",
+    "policy": {
+      "timeoutMs": 5000,
+      "maxTriangles": 10000,
+      "maxExtentMm": 200
+    },
+    "runtimeBefore": {
+      "packages/core/dist/openscad-import.js": "96704a287549b0c4e7c629ee5324865cb972a737c9abb6f37bd309cecabfe2e5",
+      "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+      "packages/core/dist/parameters.js": "30065ecfcedf8d1d7a130ffe9d2f64b34c0a3ad617f415830d0864fb5a10a555",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeAfter": {
+      "packages/core/dist/openscad-import.js": "96704a287549b0c4e7c629ee5324865cb972a737c9abb6f37bd309cecabfe2e5",
+      "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+      "packages/core/dist/parameters.js": "30065ecfcedf8d1d7a130ffe9d2f64b34c0a3ad617f415830d0864fb5a10a555",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeStable": true,
+    "results": [
+      {
+        "name": "ex1",
+        "files": [
+          {
+            "path": "examples/ex1.scad",
+            "sha256": "789200891e04fcd20a9b216adde28c54c7fddf3ad8e5b3d4c10173a96bad5686",
+            "bytes": 242
+          },
+          {
+            "path": "scon.scad",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "phase": "stl",
+        "warnings": [],
+        "volumeMm3": 4179.08031657782,
+        "mesh": {
+          "sha256": "20b6b6cd8233a18062a7dc4cbfdf2c5742b791039ec04c06f1b18e04c9497d9a",
+          "bytes": 250084
+        },
+        "screening": {
+          "fileSha256": "20b6b6cd8233a18062a7dc4cbfdf2c5742b791039ec04c06f1b18e04c9497d9a",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 5000,
+          "boundsMm": {
+            "min": [
+              -9,
+              -8,
+              -7
+            ],
+            "max": [
+              11,
+              12,
+              13
+            ]
+          },
+          "signedVolumeMm3": 4179.080338350149,
+          "quality": {
+            "fileSha256": "20b6b6cd8233a18062a7dc4cbfdf2c5742b791039ec04c06f1b18e04c9497d9a",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified",
+        "admittedAssetId": "corpus-scon-ex1"
+      },
+      {
+        "name": "ex2",
+        "files": [
+          {
+            "path": "examples/ex2.scad",
+            "sha256": "d5e1cc34d67fda3524fdd88c26bbdecf338d3dad8d012d1c127570f7571114b0",
+            "bytes": 784
+          },
+          {
+            "path": "scon.scad",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "phase": "stl",
+        "warnings": [
+          "Source colours and transparency are not retained; solid geometry is preserved."
+        ],
+        "volumeMm3": 5.095220100788306,
+        "mesh": {
+          "sha256": "cb972f26a73bc6539cae5a9a302cf8fc1d98436ae05354c0832f97373e99730d",
+          "bytes": 26284
+        },
+        "screening": {
+          "fileSha256": "cb972f26a73bc6539cae5a9a302cf8fc1d98436ae05354c0832f97373e99730d",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 524,
+          "boundsMm": {
+            "min": [
+              -1.5,
+              -2.5,
+              -3.5
+            ],
+            "max": [
+              2,
+              3,
+              4
+            ]
+          },
+          "signedVolumeMm3": 5.095220284804604,
+          "quality": {
+            "fileSha256": "cb972f26a73bc6539cae5a9a302cf8fc1d98436ae05354c0832f97373e99730d",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified",
+        "admittedAssetId": "corpus-scon-ex2"
+      },
+      {
+        "name": "ex3",
+        "files": [
+          {
+            "path": "examples/ex3.scad",
+            "sha256": "7e2ea0f5ec9907a476b2db5030580f3cba30402d02428140c1517f3b950868c5",
+            "bytes": 883
+          },
+          {
+            "path": "scon.scad",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "phase": "stl",
+        "warnings": [
+          "Source colours and transparency are not retained; solid geometry is preserved."
+        ],
+        "volumeMm3": 33.76176080630645,
+        "mesh": {
+          "sha256": "aee0dbfb248f5ab4c7da98ae8284b6f7d0b197695937dd36ebbff6d01b4d551f",
+          "bytes": 26284
+        },
+        "screening": {
+          "fileSha256": "aee0dbfb248f5ab4c7da98ae8284b6f7d0b197695937dd36ebbff6d01b4d551f",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 524,
+          "boundsMm": {
+            "min": [
+              -2,
+              -2.5,
+              -3.5
+            ],
+            "max": [
+              2,
+              2,
+              2
+            ]
+          },
+          "signedVolumeMm3": 33.76175960744992,
+          "quality": {
+            "fileSha256": "aee0dbfb248f5ab4c7da98ae8284b6f7d0b197695937dd36ebbff6d01b4d551f",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified",
+        "admittedAssetId": "corpus-scon-ex3"
+      },
+      {
+        "name": "ex4",
+        "files": [
+          {
+            "path": "examples/ex4.scad",
+            "sha256": "09282461aab2db14ca3e6140155ca3b481b89d257584a8bd578a8c0f864ce271",
+            "bytes": 1549
+          },
+          {
+            "path": "scon.scad",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "phase": "stl",
+        "warnings": [
+          "Source colours and transparency are not retained; solid geometry is preserved."
+        ],
+        "volumeMm3": 38.00999280181218,
+        "mesh": {
+          "sha256": "7e40fe219349e54fdb8224a6300d1fba46d009b5138789ba34786f111e27fbc9",
+          "bytes": 254284
+        },
+        "screening": {
+          "fileSha256": "7e40fe219349e54fdb8224a6300d1fba46d009b5138789ba34786f111e27fbc9",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 5084,
+          "boundsMm": {
+            "min": [
+              -2,
+              -2,
+              -2
+            ],
+            "max": [
+              11,
+              2,
+              2
+            ]
+          },
+          "signedVolumeMm3": 38.00999220887641,
+          "quality": {
+            "fileSha256": "7e40fe219349e54fdb8224a6300d1fba46d009b5138789ba34786f111e27fbc9",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified",
+        "admittedAssetId": "corpus-scon-ex4"
+      },
+      {
+        "name": "ex5",
+        "files": [
+          {
+            "path": "examples/ex5.scad",
+            "sha256": "118d31e94500320aa6da99b5c26952cf26ee605ee1b5c5c7e80e330d3f9e79c0",
+            "bytes": 2143
+          },
+          {
+            "path": "scon.scad",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "phase": "convert",
+        "status": "limited",
+        "error": {
+          "code": "resource-limit",
+          "message": "Line 85, column 7: examples/ex5.scad: OpenSCAD construction nesting exceeds 32",
+          "path": "examples/ex5.scad",
+          "line": 85,
+          "column": 7
+        }
+      },
+      {
+        "name": "tldr",
+        "files": [
+          {
+            "path": "examples/tldr.scad",
+            "sha256": "9ee049e3b62af2232bfb2f9eefa9a7f19edb05ab42506271bdb64d58f5a44f9a",
+            "bytes": 375
+          },
+          {
+            "path": "scon.scad",
+            "sha256": "ee43fabc0729b37a0ab736ac6fa668eef7458b0f2f2b0287e4bf95eba40c4040",
+            "bytes": 5595
+          }
+        ],
+        "phase": "stl",
+        "warnings": [],
+        "volumeMm3": 4.179080316577819,
+        "mesh": {
+          "sha256": "de15cc31c7c09ac618379ec7524c9262a87e2148c15e052091e8dcbab573e534",
+          "bytes": 250084
+        },
+        "screening": {
+          "fileSha256": "de15cc31c7c09ac618379ec7524c9262a87e2148c15e052091e8dcbab573e534",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "pass",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [],
+          "triangles": 5000,
+          "boundsMm": {
+            "min": [
+              0,
+              1,
+              2
+            ],
+            "max": [
+              2,
+              3,
+              4
+            ]
+          },
+          "signedVolumeMm3": 4.1790802921235635,
+          "quality": {
+            "fileSha256": "de15cc31c7c09ac618379ec7524c9262a87e2148c15e052091e8dcbab573e534",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": true,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "qualified",
+        "admittedAssetId": "corpus-scon-tldr"
+      }
+    ]
+  }
+}

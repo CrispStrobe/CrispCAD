@@ -63,11 +63,11 @@ no saved iteration. Restoring an iteration retains later work.
 
 The interpreter accepts a bounded modeling language, not JavaScript, Haskell or
 `.scad` files. There is no `eval`, arbitrary imports, filesystem or network access.
-Current limits: 32 KiB UTF-8 source, 8,192 tokens, 128 statements, depth 32,
+Current limits: 32 KiB UTF-8 source, 8,192 tokens, 256 statements, depth 32,
 4,096 expanded shape nodes, 200,000 estimated faces, repeat count 64 and curve
-segments 12–96 (default 48). The normal expression and document limits also apply.
-General user-defined modules, conditional modeling, arbitrary loops, 2D code
-profiles and implicit surfaces are future work.
+segments up to 4,096 (default 48), additionally bounded by the face budget. The normal expression and document limits also apply.
+The supported conditional, loop and profile operations remain bounded. General
+user-defined native functions, arbitrary loops and implicit surfaces remain ahead.
 
 ![Independent source editor, solid preview and local parameter controls](images/code-editor.png)
 
@@ -132,6 +132,9 @@ return extrudeProfile(height,
 starts at Z=0; positive twist follows the right-hand convention.
 `revolve(profile[, angleDegrees, segmentsPerFullTurn])` revolves one-sided radial
 X coordinates around the profile Y axis and maps that axis to world Z.
+Complete 360-degree turns also accept wholly nonpositive radial profiles,
+reflected before revolution; crossing-axis and negative partial-turn profiles
+remain refused.
 Use `move2d`, `rotate2d`, `scale2d`, `union2d`, `subtract2d`, `intersect2d`,
 `hull2d` and `polygon2d(points[, indexPaths])` for profiles. Profile expressions
 are inline trees; named profile references and profile loops are future work.
@@ -174,3 +177,30 @@ A message can use `formatSCAD("width=",width)` for reference-compatible numeric
 lettering/diagnostics; existing `formatText` keeps native number formatting.
 Signed revolutions and wholly negative radial profiles are supported. A profile
 crossing the radial axis is diagnosed rather than replaced with a solid.
+
+### Lazy scalar aliases
+
+`const name = expression;` names a scalar expression without exposing another
+editable parameter. Aliases may read parameters and other aliases; parameter
+definitions can read aliases in their global scope. They resolve only when used in the active
+shape/profile branch, so inactive assertions and invalid numeric domains stay
+inactive. In a loop, resolution and caching use that iteration's binding scope.
+
+```cad
+param width: mm = 20;
+const half = width / 2;
+return box(width, half, 2);
+```
+
+Aliases share the existing source, token and 256-statement budgets. Every
+expression remains limited to 1,024 characters; alias cycles and dependency
+chains beyond 32 are refused, and resolution uses a 65,536 scalar-work guard in addition to the 16,384-step
+shape evaluation budget. The importer uses aliases to avoid repeating large
+symbolic formulas. No source defaults or geometry limits are changed.
+
+Named shapes are also resolved in the consuming loop scope. Their declaration
+graph is checked for unknown names/cycles without evaluating inactive numeric
+domains or unbound loop variables. `assertValue(condition,value[,message])`
+checks lazily, including an optional literal or `formatSCAD` diagnostic message.
+Text in this expression form is diagnostic data; it cannot supply a numeric
+modeling argument or execute code.

@@ -29,11 +29,12 @@
       "id": "scad.assert.message",
       "state": "closed",
       "area": "diagnostics",
-      "current": "Literal and parameter-driven assertion messages are retained in solid and profile IR.",
+      "current": "Literal and parameter-driven messages are retained in solid, profile and scalar expression assertions, including default and ignored arguments.",
       "tests": [
-        "tests/openscad-language.test.ts"
+        "tests/openscad-language.test.ts",
+        "tests/retained-evaluation.test.ts"
       ],
-      "nextOrEvidence": "Both assertion conditions and messages recompute after parameter edits."
+      "nextOrEvidence": "Official 2021.01 executable confirms six-significant-digit expression assertion messages. Guarded failed edits preserve the last valid model and its history."
     },
     {
       "id": "scad.random.sequence",

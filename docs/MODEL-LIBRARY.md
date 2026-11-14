@@ -586,3 +586,112 @@ The host bundles exact selected source bytes, previews and the
 correct asset-specific MIT notice. Insertion verifies hashes, evaluates the
 candidate, and preserves provenance, attribution and undo/redo through the
 existing source-insertion path. No whole-corpus rendering gate is used.
+
+### Bounded A2D dependency collection
+
+Two authored MIT A2D roots, `Samples/GrillSquare.scad` and
+`Samples/PointGenerators.scad`, are projected separately in
+`library/a2d-editor-manifest.json`. Together with the unchanged 93-entry corpus
+selection this gives 95 editor-enabled source entries and 93 distinct mesh
+hashes (134 gallery entries including the other seeds). A2D.scad is retained as
+one shared dependency, not counted as an additional model.
+
+Each root retains its exact original bytes and relative directory structure.
+`sourceBundle` records its logical root and every local dependency's file hash,
+size, author, source URL, pinned commit and independent reviewed licence grant.
+Insertion verifies all originals before in-memory include expansion and preserves
+that metadata in project provenance and attribution sidecars. The pure bundle API
+has no ambient file access, search path or network loading. Explicit local file-scope
+`use` is now supported with isolated library definitions; library root geometry is
+not executed (see the cycle 23 measurement below).
+Both aggregate original and expanded source stay within 32 KiB and expanded
+lexical tokens within 8,192. Existing construction, geometry and timeout limits
+are unchanged. Assertions remain live and failing edits abort atomically.
+
+The [nine-root measurement report](../library/corpus-audit/editor-screening-cycle17.json)
+retains two strict STL passes, five unsupported roots and two resource refusals.
+Only the two passes are reproduced on the final runtime and inserted. The three
+planar samples receive no invented extrusion; source parameters, time, fragment
+settings and entry points remain unchanged. Unused A2D library helpers are outside
+these two default-root qualifications.
+
+
+### Full-turn shaft admission — 2026-11-14
+
+Two further unchanged MIT defaults, `Shaft_01.scad` and
+`Shaft_02_With_Keyway.scad`, pass strict STL screening after support for full
+revolutions of wholly left-side profiles. Their six-point authored profiles and
+48-segment full turns remain unchanged; no source edits, repairs or tessellation
+overrides were used. They add 384- and 568-triangle meshes respectively. The
+standalone corpus now has 95 entries plus the two separate A2D entries: **97 source
+entries / 95 distinct mesh hashes**, and 136 total gallery entries. All earlier
+records and previews are preserved. See `editor-screening-cycle18.json` for the
+two original failures and final measurements. Partial-turn and crossing-axis
+profiles remain refused; this is static geometry qualification only.
+
+
+### SCON function-valued configurations — 2026-11-14
+
+The separate `library/scon-editor-manifest.json` admits five MIT authored defaults
+from Warren MacEvoy's pinned openscad-scon revision
+`c954e07bf0faf571d8eccc259d47e61938666cef`: `examples/ex1.scad`, `ex2.scad`,
+`ex3.scad`, `ex4.scad` and `tldr.scad`. Every root includes only the independently
+retained 5,595-byte `scon.scad`; all exact original bytes and the complete MIT
+notice remain local and are hash-checked before insertion. No JSON file, external
+renderer, parameter override, repair or alternate entrypoint is used.
+
+The six-root report `library/corpus-audit/editor-screening-cycle19.json` retains
+0/6 before and 5/6 after. The remaining `ex5` refuses construction depth beyond
+32. The admitted meshes have 5000, 524, 524, 5084 and 5000 triangles, respectively,
+and pass parse, closed positive-volume, 200mm extent and 10,000-triangle screens.
+They add five distinct hashes: 95 Angelo + 2 A2D + 5 SCON = **102 source entries /
+100 distinct meshes**, and 141 total gallery entries. The prior 97 records,
+136 previews and seven historical A2D refusals remain unchanged. All counts refer
+to these static authored defaults; no manufacturing, motion or physics claim.
+
+
+### Coin default and retained cycle20 refusals — 2026-11-14
+
+`Asset_SCAD/Coin_02.scad` adds one unchanged MIT authored default, with a
+3,132-triangle mesh passing all four strict STL screens. Its nonstandard text
+`center` argument is warned and ignored, retaining the original default left /
+baseline alignment; existing Droid-font substitution can change glyph metrics.
+No source edit, font download, model repair, parameter override or limit change
+was used. The first 95 Angelo records, two A2D records and five SCON records,
+their 141 previews, all historical refusals and SCON `ex5`'s depth exclusion remain
+unchanged. Totals are **103 source entries / 101 distinct STL hashes**, and 142
+gallery entries. This is static authored-default qualification only.
+
+The bounded four-root measurement improved from no qualified defaults to one:
+`meshbuilder` reaches the fixed work limit after its generated-list syntax is
+supported; `functional` requires unsupported `version_num`; `Sign_03` fails
+strict topology; `Coin_02` passes geometry, STL and offline editor insertion.
+See `library/corpus-audit/editor-screening-cycle20.json` for the separate measured
+phases, unchanged-result reuse and exact runtime identities.
+
+
+### Authored circular grill default — 2026-11-14
+
+`Samples/GrillCircle.scad` adds a third A2D entry from the same reviewed MIT
+revision and exact shared dependency bytes. Its original 80mm fan-grill default
+passes all four strict STL screens at 3,372 triangles with bounds
+[-40,-40,0] to [40,40,2]mm. Original dimensions, fragments, entrypoint and source
+bytes remain unchanged; no repair or parameter override was used.
+
+The two-root sample is 1 pass / 1 resource refusal after being 0/2 qualified.
+`ParametricBoxWithLid` remains excluded at the original work limit, as does SCON
+`ex5` at depth32. The old 103 records, 142 previews and all historical refusal
+reports remain unchanged. Totals are **104 source entries / 102 distinct STL
+hashes**, and 143 total gallery entries. The new result supersedes only the prior
+GrillCircle refusal for current admission; its historical observation stays in
+the original nine-root report. See `library/corpus-audit/editor-screening-cycle21.json`.
+
+Cycle 23 measured scoped `use` on Angelo `Scene_House.scad` (one unchanged authored
+root and four exact dependencies). It now produces actual geometry and a 2,284-
+triangle STL, and editor insertion/serialization/undo-redo pass. Strict STL topology
+fails with 44 invalid edges and 54 invalid vertex fans; it remains excluded. The
+cohort is **0/1 qualified before → 0/1 qualified after**, with one topology refusal.
+Delivered counts remain **104 sources / 102 distinct STL hashes / 143 previews**.
+See `library/corpus-audit/editor-screening-cycle23.json`. Seven other ranked `use` roots
+have independent path, loop/list-size or JSON blockers and are not credited as
+expected admissions. Their ranking and exact root names remain in the cycle 21 report.

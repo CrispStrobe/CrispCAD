@@ -1,0 +1,337 @@
+{
+  "version": 1,
+  "capturedAt": "2026-11-14T14:36:30.425291+00:00",
+  "baselineCommit": "b928048271c080252a0eb1d7ef668c81b83a3f61",
+  "scope": "Nine unchanged authored A2D sample roots with the pinned A2D.scad dependency. No added extrusion, source/fragment/time overrides or alternate entrypoints. Initial observations retain their exact runtime artifacts; only the two qualified roots are reproduced on the final guarded runtime for admission.",
+  "policy": {
+    "timeoutMs": 5000,
+    "maxTriangles": 10000,
+    "maxExtentMm": 200,
+    "defaults": "unchanged authored root; no frame, fragment, extrusion or source overrides"
+  },
+  "runtimeArtifacts": {
+    "packages/core/dist/openscad-import.js": "a21c3a2bc807ed96fcf99333e0b75d08be5614e0fcf6ddd2bdbb0a2b3997d58d",
+    "packages/core/dist/openscad-bundle.js": "ad4d318e29d04f01f74d86344aa9245e86586cdcd19ac0a7e332e465e3584acf",
+    "packages/core/dist/code.js": "36b18c76f8fa41a7d841a10abd1b7cf6a9e17a8def0c5c325009b17203ecfd39",
+    "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+    "packages/core/dist/parameters.js": "30065ecfcedf8d1d7a130ffe9d2f64b34c0a3ad617f415830d0864fb5a10a555",
+    "packages/geometry/dist/kernel.js": "986b3804ba93e4c3f9ba90b76e83f0cfbf396539ffe8f44b5da1aa8e129c72b0",
+    "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+  },
+  "runtimeStable": true,
+  "counts": {
+    "limited": 2,
+    "qualified": 2,
+    "unsupported": 5
+  },
+  "results": [
+    {
+      "name": "GrillCircle",
+      "rootPath": "Samples/GrillCircle.scad",
+      "files": [
+        {
+          "path": "Samples/GrillCircle.scad",
+          "sha256": "f1c6e12d4269e5af6f8f2a54b3f366441ce6a54f8c86d6758b9eea8e1f4d3f37",
+          "bytes": 1478
+        },
+        {
+          "path": "A2D.scad",
+          "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+          "bytes": 13948
+        }
+      ],
+      "status": "limited",
+      "phase": "convert",
+      "error": {
+        "code": "resource-limit",
+        "message": "Line 358, column 54: A2D.scad: OpenSCAD expanded expression limit exceeded",
+        "path": "A2D.scad",
+        "line": 358,
+        "column": 54
+      }
+    },
+    {
+      "name": "GrillSquare",
+      "rootPath": "Samples/GrillSquare.scad",
+      "files": [
+        {
+          "path": "Samples/GrillSquare.scad",
+          "sha256": "c91720016f60ba9d343e4625a3212fe3ab1e5668395aee56fdf0d7452510c99b",
+          "bytes": 1446
+        },
+        {
+          "path": "A2D.scad",
+          "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+          "bytes": 13948
+        }
+      ],
+      "status": "qualified",
+      "phase": "stl",
+      "warnings": [
+        "Assertion messages are archived; failures use a generic diagnostic.",
+        "Assertion message: Please upgrade A2D library to version 1.5.0 or higher.",
+        "Assertion message: size must be number or list with two items",
+        "Assertion message: hsize must be number or list with two items",
+        "Assertion message: spacing must be number or list with two items",
+        "Assertion message: count must be number or list with two items"
+      ],
+      "bundle": {
+        "originalBytes": 15394,
+        "expandedBytes": 15375,
+        "expandedTokens": 3113,
+        "expandedSha256": "31114b1a359c599941f16df7390466396bc211c9b61060e42548099b36b5532a",
+        "includes": [
+          {
+            "fromPath": "Samples/GrillSquare.scad",
+            "path": "A2D.scad",
+            "sourceOffset": 610,
+            "line": 10,
+            "column": 1,
+            "depth": 1
+          }
+        ]
+      },
+      "volumeMm3": 11316.420356224853,
+      "mesh": {
+        "sha256": "9866b1c4ec3312bf5d21218837850531f5600de825638bbb6f7c431417079c94",
+        "bytes": 87884
+      },
+      "screening": {
+        "checks": {
+          "parseable": "pass",
+          "closedPositiveVolume": "pass",
+          "withinSizeLimits": "pass",
+          "withinTriangleLimits": "pass"
+        },
+        "triangles": 1756,
+        "boundsMm": {
+          "min": [
+            0,
+            0,
+            0
+          ],
+          "max": [
+            150,
+            50,
+            2
+          ]
+        },
+        "signedVolumeMm3": 11316.420302132363,
+        "diagnostics": []
+      }
+    },
+    {
+      "name": "KnurledKnob",
+      "rootPath": "Samples/KnurledKnob.scad",
+      "files": [
+        {
+          "path": "Samples/KnurledKnob.scad",
+          "sha256": "7052b4f11cef9fa2fb31b6aa34e76d40d7c1c1a49b2da1503ef2f129d51f65f3",
+          "bytes": 2028
+        },
+        {
+          "path": "A2D.scad",
+          "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+          "bytes": 13948
+        }
+      ],
+      "status": "unsupported",
+      "phase": "convert",
+      "error": {
+        "code": "unsupported-feature",
+        "message": "Line 19, column 10: A2D.scad: Unsupported OpenSCAD feature \u201ccomprehension range must be finite and independent of parameters\u201d",
+        "path": "A2D.scad",
+        "line": 19,
+        "column": 10
+      }
+    },
+    {
+      "name": "MakeRound",
+      "rootPath": "Samples/MakeRound.scad",
+      "files": [
+        {
+          "path": "Samples/MakeRound.scad",
+          "sha256": "70c9f40a133ea92b12dfdf336404c29c124b860fd5e02c2a7464505c6232825d",
+          "bytes": 1847
+        },
+        {
+          "path": "A2D.scad",
+          "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+          "bytes": 13948
+        }
+      ],
+      "status": "limited",
+      "phase": "convert",
+      "error": {
+        "code": "resource-limit",
+        "message": "Line 30, column 1: Samples/MakeRound.scad: Converted OpenSCAD construction: Estimated mesh budget exceeds 200000 faces",
+        "path": "Samples/MakeRound.scad",
+        "line": 30,
+        "column": 1
+      }
+    },
+    {
+      "name": "ParametricBoxWithLid",
+      "rootPath": "Samples/ParametricBoxWithLid.scad",
+      "files": [
+        {
+          "path": "Samples/ParametricBoxWithLid.scad",
+          "sha256": "65db4781c2f488a08fab31dfdf2c4b50b08757519e76c171144b0f2079705761",
+          "bytes": 2006
+        },
+        {
+          "path": "A2D.scad",
+          "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+          "bytes": 13948
+        }
+      ],
+      "status": "unsupported",
+      "phase": "convert",
+      "error": {
+        "code": "unsupported-feature",
+        "message": "Line 41, column 28: Samples/ParametricBoxWithLid.scad: Unsupported OpenSCAD feature \u201cnumeric operation on string or undef\u201d",
+        "path": "Samples/ParametricBoxWithLid.scad",
+        "line": 41,
+        "column": 28
+      }
+    },
+    {
+      "name": "PointGenerators",
+      "rootPath": "Samples/PointGenerators.scad",
+      "files": [
+        {
+          "path": "Samples/PointGenerators.scad",
+          "sha256": "5f4103ddc2fbab12be80258ef10b75aed85f4b293677322b9191e54005e0c424",
+          "bytes": 1037
+        },
+        {
+          "path": "A2D.scad",
+          "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+          "bytes": 13948
+        }
+      ],
+      "status": "qualified",
+      "phase": "stl",
+      "warnings": [],
+      "bundle": {
+        "originalBytes": 14985,
+        "expandedBytes": 14966,
+        "expandedTokens": 3020,
+        "expandedSha256": "78092a9ae094029f70259013e4e0304edf30583c24844f5d043cb5385fa489f6",
+        "includes": [
+          {
+            "fromPath": "Samples/PointGenerators.scad",
+            "path": "A2D.scad",
+            "sourceOffset": 626,
+            "line": 10,
+            "column": 1,
+            "depth": 1
+          }
+        ]
+      },
+      "volumeMm3": 4681.637636889065,
+      "mesh": {
+        "sha256": "0310fc106c49e0d52c1eff029988ad5eda6cde5578fd06c7ecd8192ecabdbf5e",
+        "bytes": 20684
+      },
+      "screening": {
+        "checks": {
+          "parseable": "pass",
+          "closedPositiveVolume": "pass",
+          "withinSizeLimits": "pass",
+          "withinTriangleLimits": "pass"
+        },
+        "triangles": 412,
+        "boundsMm": {
+          "min": [
+            -30,
+            -20,
+            0
+          ],
+          "max": [
+            30,
+            20,
+            2
+          ]
+        },
+        "signedVolumeMm3": 4681.637687323614,
+        "diagnostics": []
+      }
+    },
+    {
+      "name": "CircleText",
+      "rootPath": "Samples/CircleText.scad",
+      "files": [
+        {
+          "path": "Samples/CircleText.scad",
+          "sha256": "2e59a071934742896c30407c5f967fc3f2797ed438fece39c44c275daf642bf2",
+          "bytes": 1373
+        },
+        {
+          "path": "A2D.scad",
+          "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+          "bytes": 13948
+        }
+      ],
+      "status": "unsupported",
+      "phase": "convert",
+      "error": {
+        "code": "unsupported-feature",
+        "message": "Line 248, column 56: A2D.scad: Unsupported OpenSCAD feature \u201ctext\u201d",
+        "path": "A2D.scad",
+        "line": 248,
+        "column": 56
+      }
+    },
+    {
+      "name": "MultiLineText",
+      "rootPath": "Samples/MultiLineText.scad",
+      "files": [
+        {
+          "path": "Samples/MultiLineText.scad",
+          "sha256": "d71a20d92a21e9780382dd261ec582a778b5910f4fc1c284cd735dc9e252aef2",
+          "bytes": 827
+        },
+        {
+          "path": "A2D.scad",
+          "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+          "bytes": 13948
+        }
+      ],
+      "status": "unsupported",
+      "phase": "convert",
+      "error": {
+        "code": "unsupported-feature",
+        "message": "Line 263, column 69: A2D.scad: Unsupported OpenSCAD feature \u201ctext\u201d",
+        "path": "A2D.scad",
+        "line": 263,
+        "column": 69
+      }
+    },
+    {
+      "name": "Stars",
+      "rootPath": "Samples/Stars.scad",
+      "files": [
+        {
+          "path": "Samples/Stars.scad",
+          "sha256": "020ccb69db42e3292e0a986123caf34d9031836828c4d43fb80af56eee8c42c8",
+          "bytes": 900
+        },
+        {
+          "path": "A2D.scad",
+          "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+          "bytes": 13948
+        }
+      ],
+      "status": "unsupported",
+      "phase": "convert",
+      "error": {
+        "code": "unsupported-feature",
+        "message": "Line 66, column 5: A2D.scad: Unsupported OpenSCAD feature \u201cpolygon\u201d",
+        "path": "A2D.scad",
+        "line": 66,
+        "column": 5
+      }
+    }
+  ]
+}
