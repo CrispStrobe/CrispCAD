@@ -71,3 +71,9 @@ it('qualifies imported taper/hull/control-flow solids with real mass and refuses
  const changed=kernel.evaluate(s.state.document);expect(solidMassProperties(changed.bodies[0],1050).massKg).toBeCloseTo(changed.volume*1050e-9,9);await expect(createPhysicsWorld(s.state.document,changed,old,{J})).rejects.toThrow();
  const prepared=await prepareDocumentCollisions(s.state.document,changed,kernel),world=await createPhysicsWorld(s.state.document,changed,prepared,{J});try{for(let i=0;i<200;i++)world.step();expect(world.geometryBoundsMm(id).min[2]).toBeGreaterThan(-.25);}finally{world.dispose();}
 },30000);
+it('qualifies imported profile holes and partial revolutions and preserves their empty space in Jolt',async()=>{
+ for(const source of ['linear_extrude(10)difference(){square([20,20],true);circle(4,$fn=16);}','rotate_extrude(angle=180,$fn=24)translate([8,0])square([3,10]);']){
+  const session=createCadSession(),id=session.addCode(importOpenSCAD(source)),doc=session.state.document,result=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,result,kernel);expect(prepared.get(id)!.certificate.relativeError).toBeLessThan(.02);
+  const world=await createPhysicsWorld(doc,result,prepared,{J,ground:false});try{expect(world.raycast([0,0,20],[0,0,-5])).toBeNull();expect(world.raycast([9,1,20],[9,1,-5])?.bodyId).toBe(id);world.step();}finally{world.dispose();session.dispose();}
+ }
+});

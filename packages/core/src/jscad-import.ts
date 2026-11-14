@@ -8,7 +8,7 @@ type Ast={type:string;start:number;[key:string]:any};
 type RecordValue={[key:string]:Value};
 type Value=undefined|null|number|boolean|string|Value[]|RecordValue|Geometry|Profile|Procedure|Api;
 class Geometry {constructor(readonly source:string,readonly color?:string){}}
-class Profile {constructor(readonly points:number[][]){}}
+class Profile {readonly source:string;constructor(readonly points:number[][],source?:string){this.source=source??`polygon2d([${points.map(p=>'['+p.join(', ')+']').join(', ')}])`;}}
 class Procedure {constructor(readonly node:Ast,readonly scope:Scope){}}
 class Api {constructor(readonly path:string,readonly receiver?:Value[]){}}
 class Returned {constructor(readonly value:Value){}}
@@ -18,7 +18,7 @@ export interface JSCADImport {program:CodeProgram;outputs:{program:CodeProgram;c
 export const JSCAD_IMPORT_LIMITS=Object.freeze({steps:20000,loopIterations:64,arrayItems:256,callDepth:32,astDepth:128,astNodes:8192});
 export function importJSCAD(source:string,overrides:Record<string,number|string|boolean>={},options:JSCADImportOptions={}):JSCADImport{
  if(typeof source!=='string')throw new CadCodeError(t('Expected source text'),0,'');
- let steps=0,depth=0,location=0,coloursUsed=false;
+ let steps=0,depth=0,location=0,coloursUsed=false,curvedExtrusions=false;
  const fail:(message:string,node?:Ast,code?:string)=>never=(message,node,code='invalid-source')=>{throw new CadCodeError(message,node?.start??location,source,code);};
  const unsupported:(feature:string,node?:Ast)=>never=(feature,node)=>fail(t`Unsupported JSCAD feature “${feature}”`,node,'unsupported-feature');
  const tick=(node:Ast)=>{location=node.start;if(++steps>JSCAD_IMPORT_LIMITS.steps)fail(t('JSCAD evaluation budget exceeded'),node,'resource-limit');};
@@ -34,6 +34,7 @@ export function importJSCAD(source:string,overrides:Record<string,number|string|
  const array=(v:Value[]):Value[]=>{if(v.length>JSCAD_IMPORT_LIMITS.arrayItems)fail(t('JSCAD array limit exceeded'),undefined,'resource-limit');return v;};
  const geometry=(text:string,color?:string):Geometry=>{if(text.length>CODE_LIMITS.sourceBytes)fail(t('JSCAD expanded source limit exceeded'),undefined,'resource-limit');return new Geometry(text,color);};
  function geometries(values:Value[]):Geometry[]{const out:Geometry[]=[];const add=(v:Value,n=0)=>{if(n>32)fail(t('JSCAD array nesting limit exceeded'),undefined,'resource-limit');if(Array.isArray(v)){for(const x of v)add(x,n+1);}else if(v instanceof Geometry)out.push(v);else fail(t('Expected JSCAD solid geometry'));if(out.length>256)fail(t('JSCAD array limit exceeded'),undefined,'resource-limit');};for(const v of values)add(v);return out;}
+ const profileValue=(source:string)=>{if(source.length>CODE_LIMITS.sourceBytes)fail(t('JSCAD generated profile exceeds source budget'),undefined,'resource-limit');return new Profile([],source);};
  const merged=(name:string,items:Geometry[])=>{if(!items.length)fail(t('JSCAD construction returned no solids'));return items.length===1&&name!=='hull'?items[0]:geometry(`${name}(${items.map(v=>v.source).join(', ')})`);};
  const root=new Scope(),module=record(),initialExports=record();module.exports=initialExports;root.values.set('module',module);root.values.set('exports',initialExports);root.values.set('require',new Api('require'));root.values.set('Math',new Api('Math'));root.values.set('undefined',undefined);
  function lookup(scope:Scope,key:string):Value{safe(key);const found=scope.find(key);if(!found)fail(t`Unknown JSCAD name “${key}”`);return found.values.get(key);}
@@ -95,18 +96,25 @@ export function importJSCAD(source:string,overrides:Record<string,number|string|
    if(path.startsWith('transforms.')&&args.slice(1).some(arg=>arg instanceof Profile)){
     const profiles=args.slice(1);if(!profiles.length||!profiles.every(arg=>arg instanceof Profile))return unsupported(`${path} mixed profiles/solids`);
     const method=path.slice(11);let offset=[0,0],factor=[1,1],angle=0;
-    if(method==='translate')offset=vector(args[0],2);
+    if(method==='translate'){const raw=list(args[0]);if(raw.length===3&&number(raw[2])===0)offset=vector(raw.slice(0,2),2);else offset=vector(raw,2);}
     else if(method==='translateX'||method==='translateY')offset[method==='translateX'?0:1]=number(args[0]);
     else if(method==='scale'){factor=vector(args[0],2);if(factor.some(n=>n<=0))return unsupported('profile scale must be positive');}
     else if(method==='rotateZ')angle=number(args[0]);
     else if(method==='rotate'){const v=vector(args[0]);if(v[0]!==0||v[1]!==0)return unsupported('profile rotation outside XY plane');angle=v[2];}
     else return unsupported(path);
-    const c=Math.cos(angle),s=Math.sin(angle),out=profiles.map(profile=>new Profile((profile as Profile).points.map(([x,y])=>[number(offset[0]+factor[0]*(x*c-y*s)),number(offset[1]+factor[1]*(x*s+y*c))])));
+    const out=profiles.map(profile=>profileValue(`move2d(${offset.join(', ')}, rotate2d(${angle*180/Math.PI}, scale2d(${factor.join(', ')}, ${(profile as Profile).source})))`));
     return out.length===1?out[0]:out;
    }
    if(path==='geometries.geom3.create'){if(args.length)return unsupported('geom3.create with polygons');return geometry('empty()');}
    if(path==='primitives.polygon'){const opts=args[0];if(!plain(opts)||Object.keys(opts).some(key=>!['points','closed'].includes(key))||opts.closed===false)return unsupported('primitives.polygon options');return new Profile(list(opts.points).map(p=>vector(p,2)));}
-   if(path==='extrusions.extrudeLinear'){const opts=args[0],profile=args[1];if(!plain(opts)||!(profile instanceof Profile)||Object.keys(opts).some(key=>key!=='height')||args.length!==2)return unsupported('extrusions.extrudeLinear options/profile');const points=profile.points.map(p=>`[${p.join(', ')}]`).join(', ');return geometry(`extrude(${number(opts.height??1)}, [${points}])`);}
+   if(path==='extrusions.extrudeLinear'){const opts=args[0],profile=args[1];if(!plain(opts)||!(profile instanceof Profile)||Object.keys(opts).some(key=>!['height','twistAngle','twistSteps'].includes(key))||args.length!==2)return unsupported('extrusions.extrudeLinear options/profile');if(number(opts.twistAngle??0)!==0)curvedExtrusions=true;return geometry(`extrudeProfile(${number(opts.height??1)}, ${profile.source}, ${number(opts.twistAngle??0)*180/Math.PI}, ${number(opts.twistSteps??1)})`);}
+   if(path==='extrusions.extrudeRotate'){const opts=args[0],profile=args[1];if(!plain(opts)||!(profile instanceof Profile)||Object.keys(opts).some(key=>!['angle','startAngle','segments','overflow'].includes(key))||args.length!==2||opts.overflow!==undefined&&opts.overflow!=='cap')return unsupported('extrusions.extrudeRotate options/profile');curvedExtrusions=true;const angle=number(opts.angle??2*Math.PI),start=number(opts.startAngle??0);if(angle<=0||angle>2*Math.PI||start<0||start+angle>2*Math.PI+1e-10)return unsupported('extrudeRotate angle interval');return geometry(`rotate([0,0,${start*180/Math.PI}], revolve(${profile.source}, ${angle*180/Math.PI}, ${number(opts.segments??12)}))`);}
+   if(path==='geometries.geom2.create'){if(args.length)return unsupported('geom2.create with sides');return profileValue('union2d()');}
+   if(['hulls.hull','hulls.hullChain','booleans.union','booleans.subtract','booleans.intersect'].includes(path)){
+    const flat:Value[]=[];const collect=(v:Value)=>{if(Array.isArray(v))v.forEach(collect);else flat.push(v);};args.forEach(collect);
+    if(flat.some(v=>v instanceof Profile)){if(!flat.every(v=>v instanceof Profile))return unsupported('mixed 2D profiles and 3D solids');const profiles=flat as Profile[],kind=path==='hulls.hull'?'hull2d':path==='booleans.subtract'?'subtract2d':path==='booleans.intersect'?'intersect2d':'union2d';if(path==='hulls.hullChain'){if(profiles.length<2)return unsupported('hullChain needs two profiles');return profileValue(`union2d(${profiles.slice(1).map((v,i)=>`hull2d(${profiles[i].source},${v.source})`).join(',')})`);}return profileValue(`${kind}(${profiles.map(p=>p.source).join(',')})`);}
+    if(path==='hulls.hullChain'){const solids=geometries(args);if(solids.length<2)return unsupported('hullChain needs two solids');return merged('union',solids.slice(1).map((g,i)=>merged('hull',[solids[i],g])));}
+   }
    if(path==='hulls.hull')return merged('hull',geometries(args));
    const bools:Record<string,string>={'booleans.union':'union','booleans.subtract':'subtract','booleans.intersect':'intersect'};if(bools[path])return merged(bools[path],geometries(args));
    if(path==='colors.colorize'){coloursUsed=true;const c=vector(args[0],Array.isArray(args[0])?args[0].length:3);if(c.length<3||c.length>4||c.some(n=>n<0||n>1)||c.length===4&&c[3]!==1)return unsupported('colorize alpha/color');const hex='#'+c.slice(0,3).map(n=>Math.round(n*255).toString(16).padStart(2,'0')).join('');const shapes=geometries(args.slice(1)).map(g=>geometry(g.source,hex));return shapes.length===1?shapes[0]:shapes;}
@@ -122,7 +130,7 @@ export function importJSCAD(source:string,overrides:Record<string,number|string|
  for(const [key,value] of Object.entries(overrides)){if(!Object.hasOwn(params,key))fail(t`Unknown JSCAD parameter “${key}”`);let normalized=value;if(typeof params[key]==='number'&&typeof value==='string'&&/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(value.trim()))normalized=Number(value);if(typeof params[key]==='boolean'&&typeof value==='string'&&['true','false'].includes(value.trim()))normalized=value.trim()==='true';if(typeof normalized!==typeof params[key])fail(t`Invalid JSCAD parameter “${key}”`);if(typeof normalized==='number')number(normalized);params[key]=normalized;metadata[key]=normalized;}
  for(const [key,definition] of definitionsByName){const value=params[key];if(typeof value==='number'&&(definition.type==='int'&&!Number.isInteger(value)||typeof definition.min==='number'&&value<definition.min||typeof definition.max==='number'&&value>definition.max))fail(t`JSCAD parameter “${key}” is outside its declared range`);if(Array.isArray(definition.values)&&!definition.values.includes(value))fail(t`Invalid JSCAD parameter “${key}”`);}
 
- const args=options.arguments?[...options.arguments]:[params];if(options.arguments){if(args.length>64)fail(t('JSCAD argument limit exceeded'));for(const value of args)if(typeof value==='number')number(value);else if(typeof value!=='string'&&typeof value!=='boolean'||typeof value==='string'&&value.length>1024)fail(t('Invalid JSCAD entry argument'));}const outputs=geometries([call(main,args)]);if(!outputs.length)fail(t('JSCAD construction returned no solids'));const warnings=[t('JSCAD conversion is an evaluated snapshot; keep the original source for parametric edits.')];if(outputs.length>1)warnings.push(t('Multiple JSCAD outputs are combined into one rigid body in the code editor.'));if(coloursUsed)warnings.push(t('Only whole-output JSCAD colours are retained in conversion metadata; face colours are not converted.'));
+ const args=options.arguments?[...options.arguments]:[params];if(options.arguments){if(args.length>64)fail(t('JSCAD argument limit exceeded'));for(const value of args)if(typeof value==='number')number(value);else if(typeof value!=='string'&&typeof value!=='boolean'||typeof value==='string'&&value.length>1024)fail(t('Invalid JSCAD entry argument'));}const outputs=geometries([call(main,args)]);if(!outputs.length)fail(t('JSCAD construction returned no solids'));const warnings=[t('JSCAD conversion is an evaluated snapshot; keep the original source for parametric edits.')];if(curvedExtrusions)warnings.push(t('Curved and twisted extrusion meshes use native tessellation; coarse slice counts can differ from JSCAD.'));if(outputs.length>1)warnings.push(t('Multiple JSCAD outputs are combined into one rigid body in the code editor.'));if(coloursUsed)warnings.push(t('Only whole-output JSCAD colours are retained in conversion metadata; face colours are not converted.'));
  const make=(g:Geometry):CodeProgram=>{const program:CodeProgram={version:1,language:'brickwright-cad-script',parameters:{},source:`// Converted JSCAD snapshot. Units: millimetres; rotations converted to degrees.\nreturn ${g.source.replace(/,\s*(?=(?:box|cylinder|sphere|move|rotate|scale|union|subtract|intersect)\()/g,',\n  ')};\n`};try{compileCode(program);}catch(error){fail(t`Converted JSCAD construction: ${error instanceof CadCodeError?error.detail:error instanceof Error?error.message:String(error)}`,main.node);}return program;};
  return {program:make(merged('union',outputs)),outputs:outputs.map(g=>({program:make(g),...(g.color?{color:g.color}:{})})),warnings,parameters:metadata,evaluatedSnapshot:true};
 }

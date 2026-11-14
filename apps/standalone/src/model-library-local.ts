@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {createLocalModelLibraryCatalogue, parseModelLibraryCatalogue, validateModelLibraryCatalogue} from '@brickwright/cad-core';
 import manifestText from '../../../library/examples-manifest.json?raw';
+import supportedText from '../../../library/supported-models-manifest.json?raw';
 import fixtureText from '../../../library/fixtures-manifest.json?raw';
 import seedText from '../../../library/seed-catalogue.json?raw';
 import previewText from '../../../library/previews.json?raw';
@@ -27,7 +28,7 @@ export function createBundledModelLibrary() {
   gear.modificationNotes = 'Unmodified upstream JavaScript retained. Insertion translates default parameters with Brickwright’s bounded interpreter into an editable CAD Script evaluated snapshot; original JavaScript parameters are not project parameters. No mesh or physics qualification.';
   gear.editableSource = {path: 'sources/jscad/gear.js', format: gear.original.format, bytes: gear.original.bytes, sha256: gear.original.sha256};
   gear.licence.attribution += ` Applicable original JSCAD MIT notice (retained for source and converted geometry; line breaks normalized to spaces): ${mitNotice.replace(/\r?\n/g, ' ')}`;
-  const checked = validateModelLibraryCatalogue({...examples, assets: [...examples.assets, ...fixtures.assets, gear]});
+  const checked = validateModelLibraryCatalogue({...examples, assets: [...examples.assets, ...fixtures.assets, ...createLocalModelLibraryCatalogue(JSON.parse(supportedText)).assets, gear]});
   if (!checked.valid) throw new Error(checked.errors.join(' '));
   const previews=new Map<string,string>(Object.entries(JSON.parse(previewText).previews));
   for(const asset of checked.catalogue.assets)if(!previews.has(asset.original.sha256))throw new Error('Missing bundled model preview: '+asset.id);

@@ -5,13 +5,14 @@ import {createCadSession, createLocalModelLibraryCatalogue, createModelAttributi
 import {createGeometryKernel, insertModelLibrarySource, type GeometryKernel} from '@brickwright/cad-geometry';
 const read=(path:string)=>readFileSync(`library/${path}`);
 const examples=createLocalModelLibraryCatalogue(JSON.parse(read('examples-manifest.json').toString()));
+const supported=createLocalModelLibraryCatalogue(JSON.parse(read('supported-models-manifest.json').toString()));
 const fixtures=createLocalModelLibraryCatalogue(JSON.parse(read('fixtures-manifest.json').toString()));
 let kernel:GeometryKernel;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 const options=()=>({evaluate:kernel.evaluate,modificationNotes:'Source compiled with default parameters; coordinates preserved.'});
 
-it('inserts all 35 pinned local sources as editable code with provenance, one undoable edit, and attribution',async()=>{
-  for(const catalogue of [examples,fixtures])for(const asset of catalogue.assets){
+it('inserts all 38 pinned local sources as editable code with provenance, one undoable edit, and attribution',async()=>{
+  for(const catalogue of [examples,fixtures,supported])for(const asset of catalogue.assets){
     const session=createCadSession();session.add({kind:'box',size:[1,1,1]});
     const before=session.serialize(),revision=session.state.revision;
     await insertModelLibrarySource(session,catalogue,{assetId:asset.id,file:'original'},read(asset.original.path!),options());

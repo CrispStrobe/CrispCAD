@@ -124,3 +124,25 @@ The reusable editor accepts host-provided `previews` and `licenceTexts` maps.
 Thumbnail browsing performs no model downloads or project/history writes. Imported
 external catalogues without a host-supplied preview show an explicit unavailable
 placeholder; the editor does not invent an image or fetch their STL automatically.
+
+## Supported CC0 additions — 2026-11-14
+
+The offline gallery now contains 39 editable-source models. The new
+`supported-models-manifest.json` admits **Quarter cylinder**, **Square pyramid** and
+**Nested open frames** from Ghostkeeper/SlicerTestModels at pinned revision
+`e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d`. Sources are unmodified, including
+original byte identity. The repository's explicit CC0 model grant and complete
+licence are retained alongside per-file author/commit evidence. Millimetres and
+Z up are curator assumptions. These are geometric fixtures, not calibrated parts.
+
+`node scripts/generate-supported-library.mjs --check` reproduces the manifests and
+STLs offline, checks pinned source/licence hashes, screens closed positive-volume
+meshes, and compares volumes with independent polygon geometry or rectangle-cell
+integration. `--write` regenerates the same outputs. New source or grant identities
+require a new review. `npm run library:previews:generate` renders actual evaluated
+geometry for all 39 gallery entries. Browsing and insertion use bundled bytes;
+research-only datasets and unsupported seeds are not gallery entries.
+
+STL screening is separate from Jolt qualification. These models do not carry a
+reusable physics certificate; simulation must qualify their actual regenerated
+geometry through the existing collision pipeline.

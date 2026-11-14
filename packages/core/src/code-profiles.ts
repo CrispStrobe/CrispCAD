@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: BSD-3-Clause
+import {t} from './i18n.js';
+export type CodeProfile={kind:'empty'}|{kind:'polygon';contours:[number,number][][]}|{kind:'circle';radius:number;segments:number}|{kind:'rectangle';size:[number,number];center:boolean}|{kind:'union'|'subtract'|'intersect'|'hull';profiles:CodeProfile[]}|{kind:'move'|'scale';vector:[number,number];profile:CodeProfile}|{kind:'rotate';angle:number;profile:CodeProfile};
+interface Scalar{text:string;at:number}
+export interface ProfileAst{name:string;at:number;scalars:Scalar[];points?:Scalar[][];paths?:Scalar[][];profiles:ProfileAst[]}
+interface Parser{peek():string|undefined;take():{text:string;at:number};expect(value:string):unknown;scalar(stops:string[]):Scalar;fail(message:string,at?:number):never;limited(message:string,at?:number):never}
+export function parseCodeProfile(p:Parser,depth=0):ProfileAst{
+ if(depth>32)p.limited(t('Profile nesting exceeds 32'));const token=p.take(),a:ProfileAst={name:token.text,at:token.at,scalars:[],profiles:[]};p.expect('(');
+ const lists=()=>{p.expect('[');const values:Scalar[][]=[];while(p.peek()!==']'){p.expect('[');const row:Scalar[]=[];while(p.peek()!==']'){row.push(p.scalar([',',']']));if(row.length>256)p.limited(t('Profile point budget exceeded'),a.at);if(p.peek()!==',')break;p.expect(',');}p.expect(']');values.push(row);if(values.length>256)p.limited(t('Profile point budget exceeded'),a.at);if(p.peek()!==',')break;p.expect(',');}p.expect(']');return values;};
+ if(a.name==='polygon2d'){a.points=lists();if(p.peek()===','){p.expect(',');a.paths=lists();}}
+ else if(['circle2d','rectangle2d'].includes(a.name)){while(p.peek()!==')'){a.scalars.push(p.scalar([',',')']));if(a.scalars.length>3)p.fail(t('Unexpected profile arguments'),a.at);if(p.peek()!==',')break;p.expect(',');}}
+ else if(['union2d','subtract2d','intersect2d','hull2d'].includes(a.name)){while(p.peek()!==')'){a.profiles.push(parseCodeProfile(p,depth+1));if(a.profiles.length>64)p.limited(t('At most 64 profile operands'),a.at);if(p.peek()!==',')break;p.expect(',');}}
+ else if(['move2d','scale2d','rotate2d'].includes(a.name)){const count=a.name==='rotate2d'?1:2;for(let i=0;i<count;i++){a.scalars.push(p.scalar([',']));p.expect(',');}a.profiles.push(parseCodeProfile(p,depth+1));}
+ else p.fail(t`Unknown profile function “${a.name}”`,a.at);
+ p.expect(')');return a;
+}
+export function resolveCodeProfile(a:ProfileAst,number:(s:Scalar,unit:'mm'|'deg'|'scalar',min:number,max:number,integer?:boolean,boolean?:boolean)=>number,fail:(s:string,at?:number)=>never,step:()=>void):CodeProfile{
+ step();const n=(i:number,unit:'mm'|'deg'|'scalar',min=-100000,max=100000,integer=false,boolean=false)=>number(a.scalars[i],unit,min,max,integer,boolean),arity=(lo:number,hi=lo)=>{if(a.scalars.length<lo||a.scalars.length>hi)fail(t('Unexpected profile arguments'),a.at);};
+ if(a.name==='circle2d'){arity(1,2);const radius=n(0,'mm',0),segments=a.scalars[1]?n(1,'scalar',3,4096,true):48;return radius?{kind:'circle',radius,segments}:{kind:'empty'};}
+ if(a.name==='rectangle2d'){arity(2,3);const size:[number,number]=[n(0,'mm',0),n(1,'mm',0)],center=a.scalars[2]?n(2,'scalar',0,1,false,true)!==0:false;return size.includes(0)?{kind:'empty'}:{kind:'rectangle',size,center};}
+ if(a.name==='polygon2d'){
+  const points=a.points!.map(p=>{if(p.length!==2)fail(t('Profile points need two coordinates'),a.at);return p.map(s=>number(s,'mm',-100000,100000)) as [number,number];});
+  const contours=a.paths?a.paths.map(path=>path.map(index=>points[number(index,'scalar',0,points.length-1,true)])): [points];
+  for(const contour of contours){if(contour.length>3&&contour[0].every((v,i)=>v===contour.at(-1)![i]))contour.pop();if(contour.length<3)fail(t('Extrusion profile needs at least three points'),a.at);
+   const cross=(p:number[],q:number[],r:number[])=> (q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0]);let area=0;
+   for(let i=0;i<contour.length;i++){const p=contour[i],q=contour[(i+1)%contour.length];area+=p[0]*q[1]-q[0]*p[1];if(Math.hypot(p[0]-q[0],p[1]-q[1])<1e-9)fail(t('Extrusion profile contains a zero-length edge'),a.at);
+    for(let j=i+2;j<contour.length;j++){if(i===0&&j===contour.length-1)continue;const r=contour[j],s=contour[(j+1)%contour.length],overlap=[0,1].every(k=>Math.max(Math.min(p[k],q[k]),Math.min(r[k],s[k]))<=Math.min(Math.max(p[k],q[k]),Math.max(r[k],s[k]))+1e-9);if(overlap&&cross(p,q,r)*cross(p,q,s)<=1e-10&&cross(r,s,p)*cross(r,s,q)<=1e-10)fail(t('Extrusion profile intersects itself'),a.at);}
+   }if(Math.abs(area)<1e-8)fail(t('Extrusion profile has zero area'),a.at);
+  }if(contours.reduce((sum,p)=>sum+p.length,0)>4096)fail(t('Profile point budget exceeded'),a.at);return {kind:'polygon',contours};
+ }
+ const profiles=a.profiles.map(child=>resolveCodeProfile(child,number,fail,step));
+ if(a.name.endsWith('2d')&&['union2d','subtract2d','intersect2d','hull2d'].includes(a.name)){if(!profiles.length)return {kind:'empty'};if(profiles.length===1&&a.name!=='hull2d')return profiles[0];return {kind:a.name.slice(0,-2) as 'union'|'subtract'|'intersect'|'hull',profiles};}
+ if(a.name==='rotate2d')return {kind:'rotate',angle:n(0,'deg',-360000,360000),profile:profiles[0]};
+ return {kind:a.name==='move2d'?'move':'scale',vector:[n(0,a.name==='move2d'?'mm':'scalar',a.name==='move2d'?-100000:.000001),n(1,a.name==='move2d'?'mm':'scalar',a.name==='move2d'?-100000:.000001)],profile:profiles[0]};
+}
+export function profileSize(p:CodeProfile):{nodes:number;vertices:number}{if(p.kind==='empty')return {nodes:1,vertices:0};if(p.kind==='circle')return {nodes:1,vertices:p.segments};if(p.kind==='rectangle')return {nodes:1,vertices:4};if(p.kind==='polygon')return {nodes:1,vertices:p.contours.reduce((n,c)=>n+c.length,0)};if('profile'in p){const size=profileSize(p.profile);return {...size,nodes:size.nodes+1};}return p.profiles.reduce((sum,p)=>{const n=profileSize(p);return {nodes:sum.nodes+n.nodes,vertices:sum.vertices+n.vertices};},{nodes:1,vertices:0});}

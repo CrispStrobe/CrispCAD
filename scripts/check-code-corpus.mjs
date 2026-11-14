@@ -7,7 +7,7 @@ import {createGeometryKernel} from '@brickwright/cad-geometry';
 import {convertSource} from './convert-code.mjs';
 import {loadCodeCorpus} from './load-code-corpus.mjs';
 const args=process.argv.slice(2),value=flag=>{const i=args.indexOf(flag);return i<0?undefined:args[i+1];};
-const path=resolve(value('--manifest')??'tests/fixtures/code-corpus/manifest.json'),library=value('--library'),paths=library?['seed-catalogue.json','fixtures-manifest.json','examples-manifest.json'].map(file=>resolve(library,file)):[path];const models=(await Promise.all(paths.map(loadCodeCorpus))).flat();
+const path=resolve(value('--manifest')??'tests/fixtures/code-corpus/manifest.json'),library=value('--library'),paths=library?['seed-catalogue.json','fixtures-manifest.json','examples-manifest.json','supported-models-manifest.json'].map(file=>resolve(library,file)):[path];const models=(await Promise.all(paths.map(loadCodeCorpus))).flat();
 const kernel=await createGeometryKernel({wasmBinary:await readFile(new URL('../node_modules/manifold-3d/manifold.wasm',import.meta.url))});
 const results=[];let unexpected=0;
 for(const item of models){const start=performance.now();let result;try{

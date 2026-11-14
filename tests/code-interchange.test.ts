@@ -15,7 +15,7 @@ it('retains parameter expressions and accepts scalar scale, comments and named v
  const p=importOpenSCAD('/* source */ width=20; height=width/2; $fn=48; difference(){ translate(v=[0,0,height/2]) cube([width,width,height],true); cylinder(h=50,r=3,center=true); }');expect(compileCode(p).values.height.value).toBe(10);p.parameters.width='30';expect(compileCode(p).values.height.value).toBe(15);expect(geometry('scale(2) cube(10);').volume).toBeCloseTo(8000);
 });
 it('refuses unsupported geometry and language features rather than approximating or executing them',()=>{
- for(const source of ['include <foo.scad>;','linear_extrude(height=5,twist=90) square(2);','rotate(45,[1,0,0]) cube(3);','a=10; a=20; cube(a);','sphere($fn=300);','cube(1);height=2;','import("https://example.com/a.stl");'])expect(()=>importOpenSCAD(source),source).toThrow();
+ for(const source of ['include <foo.scad>;','linear_extrude(height=5,v=[1,0,0]) square(2);','rotate(45,[1,0,0]) cube(3);','a=10; a=20; cube(a);','sphere($fn=300);','cube(1);height=2;','import("https://example.com/a.stl");'])expect(()=>importOpenSCAD(source),source).toThrow();
 });
 it('exports effective overrides as readable native defaults, preserving dependencies and comments',()=>{
  const p=codeExampleProgram('box');p.parameters={width:'40',height:'width / 2'};const text=exportCodeSource(p);expect(text).toContain('\n');const values=compileCode({...p,source:text,parameters:{}}).values;expect(values.width.value).toBe(40);expect(values.height.value).toBe(20);

@@ -114,3 +114,26 @@ for exact limits, parameter semantics, provenance and the VPS ingestion interfac
 object. It keeps GUI edits and retained source synchronized, embeds native code
 bodies as multiline templates and applies an accepted source change as one saved
 modeling step. It does not require exporting/reimporting the project.
+
+## Retained planar profiles
+
+Profiles can contain holes, planar Booleans and hulls before extrusion or
+revolution. Their scalar expressions remain driven by code parameters:
+
+```text
+param width: mm = 40;
+param bore: mm = 5;
+param height: mm = 8;
+return extrudeProfile(height,
+  subtract2d(rectangle2d(width, 30, true), circle2d(bore, 48)));
+```
+
+`extrudeProfile(height, profile[, twistDegrees, steps, topScaleX, topScaleY])`
+starts at Z=0; positive twist follows the right-hand convention.
+`revolve(profile[, angleDegrees, segmentsPerFullTurn])` revolves positive radial
+X coordinates around the profile Y axis and maps that axis to world Z.
+Use `move2d`, `rotate2d`, `scale2d`, `union2d`, `subtract2d`, `intersect2d`,
+`hull2d` and `polygon2d(points[, indexPaths])` for profiles. Profile expressions
+are inline trees; named profile references and profile loops are future work.
+See [converter coverage](CODE-CONVERTERS.md#profile-engine-and-measured-coverage--2026-11-14)
+for tessellation differences, resource limits and export gaps.

@@ -39,6 +39,9 @@ clutter. See [the shared source workflow](docs/UNIFIED-DESIGN-SOURCE.md).
 
 The same modeling compiler is available through the core SDK and a headless MCP server.
 
+The offline model library includes 39 source models with previews and retained
+licence/provenance information, including CC0 geometric fixtures.
+
 Bounded converters import supported OpenSCAD/JSCAD source and export native CAD
 Script or evaluated OpenSCAD/JSCAD snapshots. Unsupported constructs produce
 explicit diagnostics. Supported OpenSCAD modules, functions and local formulas

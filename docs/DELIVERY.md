@@ -628,3 +628,38 @@ model/source, library-file and history-pruning smoke checks. It was locally sign
 installed in `~/Applications/Brickwright CAD.app` and launched. The running asset
 receipt reports that revision with dirty=false; the installed bundle reports 18.
 Existing user projects and histories were retained.
+
+## Retained profiles, converter expansion and admitted CC0 models — 2026-11-14
+
+Native CAD Script now retains planar profile trees, holes, 2D Booleans/hulls,
+twisted/tapered extrusion and positive-angle revolutions. SCAD/JSCAD import and
+snapshot export share that IR; taper export to JSCAD is explicitly unsupported.
+Parameter dependencies survive SCAD profile conversion. The independent MIT
+JSCAD geometry oracle covers full/partial turns, holes, hulls, intersections and
+twist direction. Tests retain a measured coarse-twist triangulation discrepancy;
+we do not claim identical upstream meshes. Post-clipping budgets bound profiles
+and extrusion/revolution estimates. New diagnostics have German translations.
+
+Three unmodified, pinned CC0 Ghostkeeper files join the offline gallery:
+Quarter cylinder, Square pyramid and Nested open frames. All 39 admitted entries
+have rendered previews. New entries retain source bytes, licences, author/revision
+evidence and reproducible STL screening; independent analytic/cell-integration
+volume checks pass. Their editable insertion is tested offline with attribution,
+serialization and undo. Research-only files remain outside the shipped library.
+
+Fixed research sample: 38 → 42 positive-solid conversions out of 256 files;
+no converted regressions, four newly converted and two newly reaching resource
+limits. Final counts are 42 converted / 204 unsupported / 7 limited / 3 failed.
+This is a sampled execution outcome, not general compatibility or fidelity.
+Aggregate evidence is in `docs/evidence/import-profile-coverage-2026-11-14.json`;
+raw reports/sources remain external. Reviewed corpus: 39 converted, two diagnosed
+unsupported seeds. See CODE-CONVERTERS.md for remaining language/engine gaps.
+
+Local checks: production build; **447 unit tests pass**, one optional external
+syntax-oracle test skipped; **30 Chromium/iPad WebKit workflows pass**;
+**1,210 German messages** audited; six SDK packages install and execute offline.
+New Jolt tests preserve profile-hole space and partial-revolution space in real
+ray queries and verify hits on material. Their collision certificates meet the
+existing 2% volume / 0.2 mm bounds policy; these checks are not exact-contact or
+reusable library physics certification. Supported-library regeneration passes.
+GitHub Actions remain disabled.

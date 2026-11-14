@@ -1,0 +1,26 @@
+[
+  {
+    "path": "adhesion/big_frame.scad",
+    "revision": "e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d",
+    "lastChange": "e5cecb4a7894c7044bea414fb6e72faf147ac0f6",
+    "author": "Ghostkeeper",
+    "date": "2020-09-09T22:46:47Z",
+    "url": "https://github.com/Ghostkeeper/SlicerTestModels/commit/e5cecb4a7894c7044bea414fb6e72faf147ac0f6"
+  },
+  {
+    "path": "basic/quarter_cylinder.scad",
+    "revision": "e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d",
+    "lastChange": "b874efcb9a6bf104d28d8c78e12d96e02a9a70f9",
+    "author": "Ghostkeeper",
+    "date": "2018-06-11T22:03:41Z",
+    "url": "https://github.com/Ghostkeeper/SlicerTestModels/commit/b874efcb9a6bf104d28d8c78e12d96e02a9a70f9"
+  },
+  {
+    "path": "basic/pyramid.scad",
+    "revision": "e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d",
+    "lastChange": "89d42a9cd0d9d24ffee9639c6a6c3088227995aa",
+    "author": "Ghostkeeper",
+    "date": "2022-04-13T00:33:51Z",
+    "url": "https://github.com/Ghostkeeper/SlicerTestModels/commit/89d42a9cd0d9d24ffee9639c6a6c3088227995aa"
+  }
+]

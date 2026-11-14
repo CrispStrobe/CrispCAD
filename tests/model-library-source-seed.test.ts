@@ -10,7 +10,7 @@ beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('
 
 it('admits only the supported seed, retains exact original bytes and URL, and exports the full original MIT notice',async()=>{
   const {catalogue,localFiles}=createBundledModelLibrary();
-  expect(catalogue.assets).toHaveLength(36);
+  expect(catalogue.assets).toHaveLength(39);
   expect(catalogue.assets.some(asset=>['jscad-nuts-and-bolts','threads-scad-demo'].includes(asset.id))).toBe(false);
   const asset=catalogue.assets.find(asset=>asset.id==='jscad-involute-gear')!;
   expect(asset.original.url).toContain(`/${asset.sourceRevision!.commit}/`);
