@@ -13,11 +13,11 @@ const manifest = JSON.parse(read('editor-corpus-manifest.json').toString());
 const corpus = JSON.parse(read('corpus/manifest.json').toString());
 const repository = corpus.repositories.find((item: any) => item.id === 'AngeloNicoli--OpenSCAD-Snippet');
 const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
-const selected = ['beam-angular', 'beam-h', 'key-simple', 'roll-holder', 'angle-shelf', 'sign-01', 'sign-02', 'washer', 'transistor', 'stairs-01', 'bookshelf-01', 'chalkboard-01', 'arrow-01', 'base-cabinet-01', 'beam-c', 'bookshelf-02', 'box-wood-01', 'chair-01', 'door-01', 'flange-01', 'ladder-01', 'sofa', 'table-01', 'vent-grid', 'base-cabinet-02', 'bed-01', 'bed-02', 'bench-01', 'bench-02', 'chair-02', 'chair-03', 'fireplace-01', 'table-02', 'table-03', 'table-small-01', 'window-01', 'building-01', 'chalkboard-02', 'cone-01', 'crystal', 'key', 'lamp-01', 'lever-handle', 'soda-cup-01', 'stairs-02', 'stairs-03', 'traffic-light', 'tootbrush', 'electric-wire-plug', 'flange-03', 'resistor', 'street-02', 'street-03', 'street-06', 'sword-01', 'x', 'banner-01', 'raccordo', 'street-01', 'street-05', 'street-04', 'eyebolt', 'ladder-02', 'wall-04', 'fence-01', 'fence-02', 'building-02', 'walking-stick', 'ingot-01', 'coin-01', 'led-01', 'sauce-bottle', 'pipe-00', 'flange-02'];
+const selected = ['beam-angular', 'beam-h', 'key-simple', 'roll-holder', 'angle-shelf', 'sign-01', 'sign-02', 'washer', 'transistor', 'stairs-01', 'bookshelf-01', 'chalkboard-01', 'arrow-01', 'base-cabinet-01', 'beam-c', 'bookshelf-02', 'box-wood-01', 'chair-01', 'door-01', 'flange-01', 'ladder-01', 'sofa', 'table-01', 'vent-grid', 'base-cabinet-02', 'bed-01', 'bed-02', 'bench-01', 'bench-02', 'chair-02', 'chair-03', 'fireplace-01', 'table-02', 'table-03', 'table-small-01', 'window-01', 'building-01', 'chalkboard-02', 'cone-01', 'crystal', 'key', 'lamp-01', 'lever-handle', 'soda-cup-01', 'stairs-02', 'stairs-03', 'traffic-light', 'tootbrush', 'electric-wire-plug', 'flange-03', 'resistor', 'street-02', 'street-03', 'street-06', 'sword-01', 'x', 'banner-01', 'raccordo', 'street-01', 'street-05', 'street-04', 'eyebolt', 'ladder-02', 'wall-04', 'fence-01', 'fence-02', 'building-02', 'walking-stick', 'ingot-01', 'coin-01', 'led-01', 'sauce-bottle', 'pipe-00', 'flange-02', 'cup-01', 'ring', 'pipe-90', 'key-old-01', 'hole-plate', 'mech-piece-01', 'mech-piece-02', 'arc-02', 'circular-blade', 'gear-01', 'gear-02', 'mallet', 'tower', 'weights-01', 'tree-01', 'nut-lq', 'rod-01', 'animation-gear-02', 'animation-mechanism-01'];
 
 describe('explicit corpus to editor selection', () => {
-  it('admits exactly seventy-four selected standalone sources with unchanged pinned originals and full MIT grants', () => {
-    expect(selected).toHaveLength(74);
+  it('admits exactly ninety-three selected standalone sources with unchanged pinned originals and full MIT grants', () => {
+    expect(selected).toHaveLength(93);
     expect(manifest.selection).toMatchObject({count: selected.length, runtimeChecked: selected.length, complete: true});
     expect(manifest.assets.map((asset: any) => asset.id)).toEqual(selected.map(slug => `corpus-angelo-${slug}`));
     const street03 = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-street-03');
@@ -26,6 +26,38 @@ describe('explicit corpus to editor selection', () => {
     expect(street03.derivatives[0].sha256).toBe(street06.derivatives[0].sha256);
     for (const street of [street03, street06]) expect(street.modificationNotes).toContain('counts source files, not unique shapes');
     expect(manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-x').title).toBe('Crossed cubes (x)');
+    for (const slug of ['cup-01', 'ring', 'pipe-90', 'key-old-01']) {
+      const asset = manifest.assets.find((asset: any) => asset.id === `corpus-angelo-${slug}`);
+      expect(asset.modificationNotes).toContain('Brickwright interprets the authored two-component 3D translations [0,0] as [0,0,0]');
+      expect(asset.modificationNotes).toContain('fixed full-render context $preview=false');
+      expect(asset.modificationNotes).toContain('only the instantiated default top-level model');
+      if (slug === 'ring' || slug === 'pipe-90') expect(asset.modificationNotes).toContain('unresolved ring call');
+    }
+    for (const asset of manifest.assets.slice(78)) {
+      expect(asset.modificationNotes).toContain('only the instantiated default top-level model');
+      expect(asset.modificationNotes).toContain('Import warnings captured at qualification:');
+      expect(asset.modificationNotes).toContain('Source colours and transparency are not retained');
+    }
+    const plate = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-hole-plate');
+    expect(plate.modificationNotes).toContain('authored % background cube is excluded');
+    expect(plate.modificationNotes).toContain('authored cylinder-radius meaning');
+    for (const slug of ['weights-01', 'tree-01', 'nut-lq']) {
+      const asset = manifest.assets.find((asset: any) => asset.id === `corpus-angelo-${slug}`);
+      expect(asset.modificationNotes).toContain('bounded fixed-cardinality subset for the authored defaults');
+    }
+    for (const slug of ['rod-01', 'animation-gear-02', 'animation-mechanism-01']) {
+      const asset = manifest.assets.find((asset: any) => asset.id === `corpus-angelo-${slug}`);
+      expect(asset.modificationNotes).toContain('builtin unbound-time fallback $t=0');
+      expect(asset.modificationNotes).toContain('Unbound animation time uses $t=0; motion is not retained.');
+      expect(asset.modificationNotes).toContain('Gear engagement, kinematics and mechanical performance are not certified');
+    }
+    expect(manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-animation-gear-02').corpusSelection.upstreamPath).toBe('Animation_SCAD/Gear_02.scad');
+    expect(manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-animation-mechanism-01').corpusSelection.upstreamPath).toBe('Animation_SCAD/Mechanism_01.scad');
+    const mechanism = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-animation-mechanism-01');
+    const staticKey = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-key');
+    expect(mechanism.original.sha256).not.toBe(staticKey.original.sha256);
+    expect(mechanism.derivatives[0].sha256).toBe(staticKey.derivatives[0].sha256);
+    expect(mechanism.modificationNotes).toContain('counts source files, not unique shapes');
     const catalogue = createLocalModelLibraryCatalogue(manifest);
     expect(catalogue.assets).toHaveLength(selected.length);
     const fullNotice = read('evidence/corpus-selection-MIT-LICENSE.txt').toString().replace(/\s+/g, ' ').trim();
@@ -47,6 +79,35 @@ describe('explicit corpus to editor selection', () => {
         expect(hash(bytes)).toBe(file.sha256);
       }
     }
+  });
+
+  it('preserves every complete record from the first 93 editor selections', () => {
+    // Canonical digest pins provenance and qualification together, beyond just mesh identity.
+    expect(hash(Buffer.from(JSON.stringify(manifest.assets.slice(0, 78))))).toBe('e9620e4d5abeacff56a9a1fcbe6b70b47e4a1ebb8c3d81d29425d5cbcfcb7c61');
+    expect(hash(Buffer.from(JSON.stringify(manifest.assets.slice(0, 90))))).toBe('d11cbd3e39866caf6e7b2c41cabe17daeed22ff1011c9924232f1d7e66ca5e86');
+    expect(hash(Buffer.from(JSON.stringify(manifest.assets.slice(0, 93))))).toBe('80bf476a8360f4a58c54d90961ea49355751b7132feec3825fbc79950335000f');
+  });
+
+  it('retains the complete Walking Stick v1 qualification, original mesh and preview after scoped-fn correction', () => {
+    const history = JSON.parse(read('corpus-audit/qualification-history/walking-stick-v1.json').toString());
+    expect(history.format).toBe('brickwright-model-library-qualification-history');
+    expect(history.sourceManifest.gitCommit).toBe('23d27d7794356ce0aaf9727e637326df739e3028');
+    // Canonical digest covers the entire original record, including grant evidence and measurements.
+    expect(hash(Buffer.from(JSON.stringify(history.asset)))).toBe('6a46b4b147acfd8ebb39834a7508c9e57b90e91a05ca842928dba991a685acf8');
+    const legacy = history.asset;
+    expect(legacy.derivatives[0].path).toBe('meshes/corpus-selection/walking-stick.stl');
+    expect(legacy.derivatives[0].sha256).toBe('8901e38895159c7eab8de5002c741c3019e0ec587fa55667cdfa28fc2a15627a');
+    const mesh = read(legacy.derivatives[0].path);
+    expect(hash(mesh)).toBe(legacy.derivatives[0].sha256);
+    expect(mesh.length).toBe(legacy.derivatives[0].bytes);
+    expect(legacy.quality.fileSha256).toBe(legacy.derivatives[0].sha256);
+    const preview = read(history.preview.path);
+    expect(preview.length).toBe(history.preview.bytes);
+    expect(hash(preview)).toBe(history.preview.sha256);
+    const current = manifest.assets.find((asset: any) => asset.id === legacy.id);
+    expect(current.original).toEqual(legacy.original);
+    expect(current.derivatives[0].path).toBe('meshes/corpus-selection/walking-stick-scoped-fn-v2.stl');
+    expect(current.derivatives[0].sha256).not.toBe(legacy.derivatives[0].sha256);
   });
 
   it('screens all selected meshes independently and keeps physics qualification absent', async () => {
@@ -97,6 +158,12 @@ describe('explicit corpus to editor selection', () => {
     expect(flange.measurements.boundsMm).toEqual({min: [-100, -100, 0], max: [100, 100, 10]});
     expect(flange.modificationNotes).toContain('fixed full-render context $preview=false');
     expect(flange.modificationNotes).toContain('constant dimension selector Size=0');
+    // Nut LQ is a regular hexagon (circumradius 1) minus a 30-gon hole (radius 0.7), height 1.
+    const nut = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-nut-lq');
+    expect(nut.measurements.signedVolumeMm3).toBeCloseTo(3 * Math.sin(Math.PI / 3) - 15 * 0.7 ** 2 * Math.sin(Math.PI / 15), 5);
+    const tree = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-tree-01');
+    tree.measurements.boundsMm.min.forEach((value: number, index: number) => expect(value).toBeCloseTo([-1, -Math.sin(2 * Math.PI / 5), -1.5][index], 6));
+    tree.measurements.boundsMm.max.forEach((value: number, index: number) => expect(value).toBeCloseTo([1, Math.sin(2 * Math.PI / 5), 1.75][index], 6));
     street01.measurements.boundsMm.min.forEach((value: number, index: number) => expect(value).toBeCloseTo([-2, -1, -0.1][index], 6));
     street01.measurements.boundsMm.max.forEach((value: number, index: number) => expect(value).toBeCloseTo([2, 1, 0.1][index], 6));
   });

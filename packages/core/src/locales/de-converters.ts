@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+  "OpenSCAD construction nesting exceeds 32": "Die OpenSCAD-Konstruktion ist mehr als 32 Ebenen tief verschachtelt",
+  "Unbound animation time uses $t=0; motion is not retained.": "Nicht gebundene Animationszeit verwendet $t=0; Bewegung bleibt nicht erhalten.",
   "Tapers: frustum(bottom, top, height[,segments]). Convex hull: hull(a,...). empty() contributes no solid.": "Kegelstümpfe: frustum(unten, oben, höhe[,segmente]). Konvexe Hülle: hull(a,...). empty() trägt keinen Körper bei.",
   "Control flow: choose(condition, thenShape, elseShape), forRange(index,start,end,step,shape), forValues(index,[values],shape). Scalar conditions use comparisons, &&, ||, ! and condition ? a : b.": "Kontrollfluss: choose(bedingung, dannKörper, sonstKörper), forRange(index,start,ende,schritt,körper), forValues(index,[werte],körper). Skalare Bedingungen verwenden Vergleiche, &&, ||, ! und bedingung ? a : b.",
   "Loop exceeds 64 values": "Die Schleife überschreitet 64 Werte",

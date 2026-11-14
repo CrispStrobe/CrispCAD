@@ -1,0 +1,139 @@
+{
+  "format": "brickwright-model-library-qualification-history",
+  "version": 1,
+  "reason": "Historical qualification before correction of scoped $fn propagation. Retained verbatim; current qualification uses a new derivative path.",
+  "sourceManifest": {
+    "gitCommit": "23d27d7794356ce0aaf9727e637326df739e3028",
+    "path": "library/editor-corpus-manifest.json",
+    "gitBlob": "a3cade1b097ed420ea639b91ead26170a711d5ee",
+    "sha256": "237fe46e45e82ac6ff56a1e05d58c14681ed0ed31fb93b0e23033704c5e9c7ae"
+  },
+  "asset": {
+    "id": "corpus-angelo-walking-stick",
+    "title": "Walking Stick",
+    "author": "Angelo Nicoli (Gengio), 2023-2024",
+    "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+    "sourceRevision": {
+      "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+      "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Walking_Stick.scad"
+    },
+    "corpusSelection": {
+      "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+      "upstreamPath": "Asset_SCAD/Walking_Stick.scad",
+      "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Walking_Stick.scad",
+      "sha256": "c03f703be343096ead430017effe50e184518052f25cad0276a8a21ff8a4a986"
+    },
+    "licence": {
+      "spdx": "MIT",
+      "scope": "asset",
+      "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Walking_Stick.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+      "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+      "localEvidence": [
+        {
+          "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+          "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+          "bytes": 1079,
+          "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+        }
+      ],
+      "capturedOn": "2026-11-13",
+      "review": "accepted",
+      "reviewer": "Codex staged full-content scan and explicit exception/dependency review; explicit standalone editor selection and runtime screening 2026-11-14"
+    },
+    "original": {
+      "path": "sources/corpus-selection/walking-stick.scad",
+      "sha256": "c03f703be343096ead430017effe50e184518052f25cad0276a8a21ff8a4a986",
+      "bytes": 1980,
+      "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Walking_Stick.scad",
+      "format": "openscad"
+    },
+    "derivatives": [
+      {
+        "path": "meshes/corpus-selection/walking-stick.stl",
+        "sha256": "8901e38895159c7eab8de5002c741c3019e0ec587fa55667cdfa28fc2a15627a",
+        "bytes": 95884,
+        "format": "stl"
+      }
+    ],
+    "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics.",
+    "conversion": {
+      "sourceUnits": "mm",
+      "sourceUpAxis": "Z",
+      "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+      "toMillimetresZUp": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "quality": {
+      "fileSha256": "8901e38895159c7eab8de5002c741c3019e0ec587fa55667cdfa28fc2a15627a",
+      "toolVersion": "brickwright-stl-quality/1",
+      "checkedOn": "2026-11-14",
+      "screeningPolicy": {
+        "maxTriangles": 10000,
+        "maxExtentMm": 200,
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "maxAnalysisBytes": 16777216,
+        "maxAnalysisTriangles": 83333
+      },
+      "parseable": true,
+      "closedPositiveVolume": true,
+      "withinSizeLimits": true,
+      "withinTriangleLimits": true
+    },
+    "measurements": {
+      "triangles": 1916,
+      "boundsMm": {
+        "min": [
+          -42,
+          -6,
+          -1.2000000476837158
+        ],
+        "max": [
+          6,
+          6.199999809265137,
+          1.2000000476837158
+        ]
+      },
+      "signedVolumeMm3": 183.21875638477735
+    },
+    "diagnostics": []
+  },
+  "preview": {
+    "path": "corpus-audit/qualification-history/walking-stick-v1.preview.png",
+    "sha256": "070d725c91338931ea50144625641e907d05c111729b7ac835d578f79e5d2479",
+    "bytes": 6945
+  }
+}

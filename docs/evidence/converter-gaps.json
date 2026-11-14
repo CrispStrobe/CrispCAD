@@ -215,6 +215,16 @@
         "tests/source-research.test.ts"
       ],
       "nextOrEvidence": "Do not invent replacement geometry, skip dependencies, or count source repairs as engine coverage."
+    },
+    {
+      "id": "scad.animation.default-time",
+      "state": "open",
+      "area": "animation",
+      "current": "Unbound $t imports the static full-render frame at zero; authored overrides are respected.",
+      "tests": [
+        "tests/openscad-animation-context.test.ts"
+      ],
+      "nextOrEvidence": "Retain an explicit animation-time parameter and time-dependent feature evaluation; integrate mechanism/motion constraints rather than claiming a static frame simulates authored animation."
     }
   ]
 }

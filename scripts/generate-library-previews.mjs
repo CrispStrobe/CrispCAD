@@ -2,17 +2,37 @@
 // Original CPU projection of actual evaluated sources. No network or model edits.
 import {readFile,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
 import * as THREE from 'three';
 import {chromium} from '@playwright/test';
 import {createCadSession,createLocalModelLibraryCatalogue,importOpenSCAD,importJSCAD} from '../packages/core/dist/index.js';
 import {createGeometryKernel} from '../packages/geometry/dist/index.js';
+export function parsePreviewArguments(args) {
+ const assetIds=[];let corpusOnly=false;
+ for(let i=0;i<args.length;i++) {
+  if(args[i]==='--corpus-only')corpusOnly=true;
+  else if(args[i]==='--asset-id') {
+   const id=args[++i];
+   if(typeof id!=='string'||!id.trim()||id.startsWith('--'))throw Error('--asset-id requires an asset ID.');
+   assetIds.push(id);
+  } else throw Error('Unknown preview argument: '+args[i]);
+ }
+ return {corpusOnly,assetIds};
+}
+export function selectPreviewAssets(assets,assetIds) {
+ const ids=new Set(assetIds);
+ for(const id of ids)if(!assets.some(asset=>asset.id===id))throw Error('Unknown preview asset ID: '+id);
+ return ids.size?assets.filter(asset=>ids.has(asset.id)):assets;
+}
+async function main() {
+const {corpusOnly,assetIds}=parsePreviewArguments(process.argv.slice(2));
 const json=async path=>JSON.parse(await readFile(path,'utf8'));
-const corpusOnly=process.argv.includes('--corpus-only');
 const corpusAssets=createLocalModelLibraryCatalogue(await json('library/editor-corpus-manifest.json')).assets;
-const assets=corpusOnly?corpusAssets:[...createLocalModelLibraryCatalogue(await json('library/examples-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/fixtures-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/supported-models-manifest.json')).assets,(await json('library/seed-catalogue.json')).assets.find(a=>a.id==='jscad-involute-gear'),...corpusAssets];
+const candidates=corpusOnly?corpusAssets:[...createLocalModelLibraryCatalogue(await json('library/examples-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/fixtures-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/supported-models-manifest.json')).assets,(await json('library/seed-catalogue.json')).assets.find(a=>a.id==='jscad-involute-gear'),...corpusAssets];
+const assets=selectPreviewAssets(candidates,assetIds);
 const kernel=await createGeometryKernel({wasmBinary:await readFile('node_modules/manifold-3d/manifold.wasm')});
 const eye=new THREE.Vector3(1,-1.5,1.15).normalize(),right=new THREE.Vector3().crossVectors(new THREE.Vector3(0,0,1),eye).normalize(),up=new THREE.Vector3().crossVectors(eye,right).normalize(),light=new THREE.Vector3(-.4,-.6,1).normalize();
-const previews=corpusOnly?(await json('library/previews.json')).previews:{};
+const previews=corpusOnly||assetIds.length?(await json('library/previews.json')).previews:{};
 const browser=await chromium.launch({headless:true}),page=await browser.newPage();
 try{
 for(const asset of assets){
@@ -29,3 +49,6 @@ for(const asset of assets){
 }
 }finally{await browser.close();}
 await writeFile('library/previews.json',JSON.stringify({version:1,previews})+'\n');console.log(`Rendered ${assets.length} source previews.`);
+
+}
+if(process.argv[1]===fileURLToPath(import.meta.url))await main();

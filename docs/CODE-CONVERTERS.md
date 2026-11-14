@@ -339,3 +339,9 @@ assertion messages survive parameter edits in both solids and profiles. Original
 saved native programs retain their earlier formatting. Random streams, exact
 fonts/shaping, materials, string parameters and JSCAD source-backed parameters
 remain explicit work rather than being hidden behind successful-solid counts.
+
+Concurrent reviewed-library work adds an explicit unbound `$t=0` notice, scalar
+fragment defaults and distinct construction-depth diagnostics. These are merged
+with retained comprehensions; fixed-cardinality lists materialize symbolically,
+while supported parameter-dependent polygon generators remain live. The animation
+notice is tracked separately from mechanical simulation in CONVERTER-GAPS.md.

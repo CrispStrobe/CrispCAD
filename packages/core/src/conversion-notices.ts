@@ -2,7 +2,7 @@
 /** Stable identifiers are evidence categories, not certification of source fidelity. */
 export interface ConversionNotice{id:string;message:string}
 export const conversionGapIds=Object.freeze([
- 'scad.text.font','scad.text.number-format','scad.random.sequence','scad.arguments.ignored','scad.module.arguments-ignored','scad.parameters.strings','scad.appearance.colours','scad.preview.highlight','scad.console.echo','scad.polygon.empty-input','scad.assert.message',
+ 'scad.animation.default-time','scad.text.font','scad.text.number-format','scad.random.sequence','scad.arguments.ignored','scad.module.arguments-ignored','scad.parameters.strings','scad.appearance.colours','scad.preview.highlight','scad.console.echo','scad.polygon.empty-input','scad.assert.message',
  'jscad.parameters.snapshot','jscad.extrusion.tessellation','jscad.outputs.combined','jscad.appearance.face-colours'
 ] as const);
 

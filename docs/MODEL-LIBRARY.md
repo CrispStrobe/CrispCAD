@@ -529,31 +529,59 @@ described above. No additional JSCAD models were present in these staged subsets
 
 ### Editor-enabled corpus subset
 
-Seventy-four dependency-complete MIT Asset Collection originals now project into a
+Ninety-three dependency-complete MIT Asset Collection originals now project into a
 separate `library/editor-corpus-manifest.json` and are selectable in the bundled
 editor catalogue. See [exact model names and reproduction commands](../library/README.md#external-corpus-models-available-in-the-editor).
-Only these 74 archive selections receive local importer, Manifold and STL screening evidence;
-the archival manifest remains unchanged and unqualified. The bounded OpenSCAD
-importer accepts validated constant `color()` wrappers and discloses omitted
-appearance. Transform `$fn` bindings are scoped to their children and restored
-for siblings; literal colour parameters remain separate from numeric expressions.
-The `#` highlight modifier retains its child geometry and records omitted preview
-appearance. Other geometry-changing modifiers remain unsupported. These bounded
-extensions qualify Banner, Raccordo and two street models without source edits.
-Lexically scoped local module declarations now retain their definition's bindings
-and module registry, with bounded hoisting and caller-special-variable propagation.
-This admits seven further nested-module sources alongside Street 04; nested
-functions, module children and profile-module calls remain unsupported. Existing
-node/mesh limits and failed-topology exclusions remain in force.
-Tagged constant colour palettes admit Ingot, Coin, LED and Sauce Bottle through
-literal integer selection in module scope. Palettes never become numeric CAD
-Script expressions; cumulative value-evaluation fuel bounds alias expansion.
-Floor 01 still fails converted-mesh topology screening and remains excluded.
-Pipe 00 and Flange 02 use an explicitly recorded readonly full-render
-`$preview=false` context and literal-proven module-local numeric vector indices.
-Source overrides and computed/global/loop/function-derived indices remain
-unsupported; evaluated exports retain the selected facet counts. The original
-conditional source bytes and all previous qualification records remain intact.
+Only these 93 archive selections receive local importer, Manifold and STL screening evidence;
+the archival manifest remains unchanged and unqualified.
+
+The current bounded OpenSCAD converter supports typed string/colour selectors,
+computed scalar indexing, lexical nested modules and functions, module children,
+and module calls, local bindings and loops in planar profiles. Strings remain
+separate from numeric dimensions. Source appearance and echo output are omitted
+with conversion notices. `#` retains rendered geometry, `%`/`*` exclude background
+or disabled geometry, and `!` selects root geometry. Supported fragment controls
+retain their scoped behavior. The full-render `$preview=false` context is
+read-only; broader indexing support does not permit overriding that builtin.
+See [current coverage and limits](CODE-CONVERTERS.md#current-coverage).
+
+The admission batches in the [library history](../library/README.md#external-corpus-models-available-in-the-editor)
+record the narrower converter available when each source was screened. Banner,
+Raccordo and the street models were admitted with explicit appearance-loss notes;
+the nested-module batch qualified seven further sources alongside Street 04.
+Ingot, Coin, LED and Sauce Bottle followed with constant-palette evidence. Floor 01
+remains excluded after its recorded converted-mesh topology failure. Pipe 00 and
+Flange 02 retain their recorded full-render facet counts and original conditional
+source bytes. These historical qualifications do not imply that every newly
+parseable source has been screened or admitted.
+
+Translate-only XY/zero-Z interpretation admits Cup, Ring, Pipe 90 and Key Old
+through their default authored entry points. Rotation, scale and primitive size
+vector rules are unchanged by that compatibility rule; the source originals are
+not rewritten. Ring and Pipe 90's retained unused helpers are outside the recorded
+qualification scope. Walking Stick's corrected scoped-`$fn` mesh has a new
+derivative path; its [previous qualification record](../library/corpus-audit/qualification-history/walking-stick-v1.json),
+mesh and preview remain preserved. Existing per-model topology exclusions and
+triangle/extent screening policies are unchanged.
+
+Simple list comprehensions now build bounded profile/vector values from a fixed
+range or fixed-length vector. The importer retains symbolic coordinate expressions,
+restores lexical bindings after iteration and rejects parameter-dependent range
+cardinality. This shares the existing loop, array, depth and evaluation budgets;
+filters, `each` and multiple iterator bindings remain outside this subset.
+Only independently screened default entry points enter the editor selection.
+Unbound animation time remains the static `$t=0` fallback and now records that
+actual interpretation in converter warnings and source provenance. Authored global,
+lexical and module/transform time bindings retain their existing behavior. Rod 01,
+Animation Gear 02 and Animation Mechanism 01 pass at the authored default entry
+points with that fallback; their qualifications establish static geometry only.
+Spawing Cube remains excluded because the unchanged default produces no solid.
+Fragment-control scalar reads and self-shadowing `$fa`/`$fs` assignments now
+resolve their enclosing values or builtin defaults without changing unspecified
+48-segment tessellation. This removes a false variable-cycle refusal in the CC0
+Smooth Primitives demo. Its unchanged authored entry point then exceeds the
+existing construction-depth limit (33 versus 32), before geometry or STL
+screening; it remains archival and unqualified, outside the 93 editor selections.
 The host bundles exact selected source bytes, previews and the
 correct asset-specific MIT notice. Insertion verifies hashes, evaluates the
 candidate, and preserves provenance, attribution and undo/redo through the
