@@ -32,7 +32,7 @@ it('floors constant fractional indices while retaining invalid-index and typed-n
 it('fails closed on invalid sampling arguments and bounds unseeded snapshots and work',()=>{
  const session=createCadSession(),before=session.serialize(),state=session.state;
  try{for(const source of ['cube(rands(0,1)[0]);','cube(rands(1,0,1)[0]);','cube(rands(0,1,-1)[0]);','cube(rands(0,1,.5)[0]);','cube(rands(0,1,true)[0]);','cube(rands(0,1,1,"s")[0]);','cube(rands(0,1/0,1)[0]);',])expect(()=>session.addCode(importOpenSCAD(source))).toThrow();
-  expect(()=>importOpenSCAD('cube(len(rands(0,1,65)));')).toThrow('Loop exceeds 64');
+  expect(evaluate('cube([len(rands(0,1,65)),1,1]);').volume).toBeCloseTo(65);expect(evaluate('cube([len(rands(0,1,3000)),1,1]);').volume).toBeCloseTo(3000);
   expect(()=>importOpenSCAD('a=[for(i=[0:63],j=[0:63])rands(0,1,64,1)];cube(1);')).toThrow();
   expect(session.serialize()).toBe(before);expect(session.state).toEqual(state);
  }finally{session.dispose();}

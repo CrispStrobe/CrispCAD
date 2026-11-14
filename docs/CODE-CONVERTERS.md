@@ -560,9 +560,9 @@ not upstream fidelity certification. See the [aggregate replay and validation](e
 ## Bounded random import snapshots (cycle 26)
 
 Constant calls with at most 64 samples use bounded imported snapshots, charging
-every draw to the existing work budget. Constant unseeded calls above that limit
-are refused. Existing retained seeded lists and parameter-dependent calls keep
-their native symbolic path and work/expansion limits; they are not frozen into
+every draw to the existing work budget. Larger lists, retained seeded lists and
+parameter-dependent calls keep their native symbolic path and work/expansion
+limits (including lazy length queries); they are not frozen into
 constant snapshots. Known reversed ranges and fractional/negative counts fail.
 Explicit seeds reproduce their own independent streams. Unseeded calls use a
 source-derived stream: FNV-1a over exact UTF-8 source initializes an independent
