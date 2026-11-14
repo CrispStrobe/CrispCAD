@@ -40,9 +40,10 @@
       "id": "scad.random.sequence",
       "state": "open",
       "area": "geometry",
-      "current": "Native deterministic hash randomness is still a disclosed substitution. Oracle probes establish that 2021.01 consumes a different stream; floating/large seed normalization remains unverified.",
+      "current": "Disclosed native repeatable randomness remains a substitution. New constant small calls can use bounded deterministic snapshots; constant unseeded snapshots use a source-derived stream. Live seeded/range parameters retain native symbolic behavior. None claims upstream stream parity.",
       "tests": [
-        "tests/openscad-language.test.ts"
+        "tests/openscad-language.test.ts",
+        "tests/openscad-rands.test.ts"
       ],
       "nextOrEvidence": "Next: match integer, fractional, negative and large seeds plus sequential-call context against an executable oracle; do not remove the notice before conformance."
     },
@@ -251,6 +252,17 @@
         "tests/resize-engine.test.ts"
       ],
       "nextOrEvidence": "Next: supply evaluated bounds/geometry through the export boundary, or a compatible bounded runtime measurement contract, without freezing parameters or guessing CSG bounds."
+    },
+    {
+      "id": "jscad.slice-loft",
+      "state": "partial",
+      "area": "geometry",
+      "current": "Retained native loft and bounded JSCAD extrudeFromSlices callbacks accept matching simple planar XY sections ordered on Z, capped at both ends. slice.fromPoints, slice.transform, translation/scaling matrices and safe record spread are supported. No source is resampled.",
+      "tests": [
+        "tests/loft-engine.test.ts",
+        "tests/physics.test.ts"
+      ],
+      "nextOrEvidence": "Real MIT JSCAD volume and bounds, analytic loft volume, parameter/history round trips and Jolt cutout tests. General tilted sections, changing vertex counts, holes in sections, default callbacks, open/closed sweeps and the full authored nutsAndBolts workload remain unsupported or resource-limited."
     }
   ]
 }

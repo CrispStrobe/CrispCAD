@@ -42,7 +42,8 @@
       "licenseFile": "jscad/LICENSE",
       "sha256": "f96facf6dc85be7260a5b5e7648dd157abb9bc74e27da7d4cf78cdb0aa3df5ba",
       "format": "jscad",
-      "expectedGap": "extrusions.extrudeFromSlices"
+      "expectedGap": "JSCAD evaluation budget exceeded",
+      "expected": "limited"
     },
     {
       "id": "jscad-gear",

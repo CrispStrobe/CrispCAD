@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+  "Loft needs matching planar XY sections ordered along Z": "Ein Loft benötigt passende ebene XY-Querschnitte in Z-Reihenfolge",
+  "Loft sections must be simple and have consistent winding": "Loft-Querschnitte dürfen sich nicht selbst schneiden und müssen gleich ausgerichtet sein",
+  "Loft exceeds the section or vertex budget": "Der Loft überschreitet das Querschnitts- oder Eckpunktlimit",
+
+  "Random samples use Brickwright’s generator and are fixed in the imported snapshot.": "Zufallswerte verwenden den Generator von Brickwright und bleiben im importierten Modell fest.",
+  "Unseeded random calls use a source-derived stream for reproducible imports.": "Zufallsaufrufe ohne Startwert verwenden für reproduzierbare Importe einen aus dem Quelltext abgeleiteten Zahlenstrom.",
   "Assertion failed": "Zusicherung fehlgeschlagen",
   "Assertion requires condition and value": "Die Zusicherung erfordert eine Bedingung und einen Wert",
   "Assertion requires a condition": "Die Zusicherung erfordert eine Bedingung",

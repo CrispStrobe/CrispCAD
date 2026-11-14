@@ -223,3 +223,29 @@ use their nonzero values, while a numeric scalar `auto` is ignored. Explicit
 fractional extrusion slices are truncated. Nonpositive slice counts for straight,
 untwisted, untapered extrusions use an equivalent one-step construction. Automatic
 slices for twisted/tapered profiles remain part of the tessellation gap.
+
+
+## Matched-section lofts
+
+`loft([section0, section1, ...])` constructs a capped solid from matching closed
+XY rings, each a list of `[x,y,z]` points. Coordinates may reference native numeric
+parameters. Each section lies on one Z plane; section heights must be strictly
+ordered, vertex counts must match, and winding must be consistent. Consistently
+clockwise or descending sections are normalized. Concave rings are supported;
+self-crossing rings, repeated edges and mixed winding are rejected. The constructor
+retains authored vertex correspondence and uses triangles between adjacent rings.
+
+The existing source/token/mesh budgets still apply. Additional loft limits are
+128 sections, 256 vertices per section, 4,096 total vertices and 131,072 section
+intersection comparisons. No input is resampled to fit. Native edits retain their
+parameters and history. SCAD/JSCAD exports are evaluated polyhedron snapshots;
+the existing polyhedron import budgets can reject large exported snapshots.
+
+The JSCAD converter supports bounded `extrudeFromSlices` procedures with explicit
+callbacks returning `slice.fromPoints` or `null` for intermediate sections.
+`slice.transform`, 2D/3D point input, translation/scaling matrices and safe record
+spread are supported. Both caps are required; inside-out JSCAD shells are rejected rather than silently
+reoriented. General tilted sections, changing
+vertex counts, section holes, default callbacks and open/closed sweep modes remain
+gaps. The full archived nuts-and-bolts demonstration still exceeds existing work
+or generated-source budgets; its authored resolution is not reduced silently.

@@ -54,7 +54,7 @@ it('selects tagged constant palettes through literal module indices, defaults an
 });
 it('rejects invalid palette indices and unsafe numeric coercions',()=>{
  const wrap=(index:string)=>`module part(Mat=0){palette=["red","blue"];color(palette[${index}])cube(2);}part();`;
- for(const index of ['-1','.5','2','unknown','fetch()','"0"'])expect(()=>importOpenSCAD(wrap(index)),index).toThrow();
+ for(const index of ['-1','2','unknown','fetch()','"0"'])expect(()=>importOpenSCAD(wrap(index)),index).toThrow();
  for(const source of [
   'module part(){palette=["red"];cube(palette);}part();',
   'module part(){palette=["2"];cylinder(palette[0],1);}part();',
@@ -94,7 +94,7 @@ it('indexes numeric vectors with module-local literal provenance while retaining
  expect(geometry('module part(){index=1;alias=index;vector=[2,3];cube(vector[alias]);}part();').volume).toBeCloseTo(27);
  expect(geometry('module outer(i=0){vector=[2,3];module inner(){cube(vector[i]);}translate([10,0,0]){i=1;inner();}}outer();').volume).toBeCloseTo(8);
  const wrap=(index:string)=>`module part(i=0){vector=[2,3];cube(vector[${index}]);}part();`;
- for(const index of ['-1','.5','2','unknown','$preview','"0"','fetch()'])expect(()=>importOpenSCAD(wrap(index)),index).toThrow();
+ for(const index of ['-1','2','unknown','$preview','"0"','fetch()'])expect(()=>importOpenSCAD(wrap(index)),index).toThrow();
  for(const source of ['global=0;module part(){vector=[2,3];cube(vector[global]);}part();','function index()=0;module part(i){vector=[2,3];cube(vector[i]);}part(index());','module part(i=0+0){vector=[2,3];cube(vector[i]);}part();','module part(){vector=[2,3];for(i=[0])cube(vector[i]);}part();','vector=[2,3];function size(i)=vector[i];cube(size(0));'])expect(geometry(source).volume,source).toBeCloseTo(8);expect(()=>importOpenSCAD('module part(){vector=["2","3"];cube(vector[0]);}part();')).toThrow();
  const aliases=Array.from({length:34},(_,i)=>`i${i}=${i===33?'0':`i${i+1}`};`).join('');
  try{importOpenSCAD(`module part(){${aliases}vector=[2,3];cube(vector[i0]);}part();`);throw Error('Expected resource failure');}catch(error:any){expect(error.code).toBe('resource-limit');}

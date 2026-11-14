@@ -718,3 +718,15 @@ Existing app data and histories were retained.
 source `143a3da98e8a0a0a7e65d9654c6b40a86e0eb092`; it contains 113 gallery entries.
 The research release probe fingerprints that same clean source. The main branch
 and checkpoint branch `codex/scad-engine-expansion` were pushed to GitHub.
+
+
+## iPad build 11 — 2026-11-14
+
+Archived and ad hoc signed from clean source
+`bd03ee7b76b89cdd3fc4850020a9212bbd4b7575`, version 0.1.0, native build **11**.
+Installed in place and launched on paired iPad (3),
+`F0E7765C-F625-51B0-8F56-1E04F3B02B70`, over `transportType: localNetwork`.
+The device application receipt confirms bundle version 11. Existing application
+data was retained; no uninstall or storage reset was performed. This build contains
+the retained 2D/3D resize and converter checkpoint with 144 gallery entries.
+Later loft and library integration work follows this delivered source.

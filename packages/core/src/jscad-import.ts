@@ -7,9 +7,10 @@ import type {CodeProgram} from './code.js';
 import {t} from './i18n.js';
 type Ast={type:string;start:number;[key:string]:any};
 type RecordValue={[key:string]:Value};
-type Value=undefined|null|number|boolean|string|Value[]|RecordValue|Geometry|Profile|Procedure|Api;
+type Value=undefined|null|number|boolean|string|Value[]|RecordValue|Geometry|Profile|Slice|Procedure|Api;
 class Geometry {constructor(readonly source:string,readonly color?:string){}}
 class Profile {readonly source:string;constructor(readonly points:number[][],source?:string){this.source=source??`polygon2d([${points.map(p=>'['+p.join(', ')+']').join(', ')}])`;}}
+class Slice {constructor(readonly points:number[][]){}}
 class Procedure {constructor(readonly node:Ast,readonly scope:Scope){}}
 class Api {constructor(readonly path:string,readonly receiver?:Value[]){}}
 class Returned {constructor(readonly value:Value){}}
@@ -48,7 +49,7 @@ export function importJSCAD(source:string,overrides:Record<string,number|string|
   case 'Literal':if(node.value===null||['boolean','string','number'].includes(typeof node.value)){if(typeof node.value==='number')number(node.value);if(typeof node.value==='string'&&node.value.length>1024)unsupported('long string',node);return node.value;}return unsupported('literal',node);
   case 'Identifier':return lookup(scope,node.name);
   case 'ArrayExpression':{const values:Value[]=[];for(const item of node.elements){if(!item)unsupported('array holes',node);if(item.type==='SpreadElement')values.push(...list(evaluate(item.argument,scope)));else values.push(evaluate(item,scope));array(values);}return values;}
-  case 'ObjectExpression':{const value=record();for(const p of node.properties){if(p.type!=='Property'||p.kind!=='init'||p.method||p.computed)unsupported('object property',p);value[safe(String(p.key.name??p.key.value))]=evaluate(p.value,scope);}return value;}
+  case 'ObjectExpression':{const value=record();for(const p of node.properties){if(p.type==='SpreadElement'){const other=evaluate(p.argument,scope);if(!plain(other))return unsupported('object spread requires a record',p);for(const [key,item]of Object.entries(other))value[safe(key)]=item;continue;}if(p.type!=='Property'||p.kind!=='init'||p.method||p.computed)unsupported('object property',p);value[safe(String(p.key.name??p.key.value))]=evaluate(p.value,scope);}return value;}
   case 'MemberExpression':return member(evaluate(node.object,scope),keyOf(node,scope));
   case 'ArrowFunctionExpression':case 'FunctionExpression':if(node.async||node.generator)unsupported('async/generator',node);return new Procedure(node,scope);
   case 'CallExpression':{const fn=evaluate(node.callee,scope),args:Value[]=[];for(const a of node.arguments){if(a.type==='SpreadElement')args.push(...list(evaluate(a.argument,scope)));else args.push(evaluate(a,scope));array(args);}location=node.start;return call(fn,args);}
@@ -111,6 +112,23 @@ export function importJSCAD(source:string,overrides:Record<string,number|string|
    if(path==='geometries.geom3.create'){if(args.length)return unsupported('geom3.create with polygons');return geometry('empty()');}
    if(path==='primitives.polyhedron'){const opts=args[0];if(!plain(opts)||Object.keys(opts).some(k=>!['points','faces','orientation'].includes(k))||args.length!==1)return unsupported('polyhedron options');const points=list(opts.points).map(v=>vector(v)),faces=list(opts.faces).map(v=>list(v).map(number)),orientation=opts.orientation??'outward';if(!['outward','inward'].includes(orientation as string))return unsupported('polyhedron orientation');return geometry(`polyhedron([${points.map(v=>'['+v.join(',')+']').join(',')}],[${faces.map(v=>'['+(orientation==='inward'?[...v].reverse():v).join(',')+']').join(',')}])`);}
    if(path==='primitives.polygon'){const opts=args[0];if(!plain(opts)||Object.keys(opts).some(key=>!['points','closed'].includes(key))||opts.closed===false)return unsupported('primitives.polygon options');return new Profile(list(opts.points).map(p=>vector(p,2)));}
+   if(['maths.mat4.create','maths.mat4.fromTranslation','maths.mat4.fromScaling'].includes(path)){
+    const identity=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];if(path==='maths.mat4.create'){if(args.length)return unsupported(path);return identity;}
+    const out=list(args[0]),v=vector(args[1]);if(out.length!==16||args.length!==2)return unsupported(path);if(path==='maths.mat4.fromTranslation')for(let i=0;i<3;i++)identity[12+i]=v[i];else for(let i=0;i<3;i++)identity[i*5]=v[i];identity.forEach((n,i)=>out[i]=n);return out;
+   }
+   if(path==='extrusions.slice.transform'){
+    const matrix=list(args[0]).map(number),slice=args[1];if(args.length!==2||!(slice instanceof Slice)||matrix.length!==16||matrix[3]!==0||matrix[7]!==0||matrix[11]!==0||matrix[15]!==1)return unsupported('slice affine matrix');
+    return new Slice(slice.points.map(p=>[0,1,2].map(i=>number(matrix[i]*p[0]+matrix[4+i]*p[1]+matrix[8+i]*p[2]+matrix[12+i]))));
+   }
+   if(path==='extrusions.slice.fromPoints'){if(args.length!==1)return unsupported(path);const points=list(args[0]).map(p=>{const v=list(p);return v.length===2?[...vector(v,2),0]:vector(v);});if(points.length<3)fail(t('Loft needs matching planar XY sections ordered along Z'));return new Slice(points);}
+   if(path==='extrusions.extrudeFromSlices'){
+    const opts=args[0];if(!plain(opts)||args.length!==2||Object.keys(opts).some(k=>!['numberOfSlices','callback','capStart','capEnd','close','repair'].includes(k))||!(opts.callback instanceof Procedure))return unsupported('extrudeFromSlices options/callback');
+    if(opts.capStart!==undefined&&opts.capStart!==true||opts.capEnd!==undefined&&opts.capEnd!==true||opts.close!==undefined&&opts.close!==false||opts.repair!==undefined&&typeof opts.repair!=='boolean')return unsupported('uncapped or closed slice loft');
+    const count=number(opts.numberOfSlices??2);if(!Number.isInteger(count)||count<2)fail(t('Loft needs matching planar XY sections ordered along Z'));if(count>128)fail(t('Loft exceeds the section or vertex budget'),undefined,'resource-limit');
+    const sections:number[][][]=[];let vertices=0;for(let i=0;i<count;i++){const item=call(opts.callback,[i/(count-1),i,args[1]]);if(item===null){if(i===0||i===count-1)return unsupported('skipped loft end cap');continue;}if(!(item instanceof Slice))return unsupported('extrudeFromSlices callback must return a slice or null');sections.push(item.points);vertices+=item.points.length;if(vertices>4096)fail(t('Loft exceeds the section or vertex budget'),undefined,'resource-limit');}
+    if(sections.length>=2){const ring=sections[0],origin=ring[0],area=ring.reduce((sum,p,i)=>{const q=ring[(i+1)%ring.length];return sum+(p[0]-origin[0])*(q[1]-origin[1])-(q[0]-origin[0])*(p[1]-origin[1]);},0);if(area*(sections.at(-1)![0][2]-origin[2])<0)return unsupported('inside-out slice loft');}
+    return geometry(`loft([${sections.map(r=>'['+r.map(p=>'['+p.join(',')+']').join(',')+']').join(',')}])`);
+   }
    if(path==='extrusions.extrudeLinear'){const opts=args[0],profile=args[1];if(!plain(opts)||!(profile instanceof Profile)||Object.keys(opts).some(key=>!['height','twistAngle','twistSteps'].includes(key))||args.length!==2)return unsupported('extrusions.extrudeLinear options/profile');if(number(opts.twistAngle??0)!==0)curvedExtrusions=true;return geometry(`extrudeProfile(${number(opts.height??1)}, ${profile.source}, ${number(opts.twistAngle??0)*180/Math.PI}, ${number(opts.twistSteps??1)})`);}
    if(path==='extrusions.extrudeRotate'){const opts=args[0],profile=args[1];if(!plain(opts)||!(profile instanceof Profile)||Object.keys(opts).some(key=>!['angle','startAngle','segments','overflow'].includes(key))||args.length!==2||opts.overflow!==undefined&&opts.overflow!=='cap')return unsupported('extrusions.extrudeRotate options/profile');curvedExtrusions=true;const angle=number(opts.angle??2*Math.PI),start=number(opts.startAngle??0);if(angle<=0||angle>2*Math.PI||start<0||start+angle>2*Math.PI+1e-10)return unsupported('extrudeRotate angle interval');return geometry(`rotate([0,0,${start*180/Math.PI}], revolve(${profile.source}, ${angle*180/Math.PI}, ${number(opts.segments??12)}))`);}
    if(path==='geometries.geom2.create'){if(args.length)return unsupported('geom2.create with sides');return profileValue('union2d()');}

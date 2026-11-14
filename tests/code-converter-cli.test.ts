@@ -13,7 +13,7 @@ it('writes a history-inclusive project with separate outputs/colours and source 
  }finally{await rm(folder,{recursive:true,force:true});}
 },20000);
 it('runs the small pinned corpus, validates hashes and reports actual geometry and known gaps distinctly',async()=>{
- const {stdout}=await run(process.execPath,['scripts/check-code-corpus.mjs']);const report=JSON.parse(stdout);expect(report.converted).toBe(6);expect(report.unsupported).toBe(3);expect(report.failed).toBe(0);expect(report.unexpected).toBe(0);expect(report.results.find((r:any)=>r.id==='jscad-gear').geometry.volumeMm3).toBeGreaterThan(0);expect(report.results.find((r:any)=>r.id==='jscad-nutsAndBolts').error.message).toContain('extrudeFromSlices');
+ const {stdout}=await run(process.execPath,['scripts/check-code-corpus.mjs']);const report=JSON.parse(stdout);expect(report.converted).toBe(6);expect(report.unsupported).toBe(2);expect(report.limited).toBe(1);expect(report.failed).toBe(0);expect(report.unexpected).toBe(0);expect(report.results.find((r:any)=>r.id==='jscad-gear').geometry.volumeMm3).toBeGreaterThan(0);expect(report.results.find((r:any)=>r.id==='jscad-nutsAndBolts').error.message).toContain('evaluation budget exceeded');
  const manifest=JSON.parse(await readFile('tests/fixtures/code-corpus/manifest.json','utf8'));for(const item of manifest.models){expect(['MIT','BSD-2-Clause']).toContain(item.license);const data=await readFile('tests/fixtures/code-corpus/'+item.file);expect(createHash('sha256').update(data).digest('hex')).toBe(item.sha256);expect((await readFile('tests/fixtures/code-corpus/'+item.licenseFile,'utf8')).length).toBeGreaterThan(500);}
 },20000);
 it('distinguishes invalid input from a known unsupported language feature in JSON diagnostics',async()=>{

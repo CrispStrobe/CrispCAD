@@ -23,9 +23,9 @@ it('supports ES imports, helper functions, parameters, radians and bounded geome
 it('refuses host access, external imports, dynamic execution and unbounded programs',()=>{
  for(const source of ["require('fs');",'process.exit();','globalThis.fetch("x");',"eval('1');","new Function('return 1')();","import fs from 'node:fs';",'const main=()=>{while(true){}};module.exports={main};','function f(){return f();}module.exports.main=f;','module.exports.main=()=>{const a=1;a=2;return a;};','module.exports.main=()=>{for(let i=0;i<1000;i++){}return 1;};',"module.exports.main=()=>require('@jscad/modeling').constructor('return 1')();"]){expect(()=>importJSCAD(source),source).toThrow();}
 });
-it('reports unsupported upstream slice extrusion with a source location',()=>{
+it('reports the unchanged upstream slice demo work limit with a source location',()=>{
  const source=readFileSync('tests/fixtures/code-corpus/jscad/nutsAndBolts.js','utf8');
- expect(()=>importJSCAD(source)).toThrow(/Line .*JSCAD feature “extrusions\.extrudeFromSlices”/);
+ expect(()=>importJSCAD(source)).toThrow(/Line .*JSCAD evaluation budget exceeded/);
 });
 for(const parameters of [{},{numTeeth:12,thickness:7,centerholeradius:0}])it(`qualifies upstream gear extrusion and vec2 arithmetic: ${JSON.stringify(parameters)}`,()=>{
  const source=readFileSync('tests/fixtures/code-corpus/jscad/gear.js','utf8'),result=geometry(source,parameters);

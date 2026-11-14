@@ -100,7 +100,7 @@ Known gaps, deliberately diagnosed:
   unrestricted evaluator. Cross-axis rotational profiles remain refused; wholly negative radial profiles and clockwise sweeps are supported.
 - Ambient library resolution (including BOSL2); explicit local
   `include` and file-scope `use` bundles are supported. Comprehension filters/C-style and
-  variable-cardinality generators, randomness, search outside fixed tables,
+  variable-cardinality generators, symbolic random arguments, search outside fixed tables,
   symbolic numeric-to-string formatting,
   general matrix arithmetic, anonymous-block assignment semantics, external meshes,
   surface/image geometry, automatic resize axes and arbitrary-axis profile rotations.
@@ -556,3 +556,40 @@ other 164 previous positives retain volume and bounds at 1e-6 tolerance. The fro
 result is kept as measured; retries do not replace its timeout with a pass.
 73 of the 166 positives still have conversion notices. This is execution coverage,
 not upstream fidelity certification. See the [aggregate replay and validation](evidence/import-engine-resize-2026-11-14.json).
+
+## Bounded random import snapshots (cycle 26)
+
+Constant calls with at most 64 samples use bounded imported snapshots, charging
+every draw to the existing work budget. Constant unseeded calls above that limit
+are refused. Existing retained seeded lists and parameter-dependent calls keep
+their native symbolic path and work/expansion limits; they are not frozen into
+constant snapshots. Known reversed ranges and fractional/negative counts fail.
+Explicit seeds reproduce their own independent streams. Unseeded calls use a
+source-derived stream: FNV-1a over exact UTF-8 source initializes an independent
+xorshift32 generator; sampled values are resolved into the imported native code.
+Conversion warnings and library provenance disclose this policy. These are valid
+bounded sample snapshots, not a claim to reproduce OpenSCAD's random sequence or
+all possible stochastic outputs. Source declarations and seed arguments are not
+rewritten. The original compiler implementation follows the published
+[`rands` argument documentation](https://files.openscad.org/documentation/manual/Mathematical_Functions.html);
+no upstream generator implementation is used.
+
+Constant nonnegative fractional list/string indices now select their integer
+part; negative indices remain undefined. Symbolic indices retain the existing
+exact-index matching subset, and booleans/strings are not numeric indices. This
+allows the authored Bricks palette sample without weakening colour validation.
+
+One exact authored root, `Asset_SCAD/Bricks.scad`, improves **0/1 → 1/1 strict STL
+and editor passes**. Its reproducible snapshot consists of two separate boxes,
+24 triangles and 264.357610779 mm³. Both planar dimensions of each box remain
+within the authored 5–10 mm range; height 3 mm and second origin [10,0,0] are retained.
+See `library/corpus-audit/editor-screening-cycle26.json`.
+
+Cycle 28 adds no converter behavior. Four exact archived JSCAD examples/SCAD
+transformation fixtures are newly packaged for offline library insertion using
+the existing converters. Their baseline and editor-export STL identities agree.
+The attempted Round-Anything filter/sign/format/memoization changes were reverted;
+construction/work and other resource limits, random snapshot semantics and all
+historical refusals remain unchanged. Admission measurements and distinct
+compiler-versus-library outcomes are recorded in
+`library/corpus-audit/editor-screening-cycle28.json`.

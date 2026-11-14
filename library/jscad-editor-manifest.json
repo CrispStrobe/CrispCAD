@@ -1,0 +1,521 @@
+{
+  "format": "brickwright-local-fixture-library",
+  "version": 1,
+  "collection": "selected-jscad-examples-and-transform-fixtures",
+  "capturedOn": "2026-11-14",
+  "pathBase": "library/",
+  "selection": {
+    "repositoryUrl": "https://github.com/jscad/OpenJSCAD.org",
+    "commit": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+    "count": 4,
+    "runtimeChecked": 4,
+    "complete": true
+  },
+  "reproduction": {
+    "command": "node scripts/generate-jscad-editor-library.mjs --check",
+    "generator": {
+      "path": "../scripts/generate-jscad-editor-library.mjs",
+      "sha256": "b099479546150230492a691d8084440b0465135baa0368bfd74769a5d6fc48e7"
+    },
+    "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
+    "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+  },
+  "assets": [
+    {
+      "id": "corpus-jscad-basicbooleans",
+      "title": "JSCAD basic Boolean demonstration",
+      "author": "Simon Clark",
+      "version": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/jscad/OpenJSCAD.org",
+        "commit": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+        "sourceUrl": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/core/booleans/basicBooleans.js"
+      },
+      "archiveSelection": {
+        "manifest": "../tests/fixtures/code-corpus/manifest.json",
+        "upstreamPath": "packages/examples/core/booleans/basicBooleans.js",
+        "archivedPath": "../tests/fixtures/code-corpus/jscad/basicBooleans.js",
+        "sha256": "e269dbe7fa16fb1c80bef0cdd6ba4f94796e8cd1d3b87932b396e215343c0ec6",
+        "kind": "upstream example"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Simon Clark. Source: https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/core/booleans/basicBooleans.js. The MIT License (MIT) Copyright (c) 2017-2024 JSCAD Organization Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/jscad-LICENSE.txt",
+            "sha256": "bf0a7136796ab8f4573a7a77783d7dfebca4d35a595f0ad160d70a855d4c0cbb",
+            "bytes": 1091,
+            "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex exact four-file authored example/fixture source and MIT grant review 2026-11-14"
+      },
+      "original": {
+        "path": "sources/jscad-reviewed/basicBooleans.js",
+        "sha256": "e269dbe7fa16fb1c80bef0cdd6ba4f94796e8cd1d3b87932b396e215343c0ec6",
+        "bytes": 1008,
+        "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/examples/core/booleans/basicBooleans.js",
+        "format": "jscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/jscad-reviewed/basicBooleans.stl",
+          "sha256": "862081b025f843a8fa6766dbe09e0b35a6258414abbbc4af66d41db9e5d0e32d",
+          "bytes": 76684,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical already archived upstream example. Authored default main/root, original coordinates and transforms retained without source, argument, entrypoint, frame or fragment overrides. Existing original bounded JSCAD interpreter combines the five authored outputs into one editable native body; imported snapshot and colour losses are disclosed. No compiler/runtime change, model repair, simplification or placement adjustment. Not certified for manufacturing or physics. Import warnings: JSCAD conversion is an evaluated snapshot; keep the original source for parametric edits. Multiple JSCAD outputs are combined into one rigid body in the code editor. Only whole-output JSCAD colours are retained in conversion metadata; face colours are not converted.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit physical units. Curator interprets model units as millimetres and Z up; original coordinates are preserved.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "862081b025f843a8fa6766dbe09e0b35a6258414abbbc4af66d41db9e5d0e32d",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 1532,
+        "boundsMm": {
+          "min": [
+            -6.199999809265137,
+            -1.7999999523162842,
+            -1
+          ],
+          "max": [
+            4.800000190734863,
+            1,
+            1.7999999523162842
+          ]
+        },
+        "signedVolumeMm3": 29.76900301224061
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-jscad-translateex1",
+      "title": "JSCAD translated cube fixture",
+      "author": "JSCAD Organization",
+      "version": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/jscad/OpenJSCAD.org",
+        "commit": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+        "sourceUrl": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/translateEx1.scad"
+      },
+      "archiveSelection": {
+        "manifest": "../tests/fixtures/code-corpus/manifest.json",
+        "upstreamPath": "packages/io/scad-deserializer/tests/transformations/translateEx1.scad",
+        "archivedPath": "../tests/fixtures/code-corpus/jscad/translateEx1.scad",
+        "sha256": "a26aac3cc37c24dea98f8403f5b90547eb9903debf5dde77eedf914b6abd77c3",
+        "kind": "upstream transformation test fixture"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "JSCAD Organization. Source: https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/translateEx1.scad. The MIT License (MIT) Copyright (c) 2017-2024 JSCAD Organization Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/jscad-LICENSE.txt",
+            "sha256": "bf0a7136796ab8f4573a7a77783d7dfebca4d35a595f0ad160d70a855d4c0cbb",
+            "bytes": 1091,
+            "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex exact four-file authored example/fixture source and MIT grant review 2026-11-14"
+      },
+      "original": {
+        "path": "sources/jscad-reviewed/translateEx1.scad",
+        "sha256": "a26aac3cc37c24dea98f8403f5b90547eb9903debf5dde77eedf914b6abd77c3",
+        "bytes": 69,
+        "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/translateEx1.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/jscad-reviewed/translateEx1.stl",
+          "sha256": "a5098549ef128f3bcf8ddda352916267d189c52ef06608f289ac0ee2a40ceb6d",
+          "bytes": 684,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical already archived upstream transformation test fixture. Authored default main/root, original coordinates and transforms retained without source, argument, entrypoint, frame or fragment overrides. Existing bounded OpenSCAD importer retains the authored cube and transformation. No compiler/runtime change, model repair, simplification or placement adjustment. Not certified for manufacturing or physics. Import warnings: None.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit physical units. Curator interprets model units as millimetres and Z up; original coordinates are preserved.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "a5098549ef128f3bcf8ddda352916267d189c52ef06608f289ac0ee2a40ceb6d",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 12,
+        "boundsMm": {
+          "min": [
+            5,
+            0,
+            -5
+          ],
+          "max": [
+            15,
+            10,
+            5
+          ]
+        },
+        "signedVolumeMm3": 999.9999999999999
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-jscad-scaleex1",
+      "title": "JSCAD scaled cube fixture",
+      "author": "JSCAD Organization",
+      "version": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/jscad/OpenJSCAD.org",
+        "commit": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+        "sourceUrl": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/scaleEx1.scad"
+      },
+      "archiveSelection": {
+        "manifest": "../tests/fixtures/code-corpus/manifest.json",
+        "upstreamPath": "packages/io/scad-deserializer/tests/transformations/scaleEx1.scad",
+        "archivedPath": "../tests/fixtures/code-corpus/jscad/scaleEx1.scad",
+        "sha256": "0e9d3c5265754a7f88c778d6e1e08aced81491de32d37933bf30beadd3ffb96b",
+        "kind": "upstream transformation test fixture"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "JSCAD Organization. Source: https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/scaleEx1.scad. The MIT License (MIT) Copyright (c) 2017-2024 JSCAD Organization Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/jscad-LICENSE.txt",
+            "sha256": "bf0a7136796ab8f4573a7a77783d7dfebca4d35a595f0ad160d70a855d4c0cbb",
+            "bytes": 1091,
+            "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex exact four-file authored example/fixture source and MIT grant review 2026-11-14"
+      },
+      "original": {
+        "path": "sources/jscad-reviewed/scaleEx1.scad",
+        "sha256": "0e9d3c5265754a7f88c778d6e1e08aced81491de32d37933bf30beadd3ffb96b",
+        "bytes": 62,
+        "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/scaleEx1.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/jscad-reviewed/scaleEx1.stl",
+          "sha256": "5343e9bbeab8099bd9b36ac79965611126dd04b144cd8f6005264a82517dec42",
+          "bytes": 684,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical already archived upstream transformation test fixture. Authored default main/root, original coordinates and transforms retained without source, argument, entrypoint, frame or fragment overrides. Existing bounded OpenSCAD importer retains the authored cube and transformation. No compiler/runtime change, model repair, simplification or placement adjustment. Not certified for manufacturing or physics. Import warnings: None.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit physical units. Curator interprets model units as millimetres and Z up; original coordinates are preserved.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "5343e9bbeab8099bd9b36ac79965611126dd04b144cd8f6005264a82517dec42",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 12,
+        "boundsMm": {
+          "min": [
+            -10,
+            -10,
+            -10
+          ],
+          "max": [
+            10,
+            10,
+            10
+          ]
+        },
+        "signedVolumeMm3": 7999.999999999999
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-jscad-rotateex1",
+      "title": "JSCAD rotated cube fixture",
+      "author": "JSCAD Organization",
+      "version": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/jscad/OpenJSCAD.org",
+        "commit": "720f3688312ed3bad1702fe83906be153b8ab8fc",
+        "sourceUrl": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/rotateEx1.scad"
+      },
+      "archiveSelection": {
+        "manifest": "../tests/fixtures/code-corpus/manifest.json",
+        "upstreamPath": "packages/io/scad-deserializer/tests/transformations/rotateEx1.scad",
+        "archivedPath": "../tests/fixtures/code-corpus/jscad/rotateEx1.scad",
+        "sha256": "b724d6d863a23ec1dca57725416ee6bf7d29ab6c87ea99e61ea79114d96430da",
+        "kind": "upstream transformation test fixture"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "JSCAD Organization. Source: https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/rotateEx1.scad. The MIT License (MIT) Copyright (c) 2017-2024 JSCAD Organization Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/jscad-LICENSE.txt",
+            "sha256": "bf0a7136796ab8f4573a7a77783d7dfebca4d35a595f0ad160d70a855d4c0cbb",
+            "bytes": 1091,
+            "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex exact four-file authored example/fixture source and MIT grant review 2026-11-14"
+      },
+      "original": {
+        "path": "sources/jscad-reviewed/rotateEx1.scad",
+        "sha256": "b724d6d863a23ec1dca57725416ee6bf7d29ab6c87ea99e61ea79114d96430da",
+        "bytes": 61,
+        "url": "https://raw.githubusercontent.com/jscad/OpenJSCAD.org/720f3688312ed3bad1702fe83906be153b8ab8fc/packages/io/scad-deserializer/tests/transformations/rotateEx1.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/jscad-reviewed/rotateEx1.stl",
+          "sha256": "b4985de55af3308b0b8b5d3083b78001b54c8059cdd949905dc629244f76779f",
+          "bytes": 684,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical already archived upstream transformation test fixture. Authored default main/root, original coordinates and transforms retained without source, argument, entrypoint, frame or fragment overrides. Existing bounded OpenSCAD importer retains the authored cube and transformation. No compiler/runtime change, model repair, simplification or placement adjustment. Not certified for manufacturing or physics. Import warnings: None.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit physical units. Curator interprets model units as millimetres and Z up; original coordinates are preserved.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "b4985de55af3308b0b8b5d3083b78001b54c8059cdd949905dc629244f76779f",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 12,
+        "boundsMm": {
+          "min": [
+            -7.071067810058594,
+            -5,
+            -7.071067810058594
+          ],
+          "max": [
+            7.071067810058594,
+            5,
+            7.071067810058594
+          ]
+        },
+        "signedVolumeMm3": 999.9999994889366
+      },
+      "diagnostics": []
+    }
+  ]
+}

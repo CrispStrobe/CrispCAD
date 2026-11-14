@@ -2,6 +2,14 @@
 import {expect,test} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
 const ready=async(page:any)=>expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+test('slice callback imports remain editable native lofts after save, reload and source export',async({page})=>{
+ await page.goto('/');await ready(page);await page.getByRole('button',{name:'Code',exact:true}).click();const panel=page.getByRole('dialog',{name:'Code object',exact:true});
+ const source="const {extrusions:{extrudeFromSlices,slice}}=require('@jscad/modeling');const main=()=>extrudeFromSlices({numberOfSlices:3,callback:(p)=>slice.fromPoints([[0,0,p*10],[4,0,p*10],[4,4,p*10],[0,4,p*10]])},{});module.exports={main};";
+ await panel.getByLabel('Import CAD source',{exact:true}).setInputFiles({name:'slice-loft.js',mimeType:'text/javascript',buffer:Buffer.from(source)});await expect(panel.getByRole('status',{name:'Code status'})).toContainText('evaluated snapshot');await expect(panel.getByLabel('CAD code source',{exact:true})).toHaveValue(/loft\(/);
+ await panel.getByRole('button',{name:'Preview code',exact:true}).click();await expect(panel.getByRole('status',{name:'Code status'})).toContainText('Preview ready');
+ const download=page.waitForEvent('download');await panel.getByLabel('Source export format',{exact:true}).selectOption('jscad');await panel.getByRole('button',{name:'Export source…',exact:true}).click();const exported=await download;expect(await readFile((await exported.path())!,'utf8')).toContain('polyhedron(');
+ await panel.getByRole('button',{name:'Create code object',exact:true}).click();await expect(panel).toBeHidden();await ready(page);await page.reload();await ready(page);await expect(page.getByTestId('object-name')).toHaveCount(1);await page.getByTestId('object-name').click();await page.getByRole('button',{name:'Code',exact:true}).click();await expect(panel.getByLabel('CAD code source',{exact:true})).toHaveValue(/loft\(/);
+});
 test('resized cut profiles retain editable dimensions, straight zero slices and saved geometry',async({page})=>{
  await page.goto('/');await ready(page);await page.getByRole('button',{name:'Code',exact:true}).click();const panel=page.getByRole('dialog',{name:'Code object',exact:true});
  await panel.getByLabel('Import CAD source',{exact:true}).setInputFiles({name:'resize-frame.scad',mimeType:'text/plain',buffer:Buffer.from('width=10;linear_extrude(2,slices=0)resize([width,20])difference(){square([4,4]);translate([1,1])square([2,2]);}')});

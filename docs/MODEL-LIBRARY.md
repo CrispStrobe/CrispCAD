@@ -724,3 +724,67 @@ See `library/corpus-audit/editor-screening-cycle25.json` for the ranked alternat
 actual before/after measurements and validation reuse. The remaining five
 ClosePoints defaults and catchnhole retain independent loop/list or missing
 JSON/data blockers; no additional admission credit is assigned to them.
+
+### Authored Bricks random snapshot — 2026-11-14
+
+`Asset_SCAD/Bricks.scad` adds one byte-identical MIT source root without
+dependencies. The authored ranges, six calls, two instantiations and placement
+are unchanged. Brickwright resolves its unseeded draws into a reproducible
+source-derived import snapshot and discloses that policy in the generated code
+and model provenance. This qualifies the retained snapshot; it is not an
+upstream random-sequence equivalence claim or a qualification of every draw.
+
+The measured cohort improves **0/1 → 1/1 strict STL and editor passes**: 24 triangles,
+264.357610779 mm³, bounds [0,0,0] to approximately [15.6601,8.7175,3] mm. Independent
+component bounds confirm two 5–10 mm rectangular profiles at height 3 mm and the
+authored second origin [10,0,0]. Export identity survives serialization and
+undo/redo; edits do not resample an already imported snapshot.
+
+Totals are **106 source roots / 104 distinct STL hashes / 145 gallery entries**:
+98 Angelo, three A2D and five SCON roots. All 105 prior complete records, 144 previews
+and historical refusals remain unchanged. Only the new preview was rendered.
+Focused reproduction evaluates Bricks and hash-verifies the 97 earlier Angelo
+records and their exact original/derivative bytes:
+
+```sh
+node scripts/generate-corpus-editor-library.mjs --check --asset-id corpus-angelo-bricks
+```
+
+See `library/corpus-audit/editor-screening-cycle26.json` and the disclosed
+conversion policy in `docs/CODE-CONVERTERS.md`. No Knob, webbing, Box, depth or
+topology refusals were retried.
+
+### Archived JSCAD example and transformation fixtures — 2026-11-14
+
+Four already archived MIT roots are now admitted in
+`library/jscad-editor-manifest.json`: `basicBooleans.js` and the upstream
+transformation test fixtures `translateEx1.scad`, `scaleEx1.scad` and
+`rotateEx1.scad`. Fixture titles explicitly identify them as fixtures. Their
+original bytes, authored default roots/main, coordinates, source URLs and pinned
+JSCAD revision are retained. The existing JSCAD MIT notice is included in full.
+No new source was downloaded and no compiler/runtime changes were needed.
+
+These roots already converted on the delivered compiler. This is an offline
+library admission change: **0/4 previously shipped → 4/4 strict STL/editor
+admissions**, not a claim of four compiler repairs. Actual baseline geometry and
+STL hashes remain identical after editor insertion. The Boolean demonstration
+has 1,532 triangles and volume 29.769003 mm³; the three transformed cubes have
+12 triangles each and volumes 1,000 / 8,000 / 1,000 mm³. The existing editor
+combines the Boolean demonstration's five outputs into one body, as disclosed.
+All four retain exact provenance, export identity, serialization and undo/redo.
+
+Delivered source counts now require all four explicit manifests: **110 roots /
+108 distinct STL hashes**, from 98 Angelo + 3 A2D + 5 SCON + 4 JSCAD example/fixture
+roots; there are 149 gallery entries. The earlier bundled JSCAD gear is unchanged
+and is not counted again. Every previous 106 complete record, 145 preview and
+historical refusal is preserved.
+
+```sh
+node scripts/generate-jscad-editor-library.mjs --check
+```
+
+The earlier Round-Anything cohort produced no geometry/STL admission under the
+fixed guards. Its unsupported filter/sign/format and memoization experiment was
+preserved externally and entirely reverted. No cache/work-counter change is
+shipped. See `library/corpus-audit/editor-screening-cycle28.json` for the separate
+failed cohort and successful admission evidence.
