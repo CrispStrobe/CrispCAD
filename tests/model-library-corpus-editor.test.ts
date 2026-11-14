@@ -13,11 +13,11 @@ const manifest = JSON.parse(read('editor-corpus-manifest.json').toString());
 const corpus = JSON.parse(read('corpus/manifest.json').toString());
 const repository = corpus.repositories.find((item: any) => item.id === 'AngeloNicoli--OpenSCAD-Snippet');
 const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
-const selected = ['beam-angular', 'beam-h', 'key-simple', 'roll-holder', 'angle-shelf', 'sign-01', 'sign-02', 'washer', 'transistor', 'stairs-01', 'bookshelf-01', 'chalkboard-01', 'arrow-01', 'base-cabinet-01', 'beam-c', 'bookshelf-02', 'box-wood-01', 'chair-01', 'door-01', 'flange-01', 'ladder-01', 'sofa', 'table-01', 'vent-grid', 'base-cabinet-02', 'bed-01', 'bed-02', 'bench-01', 'bench-02', 'chair-02', 'chair-03', 'fireplace-01', 'table-02', 'table-03', 'table-small-01', 'window-01', 'building-01', 'chalkboard-02', 'cone-01', 'crystal', 'key', 'lamp-01', 'lever-handle', 'soda-cup-01', 'stairs-02', 'stairs-03', 'traffic-light', 'tootbrush', 'electric-wire-plug', 'flange-03', 'resistor', 'street-02', 'street-03', 'street-06', 'sword-01', 'x', 'banner-01', 'raccordo', 'street-01', 'street-05', 'street-04', 'eyebolt', 'ladder-02', 'wall-04', 'fence-01', 'fence-02', 'building-02', 'walking-stick', 'ingot-01', 'coin-01', 'led-01', 'sauce-bottle'];
+const selected = ['beam-angular', 'beam-h', 'key-simple', 'roll-holder', 'angle-shelf', 'sign-01', 'sign-02', 'washer', 'transistor', 'stairs-01', 'bookshelf-01', 'chalkboard-01', 'arrow-01', 'base-cabinet-01', 'beam-c', 'bookshelf-02', 'box-wood-01', 'chair-01', 'door-01', 'flange-01', 'ladder-01', 'sofa', 'table-01', 'vent-grid', 'base-cabinet-02', 'bed-01', 'bed-02', 'bench-01', 'bench-02', 'chair-02', 'chair-03', 'fireplace-01', 'table-02', 'table-03', 'table-small-01', 'window-01', 'building-01', 'chalkboard-02', 'cone-01', 'crystal', 'key', 'lamp-01', 'lever-handle', 'soda-cup-01', 'stairs-02', 'stairs-03', 'traffic-light', 'tootbrush', 'electric-wire-plug', 'flange-03', 'resistor', 'street-02', 'street-03', 'street-06', 'sword-01', 'x', 'banner-01', 'raccordo', 'street-01', 'street-05', 'street-04', 'eyebolt', 'ladder-02', 'wall-04', 'fence-01', 'fence-02', 'building-02', 'walking-stick', 'ingot-01', 'coin-01', 'led-01', 'sauce-bottle', 'pipe-00', 'flange-02'];
 
 describe('explicit corpus to editor selection', () => {
-  it('admits exactly seventy-two selected standalone sources with unchanged pinned originals and full MIT grants', () => {
-    expect(selected).toHaveLength(72);
+  it('admits exactly seventy-four selected standalone sources with unchanged pinned originals and full MIT grants', () => {
+    expect(selected).toHaveLength(74);
     expect(manifest.selection).toMatchObject({count: selected.length, runtimeChecked: selected.length, complete: true});
     expect(manifest.assets.map((asset: any) => asset.id)).toEqual(selected.map(slug => `corpus-angelo-${slug}`));
     const street03 = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-street-03');
@@ -61,7 +61,7 @@ describe('explicit corpus to editor selection', () => {
     }
   });
 
-  it('retains independently calculable beam volumes and source coordinates', () => {
+  it('retains independently calculable volumes and source coordinates', () => {
     // Beam H: three 0.4 mm³ boxes, minus two 0.02 mm³ overlaps.
     const h = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-beam-h');
     expect(h.measurements.signedVolumeMm3).toBeCloseTo(1.16, 5);
@@ -87,6 +87,16 @@ describe('explicit corpus to editor selection', () => {
     const ingot = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-ingot-01');
     expect(ingot.measurements.signedVolumeMm3).toBeCloseTo(0.5 / 3 * (2 + 1.28 + 1.6), 6);
     expect(ingot.measurements.boundsMm).toEqual({min: [-1, -0.5, 0], max: [1, 0.5, 0.5]});
+    // Full-render $preview=false selects 30 segments for the annular pipe.
+    const pipe = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-pipe-00');
+    expect(pipe.measurements.signedVolumeMm3).toBeCloseTo(15 * 30 / 2 * (2 ** 2 - 1.75 ** 2) * Math.sin(2 * Math.PI / 30), 4);
+    expect(pipe.modificationNotes).toContain('fixed full-render context $preview=false');
+    // Flange Size=0 is a 64-gon radius 100 prism minus four 60-gon radius 10 holes.
+    const flange = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-flange-02');
+    expect(flange.measurements.signedVolumeMm3).toBeCloseTo(10 * (64 / 2 * 100 ** 2 * Math.sin(2 * Math.PI / 64) - 4 * 60 / 2 * 10 ** 2 * Math.sin(2 * Math.PI / 60)), 1);
+    expect(flange.measurements.boundsMm).toEqual({min: [-100, -100, 0], max: [100, 100, 10]});
+    expect(flange.modificationNotes).toContain('fixed full-render context $preview=false');
+    expect(flange.modificationNotes).toContain('constant dimension selector Size=0');
     street01.measurements.boundsMm.min.forEach((value: number, index: number) => expect(value).toBeCloseTo([-2, -1, -0.1][index], 6));
     street01.measurements.boundsMm.max.forEach((value: number, index: number) => expect(value).toBeCloseTo([2, 1, 0.1][index], 6));
   });

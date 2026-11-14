@@ -32,12 +32,26 @@ become numeric CAD Script expressions. Constant palettes use a separate tag and
 contain only literal color strings or nested palettes. A palette index must be a
 nonnegative integer literal or a module-local binding/argument with literal
 integer provenance; computed indices and global parameter lookup are rejected.
-Numeric vector indexing remains literal-only. Palette selection ends at the same
+Numeric vector indexing accepts that same literal-provenance scope. Palette selection ends at the same
 validated `color()` endpoint and omission disclosure. Mixed numeric/color arrays,
 string indexing, arithmetic, functions, loops, global color data, and numeric
 coercion remain unsupported. Existing 256-item/32-depth limits still apply;
 local-binding evaluation and color data construction also share an 8,192-step
 budget, charged before recursive alias evaluation to bound branching aliases.
+
+Source conversion uses the full-render context: the read-only `$preview` builtin
+is `false`, and a note is added to converted CAD Script only when the builtin is
+read. Source assignments, parameter/named-argument overrides, and dynamic index
+use are rejected. Exported OpenSCAD/JSCAD snapshots contain explicit resolved
+facet counts, so they do not depend on preview mode. This adds no UI preview-mode
+setting. Numeric and palette indices may use literal integer module defaults,
+arguments or lexical local aliases; computed, global, loop and function-derived
+indices remain unsupported. Function parameter indices do not acquire module
+argument provenance. Numeric coordinate expressions retain their existing units,
+parameter dependencies and bounds, and color values cannot supply coordinates.
+The fixed context follows the official [`$preview` documentation](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#$preview)
+for full rendering; this subset diagnoses upstream-style overrides instead of
+supporting a configurable source context.
 
 `translate`, `rotate`, and `scale` accept a scoped `$fn` argument for their child
 geometry, including calls to local modules. Nested scopes restore the enclosing
@@ -81,7 +95,7 @@ to make missing capabilities reproducible, then extend coverage from real files.
 OpenSCAD scalar assignments become editable native parameters. Modules expand
 symbolically: changing a retained parameter recomputes every expanded use, rather
 than baking it into a snapshot. Named vectors retain their scalar dependencies;
-vector indices currently require literal nonnegative integers. Module defaults
+vector indices require nonnegative integers with literal module/local provenance. Module defaults
 use the definition scope; regular caller arguments do not leak into called modules.
 Special `$fn` parameters propagate through calls. Direct module definitions are
 hoisted within each lexical block and capture that block's bindings and module

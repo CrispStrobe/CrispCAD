@@ -14,7 +14,7 @@ type Definition={parameters:{name:string;start?:number;end?:number}[];start:numb
 /** Bounded declarative OpenSCAD subset. Unsupported constructs fail closed. */
 export function importOpenSCAD(source:string):CodeProgram{
  if(typeof source!=='string')throw new CadCodeError(t('Expected source text'),0,'');
- const tokens:{text:string;at:number}[]=[];let position=0,cursor=0,statements=0,fn='48',omittedColor=false,omittedHighlight=false;const assignments=new Map<string,string>();
+ const tokens:{text:string;at:number}[]=[];let position=0,cursor=0,statements=0,fn='48',omittedColor=false,omittedHighlight=false,fullRenderPreview=false;const assignments=new Map<string,string>();
  const vectors=new Map<string,Value>();let locals=new Map<string,ScopeValue>();const resolving=new Set<LocalBinding>();
  let modules=new Map<string,Definition>();const functions=new Map<string,Definition>();let functionDepth=0;
  const fail=(message:string,at=tokens[cursor]?.at??source.length):never=>{throw new CadCodeError(message,at,source);};
@@ -27,6 +27,7 @@ export function importOpenSCAD(source:string):CodeProgram{
  const take=()=>{const next=tokens[cursor++];if(!next)fail(t('Unexpected end of source'));return next!;};
  const expect=(value:string)=>{if(peek()!==value)fail(t`Expected “${value}”`);take();};
  const unsupported=(name:string,at=tokens[cursor]?.at??source.length):never=>{throw new CadCodeError(t`Unsupported OpenSCAD feature “${name}”`,at,source,'unsupported-feature');};
+ for(let i=0;i<tokens.length;i++)if(tokens[i].text==='$preview'&&tokens[i+1]?.text==='=')unsupported('read-only full-render $preview',tokens[i].at);
  let valueEvaluations=0;
  const chargeValues=(count=1)=>{valueEvaluations+=count;if(valueEvaluations>CODE_LIMITS.tokens)limited(t('OpenSCAD construction limit exceeded'));};
  function localValue(name:string):Value|undefined{
@@ -51,10 +52,10 @@ export function importOpenSCAD(source:string):CodeProgram{
  }
  // Substitute symbolic arguments, retaining scalar parameter dependencies in the native program.
  function reference():Value|undefined {
-  const name=peek();if(!name)return undefined;let v:Value|undefined;if(functions.has(name)&&peek(1)==='(')v=callFunction();else{v=localValue(name)??vectors.get(name);if(v===undefined)return undefined;take();}
-  while(peek()==='['){take();const index=take();const array:Value|undefined=v;
-   if(array instanceof LiteralPalette){const literal=/^\d+$/.test(index.text)?index.text:localIndex(index.text);if(literal===undefined||Number(literal)>=array.entries.length)return unsupported('literal palette index',index.at);expect(']');v=array.entries[Number(literal)];}
-   else{if(!Array.isArray(array)||!/^\d+$/.test(index.text)||Number(index.text)>=array.length)return unsupported('vector index',index.at);expect(']');v=array[Number(index.text)];}
+  const name=peek();if(!name)return undefined;let v:Value|undefined;if(name==='$preview'){fullRenderPreview=true;v='false';take();}else if(functions.has(name)&&peek(1)==='(')v=callFunction();else{v=localValue(name)??vectors.get(name);if(v===undefined)return undefined;take();}
+  while(peek()==='['){take();const index=take(),literal=/^\d+$/.test(index.text)?index.text:localIndex(index.text);const array:Value|undefined=v;
+   if(array instanceof LiteralPalette){if(literal===undefined||Number(literal)>=array.entries.length)return unsupported('literal palette index',index.at);expect(']');v=array.entries[Number(literal)];}
+   else{if(!Array.isArray(array)||literal===undefined||Number(literal)>=array.length)return unsupported('vector index',index.at);expect(']');v=array[Number(literal)];}
   }
   return v;
  }
@@ -79,7 +80,7 @@ export function importOpenSCAD(source:string):CodeProgram{
  const definitions=new Map<number,number>(),declaredGlobals=new Set<string>();
  function scanDefinition(localScope?:Map<string,ScopeValue>,declared?:Set<string>){const begin=cursor,kind=take().text,collection=kind==='module'?modules:functions;if(localScope&&kind!=='module')unsupported('nested functions');const name=take();if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name.text)||(declared?declared.has(name.text):collection.has(name.text)))unsupported(`${kind} name`,name.at);declared?.add(name.text);expect('(');
   const parameters:{name:string;start?:number;end?:number}[]=[];
-  while(peek()!==')'){const parameter=take();if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(parameter.text)||parameters.some(p=>p.name===parameter.text))unsupported('module parameter',parameter.at);
+  while(peek()!==')'){const parameter=take();if(parameter.text==='$preview')unsupported('read-only full-render $preview',parameter.at);if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(parameter.text)||parameters.some(p=>p.name===parameter.text))unsupported('module parameter',parameter.at);
    const entry:{name:string;start?:number;end?:number}={name:parameter.text};
    if(peek()==='='){take();entry.start=cursor;let depth=0;while(cursor<tokens.length){const n=peek()!;if(depth===0&&(n===','||n===')'))break;if(n==='('||n==='[')depth++;if(n===')'||n===']')depth--;if(depth<0||depth>32)limited(t('Expression nesting exceeds 32'));take();}entry.end=cursor;if(entry.start===entry.end)fail(t('Expected a complete dimensional expression'));}
    parameters.push(entry);if(parameters.length>64)limited(t('OpenSCAD construction limit exceeded'));if(peek()!==',')break;take();
@@ -105,7 +106,7 @@ export function importOpenSCAD(source:string):CodeProgram{
     }
     // OpenSCAD's last assignment wins throughout its lexical scope.
     if(braces===0&&parentheses===0&&brackets===0&&peek(1)==='='){
-     const statement=cursor,name=take();if(anonymous)unsupported('assignments in anonymous blocks',name.at);if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name.text))unsupported('local variable name',name.at);take();const start=cursor;
+     const statement=cursor,name=take();if(name.text==='$preview')unsupported('read-only full-render $preview',name.at);if(anonymous)unsupported('assignments in anonymous blocks',name.at);if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name.text))unsupported('local variable name',name.at);take();const start=cursor;
      let nesting=0;while(peek()!==';'||nesting!==0){const n=peek();if(!n||n==='{'||n==='}')unsupported('local variable expression',name.at);if(n==='('||n==='[')nesting++;if(n===')'||n===']')nesting--;if(nesting<0||nesting>32)limited(t('Expression nesting exceeds 32'));take();}
      const end=cursor;expect(';');if(start===end)fail(t('Expected a complete dimensional expression'),name.at);
      scope.set(name.text,new LocalBinding(start,end,scope));declarations.set(statement,cursor);
@@ -123,7 +124,7 @@ export function importOpenSCAD(source:string):CodeProgram{
  function argumentsFor(name:string,at:number){
   expect('(');const named=new Map<string,Value>(),positional:Value[]=[],namedIndices=new Map<string,string|undefined>(),positionalIndices:(string|undefined)[]=[];
   while(peek()!==')'){
-   if(peek(1)==='='){const key=take().text;take();if(named.has(key))fail(t`Duplicate OpenSCAD argument “${key}”`);const start=cursor;named.set(key,value());namedIndices.set(key,indexLiteral(start,cursor));}
+   if(peek(1)==='='){const key=take().text;take();if(key==='$preview')unsupported('read-only full-render $preview',at);if(named.has(key))fail(t`Duplicate OpenSCAD argument “${key}”`);const start=cursor;named.set(key,value());namedIndices.set(key,indexLiteral(start,cursor));}
    else{if(named.size)fail(t('Positional OpenSCAD arguments must precede named arguments'));const start=cursor;positional.push(value());positionalIndices.push(indexLiteral(start,cursor));}
    if(peek()!==',')break;take();
   }expect(')');
@@ -141,7 +142,7 @@ export function importOpenSCAD(source:string):CodeProgram{
   try{for(let i=0;i<definition.parameters.length;i++){
     const parameter=definition.parameters[i];let v=args.use(parameter.name,i),index=args.indexLiteral(parameter.name,i);
     if(v===undefined&&parameter.start!==undefined){cursor=parameter.start;locals=new Map(defaults);try{v=value();index=indexLiteral(parameter.start,cursor);}finally{locals=scope;}if(cursor!==parameter.end)unsupported(`${kind} default expression`);}
-    if(v===undefined)unsupported(`missing ${kind} argument: ${parameter.name}`,at);if(kind==='function'&&colorLiteral(v))unsupported('string function argument',at);scope.set(parameter.name,new ArgumentBinding(v!,index));
+    if(v===undefined)unsupported(`missing ${kind} argument: ${parameter.name}`,at);if(kind==='function'&&colorLiteral(v))unsupported('string function argument',at);scope.set(parameter.name,new ArgumentBinding(v!,kind==='module'?index:undefined));
    }
    cursor=definition.start;const result=body();if(cursor!==definition.end)unsupported(`${kind} body`,at);return result;
   }finally{locals=outer;modules=outerModules;cursor=resume;}
@@ -154,7 +155,7 @@ export function importOpenSCAD(source:string):CodeProgram{
  let loopSequence=0;
  const symbolNames=new Set(tokens.filter(token=>/^[A-Za-z_$]/.test(token.text)).map(token=>token.text));
  function controlLoop(depth:number):string{
-  expect('(');const variable=take();if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(variable.text))unsupported('loop variable',variable.at);expect('=');
+  expect('(');const variable=take();if(variable.text==='$preview')unsupported('read-only full-render $preview',variable.at);if(!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(variable.text))unsupported('loop variable',variable.at);expect('=');
   let generated:string;do{generated=`cadLoop${loopSequence++}`;}while(symbolNames.has(generated));symbolNames.add(generated);
   let range:string[]|undefined,items:Value[];
   if(peek()==='['){take();items=[];
@@ -245,7 +246,7 @@ export function importOpenSCAD(source:string):CodeProgram{
   }
   allowed(['h','r','d','center','$fn'],2);if(named.has('d')&&(named.has('r')||positional[1]!==undefined))unsupported('cylinder: both radius and diameter',token.at);const height=scalar(use('h',0,'1')),radius=named.has('d')?`(${scalar(named.get('d'))}) / 2`:scalar(use('r',1,'1')),body=`cylinder(${radius}, ${height}, ${segments()})`;return `move([0, 0, ${centerZ(named.get('center'),height)}], ${body})`;
  }
- let constructionAt=0;const shapes:string[]=[];while(cursor<tokens.length){if(definitions.has(cursor)){cursor=definitions.get(cursor)!;continue;}if(peek(1)==='='){const token=take(),name=token.text;take();if(shapes.length)unsupported('assignment after geometry',token.at);const v=value();expect(';');if(colorLiteral(v))return unsupported('global color literal assignment',token.at);if(name==='$fn')fn=scalar(v);else{if(!/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(name)||['constructor','prototype'].includes(name))unsupported(name,token.at);if(assignments.has(name)||vectors.has(name))unsupported('variable reassignment',token.at);if(Array.isArray(v))vectors.set(name,v);else assignments.set(name,v);}if(++statements>CODE_LIMITS.statements)limited(t('Too many statements'));}else{constructionAt=tokens[cursor]?.at??0;shapes.push(shape());}}
+ let constructionAt=0;const shapes:string[]=[];while(cursor<tokens.length){if(definitions.has(cursor)){cursor=definitions.get(cursor)!;continue;}if(peek(1)==='='){const token=take(),name=token.text;take();if(name==='$preview')unsupported('read-only full-render $preview',token.at);if(shapes.length)unsupported('assignment after geometry',token.at);const v=value();expect(';');if(colorLiteral(v))return unsupported('global color literal assignment',token.at);if(name==='$fn')fn=scalar(v);else{if(!/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(name)||['constructor','prototype'].includes(name))unsupported(name,token.at);if(assignments.has(name)||vectors.has(name))unsupported('variable reassignment',token.at);if(Array.isArray(v))vectors.set(name,v);else assignments.set(name,v);}if(++statements>CODE_LIMITS.statements)limited(t('Too many statements'));}else{constructionAt=tokens[cursor]?.at??0;shapes.push(shape());}}
  if(!shapes.length)fail(t('OpenSCAD block contains no supported solid'));
- const program:CodeProgram={version:1,language:'brickwright-cad-script',parameters:{},source:`// Converted from the supported OpenSCAD subset.\n// Curved and twisted surfaces use the native kernel tessellation.\n${omittedColor?'// Appearance colors omitted; solid geometry retained.\n':''}${omittedHighlight?'// Preview highlights omitted; solid geometry retained.\n':''}${[...assignments].map(([name,v])=>`param ${name}: scalar = ${v};`).join('\n')}\nreturn ${union(shapes)};\n`};try{compileCode(program);}catch(error){if(error instanceof CadCodeError)throw new CadCodeError(t`Converted OpenSCAD construction: ${error.detail}`,constructionAt,source,error.code);throw error;}return program;
+ const program:CodeProgram={version:1,language:'brickwright-cad-script',parameters:{},source:`// Converted from the supported OpenSCAD subset.\n// Curved and twisted surfaces use the native kernel tessellation.\n${fullRenderPreview?'// Full-render import context: $preview = false.\n':''}${omittedColor?'// Appearance colors omitted; solid geometry retained.\n':''}${omittedHighlight?'// Preview highlights omitted; solid geometry retained.\n':''}${[...assignments].map(([name,v])=>`param ${name}: scalar = ${v};`).join('\n')}\nreturn ${union(shapes)};\n`};try{compileCode(program);}catch(error){if(error instanceof CadCodeError)throw new CadCodeError(t`Converted OpenSCAD construction: ${error.detail}`,constructionAt,source,error.code);throw error;}return program;
 }
