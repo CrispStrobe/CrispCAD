@@ -134,7 +134,7 @@ Known gaps, deliberately diagnosed:
 
 - Ambient library resolution (including BOSL2); explicit local
   `include` and file-scope `use` bundles are supported. Comprehension filters/C-style and
-  variable-cardinality generators, randomness, search outside fixed tables,
+  variable-cardinality generators, symbolic random arguments, search outside fixed tables,
   symbolic numeric-to-string formatting,
   general matrix arithmetic, anonymous-block assignment semantics, external meshes,
   surface/image geometry, automatic resize axes and arbitrary-axis profile rotations.
@@ -522,3 +522,29 @@ atomic invalid edits, provenance, serialization and undo/redo pass. The five
 shared dependencies are not counted as additional admissions. The `lookup` and
 `version_num` cohorts have no confirmed admission-ready default; their existing
 refusals are unchanged. See `library/corpus-audit/editor-screening-cycle25.json`.
+
+## Bounded random import snapshots (cycle 26)
+
+Constant-argument `rands(min,max,count[,seed])` produces at most 64 finite numeric
+samples and charges every draw to the existing work budget. Reversed/nonfinite
+ranges, fractional/negative counts and parameter-dependent arguments are refused.
+Explicit seeds reproduce their own independent streams. Unseeded calls use a
+source-derived stream: FNV-1a over exact UTF-8 source initializes an independent
+xorshift32 generator; sampled values are resolved into the imported native code.
+Conversion warnings and library provenance disclose this policy. These are valid
+bounded sample snapshots, not a claim to reproduce OpenSCAD's random sequence or
+all possible stochastic outputs. Source declarations and seed arguments are not
+rewritten. The original compiler implementation follows the published
+[`rands` argument documentation](https://files.openscad.org/documentation/manual/Mathematical_Functions.html);
+no upstream generator implementation is used.
+
+Constant nonnegative fractional list/string indices now select their integer
+part; negative indices remain undefined. Symbolic indices retain the existing
+exact-index matching subset, and booleans/strings are not numeric indices. This
+allows the authored Bricks palette sample without weakening colour validation.
+
+One exact authored root, `Asset_SCAD/Bricks.scad`, improves **0/1 → 1/1 strict STL
+and editor passes**. Its reproducible snapshot consists of two separate boxes,
+24 triangles and 264.357610779 mm³. Both planar dimensions of each box remain
+within the authored 5–10 mm range; height 3 mm and second origin [10,0,0] are retained.
+See `library/corpus-audit/editor-screening-cycle26.json`.
