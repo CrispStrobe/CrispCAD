@@ -109,9 +109,12 @@ export const corpusEditorSelection = [
   ['Weights_01', '9d65acddd758fe6bdb0424e423caeaae6be9dc94c7a1414bc229f7198a98b0e2'],
   ['Tree_01', '31a9130ea9b53c0d503fb86aeec221ec871cb21ea96987262d846ef5ca2bc756'],
   ['Nut_LQ', 'deb3b2a4fe017c0734780512f781edb7809fe9434e72028b13a3f0a52581ea2f'],
+  ['Rod_01', '11cf0a57740fc1805fe86c6a424602b0799ae0f561f573e246a0bd49abef9eaa'],
+  ['Animation_Gear_02', '88e34079b1cc328209d4b2ce38a1fe38a2bfd3f57853afabe04b401cccec535f', 'Animation_SCAD/Gear_02.scad'],
+  ['Animation_Mechanism_01', '2072ec9e27a91885decf095635cf0f20458f2d6c64dfe32f98062a3e067e0a7c', 'Animation_SCAD/Mechanism_01.scad'],
 ];
 // Only this admission batch gains warning metadata; earlier qualification records stay immutable.
-const warningQualifiedNames = new Set(['Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ']);
+const warningQualifiedNames = new Set(['Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ', 'Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01']);
 export async function generateCorpusEditorLibrary() {
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
   const repository = corpus.repositories.find(item => item.id === repositoryId);
@@ -146,6 +149,8 @@ export async function generateCorpusEditorLibrary() {
     const program = importOpenSCAD(bytes.toString('utf8'));
     const admissionNotes = warningQualifiedNames.has(name)
       ? ' Qualification covers only the instantiated default top-level model.'
+        + (['Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01'].includes(name) ? ' The unchanged authored default is evaluated at the builtin unbound-time fallback $t=0; motion and alternate frames are not retained or qualified. Gear engagement, kinematics and mechanical performance are not certified.' : '')
+        + (name === 'Animation_Mechanism_01' ? ' At $t=0 the derived mesh matches the static Key source; this collection counts source files, not unique shapes.' : '')
         + (['Weights_01', 'Tree_01', 'Nut_LQ'].includes(name) ? ' Comprehensions are converted by the bounded fixed-cardinality subset for the authored defaults; alternate cardinality choices are outside this qualification.' : '')
         + (name === 'Hole_Plate' ? ' The authored % background cube is excluded from rendered geometry; Hole_Diameter retains its authored cylinder-radius meaning.' : '')
         + ' Import warnings captured at qualification: ' + (getOpenSCADImportWarnings(program).join(' ') || 'None.')

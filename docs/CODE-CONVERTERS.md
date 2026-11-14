@@ -55,6 +55,15 @@ the official [`$preview` documentation](https://files.openscad.org/documentation
 for full rendering; this subset diagnoses upstream-style overrides instead of
 supporting a configurable source context.
 
+An actually read, unbound animation time `$t` defaults to zero and adds the
+conversion notice: "Unbound animation time uses $t=0; motion is not retained."
+Authored global, lexical and module/transform `$t` bindings keep their existing
+values; this does not make `$t` read-only or force every part of a mixed-time
+source to frame zero. Uncalled definitions and unread constant branches add no
+time notice. The source remains archived, while the imported model is static.
+The existing warning API carries this notice into source-insertion provenance
+only for the source that used the fallback.
+
 Supported special fragment controls propagate through module and transform
 calls. Nested scopes restore the enclosing values, and an explicit positive
 `$fn` takes precedence over adaptive `$fa`/`$fs` calculations. Curved geometry

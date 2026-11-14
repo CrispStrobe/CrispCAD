@@ -111,7 +111,12 @@ export function importOpenSCAD(source:string):CodeProgram{
    else if(token==='undef'){take();result=new UndefinedValue();}
    else if(token&&functions.has(token)&&peek(1)==='(')result=callFunction();
    else if(token&&peek(1)==='('){take();take();const args:Value[]=[];while(peek()!==')'){args.push(value(depth+1));if(peek()!==',')break;take();}expect(')');result=builtin(token,args);}
-   else if(token&&/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(token)){take();if(token==='$preview')fullRenderPreviewUsed=true;result=localValue(token)??vectors.get(token)??(token==='PI'&&!declaredGlobals.has('PI')?'3.141592653589793':token==='true'||token==='false'?token:token==='$fn'||token==='$t'||token==='$children'?'0':token==='$preview'?'false':new UndefinedValue());}
+   else if(token&&/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(token)){
+    take();if(token==='$preview')fullRenderPreviewUsed=true;const bound=localValue(token)??vectors.get(token);
+    if(bound!==undefined)result=bound;
+    else if(token==='$t'){warnings.add(t('Unbound animation time uses $t=0; motion is not retained.'));result='0';}
+    else result=token==='PI'&&!declaredGlobals.has('PI')?'3.141592653589793':token==='true'||token==='false'?token:token==='$fn'||token==='$children'?'0':token==='$preview'?'false':new UndefinedValue();
+   }
    else if(token&&/^(?:\d|\.\d)/.test(token)){take();result=token;}
    else return fail(t('Expected a complete dimensional expression'));
    while(peek()==='['||peek()==='.'){if(peek()==='.'){take();const component=take();const index=['x','y','z'].indexOf(component.text);if(index<0)unsupported('vector component',component.at);result=indexValue(result,String(index));}else{take();const index=value(depth+1);expect(']');result=indexValue(result,index);}}return result;

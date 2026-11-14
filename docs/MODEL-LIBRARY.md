@@ -529,10 +529,10 @@ described above. No additional JSCAD models were present in these staged subsets
 
 ### Editor-enabled corpus subset
 
-Ninety dependency-complete MIT Asset Collection originals now project into a
+Ninety-three dependency-complete MIT Asset Collection originals now project into a
 separate `library/editor-corpus-manifest.json` and are selectable in the bundled
 editor catalogue. See [exact model names and reproduction commands](../library/README.md#external-corpus-models-available-in-the-editor).
-Only these 90 archive selections receive local importer, Manifold and STL screening evidence;
+Only these 93 archive selections receive local importer, Manifold and STL screening evidence;
 the archival manifest remains unchanged and unqualified.
 
 The current bounded OpenSCAD converter supports typed string/colour selectors,
@@ -570,6 +570,12 @@ restores lexical bindings after iteration and rejects parameter-dependent range
 cardinality. This shares the existing loop, array, depth and evaluation budgets;
 filters, `each` and multiple iterator bindings remain outside this subset.
 Only independently screened default entry points enter the editor selection.
+Unbound animation time remains the static `$t=0` fallback and now records that
+actual interpretation in converter warnings and source provenance. Authored global,
+lexical and module/transform time bindings retain their existing behavior. Rod 01,
+Animation Gear 02 and Animation Mechanism 01 pass at the authored default entry
+points with that fallback; their qualifications establish static geometry only.
+Spawing Cube remains excluded because the unchanged default produces no solid.
 The host bundles exact selected source bytes, previews and the
 correct asset-specific MIT notice. Insertion verifies hashes, evaluates the
 candidate, and preserves provenance, attribution and undo/redo through the
