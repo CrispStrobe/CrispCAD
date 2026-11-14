@@ -529,10 +529,10 @@ described above. No additional JSCAD models were present in these staged subsets
 
 ### Editor-enabled corpus subset
 
-Twelve dependency-complete MIT Asset Collection originals now project into a
+Twenty-four dependency-complete MIT Asset Collection originals now project into a
 separate `library/editor-corpus-manifest.json` and are selectable in the bundled
-editor catalogue. See [exact model names and reproduction commands](../library/README.md#twelve-external-corpus-models-available-in-the-editor).
-Only these twelve receive local importer, Manifold and STL screening evidence;
+editor catalogue. See [exact model names and reproduction commands](../library/README.md#external-corpus-models-available-in-the-editor).
+Only these 24 archive selections receive local importer, Manifold and STL screening evidence;
 the archival manifest remains unchanged and unqualified. The bounded OpenSCAD
 importer accepts validated constant `color()` wrappers and discloses omitted
 appearance. The host bundles exact selected source bytes, previews and the

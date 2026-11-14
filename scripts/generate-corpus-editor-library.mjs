@@ -30,6 +30,18 @@ export const corpusEditorSelection = [
   ['Stairs_01', '051e38d01a320faf319723e8dc257eb3df35e365b82c5226cec05c410f990b08'],
   ['Bookshelf_01', '6ec7ca3193e9821ee281e8ea1c8183fc418892b38b6701863be77cbaf209631e'],
   ['Chalkboard_01', '23c77731a79447bc6ad6a5d74e9e7c77ccb852bc63056cf23b236ec4f2de80b6'],
+  ['Arrow_01', '6331d5b08292a58313a0700d31a4dc12fa841dc03c1ebf3c4c0a8450f580c3b9'],
+  ['Base_cabinet_01', 'b41a38be1e986f7941331a2ec9292ef77a781e81c630c80520677f4f5a686864'],
+  ['Beam_C', '4f2e948e657f8492a1014fa8bbb5b3b0837f118e7220cd6cd1aac467a1f5e517'],
+  ['Bookshelf_02', 'd7c66316d756aa88ba7226e0f520a2c754fcb9cb8daaf3698c2790f8a6a80db0'],
+  ['Box_Wood_01', '1815370f803d408dc710d1a96dc45d962a805155050f338e66386a09c827896a'],
+  ['Chair_01', '4d71a0da78b93283c3fd9fb393daa51394cd51e73dde3c50d2a0c421f337a401'],
+  ['Door_01', '985b9b8a104215e940059b4f90cdafa3cd7bfcbc89549b630b446af0e87df473'],
+  ['Flange_01', 'd063442d8c210bf775eec5e3ec5872833c61440648cbee0577629c4939f2fd56'],
+  ['Ladder_01', '42459e1d66d176e4534271be472528abe88b6de55ec06aca5d14a3be5d9ac4c2'],
+  ['Sofa', 'c4078754ea3f646b214376acdce32df6b6eeccb043e0063587f7559a3d790b04'],
+  ['Table_01', '86e1f12d8ac487b03ed840232665c17960528c9c565352fb74c245e46109db1e'],
+  ['Vent_Grid', '6ada1d7850f6f10ebe6443af6cde6695d077401eccfb49c2f3a5833cfa956fb5'],
 ];
 export async function generateCorpusEditorLibrary() {
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
@@ -91,5 +103,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     if (write) { await mkdir(dirname(fileURLToPath(target)), {recursive: true}); await writeFile(target, expected); }
     else if (!(await read(path)).equals(expected)) throw new Error(`Selected corpus output differs: ${path}`);
   }
-  console.log('12 selected corpus sources complete; 12 runtime-checked editable models pass all STL screens.');
+  const count = corpusEditorSelection.length;
+  console.log(`${count} selected corpus sources complete; ${count} runtime-checked editable models pass all STL screens.`);
 }

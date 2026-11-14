@@ -13,14 +13,15 @@ const manifest = JSON.parse(read('editor-corpus-manifest.json').toString());
 const corpus = JSON.parse(read('corpus/manifest.json').toString());
 const repository = corpus.repositories.find((item: any) => item.id === 'AngeloNicoli--OpenSCAD-Snippet');
 const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
-const selected = ['beam-angular', 'beam-h', 'key-simple', 'roll-holder', 'angle-shelf', 'sign-01', 'sign-02', 'washer', 'transistor', 'stairs-01', 'bookshelf-01', 'chalkboard-01'];
+const selected = ['beam-angular', 'beam-h', 'key-simple', 'roll-holder', 'angle-shelf', 'sign-01', 'sign-02', 'washer', 'transistor', 'stairs-01', 'bookshelf-01', 'chalkboard-01', 'arrow-01', 'base-cabinet-01', 'beam-c', 'bookshelf-02', 'box-wood-01', 'chair-01', 'door-01', 'flange-01', 'ladder-01', 'sofa', 'table-01', 'vent-grid'];
 
 describe('explicit corpus to editor selection', () => {
-  it('admits exactly twelve selected standalone sources with unchanged pinned originals and full MIT grants', () => {
-    expect(manifest.selection).toMatchObject({count: 12, runtimeChecked: 12, complete: true});
+  it('admits exactly twenty-four selected standalone sources with unchanged pinned originals and full MIT grants', () => {
+    expect(selected).toHaveLength(24);
+    expect(manifest.selection).toMatchObject({count: selected.length, runtimeChecked: selected.length, complete: true});
     expect(manifest.assets.map((asset: any) => asset.id)).toEqual(selected.map(slug => `corpus-angelo-${slug}`));
     const catalogue = createLocalModelLibraryCatalogue(manifest);
-    expect(catalogue.assets).toHaveLength(12);
+    expect(catalogue.assets).toHaveLength(selected.length);
     const fullNotice = read('evidence/corpus-selection-MIT-LICENSE.txt').toString().replace(/\s+/g, ' ').trim();
     expect(fullNotice).toContain('Permission is hereby granted');
     expect(fullNotice).toContain('THE SOFTWARE IS PROVIDED "AS IS"');
@@ -42,7 +43,7 @@ describe('explicit corpus to editor selection', () => {
     }
   });
 
-  it('screens all twelve selected meshes independently and keeps physics qualification absent', async () => {
+  it('screens all selected meshes independently and keeps physics qualification absent', async () => {
     for (const asset of manifest.assets) {
       const mesh = asset.derivatives.find((file: any) => file.format === 'stl');
       const result = await checkModelLibrarySTL(read(mesh.path), {checkedOn: '2026-11-14', toMillimetresZUp: asset.conversion.toMillimetresZUp, maxTriangles: 10000, maxExtentMm: 200});
@@ -62,9 +63,14 @@ describe('explicit corpus to editor selection', () => {
     h.measurements.boundsMm.max.forEach((value: number, index: number) => expect(value).toBeCloseTo([0.5, 0.55, 2][index], 6));
     const angular = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-beam-angular');
     expect(angular.measurements.signedVolumeMm3).toBeCloseTo(0.78, 5);
+    // C profile: (3×3 − 2.7×2.4) mm² ×10 mm, scaled by 0.1 on every axis.
+    const c = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-beam-c');
+    expect(c.measurements.signedVolumeMm3).toBeCloseTo(0.0252, 7);
+    c.measurements.boundsMm.min.forEach((value: number, index: number) => expect(value).toBeCloseTo([0, 0, -0.5][index], 6));
+    c.measurements.boundsMm.max.forEach((value: number, index: number) => expect(value).toBeCloseTo([0.3, 0.3, 0.5][index], 6));
   });
 
   it('reproduces selected archives, meshes and manifest locally without writes or network', () => {
-    expect(execFileSync(process.execPath, ['scripts/generate-corpus-editor-library.mjs', '--check'], {cwd: fileURLToPath(root), encoding: 'utf8', timeout: 60000})).toContain('12 selected corpus sources complete; 12 runtime-checked');
+    expect(execFileSync(process.execPath, ['scripts/generate-corpus-editor-library.mjs', '--check'], {cwd: fileURLToPath(root), encoding: 'utf8', timeout: 60000})).toContain(`${selected.length} selected corpus sources complete; ${selected.length} runtime-checked`);
   });
 });
