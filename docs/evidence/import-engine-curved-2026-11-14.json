@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "measuredOn": "2026-11-14",
+  "scope": "Aggregate research execution only. Sources, per-file records and research geometry remain external. Positive solids are not upstream fidelity certification.",
+  "dataset": "redcathode/thingiverse-openscad",
+  "revision": "2b4206aae3af7740100a2f0e979dd9cb66cd77f0",
+  "sampling": "deterministic evenly spaced files after exact source-hash deduplication; not random model sampling",
+  "inputRows": 7929,
+  "uniqueFiles": 7864,
+  "sampleFiles": 256,
+  "sameSourceHashes": true,
+  "baseline": {
+    "reportSha256": "5a139324e256a3df80a8170e45085e513e25f3b5efbd8b7f70fcb00a1a9cd98c",
+    "statuses": {
+      "unsupported": 37,
+      "converted": 167,
+      "failed": 17,
+      "limited": 34,
+      "process-failure": 1
+    },
+    "limits": {
+      "converterTimeoutMs": 15000,
+      "maxOldSpaceSizeMb": 256
+    },
+    "commit": "7f8b75e6ccccf70d96d49e1c32c89d2e50e8e058"
+  },
+  "after": {
+    "reportSha256": "b3f225ce4c18dd4137bd46b44ed8a55a39d1babc5772fc86b96b4f72e7b08dc3",
+    "statuses": {
+      "unsupported": 37,
+      "converted": 167,
+      "failed": 19,
+      "limited": 32,
+      "process-failure": 1
+    },
+    "limits": {
+      "converterTimeoutMs": 15000,
+      "maxOldSpaceSizeMb": 256
+    },
+    "converterBuild": {
+      "commit": "6908a2774b5744a7722c85b462ea7ffa1e7b10a4",
+      "dirty": false,
+      "artifacts": {
+        "code.js": "59745734ad381904c3bc550bf3e99d6feefb9b3904f9a1cdc4d4e48c0653730c",
+        "code-loft.js": "fbdd29db83623c7148f02626b2c943cd04a31c5280f538992135e1974907a75b",
+        "code-elliptic.js": "66d465e26d7d7c15b08a1d5c34c7268e5d1adee45b6fd65fee8b3e138a091cb3",
+        "code-curved.js": "9add344f957dd7b4b740505e29786b05d44a8d8ce219a072c5e744f4f60ad816",
+        "code-text.js": "ae581f3a92a4a65edeb9416bc74998a1ad76a4d67956854094aeab2ce8c62240",
+        "scad-numbers.js": "8886a27b2e86394927c5e56a7b7f4f0d5a1071592f7b94a7651567efefb0fafd",
+        "conversion-notices.js": "50ee6e1c0f427acc3a78d7247dc3a4b03b0056d71dbb13928ee2b7c97f954c4e",
+        "code-interchange.js": "be4703045286764ca4054edb4991f0d66e748ca9eb565940f0362d9896a6ffc0",
+        "openscad-import.js": "707b068da429353f155f0f501285b9d616ee2e8ef8aa201067313d71076d3258",
+        "jscad-import.js": "7b49063926ab8d37675d566ccd308beab1db7543ad3d461a928dd46a58385f0d",
+        "parameters.js": "505ed030c6580b30378ce110c23ee4565dc88b183a64152ab47854d2d96b6e5b",
+        "font-budgets.js": "995412ad96947af2e3947ac41fc34e3d2881147e67b888e216fc7f4fe893878b",
+        "code-profiles.js": "403ab11bb4b5e86ae3e5b1c3df3e701f1661b823ba5cdfb1086129423581a29c",
+        "features.js": "724e4fc258961b700f598295698aec1c5dcd982d09a30f1838953d0e48ec0cd8",
+        "geometryKernel": "115db4783b95cb20ad6b313b30f43c2f2d89c8512b0fa29f26cc562fb475d946",
+        "geometry/font-profile.js": "de836295ab0c0f8364927dac7b0a95829f6b04548bd09da6fb97351bddfbd9d8",
+        "geometry/polyhedron.js": "c975596e22ca662b933fedac0519172d3778aab511b9fa1ef4ba183fa4e09382",
+        "geometry/limits.js": "ab598a640df9cfb58c5dff20f0a608c013a08b0e1e78b46f39a69a231fa20569",
+        "geometry/fonts/droid_sans_regular.typeface.json": "5532f318b78eeb2215dcb0ae6ebdfb8f82e369187731c28f53e37784a044459a",
+        "geometry/fonts/droid_serif_regular.typeface.json": "10d747ee765ad60e1acec86c31187ac5084b96c376d911c1c46e3f80308b08e4",
+        "geometry/fonts/droid_sans_mono_regular.typeface.json": "69fd4dc9782cfe281f9a96b40e3ae3e4392ea05c1082fbea4c04f369f52feaf2",
+        "manifoldWasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "node": "v26.4.0",
+      "platform": "darwin",
+      "architecture": "arm64"
+    }
+  },
+  "transitions": [
+    {
+      "before": "converted",
+      "after": "converted",
+      "count": 167
+    },
+    {
+      "before": "failed",
+      "after": "failed",
+      "count": 17
+    },
+    {
+      "before": "limited",
+      "after": "failed",
+      "count": 2
+    },
+    {
+      "before": "limited",
+      "after": "limited",
+      "count": 32
+    },
+    {
+      "before": "process-failure",
+      "after": "process-failure",
+      "count": 1
+    },
+    {
+      "before": "unsupported",
+      "after": "unsupported",
+      "count": 37
+    }
+  ],
+  "convertedRegressions": 0,
+  "newPositiveSolids": 0,
+  "changedPriorConvertedVolumesAt1e6Tolerance": 0,
+  "changedPriorConvertedBoundsAt1e6Tolerance": 0,
+  "positiveSolidsWithNotices": 73,
+  "noticeOccurrences": {
+    "scad.appearance.colours": 16,
+    "scad.parameters.strings": 43,
+    "scad.console.echo": 10,
+    "scad.preview.highlight": 7,
+    "scad.random.sequence": 1,
+    "scad.text.font": 19,
+    "scad.arguments.ignored": 5,
+    "scad.module.arguments-ignored": 5,
+    "scad.polygon.empty-input": 2
+  },
+  "caveats": [
+    "Frozen 256 exact source hashes; 15-second file timeout unchanged. No quota constants raised; module dispatch accounting now separates bounded invocation depth from emitted-shape depth.",
+    "Reference bounds and volume checks do not establish topology or full upstream fidelity. No upstream geometry oracle ran for the complete research corpus.",
+    "Custom ellipsoid axes, fractional segment compatibility, spindle/self-touching tori, vector extrema and C-style comprehensions remain gaps. Historical native sphere tessellation is unchanged.",
+    "Large evaluated polyhedron exports can exceed unchanged reimport source/point budgets; compact source is retained in native history.",
+    "Research source and generated geometry remain external; no dataset model is shipped. CC0 demo qualification is recorded separately.",
+    "Loaded-host unit/browser harness deadlines are documented; production budgets unchanged except corrected module-depth accounting. Actions remain disabled."
+  ],
+  "featureCheckpoint": "1680b477ae36b34b9887f3132646364c9401c1c2",
+  "verification": {
+    "fullNative": {
+      "passed": 844,
+      "skipped": 1,
+      "files": 74,
+      "command": "npm test -- --maxWorkers=1 --testTimeout=15000",
+      "logSha256": "b2ea1feab02b70f02158300d772481aaebbcbf20dd918b0aa60a8c928a290804"
+    },
+    "browser": {
+      "passed": 28,
+      "platforms": [
+        "Chromium desktop",
+        "WebKit iPad"
+      ],
+      "files": [
+        "tests/browser/code-import.spec.ts",
+        "tests/browser/reduction-taper.spec.ts"
+      ],
+      "scope": "New native/JSCAD curved constructors, nested reductions, formerly blocked unchanged CC0 demo, real depth refusal preserving the draft; retained source, preview, save, reload and export flows.",
+      "harnessTimeoutMs": 180000,
+      "logSha256": "c085550bf64a832ab4c95af63190f0dfde7823460390032a65769317021cc9bc",
+      "bundleSource": "1680b47 (clean; later checkpoint changes browser tests only)"
+    },
+    "german": {
+      "messages": 1360,
+      "references": 1115,
+      "status": "passed"
+    },
+    "sdk": {
+      "packages": 6,
+      "status": "passed",
+      "scope": "Exact local dependency tarballs install offline in an empty cache; native curved primitives, retained features, fonts and real SI physics execute.",
+      "logSha256": "898852c58bbca82ea515d6d3748b04b4acf05740a5b7d2d3767ed37f041824f2"
+    },
+    "independentGeometry": {
+      "oracle": "installed MIT @jscad/modeling 2.13.0",
+      "scope": "Torus/ellipsoid/roundedCylinder volume and bounds, partial rings, offsets, odd/coarse counts, zero rounding; native source parameters and export/reimport for the tested resolutions."
+    },
+    "scadOracle": {
+      "executable": "official OpenSCAD 2021.01 macOS; no implementation source consulted",
+      "syntheticProbeSha256": "72b5409f69bb59a0dfbc29142a4042ca29359f6d9fd8dbeb547bab326b48f8d9",
+      "logSha256": "c3fe7c011a63b3bc489d5de72cadb5b19cbc2cb00353afed4416404b82743744",
+      "results": {
+        "nested": 2,
+        "filtered": 6,
+        "empty": "undef",
+        "eachValue": 6,
+        "negative": -5
+      }
+    }
+  },
+  "catalogPhysics": {
+    "counts": {
+      "rigid-preview-pass": 56,
+      "reference-excluded": 1
+    },
+    "steps": 200,
+    "stepHz": 200,
+    "mode": "rigid-preview only; not mechanical/material/fit qualification",
+    "floorToleranceMm": 0.25,
+    "reportSha256": "a2f1f6e775df4de7a0be5822990caea4dabe4015a97b64b0fd5f7a95bc910b56",
+    "physicsWorldArtifactSha256": "0c32969529b0ce6af86c1615e610f75b2f900fa624540797a510f3a213f1c621"
+  },
+  "collisionSeam": {
+    "reproducer": "roundedCylinder(4,12,1,24); vertical ray [x,0,8] to [x,0,-8]",
+    "before": "All seven independently probed exact shared-bound rays missed.",
+    "after": "All seven independently probed rays hit; retained regression checks x=0,.1,1,2,3 with hit fractions bounded to the actual upper cap.",
+    "implementation": "Per-axis unit conditioning before Jolt hull creation; restore each axis to SI dimensions. Certified source hulls, work/geometry tolerances and dependency remain unchanged.",
+    "limits": "This fixes the reproduced axis-aligned seam case, not every possible oblique seam or mechanism contact."
+  },
+  "cc0Candidate": {
+    "source": "library/corpus/repos/smooth-prim/smooth_prim.scad",
+    "sourceSha256": "16de0aac3dc3cf8d357d52e1e2d333a2d0e11c21a59efb042bd4604fc341e8e0",
+    "license": "CC0-1.0",
+    "sourceModified": false,
+    "triangles": 5220,
+    "nativeVolumeMm3": 31972.73095294236,
+    "boundsMm": {
+      "min": [
+        -22,
+        -72,
+        0
+      ],
+      "max": [
+        100,
+        22,
+        18
+      ]
+    },
+    "stlSha256": "4391dafaed2d22f011eb280d2c0124f658326f62babca82324e6da6391640d0d",
+    "quality": "All four strict STL screening checks pass at 10000 triangles/200 mm. Historical cycle16 evidence unchanged. Not admitted implicitly to gallery."
+  },
+  "replayInterpretation": "All 167 prior positives retain volume and bounds at 1e-6 tolerance; no new frozen-sample positive. Two former depth-limited inputs reach later unsupported/invalid-argument diagnostics. These are not successful conversions.",
+  "laterBlockers": [
+    "Parenthesized list-comprehension generators are accepted by official 2021.01 but not by this importer; current diagnostic is invalid-source.",
+    "A numeric cylinder radius supplied as a Boolean through mixed positional/named arguments remains refused."
+  ],
+  "nativeMac": {
+    "build": 23,
+    "source": "1680b477ae36b34b9887f3132646364c9401c1c2",
+    "assetBuildWasClean": true,
+    "status": "Native smoke passed; installed and launched; live asset receipt verified. Existing projects/history retained.",
+    "logSha256": "0154144b5ac3327c902c9dee3e5629c853821259ab7a1e9204fccd37d2109b48"
+  }
+}

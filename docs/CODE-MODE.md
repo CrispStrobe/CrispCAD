@@ -264,3 +264,22 @@ normal face budget. Ends accept two positive radii or a point `[0,0]`; line ends
 are not supported. Construction produces an indexed mesh in linear space/time,
 without expanding thousands of coordinates into the source. Large evaluated
 polyhedron exports may exceed the existing reimport source/point budgets.
+
+### Curved solid constructors
+
+- `torus(majorRadius, tubeRadius [, tubeSegments, ringSegments, tubeRotation,
+  sweep, start])` retains ring dimensions and angles. Angles use degrees; default
+  angles are 0/360/0. Tube radius must be smaller than major radius. Segment
+  defaults are 48; sweep zero contributes empty geometry. Partial rings are capped.
+- `ellipsoid(radiusX, radiusY, radiusZ [, segments])` retains three radii with
+  explicit latitude/longitude tessellation. A zero radius contributes empty
+  geometry. It differs from the historical native `sphere` mesh, which is unchanged.
+- `roundedCylinder(radius, height, capHeight [, segments])` retains a cylinder
+  with elliptical rounded end caps. This is a capsule-like cap, not an edge fillet.
+  Cap height must be smaller than the radius and half the total height. Zero cap
+  height gives a straight cylinder using the requested segment count.
+
+All constructors lower to existing shape/profile representations and remain under
+normal source, expression, face and evaluated-geometry budgets. Ellipsoid face
+cost is checked before mesh allocation. Source and parameter definitions survive
+history; large evaluated polyhedron exports can still exceed reimport text limits.

@@ -48,14 +48,15 @@ test('imports a nested SCAD profile with compact conversion notes, live dimensio
  await expect(panel.getByRole('status',{name:'Code status'})).toHaveText('Source converted. Preview before creating.');const notes=panel.getByLabel('Conversion notes',{exact:true});await expect(notes).not.toHaveAttribute('open');await notes.locator('summary').click();await expect(notes).toContainText('font metrics');await expect(notes).toContainText('Source colours');await panel.getByLabel('Code parameter width',{exact:true}).fill('40');await panel.getByRole('button',{name:'Preview code',exact:true}).click();await expect(panel.getByRole('status',{name:'Code status'})).toContainText('Preview ready');await panel.getByRole('button',{name:'Create code object',exact:true}).click();await expect(panel).toBeHidden();await ready(page);await page.reload();await ready(page);await expect(page.getByTestId('object-name')).toHaveCount(1);
 });
 
-test('imports self-shadowing fragment defaults and preserves the draft when an unchanged library demo exceeds nesting',async({page})=>{
+test('imports fragment defaults and the formerly blocked CC0 demo while preserving drafts on real depth errors',async({page})=>{
  await page.goto('/');await ready(page);await page.getByRole('button',{name:'Code',exact:true}).click();const panel=page.getByRole('dialog',{name:'Code object',exact:true});
  const source='module part(){$fa=($fa>=12)?1:$fa;$fs=($fs>=2)?.4:$fs;cylinder(r=1,h=2);}part();';
  await panel.getByLabel('Import CAD source',{exact:true}).setInputFiles({name:'fragment-defaults.scad',mimeType:'text/plain',buffer:Buffer.from(source)});
  await expect(panel.getByRole('status',{name:'Code status'})).toContainText('Source converted.');const converted=await panel.getByLabel('CAD code source',{exact:true}).inputValue();
  await panel.getByRole('button',{name:'Preview code',exact:true}).click();await expect(panel.getByRole('status',{name:'Code status'})).toContainText('Preview ready');
- await panel.getByLabel('Import CAD source',{exact:true}).setInputFiles('library/corpus/repos/smooth-prim/smooth_prim.scad');
+ await panel.getByLabel('Import CAD source',{exact:true}).setInputFiles({name:'too-deep.scad',mimeType:'text/plain',buffer:Buffer.from('translate([0,0,0])'.repeat(33)+'cube(1);')});
  await expect(panel.getByRole('status',{name:'Code status'})).toContainText('OpenSCAD construction nesting exceeds 32');await expect(panel.getByLabel('CAD code source',{exact:true})).toHaveValue(converted);
+ await panel.getByLabel('Import CAD source',{exact:true}).setInputFiles('library/corpus/repos/smooth-prim/smooth_prim.scad');await expect(panel.getByRole('status',{name:'Code status'})).toContainText('Source converted.');await expect(panel.getByLabel('CAD code source',{exact:true})).not.toHaveValue(converted);await panel.getByRole('button',{name:'Preview code',exact:true}).click();await expect(panel.getByRole('status',{name:'Code status'})).toContainText('Preview ready');
  await panel.getByRole('button',{name:'Create code object',exact:true}).click();await expect(panel).toBeHidden();await ready(page);await expect(page.getByTestId('object-name')).toHaveCount(1);
  await page.reload();await ready(page);await expect(page.getByTestId('object-name')).toHaveCount(1);
 });

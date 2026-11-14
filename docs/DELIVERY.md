@@ -749,3 +749,15 @@ in place over WLAN (`transportType: localNetwork`) on device
 `F0E7765C-F625-51B0-8F56-1E04F3B02B70`. App data was retained. iPadOS refused
 launch because the device was locked; unlocking is still needed to inspect it.
 The feature and validation changes are merged in PR #32, main `600619c`.
+
+## Curved primitives and parser checkpoint — Mac build 23
+
+Built from the clean production asset checkpoint
+`1680b477ae36b34b9887f3132646364c9401c1c2`, including torus, ellipsoid and rounded
+end-cap cylinder constructors, nested numeric extrema, module-depth accounting
+and Jolt hull conditioning. The later checkpoint adds browser coverage only.
+
+Native smoke checks passed, including trackpad magnification, menus, clipboard,
+model-source, gallery and history retention. **Mac build 23** is installed and
+running in `~/Applications/Brickwright CAD.app`; its live asset receipt and bundle
+version were verified. Existing app data and model histories were retained.
