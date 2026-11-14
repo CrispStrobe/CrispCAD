@@ -132,8 +132,8 @@ limits are distinct from unsupported features and malformed input.
 
 Known gaps, deliberately diagnosed:
 
-- Ambient library resolution and `use` (including BOSL2); explicit local
-  `include` bundles are supported. Comprehension filters/C-style and
+- Ambient library resolution (including BOSL2); explicit local
+  `include` and file-scope `use` bundles are supported. Comprehension filters/C-style and
   variable-cardinality generators, randomness, search outside fixed tables,
   symbolic numeric-to-string formatting,
   general matrix arithmetic, anonymous-block assignment semantics, external meshes,
@@ -483,3 +483,26 @@ improved from 0/2 to 1/2 strict STL passes. `GrillCircle` passes at 3,372 triang
 and 80×80×2mm. `ParametricBoxWithLid` now reaches the unchanged importer work
 limit and stays excluded; this transition is not an admission gain. No further
 retries of that over-budget default are part of this cohort.
+
+## Scoped local `use` bundles (cycle 23)
+
+`importOpenSCADBundle` resolves both `include` and file-scope `use` only from
+explicit, SHA-256-verified in-memory originals. Existing path, aggregate byte/token,
+occurrence, cycle and depth guards remain unchanged. `use` imports only direct
+module/function declarations. Library assignments remain lazy in an isolated file
+scope and do not become caller parameters. Library root geometry and assertions
+are retained as original text but never evaluated. Nested `use` stays within the
+containing library; textual `include` declarations remain exportable. Caller
+`children()` retain their original lexical environment. Ambient loading remains
+unsupported. The implementation follows the published
+[include/use documentation](https://files.openscad.org/documentation/manual/Include_Statement.html),
+without consulting upstream compiler implementation.
+
+The exact archived `Scene_House.scad` and its four dependencies now produce
+26.810686449 mm³ of geometry and a 2,284-triangle STL. Direct editor insertion,
+serialization and undo/redo pass. Strict STL topology fails: 44 invalid edges and
+54 invalid vertex fans, including an edge with four incident faces. The source
+remains excluded: **0/1 qualified before, 0/1 after; no new admission**. See
+`library/corpus-audit/editor-screening-cycle23.json`. No source repair or limit
+change was applied. Seven other ranked `use` roots retain independent blockers
+and receive no expected admission credit.

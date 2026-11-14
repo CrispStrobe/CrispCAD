@@ -1,0 +1,402 @@
+{
+  "version": 1,
+  "checkedOn": "2026-11-14",
+  "baselineMain": "03ac9a64834aac8efa7315dd323ecbf79a1d60ef",
+  "cohort": {
+    "name": "Scoped use: exact authored Scene_House",
+    "sourceCount": 1,
+    "dependenciesPerRoot": 4,
+    "before": {
+      "qualified": 0,
+      "unsupported": 1
+    },
+    "after": {
+      "geometryProduced": 1,
+      "editorSessionPassed": 1,
+      "qualified": 0,
+      "screenFailed": 1
+    },
+    "admissions": 0
+  },
+  "sourcePolicy": "Byte-identical archived root and four original dependencies. Defaults unchanged. No root demo execution from used libraries. No source overrides, repairs, limit changes, downloads or dependencies.",
+  "before": {
+    "version": 1,
+    "phase": "before",
+    "head": "47a56bba44bf9455e7434f032dce24d49fb21521",
+    "policy": {
+      "timeoutMs": 5000,
+      "maxTriangles": 10000,
+      "maxExtentMm": 200,
+      "defaults": "unchanged authored root"
+    },
+    "runtimeBefore": {
+      "packages/core/dist/openscad-import.js": "b677c9e88ff354a8278c524ccbdc0474dcd954701dce0a8778caf36440367aff",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeAfter": {
+      "packages/core/dist/openscad-import.js": "b677c9e88ff354a8278c524ccbdc0474dcd954701dce0a8778caf36440367aff",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    "runtimeStable": true,
+    "results": [
+      {
+        "name": "Scene_House",
+        "files": [
+          {
+            "path": "Scene_House.scad",
+            "sha256": "1a384603215c931e4f60ae3e85b33868ed2d2c20b5a5a0e4c738f1d77b8247f0",
+            "bytes": 648
+          },
+          {
+            "path": "Asset_SCAD/Wall_01.scad",
+            "sha256": "37d22be7ba7af2cb7940563b2bb46626563dcc306422feb0fb3188f8692b7cba",
+            "bytes": 1539
+          },
+          {
+            "path": "Asset_SCAD/Wall_02.scad",
+            "sha256": "7ab3d9cb33b357178589c93038789d72a7c21752a9bdf25b030a668825bd688e",
+            "bytes": 1852
+          },
+          {
+            "path": "Asset_SCAD/Wall_03.scad",
+            "sha256": "50bad5db7e9b6675f8651d2e61ad6fb7a831d970c68480fa1ed8a7eda7ffd83c",
+            "bytes": 2300
+          },
+          {
+            "path": "Asset_SCAD/Grid_01.scad",
+            "sha256": "07e5759baf7511b67f22cdc6cbd5c0b7cdc68c2bd8edf6fc74637961f290eba2",
+            "bytes": 1541
+          }
+        ],
+        "phase": "convert",
+        "status": "unsupported",
+        "error": {
+          "code": "unsupported-feature",
+          "message": "Line 1, column 1: Scene_House.scad: OpenSCAD use dependencies are unsupported in source bundles",
+          "path": "Scene_House.scad",
+          "line": 1,
+          "column": 1
+        }
+      }
+    ]
+  },
+  "after": {
+    "version": 1,
+    "phase": "final",
+    "head": "47a56bba44bf9455e7434f032dce24d49fb21521",
+    "policy": {
+      "timeoutMs": 5000,
+      "maxTriangles": 10000,
+      "maxExtentMm": 200,
+      "defaults": "unchanged authored root"
+    },
+    "runtimeBefore": {
+      "packages/core/dist/openscad-import.js": "da1c694fd064c963a87d29b1aa57c9b8ee0372958ad3a64c21676b411c2da844",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c",
+      "packages/core/dist/openscad-bundle.js": "9596509d574447fe29002b2c088b20c67b134e5fa62858e23e9d4a4a8b09f357"
+    },
+    "runtimeAfter": {
+      "packages/core/dist/openscad-import.js": "da1c694fd064c963a87d29b1aa57c9b8ee0372958ad3a64c21676b411c2da844",
+      "packages/core/dist/code.js": "949fd6286a92ff80d30c6a24e6fdca68306a1656d7bbfc6e259890c6ced41ca6",
+      "packages/core/dist/code-profiles.js": "22c8922688ba14b539dffb4d07355d4a42bb9255fbbab9aabfb2304dc352c2aa",
+      "packages/geometry/dist/kernel.js": "e7709a9084c8a8b2995c7240915dcd1f74cd8e81559e709f174853fcdc341271",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c",
+      "packages/core/dist/openscad-bundle.js": "9596509d574447fe29002b2c088b20c67b134e5fa62858e23e9d4a4a8b09f357"
+    },
+    "runtimeStable": true,
+    "results": [
+      {
+        "name": "Scene_House",
+        "files": [
+          {
+            "path": "Scene_House.scad",
+            "sha256": "1a384603215c931e4f60ae3e85b33868ed2d2c20b5a5a0e4c738f1d77b8247f0",
+            "bytes": 648
+          },
+          {
+            "path": "Asset_SCAD/Wall_01.scad",
+            "sha256": "37d22be7ba7af2cb7940563b2bb46626563dcc306422feb0fb3188f8692b7cba",
+            "bytes": 1539
+          },
+          {
+            "path": "Asset_SCAD/Wall_02.scad",
+            "sha256": "7ab3d9cb33b357178589c93038789d72a7c21752a9bdf25b030a668825bd688e",
+            "bytes": 1852
+          },
+          {
+            "path": "Asset_SCAD/Wall_03.scad",
+            "sha256": "50bad5db7e9b6675f8651d2e61ad6fb7a831d970c68480fa1ed8a7eda7ffd83c",
+            "bytes": 2300
+          },
+          {
+            "path": "Asset_SCAD/Grid_01.scad",
+            "sha256": "07e5759baf7511b67f22cdc6cbd5c0b7cdc68c2bd8edf6fc74637961f290eba2",
+            "bytes": 1541
+          }
+        ],
+        "phase": "stl",
+        "warnings": [
+          "Source colours and transparency are not retained; solid geometry is preserved."
+        ],
+        "volumeMm3": 26.810686449030616,
+        "mesh": {
+          "sha256": "1221cb3d30e00e3a6c54874550ccd38a31c7ab1ebad8fd124e1310d4c503c6c6",
+          "bytes": 114284
+        },
+        "screening": {
+          "fileSha256": "1221cb3d30e00e3a6c54874550ccd38a31c7ab1ebad8fd124e1310d4c503c6c6",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-14",
+          "policy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "checks": {
+            "parseable": "pass",
+            "closedPositiveVolume": "fail",
+            "withinSizeLimits": "pass",
+            "withinTriangleLimits": "pass"
+          },
+          "diagnostics": [
+            "Mesh must have nondegenerate, consistently oriented closed manifold topology and positive signed volume."
+          ],
+          "triangles": 2284,
+          "boundsMm": {
+            "min": [
+              -0.07000000029802322,
+              -2.569999933242798,
+              -1.2009999752044678
+            ],
+            "max": [
+              10,
+              7.5,
+              1
+            ]
+          },
+          "signedVolumeMm3": 26.810678327725512,
+          "quality": {
+            "fileSha256": "1221cb3d30e00e3a6c54874550ccd38a31c7ab1ebad8fd124e1310d4c503c6c6",
+            "toolVersion": "brickwright-stl-quality/1",
+            "checkedOn": "2026-11-14",
+            "screeningPolicy": {
+              "maxTriangles": 10000,
+              "maxExtentMm": 200,
+              "toMillimetresZUp": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "maxAnalysisBytes": 16777216,
+              "maxAnalysisTriangles": 83333
+            },
+            "parseable": true,
+            "closedPositiveVolume": false,
+            "withinSizeLimits": true,
+            "withinTriangleLimits": true
+          }
+        },
+        "status": "screen-failed"
+      }
+    ]
+  },
+  "topologyDiagnostic": {
+    "triangles": 2284,
+    "exactVertices": 1292,
+    "degenerateTriangles": 0,
+    "invalidEdges": 44,
+    "invalidVertexFans": 54,
+    "firstInvalidEdges": [
+      {
+        "vertices": [
+          [
+            -0.07000000029802322,
+            0.5,
+            -1.0
+          ],
+          [
+            -0.05000000074505806,
+            0.5,
+            -1.0
+          ]
+        ],
+        "count": 4,
+        "direction": 0
+      },
+      {
+        "vertices": [
+          [
+            -0.05000000074505806,
+            0.5,
+            -1.0
+          ],
+          [
+            -0.05000000074505806,
+            0.5,
+            -0.9900000095367432
+          ]
+        ],
+        "count": 4,
+        "direction": 0
+      },
+      {
+        "vertices": [
+          [
+            -0.07000000029802322,
+            0.5,
+            -1.0
+          ],
+          [
+            -0.05000000074505806,
+            0.5,
+            -0.9900000095367432
+          ]
+        ],
+        "count": 4,
+        "direction": 0
+      },
+      {
+        "vertices": [
+          [
+            -0.05000000074505806,
+            0.5,
+            -0.9900000095367432
+          ],
+          [
+            -0.05000000074505806,
+            0.5,
+            0.9900000095367432
+          ]
+        ],
+        "count": 4,
+        "direction": 0
+      },
+      {
+        "vertices": [
+          [
+            0.07000000029802322,
+            -0.5,
+            -1.0
+          ],
+          [
+            0.05000000074505806,
+            -0.5,
+            -0.9900000095367432
+          ]
+        ],
+        "count": 4,
+        "direction": 0
+      }
+    ],
+    "note": "Diagnostic only: exact float32 STL coordinates, no repair, welding tolerance, source change or screening change."
+  },
+  "editorEvidence": {
+    "test": "tests/openscad-use.test.ts",
+    "geometryVolumeMm3": 26.810686449030616,
+    "stlTriangles": 2284,
+    "checks": [
+      "Native CodeProgram inserted into actual CAD session",
+      "Positive geometry evaluated by existing Manifold runtime",
+      "STL exported and hash bound to strict screening result",
+      "History-inclusive serialization round trip",
+      "Undo returns exact pre-insertion document",
+      "Redo returns exact saved document"
+    ],
+    "admittedToLibrary": false,
+    "note": "Direct editor session validation is not a library admission. Strict mesh topology failure keeps this source excluded."
+  },
+  "scopeControls": [
+    "Only direct library modules/functions exported; imported library variables remain lexical and lazy, not public parameters",
+    "Nested use dependencies stay in local file context; includes retain textual semantics",
+    "Caller and sibling library definitions/variables do not leak into used definitions",
+    "Caller children retain their lexical scope; dynamic specials forwarded",
+    "Library root geometry and assertions not executed",
+    "Live assertions, recursion/construction limits, integrity/path/depth/byte/token/cycle guards preserved"
+  ],
+  "firstActualBlocker": "Scene_House STL fails closedPositiveVolume: 44 invalid exact-coordinate edges and 54 invalid vertex fans; first edge has four incident faces. No admission credit for unsupported-to-geometry progress.",
+  "preserved": {
+    "sources": 104,
+    "distinctStlHashes": 102,
+    "previews": 143,
+    "allPriorManifestRecordsAndPreviewFiles": "unchanged",
+    "historicalRefusals": "unchanged; Box remains at16384 work and SCON ex5 remains at depth32",
+    "unchangedFileSha256": {
+      "library/editor-corpus-manifest.json": "a0380095d73a3d79f67e3807aac55dd0e7c99befc93a6b56672699361fd9dcc8",
+      "library/a2d-editor-manifest.json": "fb803ee9a44ae19362caab8c36ca5e0490d12dd187cdfb93ee5c2c79f8a718d8",
+      "library/scon-editor-manifest.json": "bd1f91a694881bed63faf47e960b79c33b8181138c7717cb6fc907a4c076b185",
+      "library/previews.json": "d84fe50da69917e0361b4e47ffe5cd0a5b71ab19c14cce83d8fcb872f1473017",
+      "library/corpus-audit/editor-screening-cycle18.json": "961b543ccb5417304da8371b7ebc2f2b275c9ac906b2e65a7feefe4a8c1a36e0",
+      "library/corpus-audit/editor-screening-cycle17.json": "1e2683ae5e160f4deae6799b12991bc452c2faa988e96fe5bbc4b90ddde87651",
+      "library/corpus-audit/editor-screening-cycle15.json": "75d91dd71e238ce5d55bdc57932041af893d67a67644c4298cdf253988ae306e",
+      "library/corpus-audit/editor-screening-cycle19.json": "0ac4e33121fa861e15cf1a52b3217321dd8e11efb0bde748fbe1ed34a7b4a2c8",
+      "library/corpus-audit/editor-screening-cycle16.json": "c810568c6124856f79ceb5abd8c350755bd69491e0c8698c1927aa0a6f327375",
+      "library/corpus-audit/editor-screening-cycle20.json": "75a1000e23ca31f391f592358cac8115109da2ef118b3731ab78504c9953f84c",
+      "library/corpus-audit/editor-screening-cycle21.json": "9be1b7a564ad2aa7823cb76c659a9ebe8dfa2f58b36c7a4334c7f2367da127dd",
+      "library/corpus-audit/editor-screening-cycle13.json": "a31db8bb8fee717ff8ff5c0b99b256af5012a81543affc3ba0a136b2ad70dc0a"
+    }
+  },
+  "remainingUseRoots": {
+    "count": 7,
+    "expectedAdmissionCredit": 0,
+    "blockers": "Scene_City_Street nonrelative-to-archive path, five ClosePoints defaults beyond iteration/list limits, catchnhole JSON/data import. Not retried in this cohort."
+  },
+  "rawEvidenceDirectory": "/mnt/storage/brickwright-cycle23-use",
+  "validation": {
+    "focusedImportScopeGuardCasesPassed": 55,
+    "reusedExistingBundleHistoryControlsPassed": 6,
+    "build": "pass",
+    "i18n": "pass:1251 messages/1004 references",
+    "unchangedGalleryBrowserProof": "Reused previous 143-gallery/group25 Chromium+iPad4/4; no manifest/UI/gallery change, no new library admission."
+  },
+  "implementationSourceSha256": {
+    "packages/core/src/openscad-bundle.ts": {
+      "before": "046fce2424a0ae87c047ff2d978508aedf9dbe1d40e9976d9c56e0d0ed69dcc1",
+      "after": "2b254bfedb0d9eed0a80761f45d89b4666412d04f0fa582d20d74a4dcd1ff627"
+    },
+    "packages/core/src/openscad-import.ts": {
+      "before": "8334482546148489d53fd8f1111a996aeb6053e298194e69e3cdeed72d4e0171",
+      "after": "8ada8eb5aa877d05a7460648f7d8849da6c996908c7a9db8cff19424d41c49dd"
+    }
+  }
+}

@@ -90,8 +90,7 @@ it('fails closed on duplicate normalized paths, missing roots/dependencies and a
   ]) await expect(importOpenSCADBundle(input)).rejects.toBeInstanceOf(OpenSCADBundleError);
 });
 
-it('keeps use unsupported and reports originating file context for an included source failure', async () => {
-  await expect(importOpenSCADBundle(bundle('root.scad', [file('root.scad', 'use <lib.scad> cube(1);'), file('lib.scad', '// ignored')]))).rejects.toMatchObject({code: 'unsupported-feature', path: 'root.scad'});
+it('reports originating file context for an included source failure', async () => {
   await expect(importOpenSCADBundle(bundle('root.scad', [file('root.scad', 'include <lib.scad>'), file('lib.scad', '\nnot_supported();')]))).rejects.toMatchObject({code: 'unsupported-feature', path: 'lib.scad', line: 2});
 });
 

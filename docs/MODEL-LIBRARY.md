@@ -601,7 +601,9 @@ Each root retains its exact original bytes and relative directory structure.
 size, author, source URL, pinned commit and independent reviewed licence grant.
 Insertion verifies all originals before in-memory include expansion and preserves
 that metadata in project provenance and attribution sidecars. The pure bundle API
-has no ambient file access, search path or network loading; `use` remains refused.
+has no ambient file access, search path or network loading. Explicit local file-scope
+`use` is now supported with isolated library definitions; library root geometry is
+not executed (see the cycle 23 measurement below).
 Both aggregate original and expanded source stay within 32 KiB and expanded
 lexical tokens within 8,192. Existing construction, geometry and timeout limits
 are unchanged. Assertions remain live and failing edits abort atomically.
@@ -684,7 +686,12 @@ hashes**, and 143 total gallery entries. The new result supersedes only the prio
 GrillCircle refusal for current admission; its historical observation stays in
 the original nine-root report. See `library/corpus-audit/editor-screening-cycle21.json`.
 
-The next bounded scoped-`use` candidate is Angelo `Scene_House.scad` (one authored
-root; geometry and editor outcome unmeasured). Seven other ranked `use` roots
+Cycle 23 measured scoped `use` on Angelo `Scene_House.scad` (one unchanged authored
+root and four exact dependencies). It now produces actual geometry and a 2,284-
+triangle STL, and editor insertion/serialization/undo-redo pass. Strict STL topology
+fails with 44 invalid edges and 54 invalid vertex fans; it remains excluded. The
+cohort is **0/1 qualified before → 0/1 qualified after**, with one topology refusal.
+Delivered counts remain **104 sources / 102 distinct STL hashes / 143 previews**.
+See `library/corpus-audit/editor-screening-cycle23.json`. Seven other ranked `use` roots
 have independent path, loop/list-size or JSON blockers and are not credited as
-expected admissions. The ranking and exact root names are in the same report.
+expected admissions. Their ranking and exact root names remain in the cycle 21 report.
