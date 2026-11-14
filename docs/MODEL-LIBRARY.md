@@ -529,10 +529,10 @@ described above. No additional JSCAD models were present in these staged subsets
 
 ### Editor-enabled corpus subset
 
-Sixty dependency-complete MIT Asset Collection originals now project into a
+Sixty-eight dependency-complete MIT Asset Collection originals now project into a
 separate `library/editor-corpus-manifest.json` and are selectable in the bundled
 editor catalogue. See [exact model names and reproduction commands](../library/README.md#external-corpus-models-available-in-the-editor).
-Only these 60 archive selections receive local importer, Manifold and STL screening evidence;
+Only these 68 archive selections receive local importer, Manifold and STL screening evidence;
 the archival manifest remains unchanged and unqualified. The bounded OpenSCAD
 importer accepts validated constant `color()` wrappers and discloses omitted
 appearance. Transform `$fn` bindings are scoped to their children and restored
@@ -540,6 +540,11 @@ for siblings; literal colour parameters remain separate from numeric expressions
 The `#` highlight modifier retains its child geometry and records omitted preview
 appearance. Other geometry-changing modifiers remain unsupported. These bounded
 extensions qualify Banner, Raccordo and two street models without source edits.
+Lexically scoped local module declarations now retain their definition's bindings
+and module registry, with bounded hoisting and caller-special-variable propagation.
+This admits seven further nested-module sources alongside Street 04; nested
+functions, module children and profile-module calls remain unsupported. Existing
+node/mesh limits and failed-topology exclusions remain in force.
 The host bundles exact selected source bytes, previews and the
 correct asset-specific MIT notice. Insertion verifies hashes, evaluates the
 candidate, and preserves provenance, attribution and undo/redo through the

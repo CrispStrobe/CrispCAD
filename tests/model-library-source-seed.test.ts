@@ -5,12 +5,14 @@ import {createCadSession, createModelAttributionSidecar, parseModelLibraryCatalo
 import {createGeometryKernel, insertModelLibrarySource, type GeometryKernel} from '@brickwright/cad-geometry';
 import {createBundledModelLibrary} from '../apps/standalone/src/model-library-local.js';
 const read=(path:string)=>readFileSync(`library/${path}`);
+const corpusManifest=JSON.parse(read('editor-corpus-manifest.json').toString());
+const bundledCorpus=createBundledModelLibrary();
 let kernel:GeometryKernel;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 
 it('admits only the supported seed, retains exact original bytes and URL, and exports the full original MIT notice',async()=>{
   const {catalogue,localFiles}=createBundledModelLibrary();
-  expect(catalogue.assets).toHaveLength(99);
+  expect(catalogue.assets).toHaveLength(107);
   expect(catalogue.assets.some(asset=>['jscad-nuts-and-bolts','threads-scad-demo'].includes(asset.id))).toBe(false);
   const asset=catalogue.assets.find(asset=>asset.id==='jscad-involute-gear')!;
   expect(asset.original.url).toContain(`/${asset.sourceRevision!.commit}/`);
@@ -34,11 +36,13 @@ it('admits only the supported seed, retains exact original bytes and URL, and ex
   session.undo();expect(session.serialize()).toBe(before);session.redo();expect(session.serialize()).toBe(saved);session.dispose();
 });
 
-it('bundles and inserts all sixty reviewed corpus sources with original identities and attribution',async()=>{
-  const manifest=JSON.parse(read('editor-corpus-manifest.json').toString());
-  const {catalogue,localFiles,previews,licenceTexts}=createBundledModelLibrary();
-  expect(manifest.assets).toHaveLength(60);
-  for(const raw of manifest.assets){
+it('bundles exactly sixty-eight reviewed corpus entries',()=>{
+  expect(corpusManifest.assets).toHaveLength(68);
+  expect(bundledCorpus.catalogue.assets).toHaveLength(107);
+});
+
+it.each(corpusManifest.assets)('bundles and inserts reviewed corpus source $id with original identity and attribution',async(raw:any)=>{
+    const {catalogue,localFiles,previews,licenceTexts}=bundledCorpus;
     const asset=catalogue.assets.find(item=>item.id===raw.id)!;
     expect(asset).toBeDefined();expect(previews.has(asset.original.sha256)).toBe(true);
     const bytes=localFiles.get(asset.original.path!)!;
@@ -53,7 +57,6 @@ it('bundles and inserts all sixty reviewed corpus sources with original identiti
     expect(sidecar.records[0].asset.licence.attribution).toContain(read('evidence/corpus-selection-MIT-LICENSE.txt').toString().replace(/\s+/g,' ').trim());
     const saved=session.serialize();expect(createCadSession(JSON.parse(saved)).serialize()).toBe(saved);
     session.undo();expect(session.serialize()).toBe(before);session.redo();expect(session.serialize()).toBe(saved);session.dispose();
-  }
 });
 
 it('refuses unsupported original seeds without evaluating or changing model, selection, history or redo',async()=>{
