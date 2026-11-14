@@ -65,19 +65,33 @@ export function compileCode(program:CodeProgram):CompiledCode {
   else fail(t`Unknown modeling function “${call.name}”`,call.at);
   expect(')');return call;
  }
- const parameters:Record<string,NamedParameter>=Object.create(null),parameterOffsets=new Map<string,number>(),definitions=new Map<string,ShapeAst>();let output:ShapeAst|undefined,statements=0;
+ const parameters:Record<string,NamedParameter>=Object.create(null),parameterOffsets=new Map<string,number>(),definitions=new Map<string,ShapeAst>(),aliases=new Map<string,Scalar>();let output:ShapeAst|undefined,statements=0;
  while(cursor<tokens.length){if(++statements>CODE_LIMITS.statements)limited(t('Too many statements'),offset());const statement=take();
   if(output)fail(t('Return must be the final statement'),statement.at);
-  if(statement.text==='param'){const id=name();if(Object.hasOwn(parameters,id)||definitions.has(id))fail(t`Duplicate name “${id}”`,statement.at);expect(':');const unit=take();if(!['mm','deg','scalar'].includes(unit.text))fail(t('Parameter unit must be mm, deg or scalar'),unit.at);expect('=');const value=scalar([';']);parameters[id]={unit:unit.text as ParameterUnit,expression:value.text};parameterOffsets.set(id,value.at);}
-  else if(statement.text==='let'){const id=name();if(definitions.has(id)||Object.hasOwn(parameters,id))fail(t`Duplicate name “${id}”`,statement.at);expect('=');definitions.set(id,shape());}
-  else if(statement.text==='return')output=shape();else fail(t('Expected param, let or return'),statement.at);
+  if(statement.text==='param'){const id=name();if(Object.hasOwn(parameters,id)||definitions.has(id)||aliases.has(id))fail(t`Duplicate name “${id}”`,statement.at);expect(':');const unit=take();if(!['mm','deg','scalar'].includes(unit.text))fail(t('Parameter unit must be mm, deg or scalar'),unit.at);expect('=');const value=scalar([';']);parameters[id]={unit:unit.text as ParameterUnit,expression:value.text};parameterOffsets.set(id,value.at);}
+  else if(statement.text==='const'){const id=name();if(aliases.has(id)||definitions.has(id)||Object.hasOwn(parameters,id))fail(t`Duplicate name “${id}”`,statement.at);expect('=');aliases.set(id,scalar([';']));}
+  else if(statement.text==='let'){const id=name();if(definitions.has(id)||Object.hasOwn(parameters,id)||aliases.has(id))fail(t`Duplicate name “${id}”`,statement.at);expect('=');definitions.set(id,shape());}
+  else if(statement.text==='return')output=shape();else fail(t('Expected param, const, let or return'),statement.at);
   expect(';');
  }
  if(!output)fail(t('Finish the program with return shape;'));
  const resolved=structuredClone(parameters);for(const [key,value] of Object.entries(program.parameters)){if(!Object.hasOwn(parameters,key))fail(t`Unknown parameter override “${key}”`);if(typeof value!=='string'||!value.trim())fail(t`Invalid override for “${key}”`);resolved[key].expression=value;}
  let loopBindings=new Map<string,Quantity>();let evaluationSteps=0;
  let values:Record<string,Quantity>;try{values=evaluateParameters({version:1,parameters:resolved,bindings:[]});}catch(error){const message=error instanceof Error?error.message:String(error);const related=[...parameterOffsets].find(([key])=>message.includes(`“${key}”`));fail(message,related?.[1]??0);}
- function number(expr:Scalar,unit:ParameterUnit,min:number,max:number,integer=false,allowBoolean=false):number {try{const q=evaluateExpression(expr.text,key=>{if(loopBindings.has(key))return loopBindings.get(key)!;if(!Object.hasOwn(values,key))throw new Error(t`Unknown parameter “${key}”`);return values[key];});if(q.boolean&&!allowBoolean)throw new Error(t('Expected a numeric modeling argument'));const length=unit==='mm'?1:0,angle=unit==='deg'?1:0;if((q.length||q.angle)&&(q.length!==length||q.angle!==angle))throw new Error(t`Expected ${unit}`);if(q.value<min||q.value>max||integer&&!Number.isInteger(q.value))throw new Error(t`Expected ${integer?t('an integer'):t('a value')} between ${min} and ${max}`);return q.value;}catch(error){return fail(error instanceof Error?error.message:String(error),expr.at);}}
+ // Aliases are expressions, not editable parameters. Resolve lazily in the
+ // current loop environment, keeping inactive domains/assertions inactive.
+ const aliasCaches=new WeakMap<Map<string,Quantity>,Map<string,Quantity>>(),visitingAliases=new Set<string>();
+ function lookup(key:string):Quantity{
+  if(loopBindings.has(key))return loopBindings.get(key)!;
+  if(Object.hasOwn(values,key))return values[key];
+  const alias=aliases.get(key);if(!alias)throw new Error(t`Unknown parameter “${key}”`);
+  if(++evaluationSteps>16384)limited(t('Code evaluation budget exceeded'),alias.at);
+  let cache=aliasCaches.get(loopBindings);if(!cache){cache=new Map();aliasCaches.set(loopBindings,cache);}const cached=cache.get(key);if(cached)return cached;
+  if(visitingAliases.has(key))fail(t`dependency cycle at “${key}”`,alias.at);
+  if(visitingAliases.size>=CODE_LIMITS.depth)limited(t('Dependency depth exceeds 32'),alias.at);
+  visitingAliases.add(key);try{const value=evaluateExpression(alias.text,lookup);cache.set(key,value);return value;}finally{visitingAliases.delete(key);}
+ }
+ function number(expr:Scalar,unit:ParameterUnit,min:number,max:number,integer=false,allowBoolean=false):number {try{const q=evaluateExpression(expr.text,lookup);if(q.boolean&&!allowBoolean)throw new Error(t('Expected a numeric modeling argument'));const length=unit==='mm'?1:0,angle=unit==='deg'?1:0;if((q.length||q.angle)&&(q.length!==length||q.angle!==angle))throw new Error(t`Expected ${unit}`);if(q.value<min||q.value>max||integer&&!Number.isInteger(q.value))throw new Error(t`Expected ${integer?t('an integer'):t('a value')} between ${min} and ${max}`);return q.value;}catch(error){if(error instanceof CadCodeError)throw error;return fail(error instanceof Error?error.message:String(error),expr.at);}}
  const built=new Map<string,CodeShape>(),visiting=new Set<string>();
  function resolve(ast:ShapeAst,depth=0):CodeShape {if(++evaluationSteps>16384)throw new CadCodeError(t('Code evaluation budget exceeded'),ast.at,source,'resource-limit');if(depth>32)limited(t('Dependency depth exceeds 32'),ast.at);if(ast.kind==='reference'){if(built.has(ast.name))return built.get(ast.name)!;if(visiting.has(ast.name))fail(t`Shape dependency cycle at “${ast.name}”`,ast.at);const definition=definitions.get(ast.name);if(!definition)fail(t`Unknown shape “${ast.name}”`,ast.at);visiting.add(ast.name);const result=resolve(definition!,depth+1);visiting.delete(ast.name);built.set(ast.name,result);return result;}
   const n=ast.scalars.length,arity=(min:number,max=min)=>{if(n<min||n>max)fail(t`${ast.name} requires ${min}${max===min?'':`–${max}`} numeric arguments`,ast.at);},mm=(i:number)=>number(ast.scalars[i],'mm',.01,100000),segments=(i:number,min=4,max=4096)=>ast.scalars[i]?number(ast.scalars[i],'scalar',min,max,true):48;

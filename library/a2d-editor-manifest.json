@@ -8,7 +8,7 @@
     "command": "node scripts/generate-a2d-editor-library.mjs --check",
     "generator": {
       "path": "../scripts/generate-a2d-editor-library.mjs",
-      "sha256": "e7b8c2cae43db4ed9ff7b948f277f7f6ca2b3d6d73cbf31cc298ef6e35fef610"
+      "sha256": "08e55470f6ba9145e3d97c7f4a2c1554aa9ebb625fbd01491d0246d53edd7914"
     },
     "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
@@ -16,8 +16,8 @@
   "selection": {
     "repositoryId": "ridercz--A2D",
     "commit": "4ad48205fefd841a468b7916521596f09383add9",
-    "count": 2,
-    "runtimeChecked": 2,
+    "count": 3,
+    "runtimeChecked": 3,
     "complete": true
   },
   "assets": [
@@ -396,6 +396,195 @@
           ]
         },
         "signedVolumeMm3": 4681.637687323614
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-a2d-grill-circle",
+      "title": "A2D circular fan grill",
+      "author": "Michal Altair Valášek, 2020-2021",
+      "version": "4ad48205fefd841a468b7916521596f09383add9",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/ridercz/A2D",
+        "commit": "4ad48205fefd841a468b7916521596f09383add9",
+        "sourceUrl": "https://raw.githubusercontent.com/ridercz/A2D/4ad48205fefd841a468b7916521596f09383add9/Samples/GrillCircle.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "ridercz--A2D",
+        "upstreamPath": "Samples/GrillCircle.scad",
+        "archivedPath": "corpus/repos/ridercz--A2D/Samples/GrillCircle.scad",
+        "sha256": "f1c6e12d4269e5af6f8f2a54b3f366441ce6a54f8c86d6758b9eea8e1f4d3f37"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Michal Altair Valášek, 2020-2021. Source: https://raw.githubusercontent.com/ridercz/A2D/4ad48205fefd841a468b7916521596f09383add9/Samples/GrillCircle.scad. MIT License Copyright (c) 2020 Michal Altair Valášek Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/ridercz/A2D/4ad48205fefd841a468b7916521596f09383add9/LICENSE",
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; cycle21 exact GrillCircle include closure and default-model screening 2026-11-14",
+        "localEvidence": [
+          {
+            "path": "evidence/a2d-MIT-LICENSE.txt",
+            "sha256": "cefd2cb74a87f6cd6a31d7afeb3337f4e32849eaa487101e6006edd6f89f5421",
+            "bytes": 1080,
+            "url": "https://raw.githubusercontent.com/ridercz/A2D/4ad48205fefd841a468b7916521596f09383add9/LICENSE"
+          }
+        ]
+      },
+      "original": {
+        "path": "sources/a2d/Samples/GrillCircle.scad",
+        "sha256": "f1c6e12d4269e5af6f8f2a54b3f366441ce6a54f8c86d6758b9eea8e1f4d3f37",
+        "bytes": 1478,
+        "url": "https://raw.githubusercontent.com/ridercz/A2D/4ad48205fefd841a468b7916521596f09383add9/Samples/GrillCircle.scad",
+        "format": "openscad"
+      },
+      "sourceBundle": {
+        "format": "brickwright-openscad-bundle",
+        "version": 1,
+        "rootPath": "Samples/GrillCircle.scad",
+        "dependencies": [
+          {
+            "path": "A2D.scad",
+            "file": {
+              "path": "sources/a2d/A2D.scad",
+              "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+              "bytes": 13948,
+              "format": "openscad"
+            },
+            "author": "Michal Altair Valášek, 2020-2021",
+            "sourceUrl": "https://raw.githubusercontent.com/ridercz/A2D/4ad48205fefd841a468b7916521596f09383add9/A2D.scad",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/ridercz/A2D",
+              "commit": "4ad48205fefd841a468b7916521596f09383add9"
+            },
+            "licence": {
+              "spdx": "MIT",
+              "scope": "asset",
+              "attribution": "Michal Altair Valášek, 2020-2021. Source: https://raw.githubusercontent.com/ridercz/A2D/4ad48205fefd841a468b7916521596f09383add9/A2D.scad. MIT License Copyright (c) 2020 Michal Altair Valášek Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+              "evidenceUrl": "https://raw.githubusercontent.com/ridercz/A2D/4ad48205fefd841a468b7916521596f09383add9/LICENSE",
+              "capturedOn": "2026-11-13",
+              "review": "accepted",
+              "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact two-root include closure and default-model screening 2026-11-14"
+            }
+          }
+        ]
+      },
+      "derivatives": [
+        {
+          "path": "meshes/a2d/GrillCircle.stl",
+          "sha256": "2e4fe957ca95bc2722febcc76da5a05313e9876d9e45d3c45ada44c782dd1652",
+          "bytes": 168684,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Exact root and dependency bytes retained independently. Includes are expanded only in memory by the bounded virtual-file importer; no flattened upstream source is invented. The authored default root and its existing extrusion are retained without parameter, frame, fragment or placement overrides, repair or simplification. Qualification covers this default root only, not every A2D helper or alternate configuration, manufacturing or physics. Archived assertion-message text does not indicate an assertion failure. Import warnings captured at qualification: Assertion messages are archived; failures use a generic diagnostic. Assertion message: Please upgrade A2D library to version 1.5.0 or higher.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The sample has no explicit unit declaration. Curator assumes millimetres and Z up; authored coordinates are preserved without placement changes.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "bundleProvenance": {
+        "format": "brickwright-openscad-source-bundle",
+        "version": 1,
+        "rootPath": "Samples/GrillCircle.scad",
+        "files": [
+          {
+            "path": "Samples/GrillCircle.scad",
+            "originalPath": "Samples/GrillCircle.scad",
+            "source": "/****************************************************************************\n * Fan Grill Sample - sample for A2D OpenSCAD Library                       *\n * Copyright (c) Michal A. Valasek, 2020                                    *\n * www.rider.cz * www.altair.blog * github.com/ridercz/A2D                  *\n * ------------------------------------------------------------------------ *\n * This sample creates a simple parametric fan grill. The default values    *\n * are for a standard 80 mm fan.                                            *\n ****************************************************************************/\n\n// Include A2D library and check for minimum required version\ninclude <../A2D.scad>;\nassert(a2d_required([1, 5, 0]), \"Please upgrade A2D library to version 1.5.0 or higher.\");\n\n/* [Fan parameters] */\nouter_size = 80;\nscrew_span = 71.5;\nscrew_diameter = 4;\ncorner_radius = 3;\n\n/* [Grill options] */\nheight = 2;\nsides = 64;\nspokes = 4;\nrotation = 0;\nhole_size = 3;\nhole_spacing = 3;\n\n/* [Hidden] */\n$fn = 32;\ngrill_od = screw_span;\ngrill_id = grill_od * .2;\n\n// Render model\n\nlinear_extrude(height) difference() {\n    // Base plate\n    r_square([outer_size, outer_size], corner_radius, center = true);\n\n    // Screw holes\n    for(pos = square_points([screw_span, screw_span], center = true)) translate(pos) circle(d = screw_diameter);\n\n    // Grill\n    grill_mask_circle_auto(grill_od, grill_id, hole_size, hole_spacing, spokes, rotation, $fn = sides);\n}",
+            "sha256": "f1c6e12d4269e5af6f8f2a54b3f366441ce6a54f8c86d6758b9eea8e1f4d3f37",
+            "bytes": 1478
+          },
+          {
+            "path": "A2D.scad",
+            "originalPath": "A2D.scad",
+            "source": "/****************************************************************************\n * Altair's 2D Objects for OpenSCAD              version 1.6.2 (2021-05-07) *\n * Copyright (c) Michal A. Valasek, 2020-2021                               *\n * ------------------------------------------------------------------------ *\n * www.rider.cz * www.altair.blog * github.com/ridercz/A2D                  *\n ****************************************************************************/\n\n// Constants\na2d_version = [1, 6, 2];    // Version of a2d library [major, minor, revision]\npi = PI;                    // Pi value\nphi = (1 + sqrt(5)) / 2;    // Golden ratio\n\n/** POINT GENERATORS **/\n\n// Generates points of vertices of regular polygon, given outer diameter and number of vertices, centered on origin\nfunction regpoly_points(od, vertices) =\n    assert(od > 0)\n    assert(vertices > 1)\n    [for(a = [0 : 360 / vertices : 359]) vector_point(a + 90, od / 2)];\n\n// Generates points of vertices of a rectangle (\"square\" in OpenSCAD terminology), given its size in [x, y]\nfunction square_points(size, center = false) = \n    assert(is_list(size) && len(size) == 2)\n    center \n        ? translate_points(square_points(size, false), size / -2)\n        : [[0, 0], [size[0], 0], size, [0, size[1]]];\n\n// Generates points of vertices of a star, given number of star points, outer diameter and inner diameter, centered on origin\nfunction star_points(n, od, id) = \n    assert(n > 2)\n    assert(od > id)\n    assert(id > 0)\n    [for(a = [0 : 360 / n : 359]) each([vector_point(a, od / 2), vector_point(a + 180 / n, id / 2)])];\n\n/** SHAPES - STARS **/\n\n// Creates a perfect five-pointed star of given outer diameter, centered on origin\nmodule p5star(od) {\n    assert(od > 0);\n\n    id = od * (2 - phi);\n    star(5, od,  id);\n}\n\n// Creates a perfect six-pointed star of given outer diameter, centered on origin\nmodule p6star(od) {\n    assert(od > 0);\n\n    rotate(30) circle(d = od, $fn = 3);\n    rotate(90) circle(d = od, $fn = 3);\n}\n\n// Creates a perfect eight-pointed star of given outer diameter, centered on origin\nmodule p8star(od) {\n    assert(od > 0);\n    circle(d = od, $fn = 4);\n    rotate(45) circle(d = od, $fn = 4);\n}\n\n// Creates a regular star of given number of points and outer and inner diameter, centered on origin\nmodule star(n, od, id) {\n    assert(n > 2);\n    assert(od > id);\n    assert(id > 0);\n\n    polygon(star_points(n, od, id));\n}\n\n/** SHAPES - ROUNDED **/\n\n// Creates a regular polygon with given outer diameter, number of vertices and vertex radius, centered on origin\nmodule r_regpoly(od, vertices, radius) {\n    // Validate arguments\n    assert(od > 0);\n    assert(vertices > 1);\n    assert(radius >= 0);\n    \n    if(radius == 0) {\n        circle(d = od, $fn = vertices);\n    } else {\n        hull() for(pos = regpoly_points(od - 2 * radius, vertices) ) translate(pos) circle(r = radius);\n    }\n}\n\n// Creates a rectangle with given size and corner radius. Radius may be specified:\n// - as a scalar number, the same for all corners\n// - as a list with two items, for top and bottom radii\n// - as a list with four items, for all corners, starting with left bottom counterclockwise\nmodule r_square(size, radius, center = false) {\n    // Validate arguments\n    assert(is_list(size) && len(size) == 2);\n    assert(is_num(radius) || (is_list(radius) && len(radius) == 2) || len(radius) == 4);\n\n    if(is_num(radius)) {\n        // The same radius on all corners\n        r_square(size, [radius, radius, radius, radius], center);\n    } else if(len(radius) == 2) {\n        // Different radii on top and bottom\n        r_square(size, [radius[0], radius[0], radius[1], radius[1]], center);\n    } else if(len(radius) == 4) {\n        // Different radius on different corners\n        translate(center ? [size[0] / -2, size[1] / -2] : [0, 0]) hull() {\n            // BL\n            if(radius[0] <= 0) square([1, 1]);\n            else translate([radius[0], radius[0]]) pie(d = radius[0] * 2, a1 = 180, a2 = 270);\n            // BR\n            if(radius[1] <= 0) translate([size[0] - 1, 0]) square([1, 1]);\n            else translate([size[0] - radius[1], radius[1]]) pie(d = radius[1] * 2, a1 = 270, a2 = 360);\n            // TR\n            if(radius[2] <= 0) translate([size[0] - 1, size[1] - 1]) square([1, 1]);\n            else translate([size[0] - radius[2], size[1] - radius[2]]) pie(d = radius[2] * 2, a1 = 0, a2 = 90);\n            // TL\n            if(radius[3] <= 0) translate([0, size[1] - 1]) square([1, 1]);\n            else translate([radius[3], size[1] - radius[3]]) pie(d = radius[3] * 2, a1 = 90, a2 = 180);\n        }\n    } else {\n        // This code should be unreachable\n        assert(false);\n    }\n}\n\n/** SHAPES - HOLLOW **/\n\n// Hollow circle (ring) with given wall thickness; use $fn to create hollow regular polygon\nmodule h_circle(d, thickness) {\n    assert(d > 0);\n    assert(thickness != 0);\n\n    difference() {\n        circle(d = a2d_outer(d, thickness));\n        circle(d = a2d_inner(d, thickness));\n    }\n}\n\n// Hollow rectangle (\"square\" in OpenSCAD terminology) with given wall thickness\nmodule h_square(size, thickness, center = false) {\n    assert(thickness != 0);\n\n    translate(center ? [0, 0] : [a2d_outer(size[0], thickness) / 2, a2d_outer(size[1], thickness) / 2])\n        difference() {\n            square([a2d_outer(size[0], thickness), a2d_outer(size[1], thickness)], center = true);\n            square([a2d_inner(size[0], thickness), a2d_inner(size[1], thickness)], center = true);\n        }\n}\n\n/** SHAPES - HOLLOW AND ROUNDED **/\n\n// Hollow and rounded regular polygon\nmodule hr_regpoly(od, vertices, radius, thickness) {\n    rh_regpoly(od, vertices, radius, thickness);\n}\nmodule rh_regpoly(od, vertices, radius, thickness) {\n    assert(od > 0);\n    assert(vertices > 1);\n    assert(radius >= 0);\n    assert(thickness != 0);\n\n    difference() {\n        r_regpoly(a2d_outer(od, thickness), vertices, a2d_outer(radius, thickness, 1));\n        r_regpoly(a2d_inner(od, thickness), vertices, a2d_inner(radius, thickness, 1));\n    }\n}\n\n// Hollow and rounded rectangle (\"square\" in OpenSCAD terminology)\nmodule hr_square(size, radius, thickness, center = false) {\n    rh_square(size, radius, thickness, center);\n}\nmodule rh_square(size, radius, thickness, center = false) {\n    // Validate arguments\n    assert(is_list(size) && len(size) == 2);\n    assert(is_num(radius) || (is_list(radius) && len(radius) == 2) || len(radius) == 4);\n    assert(thickness != 0);\n\n    translate(center ? [0, 0] : [a2d_outer(size[0], thickness) / 2, a2d_outer(size[1], thickness) / 2])\n        difference() {\n            r_square([a2d_outer(size[0], thickness), a2d_outer(size[1], thickness)], a2d_outer(radius, thickness, factor = 1), center = true);\n            r_square([a2d_inner(size[0], thickness), a2d_inner(size[1], thickness)], a2d_inner(radius, thickness, factor = 1), center = true);\n        }\n}\n\n/** SHAPES - other **/\n\n// Creates a knurled circle with given number of knurls\nmodule knurled_circle(d, knurl_count, knurl_size = .6) {\n    assert(d > 0);\n    assert(knurl_count > 4);\n    assert(knurl_size > 0);\n\n    knurl_diameter = PI * d / knurl_count * knurl_size;\n    inner_diameter = d - knurl_diameter;\n\n    circle(d = inner_diameter + knurl_diameter * (1 - knurl_size), $fn = knurl_count);\n    knurl_points = regpoly_points(od = inner_diameter, vertices = knurl_count);\n    for(pos = knurl_points) translate(pos) circle(d = knurl_diameter);\n}\n\n// Creates a pie slice with given diameter and angles\nmodule pie(d, a1, a2) {\n    assert(d > 0);\n\n    mask_points = [\n        [0,0],\n        for(i = [0:4]) vector_point(((4 - i) * a1 + i * a2) / 4, d)\n    ];\n\n    intersection() {\n        circle(d = d);\n        polygon(mask_points);\n    }\n}\n\n/** FUNCTIONS **/\n\n// Gets ciscumscribed circle diameter from given inscribed circle diameter for a regular polygon\nfunction ins2cir(ri, n) = \n    assert(ri > 0)\n    assert(n > 2)\n    ri * tan(180 / n) / sin(180 / n);\n\n// Gets inscribed circle diameter from given curcumscribed circle diameter for a regular polygon\nfunction cir2ins(rc, n) =\n    assert(rc > 0)\n    assert(n > 0)\n    rc * sin(180 / n) / tan(180 / n);\n\n// Returns point (coordinates) for a given angle (alpha) and distance); follows right hand rule\nfunction vector_point(alpha, delta) = [cos(alpha) * delta, sin(alpha) * delta];\n\n// Will offset a list of points by given offset each\nfunction translate_points(points, offset) = [for(p = points) p + offset];\n\n// Check if current version is greater or equal to minimal required version\nfunction a2d_required(minver) = a2d_ver2num(a2d_version) >= a2d_ver2num(minver);\n\n// Converts version vector [x, y, z] to number xyyzz\nfunction a2d_ver2num(version) = version[0] * 10000 + version[1] * 100 + version[2];\n\n/** TEXT **/\n\n// Will display text on a circle curve of given radius and from-to angles a1-a2\nmodule circle_text(radius, text, font, a1 = 0, a2 = 180, size = 10, valign = \"baseline\", language = \"en\", script = \"latin\", direction = \"out\") {\n    char_count = len(text);\n    angle_step = (a2 - a1) / (char_count - 1);\n\n    for(i = [0:char_count - 1]) {\n        r1a = direction == \"out\" ? a2 - angle_step * i : a1 + angle_step * i;\n        r2a = direction == \"out\" ? -90 : +90;\n        rotate(r1a) translate([radius, 0]) rotate(r2a) text(text[i], size = size, font = font, halign = \"center\", valign = valign, language = language, script = script);\n    }\n}\n\n// Will display multiline text with given line height \nmodule multiline_text(text, font, line_height = 1.2, size = 10, halign = \"left\", valign = \"baseline\", language = \"en\", script = \"latin\") {\n    assert(is_list(text));\n\n    line_count = len(text);\n    line_spacing = size * line_height;\n    total_height = (line_count - 1) * line_spacing + size;\n    yo = valign == \"top\" ? - total_height\n       : valign == \"center\" ? - total_height / 2\n       : 0;\n\n    for(i = [0 : line_count]) translate([0, i * line_spacing + yo]) text(text[line_count - 1 - i], size = size, font = font, halign = halign, valign = \"baseline\", language = language, script = script);\n}\n\n/** GRILLS **/\n\nmodule grill_mask_square(hsize, spacing, count) {\n    assert(is_num(hsize) || (is_list(hsize) && len(hsize) == 2), \"hsize must be number or list with two items\");\n    assert(is_num(spacing) || (is_list(spacing) && len(spacing) == 2), \"spacing must be number or list with two items\");\n    assert(is_num(count) || (is_list(count) && len(count) == 2), \"count must be number or list with two items\");\n\n    // Expand scalars to lists if necessary\n    rhsize = a2d_num2list(hsize, 2);\n    rspacing = a2d_num2list(spacing, 2);\n    rcount = a2d_num2list(count, 2);\n\n    // Draw squares\n    for(xi = [0:rcount[0] - 1], yi = [0:rcount[1] - 1]) {\n        pos = [xi * (rhsize[0] + rspacing[0]), yi * (rhsize[1] + rspacing[1])];\n        translate(pos) square(rhsize);\n    }\n}\n\nmodule grill_mask_square_auto(size, hsize, spacing) {\n    assert(is_num(size) || (is_list(size) && len(size) == 2), \"size must be number or list with two items\");\n    assert(is_num(hsize) || (is_list(hsize) && len(hsize) == 2), \"hsize must be number or list with two items\");\n    assert(is_num(spacing) || (is_list(spacing) && len(spacing) == 2), \"spacing must be number or list with two items\");\n\n    // Expand scalars to lists if necessary\n    rsize = a2d_num2list(size, 2);\n    rhsize = a2d_num2list(hsize, 2);\n    rspacing = a2d_num2list(spacing, 2);\n\n    // Compute real square size and count\n    count = [for(i = [0, 1]) floor((rsize[i] + rspacing[i]) / (rhsize[i] + rspacing[i]))];\n    rrhsize = [for(i = [0, 1]) (rsize[i] - rspacing[i] * (count[i] - 1)) / count[i]];\n\n    // Draw mask\n    grill_mask_square(rrhsize, spacing, count);\n}\n\nmodule grill_mask_circle(diameter, size, spacing, count, spokes = 4, spoke_rotate = 0, spoke_width = 0) {\n    assert(diameter > 0);\n    assert(size > 0);\n    assert(spacing > 0);\n    assert(count > 0);\n    assert(spokes > 2);\n    assert(spoke_width >= 0);\n\n    real_spoke_width = spoke_width == 0 ? spacing : spoke_width;\n\n    difference() {\n        // Circles\n        for(i = [0:count - 1]) h_circle(d = diameter - 2 * i * (size + spacing), thickness = -size);\n\n        // Spokes\n        for(a = [0 : 360 / spokes : 359]) rotate(a + spoke_rotate) translate([-real_spoke_width / 2, 0]) square([real_spoke_width, diameter]);\n    }\n}\n\nmodule grill_mask_circle_auto(outer_diameter, inner_diameter, size, spacing, spokes = 4, spoke_rotate = 0, spoke_width = 0) {\n    assert(outer_diameter > 0 && outer_diameter > inner_diameter);\n    assert(inner_diameter > 0);\n    assert(size > 0);\n    assert(spacing > 0);\n    assert(spokes > 2);\n    assert(spoke_width >= 0);\n\n    // Compute real ring count size\n    dd = (outer_diameter - inner_diameter + spacing) / 2;\n    ring_count = floor(dd / (size + spacing));\n    real_size = (dd - ring_count * spacing) / ring_count;\n\n    // Draw mask\n    grill_mask_circle(diameter = outer_diameter, size = real_size, spacing = spacing, count = ring_count, spokes = spokes, spoke_rotate = spoke_rotate, spoke_width = spoke_width);\n}\n\n/** TRANSFORMATIONS **/\n\n// Will make its children round; ro is outside radius, ri is inner radius\nmodule make_round(ro = 0, ri = 0) {\n    assert(ro >= 0);\n    assert(ri >= 0);\n\n    offset(r = ro) offset(r = -ro)\n    offset(r = -ri) offset(r = ri)\n    children(0);\n}\n\n/** PRIVATE HELPER FUNCTIONS **/\n\nfunction a2d_outer(d, thickness, factor = 2) = \n    assert(thickness != 0) \n    assert(factor > 0)\n    is_list(d) \n        ? [for(x = d) a2d_outer(x, thickness, factor)] \n        : (thickness > 0 ? d + factor * thickness : d);\n\nfunction a2d_inner(d, thickness, factor = 2) = \n    assert(thickness != 0)\n    assert(factor > 0)\n    is_list(d) \n        ? [for(x = d) a2d_inner(x, thickness, factor)] \n        : (thickness > 0 ? d : d + factor * thickness);\n\nfunction a2d_num2list(num, len) = \n    assert(len > 0) \n    is_list(num) \n        ? num\n        : [for(i = [0 : len - 1]) num];\n",
+            "sha256": "aeed0958f859a675236d186753f54d5ceb45d823dab2b7077f935e82f227b516",
+            "bytes": 13948
+          }
+        ],
+        "includes": [
+          {
+            "fromPath": "Samples/GrillCircle.scad",
+            "path": "A2D.scad",
+            "sourceOffset": 688,
+            "line": 11,
+            "column": 1,
+            "depth": 1
+          }
+        ],
+        "originalBytes": 15426,
+        "expandedBytes": 15407,
+        "expandedTokens": 3068,
+        "expandedSha256": "b2216a54c52c77c13c3b06b94f9a51ce35dc26aed3acf7208235f172a40cb9b7"
+      },
+      "quality": {
+        "fileSha256": "2e4fe957ca95bc2722febcc76da5a05313e9876d9e45d3c45ada44c782dd1652",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-14",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 3372,
+        "boundsMm": {
+          "min": [
+            -40,
+            -40,
+            0
+          ],
+          "max": [
+            40,
+            40,
+            2
+          ]
+        },
+        "signedVolumeMm3": 8841.204465096798
       },
       "diagnostics": []
     }

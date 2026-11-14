@@ -65,7 +65,7 @@ it('preserves conditional typed argument guards without checking an inactive bra
  rejectsEdit('n=2;flag=1;function unused(v)=2;cube(unused(assert(n>0)(flag?[1]:[1,2])));');
  const source='n=2;flag=1;function unused(v)=2;cube(unused(flag?assert(n>0)[1]:assert(n<0)[1,2]));';
  expect(evaluate(source).volume).toBeCloseTo(8);expect(()=>evaluate(source,{flag:'0'})).toThrow('Assertion failed');
- expect(()=>importOpenSCAD('n=2;flag=1;function unused(v)=2;cube(unused(assert(n>0)(flag?1:undef)));')).toThrow('parameter-dependent assertion');
+ rejectsEdit('n=2;flag=1;function unused(v)=2;cube(unused(assert(n>0)(flag?1:undef)));');
 });
 
 

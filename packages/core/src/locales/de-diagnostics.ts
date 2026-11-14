@@ -48,7 +48,7 @@ export const messages: Record<string,string> = {
   "Expected a shape function or named shape": "Formfunktion oder benannte Form erwartet",
   "Expected extrusion": "Extrusion erwartet",
   "Expected one generated body": "Ein erzeugter Körper erwartet",
-  "Expected param, let or return": "param, let oder return erwartet",
+  "Expected param, const, let or return": "param, const, let oder return erwartet",
   "Expected {0}": "{0} erwartet",
   "Expected {0} between {1} and {2}": "{0} zwischen {1} und {2} erwartet",
   "Expected “{0}”": "„{0}“ erwartet",

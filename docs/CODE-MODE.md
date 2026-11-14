@@ -152,3 +152,24 @@ outside), `mirror([nx,ny,nz],shape)`, `axisRotate([nx,ny,nz],angle,shape)` and
 `resize([width,depth,height],shape)` (zero preserves an axis). These use actual solid
 geometry and existing worker/preflight/history/collision boundaries. Unsupported
 foreign export operations fail explicitly; see CODE-CONVERTERS.md.
+
+
+### Lazy scalar aliases
+
+`const name = expression;` names a scalar expression without exposing another
+editable parameter. Aliases may read parameters and other aliases; parameter
+definitions do not read aliases. They resolve only when used in the active
+shape/profile branch, so inactive assertions and invalid numeric domains stay
+inactive. In a loop, resolution and caching use that iteration's binding scope.
+
+```cad
+param width: mm = 20;
+const half = width / 2;
+return box(width, half, 2);
+```
+
+Aliases share the existing source, token and 256-statement budgets. Every
+expression remains limited to 1,024 characters; alias cycles and dependency
+chains beyond 32 are refused, and resolution uses the existing 16,384-step
+native evaluation budget. The importer uses aliases to avoid repeating large
+symbolic formulas. No source defaults or geometry limits are changed.

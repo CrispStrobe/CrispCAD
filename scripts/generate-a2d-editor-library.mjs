@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-// Exactly two reviewed local roots; originals remain independent, never flattened on disk.
+// Exactly three reviewed local roots; originals remain independent, never flattened on disk.
 import {createHash} from 'node:crypto';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {dirname} from 'node:path';
@@ -18,6 +18,7 @@ const file=(path,bytes)=>({path,sha256:hash(bytes),bytes:bytes.length});
 export const a2dEditorSelection=[
  {id:'corpus-a2d-grill-square',name:'GrillSquare',title:'A2D square grill',sourceSha256:'c91720016f60ba9d343e4625a3212fe3ab1e5668395aee56fdf0d7452510c99b',meshSha256:'9866b1c4ec3312bf5d21218837850531f5600de825638bbb6f7c431417079c94'},
  {id:'corpus-a2d-point-generators',name:'PointGenerators',title:'A2D corner hole plate',sourceSha256:'5f4103ddc2fbab12be80258ef10b75aed85f4b293677322b9191e54005e0c424',meshSha256:'0310fc106c49e0d52c1eff029988ad5eda6cde5578fd06c7ecd8192ecabdbf5e'},
+ {id:'corpus-a2d-grill-circle',name:'GrillCircle',title:'A2D circular fan grill',sourceSha256:'f1c6e12d4269e5af6f8f2a54b3f366441ce6a54f8c86d6758b9eea8e1f4d3f37',meshSha256:'2e4fe957ca95bc2722febcc76da5a05313e9876d9e45d3c45ada44c782dd1652' },
 ];
 export async function generateA2DEditorLibrary(){
  const corpus=JSON.parse((await read('corpus/manifest.json')).toString());
@@ -31,8 +32,8 @@ export async function generateA2DEditorLibrary(){
  const evidence=await checked('LICENSE',evidenceHash),dependency=await checked('A2D.scad',dependencyHash);
  const evidencePath='evidence/a2d-MIT-LICENSE.txt',dependencyPath='sources/a2d/A2D.scad';
  const outputs=new Map([[evidencePath,evidence.bytes],[dependencyPath,dependency.bytes]]);
- const canonicalGrant=record=>({spdx:'MIT',scope:'asset',attribution:`${record.author_attribution}. Source: ${record.source_url}. ${evidence.bytes.toString('utf8').replace(/\s+/g,' ').trim()}`,
-  evidenceUrl:evidence.record.source_url,capturedOn:repository.captured_at,review:'accepted',reviewer:`${repository.reviewed_by}; exact two-root include closure and default-model screening 2026-11-14`});
+ const canonicalGrant=(record,review='exact two-root include closure and default-model screening 2026-11-14')=>({spdx:'MIT',scope:'asset',attribution:`${record.author_attribution}. Source: ${record.source_url}. ${evidence.bytes.toString('utf8').replace(/\s+/g,' ').trim()}`,
+  evidenceUrl:evidence.record.source_url,capturedOn:repository.captured_at,review:'accepted',reviewer:`${repository.reviewed_by}; ${review}`});
  const wasm=await readFile(new URL('node_modules/manifold-3d/manifold.wasm',root));
  const kernel=await createGeometryKernel({wasmBinary:wasm});
  const assets=[];
@@ -52,7 +53,7 @@ export async function generateA2DEditorLibrary(){
   assets.push({id:selection.id,title:selection.title,author:original.record.author_attribution,version:commit,
    sourceRevision:{repositoryUrl,commit,sourceUrl:original.record.source_url},
    corpusSelection:{repositoryId,upstreamPath,archivedPath:`corpus/repos/${repositoryId}/${upstreamPath}`,sha256:selection.sourceSha256},
-   licence:{...canonicalGrant(original.record),localEvidence:[{...file(evidencePath,evidence.bytes),url:evidence.record.source_url}]},
+   licence:{...canonicalGrant(original.record,selection.name==='GrillCircle'?'cycle21 exact GrillCircle include closure and default-model screening 2026-11-14':undefined),localEvidence:[{...file(evidencePath,evidence.bytes),url:evidence.record.source_url}]},
    original:{...file(sourcePath,original.bytes),url:original.record.source_url,format:'openscad'},
    sourceBundle:{format:'brickwright-openscad-bundle',version:1,rootPath:upstreamPath,dependencies:[{
     path:'A2D.scad',file:{...file(dependencyPath,dependency.bytes),format:'openscad'},author:dependency.record.author_attribution,
@@ -76,5 +77,5 @@ if(process.argv[1]===fileURLToPath(import.meta.url)){
  const outputs=await generateA2DEditorLibrary();
  if(write)for(const[path,expected]of outputs){if(!path.startsWith('meshes/'))continue;let current;try{current=await read(path);}catch(error){if(error.code!=='ENOENT')throw error;}if(current&&!current.equals(expected))throw Error('Preserve existing mesh and select a new derivative path: '+path);}
  for(const[path,expected]of outputs){const target=new URL(`library/${path}`,root);if(write){await mkdir(dirname(fileURLToPath(target)),{recursive:true});await writeFile(target,expected);}else if(!(await read(path)).equals(expected))throw Error('A2D output differs: '+path);}
- console.log('2 authored A2D roots reproduced with independent dependency originals; 2 pass all STL screens.');
+ console.log('3 authored A2D roots reproduced with independent dependency originals; 3 pass all STL screens.');
 }

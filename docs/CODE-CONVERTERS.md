@@ -30,7 +30,7 @@ they do not discard just the asserted solid. Parameter-dependent conditions rema
 in native assertion guards and are checked again on edits. Expression guards
 support numeric scalars and nonempty nested numeric vectors, including structural
 inspection and helper arguments. Constant successful assertions can return other
-typed values. Parameter-dependent empty/string/undefined results and asserted loop
+typed values. Parameter-dependent empty/string results and asserted loop
 or comprehension input vectors, and assertions inside omitted `echo()` output,
 and combinations with the `!` root modifier are rejected rather than losing
 their checks.
@@ -462,3 +462,24 @@ used. Other unknown text arguments remain refused. The existing bundled Droid
 font fallback and font-metric warning still apply. The authored `Sign_03.scad`
 remains a strict topology failure. Outcomes and runtime identities are retained in
 `library/corpus-audit/editor-screening-cycle20.json`.
+
+
+### Symbolic choices and shared scalar expressions — 2026-11-14
+
+Arithmetic can retain undefined alternatives from symbolic vector indexing;
+string arithmetic stays refused. Type predicates with identical results in all
+alternatives resolve without retaining a redundant type branch. `len` of a
+non-list/non-string value remains undefined. Assertions on conditional values
+and undefined results retain explicit guards through type inspection, arithmetic
+and otherwise unused arguments; failing edits remain atomic.
+
+Long scalar formulas can be shared as lazy native `const` aliases. The importer
+still refuses an individual generated expression above 1,024 characters and the
+native source, token, statement, dependency and work limits still apply. Aliases
+do not become editable parameters or eagerly evaluate inactive branches.
+
+The two unchanged A2D defaults measured in `editor-screening-cycle21.json`
+improved from 0/2 to 1/2 strict STL passes. `GrillCircle` passes at 3,372 triangles
+and 80×80×2mm. `ParametricBoxWithLid` now reaches the unchanged importer work
+limit and stays excluded; this transition is not an admission gain. No further
+retries of that over-budget default are part of this cohort.
