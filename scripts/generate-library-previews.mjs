@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import * as THREE from 'three';
 import {chromium} from '@playwright/test';
-import {createCadSession,createLocalModelLibraryCatalogue,importOpenSCAD,importJSCAD} from '../packages/core/dist/index.js';
+import {createCadSession,createLocalModelLibraryCatalogue,importOpenSCAD,importOpenSCADBundle,importJSCAD} from '../packages/core/dist/index.js';
 import {createGeometryKernel} from '../packages/geometry/dist/index.js';
 export function parsePreviewArguments(args) {
  const assetIds=[];let corpusOnly=false;
@@ -27,7 +27,7 @@ export function selectPreviewAssets(assets,assetIds) {
 async function main() {
 const {corpusOnly,assetIds}=parsePreviewArguments(process.argv.slice(2));
 const json=async path=>JSON.parse(await readFile(path,'utf8'));
-const corpusAssets=createLocalModelLibraryCatalogue(await json('library/editor-corpus-manifest.json')).assets;
+const corpusAssets=[...createLocalModelLibraryCatalogue(await json('library/editor-corpus-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/a2d-editor-manifest.json')).assets];
 const candidates=corpusOnly?corpusAssets:[...createLocalModelLibraryCatalogue(await json('library/examples-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/fixtures-manifest.json')).assets,...createLocalModelLibraryCatalogue(await json('library/supported-models-manifest.json')).assets,(await json('library/seed-catalogue.json')).assets.find(a=>a.id==='jscad-involute-gear'),...corpusAssets];
 const assets=selectPreviewAssets(candidates,assetIds);
 const kernel=await createGeometryKernel({wasmBinary:await readFile('node_modules/manifold-3d/manifold.wasm')});
@@ -38,7 +38,16 @@ try{
 for(const asset of assets){
  const file=asset.original,path=file.path??(asset.id==='jscad-involute-gear'?'sources/jscad/gear.js':undefined);if(!path)throw Error(asset.id);
  const bytes=await readFile('library/'+path);if(createHash('sha256').update(bytes).digest('hex')!==file.sha256)throw Error('Source hash mismatch: '+path);
- const source=bytes.toString('utf8'),program=file.format==='jscad'?importJSCAD(source).program:file.format==='openscad'?importOpenSCAD(source):{version:1,language:'brickwright-cad-script',source,parameters:{}};
+ const source=bytes.toString('utf8');let program;
+ if(asset.sourceBundle){
+  if(bytes.length!==file.bytes)throw Error('Source byte size mismatch: '+path);
+  const dependencies=await Promise.all(asset.sourceBundle.dependencies.map(async dependency=>{
+   const original=dependency.file,content=await readFile('library/'+original.path);
+   if(content.length!==original.bytes||createHash('sha256').update(content).digest('hex')!==original.sha256)throw Error('Dependency hash or byte size mismatch: '+original.path);
+   return {path:dependency.path,source:content.toString('utf8'),sha256:original.sha256};
+  }));
+  program=(await importOpenSCADBundle({version:1,rootPath:asset.sourceBundle.rootPath,files:[{path:asset.sourceBundle.rootPath,source,sha256:file.sha256},...dependencies]})).program;
+ }else program=file.format==='jscad'?importJSCAD(source).program:file.format==='openscad'?importOpenSCAD(source):{version:1,language:'brickwright-cad-script',source,parameters:{}};
  const session=createCadSession();session.addCode(program);const {bodies}=kernel.evaluate(session.state.document);session.dispose();
  const box=new THREE.Box3();for(const body of bodies)box.union(new THREE.Box3(new THREE.Vector3(...body.bounds.min),new THREE.Vector3(...body.bounds.max)));
  const center=box.getCenter(new THREE.Vector3()),extent=box.getSize(new THREE.Vector3()),scale=160/Math.max(1,extent.length()),triangles=[];

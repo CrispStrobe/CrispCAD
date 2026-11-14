@@ -24,6 +24,26 @@ An explicit positive $fn takes precedence. Small sphere meshes still use native 
 the 256-point limit. Zero-sized boxes/cylinders/spheres contribute empty geometry;
 a whole code object must still produce a printable solid for insertion.
 
+`assert(condition[, message])` supports standalone statements, solid/profile child
+chains and expression chains. Failed assertions abort the whole code object;
+they do not discard just the asserted solid. Parameter-dependent conditions remain
+in native assertion guards and are checked again on edits. Expression guards
+support numeric scalars and nonempty nested numeric vectors, including structural
+inspection and helper arguments. Constant successful assertions can return other
+typed values. Parameter-dependent empty/string/undefined results and asserted loop
+or comprehension input vectors, and assertions inside omitted `echo()` output,
+and combinations with the `!` root modifier are rejected rather than losing
+their checks.
+Optional constant string messages are archived in conversion notices; failures use
+a generic assertion diagnostic. The existing resource limits also bound assertion
+expansion. Exported geometry is an already validated snapshot.
+
+Simple fixed-cardinality comprehensions can also appear among literal list
+members, for example `[[0,0], for(i=[0:2]) points[i]]`; their generated elements
+are flattened into that list. Each generator retains the 64-iteration bound and
+the complete resulting list retains the 256-item bound. Filters, `each` and
+chained comprehension generators remain unsupported.
+
 OpenSCAD strings remain typed values, separate from numeric CAD expressions.
 Global settings, local bindings, module/function results, string indexing and
 bounded string helpers can feed colour selectors or geometry conditions. Numeric

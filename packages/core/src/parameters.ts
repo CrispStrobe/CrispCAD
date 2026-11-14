@@ -113,6 +113,7 @@ export function evaluateExpression(source: string, lookup: (name: string) => Qua
   function evaluate(node:Expr):Quantity {
     if(node.kind==='literal')return node.value;
     if(node.kind==='name')return finite(lookup(node.name));
+    if(node.kind==='call'&&node.name==='assertValue'){if(node.args.length!==2)error(t('Assertion requires condition and value'));if(!truth(evaluate(node.args[0])))error(t('Assertion failed'));return evaluate(node.args[1]);}
     if(node.kind==='call')return evaluateMathFunction(node.name,node.args.map(evaluate));
     if(node.kind==='conditional')return evaluate(truth(evaluate(node.test))?node.yes:node.no);
     if(node.kind==='unary'){const q=evaluate(node.value);if(node.op==='!')return bool(!truth(q));numeric(q);return finite({...q,value:node.op==='-'?-q.value:q.value});}
