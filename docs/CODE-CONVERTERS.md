@@ -546,3 +546,13 @@ in [the resize/extrusion evidence](evidence/resize-extrusion-oracle-2026-11-14.j
 option lowering; existing saved native programs keep their existing instructions.
 JSCAD export of resize is still an explicit gap; SCAD and native round trips,
 parameter/history edits and resized Jolt cutouts have regression coverage.
+
+The same frozen 256-file replay yields **166 positive solids** (previously 165):
+two newly supported files, 37 unsupported, 33 limited, 18 failed and two timeouts.
+One previous positive hit the unchanged 15-second deadline. Its native program is
+identical before/after; alternating old/new engine rechecks both pass and time out.
+Successful rechecks retain its previous volume, bounds and triangle count. The
+other 164 previous positives retain volume and bounds at 1e-6 tolerance. The frozen
+result is kept as measured; retries do not replace its timeout with a pass.
+73 of the 166 positives still have conversion notices. This is execution coverage,
+not upstream fidelity certification. See the [aggregate replay and validation](evidence/import-engine-resize-2026-11-14.json).
