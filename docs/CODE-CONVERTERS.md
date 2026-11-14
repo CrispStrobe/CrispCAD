@@ -11,16 +11,47 @@ The GUI, SDK, CLI and MCP share the converters.
 
 | Input | Supported |
 | --- | --- |
-| OpenSCAD | Scalar/vector/boolean assignments before geometry; arithmetic, degree math and dependent parameters; top-level reusable modules and scalar/vector functions with positional/named/default arguments; declarative module/operator-local bindings; fixed vector indexing; cube/sphere/cylinder, including r1/r2 and d1/d2 tapers; parametric range/scalar-list loops, fixed vector-list loops, if/else, scalar conditional/comparison/logic expressions; centering and radius/diameter arguments; translate, XYZ/scalar-Z rotation, positive scale; union/difference/intersection and 3D convex hull; 2D profile Booleans, hulls, transforms and polygon paths/holes; linear_extrude with twist, slices and scalar/vector top scale; positive-angle rotate_extrude on nonnegative radial profiles. |
-| JSCAD | CommonJS/ES imports of @jscad/modeling; exported main or explicitly selected entry; helper functions, destructuring/default arguments, arithmetic/Math; bounded loops and arrays; scalar input parameters; cube/cuboid/cylinder/sphere/polygon, rectangle/circle/ellipse profiles and planar profile transforms; 2D/3D Booleans, convex hull and hullChain; circular cylinderElliptic tapers; empty 3D geometry; translate/rotate/scale and axis shortcuts; flat output colours; basic vec2 maths and extrudeLinear with twist and steps; positive-angle extrudeRotate with start angle. |
-| Native CAD Script | Primitives/CSG/transforms/repeat, frustum, hull, empty, choose, forRange and forValues, plus simple extrude, retained extrudeProfile and revolve over bounded 2D profile expressions. Profile closes automatically, needs 3–256 points, and rejects zero edges/area and self-intersections. |
+| OpenSCAD | Typed scalar/vector/string values; final file/block assignments and forward references; lexical nested modules/functions and defaults; `children()` and indexed children; parameter-driven conditionals and multi-binding range/list loops; vector arithmetic/components/indexing; primitives including planar-faced polyhedra; reflections, signed scale, arbitrary-axis rotation, resize without automatic axes; hull and bounded 2D/3D Minkowski sums; profile Booleans, holes, loops, modules, text and round/sharp offsets; twisted/tapered linear extrusion and positive-angle revolution. |
+| JSCAD | Bounded CommonJS/ES modeling imports, helper functions, destructuring, arrays, loops and scalar input parameters; existing primitives plus indexed polyhedra; 2D/3D Booleans/hulls/hullChain; planar profiles and twisted extrusion; positive-angle rotational extrusion; 3D reflection and transforms; evaluated snapshots and flat output-colour metadata. |
+| Native CAD Script | Retained CSG including Minkowski, indexed planar-faced polyhedra, signed scale, mirror, arbitrary-axis rotation and resize; typed 2D construction trees with holes, text, offsets and profile loops/choices; extrusion/taper/twist/revolution; existing numeric parameters, patterns and lazy branches. |
 
 Cylinder/taper tessellation supports 3–4096 segments and sphere tessellation
 4–4096, subject to the 200,000 estimated-face budget. Small sphere counts may be
 rounded by Manifold; triangle layout is not promised. OpenSCAD uses 48 segments
-if $fn is absent, differing from its adaptive defaults. Extrusion profiles retain
+if all fragment controls are absent, differing from OpenSCAD adaptive defaults. Explicit
+$fa/$fs use radius-dependent fragment calculations for circles and cylinders;
+$fn takes precedence. Small sphere meshes still use native tessellation. Extrusion profiles retain
 the 256-point limit. Zero-sized boxes/cylinders/spheres contribute empty geometry;
 a whole code object must still produce a printable solid for insertion.
+
+OpenSCAD `color()` wrappers accept literal named/hex colors, constant RGB/RGBA
+vectors in [0,1], and optional constant alpha. They preserve solid geometry while
+omitting appearance; the converted CAD Script records that omission explicitly.
+Computed color expressions and unsupported arguments are diagnosed.
+Literal color strings may pass through module defaults, module arguments, and
+local bindings into `color()`. They retain a separate tagged type and never
+become numeric CAD Script expressions. Constant palettes use a separate tag and
+contain only literal color strings or nested palettes. A palette index must be a
+nonnegative integer literal or a module-local binding/argument with literal
+integer provenance; computed indices and global parameter lookup are rejected.
+Numeric vector indexing remains literal-only. Palette selection ends at the same
+validated `color()` endpoint and omission disclosure. Mixed numeric/color arrays,
+string indexing, arithmetic, functions, loops, global color data, and numeric
+coercion remain unsupported. Existing 256-item/32-depth limits still apply;
+local-binding evaluation and color data construction also share an 8,192-step
+budget, charged before recursive alias evaluation to bound branching aliases.
+
+`translate`, `rotate`, and `scale` accept a scoped `$fn` argument for their child
+geometry, including calls to local modules. Nested scopes restore the enclosing
+fragment count, and explicit primitive counts take precedence. Curved geometry
+keeps the existing finite integer segment limits and mesh budgets; unsupported
+transform arguments are rejected. The `#` preview highlight modifier retains its
+entire child geometry and records omitted highlight appearance in the converted
+source. `%`, `!`, and `*` modifiers remain unsupported because their semantics
+cannot be discarded while preserving the modeled solid.
+These semantics follow the official language documentation for
+[special variables](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Special_variables)
+and the [debug modifier](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Debug_Modifier).
 
 Source limit is 32 KiB. JSCAD has 20,000 interpreter steps, 64 iterations per loop,
 256 array items and call depth 32. The parsed AST is bounded to 8,192 nodes
@@ -32,17 +63,16 @@ limits are distinct from unsupported features and malformed input.
 
 Known gaps, deliberately diagnosed:
 
-- OpenSCAD include/use, recursive conditional function evaluation, vector/string
-  conditional expressions, multiple loop bindings in one for (nest for operators),
-  nested definitions, module
-  child operators, global reassignment/assignment after geometry, assignments in
-  anonymous blocks, 2D-profile-local bindings,
-  negative/cross-axis revolutions, minkowski, imported
-  meshes and arbitrary-axis transforms. BOSL2 library execution is not supported.
-- JSCAD external/local modules, arbitrary JavaScript/host APIs, unsupported math
-  helpers and geometry APIs, slice/callback extrusion, tapered-profile export,
-  lofts, curved sweeps and per-face materials. The pinned nuts-and-bolts
-  example currently stops specifically at extrusions.extrudeFromSlices.
+- External `include`/`use`, library resolution (including BOSL2), array/list
+  comprehensions, randomness/search helpers, symbolic numeric-to-string formatting,
+  general matrix arithmetic, anonymous-block assignment semantics, external meshes,
+  surface/image geometry, automatic resize axes and arbitrary-axis profile rotations.
+  Parameter-dependent recursive functions remain bounded rather than becoming an
+  unrestricted evaluator. Negative/cross-axis rotational profiles remain refused.
+- JSCAD slice/callback extrusion, general lofts/sweeps, external/local modules and
+  host APIs remain unsupported. Export to JSCAD refuses native Minkowski/resize,
+  text/offset profiles and tapered-profile extrusion where no supported lowering
+  exists. No flattening or substitute bounding solid is emitted.
 
 This is a tested subset, not a full OpenSCAD or JSCAD implementation. The goal is
 to make missing capabilities reproducible, then extend coverage from real files.
@@ -54,8 +84,16 @@ symbolically: changing a retained parameter recomputes every expanded use, rathe
 than baking it into a snapshot. Named vectors retain their scalar dependencies;
 vector indices currently require literal nonnegative integers. Module defaults
 use the definition scope; regular caller arguments do not leak into called modules.
-Special `$fn` parameters propagate through calls. Only file-scope module/function definitions are supported; `children()` and nested
-definitions remain explicit gaps. User functions expand scalar or vector results,
+Special `$fn` parameters propagate through calls. Direct module definitions are
+hoisted within each lexical block and capture that block's bindings and module
+registry. Forward references and inner name shadowing stay local to the block;
+top-level helpers retain their own declaration environment. Duplicate module
+definitions in one block are rejected. Calls restore local bindings, module
+registries and source position, including on failure, and retain the existing
+recursion, statement and expansion limits. Nested functions, `children()`, and
+module calls within 2D extrusion profiles remain explicit gaps. These scope rules
+follow the official [language scope documentation](https://files.openscad.org/documentation/manual/The_OpenSCAD_Language.html#Scope).
+User functions expand scalar or vector results,
 including generated polygon points, while retaining scalar dependencies.
 
 Module and operator block assignments use lexical scope. The final assignment
@@ -85,7 +123,7 @@ Math functions include degree-based sin/cos/tan and inverse trigonometry, atan2,
 sqrt, abs, floor/ceil/round, exp/ln/log, pow and min/max. This bounded whitelist is
 also available to native parameter formulas. Invalid domains/nonfinite results
 fail; inverse trigonometry returns scalar degree values. Symbolic expressions
-are capped at 256 characters, preventing recursive argument expansion from
+are capped at 1,024 characters, preventing recursive argument expansion from
 exhausting memory. Construction depth and statement limits also apply.
 
 JSCAD is converted at selected parameter values into an **evaluated snapshot**. Its interpreter
@@ -228,3 +266,46 @@ language semantics and the exposed construction IR remain the larger coverage ga
 JSCAD parameters still become evaluated snapshots; per-face colours and original
 foreign feature identities are not retained. Tapered profiles round-trip through
 native CAD/SCAD; JSCAD export refuses them until slice extrusion is supported.
+
+## Expanded language and engine pass — 2026-11-14
+
+The independent translator now uses a typed value parser rather than treating
+all input as numeric text. Literal strings remain distinct from scalar expressions;
+no string can inject native source. Numeric parameter dependencies remain editable.
+String settings resolve at conversion and are reported as such; numeric selectors
+can retain choices between string/profile branches. Unknown/missing values can be
+tested with `is_undef`. Inactive constant branches and boolean guards are lazy.
+File-scope assignments use the final declaration even after geometry. Module input
+normalization reads the incoming value instead of creating a false cycle.
+
+Local bindings are immutable and memoized within their lexical invocation. Their
+captured module/function environments do not change under inner shadowing. A
+16,384-value-visit budget bounds actual expansion; shared alias DAGs can be indexed
+without expanding every branch. Source is still limited to 32 KiB / 8,192 tokens,
+call/nesting depth 32, 64 values per loop, and 4,096 translator construction visits.
+Native limits are 256 statements, 1,024 expanded nodes, 16,384 evaluation steps and
+200,000 estimated/evaluated faces. Scalar expressions allow 1,024 characters and
+512 tokens; these are finite execution limits, not complete-language promises.
+
+Text profiles use the existing unmodified Apache-2.0 Droid vector fonts, shared
+with manual lettering. An original bounded outline decoder feeds CrossSection;
+Three's independent font/shape path supplies the test reference. Font metrics,
+style and kerning may differ from the foreign source and are disclosed. Supported
+text is left-to-right, at most 128 printable glyphs, with explicit missing-glyph
+errors. Profile offsets support round or sharp miter joins; chamfer joins remain
+refused. Planar Minkowski uses convex/triangle decomposition and union of actual
+pair sums, with a pair budget, rather than substituting a hull of the whole input.
+Polyhedron faces are planar, simple and triangulated with original bounded ear
+clipping; SCAD winding is reversed into the native convention.
+
+Conversion notices survive in generated code and are exposed through
+`getOpenSCADImportWarnings` to GUI, CLI, MCP and insertion provenance. The GUI
+shows a brief status and collapsed notes. Source colours/transparency and preview
+highlights are omitted explicitly; render-disabled/background geometry is excluded.
+Actual kernel resource refusals carry `resource-limit` through feature diagnostics.
+
+The integrated offline library includes the VPS agent's 72 reviewed MIT source
+models alongside the existing 39 entries. A corrected scoped-$fn walking-stick
+mesh uses a new derivative path; the previous file remains byte-identical for
+historical provenance. Archived sources are unchanged and qualification is
+separate from admission and runtime collision checks.

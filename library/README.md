@@ -107,7 +107,7 @@ inserted gear; a passing positive-volume trial is separate from those checks.
 
 ## Browser previews
 
-All 36 host-bundled items have static PNG previews generated from their actual
+All 111 host-bundled items have static PNG previews generated from their actual
 bounded source conversion and evaluated solids. Previews are keyed by original
 source SHA-256; the standalone host refuses a bundled item without its thumbnail.
 They are presentation assets, not geometry/printability/physics qualification.
@@ -125,9 +125,96 @@ Thumbnail browsing performs no model downloads or project/history writes. Import
 external catalogues without a host-supplied preview show an explicit unavailable
 placeholder; the editor does not invent an image or fetch their STL automatically.
 
+## External corpus models available in the editor
+
+The source archive contains **1,406** files. A reviewed subset of **72** is
+independently dependency-complete (no external includes/assets) and **72** are
+bundled for selection and insertion in File → Model library. These are separate
+counts: the other 1,334 archived files have not been admitted for editor insertion.
+422 archive records lack a recorded dependency blocker; that is not proof of
+dependency completeness or renderability. The 984 recorded blockers remain.
+
+The first twelve MIT selections from Angelo Nicoli's Asset Collection are
+Beam Angular, Beam H,
+Key Simple, Roll Holder, Angle Shelf, Sign 01, Sign 02, Washer, Transistor,
+Stairs 01, Bookshelf 01 and Chalkboard 01. The byte-identical OpenSCAD originals
+are in `sources/corpus-selection/`; exact upstream paths, commit, source hashes
+and retained licence evidence are in `editor-corpus-manifest.json`. Full MIT
+notice text travels with project provenance and attribution export.
+
+The second batch adds Arrow 01, Base cabinet 01, Beam C, Bookshelf 02,
+Box Wood 01, Chair 01, Door 01, Flange 01, Ladder 01, Sofa, Table 01 and
+Vent Grid, using the same importer, loader, original-byte and notice checks.
+
+The third batch adds Base cabinet 02, Bed 01, Bed 02, Bench 01, Bench 02,
+Chair 02, Chair 03, Fireplace 01, Table 02, Table 03, Table Small 01 and
+Window 01. These also use the existing runtime without source adaptations.
+
+The fourth batch adds Building 01, Chalkboard 02, Cone 01, Crystal, Key,
+Lamp 01, Lever Handle, Soda Cup 01, Stairs 02, Stairs 03, Traffic Light and
+Tootbrush (the upstream spelling). Original bytes and notices are unchanged.
+
+The fifth batch adds Electric Wire Plug, Flange 03, Resistor, Street 02,
+Street 03, Street 06, Sword 01, Crossed cubes (upstream `x`), Banner 01,
+Raccordo, Street 01 and Street 05. Scoped transform `$fn` and literal colour
+defaults preserve child geometry; `#` highlighting preserves the rendered solid
+and records omitted preview appearance. Original files remain unchanged.
+These counts are source entries: Street 03 and Street 06 have identical derived
+geometry and remain separate records for their distinct original files. The
+72 selected source entries currently have 71 distinct derived STL hashes.
+
+The sixth batch adds Street 04, Eyebolt, Ladder 02, Wall 04, Fence 01,
+Fence 02, Building 02 and Walking Stick. Bounded local module declarations
+retain lexical bindings and isolated module registries while caller `$fn`
+remains dynamic. This batch qualifies eight sources, rather than assuming twelve.
+
+The seventh batch adds Ingot 01, Coin 01, LED 01 and Sauce Bottle. Tagged
+literal colour palettes support bounded nested palettes and literal integer
+selection inside module scopes. Palettes can reach only validated `color()`;
+numeric arrays, numeric geometry, functions and loops retain their separate
+rules. Alias evaluation has a cumulative budget to bound branching expansion.
+Original colour is omitted as before; original source bytes remain intact.
+
+Of the 1,334 archive sources outside this editor selection, 984 have recorded
+dependency blockers and 350 have no recorded blocker but are not admitted for
+editor use. Nine licence-quarantined staged sources remain outside the archive.
+`Shaft_01.scad` and `Shaft_02_With_Keyway.scad` remain deferred because their
+signed radial profiles are unsupported; these remain archival originals,
+not additional licence quarantines.
+`Wood_Crate.scad`, `Wall_01.scad`, `Wall_02.scad`, `Sign_03.scad`,
+`Wall_03.scad`, `Flag_France.scad`, `Flag_Italy.scad` and `Floor_01.scad`
+also remain outside the
+editor selection: their converted meshes failed closed-solid topology checks.
+These are geometry screening failures, separate from dependency or licence
+exclusions; no repairs or source substitutions were applied.
+`Notebook.scad` produced 16,406 triangles, exceeding this selection's unchanged
+10,000-triangle policy. Abacus and Arc 01/02 still exceed the existing native
+node budget. These recorded limits are preserved; helper-module support does
+not qualify every source that can now parse.
+
+Each selected model passes the existing bounded importer, Manifold evaluation,
+and hash-bound STL screening for a closed positive-volume solid, at most 10,000
+triangles and 200 mm extent. Coordinates are unchanged; millimetres and Z up are
+explicit curator assumptions. Some upstream models are very small scene props;
+insertion does not certify real-world dimensions or manufacturability. Constant
+colour wrappers preserve geometry while appearance colours are omitted. Jolt
+collision, printing and dimensional equivalence to the upstream renderer are
+not qualified by these checks. The original editable source stays archived;
+the editor inserts the independent translator's editable CAD Script conversion.
+
+Reproduce just this subset using installed local runtimes:
+
+```sh
+npm run library:corpus:check
+node scripts/generate-library-previews.mjs --corpus-only
+```
+
+The second command updates only the 72 selected thumbnails. Neither command
+downloads assets or executes the upstream OpenSCAD application.
+
 ## Supported CC0 additions — 2026-11-14
 
-The offline gallery now contains 39 editable-source models. The new
+The offline gallery now contains 111 editable-source models. The new
 `supported-models-manifest.json` admits **Quarter cylinder**, **Square pyramid** and
 **Nested open frames** from Ghostkeeper/SlicerTestModels at pinned revision
 `e1bbc8eec047c2fb604b71f7e4793c3e0189fd6d`. Sources are unmodified, including
@@ -140,7 +227,7 @@ STLs offline, checks pinned source/licence hashes, screens closed positive-volum
 meshes, and compares volumes with independent polygon geometry or rectangle-cell
 integration. `--write` regenerates the same outputs. New source or grant identities
 require a new review. `npm run library:previews:generate` renders actual evaluated
-geometry for all 39 gallery entries. Browsing and insertion use bundled bytes;
+geometry for all 111 gallery entries. Browsing and insertion use bundled bytes;
 research-only datasets and unsupported seeds are not gallery entries.
 
 STL screening is separate from Jolt qualification. These models do not carry a

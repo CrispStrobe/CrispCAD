@@ -38,7 +38,9 @@
     "library:examples:check": "npm run build:packages && node scripts/generate-example-library.mjs --check",
     "library:fixtures:generate": "npm run build:packages && node scripts/generate-fixture-library.mjs --write",
     "library:fixtures:check": "npm run build:packages && node scripts/generate-fixture-library.mjs --check",
-    "library:previews:generate": "npm run build:packages && node scripts/generate-library-previews.mjs"
+    "library:previews:generate": "npm run build:packages && node scripts/generate-library-previews.mjs",
+    "library:corpus:generate": "npm run build:packages && node scripts/generate-corpus-editor-library.mjs --write",
+    "library:corpus:check": "npm run build:packages && node scripts/generate-corpus-editor-library.mjs --check"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",

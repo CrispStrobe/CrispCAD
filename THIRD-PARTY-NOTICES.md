@@ -109,6 +109,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
+## Selected Asset Collection models
+
+Seventy-two OpenSCAD models and their derived meshes/previews are from Angelo Nicoli's
+MIT-licensed OpenSCAD-Snippet at commit
+`4f9e3d4d16b5e427186c1f89e10c2181c437dee6`. Original source paths and per-file
+identities are retained in `library/editor-corpus-manifest.json`; the complete
+copyright and permission notice is retained in
+`library/evidence/corpus-selection-MIT-LICENSE.txt` and in exported model
+attribution. The wider archived source corpus retains its individual notices
+under `library/corpus/repos/` and per-file grants in `library/corpus/manifest.json`.
+
 ## Acorn JavaScript syntax parser
 
 Acorn 8.17.0, MIT; https://github.com/acornjs/acorn. Used by the original bounded JSCAD converter. No submitted JavaScript is executed.

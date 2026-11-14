@@ -8,6 +8,7 @@ export interface ModelLibraryOptions {
  localFiles?:ReadonlyMap<string,Uint8Array>;
  /** Host-reviewed thumbnails keyed by the exact original source SHA-256. */
  previews?:ReadonlyMap<string,string>;
+ /** Asset ID takes precedence over a generic SPDX notice (copyright holders differ). */
  licenceTexts?:ReadonlyMap<string,string>;
  cache:ModelLibraryFileCache;
  fetch?:typeof globalThis.fetch;
@@ -44,7 +45,7 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
  }
  function appendInfo(asset:ModelLibraryAsset,technical:HTMLElement){
   const licence=el('section');licence.className='model-library-licence';licence.append(el('h4',t('Licence & attribution')));
-  const text=el('textarea');text.readOnly=true;text.setAttribute('aria-label',t('Licence & attribution'));text.value=`${asset.licence.attribution}\n\n${options?.licenceTexts?.get(asset.licence.spdx)??''}`.trim();licence.append(text);
+  const text=el('textarea');text.readOnly=true;text.setAttribute('aria-label',t('Licence & attribution'));text.value=`${asset.licence.attribution}\n\n${options?.licenceTexts?.get(asset.id)??options?.licenceTexts?.get(asset.licence.spdx)??''}`.trim();licence.append(text);
   const links=el('nav');links.append(link(t('Original source'),asset.sourceUrl),link(t('Licence evidence'),asset.licence.evidenceUrl));licence.append(links);details.append(licence);
   const advanced=el('details');advanced.className='model-library-technical';advanced.append(el('summary',t('Technical details')),technical);details.append(advanced);
  }

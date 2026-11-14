@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {test,expect,type Page} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
+import {readFileSync} from 'node:fs';
 import {unzipSync} from 'fflate';
 import {createHash} from 'node:crypto';
 import {checkModelLibrarySTL} from '@brickwright/cad-geometry';
@@ -142,15 +143,36 @@ test('recorded collision reports expose bindings and limits without qualifying o
 // Gallery acceptance: actual bundled images, a usable primary action and compact details.
 test('every bundled model has a preview and inserts without mandatory notes',async({page})=>{
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');const before=await saved(page),dialog=await open(page);
- const cards=dialog.locator('.model-library-card');await expect(cards).toHaveCount(39);await expect(cards.locator('img')).toHaveCount(39);expect((await cards.first().boundingBox())!.height).toBeGreaterThanOrEqual(170);expect(await cards.first().evaluate(card=>{const outer=card.getBoundingClientRect(),label=card.querySelector('strong')!.getBoundingClientRect();return label.top>=outer.top&&label.bottom<=outer.bottom;})).toBe(true);
+ const cards=dialog.locator('.model-library-card');await expect(cards).toHaveCount(111);await expect(cards.locator('img')).toHaveCount(111);expect((await cards.first().boundingBox())!.height).toBeGreaterThanOrEqual(170);expect(await cards.first().evaluate(card=>{const outer=card.getBoundingClientRect(),label=card.querySelector('strong')!.getBoundingClientRect();return label.top>=outer.top&&label.bottom<=outer.bottom;})).toBe(true);
  await expect.poll(()=>cards.locator('img').evaluateAll((images:any[])=>images.every(image=>image.complete&&image.naturalWidth>0))).toBe(true);
  expect(await saved(page)).toEqual(before);await expect(dialog.getByRole('button',{name:'Close model library'})).toHaveText('×');
  await cards.filter({hasText:'Named dependencies'}).click();const insert=dialog.getByRole('button',{name:'Insert editable source',exact:true});await expect(insert).toBeEnabled();
  await expect(dialog.locator('.model-library-technical')).not.toHaveAttribute('open');await expect(dialog.getByRole('textbox',{name:'Licence & attribution',exact:true})).toHaveValue(/Copyright/);
  expect(await dialog.evaluate(node=>{const action=node.querySelector('.library-insert')!,licence=node.querySelector('.model-library-licence')!;return !!(action.compareDocumentPosition(licence)&Node.DOCUMENT_POSITION_FOLLOWING);})).toBe(true);
  await insert.click();await expect(dialog.getByRole('status')).toContainText('Editable source inserted');const added=await saved(page);expect(added.roots).toHaveLength(before.roots.length+1);expect(added.provenance.records[0].modificationNotes).toContain('no manual changes');
- await dialog.getByLabel('Model type',{exact:true}).selectOption('mesh');await expect(cards).toHaveCount(0);await dialog.getByLabel('Model type',{exact:true}).selectOption('source');await expect(cards).toHaveCount(39);
+ await dialog.getByLabel('Model type',{exact:true}).selectOption('mesh');await expect(cards).toHaveCount(0);await dialog.getByLabel('Model type',{exact:true}).selectOption('source');await expect(cards).toHaveCount(111);
  expect(await dialog.evaluate(node=>node.scrollWidth<=node.clientWidth)).toBe(true);
+});
+
+for(let group=0;group<18;group++)test(`reviewed dependency-complete external sources insert offline: group ${group+1}`,async({page,context})=>{
+ const assets=JSON.parse(readFileSync('library/editor-corpus-manifest.json','utf8')).assets;
+ expect(assets).toHaveLength(72);
+ await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ const before=await saved(page);let requests=0;await context.setOffline(true);page.on('request',()=>requests++);
+ // Four complete UI cycles per case keep the normal 45-second test budget.
+ for(const asset of assets.slice(group*4,group*4+4)){
+  const dialog=await open(page);
+  await dialog.getByRole('button',{name:`${asset.title} · MIT`,exact:true}).click();
+  await expect(dialog.getByRole('textbox',{name:'Licence & attribution',exact:true})).toHaveValue(/Angelo Nicoli/);
+  await dialog.getByRole('button',{name:'Insert editable source',exact:true}).click();
+  await expect(dialog.getByRole('status')).toContainText('Editable source inserted');
+  const inserted=await saved(page),record=inserted.provenance.records[0];
+  expect(inserted.roots).toHaveLength(before.roots.length+1);expect(record.asset.id).toBe(asset.id);
+  expect(record.selectedFile.sha256).toBe(asset.original.sha256);expect(record.asset.sourceRevision.commit).toBe(asset.version);
+  await dialog.getByRole('button',{name:'Close model library'}).click();
+  await page.getByRole('button',{name:'Undo',exact:true}).click();expect(await saved(page)).toEqual(before);
+ }
+ expect(requests).toBe(0);
 });
 
 test('new CC0 frame source inserts offline and survives project serialization',async({page})=>{
