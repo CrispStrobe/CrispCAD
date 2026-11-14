@@ -21,3 +21,11 @@ test('desktop host exports project and iteration archives through the native sav
   const archive=await page.evaluate(()=>JSON.parse(atob((window as unknown as {exports:{data:string}[]}).exports[1].data)));
   expect(archive.format).toBe('brickwright-cad-history');expect(archive.revisions.length).toBeGreaterThanOrEqual(2);
 });
+
+test('native Model Source command opens the synchronized dock without editing the project',async({page})=>{
+ await page.addInitScript(()=>{(window as any).brickwrightDesktop=true;(window as any).webkit={messageHandlers:{cadHost:{postMessage:async()=>null}}};});
+ await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');await addShape(page,'Box');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ const before=await page.evaluate(()=>localStorage.getItem('brickwright-cad:standalone:v1'));
+ await page.evaluate(async()=>{await (window as any).brickwrightExecuteCommand('model-source');});await expect(page.getByLabel('Design source',{exact:true})).toBeVisible();await expect(page.getByLabel('Design source',{exact:true})).toHaveValue(/box\(/);
+ expect(await page.evaluate(()=>localStorage.getItem('brickwright-cad:standalone:v1'))).toBe(before);
+});

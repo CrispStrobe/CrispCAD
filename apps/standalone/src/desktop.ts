@@ -1,7 +1,7 @@
 import {t} from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 import type {CadEditor,CadCommand,CadCommandState} from '@brickwright/cad-editor';
-const commands=new Set<CadCommand>(['new','open','save','import','export','undo','redo','cut','copy','paste','duplicate','delete','select-all','deselect','select','move','rotate','scale','home','fit','top','front','right','back','left','bottom','projection','workplane','objects','properties','drop','parameters','shapes','sketch','readout','code','union','subtract','intersect']);
+const commands=new Set<CadCommand>(['new','open','save','import','export','undo','redo','cut','copy','paste','duplicate','delete','select-all','deselect','select','move','rotate','scale','home','fit','top','front','right','back','left','bottom','projection','workplane','objects','properties','drop','parameters','shapes','sketch','readout','code','model-source','union','subtract','intersect']);
 export function mountDesktopHost(getEditor:()=>CadEditor|undefined,actions:Record<string,()=>void>){
  const handler=window.brickwrightDesktop?window.webkit?.messageHandlers.cadHost:undefined;
  const send=async<T>(action:string,data?:string,mode?:string)=>{if(!handler)throw new Error(t('Native host unavailable'));return await handler.postMessage({action,...(data===undefined?{}:{data}),...(mode===undefined?{}:{mode})}) as T;};
