@@ -621,3 +621,10 @@ Open semantics changes: all pass. They cover complete history on duplicate/expor
 active/inactive rename, partial multi-file import failures, current-model retention,
 Trash/reload/restore with identical revisions, native folder recovery after IndexedDB
 rebuild with a stale duplicate backup, and phone menu bounds/rename cancellation.
+
+Mac build **18**, from clean source
+`9d4241f43912ef983b79370fed91aa4c25d6d8ba`, passed native menu, clipboard, camera,
+model/source, library-file and history-pruning smoke checks. It was locally signed,
+installed in `~/Applications/Brickwright CAD.app` and launched. The running asset
+receipt reports that revision with dirty=false; the installed bundle reports 18.
+Existing user projects and histories were retained.
