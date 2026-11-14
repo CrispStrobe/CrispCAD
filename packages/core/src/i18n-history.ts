@@ -7,7 +7,7 @@ const labels = new Set([
   'Before restoring an iteration', 'Opened', 'Opened model', 'Opened project', 'Edit', 'Rename design',
   'Edit parameters', 'Detach shape generator', 'Edit shape parameters',
   'Add code object', 'Edit code object', 'Add sketch', 'Extrude sketch',
-  'Add sketch extrusion', 'Edit sketch', 'Edit sketch extrusion', 'Add shape',
+  'Add sketch extrusion', 'Edit sketch', 'Edit sketch extrusion', 'Add shape', 'Place shape', 'Change solid/hole role',
   'Add box', 'Add cylinder', 'Add sphere', 'Edit object', 'Transform selection',
   'union', 'intersect', 'Subtract (first selected is the base)', 'Separate operands',
   'Duplicate', 'Delete', 'Detach joints', 'Import geometry', 'Cut objects',

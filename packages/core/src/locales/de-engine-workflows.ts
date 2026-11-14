@@ -41,5 +41,19 @@ export const messages:Record<string,string>={
 "Union subtracts hole shapes from solid shapes":"Vereinigen zieht Bohrungen von Körpern ab",
 "Printable solid":"Druckbarer Körper",
 "Random values use the repeatable Brickwright generator; seeded sequences differ from OpenSCAD. Unseeded calls use seed 1.":"Zufallswerte verwenden den wiederholbaren Brickwright-Generator; Folgen mit Startwert unterscheiden sich von OpenSCAD. Aufrufe ohne Startwert verwenden 1.",
-"at most 256 code values are supported":"Höchstens 256 Codewerte werden unterstützt"
+"at most 256 code values are supported":"Höchstens 256 Codewerte werden unterstützt",
+"Choose a valid surface":"Wählen Sie eine gültige Fläche",
+"This driven rotation is too complex for surface placement":"Diese parametergesteuerte Drehung ist für die Flächenplatzierung zu komplex",
+"Choose a surface. Esc cancels.":"Fläche wählen. Esc bricht ab.",
+"Drag onto a highlighted surface.":"Auf eine hervorgehobene Fläche ziehen.",
+"Drag a shape onto the workplane or a face.":"Form auf die Arbeitsebene oder eine Fläche ziehen.",
+"Undock shape library":"Formenbibliothek lösen",
+"Dock shape library at lower right":"Formenbibliothek unten rechts andocken",
+"Shape browser":"Formenbrowser",
+"Popup":"Aufklappfenster",
+"Lower right":"Unten rechts",
+"Place shape":"Form platzieren",
+"Change solid/hole role":"Körper/Bohrung ändern",
+"Drag a shape onto the grid or a face.":"Form auf das Raster oder eine Fläche ziehen.",
+"Drag, or choose a shape then tap a surface.":"Ziehen oder Form wählen und auf eine Fläche tippen."
 };

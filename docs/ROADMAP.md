@@ -147,3 +147,14 @@ Next: integrate constrained sketch entities and the qualified geometric worker
 through these same transactions; add feature suppression/rollback and richer
 source mapping only with their retained dependency models. Existing source-backed
 primitives, sketches, booleans and generators provide the shared foundation.
+
+## Fast construction follow-up (2026-11-14)
+
+Delivered: optional lower-right shapes dock, drag/tap onto highlighted faces,
+editable oriented placement previews, fine snapping, safe cancellation, Solid/Hole
+cutters and rectangle selection. Existing popup insertion and transform workflows
+remain available. See [workflow acceptance](UX-AND-PARAMETRIC.md#fast-construction-workflows-2026-11-14).
+
+Next priorities: previewed alignment, persistent face workplanes, duplicate-repeat,
+lock/hide/isolate and direct dimension handles. Keep these contextual and usable
+without a keyboard; do not add another permanent ribbon or explanatory text wall.

@@ -11,10 +11,14 @@ full constrained sketches and an exact surface/solid backend remain roadmap work
 
 ## Modeling
 
-- Searchable shapes, practical part templates and editable generators for screws,
+- Searchable shapes with an optional lower-right dock. Drag shapes onto highlighted
+  faces, or tap a shape and then a surface on tablets. Placement previews snap,
+  orient to faces and commit as one undoable edit.
+- Practical part templates and editable generators for screws,
   threads, lettering and other parts. Name tags support rounded corners and bundled
   fonts; their text remains editable in Properties.
-- Retained union, subtraction and intersection inputs. Edit source dimensions after
+- Solid/Hole cutters and rectangle selection, with retained union, subtraction and
+  intersection inputs. Edit source dimensions after
   combining parts, and drive dimensions or transforms with named, unit-aware formulas.
 - Rectangle/circle sketches and retained extrusions on principal planes.
 - Move, rotate and resize through handles or numbers. Optional on-canvas values

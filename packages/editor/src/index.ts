@@ -15,6 +15,10 @@ export type {NavigationPreset} from './camera-input.js';
 import { mountViewport } from './viewport.js';
 import { editorStyle } from './style.js';
 import { toolIcon } from './icons.js';
+import {placeFragment} from './surface-placement.js';
+import type {PlacementPointer} from './surface-placement.js';
+import type {ShapeBrowserLayout} from './shape-picker.js';
+import type {ShapePreset} from './shapes.js';
 import { mountShapePicker } from './shape-picker.js';
 import { createPresetDocument, evaluatedPreview } from './shapes.js';
 import {mountModelSourcePanel} from './model-source-panel.js';
@@ -28,6 +32,8 @@ export interface CadEditorOptions {
   nativeMenus?:boolean;
   modelLibrary?: ModelLibraryOptions;
   navigationPreset?:NavigationPreset;
+  shapeBrowserLayout?:ShapeBrowserLayout;
+  onShapeBrowserLayoutChange?:(layout:ShapeBrowserLayout)=>void;
   showTransformReadout?:boolean;
   appearance?:{background:string;baseplate:string};
   onTransformReadoutChange?:(visible:boolean)=>void;
@@ -106,16 +112,20 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   if(options.headerContent){options.headerContent.classList.add('host-actions');designBar.append(options.headerContent);}
   toolGroup('Shapes', 'shapes-tools');
   const shapesButton = button('Shapes', () => picker.toggle(), toolParent, 'shape-library-toggle');
-  const previewCache = new Map<string, Promise<string>>();
+  const previewCache = new Map<string, Promise<string>>(),presetBuilds=new Map<string,Promise<{document:CadDocument;geometry:GeometryResult}>>();
+  function buildPreset(preset:ShapePreset,text:string,svg?:string,font?:import('@brickwright/cad-core').GeneratorRecipe['font']){const lettering=['text','name-tag','icon-tag','qr'].includes(preset.id),key=JSON.stringify([preset.id,lettering?text:'',lettering?svg:'',lettering?font:'']);let pending=presetBuilds.get(key);if(!pending){const doc=createPresetDocument(preset.id,text,{svg,font});pending=client.evaluate(doc).then(geometry=>({document:doc,geometry}));presetBuilds.set(key,pending);if(presetBuilds.size>80)presetBuilds.delete(presetBuilds.keys().next().value!);void pending.catch(()=>{if(presetBuilds.get(key)===pending)presetBuilds.delete(key);});}return pending;}
+  let placing:{name:string;projectId:string;revision:number;selection:string[];ready:Promise<{document:CadDocument;geometry:GeometryResult}>;point?:PlacementPointer;dropping:boolean;role:'solid'|'hole'}|undefined;
+  function cancelShapePlacement(){const prior=placing;if(!prior)return;placing=undefined;viewport.cancelPlacement();if(session.state.document.id===prior.projectId&&session.state.revision===prior.revision&&!session.state.selection.length)session.select(prior.selection);}
+  function beginShapePlacement(preset:ShapePreset,text:string,svg:string|undefined,font:import('@brickwright/cad-core').GeneratorRecipe['font'],point?:PlacementPointer){cancelShapePlacement();try{const pending=buildPreset(preset,text,svg,font),active={name:t(preset.name),projectId:session.state.document.id,revision:session.state.revision,selection:[...session.state.selection],ready:Promise.all([pending,whenIdle()]).then(([built])=>built),point,dropping:false,role:'solid' as const};placing=active;viewport.beginPlacement();session.select([]);if(point)viewport.movePlacement(point);void active.ready.then(({geometry})=>{if(placing!==active||disposed)return;viewport.setPlacementGeometry(geometry);if(active.point)viewport.movePlacement(active.point);}).catch(error=>{if(placing===active){cancelShapePlacement();report(error);}});}catch(error){report(error);}}
+  function moveShapePlacement(point:PlacementPointer){if(!placing)return;placing.point=point;viewport.movePlacement(point);}
+  async function dropShapePlacement(point:PlacementPointer):Promise<boolean>{const active=placing;if(!active||active.dropping)return false;active.dropping=true;active.point=point;try{const built=await active.ready;if(disposed||placing!==active)return false;if(session.state.document.id!==active.projectId||session.state.revision!==active.revision){cancelShapePlacement();return false;}const pose=viewport.movePlacement(point);if(!pose){cancelShapePlacement();return false;}const fragment=placeFragment(built.document,pose);if(active.role==='hole'){fragment.version=7;for(const id of fragment.roots)fragment.nodes[id].role='hole';}await client.evaluate(fragment);if(disposed||placing!==active)return false;if(session.state.document.id!==active.projectId||session.state.revision!==active.revision){cancelShapePlacement();return false;}placing=undefined;viewport.cancelPlacement();session.insert(fragment,[0,0,0],{mergeParameters:true,label:'Place shape'});await whenIdle();picker.placed(active.name);viewport.canvas.focus({preventScroll:true});return true;}catch(error){if(placing===active)cancelShapePlacement();throw error;}}
+  viewport.setPlacementHandlers(point=>{void dropShapePlacement(point).catch(report);},cancelShapePlacement);
   const picker = mountShapePicker(main, shapesButton, async (preset, text, svg,font) => {
-    const projectId=session.state.document.id,wasEmpty=!session.state.document.roots.length;const doc = createPresetDocument(preset.id, text, {svg,font}); const result = await client.evaluate(doc);
-    if (disposed) return;
-    if(session.state.document.id!==projectId)throw new Error(t('Shape insertion was canceled because a different model was opened'));
-    const minZ = Math.min(...result.bodies.map(body => body.bounds.min[2]));
-    session.insert(doc, [session.state.document.roots.length * 12, 0, -minZ],{mergeParameters:true});
-    await whenIdle();
-    if(wasEmpty)viewport.frame();
-  }, report, preset => { let preview=previewCache.get(preset.id); if(!preview){preview=client.evaluate(createPresetDocument(preset.id,'ABC')).then(result=>evaluatedPreview(result.bodies));previewCache.set(preset.id,preview);}return preview; });
+    const projectId=session.state.document.id,wasEmpty=!session.state.document.roots.length;const {document:doc,geometry:result}=await buildPreset(preset,text,svg,font);
+    if(disposed)return;if(session.state.document.id!==projectId)throw new Error(t('Shape insertion was canceled because a different model was opened'));
+    const minZ=Math.min(...result.bodies.map(body=>body.bounds.min[2]));session.insert(doc,[session.state.document.roots.length*12,0,-minZ],{mergeParameters:true});await whenIdle();if(wasEmpty)viewport.frame();
+  },report,preset=>{let preview=previewCache.get(preset.id);if(!preview){preview=buildPreset(preset,'ABC').then(built=>evaluatedPreview(built.geometry.bodies));previewCache.set(preset.id,preview);}return preview;},{layout:options.shapeBrowserLayout,onLayoutChange:options.onShapeBrowserLayoutChange,placement:{begin:beginShapePlacement,move:moveShapePlacement,drop:dropShapePlacement,cancel:cancelShapePlacement}});
+
   const add = (shape: Primitive) => {
     const transform = identityTransform(); const height = shape.kind === 'box' ? shape.size[2] : shape.kind === 'cylinder' ? shape.height : shape.radius * 2;
     transform.position = [session.state.document.roots.length * 12, 0, height / 2]; session.add(shape, { transform });
@@ -346,7 +356,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     run(()=>options.onCommandStateChange?.(commandState()));
   }
   function commandState():CadCommandState {const state=session.state,roots=state.selection.filter(id=>state.document.roots.includes(id));return {canUndo:state.canUndo,canRedo:state.canRedo,hasSelection:!!state.selection.length,canDelete:!!roots.length,canCombine:roots.length>=2,canExport:!!options.onExport&&!exporting&&!running&&!!built?.triangles&&builtRevision===state.revision,hasBodies:!!state.document.roots.length,ready:!running&&builtRevision===state.revision&&!!built};}
-  const unsubscribe = session.subscribe(state => {
+  const unsubscribe = session.subscribe(state => {if(placing&&(state.document.id!==placing.projectId||state.revision!==placing.revision))cancelShapePlacement();
     if (disposed) return;
     if (state.revision !== lastRevision) {
       lastRevision = state.revision; operationError = ''; buildTree(); buildInspector(); refreshButtons();
@@ -361,6 +371,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     const command = event.ctrlKey || event.metaKey; const key = event.key.toLowerCase(); let action: (() => unknown) | undefined;
     if(editable&&key!=='escape'&&!(command&&key==='s'))return;
     if(editable&&(key==='escape'||command&&key==='s'))(event.composedPath()[0] as HTMLElement).blur();
+    if(placing&&!command&&['h','s'].includes(key)){placing.role=key==='h'?'hole':'solid';viewport.setPlacementRole(placing.role);event.preventDefault();event.stopPropagation();return;}
+    if(placing&&(key==='delete'||key==='backspace')){cancelShapePlacement();event.preventDefault();event.stopPropagation();return;}
     if (command && key === 'z') action = () => event.shiftKey ? session.redo() : session.undo();
     else if (command && key === 'y') action = () => session.redo();
     else if (command && key === 's') action = () => deliver('bcad');
@@ -368,13 +380,14 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     else if(command&&key==='g')action=()=>event.shiftKey?session.separate(session.state.selection[0]):session.combine('union');
     else if(!command&&key==='h'&&session.state.selection.length)action=()=>session.setRole('hole');
     else if(!command&&key==='s'&&session.state.selection.length)action=()=>session.setRole('solid');
+    else if (!command && key === 'd') action = () => viewport.dropSelection();
     else if (command && key === 'd') action = () => session.duplicate();
     else if (command && key === 'c') action=()=>copySelection();
     else if (command && key === 'x') action=()=>copySelection(true);
     else if (command && key === 'v') action=()=>pasteSelection();
     else if ((command && key === 'k') || (!command && event.shiftKey && key === 'a')) action = () => picker.open(true);
     else if (key === 'delete' || key === 'backspace') action = () => session.remove();
-    else if (key === 'escape') action = () => {const cancelled=viewport.interacting; viewport.cancelTransform();menus.forEach(menu=>menu.open=false);if(cancelled)return;if(mode!=='select')setMode('select');else session.select([]); };
+    else if (key === 'escape') action = () => {const cancelled=viewport.interacting;cancelShapePlacement(); viewport.cancelTransform();menus.forEach(menu=>menu.open=false);if(cancelled)return;if(mode!=='select')setMode('select');else session.select([]); };
     else if (key === 'v') action = () => setMode('select');
     else if (!command&&key === 'f') action = () => viewport.frame(undefined,!event.shiftKey);
     else if (!command&&key==='o')action=()=>projectionButton.click();
@@ -462,11 +475,11 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   buildTree(); buildInspector(); lastRevision = session.state.revision; lastSelection = JSON.stringify(session.state.selection); viewport.setSelection(session.state.selection); void buildLatest(); refreshButtons();
   return {
-    session, whenIdle, openFile,importFile,executeCommand,setNavigation:viewport.setNavigation,setAppearance:viewport.setAppearance,get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
+    session, whenIdle, openFile,importFile,executeCommand,setNavigation:viewport.setNavigation,setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance:viewport.setAppearance,get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return; disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return;cancelShapePlacement(); disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;
