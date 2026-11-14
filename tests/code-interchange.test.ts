@@ -45,9 +45,49 @@ it('propagates tagged literal module colors without coercing strings into CAD ex
   'function size(c)=2;cube(size("red"));',
   'for(c=["red","blue"])color(c)cube(2);',
   'module part(c="red"){color(c[0])cube(2);}part();',
-  'module part(){colors=["red"];color(colors[0])cube(2);}part();',
   'module part(c="2); return box(9,9,9); //"){cube(c);}part();',
  ])expect(()=>importOpenSCAD(source),source).toThrow();
+});
+it('selects tagged constant palettes through literal module indices, defaults and lexical aliases',()=>{
+ const source='module part(palette=[["red","white"],["blue","#fff"]],Mat=0){alias=palette;shade=alias[Mat][1];color(shade)cube([2,3,4]);}part();';
+ expect(geometry(source).volume).toBeCloseTo(24);
+ expect(geometry(source.replace('part();','part(Mat=1);')).volume).toBeCloseTo(24);
+ expect(geometry(source.replace('part();','part(palette=[["green","#123"],["red","white"]],Mat=1);')).volume).toBeCloseTo(24);
+ expect(geometry('module outer(Mat=0){palette=["red","not a color"];module inner(){color(palette[Mat])cube(2);}translate([10,0,0]){Mat=1;inner();}}outer();').volume).toBeCloseTo(8);
+ expect(geometry('module part(){palette=["red"];index=0;alias=index;color(palette[alias])cube(2);}part();').volume).toBeCloseTo(8);
+ expect(importOpenSCAD(source).source).not.toContain('palette');
+});
+it('rejects computed palette indices and keeps palettes outside numeric, loop, function and global paths',()=>{
+ const wrap=(index:string)=>`module part(Mat=0){palette=["red","blue"];color(palette[${index}])cube(2);}part();`;
+ for(const index of ['-1','.5','1.0','2','1+0','Mat+0','unknown','fetch()','"0"'])expect(()=>importOpenSCAD(wrap(index)),index).toThrow();
+ for(const source of [
+  'global=0;module part(){palette=["red"];color(palette[global])cube(2);}part();',
+  'function index()=0;module part(Mat){palette=["red"];color(palette[Mat])cube(2);}part(index());',
+  'module part(Mat=0+0){palette=["red"];color(palette[Mat])cube(2);}part();',
+  'module part(){palette=["red"];index=0+0;color(palette[index])cube(2);}part();',
+  'module part(){palette=["red"];for(index=[0])color(palette[index])cube(2);}part();',
+  'module part(){palette=["red",2];color(palette[0])cube(2);}part();',
+  'module part(){palette=[["red"],[2]];color(palette[0][0])cube(2);}part();',
+  'module part(){palette=["red"];cube(palette);}part();',
+  'module part(){palette=["2"];cylinder(palette[0],1);}part();',
+  'module part(){palette=["red"];cube(palette+1);}part();',
+  'module part(){palette=["red"];for(c=palette)color(c)cube(2);}part();',
+  'module part(){palette=["red"];for(c=[palette])color(c[0])cube(2);}part();',
+  'function size(p)=2;cube(size(["red"]));',
+  'function palette()=["red"];color(palette()[0])cube(2);',
+  'palette=["red"];color(palette[0])cube(2);',
+  'module part(){palette=["not a color"];color(palette[0])cube(2);}part();',
+  'module part(i=0){vector=[2,3,4];cube(vector[i]);}part();',
+ ])expect(()=>importOpenSCAD(source),source).toThrow();
+});
+it('bounds palette alias expansion before a compact branching source can exhaust resources',()=>{
+ const aliases=['p0=["red"];',...Array.from({length:20},(_,i)=>`p${i+1}=[p${i},p${i}];`)].join('');
+ for(const source of [
+  `module part(){${aliases}color(p20${'[0]'.repeat(21)})cube(2);}part();`,
+  `module part(){palette=[${Array(257).fill('"red"').join(',')}];color(palette[0])cube(2);}part();`,
+  `module part(){palette=${'['.repeat(34)}"red"${']'.repeat(34)};cube(2);}part();`,
+ ]){try{importOpenSCAD(source);throw Error('Expected resource failure');}catch(error:any){expect(error.code,source).toBe('resource-limit');}}
+ expect(()=>importOpenSCAD('module part(){palette=[palette];color(palette[0])cube(2);}part();')).toThrow('dependency cycle');
 });
 it('scopes transform fragment counts through child modules and restores each enclosing scope',()=>{
  const counts=(shape:any):number[]=>'segments'in shape?[shape.segments]:'shapes'in shape?shape.shapes.flatMap(counts):'shape'in shape?counts(shape.shape):[];

@@ -28,8 +28,16 @@ omitting appearance; the converted CAD Script records that omission explicitly.
 Computed color expressions and unsupported arguments are diagnosed.
 Literal color strings may pass through module defaults, module arguments, and
 local bindings into `color()`. They retain a separate tagged type and never
-become numeric CAD Script expressions. String arithmetic, functions, indexing,
-arrays, and string use in numeric geometry remain unsupported.
+become numeric CAD Script expressions. Constant palettes use a separate tag and
+contain only literal color strings or nested palettes. A palette index must be a
+nonnegative integer literal or a module-local binding/argument with literal
+integer provenance; computed indices and global parameter lookup are rejected.
+Numeric vector indexing remains literal-only. Palette selection ends at the same
+validated `color()` endpoint and omission disclosure. Mixed numeric/color arrays,
+string indexing, arithmetic, functions, loops, global color data, and numeric
+coercion remain unsupported. Existing 256-item/32-depth limits still apply;
+local-binding evaluation and color data construction also share an 8,192-step
+budget, charged before recursive alias evaluation to bound branching aliases.
 
 `translate`, `rotate`, and `scale` accept a scoped `$fn` argument for their child
 geometry, including calls to local modules. Nested scopes restore the enclosing
