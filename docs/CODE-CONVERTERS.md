@@ -617,3 +617,27 @@ the timeout. This batch claims new native/JSCAD capabilities, not a frozen SCAD
 coverage gain. The [complete aggregate evidence](evidence/import-engine-loft-2026-11-14.json)
 records the 787-test full run, 79 final follow-up checks, 14 platform checks, SDK
 and Jolt checks, harness deadlines, limitations and iPad build 11 receipt.
+
+## Linked primitives and reductions — 2026-11-14
+
+Numeric `min`/`max` reductions now retain bounded ranges, simple scalar list
+comprehensions, filters and joined numeric lists. Empty imported reductions retain
+undefined guards; units and lexical loop bindings survive parameter edits.
+Boolean and nested-vector extrema are refused rather than silently coerced.
+
+JSCAD elliptical cylinders now retain a compact `ellipticFrustum` constructor,
+including point tips. Axis scale/mirror aliases, nested transform target arrays
+and short scale vectors are covered against the independent MIT JSCAD runtime.
+Line ends, partial angular intervals and nested/vector extrema remain gaps.
+Cube recipes and four editable screw families are available through GUI and
+model source/MCP; their contracts are in [the model documentation](PARAMETRIC-MODEL.md#cube-and-fastener-recipes).
+
+The frozen replay produced **167/256** solids: 37 unsupported, 34 limited,
+17 failed and one timeout. All 166 prior positives retain volume and bounds at
+1e-6 tolerance. The extra positive was a previous timeout, so this is not evidence
+of a new semantic coverage gain. One extrema failure advances to the construction
+budget. No production limit was raised and no research model was shipped.
+[Aggregate evidence](evidence/import-engine-cube-extrema-2026-11-14.json) records
+820 full-suite passes plus 29 overlapping final checks, 16 desktop/iPad browser
+checks, real Jolt recess/bore tests, the 1,358-message German audit, and offline
+installation/execution of all six SDK packages. GitHub Actions remain disabled.
