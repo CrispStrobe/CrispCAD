@@ -712,3 +712,14 @@ An 84-case boundary matrix covers three resolutions, four start angles and seven
 turn fractions; this prevents a radians-to-degrees rounding step from dropping a
 sector interval. The native constructor also exposes an optional explicit angular
 interval count while keeping density-based refinement available to native models.
+
+The final frozen replay improves **167 → 168/256** successful solids. All 167
+previous positives retain volume and bounds at 1e-6 tolerance. One previous parser
+failure now converts; the remaining results are 37 unsupported, 32 limited,
+18 failed and one timeout. Existing randomness and other fidelity notices remain
+visible; no research source or generated research model is shipped.
+
+[Aggregate evidence](evidence/import-engine-groups-sectors-2026-11-15.json) records
+865 full-suite passes (one optional skip), 19 overlapping final localization
+checks, 32 desktop/iPad browser checks, offline SDK execution, the nine original
+OpenSCAD grammar probes, and the independent angular-tessellation matrix.

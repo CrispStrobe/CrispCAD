@@ -761,3 +761,16 @@ Native smoke checks passed, including trackpad magnification, menus, clipboard,
 model-source, gallery and history retention. **Mac build 23** is installed and
 running in `~/Applications/Brickwright CAD.app`; its live asset receipt and bundle
 version were verified. Existing app data and model histories were retained.
+
+## Grouped generators and angular tapers — Mac build 24
+
+Built from clean source `c090dd921f7e458b4d913e8959c6b2b85b5052c4`.
+Includes grouped OpenSCAD generator bodies/comma continuations and angular
+elliptical tapers with retained source-radian tessellation counts. Supported and
+refused collision cases remain independently gated and documented.
+
+Native smoke checks passed. **Mac build 24** is installed and running in
+`~/Applications/Brickwright CAD.app`; the live asset receipt and bundle version
+were verified. Existing projects and model histories were retained. Validation,
+reference probes and the 167→168/256 replay are recorded in
+`docs/evidence/import-engine-groups-sectors-2026-11-15.json`.

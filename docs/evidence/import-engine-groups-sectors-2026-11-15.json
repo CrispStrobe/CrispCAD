@@ -1,0 +1,245 @@
+{
+  "version": 1,
+  "measuredOn": "2026-11-15",
+  "scope": "Aggregate research execution only. Sources, per-file records and research geometry remain external. Positive solids are not upstream fidelity certification.",
+  "dataset": "redcathode/thingiverse-openscad",
+  "revision": "2b4206aae3af7740100a2f0e979dd9cb66cd77f0",
+  "sampling": "deterministic evenly spaced files after exact source-hash deduplication; not random model sampling",
+  "inputRows": 7929,
+  "uniqueFiles": 7864,
+  "sampleFiles": 256,
+  "sameSourceHashes": true,
+  "baseline": {
+    "reportSha256": "b3f225ce4c18dd4137bd46b44ed8a55a39d1babc5772fc86b96b4f72e7b08dc3",
+    "statuses": {
+      "unsupported": 37,
+      "converted": 167,
+      "failed": 19,
+      "limited": 32,
+      "process-failure": 1
+    },
+    "limits": {
+      "converterTimeoutMs": 15000,
+      "maxOldSpaceSizeMb": 256
+    },
+    "commit": "6908a2774b5744a7722c85b462ea7ffa1e7b10a4"
+  },
+  "after": {
+    "reportSha256": "1d5fff732634819f733df142334a088d067027ff0b8c78133236bd9ea144ea4e",
+    "statuses": {
+      "unsupported": 37,
+      "converted": 168,
+      "failed": 18,
+      "limited": 32,
+      "process-failure": 1
+    },
+    "limits": {
+      "converterTimeoutMs": 15000,
+      "maxOldSpaceSizeMb": 256
+    },
+    "converterBuild": {
+      "commit": "c090dd921f7e458b4d913e8959c6b2b85b5052c4",
+      "dirty": false,
+      "artifacts": {
+        "code.js": "ea4bf89a7bfa08b967e504610e423494b136a0dc0a6fca7049294dc5987e7411",
+        "code-loft.js": "fbdd29db83623c7148f02626b2c943cd04a31c5280f538992135e1974907a75b",
+        "code-elliptic.js": "a9d77e84c52e4f35322c75d334b44ca8c1e4b211845522188e9db9461049bc57",
+        "code-curved.js": "9add344f957dd7b4b740505e29786b05d44a8d8ce219a072c5e744f4f60ad816",
+        "code-text.js": "ae581f3a92a4a65edeb9416bc74998a1ad76a4d67956854094aeab2ce8c62240",
+        "scad-numbers.js": "8886a27b2e86394927c5e56a7b7f4f0d5a1071592f7b94a7651567efefb0fafd",
+        "conversion-notices.js": "50ee6e1c0f427acc3a78d7247dc3a4b03b0056d71dbb13928ee2b7c97f954c4e",
+        "code-interchange.js": "be4703045286764ca4054edb4991f0d66e748ca9eb565940f0362d9896a6ffc0",
+        "openscad-import.js": "9ead183f3fbe4afb5d3e36736459bbb6051453049d04f97572a21b3e49639be0",
+        "jscad-import.js": "a5a8e42ce66194e019e610089df9d9345f5a1adf47074816b8a07c4f9a35389d",
+        "parameters.js": "505ed030c6580b30378ce110c23ee4565dc88b183a64152ab47854d2d96b6e5b",
+        "font-budgets.js": "995412ad96947af2e3947ac41fc34e3d2881147e67b888e216fc7f4fe893878b",
+        "code-profiles.js": "403ab11bb4b5e86ae3e5b1c3df3e701f1661b823ba5cdfb1086129423581a29c",
+        "features.js": "724e4fc258961b700f598295698aec1c5dcd982d09a30f1838953d0e48ec0cd8",
+        "geometryKernel": "115db4783b95cb20ad6b313b30f43c2f2d89c8512b0fa29f26cc562fb475d946",
+        "geometry/font-profile.js": "de836295ab0c0f8364927dac7b0a95829f6b04548bd09da6fb97351bddfbd9d8",
+        "geometry/polyhedron.js": "c975596e22ca662b933fedac0519172d3778aab511b9fa1ef4ba183fa4e09382",
+        "geometry/limits.js": "ab598a640df9cfb58c5dff20f0a608c013a08b0e1e78b46f39a69a231fa20569",
+        "geometry/fonts/droid_sans_regular.typeface.json": "5532f318b78eeb2215dcb0ae6ebdfb8f82e369187731c28f53e37784a044459a",
+        "geometry/fonts/droid_serif_regular.typeface.json": "10d747ee765ad60e1acec86c31187ac5084b96c376d911c1c46e3f80308b08e4",
+        "geometry/fonts/droid_sans_mono_regular.typeface.json": "69fd4dc9782cfe281f9a96b40e3ae3e4392ea05c1082fbea4c04f369f52feaf2",
+        "manifoldWasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      "node": "v26.4.0",
+      "platform": "darwin",
+      "architecture": "arm64"
+    }
+  },
+  "transitions": [
+    {
+      "before": "converted",
+      "after": "converted",
+      "count": 167
+    },
+    {
+      "before": "failed",
+      "after": "converted",
+      "count": 1
+    },
+    {
+      "before": "failed",
+      "after": "failed",
+      "count": 18
+    },
+    {
+      "before": "limited",
+      "after": "limited",
+      "count": 32
+    },
+    {
+      "before": "process-failure",
+      "after": "process-failure",
+      "count": 1
+    },
+    {
+      "before": "unsupported",
+      "after": "unsupported",
+      "count": 37
+    }
+  ],
+  "convertedRegressions": 0,
+  "newPositiveSolids": 1,
+  "changedPriorConvertedVolumesAt1e6Tolerance": 0,
+  "changedPriorConvertedBoundsAt1e6Tolerance": 0,
+  "positiveSolidsWithNotices": 74,
+  "noticeOccurrences": {
+    "scad.appearance.colours": 16,
+    "scad.parameters.strings": 43,
+    "scad.console.echo": 11,
+    "scad.preview.highlight": 7,
+    "scad.random.sequence": 4,
+    "scad.text.font": 19,
+    "scad.arguments.ignored": 5,
+    "scad.module.arguments-ignored": 5,
+    "scad.polygon.empty-input": 2
+  },
+  "caveats": [
+    "Same frozen sample and 15-second per-file timeout. Positive-solid execution and bounds/volume consistency do not certify full upstream geometry fidelity. No complete corpus geometry oracle ran.",
+    "Existing source-randomness, tessellation and font notices remain visible. Original research source, per-file reports and generated research geometry remain external.",
+    "Line ends, fractional elliptic tessellation, C-style comprehensions and reliable collision qualification for every angular CSG construction remain gaps.",
+    "Zero-side angular intervals are explicitly refused instead of importing invalid upstream shells.",
+    "Harness deadlines account for a loaded shared Mac; no speed benchmark is claimed. GitHub Actions remain disabled."
+  ],
+  "featureCheckpoint": "c090dd921f7e458b4d913e8959c6b2b85b5052c4",
+  "verification": {
+    "fullNative": {
+      "passed": 865,
+      "skipped": 1,
+      "files": 76,
+      "command": "npm test -- --maxWorkers=1 --testTimeout=15000",
+      "logSha256": "1b42c31f53fb889d32e621a29d932d1143c889d1d28f40380f5e5227b1cb7510"
+    },
+    "finalFollowup": {
+      "passed": 19,
+      "files": [
+        "tests/grouped-generators.test.ts",
+        "tests/elliptic-sectors.test.ts"
+      ],
+      "scope": "After final localized importer diagnostic text; overlaps full suite.",
+      "logSha256": "c31c656eee46271c7bdd83801e6a7d383c267a1fa9ae8dfe2c9590d5749f2e1b"
+    },
+    "browser": {
+      "passed": 32,
+      "platforms": [
+        "Chromium desktop",
+        "WebKit iPad"
+      ],
+      "files": [
+        "tests/browser/code-import.spec.ts",
+        "tests/browser/reduction-taper.spec.ts"
+      ],
+      "scope": "Grouped source import, parameter edits, preview, creation, save/reload and elliptic-sector imports plus previous importer workflows.",
+      "harnessTimeoutMs": 180000,
+      "logSha256": "5f3b071c6f772a6712e68711e8ea9aa43094dffcfd4150a767f046f4845ddd71"
+    },
+    "i18n": {
+      "messages": 1362,
+      "references": 1119,
+      "status": "passed"
+    },
+    "offlineSdk": {
+      "packages": 6,
+      "status": "passed",
+      "scope": "Exact local runtime tarballs, empty cache, retained code/features/fonts, angular taper and real SI physics.",
+      "logSha256": "898852c58bbca82ea515d6d3748b04b4acf05740a5b7d2d3767ed37f041824f2"
+    },
+    "jscadOracle": {
+      "version": "MIT @jscad/modeling 2.13.0",
+      "scope": "Eight individual sector/tip/wrap cases compare bounds, volume and export/reimport. An 84-case matrix compares volume across resolutions/start angles/turn fractions, including full-turn and radians-to-degrees boundaries."
+    },
+    "scadOracle": {
+      "version": "official OpenSCAD 2021.01 executable; no implementation source read",
+      "cases": [
+        {
+          "source": "echo(value=[for(i=[1:2])(for(j=[3:4])i+j)]);\ncube(1);\n",
+          "accepted": true,
+          "echo": "ECHO: value = [4, 5, 5, 6]"
+        },
+        {
+          "source": "echo(value=[for(i=[1:2])(each [i,i*2])]);\ncube(1);\n",
+          "accepted": true,
+          "echo": "ECHO: value = [1, 2, 2, 4]"
+        },
+        {
+          "source": "echo(value=[for(i=[1:2])(let(x=i*2) for(j=[1:2])x+j)]);\ncube(1);\n",
+          "accepted": true,
+          "echo": "ECHO: value = [3, 4, 5, 6]"
+        },
+        {
+          "source": "echo(value=[for(i=[1:2])let(x=i*2)(for(j=[1:2])x+j)]);\ncube(1);\n",
+          "accepted": true,
+          "echo": "ECHO: value = [3, 4, 5, 6]"
+        },
+        {
+          "source": "echo(value=[for(i=[1:2])(let(x=i*2)x)+3]);\ncube(1);\n",
+          "accepted": true,
+          "echo": "ECHO: value = [5, 7]"
+        },
+        {
+          "source": "echo(value=[for(i=[1:3])(if(i%2) i else -i)]);\ncube(1);\n",
+          "accepted": true,
+          "echo": "ECHO: value = [1, -2, 3]"
+        },
+        {
+          "source": "echo(value=[(for(i=[1:2])i)]);\ncube(1);\n",
+          "accepted": false,
+          "diagnosticClass": "syntax error"
+        },
+        {
+          "source": "echo(value=[0,(for(i=[1:2])i)]);\ncube(1);\n",
+          "accepted": true,
+          "echo": "ECHO: value = [0, 1, 2]"
+        },
+        {
+          "source": "echo(value=[for(i=[1:2])((for(j=[1:2])i+j))]);\ncube(1);\n",
+          "accepted": false,
+          "diagnosticClass": "syntax error"
+        }
+      ],
+      "rawExternalReportSha256": "190251ce437b5334c9d54d96df91caf032547320bebc3d2677ba810559bee040"
+    }
+  },
+  "contracts": [
+    "Grouped generators are accepted in generator-body and comma-continuation positions. Unsupported initial/extra wrapping stays rejected. Lexical bindings, order, let arithmetic, empty inputs and parameter edits are retained without source repair.",
+    "Angular ellipses use bounded linear-size triangulated meshes. Changing ellipse proportions requires explicit radial-face triangle diagonals; points at either end are supported, line ends are not.",
+    "JSCAD angular interval counts are computed in source radians and retained explicitly. Native parametric models can omit the optional angularSegments override to keep density-based refinement.",
+    "Full-turn native calls retain their previous sampling order. No source, face, depth, loop, expression or physics error limit was raised."
+  ],
+  "physics": {
+    "positive": "24-segment quarter taper with a 0.25 mm bore passes the unchanged certificate and Jolt void/material rays.",
+    "refusal": "32-segment counterpart is refused at 2.87% volume disagreement; refusal remains a regression.",
+    "scope": "CAD geometry support is separate from collider qualification. Underlying partition/CSG robustness remains an open gap; no fallback hull or relaxed tolerance is introduced."
+  },
+  "replayInterpretation": "One prior parser failure becomes a successful solid. All 167 previous positives retain volume/bounds at 1e-6 tolerance. No timeout status changed; no input was edited.",
+  "nativeMac": {
+    "build": 24,
+    "source": "c090dd921f7e458b4d913e8959c6b2b85b5052c4",
+    "assetBuildWasClean": true,
+    "status": "Native smoke passed; installed and launched; live build-info and bundle version verified. Projects/history retained.",
+    "smokeLogSha256": "0154144b5ac3327c902c9dee3e5629c853821259ab7a1e9204fccd37d2109b48"
+  }
+}
