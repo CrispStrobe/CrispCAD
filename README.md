@@ -116,6 +116,12 @@ five-socket shaft fit gauge. The assembly combines two existing Adafruit 3777
 TT motor models with eleven original PLA parts and stable **A / left** and
 **B / right** joint ports for the shared CAD controls in Brickwright Lite.
 
+Open the [assembled BCAD model](examples/scout-tt-rover/scout-tt-rover.bcad),
+download the [PLA build kit](examples/scout-tt-rover/scout-tt-rover-kit.zip), or
+load the [runnable Lite project](examples/scout-tt-rover/lite/tt-rover.sb3).
+The [Lite example instructions](examples/scout-tt-rover/lite/README.md) explain
+how to enable CAD, run the program and verify its embedded source.
+
 The [build guide](docs/PRINTABLE-TT-ROVER.md) covers the concrete dimensions,
 print quantities and orientations, hardware BOM, fit checks, assembly, wiring
 plan and control example. The physical prototype remains unprinted and untested;

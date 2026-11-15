@@ -74,8 +74,8 @@
           8.800000190734863
         ]
       },
-      "volumeMm3": 6531.163877740142,
-      "triangles": 874,
+      "volumeMm3": 6007.963791814092,
+      "triangles": 896,
       "meshChecks": {
         "parseable": "pass",
         "closedPositiveVolume": "pass",
@@ -256,13 +256,13 @@
   "files": [
     {
       "path": "scout-tt-rover.bcad",
-      "bytes": 3745800,
-      "sha256": "85e649c26280be10991d3e1c069a3ab2ca384fc0478b861026e87940a2a4461e"
+      "bytes": 3486736,
+      "sha256": "0cc04d1fb74380ddfa55492110503b1c3dfde1d588cf5fc2e9a52c834374e0e9"
     },
     {
       "path": "scout-tt-print-layout.bcad",
-      "bytes": 10768,
-      "sha256": "05b6fc159c80e4a7b9c78b895af0651a6ae543eb4c5e385ab90927f404dc4cb1"
+      "bytes": 786956,
+      "sha256": "3847f500a0eed13deca296ff6f1490f583254f17ff84969386d34f7b48fa9510"
     },
     {
       "path": "scout-tt-fit-gauge.bcad",
@@ -281,13 +281,13 @@
     },
     {
       "path": "stl/cradle.stl",
-      "bytes": 43784,
-      "sha256": "48dbf981a86bf09b27caba6e45826c501f9eb11ff2358b278021b58e3144009d"
+      "bytes": 44884,
+      "sha256": "6007e1bdbaa656671dc79f12e9d16c7e8653a13abfece56f40278e3d25193f4b"
     },
     {
       "path": "source/cradle.cadcode",
-      "bytes": 725,
-      "sha256": "b00339fd22479f5d46c5d64413a41dac903397c03e49b9d68f05a5dd2d8fc119"
+      "bytes": 827,
+      "sha256": "8261fe0f53b497702240c0656cbafa3f589fbe39c4b5e0afc8f4ba984a015ecb"
     },
     {
       "path": "stl/wheel.stl",
@@ -351,8 +351,8 @@
     },
     {
       "path": "BUILD-GUIDE.md",
-      "bytes": 23365,
-      "sha256": "58fcd6285ad26b08baf91176769bfe1f3da7b0e4278c072c407eaf19a147982b"
+      "bytes": 26361,
+      "sha256": "68d7a8e2377583b0f7f53ee886b3200942e1e7390b9b1a89526899f4e4b50c17"
     },
     {
       "path": "NOTICE.md",

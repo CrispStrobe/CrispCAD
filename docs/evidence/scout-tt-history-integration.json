@@ -1,0 +1,71 @@
+{
+  "format": "brickwright-robot-integration-audit",
+  "version": 1,
+  "checkedOn": "2026-11-15",
+  "purpose": "Preserve recent CAD and Lite robot-control work before adding the printable Scout TT rover",
+  "repositories": {
+    "CrispStrobe/brickwright-cad": {
+      "mainAtStart": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09",
+      "mainRecheckedUnchanged": true,
+      "workingBranch": "feat/printable-robot-20261115",
+      "reviewedExistingBranchHeads": 40,
+      "integratedBranches": [
+        {
+          "branch": "codex/reviewed-bundle-namespace",
+          "head": "74cdc61f94fffabb51079fc8bfde83f0df0c9dd8",
+          "pullRequest": 46,
+          "mergeCommit": "ffce6d9eae559c8b5d2f51501f965fef7c3e2ca6"
+        },
+        {
+          "branch": "codex/sync-brickwright-simlab",
+          "head": "efb165a1aaea3ab39400f4631240e9e1727fcd95",
+          "context": "Follow-up work after the already merged PR 53",
+          "mergeCommit": "8c6f9d669af427b3621c24ee940520b46dc35c10"
+        }
+      ],
+      "incrementalRemoteCheckpoints": [
+        "e8896cf802b4efd13b773d1407baf5f6a29335f8",
+        "0e942a588e4b1f2c76fc4d287d3fbd8082719f3c",
+        "959375aadafda02a282998684eb663eac4b2aadb",
+        "b8e3601764bb61b720fb3164827d0db25ed6453a"
+      ]
+    },
+    "CrispStrobe/brickwright-lite": {
+      "mainAtStart": "6e8f065c6798cc4bfa1261f5c9413e69c4cbf367",
+      "mainRecheckedUnchanged": true,
+      "workingBranch": "feat/pla-rover-cad-20261115",
+      "fetchedExistingBranchHeads": 2038,
+      "fetchedPullRequestHeads": 1761,
+      "integratedBranches": [
+        {
+          "branch": "feat/robot-cad-selection-20261115",
+          "head": "fc333ddf88023cf17e9bb5973109b74a350f2ab7",
+          "pullRequest": 1791,
+          "mergeCommit": "eb182b115c8f655f07bbf4b4b75f188b93a2822d"
+        }
+      ],
+      "incrementalRemoteCheckpoints": [
+        "7fbd4b5060fe22b0100adbf3e4725919ee0faeae",
+        "487e6f4adc89a4e333271b7fc24f41b9aecc8b3d",
+        "acbcb1fc7b83af4002978ddb00a84df2beb6ec10"
+      ]
+    }
+  },
+  "preservation": {
+    "mergeParentsRetained": true,
+    "existingMainAndFeatureBranchesUntouched": true,
+    "unrelatedExperimentalBranchesRetained": true,
+    "savedProjectHistoryRewritten": false
+  },
+  "verificationPolicy": {
+    "githubActionsAwaited": false,
+    "githubActionsEnabledOrTriggeredForValidation": false,
+    "method": "Local builds, geometry checks, Jolt qualification, focused regressions and SDK artifact verification",
+    "browserLimitation": "Local Chromium could not launch within this executor's sandbox; the cloud browser could not reach its loopback server. No browser UI pass is claimed.",
+    "inheritedLimitation": "The imported SimLab follow-up records a pending first decoded Chromium recording frame check; the Scout work does not claim to resolve it."
+  },
+  "artifactPlacement": {
+    "fullRoverAndRunnableProject": "Private CAD branch, examples/scout-tt-rover/ and examples/scout-tt-rover/lite/",
+    "liteBranch": "Generic project helper, exact-asset verifier, usage documentation and the shared SDK integration"
+  }
+}

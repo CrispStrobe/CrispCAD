@@ -42,6 +42,11 @@ manufactured-mechanism accuracy.
   material and picking/force interface. A static member fixes its whole rigid
   component; initial part velocities are projected onto the component while
   conserving linear and angular momentum.
+- Compound leaves retain their original part IDs. Native part-pair filtering
+  removes only the intended mate contacts before narrow-phase collision and
+  continuous casts. Separate contact materials remain effective for each part;
+  heterogeneous assemblies disable manifold reduction so adjacent parts cannot
+  inherit one another's friction or restitution.
 - Hinge presets contain separate leaves and a pin, local joint frames, angular
   limits, a hinge constraint and a fixed pin connection. Inserting, duplicating,
   deleting, saving and reopening retain/remap the relevant references.
@@ -89,6 +94,28 @@ Jolt manifold/contact-cache distances are explicitly tuned for millimetre-scale
 geometry in SI. Sleeping and body-pair contact caching are disabled in this
 correctness baseline. A knurl-tip regression covers a real missed-contact case
 from metre-scale defaults. Interactive performance tuning must retain this test.
+
+For hinge-connected rigid components, a bounded geometric proof can exclude
+their whole native body pair early. Every non-mated pair of qualified convex
+hulls must have disjoint axial or radial intervals through a full revolution,
+with at least 0.25 mm clearance plus a frame/roundoff reserve. Radial minima use
+the complete projected convex hull, including axis-crossing interiors. Frame
+uncertainty is scaled by the material's lever arm; uncertain frames, potential
+future contacts and proof-budget exhaustion retain native part-pair filtering.
+This avoids pathological continuous casting between overlapping compound bounds
+while preserving the existing continuous collision mode and geometry gates.
+
+The separation proof assumes an ideal hinge. Optimized hinges use 40 position
+iterations, and the world checks actual anchor separation plus rotor radius
+times normalized-axis skew before and after every 5 ms substep. Reaching
+0.249 mm permanently restores native part-pair filtering for that body pair,
+leaving a 0.001 mm cushion inside the geometric reserve. External impulse,
+velocity and drag APIs restore filtering before changing an affected body;
+nonzero authored initial velocities also retain native filtering. These are
+sampled safeguards, not a rollback or a guarantee against arbitrary forces
+within a completed substep. The stock Scout motor sequence is separately
+runtime-qualified on both normal and debug Wasm, with its full anchor-plus-axis
+bound measured at every 200 Hz step.
 
 The gate is deliberately fail-closed. A certificate records a geometric preview
 qualification; it does not certify fatigue, manufacturing clearance, friction,

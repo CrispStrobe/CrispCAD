@@ -1,0 +1,22 @@
+WHEN green flag clicked:
+  cad reset
+  cad start
+  cad run motor A at 120 degrees per second
+  cad run motor B at 120 degrees per second
+  wait 2 seconds
+  cad stop motor A brake
+  cad stop motor B brake
+  wait 0.5 seconds
+  cad run motor A at 90 degrees per second
+  cad run motor B at -90 degrees per second
+  wait 1 second
+  cad stop motor A brake
+  cad stop motor B brake
+  wait 0.5 seconds
+  cad run motor A at -120 degrees per second
+  cad run motor B at -120 degrees per second
+  wait 1 second
+  cad stop motor A brake
+  cad stop motor B brake
+  say "TT rover demo complete"
+  cad stop

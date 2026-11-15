@@ -1,0 +1,601 @@
+{
+  "format": "brickwright-rover-physics-qualification",
+  "version": 1,
+  "engine": "Jolt 1.1.0-bw.10 debug-wasm-compat",
+  "engineModule": "jolt-physics/debug-wasm-compat",
+  "engineModuleSha256": "8ef46a435f0547723c0ae38a0583e6afc44801657d644c0e62b0613f54026abe",
+  "runtime": "v24.22.1",
+  "sourceSha256": "2562a4af1859fee750a2736a37981a8956fffdd792be2e72158af88543c8eeaf",
+  "stepHz": 200,
+  "motionQuality": "LinearCast",
+  "torqueLimitNm": 0.02,
+  "speedDegreesPerSecond": 180,
+  "preparationMs": 6882.859424,
+  "worldCreationMs": 998.5922179999998,
+  "simulationMs": 58990.856862999986,
+  "nativeStepMs": 58855.05142099993,
+  "nativeSteps": 1520,
+  "bodyCount": 22,
+  "rigidBodyCount": 3,
+  "separatedHingePairCount": 2,
+  "hulls": 3738,
+  "maxRelativeError": 0.010777572240709141,
+  "maxBoundsErrorMm": 0.049515724182128906,
+  "forwardMm": 179.51007074905587,
+  "reverseMm": -186.8704186009689,
+  "turnDegrees": 130.42022457905628,
+  "movingHingeSamplingHz": 200,
+  "peakMovingHingeAnchorErrorMm": 0.060744829329553524,
+  "movingHingePeakErrors": {
+    "drive-a": {
+      "maximumMm": 0.05976904874922349,
+      "atSeconds": 3.6549999999999443,
+      "phase": "reverse"
+    },
+    "drive-b": {
+      "maximumMm": 0.060744829329553524,
+      "atSeconds": 3.6549999999999443,
+      "phase": "reverse"
+    }
+  },
+  "sourceUnchanged": true,
+  "phases": [
+    {
+      "phase": "initial",
+      "timeSeconds": 0,
+      "centerMm": [
+        -20,
+        0,
+        16
+      ],
+      "quaternion": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "yawDegrees": 0,
+      "rotationDegrees": {
+        "A": 0,
+        "B": 0
+      },
+      "velocityMmS": [
+        0,
+        0,
+        0
+      ],
+      "minimumSourceZMm": 0,
+      "jointAnchorErrorMm": 0
+    },
+    {
+      "phase": "settled",
+      "timeSeconds": 1.0000000000000007,
+      "centerMm": [
+        -20.00304807119228,
+        0.04509236936530721,
+        15.698908472398397
+      ],
+      "quaternion": [
+        0.00008129134948831052,
+        0.0023149745538830757,
+        0.0003806017048191279,
+        0.9999972581863403
+      ],
+      "yawDegrees": 0.043635659732618085,
+      "rotationDegrees": {
+        "A": -0.36597615660297506,
+        "B": -0.15409308307966768
+      },
+      "velocityMmS": [
+        -0.0449720500910189,
+        0.2720672928262502,
+        0.1403822097927332
+      ],
+      "minimumSourceZMm": -0.020125099084181808,
+      "jointAnchorErrorMm": 0.0008301161672844056
+    },
+    {
+      "phase": "forward",
+      "timeSeconds": 2.9999999999999583,
+      "centerMm": [
+        159.5070226778636,
+        -0.5476780197988179,
+        15.708906971159632
+      ],
+      "quaternion": [
+        0.00004186402657069266,
+        0.0022273617796599865,
+        0.0023358433973044157,
+        0.9999948143959045
+      ],
+      "yawDegrees": 0.2676808632748596,
+      "rotationDegrees": {
+        "A": 348.7964389968806,
+        "B": 349.73925696556796
+      },
+      "velocityMmS": [
+        92.89632737636566,
+        2.0779413171112537,
+        0.9486725321039557
+      ],
+      "minimumSourceZMm": -0.0013913988489898665,
+      "jointAnchorErrorMm": 0.002884815695020936
+    },
+    {
+      "phase": "braked-forward",
+      "timeSeconds": 3.299999999999952,
+      "centerMm": [
+        160.2244915731205,
+        -0.6208045792268302,
+        15.680868444589827
+      ],
+      "quaternion": [
+        0.000017229858713108115,
+        0.002455670852214098,
+        0.0019442791817709804,
+        0.9999951720237732
+      ],
+      "yawDegrees": 0.22280500404213302,
+      "rotationDegrees": {
+        "A": 350.3887277009135,
+        "B": 351.1231463527401
+      },
+      "velocityMmS": [
+        0.12425803288351744,
+        -0.7107402198016644,
+        -0.502144917845726
+      ],
+      "minimumSourceZMm": -0.018507811371975436,
+      "jointAnchorErrorMm": 0.0007504375279966376
+    },
+    {
+      "phase": "reverse",
+      "timeSeconds": 5.299999999999909,
+      "centerMm": [
+        -26.645927027848398,
+        0.5334889898454049,
+        15.701662140703977
+      ],
+      "quaternion": [
+        0.000037582034565275535,
+        0.0022942759096622467,
+        -0.0034067046362906694,
+        0.9999915957450867
+      ],
+      "yawDegrees": -0.39037356432706444,
+      "rotationDegrees": {
+        "A": -0.8735191361728031,
+        "B": -0.5726251841283467
+      },
+      "velocityMmS": [
+        -95.60614079236984,
+        1.8410264747217298,
+        -0.5079976399429142
+      ],
+      "minimumSourceZMm": -0.006374990828242,
+      "jointAnchorErrorMm": 0.0017991455474785664
+    },
+    {
+      "phase": "braked-reverse",
+      "timeSeconds": 5.599999999999903,
+      "centerMm": [
+        -27.367408111383845,
+        0.46002888543062703,
+        15.691377249045782
+      ],
+      "quaternion": [
+        -0.0000754088832763955,
+        0.0023709710221737623,
+        -0.004050879739224911,
+        0.9999890327453613
+      ],
+      "yawDegrees": -0.46422231865638025,
+      "rotationDegrees": {
+        "A": -1.9615643756135734,
+        "B": -1.728728029284711
+      },
+      "velocityMmS": [
+        -0.014173679119267035,
+        0.0071891317929839715,
+        0.059288817283231765
+      ],
+      "minimumSourceZMm": -0.02005745462693942,
+      "jointAnchorErrorMm": 0.0004534972200854526
+    },
+    {
+      "phase": "turn",
+      "timeSeconds": 7.59999999999986,
+      "centerMm": [
+        20.293049425840085,
+        -12.140209775566685,
+        15.696853687048684
+      ],
+      "quaternion": [
+        -0.0020121836569160223,
+        0.0011224278714507818,
+        0.9061428904533386,
+        0.4229654371738434
+      ],
+      "yawDegrees": 129.95600226039988,
+      "rotationDegrees": {
+        "A": -333.4182851560697,
+        "B": 332.5029014959574
+      },
+      "velocityMmS": [
+        35.585612058639526,
+        32.35192596912384,
+        -0.5826206179335713
+      ],
+      "minimumSourceZMm": -0.020582291615673043,
+      "jointAnchorErrorMm": 0.029793863170495767
+    }
+  ],
+  "certificates": {
+    "chassis": {
+      "hulls": 161,
+      "sourceSHA256": "fdf2cca91d9bb5566379e58cb4bc33eef2bcc005dfe3e423297bd9cc0a294b6d",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0.11565553375789793,
+      "extraVolumeMm3": 25.385784609066768,
+      "numericalResidualVolumeMm3": 8.65796323523682e-12,
+      "relativeError": 0.0003700232006901884,
+      "boundsErrorMm": 0,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "left-cradle": {
+      "hulls": 106,
+      "sourceSHA256": "a88d1f7ec3fb35e7f1d197309fd3d7adbfe67220e14b9c3e2208a0895dcc9f27",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0.03031895187535439,
+      "extraVolumeMm3": 7.058059122444678,
+      "numericalResidualVolumeMm3": 0.00006302297655569333,
+      "relativeError": 0.0011798408676798146,
+      "boundsErrorMm": 0.0000015258789076710855,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "left-wheel": {
+      "hulls": 507,
+      "sourceSHA256": "c96dd658793cd9634eeee11dd52e164214a5ac831d0e9e533c4bf2a214db6891",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 128.72355721934096,
+      "extraVolumeMm3": 53.19964169983915,
+      "numericalResidualVolumeMm3": 0.000004824127742608653,
+      "relativeError": 0.010777570382295456,
+      "boundsErrorMm": 0,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "right-cradle": {
+      "hulls": 106,
+      "sourceSHA256": "ecbf72fdc811d0aaed12d323bfed9943e24f3e07f7bf2974c27d0f0d1148cf3d",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0.03032656963153828,
+      "extraVolumeMm3": 7.0580616736838575,
+      "numericalResidualVolumeMm3": 0.000058485686984077745,
+      "relativeError": 0.001179841805053287,
+      "boundsErrorMm": 0.0000015258789076710855,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "right-wheel": {
+      "hulls": 507,
+      "sourceSHA256": "0fd2647ce59f2b6c96c82785650a2829bee7236113dd412d33942966c55d5ae2",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 128.7235710478909,
+      "extraVolumeMm3": 53.199636284410005,
+      "numericalResidualVolumeMm3": 0.00002778065329778201,
+      "relativeError": 0.010777572240709141,
+      "boundsErrorMm": 0,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "deck": {
+      "hulls": 56,
+      "sourceSHA256": "351ad05903711fe0239173af3ca5c293809c27336ae8929fbcb80f9b17b583ab",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0.019273653879782124,
+      "extraVolumeMm3": 4.2309984226799395,
+      "numericalResidualVolumeMm3": 3.8191672047105385e-14,
+      "relativeError": 0.0003385551915627148,
+      "boundsErrorMm": 0,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "standoff-0": {
+      "hulls": 24,
+      "sourceSHA256": "7b42eaa185757bb64b2c40682a854cbfd782f6e3b03d5ff897d58f130453f232",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 10.393874023248287,
+      "extraVolumeMm3": 2.8027085548677104,
+      "numericalResidualVolumeMm3": 8.171241461241152e-14,
+      "relativeError": 0.008697571733780994,
+      "boundsErrorMm": 0,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "standoff-1": {
+      "hulls": 24,
+      "sourceSHA256": "d5e75b48e9fc3e47b10bfef28e8985fb9b763bf558020ba300e1a451c391a670",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 10.393874023248268,
+      "extraVolumeMm3": 2.8027085548677624,
+      "numericalResidualVolumeMm3": 9.769962616701378e-15,
+      "relativeError": 0.008697571733780968,
+      "boundsErrorMm": 0,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "standoff-2": {
+      "hulls": 24,
+      "sourceSHA256": "ee0f4c62bd6be2a13761a42bb08e02c79df81788f7f2e17617247b8f880bcbc8",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 10.393628342527405,
+      "extraVolumeMm3": 2.8026978091068653,
+      "numericalResidualVolumeMm3": 2.2026824808563106e-13,
+      "relativeError": 0.008697402728835603,
+      "boundsErrorMm": 0,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "standoff-3": {
+      "hulls": 24,
+      "sourceSHA256": "0ad446633d48546267227bf265926eaa49bacceaa02a998049b8d66fb02ddef3",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 10.393628342527457,
+      "extraVolumeMm3": 2.8026978091069394,
+      "numericalResidualVolumeMm3": 2.433608869978343e-13,
+      "relativeError": 0.008697402728835702,
+      "boundsErrorMm": 0,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "skid": {
+      "hulls": 96,
+      "sourceSHA256": "830e8c98ef11e2458e0be31fd4937129478b828b0c8930a4de40f014c9ad51a3",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 15.407199548364408,
+      "extraVolumeMm3": 3.350010640390502,
+      "numericalResidualVolumeMm3": 0.000007478158639884214,
+      "relativeError": 0.005894440120809512,
+      "boundsErrorMm": 6.498519489396248e-17,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "left-casing": {
+      "hulls": 782,
+      "sourceSHA256": "4a4c122f4c703666e802a720082618178dfcfded84b41cc8445171db8c6b74da",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 47.43436490681776,
+      "extraVolumeMm3": 16.8215777674221,
+      "numericalResidualVolumeMm3": 0.00006443553763801901,
+      "relativeError": 0.0028913551835830693,
+      "boundsErrorMm": 0.049515724182128906,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "left-shaft": {
+      "hulls": 140,
+      "sourceSHA256": "1d15413b611b2e0d35a0cd84773b58049694737af321fb02fbd1046e309b8d55",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 3.105048822230266,
+      "extraVolumeMm3": 0.9766503875687635,
+      "numericalResidualVolumeMm3": 0.0000042442797538733146,
+      "relativeError": 0.005676699094363729,
+      "boundsErrorMm": 0.007424545288085227,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "left-tire-0": {
+      "hulls": 64,
+      "sourceSHA256": "fb7473152adec0990917224eaa77746feca7eb0d01c855ae533bb7c1fa81e8e0",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0.0005367786883260231,
+      "extraVolumeMm3": 0.00022186871808909395,
+      "numericalResidualVolumeMm3": 0.000004793460468046999,
+      "relativeError": 6.009915622765296e-7,
+      "boundsErrorMm": 0,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "left-tire-1": {
+      "hulls": 64,
+      "sourceSHA256": "3dbedec2bccfb855fee413f554eccecab7d809c3eb167d3b82f1b4597cfe0492",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0.0005363790139825483,
+      "extraVolumeMm3": 0.0002214690438689845,
+      "numericalResidualVolumeMm3": 0.000004793460818786023,
+      "relativeError": 6.003623039382876e-7,
+      "boundsErrorMm": 0,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "right-casing": {
+      "hulls": 782,
+      "sourceSHA256": "0ba7c261af11219102eb474746edfad0900e3cd86d637ea7c70ff2bdcc185c7e",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 47.43437978405136,
+      "extraVolumeMm3": 16.821577892591712,
+      "numericalResidualVolumeMm3": 0.00006460541862196578,
+      "relativeError": 0.002891355866296866,
+      "boundsErrorMm": 0.049515724182128906,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "right-shaft": {
+      "hulls": 140,
+      "sourceSHA256": "6b4564dc5c4fc8fdd1cac7ad14bcbd72baca0f687107df31b0fed8141990048d",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 3.105050506637864,
+      "extraVolumeMm3": 0.9766503875854653,
+      "numericalResidualVolumeMm3": 0.0000041754212269928814,
+      "relativeError": 0.0056767013412395385,
+      "boundsErrorMm": 0.007424545288085227,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "right-tire-0": {
+      "hulls": 64,
+      "sourceSHA256": "0b30f522cd84f389a23920c38bf2090ccd71a23969d100ab64892d0961c3d60c",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0.0005367786883148863,
+      "extraVolumeMm3": 0.00022186871816196413,
+      "numericalResidualVolumeMm3": 0.000004793460552053965,
+      "relativeError": 6.009915623912583e-7,
+      "boundsErrorMm": 0,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "right-tire-1": {
+      "hulls": 64,
+      "sourceSHA256": "72e148145ec935174bac1aa16f4e6539ea6ee7c403cfb6c0c3ad6f6080b61e4a",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0.0005363790139581094,
+      "extraVolumeMm3": 0.00022146904391804364,
+      "numericalResidualVolumeMm3": 0.0000047934606649104126,
+      "relativeError": 6.003623038365359e-7,
+      "boundsErrorMm": 0,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "battery-envelope": {
+      "hulls": 1,
+      "sourceSHA256": "36c2ed6b61c2a2fe3166b45aec72598b863dc437548d62d70e0df9fcbd019da6",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0,
+      "extraVolumeMm3": 0,
+      "numericalResidualVolumeMm3": 0,
+      "relativeError": 0,
+      "boundsErrorMm": 0.000003051757815342171,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "feather-envelope": {
+      "hulls": 1,
+      "sourceSHA256": "bd3c0a19a3df9ffc400cf6a9e1e69b3b86e536cc37ca170880918537ee8ce40a",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0,
+      "extraVolumeMm3": 0,
+      "numericalResidualVolumeMm3": 0,
+      "relativeError": 0,
+      "boundsErrorMm": 3.8146972514141453e-7,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "driver-envelope": {
+      "hulls": 1,
+      "sourceSHA256": "58d6b21ef7f9fd63fb1091b411c5105f20a7ff4e775c5c3b5c60625c4733701e",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0,
+      "extraVolumeMm3": 0,
+      "numericalResidualVolumeMm3": 0,
+      "relativeError": 0,
+      "boundsErrorMm": 0,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    }
+  },
+  "movingHingePeakDriftBounds": {
+    "drive-a": {
+      "maximumMm": 0.1306961541189346,
+      "atSeconds": 3.6549999999999443,
+      "phase": "reverse"
+    },
+    "drive-b": {
+      "maximumMm": 0.13232268383089488,
+      "atSeconds": 3.6549999999999443,
+      "phase": "reverse"
+    }
+  },
+  "peakMovingHingeDriftBoundMm": 0.13232268383089488,
+  "passed": true
+}

@@ -15,6 +15,7 @@
     "robot:check": "npm run build:packages && node scripts/generate-tt-rover.mjs --check",
     "robot:collisions:generate": "npm run build:packages && node scripts/generate-tt-rover-collisions.mjs --write",
     "robot:collisions:check": "npm run build:packages && node scripts/generate-tt-rover-collisions.mjs --check",
+    "robot:verify": "npm run build:packages && node scripts/qualify-tt-rover-physics.mjs --check",
     "dev": "npm run build:packages && npm run assets && vite --host 127.0.0.1",
     "assets": "node scripts/copy-assets.mjs",
     "build:brickwright-sdk": "npm run build:packages && vite build --config vite.brickwright.config.ts && node scripts/package-brickwright-sdk.mjs",

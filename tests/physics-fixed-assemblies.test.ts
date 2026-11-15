@@ -32,6 +32,11 @@ it('projects authored velocities onto a fixed assembly by conserving linear and 
  try{expect(other.angularVelocity('left')[2]).toBeCloseTo(Math.PI*.04,5);}finally{other.dispose();}
 });
 
+it('retains unequal densities and off-diagonal aggregate inertia',async()=>{
+ const doc=fixture();doc.nodes.left.transform.position=[-20,-20,20];doc.nodes.right.transform.position=[20,20,20];doc.nodes.right.physics!.densityKgM3=3150;doc.joints=[jointAtWorldFrame(doc,'fixed','left','right',[0,0,20],[0,1,0])];const world=await worldFor(doc);
+ try{world.applyImpulse('right',[0,0,.0001]);const angular=world.angularVelocity('left');expect(angular[0]).toBeCloseTo(.386100386,5);expect(angular[1]).toBeCloseTo(-.386100386,5);expect(angular[2]).toBeCloseTo(0,5);expect((world.linearVelocityMmS('left')[2]+3*world.linearVelocityMmS('right')[2])/4).toBeCloseTo(.0001/.0042*1000,3);}finally{world.dispose();}
+});
+
 it('freezes a complete component when any member is static and rejects conflicting moving mates',async()=>{
  const doc=fixture();doc.nodes.right.physics!.motion='static';doc.nodes.left.physics!.initialVelocityMmS=[100,0,0];const world=await worldFor(doc);
  try{const before=world.pose('left');world.step(.1);expect(world.pose('left')).toEqual(before);expect(world.pose('right')).toEqual(before);expect(()=>world.setLinearVelocity('left',[1,0,0])).toThrow('fixed');expect(()=>world.setAngularVelocity('left',[0,0,1])).toThrow('fixed');expect(()=>world.applyImpulse('left',[.001,0,0])).toThrow('fixed');}finally{world.dispose();}
@@ -44,4 +49,16 @@ it('retains each leaf material in added and persisted contacts of a heterogeneou
  const seen:{event:string;token:number;friction:number;restitution:number;reduction:boolean}[]=[];
  const observed={...J,ContactListenerJS:function(){const listener=new J.ContactListenerJS();for(const event of ['OnContactAdded','OnContactPersisted']){let callback:(...args:number[])=>void=()=>{};const wrapped=(...args:number[])=>{callback(...args);const a=J.wrapPointer(args[0],J.Body),b=J.wrapPointer(args[1],J.Body),m=J.wrapPointer(args[2],J.ContactManifold),s=J.wrapPointer(args[3],J.ContactSettings),ta=a.GetShape().GetSubShapeUserData(m.mSubShapeID1),tb=b.GetShape().GetSubShapeUserData(m.mSubShapeID2),body=ta?a:b;seen.push({event,token:ta||tb,friction:s.mCombinedFriction,restitution:s.mCombinedRestitution,reduction:body.GetUseManifoldReduction()});};Object.defineProperty(listener,event,{get:()=>wrapped,set:value=>{callback=value;},configurable:true});}return listener;}};
  const world=await worldFor(doc,observed);try{for(let i=0;i<5;i++)world.step(.1);for(const event of ['OnContactAdded','OnContactPersisted'])for(const token of [1,2]){const contact=seen.find(c=>c.event===event&&c.token===token);expect(contact).toBeDefined();expect(contact!.friction).toBeCloseTo(Math.sqrt(.8*(token===1?.12:.9)),6);expect(contact!.restitution).toBeCloseTo(token===1?.1:.2,6);expect(contact!.reduction).toBe(false);}}finally{world.dispose();}
+});
+
+it('falls back from the full-turn proof when accepted hinge frames are offset or skewed',async()=>{
+ const doc=fixture();doc.nodes.rotor={...structuredClone(doc.nodes.right),id:'rotor',name:'rotor',transform:{...identityTransform(),position:[60,0,20]}};doc.roots.push('rotor');doc.joints!.push(jointAtWorldFrame(doc,'hinge','right','rotor',[40,0,20],[0,1,0]));const aligned=await worldFor(doc);try{expect(aligned.separatedHingePairCount).toBe(1);}finally{aligned.dispose();}
+ for(const kind of ['offset','skew']){const changed=structuredClone(doc);if(kind==='offset')changed.joints![1].anchorB[0]+=.0001;else changed.joints![1].axisB=[0,Math.cos(.001),Math.sin(.001)];const world=await worldFor(changed);try{expect(world.separatedHingePairCount).toBe(0);}finally{world.dispose();}}
+});
+
+it('permanently restores native part filtering before external mutations of a separated hinge assembly',async()=>{
+ const doc=fixture();doc.nodes.rotor={...structuredClone(doc.nodes.right),id:'rotor',name:'rotor',transform:{...identityTransform(),position:[60,0,20]}};doc.roots.push('rotor');doc.joints!.push(jointAtWorldFrame(doc,'hinge','right','rotor',[40,0,20],[0,1,0]));
+ const mutations=[(w:Awaited<ReturnType<typeof worldFor>>)=>w.applyImpulse('left',[.001,0,0]),(w:Awaited<ReturnType<typeof worldFor>>)=>w.setLinearVelocity('left',[100,0,0]),(w:Awaited<ReturnType<typeof worldFor>>)=>w.setAngularVelocity('left',[0,0,1]),(w:Awaited<ReturnType<typeof worldFor>>)=>w.grabBody('left',[-20,0,20],[-19,0,20])];
+ for(const mutate of mutations){const world=await worldFor(doc);try{expect(world.separatedHingePairCount).toBe(1);mutate(world);expect(world.separatedHingePairCount).toBe(0);world.releaseGrab();world.step(.005);expect(world.separatedHingePairCount).toBe(0);}finally{world.dispose();}}
+ const moving=structuredClone(doc);moving.nodes.left.physics!.initialVelocityMmS=[100,0,0];const world=await worldFor(moving);try{expect(world.separatedHingePairCount).toBe(0);}finally{world.dispose();}
 });
