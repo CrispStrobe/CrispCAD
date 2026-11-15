@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+ "Color mode":"Farbmodus",
+ "Light":"Hell",
+ "Dark":"Dunkel",
+ "Choose light or dark mode":"Hellen oder dunklen Modus wählen",
+ "Loading models…":"Modelle werden geladen…",
+ "Original source files":"Originale Quelldateien",
  "Model source uses project version 6, 7 or 8": "Modellquelltext verwendet Projektversion 6, 7 oder 8",
  "Unknown material preset": "Unbekannte Materialvorlage",
  "Initial velocity requires project version 8": "Anfangsgeschwindigkeit erfordert Projektversion 8",

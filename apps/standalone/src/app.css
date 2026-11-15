@@ -15,3 +15,10 @@
 .library-dialog .library-status{max-height:100px;overflow:auto;overflow-wrap:anywhere}@media(pointer:coarse){.library-dialog .library-actions button,.library-dialog>header>button{min-height:44px;min-width:44px}}
 
 html,body{overscroll-behavior:none}#cad-root{overscroll-behavior:none}
+
+/* Host dialogs follow the same preference as the shared editor. */
+html[data-cad-color-mode=light],html[data-cad-color-mode=light] body{color-scheme:light;background:#f3f7fc;color:#26374d}
+html[data-cad-color-mode=light] dialog,html[data-cad-color-mode=light] .command-popup{background:#fff;color:#26374d;border-color:#758ba7}
+html[data-cad-color-mode=light] button,html[data-cad-color-mode=light] select,html[data-cad-color-mode=light] input{background:#edf3fb;color:#26374d;border-color:#758ba7}
+html[data-cad-color-mode=light] dialog h1,html[data-cad-color-mode=light] dialog a,html[data-cad-color-mode=light] .history-layout nav button.selected{color:#075eb7}
+html[data-cad-color-mode=light] small,html[data-cad-color-mode=light] .history-status,html[data-cad-color-mode=light] #save-state{color:#52657d}
