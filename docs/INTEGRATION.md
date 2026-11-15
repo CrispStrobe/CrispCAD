@@ -303,3 +303,17 @@ Full SDK preview/control behavior: [motor programs](CAD-MOTOR-PROGRAMS.md) and
 [simulation coverage](SIMLAB-PARITY.md). The standalone owns its project library;
 Brickwright owns its SB3 persistence and VM controls. Both retain the full versioned
 CAD document, including motors, joints, world settings and trace attachments.
+
+The browser SDK supplies the reviewed offline model catalogue by default. Its
+sources, thumbnails and licence texts load lazily when Model library first opens;
+standalone uses the same `apps/shared` catalogue builder. A host can override
+`modelLibrary`, including a `load()` provider, without forking the browser panel.
+The Adafruit original archive remains separate from reviewed editable sources.
+STL insertion is an in-app action; downloading an original is an optional source
+export and does not insert unsupported STEP/Fusion files.
+
+Pass `colorMode: 'light' | 'dark'` to `mountCadEditor`, and call
+`editor.setColorMode(mode)` when the host preference changes. This updates UI
+surfaces without remounting the editor or changing document history. Explicit
+viewport background/baseplate colours are preserved. Simulation has a persistent
+header close control and `editor.simulation.close()` for host-controlled dismissal.
