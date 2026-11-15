@@ -1,7 +1,7 @@
 # Shared Robots and CAD interaction
 
 CAD's viewport and Brickwright's Robots editor now use the same pure rectangle
-selection functions. The source lives in brickwright-lite at
+selection functions and pointer camera intentions. The selection source lives in brickwright-lite at
 `overlay/scratch-gui/src/lib/editor-interaction/box-selection.js`; CAD vendors it
 unchanged at `packages/editor/src/vendor/box-selection.js`. It normalizes drag
 rectangles and intersects projected bounding boxes, clipping homogeneous edges
@@ -33,3 +33,14 @@ steps: camera gesture intents, live transform readouts, host SDK integration and
 user-created part metadata. Existing SDK entry points (`mountCadEditor`, host
 file/selection callbacks and the Brickwright sidecar adapter) are the intended
 integration boundary. Saved model history stays with its editor.
+
+The shared `camera-pointer.js` maps pointer buttons/modifiers to pan/orbit
+intentions for Robots' Brickwright/Studio presets and CAD's Tinkercad/Fusion
+presets. Space-left-drag pans in all profiles; plain left-drag stays with the
+editor. Robots retains Ctrl-connected-selection and Alt part tools, while CAD
+retains modifier orbit. The viewports keep their own axes, units, touch controls,
+pointer capture and cancellation. Both shared files are pinned by the sync script.
+
+Robots activates Space-pan only when no placing/picking tool or part drag owns
+Space. Escape, pointer cancellation, lost capture and focus loss stop the camera
+gesture without a model/undo write. Its EN/DE top Help describes the shortcut.

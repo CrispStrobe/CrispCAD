@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {cameraPointerIntent} from './vendor/camera-pointer.js';
 export type NavigationPreset='tinkercad'|'fusion';
 export interface CameraWheel {deltaX:number;deltaY:number;deltaMode:number;ctrlKey:boolean;shiftKey:boolean;altKey:boolean;precise?:boolean}
 export function cameraWheelAction(event:CameraWheel,preset:NavigationPreset,height:number){
@@ -10,8 +11,5 @@ export function cameraWheelAction(event:CameraWheel,preset:NavigationPreset,heig
  return {kind,dx,dy,factor:Math.exp(-dy*(event.ctrlKey?.01:.002))} as const;
 }
 export function cameraPointerAction(button:number,shift:boolean,alt:boolean,ctrl:boolean,space:boolean,preset:NavigationPreset){
- if(button===0)return space?'pan':alt||ctrl?'orbit':undefined;
- if(button===1)return preset==='fusion'&&shift?'orbit':'pan';
- if(button===2)return shift?'pan':'orbit';
- return undefined;
+ return cameraPointerIntent({button,shiftKey:shift,altKey:alt,ctrlKey:ctrl},preset,space);
 }

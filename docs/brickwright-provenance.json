@@ -18,6 +18,12 @@
       "source": "overlay/scratch-gui/src/lib/editor-interaction/box-selection.js",
       "commit": "a2fd7c39aa2b82334f35e7fb10ddf8987ce51804",
       "sha256": "235d8c3bea2ba57e59c0997601d1b0148c7882253ff0ae1c7609f764a2e88566"
+    },
+    {
+      "file": "packages/editor/src/vendor/camera-pointer.js",
+      "source": "overlay/scratch-gui/src/lib/editor-interaction/camera-pointer.js",
+      "commit": "7132ee8a72bf98158209d10b5fd4c138ce6de967",
+      "sha256": "7cd4ae6e00945d8646726f95b4ff7874818cf1689c9a8c82d0e2d26dab6af7d8"
     }
   ]
 }
