@@ -2,6 +2,8 @@ import type {SimulationPose} from './simulation-protocol.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import * as THREE from 'three';
 import {selectionRectangle,projectedBoxIntersects} from './vendor/box-selection.js';
+import {surfaceMove} from './surface-move.js';
+import {createMeshBounds} from './mesh-bounds.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {createSurfacePlacement} from './surface-placement.js';
 import type {PlacementPointer} from './surface-placement.js';
@@ -13,6 +15,8 @@ import {assertDrivenEdit,isCube,constrainCubeTransform,t} from '@brickwright/cad
 import type { CadSession, Transform, Vec3 } from '@brickwright/cad-core';
 import type { GeometryResult } from '@brickwright/cad-geometry';
 import { TOUCH_SLOP_PX, createTouchTracker } from './vendor/touch-gestures.js';
+import {displayGridSpacing,workplaneGridGeometry,type GridDisplay} from './workplane-grid.js';
+import {surfaceGeometry} from './surface-geometry.js';
 import {mountResizeControls} from './resize-controls.js';
 import type {ResizeFrame} from './resize-math.js';
 import {resizedTransforms} from './resize-math.js';
@@ -37,10 +41,10 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const fill = new THREE.DirectionalLight(0x91c9ff, 1.5); fill.position.set(80, 50, 50); scene.add(fill);
   const workplane = new THREE.Group(); scene.add(workplane);
   const plate = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ color: colours.baseplate, side: THREE.DoubleSide })); plate.position.z = -0.14; workplane.add(plate);canvas.dataset.backgroundColour=colours.background;canvas.dataset.baseplateColour=colours.baseplate;
-  const grid = new THREE.GridHelper(400, 400, '#52677a', '#2f4655'); grid.rotation.x = Math.PI / 2; grid.position.z = -0.1; workplane.add(grid);
-  const majorGrid = new THREE.GridHelper(400, 40, '#8c9c99', '#536861'); majorGrid.rotation.x = Math.PI / 2; majorGrid.position.z = -0.08; workplane.add(majorGrid);
+  const grid = new THREE.GridHelper(400, 400, '#52677a', '#2f4655'); grid.rotation.x = 0; grid.position.z = -0.1; workplane.add(grid);
+  const majorGrid = new THREE.GridHelper(400, 40, '#8c9c99', '#536861'); majorGrid.rotation.x = 0; majorGrid.position.z = -0.08; workplane.add(majorGrid);
   plate.material.depthWrite=false;plate.renderOrder=-10;
-  for(const lines of [grid,majorGrid]){lines.material.depthWrite=false;lines.material.transparent=true;lines.renderOrder=lines===grid?-9:-8;}majorGrid.material.opacity=.55;
+  for(const lines of [grid,majorGrid]){lines.material.depthWrite=false;lines.material.transparent=true;lines.renderOrder=lines===grid?-9:-8;}majorGrid.material.opacity=.55;grid.material.opacity=.4;
   const border = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-200,-200,0), new THREE.Vector3(200,-200,0), new THREE.Vector3(200,200,0), new THREE.Vector3(-200,200,0)]), new THREE.LineBasicMaterial({ color: '#c5a35d' })); workplane.add(border);
   const axes = new THREE.AxesHelper(45); scene.add(axes);
   const textSprites: THREE.Sprite[] = [];
@@ -59,16 +63,21 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   gizmo.setTranslationSnap(1); gizmo.setRotationSnap(15 * RAD); gizmo.setScaleSnap(null);
   let simulating=false;
   const meshes = new Map<string, THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>>();
+  const meshBounds=createMeshBounds();
   const outlines = new Map<string, THREE.LineSegments>(); const ray = new THREE.Raycaster(); const pointer = new THREE.Vector2();
   const marquee=document.createElement('div');marquee.className='cad-selection-rectangle';marquee.hidden=true;container.append(marquee);
   let boxSelect:{pointerId:number;x:number;y:number;additive:boolean;base:string[];moved:boolean;gizmoEnabled:boolean}|undefined;
   function endBox(){if(!boxSelect)return;const id=boxSelect.pointerId;gizmo.enabled=boxSelect.gizmoEnabled;boxSelect=undefined;marquee.hidden=true;orbit.enabled=true;touches.reset();down=null;suppressTap=false;if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);}
   let placementCommit:((point:PlacementPointer)=>void)|undefined,placementCanceled:(()=>void)|undefined,placementControls:{rotate:boolean;gizmo:boolean}|undefined;
-  const surfacePlacement=createSurfacePlacement(scene,()=>camera,canvas,meshes,()=>session.state.document,()=>gridStep,()=>fineEnabled);
+  let surfaceSnapEnabled=true;canvas.dataset.surfaceSnap='true';
+  const moveSurface=createSurfacePlacement(scene,()=>camera,canvas,meshes,()=>session.state.document,()=>gridStep,()=>fineEnabled,()=>surfaceSnapEnabled,'moveSnap');
+  const surfacePlacement=createSurfacePlacement(scene,()=>camera,canvas,meshes,()=>session.state.document,()=>gridStep,()=>fineEnabled,()=>surfaceSnapEnabled);
   function endPlacement(notify=true){const wasActive=surfacePlacement.active;surfacePlacement.end();if(placementControls){orbit.enableRotate=placementControls.rotate;gizmo.enabled=placementControls.gizmo;placementControls=undefined;gizmo.getHelper().visible=true;}if(notify&&wasActive)placementCanceled?.();}
   const selectionBoxes=new Map<string,THREE.BoxHelper>();let activeMode:'select'|'translate'|'rotate'|'scale'='select';
-  let directDrag:{pointerId:number;start:THREE.Vector3;plane:THREE.Plane;transforms:Map<string,Transform>;offset:Vec3;moved:boolean;precision:ReturnType<typeof precisionTracker>;usedFine:boolean}|null=null;
+  let directDrag:{pointerId:number;start:THREE.Vector3;plane:THREE.Plane;transforms:Map<string,Transform>;offset:Vec3;base:Vec3;updates?:{id:string;transform:Transform}[];moved:boolean;precision:ReturnType<typeof precisionTracker>;usedFine:boolean}|null=null;
   let disposed = false; let selected: string[] = []; let drag: { matrix: THREE.Matrix4; transforms: Map<string, Transform> } | null = null; let gridStep = 1; let multiSelect = false; let viewListener: ((view: ViewDirection) => void) | undefined;
+  let gridDisplay:GridDisplay='snap',lastGridSpacing=-1;
+  function refreshGrid(){const spacing=displayGridSpacing(gridDisplay,gridStep);canvas.dataset.gridDisplay=String(gridDisplay);canvas.dataset.displayGridSpacing=String(spacing);if(spacing===lastGridSpacing)return;lastGridSpacing=spacing;grid.visible=majorGrid.visible=spacing>0;grid.geometry.dispose();majorGrid.geometry.dispose();grid.geometry=workplaneGridGeometry(spacing,'#52677a','#2f4655');majorGrid.geometry=workplaneGridGeometry(spacing*10,'#8c9c99','#536861');}
   let resizeStyle:'dimensions'|'gizmo'='dimensions';
   let resizeControls:ReturnType<typeof mountResizeControls>|undefined,resizeFrame:ResizeFrame|undefined,resizeDelta:THREE.Matrix4|undefined,resizeFactors:Vec3=[1,1,1];
   const scaleFactors=()=>resizeDelta?resizeFactors:pivot.scale.toArray() as Vec3;
@@ -104,13 +113,17 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     const exact = Object.entries(directions).find(([name, d]) => name !== 'iso' && new THREE.Vector3(...d).normalize().dot(toward) > 0.99999)?.[0];
     const view = (exact ?? 'iso') as ViewDirection; canvas.dataset.view = view; viewListener?.(view); canvas.dataset.projection = camera instanceof THREE.OrthographicCamera ? 'orthographic' : 'perspective';
   }
-  const draw = () => { if (!disposed) {canvas.dataset.cameraPosition=JSON.stringify(camera.position.toArray());canvas.dataset.cameraTarget=JSON.stringify(orbit.target.toArray());canvas.dataset.cameraZoom=String(camera instanceof THREE.OrthographicCamera?camera.zoom:camera.position.distanceTo(orbit.target));canvas.dataset.navigation=navigationPreset; canvas.dataset.transformAxis=gizmo.axis??'';surfacePlacement.refresh();updateCube();resizeControls?.update();publishPreview();const distance=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:camera.position.distanceTo(orbit.target);grid.material.opacity=THREE.MathUtils.clamp((240-distance)/200,0,.4);for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
+  const draw = () => { if (!disposed) {canvas.dataset.cameraPosition=JSON.stringify(camera.position.toArray());canvas.dataset.cameraTarget=JSON.stringify(orbit.target.toArray());canvas.dataset.cameraZoom=String(camera instanceof THREE.OrthographicCamera?camera.zoom:camera.position.distanceTo(orbit.target));canvas.dataset.navigation=navigationPreset; canvas.dataset.transformAxis=gizmo.axis??'';updateCube();resizeControls?.update();publishPreview();for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
+  let pendingMove:PointerEvent|undefined;let pendingDraw:number|undefined;const scheduleDraw=()=>{if(pendingDraw!==undefined||disposed)return;pendingDraw=requestAnimationFrame(()=>{pendingDraw=undefined;const event=pendingMove;pendingMove=undefined;if(event)processDirectMove(event);draw();});};
+  const cameraChanged=()=>{surfacePlacement.refresh();scheduleDraw();};
+  function flushDraw(){if(pendingDraw!==undefined){cancelAnimationFrame(pendingDraw);pendingDraw=undefined;const event=pendingMove;pendingMove=undefined;if(event)processDirectMove(event);draw();}}
   function publishPreview(){
     if(!previewListener)return;let poses=selected.filter(id=>session.state.document.roots.includes(id)).map(id=>({id,transform:structuredClone(session.state.document.nodes[id].transform)})),valid=true,warning:string|undefined;
     if(drag){try{const d=delta();poses=[...drag.transforms].map(([id,original])=>({id,transform:constrainCubeTransform(session.state.document.nodes[id],applyGizmoDelta(original,d,transformMode(),scaleFactors()))}));}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}}
+    else if(directDrag?.updates)poses=directDrag.updates;
     else if(directDrag)poses=[...directDrag.transforms].map(([id,t])=>({id,transform:{...t,position:t.position.map((v,i)=>v+directDrag!.offset[i]) as Vec3}}));
     if(drag||directDrag?.moved)try{for(const {id,transform} of poses)assertDrivenEdit(session.state.document,{...session.state.document.nodes[id],transform});}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}
-    const box=new THREE.Box3();for(const {id} of poses){const mesh=meshes.get(id);if(mesh)box.union(new THREE.Box3().setFromObject(mesh,true));}
+    const box=new THREE.Box3();for(const {id} of poses){const mesh=meshes.get(id);if(mesh)box.union(meshBounds.read(mesh));}
     const center=box.isEmpty()?new THREE.Vector3():box.getCenter(new THREE.Vector3());
     const project=(point:THREE.Vector3):[number,number]=>{const p=point.clone().project(camera);return [(p.x+1)*container.clientWidth/2,(1-p.y)*container.clientHeight/2];};
     const origin=project(center),anchors:TransformAxisAnchor[]=[];
@@ -138,11 +151,12 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
         const dx=point[0]-origin[0],dy=point[1]-origin[1],length=Math.hypot(dx,dy);anchors.push({axis,point,direction:[dx/(length||1),dy/(length||1)],visible:best>-Infinity&&length>12});
       });
     }
-    previewListener({mode:activeMode,resizing:!!resizeDelta,dimensionHandles:resizeStyle==='dimensions',poses,dragging:!!drag||!!directDrag?.moved,valid,warning,axes:anchors,...(!box.isEmpty()?{bounds:{min:box.min.toArray() as Vec3,max:box.max.toArray() as Vec3}}:{})});
+    const screenCorners:THREE.Vector3[]=[];if(!box.isEmpty())for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z])screenCorners.push(new THREE.Vector3(x,y,z));const points=screenCorners.map(project),screenBounds=points.length?{left:Math.min(...points.map(p=>p[0])),right:Math.max(...points.map(p=>p[0])),top:Math.min(...points.map(p=>p[1])),bottom:Math.max(...points.map(p=>p[1]))}:undefined;
+    previewListener({screenBounds,mode:activeMode,resizing:!!resizeDelta,dimensionHandles:resizeStyle==='dimensions',poses,dragging:!!drag||!!directDrag?.moved,valid,warning,axes:anchors,...(!box.isEmpty()?{bounds:{min:box.min.toArray() as Vec3,max:box.max.toArray() as Vec3}}:{})});
   }
   function measureResizeFrame(roots:string[]):ResizeFrame|undefined{
     if(!roots.length)return;const poses=roots.map(id=>session.state.document.nodes[id].transform),q=scalePivotRotation(poses),inverse=new THREE.Matrix4().makeRotationFromQuaternion(q.clone().invert()),box=new THREE.Box3(),point=new THREE.Vector3();
-    for(const id of roots){const mesh=meshes.get(id)!;mesh.updateMatrixWorld();const matrix=inverse.clone().multiply(mesh.matrixWorld),position=mesh.geometry.getAttribute('position');for(let i=0;i<position.count;i++)box.expandByPoint(point.fromBufferAttribute(position,i).applyMatrix4(matrix));}
+    for(const id of roots){const mesh=meshes.get(id)!;mesh.updateMatrixWorld();const matrix=inverse.clone().multiply(mesh.matrixWorld),positions=meshBounds.positions(mesh);if(positions)for(let i=0;i<positions.length;i+=3)box.expandByPoint(point.set(positions[i],positions[i+1],positions[i+2]).applyMatrix4(matrix));}
     const size=box.getSize(new THREE.Vector3()).toArray() as Vec3;if(size.some(v=>v<=1e-8))return;const center=box.getCenter(new THREE.Vector3()).applyQuaternion(q).toArray() as Vec3;
     const first=new THREE.Quaternion().setFromEuler(new THREE.Euler(...poses[0].rotation.map(v=>v*RAD) as Vec3,'ZYX')),mixed=poses.some(p=>Math.abs(first.dot(new THREE.Quaternion().setFromEuler(new THREE.Euler(...p.rotation.map(v=>v*RAD) as Vec3,'ZYX'))))<1-1e-12);
     return {center,size,rotation:q,ids:[...roots],uniformOnly:mixed||roots.some(id=>isCube(session.state.document.nodes[id]))};
@@ -168,8 +182,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     for (const id of drag.transforms.keys()) { const mesh = meshes.get(id); if (mesh) { mesh.matrixAutoUpdate = false; try{const node=session.state.document.nodes[id],original=drag.transforms.get(id)!;const next=isCube(node)?constrainCubeTransform(node,applyGizmoDelta(original,d,transformMode(),scaleFactors())):undefined;mesh.matrix.copy(next?transformMatrix(next).multiply(transformMatrix(original).invert()):d);}catch{mesh.matrix.copy(d);} mesh.matrixWorldNeedsUpdate = true; } }
     draw();
   };
-  const cancelTransform = () => {if(resizeControls?.active){resizeControls.cancel();return;}endBox();resizeDelta=undefined;
-    if(directDrag){for(const id of directDrag.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;}}directDrag=null;orbit.enableRotate=true;draw();}
+  const cancelTransform = () => {pendingMove=undefined;moveSurface.end();if(resizeControls?.active){resizeControls.cancel();return;}endBox();resizeDelta=undefined;
+    if(directDrag){if(canvas.hasPointerCapture(directDrag.pointerId))canvas.releasePointerCapture(directDrag.pointerId);for(const id of directDrag.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;}}directDrag=null;orbit.enableRotate=true;draw();}
     if (!drag) return;
     for (const id of drag.transforms.keys()) { const mesh = meshes.get(id); if (mesh) { mesh.matrix.identity(); mesh.matrixWorldNeedsUpdate = true; } }
     drag = null; gizmo.reset(); orbit.enabled = true; placeGizmo();
@@ -183,8 +197,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     try { session.transform(updates); draw(); } catch (e) { for (const mesh of meshes.values()) { mesh.matrix.identity(); mesh.matrixWorldNeedsUpdate = true; } onError(e); placeGizmo(); }
   };
   gizmo.addEventListener('dragging-changed', onDrag); gizmo.addEventListener('mouseDown', startTransform); gizmo.addEventListener('objectChange', previewTransform); gizmo.addEventListener('mouseUp', endTransform);
-  const resize = new ResizeObserver(() => { const w = container.clientWidth, h = container.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); if (camera instanceof THREE.PerspectiveCamera) camera.aspect = w / h; else { const half = (camera.top - camera.bottom) / 2; camera.left = -half * w / h; camera.right = half * w / h; } camera.updateProjectionMatrix(); draw(); }); resize.observe(container);
-  orbit.addEventListener('change', draw); gizmo.addEventListener('change', draw);
+  const resize = new ResizeObserver(() => { const w = container.clientWidth, h = container.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); if (camera instanceof THREE.PerspectiveCamera) camera.aspect = w / h; else { const half = (camera.top - camera.bottom) / 2; camera.left = -half * w / h; camera.right = half * w / h; } camera.updateProjectionMatrix();surfacePlacement.refresh(); draw(); }); resize.observe(container);
+  orbit.addEventListener('change', cameraChanged); gizmo.addEventListener('change', draw);
   let down: { x: number; y: number; t: number; pointerId: number } | null = null; const touches = createTouchTracker(); let suppressTap = false;
   function pointerRay(e:PointerEvent){const rect=canvas.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);}
   function zoomCamera(factor:number){if(!Number.isFinite(factor)||factor<=0)return;if(camera instanceof THREE.OrthographicCamera){camera.zoom=THREE.MathUtils.clamp(camera.zoom*factor,.01,1000);camera.updateProjectionMatrix();}else{const offset=camera.position.clone().sub(orbit.target);camera.position.copy(orbit.target).add(offset.setLength(THREE.MathUtils.clamp(offset.length()/factor,orbit.minDistance,orbit.maxDistance)));}orbit.update();draw();}
@@ -192,9 +206,12 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     if(kind==='pan'){const height=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:2*camera.position.distanceTo(orbit.target)*Math.tan((camera as THREE.PerspectiveCamera).fov*RAD/2);const unit=height/Math.max(1,canvas.clientHeight);camera.updateMatrixWorld();const offset=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0).multiplyScalar(-dx*unit).add(new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1).multiplyScalar(dy*unit));camera.position.add(offset);orbit.target.add(offset);}
     else{const up=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0)),offset=camera.position.clone().sub(orbit.target).applyQuaternion(up),spherical=new THREE.Spherical().setFromVector3(offset);spherical.theta-=dx*.005;spherical.phi=THREE.MathUtils.clamp(spherical.phi-dy*.005,.01,orbit.maxPolarAngle);camera.position.copy(orbit.target).add(offset.setFromSpherical(spherical).applyQuaternion(up.invert()));}orbit.update();draw();
   }
+  // Camera drags disable OrbitControls, including its context-menu handler.
+  // Always consume secondary-click menus on the workplane independently.
+  const contextMenu=(event:MouseEvent)=>{event.preventDefault();event.stopImmediatePropagation();};canvas.addEventListener('contextmenu',contextMenu,true);
   const wheel=(event:WheelEvent)=>{event.preventDefault();event.stopImmediatePropagation();if(drag||directDrag?.moved||cameraDrag)return;const action=cameraWheelAction(event,navigationPreset,canvas.clientHeight);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);};canvas.addEventListener('wheel',wheel,{capture:true,passive:false});
   let gestureScale=1;const gesture=(event:Event)=>{event.preventDefault();const scale=(event as Event&{scale:number}).scale;if(event.type==='gesturestart'){gestureScale=1;return;}if(event.type==='gestureend'){gestureScale=1;return;}if(scale>0&&Number.isFinite(scale)){if(!drag&&!directDrag?.moved)zoomCamera(scale/gestureScale);gestureScale=scale;}};for(const name of ['gesturestart','gesturechange','gestureend'])canvas.addEventListener(name,gesture,{passive:false});
-  const nativeGesture=(event:Event)=>{const data=(event as CustomEvent).detail;if(!data||!Number.isFinite(data.x)||!Number.isFinite(data.y))return;let hit:Element|null=document.elementFromPoint(data.x,data.y);while(hit?.shadowRoot)hit=hit.shadowRoot.elementFromPoint(data.x,data.y);if(hit!==canvas||drag||directDrag?.moved||cameraDrag)return;if(data.kind==='zoom')zoomCamera(data.factor);else if(data.kind==='wheel'){const action=cameraWheelAction(data,navigationPreset,canvas.clientHeight);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);}};window.addEventListener('brickwright-camera-input',nativeGesture);
+  const nativeGesture=(event:Event)=>{const data=(event as CustomEvent).detail;if(!data||!Number.isFinite(data.x)||!Number.isFinite(data.y))return;let hit:Element|null=document.elementFromPoint(data.x,data.y);while(hit?.shadowRoot)hit=hit.shadowRoot.elementFromPoint(data.x,data.y);if(hit!==canvas)return;data.handled=true;if(drag||directDrag?.moved||cameraDrag)return;if(data.kind==='zoom')zoomCamera(data.factor);else if(data.kind==='wheel'){const action=cameraWheelAction(data,navigationPreset,canvas.clientHeight);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);}};window.addEventListener('brickwright-camera-input',nativeGesture);
   const cameraKey=(event:KeyboardEvent)=>{if(event.code==='Space'){spaceHeld=true;event.preventDefault();}};canvas.addEventListener('keydown',cameraKey);
   const resetCameraKeys=()=>{if(surfacePlacement.active)endPlacement();endBox();spaceHeld=false;shiftHeld=false;if(cameraDrag){gizmo.enabled=cameraDrag.gizmoEnabled;cameraDrag=undefined;orbit.enabled=true;}};window.addEventListener('blur',resetCameraKeys);
   const onDown = (e: PointerEvent) => {shiftHeld=e.shiftKey;canvas.dataset.fine=String(gizmo.isFine());
@@ -207,17 +224,22 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     if (gizmo.axis) suppressTap = true;
     if(touches.count>1){endBox();if(directDrag)cancelTransform();return;}
     if(activeMode==='select'&&e.button===0&&!gizmo.axis&&(e.pointerType!=='touch'||multiSelect)){pointerRay(e);if(!ray.intersectObjects([...meshes.values()],false).length){boxSelect={pointerId:e.pointerId,x:e.clientX,y:e.clientY,additive:multiSelect||e.shiftKey,base:[...selected],moved:false,gizmoEnabled:gizmo.enabled};orbit.enabled=false;gizmo.enabled=false;canvas.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();return;}}
-    if(activeMode==='select'&&e.button===0&&!multiSelect&&!e.shiftKey&&!e.ctrlKey&&!e.metaKey){pointerRay(e);const hit=ray.intersectObjects([...meshes.values()],false)[0];const id=hit?.object.userData.id as string|undefined;if(id){if(!selected.includes(id))session.select([id]);const view=camera.getWorldDirection(new THREE.Vector3()),normal=Math.abs(view.z)<.25?(Math.abs(view.x)>Math.abs(view.y)?new THREE.Vector3(1,0,0):new THREE.Vector3(0,1,0)):new THREE.Vector3(0,0,1);const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,hit.point);const start=ray.ray.intersectPlane(plane,new THREE.Vector3());if(start){directDrag={pointerId:e.pointerId,start:start.clone(),plane,transforms:new Map(selected.filter(id=>session.state.document.roots.includes(id)).map(id=>[id,structuredClone(session.state.document.nodes[id].transform)])),offset:[0,0,0],moved:false,precision:precisionTracker([0,0,0]),usedFine:gizmo.isFine()};orbit.enableRotate=false;}}}
+    if(activeMode==='select'&&e.button===0&&!multiSelect&&!e.shiftKey&&!e.ctrlKey&&!e.metaKey){pointerRay(e);const hit=ray.intersectObjects([...meshes.values()],false)[0];const id=hit?.object.userData.id as string|undefined;if(id){if(!selected.includes(id))session.select([id]);const view=camera.getWorldDirection(new THREE.Vector3()),normal=Math.abs(view.z)<.25?(Math.abs(view.x)>Math.abs(view.y)?new THREE.Vector3(1,0,0):new THREE.Vector3(0,1,0)):new THREE.Vector3(0,0,1);const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,hit.point);const start=ray.ray.intersectPlane(plane,new THREE.Vector3());if(start){directDrag={pointerId:e.pointerId,start:start.clone(),plane,transforms:new Map(selected.filter(id=>session.state.document.roots.includes(id)).map(id=>[id,structuredClone(session.state.document.nodes[id].transform)])),offset:[0,0,0],base:(()=>{const box=new THREE.Box3();for(const key of selected){const m=meshes.get(key);if(m)box.union(meshBounds.read(m));}const bottom=new THREE.Plane(new THREE.Vector3(0,0,1),-box.min.z),p=ray.ray.intersectPlane(bottom,new THREE.Vector3())??box.getCenter(new THREE.Vector3());return [p.x,p.y,box.min.z] as Vec3;})(),moved:false,precision:precisionTracker([0,0,0]),usedFine:gizmo.isFine()};orbit.enableRotate=false;canvas.setPointerCapture(e.pointerId);if(surfaceSnapEnabled)moveSurface.begin([...directDrag.transforms.keys()],true);}}}
   };
   const onMove = (e: PointerEvent) => {if(boxSelect?.pointerId===e.pointerId){const rect=canvas.getBoundingClientRect(),x=Math.min(boxSelect.x,e.clientX)-rect.left,y=Math.min(boxSelect.y,e.clientY)-rect.top,w=Math.abs(e.clientX-boxSelect.x),h=Math.abs(e.clientY-boxSelect.y);boxSelect.moved||=Math.hypot(w,h)>TOUCH_SLOP_PX;marquee.hidden=!boxSelect.moved;Object.assign(marquee.style,{left:`${x}px`,top:`${y}px`,width:`${w}px`,height:`${h}px`});e.preventDefault();e.stopImmediatePropagation();return;}if(cameraDrag?.id===e.pointerId){navigate(cameraDrag.kind,e.clientX-cameraDrag.x,e.clientY-cameraDrag.y);cameraDrag.x=e.clientX;cameraDrag.y=e.clientY;e.preventDefault();e.stopImmediatePropagation();return;}shiftHeld=e.shiftKey;canvas.dataset.fine=String(gizmo.isFine());
-    if(surfacePlacement.active){surfacePlacement.move(e);draw();}
+    if(surfacePlacement.active){surfacePlacement.move(e);scheduleDraw();}
     if (e.pointerType === 'touch') touches.move({ id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp });
+    if(directDrag?.pointerId===e.pointerId){e.preventDefault();e.stopImmediatePropagation();pendingMove=e;scheduleDraw();}
+  };
+  function processDirectMove(e:PointerEvent){
     if(!directDrag||directDrag.pointerId!==e.pointerId||!down)return;
     if(!directDrag.moved&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<=TOUCH_SLOP_PX)return;
+    if(surfaceSnapEnabled&&!e.altKey){if(!moveSurface.active)moveSurface.begin([...directDrag.transforms.keys()],true);const pose=moveSurface.move(e);if(pose){const next=surfaceMove([...directDrag.transforms].map(([id,transform])=>({id,transform})),directDrag.base,pose.point,pose.normal);directDrag.updates=next.updates;directDrag.moved=true;for(const id of directDrag.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrixAutoUpdate=false;mesh.matrix.copy(next.delta);mesh.matrixWorldNeedsUpdate=true;}}return;}}
+    moveSurface.end();directDrag.updates=undefined;
     pointerRay(e);const point=ray.ray.intersectPlane(directDrag.plane,new THREE.Vector3());if(!point)return;
     const d=point.sub(directDrag.start);directDrag.usedFine||=gizmo.isFine();const filtered=directDrag.precision.sample([d.x,d.y,d.z],gizmo.isFine());directDrag.offset=snapDelta(filtered,(gridStep||.01)/(directDrag.usedFine?10:1));directDrag.moved=true;
-    for(const id of directDrag.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrixAutoUpdate=false;mesh.matrix.makeTranslation(...directDrag.offset);mesh.matrixWorldNeedsUpdate=true;}}draw();
-  };
+    for(const id of directDrag.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrixAutoUpdate=false;mesh.matrix.makeTranslation(...directDrag.offset);mesh.matrixWorldNeedsUpdate=true;}}
+  }
   const onUp = (e: PointerEvent) => {
     if(boxSelect?.pointerId===e.pointerId){
       const action=boxSelect,rect=canvas.getBoundingClientRect();
@@ -225,7 +247,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       const captured:string[]=[];
       camera.updateMatrixWorld();
       if(action.moved)for(const [id,mesh] of meshes){
-        const box=new THREE.Box3().setFromObject(mesh),points:THREE.Vector4[]=[];
+        const box=meshBounds.read(mesh),points:THREE.Vector4[]=[];
         for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z]){
           points.push(new THREE.Vector4(x,y,z,1).applyMatrix4(camera.matrixWorldInverse).applyMatrix4(camera.projectionMatrix));
         }
@@ -235,7 +257,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       e.preventDefault();e.stopImmediatePropagation();return;
     }
     if(cameraDrag?.id===e.pointerId){gizmo.enabled=cameraDrag.gizmoEnabled;cameraDrag=undefined;orbit.enabled=true;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();return;}
-    if(directDrag?.pointerId===e.pointerId){const action=directDrag;directDrag=null;orbit.enableRotate=true;if(action.moved){down=null;touches.reset();suppressTap=false;try{session.transform([...action.transforms].map(([id,transform])=>({id,transform:{...transform,position:transform.position.map((v,i)=>v+action.offset[i]) as Vec3}})));}catch(error){for(const id of action.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;}}onError(error);draw();}return;}}
+    if(directDrag?.pointerId===e.pointerId){flushDraw();const action=directDrag;directDrag=null;moveSurface.end();if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);orbit.enableRotate=true;if(action.moved){down=null;touches.reset();suppressTap=false;try{session.transform(action.updates??[...action.transforms].map(([id,transform])=>({id,transform:{...transform,position:transform.position.map((v,i)=>v+action.offset[i]) as Vec3}})));}catch(error){for(const id of action.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;}}onError(error);draw();}return;}}
     const gesture = e.pointerType === 'touch' ? touches.up({ id: e.pointerId, t: e.timeStamp }) : null;
     if(surfacePlacement.active){const allowed=!suppressTap&&e.button===0;down=null;if(!touches.count)suppressTap=false;if(allowed)placementCommit?.(e);return;}
     const start = down; if (!start || start.pointerId !== e.pointerId) { if (!touches.count) { down = null; suppressTap = false; } return; }
@@ -263,9 +285,9 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   function update(result: GeometryResult) {
     cancelTransform(); clear();
     for (const body of result.bodies) {
-      const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.BufferAttribute(body.positions, 3)); geometry.setIndex(new THREE.BufferAttribute(body.indices, 1)); geometry.computeVertexNormals();
-      const material = new THREE.MeshStandardMaterial({ color: body.hole?'#9eb8c8':body.color,transparent:!!body.hole,opacity:body.hole?.3:1,depthWrite:!body.hole, metalness: 0.08, roughness: 0.65, flatShading: true });
-      const mesh = new THREE.Mesh(geometry, material); mesh.userData.id = body.id;
+      const geometry=surfaceGeometry(body.positions,body.indices);
+      const material = new THREE.MeshStandardMaterial({ color: body.hole?'#9eb8c8':body.color,transparent:!!body.hole,opacity:body.hole?.3:1,depthWrite:!body.hole, metalness: 0.08, roughness: 0.65, flatShading: false });
+      const mesh = new THREE.Mesh(geometry, material); mesh.userData.id = body.id;meshBounds.register(mesh,body.positions,body.bounds);
       const outline = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 28), new THREE.LineBasicMaterial({ color: '#172a36', transparent: true, opacity: 0.8 })); mesh.add(outline);
       meshes.set(body.id, mesh); outlines.set(body.id, outline); scene.add(mesh);
     } setSelection(selected); draw();
@@ -292,7 +314,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     preview:r=>{if(!drag)return;const updates=resizedTransforms([...drag.transforms].map(([id,transform])=>({id,transform})),r);for(const u of updates)assertDrivenEdit(session.state.document,{...session.state.document.nodes[u.id],transform:u.transform});resizeDelta=r.delta;resizeFactors=r.factors;previewTransform();},
     commit:r=>{resizeFrame=r.frame;orbit.enabled=true;endTransform();},cancel:()=>{orbit.enabled=true;cancelTransform();},error:onError,
   });
-  draw();
+  refreshGrid();draw();
   return { setSimulationPoses(value:SimulationPose[]|null){cancelTransform();simulating=value!==null;gizmo.enabled=!simulating;for(const mesh of meshes.values()){mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;}for(const pose of value??[]){const mesh=meshes.get(pose.id);if(mesh){mesh.matrixAutoUpdate=false;mesh.matrix.compose(new THREE.Vector3(...pose.positionMm as [number,number,number]),new THREE.Quaternion(...pose.quaternion as [number,number,number,number]),new THREE.Vector3(1,1,1));mesh.matrixWorldNeedsUpdate=true;}}placeGizmo();draw();}, canvas, update, setSelection, frame, setView, cancelTransform,get interacting(){return surfacePlacement.active||!!boxSelect||!!drag||!!directDrag?.moved;},
     beginPlacement(){if(surfacePlacement.active)endPlacement(false);cancelTransform();placementControls={rotate:orbit.enableRotate,gizmo:gizmo.enabled};surfacePlacement.begin();orbit.enableRotate=false;gizmo.enabled=false;gizmo.getHelper().visible=false;draw();},
     setPlacementRole(value:'solid'|'hole'){surfacePlacement.setRole(value);draw();},
@@ -300,6 +322,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     movePlacement(point:PlacementPointer){const result=surfacePlacement.move(point);draw();return result;},
     cancelPlacement(){endPlacement();draw();},
     setPlacementHandlers(commit:(point:PlacementPointer)=>void,cancel:()=>void){placementCommit=commit;placementCanceled=cancel;},
+    setSurfaceSnap(value:boolean){cancelTransform();surfaceSnapEnabled=value;canvas.dataset.surfaceSnap=String(value);surfacePlacement.refresh();draw();},get surfaceSnap(){return surfaceSnapEnabled;},
     get placementActive(){return surfacePlacement.active;},
     get appearance(){return {...colours};},setAppearance(value:{background:string;baseplate:string}){if(!validColour(value.background)||!validColour(value.baseplate))throw new Error(t('Choose a six-digit colour'));Object.assign(colours,value);(scene.background as THREE.Color).set(value.background);plate.material.color.set(value.baseplate);canvas.dataset.backgroundColour=value.background;canvas.dataset.baseplateColour=value.baseplate;draw();},
     get resizeControls(){return resizeStyle;},setResizeControls(value:'dimensions'|'gizmo'){if(surfacePlacement.active)endPlacement();cancelTransform();resizeStyle=value==='gizmo'?'gizmo':'dimensions';gizmo.setScaleSnap(resizeStyle==='gizmo'?.1:null);canvas.dataset.resizeControls=resizeStyle;placeGizmo();},
@@ -325,12 +348,13 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       if (updates.length) session.transform(updates);
     },
     setMode(mode: 'select' | 'translate' | 'rotate' | 'scale') {if(surfacePlacement.active)endPlacement(); cancelTransform();activeMode=mode;canvas.dataset.mode=mode;if(mode!=='select'){gizmo.setMode(mode); gizmo.setSpace(mode === 'scale' ? 'local' : 'world');}placeGizmo();draw(); },
-    setGrid(step: number) { gridStep = step;gizmo.gridStep=step; gizmo.setTranslationSnap(gridStep || null); },
-    setFine(enabled:boolean){fineEnabled=enabled;canvas.dataset.fine=String(gizmo.isFine());},get fine(){return fineEnabled;},
+    get gridDisplay(){return gridDisplay;},setGridDisplay(value:GridDisplay){displayGridSpacing(value,gridStep);gridDisplay=value;refreshGrid();draw();},
+    setGrid(step: number) { gridStep = step;refreshGrid();surfacePlacement.refresh();draw();gizmo.gridStep=step; gizmo.setTranslationSnap(gridStep || null); },
+    setFine(enabled:boolean){fineEnabled=enabled;canvas.dataset.fine=String(gizmo.isFine());surfacePlacement.refresh();draw();},get fine(){return fineEnabled;},
     nudge(dx: number, dy: number, dz: number,fine=false) {
       const offset = snapDelta([dx, dy, dz], (gridStep || .1)/(fine?10:1));
       session.transform(selected.filter(id => session.state.document.roots.includes(id)).map(id => { const transform = structuredClone(session.state.document.nodes[id].transform); transform.position = transform.position.map((v, i) => v + offset[i]) as Vec3; return { id, transform }; }));
     },
-    dispose() {resizeControls?.dispose();resizeControls=undefined;endPlacement(false);surfacePlacement.dispose(); endBox();marquee.remove();disposed = true;canvas.removeEventListener('wheel',wheel,true);canvas.removeEventListener('keydown',cameraKey);for(const name of ['gesturestart','gesturechange','gestureend'])canvas.removeEventListener(name,gesture);window.removeEventListener('brickwright-camera-input',nativeGesture);window.removeEventListener('blur',resetCameraKeys);window.removeEventListener('keyup',releaseShift); resize.disconnect(); touches.reset(); canvas.removeEventListener('pointerdown', onDown,true); canvas.removeEventListener('pointermove', onMove,true); canvas.removeEventListener('pointerup', onUp,true); canvas.removeEventListener('pointercancel', onCancel); gizmo.removeEventListener('dragging-changed', onDrag); gizmo.removeEventListener('mouseDown', startTransform); gizmo.removeEventListener('objectChange', previewTransform); gizmo.removeEventListener('mouseUp', endTransform); gizmo.removeEventListener('change', draw); orbit.removeEventListener('change', draw); gizmo.dispose(); orbit.dispose(); clear(); for (const object of [grid, majorGrid, border, plate, axes]) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()); } for (const sprite of textSprites) { sprite.material.map?.dispose(); sprite.material.dispose(); } renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); cube.remove(); },
+    dispose() {resizeControls?.dispose();resizeControls=undefined;endPlacement(false);surfacePlacement.dispose();moveSurface.dispose(); endBox();marquee.remove();disposed = true;if(pendingDraw!==undefined)cancelAnimationFrame(pendingDraw);canvas.removeEventListener('wheel',wheel,true);canvas.removeEventListener('contextmenu',contextMenu,true);canvas.removeEventListener('keydown',cameraKey);for(const name of ['gesturestart','gesturechange','gestureend'])canvas.removeEventListener(name,gesture);window.removeEventListener('brickwright-camera-input',nativeGesture);window.removeEventListener('blur',resetCameraKeys);window.removeEventListener('keyup',releaseShift); resize.disconnect(); touches.reset(); canvas.removeEventListener('pointerdown', onDown,true); canvas.removeEventListener('pointermove', onMove,true); canvas.removeEventListener('pointerup', onUp,true); canvas.removeEventListener('pointercancel', onCancel); gizmo.removeEventListener('dragging-changed', onDrag); gizmo.removeEventListener('mouseDown', startTransform); gizmo.removeEventListener('objectChange', previewTransform); gizmo.removeEventListener('mouseUp', endTransform); gizmo.removeEventListener('change', draw); orbit.removeEventListener('change', cameraChanged); gizmo.dispose(); orbit.dispose();for(const helper of selectionBoxes.values()){scene.remove(helper);helper.geometry.dispose();(helper.material as THREE.Material).dispose();}selectionBoxes.clear(); clear(); for (const object of [grid, majorGrid, border, plate, axes]) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()); } for (const sprite of textSprites) { sprite.material.map?.dispose(); sprite.material.dispose(); } renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); cube.remove(); },
   };
 }

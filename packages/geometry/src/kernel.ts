@@ -70,7 +70,14 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
     else if(shape.kind==='minkowski'){const inputs=shape.shapes.map(buildCode);solid=inputs[0];for(const child of inputs.slice(1)){if(solid.numTri()*child.numTri()>2500000)throw new GeometryResourceLimitError(t('Minkowski operation exceeds the pair budget'));solid=keep(solid.minkowskiSum(child));if(solid.numTri()>200000)throw new GeometryResourceLimitError(t('Evaluated solid exceeds 200000 faces'));}}
     else if('shapes' in shape){const inputs=shape.shapes.map(buildCode);solid=keep(shape.kind==='hull'?module.Manifold.hull(inputs):shape.kind==='union'?module.Manifold.union(inputs):shape.kind==='subtract'?module.Manifold.difference(inputs):module.Manifold.intersection(inputs));}
     else if(shape.kind==='repeat'){const child=buildCode(shape.shape);const copies=Array.from({length:shape.count},(_,i)=>keep(child.translate(shape.step.map(v=>v*i) as [number,number,number])));solid=keep(module.Manifold.union(copies));}
-    else {const child=buildCode(shape.shape);solid=keep(shape.kind==='move'?child.translate(shape.vector):shape.kind==='rotate'?child.rotate(shape.vector):child.scale(shape.vector));}
+    else {
+      const childShape=shape.shape;
+      // A half-size move of a centred box is exactly a box from the origin.
+      // Construct that directly: nested decimal moves otherwise introduce a
+      // spurious gap at an authored shared face before CSG, hidden by Float32.
+      if(shape.kind==='move'&&childShape.kind==='box'&&shape.vector.every((v,i)=>v===childShape.size[i]/2))solid=keep(module.Manifold.cube(childShape.size,false));
+      else {const child=buildCode(childShape);solid=keep(shape.kind==='move'?child.translate(shape.vector):shape.kind==='rotate'?child.rotate(shape.vector):child.scale(shape.vector));}
+    }
     codeCache.set(shape,solid);return solid;
   };
   const build = (id: string): Manifold => {

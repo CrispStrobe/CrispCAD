@@ -11,6 +11,10 @@ import UniformTypeIdentifiers
         guard let data = try? JSONSerialization.data(withJSONObject: payload), let json = String(data: data, encoding: .utf8) else { return }
         evaluateJavaScript("window.dispatchEvent(new CustomEvent('brickwright-camera-input', {detail: \(json)}));", completionHandler: completion)
     }
+    func routeCameraWheel(_ payload: [String: Any], completion: @escaping (Bool) -> Void) {
+        guard let data = try? JSONSerialization.data(withJSONObject: payload), let json = String(data: data, encoding: .utf8) else { completion(false); return }
+        evaluateJavaScript("(() => {const detail = \(json); window.dispatchEvent(new CustomEvent('brickwright-camera-input', {detail})); return detail.handled === true;})()") { value, _ in completion(value as? Bool == true) }
+    }
     override func magnify(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
         routeCameraMagnification(factor: 1 + Double(event.magnification), x: Double(point.x), y: Double(isFlipped ? point.y : bounds.height - point.y))
@@ -104,6 +108,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     private var smokeStage = 0
     private var smokeAttempts = 0
     private var magnificationMonitor: Any?
+    private var wheelMonitor: Any?
+    private var forwardingWheel = false
     private var cameraSmokeDone = false
     private var pageLoaded = false
     private var editorState:[String:Bool]=[:]
@@ -146,6 +152,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         let infoJSON=String(data:try! JSONSerialization.data(withJSONObject:info),encoding:.utf8)!
         configuration.userContentController.addUserScript(WKUserScript(source: "window.brickwrightDesktop = true;window.brickwrightDesktopInfo=\(infoJSON);\(smoke ? "localStorage.setItem('brickwright-cad:locale','en');" : "")", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         webView = CadWebView(frame: .zero, configuration: configuration)
+        webView.allowsBackForwardNavigationGestures = false
         webView.navigationDelegate = self; webView.uiDelegate = self; webView.isInspectable = true
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1440, height: 920), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.title = smoke ? "Brickwright CAD — verification" : "Brickwright CAD"
@@ -153,6 +160,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         window.center(); if !smoke { window.setFrameAutosaveName("CADWorkspace") }; window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         // Intercept before WebKit's internal content view can consume magnify.
+        // WebKit's content subview can consume trackpad scrolling before a
+        // WKWebView override sees it. Route it before that view, then forward
+        // unhandled control/panel scrolling once without re-entering the monitor.
+        wheelMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+            guard let self, !self.forwardingWheel, event.window === self.window, let view = self.webView as? CadWebView else { return event }
+            let point = view.convert(event.locationInWindow, from: nil)
+            let payload: [String: Any] = ["kind":"wheel", "deltaX":-Double(event.scrollingDeltaX), "deltaY":-Double(event.scrollingDeltaY), "deltaMode":0, "precise":event.hasPreciseScrollingDeltas, "shiftKey":event.modifierFlags.contains(.shift), "altKey":event.modifierFlags.contains(.option), "ctrlKey":event.modifierFlags.contains(.control), "x":Double(point.x), "y":Double(view.isFlipped ? point.y : view.bounds.height - point.y)]
+            view.routeCameraWheel(payload) { [weak self] handled in
+                guard let self, !handled else { return }
+                self.forwardingWheel = true
+                NSApp.sendEvent(event)
+                self.forwardingWheel = false
+            }
+            return nil
+        }
         magnificationMonitor = NSEvent.addLocalMonitorForEvents(matching: .magnify) { [weak self] event in
             guard let self, event.window === self.window, let view = self.webView as? CadWebView else { return event }
             let point = view.convert(event.locationInWindow, from: nil)
@@ -217,6 +239,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     }
     func applicationWillTerminate(_ notification: Notification) {
         if let monitor = magnificationMonitor { NSEvent.removeMonitor(monitor); magnificationMonitor = nil }
+        if let monitor = wheelMonitor { NSEvent.removeMonitor(monitor); wheelMonitor = nil }
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -402,7 +425,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
           if (\(smokeStage) === 13) {const panel=root.querySelector('.code-dialog[open]');if(!panel)return 'waiting';Array.from(panel.querySelectorAll('button')).find(b=>b.textContent==='Create code object').click();return 'code-created';}
           if (\(smokeStage) === 14) {const code=Object.values(doc.nodes).find(n=>n.kind==='code');return objects.length===4 && doc.version===4 && code?.program.language==='brickwright-cad-script' ? 'model-source-command':'waiting';}
           if (\(smokeStage) === 15) {const pane=root.querySelector('.model-source-pane:not([hidden])');return pane?.querySelector('textarea')?.value.includes('cad`') && doc.version===4 ? 'model-library-command':'waiting';}
-          if (\(smokeStage) === 16) {const gallery=root.querySelector('.model-library-dialog[open]');if(!gallery||gallery.querySelectorAll('.model-library-card img').length!==149||!root.querySelector('.file-tools')?.hidden)return 'waiting';gallery.close();return 'passed';}
+          if (\(smokeStage) === 16) {const gallery=root.querySelector('.model-library-dialog[open]');if(!gallery||gallery.querySelectorAll('.model-library-card img').length<149||!root.querySelector('.file-tools')?.hidden)return 'waiting';gallery.close();return 'passed';}
           if (!Array.from(root.querySelectorAll('#iterations option')).some(option => option.textContent.startsWith('#3 ·'))) return 'waiting';
           if (!document.querySelector('.library-dialog .project-card')) return 'waiting';
           return window.brickwrightDesktop && !!window.webkit.messageHandlers.cadSave && !!window.brickwrightPrepareToClose ? 'passed' : 'bridge missing';
@@ -417,9 +440,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
                     if let error { self.fail(error.localizedDescription); return }
                     self.webView.callAsyncJavaScript("const c=document.querySelector('#cad-root').shadowRoot.querySelector('canvas[data-testid=\"cad-canvas\"]');return Number(c.dataset.cameraZoom)<before && (window.visualViewport?.scale??1)===1 && localStorage.getItem('brickwright-cad:standalone:v1')===saved;", arguments:["before":before,"saved":saved],in:nil,in:.page) { result in
                         guard case .success(let value) = result, value as? Bool == true else { self.fail("Native magnification did not zoom only the camera"); return }
-                        self.cameraSmokeDone = true
                         print("PASS: native magnification route zooms camera at 1x page scale without changing project data")
-                        self.pollSmoke()
+                        guard self.wheelMonitor != nil else { self.fail("Native wheel monitor missing"); return }
+                        self.webView.evaluateJavaScript("({target:document.querySelector('#cad-root').shadowRoot.querySelector('canvas[data-testid=\"cad-canvas\"]').dataset.cameraTarget,origin:performance.timeOrigin})") { value, error in
+                            guard error == nil, let state = value as? [String:Any], let target = state["target"] as? String, let origin = state["origin"] as? Double else { self.fail("Missing camera pan state"); return }
+                            view.routeCameraWheel(["kind":"wheel","x":x,"y":y,"deltaX":24,"deltaY":8,"deltaMode":0,"precise":true,"shiftKey":false,"altKey":false,"ctrlKey":false]) { handled in
+                                guard handled else { self.fail("Native trackpad event was not consumed by camera"); return }
+                                self.webView.callAsyncJavaScript("const c=document.querySelector('#cad-root').shadowRoot.querySelector('canvas[data-testid=\"cad-canvas\"]');return c.dataset.cameraTarget!==target && performance.timeOrigin===origin && (window.visualViewport?.scale??1)===1 && localStorage.getItem('brickwright-cad:standalone:v1')===saved;",arguments:["target":target,"origin":origin,"saved":saved],in:nil,in:.page) { result in
+                                    guard case .success(let value) = result,value as? Bool == true else {self.fail("Native two-finger route did not pan without reloading");return}
+                                    print("PASS: native precise scrolling pans camera without reload, page zoom or model edits")
+                                    self.cameraSmokeDone=true
+                                    self.pollSmoke()
+                                }
+                            }
+                        }
                     }
                 }
                 return

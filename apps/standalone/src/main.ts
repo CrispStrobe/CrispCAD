@@ -27,17 +27,23 @@ const historyUI=mountHistoryUI(()=>editor,async revision=>{
  const doc=await store.readDocument(revision.id);if(editor!==current||current.session.state.revision!==expectedRevision)throw new Error(t('The model changed while loading this iteration. Try restoring again.'));restoring=revision;current.session.load(doc);await lastSave;await current.whenIdle();current.frame();
 },prepareToClose);
 document.querySelector('#library')!.addEventListener('click',()=>historyUI.open());
+let surfaceSnap=true;try{surfaceSnap=localStorage.getItem('brickwright-cad:view:surface-snap')!=='false';}catch{}
+function saveSurfaceSnap(value:boolean){surfaceSnap=value;try{localStorage.setItem('brickwright-cad:view:surface-snap',String(value));}catch{}}
 let showReadout=false;try{showReadout=localStorage.getItem('brickwright-cad:view:readout')==='true';}catch{}
 function saveReadout(visible:boolean){showReadout=visible;try{localStorage.setItem('brickwright-cad:view:readout',String(visible));}catch{}}
-let navigationPreset:'tinkercad'|'fusion'='tinkercad';try{if(localStorage.getItem('brickwright-cad:view:navigation')==='fusion')navigationPreset='fusion';}catch{}
+let navigationPreset:'tinkercad'|'fusion'=window.brickwrightDesktop||/Mac/.test(navigator.platform)&&navigator.maxTouchPoints===0?'fusion':'tinkercad';try{const v=localStorage.getItem('brickwright-cad:view:navigation');if(v==='fusion'||v==='tinkercad')navigationPreset=v;}catch{}
 function saveNavigation(value:'tinkercad'|'fusion'){localStorage.setItem('brickwright-cad:view:navigation',value);navigationPreset=value;editor?.setNavigation(value);}
+let rightPane={shapesFirst:true,split:50};try{const v=JSON.parse(localStorage.getItem('brickwright-cad:view:right-pane')??'null');if(v&&typeof v.shapesFirst==='boolean'&&Number.isFinite(v.split)&&v.split>=20&&v.split<=80)rightPane=v;}catch{}
+function saveRightPane(value:typeof rightPane){rightPane={...value};try{localStorage.setItem('brickwright-cad:view:right-pane',JSON.stringify(value));}catch{}editor?.setRightPane(value);}
+let gridDisplay:'snap'|number='snap';try{const v=localStorage.getItem('brickwright-cad:view:grid-display');if(v&&v!=='snap'&&Number.isFinite(Number(v))&&(Number(v)===0||Number(v)>=.05&&Number(v)<=400))gridDisplay=Number(v);}catch{}
+function saveGridDisplay(value:'snap'|number){gridDisplay=value;try{localStorage.setItem('brickwright-cad:view:grid-display',String(value));}catch{}editor?.setGridDisplay(value);}
 let resizeControls:'dimensions'|'gizmo'='dimensions';try{if(localStorage.getItem('brickwright-cad:view:resize-controls')==='gizmo')resizeControls='gizmo';}catch{}
 function saveResizeControls(value:'dimensions'|'gizmo'){resizeControls=value;try{localStorage.setItem('brickwright-cad:view:resize-controls',value);}catch{}editor?.setResizeControls(value);}
 let shapeBrowserLayout:'popover'|'docked'='popover';try{if(localStorage.getItem('brickwright-cad:view:shape-browser')==='docked')shapeBrowserLayout='docked';}catch{}
 function saveShapeBrowser(value:'popover'|'docked'){shapeBrowserLayout=value;try{localStorage.setItem('brickwright-cad:view:shape-browser',value);}catch{}}
 const defaultAppearance={background:'#111e29',baseplate:'#233644'};let appearance={...defaultAppearance};try{const saved=JSON.parse(localStorage.getItem('brickwright-cad:view:appearance')??'null');if(saved&&/^#[0-9a-f]{6}$/i.test(saved.background)&&/^#[0-9a-f]{6}$/i.test(saved.baseplate))appearance=saved;}catch{}
 function saveAppearance(value:typeof appearance){localStorage.setItem('brickwright-cad:view:appearance',JSON.stringify(value));appearance={...value};editor?.setAppearance(value);}
-mountAppDialogs({getResizeControls:()=>editor?.resizeControls??resizeControls,setResizeControls:saveResizeControls,getShapeBrowser:()=>editor?.shapeBrowserLayout??shapeBrowserLayout,setShapeBrowser:value=>{saveShapeBrowser(value);editor?.setShapeBrowserLayout(value);},getNavigation:()=>navigationPreset,setNavigation:saveNavigation,getAppearance:()=>({...appearance}),setAppearance:saveAppearance,getReadout:()=>editor?.transformReadoutVisible??showReadout,setReadout:visible=>{saveReadout(visible);editor?.setTransformReadoutVisible(visible);},setLanguage:async language=>{await prepareToClose();try{localStorage.setItem('brickwright-cad:locale',language);}catch{throw new Error(t('Language preference could not be saved'));}await window.webkit?.messageHandlers.cadHost?.postMessage({action:'locale',data:language});location.reload();}});
+mountAppDialogs({getRightPane:()=>editor?.rightPane??rightPane,setRightPane:saveRightPane,getGridDisplay:()=>editor?.gridDisplay??gridDisplay,setGridDisplay:saveGridDisplay,getResizeControls:()=>editor?.resizeControls??resizeControls,setResizeControls:saveResizeControls,getShapeBrowser:()=>editor?.shapeBrowserLayout??shapeBrowserLayout,setShapeBrowser:value=>{saveShapeBrowser(value);editor?.setShapeBrowserLayout(value);},getNavigation:()=>navigationPreset,setNavigation:saveNavigation,getAppearance:()=>({...appearance}),setAppearance:saveAppearance,getReadout:()=>editor?.transformReadoutVisible??showReadout,setReadout:visible=>{saveReadout(visible);editor?.setTransformReadoutVisible(visible);},setLanguage:async language=>{await prepareToClose();try{localStorage.setItem('brickwright-cad:locale',language);}catch{throw new Error(t('Language preference could not be saved'));}await window.webkit?.messageHandlers.cadHost?.postMessage({action:'locale',data:language});location.reload();}});
 const desktop=mountDesktopHost(()=>editor,{projects:()=>historyUI.open(),about:()=>hostActions.querySelector<HTMLButtonElement>('#about')!.click(),settings:()=>hostActions.querySelector<HTMLButtonElement>('#settings')!.click(),help:()=>hostActions.querySelector<HTMLButtonElement>('#help')!.click()});
 async function record(document:CadDocument,label:string,parentId?:string){
  const token=++saveToken;let cacheFailed=false;badge.textContent=t('Saving iteration…');badge.className='';
@@ -66,7 +72,7 @@ function start(doc?: CadDocument) {
     editor = mountCadEditor(root, {
       modelLibrary:{cache:createModelLibraryBrowserCache(),...createBundledModelLibrary()},
       document: doc, wasmURL: new URL('../cad-assets/manifold.wasm', import.meta.url).href,
-      headerContent:hostActions,navigationPreset,resizeControls,shapeBrowserLayout,onShapeBrowserLayoutChange:saveShapeBrowser,nativeMenus:desktop.available,
+      headerContent:hostActions,surfaceSnap,onSurfaceSnapChange:saveSurfaceSnap,navigationPreset,resizeControls,gridDisplay,rightPane,shapeBrowserLayout,onShapeBrowserLayoutChange:saveShapeBrowser,nativeMenus:desktop.available,
       showTransformReadout:showReadout,onTransformReadoutChange:saveReadout,appearance,
       saveProject:async()=>{if(editor)await saveProject(editor.session.state.document);},
       decodeProject,

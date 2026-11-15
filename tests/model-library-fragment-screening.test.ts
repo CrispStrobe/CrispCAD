@@ -22,5 +22,5 @@ it('advances the unchanged demo without rewriting historical refusal or admittin
  expect(report.guardDiagnostic).toMatchObject({guard:'constructionDepth',observed:33,maximum:32,constructionVisits:135,valueEvaluations:1157});
  const manifest=JSON.parse(readFileSync('library/editor-corpus-manifest.json','utf8'));
  expect(manifest.assets.some((asset:any)=>asset.corpusSelection.repositoryId==='smooth-prim')).toBe(false);
- expect(manifest.selection.runtimeChecked).toBe(98);
+ expect(manifest.selection.runtimeChecked).toBe(manifest.assets.length);
 });

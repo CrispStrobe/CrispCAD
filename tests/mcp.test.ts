@@ -40,3 +40,14 @@ it('discovers and executes the new constructors and versioned Cube recipe throug
  const host=await createCodeHost();cleanups.push(()=>host.dispose());const help=await host.call('cad_code_help');expect(help.functions.some((f:string)=>f.startsWith('ellipticFrustum'))).toBe(true);for(const name of ['torus','ellipsoid','roundedCylinder'])expect(help.functions.some((f:string)=>f.startsWith(name+'('))).toBe(true);expect(help.generatorRecipes.cube).toMatchObject({version:2,preset:'cube',values:{edge:30}});expect(help.generatorRecipes['socket-head-screw'].driveStyle).toBe('hex');
  const preview=await host.call('cad_preview_code',{source:'return ellipticFrustum(5,3,2,4,12,24);'});expect(preview.volumeMm3).toBeGreaterThan(100);const state=await host.call('cad_get_model_source'),source=state.source.replace('roots([]);',`generated("linked-cube",{name:"Cube"},${JSON.stringify(help.generatorRecipes.cube)});\nroots(["linked-cube"]);`);const result=await host.call('cad_apply_model_source',{source,expectedRevision:state.revision});expect(result.geometry.volumeMm3).toBeCloseTo(27000);expect(result.objects[0].kind).toBe('box');
 },30000);
+
+it('shares retained tube recipes between MCP source edits, GUI reconstruction and portable history',async()=>{
+ const folder=await mkdtemp(join(tmpdir(),'cad-mcp-tube-')),path=join(folder,'tube.bcad');cleanups.push(()=>rm(folder,{recursive:true,force:true}));const host=await createCodeHost({project:path});cleanups.push(()=>host.dispose());const help=await host.call('cad_code_help');
+ expect(help.generatorRecipes.tube.values).toMatchObject({outerDiameter:30,wallThickness:5});expect(help.generatorRecipes['set-screw'].tipStyle).toBe('cup');
+ const initial=await host.call('cad_get_model_source'),r=structuredClone(help.generatorRecipes.tube);r.values.outerDiameter=42;r.values.wallThickness=3;
+ const source=initial.source.replace('roots([]);',`generated("bearing-tube",{name:"Bearing tube"},${JSON.stringify(r)});\nroots(["bearing-tube"]);`);
+ const preview=await host.call('cad_apply_model_source',{source,expectedRevision:initial.revision,preview:true});expect(preview.committed).toBe(false);expect((await readPortableHistory(await readFile(path))).revisions).toHaveLength(1);
+ const created=await host.call('cad_apply_model_source',{source,expectedRevision:initial.revision});expect(created.objects).toHaveLength(1);expect(created.geometry.volumeMm3).toBeCloseTo(preview.geometry.volumeMm3);
+ const text=await host.call('cad_get_model_source');expect(text.source).toMatch(/"?wallThickness"?:\s*3/);const edited=await host.call('cad_apply_model_source',{source:text.source.replace(/("?wallThickness"?:\s*)3/,(_,prefix)=>prefix+'2'),expectedRevision:created.revision});expect(edited.geometry.volumeMm3).toBeLessThan(created.geometry.volumeMm3);
+ const archive=await readPortableHistory(await readFile(path));expect(archive.revisions).toHaveLength(3);expect(archive.project.serial).toBe(edited.revision);
+},30000);

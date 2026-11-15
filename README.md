@@ -11,26 +11,37 @@ full constrained sketches and an exact surface/solid backend remain roadmap work
 
 ## Modeling
 
-- Searchable shapes with an optional lower-right dock. Drag shapes onto highlighted
+- Searchable shapes with an optional right-hand dock or screen-fitting dialog. Drag shapes onto highlighted
   faces, or tap a shape and then a surface on tablets. Placement previews snap,
-  orient to faces and commit as one undoable edit.
+  orient to faces and commit as one undoable edit. Existing shapes also snap onto
+  highlighted faces while dragging; the magnet or `C` disables this behavior.
+- [Retained design dimensions](docs/RETAINED-SHAPES.md) for twelve everyday shape
+  families, including linked tube/washer walls and bores, rounded boxes, capsules,
+  tapered solids, polygonal prisms and torus rings.
 - Practical part templates and editable generators for screws,
-  threads, lettering and other parts. Name tags support rounded corners and bundled
+  threads, lettering and other parts. Seven conventional screw-point styles include
+  editable cup, dog and tapered ends; headless set-screw and wood-screw presets are available. Name tags support rounded corners and bundled
   fonts; their text remains editable in Properties.
 - Solid/Hole cutters and rectangle selection, with retained union, subtraction and
   intersection inputs. Edit source dimensions after
   combining parts, and drive dimensions or transforms with named, unit-aware formulas.
-- Rectangle/circle sketches and retained extrusions on principal planes.
+- Rectangle/circle sketches and retained extrusions on principal planes, with a
+  visual draft preview and dimension handles.
 - Move and rotate through handles or numbers. Resize directly from selection
   corners/sides with live editable millimetre dimensions, grid increments and
   opposite-side anchoring. Proportion/centre toggles and Fine support touch use.
-- A numbered workplane, snapping, selection outlines, model browser, view cube and
+- A numbered workplane with visible spacing linked to snapping or set independently,
+  selection outlines, model browser, view cube and
   perspective/orthographic views. New shapes start on the workplane.
+- Adjustable metric/inch rulers and saved right-pane order/size preferences.
 - English and German interfaces, view colours, desktop menus, clipboard operations,
   project search and an About dialog with build details and offline licence texts.
 
 See [parameters](docs/PARAMETERS.md), [code mode](docs/CODE-MODE.md) and the
 [roadmap](docs/ROADMAP.md) for examples and current boundaries.
+See [surface dragging](docs/SURFACE-DRAGGING.md) for snapping and precision controls.
+The [shape-quality audit](docs/SHAPE-AND-UX-QUALITY.md) records geometry checks
+and the remaining shape-specific parameter gaps.
 
 ## Code and source interchange
 
@@ -44,7 +55,7 @@ clutter. See [the shared source workflow](docs/UNIFIED-DESIGN-SOURCE.md).
 
 The same modeling compiler is available through the core SDK and a headless MCP server.
 
-The offline model library includes 149 source models with previews and retained
+The offline model library includes 170 models with previews and retained
 licence/provenance information, including CC0 geometric fixtures.
 
 Bounded converters import supported OpenSCAD/JSCAD source, including lexical

@@ -1,11 +1,10 @@
-import {defaultGenerator,screwVariant,checkGenerator} from '@brickwright/cad-core';
+import {defaultGenerator,screwVariant,checkGenerator,basicGeneratorPresets} from '@brickwright/cad-core';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 // Independently authored presets. Geometry constructors are from Three.js (MIT).
 // Simple presets and retained sketch templates share the versioned CAD document.
 import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
+import {basicShapeGeometry} from './basic-shape-geometry.js';
 import { identityTransform, createCadSession, defaultPartPhysics,createDesignTemplate } from '@brickwright/cad-core';
 import type { Primitive, SolidNode,GeneratorRecipe } from '@brickwright/cad-core';
 import { advancedCatalog, constructionDocument, constructionPreview } from './advanced-shapes.js';
@@ -18,7 +17,7 @@ const originalCatalog = [
   ['cylinder','Cylinder','Basic solids','A circular solid with editable radius and height.','round disk rod','#db933b'],
   ['capsule','Capsule','Basic solids','A flat-based rounded slot extruded into a solid.','pill rounded slot guard','#dfb75d'],
   ['ellipse','Elliptic cylinder','Basic solids','An extruded oval.','ellipse oval','#e1bd45'],
-  ['polygon','Hexagonal prism','Basic solids','A six-sided prism.','polygon hex nut hexagon','#8c89db'],
+  ['polygon','Polygonal prism','Basic solids','A prism with editable side count and circumdiameter.','polygon hex nut hexagon','#8c89db'],
   ['wedge','Wedge','Basic solids','A triangular ramp.','triangle slope ramp','#78b48e'],
   ['sphere','Sphere','Basic solids','A ball with editable radius.','ball globe','#62b7cf'],
   ['cone','Cone','Basic solids','A circular base tapering to a point.','point taper','#aa86c8'],
@@ -38,7 +37,7 @@ const essentials:Record<string,string[]>={
  'Start a part':['l-bracket','mounting-plate','spacer'],
  'Build solids':['cube','box','cylinder','rounded-box','capsule','sphere','wedge','cone','polygon'],
  'Holes & hollow parts':['tube','washer','counterbore','countersink','port','teardrop'],
- 'Supports & connections':['rib','boss','screw','hex-head-screw','socket-head-screw','countersunk-screw','pan-head-screw','nut','hinge','dovetail','snap-fit'],
+ 'Supports & connections':['rib','boss','screw','hex-head-screw','socket-head-screw','countersunk-screw','pan-head-screw','set-screw','wood-screw','nut','hinge','dovetail','snap-fit'],
  'Motion parts':['gear','spring'],
  'Labels & outlines':['text','name-tag','star','heart'],
 };
@@ -47,7 +46,7 @@ const templates:ShapePreset[]=[
  {id:'mounting-plate',name:'Mounting plate',category:'',description:'A dimensioned plate with two bores. Edit the plate and hole dimensions in Parameters.',keywords:'mount base holes flange parametric',color:'#74b7cb'},
  {id:'spacer',name:'Spacer',category:'',description:'A dimensioned ring with an editable outer radius, bore radius and length.',keywords:'bushing sleeve standoff bearing parametric',color:'#abc1cd'},
 ];
-const screwNames=[['hex-head-screw','Hex-head screw'],['socket-head-screw','Socket-head screw'],['countersunk-screw','Countersunk screw'],['pan-head-screw','Pan-head screw']];
+const screwNames=[['hex-head-screw','Hex-head screw'],['socket-head-screw','Socket-head screw'],['countersunk-screw','Countersunk screw'],['pan-head-screw','Pan-head screw'],['set-screw','Set screw'],['wood-screw','Wood screw']];
 const entries=[...templates,...screwNames.map(([id,name])=>({id,name,category:'',description:'A screw with editable head, drive and V-thread dimensions.',keywords:'screw bolt thread fastener hex socket countersunk pan',color:'#b0b7c2'})),...originalCatalog];
 export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
  ...Object.entries(essentials).flatMap(([category,ids])=>ids.map(id=>Object.freeze({...entries.find(p=>p.id===id)!,category,additional:false}))),
@@ -55,49 +54,32 @@ export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
 ]);
 
 function profile(points: [number, number][], detail: number) { return new THREE.LatheGeometry(points.map(p => new THREE.Vector2(...p)), detail).rotateX(Math.PI / 2); }
-function tube(outer: number, inner: number, height: number, detail: number) {
-  return profile([[inner,0],[outer,0],[outer,height],[inner,height],[inner,0]], detail);
-}
 /** Caller owns and disposes the returned geometry. All geometry is Z-up. */
-export function presetGeometry(id: string, preview = false): THREE.BufferGeometry {
+export function presetGeometry(id: string, preview = false, recipe?:GeneratorRecipe): THREE.BufferGeometry {
+  if((basicGeneratorPresets as readonly string[]).includes(id)){const retained=checkGenerator(recipe??defaultGenerator(id)!);if(retained.preset!==id)throw new Error(t('Invalid shape generator'));const shown=structuredClone(retained);if(preview){for(const key of ['segments','tubeSegments','detail'])if(shown.values[key]!==undefined)shown.values[key]=Math.min(shown.values[key],key==='detail'?2:key==='tubeSegments'?10:20);}return basicShapeGeometry(shown);}
   const variant=screwVariant(id);if(variant)return constructionPreview('screw',variant);
   const n = preview ? 20 : 64;
   switch (id) {
     case 'cube': return new THREE.BoxGeometry(30,30,30);
     case 'box': return new THREE.BoxGeometry(30,30,20);
-    case 'rounded-box': return new RoundedBoxGeometry(30,24,20, preview ? 2 : 4, 3);
     case 'cylinder': return new THREE.CylinderGeometry(10,10,30,n).rotateX(Math.PI/2);
-    case 'capsule': { const shape=new THREE.Shape();shape.moveTo(-10,-10);shape.lineTo(10,-10);shape.absarc(10,0,10,-Math.PI/2,Math.PI/2,false);shape.lineTo(-10,10);shape.absarc(-10,0,10,Math.PI/2,3*Math.PI/2,false);shape.closePath();return new THREE.ExtrudeGeometry(shape,{depth:20,bevelEnabled:false,curveSegments:preview?8:24}); }
-    case 'ellipse': return new THREE.CylinderGeometry(12,12,20,n).rotateX(Math.PI/2).scale(1.5,0.8,1);
-    case 'polygon': return new THREE.CylinderGeometry(14,14,25,6).rotateX(Math.PI/2);
-    case 'wedge': return new ConvexGeometry([[-15,-15,0],[15,-15,0],[-15,15,0],[15,15,0],[-15,15,25],[15,15,25]].map(p => new THREE.Vector3(...p as [number,number,number])));
     case 'sphere': return new THREE.SphereGeometry(15,n,preview ? 12 : 32);
-    case 'cone': return new THREE.CylinderGeometry(0,13,30,n).rotateX(Math.PI/2);
     case 'curved-cone': return profile([[0,0], ...Array.from({length:17}, (_,i): [number,number] => [13*(1-i/16)**2,30*i/16])],n);
-    case 'pyramid': return new THREE.CylinderGeometry(0,16,28,4).rotateX(Math.PI/2).rotateZ(Math.PI/4);
-    case 'round-roof': {
-      const shape = new THREE.Shape(); shape.moveTo(-15,0); shape.absarc(0,0,15,Math.PI,0,true); shape.lineTo(-15,0);
-      return new THREE.ExtrudeGeometry(shape,{depth:30,bevelEnabled:false,curveSegments:preview ? 10 : 32}).rotateX(Math.PI/2);
-    }
     case 'hemisphere': return profile([[0,0], ...Array.from({length:17}, (_,i): [number,number] => i===16 ? [0,15] : [15*Math.cos(i*Math.PI/32),15*Math.sin(i*Math.PI/32)])],n);
     case 'paraboloid': return profile([[0,0], ...Array.from({length:25}, (_,i): [number,number] => [13*Math.sqrt(1-i/24),26*i/24])],n);
-    case 'torus': return new THREE.TorusGeometry(15,5,preview ? 10 : 24,n);
-    case 'tube': return tube(15,10,25,n);
-    case 'frustum': return new THREE.CylinderGeometry(7,15,25,n).rotateX(Math.PI/2);
     case 'vase': return profile([[0,0],[10,0],[13,5],[15,12],[14,20],[9,27],[8,32],[6,32],[7,27],[12,20],[13,12],[11,5],[8,2],[0,2]],n);
-    case 'washer': return tube(15,7,4,n);
     default: return constructionPreview(id);
   }
 }
-export function createPresetShape(id: string): { shape: Primitive | MeshShape; height: number } {
+export function createPresetShape(id: string, recipe?:GeneratorRecipe): { shape: Primitive | MeshShape; height: number } {
   if (id==='cube')return {shape:{kind:'box',size:[30,30,30]},height:30};
   if (id==='box') return {shape:{kind:'box',size:[30,30,20]},height:20};
   if (id==='cylinder') return {shape:{kind:'cylinder',radius:10,height:30,segments:64},height:30};
   if (id==='sphere') return {shape:{kind:'sphere',radius:15,segments:48},height:30};
-  const geometry = presetGeometry(id);
+  const geometry = presetGeometry(id,false,recipe);
   try {
     geometry.computeBoundingBox(); const bounds = geometry.boundingBox!; const height = bounds.max.z-bounds.min.z; geometry.translate(...bounds.getCenter(new THREE.Vector3()).negate().toArray() as [number,number,number]);
-    return {height,shape:{kind:'mesh',id:'preset',name:id,color:'#ffffff',transform:identityTransform(),positions:Array.from(geometry.getAttribute('position').array),indices:geometry.index ? Array.from(geometry.index.array) : Array.from({length:geometry.getAttribute('position').count},(_,i)=>i)}};
+    return {height,shape:{...(geometry.userData.collisionHint?{physics:{...defaultPartPhysics(),sourcePreset:id,collisionHint:geometry.userData.collisionHint}}:{}),kind:'mesh',id:'preset',name:id,color:'#ffffff',transform:identityTransform(),positions:Array.from(geometry.getAttribute('position').array),indices:geometry.index ? Array.from(geometry.index.array) : Array.from({length:geometry.getAttribute('position').count},(_,i)=>i)}};
   } finally { geometry.dispose(); }
 }
 const previews = new Map<string,string>();
@@ -106,9 +88,8 @@ export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: 
   const variant=screwVariant(id);if(variant)return constructionDocument('screw',t(preset.name),preset.color,text,options.svg,options.recipe??variant);
   if(['l-bracket','mounting-plate','spacer'].includes(id)){const doc=structuredClone(createDesignTemplate(id as import('@brickwright/cad-core').DesignTemplate));doc.title=t(doc.title);for(const node of Object.values(doc.nodes))node.name=t(node.name);for(const sketch of Object.values(doc.sketches??{}))sketch.name=t(sketch.name);return doc;}
   if (advancedCatalog.some(p => p[0] === id)){let recipe=options.recipe;if(!recipe&&['text','name-tag'].includes(id)){recipe=defaultGenerator(id)!;recipe={...recipe,text,font:options.font??'sans'};}return constructionDocument(id, t(preset.name), preset.color, text, options.svg,recipe);}
-  const session = createCadSession(); const base=createPresetShape(id).shape;if(id==='cube'){const recipe=checkGenerator(options.recipe??defaultGenerator('cube')!);if(recipe.preset!=='cube')throw new Error(t('Invalid shape generator'));const edge=recipe.values.edge;if(base.kind==='box')base.size=[edge,edge,edge];}session.add(base, { name: t(preset.name), color: preset.color }); const doc = structuredClone(session.state.document); const node=doc.nodes[doc.roots[0]];node.physics = {...defaultPartPhysics(),sourcePreset:id};if(id==='cube'){doc.version=2;node.generator=structuredClone(options.recipe??defaultGenerator('cube')!);}
-  if(id==='torus')node.physics.collisionHint={kind:'tube-grid',segments:64,sides:24,layout:'columns',closed:true};
-  const profileLengths:Record<string,number>={'curved-cone':18,hemisphere:18,paraboloid:26,tube:5,vase:14,washer:5};
+  const session = createCadSession(); const retained=(basicGeneratorPresets as readonly string[]).includes(id)?checkGenerator(options.recipe??defaultGenerator(id)!):undefined;const base=createPresetShape(id,retained).shape;if(id==='cube'){const recipe=checkGenerator(options.recipe??defaultGenerator('cube')!);if(recipe.preset!=='cube')throw new Error(t('Invalid shape generator'));const edge=recipe.values.edge;if(base.kind==='box')base.size=[edge,edge,edge];}session.add(base, { name: t(preset.name), color: preset.color }); const doc = structuredClone(session.state.document); const node=doc.nodes[doc.roots[0]];node.physics = {...defaultPartPhysics(),...node.physics,sourcePreset:id};if(retained){doc.version=2;node.generator=structuredClone(retained);}if(id==='cube'){doc.version=2;node.generator=structuredClone(options.recipe??defaultGenerator('cube')!);}
+  const profileLengths:Record<string,number>={'curved-cone':18,hemisphere:18,paraboloid:26,vase:14};
   if(profileLengths[id])node.physics.collisionHint={kind:'radial-profile',segments:64,sides:profileLengths[id]-1,layout:'rows',closed:true}; session.dispose(); return doc;
 }
 /** Static SVG thumbnails derived from our actual geometry, with no GPU contexts. */

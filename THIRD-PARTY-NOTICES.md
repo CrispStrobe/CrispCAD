@@ -35,10 +35,12 @@ Development/build dependencies retain their upstream licenses, including
 TypeScript (Apache-2.0), Vite/Vitest (MIT), Playwright (Apache-2.0) and type
 packages (MIT). package-lock.json pins the complete installed dependency graph.
 Selected LDraw source content is bundled separately under CC-BY-4.0, not as a
-runtime dependency: Tile 3 x 6 by Tore Eriksson, with the box5 primitive by
+runtime dependency: selected authored parts and their complete dependency closures.
+The first Tile 3 x 6 is by Tore Eriksson, with the box5 primitive by
 James Jessiman and the retained per-file history contributors. Exact originals,
 attribution, source revision, full licence and conversion notes are retained in
-library/ldraw-editor-manifest.json and library/evidence/ldraw-*.txt. No LDraw
+library/ldraw-editor-manifest.json, library/ldraw-reviewed-batch-manifest.json and
+library/evidence/ldraw-*.txt. Each batch dependency retains its own author/grant. No LDraw
 renderer implementation or full parts library is bundled.
 
 ## QR generator license
