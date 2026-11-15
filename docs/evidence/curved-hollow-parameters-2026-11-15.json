@@ -634,7 +634,23 @@
       "file": "cad-curved-browser-final.log",
       "bytes": 563,
       "sha256": "7fcd3f7f3d8f3e21248709eedf82d5066082f4da50b47de11d5601b574dff281"
+    },
+    {
+      "file": "cad-curved-merged-library.log",
+      "bytes": 1197,
+      "sha256": "e43497dead1997e771311b73e487c8b16d6bec26adb304defb3f48c76d34ed1b"
+    },
+    {
+      "file": "cad-curved-merged-coin-final.log",
+      "bytes": 230,
+      "sha256": "5bd2a147c0445b5d8001c0a69ad9bb613c498e9828f5db673f7298ac2ce230b0"
     }
   ],
-  "visualReview": "Inspected successful Chromium vase screenshot: open mouth, smooth profile, compact design fields and collapsed Surface detail. Height regeneration preserves origin as documented."
+  "visualReview": "Inspected successful Chromium vase screenshot: open mouth, smooth profile, compact design fields and collapsed Surface detail. Height regeneration preserves origin as documented.",
+  "subsequentDataMerge": {
+    "mainCommit": "58371c9",
+    "scope": "Seventeen additional archived LDraw components; no production runtime source change. Source catalogue now 189; Mac 34 predates these data admissions.",
+    "focusedLibraryTestsPassedAcrossRuns": 117,
+    "testMaintenance": "Generic seed/coin checks now assert corpus membership, unique IDs and selected-file identity instead of an unrelated global catalogue count. A new identity assertion initially compared a raw remote URL against its intentional local-file normalization; explicit local reference fields corrected it, and both coin tests pass."
+  }
 }

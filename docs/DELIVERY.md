@@ -886,3 +886,10 @@ with zero blocked entries. Eleven edited/cut Jolt cases verify cavities, floor
 and rim support, seats and a teardrop passage. Native smoke checks passed.
 These are rigid-preview checks, not manufacturing or general mechanical-fit
 certification.
+
+After this native delivery, main's concurrent seventeen-component LDraw admission
+was preserved in source. The merged catalogue contains 189 models; Mac 34 predates
+those data additions. Focused merged-library checks passed 117 distinct tests
+across runs. Generic seed tests now check exact cohort membership and uniqueness
+instead of an unrelated global catalogue count. No production engine or editor
+source changed in that integration.
