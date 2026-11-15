@@ -3,7 +3,8 @@
 Original Brickwright CAD code: BSD-3-Clause, see LICENSE.
 
 Reused independent arithmetic: Brickwright contributors, BSD-3-Clause.
-`packages/editor/src/vendor/touch-gestures.js` and `transform-math.js` are copied
+`packages/editor/src/vendor/touch-gestures.js`, `transform-math.js` and
+`box-selection.js` are copied
 unmodified from CrispStrobe/brickwright-lite; exact source revision, paths and
 hashes are in docs/brickwright-provenance.json. Their SPDX/copyright headers are
 retained. These files have no imports from Scratch or the LEGO simulation.

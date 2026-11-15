@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import * as THREE from 'three';
+import {selectionRectangle,projectedBoxIntersects} from './vendor/box-selection.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {createSurfacePlacement} from './surface-placement.js';
 import type {PlacementPointer} from './surface-placement.js';
@@ -213,7 +214,23 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     const d=point.sub(directDrag.start);directDrag.usedFine||=gizmo.isFine();const filtered=directDrag.precision.sample([d.x,d.y,d.z],gizmo.isFine());directDrag.offset=snapDelta(filtered,(gridStep||.01)/(directDrag.usedFine?10:1));directDrag.moved=true;
     for(const id of directDrag.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrixAutoUpdate=false;mesh.matrix.makeTranslation(...directDrag.offset);mesh.matrixWorldNeedsUpdate=true;}}draw();
   };
-  const onUp = (e: PointerEvent) => {if(boxSelect?.pointerId===e.pointerId){const action=boxSelect,rect=canvas.getBoundingClientRect(),left=Math.min(action.x,e.clientX)-rect.left,right=Math.max(action.x,e.clientX)-rect.left,top=Math.min(action.y,e.clientY)-rect.top,bottom=Math.max(action.y,e.clientY)-rect.top;const captured:string[]=[];if(action.moved)for(const [id,mesh] of meshes){const box=new THREE.Box3().setFromObject(mesh),points:THREE.Vector3[]=[];for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z])points.push(new THREE.Vector3(x,y,z).project(camera));if(points.every(p=>p.z>1)||points.every(p=>p.z< -1))continue;const xs=points.map(p=>(p.x+1)*rect.width/2),ys=points.map(p=>(1-p.y)*rect.height/2);if(Math.max(...xs)>=left&&Math.min(...xs)<=right&&Math.max(...ys)>=top&&Math.min(...ys)<=bottom)captured.push(id);}endBox();session.select(action.additive?[...new Set([...action.base,...captured])]:captured);e.preventDefault();e.stopImmediatePropagation();return;}if(cameraDrag?.id===e.pointerId){gizmo.enabled=cameraDrag.gizmoEnabled;cameraDrag=undefined;orbit.enabled=true;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();return;}
+  const onUp = (e: PointerEvent) => {
+    if(boxSelect?.pointerId===e.pointerId){
+      const action=boxSelect,rect=canvas.getBoundingClientRect();
+      const rectangle=selectionRectangle(action.x-rect.left,action.y-rect.top,e.clientX-rect.left,e.clientY-rect.top);
+      const captured:string[]=[];
+      camera.updateMatrixWorld();
+      if(action.moved)for(const [id,mesh] of meshes){
+        const box=new THREE.Box3().setFromObject(mesh),points:THREE.Vector4[]=[];
+        for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z]){
+          points.push(new THREE.Vector4(x,y,z,1).applyMatrix4(camera.matrixWorldInverse).applyMatrix4(camera.projectionMatrix));
+        }
+        if(projectedBoxIntersects(points,rectangle,rect))captured.push(id);
+      }
+      endBox();session.select(action.additive?[...new Set([...action.base,...captured])]:captured);
+      e.preventDefault();e.stopImmediatePropagation();return;
+    }
+    if(cameraDrag?.id===e.pointerId){gizmo.enabled=cameraDrag.gizmoEnabled;cameraDrag=undefined;orbit.enabled=true;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();return;}
     if(directDrag?.pointerId===e.pointerId){const action=directDrag;directDrag=null;orbit.enableRotate=true;if(action.moved){down=null;touches.reset();suppressTap=false;try{session.transform([...action.transforms].map(([id,transform])=>({id,transform:{...transform,position:transform.position.map((v,i)=>v+action.offset[i]) as Vec3}})));}catch(error){for(const id of action.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;}}onError(error);draw();}return;}}
     const gesture = e.pointerType === 'touch' ? touches.up({ id: e.pointerId, t: e.timeStamp }) : null;
     if(surfacePlacement.active){const allowed=!suppressTap&&e.button===0;down=null;if(!touches.count)suppressTap=false;if(allowed)placementCommit?.(e);return;}

@@ -12,6 +12,12 @@
       "file": "packages/editor/src/vendor/transform-math.js",
       "source": "overlay/scratch-gui/src/lib/bw-sim/editor/transform-math.js",
       "sha256": "7090ecf2dc33cddc8221676ca07a83c6b8e25ac1c2bab86f0f8c2a894c91a505"
+    },
+    {
+      "file": "packages/editor/src/vendor/box-selection.js",
+      "source": "overlay/scratch-gui/src/lib/editor-interaction/box-selection.js",
+      "commit": "a2fd7c39aa2b82334f35e7fb10ddf8987ce51804",
+      "sha256": "235d8c3bea2ba57e59c0997601d1b0148c7882253ff0ae1c7609f764a2e88566"
     }
   ]
 }
