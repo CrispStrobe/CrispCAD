@@ -961,3 +961,8 @@ A minimal general converter change handles exact T-junction endpoint incidence w
 ## 2026-11-15 — nine authored components, measured browser continuation
 
 Nine retained authored LDraw roots now pass actual native mesh/topology/editor/preview gates under unchanged limits using the landed general endpoint converter. All77focused tests and final app build pass. The original300-second aggregate browser timeout is preserved:9Chromium+4WebKit loops completed, then only the5unfinished WebKit cases ran and passed with durable per-model evidence on the identical build. Local165/160/204 is+9/+9/+9 from main156/151/195; no delivery credit is claimed here. All prior312asset hashes and195previews remain exact. Proof types, original failure and exact source/test/runtime bindings are in evidence/ldraw-repair9-qualification-2026-11-15.json.
+
+
+## 2026-11-15 — two whole authored LDraw parts
+
+WholeParts54200and3068b qualify under unchanged limits with80/182triangles, closed-positive-volume STL screening, editor/provenance/history and actual preview/browser gates. All19focused tests and final app build pass. A preserved harness parser failure produced zero browser outcomes; only the new durable-metadata binding was corrected. The necessary browser-only continuation passed2/2engines with4actual SHA-bound attachments on47identical built/runtime files, without replaying earlier gates. Local167/162/206 is+2/+2/+2 from main165/160/204; this note does not credit delivery before owner landing. Prior330asset hashes and204previews remain exact;25other actual native refusals stay A/B unresolved. See evidence/ldraw-wholeparts2-qualification-2026-11-15.json.

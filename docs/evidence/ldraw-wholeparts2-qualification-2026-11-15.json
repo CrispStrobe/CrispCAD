@@ -1,0 +1,368 @@
+{
+  "date": "2026-11-15",
+  "status": "TWO_LOCAL_QUALIFIED_PENDING_OWNER_DELIVERY",
+  "baselineHead": "596599a01a07754f18ceef5724074c9a297bc35c",
+  "baselineTree": "343d76e2fc3abff2afe68116174fbead77fd4d5e",
+  "mainCounts": [
+    165,
+    160,
+    204
+  ],
+  "localCounts": [
+    167,
+    162,
+    206
+  ],
+  "delta": [
+    2,
+    2,
+    2
+  ],
+  "scope": "Unchanged authored official wholeParts54200 and3068b, complete default per-file CC-BY-4.0 closure, nominal0.4mm/LDU,-Yup to Zup. Standalone geometry only; no physical/assembly certification. Existing landed exact-endpoint converter reused; no product/compiler/kernel/dependency/default/tolerance/guard change.",
+  "actualNativeBatch": {
+    "attempts": 27,
+    "strictNativeTopologyEditorPasses": 2,
+    "notManifold": 25,
+    "remaining25AB": "Unresolved; native errors not attributed intrinsically without exact source/output traces"
+  },
+  "models": [
+    {
+      "candidateID": "corpus-ldraw-54200",
+      "rootPath": "parts/54200.dat",
+      "rootSha256": "3f0c25da3dac0600209a032c53c040b8668e617374997546d5449528eb7099c9",
+      "files": [
+        {
+          "path": "parts/54200.dat",
+          "bytes": 1196,
+          "sha256": "3f0c25da3dac0600209a032c53c040b8668e617374997546d5449528eb7099c9",
+          "author": "Orion Pobursky [OrionP]",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "parts/s/54200s01.dat",
+          "bytes": 3744,
+          "sha256": "cf96613781f9e09ef1e12bf1be127a99b1a8f18a5e8ee9af434ef4e757696cc7",
+          "author": "Orion Pobursky [OrionP]",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/rect.dat",
+          "bytes": 654,
+          "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71",
+          "author": "James Jessiman",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/box4.dat",
+          "bytes": 948,
+          "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e",
+          "author": "James Jessiman",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/rect3.dat",
+          "bytes": 605,
+          "sha256": "07ac46908b6668d993b6de0fb001a34cd996542106b80ebc7de63317d8dde865",
+          "author": "Mark Kennedy [mkennedy]",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        }
+      ],
+      "metrics": {
+        "originalBytes": 7147,
+        "expandedBytes": 8455,
+        "instances": 7,
+        "work": 1176,
+        "points": 42,
+        "faces": 47
+      },
+      "mesh": {
+        "bytes": 4084,
+        "sha256": "db8622a6e44786d488a8ee831d841f8203d3935af01240df4814e50cc4342005"
+      },
+      "triangles": 80,
+      "volumeMm3": 186.1621383872451,
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "PASS",
+        "topology": "PASS",
+        "editor": "PASS: actual STL insertion/evaluation/restore/undo/redo/sidecar and mismatch-before-evaluation refusal",
+        "preview": "PASS actual raster generation and browser pixels",
+        "browser": "PASS Chromium+iPadWebKit,4actual source/mesh-bound attachments and durable records"
+      }
+    },
+    {
+      "candidateID": "corpus-ldraw-3068b",
+      "rootPath": "parts/3068b.dat",
+      "rootSha256": "57179cd9dc0ee31742b9947157636b1b5eafc8d98a283fbd99e9abf8fda977ec",
+      "files": [
+        {
+          "path": "parts/3068b.dat",
+          "bytes": 804,
+          "sha256": "57179cd9dc0ee31742b9947157636b1b5eafc8d98a283fbd99e9abf8fda977ec",
+          "author": "Takeshi Takahashi [RainbowDolphin]",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "parts/s/3068bs01.dat",
+          "bytes": 1370,
+          "sha256": "b49ecb2e8e57d8ae4a64aa5e71713d769c2a5dc91f4611fbd3157fbc30a4c6c3",
+          "author": "Willy Tschager [Holly-Wood]",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/box4.dat",
+          "bytes": 948,
+          "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e",
+          "author": "James Jessiman",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/stud4.dat",
+          "bytes": 935,
+          "sha256": "871cdcab26e7f5113488a24c453d6fabda75b275b06de592e0bfaad4292c12a3",
+          "author": "James Jessiman",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "author": "James Jessiman",
+          "licence": "CC-BY-4.0",
+          "solidColours": []
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "author": "James Jessiman",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/4-4ring3.dat",
+          "bytes": 1628,
+          "sha256": "1f2835ac308154edc2d6f479d8e742a55be981f6167b20bfa100c195bc0731dd",
+          "author": "James Jessiman",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+          "author": "James Jessiman",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/4-4ndis.dat",
+          "bytes": 1219,
+          "sha256": "21202dc15823f4336bc2544244d0b539b76745c89f7a59ad18cdd03ad45cc543",
+          "author": "James Jessiman",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        }
+      ],
+      "metrics": {
+        "originalBytes": 11812,
+        "expandedBytes": 19647,
+        "instances": 15,
+        "work": 2656,
+        "points": 93,
+        "faces": 105
+      },
+      "mesh": {
+        "bytes": 9184,
+        "sha256": "5f070574a7e91f4c2d1c4a8d982a46aff2cfba7627266512ce90720500e883ce"
+      },
+      "triangles": 182,
+      "volumeMm3": 569.0170453882791,
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "PASS",
+        "topology": "PASS",
+        "editor": "PASS: actual STL insertion/evaluation/restore/undo/redo/sidecar and mismatch-before-evaluation refusal",
+        "preview": "PASS actual raster generation and browser pixels",
+        "browser": "PASS Chromium+iPadWebKit,4actual source/mesh-bound attachments and durable records"
+      }
+    }
+  ],
+  "checks": {
+    "actualRasterPreviews": 2,
+    "focusedTests": "19/19PASS4files",
+    "finalAppBuild": "PASS after all new assets/previews staged",
+    "initialBrowserFailure": "Generated durable metadata constrecord redeclaration; syntax error before engines;0model browser outcomes; raw source/log/report frozen",
+    "minimalHarnessFix": "Only new durablemetadata binding renamed completionRecord and its newline serialization corrected. Existing provenance record/actions/assertions unchanged; prefixSHA707bc3fac2982cb70277c2e9bd07811ebfa1fcece5d0caf6986c6d0738d87318. ActualPlaywright--list recognized2engines before browser continuation.",
+    "necessaryBrowserOnlyContinuation": "Chromium+iPadWebKit2/2PASS143.080s,4real source/mesh-bound JSON attachments,4durable per-model records,zero network requests.47final build/runtimefiles unchanged; original240s test/300s command limits; no native/preview/focused/build/delivered9 replay.",
+    "prior330Assets": "PASS unchanged",
+    "prior204Previews": "PASS unchanged"
+  },
+  "actualBrowserAttachments": [
+    {
+      "candidateID": "corpus-ldraw-54200",
+      "sourceSha256": "3f0c25da3dac0600209a032c53c040b8668e617374997546d5449528eb7099c9",
+      "meshSha256": "db8622a6e44786d488a8ee831d841f8203d3935af01240df4814e50cc4342005",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-3068b",
+      "sourceSha256": "57179cd9dc0ee31742b9947157636b1b5eafc8d98a283fbd99e9abf8fda977ec",
+      "meshSha256": "5f070574a7e91f4c2d1c4a8d982a46aff2cfba7627266512ce90720500e883ce",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-54200",
+      "sourceSha256": "3f0c25da3dac0600209a032c53c040b8668e617374997546d5449528eb7099c9",
+      "meshSha256": "db8622a6e44786d488a8ee831d841f8203d3935af01240df4814e50cc4342005",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-3068b",
+      "sourceSha256": "57179cd9dc0ee31742b9947157636b1b5eafc8d98a283fbd99e9abf8fda977ec",
+      "meshSha256": "5f070574a7e91f4c2d1c4a8d982a46aff2cfba7627266512ce90720500e883ce",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    }
+  ],
+  "testedOwnedBinding": {
+    "baselineHead": "596599a01a07754f18ceef5724074c9a297bc35c",
+    "baselineTree": "343d76e2fc3abff2afe68116174fbead77fd4d5e",
+    "ownedHashes": {
+      "library/ldraw-reviewed-batch-manifest.json": "c579422ce9e87d51740eda9d846e3680efa977893a10a280dbe1b0ce3f697f86",
+      "library/ldraw-reviewed-batch-spec.json": "fb5dd6e2b121b86cc0be431ba0ad7639d0d0c239119174554d28ef042341bd5f",
+      "library/meshes/ldraw/3068b.stl": "5f070574a7e91f4c2d1c4a8d982a46aff2cfba7627266512ce90720500e883ce",
+      "library/meshes/ldraw/54200.stl": "db8622a6e44786d488a8ee831d841f8203d3935af01240df4814e50cc4342005",
+      "library/previews.json": "2395e28faa6d0a1a0996a11341f0638e109b0b176bab3c1fbec7cbd56a4710f3",
+      "library/sources/ldraw/parts/3068b.dat": "57179cd9dc0ee31742b9947157636b1b5eafc8d98a283fbd99e9abf8fda977ec",
+      "library/sources/ldraw/parts/54200.dat": "3f0c25da3dac0600209a032c53c040b8668e617374997546d5449528eb7099c9",
+      "library/sources/ldraw/parts/s/3068bs01.dat": "b49ecb2e8e57d8ae4a64aa5e71713d769c2a5dc91f4611fbd3157fbc30a4c6c3",
+      "library/sources/ldraw/parts/s/54200s01.dat": "cf96613781f9e09ef1e12bf1be127a99b1a8f18a5e8ee9af434ef4e757696cc7",
+      "tests/browser/model-library-ldraw-cycle100.spec.ts": "22f9ccf26c3393d6ae7ca59707a5ab364a688dc138006fff51e780e397409146"
+    },
+    "frozenBuiltRuntimeFiles": {
+      "dist/index.html": "4e9b4995d2a570289f2c9755849e17782b515f057059751bfe394ec511d96ecb",
+      "dist/manifest.webmanifest": "7d57494ede2e7c699fd24fd309335bb701138d85cc84d5c4ff4d9851f44ae535",
+      "dist/sw.js": "f2a6391b1be82f1c0bd6f6d983da2057bdfc5276e2f5193406fb4f11a025d8d7",
+      "dist/icon.svg": "30876dc5d178d36f341cc5126e6489a7078ac9f667a56a9e625f9d090d3d94f4",
+      "dist/embedded.html": "667d2cfe9e2fbad511626fedbadd662e454b41d3672c7fbab4a293a889fc25a7",
+      "dist/app-showcase/naga.png": "93f34940d26e229849e697f5bc98a3d28d4ed5e2caa926a34aabd93e37e74da6",
+      "dist/app-showcase/crisptuner.png": "cbac4f2381e240dd9c7879bc200262037f6bf9c35c688b65aba09402a077e033",
+      "dist/app-showcase/crisperweaver.png": "ca56b9ba5f7b4de928b7baf6979bbabe01314c0382f9a85d558f673f9435de43",
+      "dist/app-showcase/word-universe.png": "081ee34a1707823873a44fdfe4c7d4bebeb3c2fa4d7b099a44360867b1c581e7",
+      "dist/app-showcase/crispbingo.png": "974a26f8a7f20b8b61d806a1f7ef7d24ef82c1a775b8c154c96f5b7015939910",
+      "dist/app-showcase/cometbeat.png": "93c1e0820b28de7b4209a37abe4e9b6e320a1a495bd9c44e056b492454cc6769",
+      "dist/app-showcase/kerotakis.png": "0b6a24aec16e25ee6d2e098c40fd56cf530c26f917f70a69f9bb68cda4409d92",
+      "dist/app-showcase/numbernebula.png": "39d20c36896f98452b5bc6f0f4608caab1dd4ea7fc74034c88c93c90f9521bdb",
+      "dist/app-showcase/crispsudoku.png": "af8ee9c4eae94cfe68af1e38062f7d1da9346ada0734476f19c9a705eb73db5c",
+      "dist/app-showcase/brickwright.png": "4f12ea0f0f21056104c7c665a8ad2082dfaf1265d131e402e793909cef6b4065",
+      "dist/app-showcase/crispdeck.png": "3cf496171fcfe2ea3af23c6901d3b4375546d383a34288f3e433d58b8acd17ab",
+      "dist/app-showcase/crispaudio.png": "482b887823d8cbe42fb450bf9a1e7fc50213f4c80364d75387559876e157fb3d",
+      "dist/app-showcase/crispchess.png": "375e1c4df95c0a294aaf5dc078bdbc99d8753100812649821cc88be87ec7a33a",
+      "dist/app-showcase/crispsorter.png": "9b92d82e86f687bedf3f3378c27e7b4c24c83d3a953f337e5ec1cfde798666bf",
+      "dist/app-showcase/README.md": "abc4e1333f5195f98c4e34265b80c5016134b85254ff44afd05f6ed7d0e47577",
+      "dist/app-showcase/crispmesh.png": "f10da8d3835dd3d13e9a8c8422338fda2a746ef5401a42efc3f2f5bbc90ff7ad",
+      "dist/app-showcase/crispmath.png": "d85b699f750768c23d683180a37385f4c36fdbed796989f464de26840ea8915e",
+      "dist/app-showcase/crisperplayer.png": "732bf35419dbf4a3cdb604ff18e72f7f667901052c0c12b091a535440a9cec67",
+      "dist/app-showcase/hectopolis.png": "687f651d1f4d98fd4653b85191c6fc273e2497447916fb4bf9be447b7f2c6ed3",
+      "dist/app-showcase/crispcloud.png": "7736e71fd28f2400424a106513224a4dd9953ae11049c219210964cfc7ebdcfb",
+      "dist/cad-assets/app-license.txt": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+      "dist/cad-assets/build-info.json": "e5cfd29f4f7f9c7962f56b534ba11c6833cf6456d49fbbc29806405f53c882a2",
+      "dist/cad-assets/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c",
+      "dist/cad-assets/notices.txt": "dea50eee6d6781549af4e3740bfaf7661b29479696e5ae6cbe41eafd93c0fa70",
+      "dist/assets/web-CFW_TFFV.js": "8f03907704218410d27e2e4ac5c2b65221a46d5cc9d36d3908efa6eeb4e046fd",
+      "dist/assets/simulation.worker-KDFnK5IY.js": "816adfdd597954fcd542d196410b9c9dd834f30fc408caa2160183f2f7357bc2",
+      "dist/assets/web-Ds1jRplc.js": "707974c0e372003c645a6b13439e11091794fc7a7646cedf53d72f8b69405c23",
+      "dist/assets/manifold-BE4c7gO-.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c",
+      "dist/assets/esm-BVrP0UM0.js": "583ed62f030fbd89709d52e4be737ad15202fccc6e47ee007246a400885a436c",
+      "dist/assets/embedded-C04-1XXN.js": "406a8553644374071e1276481dfee77b28e247ad71900fef64369dd2889cea52",
+      "dist/assets/files-gYNcJTkq.js": "15c30a03f187ece6f695c2cb24c0b755233bf12b35f6c65599b7ef78164b28e6",
+      "dist/assets/main-BoPCnUnU.js": "cc963b25c406818079552cb9454f45cb9c76e687d8a81aae34164253635ec6ca",
+      "dist/assets/esm-p_D6S535.js": "63b50fa6679e73dc196d4db9e74e2fb465d1e47b3a854b2dab256605040a0aa8",
+      "dist/assets/geometry.worker-CSAI0DTS.js": "534cb023a75bba83ba86da03ce88e045975c484d6d9b1556f6c4fe77935c7626",
+      "dist/assets/jolt-physics.wasm-compat-DLMYuBx1.js": "db08bffd7113c77636228e2eda2814a40667a17dab709f053bac24f23a8730e3",
+      "dist/assets/files-BvSzA95Z.css": "a0bd03c2cdb4b600a58121b396da840424c00407085354cd39adee4a3064593b",
+      "package-lock.json": "fce627d2348b17711a6341f1ec5a985603a2062ba94b114da86d6bfdfdf38cfa",
+      "scripts/lib/ldraw-model.mjs": "50bb19ee767578428d0818a72cff2295a463a2e3c67fbae66907e8e2a422535e",
+      "library/ldraw-reviewed-batch-manifest.json": "c579422ce9e87d51740eda9d846e3680efa977893a10a280dbe1b0ce3f697f86",
+      "library/ldraw-reviewed-batch-spec.json": "fb5dd6e2b121b86cc0be431ba0ad7639d0d0c239119174554d28ef042341bd5f",
+      "library/previews.json": "2395e28faa6d0a1a0996a11341f0638e109b0b176bab3c1fbec7cbd56a4710f3",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    }
+  },
+  "harnessCorrectionProof": {
+    "oldAssertionAndActionsPrefixSHA256": "707bc3fac2982cb70277c2e9bd07811ebfa1fcece5d0caf6986c6d0738d87318",
+    "newAssertionAndActionsPrefixSHA256": "707bc3fac2982cb70277c2e9bd07811ebfa1fcece5d0caf6986c6d0738d87318",
+    "assertionsByteIdentical": true,
+    "onlyDurableMetadataSuffixChanged": true,
+    "oldBadSHA256": "ca033b6b4e45c80ad1814359baf8f116b3e4c41b0ffa3903152f9334c848baa5",
+    "correctedTestSHA256": "22f9ccf26c3393d6ae7ca59707a5ab364a688dc138006fff51e780e397409146",
+    "actualParserCommand": "npx playwright test tests/browser/model-library-ldraw-cycle100.spec.ts --list --grep archive100 chunk 0$ --reporter=line",
+    "actualParserResult": "PASS2engine tests recognized;0browser children",
+    "parserLogSHA256": "5fb44a5e38a87c4569d958d9bdc7932ca68c354902d4c7464040abd1fca9dec5",
+    "frozenBuiltRuntimeFileCount": 47
+  },
+  "initialFailureReceipt": "/mnt/storage/brickwright-cycle101-wholeparts/first-result.json",
+  "finalReceipt": "/mnt/storage/brickwright-cycle101-wholeparts/result.json",
+  "nextArchiveManifest": "/mnt/storage/brickwright-cycle101-next46/manifest.json",
+  "proofHashes": {
+    "/mnt/storage/brickwright-cycle101-wholeparts/first-result.json": "55b70c92485881abc5a760234b1ce7470336e2f935d99b295af38233949b852a",
+    "/mnt/storage/brickwright-cycle101-wholeparts/first-failing-browser.spec.ts.txt": "ca033b6b4e45c80ad1814359baf8f116b3e4c41b0ffa3903152f9334c848baa5",
+    "/mnt/storage/brickwright-cycle101-wholeparts/first-failing-browser.log": "81fd41a8d46cb3e6e6db5480c410497e4948cb9e19c20ede70c16aacf9eccc69",
+    "/mnt/storage/brickwright-cycle101-wholeparts/corrected-binding.json": "cb600ed91e356a82078d4590ee1f5181dbcfd2d18ed94664039561fc61e2b067",
+    "/mnt/storage/brickwright-cycle101-wholeparts/corrected-list.log": "5fb44a5e38a87c4569d958d9bdc7932ca68c354902d4c7464040abd1fca9dec5",
+    "/mnt/storage/brickwright-cycle101-wholeparts/browser.json": "670d4fdd821e097a77f0dba920c340e1511c9b9b7f4abe8a2725ffd029195cb8",
+    "/mnt/storage/brickwright-cycle101-wholeparts/execution.json": "3cd7b663f610f8fc0ed20d052e49928d9002e9cd7100a09a4cbcef2052b656bd",
+    "/mnt/storage/brickwright-cycle101-wholeparts/verified-browser-attachments.json": "e7559a4e8333cde5893a62bce6c609bb93bb476252eddbcff85364e9b9caf4d6",
+    "/mnt/storage/brickwright-cycle101-wholeparts/tested-owned-binding.json": "284f28b9816feb35c694b228e900cb81187fc690f00ae68fe6b4ec9ce08b658d",
+    "/mnt/storage/brickwright-cycle101-wholeparts/local-qualification.json": "d5e238ebb092a0aeb58aa65e8c9845b7134845e20035342401e5fd98317d710c"
+  }
+}
