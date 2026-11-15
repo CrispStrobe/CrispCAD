@@ -882,3 +882,22 @@ and its required `bolts.json` and `nuts.json` are absent from the staged archive
 The earlier preflight checked SCAD includes/use only; the corrected full-input
 assessment and original failed assessment are both retained. No speculative
 import patch or replacement input data is used.
+
+
+### Authored Italian flag, 2026-11-15
+
+Flag_Italy adds the unchanged 404-byte MIT original by Angelo Nicoli, pinned at
+`4f9e3d4d16b5e427186c1f89e10c2181c437dee6`. Its default geometry passes strict
+closed-positive-volume screening with 582 triangles. Actual source insertion,
+byte-mismatch refusal before evaluation, attribution, snapshot restore, undo/redo,
+raster preview, Chromium and iPad-WebKit tests pass on main `9c795ae` plus this selection.
+
+The French and Italian originals produce identical STL bytes after the existing
+cosmetic-colour omission; country colours are absent from geometry and monochrome
+previews. This is one new authored record and one preview, with **zero new unique
+STLs**. Main has 131 records / 129 unique STLs / 170 previews before this delivery;
+qualified local totals are 132 / 129 / 171. All prior 100 corpus records and 170
+preview values remain exact. No primitive/compiler/guard changes are required.
+
+See `docs/evidence/italy-qualification-2026-11-15.json` for source/derivative hashes,
+actual commands, original resource refusals and exact tested-file bindings.
