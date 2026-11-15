@@ -158,3 +158,14 @@ remain available. See [workflow acceptance](UX-AND-PARAMETRIC.md#fast-constructi
 Next priorities: previewed alignment, persistent face workplanes, duplicate-repeat,
 lock/hide/isolate and direct dimension handles. Keep these contextual and usable
 without a keyboard; do not add another permanent ribbon or explanatory text wall.
+
+
+## Everyday generator retention — 2026-11-15
+
+Twelve additional shape families now retain numeric design recipes shared by
+Properties, Model source and MCP. Linked hollow-part dimensions and separate
+surface-detail controls are implemented. The catalogue parameter gap is now 27
+presets. See [RETAINED-SHAPES.md](RETAINED-SHAPES.md) for the exact scope,
+legacy handling and the remaining formula/constraint boundary. Cutting tools and
+enclosure parts are next; functional mechanical parts follow with fit and
+collision evidence.

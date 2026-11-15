@@ -14,6 +14,9 @@ full constrained sketches and an exact surface/solid backend remain roadmap work
 - Searchable shapes with an optional right-hand dock or screen-fitting dialog. Drag shapes onto highlighted
   faces, or tap a shape and then a surface on tablets. Placement previews snap,
   orient to faces and commit as one undoable edit.
+- [Retained design dimensions](docs/RETAINED-SHAPES.md) for twelve everyday shape
+  families, including linked tube/washer walls and bores, rounded boxes, capsules,
+  tapered solids, polygonal prisms and torus rings.
 - Practical part templates and editable generators for screws,
   threads, lettering and other parts. Seven conventional screw-point styles include
   editable cup, dog and tapered ends; headless set-screw and wood-screw presets are available. Name tags support rounded corners and bundled

@@ -59,12 +59,13 @@ correctness across every parameter combination, mechanical fit or manufacturing
 suitability. Curved-shape and screw-point regression tests cover selected edited
 variants as well.
 
-The audit finds 39 presets without retained shape-specific generators. They still
+The current audit finds 27 presets without retained shape-specific generators
+(39 at the first audit; twelve were completed in the everyday-shape pass). They still
 support transforms and dimensions, but editing their design intent is incomplete.
 Priorities for follow-up are:
 
-1. Rounded box/capsule, tube/washer, cone/frustum and polygon: retained radii,
-   wall thickness, taper and sides with coherent dimension relationships.
+1. Completed: twelve everyday families now retain dimensions, curvature, walls
+   and resolution. See [retained shapes](RETAINED-SHAPES.md) for inputs and limits.
 2. Counterbores/countersinks, ports, bosses and ribs: meaningful clearance,
    bore and wall dimensions, predictable attachment origins.
 3. Gears, pulleys, springs, hinges and mating parts: retain mechanical design

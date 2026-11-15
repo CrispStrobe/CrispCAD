@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: BSD-3-Clause
+import {test,expect} from '@playwright/test';import {addShape} from './ui.js';
+const ready=async(p:any)=>expect(p.locator('#cad-root')).toHaveAttribute('data-state','ready');
+const saved=(p:any)=>p.evaluate(()=>JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!));
+async function panel(p:any){if(!await p.locator('.inspector').isVisible())await p.getByRole('button',{name:'Properties',exact:true}).click();return p.locator('.inspector');}
+async function apply(p:any,f:any){await f.getByRole('button',{name:'Apply shape parameters',exact:true}).click();await expect(f.getByRole('button',{name:'Apply shape parameters',exact:true})).toBeEnabled();await ready(p);}
+test('tube dimensions stay linked, drafts do not edit history, and bore changes survive undo/reload',async({page})=>{
+ await page.goto('/');await ready(page);await addShape(page,'Tube');await ready(page);const f=await panel(page),before=await saved(page);
+ await expect(f.getByLabel('Bore diameter (mm)',{exact:true})).toHaveValue('20');await expect(f.getByLabel('Radial segments',{exact:true})).toBeHidden();
+ await f.getByLabel('Outer diameter (mm)',{exact:true}).fill('42');await f.getByLabel('Bore diameter (mm)',{exact:true}).focus();await expect(f.getByLabel('Bore diameter (mm)',{exact:true})).toHaveValue('32');
+ await f.getByLabel('Bore diameter (mm)',{exact:true}).fill('36');await f.getByLabel('Height (mm)',{exact:true}).focus();await expect(f.getByLabel('Wall thickness (mm)',{exact:true})).toHaveValue('3');expect(await saved(page)).toEqual(before);
+ await apply(page,f);const d=await saved(page);expect(d.nodes[d.roots[0]].generator.values).toMatchObject({outerDiameter:42,wallThickness:3});await page.getByRole('button',{name:'Undo',exact:true}).click();await ready(page);await expect(f.getByLabel('Outer diameter (mm)',{exact:true})).toHaveValue('30');await page.getByRole('button',{name:'Redo',exact:true}).click();await ready(page);await page.reload();await ready(page);await page.getByTestId('object-name').click();await expect(f.getByLabel('Bore diameter (mm)',{exact:true})).toHaveValue('36');await f.getByText('Surface detail',{exact:true}).click();await expect(f.getByLabel('Radial segments',{exact:true})).toHaveValue('64');await page.screenshot({path:`test-results/retained-tube-${test.info().project.name}.png`});
+});
+test('rounded-box and capsule retain independent design dimensions and reject invalid curvature',async({page})=>{
+ await page.goto('/');await ready(page);await addShape(page,'Rounded box');await ready(page);let f=await panel(page),before=await saved(page);
+ await f.getByLabel('Corner radius (mm)',{exact:true}).fill('12');await apply(page,f);expect(await saved(page)).toEqual(before);await expect(page.getByRole('status').filter({hasText:'Corner radius must be smaller'})).toBeVisible();await f.getByLabel('Corner radius (mm)',{exact:true}).fill('4');await f.getByLabel('Width (mm)',{exact:true}).fill('45');await apply(page,f);let d=await saved(page);expect(d.nodes[d.roots[0]].generator.values).toMatchObject({width:45,radius:4});
+ await addShape(page,'Capsule');await ready(page);f=await panel(page);await f.getByLabel('Overall length (mm)',{exact:true}).fill('65');await f.getByLabel('Width (mm)',{exact:true}).fill('16');await apply(page,f);d=await saved(page);expect(d.nodes[d.roots.at(-1)].generator.values).toMatchObject({length:65,width:16});
+});
+test('polygon side count and torus cross section are retained editable construction values',async({page})=>{
+ await page.goto('/');await ready(page);await addShape(page,'Polygonal prism');await ready(page);let f=await panel(page);await f.getByLabel('Sides',{exact:true}).fill('9');await apply(page,f);let d=await saved(page);expect(d.nodes[d.roots[0]].generator.values.sides).toBe(9);
+ await page.getByRole('button',{name:'Shapes',exact:true}).click();const picker=page.getByRole('dialog',{name:'Shape library',exact:true});await picker.getByLabel('Show additional shapes',{exact:true}).check();await picker.getByLabel('Search shapes',{exact:true}).fill('Torus');await picker.getByRole('button',{name:'Add Torus',exact:true}).click();await ready(page);f=await panel(page);await f.getByLabel('Ring centre radius (mm)',{exact:true}).fill('24');await f.getByLabel('Ring tube radius (mm)',{exact:true}).fill('3');await apply(page,f);d=await saved(page);expect(d.nodes[d.roots.at(-1)].generator.values).toMatchObject({majorRadius:24,tubeRadius:3});
+});
