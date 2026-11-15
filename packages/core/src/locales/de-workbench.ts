@@ -17,6 +17,8 @@ export const messages:Record<string,string>={
  'Dimensions after transform (mm)':'Maße nach Transformation (mm)','Size {0} (mm)':'Größe {0} (mm)',
  'Background colour':'Hintergrundfarbe','Baseplate colour':'Farbe der Grundplatte','Reset view colours':'Ansichtsfarben zurücksetzen',
  'Name-tag':'Namensschild',
+  "Snap to surfaces":"An Oberflächen einrasten",
+  "Snap to surfaces (C) · Alt-drag temporarily bypasses":"An Oberflächen einrasten (C) · Alt-Ziehen setzt dies vorübergehend aus",
   "Radial segments":"Radiale Segmente",
   "Corner detail":"Eckendetail",
   "Overall length (mm)":"Gesamtlänge (mm)",

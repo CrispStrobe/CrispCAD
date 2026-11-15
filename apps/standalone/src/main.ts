@@ -27,6 +27,8 @@ const historyUI=mountHistoryUI(()=>editor,async revision=>{
  const doc=await store.readDocument(revision.id);if(editor!==current||current.session.state.revision!==expectedRevision)throw new Error(t('The model changed while loading this iteration. Try restoring again.'));restoring=revision;current.session.load(doc);await lastSave;await current.whenIdle();current.frame();
 },prepareToClose);
 document.querySelector('#library')!.addEventListener('click',()=>historyUI.open());
+let surfaceSnap=true;try{surfaceSnap=localStorage.getItem('brickwright-cad:view:surface-snap')!=='false';}catch{}
+function saveSurfaceSnap(value:boolean){surfaceSnap=value;try{localStorage.setItem('brickwright-cad:view:surface-snap',String(value));}catch{}}
 let showReadout=false;try{showReadout=localStorage.getItem('brickwright-cad:view:readout')==='true';}catch{}
 function saveReadout(visible:boolean){showReadout=visible;try{localStorage.setItem('brickwright-cad:view:readout',String(visible));}catch{}}
 let navigationPreset:'tinkercad'|'fusion'=window.brickwrightDesktop||/Mac/.test(navigator.platform)&&navigator.maxTouchPoints===0?'fusion':'tinkercad';try{const v=localStorage.getItem('brickwright-cad:view:navigation');if(v==='fusion'||v==='tinkercad')navigationPreset=v;}catch{}
@@ -70,7 +72,7 @@ function start(doc?: CadDocument) {
     editor = mountCadEditor(root, {
       modelLibrary:{cache:createModelLibraryBrowserCache(),...createBundledModelLibrary()},
       document: doc, wasmURL: new URL('../cad-assets/manifold.wasm', import.meta.url).href,
-      headerContent:hostActions,navigationPreset,resizeControls,gridDisplay,rightPane,shapeBrowserLayout,onShapeBrowserLayoutChange:saveShapeBrowser,nativeMenus:desktop.available,
+      headerContent:hostActions,surfaceSnap,onSurfaceSnapChange:saveSurfaceSnap,navigationPreset,resizeControls,gridDisplay,rightPane,shapeBrowserLayout,onShapeBrowserLayoutChange:saveShapeBrowser,nativeMenus:desktop.available,
       showTransformReadout:showReadout,onTransformReadoutChange:saveReadout,appearance,
       saveProject:async()=>{if(editor)await saveProject(editor.session.state.document);},
       decodeProject,

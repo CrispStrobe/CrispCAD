@@ -36,6 +36,8 @@ export interface CadEditorOptions {
   navigationPreset?:NavigationPreset;
   resizeControls?:'dimensions'|'gizmo';
   gridDisplay?:GridDisplay;
+  surfaceSnap?:boolean;
+  onSurfaceSnapChange?:(enabled:boolean)=>void;
   rightPane?:{shapesFirst:boolean;split:number};
   shapeBrowserLayout?:ShapeBrowserLayout;
   onShapeBrowserLayoutChange?:(layout:ShapeBrowserLayout)=>void;
@@ -85,7 +87,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const run = (fn: () => unknown) => { try { const result = fn(); if (result instanceof Promise) result.catch(report); } catch (e) { report(e); } };
   const client = createGeometryClient(new URL(options.wasmURL, document.baseURI).href, options.createWorker);
   let viewport: ReturnType<typeof mountViewport>;
-  try { viewport = mountViewport(viewHost, session, report,options.appearance);viewport.setNavigation(options.navigationPreset??'tinkercad');viewport.setResizeControls(options.resizeControls??'dimensions');viewport.setGridDisplay(options.gridDisplay??'snap'); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
+  try { viewport = mountViewport(viewHost, session, report,options.appearance);viewport.setNavigation(options.navigationPreset??'tinkercad');viewport.setResizeControls(options.resizeControls??'dimensions');viewport.setGridDisplay(options.gridDisplay??'snap');viewport.setSurfaceSnap(options.surfaceSnap??true); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
   const empty = el('div', 'empty'); empty.append(el('strong', '', t('Your next idea starts here.')), document.createTextNode(t('Pick a shape above. Set its dimensions in Properties. Drag to orbit; pinch to zoom.'))); viewHost.append(empty);
   const busy = el('div', 'busy', t('Building solid…')); busy.hidden = true; viewHost.append(busy);
   const errorPanel = el('div', 'error'); errorPanel.hidden = true; errorPanel.setAttribute('role', 'alert'); viewHost.append(errorPanel);
@@ -146,6 +148,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     const b = button(['Select', 'Move', 'Rotate', 'Scale'][i], () => setMode(m)); b.title = t(['Select and drag (V / Esc)', 'Move (W)', 'Rotate (E)', 'Scale (R)'][i]); return b;
   });
   const dropButton = button('Drop to workplane', () => viewport.dropSelection());
+  const surfaceSnapButton=button('Snap to surfaces',()=>setSurfaceSnap(!viewport.surfaceSnap),toolbar,'compact-icon');surfaceSnapButton.title=t('Snap to surfaces (C) · Alt-drag temporarily bypasses');surfaceSnapButton.setAttribute('aria-pressed',String(viewport.surfaceSnap));surfaceSnapButton.classList.toggle('active',viewport.surfaceSnap);
+  function setSurfaceSnap(value:boolean){viewport.setSurfaceSnap(value);surfaceSnapButton.setAttribute('aria-pressed',String(value));surfaceSnapButton.classList.toggle('active',value);options.onSurfaceSnapChange?.(value);}
   const readout=mountTransformReadout(viewHost,session,report,visible=>{numbersToggle.checked=visible;viewport.setReadoutVisible(visible);options.onTransformReadoutChange?.(visible);});
   const numbersLabel=el('label','numbers-toggle','XYZ');numbersLabel.title=t('Show on-canvas parameters');const numbersToggle=el('input');numbersToggle.type='checkbox';numbersToggle.setAttribute('aria-label',t('Show on-canvas parameters'));numbersToggle.onchange=()=>readout.setVisible(numbersToggle.checked);numbersLabel.prepend(numbersToggle);
   readout.setVisible(options.showTransformReadout??false);
@@ -399,6 +403,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     else if(command&&key==='g')action=()=>event.shiftKey?session.separate(session.state.selection[0]):session.combine('union');
     else if(!command&&key==='h'&&session.state.selection.length)action=()=>session.setRole('hole');
     else if(!command&&key==='s'&&session.state.selection.length)action=()=>session.setRole('solid');
+    else if (!command && key === 'c') action=()=>setSurfaceSnap(!viewport.surfaceSnap);
     else if (!command && key === 'd') action = () => viewport.dropSelection();
     else if (command && key === 'd') action = () => session.duplicate();
     else if (command && key === 'c') action=()=>copySelection();
@@ -494,7 +499,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   buildTree(); buildInspector(); lastRevision = session.state.revision; lastSelection = JSON.stringify(session.state.selection); viewport.setSelection(session.state.selection); void buildLatest(); refreshButtons();
   return {
-    session, whenIdle, openFile,setRightPane,get rightPane(){return {...rightPane};},importFile,executeCommand,setNavigation:viewport.setNavigation,setResizeControls:viewport.setResizeControls,setGridDisplay:viewport.setGridDisplay,get gridDisplay(){return viewport.gridDisplay;},get resizeControls(){return viewport.resizeControls;},setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance:viewport.setAppearance,get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
+    session, whenIdle, openFile,setRightPane,get rightPane(){return {...rightPane};},importFile,executeCommand,setSurfaceSnap,get surfaceSnap(){return viewport.surfaceSnap;},setNavigation:viewport.setNavigation,setResizeControls:viewport.setResizeControls,setGridDisplay:viewport.setGridDisplay,get gridDisplay(){return viewport.gridDisplay;},get resizeControls(){return viewport.resizeControls;},setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance:viewport.setAppearance,get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
