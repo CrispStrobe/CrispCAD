@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: BSD-3-Clause
+import{beforeAll,expect,it}from'vitest';import{readFileSync}from'node:fs';import{createHash}from'node:crypto';
+import{createCadSession,importOpenSCAD}from'@brickwright/cad-core';import{createGeometryKernel,exportSTL,checkModelLibrarySTL}from'@brickwright/cad-geometry';
+let kernel:Awaited<ReturnType<typeof createGeometryKernel>>;beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
+const policy={checkedOn:'2026-11-15',maxTriangles:10000,maxExtentMm:200,toMillimetresZUp:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]};
+it('keeps the exact authored flag panel/strip decimal contact closed before STL export',async()=>{
+ const bytes=readFileSync('library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Flag_France.scad'),session=createCadSession();expect(createHash('sha256').update(bytes).digest('hex')).toBe('f217f82a7a8cd72fabd7276cde47e4de47aea0ab9d19ff7c24c2a35e92b67e91');
+ try{session.addCode(importOpenSCAD(bytes.toString()));const g=kernel.evaluate(session.state.document),screen=await checkModelLibrarySTL(exportSTL(g.bodies),policy);expect(screen.triangles).toBe(582);expect(Object.values(screen.checks)).toEqual(['pass','pass','pass','pass']);}finally{session.dispose();}
+});
+it('preserves centred/default boxes and a genuine decimal gap without welding',async()=>{
+ const s=createCadSession();try{s.addCode({version:1,language:'brickwright-cad-script',parameters:{},source:'return box(0.1,0.1,0.1);'});expect(kernel.evaluate(s.state.document).bodies[0].bounds).toEqual({min:[-.05,-.05,-.05],max:[.05,.05,.05]});}finally{s.dispose();}
+ const gap=createCadSession();try{gap.addCode({version:1,language:'brickwright-cad-script',parameters:{},source:'return union(move([.05,.05,.05],box(.1,.1,.1)),move([.05,.05,.150001],box(.1,.1,.1)));'});const g=kernel.evaluate(gap.state.document),mesh=g.bodies[0];expect(g.triangles).toBe(24);const adjacency=new Map<number,Set<number>>();for(let i=0;i<mesh.indices.length;i+=3)for(const a of mesh.indices.slice(i,i+3))for(const b of mesh.indices.slice(i,i+3)){if(!adjacency.has(a))adjacency.set(a,new Set());adjacency.get(a)!.add(b);}const seen=new Set<number>();let components=0;for(const start of adjacency.keys()){if(seen.has(start))continue;components++;const pending=[start];while(pending.length){const id=pending.pop()!;if(seen.has(id))continue;seen.add(id);pending.push(...adjacency.get(id)!);}}expect(components).toBe(2);expect(mesh.positions.some((v,i)=>i%3===2&&v>.1&&v<.100002)).toBe(true);expect(Object.values((await checkModelLibrarySTL(exportSTL(g.bodies),policy)).checks)).toEqual(['pass','pass','pass','pass']);}finally{gap.dispose();}
+});

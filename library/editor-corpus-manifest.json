@@ -8,7 +8,7 @@
     "command": "node scripts/generate-corpus-editor-library.mjs --check",
     "generator": {
       "path": "../scripts/generate-corpus-editor-library.mjs",
-      "sha256": "12220438d6db4f31f7f8ffe170bbcf6e97cdb8a9b75815eabc5f62f3a350f6f8"
+      "sha256": "d58075849d4c669162449015901934a8c370620031e152af90afe756905dde71"
     },
     "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
@@ -16,8 +16,8 @@
   "selection": {
     "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
     "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
-    "count": 99,
-    "runtimeChecked": 99,
+    "count": 100,
+    "runtimeChecked": 100,
     "complete": true
   },
   "assets": [
@@ -12322,6 +12322,129 @@
           ]
         },
         "signedVolumeMm3": 2415.162802319856
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "corpus-angelo-flag-france",
+      "title": "Flag France",
+      "author": "Angelo Nicoli (Gengio), 2023-2024",
+      "version": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/AngeloNicoli/OpenSCAD-Snippet",
+        "commit": "4f9e3d4d16b5e427186c1f89e10c2181c437dee6",
+        "sourceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Flag_France.scad"
+      },
+      "corpusSelection": {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Flag_France.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Flag_France.scad",
+        "sha256": "f217f82a7a8cd72fabd7276cde47e4de47aea0ab9d19ff7c24c2a35e92b67e91"
+      },
+      "licence": {
+        "spdx": "MIT",
+        "scope": "asset",
+        "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Flag_France.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+        "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+        "localEvidence": [
+          {
+            "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+            "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+            "bytes": 1079,
+            "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+          }
+        ],
+        "capturedOn": "2026-11-13",
+        "review": "accepted",
+        "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact authored flag default and general corner-origin fix, strict STL/editor screening 2026-11-15"
+      },
+      "original": {
+        "path": "sources/corpus-selection/flag-france.scad",
+        "sha256": "f217f82a7a8cd72fabd7276cde47e4de47aea0ab9d19ff7c24c2a35e92b67e91",
+        "bytes": 402,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Flag_France.scad",
+        "format": "openscad"
+      },
+      "derivatives": [
+        {
+          "path": "meshes/corpus-selection/flag-france.stl",
+          "sha256": "7a1ce07bf4355cb400f96fe9035244441dbae89f78ea7224b3eea0c43d836cba",
+          "bytes": 29184,
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Byte-identical upstream editable source retained. Brickwright original bounded OpenSCAD importer translates geometry to editable CAD Script; cosmetic color wrappers are ignored. Rendered by the existing Manifold runtime and screened as STL. No upstream compiler, repair, simplification or placement applied. Not certified for manufacturing or physics. Qualification covers only the instantiated default top-level model. Import warnings captured at qualification: Source colours and transparency are not retained; solid geometry is preserved.",
+      "conversion": {
+        "sourceUnits": "mm",
+        "sourceUpAxis": "Z",
+        "unitAssumption": "The source has no explicit unit declaration. Curator assumes millimetres and Z up; original coordinates are preserved. This is not upstream dimensional certification.",
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "7a1ce07bf4355cb400f96fe9035244441dbae89f78ea7224b3eea0c43d836cba",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-15",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 582,
+        "boundsMm": {
+          "min": [
+            -3,
+            -3,
+            0
+          ],
+          "max": [
+            9,
+            3,
+            18.399999618530273
+          ]
+        },
+        "signedVolumeMm3": 25.297292836791705
       },
       "diagnostics": []
     }
