@@ -35,6 +35,8 @@ full constrained sketches and an exact surface/solid backend remain roadmap work
 
 See [parameters](docs/PARAMETERS.md), [code mode](docs/CODE-MODE.md) and the
 [roadmap](docs/ROADMAP.md) for examples and current boundaries.
+The [shape-quality audit](docs/SHAPE-AND-UX-QUALITY.md) records geometry checks
+and the remaining shape-specific parameter gaps.
 
 ## Code and source interchange
 
@@ -48,7 +50,7 @@ clutter. See [the shared source workflow](docs/UNIFIED-DESIGN-SOURCE.md).
 
 The same modeling compiler is available through the core SDK and a headless MCP server.
 
-The offline model library includes 150 models with previews and retained
+The offline model library includes 168 models with previews and retained
 licence/provenance information, including CC0 geometric fixtures.
 
 Bounded converters import supported OpenSCAD/JSCAD source, including lexical

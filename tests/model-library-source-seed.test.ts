@@ -12,7 +12,7 @@ beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('
 
 it('admits only the supported seed, retains exact original bytes and URL, and exports the full original MIT notice',async()=>{
   const {catalogue,localFiles}=createBundledModelLibrary();
-  expect(catalogue.assets).toHaveLength(150);
+  expect(catalogue.assets).toHaveLength(168);
   expect(catalogue.assets.some(asset=>['jscad-nuts-and-bolts','threads-scad-demo'].includes(asset.id))).toBe(false);
   const asset=catalogue.assets.find(asset=>asset.id==='jscad-involute-gear')!;
   expect(asset.original.url).toContain(`/${asset.sourceRevision!.commit}/`);
@@ -38,7 +38,7 @@ it('admits only the supported seed, retains exact original bytes and URL, and ex
 
 it('bundles exactly ninety-eight reviewed corpus entries',()=>{
   expect(corpusManifest.assets).toHaveLength(98);
-  expect(bundledCorpus.catalogue.assets).toHaveLength(150);
+  expect(bundledCorpus.catalogue.assets).toHaveLength(168);
 });
 
 it.each(corpusManifest.assets)('bundles and inserts reviewed corpus source $id with original identity and attribution',async(raw:any)=>{
