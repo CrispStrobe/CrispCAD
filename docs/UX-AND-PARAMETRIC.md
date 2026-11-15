@@ -125,7 +125,7 @@ Original interaction code, guided by common CAD conventions and the official
 | Persistent face workplane | Next: pick/reset construction plane; reuse it for insertion, movement, dimension annotations and D. Current automatic face placement does not establish a persistent workplane. |
 | Duplicate and repeat | Duplicate exists. Next: retain last translation/rotation pattern for repeat duplication, including parameter bindings. |
 | Lock / hide / isolate | Next: compact contextual actions and browser states, with explicit export and selection semantics. |
-| Direct dimension handles | Numeric dimensions and live annotations exist. Next: corner/edge resizing handles in Select mode, preserving rotated bodies and actual sizes. |
+| Direct dimension handles | Corner/side handles and editable millimetre dimensions in Select and Scale modes; fixed opposite anchor, proportional and centre options, local axes for rotated bodies. |
 
 Face placement retains generator recipes, code, bindings, provenance and local
 joint frames. It composes driven translations/rotations rather than freezing them.
@@ -135,11 +135,11 @@ command/history/source path for GUI, script and MCP access.
 
 ## Direct-placement and resize reference check — 2026-11-15
 
-The optional lower-right palette and highlighted-face placement are implemented,
-but the popup header exposed docking as an ambiguous diagonal arrow. It now has
-a readable **Lower right** action, changing to **Popup** when docked. The saved
-preference and existing drag/tap placement remain; view changes create no model
-iteration. Touch users drag thumbnails and can scroll using card labels.
+The optional lower-right palette keeps its saved docking preference. Search,
+additional-shape filtering, lettering/SVG options, dock/popup and close share one
+compact header. The dock icon has an explicit lower-right tooltip. Text/font/SVG
+controls open as an overlay; idle placement instructions no longer take a row.
+Touch users drag thumbnails and can scroll using card labels.
 
 Autodesk's [lesson guide](https://assets.ctfassets.net/jl5ii4oqrdmc/7vqtiHNyJW8CrtaiKTV9Ji/003e7fe0010f9e082bb8bdaeda08f749/0de442ca.pdf)
 (page 12) explicitly describes Snap Grid precision for resizing as well as moving.
@@ -147,20 +147,43 @@ Its [official shortcut sheet](https://images.tinkercad.com/jl5ii4oqrdmc/24W19aTK
 assigns Shift to uniform resize and Alt/Option to resizing about the centre. This
 check uses published primary documentation, not a logged-in interactive session.
 
-Remaining direct-editing work is concrete:
+Implemented dimension resizing:
 
-1. Replace percentage/factor gizmo snapping with resize increments expressed in
-   model units. The current viewport uses `setScaleSnap(0.1)`; its fine mode changes
-   factor precision, which is not the documented millimetre-based workflow.
-2. Add bounding-box face/corner handles and editable dimensions at those handles;
-   retain a predictable opposite anchor, with explicit centre and uniform options.
-   Grid-based increments and proportional scaling must coexist without rounding
-   every axis independently and breaking ratios. Existing precise numeric input
-   and fine control remain available.
-3. Keep surface placement, resizing, alignment and optional fit-to-target distinct.
-   Dropping onto a face must not silently change dimensions. A future fit action
-   must be explicit. Persistent workplanes, alignment previews and repeat duplicate
-   follow; their shortcuts must be documented consistently with active modifiers.
+- Select and Scale show four base corners, four base side handles and a height
+  handle, with compact editable X/Y/Z dimensions along the measured edges.
+- Snap Grid rounds dimension **changes** in millimetres. A fractional starting
+  dimension is preserved. Grid Off removes rounding; exact numeric entry bypasses
+  the grid. This replaces factor-based snapping in the viewport.
+- The opposite side stays fixed. Shift preserves proportions; Alt/Option holds the
+  centre. Both have touch-accessible toggles beside the selection. Uniform resizing
+  snaps one driving dimension and derives the remaining dimensions by ratio.
+- Ctrl/Command or Fine uses one-tenth pointer speed and one-tenth grid increments
+  during resizing. Shift remains fine control for moving/rotating, and fine numeric
+  steppers retain their existing Shift behavior.
+- Same-oriented bodies use their common local frame. Mixed-orientation selections
+  and cubes enforce proportional resizing to preserve valid transforms/equal edges.
+- Dimensions and the Properties panel update during drag. Release saves one edit;
+  Escape cancels. Transient previews/toggles do not enter project history.
 
-Do not describe these remaining resize/workplane operations as shipped simply
-because placement and on-canvas readouts are available.
+Surface placement keeps dimensions unchanged. Persistent workplanes, alignment
+previews, explicit fit-to-target and repeat duplicate remain separate future work.
+
+## Compact panels and optional classic controls
+
+Properties uses one row for the editable object name, Solid/Hole previews and a
+square colour picker. Actual dimensions and position/rotation/scale values use
+compact icon-led rows with inline X/Y/Z labels and accessible full field names.
+Generator fields use two columns. Numeric editing, named parameters, shape recipes
+and Solid/Hole semantics are retained.
+
+Settings → Modeling view → Resize controls selects **Dimension handles** (default)
+or **Classic axis gizmo**. The latter retains the former local-axis scale gizmo,
+centre pivot, factor-based snap/fine increments and optional XYZ factor readout.
+Move and Rotate keep their existing controls. Switching cancels a pending preview,
+persists as a host view preference and creates no model iteration. Embedded hosts
+can use `CadEditorOptions.resizeControls`, `setResizeControls()` and the
+`resizeControls` getter; storage remains host-owned.
+
+Shift keeps proportional pointer resizing in the dimension workflow. In numeric
+fields Shift+Arrow keeps the existing fine-step behavior; use the proportion toggle
+to link numeric dimensions.
