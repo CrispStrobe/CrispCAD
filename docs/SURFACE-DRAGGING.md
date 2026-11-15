@@ -61,3 +61,11 @@ other numeric labels and resize-option buttons. If an edge-of-screen label has
 no usable space, it is hidden rather than clamped over the object. The thin-part
 regression checks a 29 × 29 × 2.9 mm body in both browsers, including small height
 labels that previously moved inward.
+
+
+The embedding host can provide `surfaceSnap`, persist `onSurfaceSnapChange`, and
+use the editor's `setSurfaceSnap` method to control the same preference. This is
+a view preference and creates no model-history revision.
+
+Verified thin-part layouts: [Select/Resize](images/annotation-select.png) and
+[Move](images/annotation-move.png).

@@ -806,3 +806,25 @@ library batch. Existing projects and saved histories were retained.
 
 See [validation evidence](evidence/shape-quality-workspace-2026-11-15.json) and
 [remaining shape-quality work](SHAPE-AND-UX-QUALITY.md).
+
+
+## 2026-11-15 — Mac 32 and iPad 18
+
+Both native builds use clean source `38a081251d3b81756f025fd496bb617f8a059891`.
+Mac build 32 is installed and running; native smoke checks passed. iPad build 18
+installed successfully over WLAN. iPadOS blocked launch while locked; the owner
+explicitly chose to open it later. Physical interaction acceptance remains pending.
+
+These builds add 12 retained shape families, default surface contact when dragging
+existing objects (magnet button/C toggles it), coalesced drag previews and cached
+exact mesh bounds. Select/Resize dimensions and Move/Rotate axis values now appear
+as separate compact layers outside the selected footprint.
+
+The final merged source also preserves two concurrent library admissions and the
+corner-box origin correction, which arrived after those native builds. It passed
+954 unit tests (one existing skip). Focused browser runs passed 45 distinct checks
+with one platform skip. German validation covers 1,443 messages. The catalogue
+audit covers 59 presets, including one excluded reference ruler; 27 shape-specific
+parameter gaps remain. Twelve edited retained-family variants passed Jolt checks.
+See [validation evidence](evidence/retained-shapes-and-surface-drag-2026-11-15.json)
+for exact checkpoints, log hashes, earlier test corrections and limitations.

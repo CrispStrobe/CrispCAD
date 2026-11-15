@@ -1,0 +1,145 @@
+{
+  "date": "2026-11-15",
+  "testedMergedCheckpoint": "0bcf6903a3eb9fa3ef0fff73340b0cfa8a8ab5d1",
+  "nativeSource": {
+    "commit": "38a081251d3b81756f025fd496bb617f8a059891",
+    "dirty": false,
+    "builtAt": "2026-11-15T10:42:55.656Z",
+    "macBuild": 32,
+    "macStatus": "Installed and running; native smoke checks passed",
+    "ipadBuild": 18,
+    "ipadStatus": "Installed over WLAN; launch blocked by locked iPad. User explicitly deferred launch."
+  },
+  "checks": {
+    "unit": {
+      "passed": 954,
+      "skipped": 1,
+      "files": 90
+    },
+    "germanMessages": 1443,
+    "browser": {
+      "distinctPassedAcrossRuns": 45,
+      "platformSkipped": 1,
+      "note": "Separate focused runs, not a monolithic suite. First movement run interrupted for native delivery; remaining cases completed separately."
+    },
+    "editedRetainedShapePhysicsCasesPassed": 12,
+    "catalogue": {
+      "presets": 59,
+      "closedPositiveSolids": 58,
+      "referenceHelpersExcluded": 1,
+      "blockedPhysicsPresets": 0,
+      "remainingShapeSpecificParameterGaps": 27
+    }
+  },
+  "limits": [
+    "No universal FPS claim; shared-host rendering timings are uncontrolled.",
+    "Initial blurred palette Chromium scenario timed out; opaque palette passed all six shape browser checks.",
+    "Prior pinch assertion incorrectly relied on a screen-sized gizmo anchor; corrected test verifies actual camera zoom and unchanged page/model.",
+    "Trusted JSCAD example oracle budget increased to 15 seconds per fixture for loaded local host; production importer limits unchanged.",
+    "Rigid preview physics qualification does not certify mechanical fit, materials or manufacturing.",
+    "Native builds precede two concurrent model admissions and corner-box transform fix; merged source includes these and passed 954 tests.",
+    "Named formula binding for every retained generator parameter remains future work."
+  ],
+  "logs": [
+    {
+      "file": "cad-merge-unit-final.log",
+      "bytes": 330,
+      "sha256": "f2ea97bcc6001e252c4fd2db40079746bc2e3a3b9e16f77b201aec1de225e67e"
+    },
+    {
+      "file": "cad-final-i18n.log",
+      "bytes": 222,
+      "sha256": "510d4160f334dea57947bc0d63564e317d52c35210c76763b1a190e80118300c"
+    },
+    {
+      "file": "cad-basic-shape-audit.log",
+      "bytes": 497,
+      "sha256": "c9a12bef5014758e0ed7e3a0fa29c93d1c296492ca9662347cd76c41981bada9"
+    },
+    {
+      "file": "cad-basic-catalog-physics.log",
+      "bytes": 1084,
+      "sha256": "21076d8fbb4d35284106fbc3e2fdb8688531f8ce143bc68d40ccbb0d2876f52e"
+    },
+    {
+      "file": "cad-basic-physics-tests.log",
+      "bytes": 232,
+      "sha256": "250e942f26a4f19ef64cfd84a3c867a4eac644839b3a166cca5240eb122f77dd"
+    },
+    {
+      "file": "cad-basic-opaque-browser.log",
+      "bytes": 1402,
+      "sha256": "da6a52650d95d3192a16552910a65a0f27729cf3e5bca69fbd28dfa9973d7431"
+    },
+    {
+      "file": "cad-moving-browser-final.log",
+      "bytes": 4120,
+      "sha256": "251dae7fd4319e109cd02f8496e1385acf47e3d23a2bdee9f80c0633434bb27a"
+    },
+    {
+      "file": "cad-moving-webkit-final.log",
+      "bytes": 2088,
+      "sha256": "e4fdd82abe4ffeeba8c59f24e3f2f278a19d5f6baebedbd500d789ee9a87ad7c"
+    },
+    {
+      "file": "cad-moving-chromium-rest.log",
+      "bytes": 564,
+      "sha256": "89f5ddc8967605c4760c337a2551f72a1a7a6b6ff37f04ae5af4377d250846ac"
+    },
+    {
+      "file": "cad-labels-browser.log",
+      "bytes": 2081,
+      "sha256": "a89a0c866a3fc79f1f15395128d21598cde3245c1c2ca395b2bdb1d89411892d"
+    },
+    {
+      "file": "cad-label-regression.log",
+      "bytes": 5281,
+      "sha256": "b4996240b87176ee23aa96b1f20b29e6a926265da3bcbf550de0394425a43270"
+    },
+    {
+      "file": "cad-pinch-final.log",
+      "bytes": 378,
+      "sha256": "27b280a964131fb81b51d6cbec68074f045cdbfde587d7801211355b4a778138"
+    },
+    {
+      "file": "cad-moving-jscad-final.log",
+      "bytes": 244,
+      "sha256": "88a2bc8db3ca02224ec161506daac0e141dc1d1d501530f595ebdae39435e962"
+    },
+    {
+      "file": "cad-final-build.log",
+      "bytes": 3062,
+      "sha256": "b925c5a98c5dcfaf3e9bd75e35977478902f120cdea4fb789e6ba5fc7a004867"
+    },
+    {
+      "file": "cad-mac32-build.log",
+      "bytes": 1522,
+      "sha256": "c9e81382040e12e79a8e19e18744bbca860e210cfa6ea0ebd66b132683396e55"
+    },
+    {
+      "file": "cad-mac32-smoke.log",
+      "bytes": 599,
+      "sha256": "a63569ec4caad7d16e3204ff039660402fea1098ce185852653499ded7527cd3"
+    },
+    {
+      "file": "cad-mac32-install.log",
+      "bytes": 209,
+      "sha256": "3a3758ab815663b0fa03c13033260b4ac6666031ff04e551aa26c222d65a2fa5"
+    },
+    {
+      "file": "cad-ipad18-copy.log",
+      "bytes": 163,
+      "sha256": "1289c7550cd88f5557aa540b45613b5fbcd3e0f63b740fb94e94c5b431e4ecaa"
+    },
+    {
+      "file": "cad-ipad18-archive.log",
+      "bytes": 299714,
+      "sha256": "21adf53a2f1da375ff531b2d4a3068c2af90aa2dd5b70fdcb1f662dbea7014f9"
+    },
+    {
+      "file": "cad-ipad18-install.log",
+      "bytes": 2190,
+      "sha256": "16119969e7880d4cf0c84024db4bcf186aa2c8116634513d8917dc152bcbd56f"
+    }
+  ]
+}
