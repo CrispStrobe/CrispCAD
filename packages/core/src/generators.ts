@@ -1,12 +1,26 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
-export interface GeneratorRecipe {version:1|2;preset:'ruler'|'cube'|'screw'|'thread'|'nut'|'heart'|'text'|'name-tag';values:Record<string,number>;text?:string;font?:'block'|'sans'|'serif'|'mono';headStyle?:'cylindrical'|'hex'|'countersunk'|'pan'|'headless';driveStyle?:'slot'|'cross'|'hex'|'none';driveDepth?:number;headAngle?:number;threadAngle?:number;orientation?:'head-up'|'legacy';rulerUnit?:'mm'|'in';rulerNumbers?:boolean;tipStyle?:ScrewTipStyle;tipLength?:number;tipDiameter?:number;cupDepth?:number}
+export const basicGeneratorPresets=['rounded-box','capsule','tube','washer','cone','frustum','polygon','ellipse','wedge','pyramid','round-roof','torus'] as const;
+export type BasicGeneratorPreset=typeof basicGeneratorPresets[number];
+export interface GeneratorRecipe {version:1|2;preset:BasicGeneratorPreset|'ruler'|'cube'|'screw'|'thread'|'nut'|'heart'|'text'|'name-tag';values:Record<string,number>;text?:string;font?:'block'|'sans'|'serif'|'mono';headStyle?:'cylindrical'|'hex'|'countersunk'|'pan'|'headless';driveStyle?:'slot'|'cross'|'hex'|'none';driveDepth?:number;headAngle?:number;threadAngle?:number;orientation?:'head-up'|'legacy';rulerUnit?:'mm'|'in';rulerNumbers?:boolean;tipStyle?:ScrewTipStyle;tipLength?:number;tipDiameter?:number;cupDepth?:number}
 export const screwTipStyles=[['flat','Flat end'],['chamfer','Chamfered end'],['cone','Cone point'],['dog','Dog point'],['cup','Cup point'],['oval','Rounded point'],['gimlet','Threaded gimlet point']] as const;
 export type ScrewTipStyle=typeof screwTipStyles[number][0];
 export function screwTipParameters(r:GeneratorRecipe){const p=r.values,length=r.tipLength??Math.min(p.length/3,(p.diameter+2*p.threadDepth)/2,p.pitch*2);return {style:r.tipStyle??'flat',length,diameter:r.tipDiameter??p.diameter*.6,depth:r.cupDepth??length*.4};}
 export interface GeneratorField {key:string;label:string;value:number;min:number;max:number;step:number}
 export function generatorFields(preset:string):GeneratorField[]{
  const field=(key:string,label:string,value:number,min:number,max:number,step=.1)=>({key,label,value,min,max,step});
+ const width=(value:number)=>field('width','Width (mm)',value,.1,500),depth=(value:number)=>field('depth','Depth (mm)',value,.1,500),height=(value:number)=>field('height','Height (mm)',value,.1,500),segments=()=>field('segments','Radial segments',64,16,128,1);
+ if(preset==='rounded-box')return [width(30),depth(24),height(20),field('radius','Corner radius (mm)',3,0,200),field('detail','Corner detail',4,2,8,1)];
+ if(preset==='capsule')return [field('length','Overall length (mm)',40,.1,500),width(20),height(20),field('segments','Curve segments',24,8,64,1)];
+ if(preset==='tube'||preset==='washer')return [field('outerDiameter','Outer diameter (mm)',30,.2,500),field('wallThickness','Wall thickness (mm)',preset==='tube'?5:8,.05,200),height(preset==='tube'?25:4),segments()];
+ if(preset==='cone')return [field('diameter','Base diameter (mm)',26,.1,500),height(30),segments()];
+ if(preset==='frustum')return [field('bottomDiameter','Bottom diameter (mm)',30,.1,500),field('topDiameter','Top diameter (mm)',14,.1,500),height(25),segments()];
+ if(preset==='polygon')return [field('diameter','Circumdiameter (mm)',28,.1,500),height(25),field('sides','Sides',6,3,32,1)];
+ if(preset==='ellipse')return [width(36),depth(19.2),height(20),segments()];
+ if(preset==='wedge')return [width(30),depth(30),height(25)];
+ if(preset==='pyramid')return [width(30),depth(30),height(28)];
+ if(preset==='round-roof')return [width(30),field('length','Roof length (mm)',30,.1,500),height(15),field('segments','Curve segments',32,8,64,1)];
+ if(preset==='torus')return [field('majorRadius','Ring centre radius (mm)',15,.2,250),field('tubeRadius','Ring tube radius (mm)',5,.05,100),segments(),field('tubeSegments','Cross-section segments',24,8,32,1)];
  if(preset==='ruler')return [field('length','Ruler length (mm)',100,10,500),field('width','Ruler width (mm)',10,6,30),field('thickness','Ruler thickness (mm)',1,.5,5)];
  if(preset==='cube')return [field('edge','Edge length (mm)',30,.01,100000)];
  if(['screw','thread','nut'].includes(preset))return [field('diameter','Core diameter (mm)',10,2,80),field('length',preset==='nut'?'Nut height (mm)':'Thread length (mm)',preset==='nut'?8:20,1,200),field('pitch','Thread pitch (mm)',2,.5,10),field('threadDepth','Thread depth (mm)',1,.2,5),field('starts','Thread starts',1,1,2,1),field('hand','Handedness',1,-1,1,2),...(preset==='screw'?[field('headDiameter','Head diameter (mm)',18,3,120),field('headHeight','Head height (mm)',5,1,30),field('slotWidth','Drive slot width (mm)',2,.5,10)]:preset==='nut'?[field('clearance','Radial clearance (mm)',.25,.05,1)]:[])];
@@ -15,13 +29,21 @@ export function generatorFields(preset:string):GeneratorField[]{
  return [];
 }
 export function checkGenerator(value:unknown):GeneratorRecipe {
- const r=value as GeneratorRecipe;if(!r||![1,2].includes(r.version)||!['ruler','cube','screw','thread','nut','heart','text','name-tag'].includes(r.preset)||!r.values||typeof r.values!=='object'||Array.isArray(r.values))throw new Error(t('Invalid shape generator'));
- if(['cube','ruler'].includes(r.preset)&&r.version!==2)throw new Error(t('Invalid shape generator'));
+ const r=value as GeneratorRecipe;if(!r||![1,2].includes(r.version)||![...basicGeneratorPresets,'ruler','cube','screw','thread','nut','heart','text','name-tag'].includes(r.preset)||!r.values||typeof r.values!=='object'||Array.isArray(r.values))throw new Error(t('Invalid shape generator'));
+ if([...basicGeneratorPresets,'cube','ruler'].includes(r.preset)&&r.version!==2)throw new Error(t('Invalid shape generator'));
  if(r.version===2&&r.preset==='screw'||r.headStyle!==undefined||r.driveStyle!==undefined||r.driveDepth!==undefined||r.headAngle!==undefined||r.threadAngle!==undefined||r.orientation!==undefined){if(r.version!==2||r.preset!=='screw'||!['cylindrical','hex','countersunk','pan','headless'].includes(r.headStyle??'')||!['slot','cross','hex','none'].includes(r.driveStyle??'')||!Number.isFinite(r.driveDepth)||r.driveDepth!<=0||!Number.isFinite(r.headAngle)||r.headAngle!<60||r.headAngle!>120||!Number.isFinite(r.threadAngle)||r.threadAngle!<40||r.threadAngle!>80||r.orientation!==undefined&&!['head-up','legacy'].includes(r.orientation))throw new Error(t('Invalid screw head, drive or thread profile'));}
  if([r.tipStyle,r.tipLength,r.tipDiameter,r.cupDepth].some(v=>v!==undefined)){if(r.version!==2||r.preset!=='screw'||!screwTipStyles.some(([style])=>style===r.tipStyle))throw new Error(t('Invalid screw point parameters'));const tip=screwTipParameters(r),major=r.values.diameter+2*r.values.threadDepth;if(!Number.isFinite(tip.length)||tip.length<.05||tip.length>=r.values.length*.9||!Number.isFinite(tip.diameter)||tip.diameter<=0||tip.diameter>=major||tip.style==='dog'&&tip.diameter>r.values.diameter||!Number.isFinite(tip.depth)||tip.depth<=0||tip.style==='cup'&&tip.depth>=tip.length*.85)throw new Error(t('Invalid screw point parameters'));}
  if(r.rulerUnit!==undefined||r.rulerNumbers!==undefined){if(r.preset!=='ruler'||!['mm','in'].includes(r.rulerUnit??'mm')||r.rulerNumbers!==undefined&&typeof r.rulerNumbers!=='boolean')throw new Error(t('Invalid ruler settings'));}
  const fields=generatorFields(r.preset);
  if(Object.keys(r.values).length!==fields.length||fields.some(f=>!Object.hasOwn(r.values,f.key)||!Number.isFinite(r.values[f.key])||r.values[f.key]<f.min||r.values[f.key]>f.max))throw new Error(t('Shape parameters exceed their supported range'));
+ if((basicGeneratorPresets as readonly string[]).includes(r.preset)){
+  const p=r.values;
+  if(['segments','tubeSegments','detail','sides'].some(key=>p[key]!==undefined&&!Number.isInteger(p[key])))throw new Error(t('Surface detail and side counts must be whole numbers'));
+  if(r.preset==='rounded-box'&&p.radius>=Math.min(p.width,p.depth,p.height)/2)throw new Error(t('Corner radius must be smaller than half the shortest dimension'));
+  if(r.preset==='capsule'&&p.length<p.width)throw new Error(t('Capsule length must be at least its width'));
+  if(['tube','washer'].includes(r.preset)&&p.wallThickness*2>=p.outerDiameter)throw new Error(t('Wall thickness must leave an open bore'));
+  if(r.preset==='torus'&&p.tubeRadius>=p.majorRadius)throw new Error(t('Ring tube radius must be smaller than its centre radius'));
+ }
  if(r.preset==='text'||r.preset==='name-tag'){if(typeof r.text!=='string'||!r.text.trim()||[...r.text].length>48||/[\u0000-\u001f]/.test(r.text)||!['block','sans','serif','mono'].includes(r.font??''))throw new Error(t('Enter 1–48 printable characters and choose a supported font'));if(r.font==='block'&&(/[^A-Z0-9 .-]/i.test(r.text)||r.text.length>24))throw new Error(t('The block font supports up to 24 letters A–Z, digits, spaces, dots and hyphens'));}
  else if(['screw','thread','nut'].includes(r.preset)){
   const p=r.values;if(!Number.isInteger(p.starts)||![-1,1].includes(p.hand)||p.length/(p.pitch*p.starts)>16||p.threadDepth>p.diameter/3)throw new Error(t('Thread parameters require 1–2 starts, a valid hand, at most 16 turns, and depth ≤ one third of the core diameter'));
@@ -31,6 +53,6 @@ export function checkGenerator(value:unknown):GeneratorRecipe {
  else if(r.preset==='heart'&&Math.abs(r.values.bend)>.001&&r.values.thickness>=Math.abs(r.values.width/(r.values.bend*Math.PI/180))*.7)throw new Error(t('Reduce the heart thickness or bend angle to avoid a folded solid'));
  return r;
 }
-export function defaultGenerator(preset:string):GeneratorRecipe|undefined {const fields=generatorFields(preset);return fields.length?checkGenerator({version:['cube','ruler'].includes(preset)?2:1,preset,values:Object.fromEntries(fields.map(f=>[f.key,f.value])),...(['text','name-tag'].includes(preset)?{text:'BRICKWRIGHT',font:'sans' as const}:{})}):undefined;}
+export function defaultGenerator(preset:string):GeneratorRecipe|undefined {const fields=generatorFields(preset);return fields.length?checkGenerator({version:[...basicGeneratorPresets,'cube','ruler'].includes(preset)?2:1,preset,values:Object.fromEntries(fields.map(f=>[f.key,f.value])),...(['text','name-tag'].includes(preset)?{text:'BRICKWRIGHT',font:'sans' as const}:{})}):undefined;}
 
 export function screwVariant(id:string):GeneratorRecipe|undefined{const styles:Record<string,[NonNullable<GeneratorRecipe['headStyle']>,NonNullable<GeneratorRecipe['driveStyle']>]>={'hex-head-screw':['hex','none'],'socket-head-screw':['cylindrical','hex'],'countersunk-screw':['countersunk','cross'],'pan-head-screw':['pan','cross'],'set-screw':['headless','hex'],'wood-screw':['countersunk','cross']};const pair=styles[id];if(!pair)return undefined;const recipe=defaultGenerator('screw')!;recipe.version=2;recipe.headStyle=pair[0];recipe.driveStyle=pair[1];recipe.driveDepth=pair[0]==='countersunk'?.8:2;recipe.headAngle=90;recipe.threadAngle=60;recipe.orientation='head-up';if(pair[1]==='hex')recipe.values.slotWidth=6;if(pair[0]==='hex')recipe.values.headHeight=7;if(id==='set-screw'){recipe.tipStyle='cup';recipe.tipLength=3;recipe.tipDiameter=6;recipe.cupDepth=1;}if(id==='wood-screw'){recipe.tipStyle='gimlet';recipe.tipLength=6;}return checkGenerator(recipe);}
