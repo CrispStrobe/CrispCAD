@@ -13,7 +13,7 @@ export function createSimulationVideo(canvas:HTMLCanvasElement,deliver:(file:{na
    current.ondataavailable=event=>{if(disposed||!event.data.size)return;bytes+=event.data.size;if(bytes>64*1024*1024){overflow=true;if(current.state!=='inactive')current.stop();return;}chunks.push(event.data);};
    current.onerror=()=>{stopTracks();if(!disposed)fail(new Error(t('Video recording failed')));};
    current.onstop=()=>{stopping=false;stopTracks();if(disposed){chunks=[];return;}changed();if(overflow){chunks=[];fail(new Error(t('Video exceeds 64 MiB; record a shorter run')));return;}const parts=chunks;chunks=[];if(!parts.length)return;const actual=current.mimeType||mime;void new Blob(parts,{type:actual}).arrayBuffer().then(data=>{if(!disposed)return deliver({name:actual.startsWith('video/mp4')?'simulation.mp4':'simulation.webm',bytes:new Uint8Array(data),mime:actual});}).catch(fail);};
-   current.start(500);capture();timer=setTimeout(()=>{if(current.state!=='inactive')current.stop();},30000);changed();
+   current.start(500);canvas.dispatchEvent(new Event('brickwright-simulation-capture'));timer=setTimeout(()=>{if(current.state!=='inactive')current.stop();},30000);changed();
   },
   stop(){if(recorder&&recorder.state!=='inactive'){stopping=true;recorder.stop();}},
   dispose(){disposed=true;clearTimeout(timer);if(recorder&&recorder.state!=='inactive')recorder.stop();stopTracks();chunks=[];}
