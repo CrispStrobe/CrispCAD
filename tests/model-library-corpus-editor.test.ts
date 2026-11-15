@@ -113,7 +113,7 @@ describe('explicit corpus to editor selection', () => {
   it('screens all selected meshes independently and keeps physics qualification absent', async () => {
     for (const asset of manifest.assets) {
       const mesh = asset.derivatives.find((file: any) => file.format === 'stl');
-      const result = await checkModelLibrarySTL(read(mesh.path), {checkedOn: '2026-11-14', toMillimetresZUp: asset.conversion.toMillimetresZUp, maxTriangles: 10000, maxExtentMm: 200});
+      const result = await checkModelLibrarySTL(read(mesh.path), {checkedOn: asset.quality.checkedOn, toMillimetresZUp: asset.conversion.toMillimetresZUp, maxTriangles: 10000, maxExtentMm: 200});
       expect(result.quality, asset.id).toEqual(asset.quality);
       expect(Object.values(result.checks), asset.id).toEqual(['pass', 'pass', 'pass', 'pass']);
       expect(asset.quality.fileSha256).toBe(mesh.sha256);
