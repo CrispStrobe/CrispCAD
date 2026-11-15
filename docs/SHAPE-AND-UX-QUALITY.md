@@ -59,9 +59,9 @@ correctness across every parameter combination, mechanical fit or manufacturing
 suitability. Curved-shape and screw-point regression tests cover selected edited
 variants as well.
 
-The current audit finds 16 presets without retained shape-specific generators
+The current audit finds 13 presets without retained shape-specific generators
 (39 at the first audit; twelve everyday shapes and five cutting/enclosure parts
-now retain their design inputs, followed by six curves/vessels). They still
+now retain their design inputs, followed by six curves/vessels and three transition/sliding profiles). They still
 support transforms and dimensions, but editing their design intent is incomplete.
 Priorities for follow-up are:
 
@@ -73,9 +73,12 @@ Priorities for follow-up are:
 3. Completed: curved cones, hemispheres, paraboloids, vases, teardrops and
    finishing washers retain their profiles and section dimensions. See
    [curved shapes](CURVED-SHAPES.md).
-4. Gears, pulleys, springs, hinges and mating parts: retain mechanical design
+4. Completed: bent tubes, rectangular-to-round transitions and dovetails retain
+   dimensions, openings and normal face clearance. See
+   [retained transitions](RETAINED-TRANSITIONS.md).
+5. Gears, pulleys, springs, hinges and mating parts: retain mechanical design
    inputs, establish dimension/clearance tests and qualify edited collision shapes.
-5. Remaining decorative/library templates: distinguish meaningful editable
+6. Remaining decorative/library templates: distinguish meaningful editable
    parameters from arbitrary mesh scaling; avoid implying functional electronics
    or QR semantics for illustrative shapes.
 

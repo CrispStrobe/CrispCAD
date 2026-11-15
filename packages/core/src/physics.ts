@@ -11,7 +11,10 @@ export interface PartPhysics {
   /** Mechanical intent is not a qualification claim. Solver coupling requires an explicit mate. */
   parameters?: Record<string, number>;
   sourcePreset?: string;
-  collisionHint?: {kind:'tube-grid'|'radial-profile';segments:number;sides:number;layout:'rows'|'columns';closed:boolean;seam?:boolean;stride?:number};
+  /** annular-grid stores outer/inner rows per section; closed=false is an
+   * open sweep with capped ends, not an open solid mesh. Hints still require
+   * actual-geometry qualification and never confer simulation authority. */
+  collisionHint?: {kind:'tube-grid'|'radial-profile'|'annular-grid';segments:number;sides:number;layout:'rows'|'columns';closed:boolean;seam?:boolean;stride?:number};
 }
 export interface CadJoint {
   id: string;
@@ -34,7 +37,10 @@ export function checkPhysics(doc: CadDocument) {
   if(!p||p.version!==1||!['dynamic','static'].includes(p.motion)||!number(p.densityKgM3,1,30000)||!number(p.friction,0,2)||!number(p.restitution,0,1)||!['rigid','hinge','spring','snap-fit','thread','gear','belt','face-coupling','sliding-fit'].includes(p.intent))fail(t`bad body properties on ${node.id}`);
   if(p.parameters!==undefined&&(!p.parameters||typeof p.parameters!=='object'||Array.isArray(p.parameters)||Object.keys(p.parameters).length>30||!Object.entries(p.parameters).every(([key,value])=>/^[a-zA-Z][a-zA-Z0-9_]{0,63}$/.test(key)&&number(value,-1e9,1e9))))fail(t('bad mechanical parameters'));
   if(p.sourcePreset!==undefined&&(typeof p.sourcePreset!=='string'||!/^[a-z][a-z0-9-]{0,63}$/.test(p.sourcePreset)))fail(t('bad preset provenance'));
-  if(p.collisionHint!==undefined){const h=p.collisionHint;if(node.kind!=='mesh'||!h||!['tube-grid','radial-profile'].includes(h.kind)||!Number.isInteger(h.segments)||!number(h.segments,3,1024)||!Number.isInteger(h.sides)||!number(h.sides,3,h.kind==='radial-profile'?256:64)||!['rows','columns'].includes(h.layout)||typeof h.closed!=='boolean'||h.seam!==undefined&&typeof h.seam!=='boolean'||h.stride!==undefined&&(!Number.isInteger(h.stride)||!number(h.stride,1,8))||node.positions.length<((h.segments+1)*(h.sides+(h.seam===false?0:1)))*3)fail(t('bad collision hint'));}
+  if(p.collisionHint!==undefined){
+   const h=p.collisionHint,annular=h?.kind==='annular-grid';
+   if(node.kind!=='mesh'||!h||!['tube-grid','radial-profile','annular-grid'].includes(h.kind)||!Number.isInteger(h.segments)||!number(h.segments,annular?1:3,annular?64:1024)||!Number.isInteger(h.sides)||!number(h.sides,3,h.kind==='tube-grid'?64:256)||!['rows','columns'].includes(h.layout)||typeof h.closed!=='boolean'||h.seam!==undefined&&typeof h.seam!=='boolean'||h.stride!==undefined&&(!Number.isInteger(h.stride)||!number(h.stride,1,8))||annular&&(h.layout!=='rows'||h.closed||h.seam===false||h.stride!==undefined)||node.positions.length<(annular?2:1)*((h.segments+1)*(h.sides+(h.seam===false?0:1)))*3)fail(t('bad collision hint'));
+  }
  }
  if(doc.joints===undefined)return;
  if(!Array.isArray(doc.joints)||doc.joints.length>2000)fail(t('bad joint list'));const ids=new Set<string>();

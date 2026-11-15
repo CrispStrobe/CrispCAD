@@ -20,7 +20,8 @@ full constrained sketches and an exact surface/solid backend remain roadmap work
   tapered solids, polygonal prisms and torus rings. Counterbores, countersinks,
   ports, bosses and ribs also retain bore, clearance, angle and support dimensions.
   [Curved shapes and vessels](docs/CURVED-SHAPES.md) retain their profiles, walls,
-  floors and seats.
+  floors and seats. [Transitions and sliding profiles](docs/RETAINED-TRANSITIONS.md)
+  add editable tube bends, rectangular ducts and dovetail face clearance.
 - Practical part templates and editable generators for screws,
   threads, lettering and other parts. Seven conventional screw-point styles include
   editable cup, dog and tapered ends; headless set-screw and wood-screw presets are available. Name tags support rounded corners and bundled
@@ -58,7 +59,7 @@ clutter. See [the shared source workflow](docs/UNIFIED-DESIGN-SOURCE.md).
 
 The same modeling compiler is available through the core SDK and a headless MCP server.
 
-The offline model library includes 189 models with previews and retained
+The offline model library includes 193 models with previews and retained
 licence/provenance information, including CC0 geometric fixtures.
 
 Bounded converters import supported OpenSCAD/JSCAD source, including lexical

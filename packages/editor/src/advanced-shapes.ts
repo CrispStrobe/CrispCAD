@@ -4,6 +4,7 @@ import { t } from '@brickwright/cad-core';
 import * as T from 'three';
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import {transitionGeometry} from './transition-geometry.js';
 import {bentExtrusion} from './bent-extrusion.js';
 import {fontLettering,roundedPlate} from './lettering.js';
 import {iconGeometry} from './svg-icon.js';
@@ -12,8 +13,8 @@ import { createDocument, identityTransform, newId, defaultPartPhysics,defaultGen
 import type {GeneratorRecipe} from '@brickwright/cad-core';
 import type { CadDocument, SolidNode, Vec3 } from '@brickwright/cad-core';
 export const advancedCatalog = [
- ['loft','Loft','Hollow & tapered','A square base transitioning to a circular top.','transition rectangle circle loft','#c79c71'],
- ['bent-tube','Bent tube','Hollow & tapered','A hollow quarter-circle pipe.','elbow pipe hollow','#d39c66'],
+ ['loft','Loft','Hollow & tapered','A rectangular-to-round transition. Set wall thickness to make an open duct.','transition rectangle circle loft','#c79c71'],
+ ['bent-tube','Bent tube','Hollow & tapered','A hollow pipe with editable bend radius and angle.','elbow pipe hollow','#d39c66'],
  ['counterbore','Counterbore','Cutting tools','A stepped cutter for a recessed screw head.','hole bolt recess','#8baaba'],
  ['countersink','Countersink','Cutting tools','A cutter with a conical head recess.','hole screw recess','#87b6a7'],
  ['teardrop','Teardrop hole','Cutting tools','An upright pointed arch cutter.','hole printable arch','#a595c6'],
@@ -23,7 +24,7 @@ export const advancedCatalog = [
  ['nut','Nut','Fasteners & joints','A hexagonal nut with a matching helical bore.','hex thread fastener','#9eacb9'],
  ['finishing-washer','Finishing washer','Fasteners & joints','A washer with a conical screw seat.','cup countersink ring','#bac1c7'],
  ['hinge','Hinge','Fasteners & joints','Two separate leaves and a pin with assembly clearance.','joint pivot barrel articulation','#7bb7a3'],
- ['dovetail','Dovetail','Fasteners & joints','An extruded trapezoidal sliding key.','slide joint key','#c68a6b'],
+ ['dovetail','Dovetail','Fasteners & joints','A sliding key with editable taper and face clearance.','slide joint key','#c68a6b'],
  ['boss','Screw boss','Enclosure parts','A hollow screw support with four reinforcing ribs.','standoff rib enclosure','#b1a18a'],
  ['snap-fit','Snap-fit','Enclosure parts','A cantilever clip with a lead-in hook.','clip latch flexible','#78b7ae'],
  ['rib','Rib','Enclosure parts','A triangular reinforcing gusset.','brace support gusset','#90acbe'],
@@ -111,8 +112,7 @@ export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string,
   const contour=s.extractPoints(48).shape;if(contour[0].equals(contour.at(-1)!))contour.pop();contour.forEach(v=>v.set(v.x*sx,v.y*sy));return {add:[bentExtrusion(contour,p.thickness,p.width/(p.bend*Math.PI/180))]};
  }
  switch(id){
- case 'loft':{const points:number[]=[],triangles:number[]=[];for(let level=0;level<=8;level++)for(let j=0;j<64;j++){const a=j*Math.PI/32,t=level/8,r=(1-t)*15/Math.max(Math.abs(Math.cos(a)),Math.abs(Math.sin(a)))+t*8;points.push(r*Math.cos(a),r*Math.sin(a),25*t);}for(let i=0;i<8;i++)for(let j=0;j<64;j++){const a=i*64+j,b=i*64+(j+1)%64,c=a+64,d=b+64;triangles.push(a,b,c,b,d,c);}const bottom=points.length/3;points.push(0,0,0,0,0,25);for(let j=0;j<64;j++)triangles.push(bottom,(j+1)%64,j,bottom+1,512+j,512+(j+1)%64);const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(points,3));g.setIndex(triangles);return {add:[g]};}
- case 'bent-tube': {const s=annulus(5,3);class Bend extends T.Curve<T.Vector3>{constructor(){super();}getPoint(t:number,v=new T.Vector3()){return v.set(20*Math.cos(t*Math.PI/2),20*Math.sin(t*Math.PI/2),0);}}return {add:[new T.ExtrudeGeometry(s,{extrudePath:new Bend(),steps:32,bevelEnabled:false,curveSegments:16})]};}
+ case 'loft':case 'bent-tube':case 'dovetail':return {add:[transitionGeometry(recipe??defaultGenerator(id)!,preview)]};
  case 'counterbore':{const p=values!,r=(p.boreDiameter+p.clearance)/2,R=(p.recessDiameter+p.clearance)/2,h=p.shaftLength,H=h+p.recessDepth;return {add:[lathe([[0,0],[r,0],[r,h],[R,h],[R,H],[0,H]],p.segments)]};}
  case 'countersink':{const p=values!,r=(p.boreDiameter+p.clearance)/2,R=(p.recessDiameter+p.clearance)/2,h=p.shaftLength,H=h+(R-r)/Math.tan(p.seatAngle*Math.PI/360),profile=[[0,0],[r,0],[r,h],[R,H],...(p.rimHeight>0?[[R,H+p.rimHeight]]:[]),[0,H+p.rimHeight]];return {add:[lathe(profile,p.segments)]};}
  case 'teardrop':{const p=values!,s=new T.Shape(),r=p.radius,h=p.apexHeight,a=Math.asin(r/h),x=r*Math.cos(a),y=r*Math.sin(a);s.moveTo(-x,y);s.absarc(0,0,r,Math.PI-a,2*Math.PI+a,false);s.lineTo(0,h);s.closePath();return {add:[new T.ExtrudeGeometry(s,{depth:p.length,bevelEnabled:false,curveSegments:preview?Math.min(20,p.segments):p.segments}).rotateX(Math.PI/2)]};}
@@ -122,7 +122,6 @@ export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string,
  case 'nut':return {add:[cylinder(10,8,[0,0,10],6)],cut:[cylinder(5.25,30,[0,0,10]),threadRidge(5.25,2,12,.15)]};
  case 'finishing-washer':{const p=values!,r=p.boreDiameter/2,R=p.outerDiameter/2,seat=p.seatDiameter/2,d=(seat-r)/Math.tan(p.seatAngle*Math.PI/360),c=p.edgeChamfer;return {add:[lathe([[r,0],[R,0],...(c>0?[[R,p.height-c],[R-c,p.height]]:[[R,p.height]]),[seat,p.height],[r,p.height-d],[r,0]],p.segments)]};}
  case 'hinge':return {separate:true,add:[box(19,3,30,[-12.5,0,0]),box(19,3,30,[12.5,0,0]),...[-12,-6,0,6,12].map(z=>ring(5,3,5.7).translate(0,0,z-2.85)),cylinder(2.5,32)]};
- case 'dovetail':return {add:[extrude(XY([[-8,0],[8,0],[12,8],[-12,8]]),30).rotateX(Math.PI/2)]};
  case 'boss':{const p=values!,R=p.outerDiameter/2,r=p.boreDiameter/2,span=p.outerDiameter+2*p.ribReach;const add:T.BufferGeometry[]=[lathe([[r,0],[R,0],[R,p.height],[r,p.height],[r,0]],p.segments)];if(p.ribReach>0)add.push(box(span,p.ribThickness,p.ribHeight,[0,0,p.ribHeight/2]),box(p.ribThickness,span,p.ribHeight,[0,0,p.ribHeight/2]));return {add,...(p.ribReach>0?{cut:[cylinder(r,p.height+2,[0,0,p.height/2],p.segments)]}:{})};}
  case 'snap-fit':return {add:[box(20,12,3,[0,0,1.5]),box(3,12,25,[8.5,0,15]),extrude(XY([[0,0],[5,0],[0,6]]),12).rotateX(Math.PI/2).translate(5.5,6,24)]};
  case 'rib':{const p=values!;return {add:[extrude(XY([[0,0],[p.length,0],[0,p.height]]),p.thickness).rotateX(Math.PI/2)]};}

@@ -893,3 +893,32 @@ those data additions. Focused merged-library checks passed 117 distinct tests
 across runs. Generic seed tests now check exact cohort membership and uniqueness
 instead of an unrelated global catalogue count. No production engine or editor
 source changed in that integration.
+
+
+## 2026-11-15 — Mac 35: retained bends, ducts and dovetails
+
+Mac build 35 is installed and running from clean source
+`bd3a0b3d099aa9b400e488422d011d56d9e37c7e`; native smoke checks passed and the live
+asset receipt matches. Bent tubes, rectangular-to-round solid/duct transitions
+and dovetails now retain their dimensions through Properties, model source, MCP
+and portable revisions. Linked bore fields, true rectangular section corners
+and normal face clearance are implemented. Legacy geometry remains unchanged
+until explicit regeneration. The remaining catalogue parameter gap is 13.
+
+Section-grid collision candidates follow actual vertices rather than fixed pipe
+dimensions. An expanding hollow transition initially exceeded the volume-error
+gate at 2.36%; exact-kernel section-cell refinement now qualifies it, including
+inside a transformed retained union. Jolt settings and the 2% volume, 0.2 mm bounds
+and 2,048-hull budgets remain unchanged. See [definitions and format](RETAINED-TRANSITIONS.md).
+
+The clean feature checkpoint passed production build, 1,030 tests (one existing
+skip, 100 files), 1,491-message German validation, six GUI workflows across
+Chromium/iPad WebKit, and all 59 catalogue collision qualifications or reference
+exclusions. Nine edited/cut/transformed Jolt cases check passages, support and
+clearance. Preview images of the edited bend and hollow transition were inspected.
+
+Main's subsequent four-model LDraw admission is preserved in source, with 117
+focused library tests passing. The source catalogue now has 193 models; Mac 35
+predates those four data additions. No production runtime code changed in this
+integration. [Evidence](evidence/retained-transitions-2026-11-15.json) retains exact
+checkpoints, initial failures/corrections, test scopes, limitations and log hashes.

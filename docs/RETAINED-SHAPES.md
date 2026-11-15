@@ -115,3 +115,12 @@ washers now retain design inputs. See [curved shapes](CURVED-SHAPES.md) for
 profile definitions, origin compatibility, radial-wall semantics and collision
 construction. The remaining catalogue parameter gap is 16. Bent tubes, lofts and
 functional mechanical parts still need their own retained definitions.
+
+
+## Transitions and sliding profiles — 2026-11-15
+
+Bent tubes, rectangular-to-round solid/duct transitions and dovetails now retain
+their definitions. Dovetail clearance offsets profile faces; section-grid
+collision construction follows edited tube/transition geometry. See
+[retained transitions](RETAINED-TRANSITIONS.md) for formulas, metadata, legacy
+handling and refinement limits. The remaining parameter gap is 13.
