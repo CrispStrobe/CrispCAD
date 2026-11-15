@@ -13,6 +13,8 @@ const rational=(n,d=1n)=>{if(d===0n)throw Error('Invalid exact denominator.');if
 const add=(a,b)=>rational(a[0]*b[1]+b[0]*a[1],a[1]*b[1]);
 const mul=(a,b)=>rational(a[0]*b[0],a[1]*b[1]);
 const neg=a=>[-a[0],a[1]],sub=(a,b)=>add(a,neg(b));
+const div=(a,b)=>rational(a[0]*b[1],a[1]*b[0]);
+const compare=(a,b)=>a[0]*b[1]<b[0]*a[1]?-1:a[0]*b[1]>b[0]*a[1]?1:0;
 const decimal=s=>{const [mantissa,exponent='0']=s.toLowerCase().split('e'),negative=mantissa.startsWith('-'),unsigned=mantissa.replace(/^[+-]/,''),[whole,fraction='']=unsigned.split('.'),power=Number(exponent)-fraction.length,digits=whole+fraction;if(digits.length>128||Math.abs(power)>128)throw Error('LDraw decimal precision budget exceeded.');return power>=0?rational(BigInt(digits)*(negative?-1n:1n)*10n**BigInt(power)):rational(BigInt(digits)*(negative?-1n:1n),10n**BigInt(-power));};
 const value=a=>Number(a[0])/Number(a[1]),zero=rational(0n),one=rational(1n),unit=rational(2n,5n);
 const identity=[one,zero,zero,zero,zero,one,zero,zero,zero,zero,one,zero];
@@ -34,6 +36,37 @@ function nativeFaces(face,points){
  return[[face[0],face[1],face[2]],[face[0],face[2],face[3]]];
 }
 
+// LDraw facets can meet at exact T-junctions. Native indexed polyhedra need
+// matching boundary segments. Group authored edges by their exact supporting
+// line, then insert only existing endpoints strictly inside each edge. No new
+// position, tolerance, welding, cap, winding change or inferred closing face.
+function conformEdges(faces,points,charge){
+ const incidence=new Map();
+ for(const face of faces)for(let i=0;i<face.length;i++){
+  charge();const a=face[i],b=face[(i+1)%face.length],key=a<b?a+','+b:b+','+a;
+  incidence.set(key,(incidence.get(key)||0)+1);
+ }
+ // Keep already conforming programs and triangulation byte-identical.
+ if([...incidence.values()].every(n=>n===2))return faces;
+ const groups=new Map(),faceEdges=[];
+ for(const face of faces){const edges=[];for(let i=0;i<face.length;i++){
+  charge();const a=face[i],b=face[(i+1)%face.length],p=points[a],q=points[b],delta=q.map((x,j)=>sub(x,p[j]));
+  const axis=delta.findIndex(x=>x[0]!==0n);if(axis<0)throw Error('Degenerate LDraw edge refused.');
+  const direction=delta.map(x=>div(x,delta[axis])),offset=p.map((x,j)=>sub(x,mul(direction[j],p[axis])));
+  const key=axis+'|'+direction.concat(offset).map(x=>x.join('/')).join(',');
+  let group=groups.get(key);if(!group){group={axis,vertices:new Set()};groups.set(key,group);}
+  group.vertices.add(a);group.vertices.add(b);edges.push({a,b,group});
+ }faceEdges.push(edges);}
+ for(const group of groups.values()){
+  group.sorted=[...group.vertices].sort((a,b)=>{charge();return compare(points[a][group.axis],points[b][group.axis]);});
+  group.positions=new Map();group.sorted.forEach((id,i)=>{charge();group.positions.set(id,i);});
+ }
+ return faceEdges.map(edges=>{const face=[];for(const {a,b,group} of edges){
+  charge();face.push(a);const from=group.positions.get(a),to=group.positions.get(b),step=from<to?1:-1;
+  for(let i=from+step;i!==to;i+=step){charge();face.push(group.sorted[i]);}
+ }return face;});
+}
+
 /** Accept only a complete, certified, single-colour geometry bundle. Preserve authored facets.
  * Original/expanded byte32KiB, files32, depth32, instances1024, construction work16384,
  * points/faces256 and the native compiler's existing budgets all remain hard bounds.
@@ -47,11 +80,11 @@ export function convertLDrawBundle({rootPath,files}) {
     bundle.set(path,new TextDecoder('latin1').decode(bytes));
   }
   const root=pathKey(rootPath);if(!bundle.has(root))throw Error('LDraw root is missing.');
-  const points=[],faces=[],pointIndex=new Map(),active=new Set(),visited=new Set(),edges=[];
+  const points=[],exactPoints=[],faces=[],pointIndex=new Map(),active=new Set(),visited=new Set(),edges=[];
   const charge=()=>{if(++work>16384)throw Error('LDraw construction work exceeds16384.');};
   const resolve=(ref)=>{ref=pathKey(ref.replaceAll('\\','/'));const candidates=['parts/'+ref,'p/'+ref];const found=candidates.find(p=>bundle.has(p));if(!found)throw Error('Missing LDraw dependency: '+ref);return found;};
   const numbers=(tokens,count)=>{if(tokens.length!==count)throw Error('Invalid LDraw numeric record arity.');return tokens.map(s=>{if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(s))throw Error('Invalid LDraw number.');const n=Number(s);if(!Number.isFinite(n)||Math.abs(n)>1e6)throw Error('LDraw numeric range exceeded.');return decimal(s);});};
-  const vertex=(m,v)=>{charge();const [x,y,z]=transform(m,v),exact=[mul(x,unit),mul(z,unit),neg(mul(y,unit))],p=exact.map(value);if(p.some(n=>!Number.isFinite(n)||Math.abs(n)>100000))throw Error('LDraw transformed coordinate exceeded native bounds.');const key=exact.map(v=>v.join('/')).join(',');if(!pointIndex.has(key)){if(points.length>=256)throw Error('LDraw point array exceeds256.');pointIndex.set(key,points.length);points.push(p);}return pointIndex.get(key);};
+  const vertex=(m,v)=>{charge();const [x,y,z]=transform(m,v),exact=[mul(x,unit),mul(z,unit),neg(mul(y,unit))],p=exact.map(value);if(p.some(n=>!Number.isFinite(n)||Math.abs(n)>100000))throw Error('LDraw transformed coordinate exceeded native bounds.');const key=exact.map(v=>v.join('/')).join(',');if(!pointIndex.has(key)){if(points.length>=256)throw Error('LDraw point array exceeds256.');pointIndex.set(key,points.length);points.push(p);exactPoints.push(exact);}return pointIndex.get(key);};
   function visit(path,m,inverted,depth) {
     if(depth>32||active.has(path))throw Error('LDraw dependency depth/cycle refused.');
     if(++instances>1024)throw Error('LDraw expanded instances exceed1024.');
@@ -86,6 +119,7 @@ export function convertLDrawBundle({rootPath,files}) {
   visit(root,identity,false,0);
   if(visited.size!==bundle.size)throw Error('Unused/undeclared LDraw closure files refused.');
   if(points.length<4||faces.length<4)throw Error('LDraw source has no volumetric construction.');
+  const conforming=conformEdges(faces,exactPoints,charge);faces.splice(0,faces.length,...conforming);
   const program={version:1,language:'brickwright-cad-script',parameters:{},source:'// Original LDraw facets; nominal0.4mm/LDU and -Y-up to Z-up.\nreturn polyhedron('+JSON.stringify(points)+', '+JSON.stringify(faces)+');\n'};
   const compiled=compileCode(program);
   return {program,compiled,points,faces,edges,metrics:{originalBytes,expandedBytes,instances,work,points:points.length,faces:faces.length},warnings:['Original display edge/conditional-edge lines and inherited colour appearance are omitted; all authored solid faces are retained. No primitive substitution or mesh repair.']};
