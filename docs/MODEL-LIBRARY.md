@@ -956,3 +956,26 @@ preserved. That failure and resource refusals remain in the evidence history.
 After actual reserve restoration, regeneration/reproduction, six focused tests,
 build and all34 model/browser attachments passed under the original guards.
 See docs/evidence/ldraw-components-qualification-2026-11-15.json.
+
+
+### Next authored LDraw reserve, 2026-11-15
+
+The next fifteen distinct complete authored component roots were executed on
+synced main1989504 under the original lock/resource/input/quality limits. Four
+pass every actual gate: u9404,99401,u9396 and56474. Their original DAT sources,
+complete dependency grants/hashes, defaults, units and transforms are unchanged.
+Actual source/STL reproduction, six focused tests, build/typechecks, editor
+evaluation/provenance/history and eight Chromium/iPad-WebKit model attachments
+pass, including real raster pixels, offline insertion and zero requests.
+
+This cohort adds four records, four unique STLs and four previews: local qualified
+totals154/149/193 from delivered main150/145/189. Prior35 LDraw records,300
+source/derivative hash entries and189 preview values remain exact; the earlier
+seventeen-source cohort is not credited again. Qualification covers only each
+standalone authored component, with no physical-operation or parent-assembly claim.
+
+The other eleven new roots produced non-manifold output. Their A/B causes remain
+unresolved until source/output tracing. The preceding thirteen refused roots
+were not retried, and no kernel/compiler/source/default/tolerance/guard change
+or repair was used. This finishes the current fifteen-root reserve, not the
+whole staged archive. See docs/evidence/ldraw-reserve-qualification-2026-11-15.json.
