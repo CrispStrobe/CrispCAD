@@ -143,8 +143,9 @@ storage. The editor still owns neither autosave nor a global model library.
 `editor.frame()` fits restored/imported work without changing its history.
 
 `@brickwright/cad-physics` provides source-verified convex compounds, SI mass and
-inertia, and headless Jolt worlds. See PHYSICS.md before wiring simulation UI;
-rigid-preview qualification does not supply gear/belt/spring/thread mates or
+inertia, and headless Jolt worlds. The shared editor exposes the Simulate panel
+and `editor.simulation`; see PHYSICS.md for the boundary. Rigid-preview
+qualification does not supply gear/belt/spring/thread mates or
 material deformation. Keep simulation state separate from design revisions.
 
 Core IDs and hashes also support native/custom-scheme hosts without randomUUID
@@ -272,3 +273,32 @@ schema migration, history pruning or permanent removal was introduced.
 Native recovery prefers the canonical `<project-id>.bcad` autosave over exported
 copies with the same identity. Import/rename/duplicate/trash mirrors share the
 serialized file queue and are included in the host's close-time flush.
+
+
+## Keeping standalone and Brickwright synchronized
+
+The shared editor, geometry worker and simulation worker live in this repository.
+Brickwright hosts the built SDK; do not copy simulation/editor implementations
+into its host adapter. Its robot-specific mechanics retain their own coordinates
+and devices. Shared interaction arithmetic is pinned in the reverse direction.
+
+After committing CAD changes, build and pin the exact source checkpoint:
+
+```sh
+npm run build:brickwright-sdk
+# In the Brickwright worktree:
+node scripts/sync-cad-sdk.mjs /path/to/brickwright-cad
+# Back in CAD, verify both directions and the common Jolt release/integrity:
+npm run verify:brickwright-sync -- /path/to/brickwright-lite
+```
+
+The check refuses a stale SDK, mismatched file hashes, changed shared interaction
+arithmetic, or different Jolt producer/lock pins. Updating a pin is explicit;
+verification never overwrites either checkout. Run Brickwright's SDK/VM checks
+after pinning, and commit its SDK files with the host changes. A CAD release is
+not automatically installed in an already built Brickwright app.
+
+Full SDK preview/control behavior: [motor programs](CAD-MOTOR-PROGRAMS.md) and
+[simulation coverage](SIMLAB-PARITY.md). The standalone owns its project library;
+Brickwright owns its SB3 persistence and VM controls. Both retain the full versioned
+CAD document, including motors, joints, world settings and trace attachments.

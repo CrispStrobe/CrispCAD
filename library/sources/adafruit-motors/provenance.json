@@ -1,0 +1,38 @@
+{
+  "repository": "https://github.com/adafruit/Adafruit_CAD_Parts",
+  "commit": "9f2a89f3d5c3491886d58cb7fe83385417563cf4",
+  "license": "MIT",
+  "copyright": "Copyright (c) 2016 Adafruit Industries",
+  "files": [
+    {
+      "path": "LICENSE",
+      "sha256": "f60436644e066301d4c2e8f1f0674a157b1f60e4fd5586717b99dde255cc18cd",
+      "bytes": 1076,
+      "url": "https://raw.githubusercontent.com/adafruit/Adafruit_CAD_Parts/9f2a89f3d5c3491886d58cb7fe83385417563cf4/LICENSE"
+    },
+    {
+      "path": "3777 TT Motor/3777 TT Motor.step",
+      "sha256": "12e0fa54576085011cc9f5221ad95aca62d565e051d995523d192d0a65797ce3",
+      "bytes": 112694,
+      "url": "https://raw.githubusercontent.com/adafruit/Adafruit_CAD_Parts/9f2a89f3d5c3491886d58cb7fe83385417563cf4/3777%20TT%20Motor/3777%20TT%20Motor.step"
+    },
+    {
+      "path": "3777 TT Motor/3777 TT Motor.stl",
+      "sha256": "c457c4533b41aff66b93870e2cd8662058e75253c84b16c1cc085d7cb690ad8c",
+      "bytes": 166084,
+      "url": "https://raw.githubusercontent.com/adafruit/Adafruit_CAD_Parts/9f2a89f3d5c3491886d58cb7fe83385417563cf4/3777%20TT%20Motor/3777%20TT%20Motor.stl"
+    },
+    {
+      "path": "711 DC Toy Motor/711 DC Toy Motor.step",
+      "sha256": "7718d43d37ff4191a8b136846fedd33de85f6c64216fa76f9eff6b0064c4ef64",
+      "bytes": 87264,
+      "url": "https://raw.githubusercontent.com/adafruit/Adafruit_CAD_Parts/9f2a89f3d5c3491886d58cb7fe83385417563cf4/711%20DC%20Toy%20Motor/711%20DC%20Toy%20Motor.step"
+    },
+    {
+      "path": "3802 TT Motor Metal Gear/3802 TT Motor Metal Gear.step",
+      "sha256": "b17f227c7a178b3bef0e1c16599b68e624b31df1af3afe05a29d4cfeb4384fcd",
+      "bytes": 170464,
+      "url": "https://raw.githubusercontent.com/adafruit/Adafruit_CAD_Parts/9f2a89f3d5c3491886d58cb7fe83385417563cf4/3802%20TT%20Motor%20Metal%20Gear/3802%20TT%20Motor%20Metal%20Gear.step"
+    }
+  ]
+}

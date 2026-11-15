@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Original line icons for the workbench. No external icon/font dependency.
 const paths: Record<string, string> = {
+  Simulate: 'M7 3 21 12 7 21Z',
   'Snap to surfaces':'M5 3h5v8a2 2 0 0 0 4 0V3h5v8a7 7 0 0 1-14 0Z M5 7h5 M14 7h5 M3 19l-2 2 M21 19l2 2',
   Solid: 'M12 2 22 7v10l-10 5-10-5V7Z M2 7l10 5 10-5 M12 12v10',
   Hole: 'M12 2 22 7v10l-10 5-10-5V7Z M2 7l10 5 10-5 M12 12v10 M6 9v9 M9 11v9 M15 11v9 M18 9v9',

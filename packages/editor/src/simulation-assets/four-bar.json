@@ -1,0 +1,1 @@
+{"version":1,"solver":"dart_csp","revision":"46288eb23f04c2a2f2210088fe568285bea6114f","points":{"origin":[0.0,0.0,0.0],"ground":[60.0,0.0,0.0],"crank":[15.0,25.980762113533157,0.0],"follower":[73.88106260989981,37.514211984551835,0.0]},"lengths":{"ground":60,"crank":30,"coupler":60,"follower":40},"maxLengthErrorMm":2.3142376903706463e-11,"status":"residual-checked"}

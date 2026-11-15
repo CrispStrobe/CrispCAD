@@ -20,6 +20,7 @@ export function selectionFragment(input:CadDocument,selection:readonly string[])
  const keep=new Set<string>();const visit=(id:string)=>{if(keep.has(id))return;keep.add(id);const node=doc.nodes[id];if(node.kind==='boolean')node.inputs.forEach(visit);};doc.roots.forEach(visit);
  for(const id of Object.keys(doc.nodes))if(!keep.has(id))delete doc.nodes[id];
  const sketches=new Set(Object.values(doc.nodes).flatMap(n=>n.kind==='extrusion'?[n.sketchId]:[]));if(doc.sketches)doc.sketches=Object.fromEntries(Object.entries(doc.sketches).filter(([id])=>sketches.has(id)));
+ if(doc.version>=8&&doc.tracers)doc.tracers=doc.tracers.filter(trace=>doc.roots.includes(trace.bodyId));
  if(doc.joints)doc.joints=doc.joints.filter(j=>doc.roots.includes(j.bodyA)&&doc.roots.includes(j.bodyB));
  if(doc.parametric){
   const original=doc.parametric,values=evaluateParameters(original);original.bindings=original.bindings.filter(binding=>keep.has(binding.nodeId));
