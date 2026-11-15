@@ -22,7 +22,7 @@ export interface ModelLibraryCollisionReport {
     qualified: true; scope: 'rigid-collision-preview'; geometrySha256: string; sourceVolumeMm3: number; hulls: number;
     certificate: {
       sourceSHA256: string; algorithm: 'manifold-compound/v1'; strategy: 'bsp'; maxHulls: number;
-      missingVolumeMm3: number; extraVolumeMm3: number; relativeError: number; boundsErrorMm: number;
+      missingVolumeMm3: number; extraVolumeMm3: number; numericalResidualVolumeMm3?: number; relativeError: number; boundsErrorMm: number;
       tolerance: {volumeFraction: number; boundsMm: number};
     };
     nativeCheck: {build: 'debug'; ground: false; steps: 1; stepSeconds: 0.005};
@@ -57,10 +57,10 @@ export function validModelLibraryCollisionReport(value: unknown, asset: ModelLib
   const e = value.evidence;
   if (!exact(e, 'fileSha256 checkedOn toMillimetresZUp engine engineVersion qualifierVersion qualified scope geometrySha256 sourceVolumeMm3 hulls certificate nativeCheck') || e.fileSha256 !== selected.sha256 || e.checkedOn !== q.checkedOn || !same(e.toMillimetresZUp, p.toMillimetresZUp) || e.engine !== 'Jolt' || e.engineVersion !== '1.1.0-bw.9' || e.qualifierVersion !== 'brickwright-library-collision/1' || e.qualified !== true || e.scope !== 'rigid-collision-preview' || !hash(e.geometrySha256) || !positive(e.sourceVolumeMm3)) return false;
   const c = e.certificate;
-  if (!exact(c, 'sourceSHA256 algorithm strategy maxHulls missingVolumeMm3 extraVolumeMm3 relativeError boundsErrorMm tolerance') || c.sourceSHA256 !== e.geometrySha256 || c.algorithm !== 'manifold-compound/v1' || c.strategy !== 'bsp' || !Number.isSafeInteger(c.maxHulls) || c.maxHulls < 1 || c.maxHulls > 2048 || !Number.isSafeInteger(e.hulls) || e.hulls < 1 || e.hulls > c.maxHulls) return false;
+  if (!(exact(c, 'sourceSHA256 algorithm strategy maxHulls missingVolumeMm3 extraVolumeMm3 relativeError boundsErrorMm tolerance') || exact(c, 'sourceSHA256 algorithm strategy maxHulls missingVolumeMm3 extraVolumeMm3 numericalResidualVolumeMm3 relativeError boundsErrorMm tolerance')) || c.sourceSHA256 !== e.geometrySha256 || c.algorithm !== 'manifold-compound/v1' || c.strategy !== 'bsp' || !Number.isSafeInteger(c.maxHulls) || c.maxHulls < 1 || c.maxHulls > 2048 || !Number.isSafeInteger(e.hulls) || e.hulls < 1 || e.hulls > c.maxHulls) return false;
   const t = c.tolerance;
-  if (!exact(t, 'volumeFraction boundsMm') || !positive(t.volumeFraction) || t.volumeFraction > 0.1 || !positive(t.boundsMm) || t.boundsMm > 1 || ![c.missingVolumeMm3, c.extraVolumeMm3, c.relativeError, c.boundsErrorMm].every(nonnegative) || c.relativeError > t.volumeFraction || c.boundsErrorMm > t.boundsMm) return false;
-  const relative = (c.missingVolumeMm3 + c.extraVolumeMm3) / e.sourceVolumeMm3;
+  if (!exact(t, 'volumeFraction boundsMm') || !positive(t.volumeFraction) || t.volumeFraction > 0.1 || !positive(t.boundsMm) || t.boundsMm > 1 || ![c.missingVolumeMm3, c.extraVolumeMm3, c.relativeError, c.boundsErrorMm, c.numericalResidualVolumeMm3 ?? 0].every(nonnegative) || c.relativeError > t.volumeFraction || c.boundsErrorMm > t.boundsMm) return false;
+  const relative = (c.missingVolumeMm3 + c.extraVolumeMm3 + (c.numericalResidualVolumeMm3 ?? 0)) / e.sourceVolumeMm3;
   if (!Number.isFinite(relative) || Math.abs(relative - c.relativeError) > Number.EPSILON * 16 * Math.max(1, relative, c.relativeError)) return false;
   if (outer.physics && (outer.physics.qualified !== true || outer.physics.engine !== e.engine || outer.physics.engineVersion !== e.engineVersion || outer.physics.qualifierVersion !== e.qualifierVersion)) return false;
   return same(e.nativeCheck, {build: 'debug', ground: false, steps: 1, stepSeconds: 0.005});

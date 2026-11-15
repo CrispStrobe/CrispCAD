@@ -3,6 +3,10 @@
 const paths: Record<string, string> = {
   Solid: 'M12 2 22 7v10l-10 5-10-5V7Z M2 7l10 5 10-5 M12 12v10',
   Hole: 'M12 2 22 7v10l-10 5-10-5V7Z M2 7l10 5 10-5 M12 12v10 M6 9v9 M9 11v9 M15 11v9 M18 9v9',
+  'Sketch width': 'M2 12h20 M6 8l-4 4 4 4 M18 8l4 4-4 4',
+  'Sketch depth': 'M12 2v20 M8 6l4-4 4 4 M8 18l4 4 4-4',
+  'Sketch radius': 'M20 6A10 10 0 1 0 22 12 M12 12l8-6 M15 6h5v5',
+  Extrude: 'M2 10l8-4 8 4-8 4Z M2 10v9l8 4 8-4v-9 M10 14v9 M22 2v11 M19 5l3-3 3 3',
   Dimensions: 'M3 8h18v10H3Z M6 8v5 M10 8v3 M14 8v5 M18 8v3',
   'Lettering options': 'M3 5V3h18v2 M12 3v18 M8 21h8',
   'Additional shapes': 'M3 3h7v7H3Z M14 3h7v7h-7Z M3 14h7v7H3Z M14 17h8 M18 13v8',
