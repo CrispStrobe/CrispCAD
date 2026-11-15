@@ -40,5 +40,5 @@ it('refuses missing/corrupt dependencies before evaluation without altering proj
  }}finally{session.dispose();}
 });
 it('reproduces only the new city geometry while reusing hash-verified unchanged96 qualifications',()=>{
- expect(execFileSync(process.execPath,['scripts/generate-corpus-editor-library.mjs','--check','--asset-id',raw.id],{encoding:'utf8',timeout:15000})).toContain('101 selected corpus sources complete');
+ expect(execFileSync(process.execPath,['scripts/generate-corpus-editor-library.mjs','--check','--asset-id',raw.id],{encoding:'utf8',timeout:15000})).toContain('102 selected corpus sources complete');
 });
