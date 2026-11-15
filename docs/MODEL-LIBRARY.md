@@ -979,3 +979,25 @@ unresolved until source/output tracing. The preceding thirteen refused roots
 were not retried, and no kernel/compiler/source/default/tolerance/guard change
 or repair was used. This finishes the current fifteen-root reserve, not the
 whole staged archive. See docs/evidence/ldraw-reserve-qualification-2026-11-15.json.
+
+
+### Authored Lighting Ring Separator subcomponent, 2026-11-15
+
+Thirty new dependency-complete authored Subpart roots were executed with the
+existing converter after excluding shipped/historical roots, aliases/patterns,
+primitives and source-declared partial surfaces. One passes every actual gate:
+parts/s/u9465s02.dat, Electric Powered Up Distance Sensor Lighting Ring Separator.
+Its unchanged standalone default and complete CC-BY-4.0 closure produce20triangles
+with strict closed-positive-volume screening PASS. Source/STL reproduction, six
+focused tests, build/typechecks and Chromium/iPad-WebKit attachments pass, including
+actual preview pixels, offline insertion, provenance/history and zero requests.
+Qualification covers this named component, not its whole parent part or physical
+operation. No source/default/converter/kernel/guard/tolerance changes were used.
+
+The local delta is one record, one unique STL and one preview:155/150/194 from
+delivered main154/149/193. All prior154 records,308 original/derivative hash entries
+and193 preview values remain exact. Twenty-eight other new roots produced
+non-manifold output and one refused quad coplanarity/convexity; A/B remains
+unresolved pending source/output tracing. The prior24 refusals were not retried.
+Twenty next complete authored archive roots remain ranked, without any archive
+exhaustion claim. See docs/evidence/ldraw-subcomponent-qualification-2026-11-15.json.

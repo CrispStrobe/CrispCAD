@@ -143,14 +143,14 @@ test('recorded collision reports expose bindings and limits without qualifying o
 // Gallery acceptance: actual bundled images, a usable primary action and compact details.
 test('every bundled model has a preview and inserts without mandatory notes',async({page})=>{
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');const before=await saved(page),dialog=await open(page);
- const cards=dialog.locator('.model-library-card');await expect(cards).toHaveCount(193);await expect(cards.locator('img')).toHaveCount(193);expect((await cards.first().boundingBox())!.height).toBeGreaterThanOrEqual(170);expect(await cards.first().evaluate(card=>{const outer=card.getBoundingClientRect(),label=card.querySelector('strong')!.getBoundingClientRect();return label.top>=outer.top&&label.bottom<=outer.bottom;})).toBe(true);
+ const cards=dialog.locator('.model-library-card');await expect(cards).toHaveCount(194);await expect(cards.locator('img')).toHaveCount(194);expect((await cards.first().boundingBox())!.height).toBeGreaterThanOrEqual(170);expect(await cards.first().evaluate(card=>{const outer=card.getBoundingClientRect(),label=card.querySelector('strong')!.getBoundingClientRect();return label.top>=outer.top&&label.bottom<=outer.bottom;})).toBe(true);
  await expect.poll(()=>cards.locator('img').evaluateAll((images:any[])=>images.every(image=>image.complete&&image.naturalWidth>0))).toBe(true);
  expect(await saved(page)).toEqual(before);await expect(dialog.getByRole('button',{name:'Close model library'})).toHaveText('×');
  await cards.filter({hasText:'Named dependencies'}).click();const insert=dialog.getByRole('button',{name:'Insert editable source',exact:true});await expect(insert).toBeEnabled();
  await expect(dialog.locator('.model-library-technical')).not.toHaveAttribute('open');await expect(dialog.getByRole('textbox',{name:'Licence & attribution',exact:true})).toHaveValue(/Copyright/);
  expect(await dialog.evaluate(node=>{const action=node.querySelector('.library-insert')!,licence=node.querySelector('.model-library-licence')!;return !!(action.compareDocumentPosition(licence)&Node.DOCUMENT_POSITION_FOLLOWING);})).toBe(true);
  await insert.click();await expect(dialog.getByRole('status')).toContainText('Editable source inserted');const added=await saved(page);expect(added.roots).toHaveLength(before.roots.length+1);expect(added.provenance.records[0].modificationNotes).toContain('no manual changes');
- await dialog.getByLabel('Model type',{exact:true}).selectOption('mesh');await expect(cards).toHaveCount(40);await dialog.getByLabel('Model type',{exact:true}).selectOption('source');await expect(cards).toHaveCount(153);
+ await dialog.getByLabel('Model type',{exact:true}).selectOption('mesh');await expect(cards).toHaveCount(41);await dialog.getByLabel('Model type',{exact:true}).selectOption('source');await expect(cards).toHaveCount(153);
  expect(await dialog.evaluate(node=>node.scrollWidth<=node.clientWidth)).toBe(true);
 });
 
