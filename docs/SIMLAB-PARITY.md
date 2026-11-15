@@ -65,4 +65,4 @@ Chromium and iPad WebKit passed timeline scrub/play/pause/resume, cube throwing,
 preview-object removal before creation time, and connector drag/undo/Escape tests.
 The iPad controls can be minimized; picking a surface temporarily minimizes them
 and restores the previous view afterward. These view changes stay outside model
-history. The complete CAD unit suite passed 980 tests with one skipped.
+history. Current merged validation and source identities are recorded in [delivery](DELIVERY.md).
