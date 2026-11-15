@@ -8,6 +8,7 @@ import a2dText from '../../../library/a2d-editor-manifest.json?raw';
 import sconText from '../../../library/scon-editor-manifest.json?raw';
 import jscadText from '../../../library/jscad-editor-manifest.json?raw';
 import ldrawText from '../../../library/ldraw-editor-manifest.json?raw';
+import ldrawBatchText from '../../../library/ldraw-reviewed-batch-manifest.json?raw';
 import seedText from '../../../library/seed-catalogue.json?raw';
 import previewText from '../../../library/previews.json?raw';
 import bsdNotice from '../../../library/evidence/brickwright-examples-LICENSE.txt?raw';
@@ -39,6 +40,7 @@ export function createBundledModelLibrary() {
   const scon = createLocalModelLibraryCatalogue(JSON.parse(sconText));
   const jscad = createLocalModelLibraryCatalogue(JSON.parse(jscadText));
   const ldraw = createLocalModelLibraryCatalogue(JSON.parse(ldrawText));
+  ldraw.assets.push(...createLocalModelLibraryCatalogue(JSON.parse(ldrawBatchText)).assets);
   const seeds = parseModelLibraryCatalogue(seedText);
   if (!seeds.valid) throw new Error(seeds.errors.join(' '));
   // Explicit admission: only this pinned seed has a qualified supported conversion.
