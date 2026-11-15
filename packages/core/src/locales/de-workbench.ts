@@ -61,4 +61,5 @@ export const messages:Record<string,string>={
  "Port length must be at least its width":"Die Öffnungslänge muss mindestens ihrer Breite entsprechen",
  "Recess diameter must exceed the nominal bore diameter":"Der Senkungsdurchmesser muss größer als der Nennbohrungsdurchmesser sein",
  "Boss bore and rib thickness must fit inside its outer diameter, and ribs must not exceed its height":"Bohrung und Rippenstärke müssen kleiner als der Außendurchmesser sein; die Rippen dürfen nicht höher als der Schraubdom sein",
+ "Calculated from diameters and seat angle":"Aus Durchmessern und Senkungswinkel berechnet",
 };

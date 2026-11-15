@@ -307,7 +307,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       }
       if(draft.preset==='countersink'){
        const seatDepth=()=>Number(((draft.values.recessDiameter-draft.values.boreDiameter)/2/Math.tan(draft.values.seatAngle*Math.PI/360)).toFixed(4));
-       const derived=field(form,'Seat depth (mm)',seatDepth(),()=>{},'number','.1');derived.readOnly=true;
+       const derived=field(form,'Seat depth (mm)',seatDepth(),()=>{},'number','.1');derived.readOnly=true;derived.title=t('Calculated from diameters and seat angle');
        for(const key of ['boreDiameter','recessDiameter','seatAngle'])parameterInputs.get(key)!.addEventListener('input',()=>{const v=Object.fromEntries([...parameterInputs].map(([key,input])=>[key,Number(input.value)]));const value=(v.recessDiameter-v.boreDiameter)/2/Math.tan(v.seatAngle*Math.PI/360);derived.value=Number.isFinite(value)&&value>0?String(Number(value.toFixed(4))):'';});
       }
       if(surfaceDetail.children.length>1)form.append(surfaceDetail);
