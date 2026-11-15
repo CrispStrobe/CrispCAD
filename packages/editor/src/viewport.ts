@@ -145,8 +145,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   }
   const placeGizmo = () => {
     if (drag) return;
-    const roots = selected.filter(id => session.state.document.roots.includes(id) && meshes.has(id)&&!session.state.document.nodes[id].reference);
-    resizeFrame=measureResizeFrame(roots);
+    const roots = selected.filter(id => session.state.document.roots.includes(id) && meshes.has(id));
+    resizeFrame=roots.some(id=>session.state.document.nodes[id].reference)?undefined:measureResizeFrame(roots);
     if (!roots.length || activeMode==='select'||activeMode==='scale') { gizmo.detach(); draw(); return; }
     const box = new THREE.Box3(); for (const id of roots) box.union(new THREE.Box3().setFromObject(meshes.get(id)!));
     pivot.position.copy(box.getCenter(new THREE.Vector3())); pivot.quaternion.identity(); pivot.scale.set(1, 1, 1); pivot.updateMatrixWorld(); gizmo.attach(pivot); draw();

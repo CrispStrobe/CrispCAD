@@ -21,8 +21,9 @@ full constrained sketches and an exact surface/solid backend remain roadmap work
   intersection inputs. Edit source dimensions after
   combining parts, and drive dimensions or transforms with named, unit-aware formulas.
 - Rectangle/circle sketches and retained extrusions on principal planes.
-- Move, rotate and resize through handles or numbers. Optional on-canvas values
-  update during dragging. Shift and the touch-friendly Fine option provide finer steps.
+- Move and rotate through handles or numbers. Resize directly from selection
+  corners/sides with live editable millimetre dimensions, grid increments and
+  opposite-side anchoring. Proportion/centre toggles and Fine support touch use.
 - A numbered workplane, snapping, selection outlines, model browser, view cube and
   perspective/orthographic views. New shapes start on the workplane.
 - English and German interfaces, view colours, desktop menus, clipboard operations,
@@ -103,7 +104,9 @@ Default controls over the modeling canvas:
 | Frame selection | `F` |
 | Frame all | `Shift`-`F` or `Home` |
 | Select / move / rotate / scale | `V` / `W` / `E` / `R` |
-| Return to selection | `Esc` |
+| Proportional resize / resize about centre | `Shift` / `Alt` (`Option`) while resizing |
+| Fine control | `Shift` for move/rotate; `Ctrl`/`Command` for resize; or Fine toggle |
+| Cancel drag / return to selection | `Esc` / `Esc` again |
 
 Settings offers alternate camera mappings. Use the view cube for principal views.
 Touch uses two fingers to zoom and pan. View changes do not create model iterations.
