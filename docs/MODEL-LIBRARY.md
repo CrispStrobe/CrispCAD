@@ -924,3 +924,35 @@ preview and Chromium/iPad-WebKit tests. This adds one locally qualified record,
 one unique STL and one preview: 133 / 130 / 172 locally, with main at 132 / 129 / 171
 after Italy delivery. Prior 101 corpus records and 171 previews remain exact.
 See `docs/evidence/uniform-cylinder-sign03-qualification-2026-11-15.json`.
+
+
+### Authored LDraw internal components, 2026-11-15
+
+Thirty new archived official Part/Shortcut component roots were selected after
+excluding aliases, patterns, primitives, shipped roots and historical refusals.
+Seventeen pass actual conversion, strict closed-positive-volume mesh screening,
+editor insertion/history/provenance and Chromium/iPad-WebKit preview/insertion
+checks. These are named unchanged authored component originals with complete
+CC-BY-4.0 closures pinned to the existing owned source revision; qualification
+covers the standalone component, not its parent assembly or physical operation.
+Nominal LDraw units/transforms use the existing converter unchanged.
+
+The seventeen originals add fifteen unique STL hashes: EV3 Square Button99146,
+Powered Up Hub Button34745 and Boost Move Hub Button27198 share one exact mesh.
+All prior133 record objects,266 source/derivative hashes and172 preview values
+remain exact. Local qualified totals become150records/145uniqueSTLs/189previews
+from delivered main133/130/172; delivery is recorded separately.
+
+Twelve other roots produced non-manifold output and one refused quad coplanarity
+or convexity. These remain A/B unresolved pending source/output tracing; no
+intrinsic physical-part defect or archive exhaustion is asserted. Fifteen next
+complete authored roots remain queued. No rejected Wall01 construction rule,
+parent-module implementation, source/default edits or weaker guard was used.
+
+The first browser provenance assertion failed because newly supplied dependency
+grants included build-only localEvidence. Packaging now follows the existing
+runtime schema, while root evidence and every dependency source/grant/hash are
+preserved. That failure and resource refusals remain in the evidence history.
+After actual reserve restoration, regeneration/reproduction, six focused tests,
+build and all34 model/browser attachments passed under the original guards.
+See docs/evidence/ldraw-components-qualification-2026-11-15.json.
