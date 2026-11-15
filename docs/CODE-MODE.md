@@ -258,7 +258,7 @@ value's units, bind the index only inside the predicate/value, and visit at most
 256 inputs under the expression work budget. Empty native reductions fail;
 OpenSCAD list reductions retain undefined/guard behavior for empty results.
 
-`ellipticFrustum(rx0,ry0,rx1,ry1,height[,segments])` retains the dimensions of an
+`ellipticFrustum(rx0,ry0,rx1,ry1,height[,segments,startAngle,endAngle,angularSegments])` retains the dimensions of an
 elliptical taper. It uses centered Z placement and 4–4096 segments, subject to the
 normal face budget. Ends accept two positive radii or a point `[0,0]`; line ends
 are not supported. Construction produces an indexed mesh in linear space/time,
@@ -283,3 +283,22 @@ All constructors lower to existing shape/profile representations and remain unde
 normal source, expression, face and evaluated-geometry budgets. Ellipsoid face
 cost is checked before mesh allocation. Source and parameter definitions survive
 history; large evaluated polyhedron exports can still exceed reimport text limits.
+
+### Elliptical angular sectors
+
+`ellipticFrustum` accepts optional start/end angles in degrees after the segment
+count. Defaults remain 0 and 360. Endpoints wrap; equal endpoints denote a full
+turn. The count describes a full turn, with angular sectors using its proportional
+integer part. At least one side segment is required; increase the count for a
+very narrow sector. Caps and radial cut faces are triangulated explicitly,
+including cases where changing ellipse proportions twist a radial face.
+
+Full-turn calls keep their existing sampling/order. Angular dimensions and radii
+remain editable source parameters; normal source, face and evaluation budgets
+are unchanged. Collision preparation remains separately qualified and can refuse
+a valid rendered construction when no accurate collider is available.
+
+An optional final `angularSegments` overrides the number of sector intervals
+directly (1–4096). JSCAD snapshots supply this count calculated in source radians,
+so conversion to degrees cannot change tessellation at integer boundaries.
+Native parametric models can omit it to retain density-based angular refinement.

@@ -137,4 +137,6 @@ export const messages:Record<string,string>={
   "Cannot triangulate polyhedron face": "Die Polyederfläche kann nicht trianguliert werden",
   "Torus tube radius must be smaller than its major radius": "Der Rohrradius des Torus muss kleiner als sein Hauptradius sein",
   "Cylinder rounding must be smaller than its radius and half its height": "Die Zylinderabrundung muss kleiner als der Radius und die halbe Höhe sein",
+  "Elliptical sector needs at least one angular segment": "Der elliptische Sektor benötigt mindestens ein Winkelsegment",
+  "Negative elliptical angles are not supported": "Negative elliptische Winkel werden nicht unterstützt",
 };
