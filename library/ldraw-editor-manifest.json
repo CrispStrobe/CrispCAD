@@ -17,7 +17,7 @@
     },
     "converter": {
       "path": "../scripts/lib/ldraw-model.mjs",
-      "sha256": "7984352ff0b31852078380160f1b3fd6ebf70fc6f3617b2c9f61158699550ed2"
+      "sha256": "64938376a81669fa95c9f60eb592de502a7e751d0d42aa58c196f6b4bdb4bacf"
     },
     "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
