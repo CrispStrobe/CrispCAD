@@ -1,0 +1,200 @@
+{
+  "format": "brickwright-local-fixture-library",
+  "version": 1,
+  "collection": "selected-ldraw-authored-parts",
+  "capturedOn": "2026-11-15",
+  "pathBase": "library/",
+  "selection": {
+    "count": 1,
+    "authoredModels": 1,
+    "fixtures": 0
+  },
+  "reproduction": {
+    "command": "node scripts/generate-ldraw-editor-library.mjs --check",
+    "generator": {
+      "path": "../scripts/generate-ldraw-editor-library.mjs",
+      "sha256": "e873692d02e3b1fa53b7d966364be5ed44797fa8473613ffe211b9f0606fd17b"
+    },
+    "converter": {
+      "path": "../scripts/lib/ldraw-model.mjs",
+      "sha256": "7984352ff0b31852078380160f1b3fd6ebf70fc6f3617b2c9f61158699550ed2"
+    },
+    "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
+    "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+  },
+  "assets": [
+    {
+      "id": "corpus-ldraw-6934",
+      "title": "LDraw 3 × 6 hollow tile",
+      "author": "Tore Eriksson [Tore_Eriksson]; box5 primitive by James Jessiman",
+      "version": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+        "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/6934.dat"
+      },
+      "archiveSelection": {
+        "officialSourceArchive": {
+          "url": "https://library.ldraw.org/library/updates/complete.zip",
+          "sha256": "f3e496d0ede69ca7942fa4aa198e661ee2d22723906101e2e339d8917a4dd5f2",
+          "date": "2026-09-30"
+        },
+        "rootPath": "parts/6934.dat",
+        "converterMetrics": {
+          "originalBytes": 1905,
+          "expandedBytes": 2868,
+          "instances": 3,
+          "work": 136,
+          "points": 16,
+          "faces": 14
+        },
+        "authorsAndHistory": "Root: Tore Eriksson. Primitive: James Jessiman. Retained history credits: PTadmin, guyvivan, cwdee, sbliss, Philo.",
+        "kind": "official authored LDraw part"
+      },
+      "licence": {
+        "spdx": "CC-BY-4.0",
+        "scope": "asset",
+        "attribution": "Tore Eriksson [Tore_Eriksson], with box5 primitive by James Jessiman; retained history credits PTadmin, guyvivan, cwdee, sbliss and Philo. LDraw.org Official Parts Library. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/6934.dat. Creative Commons Attribution 4.0 International: https://creativecommons.org/licenses/by/4.0/. Original file and its !HISTORY contributor credits retained. Source unchanged; geometry conversion and nominal unit/axis changes described with the asset.",
+        "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/6934.dat",
+        "capturedOn": "2026-11-15",
+        "review": "accepted",
+        "reviewer": "Codex exact staged source, author, per-file CC-BY-4.0 grant and complete two-file closure review",
+        "localEvidence": [
+          {
+            "path": "evidence/ldraw-CC-BY-4.0.txt",
+            "bytes": 18657,
+            "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+            "format": "text"
+          },
+          {
+            "path": "evidence/ldraw-CAreadme.txt",
+            "bytes": 4151,
+            "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+            "format": "text"
+          }
+        ]
+      },
+      "original": {
+        "path": "sources/ldraw/parts/6934.dat",
+        "bytes": 942,
+        "sha256": "a5b599ccc9e7979c4cc2bc72e2b4705eb1f5954c6a82d2761ce22063a3ea4e17",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/6934.dat"
+      },
+      "sourceBundle": {
+        "format": "brickwright-ldraw-bundle",
+        "version": 1,
+        "rootPath": "parts/6934.dat",
+        "dependencies": [
+          {
+            "path": "p/box5.dat",
+            "file": {
+              "path": "sources/ldraw/p/box5.dat",
+              "bytes": 963,
+              "sha256": "ccb7b8a1d36692335b10ea6aa196849afcad4b15331683ed8112a10b50977318",
+              "format": "ldraw"
+            },
+            "author": "James Jessiman",
+            "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+              "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08"
+            },
+            "licence": {
+              "spdx": "CC-BY-4.0",
+              "scope": "asset",
+              "attribution": "James Jessiman. LDraw.org Official Parts Library. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat. Creative Commons Attribution 4.0 International: https://creativecommons.org/licenses/by/4.0/. Original file and its !HISTORY contributor credits retained. Source unchanged; geometry conversion and nominal unit/axis changes described with the asset.",
+              "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat",
+              "capturedOn": "2026-11-15",
+              "review": "accepted",
+              "reviewer": "Codex exact staged source, author, per-file CC-BY-4.0 grant and complete two-file closure review"
+            }
+          }
+        ]
+      },
+      "derivatives": [
+        {
+          "path": "meshes/ldraw/6934.stl",
+          "bytes": 1484,
+          "sha256": "02e1f0467c9744db98226db1a5e45de1597c54f09cdfdcbaf33b95bd3865288b",
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Exact authored root and entire dependency retained byte-for-byte. Original bounded converter interprets certified BFC winding, INVERTNEXT and mirrored references, preserving every authored solid face. Nominal 0.4 mm/LDU and -Y-up converted to millimetres/Z-up; original origin preserved. Display edge/conditional-edge lines and inherited colour appearance omitted. No primitive substitution, geometry repair, tolerance change, simplification, source/default edits or collision/physical certification. Original DAT closure is archival; insertion uses freshly checked derived STL.",
+      "conversion": {
+        "sourceUnits": "ldu",
+        "sourceUpAxis": "-Y",
+        "unitAssumption": "LDraw uses -Y up and nominal 0.4 millimetres per LDU, per https://ldraw.org/article/218.html. This is the documented nominal display conversion, not physical calibration or a manufacturing tolerance. Original source coordinates and placement retained.",
+        "toMillimetresZUp": [
+          0.4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          -0.4,
+          0,
+          0,
+          0.4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "02e1f0467c9744db98226db1a5e45de1597c54f09cdfdcbaf33b95bd3865288b",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-15",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 28,
+        "boundsMm": {
+          "min": [
+            -24,
+            -12,
+            -3.200000047683716
+          ],
+          "max": [
+            24,
+            12,
+            0
+          ]
+        },
+        "signedVolumeMm3": 2195.456112792969,
+        "analyticVolumeMm3": 2195.4560000000006
+      },
+      "diagnostics": []
+    }
+  ]
+}
