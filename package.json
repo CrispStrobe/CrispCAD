@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "npm run build:packages && npm run assets && vite --host 127.0.0.1",
     "assets": "node scripts/copy-assets.mjs",
+    "build:brickwright-sdk": "npm run build:packages && vite build --config vite.brickwright.config.ts && node scripts/package-brickwright-sdk.mjs",
     "build:packages": "tsc -b",
     "build": "npm run build:packages && tsc -p apps/standalone/tsconfig.json && npm run assets && vite build && node scripts/build-sw.mjs",
     "preview": "vite preview --host 127.0.0.1",
