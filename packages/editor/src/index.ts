@@ -4,12 +4,14 @@ import {mountModelLibraryPanel, type ModelLibraryOptions} from './model-library-
 export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
 import { t } from '@brickwright/cad-core';
-import { createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube } from '@brickwright/cad-core';
-import type { CadDocument, CadSession, Primitive, SolidNode, Transform, Vec3 } from '@brickwright/cad-core';
+import { createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters } from '@brickwright/cad-core';
+import type { CadDocument, CadSession, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe } from '@brickwright/cad-core';
 import { importSTL } from '@brickwright/cad-geometry';
 import type { GeometryResult } from '@brickwright/cad-geometry';
 import { createGeometryClient } from './geometry-client.js';
 import {mountTransformReadout} from './transform-readout.js';
+import type {GridDisplay} from './workplane-grid.js';
+export type {GridDisplay} from './workplane-grid.js';
 import type {NavigationPreset} from './camera-input.js';
 export type {NavigationPreset} from './camera-input.js';
 import { mountViewport } from './viewport.js';
@@ -33,6 +35,8 @@ export interface CadEditorOptions {
   modelLibrary?: ModelLibraryOptions;
   navigationPreset?:NavigationPreset;
   resizeControls?:'dimensions'|'gizmo';
+  gridDisplay?:GridDisplay;
+  rightPane?:{shapesFirst:boolean;split:number};
   shapeBrowserLayout?:ShapeBrowserLayout;
   onShapeBrowserLayoutChange?:(layout:ShapeBrowserLayout)=>void;
   showTransformReadout?:boolean;
@@ -69,6 +73,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const toolbar = el('div', 'toolbar'); toolbar.setAttribute('role', 'toolbar'); toolbar.setAttribute('aria-label', 'Model tools');
   const iterationControl=options.headerContent?.querySelector<HTMLSelectElement>('#iterations');const projectsControl=options.headerContent?.querySelector<HTMLButtonElement>('#library');
   const main = el('div', 'main'); const tree = el('aside', 'panel tree'); const viewHost = el('div', 'viewport'); const inspector = el('aside', 'panel inspector');
+  let rightPane={shapesFirst:true,split:50};const setRightPane=(value:typeof rightPane)=>{if(typeof value.shapesFirst!=='boolean'||!Number.isFinite(value.split)||value.split<20||value.split>80)throw new Error(t('Choose a pane split between 20 and 80 percent'));rightPane={...value};main.dataset.shapesFirst=String(value.shapesFirst);main.style.setProperty('--right-pane-split',`${value.split}%`);};setRightPane(options.rightPane??rightPane);
   const status = el('div', 'status'); const message = el('span'); message.setAttribute('role', 'status');message.setAttribute('aria-label',t('Editor status')); message.setAttribute('aria-live', 'polite'); const stats = el('span', 'stats'); status.append(message, stats);
   const designBar = el('div', 'design-bar');
   const titleInput = el('input'); titleInput.setAttribute('aria-label', 'Design title'); titleInput.addEventListener('keydown',event=>{if(event.key==='Enter')titleInput.blur();else if(event.key==='Escape'){titleInput.value=session.state.document.title;titleInput.blur();}}); titleInput.addEventListener('change', () => run(() => session.rename(titleInput.value))); designBar.append(titleInput, el('span', 'units-label', t('mm · Z up')));
@@ -80,7 +85,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const run = (fn: () => unknown) => { try { const result = fn(); if (result instanceof Promise) result.catch(report); } catch (e) { report(e); } };
   const client = createGeometryClient(new URL(options.wasmURL, document.baseURI).href, options.createWorker);
   let viewport: ReturnType<typeof mountViewport>;
-  try { viewport = mountViewport(viewHost, session, report,options.appearance);viewport.setNavigation(options.navigationPreset??'tinkercad');viewport.setResizeControls(options.resizeControls??'dimensions'); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
+  try { viewport = mountViewport(viewHost, session, report,options.appearance);viewport.setNavigation(options.navigationPreset??'tinkercad');viewport.setResizeControls(options.resizeControls??'dimensions');viewport.setGridDisplay(options.gridDisplay??'snap'); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
   const empty = el('div', 'empty'); empty.append(el('strong', '', t('Your next idea starts here.')), document.createTextNode(t('Pick a shape above. Set its dimensions in Properties. Drag to orbit; pinch to zoom.'))); viewHost.append(empty);
   const busy = el('div', 'busy', t('Building solid…')); busy.hidden = true; viewHost.append(busy);
   const errorPanel = el('div', 'error'); errorPanel.hidden = true; errorPanel.setAttribute('role', 'alert'); viewHost.append(errorPanel);
@@ -104,7 +109,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const propertiesToggle = button('Properties', () => togglePanel(inspector, propertiesToggle), status, 'panel-toggle properties-toggle');
   const modelLibraryPanel=mountModelLibraryPanel(shell,session,doc=>client.evaluate(doc),options.modelLibrary,async()=>{await whenIdle();viewport.frame();});
   const parametersPanel=mountParametersPanel(shell,session);
-  const sketchPanel=mountSketchPanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();});
+  const sketchPanel=mountSketchPanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();},()=>grid);
   button('Sketch',()=>sketchPanel.open(),toolbar,'compact-icon').title=t('Create a dimensioned sketch and extrusion');
   const modelSourcePanel=mountModelSourcePanel(shell,status,session,doc=>client.evaluate(doc),(recipe,name)=>createPresetDocument(recipe.preset,name,{recipe}));
   const codePanel=mountCodePanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();},options.onExport,()=>run(()=>modelSourcePanel.open()));
@@ -146,9 +151,9 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   readout.setVisible(options.showTransformReadout??false);
   viewport.setTransformPreviewListener(preview=>{readout.update(preview);if(preview.bounds)for(const [i,axis] of ['X','Y','Z'].entries()){const input=inspector.querySelector<HTMLInputElement>(`[data-size-axis=${axis}]`);if(input)input.value=String(Number((preview.bounds.max[i]-preview.bounds.min[i]).toFixed(3)));}const pose=preview.poses[0]?.transform;if(!pose)return;for(const [key,name] of [['position','Position'],['rotation','Rotation'],['scale','Scale']] as const)for(const [i,axis] of ['X','Y','Z'].entries()){const input=Array.from(inspector.querySelectorAll('input')).find(el=>el.getAttribute('aria-label')===`${t(name)} ${axis}`);if(input){input.readOnly=preview.dragging;if(shadow.activeElement!==input||preview.dragging)input.value=String(Number(pose[key][i].toFixed(5)));}}});
   const planeBar = el('div', 'plane-bar'); planeBar.append(el('span', 'plate-size', t('400 × 400 mm workplane')));
-  const gridLabel = el('label', '', t('Snap Grid')); const gridSelect = el('select'); gridSelect.setAttribute('aria-label', 'Grid spacing');
+  const gridLabel = el('label','grid-control');gridLabel.title=t('Snap Grid'); const gridSelect = el('select'); gridSelect.setAttribute('aria-label',t('Grid spacing'));gridSelect.title=t('Snap Grid');
   for (const n of [0, 0.1, 1, 5, 10]) { const o = el('option', '', n === 0 ? t('Off') : `${n} mm`); o.value = String(n); gridSelect.append(o); } gridSelect.value = '1';
-  gridSelect.addEventListener('change', () => { grid = Number(gridSelect.value); viewport.setGrid(grid); }); gridLabel.append(gridSelect); const fineLabel=el('label','numbers-toggle',t('Fine')),fineToggle=el('input');fineToggle.type='checkbox';fineToggle.setAttribute('aria-label',t('Fine adjustments'));fineLabel.title=t('Fine adjustments: Shift for move/rotate; Ctrl/⌘ for resize. Shift resizes proportionally; Alt resizes about the center.');fineToggle.onchange=()=>viewport.setFine(fineToggle.checked);fineLabel.prepend(fineToggle);planeBar.append(numbersLabel,fineLabel,gridLabel, el('span', 'unit-chip', 'mm')); viewHost.append(planeBar);
+  gridSelect.addEventListener('change', () => { grid = Number(gridSelect.value); viewport.setGrid(grid); }); gridLabel.append(gridSelect); const fineLabel=el('label','numbers-toggle',t('Fine')),fineToggle=el('input');fineToggle.type='checkbox';fineToggle.setAttribute('aria-label',t('Fine adjustments'));fineLabel.title=t('Fine adjustments: Shift for move/rotate; Ctrl/⌘ for resize. Shift resizes proportionally; Alt resizes about the center.');fineToggle.onchange=()=>viewport.setFine(fineToggle.checked);fineLabel.prepend(fineToggle);planeBar.append(numbersLabel,fineLabel,gridLabel); viewHost.append(planeBar);
   const undoButton = button('Undo', () => session.undo(),toolbar,'compact-icon'); const redoButton = button('Redo', () => session.redo(),toolbar,'compact-icon');
   toolGroup('Edit');
   const cutButton=button('Cut',()=>copySelection(true));const copyButton=button('Copy',()=>copySelection());const pasteButton=button('Paste',()=>pasteSelection());
@@ -267,20 +272,24 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     if(!session.state.document.roots.includes(id)){const parent=Object.values(session.state.document.nodes).find(node=>node.kind==='boolean'&&node.inputs.includes(id));if(parent)button(t`Back to ${parent.name}`,()=>{session.select([parent.id]);viewport.canvas.focus({preventScroll:true});},inspector);}
     const nameInput=field(styleRow, 'Object name', n.name, value => session.update(id, { name: value }), 'text');nameInput.parentElement!.classList.add('object-name');nameInput.title=t('Object name');styleRow.prepend(nameInput.parentElement!);const colour=field(styleRow,'Color',n.color,value=>session.update(id,{color:value}),'color');colour.parentElement!.classList.add('color-swatch');colour.title=t('Color');
     transformFields([id],activeKey);for(const key of ['position','rotation','scale'] as const)if(key!==activeKey)transformFields([id],key);
-    const recipe=n.generator??(session.state.document.roots.includes(id)?defaultGenerator(n.physics?.sourcePreset??''):undefined);
+    const recipe=n.generator??(n.reference?defaultGenerator('ruler'):session.state.document.roots.includes(id)?defaultGenerator(n.physics?.sourcePreset??''):undefined);
     if(recipe&&!isCube(n)){
       const draft=structuredClone(recipe);const legacyLettering=!n.generator&&['text','name-tag'].includes(recipe.preset);if(legacyLettering)draft.text='';const form=el('div','shape-parameters');form.append(el('div','inspect-title',t`${t(recipe.preset[0].toUpperCase()+recipe.preset.slice(1))} parameters`));
       if(legacyLettering)form.append(el('p','hint',t('This older object did not retain its text. Enter the lettering to make it editable; the existing solid stays unchanged until Apply.')));
+      if(draft.preset==='ruler'){const wrap=el('label','field',t('Ruler units')),unit=el('select');unit.setAttribute('aria-label',t('Ruler units'));for(const [value,label]of [['mm','mm'],['in','in']]){const o=el('option','',label);o.value=value;unit.append(o);}unit.value=draft.rulerUnit??'mm';unit.onchange=()=>draft.rulerUnit=unit.value as 'mm'|'in';wrap.append(unit);form.append(wrap);const numbers=el('label','field',t('Ruler numbers')),toggle=el('input');toggle.type='checkbox';toggle.checked=draft.rulerNumbers!==false;toggle.setAttribute('aria-label',t('Ruler numbers'));toggle.onchange=()=>draft.rulerNumbers=toggle.checked;numbers.append(toggle);form.append(numbers);}
       if(draft.preset==='text'||draft.preset==='name-tag'){
         field(form,'Text',draft.text??'',value=>draft.text=value,'text');const label=el('label','field',t('Font')),select=el('select');select.setAttribute('aria-label',t('Font'));
         for(const [value,name] of [['sans','Droid Sans'],['serif','Droid Serif'],['mono','Droid Sans Mono'],['block',t('Original block letters')]]){const option=el('option','',name);option.value=value;select.append(option);}select.value=draft.font??'sans';select.onchange=()=>draft.font=select.value as typeof draft.font;label.append(select);form.append(label);
       }
       if(draft.preset==='screw'){
-       for(const [key,label,choices]of [['headStyle','Head type',[['cylindrical','Cylindrical head'],['hex','External hex head'],['countersunk','Countersunk head'],['pan','Pan head']]],['driveStyle','Drive type',[['slot','Slotted'],['cross','Cross recess'],['hex','Hex socket'],['none','No recess']]]] as const){const wrap=el('label','field',t(label)),select=el('select');select.setAttribute('aria-label',t(label));for(const [value,name]of choices){const option=el('option','',t(name));option.value=value;select.append(option);}select.value=String(draft[key]??(key==='headStyle'?'cylindrical':'slot'));select.onchange=()=>{if(draft.version===1)draft.orientation='legacy';draft.version=2;draft.headStyle??='cylindrical';draft.driveStyle??='slot';draft.driveDepth??=draft.values.headHeight*.3;draft.headAngle??=90;draft.threadAngle??=60;(draft as any)[key]=select.value;};wrap.append(select);form.append(wrap);}
+       for(const [key,label,choices]of [['headStyle','Head type',[['cylindrical','Cylindrical head'],['hex','External hex head'],['countersunk','Countersunk head'],['pan','Pan head'],['headless','Headless']]],['driveStyle','Drive type',[['slot','Slotted'],['cross','Cross recess'],['hex','Hex socket'],['none','No recess']]]] as const){const wrap=el('label','field',t(label)),select=el('select');select.setAttribute('aria-label',t(label));for(const [value,name]of choices){const option=el('option','',t(name));option.value=value;select.append(option);}select.value=String(draft[key]??(key==='headStyle'?'cylindrical':'slot'));select.onchange=()=>{if(draft.version===1)draft.orientation='legacy';draft.version=2;draft.headStyle??='cylindrical';draft.driveStyle??='slot';draft.driveDepth??=draft.values.headHeight*.3;draft.headAngle??=90;draft.threadAngle??=60;(draft as any)[key]=select.value;};wrap.append(select);form.append(wrap);}
+       const tipLabel=el('label','field',t('Point type')),tipSelect=el('select');tipSelect.setAttribute('aria-label',t('Point type'));for(const [value,label] of screwTipStyles){const option=el('option','',t(label));option.value=value;tipSelect.append(option);}tipSelect.value=draft.tipStyle??'flat';tipLabel.append(tipSelect);form.append(tipLabel);
+       const tip=screwTipParameters(draft),tipLength=field(form,'Point length (mm)',tip.length,value=>draft.tipLength=Number(value),'number','.1'),tipDiameter=field(form,'End / cup diameter (mm)',tip.diameter,value=>draft.tipDiameter=Number(value),'number','.1'),cupDepth=field(form,'Cup depth (mm)',tip.depth,value=>draft.cupDepth=Number(value),'number','.1');
+       const showTip=()=>{tipLength.parentElement!.hidden=tipSelect.value==='flat';tipDiameter.parentElement!.hidden=!['chamfer','dog','cup'].includes(tipSelect.value);cupDepth.parentElement!.hidden=tipSelect.value!=='cup';};tipSelect.onchange=()=>{if(draft.version===1)draft.orientation='legacy';draft.version=2;draft.headStyle??='cylindrical';draft.driveStyle??='slot';draft.driveDepth??=draft.values.headHeight*.3;draft.headAngle??=90;draft.threadAngle??=60;draft.tipStyle=tipSelect.value as NonNullable<GeneratorRecipe['tipStyle']>;showTip();};showTip();
        if(draft.version===2){if(draft.driveStyle!=='none')field(form,'Drive recess depth (mm)',draft.driveDepth!,value=>draft.driveDepth=Number(value),'number','.1');field(form,'Thread angle (°)',draft.threadAngle!,value=>draft.threadAngle=Number(value),'number','1');if(draft.headStyle==='countersunk')field(form,'Countersink angle (°)',draft.headAngle!,value=>draft.headAngle=Number(value),'number','1');}
       }
       for(const parameter of generatorFields(recipe.preset)){
-        if(draft.version===2&&draft.preset==='screw'&&(parameter.key==='headHeight'&&draft.headStyle==='countersunk'||parameter.key==='slotWidth'&&draft.driveStyle==='none'))continue;
+        if(draft.version===2&&draft.preset==='screw'&&(parameter.key==='headHeight'&&['countersunk','headless'].includes(draft.headStyle??'')||parameter.key==='headDiameter'&&draft.headStyle==='headless'||parameter.key==='slotWidth'&&draft.driveStyle==='none'))continue;
         if(draft.version===2&&draft.preset==='screw'&&parameter.key==='diameter'){field(form,'Thread diameter (mm)',draft.values.diameter+2*draft.values.threadDepth,value=>draft.values.diameter=Number(value)-2*draft.values.threadDepth,'number','.1');continue;}
         if(draft.version===2&&draft.preset==='screw'&&parameter.key==='threadDepth'){field(form,parameter.label,draft.values.threadDepth,value=>{const diameter=draft.values.diameter+2*draft.values.threadDepth;draft.values.threadDepth=Number(value);draft.values.diameter=diameter-2*draft.values.threadDepth;},'number',String(parameter.step));continue;}
         if(parameter.key==='hand'){const label=el('label','field',t('Thread handedness'));const select=el('select');select.setAttribute('aria-label',t('Thread handedness'));for(const [value,name] of [[1,'Right hand'],[-1,'Left hand']] as const){const option=el('option','',t(name));option.value=String(value);select.append(option);}select.value=String(draft.values.hand);select.onchange=()=>draft.values.hand=Number(select.value);label.append(select);form.append(label);}
@@ -478,7 +487,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   buildTree(); buildInspector(); lastRevision = session.state.revision; lastSelection = JSON.stringify(session.state.selection); viewport.setSelection(session.state.selection); void buildLatest(); refreshButtons();
   return {
-    session, whenIdle, openFile,importFile,executeCommand,setNavigation:viewport.setNavigation,setResizeControls:viewport.setResizeControls,get resizeControls(){return viewport.resizeControls;},setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance:viewport.setAppearance,get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
+    session, whenIdle, openFile,setRightPane,get rightPane(){return {...rightPane};},importFile,executeCommand,setNavigation:viewport.setNavigation,setResizeControls:viewport.setResizeControls,setGridDisplay:viewport.setGridDisplay,get gridDisplay(){return viewport.gridDisplay;},get resizeControls(){return viewport.resizeControls;},setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance:viewport.setAppearance,get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },

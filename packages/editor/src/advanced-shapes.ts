@@ -4,10 +4,11 @@ import { t } from '@brickwright/cad-core';
 import * as T from 'three';
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import {bentExtrusion} from './bent-extrusion.js';
 import {fontLettering,roundedPlate} from './lettering.js';
 import {iconGeometry} from './svg-icon.js';
 import qrcode from 'qrcode-generator';
-import { createDocument, identityTransform, newId, defaultPartPhysics,defaultGenerator,checkGenerator } from '@brickwright/cad-core';
+import { createDocument, identityTransform, newId, defaultPartPhysics,defaultGenerator,checkGenerator,screwTipParameters } from '@brickwright/cad-core';
 import type {GeneratorRecipe} from '@brickwright/cad-core';
 import type { CadDocument, SolidNode, Vec3 } from '@brickwright/cad-core';
 export const advancedCatalog = [
@@ -63,10 +64,10 @@ function closedTube(curve:T.Curve<T.Vector3>,segments:number,radius:number,sides
  tube.dispose();let volume=0;for(let i=0;i<indices.length;i+=3){const a=new T.Vector3().fromArray(positions,indices[i]*3),b=new T.Vector3().fromArray(positions,indices[i+1]*3),c=new T.Vector3().fromArray(positions,indices[i+2]*3);volume+=a.dot(b.cross(c));}if(volume<0)for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.userData.collisionHint={kind:'tube-grid',segments,sides,layout:'rows',closed:false,stride:1};return g;
 }
-function threadRidge(radius=5,pitch=2,turns=10,clearance=0,depth=1,hand=1,phase=0,spacing=pitch,flankAngle?:number){
+function threadRidge(radius=5,pitch=2,turns=10,clearance=0,depth=1,hand=1,phase=0,spacing=pitch,flankAngle?:number,taper?:(z:number)=>number){
  const count=Math.ceil(turns*48),positions:number[]=[],indices:number[]=[];
  const halfWidth=flankAngle===undefined?spacing*.38:(depth+.3)*Math.tan(flankAngle*Math.PI/360);
- for(let i=0;i<=count;i++){const a=hand*i/count*turns*2*Math.PI+phase,z=i/count*turns*pitch;for(const [r,dz] of [[radius-.3,-halfWidth],[radius+depth+clearance,0],[radius-.3,halfWidth]])positions.push(r*Math.cos(a),r*Math.sin(a),z+dz);}
+ for(let i=0;i<=count;i++){const a=hand*i/count*turns*2*Math.PI+phase,z=i/count*turns*pitch;for(const [r,dz] of [[radius-.3,-halfWidth],[radius+depth+clearance,0],[radius-.3,halfWidth]])positions.push(r*(taper?.(z+dz)??1)*Math.cos(a),r*(taper?.(z+dz)??1)*Math.sin(a),z+dz);}
  for(let i=0;i<count;i++)for(let j=0;j<3;j++){const a=i*3+j,b=i*3+(j+1)%3,c=(i+1)*3+j,d=(i+1)*3+(j+1)%3;indices.push(a,b,c,b,d,c);}indices.push(0,2,1,count*3,count*3+1,count*3+2);
  let volume=0;for(let i=0;i<indices.length;i+=3){const a=new T.Vector3().fromArray(positions,indices[i]*3),b=new T.Vector3().fromArray(positions,indices[i+1]*3),c=new T.Vector3().fromArray(positions,indices[i+2]*3);volume+=a.dot(b.cross(c));}if(volume<0)for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.userData.collisionHint={kind:'tube-grid',segments:count,sides:3,layout:'rows',closed:false,seam:false,stride:1};return g;
@@ -80,13 +81,25 @@ export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string,
  if(['thread','screw','nut'].includes(id)&&values){const p=values,r=p.diameter/2,lead=p.pitch*p.starts;const ridges=()=>Array.from({length:p.starts},(_,i)=>threadRidge(r+(id==='nut'?p.clearance:0),lead,p.length/lead,id==='nut'?.15:0,p.threadDepth,p.hand,i*2*Math.PI/p.starts,p.pitch,recipe?.threadAngle));
   if(id==='thread')return {add:[cylinder(r,p.length,[0,0,p.length/2]),...ridges()]};
   if(id==='screw'&&recipe?.version===2){
-   const style=recipe.headStyle!,drive=recipe.driveStyle!,headR=style==='hex'?p.headDiameter/Math.sqrt(3):p.headDiameter/2,neck=r+p.threadDepth,h=style==='countersunk'?(headR-neck)/Math.tan(recipe.headAngle!*Math.PI/360):p.headHeight;
+   const style=recipe.headStyle!,drive=recipe.driveStyle!,headR=style==='headless'?r+p.threadDepth:style==='hex'?p.headDiameter/Math.sqrt(3):p.headDiameter/2,neck=r+p.threadDepth,h=style==='headless'?0:style==='countersunk'?(headR-neck)/Math.tan(recipe.headAngle!*Math.PI/360):p.headHeight;
    const head=style==='pan'?lathe([[0,0],[headR,0],...Array.from({length:17},(_,i)=>{const a=i*Math.PI/32;return [i===16?0:headR*Math.cos(a),h*(.3+.7*Math.sin(a))];}),[0,0]]):cylinder(style==='countersunk'?neck:headR,h,[0,0,h/2],style==='hex'?6:64,headR);
    const depth=recipe.driveDepth!,z=h-depth/2+.1,cuts:T.BufferGeometry[]=[];
    if(drive==='slot')cuts.push(box(p.slotWidth,p.headDiameter+2,depth+.2,[0,0,z]));
    if(drive==='cross')cuts.push(box(p.slotWidth,p.headDiameter*.65,depth+.2,[0,0,z]),box(p.headDiameter*.65,p.slotWidth,depth+.2,[0,0,z]));
    if(drive==='hex')cuts.push(cylinder(p.slotWidth/Math.sqrt(3),depth+.2,[0,0,z],6));
-   const add=[cylinder(r,p.length,[0,0,-p.length/2]),...ridges().map(g=>g.rotateX(Math.PI)),head];if(recipe.orientation==='legacy')[...add,...cuts].forEach(g=>g.rotateX(Math.PI));return {add,...(cuts.length?{cut:cuts}:{})};
+   const tip=screwTipParameters(recipe),R=r+p.threadDepth,enabled=recipe.tipStyle!==undefined||style==='headless',gimlet=enabled&&tip.style==='gimlet',plain=enabled&&!['flat','gimlet'].includes(tip.style),bodyLength=plain?p.length-tip.length:p.length;
+   const half=(p.threadDepth+.3)*Math.tan(recipe.threadAngle!*Math.PI/360),startZ=Math.min(half+.05,bodyLength*.4),ridgeLength=Math.max(.01,bodyLength-2*startZ);
+   const thread=enabled?Array.from({length:p.starts},(_,i)=>threadRidge(r,lead,ridgeLength/lead,0,p.threadDepth,p.hand,i*2*Math.PI/p.starts,p.pitch,recipe.threadAngle,gimlet?z=>Math.max(0,Math.min(1,(p.length-z-startZ)/tip.length)):undefined).translate(0,0,startZ)):ridges();
+   const core=gimlet?lathe([[0,-p.length],[r,-p.length+tip.length],[r,0],[0,0]]):cylinder(r,bodyLength,[0,0,-bodyLength/2]);
+   const add=[core,...thread.map(g=>g.rotateX(Math.PI)),...(style==='headless'?[]:[head])];if(style==='headless')head.dispose();const after:T.BufferGeometry[]=[];
+
+   if(plain){const z=-p.length,L=tip.length,e=.01,top=z+L+e;
+    if(tip.style==='dog')after.push(cylinder(tip.diameter/2,L+e,[0,0,z+(L+e)/2]));
+    else if(tip.style==='cup')after.push(lathe([[0,z+tip.depth],[tip.diameter/2,z],[R,z],[R,top],[0,top]]));
+    else if(tip.style==='oval')after.push(lathe([[0,z],...Array.from({length:24},(_,i)=>{const a=(i+1)*Math.PI/48;return [R*Math.sin(a),z+L*(1-Math.cos(a))];}),[R,top],[0,top]]));
+    else after.push(lathe([[0,z],...(tip.style==='chamfer'?[[tip.diameter/2,z]]:[]),[R,z+L],[R,top],[0,top]]));
+   }
+   if(recipe.orientation==='legacy')[...add,...cuts,...after].forEach(g=>g.rotateX(Math.PI));return {add,...(cuts.length?{cut:cuts}:{}),...(after.length?{after}:{})};
   }
   if(id==='screw')return {add:[cylinder(r,p.length,[0,0,p.length/2]),...ridges(),cylinder(p.headDiameter/2,p.headHeight,[0,0,-p.headHeight/2])],cut:[box(p.slotWidth,p.headDiameter*.8,p.headHeight*.3+1,[0,0,-p.headHeight+(p.headHeight*.3-1)/2])]};
   return {add:[cylinder(r+p.threadDepth+4,p.length,[0,0,p.length/2],6)],cut:[cylinder(r+p.clearance,p.length+4,[0,0,p.length/2]),...ridges()]};
@@ -95,25 +108,14 @@ export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string,
   const p=values,s=new T.Shape();s.moveTo(0,-14);s.bezierCurveTo(-28*p.roundness,4,-13,22,0,p.cleft);s.bezierCurveTo(13,22,28*p.roundness,4,0,-14);
   const g=extrude(s,p.thickness);g.computeBoundingBox();const bounds=g.boundingBox!,sx=p.width/(bounds.max.x-bounds.min.x),sy=p.height/(bounds.max.y-bounds.min.y);
   if(Math.abs(p.bend)<.001){g.scale(sx,sy,1);return {add:[g]};}g.dispose();
-  // Retain convex sections as the actual source solid. Warping a coarse cap
-  // triangulation creates long nonplanar faces and unstable collision BSP cuts.
-  // Every section here participates in BOTH rendered CSG and physics candidates.
-  const contour=s.extractPoints(24).shape;if(contour[0].equals(contour.at(-1)!))contour.pop();const triangles=T.ShapeUtils.triangulateShape(contour,[]),radius=p.width/(p.bend*Math.PI/180),steps=3,parts:T.BufferGeometry[]=[];
-  const warp=(x:number,y:number,z:number)=>new T.Vector3((radius+z)*Math.sin(x/radius),y,(radius+z)*Math.cos(x/radius)-radius);
-  for(const triangle of triangles){
-   const sample=(i:number,j:number)=>{const weights=[1-(i+j)/steps,i/steps,j/steps];let x=0,y=0;for(const k of [0,1,2].sort((a,b)=>triangle[a]-triangle[b])){x+=contour[triangle[k]].x*weights[k];y+=contour[triangle[k]].y*weights[k];}return [x*sx,y*sy];};
-   const prism=(points:number[][])=>parts.push(new ConvexGeometry(points.flatMap(([x,y])=>[warp(x,y,0),warp(x,y,p.thickness)])));
-   for(let i=0;i<steps;i++)for(let j=0;j<steps-i;j++){prism([sample(i,j),sample(i+1,j),sample(i,j+1)]);if(i+j<steps-1)prism([sample(i+1,j),sample(i+1,j+1),sample(i,j+1)]);}
-  }
-  let minZ=Infinity;for(const part of parts){part.computeBoundingBox();minZ=Math.min(minZ,part.boundingBox!.min.z);}for(const part of parts)part.translate(0,0,-minZ);
-  return {add:parts};
+  const contour=s.extractPoints(48).shape;if(contour[0].equals(contour.at(-1)!))contour.pop();contour.forEach(v=>v.set(v.x*sx,v.y*sy));return {add:[bentExtrusion(contour,p.thickness,p.width/(p.bend*Math.PI/180))]};
  }
  switch(id){
  case 'loft':{const points:number[]=[],triangles:number[]=[];for(let level=0;level<=8;level++)for(let j=0;j<64;j++){const a=j*Math.PI/32,t=level/8,r=(1-t)*15/Math.max(Math.abs(Math.cos(a)),Math.abs(Math.sin(a)))+t*8;points.push(r*Math.cos(a),r*Math.sin(a),25*t);}for(let i=0;i<8;i++)for(let j=0;j<64;j++){const a=i*64+j,b=i*64+(j+1)%64,c=a+64,d=b+64;triangles.push(a,b,c,b,d,c);}const bottom=points.length/3;points.push(0,0,0,0,0,25);for(let j=0;j<64;j++)triangles.push(bottom,(j+1)%64,j,bottom+1,512+j,512+(j+1)%64);const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(points,3));g.setIndex(triangles);return {add:[g]};}
  case 'bent-tube': {const s=annulus(5,3);class Bend extends T.Curve<T.Vector3>{constructor(){super();}getPoint(t:number,v=new T.Vector3()){return v.set(20*Math.cos(t*Math.PI/2),20*Math.sin(t*Math.PI/2),0);}}return {add:[new T.ExtrudeGeometry(s,{extrudePath:new Bend(),steps:32,bevelEnabled:false,curveSegments:16})]};}
  case 'counterbore':return {add:[lathe([[0,0],[3,0],[3,20],[6,20],[6,26],[0,26]])]};
  case 'countersink':return {add:[lathe([[0,0],[3,0],[3,20],[6,23],[6,25],[0,25]])]};
- case 'teardrop':{const s=new T.Shape();s.moveTo(-8,0);s.absarc(0,0,8,Math.PI,Math.PI*2,false);s.lineTo(0,12);s.closePath();return {add:[extrude(s,25).rotateX(Math.PI/2)]};}
+ case 'teardrop':{const s=new T.Shape(),r=8,h=12,a=Math.asin(r/h),x=r*Math.cos(a),y=r*Math.sin(a);s.moveTo(-x,y);s.absarc(0,0,r,Math.PI-a,2*Math.PI+a,false);s.lineTo(0,h);s.closePath();return {add:[extrude(s,25).rotateX(Math.PI/2)]};}
  case 'port':{const s=new T.Shape();s.moveTo(-10,-5);s.lineTo(10,-5);s.absarc(10,0,5,-Math.PI/2,Math.PI/2,false);s.lineTo(-10,5);s.absarc(-10,0,5,Math.PI/2,3*Math.PI/2,false);s.closePath();return {add:[extrude(s,20)]};}
  case 'thread':return {add:[cylinder(5,20,[0,0,10]),threadRidge()]};
  case 'screw':return {add:[cylinder(5,20,[0,0,10]),threadRidge(),cylinder(9,5,[0,0,-2.5])],cut:[box(2,14,2,[0,0,-4.5])]};
@@ -143,7 +145,7 @@ export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string,
  case 'heart':{const s=new T.Shape();s.moveTo(0,-14);s.bezierCurveTo(-28,4,-13,22,0,10);s.bezierCurveTo(13,22,28,4,0,-14);return {add:[extrude(s,5)]};}
  case 'crescent':{const s=new T.Shape();s.absarc(0,0,16,Math.PI/3,Math.PI*5/3,false);s.quadraticCurveTo(-5,0,8,16*Math.sin(Math.PI/3));s.closePath();return {add:[extrude(s,5)]};}
  case 'knurl':{const add:T.BufferGeometry[]=[cylinder(12,25,[0,0,12.5])];for(let k=0;k<12;k++)for(const turn of [-.5,.5]){const g=closedTube(new Helix(11.8,25,turn,k*Math.PI/6),preview?12:24,.65,4);g.userData.collisionHint.stride=2;add.push(g);};return {add};}
- case 'ruler':return {reference:true,add:[box(100,6,1),...Array.from({length:101},(_,i)=>box(.18,i%10===0?4:i%5===0?3:1.5,.35,[-50+i,0,.65]))]};
+ case 'ruler':{const p=values!,unit=recipe?.rulerUnit??'mm',step=unit==='in'?25.4/16:1,major=unit==='in'?16:10,parts:T.BufferGeometry[]=[box(p.length,p.width,p.thickness,[0,0,p.thickness/2])];for(let i=0;i<=Math.floor((p.length+1e-8)/step);i++){const x=-p.length/2+i*step,tick=i%major===0?p.width*.5:i%(major/2)===0?p.width*.36:p.width*.2,at=Math.max(-p.length/2+.07,Math.min(p.length/2-.07,x));parts.push(box(.14,tick,.16,[at,p.width/2-tick/2,p.thickness+.06]));if(recipe?.rulerNumbers!==false&&i%major===0){const glyphs=letters(String(unit==='in'?i/major:i));const bounds=new T.Box3();for(const g of glyphs){g.scale(.16,.16,.08);g.computeBoundingBox();bounds.union(g.boundingBox!);}const px=Math.max(-p.length/2+.25,Math.min(p.length/2-bounds.max.x-.25,x+.25));for(const g of glyphs)parts.push(g.translate(px,-p.width/2+.4,p.thickness-.02));}}return {reference:true,add:parts};}
  default:throw new Error(t`Unknown construction: ${id}`);
  }
 }

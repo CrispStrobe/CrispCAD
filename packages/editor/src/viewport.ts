@@ -11,6 +11,8 @@ import {assertDrivenEdit,isCube,constrainCubeTransform,t} from '@brickwright/cad
 import type { CadSession, Transform, Vec3 } from '@brickwright/cad-core';
 import type { GeometryResult } from '@brickwright/cad-geometry';
 import { TOUCH_SLOP_PX, createTouchTracker } from './vendor/touch-gestures.js';
+import {displayGridSpacing,workplaneGridGeometry,type GridDisplay} from './workplane-grid.js';
+import {surfaceGeometry} from './surface-geometry.js';
 import {mountResizeControls} from './resize-controls.js';
 import type {ResizeFrame} from './resize-math.js';
 import {resizedTransforms} from './resize-math.js';
@@ -35,10 +37,10 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const fill = new THREE.DirectionalLight(0x91c9ff, 1.5); fill.position.set(80, 50, 50); scene.add(fill);
   const workplane = new THREE.Group(); scene.add(workplane);
   const plate = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ color: colours.baseplate, side: THREE.DoubleSide })); plate.position.z = -0.14; workplane.add(plate);canvas.dataset.backgroundColour=colours.background;canvas.dataset.baseplateColour=colours.baseplate;
-  const grid = new THREE.GridHelper(400, 400, '#52677a', '#2f4655'); grid.rotation.x = Math.PI / 2; grid.position.z = -0.1; workplane.add(grid);
-  const majorGrid = new THREE.GridHelper(400, 40, '#8c9c99', '#536861'); majorGrid.rotation.x = Math.PI / 2; majorGrid.position.z = -0.08; workplane.add(majorGrid);
+  const grid = new THREE.GridHelper(400, 400, '#52677a', '#2f4655'); grid.rotation.x = 0; grid.position.z = -0.1; workplane.add(grid);
+  const majorGrid = new THREE.GridHelper(400, 40, '#8c9c99', '#536861'); majorGrid.rotation.x = 0; majorGrid.position.z = -0.08; workplane.add(majorGrid);
   plate.material.depthWrite=false;plate.renderOrder=-10;
-  for(const lines of [grid,majorGrid]){lines.material.depthWrite=false;lines.material.transparent=true;lines.renderOrder=lines===grid?-9:-8;}majorGrid.material.opacity=.55;
+  for(const lines of [grid,majorGrid]){lines.material.depthWrite=false;lines.material.transparent=true;lines.renderOrder=lines===grid?-9:-8;}majorGrid.material.opacity=.55;grid.material.opacity=.4;
   const border = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-200,-200,0), new THREE.Vector3(200,-200,0), new THREE.Vector3(200,200,0), new THREE.Vector3(-200,200,0)]), new THREE.LineBasicMaterial({ color: '#c5a35d' })); workplane.add(border);
   const axes = new THREE.AxesHelper(45); scene.add(axes);
   const textSprites: THREE.Sprite[] = [];
@@ -66,6 +68,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const selectionBoxes=new Map<string,THREE.BoxHelper>();let activeMode:'select'|'translate'|'rotate'|'scale'='select';
   let directDrag:{pointerId:number;start:THREE.Vector3;plane:THREE.Plane;transforms:Map<string,Transform>;offset:Vec3;moved:boolean;precision:ReturnType<typeof precisionTracker>;usedFine:boolean}|null=null;
   let disposed = false; let selected: string[] = []; let drag: { matrix: THREE.Matrix4; transforms: Map<string, Transform> } | null = null; let gridStep = 1; let multiSelect = false; let viewListener: ((view: ViewDirection) => void) | undefined;
+  let gridDisplay:GridDisplay='snap',lastGridSpacing=-1;
+  function refreshGrid(){const spacing=displayGridSpacing(gridDisplay,gridStep);canvas.dataset.gridDisplay=String(gridDisplay);canvas.dataset.displayGridSpacing=String(spacing);if(spacing===lastGridSpacing)return;lastGridSpacing=spacing;grid.visible=majorGrid.visible=spacing>0;grid.geometry.dispose();majorGrid.geometry.dispose();grid.geometry=workplaneGridGeometry(spacing,'#52677a','#2f4655');majorGrid.geometry=workplaneGridGeometry(spacing*10,'#8c9c99','#536861');}
   let resizeStyle:'dimensions'|'gizmo'='dimensions';
   let resizeControls:ReturnType<typeof mountResizeControls>|undefined,resizeFrame:ResizeFrame|undefined,resizeDelta:THREE.Matrix4|undefined,resizeFactors:Vec3=[1,1,1];
   const scaleFactors=()=>resizeDelta?resizeFactors:pivot.scale.toArray() as Vec3;
@@ -101,7 +105,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     const exact = Object.entries(directions).find(([name, d]) => name !== 'iso' && new THREE.Vector3(...d).normalize().dot(toward) > 0.99999)?.[0];
     const view = (exact ?? 'iso') as ViewDirection; canvas.dataset.view = view; viewListener?.(view); canvas.dataset.projection = camera instanceof THREE.OrthographicCamera ? 'orthographic' : 'perspective';
   }
-  const draw = () => { if (!disposed) {canvas.dataset.cameraPosition=JSON.stringify(camera.position.toArray());canvas.dataset.cameraTarget=JSON.stringify(orbit.target.toArray());canvas.dataset.cameraZoom=String(camera instanceof THREE.OrthographicCamera?camera.zoom:camera.position.distanceTo(orbit.target));canvas.dataset.navigation=navigationPreset; canvas.dataset.transformAxis=gizmo.axis??'';surfacePlacement.refresh();updateCube();resizeControls?.update();publishPreview();const distance=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:camera.position.distanceTo(orbit.target);grid.material.opacity=THREE.MathUtils.clamp((240-distance)/200,0,.4);for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
+  const draw = () => { if (!disposed) {canvas.dataset.cameraPosition=JSON.stringify(camera.position.toArray());canvas.dataset.cameraTarget=JSON.stringify(orbit.target.toArray());canvas.dataset.cameraZoom=String(camera instanceof THREE.OrthographicCamera?camera.zoom:camera.position.distanceTo(orbit.target));canvas.dataset.navigation=navigationPreset; canvas.dataset.transformAxis=gizmo.axis??'';surfacePlacement.refresh();updateCube();resizeControls?.update();publishPreview();for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
   function publishPreview(){
     if(!previewListener)return;let poses=selected.filter(id=>session.state.document.roots.includes(id)).map(id=>({id,transform:structuredClone(session.state.document.nodes[id].transform)})),valid=true,warning:string|undefined;
     if(drag){try{const d=delta();poses=[...drag.transforms].map(([id,original])=>({id,transform:constrainCubeTransform(session.state.document.nodes[id],applyGizmoDelta(original,d,transformMode(),scaleFactors()))}));}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}}
@@ -188,9 +192,12 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     if(kind==='pan'){const height=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:2*camera.position.distanceTo(orbit.target)*Math.tan((camera as THREE.PerspectiveCamera).fov*RAD/2);const unit=height/Math.max(1,canvas.clientHeight);camera.updateMatrixWorld();const offset=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0).multiplyScalar(-dx*unit).add(new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1).multiplyScalar(dy*unit));camera.position.add(offset);orbit.target.add(offset);}
     else{const up=new THREE.Quaternion().setFromUnitVectors(camera.up,new THREE.Vector3(0,1,0)),offset=camera.position.clone().sub(orbit.target).applyQuaternion(up),spherical=new THREE.Spherical().setFromVector3(offset);spherical.theta-=dx*.005;spherical.phi=THREE.MathUtils.clamp(spherical.phi-dy*.005,.01,orbit.maxPolarAngle);camera.position.copy(orbit.target).add(offset.setFromSpherical(spherical).applyQuaternion(up.invert()));}orbit.update();draw();
   }
+  // Camera drags disable OrbitControls, including its context-menu handler.
+  // Always consume secondary-click menus on the workplane independently.
+  const contextMenu=(event:MouseEvent)=>{event.preventDefault();event.stopImmediatePropagation();};canvas.addEventListener('contextmenu',contextMenu,true);
   const wheel=(event:WheelEvent)=>{event.preventDefault();event.stopImmediatePropagation();if(drag||directDrag?.moved||cameraDrag)return;const action=cameraWheelAction(event,navigationPreset,canvas.clientHeight);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);};canvas.addEventListener('wheel',wheel,{capture:true,passive:false});
   let gestureScale=1;const gesture=(event:Event)=>{event.preventDefault();const scale=(event as Event&{scale:number}).scale;if(event.type==='gesturestart'){gestureScale=1;return;}if(event.type==='gestureend'){gestureScale=1;return;}if(scale>0&&Number.isFinite(scale)){if(!drag&&!directDrag?.moved)zoomCamera(scale/gestureScale);gestureScale=scale;}};for(const name of ['gesturestart','gesturechange','gestureend'])canvas.addEventListener(name,gesture,{passive:false});
-  const nativeGesture=(event:Event)=>{const data=(event as CustomEvent).detail;if(!data||!Number.isFinite(data.x)||!Number.isFinite(data.y))return;let hit:Element|null=document.elementFromPoint(data.x,data.y);while(hit?.shadowRoot)hit=hit.shadowRoot.elementFromPoint(data.x,data.y);if(hit!==canvas||drag||directDrag?.moved||cameraDrag)return;if(data.kind==='zoom')zoomCamera(data.factor);else if(data.kind==='wheel'){const action=cameraWheelAction(data,navigationPreset,canvas.clientHeight);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);}};window.addEventListener('brickwright-camera-input',nativeGesture);
+  const nativeGesture=(event:Event)=>{const data=(event as CustomEvent).detail;if(!data||!Number.isFinite(data.x)||!Number.isFinite(data.y))return;let hit:Element|null=document.elementFromPoint(data.x,data.y);while(hit?.shadowRoot)hit=hit.shadowRoot.elementFromPoint(data.x,data.y);if(hit!==canvas)return;data.handled=true;if(drag||directDrag?.moved||cameraDrag)return;if(data.kind==='zoom')zoomCamera(data.factor);else if(data.kind==='wheel'){const action=cameraWheelAction(data,navigationPreset,canvas.clientHeight);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);}};window.addEventListener('brickwright-camera-input',nativeGesture);
   const cameraKey=(event:KeyboardEvent)=>{if(event.code==='Space'){spaceHeld=true;event.preventDefault();}};canvas.addEventListener('keydown',cameraKey);
   const resetCameraKeys=()=>{if(surfacePlacement.active)endPlacement();endBox();spaceHeld=false;shiftHeld=false;if(cameraDrag){gizmo.enabled=cameraDrag.gizmoEnabled;cameraDrag=undefined;orbit.enabled=true;}};window.addEventListener('blur',resetCameraKeys);
   const onDown = (e: PointerEvent) => {shiftHeld=e.shiftKey;canvas.dataset.fine=String(gizmo.isFine());
@@ -242,8 +249,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   function update(result: GeometryResult) {
     cancelTransform(); clear();
     for (const body of result.bodies) {
-      const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.BufferAttribute(body.positions, 3)); geometry.setIndex(new THREE.BufferAttribute(body.indices, 1)); geometry.computeVertexNormals();
-      const material = new THREE.MeshStandardMaterial({ color: body.hole?'#9eb8c8':body.color,transparent:!!body.hole,opacity:body.hole?.3:1,depthWrite:!body.hole, metalness: 0.08, roughness: 0.65, flatShading: true });
+      const geometry=surfaceGeometry(body.positions,body.indices);
+      const material = new THREE.MeshStandardMaterial({ color: body.hole?'#9eb8c8':body.color,transparent:!!body.hole,opacity:body.hole?.3:1,depthWrite:!body.hole, metalness: 0.08, roughness: 0.65, flatShading: false });
       const mesh = new THREE.Mesh(geometry, material); mesh.userData.id = body.id;
       const outline = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 28), new THREE.LineBasicMaterial({ color: '#172a36', transparent: true, opacity: 0.8 })); mesh.add(outline);
       meshes.set(body.id, mesh); outlines.set(body.id, outline); scene.add(mesh);
@@ -271,7 +278,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     preview:r=>{if(!drag)return;const updates=resizedTransforms([...drag.transforms].map(([id,transform])=>({id,transform})),r);for(const u of updates)assertDrivenEdit(session.state.document,{...session.state.document.nodes[u.id],transform:u.transform});resizeDelta=r.delta;resizeFactors=r.factors;previewTransform();},
     commit:r=>{resizeFrame=r.frame;orbit.enabled=true;endTransform();},cancel:()=>{orbit.enabled=true;cancelTransform();},error:onError,
   });
-  draw();
+  refreshGrid();draw();
   return { canvas, update, setSelection, frame, setView, cancelTransform,get interacting(){return surfacePlacement.active||!!boxSelect||!!drag||!!directDrag?.moved;},
     beginPlacement(){if(surfacePlacement.active)endPlacement(false);cancelTransform();placementControls={rotate:orbit.enableRotate,gizmo:gizmo.enabled};surfacePlacement.begin();orbit.enableRotate=false;gizmo.enabled=false;gizmo.getHelper().visible=false;draw();},
     setPlacementRole(value:'solid'|'hole'){surfacePlacement.setRole(value);draw();},
@@ -304,12 +311,13 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       if (updates.length) session.transform(updates);
     },
     setMode(mode: 'select' | 'translate' | 'rotate' | 'scale') {if(surfacePlacement.active)endPlacement(); cancelTransform();activeMode=mode;canvas.dataset.mode=mode;if(mode!=='select'){gizmo.setMode(mode); gizmo.setSpace(mode === 'scale' ? 'local' : 'world');}placeGizmo();draw(); },
-    setGrid(step: number) { gridStep = step;gizmo.gridStep=step; gizmo.setTranslationSnap(gridStep || null); },
+    get gridDisplay(){return gridDisplay;},setGridDisplay(value:GridDisplay){displayGridSpacing(value,gridStep);gridDisplay=value;refreshGrid();draw();},
+    setGrid(step: number) { gridStep = step;refreshGrid();draw();gizmo.gridStep=step; gizmo.setTranslationSnap(gridStep || null); },
     setFine(enabled:boolean){fineEnabled=enabled;canvas.dataset.fine=String(gizmo.isFine());},get fine(){return fineEnabled;},
     nudge(dx: number, dy: number, dz: number,fine=false) {
       const offset = snapDelta([dx, dy, dz], (gridStep || .1)/(fine?10:1));
       session.transform(selected.filter(id => session.state.document.roots.includes(id)).map(id => { const transform = structuredClone(session.state.document.nodes[id].transform); transform.position = transform.position.map((v, i) => v + offset[i]) as Vec3; return { id, transform }; }));
     },
-    dispose() {resizeControls?.dispose();resizeControls=undefined;endPlacement(false);surfacePlacement.dispose(); endBox();marquee.remove();disposed = true;canvas.removeEventListener('wheel',wheel,true);canvas.removeEventListener('keydown',cameraKey);for(const name of ['gesturestart','gesturechange','gestureend'])canvas.removeEventListener(name,gesture);window.removeEventListener('brickwright-camera-input',nativeGesture);window.removeEventListener('blur',resetCameraKeys);window.removeEventListener('keyup',releaseShift); resize.disconnect(); touches.reset(); canvas.removeEventListener('pointerdown', onDown,true); canvas.removeEventListener('pointermove', onMove,true); canvas.removeEventListener('pointerup', onUp,true); canvas.removeEventListener('pointercancel', onCancel); gizmo.removeEventListener('dragging-changed', onDrag); gizmo.removeEventListener('mouseDown', startTransform); gizmo.removeEventListener('objectChange', previewTransform); gizmo.removeEventListener('mouseUp', endTransform); gizmo.removeEventListener('change', draw); orbit.removeEventListener('change', draw); gizmo.dispose(); orbit.dispose(); clear(); for (const object of [grid, majorGrid, border, plate, axes]) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()); } for (const sprite of textSprites) { sprite.material.map?.dispose(); sprite.material.dispose(); } renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); cube.remove(); },
+    dispose() {resizeControls?.dispose();resizeControls=undefined;endPlacement(false);surfacePlacement.dispose(); endBox();marquee.remove();disposed = true;canvas.removeEventListener('wheel',wheel,true);canvas.removeEventListener('contextmenu',contextMenu,true);canvas.removeEventListener('keydown',cameraKey);for(const name of ['gesturestart','gesturechange','gestureend'])canvas.removeEventListener(name,gesture);window.removeEventListener('brickwright-camera-input',nativeGesture);window.removeEventListener('blur',resetCameraKeys);window.removeEventListener('keyup',releaseShift); resize.disconnect(); touches.reset(); canvas.removeEventListener('pointerdown', onDown,true); canvas.removeEventListener('pointermove', onMove,true); canvas.removeEventListener('pointerup', onUp,true); canvas.removeEventListener('pointercancel', onCancel); gizmo.removeEventListener('dragging-changed', onDrag); gizmo.removeEventListener('mouseDown', startTransform); gizmo.removeEventListener('objectChange', previewTransform); gizmo.removeEventListener('mouseUp', endTransform); gizmo.removeEventListener('change', draw); orbit.removeEventListener('change', draw); gizmo.dispose(); orbit.dispose(); clear(); for (const object of [grid, majorGrid, border, plate, axes]) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()); } for (const sprite of textSprites) { sprite.material.map?.dispose(); sprite.material.dispose(); } renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); cube.remove(); },
   };
 }

@@ -786,3 +786,23 @@ Eight desktop/iPad browser placement checks and the 1,364-message German audit
 passed. Native smoke checks passed; **Mac build 25** is installed and running,
 with its live asset receipt/bundle version verified and existing data retained.
 See `docs/evidence/shape-palette-discoverability-2026-11-15.json`.
+
+## Shape and workspace quality — Mac build 29 / iPad build 15
+
+Mac build 29 is installed and running from clean source
+`ebbfe80fcd06506c97066ab7e53b0af2a4262cb2`. Live asset receipt and installed
+bundle version agree. Native smoke checks passed. In addition to native precise
+scroll/pinch routing, the canvas now suppresses WebKit's secondary-click context
+menu independently of temporarily disabled camera controls. A real secondary
+pointer drag is covered in Chromium and WebKit.
+
+The same quality pass repairs bent-heart shells and teardrop tangency, adds seven
+conventional screw-point choices and headless/wood presets, ruler graduation
+properties, a visual sketch draft, snap-linked visible grid spacing and saved
+right-pane order/split. iPad build 15 was installed and launched over WLAN from
+clean source `2cb8bcd9432d8c4e5abd59a765ac6321b20dc39f`; device listing confirms
+build 15. It predates the later Mac context-menu follow-up and concurrent model
+library batch. Existing projects and saved histories were retained.
+
+See [validation evidence](evidence/shape-quality-workspace-2026-11-15.json) and
+[remaining shape-quality work](SHAPE-AND-UX-QUALITY.md).

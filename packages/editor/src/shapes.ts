@@ -38,7 +38,7 @@ const essentials:Record<string,string[]>={
  'Start a part':['l-bracket','mounting-plate','spacer'],
  'Build solids':['cube','box','cylinder','rounded-box','capsule','sphere','wedge','cone','polygon'],
  'Holes & hollow parts':['tube','washer','counterbore','countersink','port','teardrop'],
- 'Supports & connections':['rib','boss','screw','hex-head-screw','socket-head-screw','countersunk-screw','pan-head-screw','nut','hinge','dovetail','snap-fit'],
+ 'Supports & connections':['rib','boss','screw','hex-head-screw','socket-head-screw','countersunk-screw','pan-head-screw','set-screw','wood-screw','nut','hinge','dovetail','snap-fit'],
  'Motion parts':['gear','spring'],
  'Labels & outlines':['text','name-tag','star','heart'],
 };
@@ -47,7 +47,7 @@ const templates:ShapePreset[]=[
  {id:'mounting-plate',name:'Mounting plate',category:'',description:'A dimensioned plate with two bores. Edit the plate and hole dimensions in Parameters.',keywords:'mount base holes flange parametric',color:'#74b7cb'},
  {id:'spacer',name:'Spacer',category:'',description:'A dimensioned ring with an editable outer radius, bore radius and length.',keywords:'bushing sleeve standoff bearing parametric',color:'#abc1cd'},
 ];
-const screwNames=[['hex-head-screw','Hex-head screw'],['socket-head-screw','Socket-head screw'],['countersunk-screw','Countersunk screw'],['pan-head-screw','Pan-head screw']];
+const screwNames=[['hex-head-screw','Hex-head screw'],['socket-head-screw','Socket-head screw'],['countersunk-screw','Countersunk screw'],['pan-head-screw','Pan-head screw'],['set-screw','Set screw'],['wood-screw','Wood screw']];
 const entries=[...templates,...screwNames.map(([id,name])=>({id,name,category:'',description:'A screw with editable head, drive and V-thread dimensions.',keywords:'screw bolt thread fastener hex socket countersunk pan',color:'#b0b7c2'})),...originalCatalog];
 export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
  ...Object.entries(essentials).flatMap(([category,ids])=>ids.map(id=>Object.freeze({...entries.find(p=>p.id===id)!,category,additional:false}))),

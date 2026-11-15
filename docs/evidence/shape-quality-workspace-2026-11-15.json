@@ -1,0 +1,854 @@
+{
+  "version": 1,
+  "measuredOn": "2026-11-15",
+  "sourceCheckpoint": "ebbfe80fcd06506c97066ab7e53b0af2a4262cb2",
+  "scope": "Independent geometry repairs, conventional screw tips, ruler properties, visual sketch draft, pane/grid preferences, display normals, native trackpad routing and secondary-click menu suppression.",
+  "referenceBoundary": "Public guide and disposable UI observations only; no reference implementation, assets or meshes copied.",
+  "checks": {
+    "productionBuild": {
+      "status": "passed",
+      "logSha256": "7a87d82f18bfb2cb6bef40ba5cc1c04b016afc9382d8de3c1d7c72f20c8c7f3a"
+    },
+    "unit": {
+      "passed": 913,
+      "skipped": 1,
+      "files": 83,
+      "logSha256": "81825ce0b5f608fbf6bf1d4cac7472188f00e6c607e2ec26bf54378e0b27a830",
+      "scope": "After preserving concurrent LDraw batch; before the final canvas context-menu listener. The listener is covered by the final two-browser regression."
+    },
+    "german": {
+      "messages": 1414,
+      "status": "passed",
+      "logSha256": "26d1c553750d095db4a1c2ab16e3ffee138c366aece115892aaec2b6729be0f8"
+    },
+    "browser": {
+      "features": {
+        "chromiumPassed": 8,
+        "webkitPassed": 8,
+        "chromiumLogSha256": "ca29799dcfe6329c859c55a9330073a6d01c58ca7cbd89427a4fb481754be9c2",
+        "webkitLogSha256": "693c809431a49f23a307245503fc7b6bdd85b7f434f7fcc166bca23f9bff405f",
+        "note": "Initial combined run could not launch WebKit because its runtime was absent. Downloaded runtime; all eight WebKit cases passed in the separate run.",
+        "runtimeCheckpoint": "2cb8bcd9432d8c4e5abd59a765ac6321b20dc39f"
+      },
+      "contextMenu": {
+        "passed": 2,
+        "logSha256": "f5b2c1c4ae8ee400ab4ce92d8426f5d71be4be7be18474144ec14cf4effb75aa",
+        "scope": "Real secondary pointer down/drag/up; menu cancellation during/after orbit and unchanged model/time origin, Chromium and iPad WebKit."
+      },
+      "regression": {
+        "status": "passed",
+        "passed": 12,
+        "timeoutMilliseconds": 120000,
+        "logSha256": "977a4fd0958f9179b5c38989e9ba6703c434e602b172aa68d2ec95be097d582b",
+        "scope": "Final bundle: selection resizing, exact numeric sizes, fine/grid-Off, height/base invariant, ruler movement, optional classic gizmo, surface placement, cancellation and dock persistence.",
+        "earlierRun": {
+          "passed": 5,
+          "timedOut": 4,
+          "interrupted": 1,
+          "didNotRun": 4,
+          "timeoutMilliseconds": 45000,
+          "logSha256": "774b6e6e9aff22f8f25dce0ab9536219aea7ebded87cac8ae1f8e83781188be9",
+          "note": "Interrupted after repeated overall test deadlines under heavy shared-host load. Complete rerun with a longer deadline passed; this is not a rendering-performance qualification."
+        }
+      }
+    }
+  },
+  "catalogue": {
+    "spawnPresets": 59,
+    "defaultResults": [
+      {
+        "id": "l-bracket",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "mounting-plate",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "spacer",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "cube",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "box",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "cylinder",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "rounded-box",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "capsule",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "sphere",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "wedge",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "cone",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "polygon",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "tube",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "washer",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "counterbore",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "countersink",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "port",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "teardrop",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "rib",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "boss",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "screw",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "hex-head-screw",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "socket-head-screw",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "countersunk-screw",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "pan-head-screw",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "set-screw",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "wood-screw",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "nut",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "hinge",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "dovetail",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "snap-fit",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "gear",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "spring",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "text",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "name-tag",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "star",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "heart",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "ellipse",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "curved-cone",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "pyramid",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "round-roof",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "hemisphere",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "paraboloid",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "torus",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "frustum",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "vase",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "loft",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "bent-tube",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "thread",
+        "status": "closed-solid",
+        "retainedShapeParameters": true
+      },
+      {
+        "id": "finishing-washer",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "hirth",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "gt2-pulley",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "grid-bin",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "sbc",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "icon-tag",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "qr",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "crescent",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "knurl",
+        "status": "closed-solid",
+        "retainedShapeParameters": false
+      },
+      {
+        "id": "ruler",
+        "status": "reference-excluded",
+        "retainedShapeParameters": true
+      }
+    ],
+    "physics": [
+      {
+        "id": "l-bracket",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 2,
+        "maxRelativeError": 4.0602442043434315e-16,
+        "milliseconds": 129
+      },
+      {
+        "id": "mounting-plate",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 58,
+        "maxRelativeError": 0.0005847724003672656,
+        "milliseconds": 508
+      },
+      {
+        "id": "spacer",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 1.783351507392845e-7,
+        "milliseconds": 432
+      },
+      {
+        "id": "cube",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 27
+      },
+      {
+        "id": "box",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 35
+      },
+      {
+        "id": "cylinder",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 8,
+        "maxRelativeError": 0,
+        "milliseconds": 127
+      },
+      {
+        "id": "rounded-box",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 92,
+        "maxRelativeError": 0.0000050806847409396725,
+        "milliseconds": 654
+      },
+      {
+        "id": "capsule",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 6,
+        "maxRelativeError": 0,
+        "milliseconds": 126
+      },
+      {
+        "id": "sphere",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 16,
+        "maxRelativeError": 6.91915292701303e-9,
+        "milliseconds": 206
+      },
+      {
+        "id": "wedge",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 27
+      },
+      {
+        "id": "cone",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 36,
+        "maxRelativeError": 7.450580642070597e-9,
+        "milliseconds": 194
+      },
+      {
+        "id": "polygon",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 1.4288354434899837e-16,
+        "milliseconds": 33
+      },
+      {
+        "id": "tube",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 4.349500898154281e-18,
+        "milliseconds": 519
+      },
+      {
+        "id": "washer",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 1.769816447450209e-17,
+        "milliseconds": 791
+      },
+      {
+        "id": "counterbore",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 128,
+        "maxRelativeError": 7.15077342109299e-19,
+        "milliseconds": 621
+      },
+      {
+        "id": "countersink",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 128,
+        "maxRelativeError": 0,
+        "milliseconds": 540
+      },
+      {
+        "id": "port",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 36,
+        "maxRelativeError": 2.296365477715463e-11,
+        "milliseconds": 297
+      },
+      {
+        "id": "teardrop",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 6,
+        "maxRelativeError": 2.1944909741794203e-11,
+        "milliseconds": 135
+      },
+      {
+        "id": "rib",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 2.4253192047278088e-16,
+        "milliseconds": 23
+      },
+      {
+        "id": "boss",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 96,
+        "maxRelativeError": 4.163597373930894e-9,
+        "milliseconds": 882
+      },
+      {
+        "id": "screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 506,
+        "maxRelativeError": 0.0004210658193403879,
+        "milliseconds": 1052
+      },
+      {
+        "id": "hex-head-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 489,
+        "maxRelativeError": 0.0003380656213310644,
+        "milliseconds": 1252
+      },
+      {
+        "id": "socket-head-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 504,
+        "maxRelativeError": 0.00042422099411501074,
+        "milliseconds": 1156
+      },
+      {
+        "id": "countersunk-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 536,
+        "maxRelativeError": 0.0005605987129271594,
+        "milliseconds": 1494
+      },
+      {
+        "id": "pan-head-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 653,
+        "maxRelativeError": 0.0004960210207531363,
+        "milliseconds": 1985
+      },
+      {
+        "id": "set-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 455,
+        "maxRelativeError": 0.0005572603407184319,
+        "milliseconds": 1476
+      },
+      {
+        "id": "wood-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 554,
+        "maxRelativeError": 0.0005051206769920052,
+        "milliseconds": 2328
+      },
+      {
+        "id": "nut",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 2038,
+        "maxRelativeError": 0.00011400955509362327,
+        "milliseconds": 9748
+      },
+      {
+        "id": "hinge",
+        "status": "rigid-preview-pass",
+        "bodies": 3,
+        "hulls": 358,
+        "maxRelativeError": 5.3743281756049115e-8,
+        "milliseconds": 1579
+      },
+      {
+        "id": "dovetail",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 19
+      },
+      {
+        "id": "snap-fit",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 3,
+        "maxRelativeError": 4.099892502747794e-9,
+        "milliseconds": 26
+      },
+      {
+        "id": "gear",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 99,
+        "maxRelativeError": 0.0001156999025326226,
+        "milliseconds": 924
+      },
+      {
+        "id": "spring",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 288,
+        "maxRelativeError": 4.449026623655325e-8,
+        "milliseconds": 1095
+      },
+      {
+        "id": "text",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 196,
+        "maxRelativeError": 0.00010277534793130854,
+        "milliseconds": 1900
+      },
+      {
+        "id": "name-tag",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 222,
+        "maxRelativeError": 0.00029261161809340623,
+        "milliseconds": 914
+      },
+      {
+        "id": "star",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 6,
+        "maxRelativeError": 1.2747213413988041e-8,
+        "milliseconds": 67
+      },
+      {
+        "id": "heart",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 4,
+        "maxRelativeError": 6.358413589427866e-10,
+        "milliseconds": 74
+      },
+      {
+        "id": "ellipse",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 8,
+        "maxRelativeError": 1.704864494873777e-16,
+        "milliseconds": 95
+      },
+      {
+        "id": "curved-cone",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1024,
+        "maxRelativeError": 6.640177097904917e-9,
+        "milliseconds": 6952
+      },
+      {
+        "id": "pyramid",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 26
+      },
+      {
+        "id": "round-roof",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 8,
+        "maxRelativeError": 4.446516007697686e-9,
+        "milliseconds": 106
+      },
+      {
+        "id": "hemisphere",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 7.997545752308254e-9,
+        "milliseconds": 1022
+      },
+      {
+        "id": "paraboloid",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 5.848114348134307e-9,
+        "milliseconds": 858
+      },
+      {
+        "id": "torus",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 1.356041088461232e-8,
+        "milliseconds": 1445
+      },
+      {
+        "id": "frustum",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 4,
+        "maxRelativeError": 2.9341894342097384e-9,
+        "milliseconds": 109
+      },
+      {
+        "id": "vase",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 384,
+        "maxRelativeError": 2.5940006154553497e-8,
+        "milliseconds": 1648
+      },
+      {
+        "id": "loft",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 425,
+        "maxRelativeError": 0.00052319496647393,
+        "milliseconds": 1410
+      },
+      {
+        "id": "bent-tube",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 384,
+        "maxRelativeError": 0.00850375221964197,
+        "milliseconds": 1124
+      },
+      {
+        "id": "thread",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 488,
+        "maxRelativeError": 0.0007214165282141644,
+        "milliseconds": 886
+      },
+      {
+        "id": "finishing-washer",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 5.0430367982210755e-9,
+        "milliseconds": 542
+      },
+      {
+        "id": "hirth",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 88,
+        "maxRelativeError": 1.9561657910257435e-7,
+        "milliseconds": 496
+      },
+      {
+        "id": "gt2-pulley",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 681,
+        "maxRelativeError": 0.00014601622389742058,
+        "milliseconds": 2667
+      },
+      {
+        "id": "grid-bin",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 9,
+        "maxRelativeError": 1.392074849175087e-16,
+        "milliseconds": 39
+      },
+      {
+        "id": "sbc",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 115,
+        "maxRelativeError": 0.0002641311386254461,
+        "milliseconds": 822
+      },
+      {
+        "id": "icon-tag",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 42,
+        "maxRelativeError": 0.00016504658038797433,
+        "milliseconds": 343
+      },
+      {
+        "id": "qr",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 114,
+        "maxRelativeError": 1.196829540655702e-16,
+        "milliseconds": 602
+      },
+      {
+        "id": "crescent",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 20,
+        "maxRelativeError": 0.0005010191828879746,
+        "milliseconds": 239
+      },
+      {
+        "id": "knurl",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 296,
+        "maxRelativeError": 0.00005587449320381498,
+        "milliseconds": 1463
+      },
+      {
+        "id": "ruler",
+        "status": "reference-excluded"
+      }
+    ],
+    "scope": "rigid-preview only; not mechanical/material/fit qualification",
+    "limitations": "Default topology and rigid-preview qualification; not a guarantee for arbitrary edited parameters, manufacturing, fit or physical material behavior. Thirty-nine presets still lack retained shape-specific parameters."
+  },
+  "delivery": {
+    "mac": {
+      "build": 29,
+      "receipt": {
+        "version": "0.1.0",
+        "commit": "ebbfe80fcd06506c97066ab7e53b0af2a4262cb2",
+        "dirty": false,
+        "builtAt": "2026-11-15T08:33:00.792Z"
+      },
+      "status": "Installed and launched; live receipt and installed bundle build verified.",
+      "smokeLogSha256": "a63569ec4caad7d16e3204ff039660402fea1098ce185852653499ded7527cd3",
+      "installLogSha256": "3a3758ab815663b0fa03c13033260b4ac6666031ff04e551aa26c222d65a2fa5"
+    },
+    "ipad": {
+      "build": 15,
+      "receipt": {
+        "version": "0.1.0",
+        "commit": "2cb8bcd9432d8c4e5abd59a765ac6321b20dc39f",
+        "dirty": false,
+        "builtAt": "2026-11-15T08:22:44.789Z"
+      },
+      "status": "Installed and launched over WLAN; device app listing confirms build 15. This delivery predates the Mac context-menu follow-up and concurrent LDraw batch.",
+      "archiveLogSha256": "def2237878c261479ad4067e046e20d6afbea1aa6b12f13948af5ccdf458707d",
+      "installLogSha256": "5130e7d62c914ca9d4e4e04fb9a1460af31d967396eb6312808ebe4e8d5cfe82"
+    }
+  }
+}
