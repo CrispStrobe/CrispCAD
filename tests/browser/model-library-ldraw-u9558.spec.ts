@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: BSD-3-Clause
+import {test,expect} from '@playwright/test';
+import {readFileSync} from 'node:fs';
+test.use({serviceWorkers:'block'});
+const newIDs=new Set(['corpus-ldraw-u9558']);
+const assets=JSON.parse(readFileSync('library/ldraw-reviewed-batch-manifest.json','utf8')).assets.filter((a:{id:string})=>newIDs.has(a.id));
+test('new archived authored components preview and insert every exact mesh offline with provenance and history',async({page,context},info)=>{
+ test.setTimeout(240000);expect(assets).toHaveLength(newIDs.size);await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');await context.setOffline(true);let requests=0;page.on('request',()=>requests++);
+ const saved=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!));
+ for(const asset of assets)await test.step(asset.id,async()=>{
+  const before=await saved();await page.getByLabel('File menu',{exact:true}).click();await page.getByRole('button',{name:'Model library',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Model library',exact:true});await dialog.getByRole('button',{name:`${asset.title} · CC-BY-4.0`,exact:true}).click();
+  const image=dialog.locator('.model-library-preview img');await expect(image).toBeVisible();expect(await image.evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth===220&&img.naturalHeight===180)).toBe(true);expect(await image.evaluate((img:HTMLImageElement)=>{const c=document.createElement('canvas');c.width=220;c.height=180;const ctx=c.getContext('2d')!;ctx.drawImage(img,0,0);return Array.from(ctx.getImageData(0,0,220,180).data).filter((v,i)=>i%4===3&&v>0).length;})).toBeGreaterThan(100);
+  const attribution=await dialog.getByRole('textbox',{name:'Licence & attribution',exact:true}).inputValue();expect(attribution).toContain(asset.author);
+  await expect(dialog.getByRole('button',{name:'Insert selected STL',exact:true})).toBeEnabled();await dialog.getByRole('button',{name:'Insert selected STL',exact:true}).click();await expect(dialog.getByRole('status')).toContainText('Inserted with provenance');const after=await saved(),record=after.provenance.records.at(-1);expect(after.roots).toHaveLength(before.roots.length+1);expect(after.nodes[after.roots.at(-1)].kind).toBe('mesh');expect(record.selectedFile.sha256).toBe(asset.derivatives[0].sha256);expect(record.asset.original.sha256).toBe(asset.original.sha256);expect(record.asset.sourceBundle).toEqual(asset.sourceBundle);expect(record.asset.conversion).toEqual(asset.conversion);
+  await dialog.getByRole('button',{name:'Close model library'}).click();await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');await page.getByRole('button',{name:'Undo',exact:true}).click();expect(await saved()).toEqual(before);await page.getByRole('button',{name:'Redo',exact:true}).click();expect(await saved()).toEqual(after);await page.getByRole('button',{name:'Undo',exact:true}).click();expect(await saved()).toEqual(before);expect(requests).toBe(0);
+  await info.attach(asset.id,{body:JSON.stringify({candidateID:asset.id,sourceSha256:asset.original.sha256,meshSha256:asset.derivatives[0].sha256,project:info.project.name,preview:'PASS220x180 actual raster pixels',editor:'PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo',networkRequests:requests}),contentType:'application/json'});console.log('QUALIFIED',info.project.name,asset.id);
+ });
+});

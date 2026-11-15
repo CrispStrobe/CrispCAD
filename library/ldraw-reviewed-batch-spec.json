@@ -11320,6 +11320,271 @@
           "qualificationScope": "Named standalone component only; no parent-part completeness or physical-operation claim."
         }
       }
+    },
+    {
+      "rootPath": "parts/u9558.dat",
+      "files": [
+        {
+          "path": "parts/u9558.dat",
+          "bytes": 3881,
+          "sha256": "d01271bc0b7ad6647221c518f3f97a346e2cf5971be904682fc5c051cf3ad8b4",
+          "author": "Philippe Hurbain [Philo]",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/box5.dat",
+          "bytes": 963,
+          "sha256": "ccb7b8a1d36692335b10ea6aa196849afcad4b15331683ed8112a10b50977318",
+          "author": "James Jessiman",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/rect3.dat",
+          "bytes": 605,
+          "sha256": "07ac46908b6668d993b6de0fb001a34cd996542106b80ebc7de63317d8dde865",
+          "author": "Mark Kennedy [mkennedy]",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/rect2a.dat",
+          "bytes": 586,
+          "sha256": "6d75ffb88e705a35f34e095ec0848a7bb70b577a376fdae05804da214b0d6369",
+          "author": "Chris Dee [cwdee]",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/rect.dat",
+          "bytes": 654,
+          "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71",
+          "author": "James Jessiman",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        }
+      ],
+      "expectedMeshSha256": "5e75746c0a59a438d0d6e21806ffee3d1e74cd43c07f5ae7a9d0066621939de6",
+      "asset": {
+        "id": "corpus-ldraw-u9558",
+        "title": "LDraw ~Electric Powered Up 2 Port Hub Rechargeable Battery Top",
+        "author": "Philippe Hurbain [Philo]",
+        "version": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+          "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/u9558.dat"
+        },
+        "licence": {
+          "spdx": "CC-BY-4.0",
+          "scope": "asset",
+          "attribution": "Philippe Hurbain [Philo]. LDraw.org Official Parts Library. Original per-file CC-BY-4.0 grant and HISTORY retained. Nominal0.4mm/LDU converted to millimetres/Zup; display edge/conditional-edge appearance omitted; authored solid faces unchanged. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/u9558.dat. Licence: https://creativecommons.org/licenses/by/4.0/.",
+          "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/u9558.dat",
+          "capturedOn": "2026-11-15",
+          "review": "accepted",
+          "reviewer": "Codex exact staged/pinned original and complete per-file grant/closure review",
+          "localEvidence": [
+            {
+              "path": "evidence/ldraw-CC-BY-4.0.txt",
+              "format": "text",
+              "bytes": 18657,
+              "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+            },
+            {
+              "path": "evidence/ldraw-CAreadme.txt",
+              "format": "text",
+              "bytes": 4151,
+              "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497"
+            }
+          ]
+        },
+        "original": {
+          "path": "sources/ldraw/parts/u9558.dat",
+          "bytes": 3881,
+          "sha256": "d01271bc0b7ad6647221c518f3f97a346e2cf5971be904682fc5c051cf3ad8b4",
+          "format": "ldraw",
+          "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/u9558.dat"
+        },
+        "sourceBundle": {
+          "format": "brickwright-ldraw-bundle",
+          "version": 1,
+          "rootPath": "parts/u9558.dat",
+          "dependencies": [
+            {
+              "path": "p/box5.dat",
+              "file": {
+                "path": "sources/ldraw/p/box5.dat",
+                "bytes": 963,
+                "sha256": "ccb7b8a1d36692335b10ea6aa196849afcad4b15331683ed8112a10b50977318",
+                "format": "ldraw"
+              },
+              "author": "James Jessiman",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+                "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "James Jessiman. LDraw.org Official Parts Library. Original per-file CC-BY-4.0 grant and HISTORY retained. Nominal0.4mm/LDU converted to millimetres/Zup; display edge/conditional-edge appearance omitted; authored solid faces unchanged. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat. Licence: https://creativecommons.org/licenses/by/4.0/.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat",
+                "capturedOn": "2026-11-15",
+                "review": "accepted",
+                "reviewer": "Codex exact staged/pinned original and complete per-file grant/closure review"
+              }
+            },
+            {
+              "path": "p/rect3.dat",
+              "file": {
+                "path": "sources/ldraw/p/rect3.dat",
+                "bytes": 605,
+                "sha256": "07ac46908b6668d993b6de0fb001a34cd996542106b80ebc7de63317d8dde865",
+                "format": "ldraw"
+              },
+              "author": "Mark Kennedy [mkennedy]",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect3.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+                "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "Mark Kennedy [mkennedy]. LDraw.org Official Parts Library. Original per-file CC-BY-4.0 grant and HISTORY retained. Nominal0.4mm/LDU converted to millimetres/Zup; display edge/conditional-edge appearance omitted; authored solid faces unchanged. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect3.dat. Licence: https://creativecommons.org/licenses/by/4.0/.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect3.dat",
+                "capturedOn": "2026-11-15",
+                "review": "accepted",
+                "reviewer": "Codex exact staged/pinned original and complete per-file grant/closure review"
+              }
+            },
+            {
+              "path": "p/rect2a.dat",
+              "file": {
+                "path": "sources/ldraw/p/rect2a.dat",
+                "bytes": 586,
+                "sha256": "6d75ffb88e705a35f34e095ec0848a7bb70b577a376fdae05804da214b0d6369",
+                "format": "ldraw"
+              },
+              "author": "Chris Dee [cwdee]",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect2a.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+                "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "Chris Dee [cwdee]. LDraw.org Official Parts Library. Original per-file CC-BY-4.0 grant and HISTORY retained. Nominal0.4mm/LDU converted to millimetres/Zup; display edge/conditional-edge appearance omitted; authored solid faces unchanged. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect2a.dat. Licence: https://creativecommons.org/licenses/by/4.0/.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect2a.dat",
+                "capturedOn": "2026-11-15",
+                "review": "accepted",
+                "reviewer": "Codex exact staged/pinned original and complete per-file grant/closure review"
+              }
+            },
+            {
+              "path": "p/rect.dat",
+              "file": {
+                "path": "sources/ldraw/p/rect.dat",
+                "bytes": 654,
+                "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71",
+                "format": "ldraw"
+              },
+              "author": "James Jessiman",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+                "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "James Jessiman. LDraw.org Official Parts Library. Original per-file CC-BY-4.0 grant and HISTORY retained. Nominal0.4mm/LDU converted to millimetres/Zup; display edge/conditional-edge appearance omitted; authored solid faces unchanged. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect.dat. Licence: https://creativecommons.org/licenses/by/4.0/.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect.dat",
+                "capturedOn": "2026-11-15",
+                "review": "accepted",
+                "reviewer": "Codex exact staged/pinned original and complete per-file grant/closure review"
+              }
+            }
+          ]
+        },
+        "derivatives": [
+          {
+            "path": "meshes/ldraw/u9558.stl",
+            "bytes": 7484,
+            "sha256": "5e75746c0a59a438d0d6e21806ffee3d1e74cd43c07f5ae7a9d0066621939de6",
+            "format": "stl"
+          }
+        ],
+        "modificationNotes": "Exact complete authored part and dependencies unchanged. Existing bounded original converter preserves authored solid faces and origin, BFC winding and transforms. Nominal0.4mm/LDU,-Yup to Zup conversion; display-only edge/conditional lines and inherited colour appearance omitted. No primitive substitution, geometry repair, tolerance/guard/source/default edits or physical/collision certification. DAT closure archival; insertion uses freshly screened STL. General exact supporting-line grouping subdivides facet boundaries only at existing authored endpoints; no coordinates or surfaces added, no rounding or inferred closure. Original16384 construction guard remains; measured2257work. Standalone authored battery-top component only; no completed assembly/collision/physical qualification.",
+        "conversion": {
+          "sourceUnits": "ldu",
+          "sourceUpAxis": "-Y",
+          "unitAssumption": "LDraw nominal0.4mm/LDU,-Yup per https://ldraw.org/article/218.html; display conversion only, no physical calibration.",
+          "toMillimetresZUp": [
+            0.4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -0.4,
+            0,
+            0,
+            0.4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "quality": {
+          "fileSha256": "5e75746c0a59a438d0d6e21806ffee3d1e74cd43c07f5ae7a9d0066621939de6",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-15",
+          "screeningPolicy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "parseable": true,
+          "closedPositiveVolume": true,
+          "withinSizeLimits": true,
+          "withinTriangleLimits": true
+        }
+      }
     }
   ]
 }

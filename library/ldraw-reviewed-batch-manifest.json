@@ -5,20 +5,20 @@
   "capturedOn": "2026-11-15",
   "pathBase": "library/",
   "selection": {
-    "count": 40,
-    "authoredModels": 40,
+    "count": 41,
+    "authoredModels": 41,
     "fixtures": 0
   },
   "reproduction": {
     "command": "node scripts/generate-ldraw-reviewed-batch.mjs --check",
-    "specSha256": "a6378f751bc224389a4b1044324e8c1129930d98043257528304c5eed9b5e076",
+    "specSha256": "d3dc04994576d5a90b4bd4cb2084cf5ec9a333596a5162035082baf5a09861e5",
     "generator": {
       "path": "../scripts/generate-ldraw-reviewed-batch.mjs",
       "sha256": "644c7ff769e180447b3dc28154a4f5ae2f3421319263472d84e830a8d1eaaf0a"
     },
     "converter": {
       "path": "../scripts/lib/ldraw-model.mjs",
-      "sha256": "64938376a81669fa95c9f60eb592de502a7e751d0d42aa58c196f6b4bdb4bacf"
+      "sha256": "50bb19ee767578428d0818a72cff2295a463a2e3c67fbae66907e8e2a422535e"
     },
     "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
@@ -214,7 +214,7 @@
         "originalBytes": 2195,
         "expandedBytes": 3982,
         "instances": 7,
-        "work": 190,
+        "work": 264,
         "points": 19,
         "faces": 20
       }
@@ -433,7 +433,7 @@
         "originalBytes": 3030,
         "expandedBytes": 3978,
         "instances": 5,
-        "work": 204,
+        "work": 292,
         "points": 24,
         "faces": 22
       }
@@ -652,7 +652,7 @@
         "originalBytes": 3097,
         "expandedBytes": 4045,
         "instances": 5,
-        "work": 206,
+        "work": 294,
         "points": 24,
         "faces": 22
       }
@@ -871,7 +871,7 @@
         "originalBytes": 10821,
         "expandedBytes": 20523,
         "instances": 8,
-        "work": 816,
+        "work": 1280,
         "points": 90,
         "faces": 144
       }
@@ -1090,7 +1090,7 @@
         "originalBytes": 10821,
         "expandedBytes": 20523,
         "instances": 8,
-        "work": 816,
+        "work": 1280,
         "points": 90,
         "faces": 144
       }
@@ -1309,7 +1309,7 @@
         "originalBytes": 10897,
         "expandedBytes": 20599,
         "instances": 8,
-        "work": 817,
+        "work": 1281,
         "points": 90,
         "faces": 144
       }
@@ -1528,7 +1528,7 @@
         "originalBytes": 10898,
         "expandedBytes": 20600,
         "instances": 8,
-        "work": 817,
+        "work": 1281,
         "points": 90,
         "faces": 144
       }
@@ -1747,7 +1747,7 @@
         "originalBytes": 10983,
         "expandedBytes": 20685,
         "instances": 8,
-        "work": 819,
+        "work": 1283,
         "points": 90,
         "faces": 144
       }
@@ -1966,7 +1966,7 @@
         "originalBytes": 10983,
         "expandedBytes": 20685,
         "instances": 8,
-        "work": 819,
+        "work": 1283,
         "points": 90,
         "faces": 144
       }
@@ -2185,7 +2185,7 @@
         "originalBytes": 10983,
         "expandedBytes": 20685,
         "instances": 8,
-        "work": 819,
+        "work": 1283,
         "points": 90,
         "faces": 144
       }
@@ -2404,7 +2404,7 @@
         "originalBytes": 10984,
         "expandedBytes": 20686,
         "instances": 8,
-        "work": 819,
+        "work": 1283,
         "points": 90,
         "faces": 144
       }
@@ -2623,7 +2623,7 @@
         "originalBytes": 10984,
         "expandedBytes": 20686,
         "instances": 8,
-        "work": 819,
+        "work": 1283,
         "points": 90,
         "faces": 144
       }
@@ -2842,7 +2842,7 @@
         "originalBytes": 10986,
         "expandedBytes": 20688,
         "instances": 8,
-        "work": 819,
+        "work": 1283,
         "points": 90,
         "faces": 144
       }
@@ -3061,7 +3061,7 @@
         "originalBytes": 10987,
         "expandedBytes": 20689,
         "instances": 8,
-        "work": 819,
+        "work": 1283,
         "points": 90,
         "faces": 144
       }
@@ -3280,7 +3280,7 @@
         "originalBytes": 11027,
         "expandedBytes": 20729,
         "instances": 8,
-        "work": 819,
+        "work": 1283,
         "points": 90,
         "faces": 144
       }
@@ -3595,7 +3595,7 @@
         "originalBytes": 9123,
         "expandedBytes": 28713,
         "instances": 21,
-        "work": 1110,
+        "work": 1622,
         "points": 128,
         "faces": 128
       }
@@ -4006,7 +4006,7 @@
         "originalBytes": 12526,
         "expandedBytes": 26373,
         "instances": 22,
-        "work": 1102,
+        "work": 1646,
         "points": 130,
         "faces": 144
       }
@@ -4345,7 +4345,7 @@
         "originalBytes": 11191,
         "expandedBytes": 31245,
         "instances": 22,
-        "work": 1263,
+        "work": 1871,
         "points": 146,
         "faces": 160
       }
@@ -4519,7 +4519,7 @@
         "originalBytes": 1371,
         "expandedBytes": 1371,
         "instances": 2,
-        "work": 64,
+        "work": 88,
         "points": 8,
         "faces": 6
       }
@@ -4693,7 +4693,7 @@
         "originalBytes": 1375,
         "expandedBytes": 1375,
         "instances": 2,
-        "work": 64,
+        "work": 88,
         "points": 8,
         "faces": 6
       }
@@ -4963,7 +4963,7 @@
         "originalBytes": 4161,
         "expandedBytes": 6659,
         "instances": 10,
-        "work": 205,
+        "work": 255,
         "points": 14,
         "faces": 13
       }
@@ -5137,7 +5137,7 @@
         "originalBytes": 1644,
         "expandedBytes": 2607,
         "instances": 3,
-        "work": 130,
+        "work": 186,
         "points": 16,
         "faces": 14
       }
@@ -5479,7 +5479,7 @@
         "originalBytes": 7553,
         "expandedBytes": 10585,
         "instances": 14,
-        "work": 345,
+        "work": 447,
         "points": 27,
         "faces": 26
       }
@@ -5749,7 +5749,7 @@
         "originalBytes": 4788,
         "expandedBytes": 18100,
         "instances": 26,
-        "work": 566,
+        "work": 726,
         "points": 40,
         "faces": 42
       }
@@ -5995,7 +5995,7 @@
         "originalBytes": 5750,
         "expandedBytes": 7971,
         "instances": 7,
-        "work": 340,
+        "work": 500,
         "points": 34,
         "faces": 48
       }
@@ -6241,7 +6241,7 @@
         "originalBytes": 5783,
         "expandedBytes": 8004,
         "instances": 7,
-        "work": 340,
+        "work": 500,
         "points": 34,
         "faces": 48
       }
@@ -6487,7 +6487,7 @@
         "originalBytes": 5821,
         "expandedBytes": 8042,
         "instances": 7,
-        "work": 342,
+        "work": 502,
         "points": 34,
         "faces": 48
       }
@@ -6733,7 +6733,7 @@
         "originalBytes": 5914,
         "expandedBytes": 8135,
         "instances": 7,
-        "work": 343,
+        "work": 503,
         "points": 34,
         "faces": 48
       }
@@ -7051,7 +7051,7 @@
         "originalBytes": 7396,
         "expandedBytes": 29609,
         "instances": 40,
-        "work": 898,
+        "work": 1138,
         "points": 60,
         "faces": 62
       }
@@ -7393,7 +7393,7 @@
         "originalBytes": 7703,
         "expandedBytes": 29916,
         "instances": 41,
-        "work": 906,
+        "work": 1146,
         "points": 60,
         "faces": 62
       }
@@ -7735,7 +7735,7 @@
         "originalBytes": 7720,
         "expandedBytes": 29933,
         "instances": 41,
-        "work": 906,
+        "work": 1146,
         "points": 60,
         "faces": 62
       }
@@ -7981,7 +7981,7 @@
         "originalBytes": 6458,
         "expandedBytes": 14420,
         "instances": 11,
-        "work": 557,
+        "work": 813,
         "points": 64,
         "faces": 64
       }
@@ -8227,7 +8227,7 @@
         "originalBytes": 7292,
         "expandedBytes": 16040,
         "instances": 11,
-        "work": 582,
+        "work": 838,
         "points": 64,
         "faces": 64
       }
@@ -8569,7 +8569,7 @@
         "originalBytes": 11068,
         "expandedBytes": 23570,
         "instances": 28,
-        "work": 844,
+        "work": 1138,
         "points": 69,
         "faces": 80
       }
@@ -8839,7 +8839,7 @@
         "originalBytes": 10132,
         "expandedBytes": 22252,
         "instances": 9,
-        "work": 687,
+        "work": 991,
         "points": 58,
         "faces": 96
       }
@@ -9133,7 +9133,7 @@
         "originalBytes": 10881,
         "expandedBytes": 23940,
         "instances": 17,
-        "work": 938,
+        "work": 1386,
         "points": 112,
         "faces": 112
       }
@@ -9451,7 +9451,7 @@
         "originalBytes": 11381,
         "expandedBytes": 24471,
         "instances": 18,
-        "work": 1011,
+        "work": 1523,
         "points": 128,
         "faces": 128
       }
@@ -9745,7 +9745,7 @@
         "originalBytes": 8785,
         "expandedBytes": 27841,
         "instances": 19,
-        "work": 1058,
+        "work": 1538,
         "points": 98,
         "faces": 144
       }
@@ -10015,7 +10015,7 @@
         "originalBytes": 10121,
         "expandedBytes": 30813,
         "instances": 19,
-        "work": 1259,
+        "work": 1899,
         "points": 160,
         "faces": 160
       }
@@ -10189,9 +10189,242 @@
         "originalBytes": 1757,
         "expandedBytes": 2351,
         "instances": 3,
-        "work": 96,
+        "work": 136,
         "points": 12,
         "faces": 10
+      }
+    },
+    {
+      "id": "corpus-ldraw-u9558",
+      "title": "LDraw ~Electric Powered Up 2 Port Hub Rechargeable Battery Top",
+      "author": "Philippe Hurbain [Philo]",
+      "version": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+        "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/u9558.dat"
+      },
+      "licence": {
+        "spdx": "CC-BY-4.0",
+        "scope": "asset",
+        "attribution": "Philippe Hurbain [Philo]. LDraw.org Official Parts Library. Original per-file CC-BY-4.0 grant and HISTORY retained. Nominal0.4mm/LDU converted to millimetres/Zup; display edge/conditional-edge appearance omitted; authored solid faces unchanged. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/u9558.dat. Licence: https://creativecommons.org/licenses/by/4.0/.",
+        "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/u9558.dat",
+        "capturedOn": "2026-11-15",
+        "review": "accepted",
+        "reviewer": "Codex exact staged/pinned original and complete per-file grant/closure review",
+        "localEvidence": [
+          {
+            "path": "evidence/ldraw-CC-BY-4.0.txt",
+            "format": "text",
+            "bytes": 18657,
+            "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+          },
+          {
+            "path": "evidence/ldraw-CAreadme.txt",
+            "format": "text",
+            "bytes": 4151,
+            "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497"
+          }
+        ]
+      },
+      "original": {
+        "path": "sources/ldraw/parts/u9558.dat",
+        "bytes": 3881,
+        "sha256": "d01271bc0b7ad6647221c518f3f97a346e2cf5971be904682fc5c051cf3ad8b4",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/u9558.dat"
+      },
+      "sourceBundle": {
+        "format": "brickwright-ldraw-bundle",
+        "version": 1,
+        "rootPath": "parts/u9558.dat",
+        "dependencies": [
+          {
+            "path": "p/box5.dat",
+            "file": {
+              "path": "sources/ldraw/p/box5.dat",
+              "bytes": 963,
+              "sha256": "ccb7b8a1d36692335b10ea6aa196849afcad4b15331683ed8112a10b50977318",
+              "format": "ldraw"
+            },
+            "author": "James Jessiman",
+            "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+              "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08"
+            },
+            "licence": {
+              "spdx": "CC-BY-4.0",
+              "scope": "asset",
+              "attribution": "James Jessiman. LDraw.org Official Parts Library. Original per-file CC-BY-4.0 grant and HISTORY retained. Nominal0.4mm/LDU converted to millimetres/Zup; display edge/conditional-edge appearance omitted; authored solid faces unchanged. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat. Licence: https://creativecommons.org/licenses/by/4.0/.",
+              "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat",
+              "capturedOn": "2026-11-15",
+              "review": "accepted",
+              "reviewer": "Codex exact staged/pinned original and complete per-file grant/closure review"
+            }
+          },
+          {
+            "path": "p/rect3.dat",
+            "file": {
+              "path": "sources/ldraw/p/rect3.dat",
+              "bytes": 605,
+              "sha256": "07ac46908b6668d993b6de0fb001a34cd996542106b80ebc7de63317d8dde865",
+              "format": "ldraw"
+            },
+            "author": "Mark Kennedy [mkennedy]",
+            "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect3.dat",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+              "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08"
+            },
+            "licence": {
+              "spdx": "CC-BY-4.0",
+              "scope": "asset",
+              "attribution": "Mark Kennedy [mkennedy]. LDraw.org Official Parts Library. Original per-file CC-BY-4.0 grant and HISTORY retained. Nominal0.4mm/LDU converted to millimetres/Zup; display edge/conditional-edge appearance omitted; authored solid faces unchanged. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect3.dat. Licence: https://creativecommons.org/licenses/by/4.0/.",
+              "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect3.dat",
+              "capturedOn": "2026-11-15",
+              "review": "accepted",
+              "reviewer": "Codex exact staged/pinned original and complete per-file grant/closure review"
+            }
+          },
+          {
+            "path": "p/rect2a.dat",
+            "file": {
+              "path": "sources/ldraw/p/rect2a.dat",
+              "bytes": 586,
+              "sha256": "6d75ffb88e705a35f34e095ec0848a7bb70b577a376fdae05804da214b0d6369",
+              "format": "ldraw"
+            },
+            "author": "Chris Dee [cwdee]",
+            "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect2a.dat",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+              "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08"
+            },
+            "licence": {
+              "spdx": "CC-BY-4.0",
+              "scope": "asset",
+              "attribution": "Chris Dee [cwdee]. LDraw.org Official Parts Library. Original per-file CC-BY-4.0 grant and HISTORY retained. Nominal0.4mm/LDU converted to millimetres/Zup; display edge/conditional-edge appearance omitted; authored solid faces unchanged. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect2a.dat. Licence: https://creativecommons.org/licenses/by/4.0/.",
+              "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect2a.dat",
+              "capturedOn": "2026-11-15",
+              "review": "accepted",
+              "reviewer": "Codex exact staged/pinned original and complete per-file grant/closure review"
+            }
+          },
+          {
+            "path": "p/rect.dat",
+            "file": {
+              "path": "sources/ldraw/p/rect.dat",
+              "bytes": 654,
+              "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71",
+              "format": "ldraw"
+            },
+            "author": "James Jessiman",
+            "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect.dat",
+            "sourceRevision": {
+              "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+              "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08"
+            },
+            "licence": {
+              "spdx": "CC-BY-4.0",
+              "scope": "asset",
+              "attribution": "James Jessiman. LDraw.org Official Parts Library. Original per-file CC-BY-4.0 grant and HISTORY retained. Nominal0.4mm/LDU converted to millimetres/Zup; display edge/conditional-edge appearance omitted; authored solid faces unchanged. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect.dat. Licence: https://creativecommons.org/licenses/by/4.0/.",
+              "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect.dat",
+              "capturedOn": "2026-11-15",
+              "review": "accepted",
+              "reviewer": "Codex exact staged/pinned original and complete per-file grant/closure review"
+            }
+          }
+        ]
+      },
+      "derivatives": [
+        {
+          "path": "meshes/ldraw/u9558.stl",
+          "bytes": 7484,
+          "sha256": "5e75746c0a59a438d0d6e21806ffee3d1e74cd43c07f5ae7a9d0066621939de6",
+          "format": "stl"
+        }
+      ],
+      "modificationNotes": "Exact complete authored part and dependencies unchanged. Existing bounded original converter preserves authored solid faces and origin, BFC winding and transforms. Nominal0.4mm/LDU,-Yup to Zup conversion; display-only edge/conditional lines and inherited colour appearance omitted. No primitive substitution, geometry repair, tolerance/guard/source/default edits or physical/collision certification. DAT closure archival; insertion uses freshly screened STL. General exact supporting-line grouping subdivides facet boundaries only at existing authored endpoints; no coordinates or surfaces added, no rounding or inferred closure. Original16384 construction guard remains; measured2257work. Standalone authored battery-top component only; no completed assembly/collision/physical qualification.",
+      "conversion": {
+        "sourceUnits": "ldu",
+        "sourceUpAxis": "-Y",
+        "unitAssumption": "LDraw nominal0.4mm/LDU,-Yup per https://ldraw.org/article/218.html; display conversion only, no physical calibration.",
+        "toMillimetresZUp": [
+          0.4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          -0.4,
+          0,
+          0,
+          0.4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "quality": {
+        "fileSha256": "5e75746c0a59a438d0d6e21806ffee3d1e74cd43c07f5ae7a9d0066621939de6",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-15",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "measurements": {
+        "triangles": 148,
+        "boundsMm": {
+          "min": [
+            -20,
+            -17.600000381469727,
+            -3.200000047683716
+          ],
+          "max": [
+            20.799999237060547,
+            17.600000381469727,
+            1.2000000476837158
+          ]
+        },
+        "signedVolumeMm3": 1595.3922456321702
+      },
+      "converterMetrics": {
+        "originalBytes": 6689,
+        "expandedBytes": 20920,
+        "instances": 28,
+        "work": 2257,
+        "points": 76,
+        "faces": 78
       }
     }
   ]
