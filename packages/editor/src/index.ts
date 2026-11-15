@@ -32,6 +32,7 @@ export interface CadEditorOptions {
   nativeMenus?:boolean;
   modelLibrary?: ModelLibraryOptions;
   navigationPreset?:NavigationPreset;
+  resizeControls?:'dimensions'|'gizmo';
   shapeBrowserLayout?:ShapeBrowserLayout;
   onShapeBrowserLayoutChange?:(layout:ShapeBrowserLayout)=>void;
   showTransformReadout?:boolean;
@@ -79,7 +80,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const run = (fn: () => unknown) => { try { const result = fn(); if (result instanceof Promise) result.catch(report); } catch (e) { report(e); } };
   const client = createGeometryClient(new URL(options.wasmURL, document.baseURI).href, options.createWorker);
   let viewport: ReturnType<typeof mountViewport>;
-  try { viewport = mountViewport(viewHost, session, report,options.appearance);viewport.setNavigation(options.navigationPreset??'tinkercad'); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
+  try { viewport = mountViewport(viewHost, session, report,options.appearance);viewport.setNavigation(options.navigationPreset??'tinkercad');viewport.setResizeControls(options.resizeControls??'dimensions'); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
   const empty = el('div', 'empty'); empty.append(el('strong', '', t('Your next idea starts here.')), document.createTextNode(t('Pick a shape above. Set its dimensions in Properties. Drag to orbit; pinch to zoom.'))); viewHost.append(empty);
   const busy = el('div', 'busy', t('Building solid…')); busy.hidden = true; viewHost.append(busy);
   const errorPanel = el('div', 'error'); errorPanel.hidden = true; errorPanel.setAttribute('role', 'alert'); viewHost.append(errorPanel);
@@ -248,25 +249,24 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     if (!doc.roots.length) content.append(el('p', 'hint', t('No objects yet. Start with a box.')));
   }
   function field(parent: HTMLElement, label: string, value: string | number, change: (value: string) => void, type = 'number', step = '1') {
-    const wrap = el('label', 'field', t(label)); const input = el('input'); input.type = type; input.value = String(value); input.setAttribute('aria-label', t(label)); input.step = step;
+    const wrap = el('label', 'field');wrap.append(el('span','field-name',t(label))); const input = el('input'); input.type = type; input.value = String(value); input.setAttribute('aria-label', t(label)); input.step = step;
     input.addEventListener('change', () => run(() => change(input.value)));input.addEventListener('keydown',event=>{if(fineNumberKeys(input,event))return;if(event.key==='Enter'){event.preventDefault();event.stopPropagation();const apply=input.closest('.shape-parameters')?.querySelector<HTMLButtonElement>(`[aria-label="${t('Apply shape parameters')}"]`);input.blur();apply?.click();viewport.canvas.focus({preventScroll:true});}}); wrap.append(input); parent.append(wrap); return input;
   }
   function buildInspector() {
     inspector.replaceChildren(); const header = el('div', 'panel-header'); header.append(el('h2', '', t('Properties'))); button('Close properties', () => { inspector.classList.remove('open'); inspector.classList.add('closed'); propertiesToggle.setAttribute('aria-pressed', 'false'); }, header); inspector.append(header);
-    const selection = session.state.selection;
-    if(selection.some(id=>session.state.document.roots.includes(id))){inspector.append(el('div','inspect-title',t('Dimensions after transform (mm)')));const dimensions=el('div','triple');inspector.append(dimensions);for(const axis of ['X','Y','Z']){const bodies=built?.bodies.filter(body=>selection.includes(body.id))??[];const i=['X','Y','Z'].indexOf(axis),size=bodies.length?Math.max(...bodies.map(body=>body.bounds.max[i]))-Math.min(...bodies.map(body=>body.bounds.min[i])):'';const input=field(dimensions,t`Size ${axis} (mm)`,typeof size==='number'?Number(size.toFixed(3)):'',()=>{},'number','.1');input.readOnly=true;input.dataset.sizeAxis=axis;}}
-    if(selection.length&&selection.every(id=>session.state.document.roots.includes(id)&&!session.state.document.nodes[id].reference)){const roles=el('div','shape-role');roles.setAttribute('role','group');roles.setAttribute('aria-label',t('Solid or hole'));for(const role of ['solid','hole'] as const){const label=role==='solid'?'Solid':'Hole',b=button(label,()=>session.setRole(role),roles);b.setAttribute('aria-pressed',String(selection.every(id=>(session.state.document.nodes[id].role??'solid')===role)));b.dataset.testid=`role-${role}`;b.title=role==='hole'?t('Union subtracts hole shapes from solid shapes'):t('Printable solid');}inspector.append(roles);}
+    const selection = session.state.selection;const styleRow=el('div','object-style');inspector.append(styleRow);
+    if(selection.some(id=>session.state.document.roots.includes(id))){const dimensions=el('div','property-matrix actual-size');dimensions.setAttribute('role','group');dimensions.setAttribute('aria-label',t('Dimensions after transform (mm)'));const marker=el('div','property-kind');marker.title=t('Dimensions after transform (mm)');marker.append(toolIcon('Dimensions')!,el('small','','mm'));dimensions.append(marker);inspector.append(dimensions);for(const axis of ['X','Y','Z']){const bodies=built?.bodies.filter(body=>selection.includes(body.id))??[];const i=['X','Y','Z'].indexOf(axis),size=bodies.length?Math.max(...bodies.map(body=>body.bounds.max[i]))-Math.min(...bodies.map(body=>body.bounds.min[i])):'';const input=field(dimensions,t`Size ${axis} (mm)`,typeof size==='number'?Number(size.toFixed(3)):'',()=>{},'number','.1');input.readOnly=true;input.dataset.sizeAxis=axis;input.title=t`Size ${axis} (mm)`;input.parentElement!.querySelector('.field-name')!.textContent=axis;}}
+    if(selection.length&&selection.every(id=>session.state.document.roots.includes(id)&&!session.state.document.nodes[id].reference)){const roles=el('div','shape-role');roles.setAttribute('role','group');roles.setAttribute('aria-label',t('Solid or hole'));for(const role of ['solid','hole'] as const){const label=role==='solid'?'Solid':'Hole',b=button(label,()=>session.setRole(role),roles,'role-icon');b.setAttribute('aria-pressed',String(selection.every(id=>(session.state.document.nodes[id].role??'solid')===role)));b.dataset.testid=`role-${role}`;b.style.setProperty('--part-colour',session.state.document.nodes[selection[0]].color);b.title=role==='hole'?t('Union subtracts hole shapes from solid shapes'):t('Printable solid');}styleRow.append(roles);}
     const activeKey=mode==='rotate'?'rotation':mode==='scale'?'scale':'position';
     function transformFields(ids:readonly string[],key:'position'|'rotation'|'scale'){
-      const title=key==='rotation'?'Rotation':key==='scale'?'Scale':'Position';inspector.append(el('div','inspect-title',`${t(title)} (${key==='rotation'?'°':key==='scale'?'×':'mm'})`));const group=el('div','triple');inspector.append(group);
-      ['X','Y','Z'].forEach((axis,i)=>field(group,`${t(title)} ${axis}`,session.state.document.nodes[ids[0]].transform[key][i],value=>{session.transform(ids.map(id=>{const transform=structuredClone(session.state.document.nodes[id].transform);transform[key][i]=Number(value);return {id,transform};}));},'number',key==='rotation'?'1':'0.1'));
+      const title=key==='rotation'?'Rotation':key==='scale'?'Scale':'Position',units=key==='rotation'?'°':key==='scale'?'×':'mm',group=el('div','property-matrix');group.setAttribute('role','group');group.setAttribute('aria-label',`${t(title)} (${units})`);const marker=el('div','property-kind');marker.title=`${t(title)} (${units})`;marker.append(toolIcon(key==='rotation'?'Rotate':key==='scale'?'Scale':'Move')!,el('small','',units));group.append(marker);inspector.append(group);
+      ['X','Y','Z'].forEach((axis,i)=>{const input=field(group,`${t(title)} ${axis}`,session.state.document.nodes[ids[0]].transform[key][i],value=>{session.transform(ids.map(id=>{const transform=structuredClone(session.state.document.nodes[id].transform);transform[key][i]=Number(value);return {id,transform};}));},'number',key==='rotation'?'1':'0.1');input.title=`${t(title)} ${axis} (${units})`;input.parentElement!.querySelector('.field-name')!.textContent=axis;});
     }
     if (selection.length !== 1) { inspector.append(el('p', 'selection-count', selection.length ? t`${selection.length} selected · per-object values` : t('Nothing selected')));if(selection.length)transformFields(selection,activeKey);return; }
     const id = selection[0], n = session.state.document.nodes[id];
     if(!session.state.document.roots.includes(id)){const parent=Object.values(session.state.document.nodes).find(node=>node.kind==='boolean'&&node.inputs.includes(id));if(parent)button(t`Back to ${parent.name}`,()=>{session.select([parent.id]);viewport.canvas.focus({preventScroll:true});},inspector);}
-    inspector.append(el('div', 'selection-count', t`${n.name} · selected`));
-    field(inspector, 'Object name', n.name, value => session.update(id, { name: value }), 'text');
-    transformFields([id],activeKey);
+    const nameInput=field(styleRow, 'Object name', n.name, value => session.update(id, { name: value }), 'text');nameInput.parentElement!.classList.add('object-name');nameInput.title=t('Object name');styleRow.prepend(nameInput.parentElement!);const colour=field(styleRow,'Color',n.color,value=>session.update(id,{color:value}),'color');colour.parentElement!.classList.add('color-swatch');colour.title=t('Color');
+    transformFields([id],activeKey);for(const key of ['position','rotation','scale'] as const)if(key!==activeKey)transformFields([id],key);
     const recipe=n.generator??(session.state.document.roots.includes(id)?defaultGenerator(n.physics?.sourcePreset??''):undefined);
     if(recipe&&!isCube(n)){
       const draft=structuredClone(recipe);const legacyLettering=!n.generator&&['text','name-tag'].includes(recipe.preset);if(legacyLettering)draft.text='';const form=el('div','shape-parameters');form.append(el('div','inspect-title',t`${t(recipe.preset[0].toUpperCase()+recipe.preset.slice(1))} parameters`));
@@ -300,22 +300,17 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       const design=el('details','design-inputs');design.open=true;design.append(el('summary','',t('Design inputs')));const values=evaluateParameters(session.state.document.parametric);
       for(const parameter of dimensions){const p=session.state.document.parametric.parameters[parameter.id];const input=field(design,t`Parameter ${parameter.label} (${p.unit})`,p.expression,expression=>{const next=structuredClone(session.state.document.parametric!);next.parameters[parameter.id].expression=expression;session.setParametric(next);},'text');input.parentElement?.append(el('small','',`${Number(values[parameter.id].value.toFixed(5))} ${p.unit==='scalar'?'':p.unit}`));}inspector.append(design);
     }
-    field(inspector, 'Color', n.color, value => session.update(id, { color: value }), 'color');
-    if(isCube(n)&&n.kind==='box'){field(inspector,'Edge length (mm)',n.size[0]*n.transform.scale[0],value=>{const edge=Number(value)/n.transform.scale[0];session.update(id,{size:[edge,edge,edge]});},'number','0.1');}
+    const primitiveFields=el('div','primitive-parameters');inspector.append(primitiveFields);
+    if(isCube(n)&&n.kind==='box'){field(primitiveFields,'Edge length (mm)',n.size[0]*n.transform.scale[0],value=>{const edge=Number(value)/n.transform.scale[0];session.update(id,{size:[edge,edge,edge]});},'number','0.1');}
     else if (n.kind === 'box') {
-      (['Width', 'Depth', 'Height'] as const).forEach((label, i) => field(inspector, `${label} (mm)`, n.size[i], value => { const size = [...n.size] as Vec3; size[i] = Number(value); session.update(id, { size }); }, 'number', '0.1'));
+      (['Width', 'Depth', 'Height'] as const).forEach((label, i) => field(primitiveFields, `${label} (mm)`, n.size[i], value => { const size = [...n.size] as Vec3; size[i] = Number(value); session.update(id, { size }); }, 'number', '0.1'));
     } else if (n.kind === 'cylinder' || n.kind === 'sphere') {
-      field(inspector, 'Radius (mm)', n.radius, value => session.update(id, { radius: Number(value) }), 'number', '0.1');
-      if (n.kind === 'cylinder') field(inspector, 'Height (mm)', n.height, value => session.update(id, { height: Number(value) }), 'number', '0.1');
-      field(inspector, 'Segments', n.segments, value => session.update(id, { segments: Number(value) }), 'number', '4');
+      field(primitiveFields, 'Radius (mm)', n.radius, value => session.update(id, { radius: Number(value) }), 'number', '0.1');
+      if (n.kind === 'cylinder') field(primitiveFields, 'Height (mm)', n.height, value => session.update(id, { height: Number(value) }), 'number', '0.1');
+      field(primitiveFields, 'Segments', n.segments, value => session.update(id, { segments: Number(value) }), 'number', '4');
     } else if (n.kind === 'boolean'&&!recipe&&!n.physics?.sourcePreset&&!n.reference) {
       const sources=el('details','construction-sources');sources.append(el('summary','',t('Edit source shapes')));for(const sourceId of n.inputs){const source=session.state.document.nodes[sourceId];button(t`Edit ${source.name}`,()=>{session.select([sourceId]);viewport.canvas.focus({preventScroll:true});},sources);}inspector.append(sources);
       button('Separate operands', () => session.separate(id), inspector);
-    }
-    for (const [key, title, units, step] of [['position', 'Position', 'mm', '0.1'], ['rotation', 'Rotation', '°', '1'], ['scale', 'Scale', '×', '0.1']] as const) {
-      if(key===activeKey)continue;
-      inspector.append(el('div', 'inspect-title', `${t(title)} (${units})`)); const group = el('div', 'triple'); inspector.append(group);
-      ['X', 'Y', 'Z'].forEach((axis, i) => field(group, `${t(title)} ${axis}`, n.transform[key][i], value => { const transform = structuredClone(n.transform); transform[key][i] = Number(value); session.update(id, { transform }); }, 'number', step));
     }
     button('Reset transform', () => session.update(id, { transform: identityTransform() }), inspector);
     if(!n.reference&&n.role!=='hole' && session.state.document.roots.includes(id)) {
@@ -483,7 +478,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   buildTree(); buildInspector(); lastRevision = session.state.revision; lastSelection = JSON.stringify(session.state.selection); viewport.setSelection(session.state.selection); void buildLatest(); refreshButtons();
   return {
-    session, whenIdle, openFile,importFile,executeCommand,setNavigation:viewport.setNavigation,setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance:viewport.setAppearance,get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
+    session, whenIdle, openFile,importFile,executeCommand,setNavigation:viewport.setNavigation,setResizeControls:viewport.setResizeControls,get resizeControls(){return viewport.resizeControls;},setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance:viewport.setAppearance,get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },

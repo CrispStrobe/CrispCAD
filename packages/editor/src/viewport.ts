@@ -66,6 +66,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const selectionBoxes=new Map<string,THREE.BoxHelper>();let activeMode:'select'|'translate'|'rotate'|'scale'='select';
   let directDrag:{pointerId:number;start:THREE.Vector3;plane:THREE.Plane;transforms:Map<string,Transform>;offset:Vec3;moved:boolean;precision:ReturnType<typeof precisionTracker>;usedFine:boolean}|null=null;
   let disposed = false; let selected: string[] = []; let drag: { matrix: THREE.Matrix4; transforms: Map<string, Transform> } | null = null; let gridStep = 1; let multiSelect = false; let viewListener: ((view: ViewDirection) => void) | undefined;
+  let resizeStyle:'dimensions'|'gizmo'='dimensions';
   let resizeControls:ReturnType<typeof mountResizeControls>|undefined,resizeFrame:ResizeFrame|undefined,resizeDelta:THREE.Matrix4|undefined,resizeFactors:Vec3=[1,1,1];
   const scaleFactors=()=>resizeDelta?resizeFactors:pivot.scale.toArray() as Vec3;
   const transformMode=()=>resizeDelta?'scale' as const:activeMode==='select'?'translate' as const:activeMode;
@@ -134,7 +135,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
         const dx=point[0]-origin[0],dy=point[1]-origin[1],length=Math.hypot(dx,dy);anchors.push({axis,point,direction:[dx/(length||1),dy/(length||1)],visible:best>-Infinity&&length>12});
       });
     }
-    previewListener({mode:activeMode,resizing:!!resizeDelta,poses,dragging:!!drag||!!directDrag?.moved,valid,warning,axes:anchors,...(!box.isEmpty()?{bounds:{min:box.min.toArray() as Vec3,max:box.max.toArray() as Vec3}}:{})});
+    previewListener({mode:activeMode,resizing:!!resizeDelta,dimensionHandles:resizeStyle==='dimensions',poses,dragging:!!drag||!!directDrag?.moved,valid,warning,axes:anchors,...(!box.isEmpty()?{bounds:{min:box.min.toArray() as Vec3,max:box.max.toArray() as Vec3}}:{})});
   }
   function measureResizeFrame(roots:string[]):ResizeFrame|undefined{
     if(!roots.length)return;const poses=roots.map(id=>session.state.document.nodes[id].transform),q=scalePivotRotation(poses),inverse=new THREE.Matrix4().makeRotationFromQuaternion(q.clone().invert()),box=new THREE.Box3(),point=new THREE.Vector3();
@@ -147,9 +148,9 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     if (drag) return;
     const roots = selected.filter(id => session.state.document.roots.includes(id) && meshes.has(id));
     resizeFrame=roots.some(id=>session.state.document.nodes[id].reference)?undefined:measureResizeFrame(roots);
-    if (!roots.length || activeMode==='select'||activeMode==='scale') { gizmo.detach(); draw(); return; }
+    if (!roots.length || activeMode==='select'||activeMode==='scale'&&resizeStyle==='dimensions') { gizmo.detach(); draw(); return; }
     const box = new THREE.Box3(); for (const id of roots) box.union(new THREE.Box3().setFromObject(meshes.get(id)!));
-    pivot.position.copy(box.getCenter(new THREE.Vector3())); pivot.quaternion.identity(); pivot.scale.set(1, 1, 1); pivot.updateMatrixWorld(); gizmo.attach(pivot); draw();
+    pivot.position.copy(box.getCenter(new THREE.Vector3())); pivot.quaternion.copy(activeMode==='scale'?scalePivotRotation(roots.map(id=>session.state.document.nodes[id].transform)):new THREE.Quaternion()); pivot.scale.set(1, 1, 1); pivot.updateMatrixWorld(); gizmo.attach(pivot); draw();
   };
   const onDrag = (event: { value: unknown }) => { orbit.enabled = !event.value; };
   const startTransform = () => {
@@ -263,7 +264,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     camera.position.copy(center).addScaledVector(dir.normalize(), distance); orbit.target.copy(center); orbit.update(); draw();
   }
   resizeControls=mountResizeControls(container,{
-    frame:()=>!surfacePlacement.active&&!directDrag?.moved&&!boxSelect&&!cameraDrag&&(activeMode==='select'||activeMode==='scale')?resizeFrame:undefined,
+    frame:()=>resizeStyle==='dimensions'&&!surfacePlacement.active&&!directDrag?.moved&&!boxSelect&&!cameraDrag&&(activeMode==='select'||activeMode==='scale')?resizeFrame:undefined,
     project:p=>{const v=p.clone().project(camera);return [(v.x+1)*container.clientWidth/2,(1-v.y)*container.clientHeight/2,v.z];},
     ray:(x,y)=>{const r=canvas.getBoundingClientRect(),caster=new THREE.Raycaster();caster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);return caster.ray;},camera:()=>camera,grid:()=>gridStep,fine:()=>fineEnabled,
     begin:()=>{cancelTransform();const transforms=new Map<string,Transform>();for(const id of resizeFrame?.ids??[])transforms.set(id,structuredClone(session.state.document.nodes[id].transform));drag={matrix:new THREE.Matrix4(),transforms};resizeDelta=new THREE.Matrix4();resizeFactors=[1,1,1];orbit.enabled=false;},
@@ -280,6 +281,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     setPlacementHandlers(commit:(point:PlacementPointer)=>void,cancel:()=>void){placementCommit=commit;placementCanceled=cancel;},
     get placementActive(){return surfacePlacement.active;},
     get appearance(){return {...colours};},setAppearance(value:{background:string;baseplate:string}){if(!validColour(value.background)||!validColour(value.baseplate))throw new Error(t('Choose a six-digit colour'));Object.assign(colours,value);(scene.background as THREE.Color).set(value.background);plate.material.color.set(value.baseplate);canvas.dataset.backgroundColour=value.background;canvas.dataset.baseplateColour=value.baseplate;draw();},
+    get resizeControls(){return resizeStyle;},setResizeControls(value:'dimensions'|'gizmo'){if(surfacePlacement.active)endPlacement();cancelTransform();resizeStyle=value==='gizmo'?'gizmo':'dimensions';gizmo.setScaleSnap(resizeStyle==='gizmo'?.1:null);canvas.dataset.resizeControls=resizeStyle;placeGizmo();},
     setReadoutVisible(visible:boolean){annotationsVisible=visible;draw();},
     setTransformPreviewListener(listener:(preview:TransformPreview)=>void){previewListener=listener;draw();},
     setViewListener(listener: (view: ViewDirection) => void) { viewListener = listener; draw(); },

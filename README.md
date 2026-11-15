@@ -108,6 +108,11 @@ Default controls over the modeling canvas:
 | Fine control | `Shift` for move/rotate; `Ctrl`/`Command` for resize; or Fine toggle |
 | Cancel drag / return to selection | `Esc` / `Esc` again |
 
+Settings → Modeling view → Resize controls keeps the **Classic axis gizmo**
+available alongside the default **Dimension handles**. The classic option retains
+scale-factor snapping and optional XYZ factor annotations. This view preference
+persists without creating a model iteration.
+
 Settings offers alternate camera mappings. Use the view cube for principal views.
 Touch uses two fingers to zoom and pan. View changes do not create model iterations.
 

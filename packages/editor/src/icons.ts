@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Original line icons for the workbench. No external icon/font dependency.
 const paths: Record<string, string> = {
+  Solid: 'M12 2 22 7v10l-10 5-10-5V7Z M2 7l10 5 10-5 M12 12v10',
+  Hole: 'M12 2 22 7v10l-10 5-10-5V7Z M2 7l10 5 10-5 M12 12v10 M6 9v9 M9 11v9 M15 11v9 M18 9v9',
+  Dimensions: 'M3 8h18v10H3Z M6 8v5 M10 8v3 M14 8v5 M18 8v3',
+  'Lettering options': 'M3 5V3h18v2 M12 3v18 M8 21h8',
+  'Additional shapes': 'M3 3h7v7H3Z M14 3h7v7h-7Z M3 14h7v7H3Z M14 17h8 M18 13v8',
+  'Dock shapes': 'M2 3h20v18H2Z M15 3v18 M17 12h3 M18.5 10.5v3',
+  'Popup shapes': 'M3 8v13h13 M8 3h13v13H8Z M11 10l7-4 M14 5h5v5',
   Select:'M5 2 5 20l5-5 4 7 4-2-4-7h7Z',
   Code:'M8 5 2 12l6 7 M16 5l6 7-6 7 M14 3l-4 18',
   Sketch:'M3 3h13v5 M3 3v18h18v-8 M8 17l2-6L18 3l4 4-8 8Z M10 11l4 4',

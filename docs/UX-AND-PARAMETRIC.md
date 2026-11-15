@@ -135,11 +135,11 @@ command/history/source path for GUI, script and MCP access.
 
 ## Direct-placement and resize reference check — 2026-11-15
 
-The optional lower-right palette and highlighted-face placement are implemented,
-but the popup header exposed docking as an ambiguous diagonal arrow. It now has
-a readable **Lower right** action, changing to **Popup** when docked. The saved
-preference and existing drag/tap placement remain; view changes create no model
-iteration. Touch users drag thumbnails and can scroll using card labels.
+The optional lower-right palette keeps its saved docking preference. Search,
+additional-shape filtering, lettering/SVG options, dock/popup and close share one
+compact header. The dock icon has an explicit lower-right tooltip. Text/font/SVG
+controls open as an overlay; idle placement instructions no longer take a row.
+Touch users drag thumbnails and can scroll using card labels.
 
 Autodesk's [lesson guide](https://assets.ctfassets.net/jl5ii4oqrdmc/7vqtiHNyJW8CrtaiKTV9Ji/003e7fe0010f9e082bb8bdaeda08f749/0de442ca.pdf)
 (page 12) explicitly describes Snap Grid precision for resizing as well as moving.
@@ -167,3 +167,23 @@ Implemented dimension resizing:
 
 Surface placement keeps dimensions unchanged. Persistent workplanes, alignment
 previews, explicit fit-to-target and repeat duplicate remain separate future work.
+
+## Compact panels and optional classic controls
+
+Properties uses one row for the editable object name, Solid/Hole previews and a
+square colour picker. Actual dimensions and position/rotation/scale values use
+compact icon-led rows with inline X/Y/Z labels and accessible full field names.
+Generator fields use two columns. Numeric editing, named parameters, shape recipes
+and Solid/Hole semantics are retained.
+
+Settings → Modeling view → Resize controls selects **Dimension handles** (default)
+or **Classic axis gizmo**. The latter retains the former local-axis scale gizmo,
+centre pivot, factor-based snap/fine increments and optional XYZ factor readout.
+Move and Rotate keep their existing controls. Switching cancels a pending preview,
+persists as a host view preference and creates no model iteration. Embedded hosts
+can use `CadEditorOptions.resizeControls`, `setResizeControls()` and the
+`resizeControls` getter; storage remains host-owned.
+
+Shift keeps proportional pointer resizing in the dimension workflow. In numeric
+fields Shift+Arrow keeps the existing fine-step behavior; use the proportion toggle
+to link numeric dimensions.
