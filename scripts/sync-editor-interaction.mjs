@@ -8,13 +8,14 @@ import {fileURLToPath} from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2), sourceRoot = args.find(a => !a.startsWith('--'));
 if (!sourceRoot || args.some(a => a.startsWith('--') && a !== '--check')) throw new Error('Usage: node scripts/sync-editor-interaction.mjs <brickwright-lite-checkout> [--check]');
-const modules = ['box-selection', 'camera-pointer'];
+const modules = ['box-selection', 'camera-pointer', 'touch-gestures', 'transform-math'];
 const checkout = resolve(sourceRoot);
 const git = (...args) => execFileSync('git', ['-C', checkout, ...args], {encoding:'utf8'}).trim();
 const manifestPath = resolve(root,'docs/brickwright-provenance.json');
 const manifest = JSON.parse(await readFile(manifestPath,'utf8'));
 for (const name of modules) {
-    const source = `overlay/scratch-gui/src/lib/editor-interaction/${name}.js`;
+    const directory = ['touch-gestures', 'transform-math'].includes(name) ? 'bw-sim/editor' : 'editor-interaction';
+    const source = `overlay/scratch-gui/src/lib/${directory}/${name}.js`;
     const file = `packages/editor/src/vendor/${name}.js`;
     if (git('status','--porcelain','--',source)) throw new Error('Commit the shared source before pinning it');
     const bytes = await readFile(resolve(checkout,source));

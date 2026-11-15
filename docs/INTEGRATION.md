@@ -111,7 +111,8 @@ must attach the sidecar on every save/autosave; its loader must extract it and
 clear stale CAD state on a legacy project load. Older unmodified Scratch or
 Brickwright hosts may drop the sidecar when they regenerate an archive. The
 embedding demo is a real consumer of the same package/API and exercises an SB3
-round-trip; it is not a claim that the active Brickwright application is wired.
+round-trip. Brickwright's optional CAD workspace consumes the packaged SDK;
+its availability depends on the host build flag and user workspace setting.
 
 A React consumer should mount once in useEffect, keep the instance in a ref,
 and call dispose in cleanup. Load host project replacements explicitly; do not

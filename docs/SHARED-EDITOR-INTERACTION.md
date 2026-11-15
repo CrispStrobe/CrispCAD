@@ -44,3 +44,8 @@ pointer capture and cancellation. Both shared files are pinned by the sync scrip
 Robots activates Space-pan only when no placing/picking tool or part drag owns
 Space. Escape, pointer cancellation, lost capture and focus loss stop the camera
 gesture without a model/undo write. Its EN/DE top Help describes the shortcut.
+
+
+The same sync/check covers the retained touch tracker and transform arithmetic.
+The touch tracker resets its pinch baseline when a third finger replaces a lifted
+member of the active pair, preventing a discontinuous camera movement.

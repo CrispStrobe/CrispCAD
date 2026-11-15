@@ -6,11 +6,14 @@ standalone CAD and the shared Brickwright SDK. Existing hinge joints have speed
 and Reset operate in a dedicated worker at 200 Hz. The first body can explicitly
 be fixed as a base (enabled by default). Closing/resetting restores the design;
 editing invalidates the preview, and simulation never writes document/history.
-The preview pauses when the editor is hidden or the window loses focus.
+Manual previews pause on focus loss. Program-driven controls may continue while
+the CAD tab is hidden; page hiding stops them.
 
 Collision geometry still passes the qualified adapter below before simulation.
-Mate creation and robot-program/virtual-hub execution are separate future work;
-a running rigid assembly does not establish manufactured-mechanism accuracy.
+Axle, slider, pivot and fixed connections can be authored in the shared editor.
+Brickwright adapts its block/code commands to the same control API; robot-specific
+virtual hubs remain host-owned. A running rigid assembly does not establish
+manufactured-mechanism accuracy.
 
 ## Implementation
 
@@ -40,11 +43,12 @@ a running rigid assembly does not establish manufactured-mechanism accuracy.
 Persistent cache restoration requalifies canonical convex hulls and uses the
 same SHA-256 addresses even when native WebCrypto is unavailable.
 
-Preprocessing belongs in a host worker with cancellation/time limits and a cache
-keyed by the complete geometry SHA-256. The current headless API is synchronous
-inside its geometric operations; calling it on an interactive UI thread would
-block that UI. The editor's ordinary geometry worker has its existing timeout;
-it is not yet an interactive physics worker.
+The shared editor runs preprocessing and Jolt in a dedicated simulation worker,
+separate from its ordinary geometry worker. Startup has a 60-second budget and
+subsequent worker commands a 10-second budget. Disposal terminates pending work;
+model edits invalidate the preview. Headless geometric operations remain
+synchronous internally, so other hosts should also run them outside their UI
+thread. Collision caches are keyed by the complete geometry SHA-256.
 
 Shape-specific sweep/profile candidates use the original geometry samples.
 Retained unions keep useful convex pieces; cutters are applied before the final
