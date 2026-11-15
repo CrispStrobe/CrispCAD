@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: BSD-3-Clause
+import {beforeAll,expect,it} from 'vitest';import{readFileSync}from'node:fs';import{createHash}from'node:crypto';
+import{createCadSession,createModelAttributionSidecar}from'@brickwright/cad-core';import{createGeometryKernel,exportSTL,checkModelLibrarySTL}from'@brickwright/cad-geometry';import{insertModelLibrarySource}from'../packages/geometry/src/model-library-insert.js';import{createBundledModelLibrary}from'../apps/standalone/src/model-library-local.js';
+const sha=(b:Uint8Array)=>createHash('sha256').update(b).digest('hex');
+let kernel:Awaited<ReturnType<typeof createGeometryKernel>>;
+beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
+it('FlagItaly exact authored source inserts offline with582 closed triangles, provenance, restore and undo/redo',async()=>{
+ const b=createBundledModelLibrary(),a=b.catalogue.assets.find(a=>a.id==='corpus-angelo-flag-italy')!,bytes=b.localFiles.get(a.original.path!)!,s=createCadSession(),before=s.serialize();
+ try{expect(sha(bytes)).toBe('981ec35a7c5c57bdd686820c7ae3268f6cf56328622e37f09dd6f21840089c9e');let evaluations=0;const bad=bytes.slice();bad[10]^=1;await expect(insertModelLibrarySource(s,b.catalogue,{assetId:a.id,file:'original'},bad,{evaluate:doc=>{evaluations++;return kernel.evaluate(doc);},sourceFiles:b.localFiles,modificationNotes:'Byte mismatch refusal.'})).rejects.toThrow();expect(evaluations).toBe(0);expect(s.serialize()).toBe(before);
+ await insertModelLibrarySource(s,b.catalogue,{assetId:a.id,file:'original'},bytes,{sourceFiles:b.localFiles,evaluate:kernel.evaluate,modificationNotes:'Exact authored defaults; no manual changes.'});const mesh=exportSTL(kernel.evaluate(s.state.document).bodies);expect(sha(mesh)).toBe('7a1ce07bf4355cb400f96fe9035244441dbae89f78ea7224b3eea0c43d836cba');const screen=await checkModelLibrarySTL(mesh,{checkedOn:'2026-11-15',maxTriangles:10000,maxExtentMm:200,toMillimetresZUp:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]});expect(screen.triangles).toBe(582);expect(Object.values(screen.checks)).toEqual(['pass','pass','pass','pass']);const saved=s.serialize(),restored=createCadSession(JSON.parse(saved));try{expect(restored.serialize()).toBe(saved);expect(restored.state.document.provenance!.records[0].asset.original.sha256).toBe(a.original.sha256);}finally{restored.dispose();}
+ const sidecar=await createModelAttributionSidecar(s.state.document,{filename:'arc.stl',format:'stl',bytes:mesh,modificationNotes:'Exact authored defaults.'});expect(sidecar.records[0].asset.original.sha256).toBe(a.original.sha256);s.undo();expect(s.serialize()).toBe(before);s.redo();expect(s.serialize()).toBe(saved);
+ }finally{s.dispose();}
+});

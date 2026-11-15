@@ -1,0 +1,316 @@
+{
+  "candidateID": "corpus-angelo-flag-italy",
+  "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+  "baseCommit": "9c795aedd32c51d1dc0b0a23576bc0075d3dfbad",
+  "original": {
+    "path": "sources/corpus-selection/flag-italy.scad",
+    "sha256": "981ec35a7c5c57bdd686820c7ae3268f6cf56328622e37f09dd6f21840089c9e",
+    "bytes": 404,
+    "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Flag_Italy.scad",
+    "format": "openscad"
+  },
+  "sourceClosure": [
+    {
+      "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+      "upstreamPath": "Asset_SCAD/Flag_Italy.scad",
+      "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Flag_Italy.scad",
+      "sha256": "981ec35a7c5c57bdd686820c7ae3268f6cf56328622e37f09dd6f21840089c9e"
+    }
+  ],
+  "licence": {
+    "spdx": "MIT",
+    "scope": "asset",
+    "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Flag_Italy.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+    "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+    "localEvidence": [
+      {
+        "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+        "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+        "bytes": 1079,
+        "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+      }
+    ],
+    "capturedOn": "2026-11-13",
+    "review": "accepted",
+    "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact authored Italian flag source/editor/preview qualification 2026-11-15; shared STL counted once"
+  },
+  "triangles": 582,
+  "sharedMeshSha256": "7a1ce07bf4355cb400f96fe9035244441dbae89f78ea7224b3eea0c43d836cba",
+  "closedPositiveVolume": "PASS actual strict STL screening and editor insertion test",
+  "gates": {
+    "converter": "PASS",
+    "mesh": "PASS",
+    "topology": "PASS",
+    "editorHistoryAndMismatchedBytes": "PASS",
+    "preview": "PASS actual generated raster",
+    "browser": "PASS Chromium and iPad-WebKit 2/2"
+  },
+  "executions": {
+    "generate": {
+      "command": [
+        "node",
+        "scripts/generate-corpus-editor-library.mjs",
+        "--write",
+        "--asset-id",
+        "corpus-angelo-flag-italy"
+      ],
+      "exitCode": 0,
+      "guard": {
+        "fastFreeBytes": 15008403456,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4927647744,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 4.9599609375,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "elapsedSeconds": 1.341646530199796
+    },
+    "preview": {
+      "command": [
+        "node",
+        "scripts/generate-library-previews.mjs",
+        "--asset-id",
+        "corpus-angelo-flag-italy"
+      ],
+      "exitCode": 0,
+      "guard": {
+        "fastFreeBytes": 15008362496,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4902928384,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 4.9619140625,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "elapsedSeconds": 4.285772992996499
+    },
+    "focused": {
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/model-library-italy.test.ts",
+        "tests/model-library-corpus-editor.test.ts",
+        "-t",
+        "FlagItaly|one hundred and one"
+      ],
+      "exitCode": 0,
+      "guard": {
+        "fastFreeBytes": 15008354304,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4838031360,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.029296875,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "elapsedSeconds": 8.224323347909376
+    },
+    "check": {
+      "command": [
+        "node",
+        "scripts/generate-corpus-editor-library.mjs",
+        "--check",
+        "--asset-id",
+        "corpus-angelo-flag-italy"
+      ],
+      "exitCode": 0,
+      "guard": {
+        "fastFreeBytes": 15008354304,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4870942720,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.1103515625,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "elapsedSeconds": 0.9101360670756549
+    },
+    "build": {
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "guard": {
+        "fastFreeBytes": 15007813632,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4866547712,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.1083984375,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "elapsedSeconds": 13.286289138020948
+    },
+    "browser": {
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-italy.spec.ts",
+        "--reporter=line,json"
+      ],
+      "exitCode": 0,
+      "guard": {
+        "fastFreeBytes": 15007793152,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4903669760,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.16943359375,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "elapsedSeconds": 44.45613104104996
+    }
+  },
+  "mainCounts": [
+    131,
+    129,
+    170
+  ],
+  "localQualifiedCounts": [
+    132,
+    129,
+    171
+  ],
+  "localDelta": [
+    1,
+    0,
+    1
+  ],
+  "deliveredDelta": [
+    0,
+    0,
+    0
+  ],
+  "preservedPriorCorpusRecords": 100,
+  "preservedPriorPreviews": 170,
+  "firstResourceRefusalsPreserved": "/mnt/storage/brickwright-cycle75-italy/result.json",
+  "nextBatchManifest": "/mnt/storage/brickwright-cycle78-next-batch/manifest.json",
+  "noGuardOrDefaultChanges": true,
+  "testedBinding": {
+    "baseCommit": "9c795aedd32c51d1dc0b0a23576bc0075d3dfbad",
+    "ownedFiles": [
+      {
+        "path": "library/editor-corpus-manifest.json",
+        "sha256": "bb90443d28f9bfcd54f4b4f62d1d44c35dd69fb161ad1bfa77814d6ab27303ee",
+        "bytes": 593899
+      },
+      {
+        "path": "library/previews.json",
+        "sha256": "40e409fb5f650e437c7207659391750808498892c1ac972a9133fc0abec8235e",
+        "bytes": 2992823
+      },
+      {
+        "path": "scripts/generate-corpus-editor-library.mjs",
+        "sha256": "cfb6543b95b72524e91702e06266083aa74634e4b3a0254a0727223af99bf329",
+        "bytes": 26618
+      },
+      {
+        "path": "tests/browser/model-library.spec.ts",
+        "sha256": "f0b352473b7349f6f4d9607ac8d1300523baa3216e4396919bb0ffd792f71070",
+        "bytes": 26483
+      },
+      {
+        "path": "tests/model-library-bricks.test.ts",
+        "sha256": "d17eac9795f52354a785ac68efa4e75d288b38f3b0ea4f8b322e0fc9c3fc5e03",
+        "bytes": 5565
+      },
+      {
+        "path": "tests/model-library-city.test.ts",
+        "sha256": "740c440d8d93439b8a7c12db5f71c0c687d5518e6dcac46ae0fe61caf154ca48",
+        "bytes": 6024
+      },
+      {
+        "path": "tests/model-library-corpus-editor.test.ts",
+        "sha256": "bcada6504ce9d0e17dd0c4ea1ee0a7a9dbb0d04fa453fc9c6b93e422c6edccfb",
+        "bytes": 15266
+      },
+      {
+        "path": "library/meshes/corpus-selection/flag-italy.stl",
+        "sha256": "7a1ce07bf4355cb400f96fe9035244441dbae89f78ea7224b3eea0c43d836cba",
+        "bytes": 29184
+      },
+      {
+        "path": "library/sources/corpus-selection/flag-italy.scad",
+        "sha256": "981ec35a7c5c57bdd686820c7ae3268f6cf56328622e37f09dd6f21840089c9e",
+        "bytes": 404
+      },
+      {
+        "path": "tests/browser/model-library-italy.spec.ts",
+        "sha256": "6058a668d2d33a1bd5a95b7fcd18da37f8bcf10a4e5446efa2f768382ac814ed",
+        "bytes": 2133
+      },
+      {
+        "path": "tests/model-library-italy.test.ts",
+        "sha256": "5095a4f5e0894259e94be80a82ab2e6d53ef93dfdf57d077887689be721b694d",
+        "bytes": 2739
+      }
+    ],
+    "validationFiles": [
+      {
+        "path": "/mnt/storage/brickwright-cycle78-italy/browser-execution.json",
+        "sha256": "d4651744500569d2edbd524534be8675ea252638c636933cd779b93a637bfddb"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-italy/browser-report.json",
+        "sha256": "596c341eb5da5dfb8caa436296d5812446981d0f15b6d0778bfa1b94287407dc"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-italy/browser.log",
+        "sha256": "35e078024ea794023a74eabfd9da07585f73fdf947a11032c8dc3faa8fc2e419"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-italy/build-execution.json",
+        "sha256": "33a2eaa532d1adcf867edd8a6ef218be057b6463bb5fc2e1ccaa47dd4c4922b7"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-italy/build.log",
+        "sha256": "7cae4650a0a1d4d800d9bdc40cd10c464abc37c64c5478845a4e9536b282d24a"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-italy/check-execution.json",
+        "sha256": "45ff2054790054b141b0e0784e0f08c1fcfa7422517d16627f0bffa2323b9f1b"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-italy/check.log",
+        "sha256": "ddbb23740575748b61151f323d19d590b778b64b129ab43e9aa67ab62b9d329c"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-italy/focused-execution.json",
+        "sha256": "137229b02d2f3055dd8a654fbfc52115090b6a1dd104531bca147e114c8486f3"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-italy/focused.log",
+        "sha256": "d9f32de8e08e0d485efa3838c69ed0beb53f4a3915c5ce24bb6eccc0d8e57285"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-italy/generate-execution.json",
+        "sha256": "3f01f824764909c6dd447cb2465011c241361e083259062ef55f0f690d916ffa"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-italy/generate.log",
+        "sha256": "ddbb23740575748b61151f323d19d590b778b64b129ab43e9aa67ab62b9d329c"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-italy/preview-execution.json",
+        "sha256": "7fbfa5accb7ff0bd421551750a31acd5b818ecd18339f734d53f755744c1aafc"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-italy/preview.log",
+        "sha256": "d114106fc845d4f085b00c672a836b15ae27df58098b5bc3557c8faf85479497"
+      }
+    ],
+    "method": "All runtime/asset/test files measured after actual generation, strict topology, preview, focused editor/history/mismatched-byte refusal, source reproduction, production build and Chromium/WebKit runs. No runtime files changed after checks."
+  },
+  "scope": "Distinct authored MIT source; geometry and monochrome preview omit country colours. Same STL as French flag, no unique-mesh gain. Original input bytes, defaults and all guards preserved.",
+  "commands": {
+    "generate": "node scripts/generate-corpus-editor-library.mjs --write --asset-id corpus-angelo-flag-italy",
+    "reproduce": "node scripts/generate-corpus-editor-library.mjs --check --asset-id corpus-angelo-flag-italy"
+  },
+  "reproductionComplete": "PASS; prior100 corpus record objects and170 previews exact",
+  "remainingTopologyCases": "Ten retain A/B provisional classification; no new kernel/compiler fix in this change."
+}
