@@ -1,0 +1,656 @@
+{
+  "date": "2026-11-15",
+  "sourceCommit": "d6e3f2d77e23f4b1e696785d5647e031b85d4d8c",
+  "families": [
+    "curved-cone",
+    "hemisphere",
+    "paraboloid",
+    "vase",
+    "teardrop",
+    "finishing-washer"
+  ],
+  "validation": {
+    "unitPassed": 1011,
+    "unitSkipped": 1,
+    "unitFiles": 98,
+    "germanMessages": 1473,
+    "editedPhysicsCasesPassed": 11,
+    "profileSimplificationTestsPassed": 2,
+    "cataloguePresets": 59,
+    "closedPositiveSolids": 58,
+    "referenceHelpersExcluded": 1,
+    "catalogueBlocked": 0,
+    "remainingParameterGaps": 16,
+    "browser": {
+      "distinctWorkflowsPassed": 6,
+      "platforms": [
+        "Chromium",
+        "iPad WebKit"
+      ],
+      "runs": "Initial run: three WebKit pass. Visible-control Chromium rerun: teardrop pass. Final bounded Chromium rerun: vase and finishing washer pass (32.5 and 34.0 seconds)."
+    }
+  },
+  "cataloguePhysics": {
+    "generatedAt": "2026-11-15T12:22:14.927Z",
+    "engine": "1.1.0-bw.9 debug",
+    "stepHz": 200,
+    "steps": 200,
+    "sourceFloorToleranceMm": 0.25,
+    "mode": "rigid-preview only; not mechanical/material/fit qualification",
+    "records": [
+      {
+        "id": "l-bracket",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 2,
+        "maxRelativeError": 4.0602442043434315e-16,
+        "milliseconds": 479
+      },
+      {
+        "id": "mounting-plate",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 58,
+        "maxRelativeError": 0.0005847724003672656,
+        "milliseconds": 2550
+      },
+      {
+        "id": "spacer",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 1.783351507392845e-07,
+        "milliseconds": 2531
+      },
+      {
+        "id": "cube",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 597
+      },
+      {
+        "id": "box",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 973
+      },
+      {
+        "id": "cylinder",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 8,
+        "maxRelativeError": 0,
+        "milliseconds": 1116
+      },
+      {
+        "id": "rounded-box",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 92,
+        "maxRelativeError": 5.0806847409396725e-06,
+        "milliseconds": 3930
+      },
+      {
+        "id": "capsule",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 6,
+        "maxRelativeError": 0,
+        "milliseconds": 456
+      },
+      {
+        "id": "sphere",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 16,
+        "maxRelativeError": 6.91915292701303e-09,
+        "milliseconds": 895
+      },
+      {
+        "id": "wedge",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 106
+      },
+      {
+        "id": "cone",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 36,
+        "maxRelativeError": 7.450580642070597e-09,
+        "milliseconds": 658
+      },
+      {
+        "id": "polygon",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 1.4288354434899837e-16,
+        "milliseconds": 100
+      },
+      {
+        "id": "tube",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 2.5537830518362647e-06,
+        "milliseconds": 2536
+      },
+      {
+        "id": "washer",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 1.5296010121984626e-06,
+        "milliseconds": 1538
+      },
+      {
+        "id": "counterbore",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 128,
+        "maxRelativeError": 7.700058532286897e-07,
+        "milliseconds": 1949
+      },
+      {
+        "id": "countersink",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 128,
+        "maxRelativeError": 7.289893901930395e-07,
+        "milliseconds": 1997
+      },
+      {
+        "id": "port",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 36,
+        "maxRelativeError": 2.296365477715463e-11,
+        "milliseconds": 715
+      },
+      {
+        "id": "teardrop",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 6,
+        "maxRelativeError": 2.1944909741794203e-11,
+        "milliseconds": 472
+      },
+      {
+        "id": "rib",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 2.4253192047278088e-16,
+        "milliseconds": 53
+      },
+      {
+        "id": "boss",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 96,
+        "maxRelativeError": 8.725720794754994e-07,
+        "milliseconds": 2506
+      },
+      {
+        "id": "screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 506,
+        "maxRelativeError": 0.0004210658193403879,
+        "milliseconds": 3021
+      },
+      {
+        "id": "hex-head-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 489,
+        "maxRelativeError": 0.0003380656213310644,
+        "milliseconds": 3260
+      },
+      {
+        "id": "socket-head-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 504,
+        "maxRelativeError": 0.00042422099411501074,
+        "milliseconds": 2922
+      },
+      {
+        "id": "countersunk-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 536,
+        "maxRelativeError": 0.0005605987129271594,
+        "milliseconds": 2803
+      },
+      {
+        "id": "pan-head-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 671,
+        "maxRelativeError": 0.0004964636848282482,
+        "milliseconds": 4151
+      },
+      {
+        "id": "set-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 455,
+        "maxRelativeError": 0.0005573864316768859,
+        "milliseconds": 2507
+      },
+      {
+        "id": "wood-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 554,
+        "maxRelativeError": 0.0005053345186323793,
+        "milliseconds": 4000
+      },
+      {
+        "id": "nut",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 2038,
+        "maxRelativeError": 0.00011400955509362327,
+        "milliseconds": 24569
+      },
+      {
+        "id": "hinge",
+        "status": "rigid-preview-pass",
+        "bodies": 3,
+        "hulls": 358,
+        "maxRelativeError": 5.3743281756049115e-08,
+        "milliseconds": 2952
+      },
+      {
+        "id": "dovetail",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 34
+      },
+      {
+        "id": "snap-fit",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 3,
+        "maxRelativeError": 4.099892502747794e-09,
+        "milliseconds": 39
+      },
+      {
+        "id": "gear",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 99,
+        "maxRelativeError": 0.0001156999025326226,
+        "milliseconds": 1761
+      },
+      {
+        "id": "spring",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 288,
+        "maxRelativeError": 4.449026623655325e-08,
+        "milliseconds": 1544
+      },
+      {
+        "id": "text",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 196,
+        "maxRelativeError": 0.00010277534793130854,
+        "milliseconds": 1687
+      },
+      {
+        "id": "name-tag",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 222,
+        "maxRelativeError": 0.00029261161809340623,
+        "milliseconds": 831
+      },
+      {
+        "id": "star",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 6,
+        "maxRelativeError": 1.2747213413988041e-08,
+        "milliseconds": 67
+      },
+      {
+        "id": "heart",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 4,
+        "maxRelativeError": 6.358413589427866e-10,
+        "milliseconds": 97
+      },
+      {
+        "id": "ellipse",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 8,
+        "maxRelativeError": 1.6911579726812762e-16,
+        "milliseconds": 102
+      },
+      {
+        "id": "curved-cone",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 896,
+        "maxRelativeError": 0.003761622839417616,
+        "milliseconds": 10532
+      },
+      {
+        "id": "pyramid",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 133
+      },
+      {
+        "id": "round-roof",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 8,
+        "maxRelativeError": 4.446516007697686e-09,
+        "milliseconds": 186
+      },
+      {
+        "id": "hemisphere",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 9.524825995678972e-07,
+        "milliseconds": 1653
+      },
+      {
+        "id": "paraboloid",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 0.0029972742224625504,
+        "milliseconds": 1443
+      },
+      {
+        "id": "torus",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 1.356041088461232e-08,
+        "milliseconds": 1288
+      },
+      {
+        "id": "frustum",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 4,
+        "maxRelativeError": 2.9341894342097384e-09,
+        "milliseconds": 84
+      },
+      {
+        "id": "vase",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1153,
+        "maxRelativeError": 0.010233761391560918,
+        "milliseconds": 4801
+      },
+      {
+        "id": "loft",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 425,
+        "maxRelativeError": 0.00052319496647393,
+        "milliseconds": 1500
+      },
+      {
+        "id": "bent-tube",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 384,
+        "maxRelativeError": 0.00850375221964197,
+        "milliseconds": 1093
+      },
+      {
+        "id": "thread",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 488,
+        "maxRelativeError": 0.0007214165282141644,
+        "milliseconds": 871
+      },
+      {
+        "id": "finishing-washer",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 1.3107161517716934e-06,
+        "milliseconds": 485
+      },
+      {
+        "id": "hirth",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 88,
+        "maxRelativeError": 1.0374267924974108e-06,
+        "milliseconds": 512
+      },
+      {
+        "id": "gt2-pulley",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 681,
+        "maxRelativeError": 0.00013665824742695165,
+        "milliseconds": 2381
+      },
+      {
+        "id": "grid-bin",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 9,
+        "maxRelativeError": 1.392074849175087e-16,
+        "milliseconds": 32
+      },
+      {
+        "id": "sbc",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 115,
+        "maxRelativeError": 0.0002641311386254461,
+        "milliseconds": 803
+      },
+      {
+        "id": "icon-tag",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 42,
+        "maxRelativeError": 0.00016504658038797433,
+        "milliseconds": 366
+      },
+      {
+        "id": "qr",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 114,
+        "maxRelativeError": 1.196829540655702e-16,
+        "milliseconds": 188
+      },
+      {
+        "id": "crescent",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 20,
+        "maxRelativeError": 0.0005010191828879746,
+        "milliseconds": 172
+      },
+      {
+        "id": "knurl",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 296,
+        "maxRelativeError": 5.587449320381498e-05,
+        "milliseconds": 1458
+      },
+      {
+        "id": "ruler",
+        "status": "reference-excluded"
+      }
+    ]
+  },
+  "nativeMac": {
+    "build": 34,
+    "status": "Installed and running; native smoke passed; live asset receipt matches",
+    "receipt": {
+      "version": "0.1.0",
+      "commit": "d6e3f2d77e23f4b1e696785d5647e031b85d4d8c",
+      "dirty": false,
+      "builtAt": "2026-11-15T12:19:06.268Z"
+    }
+  },
+  "closedGaps": [
+    {
+      "gap": "Longer profiles were rejected by the old 64-edge metadata ceiling.",
+      "fix": "Radial profiles allow up to 256 edges. Tube-grid limits, mesh buffer checks, qualification error and compound budgets remain enforced."
+    },
+    {
+      "gap": "Microscopic curved-cone tip pieces failed Jolt scale validation; angular coarsening caused vase collision error above 3%.",
+      "fix": "Bounded collision-only profile chord simplification, up to 0.05 mm and scaled down for small profiles. Actual-mesh qualification retains 2% volume and 0.2 mm bounds gates."
+    },
+    {
+      "gap": "A volume-correct sector compound had ambiguous ray hits at shared floor/axis and wall boundaries.",
+      "fix": "Inscribed floor support core plus 0.00001-radian sector overlap. Both are part of actual source/compound qualification. Floor axis, off-axis support and wall seam regressions pass. Jolt settings remain unchanged."
+    }
+  ],
+  "browserInitialFailure": "Initial 45-second run: three Chromium workflows timed out while Playwright scrolled the transparent additional-shapes checkbox, before edits; three WebKit workflows passed. A visible labelled-icon rerun passed the teardrop case, but vase/washer then exhausted the deadline later. Its trace showed roughly 10-second cold navigation, 10-second palette opening and 9-second checked-state lookup before editing. The final two cases use the visible control and a bounded 120-second allowance. No runtime timeout or modeling budget changed.",
+  "limits": [
+    "Numeric recipes are not general sketch constraints or arbitrary generator formula bindings.",
+    "Vase wall thickness is radial, not constant along surface normals.",
+    "Qualification covers defaults and selected edited variants, not every possible numeric combination or mechanical/material/manufacturing fitness.",
+    "Software-rendered browser timing is not a controlled hardware performance measurement."
+  ],
+  "logs": [
+    {
+      "file": "cad-curved-unit.log",
+      "bytes": 4339,
+      "sha256": "a0824769c9fdf5c4c37d668e34f4c77f1661ea7531f2c0fd84d4608d6b379c51"
+    },
+    {
+      "file": "cad-curved-unit-final.log",
+      "bytes": 232,
+      "sha256": "ee03d852f4cdbabe8674cd49bf081dd6f477ed2345e157708d7734011b24dd47"
+    },
+    {
+      "file": "cad-curved-physics.log",
+      "bytes": 3177,
+      "sha256": "7d32a3b054b62b96d1342119ed9be6ebe8f05e816890f033d5546c6ca3659b86"
+    },
+    {
+      "file": "cad-curved-physics-final.log",
+      "bytes": 2985,
+      "sha256": "0f249d249c7770f1ee5fabcced62c0e94199c0a64dd5ac07ac86cc5235bac0e0"
+    },
+    {
+      "file": "cad-curved-physics-refined.log",
+      "bytes": 2082,
+      "sha256": "9271fe83b56e383378ffae98c4efaa8fe8d3e4dc934906db105007e072a65d11"
+    },
+    {
+      "file": "cad-curved-physics-closed.log",
+      "bytes": 1064,
+      "sha256": "00066ddc6dcc1a657c6216d342ee4f16a29d1b05de12e9c5b29ff223087fd98b"
+    },
+    {
+      "file": "cad-curved-physics-supported.log",
+      "bytes": 1118,
+      "sha256": "3bc792cb07a89f7c7add365f3aa7b1a50043a77c5ba09bd9156037336c831ef1"
+    },
+    {
+      "file": "cad-curved-physics-sealed.log",
+      "bytes": 234,
+      "sha256": "652b64f85eecf34b5906e639446858d64b6d0c8fd5d78856cf500c24240cd411"
+    },
+    {
+      "file": "cad-curved-full-unit.log",
+      "bytes": 331,
+      "sha256": "2325380f7a3ae692d583abea0158943908b53f18105655a93697aa804777d337"
+    },
+    {
+      "file": "cad-curved-release-build.log",
+      "bytes": 3061,
+      "sha256": "5d94444b81428998e0bfb4bdb14b9f3bee7e7278f535ab50155ba65fd8911963"
+    },
+    {
+      "file": "cad-curved-release-i18n.log",
+      "bytes": 222,
+      "sha256": "e384a719b5fabb1e5cd368f3f56d7f5df16817f16bde415d425a033a3060ff93"
+    },
+    {
+      "file": "cad-curved-release-audit.log",
+      "bytes": 317,
+      "sha256": "2c68ce9d02d5b96cec634a586e527e9c41756010ff09052aa395660eafb5cb75"
+    },
+    {
+      "file": "cad-curved-catalog-physics.log",
+      "bytes": 1084,
+      "sha256": "a9ac359d5ad01419c6404a71905497ccbf975c31b52982299eba7969b43634e4"
+    },
+    {
+      "file": "cad-curved-browser.log",
+      "bytes": 13832,
+      "sha256": "05796b5a4064d00eec0905c63bf55b7bcaf391327c52f90bef1abfdfb74ddf2a"
+    },
+    {
+      "file": "cad-mac34-build.log",
+      "bytes": 1522,
+      "sha256": "c9e81382040e12e79a8e19e18744bbca860e210cfa6ea0ebd66b132683396e55"
+    },
+    {
+      "file": "cad-mac34-smoke.log",
+      "bytes": 468,
+      "sha256": "f65df21f2a201d47bdea55addc02ea40d13728e4e69f4e69e071385337a4d53f"
+    },
+    {
+      "file": "cad-mac34-install.log",
+      "bytes": 128,
+      "sha256": "32585d3f32327145fe56d6d3f3a11323274dd5ae18c8d933581a239adbbd5273"
+    },
+    {
+      "file": "cad-curved-browser-visible-controls.log",
+      "bytes": 7883,
+      "sha256": "fcb8a08c27de5a0187f219529120b9ec131cb597081c624fcb6dd573f59788fc"
+    },
+    {
+      "file": "cad-curved-browser-final.log",
+      "bytes": 563,
+      "sha256": "7fcd3f7f3d8f3e21248709eedf82d5066082f4da50b47de11d5601b574dff281"
+    },
+    {
+      "file": "cad-curved-merged-library.log",
+      "bytes": 1197,
+      "sha256": "e43497dead1997e771311b73e487c8b16d6bec26adb304defb3f48c76d34ed1b"
+    },
+    {
+      "file": "cad-curved-merged-coin-final.log",
+      "bytes": 230,
+      "sha256": "5bd2a147c0445b5d8001c0a69ad9bb613c498e9828f5db673f7298ac2ce230b0"
+    }
+  ],
+  "visualReview": "Inspected successful Chromium vase screenshot: open mouth, smooth profile, compact design fields and collapsed Surface detail. Height regeneration preserves origin as documented.",
+  "subsequentDataMerge": {
+    "mainCommit": "58371c9",
+    "scope": "Seventeen additional archived LDraw components; no production runtime source change. Source catalogue now 189; Mac 34 predates these data admissions.",
+    "focusedLibraryTestsPassedAcrossRuns": 117,
+    "testMaintenance": "Generic seed/coin checks now assert corpus membership, unique IDs and selected-file identity instead of an unrelated global catalogue count. A new identity assertion initially compared a raw remote URL against its intentional local-file normalization; explicit local reference fields corrected it, and both coin tests pass."
+  }
+}

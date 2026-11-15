@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: BSD-3-Clause
+import {beforeAll,expect,it} from 'vitest';import {readFileSync} from 'node:fs';
+import {curvedGeneratorPresets,defaultGenerator,checkGenerator,generatorFields,createCadSession,parseDocument,validateDocument,setLocale,t} from '@brickwright/cad-core';
+import {createGeometryKernel} from '@brickwright/cad-geometry';import type {GeometryKernel} from '@brickwright/cad-geometry';
+import {createPresetDocument,presetGeometry} from '../packages/editor/src/shapes.js';
+let kernel:GeometryKernel;beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
+const variants={'curved-cone':{diameter:38,height:44,exponent:1.5,profileSegments:64,segments:96},hemisphere:{radius:22,profileSegments:64,segments:96},paraboloid:{diameter:40,height:28,profileSegments:96,segments:96},vase:{baseDiameter:28,bodyDiameter:44,mouthDiameter:24,height:50,bellyHeight:18,wallThickness:2.5,baseThickness:3,profileSegments:48,segments:96},teardrop:{radius:11,apexHeight:19,length:38,segments:48},'finishing-washer':{outerDiameter:26,boreDiameter:8,seatDiameter:18,height:8,seatAngle:82,edgeChamfer:1.5,segments:96}};
+for(const preset of curvedGeneratorPresets)it(`${preset} retains edited design intent through source, undo and portable reopening`,()=>{
+ const s=createCadSession(createPresetDocument(preset)),id=s.state.document.roots[0];s.update(id,{name:'Retained curve',color:'#aa6688',transform:{position:[4,8,12],rotation:[0,0,30],scale:[1,1,1]}});const before=s.serialize(),r=defaultGenerator(preset)!;Object.assign(r.values,variants[preset]);s.replaceGenerated(id,createPresetDocument(preset,'BW',{recipe:r}));validateDocument(s.state.document);expect(s.state.document.nodes[id]).toMatchObject({generator:r,name:'Retained curve',color:'#aa6688',transform:{position:[4,8,12],rotation:[0,0,30],scale:[1,1,1]}});expect(kernel.evaluate(s.state.document).volume).toBeGreaterThan(0);const after=s.serialize();expect(parseDocument(after).nodes[id].generator).toEqual(r);s.undo();expect(s.serialize()).toBe(before);s.redo();expect(s.serialize()).toBe(after);
+ s.enableModelSource();expect(s.modelSource.length).toBeLessThan(5000);const key=preset==='hemisphere'?'radius':preset==='teardrop'?'length':'height',value=r.values[key]+1;s.applyModelSource(s.modelSource.replace(`${key}: ${r.values[key]}`,`${key}: ${value}`),{regenerate:recipe=>createPresetDocument(recipe.preset,'BW',{recipe})});expect(s.state.document.nodes[id].generator!.values[key]).toBe(value);expect(kernel.evaluate(s.state.document).volume).toBeGreaterThan(0);s.dispose();
+});
+it('matches independent curved-cone, hemisphere and paraboloid integrals at high detail',()=>{
+ for(const preset of ['curved-cone','hemisphere','paraboloid'] as const){const r=defaultGenerator(preset)!;Object.assign(r.values,variants[preset]);const p=r.values,g=kernel.evaluate(createPresetDocument(preset,'BW',{recipe:r})),expected=preset==='hemisphere'?2*Math.PI*p.radius**3/3:preset==='paraboloid'?Math.PI*(p.diameter/2)**2*p.height/2:Math.PI*(p.diameter/2)**2*p.height/(2*p.exponent+1);expect(Math.abs(g.volume-expected)/expected).toBeLessThan(.002);expect(g.bodies[0].bounds.max[2]-g.bodies[0].bounds.min[2]).toBeCloseTo(preset==='hemisphere'?p.radius:p.height,4);}
+});
+it('keeps one connected, welded shell for edited curved and hollow shapes',()=>{
+ for(const preset of curvedGeneratorPresets){const r=defaultGenerator(preset)!;Object.assign(r.values,variants[preset]);const b=kernel.evaluate(createPresetDocument(preset,'BW',{recipe:r})).bodies[0],edges=new Map<string,number>(),adj=new Map<number,Set<number>>();for(let i=0;i<b.indices.length;i+=3)for(let j=0;j<3;j++){const a=b.indices[i+j],c=b.indices[i+(j+1)%3],key=a<c?`${a}/${c}`:`${c}/${a}`;edges.set(key,(edges.get(key)??0)+1);if(!adj.has(a))adj.set(a,new Set());adj.get(a)!.add(c);}expect([...edges.values()].every(v=>v===2),preset).toBe(true);const seen=new Set<number>(),todo=[b.indices[0]];while(todo.length){const i=todo.pop()!;if(seen.has(i))continue;seen.add(i);todo.push(...adj.get(i)!);}expect(seen.size,preset).toBe(adj.size);}
+});
+it('keeps a vase opening and prescribed radial wall at every shared profile height',()=>{
+ const r=defaultGenerator('vase')!;Object.assign(r.values,variants.vase);const g=presetGeometry('vase',false,r),p=g.getAttribute('position'),hint=g.userData.collisionHint;expect(hint.segments).toBe(96);const rows=Array.from({length:hint.sides+1},(_,i)=>[Math.hypot(p.getX(i),p.getY(i)),p.getZ(i)]),outer=rows.slice(1).filter(v=>v[0]>0);for(const z of new Set(outer.map(v=>v[1]))){const radii=outer.filter(v=>v[1]===z).map(v=>v[0]);if(radii.length===2)expect(Math.max(...radii)-Math.min(...radii)).toBeCloseTo(2.5,4);}g.dispose();
+});
+it('refuses folded, closed or zero-material designs and fractional profile detail transactionally',()=>{
+ for(const [preset,patch] of [['vase',{mouthDiameter:4}],['vase',{bodyDiameter:18}],['vase',{baseThickness:32}],['vase',{bellyHeight:32}],['teardrop',{apexHeight:8}],['finishing-washer',{seatDiameter:6}],['finishing-washer',{edgeChamfer:2}],['finishing-washer',{seatAngle:30}],['hemisphere',{profileSegments:16.5}]] as const){const r=defaultGenerator(preset)!;Object.assign(r.values,patch);expect(()=>checkGenerator(r)).toThrow();expect(()=>createPresetDocument(preset,'BW',{recipe:r})).toThrow();}
+ expect(()=>createPresetDocument('vase','BW',{recipe:defaultGenerator('hemisphere')})).toThrow();
+});
+it('supports plain cup profiles, zero chamfers and both limits of supported cone curvature',()=>{
+ for(const [preset,patch] of [['vase',{baseDiameter:24,bodyDiameter:24,mouthDiameter:24,baseThickness:4}],['finishing-washer',{edgeChamfer:0}],['curved-cone',{exponent:.5}],['curved-cone',{exponent:4}]] as const){const r=defaultGenerator(preset)!;Object.assign(r.values,patch);expect(kernel.evaluate(createPresetDocument(preset,'BW',{recipe:r})).volume).toBeGreaterThan(0);}
+});
+it('preserves legacy meshes until explicit regeneration and localizes every new design input',()=>{
+ for(const preset of curvedGeneratorPresets){const doc=createPresetDocument(preset),id=doc.roots[0];delete doc.nodes[id].generator;doc.version=1;const s=createCadSession(doc),before=s.serialize();s.replaceGenerated(id,createPresetDocument(preset));expect(s.state.document.nodes[id].generator?.preset).toBe(preset);s.undo();expect(s.serialize()).toBe(before);s.dispose();}
+ setLocale('de');try{for(const preset of curvedGeneratorPresets)for(const f of generatorFields(preset))if(f.label!=='Radius (mm)')expect(t(f.label),f.label).not.toBe(f.label);}finally{setLocale('en');}
+});
+it('bounds denser radial profiles without loosening tube-grid or collision approximation limits',()=>{
+ const doc=createPresetDocument('vase'),id=doc.roots[0],node=doc.nodes[id];if(node.kind!=='mesh')throw new Error('Expected mesh');expect(node.physics!.collisionHint!.sides).toBeGreaterThan(64);validateDocument(doc);
+ const invalid=structuredClone(doc),m=invalid.nodes[id];m.physics!.collisionHint!.sides=257;expect(()=>validateDocument(invalid)).toThrow('bad collision hint');
+ const tube=structuredClone(doc);tube.nodes[id].physics!.collisionHint={kind:'tube-grid',segments:16,sides:65,layout:'rows',closed:true};expect(()=>validateDocument(tube)).toThrow('bad collision hint');
+});

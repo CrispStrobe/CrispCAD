@@ -1,12 +1,13 @@
 import {simulationExampleCatalog,isSimulationExample,createSimulationExample,simulationExampleGeometry} from './simulation-examples.js';
 import {motorCatalog,isMotorModel,motorGeometry,createMotorDocument} from './motor-models.js';
 import {allocateMotorPort} from '@brickwright/cad-core';
-import {defaultGenerator,screwVariant,checkGenerator,basicGeneratorPresets} from '@brickwright/cad-core';
+import {defaultGenerator,screwVariant,checkGenerator,basicGeneratorPresets,curvedGeneratorPresets} from '@brickwright/cad-core';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 // Independently authored presets. Geometry constructors are from Three.js (MIT).
 // Simple presets and retained sketch templates share the versioned CAD document.
 import * as THREE from 'three';
+import {curvedShapeGeometry} from './curved-shape-geometry.js';
 import {basicShapeGeometry} from './basic-shape-geometry.js';
 import { identityTransform, createCadSession, defaultPartPhysics,createDesignTemplate } from '@brickwright/cad-core';
 import type { Primitive, SolidNode,GeneratorRecipe } from '@brickwright/cad-core';
@@ -57,12 +58,12 @@ export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
  ...entries.filter(p=>!Object.values(essentials).flat().includes(p.id)).map(p=>Object.freeze({...p,category:'Additional shapes',additional:true})),
 ]);
 
-function profile(points: [number, number][], detail: number) { return new THREE.LatheGeometry(points.map(p => new THREE.Vector2(...p)), detail).rotateX(Math.PI / 2); }
 /** Caller owns and disposes the returned geometry. All geometry is Z-up. */
 export function presetGeometry(id: string, preview = false, recipe?:GeneratorRecipe): THREE.BufferGeometry {
   if(isSimulationExample(id))return simulationExampleGeometry(id);
   if(isMotorModel(id))return motorGeometry(id);
   if((basicGeneratorPresets as readonly string[]).includes(id)){const retained=checkGenerator(recipe??defaultGenerator(id)!);if(retained.preset!==id)throw new Error(t('Invalid shape generator'));const shown=structuredClone(retained);if(preview){for(const key of ['segments','tubeSegments','detail'])if(shown.values[key]!==undefined)shown.values[key]=Math.min(shown.values[key],key==='detail'?2:key==='tubeSegments'?10:20);}return basicShapeGeometry(shown);}
+  if((curvedGeneratorPresets as readonly string[]).includes(id)&&!advancedCatalog.some(p=>p[0]===id)){const retained=checkGenerator(recipe??defaultGenerator(id)!);if(retained.preset!==id)throw new Error(t('Invalid shape generator'));const shown=structuredClone(retained);if(preview){shown.values.segments=Math.min(20,shown.values.segments);shown.values.profileSegments=Math.min(16,shown.values.profileSegments);}return curvedShapeGeometry(shown);}
   const variant=screwVariant(id);if(variant)return constructionPreview('screw',variant);
   const n = preview ? 20 : 64;
   switch (id) {
@@ -70,11 +71,7 @@ export function presetGeometry(id: string, preview = false, recipe?:GeneratorRec
     case 'box': return new THREE.BoxGeometry(30,30,20);
     case 'cylinder': return new THREE.CylinderGeometry(10,10,30,n).rotateX(Math.PI/2);
     case 'sphere': return new THREE.SphereGeometry(15,n,preview ? 12 : 32);
-    case 'curved-cone': return profile([[0,0], ...Array.from({length:17}, (_,i): [number,number] => [13*(1-i/16)**2,30*i/16])],n);
-    case 'hemisphere': return profile([[0,0], ...Array.from({length:17}, (_,i): [number,number] => i===16 ? [0,15] : [15*Math.cos(i*Math.PI/32),15*Math.sin(i*Math.PI/32)])],n);
-    case 'paraboloid': return profile([[0,0], ...Array.from({length:25}, (_,i): [number,number] => [13*Math.sqrt(1-i/24),26*i/24])],n);
-    case 'vase': return profile([[0,0],[10,0],[13,5],[15,12],[14,20],[9,27],[8,32],[6,32],[7,27],[12,20],[13,12],[11,5],[8,2],[0,2]],n);
-    default: return constructionPreview(id);
+    default: return constructionPreview(id,recipe);
   }
 }
 export function createPresetShape(id: string, recipe?:GeneratorRecipe): { shape: Primitive | MeshShape; height: number } {
@@ -96,9 +93,8 @@ export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: 
   const variant=screwVariant(id);if(variant)return constructionDocument('screw',t(preset.name),preset.color,text,options.svg,options.recipe??variant);
   if(['l-bracket','mounting-plate','spacer'].includes(id)){const doc=structuredClone(createDesignTemplate(id as import('@brickwright/cad-core').DesignTemplate));doc.title=t(doc.title);for(const node of Object.values(doc.nodes))node.name=t(node.name);for(const sketch of Object.values(doc.sketches??{}))sketch.name=t(sketch.name);return doc;}
   if (advancedCatalog.some(p => p[0] === id)){let recipe=options.recipe;if(!recipe&&['text','name-tag'].includes(id)){recipe=defaultGenerator(id)!;recipe={...recipe,text,font:options.font??'sans'};}const document=constructionDocument(id, t(preset.name), preset.color, text, options.svg,recipe);for(const joint of document.joints??[])if(joint.kind==='hinge'&&!joint.control)joint.control={port:allocateMotorPort(document.joints!)};return document;}
-  const session = createCadSession(); const retained=(basicGeneratorPresets as readonly string[]).includes(id)?checkGenerator(options.recipe??defaultGenerator(id)!):undefined;const base=createPresetShape(id,retained).shape;if(id==='cube'){const recipe=checkGenerator(options.recipe??defaultGenerator('cube')!);if(recipe.preset!=='cube')throw new Error(t('Invalid shape generator'));const edge=recipe.values.edge;if(base.kind==='box')base.size=[edge,edge,edge];}session.add(base, { name: t(preset.name), color: preset.color }); const doc = structuredClone(session.state.document); const node=doc.nodes[doc.roots[0]];node.physics = {...defaultPartPhysics(),...node.physics,sourcePreset:id};if(retained){doc.version=2;node.generator=structuredClone(retained);}if(id==='cube'){doc.version=2;node.generator=structuredClone(options.recipe??defaultGenerator('cube')!);}
-  const profileLengths:Record<string,number>={'curved-cone':18,hemisphere:18,paraboloid:26,vase:14};
-  if(profileLengths[id])node.physics.collisionHint={kind:'radial-profile',segments:64,sides:profileLengths[id]-1,layout:'rows',closed:true}; session.dispose(); return doc;
+  const session = createCadSession(); const retained=([...basicGeneratorPresets,...curvedGeneratorPresets] as readonly string[]).includes(id)?checkGenerator(options.recipe??defaultGenerator(id)!):undefined;const base=createPresetShape(id,retained).shape;if(id==='cube'){const recipe=checkGenerator(options.recipe??defaultGenerator('cube')!);if(recipe.preset!=='cube')throw new Error(t('Invalid shape generator'));const edge=recipe.values.edge;if(base.kind==='box')base.size=[edge,edge,edge];}session.add(base, { name: t(preset.name), color: preset.color }); const doc = structuredClone(session.state.document); const node=doc.nodes[doc.roots[0]];node.physics = {...defaultPartPhysics(),...node.physics,sourcePreset:id};if(retained){doc.version=2;node.generator=structuredClone(retained);}if(id==='cube'){doc.version=2;node.generator=structuredClone(options.recipe??defaultGenerator('cube')!);}
+  session.dispose(); return doc;
 }
 /** Static SVG thumbnails derived from our actual geometry, with no GPU contexts. */
 export function presetPreview(preset: ShapePreset): string {

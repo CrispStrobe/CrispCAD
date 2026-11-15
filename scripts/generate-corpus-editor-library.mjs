@@ -119,9 +119,11 @@ export const corpusEditorSelection = [
   ['Bricks', '97cd7d74ef9492d8f29bcbccc7cdd972f83818d48cf947e47f0ef62229355545'],
   ['Arc_01', '3a090cd3ee476bdede9893c9c75745278b1469a4c0038e312e0c004fc656cb2b'],
   ['Flag_France', 'f217f82a7a8cd72fabd7276cde47e4de47aea0ab9d19ff7c24c2a35e92b67e91'],
+  ['Flag_Italy', '981ec35a7c5c57bdd686820c7ae3268f6cf56328622e37f09dd6f21840089c9e'],
+  ['Sign_03', '78b28f433cf0fe1807864af8c060a346b4326103cd25c18eb9aa92e964eae32b'],
 ];
 // Only this admission batch gains warning metadata; earlier qualification records stay immutable.
-const warningQualifiedNames = new Set(['Flag_France', 'Arc_01', 'Bricks', 'Scene_City_Street', 'Coin_02', 'Shaft_01', 'Shaft_02_With_Keyway', 'Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ', 'Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01']);
+const warningQualifiedNames = new Set(['Sign_03', 'Flag_Italy', 'Flag_France', 'Arc_01', 'Bricks', 'Scene_City_Street', 'Coin_02', 'Shaft_01', 'Shaft_02_With_Keyway', 'Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ', 'Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01']);
 const cityDependencies = {
   "Asset_SCAD/Street_02.scad": "9c114a059e7a07b137e11bde20c9ddc047631de9309ec8b99f2b4fc556da3060",
   "Asset_SCAD/Street_03.scad": "5e2efcd002e43aafc5ad52fecb0f5425413872fb0e38169ef98b45d22675ac9d",
@@ -133,7 +135,7 @@ const preserved97Hash = '1c4e1de1ea28475c545bd1d2a1b1bf5a20fbcb3b04dffca40779b2b
 export async function generateCorpusEditorLibrary({assetId} = {}) {
   const previous = assetId ? JSON.parse((await read('editor-corpus-manifest.json')).toString()) : undefined;
   if (previous && hash(Buffer.from(JSON.stringify(previous.assets.slice(0,97)))) !== preserved97Hash) throw new Error('Review required: historical 97 records changed.');
-  if (assetId && !['corpus-angelo-scene-city-street','corpus-angelo-bricks','corpus-angelo-arc-01','corpus-angelo-flag-france'].includes(assetId)) throw new Error('Focused reproduction is restricted to the explicitly reviewed city, Bricks, Arc01 and FlagFrance sources.');
+  if (assetId && !['corpus-angelo-scene-city-street','corpus-angelo-bricks','corpus-angelo-arc-01','corpus-angelo-flag-france','corpus-angelo-flag-italy','corpus-angelo-sign-03'].includes(assetId)) throw new Error('Focused reproduction is restricted to the explicitly reviewed city, Bricks, Arc01 FlagFrance, FlagItaly and Sign03 sources.');
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
   const repository = corpus.repositories.find(item => item.id === repositoryId);
   if (!repository || repository.commit !== commit || repository.url !== repositoryUrl || repository.license !== 'MIT') throw new Error('Review required: selected corpus repository identity changed.');
@@ -161,7 +163,7 @@ export async function generateCorpusEditorLibrary({assetId} = {}) {
     // Preserve the previous derivative bytes and their history/provenance identity.
     const meshPath = `meshes/corpus-selection/${slug}${name === 'Walking_Stick' ? '-scoped-fn-v2' : ''}.stl`;
     const title = name === 'x' ? 'Crossed cubes (x)' : name.replaceAll('_', ' ');
-    const selectionNote = name === 'Bricks' ? ' Random dimensions are a reproducible import snapshot from Brickwright’s source-derived unseeded stream. The authored source, ranges, two invocations and positions are unchanged; this is not an upstream random-sequence equivalence claim. Random values are fixed in generated CAD Script; reimport changed source to sample its source-derived stream. Appearance colours are omitted as elsewhere.' : name === 'Coin_02' ? ' The authored unsupported text center argument is ignored with a warning; default left/baseline text alignment is retained. Text uses the bundled Droid Sans substitute; font metrics and appearance are not upstream-certified.' : ['Street_03', 'Street_06'].includes(name)
+    const selectionNote = name === 'Flag_Italy' ? ' French and Italian flags are distinct authored originals whose geometry is identical after the existing cosmetic-colour omission. This record adds no unique STL; country colours are not retained in geometry or monochrome previews. This collection counts originals separately from unique derived geometry.' : name === 'Bricks' ? ' Random dimensions are a reproducible import snapshot from Brickwright’s source-derived unseeded stream. The authored source, ranges, two invocations and positions are unchanged; this is not an upstream random-sequence equivalence claim. Random values are fixed in generated CAD Script; reimport changed source to sample its source-derived stream. Appearance colours are omitted as elsewhere.' : name === 'Coin_02' ? ' The authored unsupported text center argument is ignored with a warning; default left/baseline text alignment is retained. Text uses the bundled Droid Sans substitute; font metrics and appearance are not upstream-certified.' : ['Street_03', 'Street_06'].includes(name)
       ? ' Street 03 and Street 06 are distinct upstream source files with identical derived geometry; this collection counts source files, not unique shapes.'
       : name === 'Raccordo' ? ' OpenSCAD # highlighting is omitted; the highlighted solid geometry is retained.'
       : name === 'Pipe_00' ? ' Translation uses the fixed full-render context $preview=false, preserving the source-selected 30-segment circular profiles.'
@@ -190,11 +192,12 @@ export async function generateCorpusEditorLibrary({assetId} = {}) {
     const evaluated = kernel.evaluate(session.state.document);
     if (!evaluated.bodies.length || !(evaluated.volume > 0)) throw new Error(`Selected source produced no positive solid: ${name}`);
     const mesh = Buffer.from(exportSTL(evaluated.bodies));
+    if (name === 'Flag_Italy' && hash(mesh) !== '7a1ce07bf4355cb400f96fe9035244441dbae89f78ea7224b3eea0c43d836cba') throw new Error('FlagItaly derivative changed from closed-mesh qualification.');
     if (name === 'Flag_France' && hash(mesh) !== '7a1ce07bf4355cb400f96fe9035244441dbae89f78ea7224b3eea0c43d836cba') throw new Error('FlagFrance derivative changed from corner-origin qualification.');
     if (name === 'Arc_01' && hash(mesh) !== '919d78c32c797aaac495093e824987455564e3cfd00e1a334fd37206a4a1db11') throw new Error('Arc01 derivative changed from updated-code qualification.');
     if (name === 'Bricks' && hash(mesh) !== '0a405aa894512686e543462e230dee07406b5e81b0b306746f06391c481e0fe7') throw new Error('Bricks snapshot changed from cold-qualified STL.');
     if (name === 'Scene_City_Street' && hash(mesh) !== '27c31bed500181d6207e8b020897515bb79cbe264c2387626c00dc79d3e5118f') throw new Error('City default changed from cold-qualified STL.');
-    const screening = await checkModelLibrarySTL(mesh, {checkedOn: ['Arc_01','Flag_France'].includes(name) ? '2026-11-15' : '2026-11-14', toMillimetresZUp: identity, maxTriangles: 10000, maxExtentMm: 200});
+    const screening = await checkModelLibrarySTL(mesh, {checkedOn: ['Arc_01','Flag_France','Flag_Italy','Sign_03'].includes(name) ? '2026-11-15' : '2026-11-14', toMillimetresZUp: identity, maxTriangles: 10000, maxExtentMm: 200});
     if (!screening.quality || Object.values(screening.checks).some(result => result !== 'pass')) throw new Error(`Selected mesh screening failed: ${name}: ${JSON.stringify(screening.diagnostics)}`);
     outputs.set(sourcePath, bytes);
     outputs.set(meshPath, mesh);
@@ -217,7 +220,7 @@ export async function generateCorpusEditorLibrary({assetId} = {}) {
       corpusSelection: {repositoryId, upstreamPath, archivedPath: `corpus/repos/${repositoryId}/${upstreamPath}`, sha256: expectedHash},
       licence: {spdx: 'MIT', scope: 'asset', attribution: `${record.author_attribution}. Source: ${record.source_url}. ${evidence.toString('utf8').replace(/\s+/g, ' ').trim()}`,
         evidenceUrl: evidenceRecord.source_url, localEvidence: [{...file(evidencePath, evidence), url: evidenceRecord.source_url}], capturedOn: repository.captured_at,
-        review: 'accepted', reviewer: name === 'Flag_France' ? `${repository.reviewed_by}; exact authored flag default and general corner-origin fix, strict STL/editor screening 2026-11-15` : name === 'Arc_01' ? `${repository.reviewed_by}; exact Arc01 current-code defaults/STL/editor screening 2026-11-15` : name === 'Scene_City_Street' ? `${repository.reviewed_by}; explicit city root and five use dependencies, default STL screening 2026-11-14` : `${repository.reviewed_by}; explicit standalone editor selection and runtime screening 2026-11-14`},
+        review: 'accepted', reviewer: name === 'Sign_03' ? `${repository.reviewed_by}; exact authored sign and general uniform-cylinder origin fix, strict STL/editor screening 2026-11-15` : name === 'Flag_Italy' ? `${repository.reviewed_by}; exact authored Italian flag source/editor/preview qualification 2026-11-15; shared STL counted once` : name === 'Flag_France' ? `${repository.reviewed_by}; exact authored flag default and general corner-origin fix, strict STL/editor screening 2026-11-15` : name === 'Arc_01' ? `${repository.reviewed_by}; exact Arc01 current-code defaults/STL/editor screening 2026-11-15` : name === 'Scene_City_Street' ? `${repository.reviewed_by}; explicit city root and five use dependencies, default STL screening 2026-11-14` : `${repository.reviewed_by}; explicit standalone editor selection and runtime screening 2026-11-14`},
       original: {...file(sourcePath, bytes), url: record.source_url, format: 'openscad'},
       ...(sourceBundle ? {sourceBundle} : {}),
       derivatives: [{...file(meshPath, mesh), format: 'stl'}],

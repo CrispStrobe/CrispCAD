@@ -21,14 +21,26 @@ export async function createGeometryKernel(options: { wasmURL?: string; wasmBina
   // External or mutated pieces still require canonical convex reconstruction.
   const convexRegistry=new WeakMap<object,{positions:Float64Array;indices:Uint32Array}>();
   const remember=<T extends {positions:Float64Array;indices:Uint32Array}>(piece:T):T=>{convexRegistry.set(piece,{positions:new Float64Array(piece.positions),indices:new Uint32Array(piece.indices)});return piece;};
-  return { evaluate: (doc: CadDocument) => evaluateDocument(module, doc), partitionConvex: (mesh: Pick<BodyMesh,'positions'|'indices'>, maxPieces=2048) => partitionConvex(module,mesh.positions,mesh.indices,maxPieces).map(remember),
+  return { evaluate: (doc: CadDocument) => {
+      const retry={value:false},first=evaluateDocument(module,doc,false,retry);
+      return retry.value?evaluateDocument(module,doc,true):first;
+    }, partitionConvex: (mesh: Pick<BodyMesh,'positions'|'indices'>, maxPieces=2048) => partitionConvex(module,mesh.positions,mesh.indices,maxPieces).map(remember),
     isConvexPiece(piece:{positions:Float64Array;indices:Uint32Array}){const snapshot=convexRegistry.get(piece);return !!snapshot&&snapshot.positions.length===piece.positions.length&&snapshot.indices.length===piece.indices.length&&snapshot.positions.every((v,i)=>v===piece.positions[i])&&snapshot.indices.every((v,i)=>v===piece.indices[i]);},
     collisionCSG: collisionCSG(module,remember),
     hullPoints(points: readonly [number,number,number][]) { if(points.length<4||points.length>4096||points.some(p=>p.length!==3||p.some(v=>!Number.isFinite(v)||Math.abs(v)>1e6)))throw new Error(t('Collision hull points exceed the finite geometry budget'));const hull=module.Manifold.hull(points);try{if(hull.isEmpty())throw new Error(t('Collision segment is degenerate'));const mesh=hull.getMesh();return remember({positions:new Float64Array(Array.from({length:mesh.numVert*3},(_,i)=>mesh.vertProperties[Math.floor(i/3)*mesh.numProp+i%3])),indices:new Uint32Array(mesh.triVerts)});}finally{hull.delete();} },
   };
 }
 export type GeometryKernel = Awaited<ReturnType<typeof createGeometryKernel>>;
-function evaluateDocument(module: ManifoldToplevel, input: CadDocument): GeometryResult {
+// Do not globally replace centred construction: it changes stable CSG triangulations.
+// Retry the equivalent origin construction only when distinct manifold vertices
+// collapse to the same Float32 export coordinate. No snapping or gap tolerance is used.
+function hasCollapsedVertices(mesh:BodyMesh):boolean {
+  const seen=new Set<string>();
+  for(let i=0;i<mesh.positions.length;i+=3){const key=`${mesh.positions[i]},${mesh.positions[i+1]},${mesh.positions[i+2]}`;if(seen.has(key))return true;seen.add(key);}
+  return false;
+}
+function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCylinderOrigins=false, retry?:{value:boolean}): GeometryResult {
+  let hasOriginCylinder=false;
   const doc = validateDocument(input); const cache = new Map<string, Manifold>(); const owned = new Set<Manifold>();
   const keep = (m: Manifold) => { owned.add(m); return m; };
   const profiles=new Set<CrossSection>(),profileCache=new WeakMap<CodeProfile,CrossSection>();
@@ -76,7 +88,12 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
       // Construct that directly: nested decimal moves otherwise introduce a
       // spurious gap at an authored shared face before CSG, hidden by Float32.
       if(shape.kind==='move'&&childShape.kind==='box'&&shape.vector.every((v,i)=>v===childShape.size[i]/2))solid=keep(module.Manifold.cube(childShape.size,false));
-      else {const child=buildCode(childShape);solid=keep(shape.kind==='move'?child.translate(shape.vector):shape.kind==='rotate'?child.rotate(shape.vector):child.scale(shape.vector));}
+      else {
+        const originCylinder=shape.kind==='move'&&(childShape.kind==='cylinder'||(childShape.kind==='frustum'&&childShape.bottom===childShape.top))&&shape.vector[0]===0&&shape.vector[1]===0&&shape.vector[2]===childShape.height/2;
+        if(originCylinder)hasOriginCylinder=true;
+        if(exactCylinderOrigins&&originCylinder&&(childShape.kind==='cylinder'||childShape.kind==='frustum')){const radius=childShape.kind==='cylinder'?childShape.radius:childShape.bottom;solid=keep(module.Manifold.cylinder(childShape.height,radius,radius,childShape.segments,false));}
+        else {const child=buildCode(childShape);solid=keep(shape.kind==='move'?child.translate(shape.vector):shape.kind==='rotate'?child.rotate(shape.vector):child.scale(shape.vector));}
+      }
     }
     codeCache.set(shape,solid);return solid;
   };
@@ -125,6 +142,7 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
       const bounds = solid.boundingBox();
       return { id, name: node.name, color: node.color, reference: node.reference,...(node.role==='hole'?{hole:true}:{}), positions, indices: new Uint32Array(mesh.triVerts), volume: solid.volume(), bounds };
     });
+    if(retry&&hasOriginCylinder)retry.value=bodies.some(hasCollapsedVertices);
     return { sourceKey:documentGeometryKey(doc), bodies, volume: bodies.filter(b=>!b.reference&&!b.hole).reduce((s, b) => s + b.volume, 0), triangles: bodies.filter(b=>!b.reference&&!b.hole).reduce((s, b) => s + b.indices.length / 3, 0) };
   } finally { for (const solid of [...owned].reverse()) solid.delete();for(const profile of [...profiles].reverse())profile.delete(); }
 }

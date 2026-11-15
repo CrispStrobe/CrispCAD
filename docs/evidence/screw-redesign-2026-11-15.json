@@ -1,0 +1,109 @@
+{
+  "date": "2026-11-15",
+  "feature": "Optional retained screw thread redesign after resizing",
+  "nativeAndBrowserSource": "e230585f22a756eb3bec2e05c7adcebd1d2d7db8",
+  "fullUnitSource": "728b6e15dc4fea166571f6a5cfadaaccdbafb114",
+  "sourceDifference": "The later GUI-only commit mounts the redesign form only while open and temporarily detaches the regular generator fields to prevent duplicate controls. Production build, browser and native checks cover that change. No core/engine change after the full unit run.",
+  "ownerDefault": "Keep pitch by default; allow explicit pitch or turns per start.",
+  "validation": {
+    "unitPassed": 1047,
+    "unitSkipped": 1,
+    "unitFiles": 102,
+    "focusedPassed": 26,
+    "browserPassed": 6,
+    "browserPlatforms": [
+      "Chromium",
+      "iPad WebKit"
+    ],
+    "germanMessages": 1506,
+    "cataloguePresets": 59,
+    "catalogueBlocked": 0,
+    "editedJoltCases": 4,
+    "directCrestMeasurement": "Both thread directions, two starts; actual ridge vertices measure pitch times starts.",
+    "retainedParameterGaps": 13,
+    "sourceLibraryModels": 194,
+    "nativeSmoke": "Passed camera wheel/magnification, menu, clipboard and model/history workflows."
+  },
+  "delivery": {
+    "macBuild": 36,
+    "installedAndRunning": true,
+    "bundle": "/Users/christianstrobele/Applications/Brickwright CAD.app",
+    "liveAssetReceipt": {
+      "version": "0.1.0",
+      "commit": "e230585f22a756eb3bec2e05c7adcebd1d2d7db8",
+      "dirty": false,
+      "builtAt": "2026-11-15T14:14:52.191Z"
+    },
+    "ipad": "No new native iPad build in this checkpoint; iPad WebKit checks are browser automation, not device installation."
+  },
+  "corrections": [
+    "The initial fine/long-thread qualification exposed the old 1024 tube-grid segment metadata cap. Bounded support now accepts up to 4096 segments, with early rejection above the existing 2048-hull budget and grouped long-ridge collision samples. Final focused/full/catalogue checks pass.",
+    "Only the active parameter form is mounted; closed redesign fields cannot shadow the regular inspector labels. Six browser workflows pass without forced clicks."
+  ],
+  "limits": [
+    "Ordinary resize still stretches geometry until explicit redesign.",
+    "Turn count is nominal length divided by pitch and starts; end runouts are trimmed.",
+    "Unequal X/Y scales default to a circular area-equivalent major diameter.",
+    "Scaled parents, scale-driving expressions, attached joints and invalid recipes are guarded transactionally.",
+    "Existing recipes keep their previous root overlap until explicit redesign. Generic threads are not ISO/DIN fit certification.",
+    "Jolt qualification limits remain 2% volume, 0.2 mm bounds and 2048 hulls; no Jolt settings or fork change.",
+    "Springs/gears and the 13 remaining shape-parameter gaps are still queued."
+  ],
+  "logReceipts": [
+    {
+      "file": "cad-screw-redesign-full-unit.log",
+      "bytes": 333,
+      "sha256": "a0132a83e01c2b6181db6eca2d85aa98d2b2c737e157f04bd3e2087d06943dd7"
+    },
+    {
+      "file": "cad-screw-redesign-focused.log",
+      "bytes": 234,
+      "sha256": "40603e85aded135a37e255b2a80a5a64cf9c25b275355b49de43139043bd5acb"
+    },
+    {
+      "file": "cad-screw-redesign-unit.log",
+      "bytes": 1133,
+      "sha256": "149f81f563231ad2138cd785ac39deda0a6e45d8ab8dc0d316bf50b5b7cd0bd0"
+    },
+    {
+      "file": "cad-screw-redesign-final-build.log",
+      "bytes": 3061,
+      "sha256": "c329cfdb2666b5bb6df30d6e497663826965062d363e2612f56b819c31f31ed7"
+    },
+    {
+      "file": "cad-screw-redesign-release-i18n.log",
+      "bytes": 222,
+      "sha256": "8cb5700712451bf67b92a06cbce94d8965815cf38b3257150d4a9b7a46b960be"
+    },
+    {
+      "file": "cad-screw-redesign-audit.log",
+      "bytes": 272,
+      "sha256": "13646902ef432949ae4bd0c662a8ca42e478b15f9afd294101373f2e74e38537"
+    },
+    {
+      "file": "cad-screw-redesign-catalog-physics.log",
+      "bytes": 1085,
+      "sha256": "6abf6696cc7b76250f0958bac084ea30cbbbc387852952f55375327b60d06922"
+    },
+    {
+      "file": "cad-screw-redesign-browser.log",
+      "bytes": 1402,
+      "sha256": "7ade91660ec50daeb3974c38303a4657e86b3875dc05e27106f321eb09b9361b"
+    },
+    {
+      "file": "cad-mac36-final-build.log",
+      "bytes": 1522,
+      "sha256": "c9e81382040e12e79a8e19e18744bbca860e210cfa6ea0ebd66b132683396e55"
+    },
+    {
+      "file": "cad-mac36-smoke.log",
+      "bytes": 468,
+      "sha256": "f65df21f2a201d47bdea55addc02ea40d13728e4e69f4e69e071385337a4d53f"
+    },
+    {
+      "file": "cad-mac36-install.log",
+      "bytes": 128,
+      "sha256": "32585d3f32327145fe56d6d3f3a11323274dd5ae18c8d933581a239adbbd5273"
+    }
+  ]
+}

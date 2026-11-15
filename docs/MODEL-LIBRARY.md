@@ -882,3 +882,122 @@ and its required `bolts.json` and `nuts.json` are absent from the staged archive
 The earlier preflight checked SCAD includes/use only; the corrected full-input
 assessment and original failed assessment are both retained. No speculative
 import patch or replacement input data is used.
+
+
+### Authored Italian flag, 2026-11-15
+
+Flag_Italy adds the unchanged 404-byte MIT original by Angelo Nicoli, pinned at
+`4f9e3d4d16b5e427186c1f89e10c2181c437dee6`. Its default geometry passes strict
+closed-positive-volume screening with 582 triangles. Actual source insertion,
+byte-mismatch refusal before evaluation, attribution, snapshot restore, undo/redo,
+raster preview, Chromium and iPad-WebKit tests pass on main `9c795ae` plus this selection.
+
+The French and Italian originals produce identical STL bytes after the existing
+cosmetic-colour omission; country colours are absent from geometry and monochrome
+previews. This is one new authored record and one preview, with **zero new unique
+STLs**. Main has 131 records / 129 unique STLs / 170 previews before this delivery;
+qualified local totals are 132 / 129 / 171. All prior 100 corpus records and 170
+preview values remain exact. No primitive/compiler/guard changes are required.
+
+See `docs/evidence/italy-qualification-2026-11-15.json` for source/derivative hashes,
+actual commands, original resource refusals and exact tested-file bindings.
+
+
+### Uniform cylinder contacts and authored Sign03, 2026-11-15
+
+The unchanged MIT Sign_03 source shares z=0.1 between its grey base (line6) and
+red disk (lines8/11). Its centred-cylinder construction introduced
+`(0.1+0.05)-0.05 = 0.10000000000000002` before CSG. Primitive-ID tracing matched
+the first collapsed edge to those surfaces; observer and baseline STL bytes were
+identical, and the exporter changed zero coordinates. This is a demonstrated
+construction bug, not an intrinsic source or physical-part defect.
+
+Construct the exact identity `move([0,0,h/2], cylinder(r,h))` directly at the
+origin, including equal-radius frustum representations. Tapered frustums retain
+their path. The general fix has no model names or special dimensions. Centred
+defaults and a real gap remain intact; France, Italy and Arc01 derivative hashes
+remain exact. Limits, tolerances, defaults and source bytes are unchanged.
+
+Sign03 now passes all strict STL screens with 564 triangles, actual editable-source
+insertion, byte mismatch refusal before evaluation, attribution/history, raster
+preview and Chromium/iPad-WebKit tests. This adds one locally qualified record,
+one unique STL and one preview: 133 / 130 / 172 locally, with main at 132 / 129 / 171
+after Italy delivery. Prior 101 corpus records and 171 previews remain exact.
+See `docs/evidence/uniform-cylinder-sign03-qualification-2026-11-15.json`.
+
+
+### Authored LDraw internal components, 2026-11-15
+
+Thirty new archived official Part/Shortcut component roots were selected after
+excluding aliases, patterns, primitives, shipped roots and historical refusals.
+Seventeen pass actual conversion, strict closed-positive-volume mesh screening,
+editor insertion/history/provenance and Chromium/iPad-WebKit preview/insertion
+checks. These are named unchanged authored component originals with complete
+CC-BY-4.0 closures pinned to the existing owned source revision; qualification
+covers the standalone component, not its parent assembly or physical operation.
+Nominal LDraw units/transforms use the existing converter unchanged.
+
+The seventeen originals add fifteen unique STL hashes: EV3 Square Button99146,
+Powered Up Hub Button34745 and Boost Move Hub Button27198 share one exact mesh.
+All prior133 record objects,266 source/derivative hashes and172 preview values
+remain exact. Local qualified totals become150records/145uniqueSTLs/189previews
+from delivered main133/130/172; delivery is recorded separately.
+
+Twelve other roots produced non-manifold output and one refused quad coplanarity
+or convexity. These remain A/B unresolved pending source/output tracing; no
+intrinsic physical-part defect or archive exhaustion is asserted. Fifteen next
+complete authored roots remain queued. No rejected Wall01 construction rule,
+parent-module implementation, source/default edits or weaker guard was used.
+
+The first browser provenance assertion failed because newly supplied dependency
+grants included build-only localEvidence. Packaging now follows the existing
+runtime schema, while root evidence and every dependency source/grant/hash are
+preserved. That failure and resource refusals remain in the evidence history.
+After actual reserve restoration, regeneration/reproduction, six focused tests,
+build and all34 model/browser attachments passed under the original guards.
+See docs/evidence/ldraw-components-qualification-2026-11-15.json.
+
+
+### Next authored LDraw reserve, 2026-11-15
+
+The next fifteen distinct complete authored component roots were executed on
+synced main1989504 under the original lock/resource/input/quality limits. Four
+pass every actual gate: u9404,99401,u9396 and56474. Their original DAT sources,
+complete dependency grants/hashes, defaults, units and transforms are unchanged.
+Actual source/STL reproduction, six focused tests, build/typechecks, editor
+evaluation/provenance/history and eight Chromium/iPad-WebKit model attachments
+pass, including real raster pixels, offline insertion and zero requests.
+
+This cohort adds four records, four unique STLs and four previews: local qualified
+totals154/149/193 from delivered main150/145/189. Prior35 LDraw records,300
+source/derivative hash entries and189 preview values remain exact; the earlier
+seventeen-source cohort is not credited again. Qualification covers only each
+standalone authored component, with no physical-operation or parent-assembly claim.
+
+The other eleven new roots produced non-manifold output. Their A/B causes remain
+unresolved until source/output tracing. The preceding thirteen refused roots
+were not retried, and no kernel/compiler/source/default/tolerance/guard change
+or repair was used. This finishes the current fifteen-root reserve, not the
+whole staged archive. See docs/evidence/ldraw-reserve-qualification-2026-11-15.json.
+
+
+### Authored Lighting Ring Separator subcomponent, 2026-11-15
+
+Thirty new dependency-complete authored Subpart roots were executed with the
+existing converter after excluding shipped/historical roots, aliases/patterns,
+primitives and source-declared partial surfaces. One passes every actual gate:
+parts/s/u9465s02.dat, Electric Powered Up Distance Sensor Lighting Ring Separator.
+Its unchanged standalone default and complete CC-BY-4.0 closure produce20triangles
+with strict closed-positive-volume screening PASS. Source/STL reproduction, six
+focused tests, build/typechecks and Chromium/iPad-WebKit attachments pass, including
+actual preview pixels, offline insertion, provenance/history and zero requests.
+Qualification covers this named component, not its whole parent part or physical
+operation. No source/default/converter/kernel/guard/tolerance changes were used.
+
+The local delta is one record, one unique STL and one preview:155/150/194 from
+delivered main154/149/193. All prior154 records,308 original/derivative hash entries
+and193 preview values remain exact. Twenty-eight other new roots produced
+non-manifold output and one refused quad coplanarity/convexity; A/B remains
+unresolved pending source/output tracing. The prior24 refusals were not retried.
+Twenty next complete authored archive roots remain ranked, without any archive
+exhaustion claim. See docs/evidence/ldraw-subcomponent-qualification-2026-11-15.json.

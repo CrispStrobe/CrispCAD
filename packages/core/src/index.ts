@@ -42,3 +42,4 @@ export {getOpenSCADImportNotices} from './openscad-import.js';
 export * from './openscad-bundle.js';
 
 export * from './simulation.js';
+export * from './screw-redesign.js';

@@ -22,7 +22,7 @@ describe('editable shape recipes',()=>{
  });
  it('refuses unsupported and folded variants without changing the current object',()=>{
   const s=createCadSession(createPresetDocument('heart')),before=s.serialize(),bad=defaultGenerator('heart')!;bad.values.width=5;bad.values.bend=90;bad.values.thickness=30;expect(()=>checkGenerator(bad)).toThrow('folded');expect(s.serialize()).toBe(before);
-  const screw=defaultGenerator('screw')!;screw.values.pitch=.5;expect(()=>checkGenerator(screw)).toThrow('turns');
+  const screw=defaultGenerator('screw')!;screw.values.pitch=.5;screw.values.length=100;expect(()=>checkGenerator(screw)).toThrow('turns');
   expect(()=>validateDocument({...s.state.document,version:1})).toThrow('version 2');
  });
 });

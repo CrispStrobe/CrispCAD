@@ -179,3 +179,46 @@ scales are preserved; one release creates one transform/history step. Exact
 source-buffer bounds are cached, input is coalesced per frame, and the shape
 palette no longer blurs the canvas. See [SURFACE-DRAGGING.md](SURFACE-DRAGGING.md)
 for behavior and the limits of the performance evidence.
+
+
+## Cutting/enclosure generator retention — 2026-11-15
+
+Counterbores, countersinks, rounded ports, screw bosses and ribs now retain their
+design inputs across Properties, model source, MCP and revisions. Countersink
+seat depth is derived from the angle and displayed live; clearance is diametral.
+Edited bores, support ribs and recesses have actual-geometry collision tests.
+The remaining shape-parameter gap is 22. Curves/vessels and mechanical parts
+remain ahead; this does not add constrained sketches or certified fastener fits.
+
+
+## Curved/hollow generator retention — 2026-11-15
+
+Six more shapes retain profile and section inputs across GUI, model source, MCP
+and saved revisions. Vases use a smooth profile with a separate floor; finishing
+washers derive seat depth from their angle. Collision construction handles dense
+radial profiles, small tips and compound-sector seams without changing Jolt or
+loosening qualification limits. The parameter gap is now 16; bent tubes, lofts,
+mechanical constructions and decorative templates remain. See
+[CURVED-SHAPES.md](CURVED-SHAPES.md) for formulas and boundaries.
+
+
+## Retained transition/sliding templates — 2026-11-15
+
+Bent tubes, rectangular-to-round solid/duct transitions and dovetails now retain
+their dimensions through GUI, source, MCP and revisions. Section-grid collision
+metadata follows actual geometry; warped hollow cells have a bounded exact-kernel
+refinement path. Dovetail clearance offsets profile planes rather than scaling a
+key. The catalogue parameter gap is 13. Hinges, springs, gears, pulleys and other
+mechanical constructions remain next with explicit fit/clearance acceptance.
+See [RETAINED-TRANSITIONS.md](RETAINED-TRANSITIONS.md).
+
+
+## Optional screw thread redesign — 2026-11-15
+
+Owner steering prioritizes **Redesign thread** after local resizing. Pitch is
+kept by default; pitch or nominal turns per start can be chosen explicitly. The
+shared core/GUI/MCP transaction rebuilds physical dimensions, resets local scale
+and preserves undo/history and appearance. Fine/long thread support retains
+legacy defaults and actual-geometry collision gates. See
+[SCREW-REDESIGN.md](SCREW-REDESIGN.md). The catalogue parameter gap remains 13;
+springs and gears are still queued as the next retained mechanical templates.

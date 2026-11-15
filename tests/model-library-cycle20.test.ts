@@ -22,7 +22,7 @@ it('admits only the unchanged coin default while retaining all four measured out
 });
 it('inserts the coin offline with matching actual STL, attribution, serialization, sidecar and undo/redo',async()=>{
  const bundle=createBundledModelLibrary(),asset=bundle.catalogue.assets.find(a=>a.id===raw.id)!,session=createCadSession(),before=session.serialize();
- expect(bundle.catalogue.assets).toHaveLength(170);expect(bundle.catalogue.assets.some(a=>a.id==='corpus-scon-ex5')).toBe(false);
+ expect(asset.original).toEqual({path:raw.original.path,format:raw.original.format,bytes:raw.original.bytes,sha256:raw.original.sha256});expect(bundle.catalogue.assets.some(a=>a.id==='corpus-scon-ex5')).toBe(false);
  try{
   await insertModelLibrarySource(session,bundle.catalogue,{assetId:asset.id,file:'original'},bundle.localFiles.get(asset.original.path!)!,{evaluate:kernel.evaluate,modificationNotes:'Unchanged authored coin defaults; warned ignored text center.'});
   const result=kernel.evaluate(session.state.document),mesh=exportSTL(result.bodies);expect(result.volume).toBeGreaterThan(0);expect(await sha256Hex(mesh)).toBe(raw.derivatives[0].sha256);

@@ -806,3 +806,148 @@ library batch. Existing projects and saved histories were retained.
 
 See [validation evidence](evidence/shape-quality-workspace-2026-11-15.json) and
 [remaining shape-quality work](SHAPE-AND-UX-QUALITY.md).
+
+
+## 2026-11-15 — Mac 32 and iPad 18
+
+Both native builds use clean source `38a081251d3b81756f025fd496bb617f8a059891`.
+Mac build 32 is installed and running; native smoke checks passed. iPad build 18
+installed successfully over WLAN. iPadOS blocked launch while locked; the owner
+explicitly chose to open it later. Physical interaction acceptance remains pending.
+
+These builds add 12 retained shape families, default surface contact when dragging
+existing objects (magnet button/C toggles it), coalesced drag previews and cached
+exact mesh bounds. Select/Resize dimensions and Move/Rotate axis values now appear
+as separate compact layers outside the selected footprint.
+
+The source checkpoint `0bcf690` also preserves two concurrent library admissions
+and the corner-box origin correction, which arrived after those native builds.
+It passed 954 unit tests (one existing skip). The later Italian-flag library
+admission is preserved as well, with separate focused library verification. Focused browser runs passed 45 distinct checks
+with one platform skip. German validation covers 1,443 messages. The catalogue
+audit covers 59 presets, including one excluded reference ruler; 27 shape-specific
+parameter gaps remain. Twelve edited retained-family variants passed Jolt checks.
+See [validation evidence](evidence/retained-shapes-and-surface-drag-2026-11-15.json)
+for exact checkpoints, log hashes, earlier test corrections and limitations.
+
+
+## 2026-11-15 — Mac 33: retained cutters and enclosure supports
+
+Mac build 33 is installed and running from clean source
+`7e71641c18d121be062b72864e8379924b6eb3c4`; the live native asset receipt matches.
+Counterbores, countersinks, rounded ports, screw bosses and ribs now retain their
+dimensions in Properties, model source, MCP and revisions. The inspector displays
+countersink taper depth live from its diameters and seat angle. Invalid design
+relationships cannot commit a history entry. The remaining catalogue parameter
+gap falls from 27 to 22. See [inputs and origins](RETAINED-SHAPES.md).
+
+Integration caught and fixed a regression in the concurrent cylinder-origin
+optimization: valid established CSG triangulations are preserved, with a bounded
+equivalent-construction retry for collapsed export coordinates. Existing example
+and corpus derivatives remain byte-identical; the newly supported Sign03 stays
+closed and an actual gap stays open. The merged source includes the concurrent
+Sign03 library admission (172 bundled models, 102 reviewed corpus originals).
+
+Production/native builds and native smoke checks pass. The complete merged suite
+passes 984 tests with one existing skip; six focused browser workflows pass in
+Chromium/iPad WebKit. German validation covers 1,459 messages. All 59 default
+presets qualify or are reference-excluded; ten edited/cut Jolt cases test bores,
+ribs, recess shoulders and taper depths. Physical manufacturing/fit qualification
+and general constraints remain separate work.
+
+[Validation evidence](evidence/cutting-enclosure-parameters-2026-11-15.json) records
+exact checkpoints, log hashes, the initial integration failure and its resolution,
+and the scope of browser/physics checks. iPad build 18 remains the prior WLAN
+delivery whose launch the owner deferred; this pass updates the Mac installation.
+
+
+## 2026-11-15 — Mac 34: retained curves and vessels
+
+Mac build 34 is installed and running from clean source
+`d6e3f2d77e23f4b1e696785d5647e031b85d4d8c`; the live native receipt matches.
+Curved cones, hemispheres, paraboloids, vases, teardrop cutters and finishing
+washers now retain their design inputs across Properties, model source, MCP and
+revisions. Vases have a smooth profile and explicit radial wall/floor thickness;
+washer seats derive live depth from their included angle. Existing saved meshes
+remain unchanged until explicit regeneration. The parameter gap is now 16.
+
+The edited-geometry checks found and closed collision issues with long profiles,
+microscopic tip pieces and common boundaries between radial collision sectors.
+Bounded candidate simplification, qualified sector overlap and an inscribed vase
+floor core keep the existing Jolt settings and qualification budgets. See
+[definitions and collision boundaries](CURVED-SHAPES.md).
+
+The full suite passes 1,011 tests with one existing skip across 98 files. Six
+distinct browser workflows passed across Chromium/iPad WebKit, with initial
+Chromium automation/deadline failures and their bounded reruns preserved in
+[evidence](evidence/curved-hollow-parameters-2026-11-15.json). German validation
+covers 1,473 messages. All 59 catalogue defaults qualify or are reference-excluded,
+with zero blocked entries. Eleven edited/cut Jolt cases verify cavities, floor
+and rim support, seats and a teardrop passage. Native smoke checks passed.
+These are rigid-preview checks, not manufacturing or general mechanical-fit
+certification.
+
+After this native delivery, main's concurrent seventeen-component LDraw admission
+was preserved in source. The merged catalogue contains 189 models; Mac 34 predates
+those data additions. Focused merged-library checks passed 117 distinct tests
+across runs. Generic seed tests now check exact cohort membership and uniqueness
+instead of an unrelated global catalogue count. No production engine or editor
+source changed in that integration.
+
+
+## 2026-11-15 — Mac 35: retained bends, ducts and dovetails
+
+Mac build 35 is installed and running from clean source
+`bd3a0b3d099aa9b400e488422d011d56d9e37c7e`; native smoke checks passed and the live
+asset receipt matches. Bent tubes, rectangular-to-round solid/duct transitions
+and dovetails now retain their dimensions through Properties, model source, MCP
+and portable revisions. Linked bore fields, true rectangular section corners
+and normal face clearance are implemented. Legacy geometry remains unchanged
+until explicit regeneration. The remaining catalogue parameter gap is 13.
+
+Section-grid collision candidates follow actual vertices rather than fixed pipe
+dimensions. An expanding hollow transition initially exceeded the volume-error
+gate at 2.36%; exact-kernel section-cell refinement now qualifies it, including
+inside a transformed retained union. Jolt settings and the 2% volume, 0.2 mm bounds
+and 2,048-hull budgets remain unchanged. See [definitions and format](RETAINED-TRANSITIONS.md).
+
+The clean feature checkpoint passed production build, 1,030 tests (one existing
+skip, 100 files), 1,491-message German validation, six GUI workflows across
+Chromium/iPad WebKit, and all 59 catalogue collision qualifications or reference
+exclusions. Nine edited/cut/transformed Jolt cases check passages, support and
+clearance. Preview images of the edited bend and hollow transition were inspected.
+
+Main's subsequent four-model LDraw admission is preserved in source, with 117
+focused library tests passing. The source catalogue now has 193 models; Mac 35
+predates those four data additions. No production runtime code changed in this
+integration. [Evidence](evidence/retained-transitions-2026-11-15.json) retains exact
+checkpoints, initial failures/corrections, test scopes, limitations and log hashes.
+
+
+## 2026-11-15 — Mac 36: optional screw thread redesign
+
+Mac build 36 is installed and running from clean source
+`e230585f22a756eb3bec2e05c7adcebd1d2d7db8`; the live asset receipt agrees and
+native smoke checks pass. Properties → Redesign thread keeps pitch by default,
+or accepts a new pitch/turn count. Apply consumes local resize into the retained
+recipe as one undoable edit. Ordinary resize remains available. Opening redesign
+replaces the regular generator fields temporarily rather than duplicating them.
+The same transaction is available through `cad_redesign_screw` with preview and
+revision guards. [Behavior and limits](SCREW-REDESIGN.md).
+
+All 1,047 tests pass (one existing skip, 102 files); the final GUI-only mounting
+change additionally passes production build and six browser workflows across
+Chromium/iPad WebKit. Four actual Jolt cases cover fine/long redesigned screws;
+crest measurements verify pitch for both thread directions and multiple starts.
+All 59 catalogue defaults qualify or are reference-excluded, with zero blocked
+entries. German validation covers 1,506 messages. The source/native library has
+194 models; the concurrent separator admission is preserved.
+
+Long-thread collision metadata is bounded at 4,096 tube-grid segments, with
+coarser candidate grouping for long ridges and early compound-budget rejection.
+Qualification limits remain 2% volume, 0.2 mm bounds and 2,048 hulls. Existing
+recipes retain previous geometry until deliberate regeneration. Nominal turn
+counts trim end runouts; circularization uses area-equivalent diameter for unequal
+X/Y scales. This does not certify manufacturing fits. Springs/gears remain queued
+and 13 catalogue parameter gaps remain. No new native iPad installation was made.
+[Evidence and exact source boundaries](evidence/screw-redesign-2026-11-15.json).
