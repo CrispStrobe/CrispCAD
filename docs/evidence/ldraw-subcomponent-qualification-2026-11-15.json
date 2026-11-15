@@ -1,0 +1,848 @@
+{
+  "status": "ALL ACTUAL GATES PASS LOCAL; delivery recorded separately",
+  "mainBase": "9476dfdb2ee1a78d130d8e2ec5caeb39a1164a2c",
+  "testedSourceTree": "a578c17f6f22655e74c19a4c45585dd70272d5b4",
+  "mainCountsBefore": [
+    154,
+    149,
+    193
+  ],
+  "qualifiedLocalCounts": [
+    155,
+    150,
+    194
+  ],
+  "delta": [
+    1,
+    1,
+    1
+  ],
+  "admissions": [
+    {
+      "candidateID": "corpus-ldraw-u9465s02",
+      "sourceID": "parts/s/u9465s02.dat",
+      "sourceSha256": "2524208bc5838df38527f9c85305537f3008ed066ac3c97f995fa40349262f84",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "rootKind": "authored official Subpart component; unchanged standalone default closure",
+      "defaultClosureFiles": 2,
+      "meshSha256": "1b130db5d7385dab285ab3a078cd4a87ffef35663f3459f5a83c5867f937a061",
+      "triangles": 20,
+      "signedVolumeMm3": 19.967999214172323,
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "gates": {
+        "converter": "PASS",
+        "mesh": "PASS",
+        "strictClosedPositiveVolumeAndLimits": "PASS",
+        "editorEvaluationProvenanceRestoreUndoRedoMismatchRefusal": "PASS",
+        "actualRasterPreview": "PASS",
+        "browser": "PASS both engines, exact hashes, zero requests"
+      }
+    }
+  ],
+  "browserCoverage": {
+    "chromium": 1,
+    "ipad-webkit": 1
+  },
+  "attachments": [
+    {
+      "candidateID": "corpus-ldraw-u9465s02",
+      "sourceSha256": "2524208bc5838df38527f9c85305537f3008ed066ac3c97f995fa40349262f84",
+      "meshSha256": "1b130db5d7385dab285ab3a078cd4a87ffef35663f3459f5a83c5867f937a061",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9465s02",
+      "sourceSha256": "2524208bc5838df38527f9c85305537f3008ed066ac3c97f995fa40349262f84",
+      "meshSha256": "1b130db5d7385dab285ab3a078cd4a87ffef35663f3459f5a83c5867f937a061",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    }
+  ],
+  "execution": [
+    {
+      "command": [
+        "node",
+        "scripts/generate-ldraw-reviewed-batch.mjs",
+        "--check"
+      ],
+      "guard": {
+        "fastFreeBytes": 14612279296,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4595773440,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 4.70849609375,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "integrationTree": "a578c17f6f22655e74c19a4c45585dd70272d5b4",
+      "timeoutSeconds": 90,
+      "status": "PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 1.891379269072786
+    },
+    {
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/model-library-ldraw.test.ts",
+        "tests/model-library-ldraw-exact.test.ts"
+      ],
+      "guard": {
+        "fastFreeBytes": 14612279296,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4573696000,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 4.70849609375,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "integrationTree": "a578c17f6f22655e74c19a4c45585dd70272d5b4",
+      "timeoutSeconds": 45,
+      "status": "PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 4.020539672113955
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "guard": {
+        "fastFreeBytes": 14612279296,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4601257984,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 4.72998046875,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "integrationTree": "a578c17f6f22655e74c19a4c45585dd70272d5b4",
+      "timeoutSeconds": 90,
+      "status": "PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 13.356131399050355
+    },
+    {
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-ldraw-subcomponent.spec.ts",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 14612258816,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4789477376,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 4.76025390625,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "integrationTree": "a578c17f6f22655e74c19a4c45585dd70272d5b4",
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 45.11325242789462
+    }
+  ],
+  "testedOwnedFiles": [
+    {
+      "path": "library/ldraw-reviewed-batch-manifest.json",
+      "bytes": 525158,
+      "sha256": "023936cd417efec09cdfe97c739e0365e5a910d83b7544c5aa3719528b8400ec"
+    },
+    {
+      "path": "library/ldraw-reviewed-batch-spec.json",
+      "bytes": 588231,
+      "sha256": "a6378f751bc224389a4b1044324e8c1129930d98043257528304c5eed9b5e076"
+    },
+    {
+      "path": "library/meshes/ldraw/u9465s02.stl",
+      "bytes": 1084,
+      "sha256": "1b130db5d7385dab285ab3a078cd4a87ffef35663f3459f5a83c5867f937a061"
+    },
+    {
+      "path": "library/previews.json",
+      "bytes": 3347499,
+      "sha256": "0b564a51d6c0176e879428eacb71a68d830abed52c6f81db79575aecffb7a2ca"
+    },
+    {
+      "path": "library/sources/ldraw/parts/s/u9465s02.dat",
+      "bytes": 1163,
+      "sha256": "2524208bc5838df38527f9c85305537f3008ed066ac3c97f995fa40349262f84"
+    },
+    {
+      "path": "tests/browser/model-library-ldraw-subcomponent.spec.ts",
+      "bytes": 3473,
+      "sha256": "aeacddd336e27b282c7a3ef7e2df44342767acde84942e15ff47ae65fc3f3df2"
+    },
+    {
+      "path": "tests/browser/model-library.spec.ts",
+      "bytes": 26483,
+      "sha256": "9126f6274f4ff8c69dec573c3ef53e1fa1df14131cd005e3ad1df34d63750547"
+    }
+  ],
+  "validationHashes": [
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/sync.json",
+      "sha256": "55fe79007c24e17f0e5f3a88c776ea2bf883df17b61508448be07e62d0d54973"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/batch-execution.json",
+      "sha256": "18ea7b3c0a77d405f90adfeda53291a8455a1f34f4054dd470d4a243e2b96f68"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/batch1-results.json",
+      "sha256": "97f979a0a20cd2fded0ae1356728d85c775e02592ec9446ce3f6c2ff4ed51f50"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/classified-results.json",
+      "sha256": "94020447900fa0bd450295b5c16bfdefb6102c87d0996af7066927cbed9a638a"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/prepare-execution.json",
+      "sha256": "a4d58760994bd6ae2247332af22e685033bc774ecaaac6ae1ae2de4fbfca9e9a"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/prepare-0.log",
+      "sha256": "1d67e0a194898a4598cd9f155e2f8513a07bf282256cbb7030161141dadac334"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/prepare-1.log",
+      "sha256": "d114106fc845d4f085b00c672a836b15ae27df58098b5bc3557c8faf85479497"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/qualify-execution.json",
+      "sha256": "666fcfd9f747c158b4336cc098c921fb4bc8f26abd38cfcec2377e3556e6c367"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/qualify-0.log",
+      "sha256": "1d67e0a194898a4598cd9f155e2f8513a07bf282256cbb7030161141dadac334"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/qualify-1.log",
+      "sha256": "17099e65fc4d6512a3bac04fe96e67b8b6755a9af528b9ae21a00903f30645e3"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/qualify-2.log",
+      "sha256": "c4752ab324d43c65237e3b436bdae95ee14ba06cc2c09e32ab6f94bdf502122e"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/qualify-3.log",
+      "sha256": "f16f4b4fbead42ea4fdec6276025d5af623708ffe4e32c6d868ef9b5571cefdd"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/qualify-browser.json",
+      "sha256": "957242eb22930595c1c1f747b5180c74b1bf749308a92360a049dcd8907a59c2"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/metadata-schema-proof.json",
+      "sha256": "ae0c0e0bac8a2e56b57810f556cedcea9728e7678227472921b4f2e02ea4c696"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle84-batch/next-ranked-batch.json",
+      "sha256": "9a1363b548b888f70583e7291ee9cd57a7a93a6b2d33e7251fa569835bae1eba"
+    }
+  ],
+  "refusals": [
+    {
+      "rootPath": "parts/s/6538s02.dat",
+      "title": "~Technic Axle Joiner Ridge Segment",
+      "rootSha256": "7d87245bd555cfdda17cb8bc1504207a03c36092ae519432ad6e534ccddec80b",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 0968bd3f-bbe1-4c52-a231-27d10771522d: ~Technic Axle Joiner Ridge Segment: Not manifold",
+        "stack": "FeatureEvaluationError: feature 0968bd3f-bbe1-4c52-a231-27d10771522d: ~Technic Axle Joiner Ridge Segment: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/4032s01.dat",
+      "title": "~Plate  2 x  2 Round with Axlehole - Quarter",
+      "rootSha256": "0b12443c9f5975afabecf7ad9e50384a0237deb74d3fc641705e25cf3a544bb3",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 600c19a7-3842-4e05-a5bd-0951be0b2899: ~Plate  2 x  2 Round with Axlehole - Quarter: Not manifold",
+        "stack": "FeatureEvaluationError: feature 600c19a7-3842-4e05-a5bd-0951be0b2899: ~Plate  2 x  2 Round with Axlehole - Quarter: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/64781s02.dat",
+      "title": "~Technic Gear Rack with Pegholes and Axleholes - Tooth Module",
+      "rootSha256": "415b08cb9c8a31da67289d4db880e28cbc9295520c1ee216fe17fc799069052c",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature ce7f6392-3ead-4d81-9a25-8812f808869d: ~Technic Gear Rack with Pegholes and Axleholes - Tooth Module: Not manifold",
+        "stack": "FeatureEvaluationError: feature ce7f6392-3ead-4d81-9a25-8812f808869d: ~Technic Gear Rack with Pegholes and Axleholes - Tooth Module: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/6538s01.dat",
+      "title": "~Technic Axle Joiner Core",
+      "rootSha256": "30b6df05538ec96ff07697f1b32ad6063bcce63a9d9a4d6a3ac16559f6378101",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature a1773147-f221-44c3-9159-39447a545cc6: ~Technic Axle Joiner Core: Not manifold",
+        "stack": "FeatureEvaluationError: feature a1773147-f221-44c3-9159-39447a545cc6: ~Technic Axle Joiner Core: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/53790s04.dat",
+      "title": "~Electric Mindstorms NXT Triangular Button",
+      "rootSha256": "d04d36ac33bf1af1ab44c8b5779c1cd6a98eceef52f6920b3249058cd8843f46",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature a0b7e744-08ab-42db-bf70-f58de110b343: ~Electric Mindstorms NXT Triangular Button: Not manifold",
+        "stack": "FeatureEvaluationError: feature a0b7e744-08ab-42db-bf70-f58de110b343: ~Electric Mindstorms NXT Triangular Button: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/53790s02.dat",
+      "title": "~Electric Mindstorms NXT Rectangular Button",
+      "rootSha256": "74323b776e108b26b726640454bf22b8a39fd748c01b0095c7cb9e1de8f97fb0",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 76571c20-264b-4e0e-9a06-14851bc21be7: ~Electric Mindstorms NXT Rectangular Button: Not manifold",
+        "stack": "FeatureEvaluationError: feature 76571c20-264b-4e0e-9a06-14851bc21be7: ~Electric Mindstorms NXT Rectangular Button: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/53790s03.dat",
+      "title": "~Electric Mindstorms NXT Square Button",
+      "rootSha256": "388d990aca89cb6bb59a391ae49ba1c11633ff1ecc706a6b4558a8e7bed2038e",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 311b0bde-00e8-4a25-a0c6-be98fd85211c: ~Electric Mindstorms NXT Square Button: Not manifold",
+        "stack": "FeatureEvaluationError: feature 311b0bde-00e8-4a25-a0c6-be98fd85211c: ~Electric Mindstorms NXT Square Button: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/32198as01.dat",
+      "title": "~Technic Gear 20 Tooth Bevel with Two Axlehole Slots - 1/4",
+      "rootSha256": "c46e73396bff86622a27771a760865a0b373a0f1b8d04a46f97ff29bbe92fbed",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 8e727e18-c32e-4951-a129-01264489b4ff: ~Technic Gear 20 Tooth Bevel with Two Axlehole Slots - 1/4: Not manifold",
+        "stack": "FeatureEvaluationError: feature 8e727e18-c32e-4951-a129-01264489b4ff: ~Technic Gear 20 Tooth Bevel with Two Axlehole Slots - 1/4: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/26287s01.dat",
+      "title": "~Technic Axle Joiner  3L Quarter",
+      "rootSha256": "9d34dc30a5da043bb806e24546e9c2d64cb2c2d076411e747156d06722e2fd39",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 006af669-0a1b-4207-9477-0b7675e942a7: ~Technic Axle Joiner  3L Quarter: Not manifold",
+        "stack": "FeatureEvaluationError: feature 006af669-0a1b-4207-9477-0b7675e942a7: ~Technic Axle Joiner  3L Quarter: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/24851s02.dat",
+      "title": "~Electric Powered Up 2 Port Battery Box Connector Bottom",
+      "rootSha256": "d333724ef2c28c7846b75965c34223fc3f08e9c621300a954ab94d949e4ebd21",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 897f25d2-f764-459d-a315-244b0cb1b6eb: ~Electric Powered Up 2 Port Battery Box Connector Bottom: Not manifold",
+        "stack": "FeatureEvaluationError: feature 897f25d2-f764-459d-a315-244b0cb1b6eb: ~Electric Powered Up 2 Port Battery Box Connector Bottom: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/3648s03.dat",
+      "title": "~Technic Gear 24 Tooth - Eighth of Pin Holes",
+      "rootSha256": "f9caf2f2083b06d55b3fd1d9a4ef62a27bf2584cbdbfb3f293f6561a3e1728ce",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 14525663-1278-46fd-ab7c-9eb24dc2b367: ~Technic Gear 24 Tooth - Eighth of Pin Holes: Not manifold",
+        "stack": "FeatureEvaluationError: feature 14525663-1278-46fd-ab7c-9eb24dc2b367: ~Technic Gear 24 Tooth - Eighth of Pin Holes: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/54713s01.dat",
+      "title": "~Electric Mindstorms NXT Sockets Cover Subpart",
+      "rootSha256": "5b4dd5c550cda2b160832600e6e584c6e26a1ae86f12c68079dbfc0fa301306c",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "FAILED",
+        "mesh": "NOT RUN",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "converter",
+        "message": "LDraw quad exceeds supported coplanarity or convexity.",
+        "stack": "Error: LDraw quad exceeds supported coplanarity or convexity.\n    at nativeFaces (file:///mnt/volume1/code/brickwright-cad/scripts/lib/ldraw-model.mjs:33:241)\n    at visit (file:///mnt/volume1/code/brickwright-cad/scripts/lib/ldraw-model.mjs:82:321)\n    at convertLDrawBundle (file:///mnt/volume1/code/brickwright-cad/scripts/lib/ldraw-model.mjs:86:3)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:13:11"
+      },
+      "taxonomy": "unsupported_quad_geometry",
+      "classification": "PENDING_A_B: actual unchanged quad coplanarity/convexity refusal; no budget or intrinsic claim"
+    },
+    {
+      "rootPath": "parts/s/u9416s01.dat",
+      "title": "~Technic Pneumatic Valve with Axle Hole Front Cover - Half",
+      "rootSha256": "70cdff2140d705cc3fbcae3015a39212f7c614c632e096a0146df52580dba9f4",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature e0a88a28-87ca-4389-8095-e3f183a4c5ac: ~Technic Pneumatic Valve with Axle Hole Front Cover - Half: Not manifold",
+        "stack": "FeatureEvaluationError: feature e0a88a28-87ca-4389-8095-e3f183a4c5ac: ~Technic Pneumatic Valve with Axle Hole Front Cover - Half: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/10288s01.dat",
+      "title": "~Technic Angle Connector (3 x 120 degree) Third",
+      "rootSha256": "74eaa71a3beae32d16e87f57d919cad679aa0f6f46c8fddf17ba8bc82fa726b1",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature a594075d-3ca7-4a7d-a63d-7981dfc53390: ~Technic Angle Connector (3 x 120 degree) Third: Not manifold",
+        "stack": "FeatureEvaluationError: feature a594075d-3ca7-4a7d-a63d-7981dfc53390: ~Technic Angle Connector (3 x 120 degree) Third: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/4716s04.dat",
+      "title": "~Cylinder Helical Cylinder  0.25 with Edges",
+      "rootSha256": "3551482fa8594d9d17c3063574dc25b3583e1c833fa8e3f4a756ac05dadd2332",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 714106bb-5860-4d39-9cb7-a3a1e3c29ed4: ~Cylinder Helical Cylinder  0.25 with Edges: Not manifold",
+        "stack": "FeatureEvaluationError: feature 714106bb-5860-4d39-9cb7-a3a1e3c29ed4: ~Cylinder Helical Cylinder  0.25 with Edges: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/3711s03.dat",
+      "title": "~Technic Chain Link - Inner Flange",
+      "rootSha256": "5bfeb0dafa13d9e47dbb10f3a37f5803f7699bda454071af7fa5f2cf17329cc5",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 301c30ae-eb9d-48e9-842b-70562474f756: ~Technic Chain Link - Inner Flange: Not manifold",
+        "stack": "FeatureEvaluationError: feature 301c30ae-eb9d-48e9-842b-70562474f756: ~Technic Chain Link - Inner Flange: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/65414s01.dat",
+      "title": "~Technic Differential Casing - Clutch Tooth",
+      "rootSha256": "d2bb35e19bbf327b0741c9c212c79409c5ea28a4f76b90669db42135a6b9f242",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 96c899d4-c84b-4249-8a9f-068bf5101e4b: ~Technic Differential Casing - Clutch Tooth: Not manifold",
+        "stack": "FeatureEvaluationError: feature 96c899d4-c84b-4249-8a9f-068bf5101e4b: ~Technic Differential Casing - Clutch Tooth: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/24853s02.dat",
+      "title": "~Electric Control+ Hub Battery Lid Rib Segment",
+      "rootSha256": "01d242dbd7553047406dae74cdf76a6b0b7095fd1b960941696d642571d45e1c",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 8a5442eb-5e84-47d9-9549-08d5d84b76da: ~Electric Control+ Hub Battery Lid Rib Segment: Not manifold",
+        "stack": "FeatureEvaluationError: feature 8a5442eb-5e84-47d9-9549-08d5d84b76da: ~Electric Control+ Hub Battery Lid Rib Segment: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/35185s01.dat",
+      "title": "~Technic Gear 20 Tooth Double Bevel Clutch",
+      "rootSha256": "ad06cef834a7ea3f0e53cc1c7cf59681f341a945c3cc8b14dc9469fc89612e47",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature ac3f95a5-5162-4d71-a0bd-edc8e62e27c9: ~Technic Gear 20 Tooth Double Bevel Clutch: Not manifold",
+        "stack": "FeatureEvaluationError: feature ac3f95a5-5162-4d71-a0bd-edc8e62e27c9: ~Technic Gear 20 Tooth Double Bevel Clutch: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/u9363s02.dat",
+      "title": "~Electric Powered Up Angular Motor Drive Hub Pointer",
+      "rootSha256": "cf784f3d463728155ec3df3f903b143962d40a20b862ae287930b7a464232b12",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature d6761b70-8088-4cb1-94ac-d169710a5da1: ~Electric Powered Up Angular Motor Drive Hub Pointer: Not manifold",
+        "stack": "FeatureEvaluationError: feature d6761b70-8088-4cb1-94ac-d169710a5da1: ~Electric Powered Up Angular Motor Drive Hub Pointer: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/2471s01.dat",
+      "title": "~Technic Gear 24 Tooth with Clutch on Both Sides Tooth",
+      "rootSha256": "4e16ddcb5de9bf938eec99bf161983be5288d2a475540b6195adec0b8a8466a4",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature fd9f69b0-9e3e-473c-ac34-af6ea6e69d35: ~Technic Gear 24 Tooth with Clutch on Both Sides Tooth: Not manifold",
+        "stack": "FeatureEvaluationError: feature fd9f69b0-9e3e-473c-ac34-af6ea6e69d35: ~Technic Gear 24 Tooth with Clutch on Both Sides Tooth: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/69778s01.dat",
+      "title": "~Technic Gear 12 Tooth - Tooth",
+      "rootSha256": "bde9e244ae77ba0da986cbe0014d8448a51b426a04f6160de03adf7d09198f8a",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature d0c7aecb-a147-48bc-bebe-b1e85b1c31f3: ~Technic Gear 12 Tooth - Tooth: Not manifold",
+        "stack": "FeatureEvaluationError: feature d0c7aecb-a147-48bc-bebe-b1e85b1c31f3: ~Technic Gear 12 Tooth - Tooth: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/69779s01.dat",
+      "title": "~Technic Gear 20 Tooth - Tooth",
+      "rootSha256": "2425fb9b70999f3f5936b437318ab89151869175aad591ba3da56c215d35d18c",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 11fc87d1-05bd-4902-bd8e-7b7266688db9: ~Technic Gear 20 Tooth - Tooth: Not manifold",
+        "stack": "FeatureEvaluationError: feature 11fc87d1-05bd-4902-bd8e-7b7266688db9: ~Technic Gear 20 Tooth - Tooth: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/u9465s01.dat",
+      "title": "~Electric Powered Up Distance Sensor Lighting Ring Half",
+      "rootSha256": "ba7e15ac5418e0ee8039b8dc16c25ef917a864ec1557804d7f0e207e3ab74c7a",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 93d86c89-a557-4485-a1b1-9e81fd263f88: ~Electric Powered Up Distance Sensor Lighting Ring Half: Not manifold",
+        "stack": "FeatureEvaluationError: feature 93d86c89-a557-4485-a1b1-9e81fd263f88: ~Electric Powered Up Distance Sensor Lighting Ring Half: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/5996s01.dat",
+      "title": "~Technic Steering Link  8L - Quarter",
+      "rootSha256": "dc6ed3839779a3fe855ea0d4b30bf782ca8755945b5a0f46cad930ed6c720e2f",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 474c6e3d-3860-486c-97b7-b12824113b5d: ~Technic Steering Link  8L - Quarter: Not manifold",
+        "stack": "FeatureEvaluationError: feature 474c6e3d-3860-486c-97b7-b12824113b5d: ~Technic Steering Link  8L - Quarter: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/32109s02.dat",
+      "title": "~Electric Mindstorms RCX Angled Bottom Integrated Stud Half For 32109",
+      "rootSha256": "f0b9a0e85a3894b95965858a8fedd2218ec0bc8af3b38644b76e2d53e73a264e",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature e84e04bc-d570-4864-8470-69692aac1dbe: ~Electric Mindstorms RCX Angled Bottom Integrated Stud Half For 32109: Not manifold",
+        "stack": "FeatureEvaluationError: feature e84e04bc-d570-4864-8470-69692aac1dbe: ~Electric Mindstorms RCX Angled Bottom Integrated Stud Half For 32109: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/39367s02.dat",
+      "title": "~Tyre for Wheel 14 x 48 with  4 Spokes with Integral Tyre - 1/8",
+      "rootSha256": "3e88a632c09bbca1aabbf8093e447ae2cb5cdee7824ef3241e7ef67dd7655798",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 6079a788-534c-49ed-879c-5f1d2f47eae3: ~Tyre for Wheel 14 x 48 with  4 Spokes with Integral Tyre - 1/8: Not manifold",
+        "stack": "FeatureEvaluationError: feature 6079a788-534c-49ed-879c-5f1d2f47eae3: ~Tyre for Wheel 14 x 48 with  4 Spokes with Integral Tyre - 1/8: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/49295s02.dat",
+      "title": "~Tyre for Wheel 14 x 80 with  4 Spokes with Integral Tyre - 1/8",
+      "rootSha256": "ebee2006237946aca75800eb3f1ced5414c4c7e2c6bbacbbad9a8b43ca70ce44",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature fd1bb0c0-5219-413d-b34b-ab108d79762c: ~Tyre for Wheel 14 x 80 with  4 Spokes with Integral Tyre - 1/8: Not manifold",
+        "stack": "FeatureEvaluationError: feature fd1bb0c0-5219-413d-b34b-ab108d79762c: ~Tyre for Wheel 14 x 80 with  4 Spokes with Integral Tyre - 1/8: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/s/91405s01.dat",
+      "title": "~Plate 16 x 16 Rib with 1 Quarter Stud",
+      "rootSha256": "05cf8ad69696201fef407b3be7a8a252a06e1f6af977389b60b9a1e448f5c55e",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 45d711d2-7db8-473c-a482-7fba8a7fa427: ~Plate 16 x 16 Rib with 1 Quarter Stud: Not manifold",
+        "stack": "FeatureEvaluationError: feature 45d711d2-7db8-473c-a482-7fba8a7fa427: ~Plate 16 x 16 Rib with 1 Quarter Stud: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle84-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    }
+  ],
+  "failureTaxonomy": {
+    "non_manifold": 28,
+    "unsupported_quad_geometry": 1
+  },
+  "prior24RefusalsNotRerun": true,
+  "prior39LDrawRecordsAnd193PreviewsExact": true,
+  "nextRankedBatch": "/mnt/storage/brickwright-cycle84-batch/next-ranked-batch.json",
+  "nextBatchCount": 20,
+  "result": "/mnt/storage/brickwright-cycle84-batch/result.json",
+  "scope": "Unchanged named authored official Subpart component with complete per-file CC-BY-4.0 closure; no whole-parent-part or physical-operation claim."
+}

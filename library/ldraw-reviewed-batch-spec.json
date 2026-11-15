@@ -11144,6 +11144,182 @@
           "qualificationScope": "Standalone authored component only; no parent assembly or physical-operation qualification."
         }
       }
+    },
+    {
+      "rootPath": "parts/s/u9465s02.dat",
+      "files": [
+        {
+          "path": "parts/s/u9465s02.dat",
+          "bytes": 1163,
+          "sha256": "2524208bc5838df38527f9c85305537f3008ed066ac3c97f995fa40349262f84",
+          "author": "Philippe Hurbain [Philo]",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        },
+        {
+          "path": "p/rect2p.dat",
+          "bytes": 594,
+          "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc",
+          "author": "Donald Sutter [technog]",
+          "licence": "CC-BY-4.0",
+          "solidColours": [
+            16
+          ]
+        }
+      ],
+      "expectedMeshSha256": "1b130db5d7385dab285ab3a078cd4a87ffef35663f3459f5a83c5867f937a061",
+      "asset": {
+        "id": "corpus-ldraw-u9465s02",
+        "title": "LDraw ~Electric Powered Up Distance Sensor Lighting Ring Separator",
+        "author": "Philippe Hurbain [Philo]",
+        "version": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+          "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/s/u9465s02.dat"
+        },
+        "licence": {
+          "spdx": "CC-BY-4.0",
+          "scope": "asset",
+          "attribution": "Philippe Hurbain [Philo]. LDraw.org Official Parts Library. Original per-file CC-BY-4.0 grant and HISTORY retained. Nominal0.4mm/LDU converted to millimetres/Zup; display edge/conditional-edge appearance omitted; authored solid faces unchanged. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/s/u9465s02.dat. Licence: https://creativecommons.org/licenses/by/4.0/.",
+          "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/s/u9465s02.dat",
+          "capturedOn": "2026-11-15",
+          "review": "accepted",
+          "reviewer": "Codex exact staged/pinned original and complete per-file grant/closure review",
+          "localEvidence": [
+            {
+              "path": "evidence/ldraw-CC-BY-4.0.txt",
+              "format": "text",
+              "bytes": 18657,
+              "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+            },
+            {
+              "path": "evidence/ldraw-CAreadme.txt",
+              "format": "text",
+              "bytes": 4151,
+              "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497"
+            }
+          ]
+        },
+        "original": {
+          "path": "sources/ldraw/parts/s/u9465s02.dat",
+          "bytes": 1163,
+          "sha256": "2524208bc5838df38527f9c85305537f3008ed066ac3c97f995fa40349262f84",
+          "format": "ldraw",
+          "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/s/u9465s02.dat"
+        },
+        "sourceBundle": {
+          "format": "brickwright-ldraw-bundle",
+          "version": 1,
+          "rootPath": "parts/s/u9465s02.dat",
+          "dependencies": [
+            {
+              "path": "p/rect2p.dat",
+              "file": {
+                "path": "sources/ldraw/p/rect2p.dat",
+                "bytes": 594,
+                "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc",
+                "format": "ldraw"
+              },
+              "author": "Donald Sutter [technog]",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect2p.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+                "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "Donald Sutter [technog]. LDraw.org Official Parts Library. Original per-file CC-BY-4.0 grant and HISTORY retained. Nominal0.4mm/LDU converted to millimetres/Zup; display edge/conditional-edge appearance omitted; authored solid faces unchanged. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect2p.dat. Licence: https://creativecommons.org/licenses/by/4.0/.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/rect2p.dat",
+                "capturedOn": "2026-11-15",
+                "review": "accepted",
+                "reviewer": "Codex exact staged/pinned original and complete per-file grant/closure review"
+              }
+            }
+          ]
+        },
+        "derivatives": [
+          {
+            "path": "meshes/ldraw/u9465s02.stl",
+            "bytes": 1084,
+            "sha256": "1b130db5d7385dab285ab3a078cd4a87ffef35663f3459f5a83c5867f937a061",
+            "format": "stl"
+          }
+        ],
+        "modificationNotes": "Exact complete authored part and dependencies unchanged. Existing bounded original converter preserves authored solid faces and origin, BFC winding and transforms. Nominal0.4mm/LDU,-Yup to Zup conversion; display-only edge/conditional lines and inherited colour appearance omitted. No primitive substitution, geometry repair, tolerance/guard/source/default edits or physical/collision certification. DAT closure archival; insertion uses freshly screened STL. Qualification covers this standalone authored Subpart component only, without parent assembly or physical-operation qualification.",
+        "conversion": {
+          "sourceUnits": "ldu",
+          "sourceUpAxis": "-Y",
+          "unitAssumption": "LDraw nominal0.4mm/LDU,-Yup per https://ldraw.org/article/218.html; display conversion only, no physical calibration.",
+          "toMillimetresZUp": [
+            0.4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -0.4,
+            0,
+            0,
+            0.4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "quality": {
+          "fileSha256": "1b130db5d7385dab285ab3a078cd4a87ffef35663f3459f5a83c5867f937a061",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-15",
+          "screeningPolicy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "parseable": true,
+          "closedPositiveVolume": true,
+          "withinSizeLimits": true,
+          "withinTriangleLimits": true
+        },
+        "archiveSelection": {
+          "sourceRepository": "https://github.com/CrispStrobe/brickwright-lite",
+          "sourceCommit": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+          "rootPath": "parts/s/u9465s02.dat",
+          "sourceArchive": {
+            "name": "complete.zip",
+            "url": "https://library.ldraw.org/library/updates/complete.zip",
+            "sha256": "f3e496d0ede69ca7942fa4aa198e661ee2d22723906101e2e339d8917a4dd5f2",
+            "date": "2026-09-30"
+          },
+          "rootKind": "authored official Subpart component; unchanged standalone default closure",
+          "qualificationScope": "Named standalone component only; no parent-part completeness or physical-operation claim."
+        }
+      }
     }
   ]
 }
