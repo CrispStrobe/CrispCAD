@@ -237,6 +237,23 @@ the STL and its attribution JSON. Programmatic callers use
 save/share this ZIP intact; plain mesh and project export contracts are unchanged.
 See [attribution export](MODEL-ATTRIBUTION.md) for snapshot and cancellation behavior.
 
+`ModelLibrarySourceBundle` version 1 also accepts `brickwright-ldraw-bundle` for
+archival DAT roots and dependencies; `ModelLibraryAsset.conversion.sourceUnits`
+accepts `ldu`. These are retained provenance metadata, not an executable DAT
+import API. Hosts must preserve the complete source bundle, per-file identities,
+licence grants and nominal conversion when saving, restoring or exporting
+attribution. Unknown bundle formats remain invalid. Existing file-count, aggregate
+byte, path, hash and licence guards apply to both supported bundle formats.
+
+The model-library panel can insert an STL from its supplied `localFiles` map.
+It snapshots the bytes and uses the same `insertModelLibrarySTL` checks as a
+downloaded STL: exact size/SHA-256, curated quality policy, fresh mesh topology
+and atomic provenance/history insertion. A mismatched local file must leave the
+project and history unchanged. `tests/model-library-ldraw.test.ts` covers saved
+document restoration and attribution round trips; the Chromium/iPad-WebKit
+embedding tests in `tests/browser/model-library-ldraw.spec.ts` cover offline
+insertion, retained provenance, undo/redo and mismatched-byte refusal.
+
 ## Recoverable project removal
 
 The history store adds optional `ModelProject.trashedAt` metadata; documents and
