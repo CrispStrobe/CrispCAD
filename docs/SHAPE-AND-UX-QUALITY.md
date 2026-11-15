@@ -59,15 +59,17 @@ correctness across every parameter combination, mechanical fit or manufacturing
 suitability. Curved-shape and screw-point regression tests cover selected edited
 variants as well.
 
-The current audit finds 27 presets without retained shape-specific generators
-(39 at the first audit; twelve were completed in the everyday-shape pass). They still
+The current audit finds 22 presets without retained shape-specific generators
+(39 at the first audit; twelve everyday shapes and five cutting/enclosure parts
+now retain their design inputs). They still
 support transforms and dimensions, but editing their design intent is incomplete.
 Priorities for follow-up are:
 
 1. Completed: twelve everyday families now retain dimensions, curvature, walls
    and resolution. See [retained shapes](RETAINED-SHAPES.md) for inputs and limits.
-2. Counterbores/countersinks, ports, bosses and ribs: meaningful clearance,
-   bore and wall dimensions, predictable attachment origins.
+2. Completed: counterbores/countersinks, ports, bosses and ribs retain bore,
+   clearance, recess angle/depth and support dimensions with their original
+   construction origins. Edited cavity/shoulder collision checks accompany them.
 3. Gears, pulleys, springs, hinges and mating parts: retain mechanical design
    inputs, establish dimension/clearance tests and qualify edited collision shapes.
 4. Remaining decorative/library templates: distinguish meaningful editable

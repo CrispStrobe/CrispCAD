@@ -47,7 +47,7 @@ const XY=(points:number[][])=>{const s=new T.Shape();s.moveTo(points[0][0],point
 const extrude=(shape:T.Shape,height:number)=>new T.ExtrudeGeometry(shape,{depth:height,bevelEnabled:false,curveSegments:32});
 const box=(x:number,y:number,z:number,at:Vec3=[0,0,0])=>new T.BoxGeometry(x,y,z).translate(...at);
 const cylinder=(r:number,h:number,at:Vec3=[0,0,0],n=64,top=r)=>new T.CylinderGeometry(top,r,h,n).rotateX(Math.PI/2).translate(...at);
-const lathe=(p:number[][])=>{const g=new T.LatheGeometry(p.map(v=>new T.Vector2(v[0],v[1])),64).rotateX(Math.PI/2);g.userData.collisionHint={kind:'radial-profile',segments:64,sides:p.length-1,layout:'rows',closed:true};return g;};
+const lathe=(p:number[][],segments=64)=>{const g=new T.LatheGeometry(p.map(v=>new T.Vector2(v[0],v[1])),segments).rotateX(Math.PI/2);g.userData.collisionHint={kind:'radial-profile',segments,sides:p.length-1,layout:'rows',closed:true};return g;};
 const ring=(outer:number,inner:number,h:number)=>lathe([[inner,0],[outer,0],[outer,h],[inner,h],[inner,0]]);
 function annulus(outer:number,inner:number){const s=new T.Shape();s.absarc(0,0,outer,0,Math.PI*2,false);const hole=new T.Path();hole.absarc(0,0,inner,0,Math.PI*2,true);s.holes.push(hole);return s;}
 function star(){return XY(Array.from({length:10},(_,i)=>{const a=i*Math.PI/5+Math.PI/2,r=i%2?7:16;return [r*Math.cos(a),r*Math.sin(a)];}));}
@@ -113,19 +113,19 @@ export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string,
  switch(id){
  case 'loft':{const points:number[]=[],triangles:number[]=[];for(let level=0;level<=8;level++)for(let j=0;j<64;j++){const a=j*Math.PI/32,t=level/8,r=(1-t)*15/Math.max(Math.abs(Math.cos(a)),Math.abs(Math.sin(a)))+t*8;points.push(r*Math.cos(a),r*Math.sin(a),25*t);}for(let i=0;i<8;i++)for(let j=0;j<64;j++){const a=i*64+j,b=i*64+(j+1)%64,c=a+64,d=b+64;triangles.push(a,b,c,b,d,c);}const bottom=points.length/3;points.push(0,0,0,0,0,25);for(let j=0;j<64;j++)triangles.push(bottom,(j+1)%64,j,bottom+1,512+j,512+(j+1)%64);const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(points,3));g.setIndex(triangles);return {add:[g]};}
  case 'bent-tube': {const s=annulus(5,3);class Bend extends T.Curve<T.Vector3>{constructor(){super();}getPoint(t:number,v=new T.Vector3()){return v.set(20*Math.cos(t*Math.PI/2),20*Math.sin(t*Math.PI/2),0);}}return {add:[new T.ExtrudeGeometry(s,{extrudePath:new Bend(),steps:32,bevelEnabled:false,curveSegments:16})]};}
- case 'counterbore':return {add:[lathe([[0,0],[3,0],[3,20],[6,20],[6,26],[0,26]])]};
- case 'countersink':return {add:[lathe([[0,0],[3,0],[3,20],[6,23],[6,25],[0,25]])]};
+ case 'counterbore':{const p=values!,r=(p.boreDiameter+p.clearance)/2,R=(p.recessDiameter+p.clearance)/2,h=p.shaftLength,H=h+p.recessDepth;return {add:[lathe([[0,0],[r,0],[r,h],[R,h],[R,H],[0,H]],p.segments)]};}
+ case 'countersink':{const p=values!,r=(p.boreDiameter+p.clearance)/2,R=(p.recessDiameter+p.clearance)/2,h=p.shaftLength,H=h+(R-r)/Math.tan(p.seatAngle*Math.PI/360),profile=[[0,0],[r,0],[r,h],[R,H],...(p.rimHeight>0?[[R,H+p.rimHeight]]:[]),[0,H+p.rimHeight]];return {add:[lathe(profile,p.segments)]};}
  case 'teardrop':{const s=new T.Shape(),r=8,h=12,a=Math.asin(r/h),x=r*Math.cos(a),y=r*Math.sin(a);s.moveTo(-x,y);s.absarc(0,0,r,Math.PI-a,2*Math.PI+a,false);s.lineTo(0,h);s.closePath();return {add:[extrude(s,25).rotateX(Math.PI/2)]};}
- case 'port':{const s=new T.Shape();s.moveTo(-10,-5);s.lineTo(10,-5);s.absarc(10,0,5,-Math.PI/2,Math.PI/2,false);s.lineTo(-10,5);s.absarc(-10,0,5,Math.PI/2,3*Math.PI/2,false);s.closePath();return {add:[extrude(s,20)]};}
+ case 'port':{const p=values!,r=p.width/2,a=(p.length-p.width)/2,s=new T.Shape();s.moveTo(-a,-r);s.lineTo(a,-r);s.absarc(a,0,r,-Math.PI/2,Math.PI/2,false);s.lineTo(-a,r);s.absarc(-a,0,r,Math.PI/2,3*Math.PI/2,false);s.closePath();return {add:[new T.ExtrudeGeometry(s,{depth:p.height,bevelEnabled:false,curveSegments:preview?Math.min(20,p.segments):p.segments})]};}
  case 'thread':return {add:[cylinder(5,20,[0,0,10]),threadRidge()]};
  case 'screw':return {add:[cylinder(5,20,[0,0,10]),threadRidge(),cylinder(9,5,[0,0,-2.5])],cut:[box(2,14,2,[0,0,-4.5])]};
  case 'nut':return {add:[cylinder(10,8,[0,0,10],6)],cut:[cylinder(5.25,30,[0,0,10]),threadRidge(5.25,2,12,.15)]};
  case 'finishing-washer':return {add:[lathe([[3,0],[9,0],[9,3],[7,5],[3,1],[3,0]])]};
  case 'hinge':return {separate:true,add:[box(19,3,30,[-12.5,0,0]),box(19,3,30,[12.5,0,0]),...[-12,-6,0,6,12].map(z=>ring(5,3,5.7).translate(0,0,z-2.85)),cylinder(2.5,32)]};
  case 'dovetail':return {add:[extrude(XY([[-8,0],[8,0],[12,8],[-12,8]]),30).rotateX(Math.PI/2)]};
- case 'boss':return {add:[ring(7,3,20),box(25,2,5,[0,0,2.5]),box(2,25,5,[0,0,2.5])],cut:[cylinder(3,40,[0,0,10])]};
+ case 'boss':{const p=values!,R=p.outerDiameter/2,r=p.boreDiameter/2,span=p.outerDiameter+2*p.ribReach;const add:T.BufferGeometry[]=[lathe([[r,0],[R,0],[R,p.height],[r,p.height],[r,0]],p.segments)];if(p.ribReach>0)add.push(box(span,p.ribThickness,p.ribHeight,[0,0,p.ribHeight/2]),box(p.ribThickness,span,p.ribHeight,[0,0,p.ribHeight/2]));return {add,...(p.ribReach>0?{cut:[cylinder(r,p.height+2,[0,0,p.height/2],p.segments)]}:{})};}
  case 'snap-fit':return {add:[box(20,12,3,[0,0,1.5]),box(3,12,25,[8.5,0,15]),extrude(XY([[0,0],[5,0],[0,6]]),12).rotateX(Math.PI/2).translate(5.5,6,24)]};
- case 'rib':return {add:[extrude(XY([[0,0],[25,0],[0,25]]),3).rotateX(Math.PI/2)]};
+ case 'rib':{const p=values!;return {add:[extrude(XY([[0,0],[p.length,0],[0,p.height]]),p.thickness).rotateX(Math.PI/2)]};}
  case 'spring':return {add:[closedTube(new Helix(10,40,6),preview?96:288,1.4,preview?6:12)]};
  case 'gear':return {add:[gear()]};
  case 'hirth':{const add:T.BufferGeometry[]=[ring(16,4,4)];for(let i=0;i<24;i++){const half=Math.PI/24*.9,points=[];for(const r of [5,16]){points.push(new T.Vector3(r*Math.cos(-half),r*Math.sin(-half),3.8),new T.Vector3(r*Math.cos(half),r*Math.sin(half),3.8),new T.Vector3(r,0,6));}const g=new ConvexGeometry(points);g.rotateZ(i*Math.PI/12);add.push(g);}return {add};}
@@ -150,11 +150,12 @@ export function advancedGeometry(id:string,text='ABC',preview=false,svg?:string,
  }
 }
 export function constructionPreview(id:string,recipe?:GeneratorRecipe):T.BufferGeometry {
+ if(recipe){checkGenerator(recipe);if(recipe.preset!==id)throw new Error(t('Invalid shape generator'));}
  const c=advancedGeometry(id,['text','name-tag'].includes(id)?'ABC':'BW',true,undefined,recipe);const geometries=[...c.add,...(c.after??[])].map(g=>{const non=g.index?g.toNonIndexed():g;const clean=new T.BufferGeometry();clean.setAttribute('position',non.getAttribute('position').clone());if(non!==g)non.dispose();g.dispose();return clean;});c.cut?.forEach(g=>g.dispose());const merged=mergeGeometries(geometries)!;geometries.forEach(g=>g.dispose());return merged;
 }
 export function constructionDocument(id:string,name:string,color:string,text:string,svg?:string,recipe?:GeneratorRecipe):CadDocument {
  const provided=recipe;recipe??=defaultGenerator(id);if(recipe&&!provided&&['text','name-tag'].includes(id))recipe={...recipe,text};
- if(recipe&&['text','name-tag'].includes(id))recipe={...recipe,text:recipe.text??text};if(recipe)checkGenerator(recipe);const c=advancedGeometry(id,text,false,svg,recipe);const doc=createDocument(name);let component=0;const addNode=(g:T.BufferGeometry)=>{const key=newId();doc.nodes[key]={id:key,name:t`${name} component ${++component}`,kind:'mesh',color,transform:identityTransform(),positions:Array.from(g.getAttribute('position').array),indices:g.index?Array.from(g.index.array):Array.from({length:g.getAttribute('position').count},(_,i)=>i),...(g.userData.collisionHint?{physics:{...defaultPartPhysics(),sourcePreset:id,collisionHint:g.userData.collisionHint}}:{})};g.dispose();return key;};
+ if(recipe&&['text','name-tag'].includes(id))recipe={...recipe,text:recipe.text??text};if(recipe){checkGenerator(recipe);if(recipe.preset!==id)throw new Error(t('Invalid shape generator'));}const c=advancedGeometry(id,text,false,svg,recipe);const doc=createDocument(name);let component=0;const addNode=(g:T.BufferGeometry)=>{const key=newId();doc.nodes[key]={id:key,name:t`${name} component ${++component}`,kind:'mesh',color,transform:identityTransform(),positions:Array.from(g.getAttribute('position').array),indices:g.index?Array.from(g.index.array):Array.from({length:g.getAttribute('position').count},(_,i)=>i),...(g.userData.collisionHint?{physics:{...defaultPartPhysics(),sourcePreset:id,collisionHint:g.userData.collisionHint}}:{})};g.dispose();return key;};
  const combine=(operation:'union'|'subtract',inputs:string[]):string=>{if(inputs.length===1)return inputs[0];if(inputs.length>100){const groups=[];for(let i=0;i<inputs.length;i+=100)groups.push(combine('union',inputs.slice(i,i+100)));return combine(operation,groups);}const key=newId();doc.nodes[key]={id:key,name,kind:'boolean',operation,inputs,color,transform:identityTransform()};return key;};
  if(id==='hinge') {
   c.add.forEach(g=>g.dispose());
@@ -169,6 +170,6 @@ export function constructionDocument(id:string,name:string,color:string,text:str
  for(const root of doc.roots){const node=doc.nodes[root];if(c.reference)node.reference=true;else node.physics={...defaultPartPhysics(),...(node.physics?.collisionHint?{collisionHint:node.physics.collisionHint}:{}),sourcePreset:id,intent:id==='hinge'?'hinge':id==='spring'?'spring':id==='snap-fit'?'snap-fit':['thread','screw','nut'].includes(id)?'thread':id==='gear'?'gear':id==='gt2-pulley'?'belt':id==='hirth'?'face-coupling':id==='dovetail'?'sliding-fit':'rigid',...(['thread','screw','nut'].includes(id)?{parameters:{pitchMm:2,starts:1}}:id==='gear'?{parameters:{teeth:20,moduleMm:1.5,pressureAngleDeg:20}}:id==='spring'?{parameters:{wireDiameterMm:2.8,meanDiameterMm:20,activeTurns:6}}:id==='gt2-pulley'?{parameters:{teeth:20,pitchMm:2}}:{})};}
  const root=doc.nodes[doc.roots[0]];if(root.physics&&id==='spring')root.physics.collisionHint={kind:'tube-grid',segments:288,sides:12,layout:'rows',closed:false};
  if(recipe){doc.version=2;root.generator=structuredClone(recipe);root.name=name;if(root.physics&&['screw','thread','nut'].includes(id))root.physics.parameters={pitchMm:recipe.values.pitch,starts:recipe.values.starts,coreDiameterMm:recipe.values.diameter,lengthMm:recipe.values.length,threadDepthMm:recipe.values.threadDepth,hand:recipe.values.hand};}
- const profileLengths:Record<string,number>={counterbore:6,countersink:6,'finishing-washer':6};if(root.physics&&profileLengths[id])root.physics.collisionHint={kind:'radial-profile',segments:64,sides:profileLengths[id]-1,layout:'rows',closed:true};
+ const profileLengths:Record<string,number>={'finishing-washer':6};if(root.physics&&profileLengths[id])root.physics.collisionHint={kind:'radial-profile',segments:64,sides:profileLengths[id]-1,layout:'rows',closed:true};
  return doc;
 }
