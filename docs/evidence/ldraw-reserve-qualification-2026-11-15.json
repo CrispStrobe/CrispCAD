@@ -1,0 +1,660 @@
+{
+  "status": "ALL4 ACTUAL GATES PASS LOCAL; delivery counted separately",
+  "mainBase": "19895040c5d3613ab7e487b7a32555f7835b060c",
+  "testedSourceTree": "5c2dd543d018ba38196fdd6bafdae3f8ac3d35d6",
+  "mainCountsBefore": [
+    150,
+    145,
+    189
+  ],
+  "qualifiedLocalCounts": [
+    154,
+    149,
+    193
+  ],
+  "delta": [
+    4,
+    4,
+    4
+  ],
+  "admissions": [
+    {
+      "candidateID": "corpus-ldraw-u9404",
+      "sourceID": "parts/u9404.dat",
+      "sourceSha256": "e410d3de9f87c9f88b1a1bf97d4e743014d37de70c0a12c865a1973626b1fe63",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 7,
+      "meshSha256": "98126d790c1f8ffddd294261a4cac1b0c2e1709b093461a5da0de0b868d93ea5",
+      "triangles": 224,
+      "signedVolumeMm3": 82.80576598891047,
+      "browser": "PASS both engines with exact source/STL hashes and zero requests",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "preview": "PASS generated raster+actual browser pixels",
+      "editor": "PASS actual evaluation,provenance,restore,undo/redo,mismatched bytes refused before evaluation"
+    },
+    {
+      "candidateID": "corpus-ldraw-99401",
+      "sourceID": "parts/99401.dat",
+      "sourceSha256": "e7aedc742fbc87b9239934a9e5dcb64ca769bef59efd7725090fb7799db6b45b",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 8,
+      "meshSha256": "af3dc49856d3e8095014e76ce1ed65ef12dab08403ac1fa8c8c2b25033fc4294",
+      "triangles": 256,
+      "signedVolumeMm3": 537.653586850499,
+      "browser": "PASS both engines with exact source/STL hashes and zero requests",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "preview": "PASS generated raster+actual browser pixels",
+      "editor": "PASS actual evaluation,provenance,restore,undo/redo,mismatched bytes refused before evaluation"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9396",
+      "sourceID": "parts/u9396.dat",
+      "sourceSha256": "3e1e5b112c68bd21edfc9e125bdd66fa0d3521c162a7293551754bc62515d034",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 7,
+      "meshSha256": "d9c1cd7fafd7d299334e3478e08eb4330e6020222838fd1c2e67995f6b6b2759",
+      "triangles": 192,
+      "signedVolumeMm3": 119.31481294477425,
+      "browser": "PASS both engines with exact source/STL hashes and zero requests",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "preview": "PASS generated raster+actual browser pixels",
+      "editor": "PASS actual evaluation,provenance,restore,undo/redo,mismatched bytes refused before evaluation"
+    },
+    {
+      "candidateID": "corpus-ldraw-56474",
+      "sourceID": "parts/56474.dat",
+      "sourceSha256": "9247bdcaaf1add361ad62ca99743e34d660561272cdace64623be46a89cd681d",
+      "author": "Steve Bliss [sbliss]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 6,
+      "meshSha256": "9f099c1ba14f63d9828c2647613593599c740656091d211f513cd40dba8e8b3f",
+      "triangles": 320,
+      "signedVolumeMm3": 768.2725967506511,
+      "browser": "PASS both engines with exact source/STL hashes and zero requests",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "preview": "PASS generated raster+actual browser pixels",
+      "editor": "PASS actual evaluation,provenance,restore,undo/redo,mismatched bytes refused before evaluation"
+    }
+  ],
+  "browserCoverage": {
+    "chromium": 4,
+    "ipad-webkit": 4
+  },
+  "attachments": [
+    {
+      "candidateID": "corpus-ldraw-u9404",
+      "sourceSha256": "e410d3de9f87c9f88b1a1bf97d4e743014d37de70c0a12c865a1973626b1fe63",
+      "meshSha256": "98126d790c1f8ffddd294261a4cac1b0c2e1709b093461a5da0de0b868d93ea5",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-99401",
+      "sourceSha256": "e7aedc742fbc87b9239934a9e5dcb64ca769bef59efd7725090fb7799db6b45b",
+      "meshSha256": "af3dc49856d3e8095014e76ce1ed65ef12dab08403ac1fa8c8c2b25033fc4294",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9396",
+      "sourceSha256": "3e1e5b112c68bd21edfc9e125bdd66fa0d3521c162a7293551754bc62515d034",
+      "meshSha256": "d9c1cd7fafd7d299334e3478e08eb4330e6020222838fd1c2e67995f6b6b2759",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-56474",
+      "sourceSha256": "9247bdcaaf1add361ad62ca99743e34d660561272cdace64623be46a89cd681d",
+      "meshSha256": "9f099c1ba14f63d9828c2647613593599c740656091d211f513cd40dba8e8b3f",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9404",
+      "sourceSha256": "e410d3de9f87c9f88b1a1bf97d4e743014d37de70c0a12c865a1973626b1fe63",
+      "meshSha256": "98126d790c1f8ffddd294261a4cac1b0c2e1709b093461a5da0de0b868d93ea5",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-99401",
+      "sourceSha256": "e7aedc742fbc87b9239934a9e5dcb64ca769bef59efd7725090fb7799db6b45b",
+      "meshSha256": "af3dc49856d3e8095014e76ce1ed65ef12dab08403ac1fa8c8c2b25033fc4294",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9396",
+      "sourceSha256": "3e1e5b112c68bd21edfc9e125bdd66fa0d3521c162a7293551754bc62515d034",
+      "meshSha256": "d9c1cd7fafd7d299334e3478e08eb4330e6020222838fd1c2e67995f6b6b2759",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-56474",
+      "sourceSha256": "9247bdcaaf1add361ad62ca99743e34d660561272cdace64623be46a89cd681d",
+      "meshSha256": "9f099c1ba14f63d9828c2647613593599c740656091d211f513cd40dba8e8b3f",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    }
+  ],
+  "execution": [
+    {
+      "command": [
+        "node",
+        "scripts/generate-ldraw-reviewed-batch.mjs",
+        "--check"
+      ],
+      "guard": {
+        "fastFreeBytes": 14630584320,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4852731904,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.05029296875,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "integrationTree": "5c2dd543d018ba38196fdd6bafdae3f8ac3d35d6",
+      "timeoutSeconds": 90,
+      "status": "PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 1.8120592972263694
+    },
+    {
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/model-library-ldraw.test.ts",
+        "tests/model-library-ldraw-exact.test.ts"
+      ],
+      "guard": {
+        "fastFreeBytes": 14630584320,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4815003648,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.04931640625,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "integrationTree": "5c2dd543d018ba38196fdd6bafdae3f8ac3d35d6",
+      "timeoutSeconds": 45,
+      "status": "PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 3.8892328271176666
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "guard": {
+        "fastFreeBytes": 14630580224,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4844744704,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.04931640625,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "integrationTree": "5c2dd543d018ba38196fdd6bafdae3f8ac3d35d6",
+      "timeoutSeconds": 90,
+      "status": "PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 13.475206503877416
+    },
+    {
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-ldraw-reserve.spec.ts",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 14630338560,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4907405312,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.11328125,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "integrationTree": "5c2dd543d018ba38196fdd6bafdae3f8ac3d35d6",
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 98.63408597116359
+    }
+  ],
+  "testedOwnedFiles": [
+    {
+      "path": "library/ldraw-reviewed-batch-manifest.json",
+      "sha256": "612083e60316f78852b18c13a9d2db2f28e224904cfefaf0b555eae9992b1741",
+      "bytes": 517468
+    },
+    {
+      "path": "library/ldraw-reviewed-batch-spec.json",
+      "sha256": "195b974e63ce686de8a3bbcbde3ec2dc5c6bd4cc14cfb3bd68f4fecdae501a84",
+      "bytes": 579997
+    },
+    {
+      "path": "library/meshes/ldraw/56474.stl",
+      "sha256": "9f099c1ba14f63d9828c2647613593599c740656091d211f513cd40dba8e8b3f",
+      "bytes": 16084
+    },
+    {
+      "path": "library/meshes/ldraw/99401.stl",
+      "sha256": "af3dc49856d3e8095014e76ce1ed65ef12dab08403ac1fa8c8c2b25033fc4294",
+      "bytes": 12884
+    },
+    {
+      "path": "library/meshes/ldraw/u9396.stl",
+      "sha256": "d9c1cd7fafd7d299334e3478e08eb4330e6020222838fd1c2e67995f6b6b2759",
+      "bytes": 9684
+    },
+    {
+      "path": "library/meshes/ldraw/u9404.stl",
+      "sha256": "98126d790c1f8ffddd294261a4cac1b0c2e1709b093461a5da0de0b868d93ea5",
+      "bytes": 11284
+    },
+    {
+      "path": "library/previews.json",
+      "sha256": "12b7eb8b9536a76d63bf13ef97ea0f3210ff5c5f65b4805456944e0753f2c981",
+      "bytes": 3334043
+    },
+    {
+      "path": "library/sources/ldraw/p/4-4con4.dat",
+      "sha256": "7c49737dec9819a49e43d7af5926c05d8a1a1226bc0f2cb15cbe7cddb035f00b",
+      "bytes": 2722
+    },
+    {
+      "path": "library/sources/ldraw/p/4-4ring11.dat",
+      "sha256": "325dd90eb9b86d9e94ea2fb9bdd766dad0275b10a1fe22f014f2c8ad2a3ac7cd",
+      "bytes": 1630
+    },
+    {
+      "path": "library/sources/ldraw/p/4-4ring18.dat",
+      "sha256": "1edf4b9ee669e0e34c60813a924d18c6cff36a4bbc6e81ba5c65cb0b1cd4a919",
+      "bytes": 1530
+    },
+    {
+      "path": "library/sources/ldraw/p/4-4ring2.dat",
+      "sha256": "6fb38804b1f5e9bee8c0b80caf1397b09454fc58b048dc19045b6f37c8762ab0",
+      "bytes": 1628
+    },
+    {
+      "path": "library/sources/ldraw/p/4-4ring5.dat",
+      "sha256": "ca5a04efffaad8671c935fed492ee397b1b91f854079257b033e87fcca3580b1",
+      "bytes": 1773
+    },
+    {
+      "path": "library/sources/ldraw/p/48/1-4cyli.dat",
+      "sha256": "e2ed297feaf608b7319c2e54cd81dcb653fbb3d87b5a8e48ab2f54b32953fc6b",
+      "bytes": 2413
+    },
+    {
+      "path": "library/sources/ldraw/p/48/1-4edge.dat",
+      "sha256": "e4ebabd21711f16411b3c8b8b278995a56c5f25919cd424976357da5b19943c6",
+      "bytes": 1196
+    },
+    {
+      "path": "library/sources/ldraw/p/48/4-4cylc.dat",
+      "sha256": "7daf39e47048db647bdab349b9cdec012aaa83d22f7029f35e26a568edbc16bc",
+      "bytes": 501
+    },
+    {
+      "path": "library/sources/ldraw/p/48/4-4cyli.dat",
+      "sha256": "6c466cd94f69ecdb3a5a83faee52ad2e5ecd9d1560975feaf854c3433de6e6a2",
+      "bytes": 683
+    },
+    {
+      "path": "library/sources/ldraw/p/48/4-4disc.dat",
+      "sha256": "d458fdd05b598d6f4023a38d86d9647c542d2d4209c4bc83360399842448f680",
+      "bytes": 2733
+    },
+    {
+      "path": "library/sources/ldraw/p/48/4-4edge.dat",
+      "sha256": "db8fd751c8c6b1f72211903adbff3aa90be6808cc4fcff391f1c320adced5da7",
+      "bytes": 712
+    },
+    {
+      "path": "library/sources/ldraw/parts/56474.dat",
+      "sha256": "9247bdcaaf1add361ad62ca99743e34d660561272cdace64623be46a89cd681d",
+      "bytes": 1307
+    },
+    {
+      "path": "library/sources/ldraw/parts/99401.dat",
+      "sha256": "e7aedc742fbc87b9239934a9e5dcb64ca769bef59efd7725090fb7799db6b45b",
+      "bytes": 942
+    },
+    {
+      "path": "library/sources/ldraw/parts/u9396.dat",
+      "sha256": "3e1e5b112c68bd21edfc9e125bdd66fa0d3521c162a7293551754bc62515d034",
+      "bytes": 547
+    },
+    {
+      "path": "library/sources/ldraw/parts/u9404.dat",
+      "sha256": "e410d3de9f87c9f88b1a1bf97d4e743014d37de70c0a12c865a1973626b1fe63",
+      "bytes": 866
+    },
+    {
+      "path": "tests/browser/model-library-ldraw-reserve.spec.ts",
+      "sha256": "3cff67747ae10a7c0eac147766e868d7bcc0002007b79f4bc63b506520b4fe6f",
+      "bytes": 3538
+    },
+    {
+      "path": "tests/browser/model-library.spec.ts",
+      "sha256": "ecd88c368aeb9f566b614a303a9a801469cb09a1d53041103f239109e9374937",
+      "bytes": 26483
+    }
+  ],
+  "validationHashes": [
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/sync.json",
+      "sha256": "062f21590e8e386688e7929b546d905e158e75710cd372f61f185664dc391d69"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/batch-execution.json",
+      "sha256": "18562620133e25dfeb6b029cfe0e8e7fa7844be8ab7fc14cef091ed12d98b62d"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/batch1-results.json",
+      "sha256": "0c13462d4a8a53a462829be72b303235179aefc85aaae3e4719f0c0e0d0afe6c"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/classified-results.json",
+      "sha256": "d3aad6968daec53fec3e13d00fc1b862879221c4d8abd1aa53717d5468172c4a"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/prepare-execution.json",
+      "sha256": "e71120c02fa5e25a3d411da2e59ae5051edda8b3dda5167524a21c49ee617bc8"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/prepare-0.log",
+      "sha256": "1d67e0a194898a4598cd9f155e2f8513a07bf282256cbb7030161141dadac334"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/prepare-1.log",
+      "sha256": "c9cee213c7a492e916dca69698c10d69749d244c0829bf45fe455ac97af79eab"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/qualify-execution.json",
+      "sha256": "b71ff1da01cd2c0eec6751a7cb548b46091cd3894e2aeb40fd4bb4be412dd357"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/qualify-0.log",
+      "sha256": "1d67e0a194898a4598cd9f155e2f8513a07bf282256cbb7030161141dadac334"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/qualify-1.log",
+      "sha256": "4bb11ec7d1c6a450c6424cf4ecee2dd76f3abbc23907fe31e0131f1b1c31c6bc"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/qualify-2.log",
+      "sha256": "7a6cffb17704d0db07bd2e71c276a2463595e827c503c55009ff966536f07e62"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/qualify-3.log",
+      "sha256": "b13a0ae3c4290b351ba000a72764423cf5d2fdc823c83dd7f7715b342aa76ad6"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/qualify-browser.json",
+      "sha256": "82355d1883f0266e56c7f1d56771c63118efb6a02187aa558c270bb180bdb0fd"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/metadata-schema-proof.json",
+      "sha256": "48bb8a535289543446af0eb5305da0478f830ac647aad18635ca8c923b11b41d"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle83-batch/first-packaging-setup-refusal.json",
+      "sha256": "803d615636a2db3fb016647315dcb56a5bb5bbd2e14ba43109e3db00f7194b4b"
+    }
+  ],
+  "refusals": [
+    {
+      "rootPath": "parts/27195.dat",
+      "title": "~Electric Power Functions 2.0 Boost Move Hub Left Side",
+      "rootSha256": "c1dc3a79f2611b460e18dc7d30865fd0e5a53ff2c6696eeff11ca6a83b9ff10d",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 4af2f1d1-f79b-4b30-9330-42e05f0d06de: ~Electric Power Functions 2.0 Boost Move Hub Left Side: Not manifold",
+        "stack": "FeatureEvaluationError: feature 4af2f1d1-f79b-4b30-9330-42e05f0d06de: ~Electric Power Functions 2.0 Boost Move Hub Left Side: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle83-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/u9289.dat",
+      "title": "~Electric Brick  2 x  2 x  0.667 with Side Clamps Left Inside Metal Part",
+      "rootSha256": "95db76a04aeb1a06e6e847229aeabf52e27a4c4661ab8fddab32c65920f22970",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature f33dab01-c75a-4a8f-967e-dd51140b76f3: ~Electric Brick  2 x  2 x  0.667 with Side Clamps Left Inside Metal Part: Not manifold",
+        "stack": "FeatureEvaluationError: feature f33dab01-c75a-4a8f-967e-dd51140b76f3: ~Electric Brick  2 x  2 x  0.667 with Side Clamps Left Inside Metal Part: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle83-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/u9301.dat",
+      "title": "~Electric Brick  2 x  2 x  0.667 with Side Clamps Right Inside Metal Part",
+      "rootSha256": "06f856d7b705dedffcf2c99468d8f0dee8c2a49f4145f13aea807aecb103cff8",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature fe2a8c0a-2f6e-44c7-b788-7f870c71cc76: ~Electric Brick  2 x  2 x  0.667 with Side Clamps Right Inside Metal Part: Not manifold",
+        "stack": "FeatureEvaluationError: feature fe2a8c0a-2f6e-44c7-b788-7f870c71cc76: ~Electric Brick  2 x  2 x  0.667 with Side Clamps Right Inside Metal Part: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle83-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/10092.dat",
+      "title": "~Electric Power Functions Large Motor Case Front Plate",
+      "rootSha256": "3494a438b53eff8188be9923bb3a98d1fe0e0c1256ea1ed1cfb9692f89fcbf55",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 3f80a649-37ca-4e97-972b-05f0b3e5a60e: ~Electric Power Functions Large Motor Case Front Plate: Not manifold",
+        "stack": "FeatureEvaluationError: feature 3f80a649-37ca-4e97-972b-05f0b3e5a60e: ~Electric Power Functions Large Motor Case Front Plate: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle83-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/2941.dat",
+      "title": "~Technic Pneumatic Cylinder 1 x 1 Cap",
+      "rootSha256": "342395711816ef23ea26692494b7a76d0e206c19fe59c6d5d9236c7da325a9ad",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature bb7610fe-ea50-453c-9c06-4dbb99c7ebb0: ~Technic Pneumatic Cylinder 1 x 1 Cap: Not manifold",
+        "stack": "FeatureEvaluationError: feature bb7610fe-ea50-453c-9c06-4dbb99c7ebb0: ~Technic Pneumatic Cylinder 1 x 1 Cap: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle83-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/59142.dat",
+      "title": "~Electric Power Functions Medium Motor Back (Needs Work)",
+      "rootSha256": "587926ba9276d9c82ae1cba3a7187cf0e843cd63f0b1bec8445c5c4e67952262",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 8cec33af-5035-406e-8b83-3ea1f086a8a1: ~Electric Power Functions Medium Motor Back (Needs Work): Not manifold",
+        "stack": "FeatureEvaluationError: feature 8cec33af-5035-406e-8b83-3ea1f086a8a1: ~Electric Power Functions Medium Motor Back (Needs Work): Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle83-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/10091.dat",
+      "title": "~Electric Power Functions Large Motor Cable Retainer",
+      "rootSha256": "f9575c4792661a1af6b05728c500396941f8357ca2dbc2fe5d622b6faf4ddea5",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 00ba689a-2171-4c17-8a36-bd9f9c988687: ~Electric Power Functions Large Motor Cable Retainer: Not manifold",
+        "stack": "FeatureEvaluationError: feature 00ba689a-2171-4c17-8a36-bd9f9c988687: ~Electric Power Functions Large Motor Cable Retainer: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle83-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/55966.dat",
+      "title": "~Electric Mindstorms NXT Sensor Shell Top",
+      "rootSha256": "95d49cd1875d18b2890d0f96efa0145df4112ea28e4049eaa94251e3ba4b1ae7",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 84b26620-6706-4880-ad6e-f2f092d1bfc8: ~Electric Mindstorms NXT Sensor Shell Top: Not manifold",
+        "stack": "FeatureEvaluationError: feature 84b26620-6706-4880-ad6e-f2f092d1bfc8: ~Electric Mindstorms NXT Sensor Shell Top: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle83-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/70834.dat",
+      "title": "~Technic Pneumatic Pump  1 x  1 Gasket",
+      "rootSha256": "19673945a6d3162f40720582d0b55b2c39dd56bf2bd81f7c20b50a1f3645510c",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature d9aed83b-0eff-4937-9a6c-bd70a5b55804: ~Technic Pneumatic Pump  1 x  1 Gasket: Not manifold",
+        "stack": "FeatureEvaluationError: feature d9aed83b-0eff-4937-9a6c-bd70a5b55804: ~Technic Pneumatic Pump  1 x  1 Gasket: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle83-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/99799.dat",
+      "title": "~Technic Pneumatic Cylinder 1 x 1 for Pump 6L",
+      "rootSha256": "6e10efe343f9e55737a77659a3c91ef41cc4832253cb96193e7383928e854bbc",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 823e444e-fffa-405c-aab3-6d64bf4940c1: ~Technic Pneumatic Cylinder 1 x 1 for Pump 6L: Not manifold",
+        "stack": "FeatureEvaluationError: feature 823e444e-fffa-405c-aab3-6d64bf4940c1: ~Technic Pneumatic Cylinder 1 x 1 for Pump 6L: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle83-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    },
+    {
+      "rootPath": "parts/28943.dat",
+      "title": "~Electric Power Functions 2.0 Boost Move Hub Right Side",
+      "rootSha256": "7d3cf4704cc99cc790535e85793908b7bd1d19c21e80c9f2c8cc5318124ffb73",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 40888e70-aff1-41b5-ab59-040761c3cbca: ~Electric Power Functions 2.0 Boost Move Hub Right Side: Not manifold",
+        "stack": "FeatureEvaluationError: feature 40888e70-aff1-41b5-ab59-040761c3cbca: ~Electric Power Functions 2.0 Boost Move Hub Right Side: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle83-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual open/nonmanifold output; exact source/output trace required before an intrinsic classification"
+    }
+  ],
+  "prior13RefusalsNotRerun": true,
+  "prior35LDrawRecordsAnd189PreviewsExact": true,
+  "result": "/mnt/storage/brickwright-cycle83-batch/result.json",
+  "scope": "Four unchanged authored standalone components from exact preflighted reserve, complete per-file CC-BY-4.0 closures. No parent assembly/physical qualification or new format/converter feature."
+}
