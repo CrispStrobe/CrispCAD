@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-14",
+  "updated": "2026-11-15",
   "policy": "Every emitted notice is tracked. Positive-solid execution is not semantic fidelity. A closed gap needs a retained regression and evidence; source-behavior diagnostics may remain visible. Research sources/reports remain external.",
   "order": [
     "scad.text.number-format",
@@ -279,12 +279,13 @@
       "id": "jscad.elliptic-tapers",
       "state": "partial",
       "area": "geometry",
-      "current": "Full-turn noncircular cylinderElliptic radii lower to a compact retained native elliptical taper, including point tips.",
+      "current": "Full-turn and angular cylinderElliptic tapers lower to retained native meshes, with wrapped/equal endpoints and point tips. Radial cut faces retain explicit triangles.",
       "tests": [
         "tests/next-engine.test.ts",
-        "tests/physics.test.ts"
+        "tests/physics.test.ts",
+        "tests/elliptic-sectors.test.ts"
       ],
-      "nextOrEvidence": "Direct MIT JSCAD volume/bounds checks and real Jolt bore rays. Line ends, angle intervals and fractional elliptic tessellation remain unsupported."
+      "nextOrEvidence": "Independent MIT JSCAD volume/bounds and export/reimport checks. Line ends and fractional tessellation remain unsupported. Angular resolutions producing zero side segments are refused instead of reproducing invalid upstream shells."
     },
     {
       "id": "jscad.axis-transform-aliases",
@@ -330,11 +331,23 @@
     },
     {
       "id": "scad.comprehension.parentheses",
-      "state": "open",
+      "state": "closed",
       "area": "language",
-      "current": "Parenthesized generator bodies remain unsupported; a newly reached case is currently reported as invalid-source rather than unsupported-feature.",
-      "tests": [],
-      "nextOrEvidence": "A read-only official OpenSCAD 2021.01 executable probe accepts the original external research input and emits CSG. Add an original minimal conformance probe and bounded retained parentheses support; do not relabel the file malformed."
+      "current": "Parenthesized for/if/each bodies and let-prefixed generators are retained in generator-body and comma-continuation positions. Extra grouping rejected by the reference remains rejected; normal let arithmetic is preserved.",
+      "tests": [
+        "tests/grouped-generators.test.ts"
+      ],
+      "nextOrEvidence": "Nine original syntax/value probes against official OpenSCAD 2021.01 distinguish accepted and refused grammar. Existing array, expression, evaluation and expansion limits remain enforced."
+    },
+    {
+      "id": "physics.angular-bore-qualification",
+      "state": "open",
+      "area": "physics",
+      "current": "A 24-segment quarter-taper with a bore qualifies and preserves voids in real Jolt rays. The same fixture at 32 segments is rejected by the unchanged 2% volume gate (2.87% disagreement).",
+      "tests": [
+        "tests/physics.test.ts"
+      ],
+      "nextOrEvidence": "Improve partition/CSG comparison robustness under unchanged hull and error budgets. Both a positive collision test and the current refusal are retained. No collider or volume tolerance is relaxed."
     }
   ]
 }

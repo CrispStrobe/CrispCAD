@@ -686,3 +686,40 @@ parser pass rather than dismissed as a malformed author file.
 844 passing tests, one optional skip, 28 desktop/iPad browser checks, offline SDK
 execution, independent geometry probes and the 56 rigid-preview preset passes
 plus one reference exclusion. No research geometry is shipped.
+
+## Grouped generators and angular tapers — 2026-11-15
+
+OpenSCAD grouped generator bodies now retain nested `for`, `if`, `each` and
+`let` scopes, including comma-continuation positions. The grammar distinguishes
+these from ordinary parenthesized arithmetic and from extra wrapping rejected
+by the official executable. Original conformance probes cover order, filtering,
+scoping, empty inputs and later numeric parameter edits. No source is repaired.
+
+JSCAD `cylinderElliptic` now accepts start/end angles, including wrapped intervals,
+full turns at equal endpoints and point tips. Explicit triangle diagonals preserve
+the twisted radial cut faces when the two ellipses have different proportions.
+Independent MIT JSCAD measurements and export/reimport checks cover the supported
+subset. Zero-side angular intervals, line ends and fractional tessellation remain
+refused. Existing full-turn native calls keep their historical sampling order.
+
+Physics is a separate gate: the quarter-taper/bore fixture at 24 segments passes
+qualification and Jolt void/material rays. At 32 segments it remains refused at
+2.87% volume disagreement. Both outcomes are regression tests; no error threshold
+or hull budget is increased. Partition/CSG robustness remains a tracked gap.
+
+JSCAD snapshots retain the interval count computed from source radians explicitly.
+An 84-case boundary matrix covers three resolutions, four start angles and seven
+turn fractions; this prevents a radians-to-degrees rounding step from dropping a
+sector interval. The native constructor also exposes an optional explicit angular
+interval count while keeping density-based refinement available to native models.
+
+The final frozen replay improves **167 → 168/256** successful solids. All 167
+previous positives retain volume and bounds at 1e-6 tolerance. One previous parser
+failure now converts; the remaining results are 37 unsupported, 32 limited,
+18 failed and one timeout. Existing randomness and other fidelity notices remain
+visible; no research source or generated research model is shipped.
+
+[Aggregate evidence](evidence/import-engine-groups-sectors-2026-11-15.json) records
+865 full-suite passes (one optional skip), 19 overlapping final localization
+checks, 32 desktop/iPad browser checks, offline SDK execution, the nine original
+OpenSCAD grammar probes, and the independent angular-tessellation matrix.
