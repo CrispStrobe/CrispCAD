@@ -1,0 +1,1424 @@
+{
+  "status": "ALL17 ACTUAL GATES PASS LOCAL; delivery counted separately",
+  "mainBase": "5ae4c38a7256bd68f2e979921173c9f36c003732",
+  "testedSourceTree": "1bf3e99a8230ab5ebc354821a5ada77adbc77c16",
+  "mainCountsBefore": [
+    133,
+    130,
+    172
+  ],
+  "localQualifiedCounts": [
+    150,
+    145,
+    189
+  ],
+  "delta": [
+    17,
+    15,
+    17
+  ],
+  "admissions": [
+    {
+      "candidateID": "corpus-ldraw-97622",
+      "sourceID": "parts/97622.dat",
+      "sourceSha256": "19765e7374a2fb74f9a1cbdce35bb81582caf2942b2d899b15f62af3ac8e6120",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 2,
+      "meshSha256": "b77bdfed8de1ad8bb2d37f5bdbb52572b2a6ec2d0de927cfad97f5f664a26472",
+      "triangles": 12,
+      "signedVolumeMm3": 3072.000045776367,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-11036",
+      "sourceID": "parts/11036.dat",
+      "sourceSha256": "4f41ce40af6f4f315e32394e35135dd1a4688db39bb114d8a06c53f292821a23",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 2,
+      "meshSha256": "ff6c5c4ed004d307cc966bffd96384066349cd0a9c67367dcefbfe40ec156d47",
+      "triangles": 12,
+      "signedVolumeMm3": 3328.000049591065,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9471",
+      "sourceID": "parts/u9471.dat",
+      "sourceSha256": "626cc1e4f7f4497e1e35fc793fa01b463ad3098d733cdac6f3fcbf32ecda0d19",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 6,
+      "meshSha256": "97725d875dbaffc62bd345b0c5a68a45ee970a682293642d90267c7bc3c932c4",
+      "triangles": 24,
+      "signedVolumeMm3": 64.49720574347658,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-11034",
+      "sourceID": "parts/11034.dat",
+      "sourceSha256": "a5a0f6679f6bdac1cf628d1ee96de5e3eeb01f448b7f3800d7af76fd5a7ec892",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 2,
+      "meshSha256": "4fe31af7d4d74a6dc706b00f647360bc28bc0a993c5059eea0413eb8adbe69c8",
+      "triangles": 28,
+      "signedVolumeMm3": 244.22398844909685,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-11030",
+      "sourceID": "parts/11030.dat",
+      "sourceSha256": "de026f7daab3db043f817c26740d6e9140aa6973fac3fedbdc3358ef171e40c4",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 9,
+      "meshSha256": "cc193c67f5c284c91ea1e0ab1e131ea7a847489cc67e470fdebf4b13e7bdaf8f",
+      "triangles": 50,
+      "signedVolumeMm3": 553.0761011647364,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-19068",
+      "sourceID": "parts/19068.dat",
+      "sourceSha256": "31cf9cee81d03958c421a6d0df8df4746ce28e8d71535e6fe205cff9e6c7a176",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 6,
+      "meshSha256": "5e80491cdb6706e7e856cd2d2f441ce97ad753754144cc2fdb83dea85c79ada3",
+      "triangles": 76,
+      "signedVolumeMm3": 97.49316836656922,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9112",
+      "sourceID": "parts/u9112.dat",
+      "sourceSha256": "d832f15f328be3cf4103c7ef1ba1cf1369e95c490199e79c32e4e968fb8278bd",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 5,
+      "meshSha256": "798088a1477e12176be9ddfcc5f07b53abed336f90bdb4175b2c9a9caca7310d",
+      "triangles": 64,
+      "signedVolumeMm3": 532.9511778091896,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-70023b",
+      "sourceID": "parts/70023b.dat",
+      "sourceSha256": "6e1ac9a82ef12db218e9db8254511a5e1fb133a595c99e23083c6c9362124bdc",
+      "author": "Rene Rechthaler [Blechtaler]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 5,
+      "meshSha256": "3f0a8c3583605ff4951bd263c0396b51ea355d37ab29c1e5e7660b5a51404ccb",
+      "triangles": 64,
+      "signedVolumeMm3": 535.7677816235412,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9375",
+      "sourceID": "parts/u9375.dat",
+      "sourceSha256": "cb4baa356195c94a2d2c4cc855e0edce791b27f38916b942cccbe00c4027eac4",
+      "author": "Chris Dee [cwdee]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 5,
+      "meshSha256": "8b5ed59e528a96e36145a162f257f5f10b63ce92b1f5b36949c494517e950142",
+      "triangles": 64,
+      "signedVolumeMm3": 75.24016926872002,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9403",
+      "sourceID": "parts/u9403.dat",
+      "sourceSha256": "2a9b7e9cad6ab024193f897331f59af1d8a9655a9a8484aa8b2dc760f707b452",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 5,
+      "meshSha256": "afda1be6eab8dbb51a65bb8bfb9696be30c8a37db4460f00140e8200b8aa362e",
+      "triangles": 64,
+      "signedVolumeMm3": 23.84172551642917,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-99146",
+      "sourceID": "parts/99146.dat",
+      "sourceSha256": "9f64312f6eb67cbab14caca12a88aaaa5084af3b07b4a5fbc6512fc40eaacb2b",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 8,
+      "meshSha256": "e2d02a429281b76b22d294292a8a4e61ebad9f1867215827363fc4732a18dabb",
+      "triangles": 116,
+      "signedVolumeMm3": 344.11501167224975,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-34745",
+      "sourceID": "parts/34745.dat",
+      "sourceSha256": "2be531d3ff07e7d76d46c2804f3216f648030ba25af76b4f498c5f0c706fe790",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 9,
+      "meshSha256": "e2d02a429281b76b22d294292a8a4e61ebad9f1867215827363fc4732a18dabb",
+      "triangles": 116,
+      "signedVolumeMm3": 344.11501167224975,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-27198",
+      "sourceID": "parts/27198.dat",
+      "sourceSha256": "6e34ed0ca23fca85d5407a3c62432787a2c38c6441394ca2d0900da5f2886075",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 9,
+      "meshSha256": "e2d02a429281b76b22d294292a8a4e61ebad9f1867215827363fc4732a18dabb",
+      "triangles": 116,
+      "signedVolumeMm3": 344.11501167224975,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9394",
+      "sourceID": "parts/u9394.dat",
+      "sourceSha256": "f390ec5d6551c08981465014072d8f637a9c003f2bfb99a115563f4237d8d770",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 5,
+      "meshSha256": "5fe3202cf484442ab3aa6796d1c1abd516f3f468a05d40d6b9b84f842412738f",
+      "triangles": 128,
+      "signedVolumeMm3": 33.06452991260062,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9405",
+      "sourceID": "parts/u9405.dat",
+      "sourceSha256": "c1bbd1f7942ffb862d3ab7055f22fa926edad2700674642de4884173e67ce63d",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 5,
+      "meshSha256": "e8f0596ca58ec3d51af1ca37e86a12d7ff3ec30b91b5c1f30b508d52f8685953",
+      "triangles": 128,
+      "signedVolumeMm3": 36.670628383218556,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9398",
+      "sourceID": "parts/u9398.dat",
+      "sourceSha256": "4398290c52ec978c76e9d7f2fc3385388e68738b9da3573ba933d531ecf9bca5",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 9,
+      "meshSha256": "73b8fa5064057b4aa5b1b57e4726a1be9c5ad83548d2e20e3e603595807e3fab",
+      "triangles": 134,
+      "signedVolumeMm3": 57.975792910902754,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9130",
+      "sourceID": "parts/u9130.dat",
+      "sourceSha256": "86c31486ae54b6aa4ae116ecffe953b5f2a2d72bc55a4c9bd512654bd8bebbab",
+      "author": "Steffen [Steffen]",
+      "licence": "CC-BY-4.0",
+      "defaultClosureFiles": 6,
+      "meshSha256": "24e51387ad48dc61d832f5a23b799dcc8e30bf18707254a55a33a1f8b90e5007",
+      "triangles": 112,
+      "signedVolumeMm3": 173.61087111492276,
+      "strictChecks": {
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      },
+      "browserAdmission": "PASS Chromium and iPad-WebKit actual per-root attachments verified",
+      "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+      "editor": "PASS actual insert/restore/undo/redo/attribution/mismatched-bytes refusal",
+      "preview": "PASS actual raster and browser pixels"
+    }
+  ],
+  "browserCoverage": {
+    "chromium": 17,
+    "ipad-webkit": 17
+  },
+  "attachments": [
+    {
+      "candidateID": "corpus-ldraw-97622",
+      "sourceSha256": "19765e7374a2fb74f9a1cbdce35bb81582caf2942b2d899b15f62af3ac8e6120",
+      "meshSha256": "b77bdfed8de1ad8bb2d37f5bdbb52572b2a6ec2d0de927cfad97f5f664a26472",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-11036",
+      "sourceSha256": "4f41ce40af6f4f315e32394e35135dd1a4688db39bb114d8a06c53f292821a23",
+      "meshSha256": "ff6c5c4ed004d307cc966bffd96384066349cd0a9c67367dcefbfe40ec156d47",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9471",
+      "sourceSha256": "626cc1e4f7f4497e1e35fc793fa01b463ad3098d733cdac6f3fcbf32ecda0d19",
+      "meshSha256": "97725d875dbaffc62bd345b0c5a68a45ee970a682293642d90267c7bc3c932c4",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-11034",
+      "sourceSha256": "a5a0f6679f6bdac1cf628d1ee96de5e3eeb01f448b7f3800d7af76fd5a7ec892",
+      "meshSha256": "4fe31af7d4d74a6dc706b00f647360bc28bc0a993c5059eea0413eb8adbe69c8",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-11030",
+      "sourceSha256": "de026f7daab3db043f817c26740d6e9140aa6973fac3fedbdc3358ef171e40c4",
+      "meshSha256": "cc193c67f5c284c91ea1e0ab1e131ea7a847489cc67e470fdebf4b13e7bdaf8f",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-19068",
+      "sourceSha256": "31cf9cee81d03958c421a6d0df8df4746ce28e8d71535e6fe205cff9e6c7a176",
+      "meshSha256": "5e80491cdb6706e7e856cd2d2f441ce97ad753754144cc2fdb83dea85c79ada3",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9112",
+      "sourceSha256": "d832f15f328be3cf4103c7ef1ba1cf1369e95c490199e79c32e4e968fb8278bd",
+      "meshSha256": "798088a1477e12176be9ddfcc5f07b53abed336f90bdb4175b2c9a9caca7310d",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-70023b",
+      "sourceSha256": "6e1ac9a82ef12db218e9db8254511a5e1fb133a595c99e23083c6c9362124bdc",
+      "meshSha256": "3f0a8c3583605ff4951bd263c0396b51ea355d37ab29c1e5e7660b5a51404ccb",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9375",
+      "sourceSha256": "cb4baa356195c94a2d2c4cc855e0edce791b27f38916b942cccbe00c4027eac4",
+      "meshSha256": "8b5ed59e528a96e36145a162f257f5f10b63ce92b1f5b36949c494517e950142",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9403",
+      "sourceSha256": "2a9b7e9cad6ab024193f897331f59af1d8a9655a9a8484aa8b2dc760f707b452",
+      "meshSha256": "afda1be6eab8dbb51a65bb8bfb9696be30c8a37db4460f00140e8200b8aa362e",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-99146",
+      "sourceSha256": "9f64312f6eb67cbab14caca12a88aaaa5084af3b07b4a5fbc6512fc40eaacb2b",
+      "meshSha256": "e2d02a429281b76b22d294292a8a4e61ebad9f1867215827363fc4732a18dabb",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-34745",
+      "sourceSha256": "2be531d3ff07e7d76d46c2804f3216f648030ba25af76b4f498c5f0c706fe790",
+      "meshSha256": "e2d02a429281b76b22d294292a8a4e61ebad9f1867215827363fc4732a18dabb",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-27198",
+      "sourceSha256": "6e34ed0ca23fca85d5407a3c62432787a2c38c6441394ca2d0900da5f2886075",
+      "meshSha256": "e2d02a429281b76b22d294292a8a4e61ebad9f1867215827363fc4732a18dabb",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9394",
+      "sourceSha256": "f390ec5d6551c08981465014072d8f637a9c003f2bfb99a115563f4237d8d770",
+      "meshSha256": "5fe3202cf484442ab3aa6796d1c1abd516f3f468a05d40d6b9b84f842412738f",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9405",
+      "sourceSha256": "c1bbd1f7942ffb862d3ab7055f22fa926edad2700674642de4884173e67ce63d",
+      "meshSha256": "e8f0596ca58ec3d51af1ca37e86a12d7ff3ec30b91b5c1f30b508d52f8685953",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9398",
+      "sourceSha256": "4398290c52ec978c76e9d7f2fc3385388e68738b9da3573ba933d531ecf9bca5",
+      "meshSha256": "73b8fa5064057b4aa5b1b57e4726a1be9c5ad83548d2e20e3e603595807e3fab",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9130",
+      "sourceSha256": "86c31486ae54b6aa4ae116ecffe953b5f2a2d72bc55a4c9bd512654bd8bebbab",
+      "meshSha256": "24e51387ad48dc61d832f5a23b799dcc8e30bf18707254a55a33a1f8b90e5007",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-97622",
+      "sourceSha256": "19765e7374a2fb74f9a1cbdce35bb81582caf2942b2d899b15f62af3ac8e6120",
+      "meshSha256": "b77bdfed8de1ad8bb2d37f5bdbb52572b2a6ec2d0de927cfad97f5f664a26472",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-11036",
+      "sourceSha256": "4f41ce40af6f4f315e32394e35135dd1a4688db39bb114d8a06c53f292821a23",
+      "meshSha256": "ff6c5c4ed004d307cc966bffd96384066349cd0a9c67367dcefbfe40ec156d47",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9471",
+      "sourceSha256": "626cc1e4f7f4497e1e35fc793fa01b463ad3098d733cdac6f3fcbf32ecda0d19",
+      "meshSha256": "97725d875dbaffc62bd345b0c5a68a45ee970a682293642d90267c7bc3c932c4",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-11034",
+      "sourceSha256": "a5a0f6679f6bdac1cf628d1ee96de5e3eeb01f448b7f3800d7af76fd5a7ec892",
+      "meshSha256": "4fe31af7d4d74a6dc706b00f647360bc28bc0a993c5059eea0413eb8adbe69c8",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-11030",
+      "sourceSha256": "de026f7daab3db043f817c26740d6e9140aa6973fac3fedbdc3358ef171e40c4",
+      "meshSha256": "cc193c67f5c284c91ea1e0ab1e131ea7a847489cc67e470fdebf4b13e7bdaf8f",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-19068",
+      "sourceSha256": "31cf9cee81d03958c421a6d0df8df4746ce28e8d71535e6fe205cff9e6c7a176",
+      "meshSha256": "5e80491cdb6706e7e856cd2d2f441ce97ad753754144cc2fdb83dea85c79ada3",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9112",
+      "sourceSha256": "d832f15f328be3cf4103c7ef1ba1cf1369e95c490199e79c32e4e968fb8278bd",
+      "meshSha256": "798088a1477e12176be9ddfcc5f07b53abed336f90bdb4175b2c9a9caca7310d",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-70023b",
+      "sourceSha256": "6e1ac9a82ef12db218e9db8254511a5e1fb133a595c99e23083c6c9362124bdc",
+      "meshSha256": "3f0a8c3583605ff4951bd263c0396b51ea355d37ab29c1e5e7660b5a51404ccb",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9375",
+      "sourceSha256": "cb4baa356195c94a2d2c4cc855e0edce791b27f38916b942cccbe00c4027eac4",
+      "meshSha256": "8b5ed59e528a96e36145a162f257f5f10b63ce92b1f5b36949c494517e950142",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9403",
+      "sourceSha256": "2a9b7e9cad6ab024193f897331f59af1d8a9655a9a8484aa8b2dc760f707b452",
+      "meshSha256": "afda1be6eab8dbb51a65bb8bfb9696be30c8a37db4460f00140e8200b8aa362e",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-99146",
+      "sourceSha256": "9f64312f6eb67cbab14caca12a88aaaa5084af3b07b4a5fbc6512fc40eaacb2b",
+      "meshSha256": "e2d02a429281b76b22d294292a8a4e61ebad9f1867215827363fc4732a18dabb",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-34745",
+      "sourceSha256": "2be531d3ff07e7d76d46c2804f3216f648030ba25af76b4f498c5f0c706fe790",
+      "meshSha256": "e2d02a429281b76b22d294292a8a4e61ebad9f1867215827363fc4732a18dabb",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-27198",
+      "sourceSha256": "6e34ed0ca23fca85d5407a3c62432787a2c38c6441394ca2d0900da5f2886075",
+      "meshSha256": "e2d02a429281b76b22d294292a8a4e61ebad9f1867215827363fc4732a18dabb",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9394",
+      "sourceSha256": "f390ec5d6551c08981465014072d8f637a9c003f2bfb99a115563f4237d8d770",
+      "meshSha256": "5fe3202cf484442ab3aa6796d1c1abd516f3f468a05d40d6b9b84f842412738f",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9405",
+      "sourceSha256": "c1bbd1f7942ffb862d3ab7055f22fa926edad2700674642de4884173e67ce63d",
+      "meshSha256": "e8f0596ca58ec3d51af1ca37e86a12d7ff3ec30b91b5c1f30b508d52f8685953",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9398",
+      "sourceSha256": "4398290c52ec978c76e9d7f2fc3385388e68738b9da3573ba933d531ecf9bca5",
+      "meshSha256": "73b8fa5064057b4aa5b1b57e4726a1be9c5ad83548d2e20e3e603595807e3fab",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9130",
+      "sourceSha256": "86c31486ae54b6aa4ae116ecffe953b5f2a2d72bc55a4c9bd512654bd8bebbab",
+      "meshSha256": "24e51387ad48dc61d832f5a23b799dcc8e30bf18707254a55a33a1f8b90e5007",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    }
+  ],
+  "executions": [
+    {
+      "command": [
+        "node",
+        "scripts/generate-ldraw-reviewed-batch.mjs",
+        "--write"
+      ],
+      "guard": {
+        "fastFreeBytes": 14644412416,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4907130880,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.20947265625,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "integrationTree": "1bf3e99a8230ab5ebc354821a5ada77adbc77c16",
+      "timeoutSeconds": 90,
+      "status": "PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 1.413163963938132
+    },
+    {
+      "command": [
+        "node",
+        "scripts/generate-ldraw-reviewed-batch.mjs",
+        "--check"
+      ],
+      "guard": {
+        "fastFreeBytes": 14644412416,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4909154304,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.22265625,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "integrationTree": "1bf3e99a8230ab5ebc354821a5ada77adbc77c16",
+      "timeoutSeconds": 90,
+      "status": "PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 1.3121847910806537
+    },
+    {
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/model-library-ldraw.test.ts",
+        "tests/model-library-ldraw-exact.test.ts"
+      ],
+      "guard": {
+        "fastFreeBytes": 14644412416,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4900798464,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.22265625,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "integrationTree": "1bf3e99a8230ab5ebc354821a5ada77adbc77c16",
+      "timeoutSeconds": 45,
+      "status": "PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 4.899364023003727
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "guard": {
+        "fastFreeBytes": 14644412416,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4930146304,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.23583984375,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "integrationTree": "1bf3e99a8230ab5ebc354821a5ada77adbc77c16",
+      "timeoutSeconds": 90,
+      "status": "PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 14.096594379050657
+    },
+    {
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-ldraw-components.spec.ts",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 14644457472,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4623425536,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.2724609375,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "integrationTree": "1bf3e99a8230ab5ebc354821a5ada77adbc77c16",
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 244.50689194584265
+    }
+  ],
+  "testedOwnedFiles": [
+    {
+      "path": "library/ldraw-reviewed-batch-manifest.json",
+      "bytes": 453537,
+      "sha256": "6fb049202c8ba8994b3753d55d04e1491b89f76abaec8eddefae2e407789b13e"
+    },
+    {
+      "path": "library/ldraw-reviewed-batch-spec.json",
+      "bytes": 507060,
+      "sha256": "d9ec97677ea3203d8116c19f749106de20287b6f2b386ac4e27d6a96db481cd9"
+    },
+    {
+      "path": "library/meshes/ldraw/11030.stl",
+      "bytes": 2584,
+      "sha256": "cc193c67f5c284c91ea1e0ab1e131ea7a847489cc67e470fdebf4b13e7bdaf8f"
+    },
+    {
+      "path": "library/meshes/ldraw/11034.stl",
+      "bytes": 1484,
+      "sha256": "4fe31af7d4d74a6dc706b00f647360bc28bc0a993c5059eea0413eb8adbe69c8"
+    },
+    {
+      "path": "library/meshes/ldraw/11036.stl",
+      "bytes": 684,
+      "sha256": "ff6c5c4ed004d307cc966bffd96384066349cd0a9c67367dcefbfe40ec156d47"
+    },
+    {
+      "path": "library/meshes/ldraw/19068.stl",
+      "bytes": 3884,
+      "sha256": "5e80491cdb6706e7e856cd2d2f441ce97ad753754144cc2fdb83dea85c79ada3"
+    },
+    {
+      "path": "library/meshes/ldraw/27198.stl",
+      "bytes": 5884,
+      "sha256": "e2d02a429281b76b22d294292a8a4e61ebad9f1867215827363fc4732a18dabb"
+    },
+    {
+      "path": "library/meshes/ldraw/34745.stl",
+      "bytes": 5884,
+      "sha256": "e2d02a429281b76b22d294292a8a4e61ebad9f1867215827363fc4732a18dabb"
+    },
+    {
+      "path": "library/meshes/ldraw/70023b.stl",
+      "bytes": 3284,
+      "sha256": "3f0a8c3583605ff4951bd263c0396b51ea355d37ab29c1e5e7660b5a51404ccb"
+    },
+    {
+      "path": "library/meshes/ldraw/97622.stl",
+      "bytes": 684,
+      "sha256": "b77bdfed8de1ad8bb2d37f5bdbb52572b2a6ec2d0de927cfad97f5f664a26472"
+    },
+    {
+      "path": "library/meshes/ldraw/99146.stl",
+      "bytes": 5884,
+      "sha256": "e2d02a429281b76b22d294292a8a4e61ebad9f1867215827363fc4732a18dabb"
+    },
+    {
+      "path": "library/meshes/ldraw/u9112.stl",
+      "bytes": 3284,
+      "sha256": "798088a1477e12176be9ddfcc5f07b53abed336f90bdb4175b2c9a9caca7310d"
+    },
+    {
+      "path": "library/meshes/ldraw/u9130.stl",
+      "bytes": 5684,
+      "sha256": "24e51387ad48dc61d832f5a23b799dcc8e30bf18707254a55a33a1f8b90e5007"
+    },
+    {
+      "path": "library/meshes/ldraw/u9375.stl",
+      "bytes": 3284,
+      "sha256": "8b5ed59e528a96e36145a162f257f5f10b63ce92b1f5b36949c494517e950142"
+    },
+    {
+      "path": "library/meshes/ldraw/u9394.stl",
+      "bytes": 6484,
+      "sha256": "5fe3202cf484442ab3aa6796d1c1abd516f3f468a05d40d6b9b84f842412738f"
+    },
+    {
+      "path": "library/meshes/ldraw/u9398.stl",
+      "bytes": 6784,
+      "sha256": "73b8fa5064057b4aa5b1b57e4726a1be9c5ad83548d2e20e3e603595807e3fab"
+    },
+    {
+      "path": "library/meshes/ldraw/u9403.stl",
+      "bytes": 3284,
+      "sha256": "afda1be6eab8dbb51a65bb8bfb9696be30c8a37db4460f00140e8200b8aa362e"
+    },
+    {
+      "path": "library/meshes/ldraw/u9405.stl",
+      "bytes": 6484,
+      "sha256": "e8f0596ca58ec3d51af1ca37e86a12d7ff3ec30b91b5c1f30b508d52f8685953"
+    },
+    {
+      "path": "library/meshes/ldraw/u9471.stl",
+      "bytes": 1284,
+      "sha256": "97725d875dbaffc62bd345b0c5a68a45ee970a682293642d90267c7bc3c932c4"
+    },
+    {
+      "path": "library/previews.json",
+      "bytes": 3249063,
+      "sha256": "35dc5f15979fc14c9668c04358d0ec45f1523ee9330bc13ee12aacc558700730"
+    },
+    {
+      "path": "library/sources/ldraw/p/1-4chrd.dat",
+      "bytes": 743,
+      "sha256": "ccba3a97b5cc358754e476b78b4ce61cce5f404cd15e37471b73df3e81784aec"
+    },
+    {
+      "path": "library/sources/ldraw/p/1-4con2.dat",
+      "bytes": 1263,
+      "sha256": "5b4d444a154349f4a930b5fd60ed5c7e6060e12faf7f50c192909e958cdd04d6"
+    },
+    {
+      "path": "library/sources/ldraw/p/1-4con7.dat",
+      "bytes": 1123,
+      "sha256": "bc528d486a6535e6df4fd85fed64a1b4f49f86c195a304a3318c50f7d900d26a"
+    },
+    {
+      "path": "library/sources/ldraw/p/1-4cyli.dat",
+      "bytes": 1044,
+      "sha256": "5a7168952a5a3570327873b9a5802fa7b3be40967ab78c03b6a2bfd4419a1f10"
+    },
+    {
+      "path": "library/sources/ldraw/p/1-4cylo.dat",
+      "bytes": 388,
+      "sha256": "792a01362608c3f385dd7f01a1bd7d19cf9ed8a40f793266345cc86d1d98f3af"
+    },
+    {
+      "path": "library/sources/ldraw/p/1-4edge.dat",
+      "bytes": 545,
+      "sha256": "9ce2de7e67bbac575d52cfdc771b9d00856efc9b88002d97db8e665e50f4d467"
+    },
+    {
+      "path": "library/sources/ldraw/p/1-8sphe.dat",
+      "bytes": 4040,
+      "sha256": "c38f9b8df6f260a26e920d8bbfb2d6b11667026e0675733d7fc2d3653ef92c53"
+    },
+    {
+      "path": "library/sources/ldraw/p/4-4con3.dat",
+      "bytes": 2426,
+      "sha256": "1aed96f9d90a36758bb299c01db21f8fd795a4734bcd605171c76ea61116697e"
+    },
+    {
+      "path": "library/sources/ldraw/p/4-8sphe.dat",
+      "bytes": 623,
+      "sha256": "37fa33d0b13605e0e1a84b8e0917953d42beebee08dc444e1bd44015acd64d9e"
+    },
+    {
+      "path": "library/sources/ldraw/p/box.dat",
+      "bytes": 891,
+      "sha256": "a1dd11c88627c1a6bfe28119c235dcdad25471c5f8aa948ead850397b939a7c3"
+    },
+    {
+      "path": "library/sources/ldraw/p/box4o8a.dat",
+      "bytes": 749,
+      "sha256": "2144edea417bbc55c261e3731ea86d52ac50c7cb651b4879f55ec39966fd0f5b"
+    },
+    {
+      "path": "library/sources/ldraw/p/rect.dat",
+      "bytes": 654,
+      "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71"
+    },
+    {
+      "path": "library/sources/ldraw/p/rect1.dat",
+      "bytes": 556,
+      "sha256": "48fdcd3181587b4bdc89d356a5aee21268688f3f2fcdd4d6f5c1a3d49b1a1ceb"
+    },
+    {
+      "path": "library/sources/ldraw/p/rect2p.dat",
+      "bytes": 594,
+      "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc"
+    },
+    {
+      "path": "library/sources/ldraw/p/rect3.dat",
+      "bytes": 605,
+      "sha256": "07ac46908b6668d993b6de0fb001a34cd996542106b80ebc7de63317d8dde865"
+    },
+    {
+      "path": "library/sources/ldraw/parts/11030.dat",
+      "bytes": 1857,
+      "sha256": "de026f7daab3db043f817c26740d6e9140aa6973fac3fedbdc3358ef171e40c4"
+    },
+    {
+      "path": "library/sources/ldraw/parts/11034.dat",
+      "bytes": 681,
+      "sha256": "a5a0f6679f6bdac1cf628d1ee96de5e3eeb01f448b7f3800d7af76fd5a7ec892"
+    },
+    {
+      "path": "library/sources/ldraw/parts/11036.dat",
+      "bytes": 484,
+      "sha256": "4f41ce40af6f4f315e32394e35135dd1a4688db39bb114d8a06c53f292821a23"
+    },
+    {
+      "path": "library/sources/ldraw/parts/19068.dat",
+      "bytes": 1319,
+      "sha256": "31cf9cee81d03958c421a6d0df8df4746ce28e8d71535e6fe205cff9e6c7a176"
+    },
+    {
+      "path": "library/sources/ldraw/parts/27198.dat",
+      "bytes": 324,
+      "sha256": "6e34ed0ca23fca85d5407a3c62432787a2c38c6441394ca2d0900da5f2886075"
+    },
+    {
+      "path": "library/sources/ldraw/parts/34745.dat",
+      "bytes": 307,
+      "sha256": "2be531d3ff07e7d76d46c2804f3216f648030ba25af76b4f498c5f0c706fe790"
+    },
+    {
+      "path": "library/sources/ldraw/parts/70023b.dat",
+      "bytes": 492,
+      "sha256": "6e1ac9a82ef12db218e9db8254511a5e1fb133a595c99e23083c6c9362124bdc"
+    },
+    {
+      "path": "library/sources/ldraw/parts/97622.dat",
+      "bytes": 480,
+      "sha256": "19765e7374a2fb74f9a1cbdce35bb81582caf2942b2d899b15f62af3ac8e6120"
+    },
+    {
+      "path": "library/sources/ldraw/parts/99146.dat",
+      "bytes": 2263,
+      "sha256": "9f64312f6eb67cbab14caca12a88aaaa5084af3b07b4a5fbc6512fc40eaacb2b"
+    },
+    {
+      "path": "library/sources/ldraw/parts/u9112.dat",
+      "bytes": 366,
+      "sha256": "d832f15f328be3cf4103c7ef1ba1cf1369e95c490199e79c32e4e968fb8278bd"
+    },
+    {
+      "path": "library/sources/ldraw/parts/u9130.dat",
+      "bytes": 561,
+      "sha256": "86c31486ae54b6aa4ae116ecffe953b5f2a2d72bc55a4c9bd512654bd8bebbab"
+    },
+    {
+      "path": "library/sources/ldraw/parts/u9375.dat",
+      "bytes": 437,
+      "sha256": "cb4baa356195c94a2d2c4cc855e0edce791b27f38916b942cccbe00c4027eac4"
+    },
+    {
+      "path": "library/sources/ldraw/parts/u9394.dat",
+      "bytes": 664,
+      "sha256": "f390ec5d6551c08981465014072d8f637a9c003f2bfb99a115563f4237d8d770"
+    },
+    {
+      "path": "library/sources/ldraw/parts/u9398.dat",
+      "bytes": 3088,
+      "sha256": "4398290c52ec978c76e9d7f2fc3385388e68738b9da3573ba933d531ecf9bca5"
+    },
+    {
+      "path": "library/sources/ldraw/parts/u9403.dat",
+      "bytes": 530,
+      "sha256": "2a9b7e9cad6ab024193f897331f59af1d8a9655a9a8484aa8b2dc760f707b452"
+    },
+    {
+      "path": "library/sources/ldraw/parts/u9405.dat",
+      "bytes": 712,
+      "sha256": "c1bbd1f7942ffb862d3ab7055f22fa926edad2700674642de4884173e67ce63d"
+    },
+    {
+      "path": "library/sources/ldraw/parts/u9471.dat",
+      "bytes": 836,
+      "sha256": "626cc1e4f7f4497e1e35fc793fa01b463ad3098d733cdac6f3fcbf32ecda0d19"
+    },
+    {
+      "path": "tests/browser/model-library-ldraw-components.spec.ts",
+      "bytes": 3829,
+      "sha256": "474d9d16ef359e9ec59cbfa57e03315ce29bfcd907a35f8597337fa39fa77112"
+    },
+    {
+      "path": "tests/browser/model-library.spec.ts",
+      "bytes": 26483,
+      "sha256": "9ad48012b0cfcceeb4bbea972772e21367e2c0af88851d04278c3c769f669e9d"
+    }
+  ],
+  "validationHashes": [
+    {
+      "path": "/mnt/storage/brickwright-cycle81-batch/corrected-execution.json",
+      "sha256": "93851f12f3c6659e6e85676bcf85338a7b4af1cd96b7a2288a4165ba7663dc00"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle81-batch/corrected-0.log",
+      "sha256": "1d67e0a194898a4598cd9f155e2f8513a07bf282256cbb7030161141dadac334"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle81-batch/corrected-1.log",
+      "sha256": "1d67e0a194898a4598cd9f155e2f8513a07bf282256cbb7030161141dadac334"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle81-batch/corrected-2.log",
+      "sha256": "099800e5874c30f730146e82a6b8cb1501a5c4c4038305bab068338ed7b6a4b8"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle81-batch/corrected-3.log",
+      "sha256": "86d79b92a94034ee3200f80335c08b2fc34d670828043ca21f4a803c67f228df"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle81-batch/corrected-4.log",
+      "sha256": "f76c08c1077a3db051fc931e0ebe56306103603ceb06c7482a0d1e6b1779e14e"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle81-batch/corrected-browser.json",
+      "sha256": "0c033d730658db5f7a2c0c43e8537cc57b0cb364904ed0a2e77fbf173b2ecf14"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle81-batch/classified-results.json",
+      "sha256": "56c1bac831facd8554870970a3942de385f3fbf3c03204f47869ebbc1f5b8246"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle81-batch/metadata-schema-proof.json",
+      "sha256": "3508d0f7b3cbd592142c54c04897514b147cc8588f14126670fd13f833ec1362"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle81-batch/first-browser-failure/qualification-browser.json",
+      "sha256": "d0380510a646265248ddaf9e0946de917b81cd62871ccc398aa80558f2e444d5"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle81-batch/first-browser-failure/cold-archive-binding.json",
+      "sha256": "f4565d0a451e9a4d4947801d263418f5d28d0f3231512c620f5ea4cc0084ba69"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle81-batch/pre-restoration-resource-refusals/prepare-execution.json",
+      "sha256": "e6f7a2b7c3384368e0b6bc452dff242f2b31e9423a77e3e9385f7421adb88f7e"
+    }
+  ],
+  "failureTaxonomy": {
+    "non_manifold": 12,
+    "unsupported_quad_geometry": 1
+  },
+  "refusedRoots": [
+    {
+      "rootPath": "parts/993.dat",
+      "title": "~Electric Cable 3LDU Twin",
+      "rootSha256": "9929c6a4446c184f07601b5cf930a42e6d7cc44e06b32b02aa44f798970589f8",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature b994079e-bb8e-4984-92e8-10464d545be2: ~Electric Cable 3LDU Twin: Not manifold",
+        "stack": "FeatureEvaluationError: feature b994079e-bb8e-4984-92e8-10464d545be2: ~Electric Cable 3LDU Twin: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle81-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual non-manifold mesh output; exact source-vs-output trace needed; not an intrinsic physical-part claim."
+    },
+    {
+      "rootPath": "parts/u9391.dat",
+      "title": "~Electric Powered Up Large Angular Motor Cable Lock",
+      "rootSha256": "668a887b7a7ee16a444048ab747377deed17bcdd16cfb5cc7a2b7ca22485dc98",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature c89159eb-6ffb-4940-ac1d-a0f257b31bd2: ~Electric Powered Up Large Angular Motor Cable Lock: Not manifold",
+        "stack": "FeatureEvaluationError: feature c89159eb-6ffb-4940-ac1d-a0f257b31bd2: ~Electric Powered Up Large Angular Motor Cable Lock: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle81-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual non-manifold mesh output; exact source-vs-output trace needed; not an intrinsic physical-part claim."
+    },
+    {
+      "rootPath": "parts/u9460.dat",
+      "title": "~Electric Powered Up Colour Sensor Cable Lock",
+      "rootSha256": "ed8c6ac0343bc37b1f59ca5a792a321ff070a5518525a2432940079710322b23",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 86e75400-71b8-41de-9cd9-fb6593f25058: ~Electric Powered Up Colour Sensor Cable Lock: Not manifold",
+        "stack": "FeatureEvaluationError: feature 86e75400-71b8-41de-9cd9-fb6593f25058: ~Electric Powered Up Colour Sensor Cable Lock: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle81-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual non-manifold mesh output; exact source-vs-output trace needed; not an intrinsic physical-part claim."
+    },
+    {
+      "rootPath": "parts/10132.dat",
+      "title": "~Electric Power Functions Servo Motor Case Cable Retainer",
+      "rootSha256": "f21f0e213b645825c53a56b41cb3c370a1cd1b4ce8e431e7c52f307283a0fb01",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "FAILED",
+        "mesh": "NOT RUN",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "converter",
+        "message": "LDraw quad exceeds supported coplanarity or convexity.",
+        "stack": "Error: LDraw quad exceeds supported coplanarity or convexity.\n    at nativeFaces (file:///mnt/volume1/code/brickwright-cad/scripts/lib/ldraw-model.mjs:33:241)\n    at visit (file:///mnt/volume1/code/brickwright-cad/scripts/lib/ldraw-model.mjs:82:321)\n    at convertLDrawBundle (file:///mnt/volume1/code/brickwright-cad/scripts/lib/ldraw-model.mjs:86:3)\n    at file:///mnt/akademie_storage/brickwright-cycle81-batch/execute.mjs:13:11"
+      },
+      "taxonomy": "unsupported_quad_geometry",
+      "classification": "PENDING_A_B: actual existing converter quad coplanarity/convexity refusal; not a work-budget claim or intrinsic-source judgment."
+    },
+    {
+      "rootPath": "parts/32108.dat",
+      "title": "~Electric Mindstorms RCX Module - LCD Screen Protector",
+      "rootSha256": "e570118b7604f3f234c6369f759032412d4c5040557b863e2073e805272cadcf",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 4d3291c4-18ef-4dcd-b0f3-60d6ffa16e40: ~Electric Mindstorms RCX Module - LCD Screen Protector: Not manifold",
+        "stack": "FeatureEvaluationError: feature 4d3291c4-18ef-4dcd-b0f3-60d6ffa16e40: ~Electric Mindstorms RCX Module - LCD Screen Protector: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle81-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual non-manifold mesh output; exact source-vs-output trace needed; not an intrinsic physical-part claim."
+    },
+    {
+      "rootPath": "parts/u9397.dat",
+      "title": "~Electric Powered Up 6 Port Hub Arrow Button",
+      "rootSha256": "136e13914368df70ef8d218cb44b05eb22b5cd877dd4f3d4358535fcbc94fb0a",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 3f89606f-9764-4bac-8afe-fff0e3078c36: ~Electric Powered Up 6 Port Hub Arrow Button: Not manifold",
+        "stack": "FeatureEvaluationError: feature 3f89606f-9764-4bac-8afe-fff0e3078c36: ~Electric Powered Up 6 Port Hub Arrow Button: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle81-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual non-manifold mesh output; exact source-vs-output trace needed; not an intrinsic physical-part claim."
+    },
+    {
+      "rootPath": "parts/99145.dat",
+      "title": "~Electric Mindstorms EV3 D-Shaped Button",
+      "rootSha256": "5a6a8a2c7c5cdabe855afffa913f6e47ed128a9019a4f593e645c07502cfe41b",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature c5992475-c4cc-44d8-bb1d-7c2dc8d477d3: ~Electric Mindstorms EV3 D-Shaped Button: Not manifold",
+        "stack": "FeatureEvaluationError: feature c5992475-c4cc-44d8-bb1d-7c2dc8d477d3: ~Electric Mindstorms EV3 D-Shaped Button: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle81-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual non-manifold mesh output; exact source-vs-output trace needed; not an intrinsic physical-part claim."
+    },
+    {
+      "rootPath": "parts/56476.dat",
+      "title": "~Electric Mindstorms NXT Ultrasonic Sensor Insert (Needs Work)",
+      "rootSha256": "03c4b85747b1b955504f0c3c33027db72d110fd9eafcd5814f126f61950360e9",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature c73b207f-39d3-40a5-ad33-495ebfc47758: ~Electric Mindstorms NXT Ultrasonic Sensor Insert (Needs Work): Not manifold",
+        "stack": "FeatureEvaluationError: feature c73b207f-39d3-40a5-ad33-495ebfc47758: ~Electric Mindstorms NXT Ultrasonic Sensor Insert (Needs Work): Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle81-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual non-manifold mesh output; exact source-vs-output trace needed; not an intrinsic physical-part claim."
+    },
+    {
+      "rootPath": "parts/2893.dat",
+      "title": "~Electric Train Motor  9V Bottom Cover",
+      "rootSha256": "515f18c2e378f3a6256968de4c7477aefc9187151472761a3dc96c17eebc81a7",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 81957c3a-1a97-40b2-b14f-171ddf832ed5: ~Electric Train Motor  9V Bottom Cover: Not manifold",
+        "stack": "FeatureEvaluationError: feature 81957c3a-1a97-40b2-b14f-171ddf832ed5: ~Electric Train Motor  9V Bottom Cover: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle81-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual non-manifold mesh output; exact source-vs-output trace needed; not an intrinsic physical-part claim."
+    },
+    {
+      "rootPath": "parts/28944.dat",
+      "title": "~Electric Power Functions 2.0 Boost Move Hub Connector Holder",
+      "rootSha256": "6197968ff9e045ab76a094a43419e3b8cae9d64ccbf303ed2d031204d2a1f7e9",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature db49829f-f4ed-4382-8889-390e1c6a3a4e: ~Electric Power Functions 2.0 Boost Move Hub Connector Holder: Not manifold",
+        "stack": "FeatureEvaluationError: feature db49829f-f4ed-4382-8889-390e1c6a3a4e: ~Electric Power Functions 2.0 Boost Move Hub Connector Holder: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle81-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual non-manifold mesh output; exact source-vs-output trace needed; not an intrinsic physical-part claim."
+    },
+    {
+      "rootPath": "parts/u9558.dat",
+      "title": "~Electric Powered Up 2 Port Hub Rechargeable Battery Top",
+      "rootSha256": "d01271bc0b7ad6647221c518f3f97a346e2cf5971be904682fc5c051cf3ad8b4",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 860d3980-b19f-4263-a17c-4109b6ec9519: ~Electric Powered Up 2 Port Hub Rechargeable Battery Top: Not manifold",
+        "stack": "FeatureEvaluationError: feature 860d3980-b19f-4263-a17c-4109b6ec9519: ~Electric Powered Up 2 Port Hub Rechargeable Battery Top: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle81-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual non-manifold mesh output; exact source-vs-output trace needed; not an intrinsic physical-part claim."
+    },
+    {
+      "rootPath": "parts/32053.dat",
+      "title": "~Technic Gear 24 Tooth Clutch Center",
+      "rootSha256": "641f1ec91b8edc15a0ee12e2b7aad71d5ce6129f99051ba6377f5e3eaf70ce87",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 6c9d5b23-87c3-4a72-8296-277c948be170: ~Technic Gear 24 Tooth Clutch Center: Not manifold",
+        "stack": "FeatureEvaluationError: feature 6c9d5b23-87c3-4a72-8296-277c948be170: ~Technic Gear 24 Tooth Clutch Center: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle81-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual non-manifold mesh output; exact source-vs-output trace needed; not an intrinsic physical-part claim."
+    },
+    {
+      "rootPath": "parts/u9406.dat",
+      "title": "~Electric Powered Up Colour Sensor Frame",
+      "rootSha256": "e63e6125d3cb188de34b691665762330f697840383ff4d4c71204403d9973552",
+      "gates": {
+        "sourceClosureLicence": "PASS",
+        "converter": "PASS",
+        "mesh": "FAILED",
+        "topology": "NOT RUN",
+        "editor": "NOT RUN",
+        "preview": "NOT RUN"
+      },
+      "firstFailure": {
+        "stage": "mesh",
+        "message": "feature 2f98956c-e3d1-4c11-bdc9-1eb757f0e02b: ~Electric Powered Up Colour Sensor Frame: Not manifold",
+        "stack": "FeatureEvaluationError: feature 2f98956c-e3d1-4c11-bdc9-1eb757f0e02b: ~Electric Powered Up Colour Sensor Frame: Not manifold\n    at build (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:287:19)\n    at file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:292:27\n    at Array.map (<anonymous>)\n    at evaluateDocument (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:291:34)\n    at Object.evaluate (file:///mnt/volume1/code/brickwright-cad/packages/geometry/dist/kernel.js:21:53)\n    at file:///mnt/akademie_storage/brickwright-cycle81-batch/execute.mjs:17:62"
+      },
+      "taxonomy": "non_manifold",
+      "classification": "PENDING_A_B: actual non-manifold mesh output; exact source-vs-output trace needed; not an intrinsic physical-part claim."
+    }
+  ],
+  "sharedMeshGroups": [
+    {
+      "sha256": "e2d02a429281b76b22d294292a8a4e61ebad9f1867215827363fc4732a18dabb",
+      "roots": [
+        "corpus-ldraw-99146",
+        "corpus-ldraw-34745",
+        "corpus-ldraw-27198"
+      ]
+    }
+  ],
+  "preservation": {
+    "all266PriorAssetHashesExact": true,
+    "all172PriorPreviewValuesExact": true,
+    "all18PriorLDrawRecordObjectsExact": true,
+    "mainCountsUnchanged": [
+      133,
+      130,
+      172
+    ],
+    "pendingUncreditedCountsIfAllGatesPass": [
+      150,
+      145,
+      189
+    ],
+    "pendingNewUniqueSTL": 15,
+    "sharedGeometry": "99146,34745,27198 share exact e2d02a... STL; no triple unique-mesh credit",
+    "Wall01AndEightOthers": "Original refusal/default/source evidence retained; rejected scratch rule untouched"
+  },
+  "firstBrowserFailure": "/mnt/storage/brickwright-cycle81-batch/first-browser-failure/decision.json",
+  "coldFailureArchive": "/mnt/storage/brickwright-cycle81-batch/first-browser-failure/cold-archive-binding.json",
+  "firstResourceRefusal": "/mnt/storage/brickwright-cycle81-batch/pre-restoration-resource-refusals/prepare-execution.json",
+  "result": "/mnt/storage/brickwright-cycle81-batch/result.json",
+  "nextRankedReserve": "/mnt/storage/brickwright-cycle81-batch/next-ranked-reserve.json",
+  "noKernelCompilerSourceDefaultsGuardToleranceOrDependencyChanges": true
+}
