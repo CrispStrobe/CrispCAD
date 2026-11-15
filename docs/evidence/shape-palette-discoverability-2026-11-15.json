@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "measuredOn": "2026-11-15",
+  "featureCheckpoint": "a6ee01cdd9befd667c59c7e0a3013812e28a736d",
+  "scope": "Discoverability and wording of an existing placement workflow; no new resize or workplane functionality claimed.",
+  "verification": {
+    "productionBuild": "passed",
+    "browser": {
+      "passed": 8,
+      "platforms": [
+        "Chromium desktop",
+        "iPad WebKit"
+      ],
+      "scope": "Top/side face placement, grid/base override, fine increments, cancellation, hole placement, saved dock preference, and readable Lower right/Popup toggle.",
+      "harnessTimeoutMs": 180000,
+      "logSha256": "7e0a01957b0dcddabcdac33183badcc75ec67bb7b5b05dd06f24e48a31dc3406"
+    },
+    "german": {
+      "messages": 1364,
+      "status": "passed"
+    },
+    "nativeMac": {
+      "build": 25,
+      "status": "Native smoke passed; installed and launched; live clean build-info and bundle version verified. Existing projects/history retained.",
+      "logSha256": "0154144b5ac3327c902c9dee3e5629c853821259ab7a1e9204fccd37d2109b48"
+    }
+  },
+  "referenceBoundary": "Published Autodesk primary documents only; no logged-in interactive Tinkercad session tested. No upstream implementation or assets copied.",
+  "remaining": "Our scale gizmo still uses factor snapping. Physical-unit resize increments, bounding handles, appropriate uniform/centre modifiers, persistent workplanes and alignment remain concrete follow-up work.",
+  "ci": "Actions remain disabled."
+}

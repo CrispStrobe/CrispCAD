@@ -132,3 +132,35 @@ joint frames. It composes driven translations/rotations rather than freezing the
 No intersections are silently merged. Snapping is a placement aid, not a contact
 constraint or collision certificate. New modeling features must keep the same
 command/history/source path for GUI, script and MCP access.
+
+## Direct-placement and resize reference check — 2026-11-15
+
+The optional lower-right palette and highlighted-face placement are implemented,
+but the popup header exposed docking as an ambiguous diagonal arrow. It now has
+a readable **Lower right** action, changing to **Popup** when docked. The saved
+preference and existing drag/tap placement remain; view changes create no model
+iteration. Touch users drag thumbnails and can scroll using card labels.
+
+Autodesk's [lesson guide](https://assets.ctfassets.net/jl5ii4oqrdmc/7vqtiHNyJW8CrtaiKTV9Ji/003e7fe0010f9e082bb8bdaeda08f749/0de442ca.pdf)
+(page 12) explicitly describes Snap Grid precision for resizing as well as moving.
+Its [official shortcut sheet](https://images.tinkercad.com/jl5ii4oqrdmc/24W19aTK6wTT0YydFO3xZd/ffda269b296a25b9ce3b8a19e65bf571/Tinkercad_keyboard_shortcuts_1_up.pdf)
+assigns Shift to uniform resize and Alt/Option to resizing about the centre. This
+check uses published primary documentation, not a logged-in interactive session.
+
+Remaining direct-editing work is concrete:
+
+1. Replace percentage/factor gizmo snapping with resize increments expressed in
+   model units. The current viewport uses `setScaleSnap(0.1)`; its fine mode changes
+   factor precision, which is not the documented millimetre-based workflow.
+2. Add bounding-box face/corner handles and editable dimensions at those handles;
+   retain a predictable opposite anchor, with explicit centre and uniform options.
+   Grid-based increments and proportional scaling must coexist without rounding
+   every axis independently and breaking ratios. Existing precise numeric input
+   and fine control remain available.
+3. Keep surface placement, resizing, alignment and optional fit-to-target distinct.
+   Dropping onto a face must not silently change dimensions. A future fit action
+   must be explicit. Persistent workplanes, alignment previews and repeat duplicate
+   follow; their shortcuts must be documented consistently with active modifiers.
+
+Do not describe these remaining resize/workplane operations as shipped simply
+because placement and on-canvas readouts are available.

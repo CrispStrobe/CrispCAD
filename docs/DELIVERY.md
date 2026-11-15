@@ -774,3 +774,15 @@ Native smoke checks passed. **Mac build 24** is installed and running in
 were verified. Existing projects and model histories were retained. Validation,
 reference probes and the 167→168/256 replay are recorded in
 `docs/evidence/import-engine-groups-sectors-2026-11-15.json`.
+
+## Shape-palette discoverability — Mac build 25
+
+Built from clean source `a6ee01cdd9befd667c59c7e0a3013812e28a736d`.
+The Shapes popup now exposes a readable **Lower right** control, changing to
+**Popup** when docked. Existing drag/tap placement and saved layout preference
+remain. This is not a dimension-snapping or bounding-handle implementation.
+
+Eight desktop/iPad browser placement checks and the 1,364-message German audit
+passed. Native smoke checks passed; **Mac build 25** is installed and running,
+with its live asset receipt/bundle version verified and existing data retained.
+See `docs/evidence/shape-palette-discoverability-2026-11-15.json`.

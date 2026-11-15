@@ -79,5 +79,7 @@ export const messages:Record<string,string>={
 "Unclosed include path":"Nicht abgeschlossener Include-Pfad",
 "Included source file is missing: {0}":"Eingebundene Quelldatei fehlt: {0}",
 "Include occurrences exceed the existing token budget":"Die Anzahl der Includes überschreitet das Tokenbudget",
-"Expanded include tokens exceed the existing 8192-token limit":"Die erweiterten Includes überschreiten die Grenze von 8192 Tokens"
+"Expanded include tokens exceed the existing 8192-token limit":"Die erweiterten Includes überschreiten die Grenze von 8192 Tokens",
+"Drag a thumbnail onto the grid or a face.":"Vorschaubild auf das Raster oder eine Fläche ziehen.",
+"Drag onto a face, or tap a shape then its destination.":"Auf eine Fläche ziehen oder erst die Form und dann das Ziel antippen.",
 };
