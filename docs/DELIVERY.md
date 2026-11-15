@@ -951,3 +951,8 @@ counts trim end runouts; circularization uses area-equivalent diameter for unequ
 X/Y scales. This does not certify manufacturing fits. Springs/gears remain queued
 and 13 catalogue parameter gaps remain. No new native iPad installation was made.
 [Evidence and exact source boundaries](evidence/screw-redesign-2026-11-15.json).
+
+
+## 2026-11-15 — exact LDraw boundary conformity and one authored component
+
+A minimal general converter change handles exact T-junction endpoint incidence without snapping, new coordinates or guard changes. The authored u9558 battery-top component passes all actual source/mesh/topology/editor/preview gates with148triangles and2257/16384work. Normal builds,10focused tests and2browser workflows pass; original310asset hashes and194previews remain exact. Local qualification adds1/1/1 to156/151/195; this is not delivery credit before the owner PR lands. Source/derivative hashes, tested-byte binding, browser attachments and preserved initial failures are recorded in docs/evidence/ldraw-exact-conformity-2026-11-15.json.

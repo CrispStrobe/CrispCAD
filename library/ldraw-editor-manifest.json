@@ -17,7 +17,7 @@
     },
     "converter": {
       "path": "../scripts/lib/ldraw-model.mjs",
-      "sha256": "64938376a81669fa95c9f60eb592de502a7e751d0d42aa58c196f6b4bdb4bacf"
+      "sha256": "50bb19ee767578428d0818a72cff2295a463a2e3c67fbae66907e8e2a422535e"
     },
     "packageLockSha256": "fce627d2348b17711a6341f1ec5a985603a2062ba94b114da86d6bfdfdf38cfa",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
@@ -44,7 +44,7 @@
           "originalBytes": 1905,
           "expandedBytes": 2868,
           "instances": 3,
-          "work": 136,
+          "work": 192,
           "points": 16,
           "faces": 14
         },

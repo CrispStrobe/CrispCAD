@@ -1,0 +1,200 @@
+{
+  "status": "ALL_ACTUAL_GATES_PASS_LOCAL_NOT_DELIVERED",
+  "sourceHead": "a3ff7b9e79ebc58257f6f97df96c8eb311850604",
+  "testedTree": "29ad6ee62b892af7e4ea86bcd7b32735ce981d13",
+  "countsBefore": [
+    155,
+    150,
+    194
+  ],
+  "localCountsAfter": [
+    156,
+    151,
+    195
+  ],
+  "localQualificationDelta": [
+    1,
+    1,
+    1
+  ],
+  "mainDeliveryDelta": [
+    0,
+    0,
+    0
+  ],
+  "model": "parts/u9558.dat",
+  "sourceSha256": "d01271bc0b7ad6647221c518f3f97a346e2cf5971be904682fc5c051cf3ad8b4",
+  "meshSha256": "5e75746c0a59a438d0d6e21806ffee3d1e74cd43c07f5ae7a9d0066621939de6",
+  "defaultClosureOriginalBytes": 6689,
+  "expandedBytes": 20920,
+  "work": 2257,
+  "points": 76,
+  "faces": 78,
+  "triangles": 148,
+  "volumeMm3": 1595.3922456321702,
+  "guardLimitsUnchanged": true,
+  "prior310SourceMeshHashes": "PASS unchanged",
+  "prior194Previews": "PASS unchanged",
+  "focusedVitest": "10/10 PASS",
+  "browser": "2/2 PASS Chromium+iPadWebKit, two source/mesh-bound actual raster/offline insertion/provenance/undo/redo attachments, zero requests",
+  "normalPackageBuild": "PASS retained cycle94 a3ff; not replayed",
+  "appBuildFinalSnapshot": "Final post-staging copy-assets+Vite451module compile+SW PASS before browser. Staging changes only raw JSON/DAT/STL and preview; unchanged TS source/string imports were typechecked by prior app build. No generated TS/JS source file changed.",
+  "history": "Original cycle81 NotManifold and all prior resource/transport refusals preserved. Raw new headless row inherits old firstFailure metadata from original candidate despite successful gates; it is historical, not a current failure.",
+  "publication": "Pending reviewable PR and current-main integration; origin/main advanced to0032418 after c9 qualification, so no current-main landing proof claimed.",
+  "sourceCommit": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+  "ownedTestedFileHashes": [
+    {
+      "path": "library/ldraw-editor-manifest.json",
+      "bytes": 8616,
+      "sha256": "8122388f4c93d03222e1f38bc1f56e1441bbaea9ebd3f8f4cdb1acc768aab74c"
+    },
+    {
+      "path": "library/ldraw-reviewed-batch-manifest.json",
+      "bytes": 537315,
+      "sha256": "31587b5b5e752147bd53fee3cf4c1276b3349cbb1d7e715f1b93b916efd67d8e"
+    },
+    {
+      "path": "library/ldraw-reviewed-batch-spec.json",
+      "bytes": 601892,
+      "sha256": "d3dc04994576d5a90b4bd4cb2084cf5ec9a333596a5162035082baf5a09861e5"
+    },
+    {
+      "path": "library/meshes/ldraw/u9558.stl",
+      "bytes": 7484,
+      "sha256": "5e75746c0a59a438d0d6e21806ffee3d1e74cd43c07f5ae7a9d0066621939de6"
+    },
+    {
+      "path": "library/previews.json",
+      "bytes": 3367291,
+      "sha256": "cee4e8f91e487f6203908a1fee0e30f371e0a504c10e96ac4e1b4f04796106a2"
+    },
+    {
+      "path": "library/sources/ldraw/p/rect2a.dat",
+      "bytes": 586,
+      "sha256": "6d75ffb88e705a35f34e095ec0848a7bb70b577a376fdae05804da214b0d6369"
+    },
+    {
+      "path": "library/sources/ldraw/parts/u9558.dat",
+      "bytes": 3881,
+      "sha256": "d01271bc0b7ad6647221c518f3f97a346e2cf5971be904682fc5c051cf3ad8b4"
+    },
+    {
+      "path": "tests/browser/model-library-ldraw-u9558.spec.ts",
+      "bytes": 3476,
+      "sha256": "6bf82693ead7624036566b858b18fb9e346deb5e26ee76030a10101e12a79850"
+    },
+    {
+      "path": "scripts/lib/ldraw-model.mjs",
+      "bytes": 11726,
+      "sha256": "50bb19ee767578428d0818a72cff2295a463a2e3c67fbae66907e8e2a422535e"
+    },
+    {
+      "path": "tests/model-library-ldraw-conformity.test.ts",
+      "bytes": 3408,
+      "sha256": "c15d81702d2166d8dd2ecaaff993a492d8394fba9647475fed32c367ea586ed0"
+    }
+  ],
+  "validationFiles": [
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/admission.json",
+      "bytes": 437,
+      "sha256": "3033fade07a2526de3f2550502987fbd4735bc04d78eae3eff919e7305cd0f0f"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/policy-at-admission.json",
+      "bytes": 1518,
+      "sha256": "b97351ad79f4e0ead74bb949078573c1f68a1fecdfc8475d95ca67a87a27b09a"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/execution.json",
+      "bytes": 11471,
+      "sha256": "904646ce585f640eb8e9c74f239d2ec30c7d7d9e270a641a24e86ff37434aab7"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/browser.json",
+      "bytes": 6772,
+      "sha256": "7c8ecb64d9c154c397f0d60cfd57d41813042b95a2149ae8179e931ea42e0e81"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/verified-browser-attachments.json",
+      "bytes": 834,
+      "sha256": "5834dc046108149cb154eb38f1c12b75498adb1495261832dc9bc581cfd0ea9b"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/headless/batch1-results.json",
+      "bytes": 20420,
+      "sha256": "589aa3e949fe6d88747e1447d4d65d850f0ea01d7fec9450aff8ee80ec679ad9"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/phase-0.log",
+      "bytes": 220,
+      "sha256": "925cfa351527d6584cf582718f431bc8cfd051357db4cd169c4cdd31a1ab5c08"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/phase-1.log",
+      "bytes": 2913,
+      "sha256": "8e9e55d1d1d8f01958654a035767f884044523589a6e6c7d6dfdfc066c96c79c"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/phase-2.log",
+      "bytes": 185,
+      "sha256": "0bb4c2f970ada45261478e261ac03a6ca0bb83ce74263a854f341be095534147"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/phase-3.log",
+      "bytes": 75,
+      "sha256": "1aa10ebc651768de97d9a0f5fff1874094d87f871979870e77d619229c38fd63"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/phase-4.log",
+      "bytes": 53,
+      "sha256": "1d67e0a194898a4598cd9f155e2f8513a07bf282256cbb7030161141dadac334"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/phase-5.log",
+      "bytes": 91,
+      "sha256": "e1220bcda3a73b68408cd9606d36a37403b9f8b0ae57ad7756962500a6631f14"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/phase-6.log",
+      "bytes": 28,
+      "sha256": "d114106fc845d4f085b00c672a836b15ae27df58098b5bc3557c8faf85479497"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/phase-7.log",
+      "bytes": 2838,
+      "sha256": "dcd75b73c80feeb27fe564104179f36e978b9f73fd7b7afe295fceb993770c6b"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/phase-8.log",
+      "bytes": 1649,
+      "sha256": "a042c80127f25356fbe6540179e132ca7494e45b6cfcf5f0adab0febdcf057b6"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle95-chain/phase-9.log",
+      "bytes": 1381,
+      "sha256": "c7311224fab810405245633df3c0f6b92930a33482d068e37f339e120e43b8f6"
+    }
+  ],
+  "browserBindings": [
+    {
+      "candidateID": "corpus-ldraw-u9558",
+      "sourceSha256": "d01271bc0b7ad6647221c518f3f97a346e2cf5971be904682fc5c051cf3ad8b4",
+      "meshSha256": "5e75746c0a59a438d0d6e21806ffee3d1e74cd43c07f5ae7a9d0066621939de6",
+      "project": "chromium",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    },
+    {
+      "candidateID": "corpus-ldraw-u9558",
+      "sourceSha256": "d01271bc0b7ad6647221c518f3f97a346e2cf5971be904682fc5c051cf3ad8b4",
+      "meshSha256": "5e75746c0a59a438d0d6e21806ffee3d1e74cd43c07f5ae7a9d0066621939de6",
+      "project": "ipad-webkit",
+      "preview": "PASS220x180 actual raster pixels",
+      "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+      "networkRequests": 0
+    }
+  ],
+  "scope": "One unchanged authored standalone battery-top component; no parent assembly or physical/manufacturing claim. Exact existing endpoint subdivision only; no gap snapping/caps/source-default/guard/tolerance changes."
+}

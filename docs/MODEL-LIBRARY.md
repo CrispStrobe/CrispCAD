@@ -1001,3 +1001,12 @@ non-manifold output and one refused quad coplanarity/convexity; A/B remains
 unresolved pending source/output tracing. The prior24 refusals were not retried.
 Twenty next complete authored archive roots remain ranked, without any archive
 exhaustion claim. See docs/evidence/ldraw-subcomponent-qualification-2026-11-15.json.
+
+
+### Exact LDraw facet conformity and authored battery top, 2026-11-15
+
+Exact source/output tracing of parts/u9558.dat found eight unmatched indexed edges whose authored segments pair exactly. The bounded original converter now groups edges by exact rational supporting lines and inserts only existing endpoints inside matching edges. All grouping, sorting and insertion work is charged under the unchanged16384 limit. No coordinates, surfaces, winding, source defaults, tolerances or other guards change. Real tiny gaps and overlapping facets remain refused.
+
+The unchanged five-file CC-BY-4.0 authored battery-top closure uses6689original/20920expanded bytes and2257work. Its148-triangle derived STL passes actual closed-positive-volume screening and editor insertion/restore/provenance/history, including mismatched-byte refusal before evaluation. Normal package/app builds,10focused Vitest tests, complete existing LDraw derivative reproduction, real preview generation and both Chromium/iPad-WebKit workflows pass. Browser attachments bind exact source/STL hashes and actual raster pixels, with zero offline requests.
+
+One local qualification adds one record, one unique STL and one preview:156/151/195 from155/150/194. All prior310 source/mesh hash entries and194 preview values remain unchanged. Delivery is separate until the normal owner PR lands. Other retained failures are not reclassified from this proof; the next repair queue remains staged. This qualifies only the authored standalone component. See docs/evidence/ldraw-exact-conformity-2026-11-15.json.
