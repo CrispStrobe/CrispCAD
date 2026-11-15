@@ -200,3 +200,14 @@ radial profiles, small tips and compound-sector seams without changing Jolt or
 loosening qualification limits. The parameter gap is now 16; bent tubes, lofts,
 mechanical constructions and decorative templates remain. See
 [CURVED-SHAPES.md](CURVED-SHAPES.md) for formulas and boundaries.
+
+
+## Retained transition/sliding templates — 2026-11-15
+
+Bent tubes, rectangular-to-round solid/duct transitions and dovetails now retain
+their dimensions through GUI, source, MCP and revisions. Section-grid collision
+metadata follows actual geometry; warped hollow cells have a bounded exact-kernel
+refinement path. Dovetail clearance offsets profile planes rather than scaling a
+key. The catalogue parameter gap is 13. Hinges, springs, gears, pulleys and other
+mechanical constructions remain next with explicit fit/clearance acceptance.
+See [RETAINED-TRANSITIONS.md](RETAINED-TRANSITIONS.md).
