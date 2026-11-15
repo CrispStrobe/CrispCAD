@@ -33,6 +33,12 @@
       "sha256": "b17f227c7a178b3bef0e1c16599b68e624b31df1af3afe05a29d4cfeb4384fcd",
       "bytes": 170464,
       "url": "https://raw.githubusercontent.com/adafruit/Adafruit_CAD_Parts/9f2a89f3d5c3491886d58cb7fe83385417563cf4/3802%20TT%20Motor%20Metal%20Gear/3802%20TT%20Motor%20Metal%20Gear.step"
+    },
+    {
+      "path": "1143 Micro Servo - High Torque Metal Gear/1143 Micro Servo High Torque Metal Gear.stl",
+      "sha256": "6855b3fe182c318434dee40c2efec86dacbdc34048bcd39a3d7cf7cd406677ec",
+      "bytes": 113584,
+      "url": "https://raw.githubusercontent.com/adafruit/Adafruit_CAD_Parts/9f2a89f3d5c3491886d58cb7fe83385417563cf4/1143%20Micro%20Servo%20-%20High%20Torque%20Metal%20Gear/1143%20Micro%20Servo%20High%20Torque%20Metal%20Gear.stl"
     }
   ]
 }

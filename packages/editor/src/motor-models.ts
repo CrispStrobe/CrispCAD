@@ -5,13 +5,16 @@ import {createDocument,identityTransform,defaultPartPhysics,t} from '@brickwrigh
 import type {CadDocument,Vec3,ModelLibraryAsset} from '@brickwright/cad-core';
 import yellow from './motor-assets/tt-gearmotor.json' with {type:'json'};
 import dc from './motor-assets/dc-toy-motor.json' with {type:'json'};
+import microServo from './motor-assets/micro-servo-1143.json' with {type:'json'};
 import dcCollision from './motor-assets/dc-toy-motor-collision.json' with {type:'json'};
 import yellowCollision from './motor-assets/tt-gearmotor-collision.json' with {type:'json'};
-const colliders:Record<string,typeof dcCollision>={'dc-toy-motor':dcCollision,'tt-gearmotor':yellowCollision};
-const models:Record<string,typeof yellow>={'tt-gearmotor':yellow,'dc-toy-motor':dc};
+import microServoCollision from './motor-assets/micro-servo-1143-collision.json' with {type:'json'};
+const colliders:Record<string,typeof dcCollision>={'dc-toy-motor':dcCollision,'tt-gearmotor':yellowCollision,'micro-servo-1143':microServoCollision};
+const models:Record<string,typeof yellow>={'tt-gearmotor':yellow,'dc-toy-motor':dc,'micro-servo-1143':microServo};
 export const motorCatalog=[
  {id:'dc-toy-motor',name:'DC toy motor',category:'Motors',description:'Adafruit 711 DC motor with an articulated output shaft. Ideal hinge drive; electrical performance is not modelled.',keywords:'dc motor 130 can brushed electric 711',color:'#aab4bd'},
  {id:'tt-gearmotor',name:'Yellow TT gearmotor',category:'Motors',description:'Adafruit 3777 yellow TT gearmotor with its separate double-ended output shaft. Ideal hinge drive.',keywords:'yellow tt dc motor gearbox robot 3777',color:'#f4cc28'},
+ {id:'micro-servo-1143',name:'Micro servo (MG90S)',category:'Motors',description:'Adafruit 1143 high-torque metal-gear micro servo with articulated output spline. Ideal hinge drive.',keywords:'micro servo mg90s sg90 steering actuator 1143 adafruit',color:'#2f4b6e'},
 ];
 export const isMotorModel=(id:string)=>Object.hasOwn(models,id);
 export function motorGeometry(id:string){const model=models[id],positions:number[]=[],indices:number[]=[];for(const part of model.parts){const offset=positions.length/3;positions.push(...part.positions);indices.push(...part.indices.map(i=>i+offset));}const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setIndex(indices);geometry.computeVertexNormals();return geometry;}
