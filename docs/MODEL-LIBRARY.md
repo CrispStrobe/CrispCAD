@@ -901,3 +901,26 @@ preview values remain exact. No primitive/compiler/guard changes are required.
 
 See `docs/evidence/italy-qualification-2026-11-15.json` for source/derivative hashes,
 actual commands, original resource refusals and exact tested-file bindings.
+
+
+### Uniform cylinder contacts and authored Sign03, 2026-11-15
+
+The unchanged MIT Sign_03 source shares z=0.1 between its grey base (line6) and
+red disk (lines8/11). Its centred-cylinder construction introduced
+`(0.1+0.05)-0.05 = 0.10000000000000002` before CSG. Primitive-ID tracing matched
+the first collapsed edge to those surfaces; observer and baseline STL bytes were
+identical, and the exporter changed zero coordinates. This is a demonstrated
+construction bug, not an intrinsic source or physical-part defect.
+
+Construct the exact identity `move([0,0,h/2], cylinder(r,h))` directly at the
+origin, including equal-radius frustum representations. Tapered frustums retain
+their path. The general fix has no model names or special dimensions. Centred
+defaults and a real gap remain intact; France, Italy and Arc01 derivative hashes
+remain exact. Limits, tolerances, defaults and source bytes are unchanged.
+
+Sign03 now passes all strict STL screens with 564 triangles, actual editable-source
+insertion, byte mismatch refusal before evaluation, attribution/history, raster
+preview and Chromium/iPad-WebKit tests. This adds one locally qualified record,
+one unique STL and one preview: 133 / 130 / 172 locally, with main at 132 / 129 / 171
+after Italy delivery. Prior 101 corpus records and 171 previews remain exact.
+See `docs/evidence/uniform-cylinder-sign03-qualification-2026-11-15.json`.

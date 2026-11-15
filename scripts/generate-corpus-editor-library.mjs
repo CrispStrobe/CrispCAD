@@ -120,9 +120,10 @@ export const corpusEditorSelection = [
   ['Arc_01', '3a090cd3ee476bdede9893c9c75745278b1469a4c0038e312e0c004fc656cb2b'],
   ['Flag_France', 'f217f82a7a8cd72fabd7276cde47e4de47aea0ab9d19ff7c24c2a35e92b67e91'],
   ['Flag_Italy', '981ec35a7c5c57bdd686820c7ae3268f6cf56328622e37f09dd6f21840089c9e'],
+  ['Sign_03', '78b28f433cf0fe1807864af8c060a346b4326103cd25c18eb9aa92e964eae32b'],
 ];
 // Only this admission batch gains warning metadata; earlier qualification records stay immutable.
-const warningQualifiedNames = new Set(['Flag_Italy', 'Flag_France', 'Arc_01', 'Bricks', 'Scene_City_Street', 'Coin_02', 'Shaft_01', 'Shaft_02_With_Keyway', 'Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ', 'Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01']);
+const warningQualifiedNames = new Set(['Sign_03', 'Flag_Italy', 'Flag_France', 'Arc_01', 'Bricks', 'Scene_City_Street', 'Coin_02', 'Shaft_01', 'Shaft_02_With_Keyway', 'Hole_Plate', 'Mech_Piece_01', 'Mech_Piece_02', 'Arc_02', 'Circular_Blade', 'Gear_01', 'Gear_02', 'Mallet', 'Tower', 'Weights_01', 'Tree_01', 'Nut_LQ', 'Rod_01', 'Animation_Gear_02', 'Animation_Mechanism_01']);
 const cityDependencies = {
   "Asset_SCAD/Street_02.scad": "9c114a059e7a07b137e11bde20c9ddc047631de9309ec8b99f2b4fc556da3060",
   "Asset_SCAD/Street_03.scad": "5e2efcd002e43aafc5ad52fecb0f5425413872fb0e38169ef98b45d22675ac9d",
@@ -134,7 +135,7 @@ const preserved97Hash = '1c4e1de1ea28475c545bd1d2a1b1bf5a20fbcb3b04dffca40779b2b
 export async function generateCorpusEditorLibrary({assetId} = {}) {
   const previous = assetId ? JSON.parse((await read('editor-corpus-manifest.json')).toString()) : undefined;
   if (previous && hash(Buffer.from(JSON.stringify(previous.assets.slice(0,97)))) !== preserved97Hash) throw new Error('Review required: historical 97 records changed.');
-  if (assetId && !['corpus-angelo-scene-city-street','corpus-angelo-bricks','corpus-angelo-arc-01','corpus-angelo-flag-france','corpus-angelo-flag-italy'].includes(assetId)) throw new Error('Focused reproduction is restricted to the explicitly reviewed city, Bricks, Arc01 FlagFrance and FlagItaly sources.');
+  if (assetId && !['corpus-angelo-scene-city-street','corpus-angelo-bricks','corpus-angelo-arc-01','corpus-angelo-flag-france','corpus-angelo-flag-italy','corpus-angelo-sign-03'].includes(assetId)) throw new Error('Focused reproduction is restricted to the explicitly reviewed city, Bricks, Arc01 FlagFrance, FlagItaly and Sign03 sources.');
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
   const repository = corpus.repositories.find(item => item.id === repositoryId);
   if (!repository || repository.commit !== commit || repository.url !== repositoryUrl || repository.license !== 'MIT') throw new Error('Review required: selected corpus repository identity changed.');
@@ -196,7 +197,7 @@ export async function generateCorpusEditorLibrary({assetId} = {}) {
     if (name === 'Arc_01' && hash(mesh) !== '919d78c32c797aaac495093e824987455564e3cfd00e1a334fd37206a4a1db11') throw new Error('Arc01 derivative changed from updated-code qualification.');
     if (name === 'Bricks' && hash(mesh) !== '0a405aa894512686e543462e230dee07406b5e81b0b306746f06391c481e0fe7') throw new Error('Bricks snapshot changed from cold-qualified STL.');
     if (name === 'Scene_City_Street' && hash(mesh) !== '27c31bed500181d6207e8b020897515bb79cbe264c2387626c00dc79d3e5118f') throw new Error('City default changed from cold-qualified STL.');
-    const screening = await checkModelLibrarySTL(mesh, {checkedOn: ['Arc_01','Flag_France','Flag_Italy'].includes(name) ? '2026-11-15' : '2026-11-14', toMillimetresZUp: identity, maxTriangles: 10000, maxExtentMm: 200});
+    const screening = await checkModelLibrarySTL(mesh, {checkedOn: ['Arc_01','Flag_France','Flag_Italy','Sign_03'].includes(name) ? '2026-11-15' : '2026-11-14', toMillimetresZUp: identity, maxTriangles: 10000, maxExtentMm: 200});
     if (!screening.quality || Object.values(screening.checks).some(result => result !== 'pass')) throw new Error(`Selected mesh screening failed: ${name}: ${JSON.stringify(screening.diagnostics)}`);
     outputs.set(sourcePath, bytes);
     outputs.set(meshPath, mesh);
@@ -219,7 +220,7 @@ export async function generateCorpusEditorLibrary({assetId} = {}) {
       corpusSelection: {repositoryId, upstreamPath, archivedPath: `corpus/repos/${repositoryId}/${upstreamPath}`, sha256: expectedHash},
       licence: {spdx: 'MIT', scope: 'asset', attribution: `${record.author_attribution}. Source: ${record.source_url}. ${evidence.toString('utf8').replace(/\s+/g, ' ').trim()}`,
         evidenceUrl: evidenceRecord.source_url, localEvidence: [{...file(evidencePath, evidence), url: evidenceRecord.source_url}], capturedOn: repository.captured_at,
-        review: 'accepted', reviewer: name === 'Flag_Italy' ? `${repository.reviewed_by}; exact authored Italian flag source/editor/preview qualification 2026-11-15; shared STL counted once` : name === 'Flag_France' ? `${repository.reviewed_by}; exact authored flag default and general corner-origin fix, strict STL/editor screening 2026-11-15` : name === 'Arc_01' ? `${repository.reviewed_by}; exact Arc01 current-code defaults/STL/editor screening 2026-11-15` : name === 'Scene_City_Street' ? `${repository.reviewed_by}; explicit city root and five use dependencies, default STL screening 2026-11-14` : `${repository.reviewed_by}; explicit standalone editor selection and runtime screening 2026-11-14`},
+        review: 'accepted', reviewer: name === 'Sign_03' ? `${repository.reviewed_by}; exact authored sign and general uniform-cylinder origin fix, strict STL/editor screening 2026-11-15` : name === 'Flag_Italy' ? `${repository.reviewed_by}; exact authored Italian flag source/editor/preview qualification 2026-11-15; shared STL counted once` : name === 'Flag_France' ? `${repository.reviewed_by}; exact authored flag default and general corner-origin fix, strict STL/editor screening 2026-11-15` : name === 'Arc_01' ? `${repository.reviewed_by}; exact Arc01 current-code defaults/STL/editor screening 2026-11-15` : name === 'Scene_City_Street' ? `${repository.reviewed_by}; explicit city root and five use dependencies, default STL screening 2026-11-14` : `${repository.reviewed_by}; explicit standalone editor selection and runtime screening 2026-11-14`},
       original: {...file(sourcePath, bytes), url: record.source_url, format: 'openscad'},
       ...(sourceBundle ? {sourceBundle} : {}),
       derivatives: [{...file(meshPath, mesh), format: 'stl'}],
