@@ -5,6 +5,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {createDocument,defaultPartPhysics,defaultSimulationSettings,identityTransform,jointAtWorldFrame,t} from '@brickwright/cad-core';
 import type {CadDocument,CodeProgram,SolidNode,Vec3} from '@brickwright/cad-core';
 import {createMotorDocument} from './motor-models.js';
+import {ttRoverCollisionAssembly} from './tt-rover-collisions.js';
 
 export const TT_ROVER_ID='robot-tt-rover';
 export const roverCatalog=[
@@ -32,6 +33,7 @@ let stop=move([-36.5,-1,floor+2 mm],box(1,28.2,4));
 return subtract(union(foot,rails,stop),
   ${cuts([-31,32].flatMap(x=>[-7,7].map(y=>bore(x,y,4,20))))},
   ${cuts([-31,32].flatMap(x=>[-7,7].map(y=>`move([${x},${y},2],frustum(1.7,3.3,1.6,32))`)))},
+  move([20,-18,floor/2+3 mm],box(36,12,floor+8 mm)),move([20,18,floor/2+3 mm],box(36,12,floor+8 mm)),
   move([-20,-1,0.7],box(3.6,32,1.4)),move([0,-1,0.7],box(3.6,32,1.4)));`),
  wheel:program(`param clearance:mm=0.25;
 param shaftDiameter:mm=5.4;
@@ -66,7 +68,7 @@ export const ttRoverPrintQuantities:Record<Exclude<TTRoverPart,'fit'>,number>={c
 const names:Record<TTRoverPart,string>={chassis:'PLA chassis',cradle:'PLA motor cradle',wheel:'PLA clamping wheel',deck:'PLA electronics deck',standoff:'PLA deck standoff',skid:'PLA rear skid',fit:'Double-D shaft fit gauge'};
 const colors:Record<TTRoverPart,string>={chassis:'#38a99a',cradle:'#287f79',wheel:'#e8ab47',deck:'#80c7be',standoff:'#287f79',skid:'#287f79',fit:'#e8ab47'};
 function addPart(doc:CadDocument,part:TTRoverPart,id:string,position:Vec3,rotation:Vec3=[0,0,0]){
- const node:SolidNode={id,name:t(names[part]),kind:'code',program:structuredClone(ttRoverPartPrograms[part]),transform:{...identityTransform(),position,rotation},color:colors[part],physics:{...defaultPartPhysics(),densityKgM3:1240,material:'plastic',friction:part==='skid'?.12:.4,restitution:.02,sourcePreset:TT_ROVER_ID}};
+ const node:SolidNode={id,name:t(names[part]),kind:'code',program:structuredClone(ttRoverPartPrograms[part]),transform:{...identityTransform(),position,rotation},color:colors[part],physics:{...defaultPartPhysics(),densityKgM3:1240,material:'plastic',friction:part==='skid'?.12:.4,restitution:.02,sourcePreset:TT_ROVER_ID,collisionAssembly:ttRoverCollisionAssembly(part)}};
  doc.nodes[id]=node;doc.roots.push(id);return id;
 }
 /** One manufactured part in its support-free orientation. No purchased components. */
@@ -104,14 +106,14 @@ export function createTTRoverDocument(id=TT_ROVER_ID):CadDocument{
   for(const [key,original]of Object.entries(motor.nodes)){
    const node=structuredClone(original);node.id=side+'-'+key;
    if(node.kind==='boolean')node.inputs=node.inputs.map(input=>side+'-'+input);
-   if(motor.roots.includes(key))node.transform.position=[5.7,y,20.8];
+   if(motor.roots.includes(key)){node.transform.position=[5.7,y,20.8];node.physics={...node.physics!,collisionAssembly:ttRoverCollisionAssembly(key)};}
    node.name=t(side==='left'?'Left TT motor':'Right TT motor')+(key==='shaft'?' · '+t('Output shaft'):'');doc.nodes[node.id]=node;
   }
   doc.roots.push(side+'-casing',side+'-shaft');fixed(doc,'chassis',side+'-casing');
   const joint=jointAtWorldFrame(doc,'hinge',side+'-casing',side+'-shaft',[25,y,32],[0,1,0]);joint.id='drive-'+port.toLowerCase();joint.control={port};doc.joints.push(joint);
   fixed(doc,side+'-shaft',side+'-wheel');
   for(const [i,offset]of [2,6].entries()){
-   const key=side+'-tire-'+i;doc.nodes[key]={id:key,name:t('Purchased O-ring tire'),kind:'code',program:program('return torus(30,1.5,12,64);'),transform:{...identityTransform(),position:[25,Math.sign(y)*(74.5-offset),32],rotation:[90,0,0]},color:'#303c40',physics:{...defaultPartPhysics(),densityKgM3:1100,material:'rubber',friction:1,restitution:.03}};doc.roots.push(key);fixed(doc,side+'-wheel',key);
+   const key=side+'-tire-'+i;doc.nodes[key]={id:key,name:t('Purchased O-ring tire'),kind:'code',program:program('return torus(30,1.5,12,64);'),transform:{...identityTransform(),position:[25,Math.sign(y)*(74.5-offset),32],rotation:[90,0,0]},color:'#303c40',physics:{...defaultPartPhysics(),densityKgM3:1100,material:'rubber',friction:1,restitution:.03,collisionAssembly:ttRoverCollisionAssembly('tire')}};doc.roots.push(key);fixed(doc,side+'-wheel',key);
   }
  }
  // Original conservative envelopes, NOT claimed vendor PCB meshes. A battery
