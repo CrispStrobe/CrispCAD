@@ -21,8 +21,10 @@ as evidence that our implementation has parity.
 - [x] Route native Mac trackpad scrolling to camera; suppress webpage navigation
   and pull-to-refresh while preserving scrolling in actual controls.
 - [x] Editable ruler length, mm/inch graduation and optional numbering.
-- [x] Audit every spawnable shape for real dimensions, intended topology,
-  curvature, editable parameters, and collision fidelity; record remaining gaps.
+- [x] Audit default topology and physics qualification for every spawn preset;
+  record retained-parameter gaps.
+- [ ] Complete the catalogue-wide edited-dimension, curvature and mechanical-fit
+  review; default closed solids alone do not establish those properties.
 
 Primary behavioral references: [shape settings](https://layerling.com/guide/shapes.html),
 [sketching](https://layerling.com/guide/sketches.html),
@@ -80,3 +82,15 @@ Float32 union export/reimport. Both missing and extra volumes, plus the numerica
 volume-conservation residual, count against the unchanged 2% default budget.
 Old saved qualification reports remain readable; their certificates confer no
 runtime authority and edited geometry still requires fresh qualification.
+
+
+## Mac secondary-click menu follow-up
+
+The user's screenshot established that “Reload” was WebKit's context menu,
+not a pull-to-refresh indicator. A right-button camera drag temporarily disables
+OrbitControls; that also disables its own context-menu suppression. The canvas
+now consumes `contextmenu` in a separate capture handler, which remains active
+throughout orbit/pan and is removed when the viewport is disposed. This is
+separate from precise scroll/pinch routing. The regression uses a real secondary
+pointer down/drag/up, checks menu cancellation both during and after the drag,
+and verifies camera movement without model/history edits or page reload.
