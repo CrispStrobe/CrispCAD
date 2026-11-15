@@ -7,11 +7,11 @@ import type {CadDocument} from '@brickwright/cad-core';
 import type {SimulationCommand,SimulationFrame} from './simulation-protocol.js';
 let kernel:Promise<GeometryKernel>|undefined,world:Awaited<ReturnType<typeof createPhysicsWorld>>|undefined,document:CadDocument|undefined;
 const driven=new Map<string,'hinge'|'slider'>();
-const previewBalls=new Map<string,number>();
+const previewBalls=new Map<string,{previewRadiusMm:number;previewShape:'sphere'|'box'}>();
 const angles:Record<string,number>={},lastAngles:Record<string,number>={},speeds:Record<string,number>={},linearPositions:Record<string,number>={},linearSpeeds:Record<string,number>={};
 const measure=()=>{for(const joint of document!.joints??[])if(joint.kind==='hinge'){const current=world!.hingeAngle(joint.id)*180/Math.PI;let delta=current-(lastAngles[joint.id]??current);delta=((delta+180)%360+360)%360-180;angles[joint.id]=(angles[joint.id]??0)+delta;speeds[joint.id]=delta/.005;lastAngles[joint.id]=current;}};
 const measureSliders=()=>{for(const joint of document!.joints??[])if(joint.kind==='slider'){const current=world!.sliderPosition(joint.id);linearSpeeds[joint.id]=linearPositions[joint.id]===undefined?0:(current-linearPositions[joint.id])/.005;linearPositions[joint.id]=current;}};
-const frame=():SimulationFrame=>({time:world!.time,poses:document!.roots.filter(id=>!document!.nodes[id].reference&&document!.nodes[id].role!=='hole').map(id=>({id,...world!.pose(id)})).concat([...previewBalls].map(([id,previewRadiusMm])=>({id,...world!.pose(id),previewRadiusMm}))),angles:{...angles},speeds:{...speeds},linearPositions:{...linearPositions},linearSpeeds:{...linearSpeeds}});
+const frame=():SimulationFrame=>({time:world!.time,poses:document!.roots.filter(id=>!document!.nodes[id].reference&&document!.nodes[id].role!=='hole').map(id=>({id,...world!.pose(id)})).concat([...previewBalls].map(([id,spec])=>({id,...world!.pose(id),...spec}))),angles:{...angles},speeds:{...speeds},linearPositions:{...linearPositions},linearSpeeds:{...linearSpeeds}});
 self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
  const command=event.data;
  try{
@@ -36,7 +36,7 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
    else if(command.op==='velocity')world.setLinearVelocity(command.id,command.velocityMmS);
    else if(command.op==='grab')world.grabBody(command.id,command.pointMm,command.targetMm);
    else if(command.op==='release-grab')world.releaseGrab();
-   else if(command.op==='ball'){world.spawnSphere(command.id,command.positionMm,command.velocityMmS,command.radiusMm);previewBalls.set(command.id,command.radiusMm);}
+   else if(command.op==='ball'){if(command.shape==='box')world.spawnBox(command.id,command.positionMm,command.velocityMmS,command.radiusMm);else world.spawnSphere(command.id,command.positionMm,command.velocityMmS,command.radiusMm);previewBalls.set(command.id,{previewRadiusMm:command.radiusMm,previewShape:command.shape??'sphere'});}
    else if(command.op==='impulse')world.applyImpulse(command.id,command.impulseNs,command.pointMm);
    else if(command.op==='stop-motors')for(const [id,kind]of driven)if(kind==='hinge')world.stopHingeMotor(id);else world.stopSliderMotor(id);
   }

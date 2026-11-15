@@ -6,12 +6,12 @@ Reference checked 2026-11-15: Autodesk's [Sim Lab introduction](https://www.tink
 | --- | --- | --- |
 | Gravity, collisions, fixed/dynamic shapes | Qualified mesh collisions and body settings exist; saved scene gravity/floor and free-body defaults added | Saved gravity/initial velocity tests and live browser previews |
 | Material selection | Editable illustrative presets preserve mechanical metadata | Analytic impulse/mass response and shared inspector presets |
-| Axle connectors and motors | Existing angular drive plus world-frame connector authoring | Frame/history tests and a live single-drive closed four-bar; motor VM execution retained |
+| Axle connectors and motors | Angular drive, world-frame authoring, draggable anchors and surface-picked frames | Frame/history tests and a live single-drive closed four-bar; motor VM execution retained |
 | Slider connectors | Millimetre travel limits, finite-force drive, encoder feedback | Jolt travel-limit tests, live encoder travel and block/code round trips |
 | Pivot connectors | Ball pivot with adjustable cone half-angle and free twist | Jolt cone restriction with nonzero free twist |
 | Tracing | Saved attachment points, bounded preview trails and CSV export | Transform/budget tests; live traces, CSV export and reset |
-| Throwing and live interaction | Existing-body launch, transient analytic preview balls and bounded force-based pointer dragging | Jolt tests reject fixed-body throws; browser dragging preserves the serialized design |
-| Playback | Run/pause/reset, single 5 ms step, slow motion and 2× playback | Live 5 ms single step, encoder travel, model-edit cancellation and no history writes |
+| Throwing and live interaction | Existing-body launch, transient analytic balls/boxes and bounded force-based pointer dragging | Jolt tests reject fixed-body throws; browser dragging preserves the serialized design |
+| Playback | Run/pause/reset, 5 ms steps, slow motion, recorded-pose scrubbing and replay | Live 5 ms single step, encoder travel, model-edit cancellation and no history writes |
 | Video | Canvas-only recording with duration/byte limits; host export callback | Chromium produces a nonempty video export; bounded tracks/chunks are disposed |
 | Sharing | Portable CAD documents, full source, history and Brickwright sidecar | Version-8 source/document, clipboard, undo and deletion tests |
 
@@ -39,15 +39,30 @@ blur in manual mode, cancellation, reset and disposal. Preview recording copies
 rendered frames into a separate canvas so WebGL clearing does not create an empty
 capture; audio and desktop contents are excluded.
 
-## Scope still requiring parity work
+## Product scope and remaining checks
 
-This is a local physics/editor parity increment, not a claim of complete
-Tinkercad product parity. Timeline scrubbing, connector manipulation handles,
-additional projectile shapes and hosted collaboration/sharing remain separate
-work. Video export is capability-detected and still needs a real iPad MediaRecorder
-check. Existing CAD motor programs already run in the real Brickwright VM; the
-new slider words additionally need the production-host VM check after SDK sync.
+The shared engine now covers local rigid-body experiments, materials, gravity,
+axle/slider/pivot connections, programmable motors, live interaction, tracing,
+video and recorded motion replay. Replay retains at most 1,200 frames and 20,000
+body poses; its time window shortens for larger scenes. Scrubbing and replay do
+not rewind the live solver. Run explicitly resumes the latest physical state.
+Preview objects are limited to 32 and disappear when viewing frames before their
+creation; they never become saved model definitions.
+
+Portable CAD files, retained history and Brickwright sidecars provide file-based
+sharing. This does not reproduce Tinkercad's hosted-account collaboration service.
+A real iPad MediaRecorder check remains necessary; Chromium recording exports and
+iPad WebKit hinge/four-bar controls have passed. Angular and slider blocks both
+completed in the real production Brickwright Scratch VM.
 
 Library reproduction manifests were refreshed only for the current merged lockfile
 fingerprint. Archived source files, derivative meshes and historical project
 revisions were not rewritten.
+
+## Replay and connector interaction validation
+
+Chromium and iPad WebKit passed timeline scrub/play/pause/resume, cube throwing,
+preview-object removal before creation time, and connector drag/undo/Escape tests.
+The iPad controls can be minimized; picking a surface temporarily minimizes them
+and restores the previous view afterward. These view changes stay outside model
+history. The complete CAD unit suite passed 980 tests with one skipped.

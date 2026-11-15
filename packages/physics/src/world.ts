@@ -61,15 +61,19 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
   for(const mesh of meshes){const p=doc.nodes[mesh.id].physics;if(p?.motion==='static')continue;const body=byId.get(mesh.id);if(p?.initialVelocityMmS){const velocity=new J.Vec3(...p.initialVelocityMmS.map(v=>v*.001));bodies.SetLinearVelocity(body.GetID(),velocity);J.destroy(velocity);}if(p?.initialAngularVelocityDps){const velocity=new J.Vec3(...p.initialAngularVelocityDps.map(v=>v*Math.PI/180));bodies.SetAngularVelocity(body.GetID(),velocity);J.destroy(velocity);}}
   system.OptimizeBroadPhase();
  }catch(e){dispose();throw e;}
+ let previewCount=0;
+ function spawnPreview(id:string,positionMm:Vec3,velocityMmS:Vec3,sizeMm:number,kind:'sphere'|'box'){
+  if(disposed||byId.has(id)||!/^preview-[a-zA-Z0-9_-]+$/.test(id)||previewCount>=32||!Number.isFinite(sizeMm)||sizeMm<1||sizeMm>50||[...positionMm,...velocityMmS].length!==6||positionMm.some(v=>!Number.isFinite(v)||Math.abs(v)>10000)||velocityMmS.some(v=>!Number.isFinite(v)||Math.abs(v)>10000))throw new Error(t('Invalid preview ball or preview budget exceeded'));
+  const radius=sizeMm*.001,volumeM3=kind==='sphere'?4*Math.PI*radius**3/3:(2*radius)**3,massKg=volumeM3*1050,inertia=kind==='sphere'?.4*massKg*radius**2:massKg*(2*radius)**2/6;
+  const extent=kind==='box'?new J.Vec3(radius,radius,radius):undefined,shape=extent?new J.BoxShape(extent,Math.min(.0001,radius/10)):new J.SphereShape(radius);if(extent)J.destroy(extent);
+  add(shape,id,'dynamic',{friction:.4,restitution:.45},{massKg,volumeM3,centerM:[0,0,0],inertiaKgM2:[[inertia,0,0],[0,inertia,0],[0,0,inertia]]});previewCount++;
+  const body=byId.get(id),p=new J.RVec3(...positionMm.map(v=>v*.001)),v=new J.Vec3(...velocityMmS.map(v=>v*.001));bodies.SetPosition(body.GetID(),p,J.EActivation_Activate);bodies.SetLinearVelocity(body.GetID(),v);J.destroy(p);J.destroy(v);
+ }
  return {
   grabBody(id:string,pointMm:Vec3,targetMm:Vec3){const body=byId.get(id);if(disposed||!body||body.IsStatic())throw new Error(t('Choose a dynamic body to drag'));if([...pointMm,...targetMm].length!==6||[...pointMm,...targetMm].some(v=>!Number.isFinite(v)||Math.abs(v)>10000))throw new Error(t('Invalid drag point'));if(grab?.id===id){grab.target=[...targetMm];return;}const p=body.GetPosition(),q=body.GetRotation();grab={id,local:quaternionPoint(pointMm.map((v,i)=>v*.001-[p.GetX(),p.GetY(),p.GetZ()][i]),[-q.GetX(),-q.GetY(),-q.GetZ(),q.GetW()]),target:[...targetMm]};},
   releaseGrab(){grab=undefined;},
-  spawnSphere(id:string,positionMm:Vec3,velocityMmS:Vec3,radiusMm=6){
-   if(disposed||byId.has(id)||!/^preview-[a-zA-Z0-9_-]+$/.test(id)||ownedBodies.length>=meshes.length+33||!Number.isFinite(radiusMm)||radiusMm<1||radiusMm>50||[...positionMm,...velocityMmS].length!==6||positionMm.some(v=>!Number.isFinite(v)||Math.abs(v)>10000)||velocityMmS.some(v=>!Number.isFinite(v)||Math.abs(v)>10000))throw new Error(t('Invalid preview ball or preview budget exceeded'));
-   const radius=radiusMm*.001,volumeM3=4*Math.PI*radius**3/3,massKg=volumeM3*1050,inertia=.4*massKg*radius**2;
-   add(new J.SphereShape(radius),id,'dynamic',{friction:.4,restitution:.45},{massKg,volumeM3,centerM:[0,0,0],inertiaKgM2:[[inertia,0,0],[0,inertia,0],[0,0,inertia]]});
-   const body=byId.get(id),p=new J.RVec3(...positionMm.map(v=>v*.001)),v=new J.Vec3(...velocityMmS.map(v=>v*.001));bodies.SetPosition(body.GetID(),p,J.EActivation_Activate);bodies.SetLinearVelocity(body.GetID(),v);J.destroy(p);J.destroy(v);
-  },
+  spawnSphere(id:string,positionMm:Vec3,velocityMmS:Vec3,radiusMm=6){spawnPreview(id,positionMm,velocityMmS,radiusMm,'sphere');},
+  spawnBox(id:string,positionMm:Vec3,velocityMmS:Vec3,halfSizeMm=6){spawnPreview(id,positionMm,velocityMmS,halfSizeMm,'box');},
   step(seconds=1/200){if(disposed)throw new Error(t('Physics world was disposed'));if(!Number.isFinite(seconds)||seconds<=0||seconds>.1||Math.abs(seconds*200-Math.round(seconds*200))>1e-8)throw new Error(t('Step must be a positive multiple of 1/200 s, at most 0.1 s'));for(let i=0;i<Math.round(seconds*200);i++){if(grab){const body=byId.get(grab.id),p=body.GetPosition(),q=body.GetRotation(),point=quaternionPoint(grab.local,[q.GetX(),q.GetY(),q.GetZ(),q.GetW()]).map((v,i)=>v+[p.GetX(),p.GetY(),p.GetZ()][i]),at=new J.RVec3(...point),velocity=bodies.GetPointVelocity(body.GetID(),at),speed=[velocity.GetX(),velocity.GetY(),velocity.GetZ()],acceleration=point.map((v,i)=>400*(grab!.target[i]*.001-v)-40*speed[i]),length=Math.hypot(...acceleration),force=new J.Vec3(...acceleration.map(v=>v*Math.min(1,100/Math.max(1e-9,length))*bodyMass.get(grab!.id)!));body.AddForce(force,at);bodies.ActivateBody(body.GetID());J.destroy(force);J.destroy(at);}
     world.Step(1/200,1);elapsed+=1/200;}},
   get time(){return elapsed;},
