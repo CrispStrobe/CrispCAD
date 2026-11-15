@@ -19,6 +19,8 @@ full constrained sketches and an exact surface/solid backend remain roadmap work
   families, including linked tube/washer walls and bores, rounded boxes, capsules,
   tapered solids, polygonal prisms and torus rings. Counterbores, countersinks,
   ports, bosses and ribs also retain bore, clearance, angle and support dimensions.
+  [Curved shapes and vessels](docs/CURVED-SHAPES.md) retain their profiles, walls,
+  floors and seats.
 - Practical part templates and editable generators for screws,
   threads, lettering and other parts. Seven conventional screw-point styles include
   editable cup, dog and tapered ends; headless set-screw and wood-screw presets are available. Name tags support rounded corners and bundled

@@ -189,3 +189,14 @@ seat depth is derived from the angle and displayed live; clearance is diametral.
 Edited bores, support ribs and recesses have actual-geometry collision tests.
 The remaining shape-parameter gap is 22. Curves/vessels and mechanical parts
 remain ahead; this does not add constrained sketches or certified fastener fits.
+
+
+## Curved/hollow generator retention — 2026-11-15
+
+Six more shapes retain profile and section inputs across GUI, model source, MCP
+and saved revisions. Vases use a smooth profile with a separate floor; finishing
+washers derive seat depth from their angle. Collision construction handles dense
+radial profiles, small tips and compound-sector seams without changing Jolt or
+loosening qualification limits. The parameter gap is now 16; bent tubes, lofts,
+mechanical constructions and decorative templates remain. See
+[CURVED-SHAPES.md](CURVED-SHAPES.md) for formulas and boundaries.
