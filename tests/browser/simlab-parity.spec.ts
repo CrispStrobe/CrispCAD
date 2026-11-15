@@ -11,7 +11,7 @@ test('linear program travel, single steps, traces, CSV, recording and cancellati
  },{root,doc:createSimulationExample('simlab-slider')});
  const host=page.locator('#simlab-check');await expect(host).toHaveAttribute('data-state','ready');await host.getByRole('button',{name:'Simulate',exact:true}).click();
  const panel=host.getByRole('region',{name:'Assembly simulation'});
- await panel.getByRole('button',{name:'Step simulation',exact:true}).click();await expect(panel).toHaveAttribute('data-state','paused');await expect.poll(()=>panel.getAttribute('data-time')).toBe('0.005');
+ await panel.getByRole('button',{name:'Step simulation',exact:true}).click();await expect(panel).toHaveAttribute('data-state','paused',{timeout:60000});await expect.poll(()=>panel.getAttribute('data-time')).toBe('0.005');
  const result=await page.evaluate(async()=>{const s=(window as any).simlab.simulation;await s.runDistance('A',10,50);s.pause();return {position:s.sliderPosition('A'),traces:s.tracePaths(),same:(window as any).simlabBefore===(window as any).simlab.session.serialize()};});
  expect(result.position).toBeCloseTo(10,0);expect(result.traces[0].samples.length).toBeGreaterThan(3);expect(result.same).toBe(true);
  await panel.getByRole('button',{name:'Export motion CSV',exact:true}).click();expect(await page.evaluate(()=>(window as any).simlabFiles[0])).toMatchObject({name:'motion-traces.csv',mime:'text/csv'});

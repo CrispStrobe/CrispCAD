@@ -26,9 +26,21 @@ Licensing boundary: keep the BSD CAD packages independent; do not copy CrispMesh
 
 Planning estimate, not a delivery commitment: a few days for an embedding proof; several weeks for a dependable simplified-scan workflow. General mesh repair, large scans and texture-preserving edits require separate scoping.
 
-## Later: Brickwright integration
+## Shared Brickwright editor and simulation
 
-Use the existing SB3 sidecar adapter and coordinate conversions. Wire the shared editor to Brickwright's host UI and persistence. Connector/physics metadata and LEGO assembly semantics remain explicit host responsibilities. See INTEGRATION.md.
+The Brickwright integration now packages the same editor, geometry and simulation
+workers used by the standalone app. Host-owned sessions retain undo across mounts;
+SB3 sidecars retain the full versioned design. Shared simulation includes worlds,
+materials, motors, axle/slider/pivot connections, traces, live interaction and
+bounded replay. The native app and host SDK use the same qualified Jolt release.
+See [coverage and limits](SIMLAB-PARITY.md).
+
+Keep releases synchronized with `build:brickwright-sdk`, Brickwright's
+`sync-cad-sdk.mjs`, and `verify:brickwright-sync`. Host visibility, persistence and
+program controls remain in Brickwright. LEGO-specific geometry/connectors and
+custom-part mechanical qualification are still explicit host responsibilities.
+General spring deformation, gear/belt/thread mates, runtime assembly fitting and
+hosted collaboration remain separate work. See [integration](INTEGRATION.md).
 
 ## Required product direction: UX, parametrics and iterations
 
