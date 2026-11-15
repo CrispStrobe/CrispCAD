@@ -9,9 +9,11 @@ uses the same index and browser cache as the standalone app; hosts can provide a
 cache adapter through `ModelLibraryOptions`.
 
 The snapshot is pinned to Adafruit commit
-`9f2a89f3d5c3491886d58cb7fe83385417563cf4`. The indexed mirror commit, exact
-paths and hashes are in `packages/editor/src/adafruit-archive-data.ts`; the
-mirror retains every original file and its root MIT notice. The archive index is
+`9f2a89f3d5c3491886d58cb7fe83385417563cf4`. The public media mirror is pinned
+to `fb6c7632c50e9a1d58ab57167d6d3f9f9365ae73`; its [complete file manifest](https://github.com/CrispStrobe/brickwright-media-lab/blob/fb6c7632c50e9a1d58ab57167d6d3f9f9365ae73/projects/adafruit-cad-parts/files.json)
+records all 1,825 originals (2,449,273,804 bytes). The editor index groups them
+into 483 cards and retains exact paths, hashes, filename-derived formats and
+unknown-unit status. The mirror retains every original file and its root MIT notice. The archive index is
 separate from the qualified model catalogue: STEP, Fusion, STL and other files
 have not been screened merely by being listed. For an STL, a user may explicitly
 choose units and up axis and request insertion; the exact file is checked and

@@ -2,6 +2,7 @@
 import {describe,it,expect,vi} from 'vitest';
 import {sha256Hex,validateModelLibraryCatalogue,createCadSession} from '@brickwright/cad-core';
 import {fetchArchiveFile,screenArchiveSTL} from '../packages/editor/src/model-library-archive.js';
+import {adafruitArchive} from '../packages/editor/src/adafruit-archive-data.js';
 import {createGeometryKernel,insertModelLibrarySTL} from '@brickwright/cad-geometry';
 import {readFileSync} from 'node:fs';
 import type {ModelLibraryArchive} from '../packages/editor/src/model-library-archive.js';
@@ -39,4 +40,14 @@ describe('original archive retrieval',()=>{
   await expect(screenArchiveSTL(archive,folder,file,new Uint8Array(bytes.length),'mm','Z','2026-11-15')).rejects.toThrow('identity');
  });
 
+});
+
+it('indexes every original file once under the exact mirrored revision',()=>{
+ const files=adafruitArchive.folders.flatMap(folder=>folder.files);
+ expect(adafruitArchive.upstreamCommit).toBe('9f2a89f3d5c3491886d58cb7fe83385417563cf4');
+ expect(adafruitArchive.commit).toMatch(/^[a-f0-9]{40}$/);
+ expect(adafruitArchive.baseUrl).toContain(`/${adafruitArchive.commit}/`);
+ expect(adafruitArchive.folders).toHaveLength(483);expect(files).toHaveLength(1825);
+ expect(new Set(files.map(file=>file.path)).size).toBe(files.length);
+ expect(files.every(file=>/^[a-f0-9]{64}$/.test(file.sha256)&&file.bytes>0&&file.bytes<=64*1024*1024&&file.units==='unknown')).toBe(true);
 });
