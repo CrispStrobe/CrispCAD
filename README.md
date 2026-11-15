@@ -13,7 +13,8 @@ full constrained sketches and an exact surface/solid backend remain roadmap work
 
 - Searchable shapes with an optional right-hand dock or screen-fitting dialog. Drag shapes onto highlighted
   faces, or tap a shape and then a surface on tablets. Placement previews snap,
-  orient to faces and commit as one undoable edit.
+  orient to faces and commit as one undoable edit. Existing shapes also snap onto
+  highlighted faces while dragging; the magnet or `C` disables this behavior.
 - [Retained design dimensions](docs/RETAINED-SHAPES.md) for twelve everyday shape
   families, including linked tube/washer walls and bores, rounded boxes, capsules,
   tapered solids, polygonal prisms and torus rings.
@@ -38,6 +39,7 @@ full constrained sketches and an exact surface/solid backend remain roadmap work
 
 See [parameters](docs/PARAMETERS.md), [code mode](docs/CODE-MODE.md) and the
 [roadmap](docs/ROADMAP.md) for examples and current boundaries.
+See [surface dragging](docs/SURFACE-DRAGGING.md) for snapping and precision controls.
 The [shape-quality audit](docs/SHAPE-AND-UX-QUALITY.md) records geometry checks
 and the remaining shape-specific parameter gaps.
 
