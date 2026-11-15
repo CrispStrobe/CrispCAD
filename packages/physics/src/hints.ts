@@ -29,13 +29,36 @@ export async function prepareDocumentCollisions(input:CadDocument,result:Geometr
  const localCache=new Map<string,import('@brickwright/cad-geometry').BodyMesh>();
  const worldPoint=(p:Vec3,transforms:Transform[])=>transforms.reduceRight((value,t)=>point(value,t),p);
  function worldMesh(id:string,parents:Transform[]){let body=localCache.get(id);if(!body){const nodes:CadDocument['nodes']={};const visit=(key:string)=>{if(nodes[key])return;const n=doc.nodes[key];nodes[key]=n;if(n.kind==='boolean')n.inputs.forEach(visit);};visit(id);body=kernel.evaluate({...doc,nodes,roots:[id],joints:undefined,parametric:doc.parametric?{...doc.parametric,bindings:doc.parametric.bindings.filter(b=>Object.hasOwn(nodes,b.nodeId))}:undefined}).bodies[0];localCache.set(id,body);}if(!parents.length)return body;const positions=new Float32Array(body.positions.length),min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(let i=0;i<positions.length;i+=3){const p=worldPoint([body.positions[i],body.positions[i+1],body.positions[i+2]],parents);for(let j=0;j<3;j++){positions[i+j]=p[j];min[j]=Math.min(min[j],p[j]);max[j]=Math.max(max[j],p[j]);}}return {...body,positions,bounds:{min,max}};}
- function candidatesFor(id:string,parents:Transform[]):ConvexPiece[]{
+ function candidatesFor(id:string,parents:Transform[],refineAnnular=false):ConvexPiece[]{
   const node=doc.nodes[id],hint=node.physics?.collisionHint;
-  if(node.kind==='boolean'&&node.operation==='union'){const pieces=node.inputs.flatMap(child=>candidatesFor(child,[...parents,node.transform]));if(pieces.length>2048)throw new Error(t('Construction collision exceeds its compound budget'));return pieces;}
-  if(node.kind==='boolean'&&node.operation==='subtract'){const transforms=[...parents,node.transform],base=candidatesFor(node.inputs[0],transforms),cuts=node.inputs.slice(1).map(child=>worldMesh(child,transforms));const seeded=node.physics?.sourcePreset==='nut'?kernel.collisionCSG.grid(candidatesFor(node.inputs[0],[])).map(piece=>{const positions=new Float64Array(piece.positions.length);for(let i=0;i<positions.length;i+=3){const p=worldPoint([piece.positions[i],piece.positions[i+1],piece.positions[i+2]],transforms);positions.set(p,i);}return {...piece,positions};}):base;return kernel.collisionCSG.subtract(seeded,cuts);}
-  if(node.kind==='mesh'&&node.physics?.sourcePreset==='bent-tube'){
+  if(node.kind==='boolean'&&node.operation==='union'){const pieces=node.inputs.flatMap(child=>candidatesFor(child,[...parents,node.transform],refineAnnular));if(pieces.length>2048)throw new Error(t('Construction collision exceeds its compound budget'));return pieces;}
+  if(node.kind==='boolean'&&node.operation==='subtract'){const transforms=[...parents,node.transform],base=candidatesFor(node.inputs[0],transforms,refineAnnular),cuts=node.inputs.slice(1).map(child=>worldMesh(child,transforms));const seeded=node.physics?.sourcePreset==='nut'?kernel.collisionCSG.grid(candidatesFor(node.inputs[0],[],refineAnnular)).map(piece=>{const positions=new Float64Array(piece.positions.length);for(let i=0;i<positions.length;i+=3){const p=worldPoint([piece.positions[i],piece.positions[i+1],piece.positions[i+2]],transforms);positions.set(p,i);}return {...piece,positions};}):base;return kernel.collisionCSG.subtract(seeded,cuts);}
+  if(node.kind==='mesh'&&node.physics?.sourcePreset==='bent-tube'&&hint?.kind!=='annular-grid'){
    const points=(theta:number,phi:number,radius:number):Vec3=>[(20+radius*Math.cos(phi))*Math.cos(theta),(20+radius*Math.cos(phi))*Math.sin(theta),radius*Math.sin(phi)];const pieces:ConvexPiece[]=[];
    for(let i=0;i<12;i++)for(let j=0;j<32;j++){const vertices:Vec3[]=[];for(const step of [i,i+.5,i+1])for(const side of [j,j+1])for(const radius of [3,5])vertices.push(worldPoint(points(step/12*Math.PI/2,side/32*Math.PI*2,radius),[...parents,node.transform]));pieces.push(kernel.hullPoints(vertices));}return pieces;
+  }
+  if(hint?.kind==='annular-grid'&&node.kind==='mesh'){
+   const S=hint.sides,N=hint.segments,at=(ring:number,side:number,inner:number):Vec3=>{const i=(ring*2+inner)*(S+1)+(side+S)%S;return [node.positions[i*3],node.positions[i*3+1],node.positions[i*3+2]];},transforms=[...parents,node.transform],pieces:ConvexPiece[]=[];
+   // Neighbour interpolation overlaps shared sector boundaries without relying
+   // on a particular bend radius or section shape. Qualification includes it.
+   const edge=(ring:number,side:number,inner:number,direction:number):Vec3=>{const a=at(ring,side,inner),b=at(ring,side+direction,inner);return a.map((v,i)=>v+1e-4*(b[i]-v)) as Vec3;};
+   const filled=Array.from({length:N+1},(_,ring)=>Array.from({length:S},(_,side)=>at(ring,side,1))).flat().every(p=>Math.hypot(p[0],p[1])<1e-6),groups=Math.min(N,Math.floor((filled?2047:2048)/S));
+   if(refineAnnular&&!filled){
+    if(N*S>2048)throw new Error(t('Section collision refinement exceeds its compound budget'));
+    const faces=[0,1,3,0,3,2,4,6,7,4,7,5,0,4,5,0,5,1,2,3,7,2,7,6,0,2,6,0,6,4,1,5,7,1,7,3];
+    for(let ring=0;ring<N;ring++)for(let side=0;side<S;side++){
+     const v:Vec3[]=[];for(const inner of [0,1])for(const level of [ring,ring+1])for(const [offset,direction]of [[0,-1],[1,1]])v.push(worldPoint(edge(level,side+offset,inner,direction),transforms));
+     let volume=0;const origin=v[0];for(let i=0;i<faces.length;i+=3){const [a,b,c]=faces.slice(i,i+3).map(j=>v[j].map((n,k)=>n-origin[k]));volume+=a[0]*(b[1]*c[2]-b[2]*c[1])+a[1]*(b[2]*c[0]-b[0]*c[2])+a[2]*(b[0]*c[1]-b[1]*c[0]);}
+     const indices=new Uint32Array(faces);if(volume<0)for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
+     pieces.push(...kernel.partitionConvex({positions:new Float32Array(v.flat()),indices},Math.max(1,2048-pieces.length)));if(pieces.length>2048)throw new Error(t('Section collision refinement exceeds its compound budget'));
+    }
+    return pieces;
+   }
+   for(let group=0;group<groups;group++)for(let side=0;side<S;side++){const points:Vec3[]=[];for(let r=Math.floor(group*N/groups);r<=Math.floor((group+1)*N/groups);r++)for(const inner of [0,1]){points.push(worldPoint(edge(r,side,inner,-1),transforms),worldPoint(edge(r,side+1,inner,1),transforms));}pieces.push(kernel.hullPoints(points));}
+   // Keep the centre of filled transitions in one supporting face, rather than
+   // making all sector tips meet at a numerically ambiguous axis.
+   if(filled){let radius=Infinity;for(let ring=0;ring<=N;ring++)for(let side=0;side<S;side++){const p=at(ring,side,0);radius=Math.min(radius,Math.hypot(p[0],p[1])*.5);}const points:Vec3[]=[];for(const z of [at(0,0,1)[2],at(N,0,1)[2]])for(let side=0;side<32;side++)points.push(worldPoint([radius*Math.cos(side*Math.PI/16),radius*Math.sin(side*Math.PI/16),z],transforms));pieces.push(kernel.hullPoints(points));}
+   return pieces;
   }
   if(hint&&node.kind==='mesh'){
    const stride=hint.stride??1,perSide=hint.sides+(hint.seam===false?0:1),at=(ring:number,side:number):Vec3=>{const i=hint.layout==='rows'?ring*perSide+side:side*(hint.segments+1)+ring;return [node.positions[i*3],node.positions[i*3+1],node.positions[i*3+2]];},transforms=[...parents,node.transform],pieces:ConvexPiece[]=[];
@@ -55,6 +78,12 @@ export async function prepareDocumentCollisions(input:CadDocument,result:Geometr
   }
   return kernel.partitionConvex(worldMesh(id,parents));
  }
- for(const mesh of result.bodies.filter(b=>!b.reference&&!b.hole)){try{prepared.set(mesh.id,await prepareCollision(mesh,kernel,{candidates:candidatesFor(mesh.id,[])}));}catch(first){try{prepared.set(mesh.id,await prepareCollision(mesh,kernel));}catch(second){throw new Error(t`${mesh.name}: source construction failed (${first instanceof Error?first.message:String(first)}); whole-mesh preparation also failed. ${second instanceof Error?second.message:String(second)}`);}}}
+ const annularCache=new Map<string,boolean>();const hasAnnular=(id:string):boolean=>{const prior=annularCache.get(id);if(prior!==undefined)return prior;const n=doc.nodes[id],value=n.physics?.collisionHint?.kind==='annular-grid'||n.kind==='boolean'&&n.inputs.some(hasAnnular);annularCache.set(id,value);return value;};
+ for(const mesh of result.bodies.filter(b=>!b.reference&&!b.hole)){
+  try{prepared.set(mesh.id,await prepareCollision(mesh,kernel,{candidates:candidatesFor(mesh.id,[])}));}
+  catch(first){let construction=first;if(hasAnnular(mesh.id)){try{prepared.set(mesh.id,await prepareCollision(mesh,kernel,{candidates:candidatesFor(mesh.id,[],true)}));continue;}catch(refinement){construction=new Error(`${first instanceof Error?first.message:String(first)}; ${refinement instanceof Error?refinement.message:String(refinement)}`);}}
+   try{prepared.set(mesh.id,await prepareCollision(mesh,kernel));}catch(second){throw new Error(t`${mesh.name}: source construction failed (${construction instanceof Error?construction.message:String(construction)}); whole-mesh preparation also failed. ${second instanceof Error?second.message:String(second)}`);}
+  }
+ }
  return prepared;
 }
