@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "measuredOn": "2026-11-15",
+  "featureCheckpoint": "d90bbf126285600fab7a8726a011848a749501b0",
+  "scope": "Selection corner/side/height handles, physical dimension delta snapping, fixed anchors, proportional/centre options and precise numeric entry. No project/history format change or new runtime dependency. Optional classic gizmo and scale-factor readout, saved host preference/API, one-row shape palette controls, compact visual identity/style controls and axis-labelled Properties rows.",
+  "verification": {
+    "productionBuild": {
+      "status": "passed",
+      "logSha256": "eb4358d24ffd6599e5ac7f75e6b8496c8278adb564a14da01e8e9afab9cebafd"
+    },
+    "unit": {
+      "passed": 871,
+      "skipped": 1,
+      "filesPassed": 77,
+      "scope": "Full unit suite including six new resize-math tests; pure math unchanged since 5850394.",
+      "logSha256": "5e02c3a4afff8961033e902aa5465e2c2cc07a9d4cfe066fffe288fb9d45226f"
+    },
+    "browser": {
+      "focused": {
+        "passed": 16,
+        "checkpoint": "483e19ab08058175246840bfc0da30d1fafe60c2",
+        "scope": "Desktop Chromium and iPad WebKit: real handle drag, live mm values, single history commit, Escape, fixed opposite side, centre and proportional resizing, fine/grid Off, exact dimension entry, undo/reload, height/base invariant, reference ruler movement, rotated screw and rotation cancellation.",
+        "logSha256": "c79c68eb91a3f42c900d47dcb82601b53d1e05b2e108d3ab0933db63746feeae"
+      },
+      "numericFine": {
+        "passed": 2,
+        "checkpoint": "cf1344c23a644fe047afe8fcda6c91e5c446b63f",
+        "scope": "Final numeric modifier adjustment: Shift+Arrow fine-steps one dimension; proportion toggle links remaining dimensions.",
+        "logSha256": "175f94a032b0e74ba97795a4618395fa6c05e7531a88ed71c4790c025f2831aa"
+      },
+      "earlierBroaderRun": {
+        "passed": 38,
+        "failed": 2,
+        "scope": "Surface placement, dock persistence, screw variants, live parameters and compact workbench. The two failures expected Select after cancelling an active rotation; baseline production deliberately requires a second Escape. Corrected expectations pass in the focused rerun.",
+        "logSha256": "e313c2441523d79ff327d9f842e93f1848f8d182b0a905ddb05af01619708c61"
+      },
+      "interruptedRun": "One run hit a ready-state timeout during concurrent native compilation under heavy host load and was interrupted. The subsequent post-compilation focused rerun passed."
+    },
+    "german": {
+      "messages": 1376,
+      "status": "passed",
+      "logSha256": "6693ab14b43807e2b84574555072a2df5148c43ceafdc47e236ffda61a23a5dc"
+    },
+    "offlineSdk": {
+      "status": "passed",
+      "checkpoint": "d90bbf126285600fab7a8726a011848a749501b0",
+      "scope": "All six packages install offline with exact dependency tarballs and empty cache; editor, geometry, retained code, fonts and actual SI physics checks pass.",
+      "logSha256": "898852c58bbca82ea515d6d3748b04b4acf05740a5b7d2d3767ed37f041824f2"
+    },
+    "compactAndClassic": {
+      "runtimeCheckpoint": "4b6a39a4410762bc5812d7913dd9b3a725c7a0b3",
+      "focusedUnit": {
+        "passed": 10,
+        "logSha256": "8e1aa6c4469856af16c706b6d864b6e9f28fd7bce78ebd17829c74c347348ffa"
+      },
+      "browser": {
+        "initial": {
+          "passed": 4,
+          "failed": 2,
+          "scope": "Classic gizmo actual drag/factor readout/persistence and compact Properties colour/Solid-Hole/numeric editing passed in both browsers. Two layout assertions incorrectly measured Cube in the second category rather than the first actual thumbnail.",
+          "logSha256": "4cf36447b50e07ec48832348e48dd32ee79c8b69558903599a5712a7e45d49ad"
+        },
+        "correctedAndRegression": {
+          "passed": 8,
+          "scope": "Both browsers: first thumbnail <100 px from panel top in popup/dock, extras/lettering, SVG import, docking persistence, surface placement/cancellation and new dimension handles. d90bbf1 corrects only the test fixture selector.",
+          "logSha256": "ef97583639dd59d86b47f2bcfd837f51c998e49dc2c262fea5ebf192c2b165f2"
+        }
+      }
+    },
+    "nativeMac": {
+      "build": "27",
+      "version": "0.1.0",
+      "commit": "d90bbf126285600fab7a8726a011848a749501b0",
+      "dirty": false,
+      "builtAt": "2026-11-15T06:59:50.546Z",
+      "status": "Installed and launched; live HTTP receipt and installed bundle version verified. Native smoke passed. Final assets repackaged in the compiled, unchanged native host; bundle signature verified.",
+      "smokeLogSha256": "0154144b5ac3327c902c9dee3e5629c853821259ab7a1e9204fccd37d2109b48",
+      "installLogSha256": "3a3758ab815663b0fa03c13033260b4ac6666031ff04e551aa26c222d65a2fa5"
+    },
+    "nativeIPad": {
+      "build": "14",
+      "version": "0.1.0",
+      "commit": "d90bbf126285600fab7a8726a011848a749501b0",
+      "dirty": false,
+      "builtAt": "2026-11-15T06:59:50.546Z",
+      "status": "Ad-hoc archive/export succeeded; installed and launched over WLAN. Device app listing confirms bundle version 14.",
+      "archiveLogSha256": "bfc9ca6c394a7cbe5fa6beb3393a5941f6e6e050adc294f5912cd7ba92ebd9cf",
+      "installLogSha256": "18ef4f45e1cab81a4d432a9543ef7806b971456f8cb28a912d375988fb6fdc61",
+      "receiptLogSha256": "185b2eb2541e37101ddbfb35c098d3c1e3c49fca6014fafa3148cd751d17b157"
+    }
+  },
+  "referenceBoundary": "Independent BSD-3-Clause code. Published Autodesk primary documents informed interaction conventions; no upstream implementation or assets copied. No logged-in live Tinkercad session claimed.",
+  "ci": "Actions remain disabled in the private repository.",
+  "concurrentMain": {
+    "base": "4e38783",
+    "integratedCheckpoint": "4c4ee444d8319b78394b4beeb3ef6e0e419d3712",
+    "scope": "Concurrent LDraw-library update preserved with a clean merge. Delivered native builds contain the UX checkpoint above; this combined source is checked separately.",
+    "productionBuild": "passed",
+    "unitPassed": 13,
+    "unitLogSha256": "2b819a153224d4eb10cdae5860b0e16346146dfe5642c23b7dcfbd04e52ff10c",
+    "browser": {
+      "passed": 4,
+      "scope": "Chromium and iPad WebKit: offline local STL insertion, provenance, undo/redo and hash-mismatch rejection with the compact editor.",
+      "logSha256": "6532b7534ac3ea70d1097c7fb1fad3ad470d20c0f85e1fe866584611e31e3a3c"
+    }
+  }
+}
