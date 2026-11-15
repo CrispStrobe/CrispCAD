@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: BSD-3-Clause
+import {test,expect} from '@playwright/test';
+import {createSimulationExample} from '../../packages/editor/src/simulation-examples.js';
+const root='/@fs'+process.cwd();
+test('linear program travel, single steps, traces, CSV, recording and cancellation preserve the design',async({page})=>{
+ test.setTimeout(120000);const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('/');
+ await page.evaluate(async({root,doc})=>{
+  const {mountCadEditor}=await import(root+'/packages/editor/src/index.ts');
+  const host=document.createElement('div');host.id='simlab-check';Object.assign(host.style,{position:'fixed',inset:'0',zIndex:'9999'});document.body.append(host);
+  const w=window as any;w.simlabFiles=[];w.simlabInterrupts=0;w.simlab=mountCadEditor(host,{document:doc,wasmURL:'/cad-assets/manifold.wasm',onExport:(file:any)=>w.simlabFiles.push({name:file.name,size:file.bytes.length,mime:file.mime}),onSimulationInterrupt:()=>w.simlabInterrupts++});await w.simlab.whenIdle();w.simlabBefore=w.simlab.session.serialize();
+ },{root,doc:createSimulationExample('simlab-slider')});
+ const host=page.locator('#simlab-check');await expect(host).toHaveAttribute('data-state','ready');await host.getByRole('button',{name:'Simulate',exact:true}).click();
+ const panel=host.getByRole('region',{name:'Assembly simulation'});
+ await panel.getByRole('button',{name:'Step simulation',exact:true}).click();await expect(panel).toHaveAttribute('data-state','paused');await expect.poll(()=>panel.getAttribute('data-time')).toBe('0.005');
+ const result=await page.evaluate(async()=>{const s=(window as any).simlab.simulation;await s.runDistance('A',10,50);s.pause();return {position:s.sliderPosition('A'),traces:s.tracePaths(),same:(window as any).simlabBefore===(window as any).simlab.session.serialize()};});
+ expect(result.position).toBeCloseTo(10,0);expect(result.traces[0].samples.length).toBeGreaterThan(3);expect(result.same).toBe(true);
+ await panel.getByRole('button',{name:'Export motion CSV',exact:true}).click();expect(await page.evaluate(()=>(window as any).simlabFiles[0])).toMatchObject({name:'motion-traces.csv',mime:'text/csv'});
+ const record=panel.getByRole('button',{name:'Record simulation',exact:true});await expect(record).toBeVisible();await record.click();
+ await page.waitForTimeout(1200);await panel.getByRole('button',{name:'Save video',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as any).simlabFiles.filter((f:any)=>f.mime.startsWith('video/')).length)).toBe(1);
+ expect(await page.evaluate(()=>(window as any).simlabFiles.at(-1).size)).toBeGreaterThan(1000);
+ await panel.getByRole('button',{name:'Reset simulation',exact:true}).click();await expect(panel).toHaveAttribute('data-state','idle');expect(await page.evaluate(()=>(window as any).simlab.simulation.tracePaths())).toEqual([]);
+ const canceled=await page.evaluate(async()=>{const e=(window as any).simlab,s=e.simulation;const baseline=(window as any).simlabInterrupts;const pending=s.runDistance('A',100,10).then(()=>false,()=>true);await new Promise(r=>setTimeout(r,200));e.session.rename('Edited during program');return {canceled:await pending,interrupts:(window as any).simlabInterrupts-baseline,state:s.state.state};});
+ expect(canceled).toEqual({canceled:true,interrupts:1,state:'idle'});
+ const thrown=await page.evaluate(async()=>{const e=(window as any).simlab,before=e.session.serialize();await e.simulation.throwBall([0,-40,80],[0,100,0]);await new Promise(r=>setTimeout(r,200));const frame=e.simulation.snapshot();e.simulation.pause();return {count:frame.poses.filter((p:any)=>p.previewRadiusMm===6).length,same:before===e.session.serialize()};});expect(thrown).toEqual({count:1,same:true});await expect(host.locator('canvas[data-preview-balls]')).toHaveAttribute('data-preview-balls','1');
+ expect(errors).toEqual([]);
+ await page.evaluate(()=>(window as any).simlab.dispose());
+});
+test('world and connector edits persist, and the passive four-bar moves with a single driven port',async({page})=>{
+ test.setTimeout(120000);await page.goto('/');
+ await page.evaluate(async({root,doc})=>{const {mountCadEditor}=await import(root+'/packages/editor/src/index.ts');const host=document.createElement('div');host.id='simlab-check';Object.assign(host.style,{position:'fixed',inset:'0',zIndex:'9999'});document.body.append(host);(window as any).simlab=mountCadEditor(host,{document:doc,wasmURL:'/cad-assets/manifold.wasm'});await (window as any).simlab.whenIdle();},{root,doc:createSimulationExample('simlab-four-bar')});
+ const host=page.locator('#simlab-check');await host.getByRole('button',{name:'Simulate',exact:true}).click();const panel=host.getByRole('region',{name:'Assembly simulation'});
+ await panel.getByText('World settings',{exact:true}).click();await panel.getByLabel('Gravity preset',{exact:true}).selectOption('moon');await panel.getByRole('button',{name:'Apply world settings',exact:true}).click();expect(await page.evaluate(()=>(window as any).simlab.session.state.document.simulation.gravity)).toEqual([0,0,-1.62]);
+ const result=await page.evaluate(async()=>{const e=(window as any).simlab,s=e.simulation,before=e.session.serialize();await s.setMotor('A',90,.05);await new Promise(r=>setTimeout(r,1300));s.pause();return {angles:s.snapshot().angles,unchanged:e.session.serialize()===before,traces:s.tracePaths().map((p:any)=>p.samples.length)};});
+ expect(Math.abs(Object.values(result.angles)[0] as number)).toBeGreaterThan(10);expect(Object.values(result.angles).filter(a=>Math.abs(a as number)>2).length).toBeGreaterThan(2);expect(result.unchanged).toBe(true);expect(result.traces[0]).toBeGreaterThan(3);
+ await panel.getByRole('button',{name:'Reset simulation',exact:true}).click();await panel.getByText('Connectors',{exact:true}).click();await expect(panel.getByRole('button',{name:'Apply connector limits',exact:true})).toHaveCount(4);
+ await page.screenshot({path:'test-results/simlab-four-bar.png'});await page.evaluate(()=>(window as any).simlab.dispose());
+});
+test('a pointer drag moves a free body through forces and releases without editing the model',async({page})=>{
+ test.setTimeout(120000);await page.goto('/');
+ const doc=createSimulationExample('simlab-material-drop');doc.simulation!.gravity=[0,0,0];
+ await page.evaluate(async({root,doc})=>{const {mountCadEditor}=await import(root+'/packages/editor/src/index.ts');const host=document.createElement('div');host.id='simlab-check';Object.assign(host.style,{position:'fixed',inset:'0',zIndex:'9999'});document.body.append(host);(window as any).simlab=mountCadEditor(host,{document:doc,wasmURL:'/cad-assets/manifold.wasm'});await (window as any).simlab.whenIdle();(window as any).simlab.frame();},{root,doc});
+ const host=page.locator('#simlab-check');await host.getByRole('button',{name:'Simulate',exact:true}).click();await page.evaluate(()=>(window as any).simlab.simulation.start());
+ // Derive a real hit from the camera, rather than guessing a pixel position.
+ const target=await page.evaluate(async root=>{const THREE=await import(root+'/node_modules/three/build/three.module.js');const c=document.querySelector('#simlab-check')!.shadowRoot!.querySelector('canvas[data-camera-position]') as HTMLCanvasElement,r=c.getBoundingClientRect();const camera=new THREE.PerspectiveCamera(42,r.width/r.height,.1,200000);camera.up.set(0,0,1);camera.position.fromArray(JSON.parse(c.dataset.cameraPosition!));camera.lookAt(new THREE.Vector3().fromArray(JSON.parse(c.dataset.cameraTarget!)));camera.updateMatrixWorld();const p=new THREE.Vector3(-20,0,100).project(camera);return {x:r.left+(p.x+1)*r.width/2,y:r.top+(1-p.y)*r.height/2};},root);
+ const before=await page.evaluate(()=>(window as any).simlab.session.serialize());await page.mouse.move(target.x,target.y);await page.mouse.down();await page.mouse.move(target.x+70,target.y-30,{steps:8});await page.waitForTimeout(700);await page.mouse.up();
+ const result=await page.evaluate(()=>{const e=(window as any).simlab;e.simulation.pause();return {poses:e.simulation.snapshot().poses,same:e.session.serialize()};});
+ expect(Math.hypot(...result.poses.find((p:any)=>p.id===doc.roots[0]).positionMm)).toBeGreaterThan(5);expect(result.same).toBe(before);await page.evaluate(()=>(window as any).simlab.dispose());
+});

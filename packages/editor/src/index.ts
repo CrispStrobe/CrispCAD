@@ -1,3 +1,4 @@
+import {physicsMaterials} from '@brickwright/cad-core';
 import {mountSimulationPanel} from './simulation-panel.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import {prepareMeshExport} from './export-policy.js';
@@ -56,6 +57,7 @@ export interface CadEditorOptions {
   document?: CadDocument;
   createWorker?: () => Worker;
   onDocumentChange?: (document: CadDocument, revision: number) => void;
+  onSimulationInterrupt?:()=>void;
   onSelectionChange?: (selection: readonly string[]) => void;
   onExport?: (file: CadFile) => void | Promise<void>;
   requestOpen?: () => Promise<{ name: string; bytes: Uint8Array } | null>;
@@ -107,7 +109,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     const b = el('button', className); const icon = toolIcon(label); if (icon) b.append(icon); const display = translate ? t(label) : label; b.append(el('span', '', display)); b.type = 'button'; b.title = display; b.setAttribute('aria-label', display); b.addEventListener('click', () => run(action)); parent.append(b); return b;
   }
   function togglePanel(panel: HTMLElement, toggle: HTMLButtonElement) { const visible = getComputedStyle(panel).display !== 'none'; panel.classList.toggle('closed', visible); panel.classList.toggle('open', !visible); toggle.setAttribute('aria-pressed', String(!visible)); }
-  const simulation=mountSimulationPanel(viewHost,session,options.wasmURL,whenIdle,value=>viewport.setSimulationPoses(value));
+  const simulation=mountSimulationPanel(viewHost,session,options.wasmURL,whenIdle,value=>viewport.setSimulationPoses(value),{dragEnabled:enabled=>viewport.setSimulationDragEnabled(enabled),pickPoint:done=>viewport.pickPoint(done),traces:paths=>viewport.setSimulationTraces(paths),canvas:viewport.canvas,onExport:options.onExport,onInterrupt:options.onSimulationInterrupt});
+  viewport.setSimulationDrag(value=>{void(value?simulation.dragBody(value.bodyId,value.point,value.target):simulation.releaseDrag()).catch(error=>{viewport.cancelSimulationDrag();options.onError?.(error);});});
   button('Simulate',()=>simulation.open(),toolbar,'compact-icon');
   const partsToggle = button('Objects', () => togglePanel(tree, partsToggle), status, 'panel-toggle objects-toggle');
   partsToggle.title = t('Show objects');
@@ -339,7 +342,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     if(!n.reference&&n.role!=='hole' && session.state.document.roots.includes(id)) {
       const physics=el('details','physics-settings');physics.append(el('summary','',t('Physics material')));inspector.append(physics);
       const p=n.physics??defaultPartPhysics();
-      for(const [key,label,step] of [['densityKgM3','Density (kg/m³)','10'],['friction','Friction','0.05'],['restitution','Restitution','0.05']] as const)field(physics,label,p[key],value=>session.update(id,{physics:{...p,[key]:Number(value)}}),'number',step);
+      const materialLabel=el('label','field',t('Material preset')),material=el('select');material.setAttribute('aria-label',t('Material preset'));for(const preset of [{id:'custom',name:'Custom'},...physicsMaterials]){const option=el('option','',t(preset.name));option.value=preset.id;material.append(option);}material.value=p.material??'custom';material.onchange=()=>{if(material.value!=='custom')run(()=>session.applyPhysicsMaterial(material.value,[id]));};materialLabel.append(material);physics.append(materialLabel,el('small','hint',t('Illustrative material presets; edit properties for your parts.')));
+      for(const [key,label,step] of [['densityKgM3','Density (kg/m³)','10'],['friction','Friction','0.05'],['restitution','Restitution','0.05']] as const)field(physics,label,p[key],value=>session.update(id,{physics:{...p,material:'custom',[key]:Number(value)}}),'number',step);
       const label=el('label','field',t('Body motion'));const select=el('select');select.setAttribute('aria-label',t('Body motion'));for(const motion of ['dynamic','static'] as const){const option=el('option','',t(motion==='dynamic'?'Dynamic':'Fixed in world'));option.value=motion;select.append(option);}select.value=p.motion;select.addEventListener('change',()=>run(()=>session.update(id,{physics:{...p,motion:select.value as 'dynamic'|'static'}})));label.append(select);physics.append(label);
       if(p.intent!=='rigid')physics.append(el('p','hint',t`Mechanical role: ${t(p.intent)}. Rigid collision preview does not qualify elastic behavior, mating fit or a complete mechanism.`));
       if(session.state.document.joints?.some(j=>j.bodyA===id||j.bodyB===id))button('Detach joints',()=>session.detachJoints([id]),inspector);

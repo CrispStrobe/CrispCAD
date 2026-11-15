@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: BSD-3-Clause
+import {t,defaultSimulationSettings,simulationSettings,simulationTracers,worldToLocalPoint} from '@brickwright/cad-core';
+import type {CadSession,Vec3,CadJoint} from '@brickwright/cad-core';
+export interface SimulationPoint {bodyId:string;point:Vec3;normal:Vec3}
+export function mountSimulationAuthoring(parent:HTMLElement,session:CadSession,fail:(e:unknown)=>void,pick?:(done:(point:SimulationPoint|null)=>void)=>()=>void){
+ const sections:HTMLFieldSetElement[]=[];
+ const section=(title:string)=>{const details=document.createElement('details'),summary=document.createElement('summary'),fields=document.createElement('fieldset');summary.textContent=t(title);details.append(summary,fields);parent.append(details);sections.push(fields);return fields;};
+ const number=(host:HTMLElement,label:string,value:number,step='.1')=>{const wrap=document.createElement('label'),input=document.createElement('input');wrap.textContent=t(label);input.type='number';input.value=String(value);input.step=step;input.style.width='78px';input.setAttribute('aria-label',t(label));wrap.append(input);host.append(wrap);return input;};
+ const button=(host:HTMLElement,label:string,action:()=>unknown)=>{const node=document.createElement('button');node.type='button';node.textContent=t(label);node.onclick=()=>{try{Promise.resolve(action()).catch(fail);}catch(e){fail(e);}};host.append(node);return node;};
+ const select=(host:HTMLElement,label:string,choices:[string,string][])=>{const wrap=document.createElement('label'),input=document.createElement('select');wrap.textContent=t(label);input.setAttribute('aria-label',t(label));for(const [value,text]of choices){const option=document.createElement('option');option.value=value;option.textContent=t(text);input.append(option);}wrap.append(input);host.append(wrap);return input;};
+ const vector=(host:HTMLElement,label:string,values:Vec3)=>{const group=document.createElement('div');group.setAttribute('role','group');group.setAttribute('aria-label',t(label));host.append(group);return values.map((value,i)=>number(group,`${label} ${'XYZ'[i]}`,value)) as [HTMLInputElement,HTMLInputElement,HTMLInputElement];};
+ const values=(inputs:HTMLInputElement[])=>inputs.map(input=>Number(input.value)) as Vec3;
+ const set=(inputs:HTMLInputElement[],v:Vec3)=>inputs.forEach((input,i)=>{input.value=String(v[i]);});
+ let worldDirty=false;
+ const world=section('World settings'),gravity=vector(world,'Gravity (m/s²)',[0,0,-9.81]);
+ const gravityPreset=select(world,'Gravity preset',[['earth','Earth'],['moon','Moon'],['mars','Mars'],['zero','Zero gravity'],['custom','Custom']]);
+ world.addEventListener('input',()=>{worldDirty=true;});gravityPreset.onchange=()=>{worldDirty=true;if(gravityPreset.value!=='custom')set(gravity,[0,0,{earth:-9.81,moon:-1.62,mars:-3.71,zero:0}[gravityPreset.value as 'earth']]);};
+ for(const input of gravity)input.oninput=()=>{gravityPreset.value='custom';};
+ const groundLabel=document.createElement('label'),ground=document.createElement('input');ground.type='checkbox';groundLabel.append(ground,document.createTextNode(t('Ground plane')));world.append(groundLabel);
+ const friction=number(world,'Ground friction',.4,'.05'),bounce=number(world,'Ground restitution',.05,'.05');
+ button(world,'Apply world settings',()=>{session.setSimulation({gravity:values(gravity),ground:ground.checked,groundFriction:Number(friction.value),groundRestitution:Number(bounce.value)});worldDirty=false;});
+ const connectors=section('Connectors'),kind=select(connectors,'Connector type',[['hinge','Axle (hinge)'],['slider','Slider'],['pivot','Pivot'],['fixed','Fixed connector']]);
+ const bodyA=select(connectors,'Connector body A',[]),bodyB=select(connectors,'Connector body B',[]);
+ const anchor=vector(connectors,'Connector point (mm)',[0,0,0]),axis=vector(connectors,'Connector axis',[0,0,1]);
+ const selected=button(connectors,'Use selected bodies',()=>{const ids=session.state.selection.filter(id=>session.state.document.roots.includes(id));if(ids.length!==2)throw new Error(t('Select two physical bodies'));bodyA.value=ids[0];bodyB.value=ids[1];set(anchor,session.state.document.nodes[ids[1]].transform.position);});
+ let cancelPick=()=>{};let picking=false;const pickButton=button(connectors,'Pick connector point',()=>{if(!pick)return;cancelPick();picking=true;pickButton.setAttribute('aria-pressed','true');cancelPick=pick(point=>{picking=false;pickButton.setAttribute('aria-pressed','false');if(point){set(anchor,point.point);set(axis,point.normal);}});});pickButton.disabled=!pick;
+ const useLimitsLabel=document.createElement('label'),useLimits=document.createElement('input');useLimits.type='checkbox';useLimitsLabel.append(useLimits,document.createTextNode(t('Limit travel')));connectors.append(useLimitsLabel);
+ const lower=number(connectors,'Lower travel limit',-180),upper=number(connectors,'Upper travel limit',180),cone=number(connectors,'Cone half-angle (degrees)',45);
+ const limitHint=document.createElement('p');connectors.append(limitHint);
+ const updateKind=()=>{const linear=kind.value==='slider';limitHint.textContent=t(linear?'Slider limits use millimetres.':'Axle limits use degrees.');useLimits.disabled=!['hinge','slider'].includes(kind.value);lower.disabled=upper.disabled=useLimits.disabled||!useLimits.checked;cone.disabled=kind.value!=='pivot';};
+ kind.onchange=()=>{lower.value=kind.value==='slider'?'-50':'-180';upper.value=kind.value==='slider'?'50':'180';updateKind();};useLimits.onchange=updateKind;updateKind();
+ button(connectors,'Add connector',()=>{const options:{limits?:[number,number];coneAngle?:number}={};if(useLimits.checked&&['hinge','slider'].includes(kind.value)){const factor=kind.value==='hinge'?Math.PI/180:1;options.limits=[Number(lower.value)*factor,Number(upper.value)*factor];}if(kind.value==='pivot')options.coneAngle=Number(cone.value)*Math.PI/180;session.addJoint(kind.value as CadJoint['kind'],bodyA.value,bodyB.value,values(anchor),values(axis),options);});
+ const connectorList=document.createElement('div');connectors.append(connectorList);
+ const tracers=section('Motion tracers'),traceBody=select(tracers,'Tracer body',[]),tracePoint=vector(tracers,'Tracer point (local mm)',[0,0,0]);
+ const color=document.createElement('input');color.type='color';color.value='#ef8354';color.setAttribute('aria-label',t('Tracer colour'));tracers.append(color);
+ button(tracers,'Add motion tracer',()=>session.addTracer(traceBody.value,values(tracePoint),color.value));
+ const tracePick=button(tracers,'Place motion tracer',()=>{cancelPick();if(pick)cancelPick=pick(point=>{if(point)session.addTracer(point.bodyId,worldToLocalPoint(point.point,session.state.document.nodes[point.bodyId].transform),color.value);});});tracePick.disabled=!pick;
+ const tracerList=document.createElement('div');tracers.append(tracerList);
+ function bodyOptions(input:HTMLSelectElement){const previous=input.value;input.replaceChildren();for(const id of session.state.document.roots){const node=session.state.document.nodes[id];if(node.reference||node.role==='hole')continue;const option=document.createElement('option');option.value=id;option.textContent=node.name;input.append(option);}if([...input.options].some(option=>option.value===previous))input.value=previous;}
+ function rebuild(){const settings=simulationSettings(session.state.document);if(!worldDirty){set(gravity,settings.gravity);ground.checked=settings.ground;friction.value=String(settings.groundFriction);bounce.value=String(settings.groundRestitution);gravityPreset.value=settings.gravity[0]||settings.gravity[1]?'custom':Object.entries({earth:-9.81,moon:-1.62,mars:-3.71,zero:0}).find(([,z])=>z===settings.gravity[2])?.[0]??'custom';}
+  for(const input of [bodyA,bodyB,traceBody])bodyOptions(input);if(bodyB.value===bodyA.value&&bodyB.options.length>1)bodyB.selectedIndex=1;
+  selected.disabled=session.state.document.roots.length<2;connectorList.replaceChildren();
+  for(const joint of session.state.document.joints??[]){const row=document.createElement('fieldset'),label=document.createElement('legend');label.textContent=`${joint.control?.port??joint.id.slice(0,8)} · ${t(joint.kind)} · ${session.state.document.nodes[joint.bodyA].name} → ${session.state.document.nodes[joint.bodyB].name}`;row.append(label);button(row,'Select connected bodies',()=>session.select([joint.bodyA,joint.bodyB]));
+   if(joint.kind==='pivot'){const angle=number(row,'Cone half-angle (degrees)',(joint.coneAngle??Math.PI)*180/Math.PI);button(row,'Apply connector limits',()=>session.updateJoint(joint.id,{coneAngle:Number(angle.value)*Math.PI/180}));}
+   if(joint.kind==='hinge'||joint.kind==='slider'){const factor=joint.kind==='hinge'?180/Math.PI:1,enabled=document.createElement('input'),wrap=document.createElement('label');enabled.type='checkbox';enabled.checked=!!joint.limits;wrap.append(enabled,document.createTextNode(t('Limit travel')));row.append(wrap);const lo=number(row,joint.kind==='hinge'?'Lower limit (degrees)':'Lower limit (mm)',(joint.limits?.[0]??-50/factor)*factor),hi=number(row,joint.kind==='hinge'?'Upper limit (degrees)':'Upper limit (mm)',(joint.limits?.[1]??50/factor)*factor);button(row,'Apply connector limits',()=>session.updateJoint(joint.id,{limits:enabled.checked?[Number(lo.value)/factor,Number(hi.value)/factor]:undefined}));}
+   button(row,'Remove connector',()=>session.removeJoint(joint.id));connectorList.append(row);}
+  tracerList.replaceChildren();for(const trace of simulationTracers(session.state.document)){const row=document.createElement('div');row.textContent=`${session.state.document.nodes[trace.bodyId].name} · ${trace.point.map(v=>v.toFixed(1)).join(', ')} mm`;row.style.borderLeft=`4px solid ${trace.color}`;button(row,'Remove motion tracer',()=>session.removeTracer(trace.id));tracerList.append(row);}
+ }
+ let revision=session.state.revision;const unsubscribe=session.subscribe(state=>{if(state.revision!==revision){revision=state.revision;rebuild();}});rebuild();
+ return {setDisabled(disabled:boolean){if(disabled)cancelPick();for(const fields of sections)fields.disabled=disabled;},dispose(){unsubscribe();cancelPick();}};
+}

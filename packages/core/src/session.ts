@@ -1,3 +1,5 @@
+import {upgradeSimulation,jointAtWorldFrame,materialPhysics,simulationTracers} from './simulation.js';
+import type {SimulationSettings} from './simulation.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import {generateModelSource,compileModelSource,updateModelSource,sameModelValue} from './model-source.js';
 import {t} from './i18n.js';
@@ -44,7 +46,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
   const emit = () => { for (const listener of [...listeners]) listener(state()); };
   const snapshot = (): Snapshot => ({ document, selection: [...selection], label });
   function commit(title: string, edit: (draft: CadDocument) => string[] | void) {
-    const draft = { ...document, roots: [...document.roots], ...(document.joints ? {joints: structuredClone(document.joints)} : {}), ...(document.parametric ? {parametric:structuredClone(document.parametric)} : {}), ...(document.sketches?{sketches:structuredClone(document.sketches)}:{}), nodes: Object.fromEntries(Object.entries(document.nodes).map(([id, node]) => [id, cloneNode(node)])) };
+    const draft = { ...document, ...(document.version>=8&&document.tracers?{tracers:structuredClone(document.tracers)}:{}), roots: [...document.roots], ...(document.joints ? {joints: structuredClone(document.joints)} : {}), ...(document.parametric ? {parametric:structuredClone(document.parametric)} : {}), ...(document.sketches?{sketches:structuredClone(document.sketches)}:{}), nodes: Object.fromEntries(Object.entries(document.nodes).map(([id, node]) => [id, cloneNode(node)])) };
     const nextSelection = edit(draft);
     applyParametricBindings(draft);
     if(liveModelSource||draft.version>=6&&draft.modelSource){assertProvenanceUpgrade(draft);draft.version=Math.max(6,draft.version) as CadDocument['version'];draft.modelSource={version:1,language:'brickwright-design',source:updateModelSource(draft.modelSource?.source,draft)};}
@@ -53,7 +55,8 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       const previous = document.nodes[id];
       if (previous && equivalent(node, previous)) draft.nodes[id] = previous;
     }
-    if (JSON.stringify(draft.modelSource)===JSON.stringify(document.modelSource) && JSON.stringify(draft.provenance) === JSON.stringify(document.provenance) && draft.version === document.version && JSON.stringify(draft.sketches)===JSON.stringify(document.sketches) && JSON.stringify(draft.parametric) === JSON.stringify(document.parametric) && draft.title === document.title && JSON.stringify(draft.roots) === JSON.stringify(document.roots) && JSON.stringify(draft.joints) === JSON.stringify(document.joints) && Object.keys(draft.nodes).length === Object.keys(document.nodes).length && Object.entries(draft.nodes).every(([id, node]) => document.nodes[id] === node)) return;
+    const header=(doc:CadDocument)=>{const {nodes,...rest}=doc;return JSON.stringify(rest);};
+    if (header(draft)===header(document) && Object.keys(draft.nodes).length===Object.keys(document.nodes).length && Object.entries(draft.nodes).every(([id,node])=>document.nodes[id]===node)) return;
     const validated = freezeDocument(draft);
     undo.push(snapshot()); if (undo.length > 100) undo.shift(); redo.length = 0;
     document = validated; selection = nextSelection ?? selection.filter(id => !!document.nodes[id]); label = title; revision++; emit();
@@ -153,6 +156,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       if(source.parametric&&!options.mergeParameters)throw new Error(t('Enable parameter namespace merging when inserting a parametric model'));
       commit(options.label??'Add shape', d => {
         if(Math.max(d.version,source.version)>=5){assertProvenanceUpgrade(d);assertProvenanceUpgrade(source);}
+        if(source.version>=8&&d.version<8)upgradeSimulation(d);
         d.version=Math.max(d.version,source.version) as CadDocument['version'];
         const provenanceIds=new Map((source.version>=5?source.provenance?.records??[]:[]).map(r=>[r.id,newId()]));
         if(source.version>=5&&source.provenance)d.provenance={version:1,records:[...(d.provenance?.records??[]),...source.provenance.records.map(r=>({...structuredClone(r),id:provenanceIds.get(r.id)!}))]};
@@ -163,6 +167,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         const roots = source.roots.map(id => ids.get(id)!); d.roots.push(...roots);
         for(const id of roots){d.nodes[id].name=uniqueObjectName(d.nodes[id].name,names);names.add(d.nodes[id].name);}
         if(options.mergeParameters)mergeFragmentParameters(d,source,ids,offset,sketches);
+        if(source.version>=8&&source.tracers?.length){if(d.version<8)upgradeSimulation(d);d.tracers=[...(d.tracers??[]),...source.tracers.map(trace=>({...structuredClone(trace),id:newId(),bodyId:ids.get(trace.bodyId)!}))];}
         if (source.joints?.length) d.joints = [...(d.joints ?? []), ...copyAssemblyJoints(source.joints,ids,d.joints??[])];
         return roots;
       });
@@ -186,7 +191,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       assertDrivenEdit(d,next); d.nodes[id] = next;
     }); },
     transform(updates: Array<{ id: string; transform: Transform }>) { commit('Transform selection', d => { for (const { id, transform } of updates) { if (!d.nodes[id]) throw new Error(t('Object does not exist'));guardConstructionEdit(d,id); const next={...d.nodes[id],transform:constrainCubeTransform(d.nodes[id],structuredClone(transform))};assertDrivenEdit(d,next);d.nodes[id]=next; } }); },
-    setRole(role:'solid'|'hole',ids:readonly string[]=selection){commit('Change solid/hole role',d=>{const chosen=[...new Set(ids)];if(!chosen.length||!chosen.every(id=>d.roots.includes(id)))throw new Error(t('Select a top-level body'));if(chosen.some(id=>d.nodes[id].reference))throw new Error(t('Reference helpers cannot be hole cutters'));if(role==='hole'&&d.joints?.some(j=>chosen.includes(j.bodyA)||chosen.includes(j.bodyB)))throw new Error(t('Detach the selected bodies’ joints before changing them to holes'));d.version=7;for(const id of chosen)d.nodes[id]={...d.nodes[id],role};});},
+    setRole(role:'solid'|'hole',ids:readonly string[]=selection){commit('Change solid/hole role',d=>{const chosen=[...new Set(ids)];if(!chosen.length||!chosen.every(id=>d.roots.includes(id)))throw new Error(t('Select a top-level body'));if(chosen.some(id=>d.nodes[id].reference))throw new Error(t('Reference helpers cannot be hole cutters'));if(role==='hole'&&d.joints?.some(j=>chosen.includes(j.bodyA)||chosen.includes(j.bodyB)))throw new Error(t('Detach the selected bodies’ joints before changing them to holes'));d.version=Math.max(d.version,7) as CadDocument['version'];for(const id of chosen)d.nodes[id]={...d.nodes[id],role};pruneDocument(d);});},
     combine(operation: 'union' | 'subtract' | 'intersect', ids: readonly string[] = selection) {
       const chosen = [...new Set(ids)]; const id = newId();
       commit(operation === 'subtract' ? 'Subtract (first selected is the base)' : operation, d => {
@@ -198,7 +203,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         const material = d.nodes[first].physics ?? defaultPartPhysics();
         if(materialIds.some(x=>{const p=d.nodes[x].physics??defaultPartPhysics();return p.densityKgM3!==material.densityKgM3||p.friction!==material.friction||p.restitution!==material.restitution||p.motion!==material.motion;}))throw new Error(t('Combined solids must share density, contact material and motion type. Keep different materials as separate bodies.'));
         d.nodes[id] = { id, kind: 'boolean', operation, inputs: chosen,...(useHoleRoles?{useHoleRoles:true,...(!solids.length?{role:'hole' as const}:{})}:{}), name: operation[0].toUpperCase() + operation.slice(1), color: d.nodes[first].color, transform: identityTransform(), physics:{...material,intent:'rigid',parameters:undefined,sourcePreset:undefined,collisionHint:undefined} };
-        if(useHoleRoles)d.version=7;
+        if(useHoleRoles)d.version=Math.max(d.version,7) as CadDocument['version'];
         const at = Math.min(...chosen.map(x => d.roots.indexOf(x)));
         d.roots = d.roots.filter(x => !chosen.includes(x)); d.roots.splice(at, 0, id); return [id];
       }); return id;
@@ -226,6 +231,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         const id = copy(root); const n = d.nodes[id]; n.name=uniqueObjectName(n.name.replace(/(?: copy| Kopie)(?: \d+)?$/,'')+t(' copy'),new Set(d.roots.map(id=>d.nodes[id].name))); n.transform.position[0] += 10; d.roots.push(id); copied.push(id); for(const [old,next] of map)allCopied.set(old,next);
         if(d.parametric)d.parametric.bindings.push(...sourceBindings.filter(b=>map.has(b.nodeId)).map(b=>({...b,nodeId:map.get(b.nodeId)!,expression:b.nodeId===root&&b.property==='positionX'?offsetPositionExpression(b.expression,d.parametric!,10):b.expression})));
       }
+      if(d.version>=8&&d.tracers){const sourceTraces=d.tracers.slice();d.tracers.push(...sourceTraces.filter(trace=>allCopied.has(trace.bodyId)).map(trace=>({...structuredClone(trace),id:newId(),bodyId:allCopied.get(trace.bodyId)!})));}
       if(d.joints)d.joints.push(...copyAssemblyJoints(d.joints.filter(j=>roots.includes(j.bodyA)&&roots.includes(j.bodyB)),allCopied,d.joints));
       return copied;
     }); },
@@ -233,7 +239,15 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       if (!ids.some(id => d.roots.includes(id))) throw new Error(t('Select a top-level body'));
       d.roots = d.roots.filter(id => !ids.includes(id)); if(d.joints)d.joints=d.joints.filter(j=>d.roots.includes(j.bodyA)&&d.roots.includes(j.bodyB)); pruneDocument(d); return [];
     }); },
-    setMotorPort(jointId:string,port:string|null){commit('Configure motor port',d=>{const joint=d.joints?.find(j=>j.id===jointId);if(!joint||joint.kind!=='hinge')throw new Error(t('Unknown hinge joint'));if(port===null)delete joint.control;else joint.control={port};});},
+    setInitialVelocity(bodyId:string,linear:Vec3,angular:Vec3){commit('Set initial velocity',d=>{upgradeSimulation(d);if(!d.roots.includes(bodyId))throw new Error(t('Select a top-level body'));d.nodes[bodyId].physics={...(d.nodes[bodyId].physics??defaultPartPhysics()),initialVelocityMmS:[...linear],initialAngularVelocityDps:[...angular]};});},
+    setSimulation(settings:SimulationSettings){commit('Configure simulation',d=>{upgradeSimulation(d);d.simulation=structuredClone(settings);});},
+    applyPhysicsMaterial(materialId:string,ids:readonly string[]=selection){commit('Change physics material',d=>{if(!ids.length)throw new Error(t('Select a top-level body'));for(const id of ids){if(!d.roots.includes(id)||d.nodes[id].reference||d.nodes[id].role==='hole')throw new Error(t('Select a top-level body'));d.nodes[id].physics=materialPhysics(d.nodes[id].physics??defaultPartPhysics(),materialId);}});},
+    addJoint(kind:CadJoint['kind'],bodyA:string,bodyB:string,anchor:Vec3,axis:Vec3,options:{limits?:[number,number];coneAngle?:number}={}){let id='';commit('Add connector',d=>{upgradeSimulation(d);const joint=jointAtWorldFrame(d,kind,bodyA,bodyB,anchor,axis,options);if(['hinge','slider'].includes(kind))joint.control={port:allocateMotorPort(d.joints??[])};id=joint.id;(d.joints??=[]).push(joint);});return id;},
+    updateJoint(id:string,patch:Partial<Pick<CadJoint,'limits'|'coneAngle'>>){commit('Edit connector',d=>{const joint=d.joints?.find(j=>j.id===id);if(!joint)throw new Error(t('Unknown connector'));Object.assign(joint,structuredClone(patch));});},
+    removeJoint(id:string){commit('Remove connector',d=>{d.joints=d.joints?.filter(j=>j.id!==id);});},
+    addTracer(bodyId:string,point:Vec3,color='#ef8354'){let id='';commit('Add motion tracer',d=>{upgradeSimulation(d);id=newId();(d.tracers??=[]).push({id,bodyId,point:[...point],color});});return id;},
+    removeTracer(id:string){commit('Remove motion tracer',d=>{if(d.version>=8)d.tracers=d.tracers?.filter(trace=>trace.id!==id);});},
+    setMotorPort(jointId:string,port:string|null){commit('Configure motor port',d=>{const joint=d.joints?.find(j=>j.id===jointId);if(!joint||!['hinge','slider'].includes(joint.kind))throw new Error(t('Unknown hinge joint'));if(port===null)delete joint.control;else joint.control={port};});},
     detachJoints(ids: readonly string[] = selection) { commit('Detach joints',d=>{if(d.joints)d.joints=d.joints.filter(j=>!ids.includes(j.bodyA)&&!ids.includes(j.bodyB));}); },
     undo() { const prev = undo.pop(); if (!prev) return; redo.push(snapshot()); ({ document, selection, label } = prev); revision++; emit(); },
     redo() { const next = redo.pop(); if (!next) return; undo.push(snapshot()); ({ document, selection, label } = next); revision++; emit(); },

@@ -19,7 +19,7 @@
       "path": "../scripts/lib/ldraw-model.mjs",
       "sha256": "64938376a81669fa95c9f60eb592de502a7e751d0d42aa58c196f6b4bdb4bacf"
     },
-    "packageLockSha256": "f7a6e2aea0d74f057555b5cf61e8be04b6e65718ff9a5cc9775ce947d10cfbd1",
+    "packageLockSha256": "a713e26e1ca1274aebe858c8bcdbc91958e58ca4d106edfbfc917df78a126668",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
   },
   "assets": [
