@@ -1,0 +1,578 @@
+{
+  "outcome": {
+    "status": "ACTIVE same owner; bounded package correction and Wall01 source/output trace complete",
+    "mainCommit": "958fe2cbda84ec37805de9e3cd8984310fe69815",
+    "mainCounts": [
+      133,
+      130,
+      172
+    ],
+    "admissionsThisTask": 0,
+    "assetHashesVerified": 266,
+    "package": {
+      "candidateID": "review-adrien-delhorme--openscad-new-dimensions-demo",
+      "sourceSha256": "25c4cdd594440af8ffdab8a4040fee8e2efe35d2093ff2bf15d87abbcf3caa29",
+      "result": "/mnt/storage/brickwright-cycle79-package/result.json",
+      "firstFailure": {
+        "stage": "converter",
+        "message": "Line 21, column 32: openscad-new-dimensions/label.scad: Unsupported OpenSCAD feature \u201cparent_module\u201d",
+        "code": "unsupported-feature"
+      },
+      "dependencyResolution": "PASS corrected original namespace",
+      "meshEditorPreview": "NOT RUN after converter refusal",
+      "licence": "MIT",
+      "sourceDefaultsUnchanged": true,
+      "testsPassed": 49
+    },
+    "wall01": {
+      "candidateID": "corpus-angelo-wall-01",
+      "sourceSha256": "37d22be7ba7af2cb7940563b2bb46626563dcc306422feb0fb3188f8692b7cba",
+      "result": "/mnt/storage/brickwright-cycle79-wall01/result.json",
+      "actualTriangles": 56,
+      "indexedBadEdges": 0,
+      "coordinateCollapsedBadEdges": 1,
+      "firstBadFaces": [
+        22,
+        28,
+        47,
+        50
+      ],
+      "sourceLines": [
+        10,
+        12,
+        18,
+        20
+      ],
+      "actualTopology": "FAILED closedPositiveVolume",
+      "editorPreview": "NOT RUN after topology refusal",
+      "safeGeneralRepair": "Not validated; no kernel/compiler/tolerance/source patch."
+    },
+    "remainingTopology": "Eight others still A/B provisional; Wall01 numerical contact divergence traced, qualification still refused.",
+    "nextBoundedAction": "Find a general exact-construction solution for centred box contacts with positive and real-gap controls before proposing a product patch; keep authored defaults and all guards.",
+    "noCiFullNewAgentsDependenciesOrAmbientLookup": true,
+    "priorRefusalsPreserved": true
+  },
+  "package": {
+    "candidateID": "review-adrien-delhorme--openscad-new-dimensions-demo",
+    "sourceSha256": "25c4cdd594440af8ffdab8a4040fee8e2efe35d2093ff2bf15d87abbcf3caa29",
+    "sourceCommit": "d37828e26df6067fbd872e8e291c6b0b19298243",
+    "licence": "MIT",
+    "sourceFiles": [
+      {
+        "path": "demo/demo.scad",
+        "bytes": 1888,
+        "sha256": "25c4cdd594440af8ffdab8a4040fee8e2efe35d2093ff2bf15d87abbcf3caa29",
+        "licence": "MIT",
+        "author": "Adrien Delhorme, 2026; Don Smiley, 2013 (line.scad)"
+      },
+      {
+        "path": "constants.scad",
+        "bytes": 243,
+        "sha256": "84942a30123e83cb57d3c2845592ab8d83c148b5f4809c3a5a1467eef533225c",
+        "licence": "MIT",
+        "author": "Adrien Delhorme, 2026; Don Smiley, 2013 (line.scad)"
+      },
+      {
+        "path": "dimensions.scad",
+        "bytes": 466,
+        "sha256": "08e3fea558f206e315d8d1f28dce628ae9a0615e4f4b604bbc239ae97e0b59e0",
+        "licence": "MIT",
+        "author": "Adrien Delhorme, 2026; Don Smiley, 2013 (line.scad)"
+      },
+      {
+        "path": "line.scad",
+        "bytes": 5953,
+        "sha256": "cd7ffef7ae50c864661573975b2c834f2e78cab024d7a08cac127dda2cbcf698",
+        "licence": "MIT",
+        "author": "Adrien Delhorme, 2026; Don Smiley, 2013 (line.scad)"
+      },
+      {
+        "path": "angle.scad",
+        "bytes": 2318,
+        "sha256": "0b54100061a138747da5347fdd6827883ed00a660beb11d2cbded5b08c829f58",
+        "licence": "MIT",
+        "author": "Adrien Delhorme, 2026; Don Smiley, 2013 (line.scad)"
+      },
+      {
+        "path": "label.scad",
+        "bytes": 988,
+        "sha256": "e0e551568e619dcbda5e53405cf6bd99cba37d504f5b5d207ecf4b11b1d4c808",
+        "licence": "MIT",
+        "author": "Adrien Delhorme, 2026; Don Smiley, 2013 (line.scad)"
+      }
+    ],
+    "bundleRoot": "openscad-new-dimensions/demo/demo.scad",
+    "mount": "Exact upstream repository-directory namespace; no text rewrite, aliases, ambient lookup or duplicate files.",
+    "gates": {
+      "converter": "FAILED",
+      "mesh": "NOT RUN",
+      "topology": "NOT RUN",
+      "editor": "NOT RUN",
+      "preview": "NOT RUN"
+    },
+    "mainCounts": [
+      133,
+      130,
+      172
+    ],
+    "admissionDelta": [
+      0,
+      0,
+      0
+    ],
+    "status": "BLOCKED at actual converter parent_module refusal; no admission",
+    "firstFailure": {
+      "stage": "converter",
+      "message": "Line 21, column 32: openscad-new-dimensions/label.scad: Unsupported OpenSCAD feature \u201cparent_module\u201d",
+      "code": "unsupported-feature"
+    },
+    "classification": "B_ASSEMBLY_CORRECTED: retain exact reviewed repository namespace; existing bundle-root resolution works. Next refusal is B_UNSUPPORTED_PARENT_MODULE in live authored Label call, not a missing-file or intrinsic-model defect.",
+    "dependencyResolution": "PASS all exact reviewed input files supplied under original package directory; no aliases or ambient access",
+    "firstMissingFileRefusalPreserved": "/mnt/storage/brickwright-cycle78-next-batch/classified-results.json",
+    "safetyTests": {
+      "passed": 49,
+      "execution": "/mnt/storage/brickwright-cycle79-package/safety-execution.json",
+      "log": "/mnt/storage/brickwright-cycle79-package/safety.log"
+    },
+    "productResolverChange": false,
+    "assemblyUtility": "scripts/lib/openscad-bundle-namespace.mjs"
+  },
+  "wall01": {
+    "candidateID": "corpus-angelo-wall-01",
+    "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Wall_01.scad",
+    "sourceSha256": "37d22be7ba7af2cb7940563b2bb46626563dcc306422feb0fb3188f8692b7cba",
+    "sourceUnchanged": true,
+    "head": "958fe2cbda84ec37805de9e3cd8984310fe69815",
+    "instrumentationByteIdentical": true,
+    "firstDivergentCoordinateEdge": {
+      "edge": "0.07000000029802322,-0.5,-1 -> 0.07000000029802322,0.5,-1",
+      "incidences": [
+        {
+          "face": 22,
+          "originalVertices": [
+            14,
+            24
+          ],
+          "points": [
+            [
+              0.07000000029802322,
+              -0.5,
+              -1
+            ],
+            [
+              0.07000000029802322,
+              0.5,
+              -1
+            ]
+          ],
+          "direction": 1,
+          "run": 1,
+          "originalID": 2
+        },
+        {
+          "face": 28,
+          "originalVertices": [
+            24,
+            14
+          ],
+          "points": [
+            [
+              0.07000000029802322,
+              0.5,
+              -1
+            ],
+            [
+              0.07000000029802322,
+              -0.5,
+              -1
+            ]
+          ],
+          "direction": -1,
+          "run": 1,
+          "originalID": 2
+        },
+        {
+          "face": 47,
+          "originalVertices": [
+            15,
+            25
+          ],
+          "points": [
+            [
+              0.07000000029802322,
+              -0.5,
+              -1
+            ],
+            [
+              0.07000000029802322,
+              0.5,
+              -1
+            ]
+          ],
+          "direction": 1,
+          "run": 3,
+          "originalID": 4
+        },
+        {
+          "face": 50,
+          "originalVertices": [
+            25,
+            15
+          ],
+          "points": [
+            [
+              0.07000000029802322,
+              0.5,
+              -1
+            ],
+            [
+              0.07000000029802322,
+              -0.5,
+              -1
+            ]
+          ],
+          "direction": -1,
+          "run": 3,
+          "originalID": 4
+        }
+      ]
+    },
+    "badCoordinateEdgeCount": 1,
+    "exporterVertexMismatches": 0,
+    "baseline": {
+      "sha256": "48c4944a932f66f872f6ff94b7756edaae16e8e6111806dc75259c0a6c318a3b",
+      "triangles": 56,
+      "volume": 0.288,
+      "screen": {
+        "fileSha256": "48c4944a932f66f872f6ff94b7756edaae16e8e6111806dc75259c0a6c318a3b",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-15",
+        "policy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "checks": {
+          "parseable": "pass",
+          "closedPositiveVolume": "fail",
+          "withinSizeLimits": "pass",
+          "withinTriangleLimits": "pass"
+        },
+        "diagnostics": [
+          "Mesh must have nondegenerate, consistently oriented closed manifold topology and positive signed volume."
+        ],
+        "triangles": 56,
+        "boundsMm": {
+          "min": [
+            -0.07000000029802322,
+            -0.5,
+            -1
+          ],
+          "max": [
+            0.11999999731779099,
+            0.5,
+            1
+          ]
+        },
+        "signedVolumeMm3": 0.2880000018775463,
+        "quality": {
+          "fileSha256": "48c4944a932f66f872f6ff94b7756edaae16e8e6111806dc75259c0a6c318a3b",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-15",
+          "screeningPolicy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "parseable": true,
+          "closedPositiveVolume": false,
+          "withinSizeLimits": true,
+          "withinTriangleLimits": true
+        }
+      }
+    },
+    "primitiveOriginalIDs": [
+      {
+        "shape": {
+          "kind": "box",
+          "size": [
+            0.02,
+            1,
+            2
+          ]
+        },
+        "originalID": 1
+      },
+      {
+        "shape": {
+          "kind": "box",
+          "size": [
+            0.02,
+            1,
+            2
+          ]
+        },
+        "originalID": 2
+      },
+      {
+        "shape": {
+          "kind": "box",
+          "size": [
+            0.1,
+            1,
+            1.98
+          ]
+        },
+        "originalID": 3
+      },
+      {
+        "shape": {
+          "kind": "box",
+          "size": [
+            0.05,
+            1,
+            0.2
+          ]
+        },
+        "originalID": 4
+      }
+    ],
+    "allBadEdges": [
+      {
+        "edge": "0.07000000029802322,-0.5,-1 -> 0.07000000029802322,0.5,-1",
+        "incidences": [
+          {
+            "face": 22,
+            "originalVertices": [
+              14,
+              24
+            ],
+            "points": [
+              [
+                0.07000000029802322,
+                -0.5,
+                -1
+              ],
+              [
+                0.07000000029802322,
+                0.5,
+                -1
+              ]
+            ],
+            "direction": 1,
+            "run": 1,
+            "originalID": 2
+          },
+          {
+            "face": 28,
+            "originalVertices": [
+              24,
+              14
+            ],
+            "points": [
+              [
+                0.07000000029802322,
+                0.5,
+                -1
+              ],
+              [
+                0.07000000029802322,
+                -0.5,
+                -1
+              ]
+            ],
+            "direction": -1,
+            "run": 1,
+            "originalID": 2
+          },
+          {
+            "face": 47,
+            "originalVertices": [
+              15,
+              25
+            ],
+            "points": [
+              [
+                0.07000000029802322,
+                -0.5,
+                -1
+              ],
+              [
+                0.07000000029802322,
+                0.5,
+                -1
+              ]
+            ],
+            "direction": 1,
+            "run": 3,
+            "originalID": 4
+          },
+          {
+            "face": 50,
+            "originalVertices": [
+              25,
+              15
+            ],
+            "points": [
+              [
+                0.07000000029802322,
+                0.5,
+                -1
+              ],
+              [
+                0.07000000029802322,
+                -0.5,
+                -1
+              ]
+            ],
+            "direction": -1,
+            "run": 3,
+            "originalID": 4
+          }
+        ]
+      }
+    ],
+    "classification": "B_NUMERIC_CONTACT_DIVERGENCE: source positive-area face contact differs before CSG in centred-box placement; raw indexed closure survives but distinct edges collapse in Float32 output. No validated general repair yet; not a defective-source or physical-part claim.",
+    "indexedMergeTopologyBadEdgeCount": 0,
+    "sourcePrimitiveMapping": {
+      "originalID2": {
+        "lines": [
+          10,
+          12
+        ],
+        "source": "translate([0.06,0,0]) cube([0.02,1,2],center=true)",
+        "authoredRightFaceX": "7/100"
+      },
+      "originalID4": {
+        "lines": [
+          18,
+          20
+        ],
+        "source": "translate([0.095,0,-0.9]) cube([0.05,1,0.2],center=true)",
+        "authoredLeftFaceX": "7/100"
+      }
+    },
+    "authoredSharedFace": {
+      "x": "7/100",
+      "y": [
+        "-1/2",
+        "1/2"
+      ],
+      "z": [
+        "-1",
+        "-4/5"
+      ],
+      "positiveContactArea": "1/5",
+      "authoredGap": "0"
+    },
+    "arithmeticDivergence": {
+      "rightPanelFaceExpression": "0.06+0.02/2",
+      "rightPanelFaceDouble": 0.06999999999999999,
+      "skirtingFaceExpression": "0.095-0.05/2",
+      "skirtingFaceDouble": 0.07,
+      "artificialGap": 1.3877787807814457e-17,
+      "commonFloat32X": 0.07000000029802322
+    },
+    "gates": {
+      "sourceClosureLicence": "PASS unchanged standalone authored MIT original",
+      "converter": "PASS actual",
+      "mesh": "PASS actual56tri",
+      "topology": "FAILED closedPositiveVolume",
+      "editor": "NOT RUN after strict refusal",
+      "preview": "NOT RUN after strict refusal"
+    },
+    "noProductOrSourceEdits": true,
+    "counts": {
+      "main": [
+        133,
+        130,
+        172
+      ],
+      "admissionDelta": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "testedBinding": {
+    "ownedFiles": [
+      {
+        "path": "scripts/lib/openscad-bundle-namespace.mjs",
+        "sha256": "1c8dd6a73f7f5d03c7c74e3e38658237232d5900488b46b776f815149f888742"
+      },
+      {
+        "path": "tests/openscad-bundle-namespace.test.ts",
+        "sha256": "bc40dca704a65d9d97590cde3562b696b0c3e5e66132472cd555c6eee43dd8b5"
+      }
+    ],
+    "proofFiles": [
+      {
+        "path": "/mnt/storage/brickwright-cycle79-package/safety-execution.json",
+        "sha256": "258a64b4eae970d5b0b3225a9f49c2e94a8a81a3526f916a693f7a789c2ac3e3"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle79-package/safety.log",
+        "sha256": "1774569ef6f493d60611ddfb759906e9c4a4f549adf5a18e9a95b059b9b89d3c"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle79-package/probe-execution.json",
+        "sha256": "6368b951c35dbfc507fb0c109e6de44222810cb48730d727cddd7fc21d0aa3b5"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle79-package/probe.log",
+        "sha256": "208840c99bfa7e91a732266e09ec885a1f5fd2bbad25af70709ff17d39e52b9e"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle79-package/result.json",
+        "sha256": "fb80563d205295d3042b24816e41db1a5ed3b0751d5b5bd6e91e31a4e92a568f"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle79-wall01/result.json",
+        "sha256": "42da506087339f3ccb58b538f4abf21b0557f5287b46dee72979a1b309b21b01"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle79-wall01/trace-execution.json",
+        "sha256": "7a68ba17ac34403dadc5147b2f8bafaa550e3dcd459cc41e0649d5fc18f404cb"
+      }
+    ]
+  }
+}
