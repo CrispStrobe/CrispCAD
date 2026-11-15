@@ -1,0 +1,562 @@
+{
+  "date": "2026-11-15",
+  "status": "NINE_LOCAL_QUALIFIED_PENDING_OWNER_DELIVERY",
+  "baselineHead": "2e18fa2167cc99637969aa13ad09647291f37fb9",
+  "mainCounts": [
+    156,
+    151,
+    195
+  ],
+  "localCounts": [
+    165,
+    160,
+    204
+  ],
+  "delta": [
+    9,
+    9,
+    9
+  ],
+  "sourceCommit": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+  "scope": "Nine unchanged authored official LDraw standalone components; no assembly/physical qualification. Existing landed exact-endpoint converter reused; no product code, defaults, tolerances, dependencies or guard changes.",
+  "checks": {
+    "nativeTopologyEditor": "9/9 PASS closed-positive-volume, actual insertion/provenance/restore/undo/redo and mismatched bytes refused before evaluation",
+    "previews": "9 actual raster renders and browser pixel assertions PASS",
+    "focused": "77/77 PASS",
+    "finalAppBuild": "PASS after staging all new raw assets",
+    "browser": "18 individual engine assertion loops completed across original partial run + WebKit5 continuation",
+    "originalAggregate": "FAILED unchanged300s timeout; retained, not claimed passing",
+    "continuation": "WebKit-only last5 PASS168.666s, original240s test/300s command limits; no native/focused/build/Chromium9/first4WebKit replay",
+    "evidenceKinds": "13 original completed-loop log bindings with exact frozen test/source/mesh data;5 actual raw browser JSON attachments and durable per-model records. Original13 raw attachments unavailable after reporter kill.",
+    "prior312Assets": "PASS unchanged",
+    "prior195Previews": "PASS unchanged"
+  },
+  "rows": [
+    {
+      "candidateID": "corpus-ldraw-u9289",
+      "rootPath": "parts/u9289.dat",
+      "rootSha256": "95db76a04aeb1a06e6e847229aeabf52e27a4c4661ab8fddab32c65920f22970",
+      "metrics": {
+        "originalBytes": 9542,
+        "expandedBytes": 18829,
+        "instances": 24,
+        "work": 2779,
+        "points": 92,
+        "faces": 105
+      },
+      "mesh": {
+        "bytes": 9884,
+        "sha256": "4caf5762fc815f5bb7d27b17a02438a597bfa94b239b42993ffd3e65b50bc24e"
+      },
+      "triangles": 196,
+      "volumeMm3": 45.92800703012953
+    },
+    {
+      "candidateID": "corpus-ldraw-u9301",
+      "rootPath": "parts/u9301.dat",
+      "rootSha256": "06f856d7b705dedffcf2c99468d8f0dee8c2a49f4145f13aea807aecb103cff8",
+      "metrics": {
+        "originalBytes": 9893,
+        "expandedBytes": 19180,
+        "instances": 25,
+        "work": 2790,
+        "points": 92,
+        "faces": 105
+      },
+      "mesh": {
+        "bytes": 9884,
+        "sha256": "f638e624b73f1938d556fdb6a5995c7670bbbae779fca75ba0a4b51974f831ff"
+      },
+      "triangles": 196,
+      "volumeMm3": 45.92800703012953
+    },
+    {
+      "candidateID": "corpus-ldraw-32108",
+      "rootPath": "parts/32108.dat",
+      "rootSha256": "e570118b7604f3f234c6369f759032412d4c5040557b863e2073e805272cadcf",
+      "metrics": {
+        "originalBytes": 6517,
+        "expandedBytes": 12514,
+        "instances": 16,
+        "work": 1359,
+        "points": 48,
+        "faces": 52
+      },
+      "mesh": {
+        "bytes": 4684,
+        "sha256": "076fc5902e063ec9242fca7525ba2487577a8505a76297caab9f5b79db16319a"
+      },
+      "triangles": 92,
+      "volumeMm3": 1066.456290227355
+    },
+    {
+      "candidateID": "corpus-ldraw-u9406",
+      "rootPath": "parts/u9406.dat",
+      "rootSha256": "e63e6125d3cb188de34b691665762330f697840383ff4d4c71204403d9973552",
+      "metrics": {
+        "originalBytes": 11017,
+        "expandedBytes": 28414,
+        "instances": 35,
+        "work": 2597,
+        "points": 80,
+        "faces": 100
+      },
+      "mesh": {
+        "bytes": 8084,
+        "sha256": "83543268fcac85e43efc7b161d34c0a1c16fed2b5c69c421214d940557c953bd"
+      },
+      "triangles": 160,
+      "volumeMm3": 101.13937903470392
+    },
+    {
+      "candidateID": "corpus-ldraw-27195",
+      "rootPath": "parts/27195.dat",
+      "rootSha256": "c1dc3a79f2611b460e18dc7d30865fd0e5a53ff2c6696eeff11ca6a83b9ff10d",
+      "metrics": {
+        "originalBytes": 11644,
+        "expandedBytes": 22678,
+        "instances": 25,
+        "work": 2637,
+        "points": 86,
+        "faces": 106
+      },
+      "mesh": {
+        "bytes": 8684,
+        "sha256": "7bf2c1d2f6c284275ba0e94ffa0b9e07eaadb019f583b57465921cf5072752bf"
+      },
+      "triangles": 172,
+      "volumeMm3": 1325.0503599565543
+    },
+    {
+      "candidateID": "corpus-ldraw-28943",
+      "rootPath": "parts/28943.dat",
+      "rootSha256": "7d3cf4704cc99cc790535e85793908b7bd1d19c21e80c9f2c8cc5318124ffb73",
+      "metrics": {
+        "originalBytes": 24804,
+        "expandedBytes": 31587,
+        "instances": 17,
+        "work": 4268,
+        "points": 152,
+        "faces": 182
+      },
+      "mesh": {
+        "bytes": 15284,
+        "sha256": "378e05d208753817c6ec3ea32107b5d4c07aeca5207473668bbb1d2dfd9839a3"
+      },
+      "triangles": 304,
+      "volumeMm3": 1324.8119223905674
+    },
+    {
+      "candidateID": "corpus-ldraw-28944",
+      "rootPath": "parts/28944.dat",
+      "rootSha256": "6197968ff9e045ab76a094a43419e3b8cae9d64ccbf303ed2d031204d2a1f7e9",
+      "metrics": {
+        "originalBytes": 6510,
+        "expandedBytes": 22615,
+        "instances": 33,
+        "work": 2017,
+        "points": 64,
+        "faces": 74
+      },
+      "mesh": {
+        "bytes": 6284,
+        "sha256": "48f50307392ac36c20cd7f37d0c13efbb2fb6ee0dca2f2418174706b6950b76f"
+      },
+      "triangles": 124,
+      "volumeMm3": 73.87275060094329
+    },
+    {
+      "candidateID": "corpus-ldraw-2941",
+      "rootPath": "parts/2941.dat",
+      "rootSha256": "342395711816ef23ea26692494b7a76d0e206c19fe59c6d5d9236c7da325a9ad",
+      "metrics": {
+        "originalBytes": 12628,
+        "expandedBytes": 17436,
+        "instances": 13,
+        "work": 2842,
+        "points": 98,
+        "faces": 119
+      },
+      "mesh": {
+        "bytes": 10284,
+        "sha256": "83796f1051e43d69aa22bbf149b7fc63adc9704873ef8e555307957e7c35b897"
+      },
+      "triangles": 204,
+      "volumeMm3": 113.0641392974978
+    },
+    {
+      "candidateID": "corpus-ldraw-2893",
+      "rootPath": "parts/2893.dat",
+      "rootSha256": "515f18c2e378f3a6256968de4c7477aefc9187151472761a3dc96c17eebc81a7",
+      "metrics": {
+        "originalBytes": 7453,
+        "expandedBytes": 14204,
+        "instances": 15,
+        "work": 2107,
+        "points": 88,
+        "faces": 72
+      },
+      "mesh": {
+        "bytes": 9084,
+        "sha256": "88568723324e4cb175bdd54f14923496779817838b0bcb89716beb2287e3bd5c"
+      },
+      "triangles": 180,
+      "volumeMm3": 5493.7601599884065
+    }
+  ],
+  "browserProof": [
+    {
+      "candidateID": "corpus-ldraw-u9289",
+      "engine": "chromium",
+      "evidenceKind": "original completed assertion loop log, bound to frozen original test and exact source/mesh catalogue; raw attachment unavailable after reporter kill",
+      "completionLine": "QUALIFIED chromium corpus-ldraw-u9289",
+      "logSha256": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3",
+      "originalTestSha256": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702",
+      "originalLoopBodySha256": "d2e2ca34822a8837e1cdb9e4fec3008e2fe66a3461db39ed18a1bd96d714a7ec",
+      "manifestSha256": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "sourceSha256": "95db76a04aeb1a06e6e847229aeabf52e27a4c4661ab8fddab32c65920f22970",
+      "meshSha256": "4caf5762fc815f5bb7d27b17a02438a597bfa94b239b42993ffd3e65b50bc24e",
+      "assertionOrdering": "Completion line occurs after all actual raster/offline insertion/provenance/history/SHA/zero-request assertions and await info.attach; no raw attachment reconstruction claimed"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9289",
+      "engine": "ipad-webkit",
+      "evidenceKind": "original completed assertion loop log, bound to frozen original test and exact source/mesh catalogue; raw attachment unavailable after reporter kill",
+      "completionLine": "QUALIFIED ipad-webkit corpus-ldraw-u9289",
+      "logSha256": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3",
+      "originalTestSha256": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702",
+      "originalLoopBodySha256": "d2e2ca34822a8837e1cdb9e4fec3008e2fe66a3461db39ed18a1bd96d714a7ec",
+      "manifestSha256": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "sourceSha256": "95db76a04aeb1a06e6e847229aeabf52e27a4c4661ab8fddab32c65920f22970",
+      "meshSha256": "4caf5762fc815f5bb7d27b17a02438a597bfa94b239b42993ffd3e65b50bc24e",
+      "assertionOrdering": "Completion line occurs after all actual raster/offline insertion/provenance/history/SHA/zero-request assertions and await info.attach; no raw attachment reconstruction claimed"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9301",
+      "engine": "chromium",
+      "evidenceKind": "original completed assertion loop log, bound to frozen original test and exact source/mesh catalogue; raw attachment unavailable after reporter kill",
+      "completionLine": "QUALIFIED chromium corpus-ldraw-u9301",
+      "logSha256": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3",
+      "originalTestSha256": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702",
+      "originalLoopBodySha256": "d2e2ca34822a8837e1cdb9e4fec3008e2fe66a3461db39ed18a1bd96d714a7ec",
+      "manifestSha256": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "sourceSha256": "06f856d7b705dedffcf2c99468d8f0dee8c2a49f4145f13aea807aecb103cff8",
+      "meshSha256": "f638e624b73f1938d556fdb6a5995c7670bbbae779fca75ba0a4b51974f831ff",
+      "assertionOrdering": "Completion line occurs after all actual raster/offline insertion/provenance/history/SHA/zero-request assertions and await info.attach; no raw attachment reconstruction claimed"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9301",
+      "engine": "ipad-webkit",
+      "evidenceKind": "original completed assertion loop log, bound to frozen original test and exact source/mesh catalogue; raw attachment unavailable after reporter kill",
+      "completionLine": "QUALIFIED ipad-webkit corpus-ldraw-u9301",
+      "logSha256": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3",
+      "originalTestSha256": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702",
+      "originalLoopBodySha256": "d2e2ca34822a8837e1cdb9e4fec3008e2fe66a3461db39ed18a1bd96d714a7ec",
+      "manifestSha256": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "sourceSha256": "06f856d7b705dedffcf2c99468d8f0dee8c2a49f4145f13aea807aecb103cff8",
+      "meshSha256": "f638e624b73f1938d556fdb6a5995c7670bbbae779fca75ba0a4b51974f831ff",
+      "assertionOrdering": "Completion line occurs after all actual raster/offline insertion/provenance/history/SHA/zero-request assertions and await info.attach; no raw attachment reconstruction claimed"
+    },
+    {
+      "candidateID": "corpus-ldraw-32108",
+      "engine": "chromium",
+      "evidenceKind": "original completed assertion loop log, bound to frozen original test and exact source/mesh catalogue; raw attachment unavailable after reporter kill",
+      "completionLine": "QUALIFIED chromium corpus-ldraw-32108",
+      "logSha256": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3",
+      "originalTestSha256": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702",
+      "originalLoopBodySha256": "d2e2ca34822a8837e1cdb9e4fec3008e2fe66a3461db39ed18a1bd96d714a7ec",
+      "manifestSha256": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "sourceSha256": "e570118b7604f3f234c6369f759032412d4c5040557b863e2073e805272cadcf",
+      "meshSha256": "076fc5902e063ec9242fca7525ba2487577a8505a76297caab9f5b79db16319a",
+      "assertionOrdering": "Completion line occurs after all actual raster/offline insertion/provenance/history/SHA/zero-request assertions and await info.attach; no raw attachment reconstruction claimed"
+    },
+    {
+      "candidateID": "corpus-ldraw-32108",
+      "engine": "ipad-webkit",
+      "evidenceKind": "original completed assertion loop log, bound to frozen original test and exact source/mesh catalogue; raw attachment unavailable after reporter kill",
+      "completionLine": "QUALIFIED ipad-webkit corpus-ldraw-32108",
+      "logSha256": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3",
+      "originalTestSha256": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702",
+      "originalLoopBodySha256": "d2e2ca34822a8837e1cdb9e4fec3008e2fe66a3461db39ed18a1bd96d714a7ec",
+      "manifestSha256": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "sourceSha256": "e570118b7604f3f234c6369f759032412d4c5040557b863e2073e805272cadcf",
+      "meshSha256": "076fc5902e063ec9242fca7525ba2487577a8505a76297caab9f5b79db16319a",
+      "assertionOrdering": "Completion line occurs after all actual raster/offline insertion/provenance/history/SHA/zero-request assertions and await info.attach; no raw attachment reconstruction claimed"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9406",
+      "engine": "chromium",
+      "evidenceKind": "original completed assertion loop log, bound to frozen original test and exact source/mesh catalogue; raw attachment unavailable after reporter kill",
+      "completionLine": "QUALIFIED chromium corpus-ldraw-u9406",
+      "logSha256": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3",
+      "originalTestSha256": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702",
+      "originalLoopBodySha256": "d2e2ca34822a8837e1cdb9e4fec3008e2fe66a3461db39ed18a1bd96d714a7ec",
+      "manifestSha256": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "sourceSha256": "e63e6125d3cb188de34b691665762330f697840383ff4d4c71204403d9973552",
+      "meshSha256": "83543268fcac85e43efc7b161d34c0a1c16fed2b5c69c421214d940557c953bd",
+      "assertionOrdering": "Completion line occurs after all actual raster/offline insertion/provenance/history/SHA/zero-request assertions and await info.attach; no raw attachment reconstruction claimed"
+    },
+    {
+      "candidateID": "corpus-ldraw-u9406",
+      "engine": "ipad-webkit",
+      "evidenceKind": "original completed assertion loop log, bound to frozen original test and exact source/mesh catalogue; raw attachment unavailable after reporter kill",
+      "completionLine": "QUALIFIED ipad-webkit corpus-ldraw-u9406",
+      "logSha256": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3",
+      "originalTestSha256": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702",
+      "originalLoopBodySha256": "d2e2ca34822a8837e1cdb9e4fec3008e2fe66a3461db39ed18a1bd96d714a7ec",
+      "manifestSha256": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "sourceSha256": "e63e6125d3cb188de34b691665762330f697840383ff4d4c71204403d9973552",
+      "meshSha256": "83543268fcac85e43efc7b161d34c0a1c16fed2b5c69c421214d940557c953bd",
+      "assertionOrdering": "Completion line occurs after all actual raster/offline insertion/provenance/history/SHA/zero-request assertions and await info.attach; no raw attachment reconstruction claimed"
+    },
+    {
+      "candidateID": "corpus-ldraw-27195",
+      "engine": "chromium",
+      "evidenceKind": "original completed assertion loop log, bound to frozen original test and exact source/mesh catalogue; raw attachment unavailable after reporter kill",
+      "completionLine": "QUALIFIED chromium corpus-ldraw-27195",
+      "logSha256": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3",
+      "originalTestSha256": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702",
+      "originalLoopBodySha256": "d2e2ca34822a8837e1cdb9e4fec3008e2fe66a3461db39ed18a1bd96d714a7ec",
+      "manifestSha256": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "sourceSha256": "c1dc3a79f2611b460e18dc7d30865fd0e5a53ff2c6696eeff11ca6a83b9ff10d",
+      "meshSha256": "7bf2c1d2f6c284275ba0e94ffa0b9e07eaadb019f583b57465921cf5072752bf",
+      "assertionOrdering": "Completion line occurs after all actual raster/offline insertion/provenance/history/SHA/zero-request assertions and await info.attach; no raw attachment reconstruction claimed"
+    },
+    {
+      "candidateID": "corpus-ldraw-27195",
+      "engine": "ipad-webkit",
+      "evidenceKind": "actual continuation browser JSON attachment + atomic per-model completion",
+      "attachment": {
+        "candidateID": "corpus-ldraw-27195",
+        "sourceSha256": "c1dc3a79f2611b460e18dc7d30865fd0e5a53ff2c6696eeff11ca6a83b9ff10d",
+        "meshSha256": "7bf2c1d2f6c284275ba0e94ffa0b9e07eaadb019f583b57465921cf5072752bf",
+        "project": "ipad-webkit",
+        "preview": "PASS220x180 actual raster pixels",
+        "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+        "networkRequests": 0
+      },
+      "durableResultSha256": "ff4d2a19eda6cb0867164f3fa1a94698bfe5bd0af901ed2919238e276c1d164e"
+    },
+    {
+      "candidateID": "corpus-ldraw-28943",
+      "engine": "chromium",
+      "evidenceKind": "original completed assertion loop log, bound to frozen original test and exact source/mesh catalogue; raw attachment unavailable after reporter kill",
+      "completionLine": "QUALIFIED chromium corpus-ldraw-28943",
+      "logSha256": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3",
+      "originalTestSha256": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702",
+      "originalLoopBodySha256": "d2e2ca34822a8837e1cdb9e4fec3008e2fe66a3461db39ed18a1bd96d714a7ec",
+      "manifestSha256": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "sourceSha256": "7d3cf4704cc99cc790535e85793908b7bd1d19c21e80c9f2c8cc5318124ffb73",
+      "meshSha256": "378e05d208753817c6ec3ea32107b5d4c07aeca5207473668bbb1d2dfd9839a3",
+      "assertionOrdering": "Completion line occurs after all actual raster/offline insertion/provenance/history/SHA/zero-request assertions and await info.attach; no raw attachment reconstruction claimed"
+    },
+    {
+      "candidateID": "corpus-ldraw-28943",
+      "engine": "ipad-webkit",
+      "evidenceKind": "actual continuation browser JSON attachment + atomic per-model completion",
+      "attachment": {
+        "candidateID": "corpus-ldraw-28943",
+        "sourceSha256": "7d3cf4704cc99cc790535e85793908b7bd1d19c21e80c9f2c8cc5318124ffb73",
+        "meshSha256": "378e05d208753817c6ec3ea32107b5d4c07aeca5207473668bbb1d2dfd9839a3",
+        "project": "ipad-webkit",
+        "preview": "PASS220x180 actual raster pixels",
+        "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+        "networkRequests": 0
+      },
+      "durableResultSha256": "0c1196753769ff8cc3fa7db17ff2d32f962ce319b05656d3c3223e6963cd05b4"
+    },
+    {
+      "candidateID": "corpus-ldraw-28944",
+      "engine": "chromium",
+      "evidenceKind": "original completed assertion loop log, bound to frozen original test and exact source/mesh catalogue; raw attachment unavailable after reporter kill",
+      "completionLine": "QUALIFIED chromium corpus-ldraw-28944",
+      "logSha256": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3",
+      "originalTestSha256": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702",
+      "originalLoopBodySha256": "d2e2ca34822a8837e1cdb9e4fec3008e2fe66a3461db39ed18a1bd96d714a7ec",
+      "manifestSha256": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "sourceSha256": "6197968ff9e045ab76a094a43419e3b8cae9d64ccbf303ed2d031204d2a1f7e9",
+      "meshSha256": "48f50307392ac36c20cd7f37d0c13efbb2fb6ee0dca2f2418174706b6950b76f",
+      "assertionOrdering": "Completion line occurs after all actual raster/offline insertion/provenance/history/SHA/zero-request assertions and await info.attach; no raw attachment reconstruction claimed"
+    },
+    {
+      "candidateID": "corpus-ldraw-28944",
+      "engine": "ipad-webkit",
+      "evidenceKind": "actual continuation browser JSON attachment + atomic per-model completion",
+      "attachment": {
+        "candidateID": "corpus-ldraw-28944",
+        "sourceSha256": "6197968ff9e045ab76a094a43419e3b8cae9d64ccbf303ed2d031204d2a1f7e9",
+        "meshSha256": "48f50307392ac36c20cd7f37d0c13efbb2fb6ee0dca2f2418174706b6950b76f",
+        "project": "ipad-webkit",
+        "preview": "PASS220x180 actual raster pixels",
+        "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+        "networkRequests": 0
+      },
+      "durableResultSha256": "be7a72d544725a21ebaf7162389f1503f7454290fdbec4ec2c90188492e9ff21"
+    },
+    {
+      "candidateID": "corpus-ldraw-2941",
+      "engine": "chromium",
+      "evidenceKind": "original completed assertion loop log, bound to frozen original test and exact source/mesh catalogue; raw attachment unavailable after reporter kill",
+      "completionLine": "QUALIFIED chromium corpus-ldraw-2941",
+      "logSha256": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3",
+      "originalTestSha256": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702",
+      "originalLoopBodySha256": "d2e2ca34822a8837e1cdb9e4fec3008e2fe66a3461db39ed18a1bd96d714a7ec",
+      "manifestSha256": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "sourceSha256": "342395711816ef23ea26692494b7a76d0e206c19fe59c6d5d9236c7da325a9ad",
+      "meshSha256": "83796f1051e43d69aa22bbf149b7fc63adc9704873ef8e555307957e7c35b897",
+      "assertionOrdering": "Completion line occurs after all actual raster/offline insertion/provenance/history/SHA/zero-request assertions and await info.attach; no raw attachment reconstruction claimed"
+    },
+    {
+      "candidateID": "corpus-ldraw-2941",
+      "engine": "ipad-webkit",
+      "evidenceKind": "actual continuation browser JSON attachment + atomic per-model completion",
+      "attachment": {
+        "candidateID": "corpus-ldraw-2941",
+        "sourceSha256": "342395711816ef23ea26692494b7a76d0e206c19fe59c6d5d9236c7da325a9ad",
+        "meshSha256": "83796f1051e43d69aa22bbf149b7fc63adc9704873ef8e555307957e7c35b897",
+        "project": "ipad-webkit",
+        "preview": "PASS220x180 actual raster pixels",
+        "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+        "networkRequests": 0
+      },
+      "durableResultSha256": "e611ffcc402d8a32dfe264b7fd2efadffab9ef430b61867c6d9b797e5fda90f4"
+    },
+    {
+      "candidateID": "corpus-ldraw-2893",
+      "engine": "chromium",
+      "evidenceKind": "original completed assertion loop log, bound to frozen original test and exact source/mesh catalogue; raw attachment unavailable after reporter kill",
+      "completionLine": "QUALIFIED chromium corpus-ldraw-2893",
+      "logSha256": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3",
+      "originalTestSha256": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702",
+      "originalLoopBodySha256": "d2e2ca34822a8837e1cdb9e4fec3008e2fe66a3461db39ed18a1bd96d714a7ec",
+      "manifestSha256": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "sourceSha256": "515f18c2e378f3a6256968de4c7477aefc9187151472761a3dc96c17eebc81a7",
+      "meshSha256": "88568723324e4cb175bdd54f14923496779817838b0bcb89716beb2287e3bd5c",
+      "assertionOrdering": "Completion line occurs after all actual raster/offline insertion/provenance/history/SHA/zero-request assertions and await info.attach; no raw attachment reconstruction claimed"
+    },
+    {
+      "candidateID": "corpus-ldraw-2893",
+      "engine": "ipad-webkit",
+      "evidenceKind": "actual continuation browser JSON attachment + atomic per-model completion",
+      "attachment": {
+        "candidateID": "corpus-ldraw-2893",
+        "sourceSha256": "515f18c2e378f3a6256968de4c7477aefc9187151472761a3dc96c17eebc81a7",
+        "meshSha256": "88568723324e4cb175bdd54f14923496779817838b0bcb89716beb2287e3bd5c",
+        "project": "ipad-webkit",
+        "preview": "PASS220x180 actual raster pixels",
+        "editor": "PASS offline exact mesh insertion/provenance/geometry-ready/undo/redo",
+        "networkRequests": 0
+      },
+      "durableResultSha256": "fd8f68d51bc133ee3f4f5b944ea199909bcc98c7771df1f6f6c5796a95e045bc"
+    }
+  ],
+  "workingSnapshotBinding": {
+    "baselineHead": "2e18fa2167cc99637969aa13ad09647291f37fb9",
+    "baselineTree": "744e04965f1cd7bd02f1c16da578729c9b2dbc31",
+    "ownedHashes": {
+      "library/ldraw-reviewed-batch-manifest.json": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "library/ldraw-reviewed-batch-spec.json": "dbf5a15fdb50f9481edeab8e50b7eaa0610264ee5bfa7e4759c93d7bc438572f",
+      "library/meshes/ldraw/27195.stl": "7bf2c1d2f6c284275ba0e94ffa0b9e07eaadb019f583b57465921cf5072752bf",
+      "library/meshes/ldraw/2893.stl": "88568723324e4cb175bdd54f14923496779817838b0bcb89716beb2287e3bd5c",
+      "library/meshes/ldraw/28943.stl": "378e05d208753817c6ec3ea32107b5d4c07aeca5207473668bbb1d2dfd9839a3",
+      "library/meshes/ldraw/28944.stl": "48f50307392ac36c20cd7f37d0c13efbb2fb6ee0dca2f2418174706b6950b76f",
+      "library/meshes/ldraw/2941.stl": "83796f1051e43d69aa22bbf149b7fc63adc9704873ef8e555307957e7c35b897",
+      "library/meshes/ldraw/32108.stl": "076fc5902e063ec9242fca7525ba2487577a8505a76297caab9f5b79db16319a",
+      "library/meshes/ldraw/u9289.stl": "4caf5762fc815f5bb7d27b17a02438a597bfa94b239b42993ffd3e65b50bc24e",
+      "library/meshes/ldraw/u9301.stl": "f638e624b73f1938d556fdb6a5995c7670bbbae779fca75ba0a4b51974f831ff",
+      "library/meshes/ldraw/u9406.stl": "83543268fcac85e43efc7b161d34c0a1c16fed2b5c69c421214d940557c953bd",
+      "library/previews.json": "ba382d5ec58c12247d9fe7810db814822b8e4468c453acd0822b1043c37e9d58",
+      "library/sources/ldraw/p/1-4ndis.dat": "ff6685838636e7ab6152356d8f09e4f00a38af0d878b0881423f5c45fb868f0c",
+      "library/sources/ldraw/p/2-4chrd.dat": "3b0dfcf2cb881fae0acfe1e53b703104768878636477e540d0c893fc3fd87f8f",
+      "library/sources/ldraw/p/2-4cyli.dat": "d486780f0f84893899d9eadcd13150f13a42e15e77a3cda38cdf24ded98862c6",
+      "library/sources/ldraw/p/2-4cylo.dat": "4fa9f597d775c7f15e3fc66f60e20d914134d13004b485488b7dbff684776232",
+      "library/sources/ldraw/p/2-4edge.dat": "665400f76566b161c28303cdadce40d17d979a8ff9a8a133675af2d17fbe6763",
+      "library/sources/ldraw/p/2-4ndis.dat": "7557eae598be3f530b840471535198e6b07b03486ffbcc18a00e862c3d25d925",
+      "library/sources/ldraw/p/4-4ndis.dat": "21202dc15823f4336bc2544244d0b539b76745c89f7a59ad18cdd03ad45cc543",
+      "library/sources/ldraw/p/box2-5.dat": "8f297b754f87da1dbe19eec8704a5ce03a23b794ccd7cd015508e3758a206174",
+      "library/sources/ldraw/p/box2-7.dat": "e0474c5ad7fb9ff77b67883a5b1e327d028e3eb4e59921a626b4215632dd9f00",
+      "library/sources/ldraw/p/box3u2p.dat": "df73118b95f23d693c3b7d25c57c483db3bf61ae017d757848119955d28d59e0",
+      "library/sources/ldraw/p/box3u4a.dat": "15463f41f9947dd75486dc7af3231b1037704f1b654c2555e3ba705817a2db75",
+      "library/sources/ldraw/p/box3u5p.dat": "0f52d5c372a303f508113ace2c7cba6d52b46171052e76a88266679a74f17ea5",
+      "library/sources/ldraw/p/box4-1.dat": "2ed58df5da841827dfc5f9ac11c0bd7ffd8a455e46f166638e635f61a014b44d",
+      "library/sources/ldraw/p/box4-4a.dat": "58c69e00462c0a74c1bd6d75d757d826ae13e98bd3928b0e685209003bfbee54",
+      "library/sources/ldraw/p/recte3.dat": "e7f5ccbb040191aaa4cd469a25b086299cba4a3eaa8d3b0fbf71240e3de0359a",
+      "library/sources/ldraw/parts/27195.dat": "c1dc3a79f2611b460e18dc7d30865fd0e5a53ff2c6696eeff11ca6a83b9ff10d",
+      "library/sources/ldraw/parts/2893.dat": "515f18c2e378f3a6256968de4c7477aefc9187151472761a3dc96c17eebc81a7",
+      "library/sources/ldraw/parts/28943.dat": "7d3cf4704cc99cc790535e85793908b7bd1d19c21e80c9f2c8cc5318124ffb73",
+      "library/sources/ldraw/parts/28944.dat": "6197968ff9e045ab76a094a43419e3b8cae9d64ccbf303ed2d031204d2a1f7e9",
+      "library/sources/ldraw/parts/2941.dat": "342395711816ef23ea26692494b7a76d0e206c19fe59c6d5d9236c7da325a9ad",
+      "library/sources/ldraw/parts/32108.dat": "e570118b7604f3f234c6369f759032412d4c5040557b863e2073e805272cadcf",
+      "library/sources/ldraw/parts/s/28943s01.dat": "c5d5981a250c15a7f0e0bc2205e086c015473adb7d672cd2d31c697893c5b699",
+      "library/sources/ldraw/parts/u9289.dat": "95db76a04aeb1a06e6e847229aeabf52e27a4c4661ab8fddab32c65920f22970",
+      "library/sources/ldraw/parts/u9301.dat": "06f856d7b705dedffcf2c99468d8f0dee8c2a49f4145f13aea807aecb103cff8",
+      "library/sources/ldraw/parts/u9406.dat": "e63e6125d3cb188de34b691665762330f697840383ff4d4c71204403d9973552",
+      "tests/browser/model-library-ldraw-repair9-webkit5.spec.ts": "e70b95b5d675bda220b8eb4c6c7251cbb47bbf78857f6c81762314cc05ef1686",
+      "tests/browser/model-library-ldraw-repair9.spec.ts": "c48d179904d415669113659fba7347842a9ffb1f4e69b6b31744a76b22111702"
+    },
+    "immutableBuildRuntime": {
+      "dist/app-showcase/README.md": "abc4e1333f5195f98c4e34265b80c5016134b85254ff44afd05f6ed7d0e47577",
+      "dist/app-showcase/brickwright.png": "4f12ea0f0f21056104c7c665a8ad2082dfaf1265d131e402e793909cef6b4065",
+      "dist/app-showcase/cometbeat.png": "93c1e0820b28de7b4209a37abe4e9b6e320a1a495bd9c44e056b492454cc6769",
+      "dist/app-showcase/crispaudio.png": "482b887823d8cbe42fb450bf9a1e7fc50213f4c80364d75387559876e157fb3d",
+      "dist/app-showcase/crispbingo.png": "974a26f8a7f20b8b61d806a1f7ef7d24ef82c1a775b8c154c96f5b7015939910",
+      "dist/app-showcase/crispchess.png": "375e1c4df95c0a294aaf5dc078bdbc99d8753100812649821cc88be87ec7a33a",
+      "dist/app-showcase/crispcloud.png": "7736e71fd28f2400424a106513224a4dd9953ae11049c219210964cfc7ebdcfb",
+      "dist/app-showcase/crispdeck.png": "3cf496171fcfe2ea3af23c6901d3b4375546d383a34288f3e433d58b8acd17ab",
+      "dist/app-showcase/crisperplayer.png": "732bf35419dbf4a3cdb604ff18e72f7f667901052c0c12b091a535440a9cec67",
+      "dist/app-showcase/crisperweaver.png": "ca56b9ba5f7b4de928b7baf6979bbabe01314c0382f9a85d558f673f9435de43",
+      "dist/app-showcase/crispmath.png": "d85b699f750768c23d683180a37385f4c36fdbed796989f464de26840ea8915e",
+      "dist/app-showcase/crispmesh.png": "f10da8d3835dd3d13e9a8c8422338fda2a746ef5401a42efc3f2f5bbc90ff7ad",
+      "dist/app-showcase/crispsorter.png": "9b92d82e86f687bedf3f3378c27e7b4c24c83d3a953f337e5ec1cfde798666bf",
+      "dist/app-showcase/crispsudoku.png": "af8ee9c4eae94cfe68af1e38062f7d1da9346ada0734476f19c9a705eb73db5c",
+      "dist/app-showcase/crisptuner.png": "cbac4f2381e240dd9c7879bc200262037f6bf9c35c688b65aba09402a077e033",
+      "dist/app-showcase/hectopolis.png": "687f651d1f4d98fd4653b85191c6fc273e2497447916fb4bf9be447b7f2c6ed3",
+      "dist/app-showcase/kerotakis.png": "0b6a24aec16e25ee6d2e098c40fd56cf530c26f917f70a69f9bb68cda4409d92",
+      "dist/app-showcase/naga.png": "93f34940d26e229849e697f5bc98a3d28d4ed5e2caa926a34aabd93e37e74da6",
+      "dist/app-showcase/numbernebula.png": "39d20c36896f98452b5bc6f0f4608caab1dd4ea7fc74034c88c93c90f9521bdb",
+      "dist/app-showcase/word-universe.png": "081ee34a1707823873a44fdfe4c7d4bebeb3c2fa4d7b099a44360867b1c581e7",
+      "dist/assets/embedded-C04-1XXN.js": "406a8553644374071e1276481dfee77b28e247ad71900fef64369dd2889cea52",
+      "dist/assets/esm-BVrP0UM0.js": "583ed62f030fbd89709d52e4be737ad15202fccc6e47ee007246a400885a436c",
+      "dist/assets/esm-p_D6S535.js": "63b50fa6679e73dc196d4db9e74e2fb465d1e47b3a854b2dab256605040a0aa8",
+      "dist/assets/files-BvSzA95Z.css": "a0bd03c2cdb4b600a58121b396da840424c00407085354cd39adee4a3064593b",
+      "dist/assets/files-gYNcJTkq.js": "15c30a03f187ece6f695c2cb24c0b755233bf12b35f6c65599b7ef78164b28e6",
+      "dist/assets/geometry.worker-CSAI0DTS.js": "534cb023a75bba83ba86da03ce88e045975c484d6d9b1556f6c4fe77935c7626",
+      "dist/assets/jolt-physics.wasm-compat-DLMYuBx1.js": "db08bffd7113c77636228e2eda2814a40667a17dab709f053bac24f23a8730e3",
+      "dist/assets/main-Dzh4396l.js": "f15b96cd7cb0a3b3722c749b60302cbec52ed4fbcb923e8ec9024ce0595c56fc",
+      "dist/assets/manifold-BE4c7gO-.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c",
+      "dist/assets/simulation.worker-KDFnK5IY.js": "816adfdd597954fcd542d196410b9c9dd834f30fc408caa2160183f2f7357bc2",
+      "dist/assets/web-CFW_TFFV.js": "8f03907704218410d27e2e4ac5c2b65221a46d5cc9d36d3908efa6eeb4e046fd",
+      "dist/assets/web-Ds1jRplc.js": "707974c0e372003c645a6b13439e11091794fc7a7646cedf53d72f8b69405c23",
+      "dist/cad-assets/app-license.txt": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+      "dist/cad-assets/build-info.json": "1db5682a8c29c146c1a187dd36889f2e9f4d2b2759c18ea876118bb95f62b0dd",
+      "dist/cad-assets/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c",
+      "dist/cad-assets/notices.txt": "dea50eee6d6781549af4e3740bfaf7661b29479696e5ae6cbe41eafd93c0fa70",
+      "dist/embedded.html": "667d2cfe9e2fbad511626fedbadd662e454b41d3672c7fbab4a293a889fc25a7",
+      "dist/icon.svg": "30876dc5d178d36f341cc5126e6489a7078ac9f667a56a9e625f9d090d3d94f4",
+      "dist/index.html": "4aad4fe1198ba4feb38f3289c95973bd9b668090decca6441d2eab1975f1a222",
+      "dist/manifest.webmanifest": "7d57494ede2e7c699fd24fd309335bb701138d85cc84d5c4ff4d9851f44ae535",
+      "dist/sw.js": "1cefff7ad08203f8dbf6e4d36ad2e31d446548afc580500cde8d3edba6632a03",
+      "package-lock.json": "fce627d2348b17711a6341f1ec5a985603a2062ba94b114da86d6bfdfdf38cfa",
+      "scripts/lib/ldraw-model.mjs": "50bb19ee767578428d0818a72cff2295a463a2e3c67fbae66907e8e2a422535e",
+      "library/ldraw-reviewed-batch-manifest.json": "9cd1e18005503a8c87ad1a860175ceec8eeb26461a73d63a326e75b5d357cef0",
+      "library/ldraw-reviewed-batch-spec.json": "dbf5a15fdb50f9481edeab8e50b7eaa0610264ee5bfa7e4759c93d7bc438572f",
+      "library/previews.json": "ba382d5ec58c12247d9fe7810db814822b8e4468c453acd0822b1043c37e9d58",
+      "node_modules/manifold-3d/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    }
+  },
+  "continuationHarnessArchive": {
+    "originalMeasuredPath": "tests/browser/model-library-ldraw-repair9-webkit5.spec.ts",
+    "archivedPath": "docs/evidence/ldraw-repair9-webkit5-2026-11-15.spec.ts.txt",
+    "sha256": "e70b95b5d675bda220b8eb4c6c7251cbb47bbf78857f6c81762314cc05ef1686",
+    "reason": "Exact one-shot subset harness uses BW_CAD_BROWSER_COMPLETION_DIR and explicit --project=ipad-webkit; archived verbatim so ordinary full-suite discovery does not repeat the subset. Restore to measured path for historical replay."
+  },
+  "remainingEleven": "A/B unresolved, no intrinsic physical-part defect claim",
+  "localReceipt": "/mnt/storage/brickwright-cycle99-webkit5/result.json",
+  "originalFailureReceipt": "/mnt/storage/brickwright-cycle99-top9/result.json",
+  "proofHashes": {
+    "/mnt/storage/brickwright-cycle99-webkit5/result.json": "b39c567fcd900134d5fa20345db7b7d7e7dac34c9fc5508b9c733fcf3d8964e9",
+    "/mnt/storage/brickwright-cycle99-webkit5/subset-binding.json": "cee35de28c912c67c0442b526e10dba27de66d8ad87db20c09ec2fbe7e2ef760",
+    "/mnt/storage/brickwright-cycle99-webkit5/browser.json": "0959ae4a04d6fa503351d646b6b1124f5ed5a0d227cbdcb8411733c1c6bb63c5",
+    "/mnt/storage/brickwright-cycle99-top9/phase-7.log": "ef38dcdb7606f50e5df3d61e49932d1d3ec8db58c07b5364d4d4b7ff866100f3"
+  }
+}
