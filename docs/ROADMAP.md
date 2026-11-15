@@ -158,3 +158,24 @@ remain available. See [workflow acceptance](UX-AND-PARAMETRIC.md#fast-constructi
 Next priorities: previewed alignment, persistent face workplanes, duplicate-repeat,
 lock/hide/isolate and direct dimension handles. Keep these contextual and usable
 without a keyboard; do not add another permanent ribbon or explanatory text wall.
+
+
+## Everyday generator retention — 2026-11-15
+
+Twelve additional shape families now retain numeric design recipes shared by
+Properties, Model source and MCP. Linked hollow-part dimensions and separate
+surface-detail controls are implemented. The catalogue parameter gap is now 27
+presets. See [RETAINED-SHAPES.md](RETAINED-SHAPES.md) for the exact scope,
+legacy handling and the remaining formula/constraint boundary. Cutting tools and
+enclosure parts are next; functional mechanical parts follow with fit and
+collision evidence.
+
+
+## Existing-object surface dragging — 2026-11-15
+
+Existing selections now have default-on surface contact dragging, a magnet/`C`
+opt-out, visible face targets and temporary Alt bypass. Relative geometry and
+scales are preserved; one release creates one transform/history step. Exact
+source-buffer bounds are cached, input is coalesced per frame, and the shape
+palette no longer blurs the canvas. See [SURFACE-DRAGGING.md](SURFACE-DRAGGING.md)
+for behavior and the limits of the performance evidence.

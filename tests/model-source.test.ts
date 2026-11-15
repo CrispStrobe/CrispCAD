@@ -66,7 +66,7 @@ it('merges independent GUI/source edits and new parts while preserving draft com
 });
 it('keeps mesh buffers in the project and retains attribution across the v6 source workflow',async()=>{
  const {createPresetDocument}=await import('../packages/editor/src/shapes.js'),{readFileSync}=await import('node:fs'),{hasModelAttribution}=await import('@brickwright/cad-core');
- const session=createCadSession(createPresetDocument('wedge')),id=session.state.document.roots[0],asset=JSON.parse(readFileSync('library/seed-catalogue.json','utf8')).assets[0];
+ const legacy=createPresetDocument('wedge');delete legacy.nodes[legacy.roots[0]].generator;const session=createCadSession(legacy),id=session.state.document.roots[0],asset=JSON.parse(readFileSync('library/seed-catalogue.json','utf8')).assets[0];
  session.attachProvenance([id],{id:'tracked',asset,selectedFile:asset.original,modificationNotes:'Synthetic attachment for source regression.'});session.enableModelSource();session.rename('Mesh source');const text=session.modelSource;expect(text).toContain('asset(');expect(text).not.toContain('positions:');const copy=compileModelSource(text,session.state.document);expect((copy.nodes[id] as any).positions).toEqual((session.state.document.nodes[id] as any).positions);expect(hasModelAttribution(copy)).toBe(true);
  const retained=session.prepareModelSource(text.replace(/\s*provenance: \["tracked"\],?\n/, '\n'));expect(retained.document.nodes[id].provenance).toContain('tracked');validateDocument(session.fragment([id]));
 });

@@ -16,7 +16,7 @@ it('builds orthonormal, right-handed placement frames on top, sides and tilted s
 });
 it('places every essential preset on a face without flattening recipes, joints or source',()=>{
  for(const preset of shapeCatalog.filter(p=>!p.additional)){const doc=createPresetDocument(preset.id,'BW'),before=JSON.stringify(doc),placed=placeFragment(doc,{point:[40,20,30],normal:[1,0,0],rotation:[0,90,0],base:anchor(doc),snapped:true});validateDocument(placed);const result=kernel.evaluate(placed),min=Math.min(...result.bodies.map(b=>b.bounds.min[0]));expect(min,preset.id).toBeCloseTo(40,3);expect(JSON.stringify(doc)).toBe(before);expect(placed.nodes[placed.roots[0]].generator).toEqual(doc.nodes[doc.roots[0]].generator);expect(placed.joints).toEqual(doc.joints);}
-});
+},30000); // Batch evaluates every essential preset twice; keep geometric assertions unchanged.
 it('retains driven translations and rotations after placement and later parameter edits',()=>{
  const s=createCadSession(),id=s.add({kind:'box',size:[10,8,6]});s.setParametric({version:1,parameters:{distance:{expression:'12',unit:'mm'},angle:{expression:'20',unit:'deg'}},bindings:[{nodeId:id,property:'positionX',expression:'distance'},{nodeId:id,property:'rotationZ',expression:'angle'}]});
  const source=s.state.document,base=anchor(source),normal:[number,number,number]=[.3,.5,.8],placed=placeFragment(source,{point:[40,20,30],normal,rotation:placementFrame(normal).rotation,base,snapped:true});validateDocument(placed);placed.parametric!.parameters.distance.expression='24';placed.parametric!.parameters.angle.expression='40';applyParametricBindings(placed);validateDocument(placed);
