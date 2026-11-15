@@ -788,3 +788,40 @@ fixed guards. Its unsupported filter/sign/format and memoization experiment was
 preserved externally and entirely reverted. No cache/work-counter change is
 shipped. See `library/corpus-audit/editor-screening-cycle28.json` for the separate
 failed cohort and successful admission evidence.
+
+
+## Reviewed authored LDraw batch
+
+`ldraw-reviewed-batch-manifest.json` adds eighteen official authored parts (no
+fixtures): three simple tiles/slopes, twelve distinct axle originals and three
+round plate/tile/beam originals. Exact root/dependency files, per-file authors and
+CC-BY-4.0 grants, source revisions, nominal LDU conversion, derivative identities
+and fresh mesh measurements are retained. The eighteen records add eighteen
+unique STLs and previews; together with prior admitted collections the corpus
+has 129 records/127 distinct STLs and the full gallery has 168 previews.
+
+The original archival converter uses exact decimal affine arithmetic for point
+identity, so mathematically equal authored coordinates share an index without
+rounding or tolerance welding. Native polyhedron planarity remains unchanged.
+When a convex LDraw quad exceeds native planarity but satisfies the official
+ordinary less-than-one-degree coplanarity rule for both diagonals, the converter
+emits two triangles on a fixed diagonal, preserving all four coordinates and
+winding. Strongly warped/concave quads are refused. Decimal precision is bounded;
+existing source/file/depth/work/point/face and mesh limits still apply. The prior
+6934 derivative reproduces byte-for-byte. No runtime dependency is added.
+
+Reproduce the batch offline after building packages:
+`node scripts/generate-ldraw-reviewed-batch.mjs --check`. Its specification pins
+every source and previously qualified derivative; stale source, grant, mesh or
+quality identities are refused. The browser batch checks every new raster
+preview and actual offline insertion/history/provenance on Chromium and iPad
+WebKit. DAT files remain archival metadata; editor insertion uses verified STL.
+
+The associated screening evidence distinguishes the sixteen initial planarity
+refusals caused by converter representation (twelve become fully qualified;
+four then expose source-surface boundaries) from twenty-six final non-manifold
+refusals. Independent exact source-face traces prove unpaired edges in those
+render-surface assemblies; these are unsupported closed-solid inputs, not a
+claim that the physical parts are defective. No facet repair, guessed caps,
+primitive substitution or relaxed tolerance is used. The existing111 records,
+222 source/derivative identities and150 preview values are retained unchanged.
