@@ -306,3 +306,36 @@ loaded from the network at runtime.
       of your accepting any such warranty or additional liability.
 
    END OF TERMS AND CONDITIONS
+
+
+## Adafruit motor model derivatives (MIT)
+
+The meshes in `src/motor-assets/` derive from the original STEP files in
+`library/sources/adafruit-motors/` at Adafruit_CAD_Parts commit
+9f2a89f3d5c3491886d58cb7fe83385417563cf4. SHA-256, original sizes and source
+URLs are retained in provenance.json and every model. Conversion and shaft
+separation are documented in scripts/convert-adafruit-motors.py. These models
+provide mechanical geometry and an ideal hinge drive; density, torque and power
+controls do not constitute a calibrated electrical or performance model.
+
+MIT License
+
+Copyright (c) 2016 Adafruit Industries
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

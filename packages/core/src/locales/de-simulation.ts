@@ -1,5 +1,25 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "Invalid collision assembly": "Ungültige Kollisionsbaugruppe",
+  "Motors": "Motoren",
+  "DC toy motor": "DC-Spielzeugmotor",
+  "Yellow TT gearmotor": "Gelber TT-Getriebemotor",
+  "Metal TT gearmotor": "TT-Metallgetriebemotor",
+  "Output shaft": "Abtriebswelle",
+  "Motor casing": "Motorgehäuse",
+
+  "Program motor port": "Motoranschluss im Programm",
+  "Configure motor port": "Motoranschluss konfigurieren",
+  "No free CAD motor port": "Kein freier CAD-Motoranschluss",
+  "Invalid or duplicate CAD motor port": "Ungültiger oder doppelter CAD-Motoranschluss",
+  "Unknown or ambiguous CAD motor": "Unbekannter oder mehrdeutiger CAD-Motor",
+  "Simulation cannot run in a background page": "Die Simulation kann nicht auf einer Hintergrundseite laufen",
+  "Motor command was replaced": "Motorbefehl wurde ersetzt",
+  "CAD motor did not reach its target": "Der CAD-Motor hat sein Ziel nicht erreicht",
+  "Unsupported CAD stop action": "Nicht unterstützte CAD-Stoppaktion",
+  "Invalid CAD motor travel command": "Ungültiger CAD-Motordrehbefehl",
+  "Invalid simulation step": "Ungültiger Simulationsschritt",
+
   "Assembly simulation": "Baugruppen-Simulation",
   "Drive existing hinge joints. Preview changes do not alter the design.": "Vorhandene Drehgelenke antreiben. Die Vorschau verändert den Entwurf nicht.",
   "Run simulation": "Simulation starten",

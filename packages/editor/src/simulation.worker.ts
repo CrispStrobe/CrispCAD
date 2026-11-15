@@ -6,7 +6,9 @@ import type {GeometryKernel} from '@brickwright/cad-geometry';
 import type {CadDocument} from '@brickwright/cad-core';
 import type {SimulationCommand,SimulationFrame} from './simulation-protocol.js';
 let kernel:Promise<GeometryKernel>|undefined,world:Awaited<ReturnType<typeof createPhysicsWorld>>|undefined,document:CadDocument|undefined;
-const frame=():SimulationFrame=>({time:world!.time,poses:document!.roots.filter(id=>!document!.nodes[id].reference&&document!.nodes[id].role!=='hole').map(id=>({id,...world!.pose(id)})),angles:Object.fromEntries((document!.joints??[]).filter(j=>j.kind==='hinge').map(j=>[j.id,world!.hingeAngle(j.id)*180/Math.PI]))});
+const angles:Record<string,number>={},lastAngles:Record<string,number>={},speeds:Record<string,number>={};
+const measure=()=>{for(const joint of document!.joints??[])if(joint.kind==='hinge'){const current=world!.hingeAngle(joint.id)*180/Math.PI;let delta=current-(lastAngles[joint.id]??current);delta=((delta+180)%360+360)%360-180;angles[joint.id]=(angles[joint.id]??0)+delta;speeds[joint.id]=delta/.005;lastAngles[joint.id]=current;}};
+const frame=():SimulationFrame=>({time:world!.time,poses:document!.roots.filter(id=>!document!.nodes[id].reference&&document!.nodes[id].role!=='hole').map(id=>({id,...world!.pose(id)})),angles:{...angles},speeds:{...speeds}});
 self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
  const command=event.data;
  try{
@@ -18,13 +20,15 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
    const ready=await(kernel??=createGeometryKernel({wasmURL:command.wasmURL}));
    const geometry=ready.evaluate(document),prepared=await prepareDocumentCollisions(document,geometry,ready);
    world=await createPhysicsWorld(document,geometry,prepared);
+   for(const map of [angles,lastAngles,speeds])for(const key of Object.keys(map))delete map[key];measure();
   }else{
    if(!world)throw new Error(t('Start simulation first'));
-   if(command.op==='step')world.step(command.seconds);
+   if(command.op==='step'){if(!Number.isFinite(command.seconds)||command.seconds<=0||command.seconds>.05||Math.abs(command.seconds*200-Math.round(command.seconds*200))>1e-8)throw new Error(t('Invalid simulation step'));for(let i=0;i<Math.round(command.seconds*200);i++){world.step(.005);measure();}}
    else if(command.op==='motor'){
     if(!Number.isFinite(command.speedDps)||Math.abs(command.speedDps)>720)throw new Error(t('Motor speed must be between -720 and 720 degrees per second'));
     world.setHingeMotor(command.id,command.speedDps*Math.PI/180,command.torqueNm);
-   }else if(command.op==='stop-motors')for(const joint of document!.joints??[])if(joint.kind==='hinge')world.stopHingeMotor(joint.id);
+   }else if(command.op==='stop-motor'){if(command.action==='coast')world.coastHingeMotor(command.id);else world.stopHingeMotor(command.id);}
+   else if(command.op==='stop-motors')for(const joint of document!.joints??[])if(joint.kind==='hinge')world.stopHingeMotor(joint.id);
   }
   self.postMessage({request:command.request,frame:frame()});
  }catch(error){self.postMessage({request:command.request,error:error instanceof Error?error.message:String(error)});}

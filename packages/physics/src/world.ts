@@ -82,11 +82,19 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
    hinge.SetTargetAngularVelocity(speedRadS);hinge.SetMotorState(J.EMotorState_Velocity);
    for(const body of [joint.bodyA,joint.bodyB])bodies.ActivateBody(byId.get(body).GetID());
   },
+  coastHingeMotor(id:string){
+   if(disposed)throw new Error(t('Physics world was disposed'));
+   if(doc.joints?.find(j=>j.id===id)?.kind!=='hinge')throw new Error(t('Unknown hinge joint'));
+   J.castObject(constraints.get(id),J.HingeConstraint).SetMotorState(J.EMotorState_Off);
+  },
   stopHingeMotor(id:string){
    if(disposed)throw new Error(t('Physics world was disposed'));
    const joint=doc.joints?.find(j=>j.id===id);if(joint?.kind!=='hinge')throw new Error(t('Unknown hinge joint'));
    // Brake through the finite motor torque; never overwrite the body's pose/velocity.
-   J.castObject(constraints.get(id),J.HingeConstraint).SetTargetAngularVelocity(0);
+   const hinge=J.castObject(constraints.get(id),J.HingeConstraint),motor=hinge.GetMotorSettings();
+   if(motor.mMaxTorqueLimit>100){motor.mMaxTorqueLimit=.02;motor.mMinTorqueLimit=-.02;}
+   hinge.SetTargetAngularVelocity(0);hinge.SetMotorState(J.EMotorState_Velocity);
+   for(const body of [joint.bodyA,joint.bodyB])bodies.ActivateBody(byId.get(body).GetID());
   },
   hingeAngle(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const joint=doc.joints?.find(j=>j.id===id);if(joint?.kind!=='hinge')throw new Error(t('Unknown hinge joint'));return J.castObject(constraints.get(id),J.HingeConstraint).GetCurrentAngle();},
   dispose,
