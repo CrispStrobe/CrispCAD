@@ -10,7 +10,7 @@ import {ttRoverCollisionAssembly} from './tt-rover-collisions.js';
 export const TT_ROVER_ID='robot-tt-rover';
 export const roverCatalog=[
  {id:TT_ROVER_ID,name:'Scout TT rover',category:'Robots',description:'A buildable two-wheel robot with Adafruit TT motors, original PLA parts and A/B simulation drives. Print parts separately; see the build guide.',keywords:'robot rover pla printable adafruit 3777 tt differential drive scout wheels',color:'#38a99a'},
- {id:'robot-tt-rover-print',name:'Scout PLA print layout',category:'Robots',description:'Only the eleven original PLA parts, laid flat in two labelled groups. Export each part separately for your printer.',keywords:'robot rover pla chassis wheel cradle skid standoff print parts',color:'#38a99a'},
+ {id:'robot-tt-rover-print',name:'Scout PLA print layout',category:'Robots',description:'Eleven original PLA parts laid flat for inspection. Export each part separately for your printer.',keywords:'robot rover pla chassis wheel cradle skid standoff print parts',color:'#38a99a'},
  {id:'robot-tt-rover-fit',name:'Scout shaft fit gauge',category:'Robots',description:'Five double-D sockets with 0.15–0.55 mm total clearance. Print this first and check your actual TT shaft.',keywords:'robot rover tolerance coupon double d shaft fit gauge',color:'#e8ab47'},
 ];
 export const isTTRover=(id:string)=>roverCatalog.some(p=>p.id===id);

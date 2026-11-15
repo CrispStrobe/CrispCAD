@@ -6,6 +6,10 @@ standalone CAD and the shared Brickwright SDK. Existing hinge joints have speed
 and Reset operate in a dedicated worker at 200 Hz. The first body can explicitly
 be fixed as a base (enabled by default). Closing/resetting restores the design;
 editing invalidates the preview, and simulation never writes document/history.
+Projects can save `simulation.fixBase`; the Scout TT rover saves `false` so its
+chassis remains mobile when imported into an empty workspace. Existing documents
+without this setting keep the prior default, and a manual preview override stays
+outside model history.
 Manual previews pause on focus loss. Program-driven controls may continue while
 the CAD tab is hidden; page hiding stops them.
 
@@ -30,8 +34,16 @@ manufactured-mechanism accuracy.
 - Mass, center of mass and the complete inertia tensor come from signed
   tetrahedral integrals of the actual evaluated solid, not from overlapping
   collision hulls. Jolt receives an explicit COM offset and full mass/inertia.
+- Parts connected by fixed mates form one native compound rigid body. Their
+  evaluated masses and centers are summed, and their inertia tensors are
+  combined using the parallel-axis theorem. This prevents solver drift across
+  small shafts and much heavier attached wheels. Every original part retains
+  its document identity, editable geometry, world-space pose delta, contact
+  material and picking/force interface. A static member fixes its whole rigid
+  component; initial part velocities are projected onto the component while
+  conserving linear and angular momentum.
 - Hinge presets contain separate leaves and a pin, local joint frames, angular
-  limits, a hinge constraint and a fixed pin constraint. Inserting, duplicating,
+  limits, a hinge constraint and a fixed pin connection. Inserting, duplicating,
   deleting, saving and reopening retain/remap the relevant references.
 - References such as the ruler are rendered but excluded from printable meshes,
   mass and simulation. Boolean operations cannot silently absorb reference
@@ -63,7 +75,8 @@ A compound is accepted only after comparison with the evaluated source solid:
   Default total relative difference is at most 2%; default outer bounds deviation
   is at most 0.2 mm. These are preview limits, not a Hausdorff-distance proof or a
   guarantee that every small cavity is clear. Fit-critical openings need probes.
-- Maximum 64 vertices per hull, 2048 hulls per body and 4096 per world. Difficult
+- Maximum 64 vertices per hull, 2048 hulls per evaluated source part and 4096
+  per world, including all parts aggregated by fixed mates. Difficult
   geometry is rejected rather than silently replaced with a box or convex hull.
 - Each Jolt hull is centered and conditioned near unit size, then wrapped in a
   scaled shape to recover SI geometry. Its hull-building tolerance is bounded by

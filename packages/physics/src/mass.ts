@@ -2,6 +2,15 @@
 import {t} from '@brickwright/cad-core';
 import type { BodyMesh } from '@brickwright/cad-geometry';
 export interface MassProperties {massKg:number;volumeM3:number;centerM:[number,number,number];inertiaKgM2:number[][]}
+/** Rigidly attached solids retain their separate densities. Sum their tensors
+ * about the common centre using the parallel-axis theorem. */
+export function combineMassProperties(parts:readonly MassProperties[]):MassProperties{
+ const massKg=parts.reduce((sum,p)=>sum+p.massKg,0),volumeM3=parts.reduce((sum,p)=>sum+p.volumeM3,0);
+ if(!parts.length||!Number.isFinite(massKg)||massKg<=0)throw new Error(t('Invalid solid inertia'));
+ const centerM=[0,1,2].map(axis=>parts.reduce((sum,p)=>sum+p.massKg*p.centerM[axis],0)/massKg) as [number,number,number],inertiaKgM2=Array.from({length:3},()=>[0,0,0]);
+ for(const part of parts){const r=part.centerM.map((v,i)=>v-centerM[i]),r2=r.reduce((sum,v)=>sum+v*v,0);for(let row=0;row<3;row++)for(let col=0;col<3;col++)inertiaKgM2[row][col]+=part.inertiaKgM2[row][col]+part.massKg*((row===col?r2:0)-r[row]*r[col]);}
+ return {massKg,volumeM3,centerM,inertiaKgM2};
+}
 /** Signed tetrahedral integrals of the evaluated solid, in SI, about its actual COM.
  * Collision decomposition never determines the body's mass or inertia. */
 export function solidMassProperties(mesh:BodyMesh,densityKgM3:number):MassProperties {
