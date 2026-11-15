@@ -14,6 +14,7 @@ test('browse originals without a request, download verified bytes and reuse offl
  await expect(dialog).toContainText('units and orientation have not been verified');expect(requests).toBe(0);
  const root=adafruitArchive.folders.find(f=>f.name==='Adafruit archive files')!;
  await dialog.getByLabel('Original file').selectOption(String(root.files.findIndex(f=>f.path==='LICENSE')));
+ await dialog.getByText('Original source files',{exact:true}).click();
  const downloading=page.waitForEvent('download');await dialog.getByRole('button',{name:'Download verified original'}).click();
  expect(await readFile((await (await downloading).path())!,'utf8')).toBe(adafruitArchive.licence);expect(requests).toBe(1);
  await context.setOffline(true);await dialog.getByLabel('Use cached files only').check();
