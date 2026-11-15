@@ -820,9 +820,10 @@ existing objects (magnet button/C toggles it), coalesced drag previews and cache
 exact mesh bounds. Select/Resize dimensions and Move/Rotate axis values now appear
 as separate compact layers outside the selected footprint.
 
-The final merged source also preserves two concurrent library admissions and the
-corner-box origin correction, which arrived after those native builds. It passed
-954 unit tests (one existing skip). Focused browser runs passed 45 distinct checks
+The source checkpoint `0bcf690` also preserves two concurrent library admissions
+and the corner-box origin correction, which arrived after those native builds.
+It passed 954 unit tests (one existing skip). The later Italian-flag library
+admission is preserved as well, with separate focused library verification. Focused browser runs passed 45 distinct checks
 with one platform skip. German validation covers 1,443 messages. The catalogue
 audit covers 59 presets, including one excluded reference ruler; 27 shape-specific
 parameter gaps remain. Twelve edited retained-family variants passed Jolt checks.
