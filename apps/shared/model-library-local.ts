@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {bundledSourceFiles,bundledAssetLicenceTexts} from './model-library-files.js';
 import {createLocalModelLibraryCatalogue, parseModelLibraryCatalogue, validateModelLibraryCatalogue} from '@brickwright/cad-core';
 import manifestText from '../../library/examples-manifest.json?raw';
 import supportedText from '../../library/supported-models-manifest.json?raw';
@@ -14,20 +15,13 @@ import previewText from '../../library/previews.json?raw';
 import bsdNotice from '../../library/evidence/brickwright-examples-LICENSE.txt?raw';
 import cc0Notice from '../../library/evidence/slicer-test-models-LICENSE.md?raw';
 import mitNotice from '../../library/evidence/jscad-LICENSE.txt?raw';
-import corpusNotice from '../../library/evidence/corpus-selection-MIT-LICENSE.txt?raw';
-import a2dNotice from '../../library/evidence/a2d-MIT-LICENSE.txt?raw';
-import sconNotice from '../../library/evidence/scon-MIT-LICENSE.txt?raw';
-import ldrawNotice from '../../library/evidence/ldraw-CC-BY-4.0.txt?raw';
 
 // Only exact files bundled at build time are exposed; no path is read from a host filesystem.
-const sources = import.meta.glob(['../../library/sources/brickwright/*.cad', '../../library/sources/slicer-test-models/*.scad', '../../library/sources/jscad/gear.js', '../../library/sources/corpus-selection/*.scad', '../../library/sources/a2d/**/*.scad', '../../library/sources/scon/**/*.scad', '../../library/sources/jscad-reviewed/*.js', '../../library/sources/jscad-reviewed/*.scad', '../../library/sources/ldraw/**/*.dat'], {query: '?raw', import: 'default', eager: true}) as Record<string, string>;
+const sources = import.meta.glob(['../../library/sources/**/*.cad','../../library/sources/**/*.scad','../../library/sources/**/*.js','../../library/sources/**/*.dat'], {query:'?raw',import:'default',eager:true}) as Record<string,string>;
+const licenceDocuments = import.meta.glob(['../../library/evidence/*.txt','../../library/evidence/*.md'], {query:'?raw',import:'default',eager:true}) as Record<string,string>;
 const meshData = import.meta.glob('../../library/meshes/ldraw/*.stl', {query: '?url&inline', import: 'default', eager: true}) as Record<string, string>;
 export function createBundledModelLibrary() {
-  const localFiles = new Map<string, Uint8Array>();
-  for (const [path, source] of Object.entries(sources)) {
-    const relative = path.slice(path.indexOf('/sources/') + 1);
-    localFiles.set(relative, new TextEncoder().encode(source));
-  }
+  const localFiles = bundledSourceFiles(sources);
   for (const [path, dataUrl] of Object.entries(meshData)) {
     const encoded = /^data:[^,]*;base64,(.*)$/.exec(dataUrl)?.[1];
     if (!encoded) throw new Error('Expected an inline bundled library mesh.');
@@ -54,5 +48,5 @@ export function createBundledModelLibrary() {
   if (!checked.valid) throw new Error(checked.errors.join(' '));
   const previews=new Map<string,string>(Object.entries(JSON.parse(previewText).previews));
   for(const asset of checked.catalogue.assets)if(!previews.has(asset.original.sha256))throw new Error('Missing bundled model preview: '+asset.id);
-  return {catalogue: checked.catalogue, localFiles, previews, licenceTexts:new Map([['BSD-3-Clause',bsdNotice],['CC0-1.0',cc0Notice],['MIT',mitNotice],...corpus.assets.map(asset=>[asset.id,corpusNotice] as [string,string]),...a2d.assets.map(asset=>[asset.id,a2dNotice] as [string,string]),...scon.assets.map(asset=>[asset.id,sconNotice] as [string,string]),...jscad.assets.map(asset=>[asset.id,mitNotice] as [string,string]),...ldraw.assets.map(asset=>[asset.id,ldrawNotice] as [string,string])])};
+  return {catalogue:checked.catalogue,localFiles,previews,licenceTexts:new Map([['BSD-3-Clause',bsdNotice],['CC0-1.0',cc0Notice],['MIT',mitNotice],...bundledAssetLicenceTexts([manifestText,fixtureText,supportedText,corpusText,a2dText,sconText,jscadText,ldrawText,ldrawBatchText,seedText].flatMap(text=>JSON.parse(text).assets),licenceDocuments)])};
 }

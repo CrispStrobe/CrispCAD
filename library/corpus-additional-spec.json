@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "asset": {
+        "id": "corpus-smooth-prim-authored-default",
+        "title": "Smooth primitives authored default demonstration",
+        "author": "Ryan A. Colyer",
+        "version": "0d0038f984465f3eb0f6026a4d5de2f79d2dcea8",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/rcolyer/smooth-prim",
+          "commit": "0d0038f984465f3eb0f6026a4d5de2f79d2dcea8",
+          "sourceUrl": "https://raw.githubusercontent.com/rcolyer/smooth-prim/0d0038f984465f3eb0f6026a4d5de2f79d2dcea8/smooth_prim.scad"
+        },
+        "corpusSelection": {
+          "repositoryId": "smooth-prim",
+          "upstreamPath": "smooth_prim.scad",
+          "archivedPath": "corpus/repos/smooth-prim/smooth_prim.scad",
+          "sha256": "16de0aac3dc3cf8d357d52e1e2d333a2d0e11c21a59efb042bd4604fc341e8e0"
+        },
+        "licence": {
+          "spdx": "CC0-1.0",
+          "scope": "asset",
+          "attribution": "Ryan A. Colyer. Original CC0-1.0 dedication and all per-file notices retained. Source: https://raw.githubusercontent.com/rcolyer/smooth-prim/0d0038f984465f3eb0f6026a4d5de2f79d2dcea8/smooth_prim.scad",
+          "evidenceUrl": "https://raw.githubusercontent.com/rcolyer/smooth-prim/0d0038f984465f3eb0f6026a4d5de2f79d2dcea8/LICENSE.txt",
+          "localEvidence": [
+            {
+              "path": "evidence/smooth-prim-CC0-LICENSE.txt",
+              "bytes": 7049,
+              "sha256": "7179683e8000e6bdc9bbc60d85edf0a4ac8e76f951857f54fcb775d5886f1309",
+              "url": "https://raw.githubusercontent.com/rcolyer/smooth-prim/0d0038f984465f3eb0f6026a4d5de2f79d2dcea8/LICENSE.txt"
+            }
+          ],
+          "capturedOn": "2026-11-13",
+          "review": "accepted",
+          "reviewer": "Codex existing CAD owner; exact archived author CC0 source/defaults, native5220tri and closedpositivevolume verified2026-11-15"
+        },
+        "original": {
+          "path": "sources/colyer/smooth-prim-default.scad",
+          "url": "https://raw.githubusercontent.com/rcolyer/smooth-prim/0d0038f984465f3eb0f6026a4d5de2f79d2dcea8/smooth_prim.scad",
+          "bytes": 8818,
+          "sha256": "16de0aac3dc3cf8d357d52e1e2d333a2d0e11c21a59efb042bd4604fc341e8e0",
+          "format": "openscad"
+        },
+        "derivatives": [
+          {
+            "path": "meshes/colyer/smooth-prim-default.stl",
+            "bytes": 261084,
+            "sha256": "4391dafaed2d22f011eb280d2c0124f658326f62babca82324e6da6391640d0d",
+            "format": "stl"
+          }
+        ],
+        "modificationNotes": "Byte-identical authored original including its existing Demo() entrypoint and full default geometry retained. Existing bounded original OpenSCAD importer and Manifold runtime; no injected calls, source/fragment/default/epsilon/limit changes, repair, simplification or placement. Source colours and transparency are not retained. Qualification covers only the instantiated default top-level model. No manufacturing or physics certification. Earlier unqualified headless proof and original construction-depth refusal remain historical; this adds explicit full editor/preview/provenance qualification, not a compiler-gain claim.",
+        "conversion": {
+          "sourceUnits": "mm",
+          "sourceUpAxis": "Z",
+          "unitAssumption": "OpenSCAD source coordinates are interpreted in the existing CAD Script millimetre/Z-up frame without scaling. Original numeric coordinates and default programme retained; no upstream physical dimensional certification. This source-code policy is not applied to unknown-unit STL originals.",
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "quality": {
+          "fileSha256": "4391dafaed2d22f011eb280d2c0124f658326f62babca82324e6da6391640d0d",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-15",
+          "screeningPolicy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "parseable": true,
+          "closedPositiveVolume": true,
+          "withinSizeLimits": true,
+          "withinTriangleLimits": true
+        },
+        "measurements": {
+          "triangles": 5220,
+          "boundsMm": {
+            "min": [
+              -22,
+              -72,
+              0
+            ],
+            "max": [
+              100,
+              22,
+              18
+            ]
+          },
+          "signedVolumeMm3": 31972.73092172437
+        },
+        "diagnostics": []
+      },
+      "expectedProgramSha256": "14b4c67480e534b72ce6d3accd3db526e8a9b4c3c1670eb5a8d4d7d2de79d87c",
+      "sourceLicencePath": "LICENSE.txt",
+      "sourceLicenceSha256": "7179683e8000e6bdc9bbc60d85edf0a4ac8e76f951857f54fcb775d5886f1309"
+    }
+  ]
+}

@@ -10,16 +10,17 @@ import {checkModelLibrarySTL} from '../packages/geometry/src/model-library-quali
 const root = new URL('../', import.meta.url);
 const read = (path: string) => readFileSync(new URL(`library/${path}`, root));
 const manifest = JSON.parse(read('editor-corpus-manifest.json').toString());
+const angeloAssets = manifest.assets.filter((asset:any)=>asset.corpusSelection.repositoryId==='AngeloNicoli--OpenSCAD-Snippet');
 const corpus = JSON.parse(read('corpus/manifest.json').toString());
 const repository = corpus.repositories.find((item: any) => item.id === 'AngeloNicoli--OpenSCAD-Snippet');
 const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
 const selected = ['beam-angular', 'beam-h', 'key-simple', 'roll-holder', 'angle-shelf', 'sign-01', 'sign-02', 'washer', 'transistor', 'stairs-01', 'bookshelf-01', 'chalkboard-01', 'arrow-01', 'base-cabinet-01', 'beam-c', 'bookshelf-02', 'box-wood-01', 'chair-01', 'door-01', 'flange-01', 'ladder-01', 'sofa', 'table-01', 'vent-grid', 'base-cabinet-02', 'bed-01', 'bed-02', 'bench-01', 'bench-02', 'chair-02', 'chair-03', 'fireplace-01', 'table-02', 'table-03', 'table-small-01', 'window-01', 'building-01', 'chalkboard-02', 'cone-01', 'crystal', 'key', 'lamp-01', 'lever-handle', 'soda-cup-01', 'stairs-02', 'stairs-03', 'traffic-light', 'tootbrush', 'electric-wire-plug', 'flange-03', 'resistor', 'street-02', 'street-03', 'street-06', 'sword-01', 'x', 'banner-01', 'raccordo', 'street-01', 'street-05', 'street-04', 'eyebolt', 'ladder-02', 'wall-04', 'fence-01', 'fence-02', 'building-02', 'walking-stick', 'ingot-01', 'coin-01', 'led-01', 'sauce-bottle', 'pipe-00', 'flange-02', 'cup-01', 'ring', 'pipe-90', 'key-old-01', 'hole-plate', 'mech-piece-01', 'mech-piece-02', 'arc-02', 'circular-blade', 'gear-01', 'gear-02', 'mallet', 'tower', 'weights-01', 'tree-01', 'nut-lq', 'rod-01', 'animation-gear-02', 'animation-mechanism-01', 'shaft-01', 'shaft-02-with-keyway', 'coin-02', 'scene-city-street', 'bricks', 'arc-01', 'flag-france', 'flag-italy', 'sign-03'];
 
 describe('explicit corpus to editor selection', () => {
-  it('admits exactly one hundred and two selected source roots with unchanged pinned originals and full MIT grants', () => {
+  it('admits retains the102 pinned MIT originals alongside the explicitly reviewed CC0 original', () => {
     expect(selected).toHaveLength(102);
-    expect(manifest.selection).toMatchObject({count: selected.length, runtimeChecked: selected.length, complete: true});
-    expect(manifest.assets.map((asset: any) => asset.id)).toEqual(selected.map(slug => `corpus-angelo-${slug}`));
+    expect(manifest.selection).toMatchObject({count: selected.length+1, runtimeChecked: selected.length+1, complete: true});
+    expect(angeloAssets.map((asset: any) => asset.id)).toEqual(selected.map(slug => `corpus-angelo-${slug}`));
     const street03 = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-street-03');
     const street06 = manifest.assets.find((asset: any) => asset.id === 'corpus-angelo-street-06');
     expect(street03.original.sha256).not.toBe(street06.original.sha256);
@@ -33,7 +34,7 @@ describe('explicit corpus to editor selection', () => {
       expect(asset.modificationNotes).toContain('only the instantiated default top-level model');
       if (slug === 'ring' || slug === 'pipe-90') expect(asset.modificationNotes).toContain('unresolved ring call');
     }
-    for (const asset of manifest.assets.slice(78)) {
+    for (const asset of angeloAssets.slice(78)) {
       expect(asset.modificationNotes).toContain('only the instantiated default top-level model');
       expect(asset.modificationNotes).toContain('Import warnings captured at qualification:');
       expect(asset.modificationNotes).toContain('Source colours and transparency are not retained');
@@ -59,11 +60,12 @@ describe('explicit corpus to editor selection', () => {
     expect(mechanism.derivatives[0].sha256).toBe(staticKey.derivatives[0].sha256);
     expect(mechanism.modificationNotes).toContain('counts source files, not unique shapes');
     const catalogue = createLocalModelLibraryCatalogue(manifest);
-    expect(catalogue.assets).toHaveLength(selected.length);
+    expect(catalogue.assets).toHaveLength(selected.length+1);
+    expect(hash(Buffer.from(JSON.stringify(angeloAssets)))).toBe('6271192eddc56912bf91ff238878d399db4edd3e664c570380314ec3cc7769c3');
     const fullNotice = read('evidence/corpus-selection-MIT-LICENSE.txt').toString().replace(/\s+/g, ' ').trim();
     expect(fullNotice).toContain('Permission is hereby granted');
     expect(fullNotice).toContain('THE SOFTWARE IS PROVIDED "AS IS"');
-    for (const asset of manifest.assets) {
+    for (const asset of angeloAssets) {
       const record = repository.files.find((item: any) => item.path === asset.corpusSelection.upstreamPath);
       expect(asset.sourceRevision.commit).toBe('4f9e3d4d16b5e427186c1f89e10c2181c437dee6');
       expect(asset.original.url).toBe(record.source_url);
@@ -169,6 +171,6 @@ describe('explicit corpus to editor selection', () => {
   });
 
   it('reproduces selected archives, meshes and manifest locally without writes or network', () => {
-    expect(execFileSync(process.execPath, ['scripts/generate-corpus-editor-library.mjs', '--check'], {cwd: fileURLToPath(root), encoding: 'utf8', timeout: 60000})).toContain(`${selected.length} selected corpus sources complete; ${selected.length} runtime-checked`);
+    expect(execFileSync(process.execPath, ['scripts/generate-corpus-editor-library.mjs', '--check'], {cwd: fileURLToPath(root), encoding: 'utf8', timeout: 60000})).toContain(`${selected.length+1} selected corpus sources complete; ${selected.length+1} runtime-checked`);
   },65000); // Match the child process's 60-second integration budget.
 });

@@ -4,6 +4,7 @@ import {createHash} from 'node:crypto';
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {readAdditionalCorpusSpec,generateAdditionalCorpusAssets} from './lib/additional-corpus-assets.mjs';
 import {createCadSession, createLocalModelLibraryCatalogue, importOpenSCAD, importOpenSCADBundle, getOpenSCADImportWarnings} from '../packages/core/dist/index.js';
 import {createGeometryKernel, exportSTL, checkModelLibrarySTL} from '../packages/geometry/dist/index.js';
 
@@ -133,9 +134,11 @@ const cityDependencies = {
 };
 const preserved97Hash = '1c4e1de1ea28475c545bd1d2a1b1bf5a20fbcb3b04dffca40779b2bbbc28d78a';
 export async function generateCorpusEditorLibrary({assetId} = {}) {
+  const additional = await readAdditionalCorpusSpec();
+  const additionalIds = new Set(additional.spec.assets.map(row=>row.asset.id));
   const previous = assetId ? JSON.parse((await read('editor-corpus-manifest.json')).toString()) : undefined;
   if (previous && hash(Buffer.from(JSON.stringify(previous.assets.slice(0,97)))) !== preserved97Hash) throw new Error('Review required: historical 97 records changed.');
-  if (assetId && !['corpus-angelo-scene-city-street','corpus-angelo-bricks','corpus-angelo-arc-01','corpus-angelo-flag-france','corpus-angelo-flag-italy','corpus-angelo-sign-03'].includes(assetId)) throw new Error('Focused reproduction is restricted to the explicitly reviewed city, Bricks, Arc01 FlagFrance, FlagItaly and Sign03 sources.');
+  if (assetId && !['corpus-angelo-scene-city-street','corpus-angelo-bricks','corpus-angelo-arc-01','corpus-angelo-flag-france','corpus-angelo-flag-italy','corpus-angelo-sign-03'].includes(assetId) && !additionalIds.has(assetId)) throw new Error('Focused reproduction is restricted to the explicitly reviewed city, Bricks, Arc01 FlagFrance, FlagItaly and Sign03 sources.');
   const corpus = JSON.parse((await read('corpus/manifest.json')).toString());
   const repository = corpus.repositories.find(item => item.id === repositoryId);
   if (!repository || repository.commit !== commit || repository.url !== repositoryUrl || repository.license !== 'MIT') throw new Error('Review required: selected corpus repository identity changed.');
@@ -229,10 +232,11 @@ export async function generateCorpusEditorLibrary({assetId} = {}) {
       quality: screening.quality, measurements: {triangles: screening.triangles, boundsMm: screening.boundsMm, signedVolumeMm3: screening.signedVolumeMm3}, diagnostics: screening.diagnostics,
     });
   }
+  assets.push(...await generateAdditionalCorpusAssets({spec:additional.spec,kernel,outputs,assetId,previous}));
   const generator = await readFile(fileURLToPath(import.meta.url));
   const manifest = {format: 'brickwright-local-fixture-library', version: 1, collection: 'selected-source-corpus', capturedOn: '2026-11-14', pathBase: 'library/',
-    reproduction: {command: 'node scripts/generate-corpus-editor-library.mjs --check', generator: {path: '../scripts/generate-corpus-editor-library.mjs', sha256: hash(generator)}, packageLockSha256: hash(await readFile(new URL('package-lock.json', root))), manifoldWasmSha256: hash(wasm)},
-    selection: {repositoryId, commit, count: assets.length, runtimeChecked: assets.length, complete: true}, assets};
+    reproduction: {command: 'node scripts/generate-corpus-editor-library.mjs --check', generator: {path: '../scripts/generate-corpus-editor-library.mjs', sha256: hash(generator)}, additionalSelection: {path:'corpus-additional-spec.json',sha256:hash(additional.bytes),helper:{path:'../scripts/lib/additional-corpus-assets.mjs',sha256:hash(await readFile(new URL('scripts/lib/additional-corpus-assets.mjs',root)))}}, packageLockSha256: hash(await readFile(new URL('package-lock.json', root))), manifoldWasmSha256: hash(wasm)},
+    selection: {repositoryId, commit, additionalRepositories:[...new Set(additional.spec.assets.map(row=>row.asset.corpusSelection.repositoryId))], count: assets.length, runtimeChecked: assets.length, complete: true}, assets};
   createLocalModelLibraryCatalogue(manifest);
   outputs.set('editor-corpus-manifest.json', Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`));
   return outputs;
@@ -254,6 +258,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     if (write) { await mkdir(dirname(fileURLToPath(target)), {recursive: true}); await writeFile(target, expected); }
     else if (!(await read(path)).equals(expected)) throw new Error(`Selected corpus output differs: ${path}`);
   }
-  const count = corpusEditorSelection.length;
+  const count = JSON.parse(outputs.get('editor-corpus-manifest.json')).assets.length;
   console.log(`${count} selected corpus sources complete; ${count} runtime-checked editable models pass all STL screens.`);
 }

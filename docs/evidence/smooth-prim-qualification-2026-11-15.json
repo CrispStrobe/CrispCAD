@@ -1,0 +1,701 @@
+{
+  "atUTC": "2026-11-15T20:40:54.613702+00:00",
+  "status": "ALL_GATES_LOCAL_QUALIFIED_OWNER_DELIVERY_PENDING",
+  "firstLocalQualificationCycle": 107,
+  "deliveredCounts": [
+    167,
+    162,
+    206
+  ],
+  "localCounts": [
+    168,
+    163,
+    207
+  ],
+  "localDelta": [
+    1,
+    1,
+    1
+  ],
+  "mainDeliveryDelta": [
+    0,
+    0,
+    0
+  ],
+  "candidateID": "corpus-smooth-prim-authored-default",
+  "sourceHead": "15551325cf5e315add3c6cfc0991467d693f2319",
+  "sourceTree": "44477b28a6e982b85798310e8c550bb40b67e88e",
+  "testedWorkingSnapshot": [
+    {
+      "path": "apps/shared/model-library-local.ts",
+      "bytes": 4960,
+      "sha256": "32e0f17d0e204c1350a055ba70a48d135d8e9c3ec635700b0eb48e6672b684de"
+    },
+    {
+      "path": "library/editor-corpus-manifest.json",
+      "bytes": 605035,
+      "sha256": "621044a07a9cf84f739a4c406c269a0639154a74072749e1b3d727a32c3f5453"
+    },
+    {
+      "path": "library/previews.json",
+      "bytes": 3568619,
+      "sha256": "ea3eab77a3f339f9a0de90a7b315c7bb8971e675967f4f6461b5470baebca787"
+    },
+    {
+      "path": "scripts/generate-corpus-editor-library.mjs",
+      "bytes": 27677,
+      "sha256": "a3281a258521ff9b130d9d2d019e4ddb7e0a4de3ad21c94c8c26eee72f90b5d2"
+    },
+    {
+      "path": "tests/model-library-corpus-editor.test.ts",
+      "bytes": 15533,
+      "sha256": "7e55a18826dd4672ef4a35a994b017da642c1e31fa4455f2754d8032da43896f"
+    },
+    {
+      "path": "tests/model-library-fragment-screening.test.ts",
+      "bytes": 2673,
+      "sha256": "d485f157dacb6823ffa9360b6768a407da27dc48a3d7215d4dd3e619736c4451"
+    },
+    {
+      "path": "apps/shared/model-library-files.ts",
+      "bytes": 1651,
+      "sha256": "1991aadbce94f0a443a1b4a5546ea113700eb935677b8a95bd65a5e610ed765b"
+    },
+    {
+      "path": "library/corpus-additional-spec.json",
+      "bytes": 5408,
+      "sha256": "0bb25f2354108a0581f429eeb28fd50e10a1846a403ca5c7e88f63f550155092"
+    },
+    {
+      "path": "library/evidence/smooth-prim-CC0-LICENSE.txt",
+      "bytes": 7049,
+      "sha256": "7179683e8000e6bdc9bbc60d85edf0a4ac8e76f951857f54fcb775d5886f1309"
+    },
+    {
+      "path": "library/meshes/colyer/smooth-prim-default.stl",
+      "bytes": 261084,
+      "sha256": "4391dafaed2d22f011eb280d2c0124f658326f62babca82324e6da6391640d0d"
+    },
+    {
+      "path": "library/sources/colyer/smooth-prim-default.scad",
+      "bytes": 8818,
+      "sha256": "16de0aac3dc3cf8d357d52e1e2d333a2d0e11c21a59efb042bd4604fc341e8e0"
+    },
+    {
+      "path": "scripts/lib/additional-corpus-assets.mjs",
+      "bytes": 4464,
+      "sha256": "0a53427ff7b14814539e6092fc56d438b60d6d14d4059fddfcdd39dfab489376"
+    },
+    {
+      "path": "tests/browser/model-library-smooth-default.spec.ts",
+      "bytes": 5746,
+      "sha256": "9bb7c9c4c0ea81844dc9da1578119aa24d12f1e3809b38cb2ef4331bd18b30ca"
+    },
+    {
+      "path": "tests/model-library-additional-corpus.test.ts",
+      "bytes": 3509,
+      "sha256": "2f27e00bae0682d70cedd49be614d739430d350a0e97590e91d043852fa34266"
+    },
+    {
+      "path": "tests/model-library-bundled-host.test.ts",
+      "bytes": 3563,
+      "sha256": "ef4ae5ec4d96862a8698452bbffdc3c2f632f9cb894fa961a00120d8fbbcb0d9"
+    }
+  ],
+  "builtFiles": [
+    {
+      "path": "dist/app-showcase/README.md",
+      "bytes": 406,
+      "sha256": "abc4e1333f5195f98c4e34265b80c5016134b85254ff44afd05f6ed7d0e47577"
+    },
+    {
+      "path": "dist/app-showcase/brickwright.png",
+      "bytes": 17259,
+      "sha256": "4f12ea0f0f21056104c7c665a8ad2082dfaf1265d131e402e793909cef6b4065"
+    },
+    {
+      "path": "dist/app-showcase/cometbeat.png",
+      "bytes": 12576,
+      "sha256": "93c1e0820b28de7b4209a37abe4e9b6e320a1a495bd9c44e056b492454cc6769"
+    },
+    {
+      "path": "dist/app-showcase/crispaudio.png",
+      "bytes": 20854,
+      "sha256": "482b887823d8cbe42fb450bf9a1e7fc50213f4c80364d75387559876e157fb3d"
+    },
+    {
+      "path": "dist/app-showcase/crispbingo.png",
+      "bytes": 12310,
+      "sha256": "974a26f8a7f20b8b61d806a1f7ef7d24ef82c1a775b8c154c96f5b7015939910"
+    },
+    {
+      "path": "dist/app-showcase/crispchess.png",
+      "bytes": 18694,
+      "sha256": "375e1c4df95c0a294aaf5dc078bdbc99d8753100812649821cc88be87ec7a33a"
+    },
+    {
+      "path": "dist/app-showcase/crispcloud.png",
+      "bytes": 21564,
+      "sha256": "7736e71fd28f2400424a106513224a4dd9953ae11049c219210964cfc7ebdcfb"
+    },
+    {
+      "path": "dist/app-showcase/crispdeck.png",
+      "bytes": 12518,
+      "sha256": "3cf496171fcfe2ea3af23c6901d3b4375546d383a34288f3e433d58b8acd17ab"
+    },
+    {
+      "path": "dist/app-showcase/crisperplayer.png",
+      "bytes": 28416,
+      "sha256": "732bf35419dbf4a3cdb604ff18e72f7f667901052c0c12b091a535440a9cec67"
+    },
+    {
+      "path": "dist/app-showcase/crisperweaver.png",
+      "bytes": 21766,
+      "sha256": "ca56b9ba5f7b4de928b7baf6979bbabe01314c0382f9a85d558f673f9435de43"
+    },
+    {
+      "path": "dist/app-showcase/crispmath.png",
+      "bytes": 10714,
+      "sha256": "d85b699f750768c23d683180a37385f4c36fdbed796989f464de26840ea8915e"
+    },
+    {
+      "path": "dist/app-showcase/crispmesh.png",
+      "bytes": 20375,
+      "sha256": "f10da8d3835dd3d13e9a8c8422338fda2a746ef5401a42efc3f2f5bbc90ff7ad"
+    },
+    {
+      "path": "dist/app-showcase/crispsorter.png",
+      "bytes": 23362,
+      "sha256": "9b92d82e86f687bedf3f3378c27e7b4c24c83d3a953f337e5ec1cfde798666bf"
+    },
+    {
+      "path": "dist/app-showcase/crispsudoku.png",
+      "bytes": 24934,
+      "sha256": "af8ee9c4eae94cfe68af1e38062f7d1da9346ada0734476f19c9a705eb73db5c"
+    },
+    {
+      "path": "dist/app-showcase/crisptuner.png",
+      "bytes": 10185,
+      "sha256": "cbac4f2381e240dd9c7879bc200262037f6bf9c35c688b65aba09402a077e033"
+    },
+    {
+      "path": "dist/app-showcase/hectopolis.png",
+      "bytes": 8345,
+      "sha256": "687f651d1f4d98fd4653b85191c6fc273e2497447916fb4bf9be447b7f2c6ed3"
+    },
+    {
+      "path": "dist/app-showcase/kerotakis.png",
+      "bytes": 7514,
+      "sha256": "0b6a24aec16e25ee6d2e098c40fd56cf530c26f917f70a69f9bb68cda4409d92"
+    },
+    {
+      "path": "dist/app-showcase/naga.png",
+      "bytes": 10760,
+      "sha256": "93f34940d26e229849e697f5bc98a3d28d4ed5e2caa926a34aabd93e37e74da6"
+    },
+    {
+      "path": "dist/app-showcase/numbernebula.png",
+      "bytes": 29684,
+      "sha256": "39d20c36896f98452b5bc6f0f4608caab1dd4ea7fc74034c88c93c90f9521bdb"
+    },
+    {
+      "path": "dist/app-showcase/word-universe.png",
+      "bytes": 21617,
+      "sha256": "081ee34a1707823873a44fdfe4c7d4bebeb3c2fa4d7b099a44360867b1c581e7"
+    },
+    {
+      "path": "dist/assets/embedded-C04-1XXN.js",
+      "bytes": 2312,
+      "sha256": "406a8553644374071e1276481dfee77b28e247ad71900fef64369dd2889cea52"
+    },
+    {
+      "path": "dist/assets/esm-BVrP0UM0.js",
+      "bytes": 334,
+      "sha256": "583ed62f030fbd89709d52e4be737ad15202fccc6e47ee007246a400885a436c"
+    },
+    {
+      "path": "dist/assets/esm-p_D6S535.js",
+      "bytes": 1352,
+      "sha256": "63b50fa6679e73dc196d4db9e74e2fb465d1e47b3a854b2dab256605040a0aa8"
+    },
+    {
+      "path": "dist/assets/files-BvSzA95Z.css",
+      "bytes": 10183,
+      "sha256": "a0bd03c2cdb4b600a58121b396da840424c00407085354cd39adee4a3064593b"
+    },
+    {
+      "path": "dist/assets/files-gYNcJTkq.js",
+      "bytes": 6807441,
+      "sha256": "15c30a03f187ece6f695c2cb24c0b755233bf12b35f6c65599b7ef78164b28e6"
+    },
+    {
+      "path": "dist/assets/geometry.worker-CSAI0DTS.js",
+      "bytes": 1434103,
+      "sha256": "534cb023a75bba83ba86da03ce88e045975c484d6d9b1556f6c4fe77935c7626"
+    },
+    {
+      "path": "dist/assets/jolt-physics.wasm-compat-DLMYuBx1.js",
+      "bytes": 3662128,
+      "sha256": "db08bffd7113c77636228e2eda2814a40667a17dab709f053bac24f23a8730e3"
+    },
+    {
+      "path": "dist/assets/main-t-W6ETY2.js",
+      "bytes": 6266827,
+      "sha256": "6341284a175d26aa600e849f78e9df93f164754656c3fb3ad4648cab33ad6c14"
+    },
+    {
+      "path": "dist/assets/manifold-BE4c7gO-.wasm",
+      "bytes": 541470,
+      "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    {
+      "path": "dist/assets/simulation.worker-KDFnK5IY.js",
+      "bytes": 1472598,
+      "sha256": "816adfdd597954fcd542d196410b9c9dd834f30fc408caa2160183f2f7357bc2"
+    },
+    {
+      "path": "dist/assets/web-CFW_TFFV.js",
+      "bytes": 361,
+      "sha256": "8f03907704218410d27e2e4ac5c2b65221a46d5cc9d36d3908efa6eeb4e046fd"
+    },
+    {
+      "path": "dist/assets/web-Ds1jRplc.js",
+      "bytes": 8715,
+      "sha256": "707974c0e372003c645a6b13439e11091794fc7a7646cedf53d72f8b69405c23"
+    },
+    {
+      "path": "dist/cad-assets/app-license.txt",
+      "bytes": 1520,
+      "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad"
+    },
+    {
+      "path": "dist/cad-assets/build-info.json",
+      "bytes": 138,
+      "sha256": "54b2b0f265aac5eebfeff372cbb48c13e7c12de8908884c2ddf22aa9dd576c35"
+    },
+    {
+      "path": "dist/cad-assets/manifold.wasm",
+      "bytes": 541470,
+      "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    {
+      "path": "dist/cad-assets/notices.txt",
+      "bytes": 91867,
+      "sha256": "dea50eee6d6781549af4e3740bfaf7661b29479696e5ae6cbe41eafd93c0fa70"
+    },
+    {
+      "path": "dist/embedded.html",
+      "bytes": 1119,
+      "sha256": "667d2cfe9e2fbad511626fedbadd662e454b41d3672c7fbab4a293a889fc25a7"
+    },
+    {
+      "path": "dist/icon.svg",
+      "bytes": 283,
+      "sha256": "30876dc5d178d36f341cc5126e6489a7078ac9f667a56a9e625f9d090d3d94f4"
+    },
+    {
+      "path": "dist/index.html",
+      "bytes": 2974,
+      "sha256": "5565f7b300b21c712bbf2c5e7cd5dac23a41cc91db645f9a1f7f4d925d54db55"
+    },
+    {
+      "path": "dist/manifest.webmanifest",
+      "bytes": 249,
+      "sha256": "7d57494ede2e7c699fd24fd309335bb701138d85cc84d5c4ff4d9851f44ae535"
+    },
+    {
+      "path": "dist/sw.js",
+      "bytes": 1885,
+      "sha256": "7a4193f39706b35627509c5ff155fcdc963a55688e5e5f8c82afa645dab93427"
+    }
+  ],
+  "validationFiles": [
+    {
+      "path": "/mnt/storage/brickwright-cycle105-smooth-browser-final/execution.json",
+      "sha256": "4d5cc4072ae03985f8ed65c5790675c88243de4c1282c7b646929541bf8a5455",
+      "bytes": 2454
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle105-smooth-browser-final/admission.json",
+      "sha256": "7ea1cbeb4cd884b970bbd0d73216530458cf265571e819c74b8fa52f87242472",
+      "bytes": 431
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle105-smooth-browser-final/browser.json",
+      "sha256": "07d948bdb36f42ac0ebfd7e468fdbfbf37af570679de14ec7f2f4900463ff1f7",
+      "bytes": 7396
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle105-smooth-browser-final/phase-0.log",
+      "sha256": "2a14b344dc2961422f9daff7362f261fd5a76391d7c758a4e8f04f942ac8b800",
+      "bytes": 357
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle105-smooth-browser-final/phase-1.log",
+      "sha256": "3aeec7c654e50d08fe73ebd0fc199cb25d43093c6e19aab4e8060ae18a76bb6c",
+      "bytes": 1387
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle105-smooth-host-normalization/execution.json",
+      "sha256": "d1bd708a34a5cd8ea6b0296d5e647fea09ab57cd9c3e9802bb7c7a83d59d83c5",
+      "bytes": 4745
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle105-smooth-host-normalization/phase-0.log",
+      "sha256": "df0894af25225d07a1056b67060eaf65d617e4390ebe00a4a7a16d157c4cb8c7",
+      "bytes": 218
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle105-smooth-host-normalization/phase-1.log",
+      "sha256": "e768cdeb5253073da2be4b9eebf0543bb53a739cfd96cc778eb07b788dc748ed",
+      "bytes": 4689
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle105-smooth-host-normalization/browser.json",
+      "sha256": "c98a61622bda85f3452d63f60dd80ad441e551498f7d85b6f48e3d8a46da1f83",
+      "bytes": 22127
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle105-smooth-host/execution.json",
+      "sha256": "ba7ec863d7f2a5bf38ff7fc59091107d245692012a943f05418119bedb364cec",
+      "bytes": 4732
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle105-smooth-host/browser.json",
+      "sha256": "152285caf4d544eec44068c243724e6e72c69d59a653d84925b3e665cd1c4485",
+      "bytes": 121912
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle104-smooth/execution.json",
+      "sha256": "7af6a647f121feb28ff7a4d53b5f830ea7a838750cec849e3eb2690d28ec9f2e",
+      "bytes": 7354
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle104-smooth/phase-1.log",
+      "sha256": "a0e5f387a947dc2630249822e8d0b63e400e7c241553a6436289a2aded6637d6",
+      "bytes": 222
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle104-smooth/native-result.json",
+      "sha256": "55fb30c96634ede12a1bef0983548be042c709b6af418251c8477b306458dab9",
+      "bytes": 3346
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle104-smooth/candidate-asset.json",
+      "sha256": "997a420888ff54dc4188881f533716ad686fb3a6f51de1b25a5410e0fd3a9a6f",
+      "bytes": 4373
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle104-smooth/previews-before.json",
+      "sha256": "2395e28faa6d0a1a0996a11341f0638e109b0b176bab3c1fbec7cbd56a4710f3",
+      "bytes": 3548979
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle105-smooth-browser-final/per-model/chromium-corpus-smooth-prim-authored-default.json",
+      "sha256": "ededc2048720eb9d4b29f6cb7260377f11e5fb1a24b6bc23b31bc9589bc8e072",
+      "bytes": 701
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle105-smooth-browser-final/per-model/ipad-webkit-corpus-smooth-prim-authored-default.json",
+      "sha256": "e76c731df7d3a841c5fdfc17be09b6120476d51e957e03360d5cb51629866987",
+      "bytes": 704
+    }
+  ],
+  "sourceID": {
+    "repository": {
+      "repositoryUrl": "https://github.com/rcolyer/smooth-prim",
+      "commit": "0d0038f984465f3eb0f6026a4d5de2f79d2dcea8",
+      "sourceUrl": "https://raw.githubusercontent.com/rcolyer/smooth-prim/0d0038f984465f3eb0f6026a4d5de2f79d2dcea8/smooth_prim.scad"
+    },
+    "original": {
+      "path": "sources/colyer/smooth-prim-default.scad",
+      "url": "https://raw.githubusercontent.com/rcolyer/smooth-prim/0d0038f984465f3eb0f6026a4d5de2f79d2dcea8/smooth_prim.scad",
+      "bytes": 8818,
+      "sha256": "16de0aac3dc3cf8d357d52e1e2d333a2d0e11c21a59efb042bd4604fc341e8e0",
+      "format": "openscad"
+    },
+    "licence": {
+      "spdx": "CC0-1.0",
+      "scope": "asset",
+      "attribution": "Ryan A. Colyer. Original CC0-1.0 dedication and all per-file notices retained. Source: https://raw.githubusercontent.com/rcolyer/smooth-prim/0d0038f984465f3eb0f6026a4d5de2f79d2dcea8/smooth_prim.scad",
+      "evidenceUrl": "https://raw.githubusercontent.com/rcolyer/smooth-prim/0d0038f984465f3eb0f6026a4d5de2f79d2dcea8/LICENSE.txt",
+      "localEvidence": [
+        {
+          "path": "evidence/smooth-prim-CC0-LICENSE.txt",
+          "bytes": 7049,
+          "sha256": "7179683e8000e6bdc9bbc60d85edf0a4ac8e76f951857f54fcb775d5886f1309",
+          "url": "https://raw.githubusercontent.com/rcolyer/smooth-prim/0d0038f984465f3eb0f6026a4d5de2f79d2dcea8/LICENSE.txt"
+        }
+      ],
+      "capturedOn": "2026-11-13",
+      "review": "accepted",
+      "reviewer": "Codex existing CAD owner; exact archived author CC0 source/defaults, native5220tri and closedpositivevolume verified2026-11-15"
+    }
+  },
+  "mesh": {
+    "path": "meshes/colyer/smooth-prim-default.stl",
+    "bytes": 261084,
+    "sha256": "4391dafaed2d22f011eb280d2c0124f658326f62babca82324e6da6391640d0d",
+    "format": "stl"
+  },
+  "measurements": {
+    "triangles": 5220,
+    "boundsMm": {
+      "min": [
+        -22,
+        -72,
+        0
+      ],
+      "max": [
+        100,
+        22,
+        18
+      ]
+    },
+    "signedVolumeMm3": 31972.73092172437
+  },
+  "gates": {
+    "sourceClosureLicence": "PASS unmodified complete authored default source and exact CC0 grant",
+    "converterNativeTopology": "PASS retained5220tri closed-positive-volume proof, no replay",
+    "focused70": "PASS retained",
+    "hostRegression": "PASS4/4 raw-vs-normalized notice/source and refusal controls",
+    "preview": "PASS actual raster retained and both-engine pixel assertion",
+    "finalHostBuild": "PASS raw-manifest host binding snapshot; all41builtSHAs unchanged",
+    "browserParser": "PASS2 actual tests",
+    "browser": "PASS2/2 actual engines129.74569475930184seconds",
+    "editorQualityProvenanceHistory": "PASS both source/program/mesh SHA bindings, canonical asset plus upstream URL, undo/redo and actual page restart",
+    "offline": "PASS both zero offline insertion and external requests"
+  },
+  "browserOutcomes": [
+    {
+      "candidateID": "corpus-smooth-prim-authored-default",
+      "sourceSha256": "16de0aac3dc3cf8d357d52e1e2d333a2d0e11c21a59efb042bd4604fc341e8e0",
+      "meshSha256": "4391dafaed2d22f011eb280d2c0124f658326f62babca82324e6da6391640d0d",
+      "programSha256": "14b4c67480e534b72ce6d3accd3db526e8a9b4c3c1670eb5a8d4d7d2de79d87c",
+      "project": "chromium",
+      "preview": "PASS actual220x180 pixels",
+      "editor": "PASS editable code source insertion with exact source/program/mesh-quality provenance",
+      "licence": "PASS exact CC0 notice; no unrelated MIT notice",
+      "history": "PASS undo/redo/fullmodel restored after actual page restart",
+      "networkRequestsDuringOfflineInsertion": 0,
+      "externalNetworkRequests": 0
+    },
+    {
+      "candidateID": "corpus-smooth-prim-authored-default",
+      "sourceSha256": "16de0aac3dc3cf8d357d52e1e2d333a2d0e11c21a59efb042bd4604fc341e8e0",
+      "meshSha256": "4391dafaed2d22f011eb280d2c0124f658326f62babca82324e6da6391640d0d",
+      "programSha256": "14b4c67480e534b72ce6d3accd3db526e8a9b4c3c1670eb5a8d4d7d2de79d87c",
+      "project": "ipad-webkit",
+      "preview": "PASS actual220x180 pixels",
+      "editor": "PASS editable code source insertion with exact source/program/mesh-quality provenance",
+      "licence": "PASS exact CC0 notice; no unrelated MIT notice",
+      "history": "PASS undo/redo/fullmodel restored after actual page restart",
+      "networkRequestsDuringOfflineInsertion": 0,
+      "externalNetworkRequests": 0
+    }
+  ],
+  "preservation": {
+    "priorAssetHashes": 334,
+    "allPriorAssetSHAExact": true,
+    "priorPreviews": 206,
+    "allPriorPreviewValuesExact": true,
+    "currentActualAssetSHAEntries": 336,
+    "ownedFiles": 15,
+    "builtFiles": 41,
+    "sourceDefaultsLimitsTolerancesUnchanged": true
+  },
+  "initialFailuresPreserved": [
+    "/mnt/storage/brickwright-cycle104-smooth/browser.json",
+    "/mnt/storage/brickwright-cycle105-smooth-host/browser.json",
+    "/mnt/storage/brickwright-cycle105-smooth-host-normalization/browser.json",
+    "/mnt/storage/brickwright-cycle105-smooth-browser-final/cycle105-refused-admission.json"
+  ],
+  "remainingTaxonomy": {
+    "threadsAndPlot": "Retained actual construction-limit refusals; no retry or guard change",
+    "nextRanked43": "34 necessary original-byte bounds,8 missing reviewed dependency,1 necessary default-array bound; static only, no archive-exhaustion inference"
+  },
+  "sharedLock": "released terminal; MakeCode notified",
+  "next": "Normal owner code+asset PR/current-main head guard; no heavy replay if integration unchanged",
+  "testedCommitBinding": {
+    "testedCodeCommit": "159303e8936a54a192a9af9f4f68fa5a3ed66110",
+    "testedCodeTree": "be56e0c2ab1073ba284450434e695f8876ef7133",
+    "ownedCommittedSHA": [
+      {
+        "path": "apps/shared/model-library-local.ts",
+        "bytes": 4960,
+        "sha256": "32e0f17d0e204c1350a055ba70a48d135d8e9c3ec635700b0eb48e6672b684de"
+      },
+      {
+        "path": "library/editor-corpus-manifest.json",
+        "bytes": 605035,
+        "sha256": "621044a07a9cf84f739a4c406c269a0639154a74072749e1b3d727a32c3f5453"
+      },
+      {
+        "path": "library/previews.json",
+        "bytes": 3568619,
+        "sha256": "ea3eab77a3f339f9a0de90a7b315c7bb8971e675967f4f6461b5470baebca787"
+      },
+      {
+        "path": "scripts/generate-corpus-editor-library.mjs",
+        "bytes": 27677,
+        "sha256": "a3281a258521ff9b130d9d2d019e4ddb7e0a4de3ad21c94c8c26eee72f90b5d2"
+      },
+      {
+        "path": "tests/model-library-corpus-editor.test.ts",
+        "bytes": 15533,
+        "sha256": "7e55a18826dd4672ef4a35a994b017da642c1e31fa4455f2754d8032da43896f"
+      },
+      {
+        "path": "tests/model-library-fragment-screening.test.ts",
+        "bytes": 2673,
+        "sha256": "d485f157dacb6823ffa9360b6768a407da27dc48a3d7215d4dd3e619736c4451"
+      },
+      {
+        "path": "apps/shared/model-library-files.ts",
+        "bytes": 1651,
+        "sha256": "1991aadbce94f0a443a1b4a5546ea113700eb935677b8a95bd65a5e610ed765b"
+      },
+      {
+        "path": "library/corpus-additional-spec.json",
+        "bytes": 5408,
+        "sha256": "0bb25f2354108a0581f429eeb28fd50e10a1846a403ca5c7e88f63f550155092"
+      },
+      {
+        "path": "library/evidence/smooth-prim-CC0-LICENSE.txt",
+        "bytes": 7049,
+        "sha256": "7179683e8000e6bdc9bbc60d85edf0a4ac8e76f951857f54fcb775d5886f1309"
+      },
+      {
+        "path": "library/meshes/colyer/smooth-prim-default.stl",
+        "bytes": 261084,
+        "sha256": "4391dafaed2d22f011eb280d2c0124f658326f62babca82324e6da6391640d0d"
+      },
+      {
+        "path": "library/sources/colyer/smooth-prim-default.scad",
+        "bytes": 8818,
+        "sha256": "16de0aac3dc3cf8d357d52e1e2d333a2d0e11c21a59efb042bd4604fc341e8e0"
+      },
+      {
+        "path": "scripts/lib/additional-corpus-assets.mjs",
+        "bytes": 4464,
+        "sha256": "0a53427ff7b14814539e6092fc56d438b60d6d14d4059fddfcdd39dfab489376"
+      },
+      {
+        "path": "tests/browser/model-library-smooth-default.spec.ts",
+        "bytes": 5746,
+        "sha256": "9bb7c9c4c0ea81844dc9da1578119aa24d12f1e3809b38cb2ef4331bd18b30ca"
+      },
+      {
+        "path": "tests/model-library-additional-corpus.test.ts",
+        "bytes": 3509,
+        "sha256": "2f27e00bae0682d70cedd49be614d739430d350a0e97590e91d043852fa34266"
+      },
+      {
+        "path": "tests/model-library-bundled-host.test.ts",
+        "bytes": 3563,
+        "sha256": "ef4ae5ec4d96862a8698452bbffdc3c2f632f9cb894fa961a00120d8fbbcb0d9"
+      }
+    ],
+    "all15Match": true
+  },
+  "runtimeBindings": [
+    {
+      "path": "package-lock.json",
+      "bytes": 134236,
+      "sha256": "fce627d2348b17711a6341f1ec5a985603a2062ba94b114da86d6bfdfdf38cfa"
+    },
+    {
+      "path": "node_modules/manifold-3d/manifold.wasm",
+      "bytes": 541470,
+      "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+    },
+    {
+      "path": "packages/core/dist/index.js",
+      "bytes": 1520,
+      "sha256": "474a49ba216fd3a797ff518f2265036ac5f74c42dc9acdbb0dfc1cc36a7dfa22"
+    },
+    {
+      "path": "packages/geometry/dist/index.js",
+      "bytes": 412,
+      "sha256": "708530cbc46bff22ac6efb59c926bc4fa278543463307e58742883f966700b04"
+    }
+  ],
+  "nodeVersion": "v24.22.1",
+  "initialFailureHistory": [
+    {
+      "failure": "stl-action-and-host-binding",
+      "cause": "Wrong STL test action; source omitted from family-specific bundle and unrelated MIT notice on CC0 record",
+      "preservedFiles": [
+        {
+          "path": "/mnt/storage/brickwright-cycle105-smooth-host/initial-failing-browser.spec.ts.txt",
+          "sha256": "2e534c51518f9bd8ff68ef58355bab5bdb6bb8ce018d378b63ee1b24824ba4cb",
+          "bytes": 4054
+        },
+        {
+          "path": "/mnt/storage/brickwright-cycle105-smooth-host/initial-browser.json",
+          "sha256": "45f2f55dae88260f1e7d0fab55abcd2f8c8043def0875d082ff493b714191c31",
+          "bytes": 34514
+        },
+        {
+          "path": "/mnt/storage/brickwright-cycle105-smooth-host/initial-browser.log",
+          "sha256": "ead0982faeba9e5fdeb6e2e8141f88195b31c03a02e7839ad7296ed5201af905",
+          "bytes": 11862
+        }
+      ]
+    },
+    {
+      "failure": "buffer-vs-uint8array",
+      "cause": "Focused test assertion type mismatch; exact bytes unchanged",
+      "preservedFiles": [
+        {
+          "path": "/mnt/storage/brickwright-cycle105-smooth-host/focused-first-test.ts.txt",
+          "sha256": "ed4535d2e1a0218027da0af8d3ef8c6f2e9fbc91ec164ade86fe8f1dd3cde4ce",
+          "bytes": 2982
+        },
+        {
+          "path": "/mnt/storage/brickwright-cycle105-smooth-host/focused-first-failure.log",
+          "sha256": "cbc4e092be4ad90b02f43c8d61b54cd6ab775d9ba746be186997ff52b42cc63a",
+          "bytes": 1127
+        }
+      ]
+    },
+    {
+      "failure": "normalized-notice",
+      "cause": "Catalogue normalization removes localEvidence; raw manifest binding required",
+      "preservedFiles": [
+        {
+          "path": "/mnt/storage/brickwright-cycle105-smooth-host/browser.json",
+          "sha256": "152285caf4d544eec44068c243724e6e72c69d59a653d84925b3e665cd1c4485",
+          "bytes": 121912
+        },
+        {
+          "path": "/mnt/storage/brickwright-cycle105-smooth-host/phase-3.log",
+          "sha256": "651d8470429a56b5711a5694e133c4be1a2447c68849954598c2e37e28935ed3",
+          "bytes": 39216
+        }
+      ]
+    },
+    {
+      "failure": "canonical-provenance",
+      "cause": "Local file identity stores path while upstream URL remains separately on canonical asset",
+      "preservedFiles": [
+        {
+          "path": "/mnt/storage/brickwright-cycle105-smooth-host-normalization/failed-browser.spec.ts.txt",
+          "sha256": "372ad75a1e1f1b4a29a814e3632f3625beebbdfb5ad0c92400614e7eaf4067a6",
+          "bytes": 5395
+        },
+        {
+          "path": "/mnt/storage/brickwright-cycle105-smooth-host-normalization/browser.json",
+          "sha256": "c98a61622bda85f3452d63f60dd80ad441e551498f7d85b6f48e3d8a46da1f83",
+          "bytes": 22127
+        },
+        {
+          "path": "/mnt/storage/brickwright-cycle105-smooth-host-normalization/phase-3.log",
+          "sha256": "0f1302eed7aabf643dd467171e736544a2c5cdc51cc8be85dfb39d0f8ab69fa8",
+          "bytes": 10486
+        }
+      ]
+    }
+  ],
+  "delivery": "Local qualification FIRST107 only; main delivery pending this exact code+asset owner PR. No second model or compiler-gain claim."
+}
