@@ -302,3 +302,26 @@ An optional final `angularSegments` overrides the number of sector intervals
 directly (1–4096). JSCAD snapshots supply this count calculated in source radians,
 so conversion to degrees cannot change tessellation at integer boundaries.
 Native parametric models can omit it to retain density-based angular refinement.
+
+### Reviewed archive package namespaces
+
+`scripts/lib/openscad-bundle-namespace.mjs` assembles supplied originals beneath
+one explicit checkout-directory name. For a source containing
+`include <openscad-new-dimensions/constants.scad>`, retain virtual file keys such
+as `openscad-new-dimensions/demo/demo.scad` and
+`openscad-new-dimensions/constants.scad`. The existing bundle importer first
+checks a relative candidate, then an exact supplied bundle-root candidate.
+There is no suffix search, prefix stripping, ambient filesystem or URL loading.
+
+The assembly helper rejects escaped package/file paths, normalized collisions
+and accessor records. It preserves every source string and declared SHA256;
+the result still requires `importOpenSCADBundle` verification of all originals,
+including unused files, and unchanged byte/depth/work guards. Archive licence
+review remains separate from bundle assembly and from actual mesh qualification.
+
+The reviewed new-dimensions demo now clears its misassembled package paths,
+but actual conversion refuses unsupported `parent_module(2)` at
+`label.scad:21:32`. Mesh/editor/preview gates do not run after that refusal;
+this correction adds no admitted model. See
+`docs/evidence/package-namespace-and-wall01-trace-2026-11-15.json` for the exact
+source hashes, safety tests and independent Wall01 source-to-output contact trace.
