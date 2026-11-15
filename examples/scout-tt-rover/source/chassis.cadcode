@@ -1,0 +1,26 @@
+// Original Scout TT rover part; BSD-3-Clause. Millimetres.
+param thickness:mm=4;
+let plate=move([-20,0,thickness/2],box(160,110,thickness));
+return subtract(plate,
+  move([-25.3,-51,2],cylinder(1.7,12,32)),
+  move([-25.3,-37,2],cylinder(1.7,12,32)),
+  move([37.7,-51,2],cylinder(1.7,12,32)),
+  move([37.7,-37,2],cylinder(1.7,12,32)),
+  move([-25.3,37,2],cylinder(1.7,12,32)),
+  move([-25.3,51,2],cylinder(1.7,12,32)),
+  move([37.7,37,2],cylinder(1.7,12,32)),
+  move([37.7,51,2],cylinder(1.7,12,32)),
+  move([-20,-22,2],cylinder(1.7,12,32)),
+  move([-20,22,2],cylinder(1.7,12,32)),
+  move([40,-22,2],cylinder(1.7,12,32)),
+  move([40,22,2],cylinder(1.7,12,32)),
+  move([-96,0,2],cylinder(1.7,12,32)),
+  move([-74,0,2],cylinder(1.7,12,32)),
+  move([-85,-41,2],box(13,4,12)),
+  move([-85,41,2],box(13,4,12)),
+  move([-45,-41,2],box(13,4,12)),
+  move([-45,41,2],box(13,4,12)),
+  move([-10,0,2],cylinder(1.7,12,32)),
+  move([10,0,2],cylinder(1.7,12,32)),
+  move([30,0,2],cylinder(1.7,12,32)),
+  move([50,0,2],cylinder(1.7,12,32)));

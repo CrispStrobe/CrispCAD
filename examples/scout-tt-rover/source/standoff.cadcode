@@ -1,0 +1,3 @@
+// Original Scout TT rover part; BSD-3-Clause. Millimetres.
+param height:mm=28;param bore:mm=3.4;
+return move([0,0,height/2],subtract(cylinder(4.5,height,32),cylinder(bore/2,height+2 mm,32)));

@@ -44,7 +44,7 @@ let socket=move([0,0,15.2],intersect(cylinder((shaftDiameter+clearance)/2,6.4,48
 let slit=move([9,0,15],box(18,1,7));
 let clamp=move([6.5,0,13.5],rotate([90,0,0],cylinder(1.7,24,32)));
 let nut=move([6.5,-7.8,13.5],rotate([90,0,0],cylinder(3.3,3.8,6)));
-let grooves=union(move([0,0,2],torus(30,1.5,64,12)),move([0,0,6],torus(30,1.5,64,12)));
+let grooves=union(move([0,0,2],torus(30,1.5,12,64)),move([0,0,6],torus(30,1.5,12,64)));
 return subtract(union(disc,rim,hub,ears),socket,slit,clamp,nut,grooves);`),
  deck:program(`param thickness:mm=3;
 let plate=move([10,0,thickness/2],box(80,56,thickness));
@@ -111,7 +111,7 @@ export function createTTRoverDocument(id=TT_ROVER_ID):CadDocument{
   const joint=jointAtWorldFrame(doc,'hinge',side+'-casing',side+'-shaft',[25,y,32],[0,1,0]);joint.id='drive-'+port.toLowerCase();joint.control={port};doc.joints.push(joint);
   fixed(doc,side+'-shaft',side+'-wheel');
   for(const [i,offset]of [2,6].entries()){
-   const key=side+'-tire-'+i;doc.nodes[key]={id:key,name:t('Purchased O-ring tire'),kind:'code',program:program('return torus(30,1.5,64,12);'),transform:{...identityTransform(),position:[25,Math.sign(y)*(74.5-offset),32],rotation:[90,0,0]},color:'#303c40',physics:{...defaultPartPhysics(),densityKgM3:1100,material:'rubber',friction:1,restitution:.03}};doc.roots.push(key);fixed(doc,side+'-wheel',key);
+   const key=side+'-tire-'+i;doc.nodes[key]={id:key,name:t('Purchased O-ring tire'),kind:'code',program:program('return torus(30,1.5,12,64);'),transform:{...identityTransform(),position:[25,Math.sign(y)*(74.5-offset),32],rotation:[90,0,0]},color:'#303c40',physics:{...defaultPartPhysics(),densityKgM3:1100,material:'rubber',friction:1,restitution:.03}};doc.roots.push(key);fixed(doc,side+'-wheel',key);
   }
  }
  // Original conservative envelopes, NOT claimed vendor PCB meshes. A battery

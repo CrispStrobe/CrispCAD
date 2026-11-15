@@ -109,6 +109,29 @@ node scripts/check-code-corpus.mjs --library library --report /tmp/library-conve
 See [library documentation](library/README.md), [provenance](docs/MODEL-ATTRIBUTION.md)
 and [source-research tools](docs/SOURCE-RESEARCH.md).
 
+## Printable Scout TT rover
+
+**Shapes → Robots** includes the Scout TT rover, its PLA print layout and a
+five-socket shaft fit gauge. The assembly combines two existing Adafruit 3777
+TT motor models with eleven original PLA parts and stable **A / left** and
+**B / right** joint ports for the shared CAD controls in Brickwright Lite.
+
+The [build guide](docs/PRINTABLE-TT-ROVER.md) covers the concrete dimensions,
+print quantities and orientations, hardware BOM, fit checks, assembly, wiring
+plan and control example. The physical prototype remains unprinted and untested;
+the Lite connection controls CAD simulation, and a physical Adafruit transport
+requires separate controller firmware.
+
+```sh
+npm run robot:generate
+npm run robot:check
+```
+
+These local commands create and reproduce `examples/scout-tt-rover/`, including
+editable BCAD projects, seven unique screened STLs, CAD Script sources, a manifest,
+notices and `scout-tt-rover-kit.zip`. Print the original PLA parts using their listed
+quantities; the assembled file also contains purchased-component geometry.
+
 ## Navigation
 
 Default controls over the modeling canvas:

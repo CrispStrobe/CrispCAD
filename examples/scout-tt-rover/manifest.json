@@ -1,0 +1,364 @@
+{
+  "format": "brickwright-printable-robot-kit",
+  "version": 1,
+  "id": "scout-tt-rover",
+  "units": "mm",
+  "sourceUpAxis": "Z",
+  "dimensions": {
+    "chassis": [
+      160,
+      110,
+      4
+    ],
+    "axleX": 25,
+    "axleZ": 32,
+    "motorY": 44,
+    "wheelTrack": 141,
+    "wheelRadius": 31.5,
+    "shaftDiameter": 5.4,
+    "shaftFlats": 3.7,
+    "shaftEngagement": 5.8,
+    "shaftClearance": 0.25,
+    "deckHeight": 46,
+    "skidX": -85
+  },
+  "parts": [
+    {
+      "id": "chassis",
+      "quantity": 1,
+      "purpose": "robot",
+      "material": "PLA",
+      "licence": "BSD-3-Clause",
+      "source": "source/chassis.cadcode",
+      "mesh": "stl/chassis.stl",
+      "printOrientation": "Flat face down, Z up",
+      "boundsMm": {
+        "min": [
+          -100,
+          -55,
+          0
+        ],
+        "max": [
+          60,
+          55,
+          4
+        ]
+      },
+      "volumeMm3": 68918.4897874681,
+      "triangles": 2468,
+      "meshChecks": {
+        "parseable": "pass",
+        "closedPositiveVolume": "pass",
+        "withinSizeLimits": "pass",
+        "withinTriangleLimits": "pass"
+      }
+    },
+    {
+      "id": "cradle",
+      "quantity": 2,
+      "purpose": "robot",
+      "material": "PLA",
+      "licence": "BSD-3-Clause",
+      "source": "source/cradle.cadcode",
+      "mesh": "stl/cradle.stl",
+      "printOrientation": "Flat face down, Z up",
+      "boundsMm": {
+        "min": [
+          -37,
+          -15.100000381469727,
+          0
+        ],
+        "max": [
+          37,
+          13.100000381469727,
+          8.800000190734863
+        ]
+      },
+      "volumeMm3": 6531.163877740142,
+      "triangles": 874,
+      "meshChecks": {
+        "parseable": "pass",
+        "closedPositiveVolume": "pass",
+        "withinSizeLimits": "pass",
+        "withinTriangleLimits": "pass"
+      }
+    },
+    {
+      "id": "wheel",
+      "quantity": 2,
+      "purpose": "robot",
+      "material": "PLA",
+      "licence": "BSD-3-Clause",
+      "source": "source/wheel.cadcode",
+      "mesh": "stl/wheel.stl",
+      "printOrientation": "Flat face down, Z up",
+      "boundsMm": {
+        "min": [
+          -30,
+          -30,
+          0
+        ],
+        "max": [
+          30,
+          30,
+          18
+        ]
+      },
+      "volumeMm3": 16879.797540633062,
+      "triangles": 3024,
+      "meshChecks": {
+        "parseable": "pass",
+        "closedPositiveVolume": "pass",
+        "withinSizeLimits": "pass",
+        "withinTriangleLimits": "pass"
+      }
+    },
+    {
+      "id": "deck",
+      "quantity": 1,
+      "purpose": "robot",
+      "material": "PLA",
+      "licence": "BSD-3-Clause",
+      "source": "source/deck.cadcode",
+      "mesh": "stl/deck.stl",
+      "printOrientation": "Flat face down, Z up",
+      "boundsMm": {
+        "min": [
+          -30,
+          -28,
+          0
+        ],
+        "max": [
+          50,
+          28,
+          3
+        ]
+      },
+      "volumeMm3": 12554.14840073578,
+      "triangles": 700,
+      "meshChecks": {
+        "parseable": "pass",
+        "closedPositiveVolume": "pass",
+        "withinSizeLimits": "pass",
+        "withinTriangleLimits": "pass"
+      }
+    },
+    {
+      "id": "standoff",
+      "quantity": 4,
+      "purpose": "robot",
+      "material": "PLA",
+      "licence": "BSD-3-Clause",
+      "source": "source/standoff.cadcode",
+      "mesh": "stl/standoff.stl",
+      "printOrientation": "Flat face down, Z up",
+      "boundsMm": {
+        "min": [
+          -4.5,
+          -4.5,
+          0
+        ],
+        "max": [
+          4.5,
+          4.5,
+          28
+        ]
+      },
+      "volumeMm3": 1517.272022056551,
+      "triangles": 256,
+      "meshChecks": {
+        "parseable": "pass",
+        "closedPositiveVolume": "pass",
+        "withinSizeLimits": "pass",
+        "withinTriangleLimits": "pass"
+      }
+    },
+    {
+      "id": "skid",
+      "quantity": 1,
+      "purpose": "robot",
+      "material": "PLA",
+      "licence": "BSD-3-Clause",
+      "source": "source/skid.cadcode",
+      "mesh": "stl/skid.stl",
+      "printOrientation": "Flat mounting flange down (rotation already baked into STL)",
+      "boundsMm": {
+        "min": [
+          -16,
+          -10,
+          0
+        ],
+        "max": [
+          16,
+          10,
+          14
+        ]
+      },
+      "volumeMm3": 3182.188229485139,
+      "triangles": 750,
+      "meshChecks": {
+        "parseable": "pass",
+        "closedPositiveVolume": "pass",
+        "withinSizeLimits": "pass",
+        "withinTriangleLimits": "pass"
+      }
+    },
+    {
+      "id": "fit",
+      "quantity": 1,
+      "purpose": "calibration",
+      "material": "PLA",
+      "licence": "BSD-3-Clause",
+      "source": "source/fit.cadcode",
+      "mesh": "stl/fit.stl",
+      "printOrientation": "Flat face down, Z up",
+      "boundsMm": {
+        "min": [
+          -37,
+          -9,
+          0
+        ],
+        "max": [
+          37,
+          9,
+          4
+        ]
+      },
+      "volumeMm3": 4849.159402156769,
+      "triangles": 1604,
+      "meshChecks": {
+        "parseable": "pass",
+        "closedPositiveVolume": "pass",
+        "withinSizeLimits": "pass",
+        "withinTriangleLimits": "pass"
+      }
+    }
+  ],
+  "manufacturedPartCount": 11,
+  "control": {
+    "scope": "ideal-cad-simulation",
+    "left": "A",
+    "right": "B",
+    "positiveAxis": [
+      0,
+      1,
+      0
+    ],
+    "positiveTravel": "+X",
+    "fixBase": false,
+    "physicalTransport": false,
+    "physicalEncoders": false
+  },
+  "validation": {
+    "stlScreening": "All seven unique original parts pass parse, closed-positive-volume, size and triangle checks.",
+    "hardwareBuilt": false
+  },
+  "files": [
+    {
+      "path": "scout-tt-rover.bcad",
+      "bytes": 3745800,
+      "sha256": "85e649c26280be10991d3e1c069a3ab2ca384fc0478b861026e87940a2a4461e"
+    },
+    {
+      "path": "scout-tt-print-layout.bcad",
+      "bytes": 10768,
+      "sha256": "05b6fc159c80e4a7b9c78b895af0651a6ae543eb4c5e385ab90927f404dc4cb1"
+    },
+    {
+      "path": "scout-tt-fit-gauge.bcad",
+      "bytes": 1638,
+      "sha256": "f891db6072dff054e979fbc554f3874634324bb6dd8f77d94aed8fa51eec51a7"
+    },
+    {
+      "path": "stl/chassis.stl",
+      "bytes": 123484,
+      "sha256": "2103eece58f4571c18794e8cf53a3fe8445e095d3e7868023632a572f5c3cb49"
+    },
+    {
+      "path": "source/chassis.cadcode",
+      "bytes": 1027,
+      "sha256": "5e903eedaeb441393b13fb548553eb91e85926cd5856e5bf317f686bef118d67"
+    },
+    {
+      "path": "stl/cradle.stl",
+      "bytes": 43784,
+      "sha256": "48dbf981a86bf09b27caba6e45826c501f9eb11ff2358b278021b58e3144009d"
+    },
+    {
+      "path": "source/cradle.cadcode",
+      "bytes": 725,
+      "sha256": "b00339fd22479f5d46c5d64413a41dac903397c03e49b9d68f05a5dd2d8fc119"
+    },
+    {
+      "path": "stl/wheel.stl",
+      "bytes": 151284,
+      "sha256": "c6ba31d019885d3a1692d5be24617bc24d817037cdb8ed0bec50a1a5228b24ce"
+    },
+    {
+      "path": "source/wheel.cadcode",
+      "bytes": 871,
+      "sha256": "db4a3335c882731b51275da5f843b407d4c09ddaa988924b379acc57a15e9988"
+    },
+    {
+      "path": "stl/deck.stl",
+      "bytes": 35084,
+      "sha256": "40a7bc0a63bbfb27650dd1e5af6bbe24fb5b23f82d5111e80174a9dfa0f8012c"
+    },
+    {
+      "path": "source/deck.cadcode",
+      "bytes": 587,
+      "sha256": "c140a51a17abe88fc955c73628f51df33a6e116a35ac9b2d9edcd1776748b27f"
+    },
+    {
+      "path": "stl/standoff.stl",
+      "bytes": 12884,
+      "sha256": "468aa1214ee70e5709b48c3fd2a8282371f73224fcbad95af9f0bacc3e0dc6d4"
+    },
+    {
+      "path": "source/standoff.cadcode",
+      "bytes": 193,
+      "sha256": "4d782708bd971e2aa4f9cd263c6ea2461d1d842a4aad0964474ae19811bfc076"
+    },
+    {
+      "path": "stl/skid.stl",
+      "bytes": 37584,
+      "sha256": "0790bbf18f73a8083da213a73913b224d709bc74556b6e7e51b6b38b543d3264"
+    },
+    {
+      "path": "source/skid.cadcode",
+      "bytes": 284,
+      "sha256": "77244f4063fca518d244c7d5695baed0dd822bb28b9b616c0ce7822fc8889c71"
+    },
+    {
+      "path": "stl/fit.stl",
+      "bytes": 80284,
+      "sha256": "f22759d8996e552f0ce382360255b6e5dcb32f06bc68ce6a8bc6ff0cdc94d587"
+    },
+    {
+      "path": "source/fit.cadcode",
+      "bytes": 1073,
+      "sha256": "fb8e791b4289365a6cbc63af86c438469cc49e7028a35ffaa7127687d37f92a8"
+    },
+    {
+      "path": "LICENSE.txt",
+      "bytes": 1520,
+      "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad"
+    },
+    {
+      "path": "ADAFRUIT-MIT-LICENSE.txt",
+      "bytes": 1076,
+      "sha256": "f60436644e066301d4c2e8f1f0674a157b1f60e4fd5586717b99dde255cc18cd"
+    },
+    {
+      "path": "BUILD-GUIDE.md",
+      "bytes": 23365,
+      "sha256": "58fcd6285ad26b08baf91176769bfe1f3da7b0e4278c072c407eaf19a147982b"
+    },
+    {
+      "path": "NOTICE.md",
+      "bytes": 804,
+      "sha256": "22bb97b6877924f74a57e19c68853c928fbdf18377f0410febe9b437e9ad39dc"
+    }
+  ],
+  "reproduce": "npm run robot:generate; npm run robot:check"
+}
