@@ -922,3 +922,32 @@ focused library tests passing. The source catalogue now has 193 models; Mac 35
 predates those four data additions. No production runtime code changed in this
 integration. [Evidence](evidence/retained-transitions-2026-11-15.json) retains exact
 checkpoints, initial failures/corrections, test scopes, limitations and log hashes.
+
+
+## 2026-11-15 — Mac 36: optional screw thread redesign
+
+Mac build 36 is installed and running from clean source
+`e230585f22a756eb3bec2e05c7adcebd1d2d7db8`; the live asset receipt agrees and
+native smoke checks pass. Properties → Redesign thread keeps pitch by default,
+or accepts a new pitch/turn count. Apply consumes local resize into the retained
+recipe as one undoable edit. Ordinary resize remains available. Opening redesign
+replaces the regular generator fields temporarily rather than duplicating them.
+The same transaction is available through `cad_redesign_screw` with preview and
+revision guards. [Behavior and limits](SCREW-REDESIGN.md).
+
+All 1,047 tests pass (one existing skip, 102 files); the final GUI-only mounting
+change additionally passes production build and six browser workflows across
+Chromium/iPad WebKit. Four actual Jolt cases cover fine/long redesigned screws;
+crest measurements verify pitch for both thread directions and multiple starts.
+All 59 catalogue defaults qualify or are reference-excluded, with zero blocked
+entries. German validation covers 1,506 messages. The source/native library has
+194 models; the concurrent separator admission is preserved.
+
+Long-thread collision metadata is bounded at 4,096 tube-grid segments, with
+coarser candidate grouping for long ridges and early compound-budget rejection.
+Qualification limits remain 2% volume, 0.2 mm bounds and 2,048 hulls. Existing
+recipes retain previous geometry until deliberate regeneration. Nominal turn
+counts trim end runouts; circularization uses area-equivalent diameter for unequal
+X/Y scales. This does not certify manufacturing fits. Springs/gears remain queued
+and 13 catalogue parameter gaps remain. No new native iPad installation was made.
+[Evidence and exact source boundaries](evidence/screw-redesign-2026-11-15.json).

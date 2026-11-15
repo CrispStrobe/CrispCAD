@@ -105,3 +105,10 @@ creates one iteration. No-op edits do not append history. Generated recipes use
 the same part factory as the editor. Source input is capped at 65,536 characters;
 project-contained mesh assets and immutable attribution stay in the project.
 See [the language and GUI workflow](UNIFIED-DESIGN-SOURCE.md).
+
+
+Retained screws can be rebuilt after local scaling with `cad_redesign_screw`: read
+the current revision, supply `objectId` and `expectedRevision`, and optionally
+`diameter`, `length` and either `pitch` or `turnsPerStart`. `preview: true` saves
+nothing. Acceptance appends one revision and resets local scale. See
+[thread redesign](SCREW-REDESIGN.md) for defaults and guards.

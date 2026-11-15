@@ -1,10 +1,11 @@
+import {mountScrewRedesign} from './screw-redesign.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import {prepareMeshExport} from './export-policy.js';
 import {mountModelLibraryPanel, type ModelLibraryOptions} from './model-library-panel.js';
 export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
 import { t } from '@brickwright/cad-core';
-import { createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters } from '@brickwright/cad-core';
+import { createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters,redesignScrew } from '@brickwright/cad-core';
 import type { CadDocument, CadSession, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe } from '@brickwright/cad-core';
 import { importSTL } from '@brickwright/cad-geometry';
 import type { GeometryResult } from '@brickwright/cad-geometry';
@@ -277,6 +278,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     const nameInput=field(styleRow, 'Object name', n.name, value => session.update(id, { name: value }), 'text');nameInput.parentElement!.classList.add('object-name');nameInput.title=t('Object name');styleRow.prepend(nameInput.parentElement!);const colour=field(styleRow,'Color',n.color,value=>session.update(id,{color:value}),'color');colour.parentElement!.classList.add('color-swatch');colour.title=t('Color');
     transformFields([id],activeKey);for(const key of ['position','rotation','scale'] as const)if(key!==activeKey)transformFields([id],key);
     const recipe=n.generator??(n.reference?defaultGenerator('ruler'):session.state.document.roots.includes(id)?defaultGenerator(n.physics?.sourcePreset??''):undefined);
+    if(n.generator?.preset==='screw')mountScrewRedesign(inspector,n.generator,n.transform.scale,async request=>{const expected=session.state.revision,redesigned=redesignScrew(n.generator!,n.transform.scale,request),fragment=createPresetDocument('screw','BRICKWRIGHT',{recipe:redesigned}),trial=createCadSession(session.state.document);try{trial.replaceGenerated(id,fragment,{resetScale:true,label:'Redesign thread'});await client.evaluate(trial.state.document);if(disposed)return;if(session.state.revision!==expected)throw new Error(t('The model changed while generating this shape. Apply again.'));session.replaceGenerated(id,fragment,{resetScale:true,label:'Redesign thread'});await whenIdle();}finally{trial.dispose();}},report);
     if(recipe&&!isCube(n)){
       const draft=structuredClone(recipe);const legacyLettering=!n.generator&&['text','name-tag'].includes(recipe.preset);if(legacyLettering)draft.text='';const form=el('div','shape-parameters');form.append(el('div','inspect-title',t`${t(shapeCatalog.find(p=>p.id===recipe.preset)?.name??recipe.preset)} parameters`));
       if(legacyLettering)form.append(el('p','hint',t('This older object did not retain its text. Enter the lettering to make it editable; the existing solid stays unchanged until Apply.')));

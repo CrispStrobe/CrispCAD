@@ -211,3 +211,14 @@ refinement path. Dovetail clearance offsets profile planes rather than scaling a
 key. The catalogue parameter gap is 13. Hinges, springs, gears, pulleys and other
 mechanical constructions remain next with explicit fit/clearance acceptance.
 See [RETAINED-TRANSITIONS.md](RETAINED-TRANSITIONS.md).
+
+
+## Optional screw thread redesign — 2026-11-15
+
+Owner steering prioritizes **Redesign thread** after local resizing. Pitch is
+kept by default; pitch or nominal turns per start can be chosen explicitly. The
+shared core/GUI/MCP transaction rebuilds physical dimensions, resets local scale
+and preserves undo/history and appearance. Fine/long thread support retains
+legacy defaults and actual-geometry collision gates. See
+[SCREW-REDESIGN.md](SCREW-REDESIGN.md). The catalogue parameter gap remains 13;
+springs and gears are still queued as the next retained mechanical templates.
