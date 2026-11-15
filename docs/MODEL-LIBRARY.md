@@ -847,3 +847,38 @@ cases, and twelve exported-topology failures whose source-versus-code cause is
 still provisional. Those failures are not labelled defective physical models.
 The next25StoneAgeLib demonstrations all exceed the unchanged32KiB source
 bound in necessary include subsets; this is not an archive-exhaustion claim.
+
+## Preserve exact corner origins at decimal face contacts
+
+The authored Flag France root exposed a kernel representation bug. Its grey
+panel and red layer share a source face at decimal 0.1. Translating a centred
+box by its half-size and then the layer offset introduced
+`(0.1 + 0.05) - 0.05 = 0.10000000000000002` before CSG. The indexed kernel mesh
+remained topologically closed, but two separate edges collapsed to the same
+Float32 coordinates. The resulting STL had four incident faces on that edge.
+STL export itself preserved every kernel coordinate exactly.
+
+The kernel now constructs `move(size/2, box(size))` directly as a box from the
+origin. This exact constructive identity avoids the artificial intermediate
+centering; it does not round, weld, cap, simplify, alter tolerances or change
+primitive defaults. Centred boxes retain their existing behavior, and an authored
+gap remains two disconnected closed components. Arc01's previously qualified
+mesh hash is unchanged. No public schema/API or dependency changes are involved.
+
+The unchanged Flag France original now passes all gates with 582 triangles,
+including exact source/derivative hashes, strict topology/positive volume,
+actual editable-source insertion and provenance/history, and actual preview
+pixels/offline insertion on Chromium and iPad WebKit. With the pending Arc01
+addition, this gives 131 records / 129 unique STLs / 170 previews locally; neither pending
+model is claimed delivered until its PR lands.
+
+The other eleven provisional SCAD topology failures were actually rerun.
+Flag Italy now passes mesh/topology and has the same derived geometry as France;
+its editor/preview gates remain pending and it receives no admission credit.
+Ten remain source-versus-output investigations rather than defective-model
+claims. The independent 30-root next batch has 28 necessary byte exclusions and
+two missing-input cases: catchnhole's actual converter refused JSON `import`,
+and its required `bolts.json` and `nuts.json` are absent from the staged archive.
+The earlier preflight checked SCAD includes/use only; the corrected full-input
+assessment and original failed assessment are both retained. No speculative
+import patch or replacement input data is used.
