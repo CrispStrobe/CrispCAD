@@ -17,7 +17,8 @@ full constrained sketches and an exact surface/solid backend remain roadmap work
   highlighted faces while dragging; the magnet or `C` disables this behavior.
 - [Retained design dimensions](docs/RETAINED-SHAPES.md) for twelve everyday shape
   families, including linked tube/washer walls and bores, rounded boxes, capsules,
-  tapered solids, polygonal prisms and torus rings.
+  tapered solids, polygonal prisms and torus rings. Counterbores, countersinks,
+  ports, bosses and ribs also retain bore, clearance, angle and support dimensions.
 - Practical part templates and editable generators for screws,
   threads, lettering and other parts. Seven conventional screw-point styles include
   editable cup, dog and tapered ends; headless set-screw and wood-screw presets are available. Name tags support rounded corners and bundled
@@ -55,7 +56,7 @@ clutter. See [the shared source workflow](docs/UNIFIED-DESIGN-SOURCE.md).
 
 The same modeling compiler is available through the core SDK and a headless MCP server.
 
-The offline model library includes 171 models with previews and retained
+The offline model library includes 172 models with previews and retained
 licence/provenance information, including CC0 geometric fixtures.
 
 Bounded converters import supported OpenSCAD/JSCAD source, including lexical

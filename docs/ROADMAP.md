@@ -179,3 +179,13 @@ scales are preserved; one release creates one transform/history step. Exact
 source-buffer bounds are cached, input is coalesced per frame, and the shape
 palette no longer blurs the canvas. See [SURFACE-DRAGGING.md](SURFACE-DRAGGING.md)
 for behavior and the limits of the performance evidence.
+
+
+## Cutting/enclosure generator retention — 2026-11-15
+
+Counterbores, countersinks, rounded ports, screw bosses and ribs now retain their
+design inputs across Properties, model source, MCP and revisions. Countersink
+seat depth is derived from the angle and displayed live; clearance is diametral.
+Edited bores, support ribs and recesses have actual-geometry collision tests.
+The remaining shape-parameter gap is 22. Curves/vessels and mechanical parts
+remain ahead; this does not add constrained sketches or certified fastener fits.

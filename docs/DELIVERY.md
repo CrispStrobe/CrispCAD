@@ -829,3 +829,33 @@ audit covers 59 presets, including one excluded reference ruler; 27 shape-specif
 parameter gaps remain. Twelve edited retained-family variants passed Jolt checks.
 See [validation evidence](evidence/retained-shapes-and-surface-drag-2026-11-15.json)
 for exact checkpoints, log hashes, earlier test corrections and limitations.
+
+
+## 2026-11-15 — Mac 33: retained cutters and enclosure supports
+
+Mac build 33 is installed and running from clean source
+`7e71641c18d121be062b72864e8379924b6eb3c4`; the live native asset receipt matches.
+Counterbores, countersinks, rounded ports, screw bosses and ribs now retain their
+dimensions in Properties, model source, MCP and revisions. The inspector displays
+countersink taper depth live from its diameters and seat angle. Invalid design
+relationships cannot commit a history entry. The remaining catalogue parameter
+gap falls from 27 to 22. See [inputs and origins](RETAINED-SHAPES.md).
+
+Integration caught and fixed a regression in the concurrent cylinder-origin
+optimization: valid established CSG triangulations are preserved, with a bounded
+equivalent-construction retry for collapsed export coordinates. Existing example
+and corpus derivatives remain byte-identical; the newly supported Sign03 stays
+closed and an actual gap stays open. The merged source includes the concurrent
+Sign03 library admission (172 bundled models, 102 reviewed corpus originals).
+
+Production/native builds and native smoke checks pass. The complete merged suite
+passes 984 tests with one existing skip; six focused browser workflows pass in
+Chromium/iPad WebKit. German validation covers 1,459 messages. All 59 default
+presets qualify or are reference-excluded; ten edited/cut Jolt cases test bores,
+ribs, recess shoulders and taper depths. Physical manufacturing/fit qualification
+and general constraints remain separate work.
+
+[Validation evidence](evidence/cutting-enclosure-parameters-2026-11-15.json) records
+exact checkpoints, log hashes, the initial integration failure and its resolution,
+and the scope of browser/physics checks. iPad build 18 remains the prior WLAN
+delivery whose launch the owner deferred; this pass updates the Mac installation.

@@ -305,6 +305,11 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
        const bore=field(form,'Bore diameter (mm)',draft.values.outerDiameter-2*draft.values.wallThickness,value=>{draft.values.wallThickness=(draft.values.outerDiameter-Number(value))/2;parameterInputs.get('wallThickness')!.value=String(draft.values.wallThickness);},'number','.1');bore.min='.01';
        for(const key of ['outerDiameter','wallThickness'])parameterInputs.get(key)!.addEventListener('change',()=>{bore.value=String(Number((draft.values.outerDiameter-2*draft.values.wallThickness).toFixed(6)));});
       }
+      if(draft.preset==='countersink'){
+       const seatDepth=()=>Number(((draft.values.recessDiameter-draft.values.boreDiameter)/2/Math.tan(draft.values.seatAngle*Math.PI/360)).toFixed(4));
+       const derived=field(form,'Seat depth (mm)',seatDepth(),()=>{},'number','.1');derived.readOnly=true;derived.title=t('Calculated from diameters and seat angle');
+       for(const key of ['boreDiameter','recessDiameter','seatAngle'])parameterInputs.get(key)!.addEventListener('input',()=>{const v=Object.fromEntries([...parameterInputs].map(([key,input])=>[key,Number(input.value)]));const value=(v.recessDiameter-v.boreDiameter)/2/Math.tan(v.seatAngle*Math.PI/360);derived.value=Number.isFinite(value)&&value>0?String(Number(value.toFixed(4))):'';});
+      }
       if(surfaceDetail.children.length>1)form.append(surfaceDetail);
       const apply=button('Apply shape parameters',async()=>{const expected=session.state.revision;apply.disabled=true;try{const fragment=createPresetDocument(draft.preset,'BRICKWRIGHT',{recipe:draft});await client.evaluate(fragment);if(disposed)return;if(session.state.revision!==expected)throw new Error(t('The model changed while generating this shape. Apply again.'));session.replaceGenerated(id,fragment);await whenIdle();}finally{apply.disabled=false;}},form,'primary');if(n.generator){const advanced=el('details');advanced.append(el('summary','',t('Advanced')));button('Detach generator',()=>session.detachGenerator(id),advanced);form.append(advanced);}inspector.append(form);
     }

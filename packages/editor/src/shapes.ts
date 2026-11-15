@@ -68,7 +68,7 @@ export function presetGeometry(id: string, preview = false, recipe?:GeneratorRec
     case 'hemisphere': return profile([[0,0], ...Array.from({length:17}, (_,i): [number,number] => i===16 ? [0,15] : [15*Math.cos(i*Math.PI/32),15*Math.sin(i*Math.PI/32)])],n);
     case 'paraboloid': return profile([[0,0], ...Array.from({length:25}, (_,i): [number,number] => [13*Math.sqrt(1-i/24),26*i/24])],n);
     case 'vase': return profile([[0,0],[10,0],[13,5],[15,12],[14,20],[9,27],[8,32],[6,32],[7,27],[12,20],[13,12],[11,5],[8,2],[0,2]],n);
-    default: return constructionPreview(id);
+    default: return constructionPreview(id,recipe);
   }
 }
 export function createPresetShape(id: string, recipe?:GeneratorRecipe): { shape: Primitive | MeshShape; height: number } {
