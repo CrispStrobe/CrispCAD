@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {getLocale,t,newId} from '@brickwright/cad-core';
+import {getLocale,t,newId,simulationSettings} from '@brickwright/cad-core';
 import type {CadSession,Vec3} from '@brickwright/cad-core';
 import {createSimulationClient} from './simulation-client.js';
 import {createMotionTraces} from './motion-traces.js';
@@ -14,7 +14,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
  let client:ReturnType<typeof createSimulationClient>|undefined,preparing:Promise<void>|undefined,epoch=0,commandEpoch=0,playing=false,program=false,disposed=false,fixBaseOverride:boolean|undefined,rigidPreview=false,timeScale=1,timer:ReturnType<typeof setTimeout>|undefined,lastTime=0,accumulator=0;
  let frame=emptyFrame(),error='',replayTime:number|undefined,replayPlaying=false,replayTimer:ReturnType<typeof setTimeout>|undefined;const replay=createSimulationReplay();
  const traces=createMotionTraces(),tickets=new Map<string,number>(),settings=new Map<string,{speed:number;limit:number;enabled:boolean}>(),waits=new Map<string,Travel>();
- const fixBase=()=>fixBaseOverride??!!session.state.document.joints?.length;
+ const fixBase=()=>fixBaseOverride??simulationSettings(session.state.document).fixBase??!!session.state.document.joints?.length;
  const present=(value:SimulationFrame|null)=>{if(value){traces.record(session.state.document,value);replay.record(value);}else traces.clear();frameChanged(value);};
  const notify=()=>{if(!disposed)changed();};
  const list=(kind:Drive):CadMotor[]=>(session.state.document.joints??[]).filter(j=>j.kind===kind).map(j=>({port:j.control?.port??j.id,id:j.id,name:session.state.document.nodes[j.bodyB].name}));
@@ -71,7 +71,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
  const hidden=()=>{if(document.hidden){if(program)interruptProgram?.();void stop().catch(fail);}};
  const blur=()=>{if(!program){if(preparing)reset();else pause();}};
  document.addEventListener('visibilitychange',hidden);window.addEventListener('blur',blur);
- let revision=session.state.revision;const unsubscribe=session.subscribe(state=>{if(state.revision!==revision){revision=state.revision;if(program)interruptProgram?.();settings.clear();reset();}});
+ let revision=session.state.revision,documentId=session.state.document.id;const unsubscribe=session.subscribe(state=>{if(state.revision!==revision){revision=state.revision;if(state.document.id!==documentId){documentId=state.document.id;fixBaseOverride=undefined;}if(program)interruptProgram?.();settings.clear();reset();}});
  return {motors,sliders,prepare,start,pause,reset,stop,stopMotors,
   setMotor:(ref:string,speed:number,torque=.02,asProgram=true)=>setDrive(ref,'hinge',speed,torque,asProgram),
   setSlider:(ref:string,speed:number,force=10,asProgram=true)=>setDrive(ref,'slider',speed,force,asProgram),

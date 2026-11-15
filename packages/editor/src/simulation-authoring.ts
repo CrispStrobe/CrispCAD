@@ -18,7 +18,7 @@ export function mountSimulationAuthoring(parent:HTMLElement,session:CadSession,f
  for(const input of gravity)input.oninput=()=>{gravityPreset.value='custom';};
  const groundLabel=document.createElement('label'),ground=document.createElement('input');ground.type='checkbox';groundLabel.append(ground,document.createTextNode(t('Ground plane')));world.append(groundLabel);
  const friction=number(world,'Ground friction',.4,'.05'),bounce=number(world,'Ground restitution',.05,'.05');
- button(world,'Apply world settings',()=>{session.setSimulation({gravity:values(gravity),ground:ground.checked,groundFriction:Number(friction.value),groundRestitution:Number(bounce.value)});worldDirty=false;});
+ button(world,'Apply world settings',()=>{session.setSimulation({...simulationSettings(session.state.document),gravity:values(gravity),ground:ground.checked,groundFriction:Number(friction.value),groundRestitution:Number(bounce.value)});worldDirty=false;});
  const connectors=section('Connectors'),kind=select(connectors,'Connector type',[['hinge','Axle (hinge)'],['slider','Slider'],['pivot','Pivot'],['fixed','Fixed connector']]);
  const bodyA=select(connectors,'Connector body A',[]),bodyB=select(connectors,'Connector body B',[]);
  const anchor=vector(connectors,'Connector point (mm)',[0,0,0]),axis=vector(connectors,'Connector axis',[0,0,1]);

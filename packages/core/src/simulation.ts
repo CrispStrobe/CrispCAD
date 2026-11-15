@@ -3,7 +3,11 @@ import {t} from './i18n.js';
 import {newId} from './document.js';
 import type {CadDocument,Transform,Vec3} from './document.js';
 import type {CadJoint,PartPhysics} from './physics.js';
-export interface SimulationSettings {gravity:Vec3;ground:boolean;groundFriction:number;groundRestitution:number}
+export interface SimulationSettings {
+ gravity:Vec3;ground:boolean;groundFriction:number;groundRestitution:number;
+ /** Saved assembly default. Omission retains automatic base fixing for existing mechanisms. */
+ fixBase?:boolean;
+}
 export interface MotionTracer {id:string;bodyId:string;point:Vec3;color:string}
 export const defaultSimulationSettings=():SimulationSettings=>({gravity:[0,0,-9.81],ground:true,groundFriction:.4,groundRestitution:.05});
 /** Illustrative rigid-body presets; editable parameters, not material certification. */
@@ -23,7 +27,7 @@ const vec=(v:unknown,max=1e6):v is Vec3=>Array.isArray(v)&&v.length===3&&v.every
 export function checkSimulation(doc:CadDocument){
  if(doc.version<8)return;
  const fail=():never=>{throw new Error(t('Invalid simulation settings or tracers'));};
- if(doc.simulation!==undefined){const s=doc.simulation;if(!s||!vec(s.gravity,1000)||typeof s.ground!=='boolean'||!bounded(s.groundFriction,0,2)||!bounded(s.groundRestitution,0,1))fail();}
+ if(doc.simulation!==undefined){const s=doc.simulation;if(!s||!vec(s.gravity,1000)||typeof s.ground!=='boolean'||!bounded(s.groundFriction,0,2)||!bounded(s.groundRestitution,0,1)||s.fixBase!==undefined&&typeof s.fixBase!=='boolean')fail();}
  if(doc.tracers!==undefined){if(!Array.isArray(doc.tracers)||doc.tracers.length>32)fail();const ids=new Set<string>();for(const trace of doc.tracers){if(!trace||typeof trace.id!=='string'||!/^[a-zA-Z0-9_-]{1,96}$/.test(trace.id)||ids.has(trace.id)||!doc.roots.includes(trace.bodyId)||doc.nodes[trace.bodyId].reference||doc.nodes[trace.bodyId].role==='hole'||!vec(trace.point)||!/^#[a-f0-9]{6}$/i.test(trace.color))fail();ids.add(trace.id);}}
 }
 export function rotatePoint(point:Vec3,rotation:Vec3,inverse=false):Vec3{

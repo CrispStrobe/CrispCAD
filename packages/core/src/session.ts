@@ -158,6 +158,9 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       commit(options.label??'Add shape', d => {
         if(Math.max(d.version,source.version)>=5){assertProvenanceUpgrade(d);assertProvenanceUpgrade(source);}
         if(source.version>=8&&d.version<8)upgradeSimulation(d);
+        // A first assembly may provide its world defaults. Existing scene settings,
+        // including an intentionally configured empty scene, remain host-owned.
+        if(!d.roots.length&&d.simulation===undefined&&source.version>=8&&source.simulation)d.simulation=structuredClone(source.simulation);
         d.version=Math.max(d.version,source.version) as CadDocument['version'];
         const provenanceIds=new Map((source.version>=5?source.provenance?.records??[]:[]).map(r=>[r.id,newId()]));
         if(source.version>=5&&source.provenance)d.provenance={version:1,records:[...(d.provenance?.records??[]),...source.provenance.records.map(r=>({...structuredClone(r),id:provenanceIds.get(r.id)!}))]};
