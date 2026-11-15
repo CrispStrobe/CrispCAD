@@ -1,0 +1,628 @@
+{
+  "date": "2026-11-15",
+  "sourceCommit": "7e71641c18d121be062b72864e8379924b6eb3c4",
+  "scope": "Five retained cutting/enclosure recipes and compatibility correction for the concurrent cylinder-origin optimization",
+  "families": [
+    "counterbore",
+    "countersink",
+    "port",
+    "boss",
+    "rib"
+  ],
+  "validation": {
+    "unitPassed": 984,
+    "unitSkipped": 1,
+    "unitFiles": 95,
+    "focusedBrowserPassed": 6,
+    "browserPlatforms": [
+      "Chromium",
+      "iPad WebKit"
+    ],
+    "germanMessages": 1459,
+    "editedJoltCasesPassed": 10,
+    "productionBuild": "pass",
+    "nativeMacSmoke": "pass"
+  },
+  "catalogue": {
+    "presets": 59,
+    "closedPositiveSolids": 58,
+    "referenceHelpersExcluded": 1,
+    "remainingParameterGaps": [
+      "teardrop",
+      "hinge",
+      "dovetail",
+      "snap-fit",
+      "gear",
+      "spring",
+      "star",
+      "curved-cone",
+      "hemisphere",
+      "paraboloid",
+      "vase",
+      "loft",
+      "bent-tube",
+      "finishing-washer",
+      "hirth",
+      "gt2-pulley",
+      "grid-bin",
+      "sbc",
+      "icon-tag",
+      "qr",
+      "crescent",
+      "knurl"
+    ]
+  },
+  "cataloguePhysics": {
+    "generatedAt": "2026-11-15T11:27:48.614Z",
+    "engine": "1.1.0-bw.9 debug",
+    "stepHz": 200,
+    "steps": 200,
+    "sourceFloorToleranceMm": 0.25,
+    "mode": "rigid-preview only; not mechanical/material/fit qualification",
+    "records": [
+      {
+        "id": "l-bracket",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 2,
+        "maxRelativeError": 4.0602442043434315e-16,
+        "milliseconds": 336
+      },
+      {
+        "id": "mounting-plate",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 58,
+        "maxRelativeError": 0.0005847724003672656,
+        "milliseconds": 1195
+      },
+      {
+        "id": "spacer",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 1.783351507392845e-07,
+        "milliseconds": 1382
+      },
+      {
+        "id": "cube",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 73
+      },
+      {
+        "id": "box",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 89
+      },
+      {
+        "id": "cylinder",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 8,
+        "maxRelativeError": 0,
+        "milliseconds": 419
+      },
+      {
+        "id": "rounded-box",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 92,
+        "maxRelativeError": 5.0806847409396725e-06,
+        "milliseconds": 1802
+      },
+      {
+        "id": "capsule",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 6,
+        "maxRelativeError": 0,
+        "milliseconds": 250
+      },
+      {
+        "id": "sphere",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 16,
+        "maxRelativeError": 6.91915292701303e-09,
+        "milliseconds": 474
+      },
+      {
+        "id": "wedge",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 60
+      },
+      {
+        "id": "cone",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 36,
+        "maxRelativeError": 7.450580642070597e-09,
+        "milliseconds": 429
+      },
+      {
+        "id": "polygon",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 1.4288354434899837e-16,
+        "milliseconds": 54
+      },
+      {
+        "id": "tube",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 4.349500898154281e-18,
+        "milliseconds": 987
+      },
+      {
+        "id": "washer",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 1.769816447450209e-17,
+        "milliseconds": 789
+      },
+      {
+        "id": "counterbore",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 128,
+        "maxRelativeError": 7.15077342109299e-19,
+        "milliseconds": 831
+      },
+      {
+        "id": "countersink",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 128,
+        "maxRelativeError": 0,
+        "milliseconds": 814
+      },
+      {
+        "id": "port",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 36,
+        "maxRelativeError": 2.296365477715463e-11,
+        "milliseconds": 457
+      },
+      {
+        "id": "teardrop",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 6,
+        "maxRelativeError": 2.1944909741794203e-11,
+        "milliseconds": 154
+      },
+      {
+        "id": "rib",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 2.4253192047278088e-16,
+        "milliseconds": 33
+      },
+      {
+        "id": "boss",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 96,
+        "maxRelativeError": 4.241282652973854e-09,
+        "milliseconds": 1753
+      },
+      {
+        "id": "screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 506,
+        "maxRelativeError": 0.0004210658193403879,
+        "milliseconds": 1779
+      },
+      {
+        "id": "hex-head-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 489,
+        "maxRelativeError": 0.0003380656213310644,
+        "milliseconds": 1780
+      },
+      {
+        "id": "socket-head-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 504,
+        "maxRelativeError": 0.00042422099411501074,
+        "milliseconds": 1998
+      },
+      {
+        "id": "countersunk-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 536,
+        "maxRelativeError": 0.0005605987129271594,
+        "milliseconds": 2324
+      },
+      {
+        "id": "pan-head-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 653,
+        "maxRelativeError": 0.0004960210207531363,
+        "milliseconds": 3250
+      },
+      {
+        "id": "set-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 455,
+        "maxRelativeError": 0.0005572603407184319,
+        "milliseconds": 2332
+      },
+      {
+        "id": "wood-screw",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 554,
+        "maxRelativeError": 0.0005051206769920052,
+        "milliseconds": 2791
+      },
+      {
+        "id": "nut",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 2038,
+        "maxRelativeError": 0.00011400955509362327,
+        "milliseconds": 21616
+      },
+      {
+        "id": "hinge",
+        "status": "rigid-preview-pass",
+        "bodies": 3,
+        "hulls": 358,
+        "maxRelativeError": 5.3743281756049115e-08,
+        "milliseconds": 3126
+      },
+      {
+        "id": "dovetail",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 52
+      },
+      {
+        "id": "snap-fit",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 3,
+        "maxRelativeError": 4.099892502747794e-09,
+        "milliseconds": 56
+      },
+      {
+        "id": "gear",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 99,
+        "maxRelativeError": 0.0001156999025326226,
+        "milliseconds": 2035
+      },
+      {
+        "id": "spring",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 288,
+        "maxRelativeError": 4.449026623655325e-08,
+        "milliseconds": 2343
+      },
+      {
+        "id": "text",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 196,
+        "maxRelativeError": 0.00010277534793130854,
+        "milliseconds": 3211
+      },
+      {
+        "id": "name-tag",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 222,
+        "maxRelativeError": 0.00029261161809340623,
+        "milliseconds": 1954
+      },
+      {
+        "id": "star",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 6,
+        "maxRelativeError": 1.2747213413988041e-08,
+        "milliseconds": 117
+      },
+      {
+        "id": "heart",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 4,
+        "maxRelativeError": 6.358413589427866e-10,
+        "milliseconds": 183
+      },
+      {
+        "id": "ellipse",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 8,
+        "maxRelativeError": 1.6911579726812762e-16,
+        "milliseconds": 189
+      },
+      {
+        "id": "curved-cone",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1024,
+        "maxRelativeError": 6.640177097904917e-09,
+        "milliseconds": 13345
+      },
+      {
+        "id": "pyramid",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 1,
+        "maxRelativeError": 0,
+        "milliseconds": 50
+      },
+      {
+        "id": "round-roof",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 8,
+        "maxRelativeError": 4.446516007697686e-09,
+        "milliseconds": 177
+      },
+      {
+        "id": "hemisphere",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 7.997545752308254e-09,
+        "milliseconds": 1696
+      },
+      {
+        "id": "paraboloid",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 5.848114348134307e-09,
+        "milliseconds": 1899
+      },
+      {
+        "id": "torus",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 1.356041088461232e-08,
+        "milliseconds": 2668
+      },
+      {
+        "id": "frustum",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 4,
+        "maxRelativeError": 2.9341894342097384e-09,
+        "milliseconds": 296
+      },
+      {
+        "id": "vase",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 384,
+        "maxRelativeError": 2.5940006154553497e-08,
+        "milliseconds": 3261
+      },
+      {
+        "id": "loft",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 425,
+        "maxRelativeError": 0.00052319496647393,
+        "milliseconds": 3413
+      },
+      {
+        "id": "bent-tube",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 384,
+        "maxRelativeError": 0.00850375221964197,
+        "milliseconds": 2444
+      },
+      {
+        "id": "thread",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 488,
+        "maxRelativeError": 0.0007214165282141644,
+        "milliseconds": 1993
+      },
+      {
+        "id": "finishing-washer",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 64,
+        "maxRelativeError": 5.0430367982210755e-09,
+        "milliseconds": 1168
+      },
+      {
+        "id": "hirth",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 88,
+        "maxRelativeError": 1.9561657910257435e-07,
+        "milliseconds": 1345
+      },
+      {
+        "id": "gt2-pulley",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 681,
+        "maxRelativeError": 0.00014601622389742058,
+        "milliseconds": 5572
+      },
+      {
+        "id": "grid-bin",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 9,
+        "maxRelativeError": 1.392074849175087e-16,
+        "milliseconds": 71
+      },
+      {
+        "id": "sbc",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 115,
+        "maxRelativeError": 0.0002641311386254461,
+        "milliseconds": 1863
+      },
+      {
+        "id": "icon-tag",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 42,
+        "maxRelativeError": 0.00016504658038797433,
+        "milliseconds": 659
+      },
+      {
+        "id": "qr",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 114,
+        "maxRelativeError": 1.196829540655702e-16,
+        "milliseconds": 404
+      },
+      {
+        "id": "crescent",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 20,
+        "maxRelativeError": 0.0005010191828879746,
+        "milliseconds": 378
+      },
+      {
+        "id": "knurl",
+        "status": "rigid-preview-pass",
+        "bodies": 1,
+        "hulls": 296,
+        "maxRelativeError": 5.587449320381498e-05,
+        "milliseconds": 5024
+      },
+      {
+        "id": "ruler",
+        "status": "reference-excluded"
+      }
+    ]
+  },
+  "nativeMac": {
+    "build": 33,
+    "installedAndRunning": true,
+    "receipt": {
+      "version": "0.1.0",
+      "commit": "7e71641c18d121be062b72864e8379924b6eb3c4",
+      "dirty": false,
+      "builtAt": "2026-11-15T11:34:01.127Z"
+    },
+    "path": "~/Applications/Brickwright CAD.app"
+  },
+  "regressionFoundAndResolved": {
+    "initialMergedRun": "981 passed, 1 skipped, 2 failed: global exact cylinder-origin construction changed corpus and original-example outputs. No model/library artifacts were overwritten to hide the failure.",
+    "correction": "Preserve established triangulation first; only code with an origin-cylinder candidate and collapsed Float32 vertex coordinates retries the equivalent direct-origin construction once. No tolerance snapping or forced mesh welding.",
+    "evidence": "Original 34 example outputs and 102 corpus outputs reproduce byte-for-byte; Sign03 and generic decimal contact pass; actual gap remains open. Final complete suite passes."
+  },
+  "limits": [
+    "Numeric recipes do not implement arbitrary named generator-formula bindings or general sketch constraints.",
+    "Rigid-preview qualification is not mechanical-fit, material or manufacturing certification.",
+    "The six browser checks preceded the final cylinder retry integration and title-only tooltip addition; the five construction definitions are unchanged. Final merged source passed full unit and native smoke checks.",
+    "Full catalogue qualification used the initial retained-generator checkpoint; the default catalogue geometry is unchanged by the later code-only cylinder fallback. Ten edited/cut physics regressions also passed in the final full suite.",
+    "iPad build 18 remains the previously installed delivery; this pass packages Mac build 33."
+  ],
+  "logs": [
+    {
+      "file": "cad-enclosure-unit-final.log",
+      "bytes": 232,
+      "sha256": "359d7ddb39a144234d6b6d0f375c909dac2369938c724cdaee46acdb8c5e2789"
+    },
+    {
+      "file": "cad-enclosure-full-unit.log",
+      "bytes": 329,
+      "sha256": "9d027bb1e59165a6a41e1fe02744b0994b79526bfc3b044e10eb6256880f693f"
+    },
+    {
+      "file": "cad-enclosure-browser.log",
+      "bytes": 1440,
+      "sha256": "b38909cc8ca3cb2cf888d59c7fcf2d7d4e62936cde97be7e24652d862546ad03"
+    },
+    {
+      "file": "cad-enclosure-catalog-physics.log",
+      "bytes": 1084,
+      "sha256": "21076d8fbb4d35284106fbc3e2fdb8688531f8ce143bc68d40ccbb0d2876f52e"
+    },
+    {
+      "file": "cad-enclosure-merged-unit.log",
+      "bytes": 4258,
+      "sha256": "87a26965f489ce10d30e0ad1868a91c3d73ae1815575520b0739f15f9299926c"
+    },
+    {
+      "file": "cad-cylinder-fallback-tests.log",
+      "bytes": 232,
+      "sha256": "ccc0092df94d553e209884c4b43665438ee0763e83f43d082caddb7ff5107d2b"
+    },
+    {
+      "file": "cad-cylinder-contact-final.log",
+      "bytes": 230,
+      "sha256": "b098c0d3bc281e63069d3fe47033bbde8c13224e04180f9843e2fa22e01c0ae8"
+    },
+    {
+      "file": "cad-enclosure-release-build.log",
+      "bytes": 3061,
+      "sha256": "6843afd2d311a45827773faf26548a0ec2715f4a0addd007579838443ec0c40b"
+    },
+    {
+      "file": "cad-enclosure-release-unit.log",
+      "bytes": 327,
+      "sha256": "0740ea6390d78e6d2cb371e3993d2057a76631410c2f71d44c7f8f9101749db8"
+    },
+    {
+      "file": "cad-enclosure-release-i18n.log",
+      "bytes": 222,
+      "sha256": "cf64272047dcc69148c455f6ec860ffa9efa210dc47c617f52360f29a90d22d6"
+    },
+    {
+      "file": "cad-enclosure-release-audit.log",
+      "bytes": 424,
+      "sha256": "aee104bf5225446b79598d456966924b9e8826275636dabe16fa49877d68b095"
+    },
+    {
+      "file": "cad-mac33-build.log",
+      "bytes": 1522,
+      "sha256": "c9e81382040e12e79a8e19e18744bbca860e210cfa6ea0ebd66b132683396e55"
+    },
+    {
+      "file": "cad-mac33-smoke.log",
+      "bytes": 468,
+      "sha256": "f65df21f2a201d47bdea55addc02ea40d13728e4e69f4e69e071385337a4d53f"
+    },
+    {
+      "file": "cad-mac33-install.log",
+      "bytes": 128,
+      "sha256": "32585d3f32327145fe56d6d3f3a11323274dd5ae18c8d933581a239adbbd5273"
+    }
+  ]
+}
