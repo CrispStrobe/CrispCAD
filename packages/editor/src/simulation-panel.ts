@@ -17,11 +17,11 @@ export function mountSimulationPanel(parent:HTMLElement,session:CadSession,wasmU
  base.onchange=reset;
  const joints=document.createElement('div');panel.append(joints);
  const status=document.createElement('p');status.setAttribute('role','status');panel.append(status);
- let client:ReturnType<typeof createSimulationClient>|undefined,generation=0,playing=false,starting=false,disposed=false,raf=0,previous=0,accumulator=0;
+ let client:ReturnType<typeof createSimulationClient>|undefined,generation=0,playing=false,starting=false,disposed=false,raf=0,previous=0,accumulator=0,playback=0;
  const rows=new Map<string,{speed:HTMLInputElement;torque:HTMLInputElement;angle:HTMLOutputElement}>();
  function update(){run.disabled=playing||starting;pauseButton.disabled=!playing;stop.disabled=!client||starting;resetButton.disabled=!client&&!starting;base.disabled=!!client||starting;panel.dataset.state=starting?'preparing':playing?'running':client?'paused':'idle';}
  function show(frame:SimulationFrame){poses(frame.poses);panel.dataset.time=String(frame.time);for(const [id,row]of rows)row.angle.value=`${(frame.angles[id]??0).toFixed(1)}°`;}
- function pause(){playing=false;cancelAnimationFrame(raf);previous=0;accumulator=0;update();}
+ function pause(){playback++;playing=false;cancelAnimationFrame(raf);previous=0;accumulator=0;update();}
  function reset(){generation++;pause();client?.dispose();client=undefined;starting=false;poses(null);delete panel.dataset.time;for(const row of rows.values())row.angle.value='0.0°';status.textContent='';update();}
  function fail(error:unknown){if(disposed)return;reset();status.textContent=error instanceof Error?error.message:String(error);}
  async function motor(id:string){const row=rows.get(id)!;const speedDps=Number(row.speed.value),torqueNm=Number(row.torque.value);if(!Number.isFinite(speedDps)||Math.abs(speedDps)>720||!Number.isFinite(torqueNm)||torqueNm<=0||torqueNm>100)throw new Error(t('Enter a speed from -720 to 720 and a torque above 0 up to 100 Nm'));if(client&&!starting)await client.send({op:'motor',id,speedDps,torqueNm});}
@@ -33,16 +33,16 @@ export function mountSimulationPanel(parent:HTMLElement,session:CadSession,wasmU
     client=createSimulationClient();const frame=await client.send({op:'start',document:structuredClone(session.state.document),wasmURL:new URL(wasmURL,document.baseURI).href,fixBase:base.checked,locale:getLocale()});if(disposed||token!==generation)return;show(frame);starting=false;
     for(const id of rows.keys())await motor(id);
    }
-   if(disposed||token!==generation)return;playing=true;previous=0;accumulator=0;status.textContent='';update();raf=requestAnimationFrame(tick);
+   if(disposed||token!==generation)return;playing=true;previous=0;accumulator=0;status.textContent='';update();raf=requestAnimationFrame(now=>tick(now,++playback));
   }catch(error){if(token===generation)fail(error);}
  }
- async function tick(now:number){
-  if(!playing||!client)return;const token=generation;
+ async function tick(now:number,loop:number){
+  if(!playing||!client||loop!==playback)return;const token=generation;
   if(document.hidden||!panel.getClientRects().length){pause();return;}
   accumulator+=previous?Math.min((now-previous)/1000,.05):0;previous=now;
   const steps=Math.min(10,Math.floor(accumulator/.005));
-  try{if(steps){accumulator-=steps*.005;const frame=await client.send({op:'step',seconds:steps*.005});if(token!==generation||disposed)return;show(frame);}
-   if(playing)raf=requestAnimationFrame(tick);
+  try{if(steps){accumulator-=steps*.005;const frame=await client.send({op:'step',seconds:steps*.005});if(token!==generation||disposed||loop!==playback)return;show(frame);}
+   if(playing&&loop===playback)raf=requestAnimationFrame(now=>tick(now,loop));
   }catch(error){if(token===generation)fail(error);}
  }
  async function stopMotors(){for(const row of rows.values())row.speed.value='0';if(client)await client.send({op:'stop-motors'});}
@@ -56,7 +56,8 @@ export function mountSimulationPanel(parent:HTMLElement,session:CadSession,wasmU
  }
  let revision=session.state.revision;
  const unsubscribe=session.subscribe(state=>{if(state.revision!==revision){revision=state.revision;reset();rebuild();}});
- const hidden=()=>{if(document.hidden)pause();};document.addEventListener('visibilitychange',hidden);window.addEventListener('blur',pause);
+ const blur=()=>{if(starting)reset();else pause();};
+ const hidden=()=>{if(document.hidden)blur();};document.addEventListener('visibilitychange',hidden);window.addEventListener('blur',blur);
  rebuild();update();
- return {open(){panel.hidden=false;},reset,pause,get active(){return !!client||starting;},dispose(){disposed=true;reset();unsubscribe();document.removeEventListener('visibilitychange',hidden);window.removeEventListener('blur',pause);panel.remove();}};
+ return {open(){panel.hidden=false;},reset,pause,get active(){return !!client||starting;},dispose(){disposed=true;reset();unsubscribe();document.removeEventListener('visibilitychange',hidden);window.removeEventListener('blur',blur);panel.remove();}};
 }
