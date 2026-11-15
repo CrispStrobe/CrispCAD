@@ -17,6 +17,6 @@
   "dependencies": {
     "@brickwright/cad-core": "0.1.0",
     "@brickwright/cad-geometry": "0.1.0",
-    "jolt-physics": "https://github.com/CrispStrobe/JoltPhysics.js/releases/download/bw.9-qualified-20261029/jolt-physics-1.1.0-bw.9.tgz"
+    "jolt-physics": "https://github.com/CrispStrobe/JoltPhysics.js/releases/download/bw.10-qualified-20261112/jolt-physics-1.1.0-bw.10.tgz"
   }
 }

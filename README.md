@@ -172,8 +172,10 @@ verification, pairing and signing instructions.
 | `@brickwright/cad-brickwright` | Host project sidecar, coordinates and part-mesh integration |
 
 Hosts inject file access and persistence. Editor instances own their mount targets
-and dispose their resources independently. The physics SDK is available separately;
-the standalone workbench does not yet have a simulation tab. See
+and dispose their resources independently. The shared Simulate panel provides
+Jolt rigid-body experiments, motors, connectors, traces and recorded replay in
+both the standalone app and Brickwright. Simulation poses stay outside model
+history. See
 [integration](docs/INTEGRATION.md), [physics](docs/PHYSICS.md) and
 [contributing](CONTRIBUTING.md).
 

@@ -9,7 +9,7 @@
       "path": "../scripts/generate-supported-library.mjs",
       "sha256": "4c7cad93297b49487d5a36fb9e8e1a98098cf4808ad3e33dde27eb8581c3a751"
     },
-    "packageLockSha256": "a713e26e1ca1274aebe858c8bcdbc91958e58ca4d106edfbfc917df78a126668",
+    "packageLockSha256": "fce627d2348b17711a6341f1ec5a985603a2062ba94b114da86d6bfdfdf38cfa",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
   },
   "assets": [

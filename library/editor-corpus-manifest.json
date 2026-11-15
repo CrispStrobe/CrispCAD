@@ -10,7 +10,7 @@
       "path": "../scripts/generate-corpus-editor-library.mjs",
       "sha256": "424b094262e3147b621c4dec4399568d319064207de89e12a43278d10cc866d9"
     },
-    "packageLockSha256": "a713e26e1ca1274aebe858c8bcdbc91958e58ca4d106edfbfc917df78a126668",
+    "packageLockSha256": "fce627d2348b17711a6341f1ec5a985603a2062ba94b114da86d6bfdfdf38cfa",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
   },
   "selection": {

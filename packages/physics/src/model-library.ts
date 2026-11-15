@@ -5,7 +5,7 @@ import {prepareCollision} from './collision.js';
 import {createPhysicsWorld} from './world.js';
 
 export const MODEL_LIBRARY_COLLISION_QUALIFIER_VERSION = 'brickwright-library-collision/1';
-export const MODEL_LIBRARY_JOLT_VERSION = '1.1.0-bw.9';
+export const MODEL_LIBRARY_JOLT_VERSION = '1.1.0-bw.10';
 let qualificationJolt: Promise<any> | undefined;
 export interface ModelLibraryCollisionOptions extends ModelLibraryMeshQualityOptions {
   /** Trusted host kernel from createGeometryKernel; never an untrusted external evaluator. */
