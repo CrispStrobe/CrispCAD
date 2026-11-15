@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: BSD-3-Clause
+export const messages:Record<string,string> = {
+  "Original files; units and orientation have not been verified. STEP, Fusion and other formats are available as source files. These files have not been screened for insertion or collision.": "Originaldateien: Einheiten und Ausrichtung sind nicht geprüft. STEP, Fusion und weitere Formate stehen als Quelldateien bereit. Zum Einfügen wird die Geometrie gesondert geprüft.",
+  "Original file": "Originaldatei",
+  "Upstream original": "Original beim Urheber",
+  "STL source units": "Einheiten der STL-Quelle",
+  "STL source up axis": "Hochachse der STL-Quelle",
+  "Choose units": "Einheiten wählen",
+  "Millimetres": "Millimeter",
+  "Inches": "Zoll",
+  "Choose up axis": "Hochachse wählen",
+  "Z up": "Z nach oben",
+  "Y up": "Y nach oben",
+  "Screen and insert STL": "STL prüfen und einfügen",
+  "Download verified original": "Geprüftes Original herunterladen",
+  "STL exceeds the 16 MiB screening limit; original download remains available.": "Die STL überschreitet die Prüfgrenze von 16 MiB. Das Original kann heruntergeladen werden.",
+  "Choose source units and up axis to screen this STL.": "Wähle Einheiten und Hochachse, um diese STL zu prüfen.",
+  "Insertion requires a passing geometry screen and does not qualify collisions.": "Zum Einfügen muss die Geometrieprüfung bestehen. Kollisionen werden gesondert geprüft.",
+  "Verifying original file…": "Originaldatei wird geprüft…",
+  "Verified original downloaded.": "Geprüftes Original heruntergeladen.",
+  "Verifying and screening STL…": "STL-Datei und Geometrie werden geprüft…",
+  "STL inserted with provenance and selected conversion.": "STL mit Herkunftsnachweis und gewählter Umrechnung eingefügt.",
+  "STL inserted with provenance; viewport refresh failed.": "STL mit Herkunftsnachweis eingefügt. Die Ansicht konnte nicht aktualisiert werden.",
+  "The model changed while loading. Retry insertion.": "Das Modell wurde während des Ladens geändert. Füge es erneut ein.",
+  "Adafruit · Original files": "Adafruit · Originaldateien"
+};

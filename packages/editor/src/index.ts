@@ -1,3 +1,5 @@
+import {physicsMaterials} from '@brickwright/cad-core';
+import {mountSimulationPanel} from './simulation-panel.js';
 import {mountScrewRedesign} from './screw-redesign.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import {prepareMeshExport} from './export-policy.js';
@@ -17,6 +19,9 @@ import type {NavigationPreset} from './camera-input.js';
 export type {NavigationPreset} from './camera-input.js';
 import { mountViewport } from './viewport.js';
 import { editorStyle } from './style.js';
+import {themedEditorStyle} from './color-mode.js';
+import type {CadColorMode} from './color-mode.js';
+export type {CadColorMode} from './color-mode.js';
 import { toolIcon } from './icons.js';
 import {placeFragment} from './surface-placement.js';
 import type {PlacementPointer} from './surface-placement.js';
@@ -34,6 +39,7 @@ export interface CadEditorOptions {
   /** Desktop hosts provide the sole File menu through their native menu bar. */
   nativeMenus?:boolean;
   modelLibrary?: ModelLibraryOptions;
+  colorMode?:CadColorMode;
   navigationPreset?:NavigationPreset;
   resizeControls?:'dimensions'|'gizmo';
   gridDisplay?:GridDisplay;
@@ -56,6 +62,7 @@ export interface CadEditorOptions {
   document?: CadDocument;
   createWorker?: () => Worker;
   onDocumentChange?: (document: CadDocument, revision: number) => void;
+  onSimulationInterrupt?:()=>void;
   onSelectionChange?: (selection: readonly string[]) => void;
   onExport?: (file: CadFile) => void | Promise<void>;
   requestOpen?: () => Promise<{ name: string; bytes: Uint8Array } | null>;
@@ -72,7 +79,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const session = options.session ?? createCadSession(options.document); const ownsSession = !options.session;
   const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
   if (shadow.childElementCount) throw new Error(t('Mount target is already in use'));
-  const style = el('style'); style.textContent = editorStyle; const shell = el('section', 'editor'); shell.setAttribute('aria-label', 'CAD editor');
+  const style = el('style'); style.textContent = themedEditorStyle(editorStyle);host.dataset.cadColorMode=options.colorMode??'dark'; const shell = el('section', 'editor'); shell.setAttribute('aria-label', 'CAD editor');
   const toolbar = el('div', 'toolbar'); toolbar.setAttribute('role', 'toolbar'); toolbar.setAttribute('aria-label', 'Model tools');
   const iterationControl=options.headerContent?.querySelector<HTMLSelectElement>('#iterations');const projectsControl=options.headerContent?.querySelector<HTMLButtonElement>('#library');
   const main = el('div', 'main'); const tree = el('aside', 'panel tree'); const viewHost = el('div', 'viewport'); const inspector = el('aside', 'panel inspector');
@@ -87,8 +94,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   function report(e: unknown) { const error = e instanceof Error ? e : new Error(String(e)); operationError = error.message; message.textContent = error.message; if (!disposed) options.onError?.(error); }
   const run = (fn: () => unknown) => { try { const result = fn(); if (result instanceof Promise) result.catch(report); } catch (e) { report(e); } };
   const client = createGeometryClient(new URL(options.wasmURL, document.baseURI).href, options.createWorker);
-  let viewport: ReturnType<typeof mountViewport>;
-  try { viewport = mountViewport(viewHost, session, report,options.appearance);viewport.setNavigation(options.navigationPreset??'tinkercad');viewport.setResizeControls(options.resizeControls??'dimensions');viewport.setGridDisplay(options.gridDisplay??'snap');viewport.setSurfaceSnap(options.surfaceSnap??true); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
+  let viewport: ReturnType<typeof mountViewport>;let customAppearance=!!options.appearance;
+  try { viewport = mountViewport(viewHost, session, report,options.appearance);if(!options.appearance&&options.colorMode==='light')viewport.setAppearance({background:'#e7eef7',baseplate:'#cdd9e8'});viewport.setNavigation(options.navigationPreset??'tinkercad');viewport.setResizeControls(options.resizeControls??'dimensions');viewport.setGridDisplay(options.gridDisplay??'snap');viewport.setSurfaceSnap(options.surfaceSnap??true); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
   const empty = el('div', 'empty'); empty.append(el('strong', '', t('Your next idea starts here.')), document.createTextNode(t('Pick a shape above. Set its dimensions in Properties. Drag to orbit; pinch to zoom.'))); viewHost.append(empty);
   const busy = el('div', 'busy', t('Building solid…')); busy.hidden = true; viewHost.append(busy);
   const errorPanel = el('div', 'error'); errorPanel.hidden = true; errorPanel.setAttribute('role', 'alert'); viewHost.append(errorPanel);
@@ -107,10 +114,13 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     const b = el('button', className); const icon = toolIcon(label); if (icon) b.append(icon); const display = translate ? t(label) : label; b.append(el('span', '', display)); b.type = 'button'; b.title = display; b.setAttribute('aria-label', display); b.addEventListener('click', () => run(action)); parent.append(b); return b;
   }
   function togglePanel(panel: HTMLElement, toggle: HTMLButtonElement) { const visible = getComputedStyle(panel).display !== 'none'; panel.classList.toggle('closed', visible); panel.classList.toggle('open', !visible); toggle.setAttribute('aria-pressed', String(!visible)); }
+  const simulation=mountSimulationPanel(viewHost,session,options.wasmURL,whenIdle,value=>viewport.setSimulationPoses(value),{connectorHandles:visible=>viewport.setConnectorHandlesVisible(visible),dragEnabled:enabled=>viewport.setSimulationDragEnabled(enabled),pickPoint:done=>viewport.pickPoint(done),traces:paths=>viewport.setSimulationTraces(paths),canvas:viewport.canvas,onExport:options.onExport,onInterrupt:options.onSimulationInterrupt});
+  viewport.setSimulationDrag(value=>{void(value?simulation.dragBody(value.bodyId,value.point,value.target):simulation.releaseDrag()).catch(error=>{viewport.cancelSimulationDrag();options.onError?.(error);});});
+  button('Simulate',()=>simulation.open(),toolbar,'compact-icon');
   const partsToggle = button('Objects', () => togglePanel(tree, partsToggle), status, 'panel-toggle objects-toggle');
   partsToggle.title = t('Show objects');
   const propertiesToggle = button('Properties', () => togglePanel(inspector, propertiesToggle), status, 'panel-toggle properties-toggle');
-  const modelLibraryPanel=mountModelLibraryPanel(shell,session,doc=>client.evaluate(doc),options.modelLibrary,async()=>{await whenIdle();viewport.frame();});
+  const modelLibraryPanel=mountModelLibraryPanel(shell,session,doc=>client.evaluate(doc),options.modelLibrary,async()=>{await whenIdle();viewport.frame();},options.onExport);
   const parametersPanel=mountParametersPanel(shell,session);
   const sketchPanel=mountSketchPanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();},()=>grid);
   button('Sketch',()=>sketchPanel.open(),toolbar,'compact-icon').title=t('Create a dimensioned sketch and extrusion');
@@ -344,7 +354,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     if(!n.reference&&n.role!=='hole' && session.state.document.roots.includes(id)) {
       const physics=el('details','physics-settings');physics.append(el('summary','',t('Physics material')));inspector.append(physics);
       const p=n.physics??defaultPartPhysics();
-      for(const [key,label,step] of [['densityKgM3','Density (kg/m³)','10'],['friction','Friction','0.05'],['restitution','Restitution','0.05']] as const)field(physics,label,p[key],value=>session.update(id,{physics:{...p,[key]:Number(value)}}),'number',step);
+      const materialLabel=el('label','field',t('Material preset')),material=el('select');material.setAttribute('aria-label',t('Material preset'));for(const preset of [{id:'custom',name:'Custom'},...physicsMaterials]){const option=el('option','',t(preset.name));option.value=preset.id;material.append(option);}material.value=p.material??'custom';material.onchange=()=>{if(material.value!=='custom')run(()=>session.applyPhysicsMaterial(material.value,[id]));};materialLabel.append(material);physics.append(materialLabel,el('small','hint',t('Illustrative material presets; edit properties for your parts.')));
+      for(const [key,label,step] of [['densityKgM3','Density (kg/m³)','10'],['friction','Friction','0.05'],['restitution','Restitution','0.05']] as const)field(physics,label,p[key],value=>session.update(id,{physics:{...p,material:'custom',[key]:Number(value)}}),'number',step);
       const label=el('label','field',t('Body motion'));const select=el('select');select.setAttribute('aria-label',t('Body motion'));for(const motion of ['dynamic','static'] as const){const option=el('option','',t(motion==='dynamic'?'Dynamic':'Fixed in world'));option.value=motion;select.append(option);}select.value=p.motion;select.addEventListener('change',()=>run(()=>session.update(id,{physics:{...p,motion:select.value as 'dynamic'|'static'}})));label.append(select);physics.append(label);
       if(p.intent!=='rigid')physics.append(el('p','hint',t`Mechanical role: ${t(p.intent)}. Rigid collision preview does not qualify elastic behavior, mating fit or a complete mechanism.`));
       if(session.state.document.joints?.some(j=>j.bodyA===id||j.bodyB===id))button('Detach joints',()=>session.detachJoints([id]),inspector);
@@ -507,11 +518,11 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   buildTree(); buildInspector(); lastRevision = session.state.revision; lastSelection = JSON.stringify(session.state.selection); viewport.setSelection(session.state.selection); void buildLatest(); refreshButtons();
   return {
-    session, whenIdle, openFile,setRightPane,get rightPane(){return {...rightPane};},importFile,executeCommand,setSurfaceSnap,get surfaceSnap(){return viewport.surfaceSnap;},setNavigation:viewport.setNavigation,setResizeControls:viewport.setResizeControls,setGridDisplay:viewport.setGridDisplay,get gridDisplay(){return viewport.gridDisplay;},get resizeControls(){return viewport.resizeControls;},setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance:viewport.setAppearance,get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
+    setColorMode(mode:CadColorMode){if(!['light','dark'].includes(mode))throw new Error(t('Choose light or dark mode'));host.dataset.cadColorMode=mode;if(!customAppearance)viewport.setAppearance(mode==='light'?{background:'#e7eef7',baseplate:'#cdd9e8'}:{background:'#111e29',baseplate:'#233644'});},get colorMode(){return host.dataset.cadColorMode as CadColorMode;},simulation,session, whenIdle, openFile,setRightPane,get rightPane(){return {...rightPane};},importFile,executeCommand,setSurfaceSnap,get surfaceSnap(){return viewport.surfaceSnap;},setNavigation:viewport.setNavigation,setResizeControls:viewport.setResizeControls,setGridDisplay:viewport.setGridDisplay,get gridDisplay(){return viewport.gridDisplay;},get resizeControls(){return viewport.resizeControls;},setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance(value:{background:string;baseplate:string}){viewport.setAppearance(value);customAppearance=true;},get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
-    focus() { viewport.canvas.focus(); },
+    focus() { simulation.refresh(); viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return;cancelShapePlacement(); disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;

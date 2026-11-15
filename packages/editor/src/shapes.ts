@@ -1,3 +1,6 @@
+import {simulationExampleCatalog,isSimulationExample,createSimulationExample,simulationExampleGeometry} from './simulation-examples.js';
+import {motorCatalog,isMotorModel,motorGeometry,createMotorDocument} from './motor-models.js';
+import {allocateMotorPort} from '@brickwright/cad-core';
 import {defaultGenerator,screwVariant,checkGenerator,basicGeneratorPresets,curvedGeneratorPresets} from '@brickwright/cad-core';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
@@ -50,12 +53,15 @@ const templates:ShapePreset[]=[
 const screwNames=[['hex-head-screw','Hex-head screw'],['socket-head-screw','Socket-head screw'],['countersunk-screw','Countersunk screw'],['pan-head-screw','Pan-head screw'],['set-screw','Set screw'],['wood-screw','Wood screw']];
 const entries=[...templates,...screwNames.map(([id,name])=>({id,name,category:'',description:'A screw with editable head, drive and V-thread dimensions.',keywords:'screw bolt thread fastener hex socket countersunk pan',color:'#b0b7c2'})),...originalCatalog];
 export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
+ ...motorCatalog,...simulationExampleCatalog,
  ...Object.entries(essentials).flatMap(([category,ids])=>ids.map(id=>Object.freeze({...entries.find(p=>p.id===id)!,category,additional:false}))),
  ...entries.filter(p=>!Object.values(essentials).flat().includes(p.id)).map(p=>Object.freeze({...p,category:'Additional shapes',additional:true})),
 ]);
 
 /** Caller owns and disposes the returned geometry. All geometry is Z-up. */
 export function presetGeometry(id: string, preview = false, recipe?:GeneratorRecipe): THREE.BufferGeometry {
+  if(isSimulationExample(id))return simulationExampleGeometry(id);
+  if(isMotorModel(id))return motorGeometry(id);
   if((basicGeneratorPresets as readonly string[]).includes(id)){const retained=checkGenerator(recipe??defaultGenerator(id)!);if(retained.preset!==id)throw new Error(t('Invalid shape generator'));const shown=structuredClone(retained);if(preview){for(const key of ['segments','tubeSegments','detail'])if(shown.values[key]!==undefined)shown.values[key]=Math.min(shown.values[key],key==='detail'?2:key==='tubeSegments'?10:20);}return basicShapeGeometry(shown);}
   if((curvedGeneratorPresets as readonly string[]).includes(id)&&!advancedCatalog.some(p=>p[0]===id)){const retained=checkGenerator(recipe??defaultGenerator(id)!);if(retained.preset!==id)throw new Error(t('Invalid shape generator'));const shown=structuredClone(retained);if(preview){shown.values.segments=Math.min(20,shown.values.segments);shown.values.profileSegments=Math.min(16,shown.values.profileSegments);}return curvedShapeGeometry(shown);}
   const variant=screwVariant(id);if(variant)return constructionPreview('screw',variant);
@@ -82,9 +88,11 @@ export function createPresetShape(id: string, recipe?:GeneratorRecipe): { shape:
 const previews = new Map<string,string>();
 export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: {svg?:string;recipe?:GeneratorRecipe;font?:GeneratorRecipe['font']} = {}) {
   const preset = shapeCatalog.find(p => p.id === id); if (!preset) throw new Error(t('Unknown shape'));
+  if(isSimulationExample(id))return createSimulationExample(id);
+  if(isMotorModel(id))return createMotorDocument(id);
   const variant=screwVariant(id);if(variant)return constructionDocument('screw',t(preset.name),preset.color,text,options.svg,options.recipe??variant);
   if(['l-bracket','mounting-plate','spacer'].includes(id)){const doc=structuredClone(createDesignTemplate(id as import('@brickwright/cad-core').DesignTemplate));doc.title=t(doc.title);for(const node of Object.values(doc.nodes))node.name=t(node.name);for(const sketch of Object.values(doc.sketches??{}))sketch.name=t(sketch.name);return doc;}
-  if (advancedCatalog.some(p => p[0] === id)){let recipe=options.recipe;if(!recipe&&['text','name-tag'].includes(id)){recipe=defaultGenerator(id)!;recipe={...recipe,text,font:options.font??'sans'};}return constructionDocument(id, t(preset.name), preset.color, text, options.svg,recipe);}
+  if (advancedCatalog.some(p => p[0] === id)){let recipe=options.recipe;if(!recipe&&['text','name-tag'].includes(id)){recipe=defaultGenerator(id)!;recipe={...recipe,text,font:options.font??'sans'};}const document=constructionDocument(id, t(preset.name), preset.color, text, options.svg,recipe);for(const joint of document.joints??[])if(joint.kind==='hinge'&&!joint.control)joint.control={port:allocateMotorPort(document.joints!)};return document;}
   const session = createCadSession(); const retained=([...basicGeneratorPresets,...curvedGeneratorPresets] as readonly string[]).includes(id)?checkGenerator(options.recipe??defaultGenerator(id)!):undefined;const base=createPresetShape(id,retained).shape;if(id==='cube'){const recipe=checkGenerator(options.recipe??defaultGenerator('cube')!);if(recipe.preset!=='cube')throw new Error(t('Invalid shape generator'));const edge=recipe.values.edge;if(base.kind==='box')base.size=[edge,edge,edge];}session.add(base, { name: t(preset.name), color: preset.color }); const doc = structuredClone(session.state.document); const node=doc.nodes[doc.roots[0]];node.physics = {...defaultPartPhysics(),...node.physics,sourcePreset:id};if(retained){doc.version=2;node.generator=structuredClone(retained);}if(id==='cube'){doc.version=2;node.generator=structuredClone(options.recipe??defaultGenerator('cube')!);}
   session.dispose(); return doc;
 }

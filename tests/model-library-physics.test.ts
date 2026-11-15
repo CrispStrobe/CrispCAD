@@ -31,7 +31,7 @@ async function fixture(tube = false) {
 describe('optional library Jolt collision qualification', () => {
   it('keeps the reported engine version aligned with the pinned package release', () => {
     const manifest = JSON.parse(readFileSync('packages/physics/package.json', 'utf8'));
-    expect(manifest.dependencies['jolt-physics']).toBe(`https://github.com/CrispStrobe/JoltPhysics.js/releases/download/bw.9-qualified-20261029/jolt-physics-${MODEL_LIBRARY_JOLT_VERSION}.tgz`);
+    expect(manifest.dependencies['jolt-physics']).toBe(`https://github.com/CrispStrobe/JoltPhysics.js/releases/download/bw.10-qualified-20261112/jolt-physics-${MODEL_LIBRARY_JOLT_VERSION}.tgz`);
   });
   it('creates native shapes and steps the debug engine; returns separate hash/version/policy-bound evidence', async () => {
     const f = await fixture(), before = structuredClone(f.catalogue), original = f.bytes.slice();

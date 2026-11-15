@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "npm run build:packages && npm run assets && vite --host 127.0.0.1",
     "assets": "node scripts/copy-assets.mjs",
+    "build:brickwright-sdk": "npm run build:packages && vite build --config vite.brickwright.config.ts && node scripts/package-brickwright-sdk.mjs",
     "build:packages": "tsc -b",
     "build": "npm run build:packages && tsc -p apps/standalone/tsconfig.json && npm run assets && vite build && node scripts/build-sw.mjs",
     "preview": "vite preview --host 127.0.0.1",
@@ -40,7 +41,8 @@
     "library:fixtures:check": "npm run build:packages && node scripts/generate-fixture-library.mjs --check",
     "library:previews:generate": "npm run build:packages && node scripts/generate-library-previews.mjs",
     "library:corpus:generate": "npm run build:packages && node scripts/generate-corpus-editor-library.mjs --write",
-    "library:corpus:check": "npm run build:packages && node scripts/generate-corpus-editor-library.mjs --check"
+    "library:corpus:check": "npm run build:packages && node scripts/generate-corpus-editor-library.mjs --check",
+    "verify:brickwright-sync": "node scripts/verify-brickwright-sync.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",
