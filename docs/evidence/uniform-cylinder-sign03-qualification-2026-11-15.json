@@ -1,0 +1,742 @@
+{
+  "qualification": {
+    "candidateID": "corpus-angelo-sign-03",
+    "status": "ALL_GATES_PASS_LOCAL_NOT_DELIVERED",
+    "baseCommit": "0c6f7c8379e25182b854e0a4f87cdec6f7a551a5",
+    "original": {
+      "path": "sources/corpus-selection/sign-03.scad",
+      "sha256": "78b28f433cf0fe1807864af8c060a346b4326103cd25c18eb9aa92e964eae32b",
+      "bytes": 418,
+      "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Sign_03.scad",
+      "format": "openscad"
+    },
+    "licence": {
+      "spdx": "MIT",
+      "scope": "asset",
+      "attribution": "Angelo Nicoli (Gengio), 2023-2024. Source: https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/Asset_SCAD/Sign_03.scad. MIT License Copyright (c) 2024 Angelo_Nicoli (Gengio) Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+      "evidenceUrl": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE",
+      "localEvidence": [
+        {
+          "path": "evidence/corpus-selection-MIT-LICENSE.txt",
+          "sha256": "87a0009986b86613038e43d55c995a3fcb2103ddd5f05446993a4c47c9a4991d",
+          "bytes": 1079,
+          "url": "https://raw.githubusercontent.com/AngeloNicoli/OpenSCAD-Snippet/4f9e3d4d16b5e427186c1f89e10c2181c437dee6/LICENSE"
+        }
+      ],
+      "capturedOn": "2026-11-13",
+      "review": "accepted",
+      "reviewer": "Codex staged full-content scan and explicit exception/dependency review; exact authored sign and general uniform-cylinder origin fix, strict STL/editor screening 2026-11-15"
+    },
+    "defaultClosure": [
+      {
+        "repositoryId": "AngeloNicoli--OpenSCAD-Snippet",
+        "upstreamPath": "Asset_SCAD/Sign_03.scad",
+        "archivedPath": "corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Sign_03.scad",
+        "sha256": "78b28f433cf0fe1807864af8c060a346b4326103cd25c18eb9aa92e964eae32b"
+      }
+    ],
+    "triangles": 564,
+    "derivative": {
+      "path": "meshes/corpus-selection/sign-03.stl",
+      "sha256": "0d7e9c193c1fe405dd585743f9a209f03d8a005b36605650dcf8814301d77b86",
+      "bytes": 28284,
+      "format": "stl"
+    },
+    "gates": {
+      "converter": "PASS",
+      "mesh": "PASS",
+      "closedPositiveVolumeAndAllStrictChecks": "PASS",
+      "editorInsertionProvenanceRestoreUndoRedo": "PASS",
+      "mismatchedBytesRefusedBeforeEvaluation": "PASS",
+      "actualPreviewRaster": "PASS",
+      "browserChromiumAndIpadWebkit": "PASS 2/2"
+    },
+    "executions": {
+      "generate": {
+        "command": [
+          "node",
+          "scripts/generate-corpus-editor-library.mjs",
+          "--write",
+          "--asset-id",
+          "corpus-angelo-sign-03"
+        ],
+        "exitCode": 0,
+        "guard": {
+          "fastFreeBytes": 14999015424,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4985729024,
+          "minimumExclusiveMemoryBytes": 2147483648,
+          "load5": 5.15625,
+          "maximumLoad5": 8,
+          "lockAcquired": true
+        },
+        "elapsedSeconds": 1.563062220113352
+      },
+      "preview": {
+        "command": [
+          "node",
+          "scripts/generate-library-previews.mjs",
+          "--asset-id",
+          "corpus-angelo-sign-03"
+        ],
+        "exitCode": 0,
+        "guard": {
+          "fastFreeBytes": 14998974464,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4951900160,
+          "minimumExclusiveMemoryBytes": 2147483648,
+          "load5": 5.17041015625,
+          "maximumLoad5": 8,
+          "lockAcquired": true
+        },
+        "elapsedSeconds": 6.648406203836203
+      },
+      "focused": {
+        "command": [
+          "npx",
+          "vitest",
+          "run",
+          "tests/model-library-sign03.test.ts",
+          "tests/model-library-corpus-editor.test.ts",
+          "-t",
+          "Sign03|one hundred and two"
+        ],
+        "exitCode": 0,
+        "guard": {
+          "fastFreeBytes": 14998953984,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4957757440,
+          "minimumExclusiveMemoryBytes": 2147483648,
+          "load5": 5.19775390625,
+          "maximumLoad5": 8,
+          "lockAcquired": true
+        },
+        "elapsedSeconds": 6.805355296004564
+      },
+      "check": {
+        "command": [
+          "node",
+          "scripts/generate-corpus-editor-library.mjs",
+          "--check",
+          "--asset-id",
+          "corpus-angelo-sign-03"
+        ],
+        "exitCode": 0,
+        "guard": {
+          "fastFreeBytes": 14998953984,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4998889472,
+          "minimumExclusiveMemoryBytes": 2147483648,
+          "load5": 5.2412109375,
+          "maximumLoad5": 8,
+          "lockAcquired": true
+        },
+        "elapsedSeconds": 1.1621663379482925
+      },
+      "build": {
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "exitCode": 0,
+        "guard": {
+          "fastFreeBytes": 14998953984,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4982001664,
+          "minimumExclusiveMemoryBytes": 2147483648,
+          "load5": 5.2412109375,
+          "maximumLoad5": 8,
+          "lockAcquired": true
+        },
+        "elapsedSeconds": 12.680619552964345
+      },
+      "browser": {
+        "command": [
+          "npx",
+          "playwright",
+          "test",
+          "tests/browser/model-library-sign03.spec.ts",
+          "--reporter=line,json"
+        ],
+        "exitCode": 0,
+        "guard": {
+          "fastFreeBytes": 14998929408,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4951928832,
+          "minimumExclusiveMemoryBytes": 2147483648,
+          "load5": 5.3447265625,
+          "maximumLoad5": 8,
+          "lockAcquired": true
+        },
+        "elapsedSeconds": 42.118010667851195
+      }
+    },
+    "kernelFocusedExecution": {
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/cylinder-origin.test.ts",
+        "tests/corner-box-origin.test.ts",
+        "tests/model-library-arc.test.ts",
+        "tests/model-library-flag.test.ts",
+        "tests/model-library-italy.test.ts"
+      ],
+      "exitCode": 0,
+      "guard": {
+        "fastFreeBytes": 14999052288,
+        "minimumExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 5004034048,
+        "minimumExclusiveMemoryBytes": 2147483648,
+        "load5": 5.05322265625,
+        "maximumLoad5": 8,
+        "lockAcquired": true
+      },
+      "elapsedSeconds": 10.959367712028325
+    },
+    "focusedRegressionTestsPassed": 7,
+    "mainCounts": [
+      132,
+      129,
+      171
+    ],
+    "localQualifiedCounts": [
+      133,
+      130,
+      172
+    ],
+    "localDelta": [
+      1,
+      1,
+      1
+    ],
+    "deliveredDelta": [
+      0,
+      0,
+      0
+    ],
+    "priorCorpusRecordObjectsExact": 101,
+    "priorPreviewsExact": 171,
+    "causalTrace": "/mnt/storage/brickwright-cycle78-sign03-trace/result.json",
+    "nextRankedBatchManifest": "/mnt/storage/brickwright-cycle78-next-batch/manifest.json",
+    "nextBatchActualResult": "/mnt/storage/brickwright-cycle78-next-batch/classified-results.json",
+    "remainingNineTopologyRerun": "/mnt/storage/brickwright-cycle78-topology-rerun/results.json",
+    "testedBinding": "/mnt/storage/brickwright-cycle78-sign03-product/tested-binding.json"
+  },
+  "causalTrace": {
+    "candidateID": "corpus-angelo-sign-03",
+    "sourcePath": "library/corpus/repos/AngeloNicoli--OpenSCAD-Snippet/Asset_SCAD/Sign_03.scad",
+    "sourceSha256": "78b28f433cf0fe1807864af8c060a346b4326103cd25c18eb9aa92e964eae32b",
+    "sourceUnchanged": true,
+    "head": "eb465b62e1cc55d419126b7e0b0b74151b8b5029",
+    "instrumentationByteIdentical": true,
+    "firstDivergentCoordinateEdge": {
+      "edge": "-1.7665753364562988,0.6994366645812988,0.10000000149011612 -> -1.8403079509735107,-0.47251078486442566,0.10000000149011612",
+      "incidences": [
+        {
+          "face": 29,
+          "originalVertices": [
+            33,
+            99
+          ],
+          "points": [
+            [
+              -1.8403079509735107,
+              -0.47251078486442566,
+              0.10000000149011612
+            ],
+            [
+              -1.7665753364562988,
+              0.6994366645812988,
+              0.10000000149011612
+            ]
+          ],
+          "direction": -1,
+          "run": 0,
+          "originalID": 2
+        },
+        {
+          "face": 68,
+          "originalVertices": [
+            100,
+            34
+          ],
+          "points": [
+            [
+              -1.7665753364562988,
+              0.6994366645812988,
+              0.10000000149011612
+            ],
+            [
+              -1.8403079509735107,
+              -0.47251078486442566,
+              0.10000000149011612
+            ]
+          ],
+          "direction": 1,
+          "run": 0,
+          "originalID": 2
+        },
+        {
+          "face": 209,
+          "originalVertices": [
+            34,
+            100
+          ],
+          "points": [
+            [
+              -1.8403079509735107,
+              -0.47251078486442566,
+              0.10000000149011612
+            ],
+            [
+              -1.7665753364562988,
+              0.6994366645812988,
+              0.10000000149011612
+            ]
+          ],
+          "direction": -1,
+          "run": 1,
+          "originalID": 4
+        },
+        {
+          "face": 260,
+          "originalVertices": [
+            99,
+            33
+          ],
+          "points": [
+            [
+              -1.7665753364562988,
+              0.6994366645812988,
+              0.10000000149011612
+            ],
+            [
+              -1.8403079509735107,
+              -0.47251078486442566,
+              0.10000000149011612
+            ]
+          ],
+          "direction": 1,
+          "run": 1,
+          "originalID": 4
+        }
+      ]
+    },
+    "badCoordinateEdgeCount": 16,
+    "exporterVertexMismatches": 0,
+    "baseline": {
+      "sha256": "03f1d546e2850ada8d2471d1763ed368b0831a85c443d0a0b71dd6dce9579a39",
+      "triangles": 632,
+      "volume": 2.507244681013565,
+      "screen": {
+        "fileSha256": "03f1d546e2850ada8d2471d1763ed368b0831a85c443d0a0b71dd6dce9579a39",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-15",
+        "policy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "checks": {
+          "parseable": "pass",
+          "closedPositiveVolume": "fail",
+          "withinSizeLimits": "pass",
+          "withinTriangleLimits": "pass"
+        },
+        "diagnostics": [
+          "Mesh must have nondegenerate, consistently oriented closed manifold topology and positive signed volume."
+        ],
+        "triangles": 632,
+        "boundsMm": {
+          "min": [
+            -2,
+            -1.9960534572601318,
+            0
+          ],
+          "max": [
+            2,
+            1.9960534572601318,
+            0.20499999821186066
+          ]
+        },
+        "signedVolumeMm3": 2.5072447089106253,
+        "quality": {
+          "fileSha256": "03f1d546e2850ada8d2471d1763ed368b0831a85c443d0a0b71dd6dce9579a39",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-15",
+          "screeningPolicy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "parseable": true,
+          "closedPositiveVolume": false,
+          "withinSizeLimits": true,
+          "withinTriangleLimits": true
+        }
+      }
+    },
+    "scratchExactCylinderIdentity": {
+      "scope": "SCRATCH ONLY, no product change: move([0,0,h/2],centredCylinder) constructed directly non-centred; frustum analogue included",
+      "sha256": "0d7e9c193c1fe405dd585743f9a209f03d8a005b36605650dcf8814301d77b86",
+      "triangles": 564,
+      "volume": 2.507244681013565,
+      "screen": {
+        "fileSha256": "0d7e9c193c1fe405dd585743f9a209f03d8a005b36605650dcf8814301d77b86",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-15",
+        "policy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "checks": {
+          "parseable": "pass",
+          "closedPositiveVolume": "pass",
+          "withinSizeLimits": "pass",
+          "withinTriangleLimits": "pass"
+        },
+        "diagnostics": [],
+        "triangles": 564,
+        "boundsMm": {
+          "min": [
+            -2,
+            -1.9960534572601318,
+            0
+          ],
+          "max": [
+            2,
+            1.9960534572601318,
+            0.20499999821186066
+          ]
+        },
+        "signedVolumeMm3": 2.5072447084871303,
+        "quality": {
+          "fileSha256": "0d7e9c193c1fe405dd585743f9a209f03d8a005b36605650dcf8814301d77b86",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-15",
+          "screeningPolicy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "parseable": true,
+          "closedPositiveVolume": true,
+          "withinSizeLimits": true,
+          "withinTriangleLimits": true
+        }
+      }
+    },
+    "classification": "B_DEMONSTRATED_KERNEL_CONSTRUCTION; product general fix now passes7 focused kernel/product tests and full Sign03 actual editor/preview/browser qualification",
+    "sourcePrimitiveMapping": {
+      "originalID2": {
+        "sourceLine": 6,
+        "source": "cylinder(h=0.1,r1=2,r2=2,$fn=50)",
+        "role": "grey base, authored top z=0.1"
+      },
+      "originalID4": {
+        "sourceLines": [
+          8,
+          11
+        ],
+        "source": "translate([0,0,0.1]) cylinder(h=0.1,r1=1.9,r2=1.9,$fn=50)",
+        "role": "red disk, authored bottom z=0.1"
+      },
+      "mappingMethod": "Primitive originalID observer output exactly byte-identical to uninstrumented baseline; no source edits."
+    },
+    "causalNumericTrace": {
+      "authoredSharedZ": "1/10",
+      "centredRedBottomJavaScript": "(0.1+0.05)-0.05",
+      "actualCentredRedBottom": 0.10000000000000002,
+      "baseTop": 0.1,
+      "float32SharedZ": 0.10000000149011612,
+      "effect": "Numerically separate contact faces collapse to one exported Float32 edge with four incidences. Exporter coordinate mismatch count=0."
+    },
+    "generalUniformCylinderScratch": {
+      "method": "move([0,0,h/2], centred uniform cylinder(r,h)) constructed as an origin-based cylinder with identical radius,height,segments; equal-radius frustums only. Tapered frustums unchanged.",
+      "result": "564tri strict all checks PASS",
+      "meshSha256": "0d7e9c193c1fe405dd585743f9a209f03d8a005b36605650dcf8814301d77b86",
+      "regressions": [
+        {
+          "name": "Sign_03",
+          "sourceSha256": "78b28f433cf0fe1807864af8c060a346b4326103cd25c18eb9aa92e964eae32b",
+          "originalSha256": "03f1d546e2850ada8d2471d1763ed368b0831a85c443d0a0b71dd6dce9579a39",
+          "scratchSha256": "0d7e9c193c1fe405dd585743f9a209f03d8a005b36605650dcf8814301d77b86",
+          "byteIdentical": false,
+          "primitiveOriginalIDs": [
+            {
+              "shape": {
+                "kind": "frustum",
+                "bottom": 2,
+                "top": 2,
+                "height": 0.1,
+                "segments": 50
+              },
+              "originalID": 2
+            },
+            {
+              "shape": {
+                "kind": "frustum",
+                "bottom": 1.9,
+                "top": 1.9,
+                "height": 0.1,
+                "segments": 50
+              },
+              "originalID": 4
+            },
+            {
+              "shape": {
+                "kind": "frustum",
+                "bottom": 2,
+                "top": 2,
+                "height": 0.1,
+                "segments": 50
+              },
+              "originalID": 6
+            },
+            {
+              "shape": {
+                "kind": "frustum",
+                "bottom": 1.9,
+                "top": 1.9,
+                "height": 0.2,
+                "segments": 50
+              },
+              "originalID": 8
+            }
+          ]
+        },
+        {
+          "name": "Flag_France",
+          "sourceSha256": "f217f82a7a8cd72fabd7276cde47e4de47aea0ab9d19ff7c24c2a35e92b67e91",
+          "originalSha256": "7a1ce07bf4355cb400f96fe9035244441dbae89f78ea7224b3eea0c43d836cba",
+          "scratchSha256": "7a1ce07bf4355cb400f96fe9035244441dbae89f78ea7224b3eea0c43d836cba",
+          "byteIdentical": true
+        },
+        {
+          "name": "Flag_Italy",
+          "sourceSha256": "981ec35a7c5c57bdd686820c7ae3268f6cf56328622e37f09dd6f21840089c9e",
+          "originalSha256": "7a1ce07bf4355cb400f96fe9035244441dbae89f78ea7224b3eea0c43d836cba",
+          "scratchSha256": "7a1ce07bf4355cb400f96fe9035244441dbae89f78ea7224b3eea0c43d836cba",
+          "byteIdentical": true
+        },
+        {
+          "name": "Arc_01",
+          "sourceSha256": "3a090cd3ee476bdede9893c9c75745278b1469a4c0038e312e0c004fc656cb2b",
+          "originalSha256": "919d78c32c797aaac495093e824987455564e3cfd00e1a334fd37206a4a1db11",
+          "scratchSha256": "919d78c32c797aaac495093e824987455564e3cfd00e1a334fd37206a4a1db11",
+          "byteIdentical": true
+        }
+      ],
+      "rejectedBroaderScratch": "Cylinder plus tapered-frustum identity changed French/Italian derivative hashes; retained regression-controls.json and not adopted."
+    },
+    "priorTenTopologyClassifications": {
+      "demonstratedB": 1,
+      "remainingPendingSourceVsOutputTrace": 9
+    },
+    "productResult": "/mnt/storage/brickwright-cycle78-sign03-product/result.json"
+  },
+  "testedBinding": {
+    "baseCommit": "0c6f7c8379e25182b854e0a4f87cdec6f7a551a5",
+    "ownedFiles": [
+      {
+        "path": "library/editor-corpus-manifest.json",
+        "bytes": 599771,
+        "sha256": "4da8f0524173d50b9e98b6a0323767678aba58b309a3f7a326f309d2862cdfe5"
+      },
+      {
+        "path": "library/previews.json",
+        "bytes": 3013939,
+        "sha256": "ad2cfb8769bc3190756bcb4324e0a31eb6e32f150d7e27aee172a3efb10c5df5"
+      },
+      {
+        "path": "packages/geometry/src/kernel.ts",
+        "bytes": 16891,
+        "sha256": "c05eafd9ba71a2e787d84ee432b4b4e135cd28a31582ef3c8cefc50b45faf8e2"
+      },
+      {
+        "path": "scripts/generate-corpus-editor-library.mjs",
+        "bytes": 26906,
+        "sha256": "424b094262e3147b621c4dec4399568d319064207de89e12a43278d10cc866d9"
+      },
+      {
+        "path": "tests/browser/model-library.spec.ts",
+        "bytes": 26483,
+        "sha256": "bd4ba550ff4fb321c0d785bb9a1f5bc8de587dc70e83b29390cb18dbea7b3482"
+      },
+      {
+        "path": "tests/model-library-bricks.test.ts",
+        "bytes": 5565,
+        "sha256": "6e1d70c58231e90f3566aef2848b500e61b587837f60e4626d280b61eebf504a"
+      },
+      {
+        "path": "tests/model-library-city.test.ts",
+        "bytes": 6024,
+        "sha256": "2dccbcd9d02c678a3f37b711fdc418ca92cb60921e959912066b25077eaecffc"
+      },
+      {
+        "path": "tests/model-library-corpus-editor.test.ts",
+        "bytes": 15277,
+        "sha256": "cb18011cbe765318c136a829ba4949b83a963721032cc6c86f45f60bd8df7e1e"
+      },
+      {
+        "path": "library/meshes/corpus-selection/sign-03.stl",
+        "bytes": 28284,
+        "sha256": "0d7e9c193c1fe405dd585743f9a209f03d8a005b36605650dcf8814301d77b86"
+      },
+      {
+        "path": "library/sources/corpus-selection/sign-03.scad",
+        "bytes": 418,
+        "sha256": "78b28f433cf0fe1807864af8c060a346b4326103cd25c18eb9aa92e964eae32b"
+      },
+      {
+        "path": "tests/browser/model-library-sign03.spec.ts",
+        "bytes": 2127,
+        "sha256": "707064fed4c844fd178d12356473fb7db72a11d0981ff134d33a18a278f018d4"
+      },
+      {
+        "path": "tests/cylinder-origin.test.ts",
+        "bytes": 2769,
+        "sha256": "ad0ad3f73640a650b904e90798369cc9e8162f7a7ff4bda2cea0e6e93c49f480"
+      },
+      {
+        "path": "tests/model-library-sign03.test.ts",
+        "bytes": 2736,
+        "sha256": "71e1a0a713416dc8863a03358f55945d88930016b31d5339955eae6b2032960b"
+      }
+    ],
+    "validationFiles": [
+      {
+        "path": "/mnt/storage/brickwright-cycle78-sign03-product/browser-execution.json",
+        "sha256": "519992cf765aa2c26916cf3dc3c696d736104bbe7bc92fb4c10660c929f8c7b4"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-sign03-product/browser-report.json",
+        "sha256": "fcaa696eafe2eb76f0750bad56e1194732220ee25c91164ae2f6e1bdd367f9b6"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-sign03-product/browser.log",
+        "sha256": "a18105e26e4ebe2adc7b4bbf31dad9cd1c66f658ab81e8648640cc09d68a4f0f"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-sign03-product/build-execution.json",
+        "sha256": "5a0d60c65eb5351b2bbfaca1b27a5222e8caeadd7c6804b7a7f308f0beb1850a"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-sign03-product/build.log",
+        "sha256": "747b2252bdf9056528e1a15445890ed87701d63403e65301a86b2c46110cc710"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-sign03-product/check-execution.json",
+        "sha256": "fe6759709859f65cf7ddaa7204e9215fa395e5ca594ad5799a1cf9ff0fd6ea5b"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-sign03-product/check.log",
+        "sha256": "284de6354036e4cd490655a6a374f7f9959aa07c13bdd0f676336c43d238a2b7"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-sign03-product/focused-execution.json",
+        "sha256": "a489f03fd39a2e14b05f92fa948a393a5ab4bbd9dcbec1a4473c48412438efb3"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-sign03-product/focused.log",
+        "sha256": "368fd70195f7a55b69b6c754558d7b4c0c3cd4a8b61f0f0674ce2a225610360a"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-sign03-product/generate-execution.json",
+        "sha256": "eb55e29a38f9c60a25f9a72341807397f206efb1939feffc200ef98ed79dab79"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-sign03-product/generate.log",
+        "sha256": "284de6354036e4cd490655a6a374f7f9959aa07c13bdd0f676336c43d238a2b7"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-sign03-product/preview-execution.json",
+        "sha256": "db5a59a0a4e8c3a155dfba1888a6eb22fb3b0b8a6d4d7a309b9edc2982ac720e"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle78-sign03-product/preview.log",
+        "sha256": "d114106fc845d4f085b00c672a836b15ae27df58098b5bc3557c8faf85479497"
+      }
+    ],
+    "method": "Runtime/source/asset/test bytes captured after passing all actual gates; docs/evidence added afterward without runtime changes."
+  }
+}

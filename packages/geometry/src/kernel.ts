@@ -76,6 +76,9 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument): Geometr
       // Construct that directly: nested decimal moves otherwise introduce a
       // spurious gap at an authored shared face before CSG, hidden by Float32.
       if(shape.kind==='move'&&childShape.kind==='box'&&shape.vector.every((v,i)=>v===childShape.size[i]/2))solid=keep(module.Manifold.cube(childShape.size,false));
+      // The same origin identity holds for a uniform cylinder. Avoid a centred
+      // intermediate at decimal contacts; tapered frustums retain their path.
+      else if(shape.kind==='move'&&(childShape.kind==='cylinder'||(childShape.kind==='frustum'&&childShape.bottom===childShape.top))&&shape.vector[0]===0&&shape.vector[1]===0&&shape.vector[2]===childShape.height/2){const radius=childShape.kind==='cylinder'?childShape.radius:childShape.bottom;solid=keep(module.Manifold.cylinder(childShape.height,radius,radius,childShape.segments,false));}
       else {const child=buildCode(childShape);solid=keep(shape.kind==='move'?child.translate(shape.vector):shape.kind==='rotate'?child.rotate(shape.vector):child.scale(shape.vector));}
     }
     codeCache.set(shape,solid);return solid;
