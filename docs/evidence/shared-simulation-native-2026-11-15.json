@@ -1,0 +1,94 @@
+{
+  "date": "2026-11-15",
+  "deliveredMacBuild": 37,
+  "deliveredSource": "0032418672409e6a1bb7af8d6297afef2cd1a22c",
+  "deliveredSourceClean": true,
+  "installedAndRunning": "/Users/christianstrobele/Applications/Brickwright CAD.app",
+  "litePin": "89b379b8df0a1f273025a1892dec12663081655f",
+  "identicalSourceTrees": true,
+  "sdkFileHashesMatch": true,
+  "sdkFiles": {
+    "LICENSE": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+    "NOTICE.txt": "dea50eee6d6781549af4e3740bfaf7661b29479696e5ae6cbe41eafd93c0fa70",
+    "assets/geometry.worker-WPU1EGJl.js": "84f6c0e5ee267004841ebfa223fbd91a32f18d42557d4193f215b13a433de4bf",
+    "assets/jolt-physics.wasm-compat-DdHjLBPW.js": "70cd4dfe9a4137a443846f04e46a2801ba2f78484442c66e073256ea5ff49b65",
+    "assets/simulation.worker-DzPJVE2X.js": "1520578c7c6c39e19c9f792846b901525f92223b4c2e48f03d046f1251317d86",
+    "cad-assets/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c",
+    "model-library-cache-DiMFGzp9.js": "75dc4ad7999b4571b227f1c675ca00af698fcc886dc73e98dd4c0eb2604e2b20",
+    "model-library-local-DE7mK7RX.js": "db58bb2c6ca0b96bda19a52c302fab7741f5ada665c701b4b968d24a35f18ac5",
+    "sdk-BW05fSfl.js": "d38e25639ebb4f0c70660705660c10cf78278dfe0b2d064b2485698cb29c2ded",
+    "sdk.js": "cf051fef9e76dd8eab8e2bf7f70303df9adb1661226db16585fb557f30f94d4c"
+  },
+  "jolt": "1.1.0-bw.10",
+  "joltArchiveIntegrityMatches": true,
+  "nativeSmoke": "Passed; native camera, menus, clipboard, document/library/history checks. Live asset receipt and CFBundleVersion verified.",
+  "scope": "Native delivery is the already merged main through PRs 53/54/55. Lite remains in draft PR 1791; no new Lite native or iPad build was installed in this turn.",
+  "followupBranch": "codex/sync-brickwright-simlab",
+  "followupStatus": "Do not merge as a fully validated release. It contains extra touch handoff, catalogue-normalization and recording experiments beyond delivered main.",
+  "validationBoundaries": {
+    "engineCheckpoint": "a831e123fb7654d4133071273cf2d41823bd78b4",
+    "engineUnitPassed": 1073,
+    "engineUnitSkipped": 1,
+    "engineUnitFiles": 109,
+    "uiChecks": "17 passed and one existing skip in the broad Chromium/iPad WebKit run; two failures investigated separately. Both force-drag variants passed after minimizing the overlay through its UI.",
+    "catalogue": "Full run qualified/reference-excluded 63 of 65. Two failures came from the old harness replacing all body Z positions. Scoped rerun with a common +70 mm lift passed slider, pendulum and four-bar; no collision tolerances changed.",
+    "recording": "First decoded video frame can be blank. Extra capture experiments pass the WebKit decoded-pixel check but Chromium first-frame check still fails. This does not establish that every frame of the entire video is blank. Keep further diagnosis separate from the owner-requested main native delivery."
+  },
+  "logReceipts": [
+    {
+      "file": "cad-main37-build.log",
+      "bytes": 4909,
+      "sha256": "86b7197a009cf9cd49d79baad2610691c72665adb257071dafd06a567e797116"
+    },
+    {
+      "file": "cad-main37-native.log",
+      "bytes": 1522,
+      "sha256": "c9e81382040e12e79a8e19e18744bbca860e210cfa6ea0ebd66b132683396e55"
+    },
+    {
+      "file": "cad-main37-smoke.log",
+      "bytes": 468,
+      "sha256": "f65df21f2a201d47bdea55addc02ea40d13728e4e69f4e69e071385337a4d53f"
+    },
+    {
+      "file": "cad-main37-install.log",
+      "bytes": 128,
+      "sha256": "32585d3f32327145fe56d6d3f3a11323274dd5ae18c8d933581a239adbbd5273"
+    },
+    {
+      "file": "cad-sync-unit-serial.log",
+      "bytes": 347,
+      "sha256": "3c787aea931c74688e622d2e176deb1890668d9f4c868c8b524b8e636558c388"
+    },
+    {
+      "file": "cad-sync-packages-final.log",
+      "bytes": 272,
+      "sha256": "898852c58bbca82ea515d6d3748b04b4acf05740a5b7d2d3767ed37f041824f2"
+    },
+    {
+      "file": "cad-sync-browser-final.log",
+      "bytes": 10020,
+      "sha256": "d7339208600936d1bc96646c6123506fea2a5a3f33a52d784df2c3b9d15cdc6f"
+    },
+    {
+      "file": "cad-sync-browser-corrections.log",
+      "bytes": 10305,
+      "sha256": "d6c9eeec8f13037dd45d626b572165a8bdea73dfb0bca773e26758730081b30d"
+    },
+    {
+      "file": "cad-sync-video-final.log",
+      "bytes": 5814,
+      "sha256": "8f2aec0e57fa38cad0396da2558fd341dc2dbdf8c28ca956e41a96c7c78f1e8d"
+    },
+    {
+      "file": "cad-sync-video-seeded.log",
+      "bytes": 5814,
+      "sha256": "9d88ce4a59d92be0cf206ad68828726841bf1391617f8451ce90f9ba0013e2ad"
+    },
+    {
+      "file": "cad-sync-assemblies-final.log",
+      "bytes": 245,
+      "sha256": "a5417a6bbe552eeb6305533e9d69dc0673baf4c50e960e7f673b3a90e72ad876"
+    }
+  ]
+}
