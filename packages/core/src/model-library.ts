@@ -34,9 +34,9 @@ export interface ModelLibraryContentGrant {
   review: 'accepted';
   reviewer: string;
 }
-/** Exact local originals used by a bounded OpenSCAD include closure. */
+/** Exact local originals used by a bounded source closure. LDraw is archival, not executable source interchange. */
 export interface ModelLibrarySourceBundle {
-  format: 'brickwright-openscad-bundle';
+  format: 'brickwright-openscad-bundle' | 'brickwright-ldraw-bundle';
   version: 1;
   rootPath: string;
   dependencies: {
@@ -65,7 +65,7 @@ export interface ModelLibraryAsset {
   derivatives: ModelLibraryFile[];
   modificationNotes: string;
   conversion: {
-    sourceUnits: 'mm' | 'cm' | 'm' | 'in';
+    sourceUnits: 'mm' | 'cm' | 'm' | 'in' | 'ldu';
     unitAssumption: string;
     sourceUpAxis: 'X' | 'Y' | 'Z' | '-X' | '-Y' | '-Z';
     /** Column-major affine matrix from source coordinates to millimetres, Z up. */
@@ -112,7 +112,7 @@ export const isModelLibraryLocalPath = (v: unknown): v is string => typeof v ===
 const file = (v: unknown): v is unknown & ModelLibraryFile => object(v) && keys(v, 'url path format sha256 bytes') && ((Object.hasOwn(v, 'url') && !Object.hasOwn(v, 'path') && url(v.url)) || (Object.hasOwn(v, 'path') && !Object.hasOwn(v, 'url') && isModelLibraryLocalPath(v.path))) && text(v.format, 80) && /^[a-zA-Z0-9][a-zA-Z0-9.+_-]*$/.test(v.format) && hash(v.sha256) && Number.isSafeInteger(v.bytes) && (v.bytes as number) > 0;
 const grant = (v: unknown): boolean => object(v) && keys(v, 'spdx scope attribution evidenceUrl capturedOn review reviewer') && (MODEL_LIBRARY_CONTENT_LICENCES as readonly unknown[]).includes(v.spdx) && v.scope === 'asset' && v.review === 'accepted' && text(v.reviewer, 240) && text(v.attribution) && url(v.evidenceUrl) && date(v.capturedOn);
 const revision = (v: unknown): boolean => object(v) && keys(v, 'repositoryUrl commit') && url(v.repositoryUrl) && typeof v.commit === 'string' && /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(v.commit);
-const bundlePath = (v: unknown): v is string => typeof v === 'string' && v.length <= 512 && /^(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.scad$/.test(v);
+const bundlePath = (v: unknown, format = 'openscad'): v is string => typeof v === 'string' && v.length <= 512 && (format === 'ldraw' ? /^(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.dat$/ : /^(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.scad$/).test(v);
 function invertibleAffine(value: unknown): boolean {
   if (!Array.isArray(value) || value.length !== 16 || !value.every(n => typeof n === 'number' && Number.isFinite(n)) || value[3] !== 0 || value[7] !== 0 || value[11] !== 0 || value[15] !== 1) return false;
   const m = value;
@@ -151,22 +151,23 @@ function checkModelLibraryCatalogue(value: unknown): ModelLibraryValidation {
     if (!file(asset.original)) error('Invalid original file identity.');
     if (asset.sourceBundle !== undefined) {
       const bundle = asset.sourceBundle;
-      if (!object(bundle) || !keys(bundle, 'format version rootPath dependencies') || bundle.format !== 'brickwright-openscad-bundle' || bundle.version !== 1 || !bundlePath(bundle.rootPath) || !Array.isArray(bundle.dependencies) || !bundle.dependencies.length || bundle.dependencies.length > 31 || !file(asset.original) || !asset.original.path || asset.original.format !== 'openscad' || asset.editableSource !== undefined) error('Invalid local OpenSCAD source bundle (maximum 32 original files).');
+      const sourceFormat = object(bundle) && bundle.format === 'brickwright-ldraw-bundle' ? 'ldraw' : 'openscad';
+      if (!object(bundle) || !keys(bundle, 'format version rootPath dependencies') || !['brickwright-openscad-bundle', 'brickwright-ldraw-bundle'].includes(String(bundle.format)) || bundle.version !== 1 || !bundlePath(bundle.rootPath, sourceFormat) || !Array.isArray(bundle.dependencies) || !bundle.dependencies.length || bundle.dependencies.length > 31 || !file(asset.original) || !asset.original.path || asset.original.format !== sourceFormat || asset.editableSource !== undefined) error('Invalid local source bundle (maximum 32 original files).');
       else {
         const paths = new Set([bundle.rootPath]), files = new Set([asset.original.path]);
         let total = asset.original.bytes;
         for (const dependency of bundle.dependencies) {
-          if (!object(dependency) || !keys(dependency, 'path file author sourceUrl sourceRevision licence') || !bundlePath(dependency.path) || paths.has(dependency.path) || !file(dependency.file) || !dependency.file.path || dependency.file.format !== 'openscad' || files.has(dependency.file.path) || !text(dependency.author, 1000) || !url(dependency.sourceUrl) || !revision(dependency.sourceRevision) || !grant(dependency.licence)) { error('Every source dependency requires a distinct local original, pinned revision and reviewed grant.'); continue; }
+          if (!object(dependency) || !keys(dependency, 'path file author sourceUrl sourceRevision licence') || !bundlePath(dependency.path, sourceFormat) || paths.has(dependency.path) || !file(dependency.file) || !dependency.file.path || dependency.file.format !== sourceFormat || files.has(dependency.file.path) || !text(dependency.author, 1000) || !url(dependency.sourceUrl) || !revision(dependency.sourceRevision) || !grant(dependency.licence)) { error('Every source dependency requires a distinct local original, pinned revision and reviewed grant.'); continue; }
           paths.add(dependency.path); files.add(dependency.file.path); total += dependency.file.bytes;
         }
-        if (total > 32768) error('OpenSCAD original source bundle exceeds 32 KiB.');
+        if (total > 32768) error('Original source bundle exceeds 32 KiB.');
       }
     }
     if (asset.editableSource !== undefined && !file(asset.editableSource)) error('Invalid editable source identity.');
     if (!Array.isArray(asset.derivatives) || asset.derivatives.length > 32 || !asset.derivatives.every(file)) error('Invalid derivative file identities (maximum 32).');
     if (!text(asset.modificationNotes)) error('Explicit modification notes are required, including when unchanged.');
     const conversion = asset.conversion;
-    if (!object(conversion) || !keys(conversion, 'sourceUnits unitAssumption sourceUpAxis toMillimetresZUp') || !['mm', 'cm', 'm', 'in'].includes(String(conversion.sourceUnits)) || !text(conversion.unitAssumption) || !['X', 'Y', 'Z', '-X', '-Y', '-Z'].includes(String(conversion.sourceUpAxis))) error('Explicit source units, assumption and up axis are required.');
+    if (!object(conversion) || !keys(conversion, 'sourceUnits unitAssumption sourceUpAxis toMillimetresZUp') || !['mm', 'cm', 'm', 'in', 'ldu'].includes(String(conversion.sourceUnits)) || !text(conversion.unitAssumption) || !['X', 'Y', 'Z', '-X', '-Y', '-Z'].includes(String(conversion.sourceUpAxis))) error('Explicit source units, assumption and up axis are required.');
     else {
       const m = conversion.toMillimetresZUp;
       if (!Array.isArray(m) || m.length !== 16 || !m.every(n => typeof n === 'number' && Number.isFinite(n)) || m[3] !== 0 || m[7] !== 0 || m[11] !== 0 || m[15] !== 1) error('Conversion must be a finite column-major affine 4×4 matrix.');
