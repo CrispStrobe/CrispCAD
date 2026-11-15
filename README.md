@@ -22,10 +22,12 @@ full constrained sketches and an exact surface/solid backend remain roadmap work
   [Curved shapes and vessels](docs/CURVED-SHAPES.md) retain their profiles, walls,
   floors and seats. [Transitions and sliding profiles](docs/RETAINED-TRANSITIONS.md)
   add editable tube bends, rectangular ducts and dovetail face clearance.
-- Practical part templates and editable generators for screws,
-  threads, lettering and other parts. Seven conventional screw-point styles include
-  editable cup, dog and tapered ends; headless set-screw and wood-screw presets are available. Name tags support rounded corners and bundled
-  fonts; their text remains editable in Properties.
+- Editable screw/thread generators with seven conventional point styles, including
+  cup, dog and tapered ends, plus headless and wood-screw presets.
+  [Optional thread redesign](docs/SCREW-REDESIGN.md) after resizing keeps pitch
+  or accepts a new pitch/turn count as one undoable rebuild.
+- Lettering and name tags with rounded corners, bundled fonts and text that stays
+  editable in Properties.
 - Solid/Hole cutters and rectangle selection, with retained union, subtraction and
   intersection inputs. Edit source dimensions after
   combining parts, and drive dimensions or transforms with named, unit-aware formulas.

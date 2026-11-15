@@ -61,6 +61,7 @@ export async function prepareDocumentCollisions(input:CadDocument,result:Geometr
    return pieces;
   }
   if(hint&&node.kind==='mesh'){
+   if(hint.kind==='tube-grid'&&Math.ceil(hint.segments/(hint.stride??1))>2048)throw new Error(t('Construction collision exceeds its compound budget'));
    const stride=hint.stride??1,perSide=hint.sides+(hint.seam===false?0:1),at=(ring:number,side:number):Vec3=>{const i=hint.layout==='rows'?ring*perSide+side:side*(hint.segments+1)+ring;return [node.positions[i*3],node.positions[i*3+1],node.positions[i*3+2]];},transforms=[...parents,node.transform],pieces:ConvexPiece[]=[];
    if(hint.kind==='tube-grid')for(let ring=0;ring<hint.segments;ring+=stride){const points:Vec3[]=[];for(let r=ring;r<=Math.min(hint.segments,ring+stride);r++)for(let side=0;side<hint.sides;side++)points.push(worldPoint(at(r,side),transforms));pieces.push(kernel.hullPoints(points));}
    // A tiny angular overlap closes numerical seams between adjacent convex

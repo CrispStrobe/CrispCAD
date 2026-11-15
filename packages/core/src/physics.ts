@@ -39,7 +39,7 @@ export function checkPhysics(doc: CadDocument) {
   if(p.sourcePreset!==undefined&&(typeof p.sourcePreset!=='string'||!/^[a-z][a-z0-9-]{0,63}$/.test(p.sourcePreset)))fail(t('bad preset provenance'));
   if(p.collisionHint!==undefined){
    const h=p.collisionHint,annular=h?.kind==='annular-grid';
-   if(node.kind!=='mesh'||!h||!['tube-grid','radial-profile','annular-grid'].includes(h.kind)||!Number.isInteger(h.segments)||!number(h.segments,annular?1:3,annular?64:1024)||!Number.isInteger(h.sides)||!number(h.sides,3,h.kind==='tube-grid'?64:256)||!['rows','columns'].includes(h.layout)||typeof h.closed!=='boolean'||h.seam!==undefined&&typeof h.seam!=='boolean'||h.stride!==undefined&&(!Number.isInteger(h.stride)||!number(h.stride,1,8))||annular&&(h.layout!=='rows'||h.closed||h.seam===false||h.stride!==undefined)||node.positions.length<(annular?2:1)*((h.segments+1)*(h.sides+(h.seam===false?0:1)))*3)fail(t('bad collision hint'));
+   if(node.kind!=='mesh'||!h||!['tube-grid','radial-profile','annular-grid'].includes(h.kind)||!Number.isInteger(h.segments)||!number(h.segments,annular?1:3,annular?64:h.kind==='tube-grid'?4096:1024)||!Number.isInteger(h.sides)||!number(h.sides,3,h.kind==='tube-grid'?64:256)||!['rows','columns'].includes(h.layout)||typeof h.closed!=='boolean'||h.seam!==undefined&&typeof h.seam!=='boolean'||h.stride!==undefined&&(!Number.isInteger(h.stride)||!number(h.stride,1,8))||annular&&(h.layout!=='rows'||h.closed||h.seam===false||h.stride!==undefined)||node.positions.length<(annular?2:1)*((h.segments+1)*(h.sides+(h.seam===false?0:1)))*3)fail(t('bad collision hint'));
   }
  }
  if(doc.joints===undefined)return;

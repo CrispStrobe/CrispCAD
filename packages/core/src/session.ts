@@ -112,11 +112,12 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     rename(title: string) { commit('Rename design', d => { d.title = title; }); },
     setParametric(design: ParametricDesign) {commit('Edit parameters',d=>{if(d.version===1)d.version=2;d.parametric=structuredClone(design);});},
     detachGenerator(id:string){commit('Detach shape generator',d=>{if(!d.nodes[id]?.generator)throw new Error(t('No generator to detach'));if(isCube(d.nodes[id]))throw new Error(t('Cube edges are linked; use a Box for independent dimensions'));delete d.nodes[id].generator;if(d.nodes[id].physics)d.nodes[id].physics={...d.nodes[id].physics!,sourcePreset:undefined};});},
-    replaceGenerated(id:string,fragment:CadDocument){
+    replaceGenerated(id:string,fragment:CadDocument,options:{resetScale?:boolean;label?:string}={}){
       const source=validateDocument(fragment);if(source.roots.length!==1||source.joints?.length||source.parametric||source.sketches||(source.version>=5&&source.provenance))throw new Error(t('Expected one generated body'));
-      commit('Edit shape parameters',d=>{
+      commit(options.label??'Edit shape parameters',d=>{
         if(d.version>=5)assertProvenanceUpgrade(source);
-        const previous=d.nodes[id];if(!previous)throw new Error(t('Object does not exist'));
+        const previous=d.nodes[id];if(!previous)throw new Error(t('Object does not exist'));if(options.resetScale&&d.parametric?.bindings.some(b=>b.nodeId===id&&['scaleX','scaleY','scaleZ'].includes(b.property)))throw new Error(t('Detach driving scale expressions before rebuilding'));
+        if(options.resetScale){const seen=new Set<string>(),visitParents=(key:string)=>{if(seen.has(key))return;seen.add(key);for(const parent of Object.values(d.nodes))if(parent.kind==='boolean'&&parent.inputs.includes(key)){if(parent.transform.scale.some(v=>Math.abs(v-1)>1e-9))throw new Error(t('Reset parent scaling before rebuilding this body'));visitParents(parent.id);}};visitParents(id);}
         const descendants=new Set<string>();const walk=(key:string)=>{if(descendants.has(key))return;descendants.add(key);const n=d.nodes[key];if(n.kind==='boolean')n.inputs.forEach(walk);};walk(id);
         if(d.parametric?.bindings.some(b=>descendants.has(b.nodeId)&&b.nodeId!==id))throw new Error(t('Detach driving expressions on the construction operands before regenerating'));
         const connected=(key:string,seen=new Set<string>()):boolean=>{if(key===id)return true;if(seen.has(key))return false;seen.add(key);const n=d.nodes[key];return n?.kind==='boolean'&&n.inputs.some(child=>connected(child,seen));};
@@ -125,7 +126,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         for(const [key,node] of Object.entries(source.nodes)){const next=cloneNode(node);next.id=map.get(key)!;if(next.kind==='boolean')next.inputs=next.inputs.map(input=>map.get(input)!);d.nodes[next.id]=next;}
         const retained=d.version>=5?[...new Set([...descendants].flatMap(key=>document.nodes[key]?.provenance??[]))]:[];
         if(d.version<5&&Object.hasOwn(previous,'provenance'))d.nodes[id].provenance=structuredClone(previous.provenance);
-        const next=d.nodes[id];if(retained.length)next.provenance=retained;next.name=previous.name;next.color=previous.color;if(previous.role)next.role=previous.role;next.transform=structuredClone(previous.transform);
+        const next=d.nodes[id];if(retained.length)next.provenance=retained;next.name=previous.name;next.color=previous.color;if(previous.role)next.role=previous.role;next.transform=structuredClone(previous.transform);if(options.resetScale)next.transform.scale=[1,1,1];
         if(previous.physics&&next.physics)next.physics={...next.physics,densityKgM3:previous.physics.densityKgM3,friction:previous.physics.friction,restitution:previous.physics.restitution,motion:previous.physics.motion};
         if(d.version===1)d.version=2;pruneDocument(d);return [id];
       });

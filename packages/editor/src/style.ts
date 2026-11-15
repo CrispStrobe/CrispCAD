@@ -95,4 +95,6 @@ export const editorStyle = `
 @media(max-width:600px){.sketch-body{grid-template-columns:minmax(0,1fr)}.sketch-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.sketch-preview svg{height:210px;max-height:30dvh}.sketch-expressions{grid-column:1/-1}.sketch-dialog header h2{font-size:12px}.sketch-dialog{padding:8px}}
 
 .shape-parameters>.surface-detail[open]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 7px}.surface-detail>summary{grid-column:1/-1;cursor:pointer}.surface-detail>.field{margin:0;font-size:10px}
+
+.screw-redesign{margin:6px 0;padding:6px 0;border-bottom:1px solid var(--line);font-size:11px;color:#b6c8d6}.screw-redesign>summary{cursor:pointer;color:var(--accent)}.inspector:has(>.screw-redesign[open])>.shape-parameters{display:none}
 `;
