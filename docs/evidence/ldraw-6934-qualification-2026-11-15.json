@@ -1,0 +1,1772 @@
+{
+  "candidateID": "corpus-ldraw-6934",
+  "status": "PASS",
+  "result": {
+    "task": "LATESTUSER bounded task1",
+    "candidateID": "corpus-ldraw-6934",
+    "status": "PASS: one authored candidate qualified end-to-end",
+    "sourceID": "parts/6934.dat",
+    "sourceSha256": "a5b599ccc9e7979c4cc2bc72e2b4705eb1f5954c6a82d2761ce22063a3ea4e17",
+    "dependencyClosure": {
+      "format": "brickwright-ldraw-bundle",
+      "version": 1,
+      "rootPath": "parts/6934.dat",
+      "dependencies": [
+        {
+          "path": "p/box5.dat",
+          "file": {
+            "path": "sources/ldraw/p/box5.dat",
+            "bytes": 963,
+            "sha256": "ccb7b8a1d36692335b10ea6aa196849afcad4b15331683ed8112a10b50977318",
+            "format": "ldraw"
+          },
+          "author": "James Jessiman",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat",
+          "sourceRevision": {
+            "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+            "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08"
+          },
+          "licence": {
+            "spdx": "CC-BY-4.0",
+            "scope": "asset",
+            "attribution": "James Jessiman. LDraw.org Official Parts Library. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat. Creative Commons Attribution 4.0 International: https://creativecommons.org/licenses/by/4.0/. Original file and its !HISTORY contributor credits retained. Source unchanged; geometry conversion and nominal unit/axis changes described with the asset.",
+            "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat",
+            "capturedOn": "2026-11-15",
+            "review": "accepted",
+            "reviewer": "Codex exact staged source, author, per-file CC-BY-4.0 grant and complete two-file closure review"
+          }
+        }
+      ]
+    },
+    "licence": {
+      "spdx": "CC-BY-4.0",
+      "scope": "asset",
+      "attribution": "Tore Eriksson [Tore_Eriksson], with box5 primitive by James Jessiman; retained history credits PTadmin, guyvivan, cwdee, sbliss and Philo. LDraw.org Official Parts Library. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/6934.dat. Creative Commons Attribution 4.0 International: https://creativecommons.org/licenses/by/4.0/. Original file and its !HISTORY contributor credits retained. Source unchanged; geometry conversion and nominal unit/axis changes described with the asset.",
+      "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/6934.dat",
+      "capturedOn": "2026-11-15",
+      "review": "accepted",
+      "reviewer": "Codex exact staged source, author, per-file CC-BY-4.0 grant and complete two-file closure review",
+      "localEvidence": [
+        {
+          "path": "evidence/ldraw-CC-BY-4.0.txt",
+          "bytes": 18657,
+          "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+          "format": "text"
+        },
+        {
+          "path": "evidence/ldraw-CAreadme.txt",
+          "bytes": 4151,
+          "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+          "format": "text"
+        }
+      ]
+    },
+    "gates": {
+      "sourceClosureAndGrant": "PASS",
+      "mesh": "PASS",
+      "closedPositiveVolume": "PASS",
+      "triangles": 28,
+      "nativeEditorHistoryRoundTrip": "PASS",
+      "catalogueSTLInsertionInPreviewPath": "PASS",
+      "previewChromiumRaster": "PASS",
+      "packageTypecheck": "PASS",
+      "standaloneTypecheckAndProductionBuild": "PASS",
+      "focusedTests": "PASS10/10",
+      "interactiveBrowserEditor": "PASS4/4: Chromium and iPad-WebKit; actual preview, offline insertion, history/provenance and tampered bytes refusal",
+      "localMismatchBeforeInsertion": "PASS: hash mismatch rejected before geometry evaluation, insertion or history change",
+      "catalogueEditorInsertionHistoryProvenance": "PASS"
+    },
+    "actualFirstFailingAssertion": {
+      "path": "/mnt/storage/brickwright-cycle63-ldraw/validate.py:15",
+      "expression": "mem['MemAvailable'] > 2*1024**3",
+      "observedAvailableBytes": 1984524288,
+      "minimumExclusiveAvailableBytes": 2147483648,
+      "stage": "before npx vitest run tests/model-library-ldraw.test.ts tests/model-library-source-bundle.test.ts tests/library-preview-selection.test.ts"
+    },
+    "proof": {
+      "meshResult": "/mnt/storage/brickwright-cycle63-ldraw/mesh.json",
+      "completedCommands": "/mnt/storage/brickwright-cycle63-ldraw/prepare-validation.json",
+      "previewKey": "a5b599ccc9e7979c4cc2bc72e2b4705eb1f5954c6a82d2761ce22063a3ea4e17",
+      "previewPresent": true,
+      "previewCount": 150,
+      "meshSha256": "02e1f0467c9744db98226db1a5e45de1597c54f09cdfdcbaf33b95bd3865288b"
+    },
+    "deliveryBoundary": "Qualified local candidate +1 record/+1 unique STL/+1 preview; local111/109/150. Main delivery remains110/108/149 until landed.",
+    "focusedValidation": "/mnt/storage/brickwright-cycle63-ldraw/focused-validation.json",
+    "resourceBlockerResolved": "Available memory recovered to5087972KiB before focused test; nonblocking lock and all original resource checks passed.",
+    "browserValidation": "/mnt/storage/brickwright-cycle63-ldraw/browser-validation.json",
+    "counts": {
+      "main": {
+        "records": 110,
+        "uniqueSTL": 108,
+        "previews": 149
+      },
+      "local": {
+        "records": 111,
+        "uniqueSTL": 109,
+        "previews": 150
+      },
+      "candidateDelta": {
+        "records": 1,
+        "uniqueSTL": 1,
+        "previews": 1
+      }
+    },
+    "historicalResourceRefusal": "/mnt/storage/brickwright-cycle63-ldraw/task1-result.resource-blocked.json",
+    "testedSourceBinding": "/mnt/storage/brickwright-cycle63-ldraw/tested-source-binding.json",
+    "preservation": {
+      "status": "PASS",
+      "originalSourceDerivativeEntries": 220,
+      "originalPreviewsUnchanged": 149
+    },
+    "reproductionValidation": "/mnt/storage/brickwright-cycle63-ldraw/reproduction-validation.json"
+  },
+  "testedSourceBinding": {
+    "status": "PASS",
+    "baselineCommit": "749d122bbf58bf73235054252a0d1d02b806031d",
+    "originalRecords": 110,
+    "preservedSourceDerivativeEntries": [
+      {
+        "path": "sources/corpus-selection/beam-angular.scad",
+        "sha256": "8142509187db00f7fb9ff29d724860057f08635dbc5f53c1e5c886f369c1c167",
+        "bytes": 160
+      },
+      {
+        "path": "meshes/corpus-selection/beam-angular.stl",
+        "sha256": "4fdf0a0209d9bf9015821af4632fc38f0d9c702aff46abe12f1b81e9df63f998",
+        "bytes": 1384
+      },
+      {
+        "path": "sources/corpus-selection/beam-h.scad",
+        "sha256": "153a723f5a51db683a5e3ec6ead8335cba4b97d3f594371e816460a3fcb2cf21",
+        "bytes": 209
+      },
+      {
+        "path": "meshes/corpus-selection/beam-h.stl",
+        "sha256": "cd3597c4a963ea71cbd1dc9ed02e1ea986e6414b74339ea3cb932df64349934f",
+        "bytes": 2884
+      },
+      {
+        "path": "sources/corpus-selection/key-simple.scad",
+        "sha256": "524aec01efaf1757485c8855d74c77599d07c6c06e6972a6273f13d974650200",
+        "bytes": 294
+      },
+      {
+        "path": "meshes/corpus-selection/key-simple.stl",
+        "sha256": "e5d83df1f58a59f5409f968dfac3d79c75563a1b0223e2f22eab8d583833203b",
+        "bytes": 19784
+      },
+      {
+        "path": "sources/corpus-selection/roll-holder.scad",
+        "sha256": "321dc8517eb2a5ae2a6f8ef2779a8103b800843911f5e828905310ac2b4ee17e",
+        "bytes": 316
+      },
+      {
+        "path": "meshes/corpus-selection/roll-holder.stl",
+        "sha256": "db2ecc7ddf7f83b18d0288a271720cd00c2a17be8836f212ad47a75d38e5f596",
+        "bytes": 23884
+      },
+      {
+        "path": "sources/corpus-selection/angle-shelf.scad",
+        "sha256": "c6f96091369c15109983dc38858360770412f2796b806ac8950bb02ddc8b33a8",
+        "bytes": 349
+      },
+      {
+        "path": "meshes/corpus-selection/angle-shelf.stl",
+        "sha256": "21b7db7e7d25eb978bb86157e956f1f6af843941a92b88ccf636b411ae40b31d",
+        "bytes": 15084
+      },
+      {
+        "path": "sources/corpus-selection/sign-01.scad",
+        "sha256": "6d4e32ed84be5cbebc2c770479a6b0335d7a60d12f65c1baa217c342770534e0",
+        "bytes": 475
+      },
+      {
+        "path": "meshes/corpus-selection/sign-01.stl",
+        "sha256": "4d058ac2ff8f7a29f4845cb49b6329b3a6ccd1edc7c545c12a6377095355efc0",
+        "bytes": 38084
+      },
+      {
+        "path": "sources/corpus-selection/sign-02.scad",
+        "sha256": "a38bc139438edd67eeb04e9b101b493cc36bbed1d238d9b4220a9f698a4f186f",
+        "bytes": 564
+      },
+      {
+        "path": "meshes/corpus-selection/sign-02.stl",
+        "sha256": "9bfa2fcac804574304243e07fa5e6257bd12a0925b2117ce4314d174e41f7d0c",
+        "bytes": 38284
+      },
+      {
+        "path": "sources/corpus-selection/washer.scad",
+        "sha256": "0549eed9f9084c2b96c6ff38b1078648a2a251f6eac3be014a21643a29489aa8",
+        "bytes": 1293
+      },
+      {
+        "path": "meshes/corpus-selection/washer.stl",
+        "sha256": "03153572c0a41f654e400864d9cc0904d8cecb8ebb79d1fd4c9b02a0037b161a",
+        "bytes": 16084
+      },
+      {
+        "path": "sources/corpus-selection/transistor.scad",
+        "sha256": "05a5aaee99cbacf9d841368a3155911e7ee8959cdbedbcd69c793bc03f29c868",
+        "bytes": 1416
+      },
+      {
+        "path": "meshes/corpus-selection/transistor.stl",
+        "sha256": "711dc9546ae6d6c6ad5a77ab4598c6e313fe3b8d5cc2732f4a2766f8f4361080",
+        "bytes": 3084
+      },
+      {
+        "path": "sources/corpus-selection/stairs-01.scad",
+        "sha256": "051e38d01a320faf319723e8dc257eb3df35e365b82c5226cec05c410f990b08",
+        "bytes": 1392
+      },
+      {
+        "path": "meshes/corpus-selection/stairs-01.stl",
+        "sha256": "17cb67f972692d2cf8e2e7c3ffc7e4014fbd1ce4b6799a95e94d130885cdc94f",
+        "bytes": 3084
+      },
+      {
+        "path": "sources/corpus-selection/bookshelf-01.scad",
+        "sha256": "6ec7ca3193e9821ee281e8ea1c8183fc418892b38b6701863be77cbaf209631e",
+        "bytes": 1514
+      },
+      {
+        "path": "meshes/corpus-selection/bookshelf-01.stl",
+        "sha256": "213bd59790143fdd671f7e8b976f470805fd83c22a377e93a074b1f1c782a04c",
+        "bytes": 3184
+      },
+      {
+        "path": "sources/corpus-selection/chalkboard-01.scad",
+        "sha256": "23c77731a79447bc6ad6a5d74e9e7c77ccb852bc63056cf23b236ec4f2de80b6",
+        "bytes": 1454
+      },
+      {
+        "path": "meshes/corpus-selection/chalkboard-01.stl",
+        "sha256": "b5b73dc45f37e557884bd8851bb26cfb0a2a76e48de00df1190b1cc57d6b001a",
+        "bytes": 3684
+      },
+      {
+        "path": "sources/corpus-selection/arrow-01.scad",
+        "sha256": "6331d5b08292a58313a0700d31a4dc12fa841dc03c1ebf3c4c0a8450f580c3b9",
+        "bytes": 1412
+      },
+      {
+        "path": "meshes/corpus-selection/arrow-01.stl",
+        "sha256": "5667fd97d95a8a7049afc81e407a0615449d24d363e9b93c6abc1e1ad92fca1c",
+        "bytes": 1384
+      },
+      {
+        "path": "sources/corpus-selection/base-cabinet-01.scad",
+        "sha256": "b41a38be1e986f7941331a2ec9292ef77a781e81c630c80520677f4f5a686864",
+        "bytes": 1745
+      },
+      {
+        "path": "meshes/corpus-selection/base-cabinet-01.stl",
+        "sha256": "b6400fb650ec03551d7a97b7f47f9fdad347122871b8514d4b65314d80e134d7",
+        "bytes": 4084
+      },
+      {
+        "path": "sources/corpus-selection/beam-c.scad",
+        "sha256": "4f2e948e657f8492a1014fa8bbb5b3b0837f118e7220cd6cd1aac467a1f5e517",
+        "bytes": 1329
+      },
+      {
+        "path": "meshes/corpus-selection/beam-c.stl",
+        "sha256": "6ffa17f3784475afcc08dac0c1cbec6d3d9706c74f54457be44ec59834d4f9b8",
+        "bytes": 1484
+      },
+      {
+        "path": "sources/corpus-selection/bookshelf-02.scad",
+        "sha256": "d7c66316d756aa88ba7226e0f520a2c754fcb9cb8daaf3698c2790f8a6a80db0",
+        "bytes": 1549
+      },
+      {
+        "path": "meshes/corpus-selection/bookshelf-02.stl",
+        "sha256": "0cca8d8e2d8cbc1de55d6b35051af7fd5a30cbee3ec1c9c2785a417264785a09",
+        "bytes": 4684
+      },
+      {
+        "path": "sources/corpus-selection/box-wood-01.scad",
+        "sha256": "1815370f803d408dc710d1a96dc45d962a805155050f338e66386a09c827896a",
+        "bytes": 970
+      },
+      {
+        "path": "meshes/corpus-selection/box-wood-01.stl",
+        "sha256": "8b6192cfb849ffa884dea6b125dc1353790723a0eda254c642f5328f68e8508c",
+        "bytes": 20684
+      },
+      {
+        "path": "sources/corpus-selection/chair-01.scad",
+        "sha256": "4d71a0da78b93283c3fd9fb393daa51394cd51e73dde3c50d2a0c421f337a401",
+        "bytes": 2591
+      },
+      {
+        "path": "meshes/corpus-selection/chair-01.stl",
+        "sha256": "6c903e491484570b46c5dca109e2cfe8e02dd765859467b2d46fffbb50554c74",
+        "bytes": 4084
+      },
+      {
+        "path": "sources/corpus-selection/door-01.scad",
+        "sha256": "985b9b8a104215e940059b4f90cdafa3cd7bfcbc89549b630b446af0e87df473",
+        "bytes": 2273
+      },
+      {
+        "path": "meshes/corpus-selection/door-01.stl",
+        "sha256": "6cb8b1e2e9df0c76ab5b1673c73778bbfd02c723600e36deff33c65a4884ea80",
+        "bytes": 8884
+      },
+      {
+        "path": "sources/corpus-selection/flange-01.scad",
+        "sha256": "d063442d8c210bf775eec5e3ec5872833c61440648cbee0577629c4939f2fd56",
+        "bytes": 1427
+      },
+      {
+        "path": "meshes/corpus-selection/flange-01.stl",
+        "sha256": "1a62f999d113dce85c3d11a89333cc74ec7460d5bd9d89454c97969c73a9e3ac",
+        "bytes": 40884
+      },
+      {
+        "path": "sources/corpus-selection/ladder-01.scad",
+        "sha256": "42459e1d66d176e4534271be472528abe88b6de55ec06aca5d14a3be5d9ac4c2",
+        "bytes": 1456
+      },
+      {
+        "path": "meshes/corpus-selection/ladder-01.stl",
+        "sha256": "962d88adfa599844ff2ad9983c1daa10a91927ae6b1862d7d41e87f8ab004b20",
+        "bytes": 6284
+      },
+      {
+        "path": "sources/corpus-selection/sofa.scad",
+        "sha256": "c4078754ea3f646b214376acdce32df6b6eeccb043e0063587f7559a3d790b04",
+        "bytes": 1727
+      },
+      {
+        "path": "meshes/corpus-selection/sofa.stl",
+        "sha256": "4cbe8365b4dd8c82df02c441ecc281177c51ba3ce31fb6c0fc822095a0b8c1e6",
+        "bytes": 5584
+      },
+      {
+        "path": "sources/corpus-selection/table-01.scad",
+        "sha256": "86e1f12d8ac487b03ed840232665c17960528c9c565352fb74c245e46109db1e",
+        "bytes": 1944
+      },
+      {
+        "path": "meshes/corpus-selection/table-01.stl",
+        "sha256": "8f96f7017cc163a2658fe27485ec374c6d7aa3614828ae977a20ac867d304b40",
+        "bytes": 4484
+      },
+      {
+        "path": "sources/corpus-selection/vent-grid.scad",
+        "sha256": "6ada1d7850f6f10ebe6443af6cde6695d077401eccfb49c2f3a5833cfa956fb5",
+        "bytes": 1453
+      },
+      {
+        "path": "meshes/corpus-selection/vent-grid.stl",
+        "sha256": "cd12baef67c718c545b972b0d90ea169c9e59ada51cf375250faa5f41e8833e8",
+        "bytes": 18284
+      },
+      {
+        "path": "sources/corpus-selection/base-cabinet-02.scad",
+        "sha256": "006437c80eb43cab07afffa2f0302f5a6a9b5a4031561987677c1ca2da0ff276",
+        "bytes": 1682
+      },
+      {
+        "path": "meshes/corpus-selection/base-cabinet-02.stl",
+        "sha256": "80f8359b11462f0753b89036e4093840ad7866fd3f4f90a94f4a32c54b7cd55a",
+        "bytes": 5684
+      },
+      {
+        "path": "sources/corpus-selection/bed-01.scad",
+        "sha256": "341762d6fd8f6cf85db9e7c3e8c77269337dc2abf03126ddb962305e34f99558",
+        "bytes": 1776
+      },
+      {
+        "path": "meshes/corpus-selection/bed-01.stl",
+        "sha256": "b440230067b1e5ccbafcf05f5a0d8aa4d9f02197042b3444d35c0ed9f8096b20",
+        "bytes": 7284
+      },
+      {
+        "path": "sources/corpus-selection/bed-02.scad",
+        "sha256": "86e5c3303c974c02254cd42adf3e7c573d25bf3780eaf020f76ae1c8cbc7f71f",
+        "bytes": 1885
+      },
+      {
+        "path": "meshes/corpus-selection/bed-02.stl",
+        "sha256": "6c1d7be4a4e7fc773aa9b6f7dd41764a6b9c3bf70d23b5e5342c3deb2dc8a9a0",
+        "bytes": 9484
+      },
+      {
+        "path": "sources/corpus-selection/bench-01.scad",
+        "sha256": "a98ef5c2538ba30dab1259347f29fe2260f061af70a12ce5486eb1c686b923f9",
+        "bytes": 1848
+      },
+      {
+        "path": "meshes/corpus-selection/bench-01.stl",
+        "sha256": "e5ba82abf43669e6c3bde58fa6bc75fa4046038f6acd2a508c3eb63aea2ceb2a",
+        "bytes": 7084
+      },
+      {
+        "path": "sources/corpus-selection/bench-02.scad",
+        "sha256": "f7d216f47757cd3cb95d95c47f108e188744be9cd87c54ab1c545a212d3364f7",
+        "bytes": 1701
+      },
+      {
+        "path": "meshes/corpus-selection/bench-02.stl",
+        "sha256": "676fc04db57970d26293155e2945a95b26036fae9826889d03146eff1d5ef982",
+        "bytes": 4284
+      },
+      {
+        "path": "sources/corpus-selection/chair-02.scad",
+        "sha256": "e7745e1913a44223b778cea1a3bac81aa8f03f2c5a93f742ea8896b565802887",
+        "bytes": 3399
+      },
+      {
+        "path": "meshes/corpus-selection/chair-02.stl",
+        "sha256": "b0dc862f77387ba66ee4e1fb134025a9fd411453f1173481bffc35011f28808a",
+        "bytes": 14284
+      },
+      {
+        "path": "sources/corpus-selection/chair-03.scad",
+        "sha256": "b9790af1e3de2cc8bd95e166a2feb6cd2ce3c68c5a21c5a4a6ac5051763ec2ac",
+        "bytes": 3017
+      },
+      {
+        "path": "meshes/corpus-selection/chair-03.stl",
+        "sha256": "dfcf0e0927c05bc582476e30c1d41ddc3dbd7ccd8eaaa9a94e495a92995ef657",
+        "bytes": 9084
+      },
+      {
+        "path": "sources/corpus-selection/fireplace-01.scad",
+        "sha256": "998ed78138fa59f239328a9a4b08f84b6477e3364a6c47057276e2abe91a8e89",
+        "bytes": 1942
+      },
+      {
+        "path": "meshes/corpus-selection/fireplace-01.stl",
+        "sha256": "57e23b86946ce34daf871a4b89419fc5827899dda0f634c4b00349dc97c73ba8",
+        "bytes": 5484
+      },
+      {
+        "path": "sources/corpus-selection/table-02.scad",
+        "sha256": "0ab12f0be96093ed8a91e3c42b8105c2d9039c21edae89c800f8d9a243944abf",
+        "bytes": 1861
+      },
+      {
+        "path": "meshes/corpus-selection/table-02.stl",
+        "sha256": "daf082149c85ad72c0a33812518bc5fdaeba57b69ea63b91a560081724612c69",
+        "bytes": 6084
+      },
+      {
+        "path": "sources/corpus-selection/table-03.scad",
+        "sha256": "42871fd166513f17ab545d477bf54146ac018b9abeda6e6a02434511af0c0ae5",
+        "bytes": 2079
+      },
+      {
+        "path": "meshes/corpus-selection/table-03.stl",
+        "sha256": "772ae7df5ec6151dbc2382db4f5cb9be2ef8bdb6e9001fd3ee099b44220e6779",
+        "bytes": 15084
+      },
+      {
+        "path": "sources/corpus-selection/table-small-01.scad",
+        "sha256": "e171e82747b68dcf94cc55b3da1768ac07f66eca08a1794905990a6372f206ad",
+        "bytes": 1887
+      },
+      {
+        "path": "meshes/corpus-selection/table-small-01.stl",
+        "sha256": "05d0e2c51ce22f05d3552cb1a6c87f7d698543a7d72825c385dae04ff48c4949",
+        "bytes": 42284
+      },
+      {
+        "path": "sources/corpus-selection/window-01.scad",
+        "sha256": "90bac453f7bd0f5dddedcbceaed083852d81074130be3518439db2813e6e1cde",
+        "bytes": 2018
+      },
+      {
+        "path": "meshes/corpus-selection/window-01.stl",
+        "sha256": "313672effa8fb10f73dccf2e9a52c8904304673a3557092bc2a0a907b5f5ccf0",
+        "bytes": 13884
+      },
+      {
+        "path": "sources/corpus-selection/building-01.scad",
+        "sha256": "eba8bbb81ae6386c9ee6b10f3fc10fa7e03570531512cd323d5d5c86c5affb9e",
+        "bytes": 1798
+      },
+      {
+        "path": "meshes/corpus-selection/building-01.stl",
+        "sha256": "e62f8c9d6618273b6d83090117e9044df1b53a67002e8ea934a8893b47c9b7e7",
+        "bytes": 7884
+      },
+      {
+        "path": "sources/corpus-selection/chalkboard-02.scad",
+        "sha256": "a00f5ae45f5e6c3ec12593d6d13edf430e3c78fbbbe4174f8ed95c839eae20a9",
+        "bytes": 1792
+      },
+      {
+        "path": "meshes/corpus-selection/chalkboard-02.stl",
+        "sha256": "e237687339c629dd9508b831aeff9c75342f3f0d2bd098dee08ef4f338d84df5",
+        "bytes": 6284
+      },
+      {
+        "path": "sources/corpus-selection/cone-01.scad",
+        "sha256": "269b04d28730537e908451b7f98d86db1e98688f8276c01a1ef76ec89b2771b8",
+        "bytes": 703
+      },
+      {
+        "path": "meshes/corpus-selection/cone-01.stl",
+        "sha256": "7881392cc46e0c163efe654b2c0765a6dcfaba49fcc9d7fb569dce2e7c0237a8",
+        "bytes": 24884
+      },
+      {
+        "path": "sources/corpus-selection/crystal.scad",
+        "sha256": "e7078daf5d4400417f71b3bac879e378ffde2fb3d1502a6325ce6b579ce49357",
+        "bytes": 142
+      },
+      {
+        "path": "meshes/corpus-selection/crystal.stl",
+        "sha256": "acbb37f78af226a0f56ca6b7a37974f4f5450aaeba9e243dd0ef0bed03cb20f2",
+        "bytes": 484
+      },
+      {
+        "path": "sources/corpus-selection/key.scad",
+        "sha256": "f4e7eca7c681f802d4f12a863b1cea7ac2e2ec11307860f91bf78baf2cdee193",
+        "bytes": 1423
+      },
+      {
+        "path": "meshes/corpus-selection/key.stl",
+        "sha256": "6e0ae33e234fd13709c6eca04dc21f82910fad961e67756f32bd849b9de66c0e",
+        "bytes": 8284
+      },
+      {
+        "path": "sources/corpus-selection/lamp-01.scad",
+        "sha256": "e071c9c40e71a53ba4e71e9181dbf2f80f9fadb8fc825fc8e4bd7a23321f5d2b",
+        "bytes": 1538
+      },
+      {
+        "path": "meshes/corpus-selection/lamp-01.stl",
+        "sha256": "3b2c4de973bed82a96f17ff6c4194952f5a5517ee71bb59762724baeb705e694",
+        "bytes": 47884
+      },
+      {
+        "path": "sources/corpus-selection/lever-handle.scad",
+        "sha256": "73bfdfda782031cc02f19beaaf09afefa8c70f0cccd7adc94e48f51c4f31952f",
+        "bytes": 1638
+      },
+      {
+        "path": "meshes/corpus-selection/lever-handle.stl",
+        "sha256": "2f250280463fa747696fdab7c39f5c5748c8a897d05b08429b21886ccea235b0",
+        "bytes": 8284
+      },
+      {
+        "path": "sources/corpus-selection/soda-cup-01.scad",
+        "sha256": "0c87476d81f593f5c83f7926ba252157e33db9696d2a57441f7be1aa438fb653",
+        "bytes": 1716
+      },
+      {
+        "path": "meshes/corpus-selection/soda-cup-01.stl",
+        "sha256": "b1718725efbf6af4fd21282b0a821ebb216918650a4d8ebb1be2508e588e40d8",
+        "bytes": 54684
+      },
+      {
+        "path": "sources/corpus-selection/stairs-02.scad",
+        "sha256": "145a171b992ed382f067b8bf401b2b26c55a1f1f34603b3e2ac8793fcac22a45",
+        "bytes": 1863
+      },
+      {
+        "path": "meshes/corpus-selection/stairs-02.stl",
+        "sha256": "c41d2d50ee7a4fb461e07746c24f4f9fb430d51d50c5a836c2106a4f3b785638",
+        "bytes": 5884
+      },
+      {
+        "path": "sources/corpus-selection/stairs-03.scad",
+        "sha256": "4dd7b321fae87319e812f0efe2d639c276e3efa9a4cef0d34241ad02150ce3e1",
+        "bytes": 2358
+      },
+      {
+        "path": "meshes/corpus-selection/stairs-03.stl",
+        "sha256": "aa99a77c91b22c9f6a0bfe05dec7e9c1418b61e4a8a07d0b27a23aa1cddc4f81",
+        "bytes": 35084
+      },
+      {
+        "path": "sources/corpus-selection/traffic-light.scad",
+        "sha256": "1d2f42b407266586ae8f92e783230c5921545b85c9608395fc2a589f485a2774",
+        "bytes": 1739
+      },
+      {
+        "path": "meshes/corpus-selection/traffic-light.stl",
+        "sha256": "5ebb6aa51a495e5af92e6b260db222ebfe578dfb0c5b5911c0261f73dcdf3b49",
+        "bytes": 28284
+      },
+      {
+        "path": "sources/corpus-selection/tootbrush.scad",
+        "sha256": "78ef474639a08e177e2d9b30c4032f4b20fbb06b9329e40f5602069e6f04c44d",
+        "bytes": 1261
+      },
+      {
+        "path": "meshes/corpus-selection/tootbrush.stl",
+        "sha256": "1b4b47a70dfe239ef3f37cf6ae58608bb2810e1c8748be4ac7d8597140acd1db",
+        "bytes": 7484
+      },
+      {
+        "path": "sources/corpus-selection/electric-wire-plug.scad",
+        "sha256": "1c3212ab39e2f94694253387fd7a87e79e6d0d997c0f5365c493bf3ef4542fd2",
+        "bytes": 2216
+      },
+      {
+        "path": "meshes/corpus-selection/electric-wire-plug.stl",
+        "sha256": "14091fc7de434d3f832279f6525761733707b52a0e7244215e68301c343ab308",
+        "bytes": 117784
+      },
+      {
+        "path": "sources/corpus-selection/flange-03.scad",
+        "sha256": "4e02943239e0eb8445fc45fd096e57099b23c8f1e2e9d169a6d1419214ba95e7",
+        "bytes": 2176
+      },
+      {
+        "path": "meshes/corpus-selection/flange-03.stl",
+        "sha256": "e6ad9ed6829cc360acae57a8c52034609d8809d9ee05051238aa1c1da2bc67ff",
+        "bytes": 71884
+      },
+      {
+        "path": "sources/corpus-selection/resistor.scad",
+        "sha256": "7a996ef79fc368c1332daa8b284aafcd004090aadc2f5b7aec25f07d5beaf363",
+        "bytes": 2469
+      },
+      {
+        "path": "meshes/corpus-selection/resistor.stl",
+        "sha256": "c044f8b360178bee8b0f678a033cf225831cc89a6f6d45b8f637cc16319a2388",
+        "bytes": 187884
+      },
+      {
+        "path": "sources/corpus-selection/street-02.scad",
+        "sha256": "9c114a059e7a07b137e11bde20c9ddc047631de9309ec8b99f2b4fc556da3060",
+        "bytes": 1703
+      },
+      {
+        "path": "meshes/corpus-selection/street-02.stl",
+        "sha256": "6c0a957f9c9c5bbbea2363ce807440f7f1c2e2aff58704d1021cf9a5c99b1411",
+        "bytes": 8684
+      },
+      {
+        "path": "sources/corpus-selection/street-03.scad",
+        "sha256": "5e2efcd002e43aafc5ad52fecb0f5425413872fb0e38169ef98b45d22675ac9d",
+        "bytes": 1303
+      },
+      {
+        "path": "meshes/corpus-selection/street-03.stl",
+        "sha256": "8c28e0d22a012c0b756aa5f696ca8bdf682d30e3bb7879e896ae4c3dac44d1a5",
+        "bytes": 2884
+      },
+      {
+        "path": "sources/corpus-selection/street-06.scad",
+        "sha256": "68fcc501eccb2cf50fde2f2dd479569e0a3a9d8967b75a2db598d70aff4c3d88",
+        "bytes": 1302
+      },
+      {
+        "path": "meshes/corpus-selection/street-06.stl",
+        "sha256": "8c28e0d22a012c0b756aa5f696ca8bdf682d30e3bb7879e896ae4c3dac44d1a5",
+        "bytes": 2884
+      },
+      {
+        "path": "sources/corpus-selection/sword-01.scad",
+        "sha256": "a45892b776435978d1b95920b6be5d885770485b7d69d15ca243b35059e26667",
+        "bytes": 1778
+      },
+      {
+        "path": "meshes/corpus-selection/sword-01.stl",
+        "sha256": "3b605f2920722e86d527d6ba2bf6ccc19dca76c5d10b4e28da2b402b9e07d736",
+        "bytes": 10684
+      },
+      {
+        "path": "sources/corpus-selection/x.scad",
+        "sha256": "7f2e6f3bc1fad63176233084c00d562d81637db7b32ca667b75e5e11dee2efdb",
+        "bytes": 124
+      },
+      {
+        "path": "meshes/corpus-selection/x.stl",
+        "sha256": "ca64d59de77fb09d3df4df1199cd72452c99295023288c71a6faf04972a8906a",
+        "bytes": 2584
+      },
+      {
+        "path": "sources/corpus-selection/banner-01.scad",
+        "sha256": "d81bfa138ae7a43ea33c09e6ddbd06585fd4d1fbe53336427c18f0a8c920f6a1",
+        "bytes": 383
+      },
+      {
+        "path": "meshes/corpus-selection/banner-01.stl",
+        "sha256": "20f270699557a9c4eb48a5c83fffed96a9faa9b582f872ecf378dc1ffabe7b41",
+        "bytes": 29084
+      },
+      {
+        "path": "sources/corpus-selection/raccordo.scad",
+        "sha256": "0ef3163346d94601be2f9bae46aaf072bc6a4e3903d88063c2ab76d63998f69d",
+        "bytes": 97
+      },
+      {
+        "path": "meshes/corpus-selection/raccordo.stl",
+        "sha256": "f00831e6e5fea9903b2335abdec8ddc05da69b1e788ca0fb226a0d66ff9733c6",
+        "bytes": 2284
+      },
+      {
+        "path": "sources/corpus-selection/street-01.scad",
+        "sha256": "4901bec62feb143eafb7758557b6f88942234771e06ed4a98d596d76e54da37d",
+        "bytes": 1194
+      },
+      {
+        "path": "meshes/corpus-selection/street-01.stl",
+        "sha256": "d93f1d5eb112d92a021eeedef6ddf904a8eaa2b92d56f841370779c8117bd147",
+        "bytes": 684
+      },
+      {
+        "path": "sources/corpus-selection/street-05.scad",
+        "sha256": "26b28e095a3a9d571a5842152baaf7e6a247e45d185173a1ddfd525f3d953ec8",
+        "bytes": 1675
+      },
+      {
+        "path": "meshes/corpus-selection/street-05.stl",
+        "sha256": "5843a8ff02884c60157ecf39c7e2e735f3cbf14243e4c0f67fd595a0427f1f16",
+        "bytes": 11084
+      },
+      {
+        "path": "sources/corpus-selection/street-04.scad",
+        "sha256": "9560ea338991cc8a202a620a3ede99e199120f253dd7cff4d7d84111c376d033",
+        "bytes": 1737
+      },
+      {
+        "path": "meshes/corpus-selection/street-04.stl",
+        "sha256": "94b9764e7fefdec5b831d6d3c283fed1056a850e38f3a5114614d2a89721c4a6",
+        "bytes": 11084
+      },
+      {
+        "path": "sources/corpus-selection/eyebolt.scad",
+        "sha256": "b213df3b014b63a5387cae3d7d317a0b0b78f48d1c2876d7ff7ff45168165370",
+        "bytes": 1440
+      },
+      {
+        "path": "meshes/corpus-selection/eyebolt.stl",
+        "sha256": "b820ac8a04955b6ab59de3c1e28932d636f88489d5022cb99500e92ab635a3a4",
+        "bytes": 10484
+      },
+      {
+        "path": "sources/corpus-selection/ladder-02.scad",
+        "sha256": "984c71e0c8673964304653c73d9614896a55fd6da2f7e3579826532b9ac120d0",
+        "bytes": 1551
+      },
+      {
+        "path": "meshes/corpus-selection/ladder-02.stl",
+        "sha256": "3445b6eef3b27da02f13b83bd392ad2de163e7420babff222b1e892d3369e9c2",
+        "bytes": 8284
+      },
+      {
+        "path": "sources/corpus-selection/wall-04.scad",
+        "sha256": "c0c86bf56cee50e83215477ba5446999c02436718227f31023dd061596dcfa5b",
+        "bytes": 1729
+      },
+      {
+        "path": "meshes/corpus-selection/wall-04.stl",
+        "sha256": "ebc990a941585bea7212849de9c2db3721b2f1cd4897600b6530c13a294202fd",
+        "bytes": 6984
+      },
+      {
+        "path": "sources/corpus-selection/fence-01.scad",
+        "sha256": "4eea49150404cc80f3ba1ef96c18f7b503f7adf97e3070be24289efb5ce1460d",
+        "bytes": 1614
+      },
+      {
+        "path": "meshes/corpus-selection/fence-01.stl",
+        "sha256": "362ae8076f56358f55ac7cf3a3f35b367b417351271654fcef541e0cef664a1f",
+        "bytes": 45684
+      },
+      {
+        "path": "sources/corpus-selection/fence-02.scad",
+        "sha256": "58464ec8083b253f64de30407e1cbc1b41a2c567239c3e4e7ed6016f120f6728",
+        "bytes": 1668
+      },
+      {
+        "path": "meshes/corpus-selection/fence-02.stl",
+        "sha256": "a416c37bbea5156c496d7ce84dc77c68e732a24340697c10766133960c29fdd6",
+        "bytes": 102984
+      },
+      {
+        "path": "sources/corpus-selection/building-02.scad",
+        "sha256": "33e61ca81c87958bd63eb9997d462b5ceab7efc5043837f07efbcf30da89fa3e",
+        "bytes": 2269
+      },
+      {
+        "path": "meshes/corpus-selection/building-02.stl",
+        "sha256": "213d5ef63d8e8395f3d6cf08542ea855e4c1b1f57d6a36484c1b992744710da6",
+        "bytes": 8784
+      },
+      {
+        "path": "sources/corpus-selection/walking-stick.scad",
+        "sha256": "c03f703be343096ead430017effe50e184518052f25cad0276a8a21ff8a4a986",
+        "bytes": 1980
+      },
+      {
+        "path": "meshes/corpus-selection/walking-stick-scoped-fn-v2.stl",
+        "sha256": "ba81390e703302fc5fa99afbe0bd0bb6dcca3c9def9e300294ba5d6a4356adbb",
+        "bytes": 59884
+      },
+      {
+        "path": "sources/corpus-selection/ingot-01.scad",
+        "sha256": "6f3d5d101289b7637c0f8f27b2881bde600b16cddd602bab974d82a9d937cac2",
+        "bytes": 333
+      },
+      {
+        "path": "meshes/corpus-selection/ingot-01.stl",
+        "sha256": "9a97d8c5d421077cecbc19db090fef72d16ecdbcd1599fc9c141942c7997cf00",
+        "bytes": 684
+      },
+      {
+        "path": "sources/corpus-selection/coin-01.scad",
+        "sha256": "951c586e3b1b6257d90ab7feb3b4307946c379ed740368dfb4c8689f3059ad7b",
+        "bytes": 1759
+      },
+      {
+        "path": "meshes/corpus-selection/coin-01.stl",
+        "sha256": "25749fd5cbac873d34227288136252b903c9cbd8a1338927f4e5dad661937e76",
+        "bytes": 23884
+      },
+      {
+        "path": "sources/corpus-selection/led-01.scad",
+        "sha256": "8aad38e223ae0cfeb7e00f3bd8e594cc3a531120b51c8ebac96d3123074071d7",
+        "bytes": 1769
+      },
+      {
+        "path": "meshes/corpus-selection/led-01.stl",
+        "sha256": "42fda6457b64bac3b9ea3498163ec7c041b85b54282d4a5108557d3f455756ff",
+        "bytes": 13984
+      },
+      {
+        "path": "sources/corpus-selection/sauce-bottle.scad",
+        "sha256": "5bd635f4e9179b0a9716a6ec38c4b346b989f94d48d41c7e9ab6522926f59e23",
+        "bytes": 1769
+      },
+      {
+        "path": "meshes/corpus-selection/sauce-bottle.stl",
+        "sha256": "488e6be837bb8cb9091383c29f2587fd0f5316cbe80683a96ad508a128657e8b",
+        "bytes": 26884
+      },
+      {
+        "path": "sources/corpus-selection/pipe-00.scad",
+        "sha256": "1dcd758ab9c4f969c099ccbe6936de341a7dc004751607f2464db28cf5bb5381",
+        "bytes": 1387
+      },
+      {
+        "path": "meshes/corpus-selection/pipe-00.stl",
+        "sha256": "0662c245a9f779ed359f3100fccb1e6f13f0acac2f562cb9455a500b9ae09ad5",
+        "bytes": 12084
+      },
+      {
+        "path": "sources/corpus-selection/flange-02.scad",
+        "sha256": "9c3a3c5d4c767d2eca1fadcca92f51dc8d83c971196f2c343bda46015d0edede",
+        "bytes": 1583
+      },
+      {
+        "path": "meshes/corpus-selection/flange-02.stl",
+        "sha256": "c2dfdabea906da5ed9adb77ac969a54cd9a7d4b58ca3528ea2f05b0a96ca1b93",
+        "bytes": 61484
+      },
+      {
+        "path": "sources/corpus-selection/cup-01.scad",
+        "sha256": "12f442660d6c5fd577a5e69f9c11e0a51a4fc242cc15938d9b11113877686379",
+        "bytes": 1914
+      },
+      {
+        "path": "meshes/corpus-selection/cup-01.stl",
+        "sha256": "bcc1d298bd6ea706ca2e283b82feeffa600073d61aa53d703a7412df1442517c",
+        "bytes": 70884
+      },
+      {
+        "path": "sources/corpus-selection/ring.scad",
+        "sha256": "4123a8998c6ce0a0b3e562f3e7a12198a4542f2cccc86ce6610c3d2a034e82cf",
+        "bytes": 1784
+      },
+      {
+        "path": "meshes/corpus-selection/ring.stl",
+        "sha256": "e86267f414f8559596b52def86c834d24e35bff503d119bf4c7668b31ee81d34",
+        "bytes": 122884
+      },
+      {
+        "path": "sources/corpus-selection/pipe-90.scad",
+        "sha256": "7ecb93cf2a98f86eed7bf94af4c6ce59f56f3ff76276406634421ba7a5ced64e",
+        "bytes": 1810
+      },
+      {
+        "path": "meshes/corpus-selection/pipe-90.stl",
+        "sha256": "f4244bad26a606d6867bb964189019fa0461775c04d1250a45ebfcff4c52d901",
+        "bytes": 60084
+      },
+      {
+        "path": "sources/corpus-selection/key-old-01.scad",
+        "sha256": "3d1268c24366ec678a8e18e748e1281596c9aa65a502cb5ef901da8daaf0d323",
+        "bytes": 1783
+      },
+      {
+        "path": "meshes/corpus-selection/key-old-01.stl",
+        "sha256": "57d76921595e224017f10099408f64de39812eb547b9760c9e1b89023f5b64e7",
+        "bytes": 96784
+      },
+      {
+        "path": "sources/corpus-selection/hole-plate.scad",
+        "sha256": "769b1d58cebc6678909c5fbcb299cc1ffad25af502ceb2e3f0a954cf6aeefad2",
+        "bytes": 1919
+      },
+      {
+        "path": "meshes/corpus-selection/hole-plate.stl",
+        "sha256": "b0ac4b19f0d523b488b9ff1db6e7e1f986521bc32fb656e40979f4cd42da97f2",
+        "bytes": 39884
+      },
+      {
+        "path": "sources/corpus-selection/mech-piece-01.scad",
+        "sha256": "1a7a5d33362e378705d73473efec55b9d4ce08da7f78c358e1a73a9e60cf339e",
+        "bytes": 1916
+      },
+      {
+        "path": "meshes/corpus-selection/mech-piece-01.stl",
+        "sha256": "1c57dafd58afa560b3752291e89b86d16ba90bde39fbf6f0b4e7d10add262bf9",
+        "bytes": 44184
+      },
+      {
+        "path": "sources/corpus-selection/mech-piece-02.scad",
+        "sha256": "1934959de53fdd98aca22ce2051ba2aedc2e0d8255ac53297eb49c7370317774",
+        "bytes": 1804
+      },
+      {
+        "path": "meshes/corpus-selection/mech-piece-02.stl",
+        "sha256": "c0487dad694357e0b311076f6a1cd831ea7a5390a629e1c74c967cb159eb08ee",
+        "bytes": 43884
+      },
+      {
+        "path": "sources/corpus-selection/arc-02.scad",
+        "sha256": "0202799423c511dc55c8caff15e5dfea1cbabd449342eee4bafb3be59104e803",
+        "bytes": 2278
+      },
+      {
+        "path": "meshes/corpus-selection/arc-02.stl",
+        "sha256": "8b760a3a79a5d1fcc29c9aacf2fa0852b7bd68b5d750b22a5adde4e8992b8e3c",
+        "bytes": 4284
+      },
+      {
+        "path": "sources/corpus-selection/circular-blade.scad",
+        "sha256": "cb24327b57fdaf2aa12968cb23cdbac695a18e89f83e7fb8125c89bad9ea6d53",
+        "bytes": 1740
+      },
+      {
+        "path": "meshes/corpus-selection/circular-blade.stl",
+        "sha256": "33ebdb6f51b24db2fc1d9fb87d4f1b612eb863c0d2ff77adb1d7cc74a93b8b59",
+        "bytes": 18884
+      },
+      {
+        "path": "sources/corpus-selection/gear-01.scad",
+        "sha256": "eb63fd7b57dc965f3e1b4ba0ea44714fa76ba009935cb3459cbc88716817d97d",
+        "bytes": 1835
+      },
+      {
+        "path": "meshes/corpus-selection/gear-01.stl",
+        "sha256": "dbe1072a8117591f9ae3290d6785e89c4e35726b8efbb5414382ca825ad950f2",
+        "bytes": 15784
+      },
+      {
+        "path": "sources/corpus-selection/gear-02.scad",
+        "sha256": "2abb0cd7ebc2157e780c97156587a72d897f95f0b8a6e38d7bbc7ec36f8bc6bf",
+        "bytes": 2110
+      },
+      {
+        "path": "meshes/corpus-selection/gear-02.stl",
+        "sha256": "2a81591f20420d0dc559f7c7d81c41d7452ab59a55dc6cd22e8942ed26f58ccf",
+        "bytes": 54184
+      },
+      {
+        "path": "sources/corpus-selection/mallet.scad",
+        "sha256": "88884ddc1fdf9fe5ab848c118d2ea94e01e70676d72da3b3ebc432fb5b10a832",
+        "bytes": 1475
+      },
+      {
+        "path": "meshes/corpus-selection/mallet.stl",
+        "sha256": "7add7b5373820f1daa54b5c65ac845f1fed92568a3bb45805bb456beb2c77341",
+        "bytes": 15184
+      },
+      {
+        "path": "sources/corpus-selection/tower.scad",
+        "sha256": "4855a5c04e1d79e5eff5de58a2b5866908ab3a22c31a3ec88a4f99ee12a2b26d",
+        "bytes": 2059
+      },
+      {
+        "path": "meshes/corpus-selection/tower.stl",
+        "sha256": "477283058c760a743e7addbc357ff24e745ba296785e1cfbc98933063b055464",
+        "bytes": 43384
+      },
+      {
+        "path": "sources/corpus-selection/weights-01.scad",
+        "sha256": "9d65acddd758fe6bdb0424e423caeaae6be9dc94c7a1414bc229f7198a98b0e2",
+        "bytes": 1840
+      },
+      {
+        "path": "meshes/corpus-selection/weights-01.stl",
+        "sha256": "b51d0cbafdae03080fc66a509300cbbfd4264b34d6abadddf0c9d13e2e176fda",
+        "bytes": 14284
+      },
+      {
+        "path": "sources/corpus-selection/tree-01.scad",
+        "sha256": "31a9130ea9b53c0d503fb86aeec221ec871cb21ea96987262d846ef5ca2bc756",
+        "bytes": 927
+      },
+      {
+        "path": "meshes/corpus-selection/tree-01.stl",
+        "sha256": "d0460816ad77e13a822154029df2fe5c429cf39d371ce1d6641f2d5da9da8fb5",
+        "bytes": 11884
+      },
+      {
+        "path": "sources/corpus-selection/nut-lq.scad",
+        "sha256": "deb3b2a4fe017c0734780512f781edb7809fe9434e72028b13a3f0a52581ea2f",
+        "bytes": 1543
+      },
+      {
+        "path": "meshes/corpus-selection/nut-lq.stl",
+        "sha256": "bf92fa9f004358b888e65ccef471d1395f55119d76103414493cab3ef98e1351",
+        "bytes": 7284
+      },
+      {
+        "path": "sources/corpus-selection/rod-01.scad",
+        "sha256": "11cf0a57740fc1805fe86c6a424602b0799ae0f561f573e246a0bd49abef9eaa",
+        "bytes": 2055
+      },
+      {
+        "path": "meshes/corpus-selection/rod-01.stl",
+        "sha256": "925e4a2e2ecf6a75ae15899df0c7e6d5f2aede2e7e4c170ae4a8cfa4fab3a9ff",
+        "bytes": 20684
+      },
+      {
+        "path": "sources/corpus-selection/animation-gear-02.scad",
+        "sha256": "88e34079b1cc328209d4b2ce38a1fe38a2bfd3f57853afabe04b401cccec535f",
+        "bytes": 2192
+      },
+      {
+        "path": "meshes/corpus-selection/animation-gear-02.stl",
+        "sha256": "4b06eedbe5d1e67297335ca13969135e6063ee495d4791c1c8634263cdb972af",
+        "bytes": 108284
+      },
+      {
+        "path": "sources/corpus-selection/animation-mechanism-01.scad",
+        "sha256": "2072ec9e27a91885decf095635cf0f20458f2d6c64dfe32f98062a3e067e0a7c",
+        "bytes": 1447
+      },
+      {
+        "path": "meshes/corpus-selection/animation-mechanism-01.stl",
+        "sha256": "6e0ae33e234fd13709c6eca04dc21f82910fad961e67756f32bd849b9de66c0e",
+        "bytes": 8284
+      },
+      {
+        "path": "sources/corpus-selection/shaft-01.scad",
+        "sha256": "41b9cf67da8fd47d263966280fce9af1dfcaa1e1b05e8a182d8e9cba1257aee7",
+        "bytes": 1324
+      },
+      {
+        "path": "meshes/corpus-selection/shaft-01.stl",
+        "sha256": "5fa547faa44b3363c3c3e4886eeb571cd62859d12497f1407cad195358a4348b",
+        "bytes": 19284
+      },
+      {
+        "path": "sources/corpus-selection/shaft-02-with-keyway.scad",
+        "sha256": "7d48549ed36d24d8b399e7ffcf4e18b55bf93d2cc8bef43a17bf9cc64aa923b7",
+        "bytes": 1771
+      },
+      {
+        "path": "meshes/corpus-selection/shaft-02-with-keyway.stl",
+        "sha256": "76e2408ca0208ff1b6aa7da04f60953fea0bb4aedb9b41b5bafa572c02ad8df2",
+        "bytes": 28484
+      },
+      {
+        "path": "sources/corpus-selection/coin-02.scad",
+        "sha256": "92421043b2f2c5d6574e752a5e04454b5146a39452e57d21566c193ab60799bd",
+        "bytes": 1875
+      },
+      {
+        "path": "meshes/corpus-selection/coin-02.stl",
+        "sha256": "da5671e053b2f5454c4d5f53256eb988f6d49665c5bc000145d3608b6468b7fe",
+        "bytes": 156684
+      },
+      {
+        "path": "sources/corpus-selection/scene-city-street.scad",
+        "sha256": "2b33c97c3eab119a88159929bfe6927510636f0d626ac57ca025995087653743",
+        "bytes": 363
+      },
+      {
+        "path": "meshes/corpus-selection/scene-city-street.stl",
+        "sha256": "27c31bed500181d6207e8b020897515bb79cbe264c2387626c00dc79d3e5118f",
+        "bytes": 42184
+      },
+      {
+        "path": "sources/corpus-selection/bricks.scad",
+        "sha256": "97cd7d74ef9492d8f29bcbccc7cdd972f83818d48cf947e47f0ef62229355545",
+        "bytes": 1451
+      },
+      {
+        "path": "meshes/corpus-selection/bricks.stl",
+        "sha256": "0a405aa894512686e543462e230dee07406b5e81b0b306746f06391c481e0fe7",
+        "bytes": 1284
+      },
+      {
+        "path": "sources/a2d/Samples/GrillSquare.scad",
+        "sha256": "c91720016f60ba9d343e4625a3212fe3ab1e5668395aee56fdf0d7452510c99b",
+        "bytes": 1446
+      },
+      {
+        "path": "meshes/a2d/GrillSquare.stl",
+        "sha256": "9866b1c4ec3312bf5d21218837850531f5600de825638bbb6f7c431417079c94",
+        "bytes": 87884
+      },
+      {
+        "path": "sources/a2d/Samples/PointGenerators.scad",
+        "sha256": "5f4103ddc2fbab12be80258ef10b75aed85f4b293677322b9191e54005e0c424",
+        "bytes": 1037
+      },
+      {
+        "path": "meshes/a2d/PointGenerators.stl",
+        "sha256": "0310fc106c49e0d52c1eff029988ad5eda6cde5578fd06c7ecd8192ecabdbf5e",
+        "bytes": 20684
+      },
+      {
+        "path": "sources/a2d/Samples/GrillCircle.scad",
+        "sha256": "f1c6e12d4269e5af6f8f2a54b3f366441ce6a54f8c86d6758b9eea8e1f4d3f37",
+        "bytes": 1478
+      },
+      {
+        "path": "meshes/a2d/GrillCircle.stl",
+        "sha256": "2e4fe957ca95bc2722febcc76da5a05313e9876d9e45d3c45ada44c782dd1652",
+        "bytes": 168684
+      },
+      {
+        "path": "sources/scon/examples/ex1.scad",
+        "sha256": "789200891e04fcd20a9b216adde28c54c7fddf3ad8e5b3d4c10173a96bad5686",
+        "bytes": 242
+      },
+      {
+        "path": "meshes/scon/ex1.stl",
+        "sha256": "20b6b6cd8233a18062a7dc4cbfdf2c5742b791039ec04c06f1b18e04c9497d9a",
+        "bytes": 250084
+      },
+      {
+        "path": "sources/scon/examples/ex2.scad",
+        "sha256": "d5e1cc34d67fda3524fdd88c26bbdecf338d3dad8d012d1c127570f7571114b0",
+        "bytes": 784
+      },
+      {
+        "path": "meshes/scon/ex2.stl",
+        "sha256": "cb972f26a73bc6539cae5a9a302cf8fc1d98436ae05354c0832f97373e99730d",
+        "bytes": 26284
+      },
+      {
+        "path": "sources/scon/examples/ex3.scad",
+        "sha256": "7e2ea0f5ec9907a476b2db5030580f3cba30402d02428140c1517f3b950868c5",
+        "bytes": 883
+      },
+      {
+        "path": "meshes/scon/ex3.stl",
+        "sha256": "aee0dbfb248f5ab4c7da98ae8284b6f7d0b197695937dd36ebbff6d01b4d551f",
+        "bytes": 26284
+      },
+      {
+        "path": "sources/scon/examples/ex4.scad",
+        "sha256": "09282461aab2db14ca3e6140155ca3b481b89d257584a8bd578a8c0f864ce271",
+        "bytes": 1549
+      },
+      {
+        "path": "meshes/scon/ex4.stl",
+        "sha256": "7e40fe219349e54fdb8224a6300d1fba46d009b5138789ba34786f111e27fbc9",
+        "bytes": 254284
+      },
+      {
+        "path": "sources/scon/examples/tldr.scad",
+        "sha256": "9ee049e3b62af2232bfb2f9eefa9a7f19edb05ab42506271bdb64d58f5a44f9a",
+        "bytes": 375
+      },
+      {
+        "path": "meshes/scon/tldr.stl",
+        "sha256": "de15cc31c7c09ac618379ec7524c9262a87e2148c15e052091e8dcbab573e534",
+        "bytes": 250084
+      },
+      {
+        "path": "sources/jscad-reviewed/basicBooleans.js",
+        "sha256": "e269dbe7fa16fb1c80bef0cdd6ba4f94796e8cd1d3b87932b396e215343c0ec6",
+        "bytes": 1008
+      },
+      {
+        "path": "meshes/jscad-reviewed/basicBooleans.stl",
+        "sha256": "862081b025f843a8fa6766dbe09e0b35a6258414abbbc4af66d41db9e5d0e32d",
+        "bytes": 76684
+      },
+      {
+        "path": "sources/jscad-reviewed/translateEx1.scad",
+        "sha256": "a26aac3cc37c24dea98f8403f5b90547eb9903debf5dde77eedf914b6abd77c3",
+        "bytes": 69
+      },
+      {
+        "path": "meshes/jscad-reviewed/translateEx1.stl",
+        "sha256": "a5098549ef128f3bcf8ddda352916267d189c52ef06608f289ac0ee2a40ceb6d",
+        "bytes": 684
+      },
+      {
+        "path": "sources/jscad-reviewed/scaleEx1.scad",
+        "sha256": "0e9d3c5265754a7f88c778d6e1e08aced81491de32d37933bf30beadd3ffb96b",
+        "bytes": 62
+      },
+      {
+        "path": "meshes/jscad-reviewed/scaleEx1.stl",
+        "sha256": "5343e9bbeab8099bd9b36ac79965611126dd04b144cd8f6005264a82517dec42",
+        "bytes": 684
+      },
+      {
+        "path": "sources/jscad-reviewed/rotateEx1.scad",
+        "sha256": "b724d6d863a23ec1dca57725416ee6bf7d29ab6c87ea99e61ea79114d96430da",
+        "bytes": 61
+      },
+      {
+        "path": "meshes/jscad-reviewed/rotateEx1.stl",
+        "sha256": "b4985de55af3308b0b8b5d3083b78001b54c8059cdd949905dc629244f76779f",
+        "bytes": 684
+      }
+    ],
+    "originalPreviewsUnchanged": 149,
+    "localRecords": 111,
+    "localUniqueSTL": 109,
+    "localPreviews": 150,
+    "ownedFiles": [
+      {
+        "path": "library/evidence/ldraw-CAreadme.txt",
+        "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+        "bytes": 4151,
+        "mtimeNs": 1794723854090514653
+      },
+      {
+        "path": "library/evidence/ldraw-CC-BY-4.0.txt",
+        "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+        "bytes": 18657,
+        "mtimeNs": 1794723854090514653
+      },
+      {
+        "path": "library/ldraw-editor-manifest.json",
+        "sha256": "e868d2fcafb6372bc0a45c34880ff9a2b80a2c72add4e7a4bec7d37c4911b36f",
+        "bytes": 8616,
+        "mtimeNs": 1794724175160826990
+      },
+      {
+        "path": "library/meshes/ldraw/6934.stl",
+        "sha256": "02e1f0467c9744db98226db1a5e45de1597c54f09cdfdcbaf33b95bd3865288b",
+        "bytes": 1484,
+        "mtimeNs": 1794724175158826988
+      },
+      {
+        "path": "library/sources/ldraw/p/box5.dat",
+        "sha256": "ccb7b8a1d36692335b10ea6aa196849afcad4b15331683ed8112a10b50977318",
+        "bytes": 963,
+        "mtimeNs": 1794723854089514652
+      },
+      {
+        "path": "library/sources/ldraw/parts/6934.dat",
+        "sha256": "a5b599ccc9e7979c4cc2bc72e2b4705eb1f5954c6a82d2761ce22063a3ea4e17",
+        "bytes": 942,
+        "mtimeNs": 1794723854089514652
+      },
+      {
+        "path": "scripts/generate-ldraw-editor-library.mjs",
+        "sha256": "e873692d02e3b1fa53b7d966364be5ed44797fa8473613ffe211b9f0606fd17b",
+        "bytes": 7841,
+        "mtimeNs": 1794723966318628241
+      },
+      {
+        "path": "scripts/lib/ldraw-model.mjs",
+        "sha256": "7984352ff0b31852078380160f1b3fd6ebf70fc6f3617b2c9f61158699550ed2",
+        "bytes": 6630,
+        "mtimeNs": 1794723966320628243
+      },
+      {
+        "path": "tests/browser/model-library-ldraw.spec.ts",
+        "sha256": "00249e36a692b24e13397ba3038623f0f3fb086067b2fb2b58197dff9ee565d7",
+        "bytes": 3968,
+        "mtimeNs": 1794724077259735580
+      },
+      {
+        "path": "tests/model-library-ldraw.test.ts",
+        "sha256": "72da60dc48fa104e0d2a53e8d09ae94681061a84b1c9fc7b813971970c54f2d2",
+        "bytes": 5543,
+        "mtimeNs": 1794724077253735575
+      },
+      {
+        "path": "THIRD-PARTY-NOTICES.md",
+        "sha256": "5e57b508e949b441829b9746a0c6579db358bfdda2942857bc684b80c25d7e44",
+        "bytes": 9097,
+        "mtimeNs": 1794723671311315575
+      },
+      {
+        "path": "apps/standalone/src/model-library-local.ts",
+        "sha256": "7ec4dbf6bc1f929d907030e1505e30f86b44458afe7ef194c31227132d581adc",
+        "bytes": 5519,
+        "mtimeNs": 1794723965772627701
+      },
+      {
+        "path": "library/previews.json",
+        "sha256": "6256979bee2448e2e6109ef4a403c7a148eb872ca6314dc50bc5775c97fe0e16",
+        "bytes": 2719583,
+        "mtimeNs": 1794724177219828884
+      },
+      {
+        "path": "packages/core/src/model-library.ts",
+        "sha256": "62ba0912f5d29a1aea1b0f997b25df8e6cac4a3cab779609528480f4ed171731",
+        "bytes": 15795,
+        "mtimeNs": 1794723966322628245
+      },
+      {
+        "path": "packages/editor/src/model-library-panel.ts",
+        "sha256": "0cd6efc18857c65d9b6dd83d3f258db331547d0d1d17615f44903c72337719a3",
+        "bytes": 19413,
+        "mtimeNs": 1794723671307315570
+      },
+      {
+        "path": "scripts/generate-library-previews.mjs",
+        "sha256": "c719dd390a6f0fb0ade4d7cd2da4cdc7faa6c04290d35c93864b698499577400",
+        "bytes": 6634,
+        "mtimeNs": 1794723965774627703
+      },
+      {
+        "path": "tests/browser/model-library.spec.ts",
+        "sha256": "500eb9b5a15966ef466bbc823c618d9795c74b86c55d5c35ecba1daf148cb3d6",
+        "bytes": 26482,
+        "mtimeNs": 1794724077706736004
+      }
+    ],
+    "validationEvidence": [
+      {
+        "path": "/mnt/storage/brickwright-cycle63-ldraw/prepare-validation.json",
+        "sha256": "6e121506b674e5b407139aa6302c72ce429ec4866a4ea91281a19eca9fbe849c"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle63-ldraw/focused-validation.json",
+        "sha256": "3d4deb3cd32b2b94461bffd86c3d2a1abfb0db36d7436d40d624932e68d281da"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle63-ldraw/focused-0.log",
+        "sha256": "8acbf7feb6672ac5855d24af0d7a788d24dc3bc6e6ae1fe8089fcaded9bee792"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle63-ldraw/browser-validation.json",
+        "sha256": "5e60a019971a47bc2c7032301c404fbc911546916859d0ba6d80abb6cff4f04d"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle63-ldraw/browser-0.log",
+        "sha256": "74fda7f9081c7cedc2558890d1ec5b2ca451baa266c237da0473d74b9dd71287"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle63-ldraw/mesh.json",
+        "sha256": "fbd1da28bad81137ea99bef07eb6c0c2b3da8591d429bc03ea3d20c518b3565f"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle63-ldraw/task1-result.resource-blocked.json",
+        "sha256": "9eb75c91fdbb8999a76deb402752c57796fe07c40ef1508978bf1d9a71985252"
+      }
+    ],
+    "bindingMethod": "SHA-256 snapshot after successful tests; all owned-file mtimes precede browser test start. Snapshot verified again before staging. Exact commit/tree recorded in external task result after commit.",
+    "reproductionValidation": [
+      {
+        "command": [
+          "node",
+          "scripts/generate-ldraw-editor-library.mjs",
+          "--check"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.4355546429287642,
+        "resourceGuard": {
+          "fastFreeBytes": 16681926656,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4802310144,
+          "minimumAvailableMemoryBytes": 2147483648,
+          "loadAverage": [
+            1.51904296875,
+            1.57861328125,
+            1.5498046875
+          ],
+          "fiveMinuteLoadMaximum": 8,
+          "lockAcquired": true,
+          "timeoutSeconds": 15
+        },
+        "log": "/mnt/storage/brickwright-cycle63-ldraw/reproduction-0.log"
+      }
+    ]
+  },
+  "mesh": {
+    "root": "parts/6934.dat",
+    "volumeMm3": 2195.456112792969,
+    "analyticVolumeMm3": 2195.4560000000006,
+    "volumeErrorMm3": 0.00011279296859356691,
+    "mesh": {
+      "bytes": 1484,
+      "sha256": "02e1f0467c9744db98226db1a5e45de1597c54f09cdfdcbaf33b95bd3865288b"
+    },
+    "screen": {
+      "fileSha256": "02e1f0467c9744db98226db1a5e45de1597c54f09cdfdcbaf33b95bd3865288b",
+      "toolVersion": "brickwright-stl-quality/1",
+      "checkedOn": "2026-11-15",
+      "policy": {
+        "maxTriangles": 10000,
+        "maxExtentMm": 200,
+        "toMillimetresZUp": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "maxAnalysisBytes": 16777216,
+        "maxAnalysisTriangles": 83333
+      },
+      "checks": {
+        "parseable": "pass",
+        "closedPositiveVolume": "pass",
+        "withinSizeLimits": "pass",
+        "withinTriangleLimits": "pass"
+      },
+      "diagnostics": [],
+      "triangles": 28,
+      "boundsMm": {
+        "min": [
+          -24,
+          -12,
+          -3.200000047683716
+        ],
+        "max": [
+          24,
+          12,
+          0
+        ]
+      },
+      "signedVolumeMm3": 2195.456112792969,
+      "quality": {
+        "fileSha256": "02e1f0467c9744db98226db1a5e45de1597c54f09cdfdcbaf33b95bd3865288b",
+        "toolVersion": "brickwright-stl-quality/1",
+        "checkedOn": "2026-11-15",
+        "screeningPolicy": {
+          "maxTriangles": 10000,
+          "maxExtentMm": 200,
+          "toMillimetresZUp": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "maxAnalysisBytes": 16777216,
+          "maxAnalysisTriangles": 83333
+        },
+        "parseable": true,
+        "closedPositiveVolume": true,
+        "withinSizeLimits": true,
+        "withinTriangleLimits": true
+      }
+    },
+    "restoredMeshSha256": "02e1f0467c9744db98226db1a5e45de1597c54f09cdfdcbaf33b95bd3865288b",
+    "headlessCodeEditorHistory": "load/addCode/evaluate/serialize/restore/undo/redo observed",
+    "status": "mesh-and-code-session-qualified"
+  },
+  "commands": {
+    "prepare": [
+      {
+        "command": [
+          "npm",
+          "run",
+          "build:packages"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 12.23511741310358,
+        "resourceGuard": {
+          "fastFreeBytes": 16687624192,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4385128448,
+          "minimumAvailableMemoryBytes": 2147483648,
+          "loadAverage": [
+            1.96826171875,
+            1.78466796875,
+            1.4677734375
+          ],
+          "fiveMinuteLoadMaximum": 8,
+          "lockAcquired": true,
+          "timeoutSeconds": 45
+        },
+        "log": "/mnt/storage/brickwright-cycle63-ldraw/prepare-0.log"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/generate-ldraw-editor-library.mjs",
+          "--write"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.5155161849688739,
+        "resourceGuard": {
+          "fastFreeBytes": 16687181824,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 3165519872,
+          "minimumAvailableMemoryBytes": 2147483648,
+          "loadAverage": [
+            2.59521484375,
+            1.92431640625,
+            1.5166015625
+          ],
+          "fiveMinuteLoadMaximum": 8,
+          "lockAcquired": true,
+          "timeoutSeconds": 10
+        },
+        "log": "/mnt/storage/brickwright-cycle63-ldraw/prepare-1.log"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/generate-library-previews.mjs",
+          "--asset-id",
+          "corpus-ldraw-6934"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 2.007668182021007,
+        "resourceGuard": {
+          "fastFreeBytes": 16687161344,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 3051872256,
+          "minimumAvailableMemoryBytes": 2147483648,
+          "loadAverage": [
+            2.59521484375,
+            1.92431640625,
+            1.5166015625
+          ],
+          "fiveMinuteLoadMaximum": 8,
+          "lockAcquired": true,
+          "timeoutSeconds": 40
+        },
+        "log": "/mnt/storage/brickwright-cycle63-ldraw/prepare-2.log"
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 16.12952640512958,
+        "resourceGuard": {
+          "fastFreeBytes": 16687153152,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 2759098368,
+          "minimumAvailableMemoryBytes": 2147483648,
+          "loadAverage": [
+            2.9482421875,
+            2.0087890625,
+            1.54638671875
+          ],
+          "fiveMinuteLoadMaximum": 8,
+          "lockAcquired": true,
+          "timeoutSeconds": 60
+        },
+        "log": "/mnt/storage/brickwright-cycle63-ldraw/prepare-3.log"
+      }
+    ],
+    "focused": [
+      {
+        "command": [
+          "npx",
+          "vitest",
+          "run",
+          "tests/model-library-ldraw.test.ts",
+          "tests/model-library-source-bundle.test.ts",
+          "tests/library-preview-selection.test.ts"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 6.606026042019948,
+        "resourceGuard": {
+          "fastFreeBytes": 16686813184,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 5220282368,
+          "minimumAvailableMemoryBytes": 2147483648,
+          "loadAverage": [
+            2.55859375,
+            2.40576171875,
+            1.75048828125
+          ],
+          "fiveMinuteLoadMaximum": 8,
+          "lockAcquired": true,
+          "timeoutSeconds": 45
+        },
+        "log": "/mnt/storage/brickwright-cycle63-ldraw/focused-0.log"
+      }
+    ],
+    "browser": [
+      {
+        "command": [
+          "npx",
+          "playwright",
+          "test",
+          "tests/browser/model-library-ldraw.spec.ts",
+          "--reporter=line"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 40.6176315988414,
+        "resourceGuard": {
+          "fastFreeBytes": 16686800896,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 5198770176,
+          "minimumAvailableMemoryBytes": 2147483648,
+          "loadAverage": [
+            0.88671875,
+            1.93701171875,
+            1.63623046875
+          ],
+          "fiveMinuteLoadMaximum": 8,
+          "lockAcquired": true,
+          "timeoutSeconds": 120
+        },
+        "log": "/mnt/storage/brickwright-cycle63-ldraw/browser-0.log"
+      }
+    ],
+    "reproduction": [
+      {
+        "command": [
+          "node",
+          "scripts/generate-ldraw-editor-library.mjs",
+          "--check"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 0.4355546429287642,
+        "resourceGuard": {
+          "fastFreeBytes": 16681926656,
+          "minimumExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4802310144,
+          "minimumAvailableMemoryBytes": 2147483648,
+          "loadAverage": [
+            1.51904296875,
+            1.57861328125,
+            1.5498046875
+          ],
+          "fiveMinuteLoadMaximum": 8,
+          "lockAcquired": true,
+          "timeoutSeconds": 15
+        },
+        "log": "/mnt/storage/brickwright-cycle63-ldraw/reproduction-0.log"
+      }
+    ]
+  },
+  "focusedTestLog": "\n RUN  v4.1.12 /mnt/volume1/code/brickwright-cad\n\n\n Test Files  3 passed (3)\n      Tests  10 passed (10)\n   Start at  06:31:11\n   Duration  3.54s (transform 2.74s, setup 0ms, import 4.60s, tests 284ms, environment 0ms)\n\n",
+  "browserTestLog": "[WebServer] (node:2719801) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)\n\n\nRunning 4 tests using 1 worker\n\n(node:2719820) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\n\n[1/4] [chromium] \u203a tests/browser/model-library-ldraw.spec.ts:9:1 \u203a authored LDraw tile preview and verified mesh insert offline with provenance and history\n[2/4] [chromium] \u203a tests/browser/model-library-ldraw.spec.ts:21:1 \u203a local STL hash mismatch preserves the project before insertion\n(node:2720008) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\n\n[3/4] [ipad-webkit] \u203a tests/browser/model-library-ldraw.spec.ts:9:1 \u203a authored LDraw tile preview and verified mesh insert offline with provenance and history\n[4/4] [ipad-webkit] \u203a tests/browser/model-library-ldraw.spec.ts:21:1 \u203a local STL hash mismatch preserves the project before insertion\n  4 passed (39.0s)\n",
+  "initialResourceRefusal": {
+    "task": "LATESTUSER bounded task1",
+    "candidateID": "corpus-ldraw-6934",
+    "status": "BLOCKED at focused-test-start resource check; completed gates retained",
+    "sourceID": "parts/6934.dat",
+    "sourceSha256": "a5b599ccc9e7979c4cc2bc72e2b4705eb1f5954c6a82d2761ce22063a3ea4e17",
+    "dependencyClosure": {
+      "format": "brickwright-ldraw-bundle",
+      "version": 1,
+      "rootPath": "parts/6934.dat",
+      "dependencies": [
+        {
+          "path": "p/box5.dat",
+          "file": {
+            "path": "sources/ldraw/p/box5.dat",
+            "bytes": 963,
+            "sha256": "ccb7b8a1d36692335b10ea6aa196849afcad4b15331683ed8112a10b50977318",
+            "format": "ldraw"
+          },
+          "author": "James Jessiman",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat",
+          "sourceRevision": {
+            "repositoryUrl": "https://github.com/CrispStrobe/brickwright-lite",
+            "commit": "43f534195db2dcfa072a68b17654fad4d14a7c08"
+          },
+          "licence": {
+            "spdx": "CC-BY-4.0",
+            "scope": "asset",
+            "attribution": "James Jessiman. LDraw.org Official Parts Library. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat. Creative Commons Attribution 4.0 International: https://creativecommons.org/licenses/by/4.0/. Original file and its !HISTORY contributor credits retained. Source unchanged; geometry conversion and nominal unit/axis changes described with the asset.",
+            "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/p/box5.dat",
+            "capturedOn": "2026-11-15",
+            "review": "accepted",
+            "reviewer": "Codex exact staged source, author, per-file CC-BY-4.0 grant and complete two-file closure review"
+          }
+        }
+      ]
+    },
+    "licence": {
+      "spdx": "CC-BY-4.0",
+      "scope": "asset",
+      "attribution": "Tore Eriksson [Tore_Eriksson], with box5 primitive by James Jessiman; retained history credits PTadmin, guyvivan, cwdee, sbliss and Philo. LDraw.org Official Parts Library. Source: https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/6934.dat. Creative Commons Attribution 4.0 International: https://creativecommons.org/licenses/by/4.0/. Original file and its !HISTORY contributor credits retained. Source unchanged; geometry conversion and nominal unit/axis changes described with the asset.",
+      "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-lite/43f534195db2dcfa072a68b17654fad4d14a7c08/overlay/scratch-gui/static/ldraw/parts/6934.dat",
+      "capturedOn": "2026-11-15",
+      "review": "accepted",
+      "reviewer": "Codex exact staged source, author, per-file CC-BY-4.0 grant and complete two-file closure review",
+      "localEvidence": [
+        {
+          "path": "evidence/ldraw-CC-BY-4.0.txt",
+          "bytes": 18657,
+          "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+          "format": "text"
+        },
+        {
+          "path": "evidence/ldraw-CAreadme.txt",
+          "bytes": 4151,
+          "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+          "format": "text"
+        }
+      ]
+    },
+    "gates": {
+      "sourceClosureAndGrant": "PASS",
+      "mesh": "PASS",
+      "closedPositiveVolume": "PASS",
+      "triangles": 28,
+      "nativeEditorHistoryRoundTrip": "PASS",
+      "catalogueSTLInsertionInPreviewPath": "PASS",
+      "previewChromiumRaster": "PASS",
+      "packageTypecheck": "PASS",
+      "standaloneTypecheckAndProductionBuild": "PASS",
+      "focusedTests": "NOT RUN: resource guard before command",
+      "interactiveBrowserEditor": "NOT RUN",
+      "localMismatchBeforeInsertion": "NOT RUN"
+    },
+    "actualFirstFailingAssertion": {
+      "path": "/mnt/storage/brickwright-cycle63-ldraw/validate.py:15",
+      "expression": "mem['MemAvailable'] > 2*1024**3",
+      "observedAvailableBytes": 1984524288,
+      "minimumExclusiveAvailableBytes": 2147483648,
+      "stage": "before npx vitest run tests/model-library-ldraw.test.ts tests/model-library-source-bundle.test.ts tests/library-preview-selection.test.ts"
+    },
+    "proof": {
+      "meshResult": "/mnt/storage/brickwright-cycle63-ldraw/mesh.json",
+      "completedCommands": "/mnt/storage/brickwright-cycle63-ldraw/prepare-validation.json",
+      "previewKey": "a5b599ccc9e7979c4cc2bc72e2b4705eb1f5954c6a82d2761ce22063a3ea4e17",
+      "previewPresent": true,
+      "previewCount": 150,
+      "meshSha256": "02e1f0467c9744db98226db1a5e45de1597c54f09cdfdcbaf33b95bd3865288b"
+    },
+    "deliveryBoundary": "Local candidate integrated; main independently remains110/108/149. Final qualification not claimed before mismatch/browser tests."
+  },
+  "scope": "One authored part, no fixtures. Existing guards/defaults/compiler/kernel/package lock unchanged. Local candidate only; main delivery110/108/149 until merged. No physical or collision qualification.",
+  "stagedBinding": "All17 tested owned-file SHA-256 values verified against staged Git blobs before commit.",
+  "whitespaceCheck": "Product/test/generated JSON changes pass git diff --cached --check. Four exact archival source/legal text files excluded: original CRLF/trailing whitespace and full licence trailing blank retained byte-for-byte to preserve pinned hashes."
+}
