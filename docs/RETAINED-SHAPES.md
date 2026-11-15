@@ -92,3 +92,17 @@ subtraction, or Subtract explicitly. Source/history tests preserve a retained
 cutter inside a boolean; Jolt ray tests check through passages and the actual
 recess shoulder/taper in a cut plate. Boss ray tests check the bore and rib
 height, including edited resolution, no-rib and full-height-rib cases.
+
+### Integration regression: cylinder origins
+
+The concurrent origin-preserving cylinder change exposed a compatibility issue:
+applying the identity globally changed previously qualified CSG triangulations,
+including the original example boss/hub and imported Sign01. The engine now keeps
+its established construction first. If a code construction with a uniform
+origin-based cylinder exports distinct manifold vertices at identical Float32
+coordinates, it retries once with the mathematically equivalent direct-origin
+cylinder construction. This is not tolerance snapping or a mesh-welding repair.
+An actual representable gap stays open. The original 34 example outputs and all
+102 reviewed corpus outputs reproduce byte-for-byte, including the newly closed
+Sign03. The retry does not certify arbitrary output; normal export/physics
+qualification still applies. Only affected constructions pay for the second pass.
