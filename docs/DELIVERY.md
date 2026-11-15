@@ -859,3 +859,30 @@ and general constraints remain separate work.
 exact checkpoints, log hashes, the initial integration failure and its resolution,
 and the scope of browser/physics checks. iPad build 18 remains the prior WLAN
 delivery whose launch the owner deferred; this pass updates the Mac installation.
+
+
+## 2026-11-15 — Mac 34: retained curves and vessels
+
+Mac build 34 is installed and running from clean source
+`d6e3f2d77e23f4b1e696785d5647e031b85d4d8c`; the live native receipt matches.
+Curved cones, hemispheres, paraboloids, vases, teardrop cutters and finishing
+washers now retain their design inputs across Properties, model source, MCP and
+revisions. Vases have a smooth profile and explicit radial wall/floor thickness;
+washer seats derive live depth from their included angle. Existing saved meshes
+remain unchanged until explicit regeneration. The parameter gap is now 16.
+
+The edited-geometry checks found and closed collision issues with long profiles,
+microscopic tip pieces and common boundaries between radial collision sectors.
+Bounded candidate simplification, qualified sector overlap and an inscribed vase
+floor core keep the existing Jolt settings and qualification budgets. See
+[definitions and collision boundaries](CURVED-SHAPES.md).
+
+The full suite passes 1,011 tests with one existing skip across 98 files. Six
+distinct browser workflows passed across Chromium/iPad WebKit, with initial
+Chromium automation/deadline failures and their bounded reruns preserved in
+[evidence](evidence/curved-hollow-parameters-2026-11-15.json). German validation
+covers 1,473 messages. All 59 catalogue defaults qualify or are reference-excluded,
+with zero blocked entries. Eleven edited/cut Jolt cases verify cavities, floor
+and rim support, seats and a teardrop passage. Native smoke checks passed.
+These are rigid-preview checks, not manufacturing or general mechanical-fit
+certification.
