@@ -11,6 +11,8 @@ const paths: Record<string, string> = {
   Sphere: 'M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0 M2 12h20 M12 2c-7 6-7 14 0 20 7-6 7-14 0-20',
   Move: 'M12 2v20 M2 12h20 M8 6l4-4 4 4 M8 18l4 4 4-4 M6 8l-4 4 4 4 M18 8l4 4-4 4',
   Rotate: 'M20 8A9 9 0 1 0 21 16 M20 2v6h-6',
+  'Keep proportions': 'M9 15l6-6 M8 17l-2 2a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0 M16 7l2-2a4 4 0 0 1 6 6l-5 5a4 4 0 0 1-6 0',
+  'Resize about center': 'M2 7V2h5 M17 2h5v5 M22 17v5h-5 M7 22H2v-5 M8 12h8 M12 8v8',
   Scale: 'M3 14v7h7 M21 10V3h-7 M3 21l7-7 M21 3l-7 7',
   Union: 'M3 3h11v5h7v13H8v-7H3Z',
   Subtract: 'M3 3h12v5H8v7H3Z M8 8h13v13H8Z',

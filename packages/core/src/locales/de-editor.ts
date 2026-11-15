@@ -428,5 +428,15 @@ export const messages: Record<string,string> = {
   "gear": "Zahnrad",
   "belt": "Riemen",
   "face-coupling": "Stirnkupplung",
-  "sliding-fit": "Schiebepassung"
+  "sliding-fit": "Schiebepassung",
+  "Fine adjustments: Shift for move/rotate; Ctrl/⌘ for resize. Shift resizes proportionally; Alt resizes about the center.": "Feine Anpassung: Umschalt beim Verschieben/Drehen; Strg/⌘ beim Ändern der Größe. Umschalt skaliert proportional, Alt vom Mittelpunkt aus.",
+  "Resize selection": "Auswahlgröße ändern",
+  "Keep proportions": "Proportionen beibehalten",
+  "Resize about center": "Größe vom Mittelpunkt aus ändern",
+  "Drag to resize · Shift: proportions · Alt: center · Ctrl/⌘: fine": "Ziehen zum Ändern der Größe · Umschalt: proportional · Alt: Mittelpunkt · Strg/⌘: fein",
+  "Resize {0}": "Größe ändern: {0}",
+  "Resize {0} (mm)": "Größe {0} (mm)",
+  "Resize must keep every dimension positive": "Alle Abmessungen müssen positiv bleiben",
+  "Enter a positive dimension": "Eine positive Abmessung eingeben"
+
 };

@@ -11,6 +11,9 @@ import {assertDrivenEdit,isCube,constrainCubeTransform,t} from '@brickwright/cad
 import type { CadSession, Transform, Vec3 } from '@brickwright/cad-core';
 import type { GeometryResult } from '@brickwright/cad-geometry';
 import { TOUCH_SLOP_PX, createTouchTracker } from './vendor/touch-gestures.js';
+import {mountResizeControls} from './resize-controls.js';
+import type {ResizeFrame} from './resize-math.js';
+import {resizedTransforms} from './resize-math.js';
 import {scalePivotRotation,applyGizmoDelta,transformMatrix} from './transform-selection.js';
 import type {TransformPreview,TransformAxisAnchor} from './transform-readout.js';
 import { snapDelta } from './vendor/transform-math.js';
@@ -51,7 +54,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const gizmo = new PrecisionControls(camera, canvas); gizmo.setSize(0.85); gizmo.setSpace('world'); scene.add(gizmo.getHelper());
   let navigationPreset:NavigationPreset='tinkercad',spaceHeld=false;let cameraDrag:{id:number;x:number;y:number;kind:'pan'|'orbit';gizmoEnabled:boolean}|undefined;
   let fineEnabled=false,shiftHeld=false;gizmo.isFine=()=>fineEnabled||shiftHeld;
-  gizmo.setTranslationSnap(1); gizmo.setRotationSnap(15 * RAD); gizmo.setScaleSnap(0.1);
+  gizmo.setTranslationSnap(1); gizmo.setRotationSnap(15 * RAD); gizmo.setScaleSnap(null);
   const meshes = new Map<string, THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>>();
   const outlines = new Map<string, THREE.LineSegments>(); const ray = new THREE.Raycaster(); const pointer = new THREE.Vector2();
   const marquee=document.createElement('div');marquee.className='cad-selection-rectangle';marquee.hidden=true;container.append(marquee);
@@ -63,6 +66,9 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const selectionBoxes=new Map<string,THREE.BoxHelper>();let activeMode:'select'|'translate'|'rotate'|'scale'='select';
   let directDrag:{pointerId:number;start:THREE.Vector3;plane:THREE.Plane;transforms:Map<string,Transform>;offset:Vec3;moved:boolean;precision:ReturnType<typeof precisionTracker>;usedFine:boolean}|null=null;
   let disposed = false; let selected: string[] = []; let drag: { matrix: THREE.Matrix4; transforms: Map<string, Transform> } | null = null; let gridStep = 1; let multiSelect = false; let viewListener: ((view: ViewDirection) => void) | undefined;
+  let resizeControls:ReturnType<typeof mountResizeControls>|undefined,resizeFrame:ResizeFrame|undefined,resizeDelta:THREE.Matrix4|undefined,resizeFactors:Vec3=[1,1,1];
+  const scaleFactors=()=>resizeDelta?resizeFactors:pivot.scale.toArray() as Vec3;
+  const transformMode=()=>resizeDelta?'scale' as const:activeMode==='select'?'translate' as const:activeMode;
   let previewListener:((preview:TransformPreview)=>void)|undefined;let annotationsVisible=false;
   // Project an original SVG cube from the camera basis. The controls rotate with
   // the actual camera, including free orbit, without a second WebGL context.
@@ -94,10 +100,10 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     const exact = Object.entries(directions).find(([name, d]) => name !== 'iso' && new THREE.Vector3(...d).normalize().dot(toward) > 0.99999)?.[0];
     const view = (exact ?? 'iso') as ViewDirection; canvas.dataset.view = view; viewListener?.(view); canvas.dataset.projection = camera instanceof THREE.OrthographicCamera ? 'orthographic' : 'perspective';
   }
-  const draw = () => { if (!disposed) {canvas.dataset.cameraPosition=JSON.stringify(camera.position.toArray());canvas.dataset.cameraTarget=JSON.stringify(orbit.target.toArray());canvas.dataset.cameraZoom=String(camera instanceof THREE.OrthographicCamera?camera.zoom:camera.position.distanceTo(orbit.target));canvas.dataset.navigation=navigationPreset; canvas.dataset.transformAxis=gizmo.axis??'';surfacePlacement.refresh();updateCube();publishPreview();const distance=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:camera.position.distanceTo(orbit.target);grid.material.opacity=THREE.MathUtils.clamp((240-distance)/200,0,.4);for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
+  const draw = () => { if (!disposed) {canvas.dataset.cameraPosition=JSON.stringify(camera.position.toArray());canvas.dataset.cameraTarget=JSON.stringify(orbit.target.toArray());canvas.dataset.cameraZoom=String(camera instanceof THREE.OrthographicCamera?camera.zoom:camera.position.distanceTo(orbit.target));canvas.dataset.navigation=navigationPreset; canvas.dataset.transformAxis=gizmo.axis??'';surfacePlacement.refresh();updateCube();resizeControls?.update();publishPreview();const distance=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom:camera.position.distanceTo(orbit.target);grid.material.opacity=THREE.MathUtils.clamp((240-distance)/200,0,.4);for(const helper of selectionBoxes.values())helper.update(); renderer.render(scene, camera); } };
   function publishPreview(){
     if(!previewListener)return;let poses=selected.filter(id=>session.state.document.roots.includes(id)).map(id=>({id,transform:structuredClone(session.state.document.nodes[id].transform)})),valid=true,warning:string|undefined;
-    if(drag){try{const d=delta();poses=[...drag.transforms].map(([id,original])=>({id,transform:constrainCubeTransform(session.state.document.nodes[id],applyGizmoDelta(original,d,activeMode==='select'?'translate':activeMode,pivot.scale.toArray() as Vec3))}));}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}}
+    if(drag){try{const d=delta();poses=[...drag.transforms].map(([id,original])=>({id,transform:constrainCubeTransform(session.state.document.nodes[id],applyGizmoDelta(original,d,transformMode(),scaleFactors()))}));}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}}
     else if(directDrag)poses=[...directDrag.transforms].map(([id,t])=>({id,transform:{...t,position:t.position.map((v,i)=>v+directDrag!.offset[i]) as Vec3}}));
     if(drag||directDrag?.moved)try{for(const {id,transform} of poses)assertDrivenEdit(session.state.document,{...session.state.document.nodes[id],transform});}catch(error){valid=false;warning=error instanceof Error?error.message:String(error);}
     const box=new THREE.Box3();for(const {id} of poses){const mesh=meshes.get(id);if(mesh)box.union(new THREE.Box3().setFromObject(mesh,true));}
@@ -128,14 +134,22 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
         const dx=point[0]-origin[0],dy=point[1]-origin[1],length=Math.hypot(dx,dy);anchors.push({axis,point,direction:[dx/(length||1),dy/(length||1)],visible:best>-Infinity&&length>12});
       });
     }
-    previewListener({mode:activeMode,poses,dragging:!!drag||!!directDrag?.moved,valid,warning,axes:anchors,...(!box.isEmpty()?{bounds:{min:box.min.toArray() as Vec3,max:box.max.toArray() as Vec3}}:{})});
+    previewListener({mode:activeMode,resizing:!!resizeDelta,poses,dragging:!!drag||!!directDrag?.moved,valid,warning,axes:anchors,...(!box.isEmpty()?{bounds:{min:box.min.toArray() as Vec3,max:box.max.toArray() as Vec3}}:{})});
+  }
+  function measureResizeFrame(roots:string[]):ResizeFrame|undefined{
+    if(!roots.length)return;const poses=roots.map(id=>session.state.document.nodes[id].transform),q=scalePivotRotation(poses),inverse=new THREE.Matrix4().makeRotationFromQuaternion(q.clone().invert()),box=new THREE.Box3(),point=new THREE.Vector3();
+    for(const id of roots){const mesh=meshes.get(id)!;mesh.updateMatrixWorld();const matrix=inverse.clone().multiply(mesh.matrixWorld),position=mesh.geometry.getAttribute('position');for(let i=0;i<position.count;i++)box.expandByPoint(point.fromBufferAttribute(position,i).applyMatrix4(matrix));}
+    const size=box.getSize(new THREE.Vector3()).toArray() as Vec3;if(size.some(v=>v<=1e-8))return;const center=box.getCenter(new THREE.Vector3()).applyQuaternion(q).toArray() as Vec3;
+    const first=new THREE.Quaternion().setFromEuler(new THREE.Euler(...poses[0].rotation.map(v=>v*RAD) as Vec3,'ZYX')),mixed=poses.some(p=>Math.abs(first.dot(new THREE.Quaternion().setFromEuler(new THREE.Euler(...p.rotation.map(v=>v*RAD) as Vec3,'ZYX'))))<1-1e-12);
+    return {center,size,rotation:q,ids:[...roots],uniformOnly:mixed||roots.some(id=>isCube(session.state.document.nodes[id]))};
   }
   const placeGizmo = () => {
     if (drag) return;
-    const roots = selected.filter(id => session.state.document.roots.includes(id) && meshes.has(id));
-    if (!roots.length || activeMode==='select') { gizmo.detach(); draw(); return; }
+    const roots = selected.filter(id => session.state.document.roots.includes(id) && meshes.has(id)&&!session.state.document.nodes[id].reference);
+    resizeFrame=measureResizeFrame(roots);
+    if (!roots.length || activeMode==='select'||activeMode==='scale') { gizmo.detach(); draw(); return; }
     const box = new THREE.Box3(); for (const id of roots) box.union(new THREE.Box3().setFromObject(meshes.get(id)!));
-    pivot.position.copy(box.getCenter(new THREE.Vector3())); pivot.quaternion.copy(activeMode==='scale'?scalePivotRotation(roots.map(id=>session.state.document.nodes[id].transform)):new THREE.Quaternion()); pivot.scale.set(1, 1, 1); pivot.updateMatrixWorld(); gizmo.attach(pivot); draw();
+    pivot.position.copy(box.getCenter(new THREE.Vector3())); pivot.quaternion.identity(); pivot.scale.set(1, 1, 1); pivot.updateMatrixWorld(); gizmo.attach(pivot); draw();
   };
   const onDrag = (event: { value: unknown }) => { orbit.enabled = !event.value; };
   const startTransform = () => {
@@ -143,13 +157,13 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     for (const id of selected) if (session.state.document.roots.includes(id)) transforms.set(id, structuredClone(session.state.document.nodes[id].transform));
     pivot.updateMatrixWorld(); drag = { matrix: pivot.matrixWorld.clone(), transforms };
   };
-  const delta = () => { pivot.updateMatrixWorld(); return new THREE.Matrix4().multiplyMatrices(pivot.matrixWorld, drag!.matrix.clone().invert()); };
+  const delta = () => {if(resizeDelta)return resizeDelta.clone(); pivot.updateMatrixWorld(); return new THREE.Matrix4().multiplyMatrices(pivot.matrixWorld, drag!.matrix.clone().invert()); };
   const previewTransform = () => {
     if (!drag) return; const d = delta();
-    for (const id of drag.transforms.keys()) { const mesh = meshes.get(id); if (mesh) { mesh.matrixAutoUpdate = false; try{const node=session.state.document.nodes[id],original=drag.transforms.get(id)!;const next=isCube(node)?constrainCubeTransform(node,applyGizmoDelta(original,d,activeMode==='select'?'translate':activeMode,pivot.scale.toArray() as Vec3)):undefined;mesh.matrix.copy(next?transformMatrix(next).multiply(transformMatrix(original).invert()):d);}catch{mesh.matrix.copy(d);} mesh.matrixWorldNeedsUpdate = true; } }
+    for (const id of drag.transforms.keys()) { const mesh = meshes.get(id); if (mesh) { mesh.matrixAutoUpdate = false; try{const node=session.state.document.nodes[id],original=drag.transforms.get(id)!;const next=isCube(node)?constrainCubeTransform(node,applyGizmoDelta(original,d,transformMode(),scaleFactors())):undefined;mesh.matrix.copy(next?transformMatrix(next).multiply(transformMatrix(original).invert()):d);}catch{mesh.matrix.copy(d);} mesh.matrixWorldNeedsUpdate = true; } }
     draw();
   };
-  const cancelTransform = () => {endBox();
+  const cancelTransform = () => {if(resizeControls?.active){resizeControls.cancel();return;}endBox();resizeDelta=undefined;
     if(directDrag){for(const id of directDrag.transforms.keys()){const mesh=meshes.get(id);if(mesh){mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;}}directDrag=null;orbit.enableRotate=true;draw();}
     if (!drag) return;
     for (const id of drag.transforms.keys()) { const mesh = meshes.get(id); if (mesh) { mesh.matrix.identity(); mesh.matrixWorldNeedsUpdate = true; } }
@@ -158,9 +172,9 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const endTransform = () => {
     if (!drag) return; const d = delta(); const updates: { id: string; transform: Transform }[] = [];
     try {
-      for (const [id, original] of drag.transforms) updates.push({id,transform:constrainCubeTransform(session.state.document.nodes[id],applyGizmoDelta(original,d,activeMode==='select'?'translate':activeMode,pivot.scale.toArray() as Vec3))});
+      for (const [id, original] of drag.transforms) updates.push({id,transform:constrainCubeTransform(session.state.document.nodes[id],applyGizmoDelta(original,d,transformMode(),scaleFactors()))});
     } catch(error){cancelTransform();onError(error);return;}
-    drag = null;
+    drag = null;resizeDelta=undefined;
     try { session.transform(updates); draw(); } catch (e) { for (const mesh of meshes.values()) { mesh.matrix.identity(); mesh.matrixWorldNeedsUpdate = true; } onError(e); placeGizmo(); }
   };
   gizmo.addEventListener('dragging-changed', onDrag); gizmo.addEventListener('mouseDown', startTransform); gizmo.addEventListener('objectChange', previewTransform); gizmo.addEventListener('mouseUp', endTransform);
@@ -248,6 +262,14 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     if (camera instanceof THREE.OrthographicCamera) { const half = radius * 1.2 / Math.min(1, aspect); camera.top = half; camera.bottom = -half; camera.left = -half * aspect; camera.right = half * aspect; camera.zoom = 1; camera.updateProjectionMatrix(); }
     camera.position.copy(center).addScaledVector(dir.normalize(), distance); orbit.target.copy(center); orbit.update(); draw();
   }
+  resizeControls=mountResizeControls(container,{
+    frame:()=>!surfacePlacement.active&&!directDrag?.moved&&!boxSelect&&!cameraDrag&&(activeMode==='select'||activeMode==='scale')?resizeFrame:undefined,
+    project:p=>{const v=p.clone().project(camera);return [(v.x+1)*container.clientWidth/2,(1-v.y)*container.clientHeight/2,v.z];},
+    ray:(x,y)=>{const r=canvas.getBoundingClientRect(),caster=new THREE.Raycaster();caster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);return caster.ray;},camera:()=>camera,grid:()=>gridStep,fine:()=>fineEnabled,
+    begin:()=>{cancelTransform();const transforms=new Map<string,Transform>();for(const id of resizeFrame?.ids??[])transforms.set(id,structuredClone(session.state.document.nodes[id].transform));drag={matrix:new THREE.Matrix4(),transforms};resizeDelta=new THREE.Matrix4();resizeFactors=[1,1,1];orbit.enabled=false;},
+    preview:r=>{if(!drag)return;const updates=resizedTransforms([...drag.transforms].map(([id,transform])=>({id,transform})),r);for(const u of updates)assertDrivenEdit(session.state.document,{...session.state.document.nodes[u.id],transform:u.transform});resizeDelta=r.delta;resizeFactors=r.factors;previewTransform();},
+    commit:r=>{resizeFrame=r.frame;orbit.enabled=true;endTransform();},cancel:()=>{orbit.enabled=true;cancelTransform();},error:onError,
+  });
   draw();
   return { canvas, update, setSelection, frame, setView, cancelTransform,get interacting(){return surfacePlacement.active||!!boxSelect||!!drag||!!directDrag?.moved;},
     beginPlacement(){if(surfacePlacement.active)endPlacement(false);cancelTransform();placementControls={rotate:orbit.enableRotate,gizmo:gizmo.enabled};surfacePlacement.begin();orbit.enableRotate=false;gizmo.enabled=false;gizmo.getHelper().visible=false;draw();},
@@ -286,6 +308,6 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       const offset = snapDelta([dx, dy, dz], (gridStep || .1)/(fine?10:1));
       session.transform(selected.filter(id => session.state.document.roots.includes(id)).map(id => { const transform = structuredClone(session.state.document.nodes[id].transform); transform.position = transform.position.map((v, i) => v + offset[i]) as Vec3; return { id, transform }; }));
     },
-    dispose() {endPlacement(false);surfacePlacement.dispose(); endBox();marquee.remove();disposed = true;canvas.removeEventListener('wheel',wheel,true);canvas.removeEventListener('keydown',cameraKey);for(const name of ['gesturestart','gesturechange','gestureend'])canvas.removeEventListener(name,gesture);window.removeEventListener('brickwright-camera-input',nativeGesture);window.removeEventListener('blur',resetCameraKeys);window.removeEventListener('keyup',releaseShift); resize.disconnect(); touches.reset(); canvas.removeEventListener('pointerdown', onDown,true); canvas.removeEventListener('pointermove', onMove,true); canvas.removeEventListener('pointerup', onUp,true); canvas.removeEventListener('pointercancel', onCancel); gizmo.removeEventListener('dragging-changed', onDrag); gizmo.removeEventListener('mouseDown', startTransform); gizmo.removeEventListener('objectChange', previewTransform); gizmo.removeEventListener('mouseUp', endTransform); gizmo.removeEventListener('change', draw); orbit.removeEventListener('change', draw); gizmo.dispose(); orbit.dispose(); clear(); for (const object of [grid, majorGrid, border, plate, axes]) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()); } for (const sprite of textSprites) { sprite.material.map?.dispose(); sprite.material.dispose(); } renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); cube.remove(); },
+    dispose() {resizeControls?.dispose();resizeControls=undefined;endPlacement(false);surfacePlacement.dispose(); endBox();marquee.remove();disposed = true;canvas.removeEventListener('wheel',wheel,true);canvas.removeEventListener('keydown',cameraKey);for(const name of ['gesturestart','gesturechange','gestureend'])canvas.removeEventListener(name,gesture);window.removeEventListener('brickwright-camera-input',nativeGesture);window.removeEventListener('blur',resetCameraKeys);window.removeEventListener('keyup',releaseShift); resize.disconnect(); touches.reset(); canvas.removeEventListener('pointerdown', onDown,true); canvas.removeEventListener('pointermove', onMove,true); canvas.removeEventListener('pointerup', onUp,true); canvas.removeEventListener('pointercancel', onCancel); gizmo.removeEventListener('dragging-changed', onDrag); gizmo.removeEventListener('mouseDown', startTransform); gizmo.removeEventListener('objectChange', previewTransform); gizmo.removeEventListener('mouseUp', endTransform); gizmo.removeEventListener('change', draw); orbit.removeEventListener('change', draw); gizmo.dispose(); orbit.dispose(); clear(); for (const object of [grid, majorGrid, border, plate, axes]) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()); } for (const sprite of textSprites) { sprite.material.map?.dispose(); sprite.material.dispose(); } renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); cube.remove(); },
   };
 }
