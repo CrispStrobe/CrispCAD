@@ -114,3 +114,8 @@ it('preserves angular taper boundaries and a bore in real Jolt geometry',async()
 it('refuses an angular-bore collider that fails the unchanged volume gate',async()=>{
  const s=createCadSession();try{s.addCode({version:1,language:'brickwright-cad-script',parameters:{},source:'return subtract(ellipticFrustum(5,3,2,4,8,32,0,90),move([1,1,0],cylinder(.25,20,24)));'});const g=kernel.evaluate(s.state.document);expect(g.volume).toBeGreaterThan(70);await expect(prepareDocumentCollisions(s.state.document,g,kernel)).rejects.toThrow('collision approximation rejected');}finally{s.dispose();}
 });
+
+it('drives a hinge with finite torque, reverses, brakes and rejects invalid commands',async()=>{
+ const doc=structuredClone(createPresetDocument('hinge'));for(const id of doc.roots)doc.nodes[id].transform.position[2]=70;doc.nodes[doc.roots[0]].physics!.motion='static';const before=JSON.stringify(doc),result=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,result,kernel),world=await createPhysicsWorld(doc,result,prepared,{J,ground:false});
+ try{const id=doc.joints!.find(j=>j.kind==='hinge')!.id;world.setHingeMotor(id,1,.02);for(let i=0;i<40;i++)world.step();const a=world.hingeAngle(id);expect(Math.abs(a)).toBeGreaterThan(.05);world.setHingeMotor(id,-1,.02);for(let i=0;i<80;i++)world.step();expect(world.hingeAngle(id)*Math.sign(a)).toBeLessThan(0);world.stopHingeMotor(id);for(let i=0;i<40;i++)world.step();expect(Math.hypot(...world.angularVelocity(doc.roots[1]))).toBeLessThan(.2);expect(()=>world.setHingeMotor(id,NaN,.02)).toThrow();expect(()=>world.setHingeMotor(id,1,0)).toThrow();expect(()=>world.setHingeMotor('absent',1,.02)).toThrow();expect(JSON.stringify(doc)).toBe(before);}finally{world.dispose();}
+});

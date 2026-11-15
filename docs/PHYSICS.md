@@ -1,9 +1,16 @@
 # CAD → Jolt contract and qualification
 
-This is an optional headless adapter, not a completed simulation workspace.
-The editor supplies independent solids; the standalone app does not yet expose
-a simulation tab. Do not confuse a catalog mesh or a rigid preview with a
-validated manufactured mechanism.
+The editor's **Simulate** control opens a transient assembly preview in both
+standalone CAD and the shared Brickwright SDK. Existing hinge joints have speed
+(degrees/s), finite torque limit (Nm), and angle readouts. Run, Pause, Stop motors,
+and Reset operate in a dedicated worker at 200 Hz. The first body can explicitly
+be fixed as a base (enabled by default). Closing/resetting restores the design;
+editing invalidates the preview, and simulation never writes document/history.
+The preview pauses when the editor is hidden or the window loses focus.
+
+Collision geometry still passes the qualified adapter below before simulation.
+Mate creation and robot-program/virtual-hub execution are separate future work;
+a running rigid assembly does not establish manufactured-mechanism accuracy.
 
 ## Implementation
 
@@ -106,10 +113,8 @@ for mechanism tests or iPad performance acceptance.
 - Surface native update/capacity errors and allocator telemetry before broad
   arbitrary-scene acceptance; the existing Jolt interface exposes a void Step.
   Native aborts require discarding the worker/module rather than continuing.
-- Interactive worker/session, play/pause/reset and pose display, with strict
-  edit/simulate ownership and no simulation state written into the design.
 - Mate placement and frame/clearance validation, fixed/hinge/slider constraints,
-  motors, limits and reaction-force/torque measurement.
+  mate authoring and reaction-force/torque measurement.
 - Gear, rack, lead-screw and belt coupling contracts, using the existing fork
   where its measured behavior fits. Tooth/belt templates are not already
   dimensionally or dynamically qualified just because their preview runs.

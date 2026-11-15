@@ -1,3 +1,4 @@
+import type {SimulationPose} from './simulation-protocol.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import * as THREE from 'three';
 import {selectionRectangle,projectedBoxIntersects} from './vendor/box-selection.js';
@@ -56,6 +57,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   let navigationPreset:NavigationPreset='tinkercad',spaceHeld=false;let cameraDrag:{id:number;x:number;y:number;kind:'pan'|'orbit';gizmoEnabled:boolean}|undefined;
   let fineEnabled=false,shiftHeld=false;gizmo.isFine=()=>fineEnabled||shiftHeld;
   gizmo.setTranslationSnap(1); gizmo.setRotationSnap(15 * RAD); gizmo.setScaleSnap(null);
+  let simulating=false;
   const meshes = new Map<string, THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>>();
   const outlines = new Map<string, THREE.LineSegments>(); const ray = new THREE.Raycaster(); const pointer = new THREE.Vector2();
   const marquee=document.createElement('div');marquee.className='cad-selection-rectangle';marquee.hidden=true;container.append(marquee);
@@ -147,6 +149,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   }
   const placeGizmo = () => {
     if (drag) return;
+    if(simulating){resizeFrame=undefined;gizmo.detach();return;}
     const roots = selected.filter(id => session.state.document.roots.includes(id) && meshes.has(id));
     resizeFrame=roots.some(id=>session.state.document.nodes[id].reference)?undefined:measureResizeFrame(roots);
     if (!roots.length || activeMode==='select'||activeMode==='scale'&&resizeStyle==='dimensions') { gizmo.detach(); draw(); return; }
@@ -197,6 +200,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const onDown = (e: PointerEvent) => {shiftHeld=e.shiftKey;canvas.dataset.fine=String(gizmo.isFine());
     canvas.focus({ preventScroll: true });
     const cameraAction=e.pointerType==='touch'?undefined:cameraPointerAction(e.button,e.shiftKey,e.altKey,e.ctrlKey,spaceHeld,navigationPreset);if(cameraAction&&!drag&&!directDrag){cameraDrag={id:e.pointerId,x:e.clientX,y:e.clientY,kind:cameraAction,gizmoEnabled:gizmo.enabled};orbit.enabled=false;gizmo.enabled=false;canvas.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();return;}
+    if(simulating)return;
     if (e.pointerType === 'touch') { touches.down({ id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp }); if (touches.count > 1) suppressTap = true; }
     if (!down) { down = { x: e.clientX, y: e.clientY, t: e.timeStamp, pointerId: e.pointerId }; if (e.pointerType !== 'touch') suppressTap = false; }
     if(surfacePlacement.active){surfacePlacement.move(e);draw();return;}
@@ -289,7 +293,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     commit:r=>{resizeFrame=r.frame;orbit.enabled=true;endTransform();},cancel:()=>{orbit.enabled=true;cancelTransform();},error:onError,
   });
   draw();
-  return { canvas, update, setSelection, frame, setView, cancelTransform,get interacting(){return surfacePlacement.active||!!boxSelect||!!drag||!!directDrag?.moved;},
+  return { setSimulationPoses(value:SimulationPose[]|null){cancelTransform();simulating=value!==null;gizmo.enabled=!simulating;for(const mesh of meshes.values()){mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;}for(const pose of value??[]){const mesh=meshes.get(pose.id);if(mesh){mesh.matrixAutoUpdate=false;mesh.matrix.compose(new THREE.Vector3(...pose.positionMm as [number,number,number]),new THREE.Quaternion(...pose.quaternion as [number,number,number,number]),new THREE.Vector3(1,1,1));mesh.matrixWorldNeedsUpdate=true;}}placeGizmo();draw();}, canvas, update, setSelection, frame, setView, cancelTransform,get interacting(){return surfacePlacement.active||!!boxSelect||!!drag||!!directDrag?.moved;},
     beginPlacement(){if(surfacePlacement.active)endPlacement(false);cancelTransform();placementControls={rotate:orbit.enableRotate,gizmo:gizmo.enabled};surfacePlacement.begin();orbit.enableRotate=false;gizmo.enabled=false;gizmo.getHelper().visible=false;draw();},
     setPlacementRole(value:'solid'|'hole'){surfacePlacement.setRole(value);draw();},
     setPlacementGeometry(result:GeometryResult){surfacePlacement.setGeometry(result);draw();},
