@@ -38,5 +38,5 @@ it('inserts the exact authored snapshot offline, verifies two bounded boxes anal
  }finally{session.dispose();}
 });
 it('reproduces only Bricks geometry and hash-verifies the unchanged97 earlier source qualifications',()=>{
- expect(execFileSync(process.execPath,['scripts/generate-corpus-editor-library.mjs','--check','--asset-id',raw.id],{encoding:'utf8',timeout:15000})).toContain('98 selected corpus sources complete');
+ expect(execFileSync(process.execPath,['scripts/generate-corpus-editor-library.mjs','--check','--asset-id',raw.id],{encoding:'utf8',timeout:15000})).toContain('99 selected corpus sources complete');
 },16000);

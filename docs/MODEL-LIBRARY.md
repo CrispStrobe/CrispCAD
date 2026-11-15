@@ -825,3 +825,25 @@ render-surface assemblies; these are unsupported closed-solid inputs, not a
 claim that the physical parts are defective. No facet repair, guessed caps,
 primitive substitution or relaxed tolerance is used. The existing111 records,
 222 source/derivative identities and150 preview values are retained unchanged.
+
+## Updated-code Arc01 admission
+
+The next archived-family pass rechecked24unshipped Angelo roots under the
+current integrated code. The authored `Asset_SCAD/Arc_01.scad` default now passes
+all gates with328triangles. Its exact original and derived STL are pinned; the
+existing generator can reproduce only this explicitly reviewed root while
+hash-verifying and reusing the prior98corpus records without rerendering them.
+No compiler/kernel/source/default/tolerance or guard change is part of this
+admission. Actual editable-source insertion, fresh topology, source/mesh hashes,
+project serialization/provenance, undo/redo and mismatch-before-evaluation refusal
+are checked. Chromium and iPad-WebKit each verify actual preview raster pixels
+and offline insertion/history with zero network requests.
+
+This adds one authored original beyond the129record/127STL/168preview checkpoint:
+the resulting local catalogue has130records/128distinctSTLs/169previews.
+The remaining24-root batch outcomes are two necessary byte exclusions, three
+actual size/triangle exclusions, six invalid/unsupported authored default-input
+cases, and twelve exported-topology failures whose source-versus-code cause is
+still provisional. Those failures are not labelled defective physical models.
+The next25StoneAgeLib demonstrations all exceed the unchanged32KiB source
+bound in necessary include subsets; this is not an archive-exhaustion claim.
