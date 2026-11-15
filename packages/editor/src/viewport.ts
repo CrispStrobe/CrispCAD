@@ -148,7 +148,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
         const dx=point[0]-origin[0],dy=point[1]-origin[1],length=Math.hypot(dx,dy);anchors.push({axis,point,direction:[dx/(length||1),dy/(length||1)],visible:best>-Infinity&&length>12});
       });
     }
-    previewListener({mode:activeMode,resizing:!!resizeDelta,dimensionHandles:resizeStyle==='dimensions',poses,dragging:!!drag||!!directDrag?.moved,valid,warning,axes:anchors,...(!box.isEmpty()?{bounds:{min:box.min.toArray() as Vec3,max:box.max.toArray() as Vec3}}:{})});
+    const screenCorners:THREE.Vector3[]=[];if(!box.isEmpty())for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z])screenCorners.push(new THREE.Vector3(x,y,z));const points=screenCorners.map(project),screenBounds=points.length?{left:Math.min(...points.map(p=>p[0])),right:Math.max(...points.map(p=>p[0])),top:Math.min(...points.map(p=>p[1])),bottom:Math.max(...points.map(p=>p[1]))}:undefined;
+    previewListener({screenBounds,mode:activeMode,resizing:!!resizeDelta,dimensionHandles:resizeStyle==='dimensions',poses,dragging:!!drag||!!directDrag?.moved,valid,warning,axes:anchors,...(!box.isEmpty()?{bounds:{min:box.min.toArray() as Vec3,max:box.max.toArray() as Vec3}}:{})});
   }
   function measureResizeFrame(roots:string[]):ResizeFrame|undefined{
     if(!roots.length)return;const poses=roots.map(id=>session.state.document.nodes[id].transform),q=scalePivotRotation(poses),inverse=new THREE.Matrix4().makeRotationFromQuaternion(q.clone().invert()),box=new THREE.Box3(),point=new THREE.Vector3();

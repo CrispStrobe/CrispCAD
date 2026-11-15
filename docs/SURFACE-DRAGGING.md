@@ -47,3 +47,17 @@ Tests compare cached bounds with direct vertex extrema, check unchanged scales
 and relative poses on top/wall/oblique surfaces, and verify a 100-event burst is
 coalesced while retaining its final target and one committed edit. These operation
 checks do not establish a universal frame rate on every model/device.
+
+
+## One annotation layer at a time
+
+Select/Resize shows physical dimensions around the selected footprint. Move and
+Rotate show optional axis values instead. A direct selection drag can show its
+live positions while the resize overlay is hidden. The optional classic scale
+gizmo retains scale-factor values. Properties remains available in all modes.
+Dimension numbers use compact widths based on their value. Labels follow the
+projected dimension/axis lines, stay outside the selected footprint, and avoid
+other numeric labels and resize-option buttons. If an edge-of-screen label has
+no usable space, it is hidden rather than clamped over the object. The thin-part
+regression checks a 29 × 29 × 2.9 mm body in both browsers, including small height
+labels that previously moved inward.
