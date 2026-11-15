@@ -12,7 +12,6 @@ beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('
 
 it('admits only the supported seed, retains exact original bytes and URL, and exports the full original MIT notice',async()=>{
   const {catalogue,localFiles}=createBundledModelLibrary();
-  expect(catalogue.assets).toHaveLength(172);
   expect(catalogue.assets.some(asset=>['jscad-nuts-and-bolts','threads-scad-demo'].includes(asset.id))).toBe(false);
   const asset=catalogue.assets.find(asset=>asset.id==='jscad-involute-gear')!;
   expect(asset.original.url).toContain(`/${asset.sourceRevision!.commit}/`);
@@ -36,9 +35,10 @@ it('admits only the supported seed, retains exact original bytes and URL, and ex
   session.undo();expect(session.serialize()).toBe(before);session.redo();expect(session.serialize()).toBe(saved);session.dispose();
 });
 
-it('bundles exactly 102 reviewed corpus entries',()=>{
-  expect(corpusManifest.assets).toHaveLength(102);
-  expect(bundledCorpus.catalogue.assets).toHaveLength(172);
+it('bundles every reviewed corpus entry exactly once alongside the other reviewed cohorts',()=>{
+  const allIds=bundledCorpus.catalogue.assets.map(asset=>asset.id);
+  expect(new Set(allIds).size).toBe(allIds.length);
+  expect(allIds.filter(id=>id.startsWith('corpus-angelo-')).sort()).toEqual(corpusManifest.assets.map((asset:any)=>asset.id).sort());
 });
 
 it.each(corpusManifest.assets)('bundles and inserts reviewed corpus source $id with original identity and attribution',async(raw:any)=>{

@@ -106,3 +106,12 @@ An actual representable gap stays open. The original 34 example outputs and all
 102 reviewed corpus outputs reproduce byte-for-byte, including the newly closed
 Sign03. The retry does not certify arbitrary output; normal export/physics
 qualification still applies. Only affected constructions pay for the second pass.
+
+
+## Curves and vessels — 2026-11-15
+
+Curved cones, hemispheres, paraboloids, vases, teardrop cutters and finishing
+washers now retain design inputs. See [curved shapes](CURVED-SHAPES.md) for
+profile definitions, origin compatibility, radial-wall semantics and collision
+construction. The remaining catalogue parameter gap is 16. Bent tubes, lofts and
+functional mechanical parts still need their own retained definitions.

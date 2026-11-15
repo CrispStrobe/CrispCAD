@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from '@brickwright/cad-core';
+import {simplifyRadialProfile} from './radial-profile.js';
 import { documentGeometryKey, validateDocument } from '@brickwright/cad-core';
 import type {CadDocument,Vec3,Transform} from '@brickwright/cad-core';
 import type {GeometryKernel,GeometryResult} from '@brickwright/cad-geometry';
@@ -39,7 +40,17 @@ export async function prepareDocumentCollisions(input:CadDocument,result:Geometr
   if(hint&&node.kind==='mesh'){
    const stride=hint.stride??1,perSide=hint.sides+(hint.seam===false?0:1),at=(ring:number,side:number):Vec3=>{const i=hint.layout==='rows'?ring*perSide+side:side*(hint.segments+1)+ring;return [node.positions[i*3],node.positions[i*3+1],node.positions[i*3+2]];},transforms=[...parents,node.transform],pieces:ConvexPiece[]=[];
    if(hint.kind==='tube-grid')for(let ring=0;ring<hint.segments;ring+=stride){const points:Vec3[]=[];for(let r=ring;r<=Math.min(hint.segments,ring+stride);r++)for(let side=0;side<hint.sides;side++)points.push(worldPoint(at(r,side),transforms));pieces.push(kernel.hullPoints(points));}
-   else {const profile=Array.from({length:hint.sides+1},(_,i)=>{const p=at(0,i);return [Math.hypot(p[0],p[1]),p[2]];}),polygons=triangulate(profile),step=Math.max(1,Math.ceil(hint.segments*polygons.length/2048));for(let ring=0;ring<hint.segments;ring+=step)for(const polygon of polygons){const points:Vec3[]=[];for(const r of [ring,Math.min(hint.segments,ring+step)])for(const side of polygon)points.push(worldPoint(at(r,side),transforms));pieces.push(kernel.hullPoints(points));}}
+   // A tiny angular overlap closes numerical seams between adjacent convex
+   // sectors. Source/compound volume and bounds gates include the overlap.
+   else {const profile=Array.from({length:hint.sides+1},(_,i)=>{const p=at(0,i);return [Math.hypot(p[0],p[1]),p[2]];}),extent=Math.max(...profile.map(p=>p[0]))+Math.max(...profile.map(p=>p[1]))-Math.min(...profile.map(p=>p[1])),selected=simplifyRadialProfile(profile,Math.min(.05,extent*.001)),polygons=triangulate(selected.map(i=>profile[i])).map(p=>p.map(i=>selected[i])),step=Math.max(1,Math.ceil(hint.segments*polygons.length/2048));for(let ring=0;ring<hint.segments;ring+=step)for(const polygon of polygons){const points:Vec3[]=[];for(const [r,overlap]of [[ring,-1e-5],[Math.min(hint.segments,ring+step),1e-5]])for(const side of polygon){const p=at(r,side),c=Math.cos(overlap),s=Math.sin(overlap);points.push(worldPoint([p[0]*c-p[1]*s,p[0]*s+p[1]*c,p[2]],transforms));}pieces.push(kernel.hullPoints(points));}}
+   // A sector compound is volume-correct but a ray exactly on its shared
+   // radial boundaries can miss every floor sector in Jolt. Add an inscribed
+   // floor core so the central support face is one convex surface. It remains
+   // inside the sampled source and participates in normal CSG qualification.
+   if(hint.kind==='radial-profile'&&node.physics?.sourcePreset==='vase'){
+    const profile=Array.from({length:hint.sides+1},(_,i)=>{const p=at(0,i);return [Math.hypot(p[0],p[1]),p[2]];}),bottom=profile[0][1],floor=profile.at(-1)![1],top=Math.max(...profile.map(p=>p[1])),end=profile.findIndex(p=>p[1]===top);
+    if(profile[0][0]<1e-6&&profile.at(-1)![0]<1e-6&&floor>bottom){const outer=profile.slice(1,end+1).filter(p=>p[1]<=floor),radius=Math.min(...outer.map(p=>p[0]))*Math.cos(Math.PI/hint.segments);if(radius>0&&Number.isFinite(radius)){const points:Vec3[]=[];for(const z of [bottom,floor])for(let i=0;i<32;i++)points.push(worldPoint([radius*Math.cos(i*Math.PI/16),radius*Math.sin(i*Math.PI/16),z],transforms));pieces.push(kernel.hullPoints(points));}}
+   }
    return pieces;
   }
   return kernel.partitionConvex(worldMesh(id,parents));
