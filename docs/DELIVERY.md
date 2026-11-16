@@ -1095,6 +1095,7 @@ positive topology screening even with a proper rotation and positive volume.
 No failed source, fabricated face or unsupported qualification is shipped.
 
 
+
 ### Offline library preview integration, 2026-11-16
 
 The current-main integration exposed a shared UI regression: opening Model Library unconditionally imported the optional Adafruit preview module, producing one offline HTTP request. Four actual traces bind the exact local module URL and failed unchanged zero-request assertion. The minimal general correction starts the same revision-checked loader only after explicit archive component selection. A focused negative/positive workflow passes in both Chromium and iPad WebKit: opening/browsing metadata offline makes zero requests; explicit selection loads the actual256x192PNG once, and neither action changes model history.
@@ -1120,3 +1121,13 @@ The ninth ranked batch verifies licence/provenance, complete dependency closures
 The5survivors—24246,3496,u9208,33234,u9473—retain27exact originals atc42ac7b. Five actual editor/provenance/history/substituted-byte refusal cases,5actual PNGs and the final app build pass. A preserved harness capture failure treated the closed cold-proof directory symlink as a source file; the scoped correction excludes only that exact verified directory and refuses any other non-file source. After the preserved zero-child PSI veto and PR299 lock contention, the scheduled parser/browser-only continuation matches10source/42built hashes and passes all10Chromium/iPad WebKit workflows in three bounded chunks. All raw attachments equal durable source/mesh/PNG records with zero offline/external requests. The raw receipt retains the earlier no-child pre-parser capture row; an exact projection accounts for all7successful child phases, without test replay or removal of an executed failure.
 
 Measured commit27b9338/treeb33f2faa binds all40source/input/licence/tested files and23validation artifacts. All566prior source/mesh hashes and322previews remain exact. Local qualification is288/283/327, a gain of5/5/5 from delivered283/278/322; main delivery remains separate until verified owner landing. Target300 leaves12additional admissions after this cohort. No native, focused editor, PNG, build or package replay occurred in the browser continuation. The next30source-ready roots/117originals remain unconverted. The585closure-budget pool has317unconverted roots,144native NotManifold refusals, one converter quad refusal and four withheld non-independent roots; geometry yield remains unknown, so no numerical source deficit or archive exhaustion is asserted. See [per-model gates, preserved failures and exact commit/runtime binding](evidence/ldraw-batch9-qualification-2026-11-16.json).
+
+## Host-owned complete robot projects — 2026-11-16
+
+`CadEditorOptions.presetProjects` optionally identifies preset IDs whose cards
+open a whole host project instead of inserting geometry. Those cards say Open
+… project and Complete project, including in docked mode; pointer placement
+remains available for ordinary shapes and manufacturing variants. The host
+owns confirmation, bundle validation and atomic project replacement. Standalone
+CAD keeps its existing model-only behavior and has no dependency on Lite, its
+VM, circuits or Widgets. No document or geometry format changes are required.
