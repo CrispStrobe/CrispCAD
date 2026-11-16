@@ -1,10 +1,12 @@
 # A curated reusable model library
 
 Current integration, 2026-11-16: the fourth qualified LDraw cohort adds fourteen
-authored originals. The accumulated qualification totals are 242 catalogue
-admissions, 237 unique STL meshes and 281 previews, using the cohort's
-existing counting definitions. These totals are distinct from the more than
-130 editable CAD source examples. Mesh screening is not mechanism certification.
+authored originals. The complete bundled catalogue now has **281 models with
+previews: 154 editable code/source models and 127 mesh models**. The accumulated
+qualified-corpus totals are 242 records and 237 unique STL meshes; these use
+the cohort's existing counting definitions and are not the total catalogue.
+Adafruit archive folders are additional original files and are not counted as
+screened models. Mesh screening is not mechanism certification.
 Original files, licence closures, hashes and refused candidates remain retained;
 see `evidence/ldraw-batch4-qualification-2026-11-16.json` for measured results.
 The editor inserts verified compatible content into the project; downloading an
