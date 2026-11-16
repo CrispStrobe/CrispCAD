@@ -1,5 +1,16 @@
 # A curated reusable model library
 
+Current integration, 2026-11-16: the fourth qualified LDraw cohort adds fourteen
+authored originals. The accumulated qualification totals are 242 catalogue
+admissions, 237 unique STL meshes and 281 previews, using the cohort's
+existing counting definitions. These totals are distinct from the more than
+130 editable CAD source examples. Mesh screening is not mechanism certification.
+Original files, licence closures, hashes and refused candidates remain retained;
+see `evidence/ldraw-batch4-qualification-2026-11-16.json` for measured results.
+The editor inserts verified compatible content into the project; downloading an
+original remains a separate action. Preview and source-editing support must not
+be inferred merely from an archive containing a file.
+
 Research checked 2026-11-13. Mesh content licences are independent of repository
 code licences. Do not import a dataset merely because its loader is MIT/Apache.
 STL has no reliable unit, author or licence metadata and does not recover the

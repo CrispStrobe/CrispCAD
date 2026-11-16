@@ -1,3 +1,23 @@
+# Current integration — 2026-11-16
+
+The shared CAD SDK is integrated into Brickwright Lite as a default-off workspace
+editor. Circuit DC/gearmotors can drive physical CAD hinges and lead-screw sliders;
+ideal servos, measured encoders and body-mounted ultrasonic feedback share its
+5 ms simulation clock. Lite runs blocks/pseudocode or compiled Uno/ATmega328P
+firmware through this bridge. RP2040 firmware coupling remains unimplemented.
+The host integration and its limits are documented in Lite's
+`docs/CIRCUIT-CAD-CO-SIMULATION.md`; reusable mechanics stay in this repository.
+
+Scout and Atlas are integrated. Kestrel remains on its feature branch because
+its gripper failed physical qualification; no threshold was relaxed to admit it.
+The fourth qualified LDraw batch adds fourteen unchanged authored originals with
+retained licences and provenance. Its measured workflows are recorded below and
+in `docs/evidence/ldraw-batch4-qualification-2026-11-16.json`.
+
+Run checks locally. GitHub Actions remains disabled for this private repository.
+The delivery entries below are historical checkpoints; their original counts,
+source revisions and device-build claims describe those measured deliveries.
+
 # First delivery — 2026-11-12
 
 The scope in SCOPE.md is implemented as a standalone application plus four
