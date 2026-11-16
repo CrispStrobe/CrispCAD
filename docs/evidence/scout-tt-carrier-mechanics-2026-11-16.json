@@ -30,7 +30,18 @@
           20.32
         ]
       ],
-      "holeDiameterMm": 2.54,
+      "holeDiametersMm": [
+        2.5,
+        2.5,
+        2.54,
+        2.54
+      ],
+      "holePlating": [
+        "plated",
+        "plated",
+        "unplated",
+        "unplated"
+      ],
       "transform": "Centre [25.4,11.43], rotate +90 degrees about Z. USB points -Y."
     },
     {
@@ -57,9 +68,17 @@
           21.59
         ]
       ],
+      "holeDiameterMm": 2.5,
+      "holePlating": "plated",
       "transform": "Centre [6.604,11.43], rotate +90 degrees about Z, translate +32 mm in X."
     }
   ],
+  "referenceCorrection": {
+    "checkedOn": "2026-11-16",
+    "summary": "Re-read both pinned PCB files and verified the source blob identities. Feather USB-end mounting holes use MOUNTINGHOLE_2.5_PLATED with drill 2.5; far-end holes use unplated drill 2.54. The ambiguous shared Feather holeDiameterMm scalar is intentionally replaced by diameter and plating arrays aligned with holeCentresMm. Both DRV8833 holes use the same plated 2.5 mm package. These are source drill dimensions; actual screw fit still requires inspection.",
+    "geometryChanged": false,
+    "historicalEvidence": "The checks and testedFiles hashes below retain the original qualification record from before this dimensional-reference correction. Fresh continuation validation records the corrected guide and regenerated kit separately."
+  },
   "licensing": "Carrier CAD Script is an independent original BSD-3-Clause design. Only factual mounting dimensions were read from the PCB references; no PCB artwork or third-party mount implementation is distributed.",
   "manufacturing": {
     "part": "carrier",

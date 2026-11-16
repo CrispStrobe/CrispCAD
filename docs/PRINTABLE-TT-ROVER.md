@@ -235,13 +235,15 @@ is redistributed or used as carrier geometry.
 
 | Interface | Source dimensions | Position in the carrier |
 | --- | --- | --- |
-| [Feather RP2040 Rev B PCB][feather-layout] | 50.8 × 22.86 outline; mounting-hole centres `(2.54, 2.54)`, `(2.54, 20.32)`, `(48.26, 2.54)`, `(48.26, 20.32)`; Ø2.54 holes | Rotate the centred PCB +90° about Z: bosses at X ±8.89 and Y ±22.86; USB faces −Y |
-| [DRV8833 PCB][driver-layout] | Outline X −2.286 to 15.494 and Y −1.27 to 24.13; mounting-hole centres `(12.954, 1.27)` and `(12.954, 21.59)` | Centre the PCB, rotate +90° about Z, then move +32 in X: bosses at `(21.84, 6.35)` and `(42.16, 6.35)` |
+| [Feather RP2040 Rev B PCB][feather-layout] | 50.8 × 22.86 outline; mounting-hole centres `(2.54, 2.54)`, `(2.54, 20.32)`, `(48.26, 2.54)`, `(48.26, 20.32)`; source drill Ø2.50 for the two plated USB-end holes at X 2.54, Ø2.54 for the two unplated far-end holes at X 48.26 | Rotate the centred PCB +90° about Z: bosses at X ±8.89 and Y ±22.86; USB faces −Y |
+| [DRV8833 PCB][driver-layout] | Outline X −2.286 to 15.494 and Y −1.27 to 24.13; mounting-hole centres `(12.954, 1.27)` and `(12.954, 21.59)`; source drill Ø2.50 for both plated holes | Centre the PCB, rotate +90° about Z, then move +32 in X: bosses at `(21.84, 6.35)` and `(42.16, 6.35)` |
 | Carrier to deck | Four Ø3.4 bores and upper 90° countersinks, nominal Ø6.6 opening | `(25, -12.5)`, `(25, 12.5)`, `(39, -12.5)`, `(39, 12.5)`, within the existing driver-side deck slots |
 | Boards to carrier | Six Ø2.8 through-bores; Ø5 bosses; underside 90° countersinks, nominal Ø5.6 opening | Printed plate Z 0–3; bosses Z 3–9; nominal 6 mm gap under each PCB |
 
 Before assembly, compare the real boards' hole centres and connector direction
-with this table. The Feather source is pinned to commit
+with this table, and check that the actual M2.5 screws pass freely through the
+PCB mounting holes. The source drill sizes are not printed clearance allowances.
+The Feather source is pinned to commit
 `ea88166891ee0a1697a3899a5d55ab3722a2f125`, file `Adafruit Feather RP2040 rev B.brd`;
 the driver source is pinned to `dda79a86d6518d05a35091cb8b03b9c0d57d04e2`, file
 `Adafruit DRV8833.brd`. The [Feather specification][feather-spec] also documents
