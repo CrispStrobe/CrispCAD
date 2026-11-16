@@ -1,0 +1,4093 @@
+{
+  "atUTC": "2026-11-16T14:40:30.258698+00:00",
+  "status": "ALL13_LOCAL_QUALIFIED_NEW_MAIN_INTEGRATION_PENDING",
+  "qualificationCohort": "expanded-batch007-independent13",
+  "localQualificationUserCycle": 130,
+  "mainCountsLastVerified": [
+    263,
+    258,
+    302
+  ],
+  "localCounts": [
+    276,
+    271,
+    315
+  ],
+  "cohortDelta": [
+    13,
+    13,
+    13
+  ],
+  "targetRecords": 300,
+  "additionalAfterCohortDelivery": 24,
+  "converterNativeReplays": 0,
+  "packagesReplayed": false,
+  "previewsRenderedAgain": false,
+  "actualFocusedCases": 18,
+  "focusedSourceSelectionControls": 5,
+  "focusedEditorCases": 13,
+  "retainedPreviews": 13,
+  "models": [
+    {
+      "id": "corpus-ldraw-expanded-944",
+      "rootPath": "parts/944.dat",
+      "author": "Alex Taylor [anathema]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/944.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/944.dat",
+        "bytes": 365,
+        "sha256": "b22dc5b7ac02a0fedde6bb9d81502e60d50e603dd347c9d523c12973fd916b53",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/944.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/944.dat",
+          "bytes": 365,
+          "sha256": "b22dc5b7ac02a0fedde6bb9d81502e60d50e603dd347c9d523c12973fd916b53",
+          "crc32": "419f8edd",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Alex Taylor [anathema]",
+          "role": "Part UPDATE 2011-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cylc.dat",
+          "bytes": 476,
+          "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd",
+          "crc32": "f9c76187",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Alex Taylor [anathema]",
+          "role": "Primitive UPDATE 2009-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+          "crc32": "53bcfa1e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 5,
+      "originalBytes": 5749,
+      "expandedBytes": 7970,
+      "mesh": {
+        "path": "meshes/ldraw/944.stl",
+        "bytes": 3284,
+        "sha256": "7ef2e02322fe2a92f94ab8e63191cf822f7ec84c299e463209bd29e83033d56a",
+        "format": "stl"
+      },
+      "triangles": 64,
+      "nativePositiveVolumeMm3": 169.2903762065789,
+      "constructionWork": 502,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/general-source-selection/editor/provenance/refusal/history/retained-preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/chromium-corpus-ldraw-expanded-944.json",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/ipad-webkit-corpus-ldraw-expanded-944.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-u9113",
+      "rootPath": "parts/u9113.dat",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/u9113.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/u9113.dat",
+        "bytes": 368,
+        "sha256": "a0c9d3f1b81192be8feb33c45c0bcc5972fa0005c4f784c70794695f31392edf",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/u9113.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/u9113.dat",
+          "bytes": 368,
+          "sha256": "a0c9d3f1b81192be8feb33c45c0bcc5972fa0005c4f784c70794695f31392edf",
+          "crc32": "34b1f415",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Philippe Hurbain [Philo]",
+          "role": "Part UPDATE 2018-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cylc.dat",
+          "bytes": 476,
+          "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd",
+          "crc32": "f9c76187",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Alex Taylor [anathema]",
+          "role": "Primitive UPDATE 2009-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+          "crc32": "53bcfa1e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 5,
+      "originalBytes": 5752,
+      "expandedBytes": 7973,
+      "mesh": {
+        "path": "meshes/ldraw/u9113.stl",
+        "bytes": 3284,
+        "sha256": "64cff897c348267639974a02e7c8f052df24c3b0f0299102c2461c39573310b5",
+        "format": "stl"
+      },
+      "triangles": 64,
+      "nativePositiveVolumeMm3": 1058.0648092474003,
+      "constructionWork": 500,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/general-source-selection/editor/provenance/refusal/history/retained-preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/chromium-corpus-ldraw-expanded-u9113.json",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/ipad-webkit-corpus-ldraw-expanded-u9113.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-u9183",
+      "rootPath": "parts/u9183.dat",
+      "author": "Magnus Forsberg [MagFors]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/u9183.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/u9183.dat",
+        "bytes": 368,
+        "sha256": "e183569b5ca55146727806fe713d7388af060e3e9823ed8f03a316c35bf06314",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/u9183.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/u9183.dat",
+          "bytes": 368,
+          "sha256": "e183569b5ca55146727806fe713d7388af060e3e9823ed8f03a316c35bf06314",
+          "crc32": "e1c5f480",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Magnus Forsberg [MagFors]",
+          "role": "Part UPDATE 2011-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+          "crc32": "53bcfa1e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cylc.dat",
+          "bytes": 476,
+          "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd",
+          "crc32": "f9c76187",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Alex Taylor [anathema]",
+          "role": "Primitive UPDATE 2009-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 5,
+      "originalBytes": 5752,
+      "expandedBytes": 7973,
+      "mesh": {
+        "path": "meshes/ldraw/u9183.stl",
+        "bytes": 3284,
+        "sha256": "d235f5cb882f46f540a8440ff77c27ec6cbc4aa8b81bd9fac457b03220eb893d",
+        "format": "stl"
+      },
+      "triangles": 64,
+      "nativePositiveVolumeMm3": 300.9606770748801,
+      "constructionWork": 501,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/general-source-selection/editor/provenance/refusal/history/retained-preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/chromium-corpus-ldraw-expanded-u9183.json",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/ipad-webkit-corpus-ldraw-expanded-u9183.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-u9644",
+      "rootPath": "parts/u9644.dat",
+      "author": "Gerald Lasser [GeraldLasser]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/u9644.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/u9644.dat",
+        "bytes": 388,
+        "sha256": "01bb7ddcf35db3b2604992ee1bca71a078ca383c68009d62eff6c58b85dd15b1",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/u9644.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/u9644.dat",
+          "bytes": 388,
+          "sha256": "01bb7ddcf35db3b2604992ee1bca71a078ca383c68009d62eff6c58b85dd15b1",
+          "crc32": "75692f5d",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Gerald Lasser [GeraldLasser]",
+          "role": "Part UPDATE 2024-08",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cylc.dat",
+          "bytes": 476,
+          "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd",
+          "crc32": "f9c76187",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Alex Taylor [anathema]",
+          "role": "Primitive UPDATE 2009-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+          "crc32": "53bcfa1e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 5,
+      "originalBytes": 5772,
+      "expandedBytes": 7993,
+      "mesh": {
+        "path": "meshes/ldraw/u9644.stl",
+        "bytes": 3284,
+        "sha256": "8bee1f5237f1c9cd4c6abe5ffd724d542cc3bfd2109c6ee7155c6efcab8c61c8",
+        "format": "stl"
+      },
+      "triangles": 64,
+      "nativePositiveVolumeMm3": 39.18758513223663,
+      "constructionWork": 500,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/general-source-selection/editor/provenance/refusal/history/retained-preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/chromium-corpus-ldraw-expanded-u9644.json",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/ipad-webkit-corpus-ldraw-expanded-u9644.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-57877",
+      "rootPath": "parts/57877.dat",
+      "author": "Max Martin Richter [MMR1988]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/57877.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/57877.dat",
+        "bytes": 487,
+        "sha256": "1b41395dc0b0052d397a58d3104f89f1372325c753b9b382cf11a90037fede42",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/57877.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/57877.dat",
+          "bytes": 487,
+          "sha256": "1b41395dc0b0052d397a58d3104f89f1372325c753b9b382cf11a90037fede42",
+          "crc32": "d0b8de46",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Max Martin Richter [MMR1988]",
+          "role": "Part UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cylc.dat",
+          "bytes": 476,
+          "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd",
+          "crc32": "f9c76187",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Alex Taylor [anathema]",
+          "role": "Primitive UPDATE 2009-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+          "crc32": "53bcfa1e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 5,
+      "originalBytes": 5871,
+      "expandedBytes": 8092,
+      "mesh": {
+        "path": "meshes/ldraw/57877.stl",
+        "bytes": 3284,
+        "sha256": "de0191c275a075e2e283b8c3bc6abdfddb7472734b1480fb89e6e5de0bd1624a",
+        "format": "stl"
+      },
+      "triangles": 64,
+      "nativePositiveVolumeMm3": 122.4612017134254,
+      "constructionWork": 503,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/general-source-selection/editor/provenance/refusal/history/retained-preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/chromium-corpus-ldraw-expanded-57877.json",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/ipad-webkit-corpus-ldraw-expanded-57877.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-70081",
+      "rootPath": "parts/70081.dat",
+      "author": "Alex Taylor [anathema]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/70081.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/70081.dat",
+        "bytes": 496,
+        "sha256": "44bee061a413ea1ddd2672da57c1d6d63856744a7b06ced4c2ac8d451d56b875",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/70081.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/70081.dat",
+          "bytes": 496,
+          "sha256": "44bee061a413ea1ddd2672da57c1d6d63856744a7b06ced4c2ac8d451d56b875",
+          "crc32": "9b5c8022",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Alex Taylor [anathema]",
+          "role": "Part UPDATE 2012-03",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cylc.dat",
+          "bytes": 476,
+          "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd",
+          "crc32": "f9c76187",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Alex Taylor [anathema]",
+          "role": "Primitive UPDATE 2009-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+          "crc32": "53bcfa1e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 5,
+      "originalBytes": 5880,
+      "expandedBytes": 8101,
+      "mesh": {
+        "path": "meshes/ldraw/70081.stl",
+        "bytes": 3284,
+        "sha256": "521cb39d632cda5111fa6fbc6993a8599e41aa22663b95455e069904e7fe0a2c",
+        "format": "stl"
+      },
+      "triangles": 64,
+      "nativePositiveVolumeMm3": 190.45166902802947,
+      "constructionWork": 504,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/general-source-selection/editor/provenance/refusal/history/retained-preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/chromium-corpus-ldraw-expanded-70081.json",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/ipad-webkit-corpus-ldraw-expanded-70081.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-76065k01",
+      "rootPath": "parts/76065k01.dat",
+      "author": "Magnus Forsberg [MagFors]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/76065k01.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/76065k01.dat",
+        "bytes": 603,
+        "sha256": "1d751798230f6a4e97741f749fcd98d214718c69c3eeef8eb070db980cd7946f",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/76065k01.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/76065k01.dat",
+          "bytes": 603,
+          "sha256": "1d751798230f6a4e97741f749fcd98d214718c69c3eeef8eb070db980cd7946f",
+          "crc32": "93fe34bf",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Magnus Forsberg [MagFors]",
+          "role": "Part Flexible_Section UPDATE 2024-11",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+          "crc32": "53bcfa1e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cylo.dat",
+          "bytes": 383,
+          "sha256": "d6ca97ee2e75918b3309a5c88aafcd2455b3a316f7cef8963517c19f1d86b38f",
+          "crc32": "f4c91151",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Mark Kennedy [mkennedy]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 5,
+      "originalBytes": 5894,
+      "expandedBytes": 10283,
+      "mesh": {
+        "path": "meshes/ldraw/76065k01.stl",
+        "bytes": 3284,
+        "sha256": "9905d3a63295ca15ae3dbe7a697090963dc94476804957560a7f8bee7fe995ef",
+        "format": "stl"
+      },
+      "triangles": 64,
+      "nativePositiveVolumeMm3": 56.43012321432054,
+      "constructionWork": 559,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/general-source-selection/editor/provenance/refusal/history/retained-preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/chromium-corpus-ldraw-expanded-76065k01.json",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/ipad-webkit-corpus-ldraw-expanded-76065k01.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-2630k02",
+      "rootPath": "parts/2630k02.dat",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/2630k02.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/2630k02.dat",
+        "bytes": 642,
+        "sha256": "3cacbb0434d0aaeff12e694256ac1d5e2e42cd41f9457b7b08fa0cb5977c0421",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/2630k02.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/2630k02.dat",
+          "bytes": 642,
+          "sha256": "3cacbb0434d0aaeff12e694256ac1d5e2e42cd41f9457b7b08fa0cb5977c0421",
+          "crc32": "c735d3c8",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Philippe Hurbain [Philo]",
+          "role": "Part Flexible_Section UPDATE 2025-08",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cylc.dat",
+          "bytes": 476,
+          "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd",
+          "crc32": "f9c76187",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Alex Taylor [anathema]",
+          "role": "Primitive UPDATE 2009-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+          "crc32": "53bcfa1e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 5,
+      "originalBytes": 6026,
+      "expandedBytes": 10415,
+      "mesh": {
+        "path": "meshes/ldraw/2630k02.stl",
+        "bytes": 3284,
+        "sha256": "333194fbfaf89e641bf83cb285612e77946576f5caf4aba275ee60cfb48faa3b",
+        "format": "stl"
+      },
+      "triangles": 64,
+      "nativePositiveVolumeMm3": 62.70013856578706,
+      "constructionWork": 561,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/general-source-selection/editor/provenance/refusal/history/retained-preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/chromium-corpus-ldraw-expanded-2630k02.json",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/ipad-webkit-corpus-ldraw-expanded-2630k02.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-61409",
+      "rootPath": "parts/61409.dat",
+      "author": "Tim Gould [timgould]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/61409.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/61409.dat",
+        "bytes": 4379,
+        "sha256": "e412ef137e2fc5d27d2da0925cfb50d48ca205e4ef42fbbc03ce31f9dc67ea02",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/61409.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/61409.dat",
+          "bytes": 4379,
+          "sha256": "e412ef137e2fc5d27d2da0925cfb50d48ca205e4ef42fbbc03ce31f9dc67ea02",
+          "crc32": "66868836",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Tim Gould [timgould]",
+          "role": "Part UPDATE 2025-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box4.dat",
+          "bytes": 948,
+          "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e",
+          "crc32": "13bb3ba1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect.dat",
+          "bytes": 654,
+          "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71",
+          "crc32": "30c864e3",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect2p.dat",
+          "bytes": 594,
+          "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc",
+          "crc32": "62f97088",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Donald Sutter [technog]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 4,
+      "originalBytes": 6575,
+      "expandedBytes": 16145,
+      "mesh": {
+        "path": "meshes/ldraw/61409.stl",
+        "bytes": 8284,
+        "sha256": "1e58df1e15824619e742fd616c108bfd18de0eb49b45755a7785611e34518ca7",
+        "format": "stl"
+      },
+      "triangles": 164,
+      "nativePositiveVolumeMm3": 281.8313802354971,
+      "constructionWork": 1924,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/general-source-selection/editor/provenance/refusal/history/retained-preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/chromium-corpus-ldraw-expanded-61409.json",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/ipad-webkit-corpus-ldraw-expanded-61409.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-u9563",
+      "rootPath": "parts/u9563.dat",
+      "author": "Massimo Maso [Sirio]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/u9563.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/u9563.dat",
+        "bytes": 602,
+        "sha256": "d0d440cb565ad15fd596931509ca70c500bf1de31d0d4a0a9ad6ad68ab8f367e",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/u9563.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/u9563.dat",
+          "bytes": 602,
+          "sha256": "d0d440cb565ad15fd596931509ca70c500bf1de31d0d4a0a9ad6ad68ab8f367e",
+          "crc32": "0b7c940b",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Massimo Maso [Sirio]",
+          "role": "Part UPDATE 2025-04",
+          "licenceAllowed": true
+        },
+        {
+          "path": "parts/s/u9563s01.dat",
+          "bytes": 7461,
+          "sha256": "b3ce0b8593b4cd2a1711e3906a7dfb52d90a4250bfc49d4579c122907875e5bf",
+          "crc32": "ef93e8ce",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Massimo Maso [Sirio]",
+          "role": "Subpart UPDATE 2025-04",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box4.dat",
+          "bytes": 948,
+          "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e",
+          "crc32": "13bb3ba1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 3,
+      "originalBytes": 9011,
+      "expandedBytes": 9959,
+      "mesh": {
+        "path": "meshes/ldraw/u9563.stl",
+        "bytes": 6284,
+        "sha256": "d2d3d3a24263f700b493745fa7e714eb8341ec6a80bcae189e60dbe894d2198f",
+        "format": "stl"
+      },
+      "triangles": 124,
+      "nativePositiveVolumeMm3": 862.8401526780734,
+      "constructionWork": 738,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/general-source-selection/editor/provenance/refusal/history/retained-preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/chromium-corpus-ldraw-expanded-u9563.json",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/ipad-webkit-corpus-ldraw-expanded-u9563.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-u9226",
+      "rootPath": "parts/u9226.dat",
+      "author": "Steffen [Steffen]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/u9226.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/u9226.dat",
+        "bytes": 656,
+        "sha256": "02df4c76de683cbaef39761101c75c95b279f57a12b2b1f23012e3cb61f6a581",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/u9226.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/u9226.dat",
+          "bytes": 656,
+          "sha256": "02df4c76de683cbaef39761101c75c95b279f57a12b2b1f23012e3cb61f6a581",
+          "crc32": "71f70553",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Steffen [Steffen]",
+          "role": "Part UPDATE 2012-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4ring2.dat",
+          "bytes": 1628,
+          "sha256": "6fb38804b1f5e9bee8c0b80caf1397b09454fc58b048dc19045b6f37c8762ab0",
+          "crc32": "b004f7bb",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2009-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 4,
+      "originalBytes": 6055,
+      "expandedBytes": 13622,
+      "mesh": {
+        "path": "meshes/ldraw/u9226.stl",
+        "bytes": 6484,
+        "sha256": "7f32998a80138d3ad428b77e4c3234a8bc727fe9003fbba1b9ff76d5a764832f",
+        "format": "stl"
+      },
+      "triangles": 128,
+      "nativePositiveVolumeMm3": 94.05020693785886,
+      "constructionWork": 793,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/general-source-selection/editor/provenance/refusal/history/retained-preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/chromium-corpus-ldraw-expanded-u9226.json",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/ipad-webkit-corpus-ldraw-expanded-u9226.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-127",
+      "rootPath": "parts/127.dat",
+      "author": "Marc Klein [marckl]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/127.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/127.dat",
+        "bytes": 918,
+        "sha256": "b0b489398397bd5f4e8d688df1312e39bce1a31375d60b5ecd323d4bfee66c4d",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/127.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/127.dat",
+          "bytes": 918,
+          "sha256": "b0b489398397bd5f4e8d688df1312e39bce1a31375d60b5ecd323d4bfee66c4d",
+          "crc32": "3bf0a726",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Marc Klein [marckl]",
+          "role": "Part UPDATE 2024-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4ring18.dat",
+          "bytes": 1530,
+          "sha256": "1edf4b9ee669e0e34c60813a924d18c6cff36a4bbc6e81ba5c65cb0b1cd4a919",
+          "crc32": "09b2051d",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Willy Tschager [Holly-Wood]",
+          "role": "Primitive UPDATE 2024-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 4,
+      "originalBytes": 6219,
+      "expandedBytes": 13688,
+      "mesh": {
+        "path": "meshes/ldraw/127.stl",
+        "bytes": 6484,
+        "sha256": "5e63a3d7cde14644529f0a0e6a8b745d09d3d43f782e6a5e700126b1668f5ab4",
+        "format": "stl"
+      },
+      "triangles": 128,
+      "nativePositiveVolumeMm3": 594.4756452881112,
+      "constructionWork": 790,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/general-source-selection/editor/provenance/refusal/history/retained-preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/chromium-corpus-ldraw-expanded-127.json",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/ipad-webkit-corpus-ldraw-expanded-127.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-335",
+      "rootPath": "parts/335.dat",
+      "author": "Marc Klein [marckl]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/335.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/335.dat",
+        "bytes": 926,
+        "sha256": "2cb4639cea78fb6b4635e281203b6a9e205661ed7d6f90e2f405758049e0063e",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/6c6b74b7c407fe435d972529cfc3d2ebb7035e2b/library/sources/ldraw-expanded-20261109/parts/335.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/335.dat",
+          "bytes": 926,
+          "sha256": "2cb4639cea78fb6b4635e281203b6a9e205661ed7d6f90e2f405758049e0063e",
+          "crc32": "956a3e87",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Marc Klein [marckl]",
+          "role": "Part UPDATE 2024-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4ring18.dat",
+          "bytes": 1530,
+          "sha256": "1edf4b9ee669e0e34c60813a924d18c6cff36a4bbc6e81ba5c65cb0b1cd4a919",
+          "crc32": "09b2051d",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Willy Tschager [Holly-Wood]",
+          "role": "Primitive UPDATE 2024-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 4,
+      "originalBytes": 6227,
+      "expandedBytes": 13696,
+      "mesh": {
+        "path": "meshes/ldraw/335.stl",
+        "bytes": 6484,
+        "sha256": "6745b8c505610157c2cd75aa25c71ef3b880798ccc14d9591a879c0fe5a5a40e",
+        "format": "stl"
+      },
+      "triangles": 128,
+      "nativePositiveVolumeMm3": 884.4637716860732,
+      "constructionWork": 791,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/general-source-selection/editor/provenance/refusal/history/retained-preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/chromium-corpus-ldraw-expanded-335.json",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/per-model/ipad-webkit-corpus-ldraw-expanded-335.json"
+      ]
+    }
+  ],
+  "actualRemainingGatePhases": [
+    {
+      "phase": 0,
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/ldraw-source-selection.test.ts",
+        "tests/model-library-expanded-batch007.test.ts",
+        "--maxWorkers=1"
+      ],
+      "guard": {
+        "fastFreeBytes": 13639909376,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3648966656,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          1.24853515625,
+          1.81396484375,
+          2.3154296875
+        ],
+        "cpuPSISomeAvg60Percent": 3.46,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 45,
+      "status": "PASS",
+      "sourceHead": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3045327,
+      "exitCode": 0,
+      "elapsedSeconds": 6.481337769888341,
+      "childUserCPUSeconds": 4.715745999999999,
+      "childSystemCPUSeconds": 0.977201
+    },
+    {
+      "phase": 1,
+      "command": [
+        "bash",
+        "/mnt/storage/brickwright-cycle104-smooth/app-build.sh"
+      ],
+      "guard": {
+        "fastFreeBytes": 13639909376,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3662798848,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          1.228515625,
+          1.80029296875,
+          2.30810546875
+        ],
+        "cpuPSISomeAvg60Percent": 5.55,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 90,
+      "status": "PASS",
+      "sourceHead": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3045379,
+      "exitCode": 0,
+      "elapsedSeconds": 41.96182884275913,
+      "childUserCPUSeconds": 32.972597,
+      "childSystemCPUSeconds": 3.7464030000000004
+    },
+    {
+      "phase": 2,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch007.spec.ts",
+        "--list",
+        "--reporter=line"
+      ],
+      "guard": {
+        "fastFreeBytes": 13640101888,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3606593536,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          2.94091796875,
+          2.1572265625,
+          2.404296875
+        ],
+        "cpuPSISomeAvg60Percent": 25.62,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 20,
+      "status": "PASS",
+      "sourceHead": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3045535,
+      "exitCode": 0,
+      "elapsedSeconds": 3.4446652340702713,
+      "childUserCPUSeconds": 2.8850539999999967,
+      "childSystemCPUSeconds": 0.4355549999999999
+    },
+    {
+      "phase": 3,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch007.spec.ts",
+        "--output",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-output-chunk-1",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13640089600,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3469094912,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          2.94091796875,
+          2.1572265625,
+          2.404296875
+        ],
+        "cpuPSISomeAvg60Percent": 25.04,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3045597,
+      "exitCode": 0,
+      "elapsedSeconds": 201.577530561015,
+      "childUserCPUSeconds": 68.527716,
+      "childSystemCPUSeconds": 13.268170999999999
+    },
+    {
+      "phase": 4,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch007.spec.ts",
+        "--output",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-output-chunk-2",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13639917568,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3648602112,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          3.35693359375,
+          2.9013671875,
+          2.6640625
+        ],
+        "cpuPSISomeAvg60Percent": 52.41,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3046111,
+      "exitCode": 0,
+      "elapsedSeconds": 198.4879356189631,
+      "childUserCPUSeconds": 67.29365599999998,
+      "childSystemCPUSeconds": 13.069294
+    },
+    {
+      "phase": 5,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch007.spec.ts",
+        "--output",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-output-chunk-3",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13258412032,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3568365568,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          2.513671875,
+          3.09423828125,
+          2.814453125
+        ],
+        "cpuPSISomeAvg60Percent": 53.9,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3046651,
+      "exitCode": 0,
+      "elapsedSeconds": 199.85284740431234,
+      "childUserCPUSeconds": 67.391187,
+      "childSystemCPUSeconds": 12.892941999999998
+    },
+    {
+      "phase": 6,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch007.spec.ts",
+        "--output",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-output-chunk-4",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13258403840,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3392573440,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          2.990234375,
+          3.2734375,
+          2.9580078125
+        ],
+        "cpuPSISomeAvg60Percent": 55.14,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3047329,
+      "exitCode": 0,
+      "elapsedSeconds": 187.51208998076618,
+      "childUserCPUSeconds": 63.798268000000036,
+      "childSystemCPUSeconds": 12.402667999999998
+    },
+    {
+      "phase": 7,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch007.spec.ts",
+        "--output",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-output-chunk-5",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13258272768,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3400564736,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          2.912109375,
+          3.4501953125,
+          3.11279296875
+        ],
+        "cpuPSISomeAvg60Percent": 54.95,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3047853,
+      "exitCode": 0,
+      "elapsedSeconds": 196.74981118086725,
+      "childUserCPUSeconds": 66.11023899999998,
+      "childSystemCPUSeconds": 12.561096999999997
+    },
+    {
+      "phase": 8,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch007.spec.ts",
+        "--output",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-output-chunk-6",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13257908224,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3435761664,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          3.13818359375,
+          3.46826171875,
+          3.19775390625
+        ],
+        "cpuPSISomeAvg60Percent": 55.71,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3048368,
+      "exitCode": 0,
+      "elapsedSeconds": 193.39694414194673,
+      "childUserCPUSeconds": 64.67585200000002,
+      "childSystemCPUSeconds": 12.520719
+    },
+    {
+      "phase": 9,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch007.spec.ts",
+        "--output",
+        "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-output-chunk-7",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13146628096,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3596230656,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          3.74169921875,
+          3.76416015625,
+          3.37548828125
+        ],
+        "cpuPSISomeAvg60Percent": 49.46,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3049470,
+      "exitCode": 0,
+      "elapsedSeconds": 121.61649256991223,
+      "childUserCPUSeconds": 19.661665000000028,
+      "childSystemCPUSeconds": 5.689785999999998
+    }
+  ],
+  "browserProof": {
+    "status": "ALL13_GATES_LOCAL_QUALIFIED_DELIVERY_PENDING",
+    "mainCounts": [
+      263,
+      258,
+      302
+    ],
+    "allGateCompletedCandidates": 13,
+    "rawAndDurableBrowserOutcomesMatched": 26,
+    "expectedBrowserOutcomes": 26,
+    "models": [
+      "corpus-ldraw-expanded-944",
+      "corpus-ldraw-expanded-u9113",
+      "corpus-ldraw-expanded-u9183",
+      "corpus-ldraw-expanded-u9644",
+      "corpus-ldraw-expanded-57877",
+      "corpus-ldraw-expanded-70081",
+      "corpus-ldraw-expanded-76065k01",
+      "corpus-ldraw-expanded-2630k02",
+      "corpus-ldraw-expanded-61409",
+      "corpus-ldraw-expanded-u9563",
+      "corpus-ldraw-expanded-u9226",
+      "corpus-ldraw-expanded-127",
+      "corpus-ldraw-expanded-335"
+    ],
+    "localAllGateCounts": [
+      276,
+      271,
+      315
+    ],
+    "newUniqueMeshes": 13,
+    "zeroNetworkRequests": true,
+    "nativeReplayed": false,
+    "reports": [
+      {
+        "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-3.json",
+        "sha256": "d3630e2a13a001f452bbf2e83d90b2829aa3a2181148c60324a0db930d42be9a",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-4.json",
+        "sha256": "e148603b8bab64df5fa8d7d5138466e47bbc64ae931c504bfdce719b5744a77e",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-5.json",
+        "sha256": "d7a375a456d354b707ba15bbaa19f34da97d7f49a56a5c692d023ec369d9a00c",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-6.json",
+        "sha256": "4ed0922cebb9c6a2bd37cdd307cc1773ef009764f9cbf064043795ec9aa822bf",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-7.json",
+        "sha256": "151dc453193191af77e3f6c02b62ba19c57f5ec7ace2a192e737ffc2ce12d690",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-8.json",
+        "sha256": "d0078869d9678b71813a3b6d0ffff1e4bbab8793e730c2a59d7967c73f0b9914",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-9.json",
+        "sha256": "bc1f56ecb26c3edb621bfbe62fda6b64403122f7735b96ba116b420f6046ed9c",
+        "exitCode": 0
+      }
+    ],
+    "proofIsNotMainDelivery": true
+  },
+  "testedCommitBinding": {
+    "testedCommit": "95a10c2ffff7eee1598d40ac823ea63808cbb3d7",
+    "testedTree": "2a427057fe9faed3bb15500a17c2b2d660ead2e7",
+    "testedChangedSourceDataFiles": [
+      {
+        "path": "library/ldraw-reviewed-batch-manifest.json",
+        "bytes": 2334324,
+        "sha256": "6838bf1d4f353cbc18f0ad0b1df293465b9c15dac2c4a29f87963d73f57b466e"
+      },
+      {
+        "path": "library/ldraw-reviewed-batch-spec.json",
+        "bytes": 2679489,
+        "sha256": "0fd9773c29f3f3ffd6c674351291ec36e56747247fcab4b7043d57b74c848ed0"
+      },
+      {
+        "path": "library/meshes/ldraw/127.stl",
+        "bytes": 6484,
+        "sha256": "5e63a3d7cde14644529f0a0e6a8b745d09d3d43f782e6a5e700126b1668f5ab4"
+      },
+      {
+        "path": "library/meshes/ldraw/2630k02.stl",
+        "bytes": 3284,
+        "sha256": "333194fbfaf89e641bf83cb285612e77946576f5caf4aba275ee60cfb48faa3b"
+      },
+      {
+        "path": "library/meshes/ldraw/335.stl",
+        "bytes": 6484,
+        "sha256": "6745b8c505610157c2cd75aa25c71ef3b880798ccc14d9591a879c0fe5a5a40e"
+      },
+      {
+        "path": "library/meshes/ldraw/57877.stl",
+        "bytes": 3284,
+        "sha256": "de0191c275a075e2e283b8c3bc6abdfddb7472734b1480fb89e6e5de0bd1624a"
+      },
+      {
+        "path": "library/meshes/ldraw/61409.stl",
+        "bytes": 8284,
+        "sha256": "1e58df1e15824619e742fd616c108bfd18de0eb49b45755a7785611e34518ca7"
+      },
+      {
+        "path": "library/meshes/ldraw/70081.stl",
+        "bytes": 3284,
+        "sha256": "521cb39d632cda5111fa6fbc6993a8599e41aa22663b95455e069904e7fe0a2c"
+      },
+      {
+        "path": "library/meshes/ldraw/76065k01.stl",
+        "bytes": 3284,
+        "sha256": "9905d3a63295ca15ae3dbe7a697090963dc94476804957560a7f8bee7fe995ef"
+      },
+      {
+        "path": "library/meshes/ldraw/944.stl",
+        "bytes": 3284,
+        "sha256": "7ef2e02322fe2a92f94ab8e63191cf822f7ec84c299e463209bd29e83033d56a"
+      },
+      {
+        "path": "library/meshes/ldraw/u9113.stl",
+        "bytes": 3284,
+        "sha256": "64cff897c348267639974a02e7c8f052df24c3b0f0299102c2461c39573310b5"
+      },
+      {
+        "path": "library/meshes/ldraw/u9183.stl",
+        "bytes": 3284,
+        "sha256": "d235f5cb882f46f540a8440ff77c27ec6cbc4aa8b81bd9fac457b03220eb893d"
+      },
+      {
+        "path": "library/meshes/ldraw/u9226.stl",
+        "bytes": 6484,
+        "sha256": "7f32998a80138d3ad428b77e4c3234a8bc727fe9003fbba1b9ff76d5a764832f"
+      },
+      {
+        "path": "library/meshes/ldraw/u9563.stl",
+        "bytes": 6284,
+        "sha256": "d2d3d3a24263f700b493745fa7e714eb8341ec6a80bcae189e60dbe894d2198f"
+      },
+      {
+        "path": "library/meshes/ldraw/u9644.stl",
+        "bytes": 3284,
+        "sha256": "8bee1f5237f1c9cd4c6abe5ffd724d542cc3bfd2109c6ee7155c6efcab8c61c8"
+      },
+      {
+        "path": "library/previews.json",
+        "bytes": 4896963,
+        "sha256": "1a07d0ceb44e59103fca3a321c8e130a4819590e9362f26fce908e4764a1f51b"
+      },
+      {
+        "path": "scripts/lib/ldraw-source-selection.mjs",
+        "bytes": 1639,
+        "sha256": "bd0c7b2ad9d432de7eb79bdc13f018b7aca9fbc86a8e036b34e8eb76f34e15b2"
+      },
+      {
+        "path": "tests/browser/model-library-expanded-batch007.spec.ts",
+        "bytes": 6190,
+        "sha256": "3c9fbed81cc986508d52da94e8e67617bff30df7230cd5a000d8687758c01fbf"
+      },
+      {
+        "path": "tests/ldraw-source-selection.test.ts",
+        "bytes": 1838,
+        "sha256": "b395223e72a0701c4925d45663dc0296045dbccd3bdfa923928f9e11e44114a5"
+      },
+      {
+        "path": "tests/model-library-expanded-batch007.test.ts",
+        "bytes": 3979,
+        "sha256": "fa45baba2eca6786c29a76568fa641eb8144ed236bcdd22eb30afcabb61e8fb4"
+      }
+    ],
+    "inputOriginalLicenceFiles": [
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/944.dat",
+        "bytes": 365,
+        "sha256": "b22dc5b7ac02a0fedde6bb9d81502e60d50e603dd347c9d523c12973fd916b53"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cylc.dat",
+        "bytes": 476,
+        "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4edge.dat",
+        "bytes": 1084,
+        "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4disc.dat",
+        "bytes": 1137,
+        "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cyli.dat",
+        "bytes": 2687,
+        "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9113.dat",
+        "bytes": 368,
+        "sha256": "a0c9d3f1b81192be8feb33c45c0bcc5972fa0005c4f784c70794695f31392edf"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9183.dat",
+        "bytes": 368,
+        "sha256": "e183569b5ca55146727806fe713d7388af060e3e9823ed8f03a316c35bf06314"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9644.dat",
+        "bytes": 388,
+        "sha256": "01bb7ddcf35db3b2604992ee1bca71a078ca383c68009d62eff6c58b85dd15b1"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/57877.dat",
+        "bytes": 487,
+        "sha256": "1b41395dc0b0052d397a58d3104f89f1372325c753b9b382cf11a90037fede42"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/70081.dat",
+        "bytes": 496,
+        "sha256": "44bee061a413ea1ddd2672da57c1d6d63856744a7b06ced4c2ac8d451d56b875"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/70793.dat",
+        "bytes": 688,
+        "sha256": "474db7359871faa44f708134a05322006abc2a75056aaf4b8cfcbc8ee1cf4f29"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/70023.dat",
+        "bytes": 741,
+        "sha256": "f3b608760941677d462ba0a463064afb39a27ad7652e81e7294a8ff18e96486f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/572c.dat",
+        "bytes": 951,
+        "sha256": "0030f1e6159635fa5def96846c760a823910019cb75b86ade7e2547b9c143bf6"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/76065k01.dat",
+        "bytes": 603,
+        "sha256": "1d751798230f6a4e97741f749fcd98d214718c69c3eeef8eb070db980cd7946f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cylo.dat",
+        "bytes": 383,
+        "sha256": "d6ca97ee2e75918b3309a5c88aafcd2455b3a316f7cef8963517c19f1d86b38f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/2630k02.dat",
+        "bytes": 642,
+        "sha256": "3cacbb0434d0aaeff12e694256ac1d5e2e42cd41f9457b7b08fa0cb5977c0421"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/61409.dat",
+        "bytes": 4379,
+        "sha256": "e412ef137e2fc5d27d2da0925cfb50d48ca205e4ef42fbbc03ce31f9dc67ea02"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/box4.dat",
+        "bytes": 948,
+        "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect.dat",
+        "bytes": 654,
+        "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect2p.dat",
+        "bytes": 594,
+        "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/89658.dat",
+        "bytes": 305,
+        "sha256": "b002cd59cee13fe2246c28ab4f1fe25961f160d607c0a6d0dbcb078565691e86"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/99146.dat",
+        "bytes": 2263,
+        "sha256": "9f64312f6eb67cbab14caca12a88aaaa5084af3b07b4a5fbc6512fc40eaacb2b"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4chrd.dat",
+        "bytes": 743,
+        "sha256": "ccba3a97b5cc358754e476b78b4ce61cce5f404cd15e37471b73df3e81784aec"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4cylo.dat",
+        "bytes": 388,
+        "sha256": "792a01362608c3f385dd7f01a1bd7d19cf9ed8a40f793266345cc86d1d98f3af"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4edge.dat",
+        "bytes": 545,
+        "sha256": "9ce2de7e67bbac575d52cfdc771b9d00856efc9b88002d97db8e665e50f4d467"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4cyli.dat",
+        "bytes": 1044,
+        "sha256": "5a7168952a5a3570327873b9a5802fa7b3be40967ab78c03b6a2bfd4419a1f10"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4con2.dat",
+        "bytes": 1263,
+        "sha256": "5b4d444a154349f4a930b5fd60ed5c7e6060e12faf7f50c192909e958cdd04d6"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect1.dat",
+        "bytes": 556,
+        "sha256": "48fdcd3181587b4bdc89d356a5aee21268688f3f2fcdd4d6f5c1a3d49b1a1ceb"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/35536.dat",
+        "bytes": 318,
+        "sha256": "c08d2b8643262068bd31ec0934e138b11326d3fa6918ca20b4aa2432aebd7bf9"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9563.dat",
+        "bytes": 602,
+        "sha256": "d0d440cb565ad15fd596931509ca70c500bf1de31d0d4a0a9ad6ad68ab8f367e"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/s/u9563s01.dat",
+        "bytes": 7461,
+        "sha256": "b3ce0b8593b4cd2a1711e3906a7dfb52d90a4250bfc49d4579c122907875e5bf"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9226.dat",
+        "bytes": 656,
+        "sha256": "02df4c76de683cbaef39761101c75c95b279f57a12b2b1f23012e3cb61f6a581"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4ring2.dat",
+        "bytes": 1628,
+        "sha256": "6fb38804b1f5e9bee8c0b80caf1397b09454fc58b048dc19045b6f37c8762ab0"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/127.dat",
+        "bytes": 918,
+        "sha256": "b0b489398397bd5f4e8d688df1312e39bce1a31375d60b5ecd323d4bfee66c4d"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4ring18.dat",
+        "bytes": 1530,
+        "sha256": "1edf4b9ee669e0e34c60813a924d18c6cff36a4bbc6e81ba5c65cb0b1cd4a919"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/335.dat",
+        "bytes": 926,
+        "sha256": "2cb4639cea78fb6b4635e281203b6a9e205661ed7d6f90e2f405758049e0063e"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-batch007-input-20261109.json",
+        "bytes": 34930,
+        "sha256": "9eba6c666f186ce0b5f626154da829244ae4b215ee6b5c11aacc81766bad788c"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+        "bytes": 18657,
+        "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-CAreadme-20261109.txt",
+        "bytes": 4151,
+        "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497"
+      }
+    ],
+    "allCommittedFilesMatch": true,
+    "totalCommittedFileBindings": 59,
+    "builtRuntimeFiles": [
+      {
+        "path": "dist/app-showcase/README.md",
+        "bytes": 406,
+        "sha256": "abc4e1333f5195f98c4e34265b80c5016134b85254ff44afd05f6ed7d0e47577"
+      },
+      {
+        "path": "dist/app-showcase/brickwright.png",
+        "bytes": 17259,
+        "sha256": "4f12ea0f0f21056104c7c665a8ad2082dfaf1265d131e402e793909cef6b4065"
+      },
+      {
+        "path": "dist/app-showcase/cometbeat.png",
+        "bytes": 12576,
+        "sha256": "93c1e0820b28de7b4209a37abe4e9b6e320a1a495bd9c44e056b492454cc6769"
+      },
+      {
+        "path": "dist/app-showcase/crispaudio.png",
+        "bytes": 20854,
+        "sha256": "482b887823d8cbe42fb450bf9a1e7fc50213f4c80364d75387559876e157fb3d"
+      },
+      {
+        "path": "dist/app-showcase/crispbingo.png",
+        "bytes": 12310,
+        "sha256": "974a26f8a7f20b8b61d806a1f7ef7d24ef82c1a775b8c154c96f5b7015939910"
+      },
+      {
+        "path": "dist/app-showcase/crispchess.png",
+        "bytes": 18694,
+        "sha256": "375e1c4df95c0a294aaf5dc078bdbc99d8753100812649821cc88be87ec7a33a"
+      },
+      {
+        "path": "dist/app-showcase/crispcloud.png",
+        "bytes": 21564,
+        "sha256": "7736e71fd28f2400424a106513224a4dd9953ae11049c219210964cfc7ebdcfb"
+      },
+      {
+        "path": "dist/app-showcase/crispdeck.png",
+        "bytes": 12518,
+        "sha256": "3cf496171fcfe2ea3af23c6901d3b4375546d383a34288f3e433d58b8acd17ab"
+      },
+      {
+        "path": "dist/app-showcase/crisperplayer.png",
+        "bytes": 28416,
+        "sha256": "732bf35419dbf4a3cdb604ff18e72f7f667901052c0c12b091a535440a9cec67"
+      },
+      {
+        "path": "dist/app-showcase/crisperweaver.png",
+        "bytes": 21766,
+        "sha256": "ca56b9ba5f7b4de928b7baf6979bbabe01314c0382f9a85d558f673f9435de43"
+      },
+      {
+        "path": "dist/app-showcase/crispmath.png",
+        "bytes": 10714,
+        "sha256": "d85b699f750768c23d683180a37385f4c36fdbed796989f464de26840ea8915e"
+      },
+      {
+        "path": "dist/app-showcase/crispmesh.png",
+        "bytes": 20375,
+        "sha256": "f10da8d3835dd3d13e9a8c8422338fda2a746ef5401a42efc3f2f5bbc90ff7ad"
+      },
+      {
+        "path": "dist/app-showcase/crispsorter.png",
+        "bytes": 23362,
+        "sha256": "9b92d82e86f687bedf3f3378c27e7b4c24c83d3a953f337e5ec1cfde798666bf"
+      },
+      {
+        "path": "dist/app-showcase/crispsudoku.png",
+        "bytes": 24934,
+        "sha256": "af8ee9c4eae94cfe68af1e38062f7d1da9346ada0734476f19c9a705eb73db5c"
+      },
+      {
+        "path": "dist/app-showcase/crisptuner.png",
+        "bytes": 10185,
+        "sha256": "cbac4f2381e240dd9c7879bc200262037f6bf9c35c688b65aba09402a077e033"
+      },
+      {
+        "path": "dist/app-showcase/hectopolis.png",
+        "bytes": 8345,
+        "sha256": "687f651d1f4d98fd4653b85191c6fc273e2497447916fb4bf9be447b7f2c6ed3"
+      },
+      {
+        "path": "dist/app-showcase/kerotakis.png",
+        "bytes": 7514,
+        "sha256": "0b6a24aec16e25ee6d2e098c40fd56cf530c26f917f70a69f9bb68cda4409d92"
+      },
+      {
+        "path": "dist/app-showcase/naga.png",
+        "bytes": 10760,
+        "sha256": "93f34940d26e229849e697f5bc98a3d28d4ed5e2caa926a34aabd93e37e74da6"
+      },
+      {
+        "path": "dist/app-showcase/numbernebula.png",
+        "bytes": 29684,
+        "sha256": "39d20c36896f98452b5bc6f0f4608caab1dd4ea7fc74034c88c93c90f9521bdb"
+      },
+      {
+        "path": "dist/app-showcase/word-universe.png",
+        "bytes": 21617,
+        "sha256": "081ee34a1707823873a44fdfe4c7d4bebeb3c2fa4d7b099a44360867b1c581e7"
+      },
+      {
+        "path": "dist/assets/embedded-GlxXJK_9.js",
+        "bytes": 2312,
+        "sha256": "a74ed9637463bbde4b6d370ccbfe7794b91d922fe5c4b4e9199251e9ef9385ec"
+      },
+      {
+        "path": "dist/assets/esm-BbzRTG-k.js",
+        "bytes": 334,
+        "sha256": "99b94ce20dda1af191df9e1fbac1131f7663188ac047bac57f311236d6a3e2d2"
+      },
+      {
+        "path": "dist/assets/esm-CXdWoEp6.js",
+        "bytes": 1352,
+        "sha256": "a314390e0b6e574a0c26edaa226368c454739d45a17ae55b211dfb7f1ab1d22c"
+      },
+      {
+        "path": "dist/assets/files-4Re_Zl_L.js",
+        "bytes": 8675021,
+        "sha256": "0777188622c82b5c88af0faa387d3498d16d8ea06a519470dbd53dd0dab9244e"
+      },
+      {
+        "path": "dist/assets/files-BvSzA95Z.css",
+        "bytes": 10183,
+        "sha256": "a0bd03c2cdb4b600a58121b396da840424c00407085354cd39adee4a3064593b"
+      },
+      {
+        "path": "dist/assets/geometry.worker-C3-qzm0y.js",
+        "bytes": 1437256,
+        "sha256": "16614aeed9d449ffa124f7af91a14da2ff7db8b4b4b7636c61bd2542835b8871"
+      },
+      {
+        "path": "dist/assets/jolt-physics.wasm-compat-CdbhAkox.js",
+        "bytes": 3662128,
+        "sha256": "8c817441903255f8f509359ba5d64d49df4eb5f62ade5384987d229cb829e410"
+      },
+      {
+        "path": "dist/assets/main-BC_HWoTl.js",
+        "bytes": 9826245,
+        "sha256": "2ad2c8dc948478fed45bf59ca06ea8d53a26d8720c34abc6feee830b33601154"
+      },
+      {
+        "path": "dist/assets/manifold-BE4c7gO-.wasm",
+        "bytes": 541470,
+        "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      {
+        "path": "dist/assets/simulation.worker-_mgh5zwc.js",
+        "bytes": 1489092,
+        "sha256": "cec5ee4ac7012d22e5c36d89e700faf40b5ab8a47eb2a402e26333550a7e8e8e"
+      },
+      {
+        "path": "dist/assets/web-B84FEyTU.js",
+        "bytes": 361,
+        "sha256": "46f2cde3a242fad0aa51c6ab9e456b2852975b424d11bddc07da8eab03a97c22"
+      },
+      {
+        "path": "dist/assets/web-CkVQMFQt.js",
+        "bytes": 8715,
+        "sha256": "feaf4741f1dd4838a414af2d2ec02b088c2d08660b91d97d7349c957f684e42f"
+      },
+      {
+        "path": "dist/cad-assets/app-license.txt",
+        "bytes": 1520,
+        "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad"
+      },
+      {
+        "path": "dist/cad-assets/build-info.json",
+        "bytes": 138,
+        "sha256": "cb5f89e66e529f0a170fbb5edeb0c8a8a31d0fcd33b6960e0552efdf5e9faaff"
+      },
+      {
+        "path": "dist/cad-assets/manifold.wasm",
+        "bytes": 541470,
+        "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      {
+        "path": "dist/cad-assets/notices.txt",
+        "bytes": 91867,
+        "sha256": "dea50eee6d6781549af4e3740bfaf7661b29479696e5ae6cbe41eafd93c0fa70"
+      },
+      {
+        "path": "dist/embedded.html",
+        "bytes": 1119,
+        "sha256": "9d63726f77f557145dce1e871e135736d3556e3915ef5922e9830db5109c3780"
+      },
+      {
+        "path": "dist/icon.svg",
+        "bytes": 283,
+        "sha256": "30876dc5d178d36f341cc5126e6489a7078ac9f667a56a9e625f9d090d3d94f4"
+      },
+      {
+        "path": "dist/index.html",
+        "bytes": 2974,
+        "sha256": "481f4bbf6fa65fce55ff4099b93baaa37b39e808f14177d924cbd9a7637eb0ba"
+      },
+      {
+        "path": "dist/manifest.webmanifest",
+        "bytes": 249,
+        "sha256": "7d57494ede2e7c699fd24fd309335bb701138d85cc84d5c4ff4d9851f44ae535"
+      },
+      {
+        "path": "dist/sw.js",
+        "bytes": 1885,
+        "sha256": "fcb34ef99955272a981aca912f868a0a19ce712159a4ec9c8d3beb0fc0e6842e"
+      }
+    ],
+    "sourceInputCommit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+    "sourceMain": "57d63940175a3585c691d58f9db2c30a2dd25a5d"
+  },
+  "validationFiles": [
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/admission.json",
+      "bytes": 436,
+      "sha256": "18a8b685a3182ea84260793c7dab27294d4738c626d36abb698d16a3a78608f9"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/execution.json",
+      "bytes": 12540,
+      "sha256": "76c8e9a3d81a0d42b58911a2bb80052c87ba5a9e473fe0586ae1021bf5946d66"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-proof-final.json",
+      "bytes": 2347,
+      "sha256": "7b2d46880beaeb34f0160cd85f66ea1ba5d7d6d697a4b0825964fc79d691232d"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/tested-owned-hashes.json",
+      "bytes": 3174,
+      "sha256": "824d008a34ede68ac8070948d40807a82b6c73841cbbfb7506edadccfdac7e90"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/tested-built-hashes.json",
+      "bytes": 6386,
+      "sha256": "9c94c2304d0495fdb17867e42f207e11bd05eb750f19358832c156363896ffb8"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/source-capture-binding.json",
+      "bytes": 6939,
+      "sha256": "ce298903c28cbd788cf3689a41061fd81b1377c61b99d5c28b477fe6ceb1c6db"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-template-binding.json",
+      "bytes": 203,
+      "sha256": "675fa9444405e7eebbe9b4add22e1b52bf381ee7696c0a592c1d27cf5b965ac0"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/tested-commit-binding.json",
+      "bytes": 17945,
+      "sha256": "d90215604debf9151f99936d1fae393da8ca1cae4bdb3aec492a31ed40c068ba"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/source-selection-correction.json",
+      "bytes": 2748,
+      "sha256": "89b629dbd6a76707de928cf84734de941f0b39e875083a781329f2450dc30bbc"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/retained-preview-proof.json",
+      "bytes": 3107,
+      "sha256": "02264ca0c2b507f6e294370c5e218161c3f347377cfe71b33ec9c228fb4a89cc"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/prior94-source-selection-audit.json",
+      "bytes": 90136,
+      "sha256": "00480e59eb97e2cbb5b610ac23c6f9eb7cc1460121e7550ea8f3d2cc6c7c3fa4"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-3.json",
+      "bytes": 12452,
+      "sha256": "d3630e2a13a001f452bbf2e83d90b2829aa3a2181148c60324a0db930d42be9a"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-4.json",
+      "bytes": 12480,
+      "sha256": "e148603b8bab64df5fa8d7d5138466e47bbc64ae931c504bfdce719b5744a77e"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-5.json",
+      "bytes": 12472,
+      "sha256": "d7a375a456d354b707ba15bbaa19f34da97d7f49a56a5c692d023ec369d9a00c"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-6.json",
+      "bytes": 12518,
+      "sha256": "4ed0922cebb9c6a2bd37cdd307cc1773ef009764f9cbf064043795ec9aa822bf"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-7.json",
+      "bytes": 12472,
+      "sha256": "151dc453193191af77e3f6c02b62ba19c57f5ec7ace2a192e737ffc2ce12d690"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-8.json",
+      "bytes": 12452,
+      "sha256": "d0078869d9678b71813a3b6d0ffff1e4bbab8793e730c2a59d7967c73f0b9914"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor13-corrected/browser-phase-9.json",
+      "bytes": 7563,
+      "sha256": "bc1f56ecb26c3edb621bfbe62fda6b64403122f7735b96ba116b420f6046ed9c"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor17/source-selection-first-failure.json",
+      "bytes": 1805,
+      "sha256": "8a52e890c50d8dd394e80db97d4280489ff02a4f6d1e096a61d026d22611adb2"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor17/actual-source-selection-review.json",
+      "bytes": 2329,
+      "sha256": "0ff8baa6f54b364f5a85b0129a1732b9f704cae904fa01edd6d772b2dc9e291e"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor17/mesh-deduplication.json",
+      "bytes": 2588,
+      "sha256": "7ab2962cecaed6a8bba81510a95e1eb350bc33bfc1842c09518d2d9098492e40"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-editor17/execution.json",
+      "bytes": 6827,
+      "sha256": "f05e4050be2cd3a42533105a6f8627307f73d7f24015f5ce1ea3194785b9b0e5"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-native30/batch-results.json",
+      "bytes": 154510,
+      "sha256": "432f84f5dddc8022a900c0df08fec64c8e224856b4946653fda53bdfe3a011a7"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-native30/bindings.json",
+      "bytes": 1372,
+      "sha256": "cfb1386d9ac10156ac0e2cfc3b854e0dc84421ffbe5e4217e241677010827370"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle130-native30/execution.json",
+      "bytes": 573,
+      "sha256": "da07e20c5dfc9b1365542fdc617368e93f75bdc51d4ec222a5ca1d701e2f57ad"
+    }
+  ],
+  "priorPreservation": {
+    "assetSHAEntries": 526,
+    "previews": 302,
+    "allExact": true
+  },
+  "generalCodeFix": {
+    "module": "scripts/lib/ldraw-source-selection.mjs",
+    "scope": "Source admission selection only; rejects declared aliases, exact identity-only wrappers of available matching geometry, explicitly superseded identical sources. No geometry/source rewriting. Transformed references and independent authored geometry remain eligible despite shared mesh.",
+    "tests": "tests/ldraw-source-selection.test.ts"
+  },
+  "sourceSelectionFailureHistory": {
+    "initialNativeSurvivors": 17,
+    "sourceNonIndependentWithheld": 4,
+    "declaredAlias": [
+      "70793"
+    ],
+    "identityOnlyWrappersOfShipped99146": [
+      "89658",
+      "35536"
+    ],
+    "supersededIdenticalRoot": [
+      "572c"
+    ],
+    "replacementRetained": "76065k01",
+    "initialBrowserControlledStop": "Source selection false-positive discovered; own groups stopped;3durable partial outcomes preserved;not model/browser defect",
+    "original22FilesArchive": "/mnt/storage/brickwright-cycle130-editor17/frozen17-owned-source.tar",
+    "archiveSHA256": "656929243ea26e1b5a111058735def54a527476eba7367091c286e2ed599812b",
+    "notAll17Qualified": true
+  },
+  "prior94SourceAudit": {
+    "atUTC": "2026-11-16T14:17:09.565Z",
+    "status": "PRIOR94_SOURCE_ONLY_AUDIT_COMPLETE",
+    "actualMain": "57d63940175a3585c691d58f9db2c30a2dd25a5d",
+    "scope": "94 delivered expanded batch001-006 LDrawroots; separately earlier t1098 excluded from this94; no native/editor/browser replay or blanket corpus audit claim",
+    "sourceHashesVerified": 94,
+    "ruleModuleSHA256": "bd0c7b2ad9d432de7eb79bdc13f018b7aca9fbc86a8e036b34e8eb76f34e15b2",
+    "flaggedCases": [],
+    "flaggedCount": 0,
+    "unflaggedCount": 94,
+    "rows": [
+      {
+        "id": "corpus-ldraw-expanded-t1050",
+        "title": "LDraw ~| Circuit Cubes Corner Magnet",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/t1050.dat",
+        "sourceSHA256": "58e9bb21273ba0651cd74cebc9ff15299ece826b092c899bab286cd2424287a3",
+        "meshSHA256": "622a09b182c4821514084155821494498374d3a844529a141aca25bc018908c0",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/t1050.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/t1050.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-t1103",
+        "title": "LDraw ~| Circuit Cubes High Speed Motor Bottom Plate",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/t1103.dat",
+        "sourceSHA256": "6a33a25f3c40898ad045db42c1d2c7faf57cf8242fdf6139a3a6290ffbcd4e79",
+        "meshSHA256": "ea4847912b167d1a13ef23bb2a8e49e9c7d88a6619362d196299a60b96f119ed",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/t1103.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/t1103.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-t1054",
+        "title": "LDraw ~| Circuit Cubes Corner Shim",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/t1054.dat",
+        "sourceSHA256": "f7b17065e449414254411a669f1cd8e495ca901e4b3f2703fa48123b0c19527e",
+        "meshSHA256": "6929684e62661c4cc7458e95ca2f7ab7c63f63f42e252b3ea3193b7fbc6ac887",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/t1054.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/t1054.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-t1068",
+        "title": "LDraw ~| Circuit Cubes NO/NC Switch Lever",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/t1068.dat",
+        "sourceSHA256": "712d8f2f8738412243c4691794e5c2e6965c26bf04e864045659b7ec6eb83ae9",
+        "meshSHA256": "9efa916fddf8d5feeda2c569581d5f0f45a91e1229c7dd0f4ca99f8793532f80",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/t1068.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/t1068.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-t1108",
+        "title": "LDraw ~| Circuit Cubes Buzzer Bottom Plate",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/t1108.dat",
+        "sourceSHA256": "4135c008e5c2217afcaaa5ac97446f8a7b142ab7029387f579231f206a11e934",
+        "meshSHA256": "3cc9acd03726020c0e3476357c4d29507d54e728e3ec6bd7c833dfbfa4ee4ce1",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/t1108.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/t1108.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-t1093",
+        "title": "LDraw ~| Circuit Cubes Plug  2 Points",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/t1093.dat",
+        "sourceSHA256": "17a9b3c150d180f26d8b691ca1c376440f00698443adb8c46982b53778b7e67e",
+        "meshSHA256": "011fb755ba9863156b5c7ee7ffe1c34314839a8b54b274d0ad80a7659a0d7d44",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/t1093.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/t1093.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-t1100",
+        "title": "LDraw ~| Circuit Cubes Tilt Switch Cover",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/t1100.dat",
+        "sourceSHA256": "a0a17e38ade1366c60fe130a533017444922b1653dd29209ab2a8d62d1e25d2c",
+        "meshSHA256": "44ab0f5ebfe1a20b432c884ca11c158b476d4899cd269d41dbd665007aa5225e",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/t1100.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/t1100.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-t1067",
+        "title": "LDraw ~| Circuit Cubes NO/NC Switch Lid",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/t1067.dat",
+        "sourceSHA256": "e2233d95f56728756dcc3abe61c5f2555afc29b9dd7b237806523b8362011809",
+        "meshSHA256": "32cb03d29b9742f83c52dea0757494f14a5e749a392a10af47cd0aafac4344f5",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/t1067.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/t1067.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9244",
+        "title": "LDraw ~Glass for Homemaker Stove Door",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9244.dat",
+        "sourceSHA256": "552515f61dd1a56b252be619fd8299cb02dbc1576d11dce9a5105369f5afa65d",
+        "meshSHA256": "982830a66521126ab24e888a277e12070adb45082a17d458d023aae74a75beb0",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/u9244.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9244.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9264",
+        "title": "LDraw ~Magnet  1.875 x  0.25 x  0.875",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9264.dat",
+        "sourceSHA256": "37f09dd6905a41d35789a3ff21566133d131ee5e00c190c20ebe1750bbfd5423",
+        "meshSHA256": "1c2b644b77d815be58f135af53f8cf49fb0268c8640d59a22317f354c2c2b2a9",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/u9264.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9264.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-954",
+        "title": "LDraw ~Glass for Window  1 x  4 x  5 with Fixed Glass",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/954.dat",
+        "sourceSHA256": "b4d30b80f82d2d999acea83a14e5b96cdce2ad8c6e996716499e2d73c827ddf1",
+        "meshSHA256": "df54c6edb35293a8aeadde996efc897ac33c79f6932e66d4fb4f4502e2f5b1d0",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/954.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/954.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9580",
+        "title": "LDraw ~Train Brick  2 x  4 x  1.333 Sliding Wheel Block - Weight",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9580.dat",
+        "sourceSHA256": "f7c920bc1aba5cc23bcc34e64860cddcc1267b67072da50368c59274170182fa",
+        "meshSHA256": "9fcb5a8e5b985b5d62dbe0dedf5bece7ac7c7c307d0b0ef33c9f8221d527238f",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/u9580.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9580.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9400",
+        "title": "LDraw ~Electric Sound Brick  4 x  4 x  1.667 Loudspeaker",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9400.dat",
+        "sourceSHA256": "98733da8abaeebd12ecdf115210970ee86b7266fe9d208d0c2445ba7afd93bd8",
+        "meshSHA256": "d68f13fdd8118ffcc6104dabdb4ec58bfbdc8727363f3d70c49323b585d1ccde",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/u9400.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9400.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-844",
+        "title": "LDraw ~Window  1 x  1 x  1 Classic Glass",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/844.dat",
+        "sourceSHA256": "267f8c2369e537b026c74d122992fa70176929cb584730a91c93d7d322f8ccfc",
+        "meshSHA256": "50c1efbe677b6da9248c13569d970fd4c3fbf4c71f247ac1c5ee4417ee291e54",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/844.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/844.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-845",
+        "title": "LDraw ~Window  1 x  1 x  2 Classic Glass",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/845.dat",
+        "sourceSHA256": "d3c7b8f15d8d0882ff14ee19d197f6d6f520dfdbfa7882769781dace9f553ea0",
+        "meshSHA256": "66038257ada3403eb4ffef6d3adaea5d57d2e32e7a36bd67726a4d6c6e2620df",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/845.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/845.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9253",
+        "title": "LDraw Cardboard  6 x  6 Thick with Sharp Corners",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9253.dat",
+        "sourceSHA256": "8ca62f30131ebd3d54953fa437222e7b5c0f2dea9b11accab12562245771bfbd",
+        "meshSHA256": "2057b52ea646dd85aff54171a2fbff040ac4a531e61c095098d5993e14aaad51",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/u9253.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9253.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u8037",
+        "title": "LDraw ~Mursten Glass for Window  1 x  4 x  3",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u8037.dat",
+        "sourceSHA256": "880160c2b59814021cb7d4221223e6d45ad18fc87f941e0a6404255ce163f11a",
+        "meshSHA256": "6cac3aaf358894b4d70f3fbf9361450257438d299bef1b2d751f742e6b8c6fe6",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/u8037.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u8037.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u8038",
+        "title": "LDraw ~Mursten Glass for Window  1 x  6 x  3 Triple",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u8038.dat",
+        "sourceSHA256": "c5d43c35a24605fe530c43882c6d4d45ba8fee0af87f107dbf8107dd8e9050d6",
+        "meshSHA256": "d8ccb55a77050928f45593a5c54a60234cc5533aa88b0d5ab19cb2b404be4a8d",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/u8038.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u8038.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u8039",
+        "title": "LDraw ~Mursten Glass for Window  1 x  6 x  3 with Shutters",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u8039.dat",
+        "sourceSHA256": "343beff25f0a25d6b90c5dd6c77dedb719c99d239052e64670ae05ddfa6890a9",
+        "meshSHA256": "4438102896f94b4af6b25eaff9646dab59fc37574dd911e41bc62af6deb6863f",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/u8039.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u8039.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-2499",
+        "title": "LDraw ~Electric Light & Sound Brick  1 x  8 with 3 Light Holes Lid",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/2499.dat",
+        "sourceSHA256": "ac64197bc0944237a6af20ff20cb0958deb09fb7d8aa0204131334dc1d092430",
+        "meshSHA256": "7bb31cf5d6263bbdc14dcecaafa694976ae89331087abc60540d4024fa7ec2b1",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/2499.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/2499.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9117",
+        "title": "LDraw ~Electric Hub Mario Body Screen",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9117.dat",
+        "sourceSHA256": "7c81c31e005a13fdb9b2d898bceea9b930464113c6439245e6ea7fb06ba9546f",
+        "meshSHA256": "7870b30b0dd101fc8c7e2e6ff6b8c9b792b06f2c9718e390ce68ae5812f1d94f",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/u9117.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9117.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-430",
+        "title": "LDraw ~Train Brick  2 x  4 Holder Bottom Solid",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/430.dat",
+        "sourceSHA256": "31eb8982f4e4302be4a06bfbcf6b77a09c7297b2e31584e268aaa13840e234b5",
+        "meshSHA256": "77c9cebbf02101cfbcf676341a7b137bc566e1d646260bd5ec48df39bfa95467",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc/library/sources/ldraw-expanded-20261109/parts/430.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/430.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-6164",
+        "title": "LDraw ~Glass for Window  4 x  4 x  3 Roof with Centre Bar",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/6164.dat",
+        "sourceSHA256": "4131550b7b68571f5277fea1cabfe432035a78f2417c19db5b0616075088e2f8",
+        "meshSHA256": "05e5132f89e1f4f239509daeed457d5254e8404864cfe6e7572b7aba1814585a",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/6164.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/6164.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u8031",
+        "title": "LDraw ~Mursten Glass for Window  1 x  6 x  4 Panorama",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u8031.dat",
+        "sourceSHA256": "2f5311c1c086974a42c8e0c004a7a4249c012ee49f71743dc99d91b4ad567569",
+        "meshSHA256": "e81c2ca9ee98e2ff3747983c547710174b21254aaa2a81ddb99a0ca11d555e56",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/u8031.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u8031.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u8032",
+        "title": "LDraw ~Mursten Glass for Window Pane  1 x  2 x  2",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u8032.dat",
+        "sourceSHA256": "8642d0be64a80f83b3814ff7811733a5272ef08ade74594583313e080940c28c",
+        "meshSHA256": "a8121c3609cf78f81c38cd80c79fff6635c40ab351a23dad02b01e5440466d8b",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/u8032.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u8032.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u8033",
+        "title": "LDraw ~Mursten Glass for Window Pane  1 x  2 x  3",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u8033.dat",
+        "sourceSHA256": "ea64c15f558f63b4b53f4d027dc602cc44b47e590a83476e7edf0a5715877910",
+        "meshSHA256": "78c4f54bc92a05bb391694d8431482291dbb92df0687ab699aa898a536856681",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/u8033.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u8033.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u8034",
+        "title": "LDraw ~Mursten Glass for Window Pane  1 x  4 x  2",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u8034.dat",
+        "sourceSHA256": "c7b809277a838fe248edb16c6bdb73fb0e78ae63b7c3fd3bc666b5226e33093a",
+        "meshSHA256": "2443a0d8f493a6c6ad66a32a9c8500b68f46c5991c1ada7caf75dd95a4996769",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/u8034.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u8034.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u8035",
+        "title": "LDraw ~Mursten Glass for Door  1 x  2 x  4",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u8035.dat",
+        "sourceSHA256": "9a01245c2c93e2c3a3c6d712da35c9bb1d42d21095aba89ec37721f3af37755d",
+        "meshSHA256": "e2f39397de4ea486bddbf7440e1a2acfa6098e0ce6c435ab3d3ccda5157be2a6",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/u8035.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u8035.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u8036",
+        "title": "LDraw ~Mursten Glass for Window  1 x  3 x  3",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u8036.dat",
+        "sourceSHA256": "4cadf2c1fffec0a0f52dcd958ad87849b61ee3fc81c2710d16cf994fb05536a6",
+        "meshSHA256": "330dd786e58fd92f3c9fb26e55dd215f3721819efa2ee67f8d8ea5efca8d6622",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/u8036.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u8036.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-268",
+        "title": "LDraw ~Glass for Door  1 x  3 x  4",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/268.dat",
+        "sourceSHA256": "56a42ff3b619c9a6ac147b349125e72cdd2e3efe7a09baa1a776ec3c3bb8c6a3",
+        "meshSHA256": "19f59467b946ea3b5a4e43f68e97e74838800561ab54897fdd4d3ad2d1c9c296",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/268.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/268.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-70591",
+        "title": "LDraw ~Technic Control Centre - Rubber Foot",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/70591.dat",
+        "sourceSHA256": "e9de913453e9ccf58e56aaa727f32befa9f1300c88038df4110103622f62f988",
+        "meshSHA256": "cc4bc885b590d02f44a01bde992e7793ffe60b9a8f9eb0a4d80ee8043cedec86",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/70591.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/70591.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-6202",
+        "title": "LDraw ~Glass for Window  1 x  4 x  6",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/6202.dat",
+        "sourceSHA256": "c6b9ce970ff6c45ee624ce602467160a43575e59d13a0a98795d3f978ce5d8e5",
+        "meshSHA256": "772efdda6abc0016dcaad1dfb9a011098b0d71e5cceb0230735c1e9c97dbafc3",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/6202.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/6202.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9553",
+        "title": "LDraw ~Electric Record and Play Brick 16 x 10 x  4 Lid (Needs Work)",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9553.dat",
+        "sourceSHA256": "9469b8e9d09a0f16e8238ea69abae37389399c2a66a6f13a7efead67b6a4cd46",
+        "meshSHA256": "c6b0dfc8bc87d7b6eed2c7892ef26f5d922b815a5d4930c297521ae62cbda151",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/u9553.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9553.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-35544",
+        "title": "LDraw ~Electric Powered Up Remote Handset Stop Button",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/35544.dat",
+        "sourceSHA256": "a1b73d73695a6fffc0dfe785e57a40a8cd9525d4c08b665be550e88ccac4a991",
+        "meshSHA256": "5f799c0b95fc93c8ba1e921aa0de35cdd72393e40b90738a0b7683161f92688c",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/35544.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/35544.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-11236",
+        "title": "LDraw ~Electric Mindstorms EV3 IR-Beacon Rectangular Button",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/11236.dat",
+        "sourceSHA256": "57c4b72a91b2984d1a29e8e5c233a60edf86c0bbe4cdb22ca7bdc00d60d1a794",
+        "meshSHA256": "a80e1ec5cf57f422d09b517ee8bb41021ac1ebeef4ab5c5ec5d547c040d65247",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/11236.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/11236.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9116",
+        "title": "LDraw ~Electric Hub Mario Screen Glass",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9116.dat",
+        "sourceSHA256": "8dda71d07f940062a7cfe2699bdb10b80287ba84d8bcbf390e3a646a839b493d",
+        "meshSHA256": "b49c6529300d8b3d9e2c24fd9e38a8a88e2b9b558d62a30bac67dbbfab4c1fea",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/u9116.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9116.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-32340",
+        "title": "LDraw ~Electric Technic Solar Panel Top",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/32340.dat",
+        "sourceSHA256": "089d52af7c55eb67227fc6118108d514088288b72e1a1faf2d58620219d1fc2a",
+        "meshSHA256": "1d1de31c0cea86546b9d9a74f5118e095a795bf64b8fc680f459b473fd198354",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/32340.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/32340.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-88326",
+        "title": "LDraw ~Electric Power Functions Solar Panel Case Glass",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/88326.dat",
+        "sourceSHA256": "22a5d2080fc40f627eca222088b3652fc94c23934634627100f0192802ef97b8",
+        "meshSHA256": "2e986da4d07cb838db60d14ae03822f30e8442ef6631d4129cd375204af1c554",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/88326.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/88326.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-3069a",
+        "title": "LDraw Tile  1 x  2 without Groove",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/3069a.dat",
+        "sourceSHA256": "fe428151c3f8bbef64ef10123f00f826dda67c8dc94573b6c95110e4bf72944b",
+        "meshSHA256": "65e9baadf0e1048902e30b954bd2997d3aa993abb631b3095b1eb763aec9aec4",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/3069a.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/3069a.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-3070a",
+        "title": "LDraw Tile  1 x  1 without Groove",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/3070a.dat",
+        "sourceSHA256": "192dc04dc3c34794b367869e1c4cfaf1b91b624b3d4d773411521475f3334549",
+        "meshSHA256": "e0520966f609e1d165d4231b5dd23ab2861b83bcb737cf2e296d6edbf2bbdea2",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/3070a.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/3070a.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u7033",
+        "title": "LDraw Modulex Slope Brick  9  4 x  1",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u7033.dat",
+        "sourceSHA256": "3f57e6a203b1944ba59d406b4fb3ca957a4fa0e0fa2508846608a54700ea7c0b",
+        "meshSHA256": "85bbfb2cc49d148bee5a86ea2a893b2c3443740517eff0ede93acacaf589f9be",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/u7033.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u7033.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9065",
+        "title": "LDraw ~Electric Train  4.5V On/Off Switch Brick  2 x  4 Bottom Plate",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9065.dat",
+        "sourceSHA256": "a3dd5a80bb10e084f373b38134e7430d1c44790be0de0394f6f85fbd9044038b",
+        "meshSHA256": "1a088ac88665b5ec9020458a7ed2df27c76eecf42a36aef82bc58cd205d7bfed",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/u9065.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9065.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-4252",
+        "title": "LDraw ~Duplo Door Frame  2 x  4 x  3 with Flat Rim Back Panel",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/4252.dat",
+        "sourceSHA256": "02fe848a336787ee03fd5334252312ea130fe262e079ae7f558d0691c2c8411e",
+        "meshSHA256": "d287ed8bd183028a87c33bc792c2ca38ae0b7321d80d5fb1b4bccc0eb3bd6739",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/09b1ac04345c466e8de3ae8c7988788db10c8216/library/sources/ldraw-expanded-20261109/parts/4252.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/4252.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-6427k03",
+        "title": "LDraw ~Duplo Suitcase Joiner",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/6427k03.dat",
+        "sourceSHA256": "4b72bdfd2fcd279eb17c01e970c1ab4c10306af162923815bc730156bc4515bd",
+        "meshSHA256": "211ddaed0841bec680c0ca4ca7d37b201671596bc0ebb29b262f24192bddaac8",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/6427k03.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/6427k03.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u7031",
+        "title": "LDraw Modulex Slope Brick 27  2 x  1",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u7031.dat",
+        "sourceSHA256": "cae803da627bc2b7dda328683c4324b895cf9e2a5c661dc6001ef00246476dac",
+        "meshSHA256": "89c435257524505d8670d9f9015435e7131b6237281edbe1b4d9faceb8c9ed70",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/u7031.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u7031.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u7034",
+        "title": "LDraw Modulex Slope Brick  9  2 x  1 x  0.5",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u7034.dat",
+        "sourceSHA256": "6873a1f9e576a68ecc8e650dee754e045000c4d7957c2d42c3092b94bc693903",
+        "meshSHA256": "47a9eb41ba935654f3c2e07e353518b5807e4ef3b80318fe0781c57080d4674e",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/u7034.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u7034.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u7032",
+        "title": "LDraw Modulex Slope Brick 18  3 x  1",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u7032.dat",
+        "sourceSHA256": "a81c69aea36328889d7935fbb7c1cfbf7a48e3dda6166212b2a95e135c0711c0",
+        "meshSHA256": "75fb6826abab75bef21d32b369f3eacbf8045b256b613e060326a3134feedc8e",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/u7032.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u7032.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u7030",
+        "title": "LDraw Modulex Slope Brick 45  1 x  1",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u7030.dat",
+        "sourceSHA256": "235a590b87c9d0575c7e032bae8cc98b0cc6339f2fcbf247aa7b3ff01600e93d",
+        "meshSHA256": "85bdc7668b5b958edba34e96ee5efe7be5d699193817c03b2e688288477a6d38",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/u7030.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u7030.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-3044a",
+        "title": "LDraw Slope Brick 45  2 x  1 Double with Hollow Bottom",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/3044a.dat",
+        "sourceSHA256": "9b8e18ca0950ac4219e8c9a0f05ec89d10d09b59330d2ca33d2c64693c8e855b",
+        "meshSHA256": "717b3ee2f04244ca7320d7ed74a9198051aa5293116d1839c77a4e3a7101e6d8",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/3044a.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/3044a.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-6881a",
+        "title": "LDraw Tile  6 x  6 without Underside Details",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/6881a.dat",
+        "sourceSHA256": "3fe7f063d68a8689e6c9d8cd80464de9854d463c5f7580507ee0d87b3eb7efb9",
+        "meshSHA256": "818d90ce363d798aaa89a3aa9a97dbb76f9776fa17870d32f743d2747d7a2bc5",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/6881a.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/6881a.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9118",
+        "title": "LDraw ~Electric Hub Mario Body Pant Id Switch",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9118.dat",
+        "sourceSHA256": "916c2475886fd1ae2f0800462cec173060297d04a9e174ca796130d5c1f6deca",
+        "meshSHA256": "a22589517bd2e8543f0e746c2fda922254dd841dd148d47f5a349e0f01693e2c",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/u9118.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9118.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9187c",
+        "title": "LDraw ~Garage Door Counterweight Right without Hinge Pin",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9187c.dat",
+        "sourceSHA256": "245c82b2b47a73f9fc9c161e6621409b65160557436c0b92a3b08e9f1dbc01d6",
+        "meshSHA256": "80878f7819ec08ef2e9c9b2bbd1e987c8f4a0c0adc913088e0889e61a762eb02",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/u9187c.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9187c.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9187d",
+        "title": "LDraw ~Garage Door Counterweight Left without Hinge Pin",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9187d.dat",
+        "sourceSHA256": "6981bc6ca44b62403ef0cd36183db27114f779cae002fa4c6875d6247459eafe",
+        "meshSHA256": "9b7a0095016c1dd29c40f65172b1d83edd1afe20725f39f753fcc07e0c39bf1d",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/u9187d.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9187d.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u7045",
+        "title": "LDraw Modulex Brick Angled 45 2 x 2 Double",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u7045.dat",
+        "sourceSHA256": "f8defbd5a03824b23fffb7143cb12ba41a3295c357dea6757c06d6bf125f01bb",
+        "meshSHA256": "72bc357d1492dc952d1d784e2d3b4c3935215c94382dfd8d6d0c2cb19b6ecb92",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/u7045.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u7045.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u7044",
+        "title": "LDraw Modulex Brick Angled 45 2 x 1 Double",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u7044.dat",
+        "sourceSHA256": "86685ac8aba89e8e6cff03e87e4bb059d5b4feb90b339c8e80d400ece192dad8",
+        "meshSHA256": "d31f14163ccc124381cbdfaecfcb3d799f81d22724e1c49e7ff20926480063ca",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/u7044.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u7044.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u7042",
+        "title": "LDraw Modulex Brick Angled 27 2 x 2 Double",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u7042.dat",
+        "sourceSHA256": "377c2e089d8bbbd751df564916c12f8225dce3ad256a5dc28884aa6615641e9a",
+        "meshSHA256": "ba8d2285da054a2d8f1ba1c614bda5d4c064321dfc207cd938d18b44da0ce7d7",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/u7042.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u7042.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u7039",
+        "title": "LDraw Modulex Brick Angled 18  2 x  2 Double",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u7039.dat",
+        "sourceSHA256": "d9e0435bc363c56a4571ec62b4be6b8ece53e4339a2868a5cee8df9a06f1f724",
+        "meshSHA256": "d4ef36dfa2e76b1fce4e099c3ad6270f42c666c27e74835a07212bf5a05107a8",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/u7039.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u7039.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u7041",
+        "title": "LDraw Modulex Brick Angled 27 2 x 1 Double",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u7041.dat",
+        "sourceSHA256": "07b9edb1f9a4aaa594aa0052bc50161b07887566708b59f39e03c2a0da2d61f4",
+        "meshSHA256": "a570ac3752b268191466d3a4ca37f1dad7f088ea63e823cd0f05743dbcece592",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/u7041.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u7041.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u7036",
+        "title": "LDraw Modulex Brick Angled 9 2 x 2 Double",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u7036.dat",
+        "sourceSHA256": "2e3a2a1a4f24598e6ed7a6de68e1fe2d44c594d121b2d0aafc21d2ca80f61a52",
+        "meshSHA256": "905c5db885199e6fbaa7d9d39e25a66c32e49f3ff741f25fe8c0d49893c43689",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/fa11243b0ae65bcee22d8ab9f1cf11c29823a3c0/library/sources/ldraw-expanded-20261109/parts/u7036.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u7036.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u7038",
+        "title": "LDraw Modulex Brick Angled 18  2 x  1 Double",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u7038.dat",
+        "sourceSHA256": "247305f05bbb08e0250e6b7fb1ef8fdb771e78c4568cb8cbdc61475edc234872",
+        "meshSHA256": "23d3e8d5a9d7b5a16972e8fd3692d534a0175de01198062c65df1a836f2da013",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/u7038.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u7038.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u7035",
+        "title": "LDraw Modulex Brick Angled 9 2 x 1 Double",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u7035.dat",
+        "sourceSHA256": "1ef550e490ae38983c1cae1757778b58f9d85c19fa8f11b2e407a87f2f9f18a3",
+        "meshSHA256": "6260b07551417539339745b2ef28c27d7d9e168037413aaa5e24278de76ec3ec",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/u7035.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u7035.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-35464",
+        "title": "LDraw Slope Brick 45  1 x  1 Double",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/35464.dat",
+        "sourceSHA256": "0c4a292f9040030ca40a705c617f22a12357975f47dc18d3aaa1b353aa05966b",
+        "meshSHA256": "16d81274ea69188201cee92fd5ff071387dea4ab62cf9b42354513fcf2a8c422",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/35464.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/35464.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-7134",
+        "title": "LDraw Brick  1 x  2 with Curved Top without Stud Holders",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/7134.dat",
+        "sourceSHA256": "b3e72c647d3801d061b5582312f0fe5c667d406d4d6abbfce7d277683d14da7d",
+        "meshSHA256": "7ce869141100574724435bc45dccae36087337b92287656dcf157a8cfd0ab6b7",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/7134.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/7134.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-7126",
+        "title": "LDraw Brick  1 x  1 with Curved Top",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/7126.dat",
+        "sourceSHA256": "0efc3bfad9be1f305ccedd4d56831354bdfd21f941bec24f2e90fbad1149d9e6",
+        "meshSHA256": "3ca2a5ae12284abc3039677cb24a3068b24968ff4aa6ae60e93eb55dfafe3252",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/7126.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/7126.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-22388",
+        "title": "LDraw Slope Brick 50  1 x  1 x  0.667 Quadruple",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/22388.dat",
+        "sourceSHA256": "74d1f2ff6d70201b1ee77acfc720cc6c66b2418339db7201e8bb8174c8cfddd5",
+        "meshSHA256": "469ea68aa06d97beb53490fb7375a0fd0f1cb91145511a74c2b7fb381c650862",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/22388.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/22388.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-7826",
+        "title": "LDraw Slope Brick 31  1 x  1 x  0.667 Double Convex",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/7826.dat",
+        "sourceSHA256": "09c0249189068436053be27e4a2624bc8fb4ea7e836bfdcffdfd705444ac9f11",
+        "meshSHA256": "2495218a9c1f7b66cfdb9eabb040027fcf7ec120c5645ad574bb5511b749a096",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/7826.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/7826.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-7827",
+        "title": "LDraw Slope Brick 31  1 x  1 x  0.667 Double Concave",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/7827.dat",
+        "sourceSHA256": "7123e4a7a522d424b48df0a2e16cdad7bdaf2be052fe75fcb7b4cb421bd2eb50",
+        "meshSHA256": "9a83425739fe7d3f4ee8018ffd5d9e6020439374dd32149467e60809ec2cab2c",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/7827.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/7827.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-60601",
+        "title": "LDraw Glass for Window  1 x  2 x  2 without Sill",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/60601.dat",
+        "sourceSHA256": "f9802551d645052a00163ba5ab8aa2eb8f6a7be85fbae58a827161182971d882",
+        "meshSHA256": "03ec03217657947053c18390ccf792822e4fc6fcd2a6f44c23b27e9536a77a8a",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/60601.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/60601.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-87994",
+        "title": "LDraw Bar  3L",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/87994.dat",
+        "sourceSHA256": "1a6c0cb9de6da1175fbdf0bd4b7218c1a39e6dc1ff5e53b5d6080267267ee2e8",
+        "meshSHA256": "38d36edcc9b6a8a62bf13fbfdf61e570fa91f9936819490e1b488c89fdc5e835",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/87994.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/87994.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-2705",
+        "title": "LDraw Technic Action Figure Arm Bearing Pin",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/2705.dat",
+        "sourceSHA256": "a9d9cce495d26adeaf0b8a46460a1a45e3b7f856e13423623b00fadcb22101d0",
+        "meshSHA256": "df4280270b7e7536ce58dbe41e0b96361cc3c408c30606da39293e0ce2966b1e",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/2705.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/2705.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9103",
+        "title": "LDraw Figure Fabuland Hips Hinge",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9103.dat",
+        "sourceSHA256": "7174e8d28a2af68df91cee7cb223453c949b6a0b2d56890a6c438d373ea1b656",
+        "meshSHA256": "24d3e778423d5f49641cfd0f6ce7cd8d9dd967783d313b6da9ea006597a0b2ad",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/u9103.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9103.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-30374",
+        "title": "LDraw Bar  4L Lightsaber Blade",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/30374.dat",
+        "sourceSHA256": "db69ea3eecc2a6f2731aaad6ac8fb072c5ecbe136d1ea8a03de593014fe2e9c0",
+        "meshSHA256": "bac009c54f82aa55772941f167319f30af993ba54f0815563067f119628d5bd0",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/30374.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/30374.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-6231",
+        "title": "LDraw Panel  1 x  1 x  1 Corner with Rounded Corners",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/6231.dat",
+        "sourceSHA256": "4b78217c262c296782f5deace408b763154fe8961704279ad0ff69fa9772949e",
+        "meshSHA256": "3c7486bab906d0ca532aa8ef3564744044c57fecb5eca7e719fd3ff0ef14f041",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a98c23ff9003530372c28e07cbff301f1665b0b8",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a98c23ff9003530372c28e07cbff301f1665b0b8/library/sources/ldraw-expanded-20261109/parts/6231.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/6231.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-49307",
+        "title": "LDraw Brick  1 x  1 x  0.667 with Curved Top",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/49307.dat",
+        "sourceSHA256": "5ab186e08cf7dfd9ff7ce2e1afcd69d08479fd44972340d53d78f67ffdceb135",
+        "meshSHA256": "868ddd8741117c989d00be0f7cd1dd64623a8ab552ae65e542a89548c5f338f8",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/49307.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/49307.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u8025",
+        "title": "LDraw Mursten Window  1 x  3 x  3",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u8025.dat",
+        "sourceSHA256": "a44e9931525a4afcc76d95a6ec00561c791736bb7646a851db0fb9a68b70f52a",
+        "meshSHA256": "fef45abc0ce023d56d63f7590c2b7681d884d7afd810e8a031275b3c669ce3fe",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/u8025.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u8025.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u8016",
+        "title": "LDraw Mursten Window Pane  1 x  2 x  2",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u8016.dat",
+        "sourceSHA256": "2e03dd91075a82866851c7d04d7c7d3e2b19afab01d25c3f01541d8f4946255a",
+        "meshSHA256": "2912fb4e2e104eeeb43efc94f0527d5cbc98933d4ea304e0ae411bca9ad71a18",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/u8016.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u8016.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-60602",
+        "title": "LDraw Glass for Window  1 x  2 x  3",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/60602.dat",
+        "sourceSHA256": "2e6ac9f586e07461a8104dd4503f945c4a5f31d741a2e1809d2986153a428cfd",
+        "meshSHA256": "f8d35a27adf6d07220fd15d6fa867c194617f4aed7d135fbffb67045f442077a",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/60602.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/60602.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9252",
+        "title": "LDraw Cardboard  6 x  6 Thick with Rounded Corners",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9252.dat",
+        "sourceSHA256": "e4fe3794386f63fcd074339733b9aa74cecd02624a546028a7b1f0356dd71dbd",
+        "meshSHA256": "d01ae92ff99866fd90c1c7bf38bedb8437ad04fe9bd57289cf0e335883f337ee",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/u9252.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9252.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-30321",
+        "title": "LDraw Glass for Panel  3 x  6 x  6 with Window",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/30321.dat",
+        "sourceSHA256": "0e4b0fdffc5b00d24d9f23e8ac50d2fdc714e1f903b7ab72cb812b8437adc7eb",
+        "meshSHA256": "cc346b19dc637f731d970aaa2ca14c6e5664ed8d1565dfd5f9cbefce2774ae7c",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/30321.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/30321.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9565",
+        "title": "LDraw Electric Record and Play Brick 16 x 10 x  4 Off Button",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9565.dat",
+        "sourceSHA256": "966f2a1c46f7ddb5aef98e57d729d4073673daab5564b8239d5aa16fd25e3e2c",
+        "meshSHA256": "d8769ab3fa362ede339eb36d94b4829721d33073bcae729b98768aae575bb096",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/u9565.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9565.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-4862",
+        "title": "LDraw Glass for Window  1 x  2 x  2 Plane",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/4862.dat",
+        "sourceSHA256": "200c78d780800fa9b200b4ce6edb987f7c30ccf3c59adaac284a116de88c8e0c",
+        "meshSHA256": "1ec4cda9500b495e4973ffd6a756196a8087bfa2e8326a9cd0048b1c4eb7b909",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/4862.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/4862.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-3573",
+        "title": "LDraw Slope Brick Curved  4 x  1 x  1.667",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/3573.dat",
+        "sourceSHA256": "74e5a9bdc0b973970ab29e6b7b505a53f62fcf6206ed07e59658ecb41c55700d",
+        "meshSHA256": "418e459802ad055195c847159878a07a00088349d9e6bbfb531445a6b27428d9",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/3573.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/3573.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9066",
+        "title": "LDraw ~Electric Train  4.5V On/Off Switch Brick  2 x  4 (Pin)(Needs w)",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9066.dat",
+        "sourceSHA256": "25fc364f2a2b20876672e04646a21fb9848121295227ef4ea4974f6fb6a558f7",
+        "meshSHA256": "18f6965ddfc9fe984cdf221fdad6ff0f9afa1e76cd7e82aea4a643ad62c5f98f",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f/library/sources/ldraw-expanded-20261109/parts/u9066.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9066.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-76610",
+        "title": "LDraw ~Electric Mindstorms EV3 IR-Beacon D-shaped Button",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/76610.dat",
+        "sourceSHA256": "b7032f9b6d20f20d29c98fccb10e1269eaec2d21cff024d02215aab6aad30899",
+        "meshSHA256": "5b544e005264ba1f294ae5391fb276292a3bf0e695189e38596565ba75308f0f",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f/library/sources/ldraw-expanded-20261109/parts/76610.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/76610.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9340",
+        "title": "LDraw ~Garage  4 x  8 x  3 Base",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9340.dat",
+        "sourceSHA256": "35ce95ac656c2f20752bd6aa9e9eccd19dd7f171e68d3997f172cd4ff88472a9",
+        "meshSHA256": "3a40aff803cd9ce3147f0d6fdac5e394a0c7d433526b17d5861b0fd041067774",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f/library/sources/ldraw-expanded-20261109/parts/u9340.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9340.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-15435",
+        "title": "LDraw ~Minifig Helmet Large Square - Top",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/15435.dat",
+        "sourceSHA256": "1824aaca0d32f7b7bb6cf36987fe678078f6de9e854e90e6eed713a82e505e38",
+        "meshSHA256": "f0e7b3e8ea8dc1f110a7dced6fb52dd8975dd5a88b0b16d13df344912630d6f7",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f/library/sources/ldraw-expanded-20261109/parts/15435.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/15435.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9269",
+        "title": "LDraw ~Electric Brick  2 x  2 x  0.667 Underside Metal Clamp",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9269.dat",
+        "sourceSHA256": "1f73e34ad97d5cc934c2a9ff3d2b06afefbd7d62799eedeb45c49718f223dd0e",
+        "meshSHA256": "75963931548f7d5b016d971f8da54782aaf43e2e176693df1170a2005ce0fa9d",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f/library/sources/ldraw-expanded-20261109/parts/u9269.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9269.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-4343",
+        "title": "LDraw ~Door  1 x  4 x  5 Frame",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/4343.dat",
+        "sourceSHA256": "47897d1ea32290e7d8bfffcb789652773a79c1088ac64d6067c7b5512b8bbf52",
+        "meshSHA256": "af1d20d498c1f0c0c22bb051a8c73ab011259d3e9ad27b03c2c9d2f4240c56ac",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f/library/sources/ldraw-expanded-20261109/parts/4343.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/4343.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-35545",
+        "title": "LDraw ~Electric Powered Up Remote Handset \"-\" Control Button",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/35545.dat",
+        "sourceSHA256": "6ebe94e9635dc0262ca80eada8206424927d51561135e51c0a0b8424f6601933",
+        "meshSHA256": "8687f0f6ae04aa30f99f3227c60813bc0a2a76bcaaf22965ce0ceb03ac7f55d3",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f/library/sources/ldraw-expanded-20261109/parts/35545.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/35545.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9012",
+        "title": "LDraw ~Technic Axle Flexible 26 - Flexible Part",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9012.dat",
+        "sourceSHA256": "44b26bbbde0ebc0b0c1c281f7ce5aeaec3753278b6bab1dab839fe9a70cf6569",
+        "meshSHA256": "c53640ef1e026525c8aeb14dfc0a3a70acb9b6e3ec620470482c70d320155898",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f/library/sources/ldraw-expanded-20261109/parts/u9012.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9012.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9044",
+        "title": "LDraw ~Magnet Cylindrical  1.3 x  1.3",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9044.dat",
+        "sourceSHA256": "36bfb9b12b033ccc7773cdf84815c1400a410269076199fea584a0043b1576de",
+        "meshSHA256": "d39514d8b1d360993816952e86669d49997bb93c45d515e05517ab5c929571a6",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f/library/sources/ldraw-expanded-20261109/parts/u9044.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9044.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-70023",
+        "title": "LDraw ~Magnet Cylindrical (Obsolete)",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/70023.dat",
+        "sourceSHA256": "f3b608760941677d462ba0a463064afb39a27ad7652e81e7294a8ff18e96486f",
+        "meshSHA256": "6a554a3f8663ab8dd0e66428e40bdb342b58f3a7cbf726a364ec78b14c23b1cc",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f/library/sources/ldraw-expanded-20261109/parts/70023.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/70023.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9132",
+        "title": "LDraw ~Axle Steel  4 x 72 LDU",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9132.dat",
+        "sourceSHA256": "8194dde7db7c6cfa5c590b0e27e8ecb21ac34134f5e163288241a9232a7826ec",
+        "meshSHA256": "9d685d9470c19a7f7f25d224be3c967c8b782eace84329f36bcd5e4de275c03e",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f/library/sources/ldraw-expanded-20261109/parts/u9132.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9132.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      },
+      {
+        "id": "corpus-ldraw-expanded-u9133",
+        "title": "LDraw ~Axle Steel  4 x 114 LDU",
+        "sourcePath": "library/sources/ldraw-expanded-20261109/parts/u9133.dat",
+        "sourceSHA256": "760bf3589485cdc432cbbe9857facca1b61121be5db9ea1c6fc0307b91b4d60b",
+        "meshSHA256": "a1692da61275f9345f50a7601d40739e94ba34e8061a1a0dac1df6a5059183f9",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/a535d2a5e30d0f54e7a1eeffbc8f9f80f3e0764f/library/sources/ldraw-expanded-20261109/parts/u9133.dat"
+        },
+        "review": {
+          "eligible": true,
+          "cause": "authored_root_not_alias_or_known_identity_duplicate",
+          "rootPath": "parts/u9133.dat"
+        },
+        "disposition": "NO_FLAG_UNDER_THESE_SELECTION_RULES"
+      }
+    ],
+    "recordsAndAssetsPreserved": true,
+    "countsChanged": false,
+    "actualMainCountsPreserved": [
+      263,
+      258,
+      302
+    ],
+    "noAutomaticCountLoss": true
+  },
+  "failureTaxonomy": {
+    "batchLicenceClosureSourcePASS": 30,
+    "batchConverterPASS": 30,
+    "batchStrictNativePASS": 17,
+    "batchNativeNotManifoldABUnresolved": 13,
+    "batchIndependentSourceWithheld": 4,
+    "currentIndependentSurvivors": 13,
+    "cumulativeNativeNotManifold": 97,
+    "cumulativeScopedSourceBoundaryIncompatibility": 1,
+    "cumulativeABUnresolved": 96,
+    "missingUnsupportedTexture": 2
+  },
+  "sourcePool": {
+    "closureBudgetFitBeforeIndependenceReview": 585,
+    "knownNonIndependentRoots": 4,
+    "unconverted": 377,
+    "independenceOfUnconverted": "NOT_YET_REVIEWED_UNDER_NEW_RULES",
+    "qualityYieldUnknown": true,
+    "numericalSourceDeficitEstablished": false
+  },
+  "newMainIntegrationBlocker": {
+    "newMain": "b1f6fa4",
+    "changedAreas": "Model library panel/index/Adafruit preview/runtime LiteCAD source changed during measured run",
+    "newIntegrationBuildBrowser": "NOT_RUN",
+    "doNotAttributeOldRuntimeProofToNewMain": true
+  },
+  "resourceTerminal": {
+    "lockReleased": true,
+    "allCorrectedPhasesPASS": true,
+    "originalTimeoutsUnchanged": true
+  }
+}
