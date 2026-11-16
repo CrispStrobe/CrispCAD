@@ -81,11 +81,12 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
   return {
    snapshot:()=>structuredClone(frame),
    async sense(rays:SimulationRay[]){if(externalOwner!==owner||disposed||pending)throw new Error(t('Simulation was stopped'));pending=true;try{const next=await client!.send({op:'sense',rays});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));frame=next;return structuredClone(frame);}finally{pending=false;}},
-   async step(impulses:{id:string;impulse:number}[],rays:SimulationRay[]=[],servos:SimulationServo[]=[]){
+   async step(impulses:{id:string;impulse:number}[],rays:SimulationRay[]=[],servos:SimulationServo[]=[],display=true){
     if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));if(pending)throw new Error(t('A mechanical step is already pending'));
     if(impulses.some(v=>!Number.isFinite(v.impulse)||Math.abs(v.impulse)>1))throw new Error(t('Invalid actuator impulse'));
-    pending=true;try{const next=await client!.send({op:'actuator-step',impulses,rays,servos});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));frame=next;present(frame);notify();return structuredClone(frame);}finally{pending=false;}
+    pending=true;try{const next=await client!.send({op:'actuator-step',impulses,rays,servos});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));frame=next;if(display){present(frame);notify();}return structuredClone(frame);}finally{pending=false;}
    },
+   present(){if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));present(frame);notify();},
    release(){if(externalOwner===owner){const ownedClient=client;pause();if(ownedClient)void ownedClient.send({op:'stop-motors'}).catch(()=>{});}}
   };
  }
