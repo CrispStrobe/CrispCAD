@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+ "Invalid position servo target":"Ungültiger Positionsservo-Sollwert",
+ "Invalid body sensor ray":"Ungültiger Sensorstrahl am Körper",
  "Front steering servo":"Vorderer Lenkservo",
  "Output spline":"Abtriebsverzahnung",
  "Invalid actuator impulse":"Ungültiger Aktuatorimpuls",

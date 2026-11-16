@@ -4,7 +4,7 @@ import type {CadSession,Vec3} from '@brickwright/cad-core';
 import {createSimulationClient} from './simulation-client.js';
 import {createMotionTraces} from './motion-traces.js';
 import {createSimulationReplay} from './simulation-replay.js';
-import type {SimulationFrame} from './simulation-protocol.js';
+import type {SimulationFrame,SimulationRay,SimulationServo} from './simulation-protocol.js';
 export interface CadMotor {port:string;id:string;name:string}
 type Drive='hinge'|'slider';
 type Travel={kind:Drive;target:number;speed:number;deadline:number;lastSpeed:number;resolve:(value:string)=>void;reject:(error:Error)=>void};
@@ -80,10 +80,11 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
   let pending=false;
   return {
    snapshot:()=>structuredClone(frame),
-   async step(impulses:{id:string;impulse:number}[]){
+   async sense(rays:SimulationRay[]){if(externalOwner!==owner||disposed||pending)throw new Error(t('Simulation was stopped'));pending=true;try{const next=await client!.send({op:'sense',rays});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));frame=next;return structuredClone(frame);}finally{pending=false;}},
+   async step(impulses:{id:string;impulse:number}[],rays:SimulationRay[]=[],servos:SimulationServo[]=[]){
     if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));if(pending)throw new Error(t('A mechanical step is already pending'));
     if(impulses.some(v=>!Number.isFinite(v.impulse)||Math.abs(v.impulse)>1))throw new Error(t('Invalid actuator impulse'));
-    pending=true;try{const next=await client!.send({op:'actuator-step',impulses});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));frame=next;present(frame);notify();return structuredClone(frame);}finally{pending=false;}
+    pending=true;try{const next=await client!.send({op:'actuator-step',impulses,rays,servos});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));frame=next;present(frame);notify();return structuredClone(frame);}finally{pending=false;}
    },
    release(){if(externalOwner===owner)pause();}
   };

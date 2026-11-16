@@ -117,6 +117,18 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
   add(shape,id,'dynamic',{friction:.4,restitution:.45},{massKg,volumeM3,centerM:[0,0,0],inertiaKgM2:[[inertia,0,0],[0,inertia,0],[0,0,inertia]]});previewCount++;
   const body=byId.get(id),p=new J.RVec3(...positionMm.map(v=>v*.001)),v=new J.Vec3(...velocityMmS.map(v=>v*.001));bodies.SetPosition(body.GetID(),p,J.EActivation_Activate);bodies.SetLinearVelocity(body.GetID(),v);J.destroy(p);J.destroy(v);
  }
+ function castRay(fromMm:Vec3,toMm:Vec3,ignoreBodyId?:string){
+   if(disposed||![...fromMm,...toMm].every(Number.isFinite))throw new Error(t('Invalid physics state or ray'));
+   const own:any[]=[];const keep=(value:any)=>{own.push(value);return value;};
+   try{const ray=keep(new J.RRayCast()),origin=keep(new J.RVec3(...fromMm.map(v=>v*.001))),direction=keep(new J.Vec3(...toMm.map((v,i)=>(v-fromMm[i])*.001)));ray.mOrigin=origin;ray.mDirection=direction;
+    const settings=keep(new J.RayCastSettings()),collector=keep(new J.CastRayClosestHitCollisionCollector()),permissive=keep(new J.ObjectVsBroadPhaseLayerFilterJS());permissive.ShouldCollide=()=>true;
+    const broadFilter=keep(new J.DefaultBroadPhaseLayerFilter(permissive,0)),objectFilter=keep(new J.ObjectLayerFilterJS());objectFilter.ShouldCollide=()=>true;
+    const bodyFilter=keep(ignoreBodyId?new J.IgnoreSingleBodyFilter(byId.get(ignoreBodyId)!.GetID()):new J.BodyFilter()),shapeFilter=keep(new J.ShapeFilter());system.GetNarrowPhaseQuery().CastRay(ray,settings,collector,broadFilter,objectFilter,bodyFilter,shapeFilter);
+    if(!collector.HadHit())return null;const hit=collector.mHit,index=hit.mBodyID.GetIndexAndSequenceNumber(),entry=[...byId].find(([,body])=>body.GetID().GetIndexAndSequenceNumber()===index),member=entry?meshes[entry[1].GetShape().GetSubShapeUserData(hit.mSubShapeID2)-1]:undefined;return {bodyId:member?.id??entry?.[0],fraction:hit.mFraction};
+   }finally{for(const value of own.reverse())J.destroy(value);}
+
+ }
+
  return {
   grabBody(id:string,pointMm:Vec3,targetMm:Vec3){const body=byId.get(id);if(disposed||!body||body.IsStatic())throw new Error(t('Choose a dynamic body to drag'));if([...pointMm,...targetMm].length!==6||[...pointMm,...targetMm].some(v=>!Number.isFinite(v)||Math.abs(v)>10000))throw new Error(t('Invalid drag point'));invalidateSeparatedPairs(id);if(grab?.id===id){grab.target=[...targetMm];return;}const p=body.GetPosition(),q=body.GetRotation();grab={id,local:quaternionPoint(pointMm.map((v,i)=>v*.001-[p.GetX(),p.GetY(),p.GetZ()][i]),[-q.GetX(),-q.GetY(),-q.GetZ(),q.GetW()]),target:[...targetMm]};},
   releaseGrab(){grab=undefined;},
@@ -132,15 +144,14 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
   setAngularVelocity(id:string,velocityRadS:Vec3){if(disposed||!velocityRadS.every(Number.isFinite))throw new Error(t('Invalid physics state or velocity'));const body=byId.get(id);if(!body)throw new Error(t('Unknown physics body'));if(body.IsStatic())throw new Error(t('A fixed body cannot be thrown'));invalidateSeparatedPairs(id);const point=new J.RVec3(...sourceCenterM(id)),previous=bodies.GetPointVelocity(body.GetID(),point),center=body.GetCenterOfMassPosition(),r=sourceCenterM(id).map((v,i)=>v-[center.GetX(),center.GetY(),center.GetZ()][i]),prior=[previous.GetX(),previous.GetY(),previous.GetZ()],linear=new J.Vec3(...prior.map((v,i)=>v-velocityRadS[(i+1)%3]*r[(i+2)%3]+velocityRadS[(i+2)%3]*r[(i+1)%3])),angular=new J.Vec3(...velocityRadS);bodies.SetLinearVelocity(body.GetID(),linear);bodies.SetAngularVelocity(body.GetID(),angular);bodies.ActivateBody(body.GetID());J.destroy(point);J.destroy(linear);J.destroy(angular);},
   geometryBoundsMm(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const body=byId.get(id),mesh=meshes.find(m=>m.id===id);if(!body||!mesh)throw new Error(t('Unknown physics body'));const p=body.GetPosition(),q=body.GetRotation(),x=q.GetX(),y=q.GetY(),z=q.GetZ(),w=q.GetW(),translation=[p.GetX()*1000,p.GetY()*1000,p.GetZ()*1000],min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(let i=0;i<mesh.positions.length;i+=3){const a=mesh.positions[i],b=mesh.positions[i+1],c=mesh.positions[i+2],u=2*(y*c-z*b),v=2*(z*a-x*c),t=2*(x*b-y*a),rotated=[a+w*u+y*t-z*v,b+w*v+z*u-x*t,c+w*t+x*v-y*u];for(let j=0;j<3;j++){const value=rotated[j]+translation[j];min[j]=Math.min(min[j],value);max[j]=Math.max(max[j],value);}}return {min,max};},
   boundsMm(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const body=byId.get(id);if(!body)throw new Error(t('Unknown physics body'));const original=prepared.get(id);if(original&&assemblies.get(fixedRoot(id))!.length>1){const p=body.GetPosition(),q=body.GetRotation(),rotation=[q.GetX(),q.GetY(),q.GetZ(),q.GetW()],position=[p.GetX()*1000,p.GetY()*1000,p.GetZ()*1000],min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(const hull of original.hulls)for(let i=0;i<hull.positions.length;i+=3){const point=quaternionPoint(Array.from(hull.positions.subarray(i,i+3)),rotation);for(let axis=0;axis<3;axis++){const v=point[axis]+position[axis];min[axis]=Math.min(min[axis],v);max[axis]=Math.max(max[axis],v);}}return {min,max};}const box=body.GetWorldSpaceBounds();return {min:[box.mMin.GetX()*1000,box.mMin.GetY()*1000,box.mMin.GetZ()*1000],max:[box.mMax.GetX()*1000,box.mMax.GetY()*1000,box.mMax.GetZ()*1000]};},
-  raycast(fromMm:Vec3,toMm:Vec3){
-   if(disposed||![...fromMm,...toMm].every(Number.isFinite))throw new Error(t('Invalid physics state or ray'));
-   const own:any[]=[];const keep=(value:any)=>{own.push(value);return value;};
-   try{const ray=keep(new J.RRayCast()),origin=keep(new J.RVec3(...fromMm.map(v=>v*.001))),direction=keep(new J.Vec3(...toMm.map((v,i)=>(v-fromMm[i])*.001)));ray.mOrigin=origin;ray.mDirection=direction;
-    const settings=keep(new J.RayCastSettings()),collector=keep(new J.CastRayClosestHitCollisionCollector()),permissive=keep(new J.ObjectVsBroadPhaseLayerFilterJS());permissive.ShouldCollide=()=>true;
-    const broadFilter=keep(new J.DefaultBroadPhaseLayerFilter(permissive,0)),objectFilter=keep(new J.ObjectLayerFilterJS());objectFilter.ShouldCollide=()=>true;
-    const bodyFilter=keep(new J.BodyFilter()),shapeFilter=keep(new J.ShapeFilter());system.GetNarrowPhaseQuery().CastRay(ray,settings,collector,broadFilter,objectFilter,bodyFilter,shapeFilter);
-    if(!collector.HadHit())return null;const hit=collector.mHit,index=hit.mBodyID.GetIndexAndSequenceNumber(),entry=[...byId].find(([,body])=>body.GetID().GetIndexAndSequenceNumber()===index),member=entry?meshes[entry[1].GetShape().GetSubShapeUserData(hit.mSubShapeID2)-1]:undefined;return {bodyId:member?.id??entry?.[0],fraction:hit.mFraction};
-   }finally{for(const value of own.reverse())J.destroy(value);}
+  raycast(fromMm:Vec3,toMm:Vec3){return castRay(fromMm,toMm);},
+  /** Sample an ideal single ray carried by a body, ignoring its complete rigid assembly. */
+  bodyRay(id:string,originMm:Vec3,direction:Vec3,rangeMm:number){
+   const node=doc.nodes[id],body=byId.get(id);if(disposed||!node||!body||![...originMm,...direction,rangeMm].every(Number.isFinite)||rangeMm<=0||rangeMm>100000||Math.hypot(...direction)<1e-9)throw new Error(t('Invalid body sensor ray'));
+   const rotation=body.GetRotation(),q=[rotation.GetX(),rotation.GetY(),rotation.GetZ(),rotation.GetW()],position=body.GetPosition();
+   const source=rotate(originMm.map((v,i)=>v*node.transform.scale[i]),node.transform.rotation).map((v,i)=>v+node.transform.position[i]),moved=quaternionPoint(source,q),origin=moved.map((v,i)=>v+[position.GetX(),position.GetY(),position.GetZ()][i]*1000) as Vec3;
+   const axis=quaternionPoint(rotate(direction,node.transform.rotation),q),length=Math.hypot(...axis),to=origin.map((v,i)=>v+axis[i]/length*rangeMm) as Vec3;
+   const hit=castRay(origin,to,id);return hit?hit.fraction*rangeMm:null;
   },
   linearVelocityMmS(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const body=byId.get(id);if(!body)throw new Error(t('Unknown physics body'));const point=new J.RVec3(...sourceCenterM(id)),v=bodies.GetPointVelocity(body.GetID(),point);const velocity=[v.GetX()*1000,v.GetY()*1000,v.GetZ()*1000];J.destroy(point);return velocity;},
   setLinearVelocity(id:string,velocityMmS:Vec3){if(disposed||velocityMmS.length!==3||velocityMmS.some(v=>!Number.isFinite(v)||Math.abs(v)>10000))throw new Error(t('Invalid initial body velocity'));const body=byId.get(id);if(!body)throw new Error(t('Unknown physics body'));if(body.IsStatic())throw new Error(t('A fixed body cannot be thrown'));invalidateSeparatedPairs(id);const center=body.GetCenterOfMassPosition(),r=sourceCenterM(id).map((v,i)=>v-[center.GetX(),center.GetY(),center.GetZ()][i]),angular=body.GetAngularVelocity(),w=[angular.GetX(),angular.GetY(),angular.GetZ()],v=new J.Vec3(...velocityMmS.map((v,i)=>v*.001-w[(i+1)%3]*r[(i+2)%3]+w[(i+2)%3]*r[(i+1)%3]));bodies.SetLinearVelocity(body.GetID(),v);bodies.ActivateBody(body.GetID());J.destroy(v);},
@@ -158,6 +169,16 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
    else J.castObject(constraints.get(id),J.SliderConstraint).SetMotorState(J.EMotorState_Off);
    const authored=doc.nodes[joint.bodyA].transform,origin=a.GetPosition(),local=rotate(joint.anchorA.map((v,i)=>v*authored.scale[i]),authored.rotation).map((v,i)=>(v+authored.position[i])*.001),offset=quaternionPoint(local,q),at=new J.RVec3(...offset.map((v,i)=>v+[origin.GetX(),origin.GetY(),origin.GetZ()][i]));
    for(const [body,sign]of [[a,-1],[b,1]] as const){if(body.IsStatic())continue;const value=new J.Vec3(...axis.map(v=>v*impulse*sign));if(joint.kind==='hinge')body.AddAngularImpulse(value);else body.AddImpulse(value,at);bodies.ActivateBody(body.GetID());J.destroy(value);}J.destroy(at);
+  },
+  /** Ideal torque-limited position servo, solved implicitly with both-body reaction. */
+  setHingeServo(id:string,angleRad:number,maxTorqueNm:number){
+   if(disposed||!Number.isFinite(angleRad)||Math.abs(angleRad)>Math.PI*2||!Number.isFinite(maxTorqueNm)||maxTorqueNm<=0||maxTorqueNm>100||doc.joints?.find(j=>j.id===id)?.kind!=='hinge')throw new Error(t('Invalid position servo target'));
+   const joint=doc.joints!.find(j=>j.id===id)!,hinge=J.castObject(constraints.get(id),J.HingeConstraint),motor=hinge.GetMotorSettings();
+   motor.mMinTorqueLimit=-maxTorqueNm;motor.mMaxTorqueLimit=maxTorqueNm;
+   // Ideal internal position loop. Native velocity constraints enforce the
+   // torque bound implicitly; measuring again each coupled step closes the loop.
+   const error=angleRad-hinge.GetCurrentAngle(),speed=Math.max(-Math.PI*5/3,Math.min(Math.PI*5/3,error*12));
+   hinge.SetTargetAngularVelocity(speed);hinge.SetMotorState(J.EMotorState_Velocity);for(const body of [joint.bodyA,joint.bodyB])bodies.ActivateBody(byId.get(body).GetID());
   },
   setHingeMotor(id:string,speedRadS:number,maxTorqueNm:number){
    if(disposed||!Number.isFinite(speedRadS)||Math.abs(speedRadS)>20||!Number.isFinite(maxTorqueNm)||maxTorqueNm<=0||maxTorqueNm>100)throw new Error(t('Invalid hinge motor command'));
