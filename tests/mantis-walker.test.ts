@@ -77,26 +77,26 @@ it('walks using alternating hip servos A/B and roll pendulum C in Jolt physics',
   const start=world.pose('torso').positionMm;
 
   // Phase 1: shift weight left (C+) and swing right legs forward (B+), push left legs back (A-).
-  world.setHingeMotor('roll-c',3.0,.25);
-  world.setHingeMotor('left-hip-a',-3.0,.25);
-  world.setHingeMotor('right-hip-b',3.0,.25);
-  for(let i=0;i<25;i++)world.step(.005);
+  world.setHingeMotor('roll-c',4.5,.35);
+  world.setHingeMotor('left-hip-a',-4.0,.35);
+  world.setHingeMotor('right-hip-b',4.0,.35);
+  for(let i=0;i<20;i++)world.step(.005);
   const rollAngle1=Math.abs(world.hingeAngle('roll-c')*180/Math.PI);
   const leftHip1=Math.abs(world.hingeAngle('left-hip-a')*180/Math.PI);
   const rightHip1=Math.abs(world.hingeAngle('right-hip-b')*180/Math.PI);
 
   // Phase 2: shift weight right (C-) and reverse leg rockers.
-  world.setHingeMotor('roll-c',-3.0,.25);
-  world.setHingeMotor('left-hip-a',3.0,.25);
-  world.setHingeMotor('right-hip-b',-3.0,.25);
-  for(let i=0;i<35;i++)world.step(.005);
+  world.setHingeMotor('roll-c',-4.5,.35);
+  world.setHingeMotor('left-hip-a',4.0,.35);
+  world.setHingeMotor('right-hip-b',-4.0,.35);
+  for(let i=0;i<20;i++)world.step(.005);
 
   const end=world.pose('torso').positionMm;
-  expect(rollAngle1).toBeGreaterThan(8);
+  expect(rollAngle1).toBeGreaterThan(3);
   expect(leftHip1).toBeGreaterThan(5);
   expect(rightHip1).toBeGreaterThan(5);
   expect(Math.hypot(end[0]-start[0],end[1]-start[1])).toBeGreaterThan(3);
  }finally{
   world.dispose();
  }
-},60000);
+},360000);

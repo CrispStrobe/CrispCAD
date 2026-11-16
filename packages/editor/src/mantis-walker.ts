@@ -26,7 +26,7 @@ const program=(source:string):CodeProgram=>({version:1,language:'brickwright-cad
 
 export const mantisWalkerPartPrograms={
  torso:program(`let spine=move([0,0,4],box(96,28,8));
-let boss=move([-13.5,0,10],box(28,18,4));
+let boss=move([-13.5,0,12],box(28,18,8));
 return union(spine,boss);`),
 
  leg:program(`let bridge=move([0,24,3],box(92,12,6));
@@ -74,7 +74,7 @@ const boxPiece=(cx:number,cy:number,cz:number,sx:number,sy:number,sz:number):Col
 };
 
 const partCollisions:Partial<Record<MantisWalkerPart,CollisionPiece[]>>={
- torso:[boxPiece(0,0,4,96,28,8),boxPiece(-13.5,0,10,28,18,4)],
+ torso:[boxPiece(0,0,4,96,28,8),boxPiece(-13.5,0,12,28,18,8)],
  leg:[boxPiece(0,24,3,92,12,6),boxPiece(40,9,3,12,18,6),boxPiece(-40,9,3,12,18,6)],
  pendulum:[boxPiece(0,18,4,12,36,8),boxPiece(0,32,4,24,14,8)],
 };
@@ -130,8 +130,8 @@ export function createMantisWalkerDocument(id=MANTIS_WALKER_ID):CadDocument{
  // Leg rockers rotated [90,0,0] so local Z=0..6 maps to Y=-6..0, and local Y=0..30 maps to Z=0..30.
  addPart(doc,'leg','left-leg',[0,23,0],[90,0,0],.95);
  addPart(doc,'leg','right-leg',[0,-17,0],[90,0,0],.95);
- // Roll pendulum rotated [90,0,90] so local Z=0..8 maps to X=0..8 (around X=4) and local Y=0..39 maps to Z=38..77.
- addPart(doc,'pendulum','pendulum',[0,0,38],[90,0,90],.2,2400);
+ // Roll pendulum rotated [90,0,90] so local Z=0..8 maps to X=0..8 (around X=4) and local Y=0..39 maps to Z=44..83.
+ addPart(doc,'pendulum','pendulum',[0,0,44],[90,0,90],.2,2400);
 
  const servoMotor=createMotorDocument('micro-servo-1143');
  doc.provenance={
@@ -169,8 +169,8 @@ export function createMantisWalkerDocument(id=MANTIS_WALKER_ID):CadDocument{
  addServo('left-hip','Left hip servo','A',[16,-11.18,26],[-90,0,0],[16,16,26],[0,1,0],[-hipLimit,hipLimit],'torso','left-leg');
  // Right hip servo (port B) at X=-16, spline pointing -Y at [-16, -16, 26].
  addServo('right-hip','Right hip servo','B',[-16,11.18,26],[90,0,0],[-16,-16,26],[0,1,0],[-hipLimit,hipLimit],'torso','right-leg');
- // Weight-shift roll servo (port C) on top of torso, spline along +X at [0, 0, 38].
- addServo('roll','Roll balance servo','C',[-27.18,0,38],[0,90,0],[0,0,38],[1,0,0],[-rollLimit,rollLimit],'torso','pendulum');
+ // Weight-shift roll servo (port C) on top of torso, spline along +X at [0, 0, 44].
+ addServo('roll','Roll balance servo','C',[-27.18,0,44],[0,90,0],[0,0,44],[1,0,0],[-rollLimit,rollLimit],'torso','pendulum');
 
  doc.tracers=[{id:'walker-path',bodyId:'torso',point:[0,0,26],color:'#8b5cf6'}];
  return doc;
