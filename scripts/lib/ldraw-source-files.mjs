@@ -5,9 +5,13 @@ import {isModelLibraryLocalPath} from '../../packages/core/dist/index.js';
 // Read the exact locations declared by the reviewed asset, including versioned
 // archive directories. No ambient part-library or filesystem fallback.
 export async function readSelectedLDrawFiles(entry, readLocalFile) {
+  if (!Array.isArray(entry.files) || !entry.files.length || entry.files.length > 32 || entry.files.some(f => !Number.isSafeInteger(f.bytes) || f.bytes < 1) || entry.files.reduce((n, f) => n + f.bytes, 0) > 32768) throw Error('LDraw source budget exceeds32files/32768bytes.');
   const bundle = entry.asset.sourceBundle;
-  if (bundle?.rootPath !== entry.rootPath) throw Error('LDraw root binding mismatch.');
-  const declared = [[entry.rootPath, entry.asset.original], ...bundle.dependencies.map(d => [d.path, d.file])];
+  if (bundle !== undefined && (bundle?.rootPath !== entry.rootPath || !Array.isArray(bundle.dependencies) || !bundle.dependencies.length)) throw Error('LDraw root binding mismatch.');
+  // A source with no dependencies uses its original-file identity directly.
+  // A declared bundle must still contain actual dependencies.
+  const dependencies = bundle === undefined ? [] : bundle.dependencies;
+  const declared = [[entry.rootPath, entry.asset.original], ...dependencies.map(d => [d.path, d.file])];
   const locations = new Map();
   for (const [path, file] of declared) {
     if (locations.has(path)) throw Error('Duplicate LDraw source binding: ' + path);
