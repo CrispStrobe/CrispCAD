@@ -2,6 +2,7 @@ import {atlasForkliftCatalog,isAtlasForklift,createAtlasForkliftDocument,atlasFo
 import {mantisWalkerCatalog,isMantisWalker,createMantisWalkerDocument,mantisWalkerPreview} from './mantis-walker.js';
 import {cycloneSorterCatalog,isCycloneSorter,createCycloneSorterDocument,cycloneSorterPreview} from './cyclone-sorter.js';
 import {heliosCatapultCatalog,isHeliosCatapult,createHeliosCatapultDocument,heliosCatapultPreview} from './helios-catapult.js';
+import {labyrinthTilterCatalog,isLabyrinthTilter,createLabyrinthTilterDocument,labyrinthTilterPreview} from './labyrinth-tilter.js';
 import {roverCatalog,isTTRover,createTTRoverDocument,ttRoverPreview} from './tt-rover.js';
 import {steerableRoverCatalog,isSteerableRover,createSteerableRoverDocument,steerableRoverPreview} from './steerable-rover.js';
 import {simulationExampleCatalog,isSimulationExample,createSimulationExample,simulationExampleGeometry} from './simulation-examples.js';
@@ -59,7 +60,7 @@ const templates:ShapePreset[]=[
 const screwNames=[['hex-head-screw','Hex-head screw'],['socket-head-screw','Socket-head screw'],['countersunk-screw','Countersunk screw'],['pan-head-screw','Pan-head screw'],['set-screw','Set screw'],['wood-screw','Wood screw']];
 const entries=[...templates,...screwNames.map(([id,name])=>({id,name,category:'',description:'A screw with editable head, drive and V-thread dimensions.',keywords:'screw bolt thread fastener hex socket countersunk pan',color:'#b0b7c2'})),...originalCatalog];
 export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
- ...roverCatalog,...steerableRoverCatalog,...atlasForkliftCatalog,...mantisWalkerCatalog,...cycloneSorterCatalog,...heliosCatapultCatalog,...motorCatalog,...simulationExampleCatalog,
+ ...roverCatalog,...steerableRoverCatalog,...atlasForkliftCatalog,...mantisWalkerCatalog,...cycloneSorterCatalog,...heliosCatapultCatalog,...labyrinthTilterCatalog,...motorCatalog,...simulationExampleCatalog,
  ...Object.entries(essentials).flatMap(([category,ids])=>ids.map(id=>Object.freeze({...entries.find(p=>p.id===id)!,category,additional:false}))),
  ...entries.filter(p=>!Object.values(essentials).flat().includes(p.id)).map(p=>Object.freeze({...p,category:'Additional shapes',additional:true})),
 ]);
@@ -71,6 +72,7 @@ export function presetGeometry(id: string, preview = false, recipe?:GeneratorRec
  if(isMantisWalker(id))return mantisWalkerPreview(id);
  if(isCycloneSorter(id))return cycloneSorterPreview(id);
  if(isHeliosCatapult(id))return heliosCatapultPreview(id);
+ if(isLabyrinthTilter(id))return labyrinthTilterPreview(id);
  if(isSteerableRover(id))return steerableRoverPreview(id);
   if(isSimulationExample(id))return simulationExampleGeometry(id);
   if(isMotorModel(id))return motorGeometry(id);
@@ -104,6 +106,7 @@ export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: 
  if(isMantisWalker(id))return createMantisWalkerDocument(id);
  if(isCycloneSorter(id))return createCycloneSorterDocument(id);
  if(isHeliosCatapult(id))return createHeliosCatapultDocument(id);
+ if(isLabyrinthTilter(id))return createLabyrinthTilterDocument(id);
  if(isSteerableRover(id))return createSteerableRoverDocument(id);
   const preset = shapeCatalog.find(p => p.id === id); if (!preset) throw new Error(t('Unknown shape'));
   if(isSimulationExample(id))return createSimulationExample(id);
