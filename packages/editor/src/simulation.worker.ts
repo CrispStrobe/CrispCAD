@@ -35,7 +35,7 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
     if(!Array.isArray(command.impulses)||command.impulses.length>64||new Set(command.impulses.map(v=>v.id)).size!==command.impulses.length||command.impulses.some(v=>!Number.isFinite(v.impulse)||Math.abs(v.impulse)>1||!document!.joints?.some(j=>j.id===v.id&&['hinge','slider'].includes(j.kind))))throw new Error(t('Invalid actuator impulse'));
     const servos=command.servos??[];
     if(!Array.isArray(servos)||servos.length>64||new Set(servos.map(v=>v.id)).size!==servos.length||servos.some(v=>command.impulses.some(d=>d.id===v.id)||!Number.isFinite(v.angleRad)||Math.abs(v.angleRad)>Math.PI*2||!Number.isFinite(v.torqueNm)||v.torqueNm<=0||v.torqueNm>100||!document!.joints?.some(j=>j.id===v.id&&j.kind==='hinge')))throw new Error(t('Invalid position servo target'));
-    for(const servo of servos){if(servo.enabled)world.setHingeServo(servo.id,servo.angleRad,servo.torqueNm);else world.coastHingeMotor(servo.id);}
+    for(const servo of servos){if(servo.enabled){world.setHingeServo(servo.id,servo.angleRad,servo.torqueNm);driven.set(servo.id,'hinge');}else{world.coastHingeMotor(servo.id);driven.delete(servo.id);}}
     for(const drive of command.impulses)world.applyJointImpulse(drive.id,drive.impulse);world.step(.005);measure();measureSliders();if(command.rays)sense(command.rays);
    }
    else if(command.op==='motor'){

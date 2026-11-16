@@ -86,7 +86,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
     if(impulses.some(v=>!Number.isFinite(v.impulse)||Math.abs(v.impulse)>1))throw new Error(t('Invalid actuator impulse'));
     pending=true;try{const next=await client!.send({op:'actuator-step',impulses,rays,servos});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));frame=next;present(frame);notify();return structuredClone(frame);}finally{pending=false;}
    },
-   release(){if(externalOwner===owner)pause();}
+   release(){if(externalOwner===owner){const ownedClient=client;pause();if(ownedClient)void ownedClient.send({op:'stop-motors'}).catch(()=>{});}}
   };
  }
  return {motors,sliders,prepare,start,pause,reset,stop,stopMotors,acquireExternalClock,
