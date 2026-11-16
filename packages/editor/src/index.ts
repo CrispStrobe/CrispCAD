@@ -184,7 +184,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const toolbarResize=new ResizeObserver(fitSelectionActions);toolbarResize.observe(toolbar);
   toolGroup('File', 'file-tools');
   button('Model library',()=>modelLibraryPanel.open());
-  if(options.embedded)button('Model library',()=>modelLibraryPanel.open(),toolbar,'compact-icon');
+  if(options.embedded)button('Model library',()=>modelLibraryPanel.open(),toolbar,'compact-icon').style.order='-1';
   button('Model source',()=>modelSourcePanel.toggle());
   if(projectsControl){projectsControl.textContent=t('Projects');toolParent.append(projectsControl);}
   if(iterationControl)button('History…',()=>{tree.classList.remove('closed');tree.classList.add('open');partsToggle.setAttribute('aria-pressed','true');iterationControl.focus();});
