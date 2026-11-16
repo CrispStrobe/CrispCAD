@@ -12,6 +12,7 @@ const emptyFrame=():SimulationFrame=>({time:0,poses:[],angles:{},speeds:{},linea
 /** One clock for manual controls and program execution. Preview never edits the design. */
 export function createSimulationController(session:CadSession,wasmURL:string,ready:()=>Promise<unknown>,changed:()=>void,frameChanged:(frame:SimulationFrame|null)=>void,interruptProgram?:()=>void){
  let client:ReturnType<typeof createSimulationClient>|undefined,preparing:Promise<void>|undefined,epoch=0,commandEpoch=0,playing=false,program=false,disposed=false,fixBaseOverride:boolean|undefined,rigidPreview=false,timeScale=1,timer:ReturnType<typeof setTimeout>|undefined,lastTime=0,accumulator=0;
+ let externalOwner:symbol|undefined;
  let frame=emptyFrame(),error='',replayTime:number|undefined,replayPlaying=false,replayTimer:ReturnType<typeof setTimeout>|undefined;const replay=createSimulationReplay();
  const traces=createMotionTraces(),tickets=new Map<string,number>(),settings=new Map<string,{speed:number;limit:number;enabled:boolean}>(),waits=new Map<string,Travel>();
  const fixBase=()=>fixBaseOverride??simulationSettings(session.state.document).fixBase??!!session.state.document.joints?.length;
@@ -24,7 +25,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
  const cancel=(reason:string,id?:string)=>{for(const [key,wait]of waits)if(id===undefined||key===id){waits.delete(key);wait.reject(new Error(reason));}};
  function stopReplay(){replayPlaying=false;clearTimeout(replayTimer);replayTimer=undefined;}
  function showReplay(time:number){const saved=replay.at(time);if(saved){replayTime=saved.time;frameChanged(saved);}}
- function pause(){stopReplay();if(client&&!preparing)void client.send({op:'release-grab'}).catch(()=>{});commandEpoch++;playing=false;program=false;clearTimeout(timer);timer=undefined;lastTime=0;accumulator=0;cancel(t('Simulation was stopped'));notify();}
+ function pause(){externalOwner=undefined;stopReplay();if(client&&!preparing)void client.send({op:'release-grab'}).catch(()=>{});commandEpoch++;playing=false;program=false;clearTimeout(timer);timer=undefined;lastTime=0;accumulator=0;cancel(t('Simulation was stopped'));notify();}
  function reset(){epoch++;pause();client?.dispose();client=undefined;preparing=undefined;frame=emptyFrame();error='';replay.clear();replayTime=undefined;present(null);notify();}
  function fail(value:unknown){if(disposed)return;reset();error=value instanceof Error?value.message:String(value);notify();}
  async function prepare(){
@@ -34,7 +35,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
   preparing=pending;notify();
   try{await pending;}catch(e){if(expected===epoch)fail(e);throw e;}finally{if(preparing===pending)preparing=undefined;notify();}
  }
- async function start(asProgram=false){stopReplay();if(replayTime!==undefined){replayTime=undefined;frameChanged(frame);}const command=commandEpoch;program=asProgram||program;await prepare();if(command!==commandEpoch)throw new Error(t('Simulation was stopped'));if(document.hidden)throw new Error(t('Simulation cannot run in a background page'));program=asProgram||playing&&program;if(playing){notify();return;}playing=true;lastTime=performance.now();accumulator=0;notify();schedule();}
+ async function start(asProgram=false){if(externalOwner)throw new Error(t('The circuit owns this simulation clock'));stopReplay();if(replayTime!==undefined){replayTime=undefined;frameChanged(frame);}const command=commandEpoch;program=asProgram||program;await prepare();if(command!==commandEpoch)throw new Error(t('Simulation was stopped'));if(document.hidden)throw new Error(t('Simulation cannot run in a background page'));program=asProgram||playing&&program;if(playing){notify();return;}playing=true;lastTime=performance.now();accumulator=0;notify();schedule();}
  const schedule=()=>{if(playing&&!disposed)timer=setTimeout(()=>{void tick();},16);};
  function validateDrive(kind:Drive,speed:number,limit:number){if(!Number.isFinite(speed)||Math.abs(speed)>(kind==='hinge'?720:1000)||!Number.isFinite(limit)||limit<=0||limit>(kind==='hinge'?100:10000))throw new Error(t(kind==='hinge'?'Enter a speed from -720 to 720 and a torque above 0 up to 100 Nm':'Enter a speed from -1000 to 1000 and a force above 0 up to 10000 N'));}
  async function sendDrive(id:string,kind:Drive,speed:number,limit:number){validateDrive(kind,speed,limit);await client!.send(kind==='hinge'?{op:'motor',id,speedDps:speed,torqueNm:limit}:{op:'slider',id,speedMmS:speed,forceN:limit});settings.set(id,{speed,limit,enabled:true});}
@@ -56,9 +57,9 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
    if(expected===epoch&&playing)schedule();
   }catch(e){if(expected===epoch)fail(e);}
  }
- async function setDrive(ref:string,kind:Drive,speed:number,limit:number,asProgram=true){const motor=find(ref,kind);validateDrive(kind,speed,limit);const command=commandEpoch,version=ticket(motor.id);cancel(t('Motor command was replaced'),motor.id);if(asProgram)await start(true);else await prepare();if(command!==commandEpoch||tickets.get(motor.id)!==version)throw new Error(t('Motor command was replaced'));await sendDrive(motor.id,kind,speed,limit);notify();}
- async function stopDrive(ref:string,kind:Drive,action:'brake'|'coast'='brake'){const motor=find(ref,kind);if(!['brake','coast'].includes(action))throw new Error(t('Unsupported CAD stop action'));ticket(motor.id);cancel(t('Motor command was replaced'),motor.id);await brake(motor.id,kind,action);notify();}
- async function stopMotors(){stopReplay();for(const motor of [...motors(),...sliders()])ticket(motor.id);cancel(t('Simulation was stopped'));if(client&&!preparing)await client.send({op:'stop-motors'});for(const [id,value]of settings)settings.set(id,{...value,speed:0});notify();}
+ async function setDrive(ref:string,kind:Drive,speed:number,limit:number,asProgram=true){if(externalOwner)throw new Error(t('The circuit owns this simulation clock'));const motor=find(ref,kind);validateDrive(kind,speed,limit);const command=commandEpoch,version=ticket(motor.id);cancel(t('Motor command was replaced'),motor.id);if(asProgram)await start(true);else await prepare();if(command!==commandEpoch||tickets.get(motor.id)!==version)throw new Error(t('Motor command was replaced'));await sendDrive(motor.id,kind,speed,limit);notify();}
+ async function stopDrive(ref:string,kind:Drive,action:'brake'|'coast'='brake'){if(externalOwner)throw new Error(t('The circuit owns this simulation clock'));const motor=find(ref,kind);if(!['brake','coast'].includes(action))throw new Error(t('Unsupported CAD stop action'));ticket(motor.id);cancel(t('Motor command was replaced'),motor.id);await brake(motor.id,kind,action);notify();}
+ async function stopMotors(){if(externalOwner)throw new Error(t('The circuit owns this simulation clock'));stopReplay();for(const motor of [...motors(),...sliders()])ticket(motor.id);cancel(t('Simulation was stopped'));if(client&&!preparing)await client.send({op:'stop-motors'});for(const [id,value]of settings)settings.set(id,{...value,speed:0});notify();}
  async function stop(){pause();await stopMotors();}
  async function travel(ref:string,kind:Drive,distance:number,speed:number){
   const motor=find(ref,kind);if(!Number.isFinite(distance)||Math.abs(distance)>(kind==='hinge'?36000:100000)||!Number.isFinite(speed)||Math.abs(speed)>(kind==='hinge'?720:1000)||speed===0)throw new Error(t('Invalid CAD motor travel command'));
@@ -72,14 +73,29 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
  const blur=()=>{if(!program){if(preparing)reset();else pause();}};
  document.addEventListener('visibilitychange',hidden);window.addEventListener('blur',blur);
  let revision=session.state.revision,documentId=session.state.document.id;const unsubscribe=session.subscribe(state=>{if(state.revision!==revision){revision=state.revision;if(state.document.id!==documentId){documentId=state.document.id;fixBaseOverride=undefined;}if(program)interruptProgram?.();settings.clear();reset();}});
- return {motors,sliders,prepare,start,pause,reset,stop,stopMotors,
+ async function acquireExternalClock(){
+  if(externalOwner||playing||program||preparing)throw new Error(t('Stop the current simulation before connecting a circuit'));
+  const owner=Symbol('external mechanical clock');externalOwner=owner;
+  try{await prepare();if(externalOwner!==owner)throw new Error(t('Simulation was stopped'));program=true;notify();}catch(e){if(externalOwner===owner)externalOwner=undefined;throw e;}
+  let pending=false;
+  return {
+   snapshot:()=>structuredClone(frame),
+   async step(impulses:{id:string;impulse:number}[]){
+    if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));if(pending)throw new Error(t('A mechanical step is already pending'));
+    if(impulses.some(v=>!Number.isFinite(v.impulse)||Math.abs(v.impulse)>1))throw new Error(t('Invalid actuator impulse'));
+    pending=true;try{const next=await client!.send({op:'actuator-step',impulses});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));frame=next;present(frame);notify();return structuredClone(frame);}finally{pending=false;}
+   },
+   release(){if(externalOwner===owner)pause();}
+  };
+ }
+ return {motors,sliders,prepare,start,pause,reset,stop,stopMotors,acquireExternalClock,
   setMotor:(ref:string,speed:number,torque=.02,asProgram=true)=>setDrive(ref,'hinge',speed,torque,asProgram),
   setSlider:(ref:string,speed:number,force=10,asProgram=true)=>setDrive(ref,'slider',speed,force,asProgram),
   stopMotor:(ref:string,action:'brake'|'coast'='brake')=>stopDrive(ref,'hinge',action),stopSlider:(ref:string,action:'brake'|'coast'='brake')=>stopDrive(ref,'slider',action),
   runDegrees:(ref:string,degrees:number,speed:number)=>travel(ref,'hinge',degrees,speed),runDistance:(ref:string,distanceMm:number,speedMmS:number)=>travel(ref,'slider',distanceMm,speedMmS),
   angle(ref:string){return frame.angles[find(ref).id]??0;},speed(ref:string){return frame.speeds[find(ref).id]??0;},sliderPosition(ref:string){return frame.linearPositions[find(ref,'slider').id]??0;},sliderSpeed(ref:string){return frame.linearSpeeds[find(ref,'slider').id]??0;},
   setting(ref:string){const value=settings.get(find(ref).id);return {speed:value?.speed??0,torque:value?.limit??.02,enabled:value?.enabled??false};},sliderSetting(ref:string){const value=settings.get(find(ref,'slider').id);return {speed:value?.speed??0,force:value?.limit??10,enabled:value?.enabled??false};},
-  async step(){stopReplay();replayTime=undefined;if(playing||preparing)throw new Error(t('Pause simulation before stepping'));const expected=epoch,command=commandEpoch;await prepare();if(expected!==epoch||command!==commandEpoch)throw new Error(t('Simulation was stopped'));const next=await client!.send({op:'step',seconds:.005});if(expected!==epoch||command!==commandEpoch)throw new Error(t('Simulation was stopped'));frame=next;present(frame);notify();},
+  async step(){stopReplay();replayTime=undefined;if(playing||preparing||externalOwner)throw new Error(t('Pause simulation before stepping'));const expected=epoch,command=commandEpoch;await prepare();if(expected!==epoch||command!==commandEpoch)throw new Error(t('Simulation was stopped'));const next=await client!.send({op:'step',seconds:.005});if(expected!==epoch||command!==commandEpoch)throw new Error(t('Simulation was stopped'));frame=next;present(frame);notify();},
   async throwBody(id:string,velocityMmS:Vec3){const command=commandEpoch;await start();if(command!==commandEpoch)throw new Error(t('Simulation was stopped'));await client!.send({op:'velocity',id,velocityMmS});},
   async impulse(id:string,impulseNs:Vec3,pointMm?:Vec3){const command=commandEpoch;await start();if(command!==commandEpoch)throw new Error(t('Simulation was stopped'));await client!.send({op:'impulse',id,impulseNs,pointMm});},
   async dragBody(id:string,pointMm:Vec3,targetMm:Vec3){if(!playing||!client)throw new Error(t('Run simulation before dragging'));await client.send({op:'grab',id,pointMm,targetMm});},
@@ -97,7 +113,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
   pauseReplay(){stopReplay();notify();},get replayPlaying(){return replayPlaying;},
   live(){stopReplay();replayTime=undefined;frameChanged(frame);notify();},
   snapshot:()=>structuredClone(frame),
-  get state(){return {state:preparing?'preparing':playing?'running':client?'paused':'idle',program,error,time:frame.time};},
+  get state(){return {state:preparing?'preparing':playing||externalOwner?'running':client?'paused':'idle',program,error,time:frame.time};},
   dispose(){if(disposed)return;if(program){program=false;interruptProgram?.();}reset();disposed=true;unsubscribe();document.removeEventListener('visibilitychange',hidden);window.removeEventListener('blur',blur);}
  };
 }

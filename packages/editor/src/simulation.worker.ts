@@ -27,6 +27,10 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
   }else{
    if(!world)throw new Error(t('Start simulation first'));
    if(command.op==='step'){if(!Number.isFinite(command.seconds)||command.seconds<=0||command.seconds>.05||Math.abs(command.seconds*200-Math.round(command.seconds*200))>1e-8)throw new Error(t('Invalid simulation step'));for(let i=0;i<Math.round(command.seconds*200);i++){world.step(.005);measure();measureSliders();}}
+   else if(command.op==='actuator-step'){
+    if(!Array.isArray(command.impulses)||command.impulses.length>64||new Set(command.impulses.map(v=>v.id)).size!==command.impulses.length||command.impulses.some(v=>!Number.isFinite(v.impulse)||Math.abs(v.impulse)>1||!document!.joints?.some(j=>j.id===v.id&&['hinge','slider'].includes(j.kind))))throw new Error(t('Invalid actuator impulse'));
+    for(const drive of command.impulses)world.applyJointImpulse(drive.id,drive.impulse);world.step(.005);measure();measureSliders();
+   }
    else if(command.op==='motor'){
     if(!Number.isFinite(command.speedDps)||Math.abs(command.speedDps)>720)throw new Error(t('Motor speed must be between -720 and 720 degrees per second'));
     world.setHingeMotor(command.id,command.speedDps*Math.PI/180,command.torqueNm);driven.set(command.id,'hinge');

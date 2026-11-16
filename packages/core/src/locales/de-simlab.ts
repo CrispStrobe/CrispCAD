@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+ "Front steering servo":"Vorderer Lenkservo",
+ "Output spline":"Abtriebsverzahnung",
+ "Invalid actuator impulse":"Ungültiger Aktuatorimpuls",
+ "Choose a hinge or slider actuator":"Ein Dreh- oder Schubgelenk wählen",
+ "Actuator bodies belong to the same rigid assembly":"Die Aktuatorkörper gehören zur selben starren Baugruppe",
+ "The circuit owns this simulation clock":"Die Schaltung steuert diesen Simulationstakt",
+ "Stop the current simulation before connecting a circuit":"Vor dem Verbinden einer Schaltung die laufende Simulation stoppen",
+ "A mechanical step is already pending":"Ein mechanischer Simulationsschritt läuft bereits",
  "Color mode":"Farbmodus",
  "Light":"Hell",
  "Dark":"Dunkel",

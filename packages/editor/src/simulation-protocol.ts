@@ -5,6 +5,7 @@ export interface SimulationFrame {time:number;poses:SimulationPose[];angles:Reco
 export type SimulationCommand =
  |{op:'start';document:CadDocument;wasmURL:string;fixBase:boolean;locale:string;rigidPreview?:boolean}
  |{op:'step';seconds:number}
+ |{op:'actuator-step';impulses:{id:string;impulse:number}[]}
  |{op:'motor';id:string;speedDps:number;torqueNm:number}
  |{op:'stop-motor';id:string;action:'brake'|'coast'}
  |{op:'slider';id:string;speedMmS:number;forceN:number}
