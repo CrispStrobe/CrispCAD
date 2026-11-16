@@ -1,0 +1,2121 @@
+{
+  "atUTC": "2026-11-16T13:23:06.503737+00:00",
+  "status": "ALL9_LOCAL_QUALIFIED_DELIVERY_PENDING",
+  "qualificationCohort": "expanded-batch005-9",
+  "localQualificationUserCycle": 128,
+  "mainCounts": [
+    242,
+    237,
+    281
+  ],
+  "localCounts": [
+    251,
+    246,
+    290
+  ],
+  "cohortDelta": [
+    9,
+    9,
+    9
+  ],
+  "targetRecords": 300,
+  "additionalAfterCohortDelivery": 49,
+  "converterNativeReplays": 0,
+  "actualFocusedCases": 9,
+  "actualPreviews": 9,
+  "models": [
+    {
+      "id": "corpus-ldraw-expanded-49307",
+      "rootPath": "parts/49307.dat",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/49307.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/49307.dat",
+        "bytes": 1034,
+        "sha256": "5ab186e08cf7dfd9ff7ce2e1afcd69d08479fd44972340d53d78f67ffdceb135",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/49307.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/49307.dat",
+          "bytes": 1034,
+          "sha256": "5ab186e08cf7dfd9ff7ce2e1afcd69d08479fd44972340d53d78f67ffdceb135",
+          "crc32": "9bf7397e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Philippe Hurbain [Philo]",
+          "role": "Part UPDATE 2019-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box4o4a.dat",
+          "bytes": 827,
+          "sha256": "a66f3fc32d0209b5b2432c82414997dc0910c48a074be1d96ef5ec088a2594dd",
+          "crc32": "5bffd533",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Donald Sutter [technog]",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box4.dat",
+          "bytes": 948,
+          "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e",
+          "crc32": "13bb3ba1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/2-4cylo.dat",
+          "bytes": 387,
+          "sha256": "4fa9f597d775c7f15e3fc66f60e20d914134d13004b485488b7dbff684776232",
+          "crc32": "3caebe3d",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Max Martin Richter [MMR1988]",
+          "role": "Primitive UPDATE 2010-03",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/2-4edge.dat",
+          "bytes": 683,
+          "sha256": "665400f76566b161c28303cdadce40d17d979a8ff9a8a133675af2d17fbe6763",
+          "crc32": "06d0e869",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/2-4cyli.dat",
+          "bytes": 1543,
+          "sha256": "d486780f0f84893899d9eadcd13150f13a42e15e77a3cda38cdf24ded98862c6",
+          "crc32": "871b109d",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/2-4chrd.dat",
+          "bytes": 490,
+          "sha256": "3b0dfcf2cb881fae0acfe1e53b703104768878636477e540d0c893fc3fd87f8f",
+          "crc32": "6ad0d237",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Philippe Hurbain [Philo]",
+          "role": "Primitive UPDATE 2014-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 7,
+      "originalBytes": 5912,
+      "expandedBytes": 12188,
+      "mesh": {
+        "path": "meshes/ldraw/49307.stl",
+        "bytes": 5084,
+        "sha256": "868ddd8741117c989d00be0f7cd1dd64623a8ab552ae65e542a89548c5f338f8",
+        "format": "stl"
+      },
+      "triangles": 100,
+      "nativePositiveVolumeMm3": 247.05532950003916,
+      "constructionWork": 704,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/editor/provenance/refusal/history/preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/chromium-corpus-ldraw-expanded-49307.json",
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/ipad-webkit-corpus-ldraw-expanded-49307.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-u8025",
+      "rootPath": "parts/u8025.dat",
+      "author": "J.C. Tchang [tchang]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/u8025.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/u8025.dat",
+        "bytes": 2041,
+        "sha256": "a44e9931525a4afcc76d95a6ec00561c791736bb7646a851db0fb9a68b70f52a",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/u8025.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/u8025.dat",
+          "bytes": 2041,
+          "sha256": "a44e9931525a4afcc76d95a6ec00561c791736bb7646a851db0fb9a68b70f52a",
+          "crc32": "7c9f0736",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "J.C. Tchang [tchang]",
+          "role": "Part UPDATE 2019-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box4.dat",
+          "bytes": 948,
+          "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e",
+          "crc32": "13bb3ba1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box5-4a.dat",
+          "bytes": 752,
+          "sha256": "70d5f7f2d0720b84a06100b12b449b8ad37d66a02fc4650b31d556d7b1d0fe41",
+          "crc32": "23e80251",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Willy Tschager [Holly-Wood]",
+          "role": "Primitive UPDATE 2024-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect3.dat",
+          "bytes": 605,
+          "sha256": "07ac46908b6668d993b6de0fb001a34cd996542106b80ebc7de63317d8dde865",
+          "crc32": "dd7621a8",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Mark Kennedy [mkennedy]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box4-7a.dat",
+          "bytes": 1008,
+          "sha256": "93ac5f1805fc4e785c9532c0b40851a9d03da37241f85d5513b059c4358839f4",
+          "crc32": "e8e77e70",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Willy Tschager [Holly-Wood]",
+          "role": "Primitive UPDATE 2024-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect.dat",
+          "bytes": 654,
+          "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71",
+          "crc32": "30c864e3",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 6,
+      "originalBytes": 6008,
+      "expandedBytes": 10073,
+      "mesh": {
+        "path": "meshes/ldraw/u8025.stl",
+        "bytes": 5884,
+        "sha256": "fef45abc0ce023d56d63f7590c2b7681d884d7afd810e8a031275b3c669ce3fe",
+        "format": "stl"
+      },
+      "triangles": 116,
+      "nativePositiveVolumeMm3": 1095.5522083435114,
+      "constructionWork": 1500,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/editor/provenance/refusal/history/preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/chromium-corpus-ldraw-expanded-u8025.json",
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/ipad-webkit-corpus-ldraw-expanded-u8025.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-u8016",
+      "rootPath": "parts/u8016.dat",
+      "author": "J.C. Tchang [tchang]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/u8016.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/u8016.dat",
+        "bytes": 1272,
+        "sha256": "2e03dd91075a82866851c7d04d7c7d3e2b19afab01d25c3f01541d8f4946255a",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/u8016.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/u8016.dat",
+          "bytes": 1272,
+          "sha256": "2e03dd91075a82866851c7d04d7c7d3e2b19afab01d25c3f01541d8f4946255a",
+          "crc32": "4d05b449",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "J.C. Tchang [tchang]",
+          "role": "Part UPDATE 2019-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect2p.dat",
+          "bytes": 594,
+          "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc",
+          "crc32": "62f97088",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Donald Sutter [technog]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box5-2p.dat",
+          "bytes": 794,
+          "sha256": "fd9dc34999a135f90f0947492cc36c042c9dcd2fa853429b8c3d060c5f9ec581",
+          "crc32": "b4523956",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Willy Tschager [Holly-Wood]",
+          "role": "Primitive UPDATE 2024-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect3.dat",
+          "bytes": 605,
+          "sha256": "07ac46908b6668d993b6de0fb001a34cd996542106b80ebc7de63317d8dde865",
+          "crc32": "dd7621a8",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Mark Kennedy [mkennedy]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "parts/s/u8016s01.dat",
+          "bytes": 1234,
+          "sha256": "ba2b573bea200a53914c78af7be0319da83d998256412fe175c4e34a71d16ac1",
+          "crc32": "58393fb1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "J.C. Tchang [tchang]",
+          "role": "Subpart UPDATE 2019-02",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 5,
+      "originalBytes": 4499,
+      "expandedBytes": 11404,
+      "mesh": {
+        "path": "meshes/ldraw/u8016.stl",
+        "bytes": 6484,
+        "sha256": "2912fb4e2e104eeeb43efc94f0527d5cbc98933d4ea304e0ae411bca9ad71a18",
+        "format": "stl"
+      },
+      "triangles": 128,
+      "nativePositiveVolumeMm3": 626.005400431317,
+      "constructionWork": 1621,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/editor/provenance/refusal/history/preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/chromium-corpus-ldraw-expanded-u8016.json",
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/ipad-webkit-corpus-ldraw-expanded-u8016.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-60602",
+      "rootPath": "parts/60602.dat",
+      "author": "Alex Taylor [anathema]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/60602.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/60602.dat",
+        "bytes": 900,
+        "sha256": "2e6ac9f586e07461a8104dd4503f945c4a5f31d741a2e1809d2986153a428cfd",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/60602.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/60602.dat",
+          "bytes": 900,
+          "sha256": "2e6ac9f586e07461a8104dd4503f945c4a5f31d741a2e1809d2986153a428cfd",
+          "crc32": "13501fcb",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Alex Taylor [anathema]",
+          "role": "Part UPDATE 2012-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box5-4a.dat",
+          "bytes": 752,
+          "sha256": "70d5f7f2d0720b84a06100b12b449b8ad37d66a02fc4650b31d556d7b1d0fe41",
+          "crc32": "23e80251",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Willy Tschager [Holly-Wood]",
+          "role": "Primitive UPDATE 2024-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/2-4cylo.dat",
+          "bytes": 387,
+          "sha256": "4fa9f597d775c7f15e3fc66f60e20d914134d13004b485488b7dbff684776232",
+          "crc32": "3caebe3d",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Max Martin Richter [MMR1988]",
+          "role": "Primitive UPDATE 2010-03",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/2-4edge.dat",
+          "bytes": 683,
+          "sha256": "665400f76566b161c28303cdadce40d17d979a8ff9a8a133675af2d17fbe6763",
+          "crc32": "06d0e869",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/2-4cyli.dat",
+          "bytes": 1543,
+          "sha256": "d486780f0f84893899d9eadcd13150f13a42e15e77a3cda38cdf24ded98862c6",
+          "crc32": "871b109d",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/2-4disc.dat",
+          "bytes": 803,
+          "sha256": "1d4662b73e3196fadeb5ecf2fd27f3dbf7cecce0802cf3d7108ab67bb380eb15",
+          "crc32": "81c29c62",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 6,
+      "originalBytes": 5068,
+      "expandedBytes": 12208,
+      "mesh": {
+        "path": "meshes/ldraw/60602.stl",
+        "bytes": 4684,
+        "sha256": "f8d35a27adf6d07220fd15d6fa867c194617f4aed7d135fbffb67045f442077a",
+        "format": "stl"
+      },
+      "triangles": 92,
+      "nativePositiveVolumeMm3": 501.56698341318065,
+      "constructionWork": 1459,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/editor/provenance/refusal/history/preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/chromium-corpus-ldraw-expanded-60602.json",
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/ipad-webkit-corpus-ldraw-expanded-60602.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-u9252",
+      "rootPath": "parts/u9252.dat",
+      "author": "Steffen [Steffen]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/u9252.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/u9252.dat",
+        "bytes": 1490,
+        "sha256": "e4fe3794386f63fcd074339733b9aa74cecd02624a546028a7b1f0356dd71dbd",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/u9252.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/u9252.dat",
+          "bytes": 1490,
+          "sha256": "e4fe3794386f63fcd074339733b9aa74cecd02624a546028a7b1f0356dd71dbd",
+          "crc32": "2f362e91",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Steffen [Steffen]",
+          "role": "Part UPDATE 2020-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4disc.dat",
+          "bytes": 584,
+          "sha256": "3b8faa77185c576085c38f37b13c6a04e2e889eea6a7dc8c4db2d1699a33bcda",
+          "crc32": "76ebb36f",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4cylc.dat",
+          "bytes": 430,
+          "sha256": "fdcb54ba2e2731cbb86ea6b2fddb25c7dda060a7780629a72003e0278805dd30",
+          "crc32": "54d86c48",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Mark Kennedy [mkennedy]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4edge.dat",
+          "bytes": 545,
+          "sha256": "9ce2de7e67bbac575d52cfdc771b9d00856efc9b88002d97db8e665e50f4d467",
+          "crc32": "31ac1199",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4cyli.dat",
+          "bytes": 1044,
+          "sha256": "5a7168952a5a3570327873b9a5802fa7b3be40967ab78c03b6a2bfd4419a1f10",
+          "crc32": "6a45dfb7",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 5,
+      "originalBytes": 4093,
+      "expandedBytes": 16418,
+      "mesh": {
+        "path": "meshes/ldraw/u9252.stl",
+        "bytes": 4684,
+        "sha256": "d01ae92ff99866fd90c1c7bf38bedb8437ad04fe9bd57289cf0e335883f337ee",
+        "format": "stl"
+      },
+      "triangles": 92,
+      "nativePositiveVolumeMm3": 1835.5120695980079,
+      "constructionWork": 835,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/editor/provenance/refusal/history/preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/chromium-corpus-ldraw-expanded-u9252.json",
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/ipad-webkit-corpus-ldraw-expanded-u9252.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-30321",
+      "rootPath": "parts/30321.dat",
+      "author": "Tony Hafner [hafhead]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/30321.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/30321.dat",
+        "bytes": 1727,
+        "sha256": "0e4b0fdffc5b00d24d9f23e8ac50d2fdc714e1f903b7ab72cb812b8437adc7eb",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/30321.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/30321.dat",
+          "bytes": 1727,
+          "sha256": "0e4b0fdffc5b00d24d9f23e8ac50d2fdc714e1f903b7ab72cb812b8437adc7eb",
+          "crc32": "cb4418d1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Tony Hafner [hafhead]",
+          "role": "Part UPDATE 2025-09",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect2p.dat",
+          "bytes": 594,
+          "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc",
+          "crc32": "62f97088",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Donald Sutter [technog]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4cylc.dat",
+          "bytes": 430,
+          "sha256": "fdcb54ba2e2731cbb86ea6b2fddb25c7dda060a7780629a72003e0278805dd30",
+          "crc32": "54d86c48",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Mark Kennedy [mkennedy]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4edge.dat",
+          "bytes": 545,
+          "sha256": "9ce2de7e67bbac575d52cfdc771b9d00856efc9b88002d97db8e665e50f4d467",
+          "crc32": "31ac1199",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4disc.dat",
+          "bytes": 584,
+          "sha256": "3b8faa77185c576085c38f37b13c6a04e2e889eea6a7dc8c4db2d1699a33bcda",
+          "crc32": "76ebb36f",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4cyli.dat",
+          "bytes": 1044,
+          "sha256": "5a7168952a5a3570327873b9a5802fa7b3be40967ab78c03b6a2bfd4419a1f10",
+          "crc32": "6a45dfb7",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 6,
+      "originalBytes": 4924,
+      "expandedBytes": 19031,
+      "mesh": {
+        "path": "meshes/ldraw/30321.stl",
+        "bytes": 4684,
+        "sha256": "cc346b19dc637f731d970aaa2ca14c6e5664ed8d1565dfd5f9cbefce2774ae7c",
+        "format": "stl"
+      },
+      "triangles": 92,
+      "nativePositiveVolumeMm3": 807.1640285956494,
+      "constructionWork": 894,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/editor/provenance/refusal/history/preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/chromium-corpus-ldraw-expanded-30321.json",
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/ipad-webkit-corpus-ldraw-expanded-30321.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-u9565",
+      "rootPath": "parts/u9565.dat",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/u9565.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/u9565.dat",
+        "bytes": 469,
+        "sha256": "966f2a1c46f7ddb5aef98e57d729d4073673daab5564b8239d5aa16fd25e3e2c",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/u9565.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/u9565.dat",
+          "bytes": 469,
+          "sha256": "966f2a1c46f7ddb5aef98e57d729d4073673daab5564b8239d5aa16fd25e3e2c",
+          "crc32": "1ee0badd",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Philippe Hurbain [Philo]",
+          "role": "Part UPDATE 2022-03",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cylc.dat",
+          "bytes": 476,
+          "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd",
+          "crc32": "f9c76187",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Alex Taylor [anathema]",
+          "role": "Primitive UPDATE 2009-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+          "crc32": "53bcfa1e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4con9.dat",
+          "bytes": 2662,
+          "sha256": "c13514575a12e7b698cc7c88dcc3b5f5c34689fe05383c211e4e0df74ec4a220",
+          "crc32": "fc727f95",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Willy Tschager [Holly-Wood]",
+          "role": "Primitive UPDATE 2024-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 6,
+      "originalBytes": 8515,
+      "expandedBytes": 11820,
+      "mesh": {
+        "path": "meshes/ldraw/u9565.stl",
+        "bytes": 4884,
+        "sha256": "d8769ab3fa362ede339eb36d94b4829721d33073bcae729b98768aae575bb096",
+        "format": "stl"
+      },
+      "triangles": 96,
+      "nativePositiveVolumeMm3": 219.97297677871,
+      "constructionWork": 705,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/editor/provenance/refusal/history/preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/chromium-corpus-ldraw-expanded-u9565.json",
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/ipad-webkit-corpus-ldraw-expanded-u9565.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-4862",
+      "rootPath": "parts/4862.dat",
+      "author": "James Jessiman",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/4862.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/4862.dat",
+        "bytes": 2018,
+        "sha256": "200c78d780800fa9b200b4ce6edb987f7c30ccf3c59adaac284a116de88c8e0c",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/4862.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/4862.dat",
+          "bytes": 2018,
+          "sha256": "200c78d780800fa9b200b4ce6edb987f7c30ccf3c59adaac284a116de88c8e0c",
+          "crc32": "54117d94",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Part UPDATE 2018-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box4-1.dat",
+          "bytes": 973,
+          "sha256": "2ed58df5da841827dfc5f9ac11c0bd7ffd8a455e46f166638e635f61a014b44d",
+          "crc32": "d3dc201a",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Tore Eriksson [Tore_Eriksson]",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4ndis.dat",
+          "bytes": 692,
+          "sha256": "ff6685838636e7ab6152356d8f09e4f00a38af0d878b0881423f5c45fb868f0c",
+          "crc32": "c5251c06",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4cylo.dat",
+          "bytes": 388,
+          "sha256": "792a01362608c3f385dd7f01a1bd7d19cf9ed8a40f793266345cc86d1d98f3af",
+          "crc32": "f58eb38f",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Max Martin Richter [MMR1988]",
+          "role": "Primitive UPDATE 2010-03",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4edge.dat",
+          "bytes": 545,
+          "sha256": "9ce2de7e67bbac575d52cfdc771b9d00856efc9b88002d97db8e665e50f4d467",
+          "crc32": "31ac1199",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4cyli.dat",
+          "bytes": 1044,
+          "sha256": "5a7168952a5a3570327873b9a5802fa7b3be40967ab78c03b6a2bfd4419a1f10",
+          "crc32": "6a45dfb7",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect2p.dat",
+          "bytes": 594,
+          "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc",
+          "crc32": "62f97088",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Donald Sutter [technog]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect1.dat",
+          "bytes": 556,
+          "sha256": "48fdcd3181587b4bdc89d356a5aee21268688f3f2fcdd4d6f5c1a3d49b1a1ceb",
+          "crc32": "f60bb436",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Chris Dee [cwdee]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4chrd.dat",
+          "bytes": 743,
+          "sha256": "ccba3a97b5cc358754e476b78b4ce61cce5f404cd15e37471b73df3e81784aec",
+          "crc32": "a39b87ea",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Max Martin Richter [MMR1988]",
+          "role": "Primitive UPDATE 2023-05",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box3u8p.dat",
+          "bytes": 737,
+          "sha256": "0f6187106f023d041dcfd2a24e9f5a2a0c37b5c41b0ff171267ae776a8f16760",
+          "crc32": "c888975b",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 10,
+      "originalBytes": 8290,
+      "expandedBytes": 20706,
+      "mesh": {
+        "path": "meshes/ldraw/4862.stl",
+        "bytes": 5084,
+        "sha256": "1ec4cda9500b495e4973ffd6a756196a8087bfa2e8326a9cd0048b1c4eb7b909",
+        "format": "stl"
+      },
+      "triangles": 100,
+      "nativePositiveVolumeMm3": 463.100041716232,
+      "constructionWork": 945,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/editor/provenance/refusal/history/preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/chromium-corpus-ldraw-expanded-4862.json",
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/ipad-webkit-corpus-ldraw-expanded-4862.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-3573",
+      "rootPath": "parts/3573.dat",
+      "author": "Magnus Forsberg [MagFors]",
+      "licence": "CC-BY-4.0",
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/3573.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/3573.dat",
+        "bytes": 4018,
+        "sha256": "74e5a9bdc0b973970ab29e6b7b505a53f62fcf6206ed07e59658ecb41c55700d",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/2ded870ad74b911851ecedb03c14382b7a94c9c4/library/sources/ldraw-expanded-20261109/parts/3573.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/3573.dat",
+          "bytes": 4018,
+          "sha256": "74e5a9bdc0b973970ab29e6b7b505a53f62fcf6206ed07e59658ecb41c55700d",
+          "crc32": "0cdcde96",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Magnus Forsberg [MagFors]",
+          "role": "Part UPDATE 2025-09",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect3.dat",
+          "bytes": 605,
+          "sha256": "07ac46908b6668d993b6de0fb001a34cd996542106b80ebc7de63317d8dde865",
+          "crc32": "dd7621a8",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Mark Kennedy [mkennedy]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box2-5.dat",
+          "bytes": 609,
+          "sha256": "8f297b754f87da1dbe19eec8704a5ce03a23b794ccd7cd015508e3758a206174",
+          "crc32": "4f9ccda2",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Steffen [Steffen]",
+          "role": "Primitive UPDATE 2003-03",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect.dat",
+          "bytes": 654,
+          "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71",
+          "crc32": "30c864e3",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect2p.dat",
+          "bytes": 594,
+          "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc",
+          "crc32": "62f97088",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Donald Sutter [technog]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/48/1-8cylo.dat",
+          "bytes": 411,
+          "sha256": "bc5df94184d568c4b032959d7ec8fb138adc17acf14d8f9b4d41b69e96bc9f5f",
+          "crc32": "cca4a53e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Max Martin Richter [MMR1988]",
+          "role": "48_Primitive UPDATE 2014-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/48/1-8edge.dat",
+          "bytes": 711,
+          "sha256": "eec30153f06bac336ca71ae16b31c5d0c7ae432acb5e91befe37fdb7b6bb1c8e",
+          "crc32": "0ed0e02e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "[PTadmin]",
+          "role": "48_Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/48/1-8cyli.dat",
+          "bytes": 1361,
+          "sha256": "494069ca353e41885bf8f5b6b3ddc9b62aabeca3eedfe6aa5597ac8f12ca12b9",
+          "crc32": "dc3fcedc",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Steve Bliss [sbliss]",
+          "role": "48_Primitive UPDATE 2004-04",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/48/1-8chrd.dat",
+          "bytes": 611,
+          "sha256": "282b0d7dd4e73d273b9cbcce88e30889cce3b44aa8574a25382fe526248d5426",
+          "crc32": "77e6a9d6",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Willy Tschager [Holly-Wood]",
+          "role": "48_Primitive UPDATE 2024-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalCountIncludingRoot": 9,
+      "originalBytes": 9574,
+      "expandedBytes": 17587,
+      "mesh": {
+        "path": "meshes/ldraw/3573.stl",
+        "bytes": 6084,
+        "sha256": "418e459802ad055195c847159878a07a00088349d9e6bbfb531445a6b27428d9",
+        "format": "stl"
+      },
+      "triangles": 120,
+      "nativePositiveVolumeMm3": 1401.779615283314,
+      "constructionWork": 945,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS original/licence/closure/retained-native/strictSTL/editor/provenance/refusal/history/preview/finalbuild/Chromium/WebKit",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/chromium-corpus-ldraw-expanded-3573.json",
+        "/mnt/storage/brickwright-cycle128-editor9/per-model/ipad-webkit-corpus-ldraw-expanded-3573.json"
+      ]
+    }
+  ],
+  "actualRemainingGatePhases": [
+    {
+      "phase": 0,
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/model-library-expanded-batch005.test.ts",
+        "--maxWorkers=1"
+      ],
+      "guard": {
+        "fastFreeBytes": 13933051904,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3502522368,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          3.541015625,
+          2.8330078125,
+          2.60498046875
+        ],
+        "cpuPSISomeAvg60Percent": 2.01,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 45,
+      "status": "PASS",
+      "sourceHead": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3025369,
+      "exitCode": 0,
+      "elapsedSeconds": 5.00482286605984,
+      "childUserCPUSeconds": 4.0056899999999995,
+      "childSystemCPUSeconds": 0.706785
+    },
+    {
+      "phase": 1,
+      "command": [
+        "node",
+        "scripts/generate-library-previews.mjs",
+        "--asset-id",
+        "corpus-ldraw-expanded-49307",
+        "--asset-id",
+        "corpus-ldraw-expanded-u8025",
+        "--asset-id",
+        "corpus-ldraw-expanded-u8016",
+        "--asset-id",
+        "corpus-ldraw-expanded-60602",
+        "--asset-id",
+        "corpus-ldraw-expanded-u9252",
+        "--asset-id",
+        "corpus-ldraw-expanded-30321",
+        "--asset-id",
+        "corpus-ldraw-expanded-u9565",
+        "--asset-id",
+        "corpus-ldraw-expanded-4862",
+        "--asset-id",
+        "corpus-ldraw-expanded-3573"
+      ],
+      "guard": {
+        "fastFreeBytes": 13933051904,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3478552576,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          3.41748046875,
+          2.81884765625,
+          2.6015625
+        ],
+        "cpuPSISomeAvg60Percent": 4.38,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 90,
+      "status": "PASS",
+      "sourceHead": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3025410,
+      "exitCode": 0,
+      "elapsedSeconds": 2.8675422789528966,
+      "childUserCPUSeconds": 1.6286940000000003,
+      "childSystemCPUSeconds": 0.38000599999999995
+    },
+    {
+      "phase": 2,
+      "command": [
+        "bash",
+        "/mnt/storage/brickwright-cycle104-smooth/app-build.sh"
+      ],
+      "guard": {
+        "fastFreeBytes": 13932908544,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3451412480,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          3.3037109375,
+          2.80517578125,
+          2.59814453125
+        ],
+        "cpuPSISomeAvg60Percent": 5.09,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 90,
+      "status": "PASS",
+      "sourceHead": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3025495,
+      "exitCode": 0,
+      "elapsedSeconds": 39.112063989043236,
+      "childUserCPUSeconds": 31.129895,
+      "childSystemCPUSeconds": 3.6173639999999994
+    },
+    {
+      "phase": 3,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch005.spec.ts",
+        "--list",
+        "--reporter=line"
+      ],
+      "guard": {
+        "fastFreeBytes": 13932269568,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3624919040,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          3.0439453125,
+          2.8076171875,
+          2.60791015625
+        ],
+        "cpuPSISomeAvg60Percent": 26.37,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 20,
+      "status": "PASS",
+      "sourceHead": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3025598,
+      "exitCode": 0,
+      "elapsedSeconds": 4.004354981239885,
+      "childUserCPUSeconds": 2.8317210000000017,
+      "childSystemCPUSeconds": 0.563129
+    },
+    {
+      "phase": 4,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch005.spec.ts",
+        "--output",
+        "/mnt/storage/brickwright-cycle128-editor9/browser-output-chunk-1",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13932269568,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3613208576,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          2.8798828125,
+          2.77734375,
+          2.59912109375
+        ],
+        "cpuPSISomeAvg60Percent": 25.64,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3025637,
+      "exitCode": 0,
+      "elapsedSeconds": 192.46127556683496,
+      "childUserCPUSeconds": 65.335982,
+      "childSystemCPUSeconds": 12.474065999999999
+    },
+    {
+      "phase": 5,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch005.spec.ts",
+        "--output",
+        "/mnt/storage/brickwright-cycle128-editor9/browser-output-chunk-2",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13931491328,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3575222272,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          3.259765625,
+          3.2099609375,
+          2.822265625
+        ],
+        "cpuPSISomeAvg60Percent": 50.34,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3026506,
+      "exitCode": 0,
+      "elapsedSeconds": 187.26806115312502,
+      "childUserCPUSeconds": 61.320952000000005,
+      "childSystemCPUSeconds": 11.878572000000002
+    },
+    {
+      "phase": 6,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch005.spec.ts",
+        "--output",
+        "/mnt/storage/brickwright-cycle128-editor9/browser-output-chunk-3",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13926273024,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3567149056,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          4.28076171875,
+          3.97509765625,
+          3.21240234375
+        ],
+        "cpuPSISomeAvg60Percent": 47.83,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3028353,
+      "exitCode": 0,
+      "elapsedSeconds": 193.2372286100872,
+      "childUserCPUSeconds": 64.77857900000001,
+      "childSystemCPUSeconds": 12.165426
+    },
+    {
+      "phase": 7,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch005.spec.ts",
+        "--output",
+        "/mnt/storage/brickwright-cycle128-editor9/browser-output-chunk-4",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13925982208,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3525734400,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          2.97412109375,
+          3.9208984375,
+          3.36865234375
+        ],
+        "cpuPSISomeAvg60Percent": 52.69,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3028998,
+      "exitCode": 0,
+      "elapsedSeconds": 182.9483262929134,
+      "childUserCPUSeconds": 61.65803699999998,
+      "childSystemCPUSeconds": 12.080649999999999
+    },
+    {
+      "phase": 8,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch005.spec.ts",
+        "--output",
+        "/mnt/storage/brickwright-cycle128-editor9/browser-output-chunk-5",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13925326848,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 3551764480,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          2.40869140625,
+          3.4560546875,
+          3.306640625
+        ],
+        "cpuPSISomeAvg60Percent": 53.25,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "pid": 3029626,
+      "exitCode": 0,
+      "elapsedSeconds": 97.76947930408642,
+      "childUserCPUSeconds": 17.712316999999985,
+      "childSystemCPUSeconds": 5.145066
+    }
+  ],
+  "browserProof": {
+    "status": "ALL9_GATES_LOCAL_QUALIFIED_DELIVERY_PENDING",
+    "mainCounts": [
+      242,
+      237,
+      281
+    ],
+    "allGateCompletedCandidates": 9,
+    "rawAndDurableBrowserOutcomesMatched": 18,
+    "expectedBrowserOutcomes": 18,
+    "models": [
+      "corpus-ldraw-expanded-49307",
+      "corpus-ldraw-expanded-u8025",
+      "corpus-ldraw-expanded-u8016",
+      "corpus-ldraw-expanded-60602",
+      "corpus-ldraw-expanded-u9252",
+      "corpus-ldraw-expanded-30321",
+      "corpus-ldraw-expanded-u9565",
+      "corpus-ldraw-expanded-4862",
+      "corpus-ldraw-expanded-3573"
+    ],
+    "localAllGateCounts": [
+      251,
+      246,
+      290
+    ],
+    "zeroNetworkRequests": true,
+    "nativeReplayed": false,
+    "reports": [
+      {
+        "path": "/mnt/storage/brickwright-cycle128-editor9/browser-phase-4.json",
+        "sha256": "88a7db3ec8b19bfadbb4c32caf0514e55bbe09ccd80d20d6b6699d7d3a91697a",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle128-editor9/browser-phase-5.json",
+        "sha256": "af1126acda7af4c9b941ec5b236746676153f07f301566f472de59686cdfd20f",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle128-editor9/browser-phase-6.json",
+        "sha256": "2c28e74edbc872884397bcc292664324483b83689feb37634aafca5c7b20d87d",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle128-editor9/browser-phase-7.json",
+        "sha256": "846ca06d72c9ba130e786faa0d7f7f736e6d2a401a8c1d4ef77d2522b2418489",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle128-editor9/browser-phase-8.json",
+        "sha256": "d23b53f4c0c08c21748dea9d01ac3cf19f561e90dd484753a9077a53244c96d4",
+        "exitCode": 0
+      }
+    ],
+    "proofIsNotMainDelivery": true
+  },
+  "testedCommitBinding": {
+    "testedCommit": "e7827a057910dac6176f7e24906fdf8001ca3afd",
+    "testedTree": "ddccc28fbc79c104fb586428ca827a9d3120293e",
+    "testedChangedSourceDataFiles": [
+      {
+        "path": "library/ldraw-reviewed-batch-manifest.json",
+        "bytes": 1900667,
+        "sha256": "6d8330f95121e4e72846ad6a0961d29174d83c6e148d4498226b622d8b9c38bb"
+      },
+      {
+        "path": "library/ldraw-reviewed-batch-spec.json",
+        "bytes": 2179690,
+        "sha256": "870be86429b1b7e2814cf17c701510c2919269e758627cc9ea4ce57e5702f3ff"
+      },
+      {
+        "path": "library/meshes/ldraw/30321.stl",
+        "bytes": 4684,
+        "sha256": "cc346b19dc637f731d970aaa2ca14c6e5664ed8d1565dfd5f9cbefce2774ae7c"
+      },
+      {
+        "path": "library/meshes/ldraw/3573.stl",
+        "bytes": 6084,
+        "sha256": "418e459802ad055195c847159878a07a00088349d9e6bbfb531445a6b27428d9"
+      },
+      {
+        "path": "library/meshes/ldraw/4862.stl",
+        "bytes": 5084,
+        "sha256": "1ec4cda9500b495e4973ffd6a756196a8087bfa2e8326a9cd0048b1c4eb7b909"
+      },
+      {
+        "path": "library/meshes/ldraw/49307.stl",
+        "bytes": 5084,
+        "sha256": "868ddd8741117c989d00be0f7cd1dd64623a8ab552ae65e542a89548c5f338f8"
+      },
+      {
+        "path": "library/meshes/ldraw/60602.stl",
+        "bytes": 4684,
+        "sha256": "f8d35a27adf6d07220fd15d6fa867c194617f4aed7d135fbffb67045f442077a"
+      },
+      {
+        "path": "library/meshes/ldraw/u8016.stl",
+        "bytes": 6484,
+        "sha256": "2912fb4e2e104eeeb43efc94f0527d5cbc98933d4ea304e0ae411bca9ad71a18"
+      },
+      {
+        "path": "library/meshes/ldraw/u8025.stl",
+        "bytes": 5884,
+        "sha256": "fef45abc0ce023d56d63f7590c2b7681d884d7afd810e8a031275b3c669ce3fe"
+      },
+      {
+        "path": "library/meshes/ldraw/u9252.stl",
+        "bytes": 4684,
+        "sha256": "d01ae92ff99866fd90c1c7bf38bedb8437ad04fe9bd57289cf0e335883f337ee"
+      },
+      {
+        "path": "library/meshes/ldraw/u9565.stl",
+        "bytes": 4884,
+        "sha256": "d8769ab3fa362ede339eb36d94b4829721d33073bcae729b98768aae575bb096"
+      },
+      {
+        "path": "library/previews.json",
+        "bytes": 4546451,
+        "sha256": "e0bde9fc19e4583c63ad9c2525839af8d00fa0aca3664417467f492745535734"
+      },
+      {
+        "path": "tests/browser/model-library-expanded-batch005.spec.ts",
+        "bytes": 6065,
+        "sha256": "4a3ae5923b19e25bb98797d7b5e506d4e0fe96744e1ac32eb37e4c38e48e17ad"
+      },
+      {
+        "path": "tests/model-library-expanded-batch005.test.ts",
+        "bytes": 3978,
+        "sha256": "f7cacb0f58e812504a376f192b5c0b23c1033a8b307269b9a4cd250bff56e42a"
+      }
+    ],
+    "inputOriginalLicenceFiles": [
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/49307.dat",
+        "bytes": 1034,
+        "sha256": "5ab186e08cf7dfd9ff7ce2e1afcd69d08479fd44972340d53d78f67ffdceb135"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/box4o4a.dat",
+        "bytes": 827,
+        "sha256": "a66f3fc32d0209b5b2432c82414997dc0910c48a074be1d96ef5ec088a2594dd"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/box4.dat",
+        "bytes": 948,
+        "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/2-4cylo.dat",
+        "bytes": 387,
+        "sha256": "4fa9f597d775c7f15e3fc66f60e20d914134d13004b485488b7dbff684776232"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/2-4edge.dat",
+        "bytes": 683,
+        "sha256": "665400f76566b161c28303cdadce40d17d979a8ff9a8a133675af2d17fbe6763"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/2-4cyli.dat",
+        "bytes": 1543,
+        "sha256": "d486780f0f84893899d9eadcd13150f13a42e15e77a3cda38cdf24ded98862c6"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/2-4chrd.dat",
+        "bytes": 490,
+        "sha256": "3b0dfcf2cb881fae0acfe1e53b703104768878636477e540d0c893fc3fd87f8f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u8025.dat",
+        "bytes": 2041,
+        "sha256": "a44e9931525a4afcc76d95a6ec00561c791736bb7646a851db0fb9a68b70f52a"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/box5-4a.dat",
+        "bytes": 752,
+        "sha256": "70d5f7f2d0720b84a06100b12b449b8ad37d66a02fc4650b31d556d7b1d0fe41"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect3.dat",
+        "bytes": 605,
+        "sha256": "07ac46908b6668d993b6de0fb001a34cd996542106b80ebc7de63317d8dde865"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/box4-7a.dat",
+        "bytes": 1008,
+        "sha256": "93ac5f1805fc4e785c9532c0b40851a9d03da37241f85d5513b059c4358839f4"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect.dat",
+        "bytes": 654,
+        "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u8016.dat",
+        "bytes": 1272,
+        "sha256": "2e03dd91075a82866851c7d04d7c7d3e2b19afab01d25c3f01541d8f4946255a"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect2p.dat",
+        "bytes": 594,
+        "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/box5-2p.dat",
+        "bytes": 794,
+        "sha256": "fd9dc34999a135f90f0947492cc36c042c9dcd2fa853429b8c3d060c5f9ec581"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/s/u8016s01.dat",
+        "bytes": 1234,
+        "sha256": "ba2b573bea200a53914c78af7be0319da83d998256412fe175c4e34a71d16ac1"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/60602.dat",
+        "bytes": 900,
+        "sha256": "2e6ac9f586e07461a8104dd4503f945c4a5f31d741a2e1809d2986153a428cfd"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/2-4disc.dat",
+        "bytes": 803,
+        "sha256": "1d4662b73e3196fadeb5ecf2fd27f3dbf7cecce0802cf3d7108ab67bb380eb15"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9252.dat",
+        "bytes": 1490,
+        "sha256": "e4fe3794386f63fcd074339733b9aa74cecd02624a546028a7b1f0356dd71dbd"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4disc.dat",
+        "bytes": 584,
+        "sha256": "3b8faa77185c576085c38f37b13c6a04e2e889eea6a7dc8c4db2d1699a33bcda"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4cylc.dat",
+        "bytes": 430,
+        "sha256": "fdcb54ba2e2731cbb86ea6b2fddb25c7dda060a7780629a72003e0278805dd30"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4edge.dat",
+        "bytes": 545,
+        "sha256": "9ce2de7e67bbac575d52cfdc771b9d00856efc9b88002d97db8e665e50f4d467"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4cyli.dat",
+        "bytes": 1044,
+        "sha256": "5a7168952a5a3570327873b9a5802fa7b3be40967ab78c03b6a2bfd4419a1f10"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/30321.dat",
+        "bytes": 1727,
+        "sha256": "0e4b0fdffc5b00d24d9f23e8ac50d2fdc714e1f903b7ab72cb812b8437adc7eb"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9565.dat",
+        "bytes": 469,
+        "sha256": "966f2a1c46f7ddb5aef98e57d729d4073673daab5564b8239d5aa16fd25e3e2c"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cylc.dat",
+        "bytes": 476,
+        "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4edge.dat",
+        "bytes": 1084,
+        "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4disc.dat",
+        "bytes": 1137,
+        "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cyli.dat",
+        "bytes": 2687,
+        "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4con9.dat",
+        "bytes": 2662,
+        "sha256": "c13514575a12e7b698cc7c88dcc3b5f5c34689fe05383c211e4e0df74ec4a220"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/4862.dat",
+        "bytes": 2018,
+        "sha256": "200c78d780800fa9b200b4ce6edb987f7c30ccf3c59adaac284a116de88c8e0c"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/box4-1.dat",
+        "bytes": 973,
+        "sha256": "2ed58df5da841827dfc5f9ac11c0bd7ffd8a455e46f166638e635f61a014b44d"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4ndis.dat",
+        "bytes": 692,
+        "sha256": "ff6685838636e7ab6152356d8f09e4f00a38af0d878b0881423f5c45fb868f0c"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4cylo.dat",
+        "bytes": 388,
+        "sha256": "792a01362608c3f385dd7f01a1bd7d19cf9ed8a40f793266345cc86d1d98f3af"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect1.dat",
+        "bytes": 556,
+        "sha256": "48fdcd3181587b4bdc89d356a5aee21268688f3f2fcdd4d6f5c1a3d49b1a1ceb"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4chrd.dat",
+        "bytes": 743,
+        "sha256": "ccba3a97b5cc358754e476b78b4ce61cce5f404cd15e37471b73df3e81784aec"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/box3u8p.dat",
+        "bytes": 737,
+        "sha256": "0f6187106f023d041dcfd2a24e9f5a2a0c37b5c41b0ff171267ae776a8f16760"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/3573.dat",
+        "bytes": 4018,
+        "sha256": "74e5a9bdc0b973970ab29e6b7b505a53f62fcf6206ed07e59658ecb41c55700d"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/box2-5.dat",
+        "bytes": 609,
+        "sha256": "8f297b754f87da1dbe19eec8704a5ce03a23b794ccd7cd015508e3758a206174"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/48/1-8cylo.dat",
+        "bytes": 411,
+        "sha256": "bc5df94184d568c4b032959d7ec8fb138adc17acf14d8f9b4d41b69e96bc9f5f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/48/1-8edge.dat",
+        "bytes": 711,
+        "sha256": "eec30153f06bac336ca71ae16b31c5d0c7ae432acb5e91befe37fdb7b6bb1c8e"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/48/1-8cyli.dat",
+        "bytes": 1361,
+        "sha256": "494069ca353e41885bf8f5b6b3ddc9b62aabeca3eedfe6aa5597ac8f12ca12b9"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/48/1-8chrd.dat",
+        "bytes": 611,
+        "sha256": "282b0d7dd4e73d273b9cbcce88e30889cce3b44aa8574a25382fe526248d5426"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-batch005-input-20261109.json",
+        "bytes": 24359,
+        "sha256": "3b9ae1768921dd81c2bd0818057c6390117af2a9dcf1905761769c21fb34b706"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+        "bytes": 18657,
+        "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-CAreadme-20261109.txt",
+        "bytes": 4151,
+        "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497"
+      }
+    ],
+    "allCommittedFilesMatch": true,
+    "totalCommittedFileBindings": 60,
+    "builtRuntimeFiles": [
+      {
+        "path": "dist/app-showcase/README.md",
+        "bytes": 406,
+        "sha256": "abc4e1333f5195f98c4e34265b80c5016134b85254ff44afd05f6ed7d0e47577"
+      },
+      {
+        "path": "dist/app-showcase/brickwright.png",
+        "bytes": 17259,
+        "sha256": "4f12ea0f0f21056104c7c665a8ad2082dfaf1265d131e402e793909cef6b4065"
+      },
+      {
+        "path": "dist/app-showcase/cometbeat.png",
+        "bytes": 12576,
+        "sha256": "93c1e0820b28de7b4209a37abe4e9b6e320a1a495bd9c44e056b492454cc6769"
+      },
+      {
+        "path": "dist/app-showcase/crispaudio.png",
+        "bytes": 20854,
+        "sha256": "482b887823d8cbe42fb450bf9a1e7fc50213f4c80364d75387559876e157fb3d"
+      },
+      {
+        "path": "dist/app-showcase/crispbingo.png",
+        "bytes": 12310,
+        "sha256": "974a26f8a7f20b8b61d806a1f7ef7d24ef82c1a775b8c154c96f5b7015939910"
+      },
+      {
+        "path": "dist/app-showcase/crispchess.png",
+        "bytes": 18694,
+        "sha256": "375e1c4df95c0a294aaf5dc078bdbc99d8753100812649821cc88be87ec7a33a"
+      },
+      {
+        "path": "dist/app-showcase/crispcloud.png",
+        "bytes": 21564,
+        "sha256": "7736e71fd28f2400424a106513224a4dd9953ae11049c219210964cfc7ebdcfb"
+      },
+      {
+        "path": "dist/app-showcase/crispdeck.png",
+        "bytes": 12518,
+        "sha256": "3cf496171fcfe2ea3af23c6901d3b4375546d383a34288f3e433d58b8acd17ab"
+      },
+      {
+        "path": "dist/app-showcase/crisperplayer.png",
+        "bytes": 28416,
+        "sha256": "732bf35419dbf4a3cdb604ff18e72f7f667901052c0c12b091a535440a9cec67"
+      },
+      {
+        "path": "dist/app-showcase/crisperweaver.png",
+        "bytes": 21766,
+        "sha256": "ca56b9ba5f7b4de928b7baf6979bbabe01314c0382f9a85d558f673f9435de43"
+      },
+      {
+        "path": "dist/app-showcase/crispmath.png",
+        "bytes": 10714,
+        "sha256": "d85b699f750768c23d683180a37385f4c36fdbed796989f464de26840ea8915e"
+      },
+      {
+        "path": "dist/app-showcase/crispmesh.png",
+        "bytes": 20375,
+        "sha256": "f10da8d3835dd3d13e9a8c8422338fda2a746ef5401a42efc3f2f5bbc90ff7ad"
+      },
+      {
+        "path": "dist/app-showcase/crispsorter.png",
+        "bytes": 23362,
+        "sha256": "9b92d82e86f687bedf3f3378c27e7b4c24c83d3a953f337e5ec1cfde798666bf"
+      },
+      {
+        "path": "dist/app-showcase/crispsudoku.png",
+        "bytes": 24934,
+        "sha256": "af8ee9c4eae94cfe68af1e38062f7d1da9346ada0734476f19c9a705eb73db5c"
+      },
+      {
+        "path": "dist/app-showcase/crisptuner.png",
+        "bytes": 10185,
+        "sha256": "cbac4f2381e240dd9c7879bc200262037f6bf9c35c688b65aba09402a077e033"
+      },
+      {
+        "path": "dist/app-showcase/hectopolis.png",
+        "bytes": 8345,
+        "sha256": "687f651d1f4d98fd4653b85191c6fc273e2497447916fb4bf9be447b7f2c6ed3"
+      },
+      {
+        "path": "dist/app-showcase/kerotakis.png",
+        "bytes": 7514,
+        "sha256": "0b6a24aec16e25ee6d2e098c40fd56cf530c26f917f70a69f9bb68cda4409d92"
+      },
+      {
+        "path": "dist/app-showcase/naga.png",
+        "bytes": 10760,
+        "sha256": "93f34940d26e229849e697f5bc98a3d28d4ed5e2caa926a34aabd93e37e74da6"
+      },
+      {
+        "path": "dist/app-showcase/numbernebula.png",
+        "bytes": 29684,
+        "sha256": "39d20c36896f98452b5bc6f0f4608caab1dd4ea7fc74034c88c93c90f9521bdb"
+      },
+      {
+        "path": "dist/app-showcase/word-universe.png",
+        "bytes": 21617,
+        "sha256": "081ee34a1707823873a44fdfe4c7d4bebeb3c2fa4d7b099a44360867b1c581e7"
+      },
+      {
+        "path": "dist/assets/embedded-GlxXJK_9.js",
+        "bytes": 2312,
+        "sha256": "a74ed9637463bbde4b6d370ccbfe7794b91d922fe5c4b4e9199251e9ef9385ec"
+      },
+      {
+        "path": "dist/assets/esm-BbzRTG-k.js",
+        "bytes": 334,
+        "sha256": "99b94ce20dda1af191df9e1fbac1131f7663188ac047bac57f311236d6a3e2d2"
+      },
+      {
+        "path": "dist/assets/esm-CXdWoEp6.js",
+        "bytes": 1352,
+        "sha256": "a314390e0b6e574a0c26edaa226368c454739d45a17ae55b211dfb7f1ab1d22c"
+      },
+      {
+        "path": "dist/assets/files-4Re_Zl_L.js",
+        "bytes": 8675021,
+        "sha256": "0777188622c82b5c88af0faa387d3498d16d8ea06a519470dbd53dd0dab9244e"
+      },
+      {
+        "path": "dist/assets/files-BvSzA95Z.css",
+        "bytes": 10183,
+        "sha256": "a0bd03c2cdb4b600a58121b396da840424c00407085354cd39adee4a3064593b"
+      },
+      {
+        "path": "dist/assets/geometry.worker-C3-qzm0y.js",
+        "bytes": 1437256,
+        "sha256": "16614aeed9d449ffa124f7af91a14da2ff7db8b4b4b7636c61bd2542835b8871"
+      },
+      {
+        "path": "dist/assets/jolt-physics.wasm-compat-CdbhAkox.js",
+        "bytes": 3662128,
+        "sha256": "8c817441903255f8f509359ba5d64d49df4eb5f62ade5384987d229cb829e410"
+      },
+      {
+        "path": "dist/assets/main-C0EMgkSo.js",
+        "bytes": 8855158,
+        "sha256": "286cf8974eb1830a4524f2bcf74452caba1ece0abcfb90cbb49823a4d7f65a16"
+      },
+      {
+        "path": "dist/assets/manifold-BE4c7gO-.wasm",
+        "bytes": 541470,
+        "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      {
+        "path": "dist/assets/simulation.worker-_mgh5zwc.js",
+        "bytes": 1489092,
+        "sha256": "cec5ee4ac7012d22e5c36d89e700faf40b5ab8a47eb2a402e26333550a7e8e8e"
+      },
+      {
+        "path": "dist/assets/web-B84FEyTU.js",
+        "bytes": 361,
+        "sha256": "46f2cde3a242fad0aa51c6ab9e456b2852975b424d11bddc07da8eab03a97c22"
+      },
+      {
+        "path": "dist/assets/web-CkVQMFQt.js",
+        "bytes": 8715,
+        "sha256": "feaf4741f1dd4838a414af2d2ec02b088c2d08660b91d97d7349c957f684e42f"
+      },
+      {
+        "path": "dist/cad-assets/app-license.txt",
+        "bytes": 1520,
+        "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad"
+      },
+      {
+        "path": "dist/cad-assets/build-info.json",
+        "bytes": 138,
+        "sha256": "ef5e9b345853dc7f304cbd13d0a565c06e1759f9428955d78792b9f947926fd3"
+      },
+      {
+        "path": "dist/cad-assets/manifold.wasm",
+        "bytes": 541470,
+        "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      {
+        "path": "dist/cad-assets/notices.txt",
+        "bytes": 91867,
+        "sha256": "dea50eee6d6781549af4e3740bfaf7661b29479696e5ae6cbe41eafd93c0fa70"
+      },
+      {
+        "path": "dist/embedded.html",
+        "bytes": 1119,
+        "sha256": "9d63726f77f557145dce1e871e135736d3556e3915ef5922e9830db5109c3780"
+      },
+      {
+        "path": "dist/icon.svg",
+        "bytes": 283,
+        "sha256": "30876dc5d178d36f341cc5126e6489a7078ac9f667a56a9e625f9d090d3d94f4"
+      },
+      {
+        "path": "dist/index.html",
+        "bytes": 2974,
+        "sha256": "2aed1ba1fbeaa3093a5afc6181deeb8da3843fbde17b545f03eea24596616c56"
+      },
+      {
+        "path": "dist/manifest.webmanifest",
+        "bytes": 249,
+        "sha256": "7d57494ede2e7c699fd24fd309335bb701138d85cc84d5c4ff4d9851f44ae535"
+      },
+      {
+        "path": "dist/sw.js",
+        "bytes": 1885,
+        "sha256": "a135f107fca8d49ef853f22410e14795040731dbb633b9eac08421c6526be7c2"
+      }
+    ],
+    "sourceInputCommit": "2ded870ad74b911851ecedb03c14382b7a94c9c4",
+    "sourceMain": "fb8c3671aef1a2d5dc3673e7eb04bde38cc3f77b"
+  },
+  "validationFiles": [
+    {
+      "path": "/mnt/storage/brickwright-cycle128-editor9/admission.json",
+      "bytes": 434,
+      "sha256": "b9f33ac03713cc20819de0f99a84b6077e753df794d5fdb924d713d938c6d391"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-editor9/execution.json",
+      "bytes": 11476,
+      "sha256": "79494a8ba172f25f3a3eced992246788ca71d2ca2c493c0419065df833bac86e"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-editor9/browser-proof-final.json",
+      "bytes": 1708,
+      "sha256": "9de00ca6fcf1981d311ab8b9389fb29b67c9dbd1859c5ee362374dae86d91a38"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-editor9/tested-owned-hashes.json",
+      "bytes": 2229,
+      "sha256": "9de18e70dcdb34522210abee5a1fa97e8729d822008e73e959ed759b8b304840"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-editor9/tested-built-hashes.json",
+      "bytes": 6386,
+      "sha256": "3ddc3982cbc3b3537e73475a63232f380e59517f5c9dd7dc8dc602991897b70a"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-editor9/source-capture-binding.json",
+      "bytes": 8239,
+      "sha256": "72a765d6f771d2f293741ccc76728c046acae74ed1005482fdf87a3c8daa5605"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-editor9/browser-template-binding.json",
+      "bytes": 203,
+      "sha256": "675fa9444405e7eebbe9b4add22e1b52bf381ee7696c0a592c1d27cf5b965ac0"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-editor9/tested-commit-binding.json",
+      "bytes": 18240,
+      "sha256": "97ff5612f32cd77cff91690897fee55f1354f1fd389e7d2a6d81a89f3f4da503"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-editor9/browser-phase-4.json",
+      "bytes": 12447,
+      "sha256": "88a7db3ec8b19bfadbb4c32caf0514e55bbe09ccd80d20d6b6699d7d3a91697a"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-editor9/browser-phase-5.json",
+      "bytes": 12439,
+      "sha256": "af1126acda7af4c9b941ec5b236746676153f07f301566f472de59686cdfd20f"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-editor9/browser-phase-6.json",
+      "bytes": 12439,
+      "sha256": "2c28e74edbc872884397bcc292664324483b83689feb37634aafca5c7b20d87d"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-editor9/browser-phase-7.json",
+      "bytes": 12425,
+      "sha256": "846ca06d72c9ba130e786faa0d7f7f736e6d2a401a8c1d4ef77d2522b2418489"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-editor9/browser-phase-8.json",
+      "bytes": 7527,
+      "sha256": "d23b53f4c0c08c21748dea9d01ac3cf19f561e90dd484753a9077a53244c96d4"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-native30/batch-results.json",
+      "bytes": 180691,
+      "sha256": "427d6bca2cc7f7374240940eaa79ae70b11f995a276ddb1a514d534894543362"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-native30/bindings.json",
+      "bytes": 1373,
+      "sha256": "0a03ecbbbe55d92d3b5a19957cdc7085f898c38ca5bb58b2ad4d3473ab7468d2"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-native30/execution.json",
+      "bytes": 1115,
+      "sha256": "1db193b36a7c2f259e5a1284b82a64d3b25675f3644109be59899beeadbfd17f"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-native30/source-preflight.json",
+      "bytes": 513,
+      "sha256": "0047a19ca6552989c309e1a94a59b8db7b2d82e4bbc556ef316b152688ed1e7b"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle128-native30/atlas-separate-binding.json",
+      "bytes": 992,
+      "sha256": "ee9131c15f3c5cdb576bbfdd49a12ba52a0f392c55739e6da158f19c86178970"
+    }
+  ],
+  "priorPreservation": {
+    "assetSHAEntries": 484,
+    "previews": 281,
+    "allExact": true
+  },
+  "implementationChanges": [],
+  "failureTaxonomy": {
+    "currentBatchLicenceClosureSourcePASS": 30,
+    "currentBatchConverterPASS": 30,
+    "currentBatchNativeTopologyPASS": 9,
+    "currentBatchNotManifoldABUnresolved": 21,
+    "cumulativeNativeNotManifold": 66,
+    "cumulativeScopedSourceBoundaryIncompatibility": 1,
+    "cumulativeABUnresolved": 65,
+    "requiredTextureMissingUnsupported": 2
+  },
+  "sourcePool": {
+    "archiveEntries": 37155,
+    "authoredCatalogueEntrypoints": 23822,
+    "exactCC4AuthorEntries": 35140,
+    "dependencyCompleteBudgetFittingRoots": 585,
+    "nativeAttempts": 148,
+    "nativePASS": 82,
+    "nativeRefused": 66,
+    "unconverted": 437,
+    "qualityYieldUnknown": true,
+    "numericalSourceDeficitEstablished": false
+  },
+  "AtlasScope": "Separate three-file binding/integrator identity; fresh current-main package/app build passes, no Atlas behavior credit in CAD admissions.",
+  "next30Manifest": "/mnt/storage/brickwright-cycle128/next-ranked-batch-006.json",
+  "resourceTerminal": {
+    "lockReleased": true,
+    "allPhasesPASS": true,
+    "originalTimeoutsUnchanged": true
+  }
+}

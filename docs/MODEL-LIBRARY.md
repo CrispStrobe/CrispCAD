@@ -1,5 +1,18 @@
 # A curated reusable model library
 
+Current integration, 2026-11-16: the fourth qualified LDraw cohort adds fourteen
+authored originals. The complete bundled catalogue now has **281 models with
+previews: 154 editable code/source models and 127 mesh models**. The accumulated
+qualified-corpus totals are 242 records and 237 unique STL meshes; these use
+the cohort's existing counting definitions and are not the total catalogue.
+Adafruit archive folders are additional original files and are not counted as
+screened models. Mesh screening is not mechanism certification.
+Original files, licence closures, hashes and refused candidates remain retained;
+see `evidence/ldraw-batch4-qualification-2026-11-16.json` for measured results.
+The editor inserts verified compatible content into the project; downloading an
+original remains a separate action. Preview and source-editing support must not
+be inferred merely from an archive containing a file.
+
 Research checked 2026-11-13. Mesh content licences are independent of repository
 code licences. Do not import a dataset merely because its loader is MIT/Apache.
 STL has no reliable unit, author or licence metadata and does not recover the
@@ -1069,3 +1082,77 @@ The third ranked batch makes 30 actual converter/native attempts: all30convert,1
 All16focused real editor/provenance/history/mismatched-byte refusal cases,16actual previews,final asset build and32Chromium/iPad WebKit workflows pass. Eight two-model browser chunks retain the original240-second test and300-second command budgets, exact assertion/action body and durable per-model output. All32raw attachments match durable source/mesh/preview records with zero offline/external requests. All21changed and41built files remain exact;54committed source/input/licence/tested hashes bind to the measured commit. Prior424asset hashes and251previews remain intact. Retained converter/native successes are not replayed.
 
 Local qualification totals228/223/267, a cohort gain of16/16/16 from delivered212/207/251. Partial local completions are included once; normal owner delivery is separate. The target remains300, leaving72further admissions after this cohort lands. The corrected source-fit pool is585, with497unconverted roots; the next30are ranked separately. All29native refusals remain preserved: one scoped source-boundary incompatibility and28A/B unresolved, plus the two missing/unsupported texture cases. This is not an archive-exhaustion or physical-part-defect claim. See [per-model proof and exact source/runtime binding](evidence/ldraw-batch3-qualification-2026-11-16.json).
+
+
+### Fourteen further authored archive roots, 2026-11-16
+
+The fourth ranked batch converts30 original roots:14pass strict native/STL screening and16return NotManifold, with A/B cause unresolved. Only the14survivors enter editor qualification. Their44original source files and complete CC-BY-4.0 closures remain unchanged. Fresh package compilation on main338428f passes before14actual editor/provenance/history/refusal checks,14previews and the final asset build. All28Chromium/iPad WebKit workflows pass in seven bounded chunks with unchanged assertions and durable per-model results. Converter/native successes are not replayed.
+
+All28raw attachments match source/mesh/preview hashes with zero offline/external requests. All19tested files,41built files and66committed source/input/licence bindings match. Prior456asset hashes and267previews remain exact. Local qualification is242/237/281, a gain of14/14/14 from delivered228/223/267; owner delivery is separate for this same cohort. Target300 leaves58admissions after delivery. The source-fit pool585 includes467unconverted roots; the next30are pinned separately. Of45cumulative NotManifold refusals, one has scoped source-boundary proof and44remain A/B unresolved; two missing-texture refusals remain blocked. No implementation, source, dependency, default, units, tolerance or limit change is made. See [per-model proof and exact tested/runtime binding](evidence/ldraw-batch4-qualification-2026-11-16.json).
+
+### Adafruit component thumbnails
+
+All 482 component folders now have bundled 256×192 PNG thumbnails and a larger
+selection preview; the separate archive-root metadata folder has no component
+image. The set uses 367 upstream images, 111 STEP renders, two STL renders and two
+embedded Fusion previews, preserving their source identities and original MIT
+attribution. Images remain available offline after the lazy preview module loads.
+`library/adafruit-thumbnail-manifest.json` binds them to media revision
+`bd5c73276191131f3b4b53ce10980c63ef129d05`; regenerate with
+`scripts/sync-adafruit-previews.mjs`. Archive originals still require their own
+verified download/cache and geometry screening before insertion.
+
+### Nine further authored archive roots, 2026-11-16
+
+The fifth ranked batch passes licence/provenance, dependency closure, original integrity and unchanged source budgets for30roots/118originals. All30convert;9pass native/strict STL topology and21return NotManifold. Those21remain A/B unresolved, without an intrinsic-model or converter-defect claim. Only the9survivors enter full qualification. Their43unique original files are pinned unchanged at2ded870 with exact CC-BY-4.0 author/grant/dependency records. Fresh current-main packages pass before the new native batch; successful native conversion is not replayed.
+
+All9actual editor/provenance/history/substituted-byte refusal cases,9previews,final app build/parser and18Chromium/iPad WebKit workflows pass. Five bounded browser chunks retain the proven assertion/action body and original240-second test/300-second command limits. All18raw attachments equal durable source/mesh/preview records with zero offline/external requests. All14changed and41built files remain exact, with60committed source/input/licence/tested bindings. Prior484asset hashes and281previews are intact. No implementation, dependency, source, default, units, tolerance or guard change is made.
+
+Local qualification is251/246/290, a cohort gain of9/9/9 from delivered242/237/281; normal owner delivery is separate. Target300 leaves49further admissions after delivery. The585source-fit roots include437unconverted; cumulative66NotManifold refusals include one scoped source-boundary proof and65A/B unresolved cases, plus two missing/unsupported texture refusals. Atlas source/integrator identity is bound separately; this cohort does not claim Atlas behavior qualification. See [per-model proof and exact tested/runtime binding](evidence/ldraw-batch5-qualification-2026-11-16.json).
+
+
+### Twelve further authored archive roots, 2026-11-16
+
+The sixth ranked batch passes licence/provenance, closure, original integrity and unchanged source budgets for30roots/69originals. All30convert;12pass native/strict STL topology and18return NotManifold, with A/B cause unresolved. Only the12survivors enter full qualification. Their38unique original files and complete CC-BY-4.0 author/grant/dependency records are pinned unchanged at a535d2a. An initialPSI8.17%resource refusal starts zero children and proves no model failure. Useful distinct batch007preflight then completes30roots/70originals; the authorized fresh native attempt admits atPSI1.27%. No successful native or package build is replayed.
+
+All12actual editor/provenance/history/substituted-byte refusal cases,12previews,final app build/parser and24Chromium/iPad WebKit workflows pass. Six bounded browser chunks preserve the proven assertion/action body and original240-second test/300-second command limits. Every raw attachment equals its durable source/mesh/preview record with zero offline/external requests. All17changed and41built files remain exact, with58committed source/input/licence/tested bindings. Prior502asset hashes and290previews are intact. No implementation, dependency, source, default, units, tolerance or guard change is made.
+
+Local qualification is263/258/302, a cohort gain of12/12/12 from delivered251/246/290; normal owner delivery is separate. Target300 leaves37further admissions after delivery. The585source-fit roots include407unconverted. Cumulative84NotManifold refusals retain one scoped source-boundary proof and83A/B unresolved cases, plus two missing/unsupported texture refusals. The earlier21refusals have exact source/closure/emitted-converter/native-log bindings; this is not a claim that source/output boundary segments were traced. Batch007is separately source-ready, without geometry or admission credit. See [per-model proof and exact tested/runtime binding](evidence/ldraw-batch6-qualification-2026-11-16.json).
+
+
+### Thirteen independent archive originals and a general source-selection correction, 2026-11-16
+
+The seventh30-root batch passes licence/closure/integrity and converts all30. Native/STL screening yields17survivors and13NotManifold refusals, with A/B cause unresolved. Source review then exposes four false-positive selections:70793declares Part Alias of shipped70023;89658and35536are identity-only wrappers of shipped99146;572cis explicitly superseded by the identical76065k01. All four are withheld from new records. Their original/native bytes and the interrupted17-root run remain preserved. No count is inferred from native success or shared geometry.
+
+A general source-selection utility rejects those source relationships without source rewriting, new coordinates, tolerance or geometry changes. Five positive/refusal controls pass, preserving transformed references and independent authored scenes even when meshes match. A source-only scan verifies all94previous batch001-006 original hashes and finds zero flags under these specific rules; it does not rewrite prior records, decrement counts or claim broad requalification.
+
+The corrected13originals pass13actual editor/provenance/history/mismatched-byte refusal cases,18focused cases total, necessary final changed-catalogue build/parser and26Chromium/iPad WebKit workflows. Native conversion, packages and preview rendering are not replayed;13retained preview values remain exact. Every raw attachment equals its durable source/mesh/preview record with zero offline/external requests. All20tested and41built files remain exact;59committed source/input/licence/tested bindings match. All526prior asset hashes and302previews are preserved.
+
+Local qualification totals276/271/315, a genuine13/13/13 cohort gain from main263/258/302. The earlier17-record projection is superseded and receives no admission credit. Normal current-main integration/delivery remains separate: host panel/runtime changes landed during the run and are not covered by its old-base proof. Target300 leaves24additional admissions after delivery. The closure-budget pool585includes four now-known non-independent roots and377unconverted roots whose independence still requires review. See [source exclusions, prior audit, actual gate proofs and exact tested/runtime binding](evidence/ldraw-batch7-qualification-2026-11-16.json).
+
+
+### Offline library preview integration, 2026-11-16
+
+The current-main integration exposed a shared UI regression: opening Model Library unconditionally imported the optional Adafruit preview module, producing one offline HTTP request. Four actual traces bind the exact local module URL and failed unchanged zero-request assertion. The minimal general correction starts the same revision-checked loader only after explicit archive component selection. A focused negative/positive workflow passes in both Chromium and iPad WebKit: opening/browsing metadata offline makes zero requests; explicit selection loads the actual256x192PNG once, and neither action changes model history.
+
+All26unchanged model workflows then pass on the corrected runtime, matching durable source/mesh/PNG records with zero requests. The36source/42built snapshot binds to commit4f477f1/treefb723586 with75source/input/licence blob matches. The already-passed14unit checks, native outputs and PNG rendering are retained. A later main delta is restricted by source comparison to sketch open handlers, one new sketch CSS class and its locale hint. Fresh packages/build and representative offline insertion/provenance/undo/redo/restart pass in both engines on integratedaf4f8d0/tree6c5f0ce, with38source/42built files and77blob matches. The earlier26-model proof is retained; whole-tree equality to its old runtime is not claimed.
+
+The13independent originals remain local276/271/315 until actual normal owner landing is verified. Four newly identified aliases/wrappers/superseded duplicates stay withheld; the prior94source-only audit has zero flags. All526prior asset hashes and302previews remain exact. No source override, native/PNG replay, precision change, guard weakening or CI-full run occurred. See [full source/runtime proof, preserved failures and exact integration binding](evidence/ldraw-batch7-qualification-2026-11-16.json).
+
+
+### Seven independent archive originals, 2026-11-16
+
+The eighth ranked batch passes licence/provenance, dependency closure, original integrity and unchanged source budgets for30roots/93originals. After a preserved zero-child projected-reserve refusal and actual root cold-archive terminal, a fresh strict admission passes. All30are attempted:29convert, one returns the unchanged coplanarity/convexity quad refusal for2682; native screening yields7strict survivors and22NotManifold refusals. Their source-versus-converter causes remain unresolved; no blanket intrinsic model defect is claimed. The delivered general independence gate runs before and after native evaluation; all7survivors pass, with7new unique STL hashes.
+
+Only the7survivors enter full editor qualification. Their25unchanged original source files and complete CC-BY-4.0 author/grant/dependency records are pinned at543f6dd. All7actual editor/provenance/history/substituted-byte refusal cases,7previews,final app build/discovery and14Chromium/iPad WebKit workflows pass. Four browser chunks retain original240-second test/300-second command limits and identical assertion/action bodies. Every raw attachment equals its durable source/mesh/PNG record with zero offline/external requests. All12tested and42built files match, with40committed source/input/licence/tested bindings. Prior552asset hashes and315previews remain exact. No implementation, original/default/unit/tolerance/guard change or native/package replay is made.
+
+Local qualification is283/278/322, a cohort gain of7/7/7 from delivered276/271/315; normal owner delivery remains separate. Target300 leaves17additional admissions after delivery. The closure-budget pool585includes347unconverted roots,119native NotManifold refusals, one converter quad refusal and four known non-independent roots. One native refusal has scoped source-boundary proof;118remain A/B unresolved. Prior four withheld sources, the zero-flag prior94source-only audit and all historical refusals remain preserved. The next30roots/118originals are source-ready only. ActualPR299native-artifact qualification has the next heavy priority; no CAD009heavy work runs before its actualterminal. See [per-model actual gates and exact source/runtime binding](evidence/ldraw-batch8-qualification-2026-11-16.json).
+
+
+### Five independent archive originals, 2026-11-16
+
+The ninth ranked batch verifies licence/provenance, complete dependency closures, original hashes and unchanged source budgets for30roots/118originals. All30convert; strict native/STL topology screening yields5independent survivors and25NotManifold refusals. The25source-versus-converter causes remain unresolved. The earlier2682quad refusal is traced to authored source line58: its2.752/2.756-degree warp exceeds the unchanged1-degree guarded import policy, with no transform-introduced divergence or physical-part defect claim. No converter, source, unit, default, tolerance or limit change is made.
+
+The5survivors—24246,3496,u9208,33234,u9473—retain27exact originals atc42ac7b. Five actual editor/provenance/history/substituted-byte refusal cases,5actual PNGs and the final app build pass. A preserved harness capture failure treated the closed cold-proof directory symlink as a source file; the scoped correction excludes only that exact verified directory and refuses any other non-file source. After the preserved zero-child PSI veto and PR299 lock contention, the scheduled parser/browser-only continuation matches10source/42built hashes and passes all10Chromium/iPad WebKit workflows in three bounded chunks. All raw attachments equal durable source/mesh/PNG records with zero offline/external requests. The raw receipt retains the earlier no-child pre-parser capture row; an exact projection accounts for all7successful child phases, without test replay or removal of an executed failure.
+
+Measured commit27b9338/treeb33f2faa binds all40source/input/licence/tested files and23validation artifacts. All566prior source/mesh hashes and322previews remain exact. Local qualification is288/283/327, a gain of5/5/5 from delivered283/278/322; main delivery remains separate until verified owner landing. Target300 leaves12additional admissions after this cohort. No native, focused editor, PNG, build or package replay occurred in the browser continuation. The next30source-ready roots/117originals remain unconverted. The585closure-budget pool has317unconverted roots,144native NotManifold refusals, one converter quad refusal and four withheld non-independent roots; geometry yield remains unknown, so no numerical source deficit or archive exhaustion is asserted. See [per-model gates, preserved failures and exact commit/runtime binding](evidence/ldraw-batch9-qualification-2026-11-16.json).

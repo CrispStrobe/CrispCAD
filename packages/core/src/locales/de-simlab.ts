@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+ "Drag the corner to resize; drag the upper handle to set height. Then choose Create extrusion.":"Ziehe die Ecke für die Größe und den oberen Griff für die Höhe. Wähle danach Extrusion erstellen.",
  "Invalid position servo target":"Ungültiger Positionsservo-Sollwert",
  "Invalid body sensor ray":"Ungültiger Sensorstrahl am Körper",
  "Front steering servo":"Vorderer Lenkservo",
+ "Fork tilt servo":"Gabelneigungsservo",
+ "Sweeper servo":"Schwenkservo",
  "Output spline":"Abtriebsverzahnung",
  "Invalid actuator impulse":"Ungültiger Aktuatorimpuls",
  "Choose a hinge or slider actuator":"Ein Dreh- oder Schubgelenk wählen",
