@@ -50,3 +50,27 @@ npm run build:brickwright-sdk
 ```
 
 Before advancing Lite, inspect `dist/brickwright-sdk/manifest.json`: it must name the exact committed CAD source, report a clean tree, and retain matching digests for every packaged file. Use Lite's established integration/pin command and verify its SDK digests after production processing. Do not reuse one of the older model-branch SDK bundles: those bundles precede the current library cohorts.
+
+## Local completion on the Mac — 2026-11-16
+
+The saved branch has now been merged with compact embedded CAD UX and all 482
+source-bound Adafruit previews from main `5802e53`. All 2,246 existing library
+paths retain exact Git blob and mode identity; the additional path compared to
+the remote checkpoint is the Adafruit thumbnail provenance manifest.
+
+Fresh package compilation and the combined SDK build pass. The eight-file
+model/physics/telemetry suite reached 52 passing cases and one existing rover
+startup-torque deadline failure (86.3 s under a 60 s limit while the Mac was
+heavily loaded). The unchanged failing case also exceeded the limit during an
+initial retry. With our concurrent GUI minifier temporarily suspended, that
+exact case passed in 10.337 s at the original 60 s limit; the minifier was then
+resumed. Thus all 53 distinct cases have passing execution, with both deadline
+failures retained in the local logs rather than described as a clean single run.
+The new Mantis, Cyclone and Helios cases passed in the initial combined run.
+
+Four library/archive/preview suites passed all 25 cases. The German audit passes
+1,756 messages and 1,395 literal/template references after adding Cyclone's
+missing sweeper-servo label. These are model and source checks; the generated
+sequential SB3 gait/sorter/catapult programs are packaged and structurally tested
+in Lite, not newly qualified here as completed browser-driven physical tasks.
+Kestrel remains deferred. No GitHub Actions were dispatched or awaited.
