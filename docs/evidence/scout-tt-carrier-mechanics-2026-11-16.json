@@ -1,0 +1,259 @@
+{
+  "format": "brickwright-scout-carrier-mechanical-review",
+  "version": 1,
+  "checkedOn": "2026-11-16",
+  "scope": "Original printable electronics carrier and source-level review of parallel robot experiments. No physical prototype claim.",
+  "sources": [
+    {
+      "part": "Adafruit Feather RP2040 rev B",
+      "url": "https://github.com/adafruit/Adafruit-Feather-RP2040-PCB/blob/ea88166891ee0a1697a3899a5d55ab3722a2f125/Adafruit%20Feather%20RP2040%20rev%20B.brd",
+      "sourceBlobSha1": "b35d64431df4f192e936016b4c1275970e39d0d6",
+      "outlineMm": [
+        50.8,
+        22.86
+      ],
+      "holeCentresMm": [
+        [
+          2.54,
+          2.54
+        ],
+        [
+          2.54,
+          20.32
+        ],
+        [
+          48.26,
+          2.54
+        ],
+        [
+          48.26,
+          20.32
+        ]
+      ],
+      "holeDiameterMm": 2.54,
+      "transform": "Centre [25.4,11.43], rotate +90 degrees about Z. USB points -Y."
+    },
+    {
+      "part": "Adafruit DRV8833",
+      "url": "https://github.com/adafruit/Adafruit-DRV8833-Motor-Driver-Breakout-PCB/blob/dda79a86d6518d05a35091cb8b03b9c0d57d04e2/Adafruit%20DRV8833.brd",
+      "sourceBlobSha1": "b2bc1c841e3b60ba27142c3dd710f315846e6637",
+      "outlineBoundsMm": {
+        "min": [
+          -2.286,
+          -1.27
+        ],
+        "max": [
+          15.494,
+          24.13
+        ]
+      },
+      "holeCentresMm": [
+        [
+          12.954,
+          1.27
+        ],
+        [
+          12.954,
+          21.59
+        ]
+      ],
+      "transform": "Centre [6.604,11.43], rotate +90 degrees about Z, translate +32 mm in X."
+    }
+  ],
+  "licensing": "Carrier CAD Script is an independent original BSD-3-Clause design. Only factual mounting dimensions were read from the PCB references; no PCB artwork or third-party mount implementation is distributed.",
+  "manufacturing": {
+    "part": "carrier",
+    "quantity": 1,
+    "material": "PLA",
+    "printBoundsMm": {
+      "min": [
+        -14,
+        -28,
+        0
+      ],
+      "max": [
+        47,
+        28,
+        9
+      ]
+    },
+    "boardMountBoresMm": 2.8,
+    "boardBossDiameterMm": 5,
+    "stockBoardClearanceMm": 6,
+    "deckHolesMm": [
+      [
+        25,
+        -12.5
+      ],
+      [
+        25,
+        12.5
+      ],
+      [
+        39,
+        -12.5
+      ],
+      [
+        39,
+        12.5
+      ]
+    ],
+    "boardBoreEditingRangeMm": [
+      2.6,
+      3.0
+    ],
+    "boardClearanceEditingRangeMm": [
+      6,
+      20
+    ],
+    "retainedTallBossProbeMm": 15,
+    "physicalFitTested": false
+  },
+  "fastenerChecks": {
+    "board": "Six M2.5 x 16, 90 degree countersunk bolts from below, insulating washers and nuts above PCB. Nominal 13.1 mm stack, about 2.9 mm upper projection before seating variation.",
+    "carrierToDeck": "Four M3 x 12, 90 degree countersunk bolts from above, washer and nut below existing deck slots. Nominal 8.9 mm stack.",
+    "maxDeckWasherOrHeadOutsideDiameterMm": 7,
+    "minimumCarrierBoltWasherToPostGapMm": 1.5524865872713995,
+    "minimumCarrierToDeckPostHeadGapMm": 0.5,
+    "notes": "Actual hardware, printed tolerances, solder tails, USB cable routing and tool access still need inspection. No fastener is modeled as physical transport or flexible material.",
+    "toolShaftDiameterMm": 4,
+    "minimumDeckCountersinkToBoardBossLandMm": 1.1143401709779956,
+    "assemblyAccess": "All four M3 head/tool axes lie outside both PCB envelopes. Assemble the six PCB bolts with lower head access on the bench, then counterhold all four exposed M3 heads while tightening nuts beneath the deck."
+  },
+  "collisionAttempts": [
+    {
+      "method": "Generic convex partition of complete 16-facet part",
+      "carrierHulls": 517,
+      "sceneHulls": 4255,
+      "accepted": false,
+      "reason": "Exceeded unchanged 4096 scene hull budget."
+    },
+    {
+      "method": "16-facet planar plate and annular boss prisms, then conical seat CSG",
+      "carrierHulls": 383,
+      "sceneHulls": 4121,
+      "accepted": false,
+      "reason": "Exceeded unchanged 4096 scene hull budget."
+    },
+    {
+      "method": "12-facet planar plate and annular boss prisms, then conical seat CSG; preceding mixed deck-slot positions",
+      "carrierHulls": 277,
+      "sceneHulls": 4015,
+      "accepted": true,
+      "relativeError": 0.004280045489875105,
+      "boundsErrorMm": 0,
+      "volumeFractionLimit": 0.02,
+      "boundsLimitMm": 0.2,
+      "sceneHullLimit": 4096,
+      "reproducedExactly": true,
+      "superseded": true
+    },
+    {
+      "method": "12-facet planar plate and annular boss prisms, then conical seat CSG; final four accessible driver-side mounts at X25/39, Y+/-12.5",
+      "carrierHulls": 279,
+      "sceneHulls": 4017,
+      "accepted": true,
+      "final": true,
+      "relativeError": 0.004192851145816447,
+      "boundsErrorMm": 0,
+      "volumeFractionLimit": 0.02,
+      "boundsLimitMm": 0.2,
+      "sceneHullLimit": 4096,
+      "reproducedExactly": true
+    }
+  ],
+  "checks": [
+    {
+      "command": "npm run build:packages",
+      "result": "pass"
+    },
+    {
+      "command": "node scripts/generate-tt-rover-collisions.mjs --write",
+      "result": "pass",
+      "sceneHulls": 4017
+    },
+    {
+      "command": "node scripts/generate-tt-rover-collisions.mjs --check",
+      "result": "pass; byte-identical reproduction"
+    },
+    {
+      "command": "npx vitest run tests/tt-rover-electronics.test.ts tests/tt-rover.test.ts",
+      "result": "16 passed on final source, including screwdriver access, both mirrored washer rows and countersink-to-boss land"
+    },
+    {
+      "command": "node scripts/check-i18n.mjs",
+      "result": "pass; 1744 German messages and 1355 literal/template references"
+    }
+  ],
+  "parallelExperimentReview": {
+    "sourceCommit": "8d9efa34b8cd0ca25ca2961d3d5a800f83ab528c",
+    "status": "Source-level mechanical review only; not a runtime or manufacturing qualification.",
+    "findings": [
+      {
+        "file": "packages/editor/src/atlas-forklift.ts",
+        "gaps": [
+          "Lift carriage is a plain box with no retaining guide geometry or identified physical lift actuator.",
+          "Fork-to-servo connection has no physical horn/bolt interface.",
+          "Chassis is offered skid-down, lifting its broad plate 13.5 mm above the bed.",
+          "Description refers to slider A while actual control port is D."
+        ]
+      },
+      {
+        "file": "packages/editor/src/kestrel-arm.ts",
+        "gaps": [
+          "Servo hosts and driven parts contain no modeled servo mounting or horn fastener holes."
+        ]
+      },
+      {
+        "file": "packages/editor/src/steerable-rover.ts",
+        "gaps": [
+          "Circular nominal servo spline socket has no purchased horn torque/retention interface.",
+          "Front wheel has one groove at centre while two tire rings are positioned away from it."
+        ]
+      }
+    ]
+  },
+  "testedFiles": [
+    {
+      "path": "packages/editor/src/tt-rover.ts",
+      "sha256": "33647b1288d6ebed315d85c1b6cd0ae10033797aeac81d51c5ce95eebe97d6ac"
+    },
+    {
+      "path": "packages/core/src/locales/de-simulation.ts",
+      "sha256": "f0e06ea0a24757f0bd5d5de50c80838631c401e935fb538ab1dba5b9c2d13573"
+    },
+    {
+      "path": "scripts/generate-tt-rover-collisions.mjs",
+      "sha256": "31aa7ed4ffebc8d9f1073dfd3ee8bbc65c36a711ae59f3bda776ed1c570f6f24"
+    },
+    {
+      "path": "packages/editor/src/robot-assets/tt-rover-collisions.json",
+      "sha256": "8094feecbe52d4711a0979b9ef7457a0bc981510c2e161b3e67f361db036c6d4"
+    },
+    {
+      "path": "tests/tt-rover-electronics.test.ts",
+      "sha256": "96784e840512dd94137abdb27fdcbf0d0375cfb309ad06555a9c10daa2337d1e"
+    },
+    {
+      "path": "tests/tt-rover.test.ts",
+      "sha256": "328c37407eaa1e92b6260f0fca414278199857713876067693b7e062f970c277"
+    },
+    {
+      "path": "docs/PRINTABLE-TT-ROVER.md",
+      "sha256": "82ed2251f0cf2a9c158fabc09b95f56f990d8cf4ec66200e07e0aaffc5e8fb1b"
+    }
+  ],
+  "limits": [
+    "No hardware was printed or assembled.",
+    "The PCB models remain original clearance envelopes. Only the mounting dimensions are specific to the cited PCB revisions.",
+    "Full drive simulation, kit generation and Lite SDK verification are recorded by the parent integration workflow.",
+    "GitHub Actions was not used or awaited."
+  ],
+  "assemblyAccessCorrection": {
+    "precedingDesign": "Two M3 deck screw heads beneath the Feather PCB would be inaccessible for counterholding after the six underside PCB screws were secured.",
+    "firstCorrection": "Moved four M3 deck screws to existing driver-side slots at X25/39 and Y-14/+12.5. Actual tool-envelope probes were added.",
+    "retainedFailure": "Unchanged washer/post minimum-gap check then failed twice on that same intermediate geometry: lower-right gap 0.06225774829854913 mm, required greater than 1.5 mm.",
+    "finalCorrection": "Moved both rows inward to Y+/-12.5. The original 1.5 mm washer threshold passed; final minimum is 1.5524865872714 mm. All four tool shafts clear the PCB envelopes and countersink-to-boss nominal land exceeds 1 mm.",
+    "finalFocusedResult": "16 tests passed across tests/tt-rover-electronics.test.ts and tests/tt-rover.test.ts; no assertion relaxed."
+  }
+}

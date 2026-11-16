@@ -63,7 +63,7 @@ async function record(id,mesh,candidates,source,licence='BSD-3-Clause'){
 for(const part of ['chassis','cradle','wheel','deck','standoff','skid','carrier']){
  const doc=partDocument(part),mesh=kernel.evaluate(doc).bodies[0];doc.nodes[part].program.source=compactSource(doc.nodes[part].program.source,part);const compact=kernel.evaluate(doc).bodies[0];
  const candidates=part==='wheel'?wheelCandidates():part==='carrier'?carrierCandidates():['chassis','deck','standoff'].includes(part)?extrudedCandidates(compact):kernel.partitionConvex(compact);
- await record(part,mesh,candidates,{codeSHA256:hash(ttRoverPartPrograms[part].source),method:part==='wheel'?'32 radial sectors; retained socket, slit and bolt cuts':'Reduced facet count; retained manufacturing cuts'});
+ await record(part,mesh,candidates,{codeSHA256:hash(ttRoverPartPrograms[part].source),method:part==='wheel'?'32 radial sectors; retained socket, slit and bolt cuts':part==='carrier'?'12-facet planar prism sections for plate and annular bosses; conical screw-seat CSG; live 16-facet source qualification':'Reduced facet count; retained manufacturing cuts'});
 }
 const motor=createMotorDocument('tt-gearmotor'),motorGeometry=kernel.evaluate(motor);
 for(const id of ['casing','shaft']){const mesh=motorGeometry.bodies.find(b=>b.id===id),tolerance=id==='shaft'?.02:.05;await record(id,mesh,simplifiedCandidates(mesh,tolerance),{asset:'adafruit-tt-gearmotor',original:structuredClone(motor.provenance.records[0].asset.original),method:`Manifold simplify(${tolerance} mm), convex decomposition, current-source CSG qualification`},'MIT');}

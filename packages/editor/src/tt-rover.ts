@@ -22,8 +22,9 @@ export const ttRoverDimensions=Object.freeze({chassis:[160,110,4],axleX:25,axleZ
 export const ttRoverElectronics={
  featherHoles:[[-8.89,-22.86],[8.89,-22.86],[-8.89,22.86],[8.89,22.86]],
  driverHoles:[[21.84,6.35],[42.16,6.35]],
- // Shift the fourth bolt along its existing slot to leave washer/post clearance.
- deckHoles:[[-8,-14],[8,14],[25,-14],[39,12.5]],
+ // Keep all four tool axes outside both PCBs. Shift both rows along the
+ // existing slots to leave room for washers beside the deck posts below.
+ deckHoles:[[25,-12.5],[25,12.5],[39,-12.5],[39,12.5]],
  plateThickness:3,bossHeight:6,bossDiameter:5,boardBore:2.8,
 } as const;
 const boardHoles=[...ttRoverElectronics.featherHoles,...ttRoverElectronics.driverHoles];
@@ -68,6 +69,7 @@ return subtract(plate,
  standoff:program(`param height:mm=28;param bore:mm=3.4;
 return move([0,0,height/2],subtract(cylinder(4.5,height,32),cylinder(bore/2,height+2 mm,32)));`),
  carrier:program(`param boardClearance:mm=6;param boardBore:mm=2.8;
+// Editing bounds: 6..20 mm boss height, 2.6..3.0 mm bore; invalid edits refuse.
 // Flat underside on the bed; countersinks open downward with 45-degree walls.
 // Six purchased M2.5 countersunk bolts enter from below before deck installation.
 let plate=union(move([0,0,1.5],box(28,56,3)),move([32,0,1.5],box(30,36,3)),move([16,0,1.5],box(8,20,3)));
@@ -76,7 +78,8 @@ let boardBores=union(${cuts(boardHoles.map(([x,y])=>`move([${x},${y},3 mm+boardC
 let undersideHeads=union(${cuts(boardHoles.map(([x,y])=>`move([${x},${y},0.7],frustum(2.8,1.4,1.4,16))`))});
 let deckBores=union(${cuts(ttRoverElectronics.deckHoles.map(([x,y])=>`move([${x},${y},2],cylinder(1.7,10,16))`))});
 let deckHeads=union(${cuts(ttRoverElectronics.deckHoles.map(([x,y])=>`move([${x},${y},2.2],frustum(1.7,3.3,1.6,16))`))});
-return subtract(union(plate,bosses),boardBores,undersideHeads,deckBores,deckHeads);`),
+return choose(boardClearance >= 6 mm && boardClearance <= 20 mm && boardBore >= 2.6 mm && boardBore <= 3 mm,
+ subtract(union(plate,bosses),boardBores,undersideHeads,deckBores,deckHeads),empty());`),
  skid:program(`let flange=move([0,0,12.5],box(32,20,3));
 let toe=union(move([0,0,7],sphere(7,32)),move([0,0,10],cylinder(7,8,32)));
 return subtract(union(flange,toe),${bore(-11,0,7,20)},${bore(11,0,7,20)});`),

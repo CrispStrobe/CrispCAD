@@ -111,6 +111,8 @@ and [source-research tools](docs/SOURCE-RESEARCH.md).
 
 ## Printable Scout TT rover
 
+![Scout TT rover and the original PLA electronics carrier](docs/images/scout-tt-electronics-carrier.png)
+
 **Shapes → Robots** includes the Scout TT rover, its PLA print layout, a
 five-socket shaft fit gauge and a bolted electronics carrier. The assembly combines two existing Adafruit 3777
 TT motor models with twelve original PLA parts and stable **A / left** and

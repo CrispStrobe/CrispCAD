@@ -23,6 +23,7 @@ export async function generateTTRover(){
  outputs.set('scout-tt-rover.bcad',docBytes(assembly));
  outputs.set('scout-tt-print-layout.bcad',docBytes(createTTRoverDocument('robot-tt-rover-print')));
  outputs.set('scout-tt-fit-gauge.bcad',docBytes(createTTRoverPart('fit')));
+ outputs.set('scout-tt-electronics-carrier.bcad',docBytes(createTTRoverPart('carrier')));
  for(const part of Object.keys(ttRoverPartPrograms)){
   const doc=createTTRoverPart(part),geometry=kernel.evaluate(doc);
   if(geometry.bodies.length!==1||geometry.bodies[0].bounds.min[2]<-1e-5)throw new Error(part+': invalid print placement');

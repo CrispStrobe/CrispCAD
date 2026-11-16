@@ -1,0 +1,34 @@
+// Original Scout TT rover part; BSD-3-Clause. Millimetres.
+param boardClearance:mm=6;param boardBore:mm=2.8;
+// Editing bounds: 6..20 mm boss height, 2.6..3.0 mm bore; invalid edits refuse.
+// Flat underside on the bed; countersinks open downward with 45-degree walls.
+// Six purchased M2.5 countersunk bolts enter from below before deck installation.
+let plate=union(move([0,0,1.5],box(28,56,3)),move([32,0,1.5],box(30,36,3)),move([16,0,1.5],box(8,20,3)));
+let bosses=union(move([-8.89,-22.86,3 mm+boardClearance/2],cylinder(2.5,boardClearance,16)),
+  move([8.89,-22.86,3 mm+boardClearance/2],cylinder(2.5,boardClearance,16)),
+  move([-8.89,22.86,3 mm+boardClearance/2],cylinder(2.5,boardClearance,16)),
+  move([8.89,22.86,3 mm+boardClearance/2],cylinder(2.5,boardClearance,16)),
+  move([21.84,6.35,3 mm+boardClearance/2],cylinder(2.5,boardClearance,16)),
+  move([42.16,6.35,3 mm+boardClearance/2],cylinder(2.5,boardClearance,16)));
+let boardBores=union(move([-8.89,-22.86,3 mm+boardClearance/2],cylinder(boardBore/2,8 mm+boardClearance,16)),
+  move([8.89,-22.86,3 mm+boardClearance/2],cylinder(boardBore/2,8 mm+boardClearance,16)),
+  move([-8.89,22.86,3 mm+boardClearance/2],cylinder(boardBore/2,8 mm+boardClearance,16)),
+  move([8.89,22.86,3 mm+boardClearance/2],cylinder(boardBore/2,8 mm+boardClearance,16)),
+  move([21.84,6.35,3 mm+boardClearance/2],cylinder(boardBore/2,8 mm+boardClearance,16)),
+  move([42.16,6.35,3 mm+boardClearance/2],cylinder(boardBore/2,8 mm+boardClearance,16)));
+let undersideHeads=union(move([-8.89,-22.86,0.7],frustum(2.8,1.4,1.4,16)),
+  move([8.89,-22.86,0.7],frustum(2.8,1.4,1.4,16)),
+  move([-8.89,22.86,0.7],frustum(2.8,1.4,1.4,16)),
+  move([8.89,22.86,0.7],frustum(2.8,1.4,1.4,16)),
+  move([21.84,6.35,0.7],frustum(2.8,1.4,1.4,16)),
+  move([42.16,6.35,0.7],frustum(2.8,1.4,1.4,16)));
+let deckBores=union(move([25,-12.5,2],cylinder(1.7,10,16)),
+  move([25,12.5,2],cylinder(1.7,10,16)),
+  move([39,-12.5,2],cylinder(1.7,10,16)),
+  move([39,12.5,2],cylinder(1.7,10,16)));
+let deckHeads=union(move([25,-12.5,2.2],frustum(1.7,3.3,1.6,16)),
+  move([25,12.5,2.2],frustum(1.7,3.3,1.6,16)),
+  move([39,-12.5,2.2],frustum(1.7,3.3,1.6,16)),
+  move([39,12.5,2.2],frustum(1.7,3.3,1.6,16)));
+return choose(boardClearance >= 6 mm && boardClearance <= 20 mm && boardBore >= 2.6 mm && boardBore <= 3 mm,
+ subtract(union(plate,bosses),boardBores,undersideHeads,deckBores,deckHeads),empty());

@@ -215,13 +215,19 @@ deck slots; the deck and its 28 mm posts retain their original dimensions.
 
 The original BSD-3-Clause carrier replaces the previously unspecified insulated
 board carrier. It prints as one flat piece with six upright bosses, using no
-snap fits, heat-set inserts or self-tapping threads. Two overlapping board
-islands and a joining web leave the four existing deck-post screw heads exposed.
+snap fits, heat-set inserts or self-tapping threads. Two board islands
+and an overlapping joining web leave the four existing deck-post screw heads exposed.
+All four carrier-to-deck screws sit outside both PCB outlines, so a 4 mm
+screwdriver shaft can reach their heads with the boards installed. This allows
+the builder to counterhold each screw while tightening its nut beneath the deck.
 The bottom countersinks have 45-degree walls; inspect the slicer preview and
-remove elephant's foot before seating their heads. The fourth deck fastener is
-shifted 1.5 mm along its slot to clear the nearby post: use an M3 washer no more
+remove elephant's foot before seating their heads. Both rows of deck fasteners are
+shifted 1.5 mm toward the centre along their slots to clear the nearby post: use an M3 washer no more
 than 7 mm outside diameter there, leaving about 1.55 mm nominal clearance to the
-Ø9 post. Verify the real washer, nut, tool access and print tolerances.
+Ø9 post. Keep the existing deck-post screw heads and washers at or below
+7 mm outside diameter too: the right-hand carrier island leaves 0.5 mm nominal
+clearance to their edges. Verify the real hardware, tool access and print
+tolerances before tightening.
 
 The two board layouts were checked against Adafruit's exact fabrication data.
 These are dimensional references only: no PCB artwork or another mount design
@@ -231,7 +237,7 @@ is redistributed or used as carrier geometry.
 | --- | --- | --- |
 | [Feather RP2040 Rev B PCB][feather-layout] | 50.8 × 22.86 outline; mounting-hole centres `(2.54, 2.54)`, `(2.54, 20.32)`, `(48.26, 2.54)`, `(48.26, 20.32)`; Ø2.54 holes | Rotate the centred PCB +90° about Z: bosses at X ±8.89 and Y ±22.86; USB faces −Y |
 | [DRV8833 PCB][driver-layout] | Outline X −2.286 to 15.494 and Y −1.27 to 24.13; mounting-hole centres `(12.954, 1.27)` and `(12.954, 21.59)` | Centre the PCB, rotate +90° about Z, then move +32 in X: bosses at `(21.84, 6.35)` and `(42.16, 6.35)` |
-| Carrier to deck | Four Ø3.4 bores and upper 90° countersinks, nominal Ø6.6 opening | `(-8, -14)`, `(8, 14)`, `(25, -14)`, `(39, 12.5)`, within the existing deck slots |
+| Carrier to deck | Four Ø3.4 bores and upper 90° countersinks, nominal Ø6.6 opening | `(25, -12.5)`, `(25, 12.5)`, `(39, -12.5)`, `(39, 12.5)`, within the existing driver-side deck slots |
 | Boards to carrier | Six Ø2.8 through-bores; Ø5 bosses; underside 90° countersinks, nominal Ø5.6 opening | Printed plate Z 0–3; bosses Z 3–9; nominal 6 mm gap under each PCB |
 
 Before assembly, compare the real boards' hole centres and connector direction
@@ -249,7 +255,8 @@ breakouts are not automatically compatible.
    whose bosses crack. Head shape and actual print compensation still need a
    fit check.
 2. Put the four M3 × 12 countersunk carrier screws through the upper recesses.
-   Mount both boards over the M2.5 screws and bosses, using insulating washers
+   Their heads remain accessible beside the driver board. Mount both boards over
+   the M2.5 screws and bosses, using insulating washers
    beneath the top nuts. Tighten gently so that the PCB stays flat. Installing
    the screws and boards on the bench retains access to the lower screw heads;
    do this before bolting the carrier to the deck.
@@ -270,10 +277,14 @@ breakouts are not automatically compatible.
    Anchor cables with light ties through unused deck slots; do not clamp a tie
    across exposed PCB components.
 
-The carrier's retained `boardClearance` and `boardBore` parameters support a
-measured revision. Changing boss height also requires moving the component
-envelopes by the same amount and rechecking fastener lengths and collision
-candidates. The four long deck posts set the height of the entire deck; changing
+The carrier's retained `boardClearance` accepts 6–20 mm and `boardBore` accepts
+2.6–3.0 mm; values outside these design bounds refuse geometry evaluation. The
+stock values are 6 and 2.8 mm. The bore cut follows the boss height, so a taller
+post remains open all the way through. These ranges retain the nominal solder
+gap and at least 1 mm nominal radial wall at the largest bore; they are editing
+bounds, not a physical strength qualification. Changing boss height also requires
+moving the component envelopes by the same amount and rechecking fastener
+lengths and collision candidates. The four long deck posts set the height of the entire deck; changing
 them does not change board-to-carrier clearance. Physical fit, thermal behaviour
 near the driver and fastener retention remain to be checked on a printed unit.
 
@@ -509,7 +520,7 @@ required for this build workflow.
 [feather-spec]: https://learn.adafruit.com/adafruit-feather/feather-specification
 [adafruit-source]: https://github.com/adafruit/Adafruit_CAD_Parts/tree/9f2a89f3d5c3491886d58cb7fe83385417563cf4
 [lite-cad]: https://github.com/CrispStrobe/brickwright-lite/blob/fc333ddf88023cf17e9bb5973109b74a350f2ab7/docs/CAD-EDITOR.md
-[rover-source]: https://github.com/CrispStrobe/brickwright-cad/blob/feat/printable-robot-20261115/packages/editor/src/tt-rover.ts
+[rover-source]: https://github.com/CrispStrobe/brickwright-cad/blob/feat/scout-tt-integration-20261116/packages/editor/src/tt-rover.ts
 [brickwright-license]: https://github.com/CrispStrobe/brickwright-cad/blob/53581e9cbd2565e9e088c8fcd52fb1ba5c739b09/LICENSE
 [adafruit-license]: https://github.com/CrispStrobe/brickwright-cad/blob/53581e9cbd2565e9e088c8fcd52fb1ba5c739b09/library/sources/adafruit-motors/LICENSE
 [attribution]: https://github.com/CrispStrobe/brickwright-cad/blob/53581e9cbd2565e9e088c8fcd52fb1ba5c739b09/docs/MODEL-ATTRIBUTION.md
