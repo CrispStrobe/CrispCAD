@@ -1,6 +1,7 @@
 import {roverCatalog,isTTRover,createTTRoverDocument,ttRoverPreview} from './tt-rover.js';
 import {steerableRoverCatalog,isSteerableRover,createSteerableRoverDocument,steerableRoverPreview} from './steerable-rover.js';
 import {kestrelArmCatalog,isKestrelArm,createKestrelArmDocument,kestrelArmPreview} from './kestrel-arm.js';
+import {atlasForkliftCatalog,isAtlasForklift,createAtlasForkliftDocument,atlasForkliftPreview} from './atlas-forklift.js';
 import {simulationExampleCatalog,isSimulationExample,createSimulationExample,simulationExampleGeometry} from './simulation-examples.js';
 import {motorCatalog,isMotorModel,motorGeometry,createMotorDocument} from './motor-models.js';
 import {allocateMotorPort} from '@brickwright/cad-core';
@@ -56,7 +57,7 @@ const templates:ShapePreset[]=[
 const screwNames=[['hex-head-screw','Hex-head screw'],['socket-head-screw','Socket-head screw'],['countersunk-screw','Countersunk screw'],['pan-head-screw','Pan-head screw'],['set-screw','Set screw'],['wood-screw','Wood screw']];
 const entries=[...templates,...screwNames.map(([id,name])=>({id,name,category:'',description:'A screw with editable head, drive and V-thread dimensions.',keywords:'screw bolt thread fastener hex socket countersunk pan',color:'#b0b7c2'})),...originalCatalog];
 export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
- ...roverCatalog,...steerableRoverCatalog,...kestrelArmCatalog,...motorCatalog,...simulationExampleCatalog,
+ ...roverCatalog,...steerableRoverCatalog,...kestrelArmCatalog,...atlasForkliftCatalog,...motorCatalog,...simulationExampleCatalog,
  ...Object.entries(essentials).flatMap(([category,ids])=>ids.map(id=>Object.freeze({...entries.find(p=>p.id===id)!,category,additional:false}))),
  ...entries.filter(p=>!Object.values(essentials).flat().includes(p.id)).map(p=>Object.freeze({...p,category:'Additional shapes',additional:true})),
 ]);
@@ -66,6 +67,7 @@ export function presetGeometry(id: string, preview = false, recipe?:GeneratorRec
   if(isTTRover(id))return ttRoverPreview(id);
  if(isSteerableRover(id))return steerableRoverPreview(id);
  if(isKestrelArm(id))return kestrelArmPreview(id);
+ if(isAtlasForklift(id))return atlasForkliftPreview(id);
   if(isSimulationExample(id))return simulationExampleGeometry(id);
   if(isMotorModel(id))return motorGeometry(id);
   if((basicGeneratorPresets as readonly string[]).includes(id)){const retained=checkGenerator(recipe??defaultGenerator(id)!);if(retained.preset!==id)throw new Error(t('Invalid shape generator'));const shown=structuredClone(retained);if(preview){for(const key of ['segments','tubeSegments','detail'])if(shown.values[key]!==undefined)shown.values[key]=Math.min(shown.values[key],key==='detail'?2:key==='tubeSegments'?10:20);}return basicShapeGeometry(shown);}
@@ -96,6 +98,7 @@ export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: 
   if(isTTRover(id))return createTTRoverDocument(id);
  if(isSteerableRover(id))return createSteerableRoverDocument(id);
  if(isKestrelArm(id))return createKestrelArmDocument(id);
+ if(isAtlasForklift(id))return createAtlasForkliftDocument(id);
   const preset = shapeCatalog.find(p => p.id === id); if (!preset) throw new Error(t('Unknown shape'));
   if(isSimulationExample(id))return createSimulationExample(id);
   if(isMotorModel(id))return createMotorDocument(id);
