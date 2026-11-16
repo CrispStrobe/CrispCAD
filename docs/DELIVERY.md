@@ -1031,6 +1031,21 @@ The fourth ranked batch converts30 original roots:14pass strict native/STL scree
 
 All28raw attachments match source/mesh/preview hashes with zero offline/external requests. All19tested files,41built files and66committed source/input/licence bindings match. Prior456asset hashes and267previews remain exact. Local qualification is242/237/281, a gain of14/14/14 from delivered228/223/267; owner delivery is separate for this same cohort. Target300 leaves58admissions after delivery. The source-fit pool585 includes467unconverted roots; the next30are pinned separately. Of45cumulative NotManifold refusals, one has scoped source-boundary proof and44remain A/B unresolved; two missing-texture refusals remain blocked. No implementation, source, dependency, default, units, tolerance or limit change is made. See [per-model proof and exact tested/runtime binding](evidence/ldraw-batch4-qualification-2026-11-16.json).
 
+## Embedded robot workspace and Adafruit previews — 2026-11-16
+
+The embedded SDK accepts `embedded` and `toolbarContent` without a framework
+runtime dependency. Host controls are slotted into the existing modeling toolbar
+from light DOM. Embedded mode omits the duplicate File menu and quick document
+icons; hosts must expose the public file commands in their shared menus. The
+standalone editor retains its full menus and controls.
+
+The Adafruit archive now has locally bundled thumbnails and selection previews
+for all 482 component folders. They are lazy-loaded on first library opening and
+need no image download while browsing. The metadata-only root is not a model.
+Immutable media revision `bd5c73276191131f3b4b53ce10980c63ef129d05` retains the
+482 PNGs, source hashes, transformations and MIT attribution. The source-bound
+sync script verifies original identities, every PNG hash/size and image dimensions.
+These previews do not certify units, insertion eligibility or collision behavior.
 
 ### Nine further authored archive roots, 2026-11-16
 

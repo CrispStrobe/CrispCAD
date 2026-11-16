@@ -4,6 +4,7 @@ export const messages:Record<string,string>={
  "Invalid body sensor ray":"Ungültiger Sensorstrahl am Körper",
  "Front steering servo":"Vorderer Lenkservo",
  "Fork tilt servo":"Gabelneigungsservo",
+ "Sweeper servo":"Schwenkservo",
  "Output spline":"Abtriebsverzahnung",
  "Invalid actuator impulse":"Ungültiger Aktuatorimpuls",
  "Choose a hinge or slider actuator":"Ein Dreh- oder Schubgelenk wählen",

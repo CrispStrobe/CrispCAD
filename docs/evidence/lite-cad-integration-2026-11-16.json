@@ -1,0 +1,61 @@
+{
+  "format": "brickwright-cad-source-integration",
+  "version": 1,
+  "date": "2026-11-16",
+  "sourceCommit": "adac88f945d654bbf0af62ffee049d5380782362",
+  "sourceTree": "d43ea2935e45b8023ab5796842aadf83cecf487f",
+  "parents": [
+    "57d63940175a3585c691d58f9db2c30a2dd25a5d",
+    "abb65b419ec8f03443a476584393d2023c861d18"
+  ],
+  "verification": "GitHub Git tree object comparison",
+  "mainEntries": 3111,
+  "headEntries": 3117,
+  "mainBlobs": 2943,
+  "headBlobs": 2949,
+  "missing": [],
+  "changed": [
+    {
+      "path": "packages/editor/src/shapes.ts",
+      "before": "7e2caf14faf7dddbecf43c99a9d4fbafaec23cef",
+      "after": "e2c66c7ec42b015a420d68d6f20429258212514e"
+    }
+  ],
+  "added": [
+    {
+      "path": "packages/editor/src/cyclone-sorter.ts",
+      "sha": "e20d8eea0043744b6735e2926759246d9a9d2b8a"
+    },
+    {
+      "path": "packages/editor/src/helios-catapult.ts",
+      "sha": "85d794c1b547329cb7045374be9806577cb85f5f"
+    },
+    {
+      "path": "packages/editor/src/mantis-walker.ts",
+      "sha": "c056b59bc51c552b0e58a8e1b9f7a7d05d4994c5"
+    },
+    {
+      "path": "tests/cyclone-sorter.test.ts",
+      "sha": "1ea8da809bbb037fba8acfeb4dab271bf857d3a1"
+    },
+    {
+      "path": "tests/helios-catapult.test.ts",
+      "sha": "590d14a698eaee68586f7298f2fad3a4fe907f6e"
+    },
+    {
+      "path": "tests/mantis-walker.test.ts",
+      "sha": "9feb3d7526a4c5e0df2a2c1ab6563bd626558f54"
+    }
+  ],
+  "libraryPreserved": true,
+  "libraryFiles": 2245,
+  "qualification": {
+    "freshLocalTests": false,
+    "freshSdkBuild": false,
+    "freshBrowserPass": false,
+    "githubActionsRequested": false,
+    "githubActionsAwaited": false,
+    "blocker": "Executor disk exhaustion prevented sandbox process startup before CAD installation/build",
+    "liteSdkPinAdvanced": false
+  }
+}
