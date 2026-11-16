@@ -1063,3 +1063,22 @@ The sixth ranked batch passes licence/provenance, closure, original integrity an
 All12actual editor/provenance/history/substituted-byte refusal cases,12previews,final app build/parser and24Chromium/iPad WebKit workflows pass. Six bounded browser chunks preserve the proven assertion/action body and original240-second test/300-second command limits. Every raw attachment equals its durable source/mesh/preview record with zero offline/external requests. All17changed and41built files remain exact, with58committed source/input/licence/tested bindings. Prior502asset hashes and290previews are intact. No implementation, dependency, source, default, units, tolerance or guard change is made.
 
 Local qualification is263/258/302, a cohort gain of12/12/12 from delivered251/246/290; normal owner delivery is separate. Target300 leaves37further admissions after delivery. The585source-fit roots include407unconverted. Cumulative84NotManifold refusals retain one scoped source-boundary proof and83A/B unresolved cases, plus two missing/unsupported texture refusals. The earlier21refusals have exact source/closure/emitted-converter/native-log bindings; this is not a claim that source/output boundary segments were traced. Batch007is separately source-ready, without geometry or admission credit. See [per-model proof and exact tested/runtime binding](evidence/ldraw-batch6-qualification-2026-11-16.json).
+
+## Sketch usability repair — 2026-11-16
+
+Pointer resizing now clamps every sketch dimension and extrusion height to the
+same positive 0.01–100000 mm design range accepted by the kernel. Dragging the
+height handle through the base no longer creates a negative extrusion. The
+captured viewBox determines pointer scaling throughout a drag. Field names stay
+visible, and the dialog explains the two handles and the final Create action.
+Definition errors omit internal feature UUIDs in this form. Invalid numeric or
+expression input still disables Create; the kernel's validation is unchanged.
+The complete draft is evaluated before one history transaction commits it.
+
+The source-derived TT/DC/servo meshes are distinct from Scout's deliberately
+simplified PCB and battery clearance envelopes. Screws/nuts are available from
+Shapes → Supports & connections but are not present in Scout's assembly. A local
+attempt to admit Adafruit 4884 Feather RP2040 retained the pinned source but
+failed: an OCP face had no triangulation, and the vendor STL failed closed
+positive topology screening even with a proper rotation and positive volume.
+No failed source, fabricated face or unsupported qualification is shipped.
