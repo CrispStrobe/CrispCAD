@@ -7,6 +7,7 @@ import {apexScaraCatalog,isApexScara,createApexScaraDocument,apexScaraPreview} f
 import {orionCarouselCatalog,isOrionCarousel,createOrionCarouselDocument,orionCarouselPreview} from './orion-carousel.js';
 import {vortexPinballCatalog,isVortexPinball,createVortexPinballDocument,vortexPinballPreview} from './vortex-pinball.js';
 import {titanViseCatalog,isTitanVise,createTitanViseDocument,titanVisePreview} from './titan-vise.js';
+import {hermesCraneCatalog,isHermesCrane,createHermesCraneDocument,hermesCranePreview} from './hermes-crane.js';
 import {roverCatalog,isTTRover,createTTRoverDocument,ttRoverPreview} from './tt-rover.js';
 import {steerableRoverCatalog,isSteerableRover,createSteerableRoverDocument,steerableRoverPreview} from './steerable-rover.js';
 import {simulationExampleCatalog,isSimulationExample,createSimulationExample,simulationExampleGeometry} from './simulation-examples.js';
@@ -64,7 +65,7 @@ const templates:ShapePreset[]=[
 const screwNames=[['hex-head-screw','Hex-head screw'],['socket-head-screw','Socket-head screw'],['countersunk-screw','Countersunk screw'],['pan-head-screw','Pan-head screw'],['set-screw','Set screw'],['wood-screw','Wood screw']];
 const entries=[...templates,...screwNames.map(([id,name])=>({id,name,category:'',description:'A screw with editable head, drive and V-thread dimensions.',keywords:'screw bolt thread fastener hex socket countersunk pan',color:'#b0b7c2'})),...originalCatalog];
 export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
- ...roverCatalog,...steerableRoverCatalog,...atlasForkliftCatalog,...mantisWalkerCatalog,...cycloneSorterCatalog,...heliosCatapultCatalog,...labyrinthTilterCatalog,...apexScaraCatalog,...orionCarouselCatalog,...vortexPinballCatalog,...titanViseCatalog,...motorCatalog,...simulationExampleCatalog,
+ ...roverCatalog,...steerableRoverCatalog,...atlasForkliftCatalog,...mantisWalkerCatalog,...cycloneSorterCatalog,...heliosCatapultCatalog,...labyrinthTilterCatalog,...apexScaraCatalog,...orionCarouselCatalog,...vortexPinballCatalog,...titanViseCatalog,...hermesCraneCatalog,...motorCatalog,...simulationExampleCatalog,
  ...Object.entries(essentials).flatMap(([category,ids])=>ids.map(id=>Object.freeze({...entries.find(p=>p.id===id)!,category,additional:false}))),
  ...entries.filter(p=>!Object.values(essentials).flat().includes(p.id)).map(p=>Object.freeze({...p,category:'Additional shapes',additional:true})),
 ]);
@@ -81,6 +82,7 @@ export function presetGeometry(id: string, preview = false, recipe?:GeneratorRec
  if(isOrionCarousel(id))return orionCarouselPreview(id);
  if(isVortexPinball(id))return vortexPinballPreview(id);
  if(isTitanVise(id))return titanVisePreview(id);
+ if(isHermesCrane(id))return hermesCranePreview(id);
  if(isSteerableRover(id))return steerableRoverPreview(id);
   if(isSimulationExample(id))return simulationExampleGeometry(id);
   if(isMotorModel(id))return motorGeometry(id);
@@ -119,6 +121,7 @@ export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: 
  if(isOrionCarousel(id))return createOrionCarouselDocument(id);
  if(isVortexPinball(id))return createVortexPinballDocument(id);
  if(isTitanVise(id))return createTitanViseDocument(id);
+ if(isHermesCrane(id))return createHermesCraneDocument(id);
  if(isSteerableRover(id))return createSteerableRoverDocument(id);
   const preset = shapeCatalog.find(p => p.id === id); if (!preset) throw new Error(t('Unknown shape'));
   if(isSimulationExample(id))return createSimulationExample(id);
