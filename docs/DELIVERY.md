@@ -1064,6 +1064,17 @@ All12actual editor/provenance/history/substituted-byte refusal cases,12previews,
 
 Local qualification is263/258/302, a cohort gain of12/12/12 from delivered251/246/290; normal owner delivery is separate. Target300 leaves37further admissions after delivery. The585source-fit roots include407unconverted. Cumulative84NotManifold refusals retain one scoped source-boundary proof and83A/B unresolved cases, plus two missing/unsupported texture refusals. The earlier21refusals have exact source/closure/emitted-converter/native-log bindings; this is not a claim that source/output boundary segments were traced. Batch007is separately source-ready, without geometry or admission credit. See [per-model proof and exact tested/runtime binding](evidence/ldraw-batch6-qualification-2026-11-16.json).
 
+
+### Thirteen independent archive originals and a general source-selection correction, 2026-11-16
+
+The seventh30-root batch passes licence/closure/integrity and converts all30. Native/STL screening yields17survivors and13NotManifold refusals, with A/B cause unresolved. Source review then exposes four false-positive selections:70793declares Part Alias of shipped70023;89658and35536are identity-only wrappers of shipped99146;572cis explicitly superseded by the identical76065k01. All four are withheld from new records. Their original/native bytes and the interrupted17-root run remain preserved. No count is inferred from native success or shared geometry.
+
+A general source-selection utility rejects those source relationships without source rewriting, new coordinates, tolerance or geometry changes. Five positive/refusal controls pass, preserving transformed references and independent authored scenes even when meshes match. A source-only scan verifies all94previous batch001-006 original hashes and finds zero flags under these specific rules; it does not rewrite prior records, decrement counts or claim broad requalification.
+
+The corrected13originals pass13actual editor/provenance/history/mismatched-byte refusal cases,18focused cases total, necessary final changed-catalogue build/parser and26Chromium/iPad WebKit workflows. Native conversion, packages and preview rendering are not replayed;13retained preview values remain exact. Every raw attachment equals its durable source/mesh/preview record with zero offline/external requests. All20tested and41built files remain exact;59committed source/input/licence/tested bindings match. All526prior asset hashes and302previews are preserved.
+
+Local qualification totals276/271/315, a genuine13/13/13 cohort gain from main263/258/302. The earlier17-record projection is superseded and receives no admission credit. Normal current-main integration/delivery remains separate: host panel/runtime changes landed during the run and are not covered by its old-base proof. Target300 leaves24additional admissions after delivery. The closure-budget pool585includes four now-known non-independent roots and377unconverted roots whose independence still requires review. See [source exclusions, prior audit, actual gate proofs and exact tested/runtime binding](evidence/ldraw-batch7-qualification-2026-11-16.json).
+
 ## Sketch usability repair — 2026-11-16
 
 Pointer resizing now clamps every sketch dimension and extrusion height to the
@@ -1082,3 +1093,12 @@ attempt to admit Adafruit 4884 Feather RP2040 retained the pinned source but
 failed: an OCP face had no triangulation, and the vendor STL failed closed
 positive topology screening even with a proper rotation and positive volume.
 No failed source, fabricated face or unsupported qualification is shipped.
+
+
+### Offline library preview integration, 2026-11-16
+
+The current-main integration exposed a shared UI regression: opening Model Library unconditionally imported the optional Adafruit preview module, producing one offline HTTP request. Four actual traces bind the exact local module URL and failed unchanged zero-request assertion. The minimal general correction starts the same revision-checked loader only after explicit archive component selection. A focused negative/positive workflow passes in both Chromium and iPad WebKit: opening/browsing metadata offline makes zero requests; explicit selection loads the actual256x192PNG once, and neither action changes model history.
+
+All26unchanged model workflows then pass on the corrected runtime, matching durable source/mesh/PNG records with zero requests. The36source/42built snapshot binds to commit4f477f1/treefb723586 with75source/input/licence blob matches. The already-passed14unit checks, native outputs and PNG rendering are retained. A later main delta is restricted by source comparison to sketch open handlers, one new sketch CSS class and its locale hint. Fresh packages/build and representative offline insertion/provenance/undo/redo/restart pass in both engines on integratedaf4f8d0/tree6c5f0ce, with38source/42built files and77blob matches. The earlier26-model proof is retained; whole-tree equality to its old runtime is not claimed.
+
+The13independent originals remain local276/271/315 until actual normal owner landing is verified. Four newly identified aliases/wrappers/superseded duplicates stay withheld; the prior94source-only audit has zero flags. All526prior asset hashes and302previews remain exact. No source override, native/PNG replay, precision change, guard weakening or CI-full run occurred. See [full source/runtime proof, preserved failures and exact integration binding](evidence/ldraw-batch7-qualification-2026-11-16.json).
