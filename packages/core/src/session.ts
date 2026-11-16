@@ -95,6 +95,8 @@ export function createCadSession(initial: CadDocument = createDocument()) {
   }
   const session = {
     get state() { return state(); },
+    // Labels describe the actions restored by each undo/redo, without copying geometry.
+    get history() { return {past:undo.map((_,i)=>undo[i+1]?.label??label),future:[...redo].reverse().map(step=>step.label)}; },
     get modelSource(){return document.version>=6&&document.modelSource?document.modelSource.source:generateModelSource(document);},
     enableModelSource(){sourceReady();liveModelSource=true;},
     prepareModelSource,

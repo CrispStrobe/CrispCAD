@@ -40,6 +40,8 @@ export interface CadEditorOptions {
   toolbarContent?:HTMLElement;
   /** Embedded hosts already own project files; avoid a second File menu. */
   embedded?:boolean;
+  /** A host may own the sole project title. */
+  showDocumentTitle?:boolean;
   /** Optional whole-project choices supplied by an embedding application. */
   presetProjects?:{ids:readonly string[];open:(presetId:string)=>Promise<void>};
   /** Desktop hosts provide the sole File menu through their native menu bar. */
@@ -95,6 +97,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const status = el('div', 'status'); const message = el('span'); message.setAttribute('role', 'status');message.setAttribute('aria-label',t('Editor status')); message.setAttribute('aria-live', 'polite'); const stats = el('span', 'stats'); status.append(message, stats);
   const designBar = el('div', 'design-bar');
   const titleInput = el('input'); titleInput.setAttribute('aria-label', 'Design title'); titleInput.addEventListener('keydown',event=>{if(event.key==='Enter')titleInput.blur();else if(event.key==='Escape'){titleInput.value=session.state.document.title;titleInput.blur();}}); titleInput.addEventListener('change', () => run(() => session.rename(titleInput.value))); designBar.append(titleInput, el('span', 'units-label', t('mm · Z up')));
+  if(options.showDocumentTitle===false){titleInput.hidden=true;designBar.style.gridTemplateColumns='minmax(0,1fr) auto';}
   main.append(tree, viewHost, inspector); designBar.append(toolbar);shell.append(designBar, main, status); shadow.append(style, shell);
   let disposed = false; let builtRevision = -1; let built: GeometryResult | null = null; let running = false; let lastRevision = -1; let lastSelection = ''; let geometryError = ''; let mode: 'select' | 'translate' | 'rotate' | 'scale' = 'select'; let grid = 1;
   const waiters = new Set<{ resolve: (r: GeometryResult) => void; reject: (e: Error) => void }>();
