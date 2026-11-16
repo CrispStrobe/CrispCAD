@@ -86,6 +86,14 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
     if(impulses.some(v=>!Number.isFinite(v.impulse)||Math.abs(v.impulse)>1))throw new Error(t('Invalid actuator impulse'));
     pending=true;try{const next=await client!.send({op:'actuator-step',impulses,rays,servos});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));frame=next;if(display){present(frame);notify();}return structuredClone(frame);}finally{pending=false;}
    },
+   // Opt-in intermediate feedback. Finish each displayed batch with step(),
+   // which refreshes the complete snapshot before present()/replay consume it.
+   // The retained full snapshot is never labelled with a newer telemetry time.
+   async stepTelemetry(impulses:{id:string;impulse:number}[],rays:SimulationRay[]=[],servos:SimulationServo[]=[]){
+    if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));if(pending)throw new Error(t('A mechanical step is already pending'));
+    if(impulses.some(v=>!Number.isFinite(v.impulse)||Math.abs(v.impulse)>1))throw new Error(t('Invalid actuator impulse'));
+    pending=true;try{const next=await client!.send({op:'actuator-step',impulses,rays,servos,telemetryOnly:true});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));return structuredClone(next);}finally{pending=false;}
+   },
    present(){if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));present(frame);notify();},
    release(){if(externalOwner===owner){const ownedClient=client;pause();if(ownedClient)void ownedClient.send({op:'stop-motors'}).catch(()=>{});}}
   };

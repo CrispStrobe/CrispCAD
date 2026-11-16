@@ -3,11 +3,13 @@ import type {CadDocument} from '@brickwright/cad-core';
 export interface SimulationPose {id:string;positionMm:number[];quaternion:number[];previewRadiusMm?:number;previewShape?:'sphere'|'box'}
 export interface SimulationServo {id:string;angleRad:number;torqueNm:number;enabled:boolean}
 export interface SimulationRay {id:string;bodyId:string;originMm:[number,number,number];direction:[number,number,number];rangeMm:number}
-export interface SimulationFrame {time:number;poses:SimulationPose[];angles:Record<string,number>;speeds:Record<string,number>;linearPositions:Record<string,number>;linearSpeeds:Record<string,number>;distances?:Record<string,number|null>}
+export interface SimulationTelemetry {time:number;angles:Record<string,number>;speeds:Record<string,number>;linearPositions:Record<string,number>;linearSpeeds:Record<string,number>;distances?:Record<string,number|null>}
+export interface SimulationFrame extends SimulationTelemetry {poses:SimulationPose[]}
+export interface SimulationActuatorStep {op:'actuator-step';impulses:{id:string;impulse:number}[];rays?:SimulationRay[];servos?:SimulationServo[];telemetryOnly?:boolean}
 export type SimulationCommand =
  |{op:'start';document:CadDocument;wasmURL:string;fixBase:boolean;locale:string;rigidPreview?:boolean}
  |{op:'step';seconds:number}
- |{op:'actuator-step';impulses:{id:string;impulse:number}[];rays?:SimulationRay[];servos?:SimulationServo[]}
+ |SimulationActuatorStep
  |{op:'sense';rays:SimulationRay[]}
  |{op:'motor';id:string;speedDps:number;torqueNm:number}
  |{op:'stop-motor';id:string;action:'brake'|'coast'}

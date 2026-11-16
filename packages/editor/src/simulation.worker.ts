@@ -4,7 +4,7 @@ import {createPhysicsWorld,prepareDocumentCollisions} from '@brickwright/cad-phy
 import {defaultPartPhysics,setLocale,t} from '@brickwright/cad-core';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import type {CadDocument} from '@brickwright/cad-core';
-import type {SimulationCommand,SimulationFrame,SimulationRay} from './simulation-protocol.js';
+import type {SimulationCommand,SimulationFrame,SimulationRay,SimulationTelemetry} from './simulation-protocol.js';
 let kernel:Promise<GeometryKernel>|undefined,world:Awaited<ReturnType<typeof createPhysicsWorld>>|undefined,document:CadDocument|undefined;
 const driven=new Map<string,'hinge'|'slider'>();
 const previewBalls=new Map<string,{previewRadiusMm:number;previewShape:'sphere'|'box'}>();
@@ -13,7 +13,8 @@ const measure=()=>{for(const joint of document!.joints??[])if(joint.kind==='hing
 const measureSliders=()=>{for(const joint of document!.joints??[])if(joint.kind==='slider'){const current=world!.sliderPosition(joint.id);linearSpeeds[joint.id]=linearPositions[joint.id]===undefined?0:(current-linearPositions[joint.id])/.005;linearPositions[joint.id]=current;}};
 let distances:Record<string,number|null>={};
 const sense=(rays:SimulationRay[])=>{if(!Array.isArray(rays)||rays.length>32||new Set(rays.map(r=>r.id)).size!==rays.length||rays.some(r=>!r||typeof r.id!=='string'||r.id.length>96||!Array.isArray(r.originMm)||r.originMm.length!==3||!Array.isArray(r.direction)||r.direction.length!==3||!document!.nodes[r.bodyId]))throw new Error(t('Invalid body sensor ray'));const next:Record<string,number|null>={};for(const r of rays)next[r.id]=world!.bodyRay(r.bodyId,r.originMm,r.direction,r.rangeMm);distances=next;};
-const frame=():SimulationFrame=>({time:world!.time,poses:document!.roots.filter(id=>!document!.nodes[id].reference&&document!.nodes[id].role!=='hole').map(id=>({id,...world!.pose(id)})).concat([...previewBalls].map(([id,spec])=>({id,...world!.pose(id),...spec}))),angles:{...angles},speeds:{...speeds},linearPositions:{...linearPositions},linearSpeeds:{...linearSpeeds},distances:{...distances}});
+const telemetry=():SimulationTelemetry=>({time:world!.time,angles:{...angles},speeds:{...speeds},linearPositions:{...linearPositions},linearSpeeds:{...linearSpeeds},distances:{...distances}});
+const frame=():SimulationFrame=>({...telemetry(),poses:document!.roots.filter(id=>!document!.nodes[id].reference&&document!.nodes[id].role!=='hole').map(id=>({id,...world!.pose(id)})).concat([...previewBalls].map(([id,spec])=>({id,...world!.pose(id),...spec})))});
 self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
  const command=event.data;
  try{
@@ -51,6 +52,9 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
    else if(command.op==='impulse')world.applyImpulse(command.id,command.impulseNs,command.pointMm);
    else if(command.op==='stop-motors')for(const [id,kind]of driven)if(kind==='hinge')world.stopHingeMotor(id);else world.stopSliderMotor(id);
   }
-  self.postMessage({request:command.request,frame:frame()});
+  // Coupled controllers need joint/sensor feedback at 200 Hz, but poses only
+  // for the terminal step of a displayed frame. Avoid querying or cloning all
+  // body poses for those intermediate samples; physics advances identically.
+  self.postMessage({request:command.request,frame:command.op==='actuator-step'&&command.telemetryOnly===true?telemetry():frame()});
  }catch(error){self.postMessage({request:command.request,error:error instanceof Error?error.message:String(error)});}
 };
