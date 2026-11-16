@@ -165,7 +165,7 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
    const joint=doc.joints?.find(j=>j.id===id);if(!joint||!['hinge','slider'].includes(joint.kind))throw new Error(t('Choose a hinge or slider actuator'));
    const a=byId.get(joint.bodyA),b=byId.get(joint.bodyB);if(a===b)throw new Error(t('Actuator bodies belong to the same rigid assembly'));
    const rotation=a.GetRotation(),q=[rotation.GetX(),rotation.GetY(),rotation.GetZ(),rotation.GetW()],axis=quaternionPoint(rotate(joint.axisA,doc.nodes[joint.bodyA].transform.rotation),q);
-   if(joint.kind==='hinge')J.castObject(constraints.get(id),J.HingeConstraint).SetMotorState(J.EMotorState_Off);
+   if(joint.kind==='hinge'){const hinge=J.castObject(constraints.get(id),J.HingeConstraint);hinge.SetMotorState(J.EMotorState_Off);hinge.SetNumVelocityStepsOverride(40);hinge.SetNumPositionStepsOverride(80);}
    else J.castObject(constraints.get(id),J.SliderConstraint).SetMotorState(J.EMotorState_Off);
    const authored=doc.nodes[joint.bodyA].transform,origin=a.GetPosition(),local=rotate(joint.anchorA.map((v,i)=>v*authored.scale[i]),authored.rotation).map((v,i)=>(v+authored.position[i])*.001),offset=quaternionPoint(local,q),at=new J.RVec3(...offset.map((v,i)=>v+[origin.GetX(),origin.GetY(),origin.GetZ()][i]));
    for(const [body,sign]of [[a,-1],[b,1]] as const){if(body.IsStatic())continue;const value=new J.Vec3(...axis.map(v=>v*impulse*sign));if(joint.kind==='hinge')body.AddAngularImpulse(value);else body.AddImpulse(value,at);bodies.ActivateBody(body.GetID());J.destroy(value);}J.destroy(at);

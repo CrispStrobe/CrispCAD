@@ -25,3 +25,16 @@ it('body-mounted rays ignore their own rigid assembly and see external obstacles
 });
 
 it('an implicit ideal position servo reaches its target with finite torque and reaction',async()=>{const {world,a,b,joint}=await fixture('hinge',true,true);try{world.setHingeServo(joint,Math.PI/4,.001);for(let i=0;i<1000;i++){world.setHingeServo(joint,Math.PI/4,.001);world.step(.005);}expect(world.hingeAngle(joint)).toBeCloseTo(Math.PI/4,2);expect(()=>world.setHingeServo(joint,NaN,.001)).toThrow();}finally{world.dispose();}});
+
+it('keeps qualified rover hinge clearances under circuit-like startup torque',async()=>{
+ const {createTTRoverDocument}=await import('../packages/editor/src/tt-rover.js'),doc=createTTRoverDocument(),source=JSON.stringify(doc),geometry=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,geometry,kernel),world=await createPhysicsWorld(doc,geometry,prepared);
+ const ids=['drive-a','drive-b'],previous=ids.map(id=>world.hingeAngle(id)),speed=[0,0];
+ try{
+  for(let i=0;i<100;i++){
+   for(let k=0;k<2;k++)world.applyJointImpulse(ids[k],(3.2-.25*speed[k])/15*.25*.005);
+   world.step(.005);expect(world.separatedHingePairCount).toBe(2);
+   for(let k=0;k<2;k++){const angle=world.hingeAngle(ids[k]);speed[k]=Math.atan2(Math.sin(angle-previous[k]),Math.cos(angle-previous[k]))/.005;previous[k]=angle;}
+  }
+  expect(world.pose('chassis').positionMm[0]).toBeGreaterThan(50);expect(JSON.stringify(doc)).toBe(source);
+ }finally{world.dispose();}
+},60000);
