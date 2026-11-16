@@ -1,6 +1,6 @@
 {
   "atUTC": "2026-11-16T14:40:30.258698+00:00",
-  "status": "ALL13_LOCAL_QUALIFIED_NEW_MAIN_INTEGRATION_PENDING",
+  "status": "ALL13_CURRENT_MAIN_INTEGRATION_PASS_DELIVERY_PENDING",
   "qualificationCohort": "expanded-batch007-independent13",
   "localQualificationUserCycle": 130,
   "mainCountsLastVerified": [
@@ -2315,6 +2315,61 @@
       "path": "/mnt/storage/brickwright-cycle130-native30/execution.json",
       "bytes": 573,
       "sha256": "da07e20c5dfc9b1365542fdc617368e93f75bdc51d4ec222a5ca1d701e2f57ad"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle132-preview-demand-fix/first-failure-causal-trace.json",
+      "bytes": 2947,
+      "sha256": "ce27a22693f11218653438bb96bd917c46cde0f440216b634f742f92267d2359"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-proof-final.json",
+      "bytes": 2356,
+      "sha256": "ca991bdd3fbb0614b855a1d495faaf60a84b6da68bc8db90640c71b993516ceb"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle132-preview-demand-fix/tested-commit-binding.json",
+      "bytes": 21154,
+      "sha256": "baebd87410901a4da48d40de214a51444ce7bd0d864bdede45a3d17fc9624816"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-phase-3.json",
+      "bytes": 4870,
+      "sha256": "bb38c2aba28f8e09c360ff5450808304c38b569da5451b6074aaf5651a950f89"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle133-isolated-integration/scope-assessment.json",
+      "bytes": 1293,
+      "sha256": "a6f2f89d11ffd1dcea3efe242089aff8f04d7b6c4b51022f66e56e2ea47eef1e"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle133-isolated-integration/smoke-proof-final.json",
+      "bytes": 1024,
+      "sha256": "4f416cdb76adfb9daf1cbbd756275f3258a586480a2cc0df69ea640e7013a1cf"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle133-isolated-integration/tested-commit-binding.json",
+      "bytes": 21911,
+      "sha256": "d66d5765630487eb8505d0e58bc144aef2cdeef9cb72e49d5ffa109afd81722c"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle133-isolated-integration/execution.json",
+      "bytes": 4692,
+      "sha256": "113f0880dfe07767c72885c9a5f9e66cb4fc82f47cf3b25be40d4bd8a6be383c"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle133-isolated-integration/browser-phase-3.json",
+      "bytes": 7530,
+      "sha256": "08860a497c0b4294649841ef290797da84aad4ae9663d5d49497c725de341d8f"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle133-isolated-integration/tested-owned-hashes.json",
+      "bytes": 6075,
+      "sha256": "ec14126f064950a3da0887829cbcd665f0b13f11f04969c7b3becab6d4309903"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle133-isolated-integration/tested-built-hashes.json",
+      "bytes": 6559,
+      "sha256": "5aabc36432bbe491e548693e11a040869db24a2d6a628f2527d964efbeb2de31"
     }
   ],
   "priorPreservation": {
@@ -4079,15 +4134,3250 @@
     "qualityYieldUnknown": true,
     "numericalSourceDeficitEstablished": false
   },
-  "newMainIntegrationBlocker": {
+  "resourceTerminal": {
+    "lockReleased": true,
+    "allCorrectedPhasesPASS": true,
+    "originalTimeoutsUnchanged": true
+  },
+  "runtimeIntegrationUserCycle": 133,
+  "newMainIntegrationBlockerHistory": {
     "newMain": "b1f6fa4",
     "changedAreas": "Model library panel/index/Adafruit preview/runtime LiteCAD source changed during measured run",
     "newIntegrationBuildBrowser": "NOT_RUN",
     "doNotAttributeOldRuntimeProofToNewMain": true
   },
-  "resourceTerminal": {
-    "lockReleased": true,
-    "allCorrectedPhasesPASS": true,
-    "originalTimeoutsUnchanged": true
-  }
+  "currentMainIntegration": {
+    "scopeAssessment": {
+      "status": "ISOLATED_SKETCH_DELTA_SCOPE_CONFIRMED",
+      "testedFullModelCommit": "4f477f1e7159f1cbb9ac912ef2c913e1afbed49f",
+      "integrationHead": "af4f8d0c819dadaf5f31d174212ffd477836f317",
+      "integrationTree": "6c5f0ce99300402156782c2cd2b04024f1b40b5d",
+      "changedFiles": [
+        {
+          "path": "docs/DELIVERY.md",
+          "sha256": "d1f65dd300fcce778390c4fed9f45acd5aa9a6e01cc665cf85fe14eac20222e3"
+        },
+        {
+          "path": "packages/core/src/locales/de-simlab.ts",
+          "sha256": "f77049bf3054a15ede68fee96e7e34391f0fdc1cf30b24ba6ea25c315ae41a4c"
+        },
+        {
+          "path": "packages/editor/src/sketch-panel.ts",
+          "sha256": "a30b1fb60afe7496db1be220f295c073d5e04e20303f8172168867508182b8e5"
+        },
+        {
+          "path": "packages/editor/src/style.ts",
+          "sha256": "240e3462095055054e1231bd3931c30c05a77c335cf1a9005a4f060401edfde8"
+        }
+      ],
+      "sketchChangesOnlyInsideOpen": true,
+      "cssOnlyNewSketchClass": true,
+      "localeOnlySketchHint": true,
+      "modelLibraryCodeCatalogueAssetChanges": false,
+      "docsConflictResolvedKeepingBothSections": true,
+      "full26ModelProofRetained": true,
+      "minimalNecessaryChecks": [
+        "fresh packages/build",
+        "representative944 offline insertion/provenance/history/restart bothengines"
+      ],
+      "noNativePNGRerender14UnitOr26BrowserReplay": true
+    },
+    "testedCommitBinding": {
+      "atUTC": "2026-11-16T16:59:24.441422+00:00",
+      "status": "ISOLATED_NEW_MAIN_INTEGRATION_AND_ALL77_BLOBS_PASS",
+      "testedCommit": "af4f8d0c819dadaf5f31d174212ffd477836f317",
+      "testedTree": "6c5f0ce99300402156782c2cd2b04024f1b40b5d",
+      "currentMain": "4ed03b8569b389bff0b57b1dbaece9b112310134",
+      "testedIntegrationSourceFiles": [
+        {
+          "path": "library/adafruit-thumbnail-manifest.json",
+          "bytes": 387357,
+          "sha256": "cbc806221f2b46214ed321b2735ee3223f0e5b2272e513ae21c8085ef0b945a2"
+        },
+        {
+          "path": "library/ldraw-reviewed-batch-manifest.json",
+          "bytes": 2334324,
+          "sha256": "6838bf1d4f353cbc18f0ad0b1df293465b9c15dac2c4a29f87963d73f57b466e"
+        },
+        {
+          "path": "library/ldraw-reviewed-batch-spec.json",
+          "bytes": 2679489,
+          "sha256": "0fd9773c29f3f3ffd6c674351291ec36e56747247fcab4b7043d57b74c848ed0"
+        },
+        {
+          "path": "library/meshes/ldraw/127.stl",
+          "bytes": 6484,
+          "sha256": "5e63a3d7cde14644529f0a0e6a8b745d09d3d43f782e6a5e700126b1668f5ab4"
+        },
+        {
+          "path": "library/meshes/ldraw/2630k02.stl",
+          "bytes": 3284,
+          "sha256": "333194fbfaf89e641bf83cb285612e77946576f5caf4aba275ee60cfb48faa3b"
+        },
+        {
+          "path": "library/meshes/ldraw/335.stl",
+          "bytes": 6484,
+          "sha256": "6745b8c505610157c2cd75aa25c71ef3b880798ccc14d9591a879c0fe5a5a40e"
+        },
+        {
+          "path": "library/meshes/ldraw/57877.stl",
+          "bytes": 3284,
+          "sha256": "de0191c275a075e2e283b8c3bc6abdfddb7472734b1480fb89e6e5de0bd1624a"
+        },
+        {
+          "path": "library/meshes/ldraw/61409.stl",
+          "bytes": 8284,
+          "sha256": "1e58df1e15824619e742fd616c108bfd18de0eb49b45755a7785611e34518ca7"
+        },
+        {
+          "path": "library/meshes/ldraw/70081.stl",
+          "bytes": 3284,
+          "sha256": "521cb39d632cda5111fa6fbc6993a8599e41aa22663b95455e069904e7fe0a2c"
+        },
+        {
+          "path": "library/meshes/ldraw/76065k01.stl",
+          "bytes": 3284,
+          "sha256": "9905d3a63295ca15ae3dbe7a697090963dc94476804957560a7f8bee7fe995ef"
+        },
+        {
+          "path": "library/meshes/ldraw/944.stl",
+          "bytes": 3284,
+          "sha256": "7ef2e02322fe2a92f94ab8e63191cf822f7ec84c299e463209bd29e83033d56a"
+        },
+        {
+          "path": "library/meshes/ldraw/u9113.stl",
+          "bytes": 3284,
+          "sha256": "64cff897c348267639974a02e7c8f052df24c3b0f0299102c2461c39573310b5"
+        },
+        {
+          "path": "library/meshes/ldraw/u9183.stl",
+          "bytes": 3284,
+          "sha256": "d235f5cb882f46f540a8440ff77c27ec6cbc4aa8b81bd9fac457b03220eb893d"
+        },
+        {
+          "path": "library/meshes/ldraw/u9226.stl",
+          "bytes": 6484,
+          "sha256": "7f32998a80138d3ad428b77e4c3234a8bc727fe9003fbba1b9ff76d5a764832f"
+        },
+        {
+          "path": "library/meshes/ldraw/u9563.stl",
+          "bytes": 6284,
+          "sha256": "d2d3d3a24263f700b493745fa7e714eb8341ec6a80bcae189e60dbe894d2198f"
+        },
+        {
+          "path": "library/meshes/ldraw/u9644.stl",
+          "bytes": 3284,
+          "sha256": "8bee1f5237f1c9cd4c6abe5ffd724d542cc3bfd2109c6ee7155c6efcab8c61c8"
+        },
+        {
+          "path": "library/previews.json",
+          "bytes": 4896963,
+          "sha256": "1a07d0ceb44e59103fca3a321c8e130a4819590e9362f26fce908e4764a1f51b"
+        },
+        {
+          "path": "packages/core/src/locales/de-simlab.ts",
+          "bytes": 10206,
+          "sha256": "f77049bf3054a15ede68fee96e7e34391f0fdc1cf30b24ba6ea25c315ae41a4c"
+        },
+        {
+          "path": "packages/editor/src/adafruit-preview-data.json",
+          "bytes": 6162618,
+          "sha256": "3eccda2be379a6b02dd6f050bbe8688fd0b714029beeb17925633d4149879352"
+        },
+        {
+          "path": "packages/editor/src/cyclone-sorter.ts",
+          "bytes": 10157,
+          "sha256": "8da743f685832dc686c9d0d05c109d08f5901b079b2d1c035b07531376ec0fd7"
+        },
+        {
+          "path": "packages/editor/src/helios-catapult.ts",
+          "bytes": 11345,
+          "sha256": "c488449139772455544c3147024090b64ab775ef5a2874b075853b5e5b815db9"
+        },
+        {
+          "path": "packages/editor/src/icons.ts",
+          "bytes": 4222,
+          "sha256": "c9c0ae55b116316f7bb22cef5651b02bf3131879e18b982874207ff6bedd3aad"
+        },
+        {
+          "path": "packages/editor/src/index.ts",
+          "bytes": 77349,
+          "sha256": "98f4ee9090a40fc6040efcfc61726cb8e465a3ee7bcf1af88cf5213de05f4792"
+        },
+        {
+          "path": "packages/editor/src/mantis-walker.ts",
+          "bytes": 9392,
+          "sha256": "5cd9e4a9fc2d839e884044da5aed3089ba96c3d9bc462d48173da4c74ac5fa13"
+        },
+        {
+          "path": "packages/editor/src/model-library-panel.ts",
+          "bytes": 28738,
+          "sha256": "5f60fb1973883dd3e936d4589196c8d06d80835bfb71aef6854934dc944ee5c3"
+        },
+        {
+          "path": "packages/editor/src/shapes.ts",
+          "bytes": 16569,
+          "sha256": "d0efbda78bffded879cfff2924b07b4159c5781a62dcc8b78d724ef047ffb478"
+        },
+        {
+          "path": "packages/editor/src/sketch-panel.ts",
+          "bytes": 12129,
+          "sha256": "a30b1fb60afe7496db1be220f295c073d5e04e20303f8172168867508182b8e5"
+        },
+        {
+          "path": "packages/editor/src/style.ts",
+          "bytes": 51320,
+          "sha256": "240e3462095055054e1231bd3931c30c05a77c335cf1a9005a4f060401edfde8"
+        },
+        {
+          "path": "scripts/lib/ldraw-source-selection.mjs",
+          "bytes": 1639,
+          "sha256": "bd0c7b2ad9d432de7eb79bdc13f018b7aca9fbc86a8e036b34e8eb76f34e15b2"
+        },
+        {
+          "path": "scripts/sync-adafruit-previews.mjs",
+          "bytes": 2514,
+          "sha256": "7d78c09c945e60710b8a8740bde55808ac56895426941e6cdaeb4c4b285be858"
+        },
+        {
+          "path": "tests/browser/model-library-expanded-batch007.spec.ts",
+          "bytes": 6190,
+          "sha256": "3c9fbed81cc986508d52da94e8e67617bff30df7230cd5a000d8687758c01fbf"
+        },
+        {
+          "path": "tests/browser/model-library-preview-demand.spec.ts",
+          "bytes": 2448,
+          "sha256": "0c18e22f008fb08d174c21a5922eba375c3ed366df18ab41bda0fee1e92a19dd"
+        },
+        {
+          "path": "tests/cyclone-sorter.test.ts",
+          "bytes": 4880,
+          "sha256": "c2de597b53ecaf23d1a06ff5ae62ee4f899606fbdc30e1d37fefe455e7fa3fa2"
+        },
+        {
+          "path": "tests/helios-catapult.test.ts",
+          "bytes": 5038,
+          "sha256": "e1e78929c3afef4f7d9cb3415eec5076ae18f2d07954df3c6d4c7e42b3e98e53"
+        },
+        {
+          "path": "tests/ldraw-source-selection.test.ts",
+          "bytes": 1838,
+          "sha256": "b395223e72a0701c4925d45663dc0296045dbccd3bdfa923928f9e11e44114a5"
+        },
+        {
+          "path": "tests/mantis-walker.test.ts",
+          "bytes": 5216,
+          "sha256": "c718b7ddb0bed8612b3a36c9ceebfdd89bb3de18dbc2478b4d053f93cb827e53"
+        },
+        {
+          "path": "tests/model-library-adafruit-previews.test.ts",
+          "bytes": 1904,
+          "sha256": "8b00bc8d6aa87999cf65bb3243859c339b90f1ce829043bfbf3c163d21c8666b"
+        },
+        {
+          "path": "tests/model-library-expanded-batch007.test.ts",
+          "bytes": 3979,
+          "sha256": "fa45baba2eca6786c29a76568fa641eb8144ed236bcdd22eb30afcabb61e8fb4"
+        }
+      ],
+      "inputOriginalLicenceFiles": [
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/944.dat",
+          "bytes": 365,
+          "sha256": "b22dc5b7ac02a0fedde6bb9d81502e60d50e603dd347c9d523c12973fd916b53"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4cylc.dat",
+          "bytes": 476,
+          "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u9113.dat",
+          "bytes": 368,
+          "sha256": "a0c9d3f1b81192be8feb33c45c0bcc5972fa0005c4f784c70794695f31392edf"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u9183.dat",
+          "bytes": 368,
+          "sha256": "e183569b5ca55146727806fe713d7388af060e3e9823ed8f03a316c35bf06314"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u9644.dat",
+          "bytes": 388,
+          "sha256": "01bb7ddcf35db3b2604992ee1bca71a078ca383c68009d62eff6c58b85dd15b1"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/57877.dat",
+          "bytes": 487,
+          "sha256": "1b41395dc0b0052d397a58d3104f89f1372325c753b9b382cf11a90037fede42"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/70081.dat",
+          "bytes": 496,
+          "sha256": "44bee061a413ea1ddd2672da57c1d6d63856744a7b06ced4c2ac8d451d56b875"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/70793.dat",
+          "bytes": 688,
+          "sha256": "474db7359871faa44f708134a05322006abc2a75056aaf4b8cfcbc8ee1cf4f29"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/70023.dat",
+          "bytes": 741,
+          "sha256": "f3b608760941677d462ba0a463064afb39a27ad7652e81e7294a8ff18e96486f"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/572c.dat",
+          "bytes": 951,
+          "sha256": "0030f1e6159635fa5def96846c760a823910019cb75b86ade7e2547b9c143bf6"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/76065k01.dat",
+          "bytes": 603,
+          "sha256": "1d751798230f6a4e97741f749fcd98d214718c69c3eeef8eb070db980cd7946f"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4cylo.dat",
+          "bytes": 383,
+          "sha256": "d6ca97ee2e75918b3309a5c88aafcd2455b3a316f7cef8963517c19f1d86b38f"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/2630k02.dat",
+          "bytes": 642,
+          "sha256": "3cacbb0434d0aaeff12e694256ac1d5e2e42cd41f9457b7b08fa0cb5977c0421"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/61409.dat",
+          "bytes": 4379,
+          "sha256": "e412ef137e2fc5d27d2da0925cfb50d48ca205e4ef42fbbc03ce31f9dc67ea02"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/box4.dat",
+          "bytes": 948,
+          "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/rect.dat",
+          "bytes": 654,
+          "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/rect2p.dat",
+          "bytes": 594,
+          "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/89658.dat",
+          "bytes": 305,
+          "sha256": "b002cd59cee13fe2246c28ab4f1fe25961f160d607c0a6d0dbcb078565691e86"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/99146.dat",
+          "bytes": 2263,
+          "sha256": "9f64312f6eb67cbab14caca12a88aaaa5084af3b07b4a5fbc6512fc40eaacb2b"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/1-4chrd.dat",
+          "bytes": 743,
+          "sha256": "ccba3a97b5cc358754e476b78b4ce61cce5f404cd15e37471b73df3e81784aec"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/1-4cylo.dat",
+          "bytes": 388,
+          "sha256": "792a01362608c3f385dd7f01a1bd7d19cf9ed8a40f793266345cc86d1d98f3af"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/1-4edge.dat",
+          "bytes": 545,
+          "sha256": "9ce2de7e67bbac575d52cfdc771b9d00856efc9b88002d97db8e665e50f4d467"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/1-4cyli.dat",
+          "bytes": 1044,
+          "sha256": "5a7168952a5a3570327873b9a5802fa7b3be40967ab78c03b6a2bfd4419a1f10"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/1-4con2.dat",
+          "bytes": 1263,
+          "sha256": "5b4d444a154349f4a930b5fd60ed5c7e6060e12faf7f50c192909e958cdd04d6"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/rect1.dat",
+          "bytes": 556,
+          "sha256": "48fdcd3181587b4bdc89d356a5aee21268688f3f2fcdd4d6f5c1a3d49b1a1ceb"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/35536.dat",
+          "bytes": 318,
+          "sha256": "c08d2b8643262068bd31ec0934e138b11326d3fa6918ca20b4aa2432aebd7bf9"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u9563.dat",
+          "bytes": 602,
+          "sha256": "d0d440cb565ad15fd596931509ca70c500bf1de31d0d4a0a9ad6ad68ab8f367e"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/s/u9563s01.dat",
+          "bytes": 7461,
+          "sha256": "b3ce0b8593b4cd2a1711e3906a7dfb52d90a4250bfc49d4579c122907875e5bf"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u9226.dat",
+          "bytes": 656,
+          "sha256": "02df4c76de683cbaef39761101c75c95b279f57a12b2b1f23012e3cb61f6a581"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4ring2.dat",
+          "bytes": 1628,
+          "sha256": "6fb38804b1f5e9bee8c0b80caf1397b09454fc58b048dc19045b6f37c8762ab0"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/127.dat",
+          "bytes": 918,
+          "sha256": "b0b489398397bd5f4e8d688df1312e39bce1a31375d60b5ecd323d4bfee66c4d"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4ring18.dat",
+          "bytes": 1530,
+          "sha256": "1edf4b9ee669e0e34c60813a924d18c6cff36a4bbc6e81ba5c65cb0b1cd4a919"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/335.dat",
+          "bytes": 926,
+          "sha256": "2cb4639cea78fb6b4635e281203b6a9e205661ed7d6f90e2f405758049e0063e"
+        },
+        {
+          "path": "library/evidence/ldraw-expanded-batch007-input-20261109.json",
+          "bytes": 34930,
+          "sha256": "9eba6c666f186ce0b5f626154da829244ae4b215ee6b5c11aacc81766bad788c"
+        },
+        {
+          "path": "library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+          "bytes": 18657,
+          "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+        },
+        {
+          "path": "library/evidence/ldraw-expanded-CAreadme-20261109.txt",
+          "bytes": 4151,
+          "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497"
+        }
+      ],
+      "allCommittedBindingCount": 77,
+      "mismatches": [],
+      "builtRuntimeFiles": [
+        {
+          "path": "dist/app-showcase/README.md",
+          "bytes": 406,
+          "sha256": "abc4e1333f5195f98c4e34265b80c5016134b85254ff44afd05f6ed7d0e47577"
+        },
+        {
+          "path": "dist/app-showcase/brickwright.png",
+          "bytes": 17259,
+          "sha256": "4f12ea0f0f21056104c7c665a8ad2082dfaf1265d131e402e793909cef6b4065"
+        },
+        {
+          "path": "dist/app-showcase/cometbeat.png",
+          "bytes": 12576,
+          "sha256": "93c1e0820b28de7b4209a37abe4e9b6e320a1a495bd9c44e056b492454cc6769"
+        },
+        {
+          "path": "dist/app-showcase/crispaudio.png",
+          "bytes": 20854,
+          "sha256": "482b887823d8cbe42fb450bf9a1e7fc50213f4c80364d75387559876e157fb3d"
+        },
+        {
+          "path": "dist/app-showcase/crispbingo.png",
+          "bytes": 12310,
+          "sha256": "974a26f8a7f20b8b61d806a1f7ef7d24ef82c1a775b8c154c96f5b7015939910"
+        },
+        {
+          "path": "dist/app-showcase/crispchess.png",
+          "bytes": 18694,
+          "sha256": "375e1c4df95c0a294aaf5dc078bdbc99d8753100812649821cc88be87ec7a33a"
+        },
+        {
+          "path": "dist/app-showcase/crispcloud.png",
+          "bytes": 21564,
+          "sha256": "7736e71fd28f2400424a106513224a4dd9953ae11049c219210964cfc7ebdcfb"
+        },
+        {
+          "path": "dist/app-showcase/crispdeck.png",
+          "bytes": 12518,
+          "sha256": "3cf496171fcfe2ea3af23c6901d3b4375546d383a34288f3e433d58b8acd17ab"
+        },
+        {
+          "path": "dist/app-showcase/crisperplayer.png",
+          "bytes": 28416,
+          "sha256": "732bf35419dbf4a3cdb604ff18e72f7f667901052c0c12b091a535440a9cec67"
+        },
+        {
+          "path": "dist/app-showcase/crisperweaver.png",
+          "bytes": 21766,
+          "sha256": "ca56b9ba5f7b4de928b7baf6979bbabe01314c0382f9a85d558f673f9435de43"
+        },
+        {
+          "path": "dist/app-showcase/crispmath.png",
+          "bytes": 10714,
+          "sha256": "d85b699f750768c23d683180a37385f4c36fdbed796989f464de26840ea8915e"
+        },
+        {
+          "path": "dist/app-showcase/crispmesh.png",
+          "bytes": 20375,
+          "sha256": "f10da8d3835dd3d13e9a8c8422338fda2a746ef5401a42efc3f2f5bbc90ff7ad"
+        },
+        {
+          "path": "dist/app-showcase/crispsorter.png",
+          "bytes": 23362,
+          "sha256": "9b92d82e86f687bedf3f3378c27e7b4c24c83d3a953f337e5ec1cfde798666bf"
+        },
+        {
+          "path": "dist/app-showcase/crispsudoku.png",
+          "bytes": 24934,
+          "sha256": "af8ee9c4eae94cfe68af1e38062f7d1da9346ada0734476f19c9a705eb73db5c"
+        },
+        {
+          "path": "dist/app-showcase/crisptuner.png",
+          "bytes": 10185,
+          "sha256": "cbac4f2381e240dd9c7879bc200262037f6bf9c35c688b65aba09402a077e033"
+        },
+        {
+          "path": "dist/app-showcase/hectopolis.png",
+          "bytes": 8345,
+          "sha256": "687f651d1f4d98fd4653b85191c6fc273e2497447916fb4bf9be447b7f2c6ed3"
+        },
+        {
+          "path": "dist/app-showcase/kerotakis.png",
+          "bytes": 7514,
+          "sha256": "0b6a24aec16e25ee6d2e098c40fd56cf530c26f917f70a69f9bb68cda4409d92"
+        },
+        {
+          "path": "dist/app-showcase/naga.png",
+          "bytes": 10760,
+          "sha256": "93f34940d26e229849e697f5bc98a3d28d4ed5e2caa926a34aabd93e37e74da6"
+        },
+        {
+          "path": "dist/app-showcase/numbernebula.png",
+          "bytes": 29684,
+          "sha256": "39d20c36896f98452b5bc6f0f4608caab1dd4ea7fc74034c88c93c90f9521bdb"
+        },
+        {
+          "path": "dist/app-showcase/word-universe.png",
+          "bytes": 21617,
+          "sha256": "081ee34a1707823873a44fdfe4c7d4bebeb3c2fa4d7b099a44360867b1c581e7"
+        },
+        {
+          "path": "dist/assets/adafruit-preview-data-C_BcSKUk.js",
+          "bytes": 6162740,
+          "sha256": "b2805adb8bdb29da516b7a7be16971d921c4aedb3517fa2531400b6a9f935b6b"
+        },
+        {
+          "path": "dist/assets/embedded-q0A-ZTK6.js",
+          "bytes": 2312,
+          "sha256": "c495e4422820cca06b9e274de5d79ca6a4efae6cb350c44d70258ccd60e37ce9"
+        },
+        {
+          "path": "dist/assets/esm-CncAWAVZ.js",
+          "bytes": 1352,
+          "sha256": "99985cd5bf2e6ca2938c456cd8b1775cdbba9181e8c44e3d9415653dd73feb97"
+        },
+        {
+          "path": "dist/assets/esm-DFKYyh04.js",
+          "bytes": 334,
+          "sha256": "05824c89db0441d5581cbf3c0ddbdf0c6fbdb529e0386e3f226a69ee727c3140"
+        },
+        {
+          "path": "dist/assets/files-BvSzA95Z.css",
+          "bytes": 10183,
+          "sha256": "a0bd03c2cdb4b600a58121b396da840424c00407085354cd39adee4a3064593b"
+        },
+        {
+          "path": "dist/assets/files-zpr2tVrW.js",
+          "bytes": 8697189,
+          "sha256": "d9ec318d80a7b554470a032f4bd0ed0ea03e2528fa1f0cd4e98fec1a61bc83ef"
+        },
+        {
+          "path": "dist/assets/geometry.worker-Cq7BsMQR.js",
+          "bytes": 1437489,
+          "sha256": "633e32fc5ec26a9e2d3f9986d860bc7ea7d83a3f3f1513c46a452875baa0f9ab"
+        },
+        {
+          "path": "dist/assets/jolt-physics.wasm-compat-DYKT0G4b.js",
+          "bytes": 3662128,
+          "sha256": "91da365cbd56439967f79adc7e8635d756cd3e9b67bd6b65b9af1e63a7f2328e"
+        },
+        {
+          "path": "dist/assets/main-BVetFqOZ.js",
+          "bytes": 9826245,
+          "sha256": "fe29a93105d8a36755a06f5685ac3442f1b48399f976a3e425f82abdb8828de1"
+        },
+        {
+          "path": "dist/assets/manifold-BE4c7gO-.wasm",
+          "bytes": 541470,
+          "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+        },
+        {
+          "path": "dist/assets/simulation.worker-BAy-C7sQ.js",
+          "bytes": 1489325,
+          "sha256": "cea461516df299ebb0ddf3d4d67c2c930a1a9e37a862680e1fee46528b555948"
+        },
+        {
+          "path": "dist/assets/web-BcnArX8a.js",
+          "bytes": 361,
+          "sha256": "dcc9dbdf6c167cb1037f0e8a993772f72be2737991666e8af9590f95c2d82b48"
+        },
+        {
+          "path": "dist/assets/web-CiUg5jon.js",
+          "bytes": 8715,
+          "sha256": "483d6696eb46a6ef01b2b44db8aeb80809c613ee0a54eacc9c97eb3a9e5b6723"
+        },
+        {
+          "path": "dist/cad-assets/app-license.txt",
+          "bytes": 1520,
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad"
+        },
+        {
+          "path": "dist/cad-assets/build-info.json",
+          "bytes": 139,
+          "sha256": "4de61977850c9bbbd7edf4eb908bd78b76d1b7d8e903d5df641ca4f356846917"
+        },
+        {
+          "path": "dist/cad-assets/manifold.wasm",
+          "bytes": 541470,
+          "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+        },
+        {
+          "path": "dist/cad-assets/notices.txt",
+          "bytes": 91867,
+          "sha256": "dea50eee6d6781549af4e3740bfaf7661b29479696e5ae6cbe41eafd93c0fa70"
+        },
+        {
+          "path": "dist/embedded.html",
+          "bytes": 1119,
+          "sha256": "2456bb31295ede347345e7700d5d7c624ab4da63cbcd56b914f20f7ba22e87cd"
+        },
+        {
+          "path": "dist/icon.svg",
+          "bytes": 283,
+          "sha256": "30876dc5d178d36f341cc5126e6489a7078ac9f667a56a9e625f9d090d3d94f4"
+        },
+        {
+          "path": "dist/index.html",
+          "bytes": 2974,
+          "sha256": "4cba293fd6fc7449a8eb158d88c64cf236e09c4032e192a436187f463e969f7c"
+        },
+        {
+          "path": "dist/manifest.webmanifest",
+          "bytes": 249,
+          "sha256": "7d57494ede2e7c699fd24fd309335bb701138d85cc84d5c4ff4d9851f44ae535"
+        },
+        {
+          "path": "dist/sw.js",
+          "bytes": 1930,
+          "sha256": "6e7bbf8ceeb47b5f1a3af31cdee5fa4c9ad6fd0f436a027136cb10d62a2a7e44"
+        }
+      ],
+      "representativeRawDurableOutcomesPASS": 2,
+      "sourceMeshPNGBound": true,
+      "zeroNetworkRequests": true,
+      "fullModel26ProofRetained": "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-proof-final.json",
+      "fullModelMeasuredCommit": "4f477f1e7159f1cbb9ac912ef2c913e1afbed49f",
+      "fullModelMeasuredTree": "fb723586aeb95673c29b60db07366678d3bde62c",
+      "oldMeasured75BindingsRetainedInOriginalCommit": true,
+      "expectedChangedOldBinding": [
+        "packages/core/src/locales/de-simlab.ts"
+      ],
+      "newSketchFilesMeasured": 2,
+      "sourceScopeProof": "/mnt/storage/brickwright-cycle133-isolated-integration/scope-assessment.json",
+      "no26NativePNG14UnitReplay": true
+    },
+    "minimalActualPhases": [
+      {
+        "phase": 0,
+        "command": [
+          "npm",
+          "run",
+          "build:packages"
+        ],
+        "guard": {
+          "fastFreeBytes": 13422825472,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4119150592,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            0.22216796875,
+            1.12060546875,
+            2.11279296875
+          ],
+          "cpuPSISomeAvg60Percent": 0.12,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 45,
+        "status": "PASS",
+        "sourceHead": "af4f8d0c819dadaf5f31d174212ffd477836f317",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3072352,
+        "exitCode": 0,
+        "elapsedSeconds": 12.599310177844018,
+        "childUserCPUSeconds": 11.214206,
+        "childSystemCPUSeconds": 1.238797
+      },
+      {
+        "phase": 1,
+        "command": [
+          "bash",
+          "/mnt/storage/brickwright-cycle104-smooth/app-build.sh"
+        ],
+        "guard": {
+          "fastFreeBytes": 13422825472,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4014788608,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            0.876953125,
+            1.23193359375,
+            2.138671875
+          ],
+          "cpuPSISomeAvg60Percent": 9.98,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 90,
+        "status": "PASS",
+        "sourceHead": "af4f8d0c819dadaf5f31d174212ffd477836f317",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3072386,
+        "exitCode": 0,
+        "elapsedSeconds": 38.15986094903201,
+        "childUserCPUSeconds": 30.131578999999995,
+        "childSystemCPUSeconds": 3.6548010000000004
+      },
+      {
+        "phase": 2,
+        "command": [
+          "npx",
+          "playwright",
+          "test",
+          "tests/browser/model-library-expanded-batch007.spec.ts",
+          "--list",
+          "--reporter=line"
+        ],
+        "guard": {
+          "fastFreeBytes": 13422821376,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4038430720,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            2.0205078125,
+            1.47314453125,
+            2.18115234375
+          ],
+          "cpuPSISomeAvg60Percent": 27.77,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 20,
+        "status": "PASS",
+        "sourceHead": "af4f8d0c819dadaf5f31d174212ffd477836f317",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3072536,
+        "exitCode": 0,
+        "elapsedSeconds": 2.1145951049402356,
+        "childUserCPUSeconds": 1.7686760000000064,
+        "childSystemCPUSeconds": 0.29269299999999987
+      },
+      {
+        "phase": 3,
+        "command": [
+          "npx",
+          "playwright",
+          "test",
+          "tests/browser/model-library-expanded-batch007.spec.ts",
+          "--output",
+          "/mnt/storage/brickwright-cycle133-isolated-integration/smoke-output",
+          "--reporter=line,json"
+        ],
+        "guard": {
+          "fastFreeBytes": 13422821376,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 3981328384,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            2.0205078125,
+            1.47314453125,
+            2.18115234375
+          ],
+          "cpuPSISomeAvg60Percent": 28.27,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 300,
+        "status": "PASS",
+        "sourceHead": "af4f8d0c819dadaf5f31d174212ffd477836f317",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3072559,
+        "exitCode": 0,
+        "elapsedSeconds": 101.96306838840246,
+        "childUserCPUSeconds": 18.338182000000003,
+        "childSystemCPUSeconds": 5.034744
+      }
+    ],
+    "rawDurableRepresentativeOutcomesPASS": 2,
+    "wholeTreeMatchesPreviousFull26Runtime": false,
+    "scopedTransferReason": "Only sketch open body/new sketch class and one sketch locale hint changed; model library, assets, source and geometry paths unchanged. Fresh build plus both-engine representative smoke prove new integration."
+  },
+  "fullModelRuntimeIntegration": {
+    "testedCommitBinding": {
+      "atUTC": "2026-11-16T16:50:31.703811+00:00",
+      "status": "ALL_TESTED_WORKING_BYTES_MATCH_COMMIT_BLOBS",
+      "testedCommit": "4f477f1e7159f1cbb9ac912ef2c913e1afbed49f",
+      "testedTree": "fb723586aeb95673c29b60db07366678d3bde62c",
+      "measuredSourceHeadWithWorkingFix": "ada2eb48e8eef9ff5214e4ad58ef93cf8e2a5595",
+      "currentMain": "4ed03b8569b389bff0b57b1dbaece9b112310134",
+      "sourceChangedAfterMeasurement": false,
+      "testedIntegrationSourceFiles": [
+        {
+          "path": "library/adafruit-thumbnail-manifest.json",
+          "bytes": 387357,
+          "sha256": "cbc806221f2b46214ed321b2735ee3223f0e5b2272e513ae21c8085ef0b945a2"
+        },
+        {
+          "path": "library/ldraw-reviewed-batch-manifest.json",
+          "bytes": 2334324,
+          "sha256": "6838bf1d4f353cbc18f0ad0b1df293465b9c15dac2c4a29f87963d73f57b466e"
+        },
+        {
+          "path": "library/ldraw-reviewed-batch-spec.json",
+          "bytes": 2679489,
+          "sha256": "0fd9773c29f3f3ffd6c674351291ec36e56747247fcab4b7043d57b74c848ed0"
+        },
+        {
+          "path": "library/meshes/ldraw/127.stl",
+          "bytes": 6484,
+          "sha256": "5e63a3d7cde14644529f0a0e6a8b745d09d3d43f782e6a5e700126b1668f5ab4"
+        },
+        {
+          "path": "library/meshes/ldraw/2630k02.stl",
+          "bytes": 3284,
+          "sha256": "333194fbfaf89e641bf83cb285612e77946576f5caf4aba275ee60cfb48faa3b"
+        },
+        {
+          "path": "library/meshes/ldraw/335.stl",
+          "bytes": 6484,
+          "sha256": "6745b8c505610157c2cd75aa25c71ef3b880798ccc14d9591a879c0fe5a5a40e"
+        },
+        {
+          "path": "library/meshes/ldraw/57877.stl",
+          "bytes": 3284,
+          "sha256": "de0191c275a075e2e283b8c3bc6abdfddb7472734b1480fb89e6e5de0bd1624a"
+        },
+        {
+          "path": "library/meshes/ldraw/61409.stl",
+          "bytes": 8284,
+          "sha256": "1e58df1e15824619e742fd616c108bfd18de0eb49b45755a7785611e34518ca7"
+        },
+        {
+          "path": "library/meshes/ldraw/70081.stl",
+          "bytes": 3284,
+          "sha256": "521cb39d632cda5111fa6fbc6993a8599e41aa22663b95455e069904e7fe0a2c"
+        },
+        {
+          "path": "library/meshes/ldraw/76065k01.stl",
+          "bytes": 3284,
+          "sha256": "9905d3a63295ca15ae3dbe7a697090963dc94476804957560a7f8bee7fe995ef"
+        },
+        {
+          "path": "library/meshes/ldraw/944.stl",
+          "bytes": 3284,
+          "sha256": "7ef2e02322fe2a92f94ab8e63191cf822f7ec84c299e463209bd29e83033d56a"
+        },
+        {
+          "path": "library/meshes/ldraw/u9113.stl",
+          "bytes": 3284,
+          "sha256": "64cff897c348267639974a02e7c8f052df24c3b0f0299102c2461c39573310b5"
+        },
+        {
+          "path": "library/meshes/ldraw/u9183.stl",
+          "bytes": 3284,
+          "sha256": "d235f5cb882f46f540a8440ff77c27ec6cbc4aa8b81bd9fac457b03220eb893d"
+        },
+        {
+          "path": "library/meshes/ldraw/u9226.stl",
+          "bytes": 6484,
+          "sha256": "7f32998a80138d3ad428b77e4c3234a8bc727fe9003fbba1b9ff76d5a764832f"
+        },
+        {
+          "path": "library/meshes/ldraw/u9563.stl",
+          "bytes": 6284,
+          "sha256": "d2d3d3a24263f700b493745fa7e714eb8341ec6a80bcae189e60dbe894d2198f"
+        },
+        {
+          "path": "library/meshes/ldraw/u9644.stl",
+          "bytes": 3284,
+          "sha256": "8bee1f5237f1c9cd4c6abe5ffd724d542cc3bfd2109c6ee7155c6efcab8c61c8"
+        },
+        {
+          "path": "library/previews.json",
+          "bytes": 4896963,
+          "sha256": "1a07d0ceb44e59103fca3a321c8e130a4819590e9362f26fce908e4764a1f51b"
+        },
+        {
+          "path": "packages/core/src/locales/de-simlab.ts",
+          "bytes": 10002,
+          "sha256": "282e546802016c14c0116a998d79f7554f580cf7c5976a899c53b76e0f303a95"
+        },
+        {
+          "path": "packages/editor/src/adafruit-preview-data.json",
+          "bytes": 6162618,
+          "sha256": "3eccda2be379a6b02dd6f050bbe8688fd0b714029beeb17925633d4149879352"
+        },
+        {
+          "path": "packages/editor/src/cyclone-sorter.ts",
+          "bytes": 10157,
+          "sha256": "8da743f685832dc686c9d0d05c109d08f5901b079b2d1c035b07531376ec0fd7"
+        },
+        {
+          "path": "packages/editor/src/helios-catapult.ts",
+          "bytes": 11345,
+          "sha256": "c488449139772455544c3147024090b64ab775ef5a2874b075853b5e5b815db9"
+        },
+        {
+          "path": "packages/editor/src/icons.ts",
+          "bytes": 4222,
+          "sha256": "c9c0ae55b116316f7bb22cef5651b02bf3131879e18b982874207ff6bedd3aad"
+        },
+        {
+          "path": "packages/editor/src/index.ts",
+          "bytes": 77349,
+          "sha256": "98f4ee9090a40fc6040efcfc61726cb8e465a3ee7bcf1af88cf5213de05f4792"
+        },
+        {
+          "path": "packages/editor/src/mantis-walker.ts",
+          "bytes": 9392,
+          "sha256": "5cd9e4a9fc2d839e884044da5aed3089ba96c3d9bc462d48173da4c74ac5fa13"
+        },
+        {
+          "path": "packages/editor/src/model-library-panel.ts",
+          "bytes": 28738,
+          "sha256": "5f60fb1973883dd3e936d4589196c8d06d80835bfb71aef6854934dc944ee5c3"
+        },
+        {
+          "path": "packages/editor/src/shapes.ts",
+          "bytes": 16569,
+          "sha256": "d0efbda78bffded879cfff2924b07b4159c5781a62dcc8b78d724ef047ffb478"
+        },
+        {
+          "path": "scripts/lib/ldraw-source-selection.mjs",
+          "bytes": 1639,
+          "sha256": "bd0c7b2ad9d432de7eb79bdc13f018b7aca9fbc86a8e036b34e8eb76f34e15b2"
+        },
+        {
+          "path": "scripts/sync-adafruit-previews.mjs",
+          "bytes": 2514,
+          "sha256": "7d78c09c945e60710b8a8740bde55808ac56895426941e6cdaeb4c4b285be858"
+        },
+        {
+          "path": "tests/browser/model-library-expanded-batch007.spec.ts",
+          "bytes": 6190,
+          "sha256": "3c9fbed81cc986508d52da94e8e67617bff30df7230cd5a000d8687758c01fbf"
+        },
+        {
+          "path": "tests/browser/model-library-preview-demand.spec.ts",
+          "bytes": 2448,
+          "sha256": "0c18e22f008fb08d174c21a5922eba375c3ed366df18ab41bda0fee1e92a19dd"
+        },
+        {
+          "path": "tests/cyclone-sorter.test.ts",
+          "bytes": 4880,
+          "sha256": "c2de597b53ecaf23d1a06ff5ae62ee4f899606fbdc30e1d37fefe455e7fa3fa2"
+        },
+        {
+          "path": "tests/helios-catapult.test.ts",
+          "bytes": 5038,
+          "sha256": "e1e78929c3afef4f7d9cb3415eec5076ae18f2d07954df3c6d4c7e42b3e98e53"
+        },
+        {
+          "path": "tests/ldraw-source-selection.test.ts",
+          "bytes": 1838,
+          "sha256": "b395223e72a0701c4925d45663dc0296045dbccd3bdfa923928f9e11e44114a5"
+        },
+        {
+          "path": "tests/mantis-walker.test.ts",
+          "bytes": 5216,
+          "sha256": "c718b7ddb0bed8612b3a36c9ceebfdd89bb3de18dbc2478b4d053f93cb827e53"
+        },
+        {
+          "path": "tests/model-library-adafruit-previews.test.ts",
+          "bytes": 1904,
+          "sha256": "8b00bc8d6aa87999cf65bb3243859c339b90f1ce829043bfbf3c163d21c8666b"
+        },
+        {
+          "path": "tests/model-library-expanded-batch007.test.ts",
+          "bytes": 3979,
+          "sha256": "fa45baba2eca6786c29a76568fa641eb8144ed236bcdd22eb30afcabb61e8fb4"
+        }
+      ],
+      "inputOriginalLicenceFiles": [
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/944.dat",
+          "bytes": 365,
+          "sha256": "b22dc5b7ac02a0fedde6bb9d81502e60d50e603dd347c9d523c12973fd916b53"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4cylc.dat",
+          "bytes": 476,
+          "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u9113.dat",
+          "bytes": 368,
+          "sha256": "a0c9d3f1b81192be8feb33c45c0bcc5972fa0005c4f784c70794695f31392edf"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u9183.dat",
+          "bytes": 368,
+          "sha256": "e183569b5ca55146727806fe713d7388af060e3e9823ed8f03a316c35bf06314"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u9644.dat",
+          "bytes": 388,
+          "sha256": "01bb7ddcf35db3b2604992ee1bca71a078ca383c68009d62eff6c58b85dd15b1"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/57877.dat",
+          "bytes": 487,
+          "sha256": "1b41395dc0b0052d397a58d3104f89f1372325c753b9b382cf11a90037fede42"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/70081.dat",
+          "bytes": 496,
+          "sha256": "44bee061a413ea1ddd2672da57c1d6d63856744a7b06ced4c2ac8d451d56b875"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/70793.dat",
+          "bytes": 688,
+          "sha256": "474db7359871faa44f708134a05322006abc2a75056aaf4b8cfcbc8ee1cf4f29"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/70023.dat",
+          "bytes": 741,
+          "sha256": "f3b608760941677d462ba0a463064afb39a27ad7652e81e7294a8ff18e96486f"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/572c.dat",
+          "bytes": 951,
+          "sha256": "0030f1e6159635fa5def96846c760a823910019cb75b86ade7e2547b9c143bf6"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/76065k01.dat",
+          "bytes": 603,
+          "sha256": "1d751798230f6a4e97741f749fcd98d214718c69c3eeef8eb070db980cd7946f"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4cylo.dat",
+          "bytes": 383,
+          "sha256": "d6ca97ee2e75918b3309a5c88aafcd2455b3a316f7cef8963517c19f1d86b38f"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/2630k02.dat",
+          "bytes": 642,
+          "sha256": "3cacbb0434d0aaeff12e694256ac1d5e2e42cd41f9457b7b08fa0cb5977c0421"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/61409.dat",
+          "bytes": 4379,
+          "sha256": "e412ef137e2fc5d27d2da0925cfb50d48ca205e4ef42fbbc03ce31f9dc67ea02"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/box4.dat",
+          "bytes": 948,
+          "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/rect.dat",
+          "bytes": 654,
+          "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/rect2p.dat",
+          "bytes": 594,
+          "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/89658.dat",
+          "bytes": 305,
+          "sha256": "b002cd59cee13fe2246c28ab4f1fe25961f160d607c0a6d0dbcb078565691e86"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/99146.dat",
+          "bytes": 2263,
+          "sha256": "9f64312f6eb67cbab14caca12a88aaaa5084af3b07b4a5fbc6512fc40eaacb2b"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/1-4chrd.dat",
+          "bytes": 743,
+          "sha256": "ccba3a97b5cc358754e476b78b4ce61cce5f404cd15e37471b73df3e81784aec"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/1-4cylo.dat",
+          "bytes": 388,
+          "sha256": "792a01362608c3f385dd7f01a1bd7d19cf9ed8a40f793266345cc86d1d98f3af"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/1-4edge.dat",
+          "bytes": 545,
+          "sha256": "9ce2de7e67bbac575d52cfdc771b9d00856efc9b88002d97db8e665e50f4d467"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/1-4cyli.dat",
+          "bytes": 1044,
+          "sha256": "5a7168952a5a3570327873b9a5802fa7b3be40967ab78c03b6a2bfd4419a1f10"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/1-4con2.dat",
+          "bytes": 1263,
+          "sha256": "5b4d444a154349f4a930b5fd60ed5c7e6060e12faf7f50c192909e958cdd04d6"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/rect1.dat",
+          "bytes": 556,
+          "sha256": "48fdcd3181587b4bdc89d356a5aee21268688f3f2fcdd4d6f5c1a3d49b1a1ceb"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/35536.dat",
+          "bytes": 318,
+          "sha256": "c08d2b8643262068bd31ec0934e138b11326d3fa6918ca20b4aa2432aebd7bf9"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u9563.dat",
+          "bytes": 602,
+          "sha256": "d0d440cb565ad15fd596931509ca70c500bf1de31d0d4a0a9ad6ad68ab8f367e"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/s/u9563s01.dat",
+          "bytes": 7461,
+          "sha256": "b3ce0b8593b4cd2a1711e3906a7dfb52d90a4250bfc49d4579c122907875e5bf"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u9226.dat",
+          "bytes": 656,
+          "sha256": "02df4c76de683cbaef39761101c75c95b279f57a12b2b1f23012e3cb61f6a581"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4ring2.dat",
+          "bytes": 1628,
+          "sha256": "6fb38804b1f5e9bee8c0b80caf1397b09454fc58b048dc19045b6f37c8762ab0"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/127.dat",
+          "bytes": 918,
+          "sha256": "b0b489398397bd5f4e8d688df1312e39bce1a31375d60b5ecd323d4bfee66c4d"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/4-4ring18.dat",
+          "bytes": 1530,
+          "sha256": "1edf4b9ee669e0e34c60813a924d18c6cff36a4bbc6e81ba5c65cb0b1cd4a919"
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/335.dat",
+          "bytes": 926,
+          "sha256": "2cb4639cea78fb6b4635e281203b6a9e205661ed7d6f90e2f405758049e0063e"
+        },
+        {
+          "path": "library/evidence/ldraw-expanded-batch007-input-20261109.json",
+          "bytes": 34930,
+          "sha256": "9eba6c666f186ce0b5f626154da829244ae4b215ee6b5c11aacc81766bad788c"
+        },
+        {
+          "path": "library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+          "bytes": 18657,
+          "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+        },
+        {
+          "path": "library/evidence/ldraw-expanded-CAreadme-20261109.txt",
+          "bytes": 4151,
+          "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497"
+        }
+      ],
+      "allCommittedBindingCount": 75,
+      "mismatches": [],
+      "builtRuntimeFiles": [
+        {
+          "path": "dist/app-showcase/README.md",
+          "bytes": 406,
+          "sha256": "abc4e1333f5195f98c4e34265b80c5016134b85254ff44afd05f6ed7d0e47577"
+        },
+        {
+          "path": "dist/app-showcase/brickwright.png",
+          "bytes": 17259,
+          "sha256": "4f12ea0f0f21056104c7c665a8ad2082dfaf1265d131e402e793909cef6b4065"
+        },
+        {
+          "path": "dist/app-showcase/cometbeat.png",
+          "bytes": 12576,
+          "sha256": "93c1e0820b28de7b4209a37abe4e9b6e320a1a495bd9c44e056b492454cc6769"
+        },
+        {
+          "path": "dist/app-showcase/crispaudio.png",
+          "bytes": 20854,
+          "sha256": "482b887823d8cbe42fb450bf9a1e7fc50213f4c80364d75387559876e157fb3d"
+        },
+        {
+          "path": "dist/app-showcase/crispbingo.png",
+          "bytes": 12310,
+          "sha256": "974a26f8a7f20b8b61d806a1f7ef7d24ef82c1a775b8c154c96f5b7015939910"
+        },
+        {
+          "path": "dist/app-showcase/crispchess.png",
+          "bytes": 18694,
+          "sha256": "375e1c4df95c0a294aaf5dc078bdbc99d8753100812649821cc88be87ec7a33a"
+        },
+        {
+          "path": "dist/app-showcase/crispcloud.png",
+          "bytes": 21564,
+          "sha256": "7736e71fd28f2400424a106513224a4dd9953ae11049c219210964cfc7ebdcfb"
+        },
+        {
+          "path": "dist/app-showcase/crispdeck.png",
+          "bytes": 12518,
+          "sha256": "3cf496171fcfe2ea3af23c6901d3b4375546d383a34288f3e433d58b8acd17ab"
+        },
+        {
+          "path": "dist/app-showcase/crisperplayer.png",
+          "bytes": 28416,
+          "sha256": "732bf35419dbf4a3cdb604ff18e72f7f667901052c0c12b091a535440a9cec67"
+        },
+        {
+          "path": "dist/app-showcase/crisperweaver.png",
+          "bytes": 21766,
+          "sha256": "ca56b9ba5f7b4de928b7baf6979bbabe01314c0382f9a85d558f673f9435de43"
+        },
+        {
+          "path": "dist/app-showcase/crispmath.png",
+          "bytes": 10714,
+          "sha256": "d85b699f750768c23d683180a37385f4c36fdbed796989f464de26840ea8915e"
+        },
+        {
+          "path": "dist/app-showcase/crispmesh.png",
+          "bytes": 20375,
+          "sha256": "f10da8d3835dd3d13e9a8c8422338fda2a746ef5401a42efc3f2f5bbc90ff7ad"
+        },
+        {
+          "path": "dist/app-showcase/crispsorter.png",
+          "bytes": 23362,
+          "sha256": "9b92d82e86f687bedf3f3378c27e7b4c24c83d3a953f337e5ec1cfde798666bf"
+        },
+        {
+          "path": "dist/app-showcase/crispsudoku.png",
+          "bytes": 24934,
+          "sha256": "af8ee9c4eae94cfe68af1e38062f7d1da9346ada0734476f19c9a705eb73db5c"
+        },
+        {
+          "path": "dist/app-showcase/crisptuner.png",
+          "bytes": 10185,
+          "sha256": "cbac4f2381e240dd9c7879bc200262037f6bf9c35c688b65aba09402a077e033"
+        },
+        {
+          "path": "dist/app-showcase/hectopolis.png",
+          "bytes": 8345,
+          "sha256": "687f651d1f4d98fd4653b85191c6fc273e2497447916fb4bf9be447b7f2c6ed3"
+        },
+        {
+          "path": "dist/app-showcase/kerotakis.png",
+          "bytes": 7514,
+          "sha256": "0b6a24aec16e25ee6d2e098c40fd56cf530c26f917f70a69f9bb68cda4409d92"
+        },
+        {
+          "path": "dist/app-showcase/naga.png",
+          "bytes": 10760,
+          "sha256": "93f34940d26e229849e697f5bc98a3d28d4ed5e2caa926a34aabd93e37e74da6"
+        },
+        {
+          "path": "dist/app-showcase/numbernebula.png",
+          "bytes": 29684,
+          "sha256": "39d20c36896f98452b5bc6f0f4608caab1dd4ea7fc74034c88c93c90f9521bdb"
+        },
+        {
+          "path": "dist/app-showcase/word-universe.png",
+          "bytes": 21617,
+          "sha256": "081ee34a1707823873a44fdfe4c7d4bebeb3c2fa4d7b099a44360867b1c581e7"
+        },
+        {
+          "path": "dist/assets/adafruit-preview-data-C_BcSKUk.js",
+          "bytes": 6162740,
+          "sha256": "b2805adb8bdb29da516b7a7be16971d921c4aedb3517fa2531400b6a9f935b6b"
+        },
+        {
+          "path": "dist/assets/embedded-DuSCmtBE.js",
+          "bytes": 2312,
+          "sha256": "4ceeb5a68a45cb12c2d1179913233eb690316db7d51a9fb9fb3446adde791999"
+        },
+        {
+          "path": "dist/assets/esm-Cdc6OwPB.js",
+          "bytes": 1352,
+          "sha256": "c64f1e727b38192cfb60e317f9282929ddf719e1c8ca3a0be6f97cff1efcaaa5"
+        },
+        {
+          "path": "dist/assets/esm-DhMAGMR_.js",
+          "bytes": 334,
+          "sha256": "61fa88e3eb3c1a4e78940cb4e2cfc330e19d5efd448979d3560451b55ed21fad"
+        },
+        {
+          "path": "dist/assets/files-Bfs6KUsD.js",
+          "bytes": 8696605,
+          "sha256": "31db5906cceb352181728beac54fa2711db20085aa66f12c56e532cdbaafa369"
+        },
+        {
+          "path": "dist/assets/files-BvSzA95Z.css",
+          "bytes": 10183,
+          "sha256": "a0bd03c2cdb4b600a58121b396da840424c00407085354cd39adee4a3064593b"
+        },
+        {
+          "path": "dist/assets/geometry.worker-DDOPQ27E.js",
+          "bytes": 1437287,
+          "sha256": "3f0cd73a73e7148fbb7429835a66b0c05f85cd15204c04ea6f920bedabad4c76"
+        },
+        {
+          "path": "dist/assets/jolt-physics.wasm-compat-D59xCtdL.js",
+          "bytes": 3662128,
+          "sha256": "98cfdc84c78a6b14f438c8fadbc74fb24f7a0f1eeed5e81e793f5fa23effbcad"
+        },
+        {
+          "path": "dist/assets/main-BmQR_qlr.js",
+          "bytes": 9826245,
+          "sha256": "8b9a6e18b288a0a59b18ef2d8ee921c837a72f615b2f33edeb801cc831f71f59"
+        },
+        {
+          "path": "dist/assets/manifold-BE4c7gO-.wasm",
+          "bytes": 541470,
+          "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+        },
+        {
+          "path": "dist/assets/simulation.worker-oZE_k5zd.js",
+          "bytes": 1489123,
+          "sha256": "5394be95a227610fb7d26b08c33ef2bf6247dba09d279b8c28946dd2114de317"
+        },
+        {
+          "path": "dist/assets/web-DfOPnJcv.js",
+          "bytes": 8715,
+          "sha256": "93b6088b1ae851684ccc802975bc7ca14fd96cbab138861cf1a0dade13502d3b"
+        },
+        {
+          "path": "dist/assets/web-hLNnMiP-.js",
+          "bytes": 361,
+          "sha256": "dea29c74b3054d0077d83e7a2bc4560fd0976713765101184260667e08463e5e"
+        },
+        {
+          "path": "dist/cad-assets/app-license.txt",
+          "bytes": 1520,
+          "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad"
+        },
+        {
+          "path": "dist/cad-assets/build-info.json",
+          "bytes": 138,
+          "sha256": "e5867aef41884d5d6b752043788eabf3c2ccb0bbca2f873da3f0e1d1fc600dac"
+        },
+        {
+          "path": "dist/cad-assets/manifold.wasm",
+          "bytes": 541470,
+          "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+        },
+        {
+          "path": "dist/cad-assets/notices.txt",
+          "bytes": 91867,
+          "sha256": "dea50eee6d6781549af4e3740bfaf7661b29479696e5ae6cbe41eafd93c0fa70"
+        },
+        {
+          "path": "dist/embedded.html",
+          "bytes": 1119,
+          "sha256": "cf635dfb4b38e03e1f5f171ff9005851fb0e489d4ca8a145264d2a43cd64c413"
+        },
+        {
+          "path": "dist/icon.svg",
+          "bytes": 283,
+          "sha256": "30876dc5d178d36f341cc5126e6489a7078ac9f667a56a9e625f9d090d3d94f4"
+        },
+        {
+          "path": "dist/index.html",
+          "bytes": 2974,
+          "sha256": "9e5cdca2d51e5ec9bc38db674cea6da51da244cd32ede6a61027c19f323c6018"
+        },
+        {
+          "path": "dist/manifest.webmanifest",
+          "bytes": 249,
+          "sha256": "7d57494ede2e7c699fd24fd309335bb701138d85cc84d5c4ff4d9851f44ae535"
+        },
+        {
+          "path": "dist/sw.js",
+          "bytes": 1930,
+          "sha256": "aef07ea15b1366ee9a01f3fe69f0671788f1523348d9cb3562b3effa609b3b65"
+        }
+      ],
+      "qualifiedModelBrowserRawDurableOutcomes": 26,
+      "focusedDemandBrowserEnginesPASS": 2,
+      "noQualifiedCheckReplayForCommit": true
+    },
+    "actualPhases": [
+      {
+        "phase": 0,
+        "command": [
+          "npm",
+          "run",
+          "build:packages"
+        ],
+        "guard": {
+          "fastFreeBytes": 13430050816,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4255768576,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            0.25927734375,
+            0.97021484375,
+            0.94384765625
+          ],
+          "cpuPSISomeAvg60Percent": 0.37,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 45,
+        "status": "PASS",
+        "sourceHead": "ada2eb48e8eef9ff5214e4ad58ef93cf8e2a5595",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3066776,
+        "exitCode": 0,
+        "elapsedSeconds": 10.207132890820503,
+        "childUserCPUSeconds": 8.643976,
+        "childSystemCPUSeconds": 1.272187
+      },
+      {
+        "phase": 1,
+        "command": [
+          "bash",
+          "/mnt/storage/brickwright-cycle104-smooth/app-build.sh"
+        ],
+        "guard": {
+          "fastFreeBytes": 13430050816,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4121370624,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            0.6875,
+            1.0380859375,
+            0.96630859375
+          ],
+          "cpuPSISomeAvg60Percent": 8.67,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 90,
+        "status": "PASS",
+        "sourceHead": "ada2eb48e8eef9ff5214e4ad58ef93cf8e2a5595",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3066805,
+        "exitCode": 0,
+        "elapsedSeconds": 39.55032627657056,
+        "childUserCPUSeconds": 31.52608,
+        "childSystemCPUSeconds": 3.4394430000000007
+      },
+      {
+        "phase": 2,
+        "command": [
+          "npx",
+          "playwright",
+          "test",
+          "tests/browser/model-library-preview-demand.spec.ts",
+          "tests/browser/model-library-expanded-batch007.spec.ts",
+          "--list",
+          "--reporter=line"
+        ],
+        "guard": {
+          "fastFreeBytes": 13430050816,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4082892800,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            2.41552734375,
+            1.4287109375,
+            1.10107421875
+          ],
+          "cpuPSISomeAvg60Percent": 29.46,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 20,
+        "status": "PASS",
+        "sourceHead": "ada2eb48e8eef9ff5214e4ad58ef93cf8e2a5595",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3066895,
+        "exitCode": 0,
+        "elapsedSeconds": 4.221318996977061,
+        "childUserCPUSeconds": 3.3129500000000007,
+        "childSystemCPUSeconds": 0.4656060000000002
+      },
+      {
+        "phase": 3,
+        "command": [
+          "npx",
+          "playwright",
+          "test",
+          "tests/browser/model-library-preview-demand.spec.ts",
+          "--output",
+          "/mnt/storage/brickwright-cycle132-preview-demand-fix/focused-output",
+          "--reporter=line,json"
+        ],
+        "guard": {
+          "fastFreeBytes": 13430050816,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4097982464,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            2.3017578125,
+            1.42138671875,
+            1.10009765625
+          ],
+          "cpuPSISomeAvg60Percent": 29.16,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 300,
+        "status": "PASS",
+        "sourceHead": "ada2eb48e8eef9ff5214e4ad58ef93cf8e2a5595",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3066925,
+        "exitCode": 0,
+        "elapsedSeconds": 49.92975499667227,
+        "childUserCPUSeconds": 11.125347999999995,
+        "childSystemCPUSeconds": 3.137252000000001
+      },
+      {
+        "phase": 4,
+        "command": [
+          "npx",
+          "playwright",
+          "test",
+          "tests/browser/model-library-expanded-batch007.spec.ts",
+          "--output",
+          "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-output-chunk-1",
+          "--reporter=line,json"
+        ],
+        "guard": {
+          "fastFreeBytes": 13430050816,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4197904384,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            3.11865234375,
+            1.80078125,
+            1.24755859375
+          ],
+          "cpuPSISomeAvg60Percent": 49.54,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 300,
+        "status": "PASS",
+        "sourceHead": "ada2eb48e8eef9ff5214e4ad58ef93cf8e2a5595",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3067194,
+        "exitCode": 0,
+        "elapsedSeconds": 204.26512920716777,
+        "childUserCPUSeconds": 72.56897599999999,
+        "childSystemCPUSeconds": 12.996072
+      },
+      {
+        "phase": 5,
+        "command": [
+          "npx",
+          "playwright",
+          "test",
+          "tests/browser/model-library-expanded-batch007.spec.ts",
+          "--output",
+          "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-output-chunk-2",
+          "--reporter=line,json"
+        ],
+        "guard": {
+          "fastFreeBytes": 13429796864,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4148506624,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            2.90673828125,
+            2.8701171875,
+            1.82421875
+          ],
+          "cpuPSISomeAvg60Percent": 53.58,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 300,
+        "status": "PASS",
+        "sourceHead": "ada2eb48e8eef9ff5214e4ad58ef93cf8e2a5595",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3067740,
+        "exitCode": 0,
+        "elapsedSeconds": 198.66158404480666,
+        "childUserCPUSeconds": 68.826211,
+        "childSystemCPUSeconds": 13.300985999999998
+      },
+      {
+        "phase": 6,
+        "command": [
+          "npx",
+          "playwright",
+          "test",
+          "tests/browser/model-library-expanded-batch007.spec.ts",
+          "--output",
+          "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-output-chunk-3",
+          "--reporter=line,json"
+        ],
+        "guard": {
+          "fastFreeBytes": 13429796864,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4237647872,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            2.892578125,
+            3.22412109375,
+            2.19970703125
+          ],
+          "cpuPSISomeAvg60Percent": 53.44,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 300,
+        "status": "PASS",
+        "sourceHead": "ada2eb48e8eef9ff5214e4ad58ef93cf8e2a5595",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3068304,
+        "exitCode": 0,
+        "elapsedSeconds": 201.57055224012583,
+        "childUserCPUSeconds": 67.22027299999999,
+        "childSystemCPUSeconds": 13.344807000000003
+      },
+      {
+        "phase": 7,
+        "command": [
+          "npx",
+          "playwright",
+          "test",
+          "tests/browser/model-library-expanded-batch007.spec.ts",
+          "--output",
+          "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-output-chunk-4",
+          "--reporter=line,json"
+        ],
+        "guard": {
+          "fastFreeBytes": 13429796864,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4159406080,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            3.1328125,
+            3.32568359375,
+            2.45166015625
+          ],
+          "cpuPSISomeAvg60Percent": 56.71,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 300,
+        "status": "PASS",
+        "sourceHead": "ada2eb48e8eef9ff5214e4ad58ef93cf8e2a5595",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3068817,
+        "exitCode": 0,
+        "elapsedSeconds": 195.3796309819445,
+        "childUserCPUSeconds": 66.96989299999996,
+        "childSystemCPUSeconds": 12.861736999999998
+      },
+      {
+        "phase": 8,
+        "command": [
+          "npx",
+          "playwright",
+          "test",
+          "tests/browser/model-library-expanded-batch007.spec.ts",
+          "--output",
+          "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-output-chunk-5",
+          "--reporter=line,json"
+        ],
+        "guard": {
+          "fastFreeBytes": 13425192960,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4194856960,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            3.64013671875,
+            3.56396484375,
+            2.7294921875
+          ],
+          "cpuPSISomeAvg60Percent": 52.52,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 300,
+        "status": "PASS",
+        "sourceHead": "ada2eb48e8eef9ff5214e4ad58ef93cf8e2a5595",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3070194,
+        "exitCode": 0,
+        "elapsedSeconds": 198.62671884940937,
+        "childUserCPUSeconds": 66.53177499999998,
+        "childSystemCPUSeconds": 12.989547999999992
+      },
+      {
+        "phase": 9,
+        "command": [
+          "npx",
+          "playwright",
+          "test",
+          "tests/browser/model-library-expanded-batch007.spec.ts",
+          "--output",
+          "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-output-chunk-6",
+          "--reporter=line,json"
+        ],
+        "guard": {
+          "fastFreeBytes": 13424578560,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4067667968,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            3.0048828125,
+            3.59228515625,
+            2.92626953125
+          ],
+          "cpuPSISomeAvg60Percent": 52.86,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 300,
+        "status": "PASS",
+        "sourceHead": "ada2eb48e8eef9ff5214e4ad58ef93cf8e2a5595",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3070893,
+        "exitCode": 0,
+        "elapsedSeconds": 189.39581409003586,
+        "childUserCPUSeconds": 64.00885999999997,
+        "childSystemCPUSeconds": 11.918712999999997
+      },
+      {
+        "phase": 10,
+        "command": [
+          "npx",
+          "playwright",
+          "test",
+          "tests/browser/model-library-expanded-batch007.spec.ts",
+          "--output",
+          "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-output-chunk-7",
+          "--reporter=line,json"
+        ],
+        "guard": {
+          "fastFreeBytes": 13424234496,
+          "requiredExclusiveFreeBytes": 12884901888,
+          "availableMemoryBytes": 4095012864,
+          "requiredExclusiveMemoryBytes": 2147483648,
+          "loadAvgDiagnosticOnly": [
+            3.49462890625,
+            3.62939453125,
+            3.0703125
+          ],
+          "cpuPSISomeAvg60Percent": 55.29,
+          "cpuPSIAdmissionMaximumExclusive": 5.0,
+          "allowedCPUs": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "selectedCPU": 0,
+          "sameNonblockingHeavyLock": true,
+          "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+        },
+        "timeoutSeconds": 300,
+        "status": "PASS",
+        "sourceHead": "ada2eb48e8eef9ff5214e4ad58ef93cf8e2a5595",
+        "parentAffinity": [
+          0
+        ],
+        "parentNice": 19,
+        "nodeHeapMiB": 768,
+        "pid": 3071377,
+        "exitCode": 0,
+        "elapsedSeconds": 104.87532701808959,
+        "childUserCPUSeconds": 19.048806000000013,
+        "childSystemCPUSeconds": 5.281712999999996
+      }
+    ],
+    "rawDurableModelOutcomesPASS": 26,
+    "focusedDemandTestsPASS": 2,
+    "modelProof": {
+      "status": "ALL13_UPDATED_MAIN_INTEGRATION_PASS_DELIVERY_PENDING",
+      "mainCounts": [
+        263,
+        258,
+        302
+      ],
+      "allGateCompletedCandidates": 13,
+      "rawAndDurableBrowserOutcomesMatched": 26,
+      "expectedBrowserOutcomes": 26,
+      "models": [
+        "corpus-ldraw-expanded-944",
+        "corpus-ldraw-expanded-u9113",
+        "corpus-ldraw-expanded-u9183",
+        "corpus-ldraw-expanded-u9644",
+        "corpus-ldraw-expanded-57877",
+        "corpus-ldraw-expanded-70081",
+        "corpus-ldraw-expanded-76065k01",
+        "corpus-ldraw-expanded-2630k02",
+        "corpus-ldraw-expanded-61409",
+        "corpus-ldraw-expanded-u9563",
+        "corpus-ldraw-expanded-u9226",
+        "corpus-ldraw-expanded-127",
+        "corpus-ldraw-expanded-335"
+      ],
+      "localAllGateCounts": [
+        276,
+        271,
+        315
+      ],
+      "newUniqueMeshes": 13,
+      "zeroNetworkRequests": true,
+      "nativeReplayed": false,
+      "reports": [
+        {
+          "path": "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-phase-4.json",
+          "sha256": "af77964822348c74ccefc3d771a782cbe2ecd75acd9496e929c2176009b1e15f",
+          "exitCode": 0
+        },
+        {
+          "path": "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-phase-5.json",
+          "sha256": "36b83e0109d073157435a74386fed1bea652c29315c6b7d1930a5af5e5a84b1e",
+          "exitCode": 0
+        },
+        {
+          "path": "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-phase-6.json",
+          "sha256": "4420b642cc964f636711cd53b3d651cefb49a2a5a6225dde2867ffa684a3fc0e",
+          "exitCode": 0
+        },
+        {
+          "path": "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-phase-7.json",
+          "sha256": "7d0a2be6851052a4015d218b30e32432e25d33983fd91a8306bb59bc7bb4e46a",
+          "exitCode": 0
+        },
+        {
+          "path": "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-phase-8.json",
+          "sha256": "1d165bd5d15a54d7f57f975cbc78352d08092034a28678aecbdb320dc150dbd7",
+          "exitCode": 0
+        },
+        {
+          "path": "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-phase-9.json",
+          "sha256": "96e6f4a646e04095fdc186d933df71533fc0d102e84051c39341f026fa0ac9d3",
+          "exitCode": 0
+        },
+        {
+          "path": "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-phase-10.json",
+          "sha256": "e6e6d1e17cd1e59521effdb35f4b019239d078256483c165ef410746fb8acc9c",
+          "exitCode": 0
+        }
+      ],
+      "proofIsNotMainDelivery": true
+    },
+    "firstFailureCausalTrace": {
+      "atUTC": "2026-11-16T16:23:42.914610+00:00",
+      "status": "DEMONSTRATED_GENERAL_RUNTIME_B_CAUSE",
+      "failedCommand": "phase4 firstnewruntimebrowserchunk,4casesexit1",
+      "failedAssertion": "networkRequestsDuringOfflineInsertion expected0 received1",
+      "models": [
+        "corpus-ldraw-expanded-944",
+        "corpus-ldraw-expanded-u9113"
+      ],
+      "engines": [
+        "chromium",
+        "ipad-webkit"
+      ],
+      "unexpectedRequests": [
+        {
+          "trace": "/mnt/storage/brickwright-cycle130-pr70-integration/browser-output-chunk-1/model-library-expanded-bat-0c12e-ovenance-layout-and-restart-ipad-webkit/trace.zip",
+          "traceSHA256": "007967f559226752cf6bf903e382a337141a87cd25cdca1ef789d0a2a131ba32",
+          "entry": "0-trace.network",
+          "url": "http://127.0.0.1:4370/assets/adafruit-preview-data-C_BcSKUk.js",
+          "method": "GET",
+          "responseStatus": -1,
+          "failureText": "WebKit encountered an internal error"
+        },
+        {
+          "trace": "/mnt/storage/brickwright-cycle130-pr70-integration/browser-output-chunk-1/model-library-expanded-bat-0c12e-ovenance-layout-and-restart-chromium/trace.zip",
+          "traceSHA256": "dd2356dc88f699ec483bee662d11e6a4ecff9bfe61e01ffa7fe69cb0fc3c663b",
+          "entry": "0-trace.network",
+          "url": "http://127.0.0.1:4370/assets/adafruit-preview-data-C_BcSKUk.js",
+          "method": "GET",
+          "responseStatus": -1,
+          "failureText": "net::ERR_INTERNET_DISCONNECTED"
+        },
+        {
+          "trace": "/mnt/storage/brickwright-cycle130-pr70-integration/browser-output-chunk-1/model-library-expanded-bat-d5b9d-ovenance-layout-and-restart-chromium/trace.zip",
+          "traceSHA256": "243411d9f505d9aaeefd53c0bed75f4c78a88ffce4f2981393626586cbbaa783",
+          "entry": "0-trace.network",
+          "url": "http://127.0.0.1:4370/assets/adafruit-preview-data-C_BcSKUk.js",
+          "method": "GET",
+          "responseStatus": -1,
+          "failureText": "net::ERR_INTERNET_DISCONNECTED"
+        },
+        {
+          "trace": "/mnt/storage/brickwright-cycle130-pr70-integration/browser-output-chunk-1/model-library-expanded-bat-d5b9d-ovenance-layout-and-restart-ipad-webkit/trace.zip",
+          "traceSHA256": "8d1eb8775db718622cef720e059bceaee250b7f32ef1a6f6076eba5d80d45b8c",
+          "entry": "0-trace.network",
+          "url": "http://127.0.0.1:4370/assets/adafruit-preview-data-C_BcSKUk.js",
+          "method": "GET",
+          "responseStatus": -1,
+          "failureText": "WebKit encountered an internal error"
+        }
+      ],
+      "sourceModule": "packages/editor/src/model-library-panel.ts",
+      "sourceInitiator": "open() unconditionally calls loadArchivePreviews(); loader dynamically imports ./adafruit-preview-data.json",
+      "sourceBeforeSHA256": "238cbd9baf01c79cfe934352fcf8372e104340fb2af18cc2be094e02a45b89a6",
+      "fixScope": "Move archive preview loading to explicit component-folder selection; catalogue opening/localmodel insertion remains free of preview-module requests. Source revision validation retained.",
+      "allModelBytesAndAssertionsPreserved": true
+    },
+    "generalRuntimeFix": "Move existing Adafruit preview loader from unconditional library open to explicit component-folder selection; preserve revision validation and zero-HTTP assertion.",
+    "changedRuntimeFile": "packages/editor/src/model-library-panel.ts",
+    "focusedTestFile": "tests/browser/model-library-preview-demand.spec.ts",
+    "successful14UnitReplay": false
+  },
+  "originalSourceQualificationBinding": {
+    "testedCommit": "95a10c2ffff7eee1598d40ac823ea63808cbb3d7",
+    "testedTree": "2a427057fe9faed3bb15500a17c2b2d660ead2e7",
+    "testedChangedSourceDataFiles": [
+      {
+        "path": "library/ldraw-reviewed-batch-manifest.json",
+        "bytes": 2334324,
+        "sha256": "6838bf1d4f353cbc18f0ad0b1df293465b9c15dac2c4a29f87963d73f57b466e"
+      },
+      {
+        "path": "library/ldraw-reviewed-batch-spec.json",
+        "bytes": 2679489,
+        "sha256": "0fd9773c29f3f3ffd6c674351291ec36e56747247fcab4b7043d57b74c848ed0"
+      },
+      {
+        "path": "library/meshes/ldraw/127.stl",
+        "bytes": 6484,
+        "sha256": "5e63a3d7cde14644529f0a0e6a8b745d09d3d43f782e6a5e700126b1668f5ab4"
+      },
+      {
+        "path": "library/meshes/ldraw/2630k02.stl",
+        "bytes": 3284,
+        "sha256": "333194fbfaf89e641bf83cb285612e77946576f5caf4aba275ee60cfb48faa3b"
+      },
+      {
+        "path": "library/meshes/ldraw/335.stl",
+        "bytes": 6484,
+        "sha256": "6745b8c505610157c2cd75aa25c71ef3b880798ccc14d9591a879c0fe5a5a40e"
+      },
+      {
+        "path": "library/meshes/ldraw/57877.stl",
+        "bytes": 3284,
+        "sha256": "de0191c275a075e2e283b8c3bc6abdfddb7472734b1480fb89e6e5de0bd1624a"
+      },
+      {
+        "path": "library/meshes/ldraw/61409.stl",
+        "bytes": 8284,
+        "sha256": "1e58df1e15824619e742fd616c108bfd18de0eb49b45755a7785611e34518ca7"
+      },
+      {
+        "path": "library/meshes/ldraw/70081.stl",
+        "bytes": 3284,
+        "sha256": "521cb39d632cda5111fa6fbc6993a8599e41aa22663b95455e069904e7fe0a2c"
+      },
+      {
+        "path": "library/meshes/ldraw/76065k01.stl",
+        "bytes": 3284,
+        "sha256": "9905d3a63295ca15ae3dbe7a697090963dc94476804957560a7f8bee7fe995ef"
+      },
+      {
+        "path": "library/meshes/ldraw/944.stl",
+        "bytes": 3284,
+        "sha256": "7ef2e02322fe2a92f94ab8e63191cf822f7ec84c299e463209bd29e83033d56a"
+      },
+      {
+        "path": "library/meshes/ldraw/u9113.stl",
+        "bytes": 3284,
+        "sha256": "64cff897c348267639974a02e7c8f052df24c3b0f0299102c2461c39573310b5"
+      },
+      {
+        "path": "library/meshes/ldraw/u9183.stl",
+        "bytes": 3284,
+        "sha256": "d235f5cb882f46f540a8440ff77c27ec6cbc4aa8b81bd9fac457b03220eb893d"
+      },
+      {
+        "path": "library/meshes/ldraw/u9226.stl",
+        "bytes": 6484,
+        "sha256": "7f32998a80138d3ad428b77e4c3234a8bc727fe9003fbba1b9ff76d5a764832f"
+      },
+      {
+        "path": "library/meshes/ldraw/u9563.stl",
+        "bytes": 6284,
+        "sha256": "d2d3d3a24263f700b493745fa7e714eb8341ec6a80bcae189e60dbe894d2198f"
+      },
+      {
+        "path": "library/meshes/ldraw/u9644.stl",
+        "bytes": 3284,
+        "sha256": "8bee1f5237f1c9cd4c6abe5ffd724d542cc3bfd2109c6ee7155c6efcab8c61c8"
+      },
+      {
+        "path": "library/previews.json",
+        "bytes": 4896963,
+        "sha256": "1a07d0ceb44e59103fca3a321c8e130a4819590e9362f26fce908e4764a1f51b"
+      },
+      {
+        "path": "scripts/lib/ldraw-source-selection.mjs",
+        "bytes": 1639,
+        "sha256": "bd0c7b2ad9d432de7eb79bdc13f018b7aca9fbc86a8e036b34e8eb76f34e15b2"
+      },
+      {
+        "path": "tests/browser/model-library-expanded-batch007.spec.ts",
+        "bytes": 6190,
+        "sha256": "3c9fbed81cc986508d52da94e8e67617bff30df7230cd5a000d8687758c01fbf"
+      },
+      {
+        "path": "tests/ldraw-source-selection.test.ts",
+        "bytes": 1838,
+        "sha256": "b395223e72a0701c4925d45663dc0296045dbccd3bdfa923928f9e11e44114a5"
+      },
+      {
+        "path": "tests/model-library-expanded-batch007.test.ts",
+        "bytes": 3979,
+        "sha256": "fa45baba2eca6786c29a76568fa641eb8144ed236bcdd22eb30afcabb61e8fb4"
+      }
+    ],
+    "inputOriginalLicenceFiles": [
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/944.dat",
+        "bytes": 365,
+        "sha256": "b22dc5b7ac02a0fedde6bb9d81502e60d50e603dd347c9d523c12973fd916b53"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cylc.dat",
+        "bytes": 476,
+        "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4edge.dat",
+        "bytes": 1084,
+        "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4disc.dat",
+        "bytes": 1137,
+        "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cyli.dat",
+        "bytes": 2687,
+        "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9113.dat",
+        "bytes": 368,
+        "sha256": "a0c9d3f1b81192be8feb33c45c0bcc5972fa0005c4f784c70794695f31392edf"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9183.dat",
+        "bytes": 368,
+        "sha256": "e183569b5ca55146727806fe713d7388af060e3e9823ed8f03a316c35bf06314"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9644.dat",
+        "bytes": 388,
+        "sha256": "01bb7ddcf35db3b2604992ee1bca71a078ca383c68009d62eff6c58b85dd15b1"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/57877.dat",
+        "bytes": 487,
+        "sha256": "1b41395dc0b0052d397a58d3104f89f1372325c753b9b382cf11a90037fede42"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/70081.dat",
+        "bytes": 496,
+        "sha256": "44bee061a413ea1ddd2672da57c1d6d63856744a7b06ced4c2ac8d451d56b875"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/70793.dat",
+        "bytes": 688,
+        "sha256": "474db7359871faa44f708134a05322006abc2a75056aaf4b8cfcbc8ee1cf4f29"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/70023.dat",
+        "bytes": 741,
+        "sha256": "f3b608760941677d462ba0a463064afb39a27ad7652e81e7294a8ff18e96486f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/572c.dat",
+        "bytes": 951,
+        "sha256": "0030f1e6159635fa5def96846c760a823910019cb75b86ade7e2547b9c143bf6"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/76065k01.dat",
+        "bytes": 603,
+        "sha256": "1d751798230f6a4e97741f749fcd98d214718c69c3eeef8eb070db980cd7946f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cylo.dat",
+        "bytes": 383,
+        "sha256": "d6ca97ee2e75918b3309a5c88aafcd2455b3a316f7cef8963517c19f1d86b38f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/2630k02.dat",
+        "bytes": 642,
+        "sha256": "3cacbb0434d0aaeff12e694256ac1d5e2e42cd41f9457b7b08fa0cb5977c0421"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/61409.dat",
+        "bytes": 4379,
+        "sha256": "e412ef137e2fc5d27d2da0925cfb50d48ca205e4ef42fbbc03ce31f9dc67ea02"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/box4.dat",
+        "bytes": 948,
+        "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect.dat",
+        "bytes": 654,
+        "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect2p.dat",
+        "bytes": 594,
+        "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/89658.dat",
+        "bytes": 305,
+        "sha256": "b002cd59cee13fe2246c28ab4f1fe25961f160d607c0a6d0dbcb078565691e86"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/99146.dat",
+        "bytes": 2263,
+        "sha256": "9f64312f6eb67cbab14caca12a88aaaa5084af3b07b4a5fbc6512fc40eaacb2b"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4chrd.dat",
+        "bytes": 743,
+        "sha256": "ccba3a97b5cc358754e476b78b4ce61cce5f404cd15e37471b73df3e81784aec"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4cylo.dat",
+        "bytes": 388,
+        "sha256": "792a01362608c3f385dd7f01a1bd7d19cf9ed8a40f793266345cc86d1d98f3af"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4edge.dat",
+        "bytes": 545,
+        "sha256": "9ce2de7e67bbac575d52cfdc771b9d00856efc9b88002d97db8e665e50f4d467"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4cyli.dat",
+        "bytes": 1044,
+        "sha256": "5a7168952a5a3570327873b9a5802fa7b3be40967ab78c03b6a2bfd4419a1f10"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4con2.dat",
+        "bytes": 1263,
+        "sha256": "5b4d444a154349f4a930b5fd60ed5c7e6060e12faf7f50c192909e958cdd04d6"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect1.dat",
+        "bytes": 556,
+        "sha256": "48fdcd3181587b4bdc89d356a5aee21268688f3f2fcdd4d6f5c1a3d49b1a1ceb"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/35536.dat",
+        "bytes": 318,
+        "sha256": "c08d2b8643262068bd31ec0934e138b11326d3fa6918ca20b4aa2432aebd7bf9"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9563.dat",
+        "bytes": 602,
+        "sha256": "d0d440cb565ad15fd596931509ca70c500bf1de31d0d4a0a9ad6ad68ab8f367e"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/s/u9563s01.dat",
+        "bytes": 7461,
+        "sha256": "b3ce0b8593b4cd2a1711e3906a7dfb52d90a4250bfc49d4579c122907875e5bf"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9226.dat",
+        "bytes": 656,
+        "sha256": "02df4c76de683cbaef39761101c75c95b279f57a12b2b1f23012e3cb61f6a581"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4ring2.dat",
+        "bytes": 1628,
+        "sha256": "6fb38804b1f5e9bee8c0b80caf1397b09454fc58b048dc19045b6f37c8762ab0"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/127.dat",
+        "bytes": 918,
+        "sha256": "b0b489398397bd5f4e8d688df1312e39bce1a31375d60b5ecd323d4bfee66c4d"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4ring18.dat",
+        "bytes": 1530,
+        "sha256": "1edf4b9ee669e0e34c60813a924d18c6cff36a4bbc6e81ba5c65cb0b1cd4a919"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/335.dat",
+        "bytes": 926,
+        "sha256": "2cb4639cea78fb6b4635e281203b6a9e205661ed7d6f90e2f405758049e0063e"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-batch007-input-20261109.json",
+        "bytes": 34930,
+        "sha256": "9eba6c666f186ce0b5f626154da829244ae4b215ee6b5c11aacc81766bad788c"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+        "bytes": 18657,
+        "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-CAreadme-20261109.txt",
+        "bytes": 4151,
+        "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497"
+      }
+    ],
+    "allCommittedFilesMatch": true,
+    "totalCommittedFileBindings": 59,
+    "builtRuntimeFiles": [
+      {
+        "path": "dist/app-showcase/README.md",
+        "bytes": 406,
+        "sha256": "abc4e1333f5195f98c4e34265b80c5016134b85254ff44afd05f6ed7d0e47577"
+      },
+      {
+        "path": "dist/app-showcase/brickwright.png",
+        "bytes": 17259,
+        "sha256": "4f12ea0f0f21056104c7c665a8ad2082dfaf1265d131e402e793909cef6b4065"
+      },
+      {
+        "path": "dist/app-showcase/cometbeat.png",
+        "bytes": 12576,
+        "sha256": "93c1e0820b28de7b4209a37abe4e9b6e320a1a495bd9c44e056b492454cc6769"
+      },
+      {
+        "path": "dist/app-showcase/crispaudio.png",
+        "bytes": 20854,
+        "sha256": "482b887823d8cbe42fb450bf9a1e7fc50213f4c80364d75387559876e157fb3d"
+      },
+      {
+        "path": "dist/app-showcase/crispbingo.png",
+        "bytes": 12310,
+        "sha256": "974a26f8a7f20b8b61d806a1f7ef7d24ef82c1a775b8c154c96f5b7015939910"
+      },
+      {
+        "path": "dist/app-showcase/crispchess.png",
+        "bytes": 18694,
+        "sha256": "375e1c4df95c0a294aaf5dc078bdbc99d8753100812649821cc88be87ec7a33a"
+      },
+      {
+        "path": "dist/app-showcase/crispcloud.png",
+        "bytes": 21564,
+        "sha256": "7736e71fd28f2400424a106513224a4dd9953ae11049c219210964cfc7ebdcfb"
+      },
+      {
+        "path": "dist/app-showcase/crispdeck.png",
+        "bytes": 12518,
+        "sha256": "3cf496171fcfe2ea3af23c6901d3b4375546d383a34288f3e433d58b8acd17ab"
+      },
+      {
+        "path": "dist/app-showcase/crisperplayer.png",
+        "bytes": 28416,
+        "sha256": "732bf35419dbf4a3cdb604ff18e72f7f667901052c0c12b091a535440a9cec67"
+      },
+      {
+        "path": "dist/app-showcase/crisperweaver.png",
+        "bytes": 21766,
+        "sha256": "ca56b9ba5f7b4de928b7baf6979bbabe01314c0382f9a85d558f673f9435de43"
+      },
+      {
+        "path": "dist/app-showcase/crispmath.png",
+        "bytes": 10714,
+        "sha256": "d85b699f750768c23d683180a37385f4c36fdbed796989f464de26840ea8915e"
+      },
+      {
+        "path": "dist/app-showcase/crispmesh.png",
+        "bytes": 20375,
+        "sha256": "f10da8d3835dd3d13e9a8c8422338fda2a746ef5401a42efc3f2f5bbc90ff7ad"
+      },
+      {
+        "path": "dist/app-showcase/crispsorter.png",
+        "bytes": 23362,
+        "sha256": "9b92d82e86f687bedf3f3378c27e7b4c24c83d3a953f337e5ec1cfde798666bf"
+      },
+      {
+        "path": "dist/app-showcase/crispsudoku.png",
+        "bytes": 24934,
+        "sha256": "af8ee9c4eae94cfe68af1e38062f7d1da9346ada0734476f19c9a705eb73db5c"
+      },
+      {
+        "path": "dist/app-showcase/crisptuner.png",
+        "bytes": 10185,
+        "sha256": "cbac4f2381e240dd9c7879bc200262037f6bf9c35c688b65aba09402a077e033"
+      },
+      {
+        "path": "dist/app-showcase/hectopolis.png",
+        "bytes": 8345,
+        "sha256": "687f651d1f4d98fd4653b85191c6fc273e2497447916fb4bf9be447b7f2c6ed3"
+      },
+      {
+        "path": "dist/app-showcase/kerotakis.png",
+        "bytes": 7514,
+        "sha256": "0b6a24aec16e25ee6d2e098c40fd56cf530c26f917f70a69f9bb68cda4409d92"
+      },
+      {
+        "path": "dist/app-showcase/naga.png",
+        "bytes": 10760,
+        "sha256": "93f34940d26e229849e697f5bc98a3d28d4ed5e2caa926a34aabd93e37e74da6"
+      },
+      {
+        "path": "dist/app-showcase/numbernebula.png",
+        "bytes": 29684,
+        "sha256": "39d20c36896f98452b5bc6f0f4608caab1dd4ea7fc74034c88c93c90f9521bdb"
+      },
+      {
+        "path": "dist/app-showcase/word-universe.png",
+        "bytes": 21617,
+        "sha256": "081ee34a1707823873a44fdfe4c7d4bebeb3c2fa4d7b099a44360867b1c581e7"
+      },
+      {
+        "path": "dist/assets/embedded-GlxXJK_9.js",
+        "bytes": 2312,
+        "sha256": "a74ed9637463bbde4b6d370ccbfe7794b91d922fe5c4b4e9199251e9ef9385ec"
+      },
+      {
+        "path": "dist/assets/esm-BbzRTG-k.js",
+        "bytes": 334,
+        "sha256": "99b94ce20dda1af191df9e1fbac1131f7663188ac047bac57f311236d6a3e2d2"
+      },
+      {
+        "path": "dist/assets/esm-CXdWoEp6.js",
+        "bytes": 1352,
+        "sha256": "a314390e0b6e574a0c26edaa226368c454739d45a17ae55b211dfb7f1ab1d22c"
+      },
+      {
+        "path": "dist/assets/files-4Re_Zl_L.js",
+        "bytes": 8675021,
+        "sha256": "0777188622c82b5c88af0faa387d3498d16d8ea06a519470dbd53dd0dab9244e"
+      },
+      {
+        "path": "dist/assets/files-BvSzA95Z.css",
+        "bytes": 10183,
+        "sha256": "a0bd03c2cdb4b600a58121b396da840424c00407085354cd39adee4a3064593b"
+      },
+      {
+        "path": "dist/assets/geometry.worker-C3-qzm0y.js",
+        "bytes": 1437256,
+        "sha256": "16614aeed9d449ffa124f7af91a14da2ff7db8b4b4b7636c61bd2542835b8871"
+      },
+      {
+        "path": "dist/assets/jolt-physics.wasm-compat-CdbhAkox.js",
+        "bytes": 3662128,
+        "sha256": "8c817441903255f8f509359ba5d64d49df4eb5f62ade5384987d229cb829e410"
+      },
+      {
+        "path": "dist/assets/main-BC_HWoTl.js",
+        "bytes": 9826245,
+        "sha256": "2ad2c8dc948478fed45bf59ca06ea8d53a26d8720c34abc6feee830b33601154"
+      },
+      {
+        "path": "dist/assets/manifold-BE4c7gO-.wasm",
+        "bytes": 541470,
+        "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      {
+        "path": "dist/assets/simulation.worker-_mgh5zwc.js",
+        "bytes": 1489092,
+        "sha256": "cec5ee4ac7012d22e5c36d89e700faf40b5ab8a47eb2a402e26333550a7e8e8e"
+      },
+      {
+        "path": "dist/assets/web-B84FEyTU.js",
+        "bytes": 361,
+        "sha256": "46f2cde3a242fad0aa51c6ab9e456b2852975b424d11bddc07da8eab03a97c22"
+      },
+      {
+        "path": "dist/assets/web-CkVQMFQt.js",
+        "bytes": 8715,
+        "sha256": "feaf4741f1dd4838a414af2d2ec02b088c2d08660b91d97d7349c957f684e42f"
+      },
+      {
+        "path": "dist/cad-assets/app-license.txt",
+        "bytes": 1520,
+        "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad"
+      },
+      {
+        "path": "dist/cad-assets/build-info.json",
+        "bytes": 138,
+        "sha256": "cb5f89e66e529f0a170fbb5edeb0c8a8a31d0fcd33b6960e0552efdf5e9faaff"
+      },
+      {
+        "path": "dist/cad-assets/manifold.wasm",
+        "bytes": 541470,
+        "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      {
+        "path": "dist/cad-assets/notices.txt",
+        "bytes": 91867,
+        "sha256": "dea50eee6d6781549af4e3740bfaf7661b29479696e5ae6cbe41eafd93c0fa70"
+      },
+      {
+        "path": "dist/embedded.html",
+        "bytes": 1119,
+        "sha256": "9d63726f77f557145dce1e871e135736d3556e3915ef5922e9830db5109c3780"
+      },
+      {
+        "path": "dist/icon.svg",
+        "bytes": 283,
+        "sha256": "30876dc5d178d36f341cc5126e6489a7078ac9f667a56a9e625f9d090d3d94f4"
+      },
+      {
+        "path": "dist/index.html",
+        "bytes": 2974,
+        "sha256": "481f4bbf6fa65fce55ff4099b93baaa37b39e808f14177d924cbd9a7637eb0ba"
+      },
+      {
+        "path": "dist/manifest.webmanifest",
+        "bytes": 249,
+        "sha256": "7d57494ede2e7c699fd24fd309335bb701138d85cc84d5c4ff4d9851f44ae535"
+      },
+      {
+        "path": "dist/sw.js",
+        "bytes": 1885,
+        "sha256": "fcb34ef99955272a981aca912f868a0a19ce712159a4ec9c8d3beb0fc0e6842e"
+      }
+    ],
+    "sourceInputCommit": "6c6b74b7c407fe435d972529cfc3d2ebb7035e2b",
+    "sourceMain": "57d63940175a3585c691d58f9db2c30a2dd25a5d"
+  },
+  "deliverySourceBinding": {
+    "atUTC": "2026-11-16T16:59:24.441422+00:00",
+    "status": "ISOLATED_NEW_MAIN_INTEGRATION_AND_ALL77_BLOBS_PASS",
+    "testedCommit": "af4f8d0c819dadaf5f31d174212ffd477836f317",
+    "testedTree": "6c5f0ce99300402156782c2cd2b04024f1b40b5d",
+    "currentMain": "4ed03b8569b389bff0b57b1dbaece9b112310134",
+    "testedIntegrationSourceFiles": [
+      {
+        "path": "library/adafruit-thumbnail-manifest.json",
+        "bytes": 387357,
+        "sha256": "cbc806221f2b46214ed321b2735ee3223f0e5b2272e513ae21c8085ef0b945a2"
+      },
+      {
+        "path": "library/ldraw-reviewed-batch-manifest.json",
+        "bytes": 2334324,
+        "sha256": "6838bf1d4f353cbc18f0ad0b1df293465b9c15dac2c4a29f87963d73f57b466e"
+      },
+      {
+        "path": "library/ldraw-reviewed-batch-spec.json",
+        "bytes": 2679489,
+        "sha256": "0fd9773c29f3f3ffd6c674351291ec36e56747247fcab4b7043d57b74c848ed0"
+      },
+      {
+        "path": "library/meshes/ldraw/127.stl",
+        "bytes": 6484,
+        "sha256": "5e63a3d7cde14644529f0a0e6a8b745d09d3d43f782e6a5e700126b1668f5ab4"
+      },
+      {
+        "path": "library/meshes/ldraw/2630k02.stl",
+        "bytes": 3284,
+        "sha256": "333194fbfaf89e641bf83cb285612e77946576f5caf4aba275ee60cfb48faa3b"
+      },
+      {
+        "path": "library/meshes/ldraw/335.stl",
+        "bytes": 6484,
+        "sha256": "6745b8c505610157c2cd75aa25c71ef3b880798ccc14d9591a879c0fe5a5a40e"
+      },
+      {
+        "path": "library/meshes/ldraw/57877.stl",
+        "bytes": 3284,
+        "sha256": "de0191c275a075e2e283b8c3bc6abdfddb7472734b1480fb89e6e5de0bd1624a"
+      },
+      {
+        "path": "library/meshes/ldraw/61409.stl",
+        "bytes": 8284,
+        "sha256": "1e58df1e15824619e742fd616c108bfd18de0eb49b45755a7785611e34518ca7"
+      },
+      {
+        "path": "library/meshes/ldraw/70081.stl",
+        "bytes": 3284,
+        "sha256": "521cb39d632cda5111fa6fbc6993a8599e41aa22663b95455e069904e7fe0a2c"
+      },
+      {
+        "path": "library/meshes/ldraw/76065k01.stl",
+        "bytes": 3284,
+        "sha256": "9905d3a63295ca15ae3dbe7a697090963dc94476804957560a7f8bee7fe995ef"
+      },
+      {
+        "path": "library/meshes/ldraw/944.stl",
+        "bytes": 3284,
+        "sha256": "7ef2e02322fe2a92f94ab8e63191cf822f7ec84c299e463209bd29e83033d56a"
+      },
+      {
+        "path": "library/meshes/ldraw/u9113.stl",
+        "bytes": 3284,
+        "sha256": "64cff897c348267639974a02e7c8f052df24c3b0f0299102c2461c39573310b5"
+      },
+      {
+        "path": "library/meshes/ldraw/u9183.stl",
+        "bytes": 3284,
+        "sha256": "d235f5cb882f46f540a8440ff77c27ec6cbc4aa8b81bd9fac457b03220eb893d"
+      },
+      {
+        "path": "library/meshes/ldraw/u9226.stl",
+        "bytes": 6484,
+        "sha256": "7f32998a80138d3ad428b77e4c3234a8bc727fe9003fbba1b9ff76d5a764832f"
+      },
+      {
+        "path": "library/meshes/ldraw/u9563.stl",
+        "bytes": 6284,
+        "sha256": "d2d3d3a24263f700b493745fa7e714eb8341ec6a80bcae189e60dbe894d2198f"
+      },
+      {
+        "path": "library/meshes/ldraw/u9644.stl",
+        "bytes": 3284,
+        "sha256": "8bee1f5237f1c9cd4c6abe5ffd724d542cc3bfd2109c6ee7155c6efcab8c61c8"
+      },
+      {
+        "path": "library/previews.json",
+        "bytes": 4896963,
+        "sha256": "1a07d0ceb44e59103fca3a321c8e130a4819590e9362f26fce908e4764a1f51b"
+      },
+      {
+        "path": "packages/core/src/locales/de-simlab.ts",
+        "bytes": 10206,
+        "sha256": "f77049bf3054a15ede68fee96e7e34391f0fdc1cf30b24ba6ea25c315ae41a4c"
+      },
+      {
+        "path": "packages/editor/src/adafruit-preview-data.json",
+        "bytes": 6162618,
+        "sha256": "3eccda2be379a6b02dd6f050bbe8688fd0b714029beeb17925633d4149879352"
+      },
+      {
+        "path": "packages/editor/src/cyclone-sorter.ts",
+        "bytes": 10157,
+        "sha256": "8da743f685832dc686c9d0d05c109d08f5901b079b2d1c035b07531376ec0fd7"
+      },
+      {
+        "path": "packages/editor/src/helios-catapult.ts",
+        "bytes": 11345,
+        "sha256": "c488449139772455544c3147024090b64ab775ef5a2874b075853b5e5b815db9"
+      },
+      {
+        "path": "packages/editor/src/icons.ts",
+        "bytes": 4222,
+        "sha256": "c9c0ae55b116316f7bb22cef5651b02bf3131879e18b982874207ff6bedd3aad"
+      },
+      {
+        "path": "packages/editor/src/index.ts",
+        "bytes": 77349,
+        "sha256": "98f4ee9090a40fc6040efcfc61726cb8e465a3ee7bcf1af88cf5213de05f4792"
+      },
+      {
+        "path": "packages/editor/src/mantis-walker.ts",
+        "bytes": 9392,
+        "sha256": "5cd9e4a9fc2d839e884044da5aed3089ba96c3d9bc462d48173da4c74ac5fa13"
+      },
+      {
+        "path": "packages/editor/src/model-library-panel.ts",
+        "bytes": 28738,
+        "sha256": "5f60fb1973883dd3e936d4589196c8d06d80835bfb71aef6854934dc944ee5c3"
+      },
+      {
+        "path": "packages/editor/src/shapes.ts",
+        "bytes": 16569,
+        "sha256": "d0efbda78bffded879cfff2924b07b4159c5781a62dcc8b78d724ef047ffb478"
+      },
+      {
+        "path": "packages/editor/src/sketch-panel.ts",
+        "bytes": 12129,
+        "sha256": "a30b1fb60afe7496db1be220f295c073d5e04e20303f8172168867508182b8e5"
+      },
+      {
+        "path": "packages/editor/src/style.ts",
+        "bytes": 51320,
+        "sha256": "240e3462095055054e1231bd3931c30c05a77c335cf1a9005a4f060401edfde8"
+      },
+      {
+        "path": "scripts/lib/ldraw-source-selection.mjs",
+        "bytes": 1639,
+        "sha256": "bd0c7b2ad9d432de7eb79bdc13f018b7aca9fbc86a8e036b34e8eb76f34e15b2"
+      },
+      {
+        "path": "scripts/sync-adafruit-previews.mjs",
+        "bytes": 2514,
+        "sha256": "7d78c09c945e60710b8a8740bde55808ac56895426941e6cdaeb4c4b285be858"
+      },
+      {
+        "path": "tests/browser/model-library-expanded-batch007.spec.ts",
+        "bytes": 6190,
+        "sha256": "3c9fbed81cc986508d52da94e8e67617bff30df7230cd5a000d8687758c01fbf"
+      },
+      {
+        "path": "tests/browser/model-library-preview-demand.spec.ts",
+        "bytes": 2448,
+        "sha256": "0c18e22f008fb08d174c21a5922eba375c3ed366df18ab41bda0fee1e92a19dd"
+      },
+      {
+        "path": "tests/cyclone-sorter.test.ts",
+        "bytes": 4880,
+        "sha256": "c2de597b53ecaf23d1a06ff5ae62ee4f899606fbdc30e1d37fefe455e7fa3fa2"
+      },
+      {
+        "path": "tests/helios-catapult.test.ts",
+        "bytes": 5038,
+        "sha256": "e1e78929c3afef4f7d9cb3415eec5076ae18f2d07954df3c6d4c7e42b3e98e53"
+      },
+      {
+        "path": "tests/ldraw-source-selection.test.ts",
+        "bytes": 1838,
+        "sha256": "b395223e72a0701c4925d45663dc0296045dbccd3bdfa923928f9e11e44114a5"
+      },
+      {
+        "path": "tests/mantis-walker.test.ts",
+        "bytes": 5216,
+        "sha256": "c718b7ddb0bed8612b3a36c9ceebfdd89bb3de18dbc2478b4d053f93cb827e53"
+      },
+      {
+        "path": "tests/model-library-adafruit-previews.test.ts",
+        "bytes": 1904,
+        "sha256": "8b00bc8d6aa87999cf65bb3243859c339b90f1ce829043bfbf3c163d21c8666b"
+      },
+      {
+        "path": "tests/model-library-expanded-batch007.test.ts",
+        "bytes": 3979,
+        "sha256": "fa45baba2eca6786c29a76568fa641eb8144ed236bcdd22eb30afcabb61e8fb4"
+      }
+    ],
+    "inputOriginalLicenceFiles": [
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/944.dat",
+        "bytes": 365,
+        "sha256": "b22dc5b7ac02a0fedde6bb9d81502e60d50e603dd347c9d523c12973fd916b53"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cylc.dat",
+        "bytes": 476,
+        "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4edge.dat",
+        "bytes": 1084,
+        "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4disc.dat",
+        "bytes": 1137,
+        "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cyli.dat",
+        "bytes": 2687,
+        "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9113.dat",
+        "bytes": 368,
+        "sha256": "a0c9d3f1b81192be8feb33c45c0bcc5972fa0005c4f784c70794695f31392edf"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9183.dat",
+        "bytes": 368,
+        "sha256": "e183569b5ca55146727806fe713d7388af060e3e9823ed8f03a316c35bf06314"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9644.dat",
+        "bytes": 388,
+        "sha256": "01bb7ddcf35db3b2604992ee1bca71a078ca383c68009d62eff6c58b85dd15b1"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/57877.dat",
+        "bytes": 487,
+        "sha256": "1b41395dc0b0052d397a58d3104f89f1372325c753b9b382cf11a90037fede42"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/70081.dat",
+        "bytes": 496,
+        "sha256": "44bee061a413ea1ddd2672da57c1d6d63856744a7b06ced4c2ac8d451d56b875"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/70793.dat",
+        "bytes": 688,
+        "sha256": "474db7359871faa44f708134a05322006abc2a75056aaf4b8cfcbc8ee1cf4f29"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/70023.dat",
+        "bytes": 741,
+        "sha256": "f3b608760941677d462ba0a463064afb39a27ad7652e81e7294a8ff18e96486f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/572c.dat",
+        "bytes": 951,
+        "sha256": "0030f1e6159635fa5def96846c760a823910019cb75b86ade7e2547b9c143bf6"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/76065k01.dat",
+        "bytes": 603,
+        "sha256": "1d751798230f6a4e97741f749fcd98d214718c69c3eeef8eb070db980cd7946f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cylo.dat",
+        "bytes": 383,
+        "sha256": "d6ca97ee2e75918b3309a5c88aafcd2455b3a316f7cef8963517c19f1d86b38f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/2630k02.dat",
+        "bytes": 642,
+        "sha256": "3cacbb0434d0aaeff12e694256ac1d5e2e42cd41f9457b7b08fa0cb5977c0421"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/61409.dat",
+        "bytes": 4379,
+        "sha256": "e412ef137e2fc5d27d2da0925cfb50d48ca205e4ef42fbbc03ce31f9dc67ea02"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/box4.dat",
+        "bytes": 948,
+        "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect.dat",
+        "bytes": 654,
+        "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect2p.dat",
+        "bytes": 594,
+        "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/89658.dat",
+        "bytes": 305,
+        "sha256": "b002cd59cee13fe2246c28ab4f1fe25961f160d607c0a6d0dbcb078565691e86"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/99146.dat",
+        "bytes": 2263,
+        "sha256": "9f64312f6eb67cbab14caca12a88aaaa5084af3b07b4a5fbc6512fc40eaacb2b"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4chrd.dat",
+        "bytes": 743,
+        "sha256": "ccba3a97b5cc358754e476b78b4ce61cce5f404cd15e37471b73df3e81784aec"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4cylo.dat",
+        "bytes": 388,
+        "sha256": "792a01362608c3f385dd7f01a1bd7d19cf9ed8a40f793266345cc86d1d98f3af"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4edge.dat",
+        "bytes": 545,
+        "sha256": "9ce2de7e67bbac575d52cfdc771b9d00856efc9b88002d97db8e665e50f4d467"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4cyli.dat",
+        "bytes": 1044,
+        "sha256": "5a7168952a5a3570327873b9a5802fa7b3be40967ab78c03b6a2bfd4419a1f10"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4con2.dat",
+        "bytes": 1263,
+        "sha256": "5b4d444a154349f4a930b5fd60ed5c7e6060e12faf7f50c192909e958cdd04d6"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect1.dat",
+        "bytes": 556,
+        "sha256": "48fdcd3181587b4bdc89d356a5aee21268688f3f2fcdd4d6f5c1a3d49b1a1ceb"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/35536.dat",
+        "bytes": 318,
+        "sha256": "c08d2b8643262068bd31ec0934e138b11326d3fa6918ca20b4aa2432aebd7bf9"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9563.dat",
+        "bytes": 602,
+        "sha256": "d0d440cb565ad15fd596931509ca70c500bf1de31d0d4a0a9ad6ad68ab8f367e"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/s/u9563s01.dat",
+        "bytes": 7461,
+        "sha256": "b3ce0b8593b4cd2a1711e3906a7dfb52d90a4250bfc49d4579c122907875e5bf"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/u9226.dat",
+        "bytes": 656,
+        "sha256": "02df4c76de683cbaef39761101c75c95b279f57a12b2b1f23012e3cb61f6a581"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4ring2.dat",
+        "bytes": 1628,
+        "sha256": "6fb38804b1f5e9bee8c0b80caf1397b09454fc58b048dc19045b6f37c8762ab0"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/127.dat",
+        "bytes": 918,
+        "sha256": "b0b489398397bd5f4e8d688df1312e39bce1a31375d60b5ecd323d4bfee66c4d"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4ring18.dat",
+        "bytes": 1530,
+        "sha256": "1edf4b9ee669e0e34c60813a924d18c6cff36a4bbc6e81ba5c65cb0b1cd4a919"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/335.dat",
+        "bytes": 926,
+        "sha256": "2cb4639cea78fb6b4635e281203b6a9e205661ed7d6f90e2f405758049e0063e"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-batch007-input-20261109.json",
+        "bytes": 34930,
+        "sha256": "9eba6c666f186ce0b5f626154da829244ae4b215ee6b5c11aacc81766bad788c"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+        "bytes": 18657,
+        "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-CAreadme-20261109.txt",
+        "bytes": 4151,
+        "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497"
+      }
+    ],
+    "allCommittedBindingCount": 77,
+    "mismatches": [],
+    "builtRuntimeFiles": [
+      {
+        "path": "dist/app-showcase/README.md",
+        "bytes": 406,
+        "sha256": "abc4e1333f5195f98c4e34265b80c5016134b85254ff44afd05f6ed7d0e47577"
+      },
+      {
+        "path": "dist/app-showcase/brickwright.png",
+        "bytes": 17259,
+        "sha256": "4f12ea0f0f21056104c7c665a8ad2082dfaf1265d131e402e793909cef6b4065"
+      },
+      {
+        "path": "dist/app-showcase/cometbeat.png",
+        "bytes": 12576,
+        "sha256": "93c1e0820b28de7b4209a37abe4e9b6e320a1a495bd9c44e056b492454cc6769"
+      },
+      {
+        "path": "dist/app-showcase/crispaudio.png",
+        "bytes": 20854,
+        "sha256": "482b887823d8cbe42fb450bf9a1e7fc50213f4c80364d75387559876e157fb3d"
+      },
+      {
+        "path": "dist/app-showcase/crispbingo.png",
+        "bytes": 12310,
+        "sha256": "974a26f8a7f20b8b61d806a1f7ef7d24ef82c1a775b8c154c96f5b7015939910"
+      },
+      {
+        "path": "dist/app-showcase/crispchess.png",
+        "bytes": 18694,
+        "sha256": "375e1c4df95c0a294aaf5dc078bdbc99d8753100812649821cc88be87ec7a33a"
+      },
+      {
+        "path": "dist/app-showcase/crispcloud.png",
+        "bytes": 21564,
+        "sha256": "7736e71fd28f2400424a106513224a4dd9953ae11049c219210964cfc7ebdcfb"
+      },
+      {
+        "path": "dist/app-showcase/crispdeck.png",
+        "bytes": 12518,
+        "sha256": "3cf496171fcfe2ea3af23c6901d3b4375546d383a34288f3e433d58b8acd17ab"
+      },
+      {
+        "path": "dist/app-showcase/crisperplayer.png",
+        "bytes": 28416,
+        "sha256": "732bf35419dbf4a3cdb604ff18e72f7f667901052c0c12b091a535440a9cec67"
+      },
+      {
+        "path": "dist/app-showcase/crisperweaver.png",
+        "bytes": 21766,
+        "sha256": "ca56b9ba5f7b4de928b7baf6979bbabe01314c0382f9a85d558f673f9435de43"
+      },
+      {
+        "path": "dist/app-showcase/crispmath.png",
+        "bytes": 10714,
+        "sha256": "d85b699f750768c23d683180a37385f4c36fdbed796989f464de26840ea8915e"
+      },
+      {
+        "path": "dist/app-showcase/crispmesh.png",
+        "bytes": 20375,
+        "sha256": "f10da8d3835dd3d13e9a8c8422338fda2a746ef5401a42efc3f2f5bbc90ff7ad"
+      },
+      {
+        "path": "dist/app-showcase/crispsorter.png",
+        "bytes": 23362,
+        "sha256": "9b92d82e86f687bedf3f3378c27e7b4c24c83d3a953f337e5ec1cfde798666bf"
+      },
+      {
+        "path": "dist/app-showcase/crispsudoku.png",
+        "bytes": 24934,
+        "sha256": "af8ee9c4eae94cfe68af1e38062f7d1da9346ada0734476f19c9a705eb73db5c"
+      },
+      {
+        "path": "dist/app-showcase/crisptuner.png",
+        "bytes": 10185,
+        "sha256": "cbac4f2381e240dd9c7879bc200262037f6bf9c35c688b65aba09402a077e033"
+      },
+      {
+        "path": "dist/app-showcase/hectopolis.png",
+        "bytes": 8345,
+        "sha256": "687f651d1f4d98fd4653b85191c6fc273e2497447916fb4bf9be447b7f2c6ed3"
+      },
+      {
+        "path": "dist/app-showcase/kerotakis.png",
+        "bytes": 7514,
+        "sha256": "0b6a24aec16e25ee6d2e098c40fd56cf530c26f917f70a69f9bb68cda4409d92"
+      },
+      {
+        "path": "dist/app-showcase/naga.png",
+        "bytes": 10760,
+        "sha256": "93f34940d26e229849e697f5bc98a3d28d4ed5e2caa926a34aabd93e37e74da6"
+      },
+      {
+        "path": "dist/app-showcase/numbernebula.png",
+        "bytes": 29684,
+        "sha256": "39d20c36896f98452b5bc6f0f4608caab1dd4ea7fc74034c88c93c90f9521bdb"
+      },
+      {
+        "path": "dist/app-showcase/word-universe.png",
+        "bytes": 21617,
+        "sha256": "081ee34a1707823873a44fdfe4c7d4bebeb3c2fa4d7b099a44360867b1c581e7"
+      },
+      {
+        "path": "dist/assets/adafruit-preview-data-C_BcSKUk.js",
+        "bytes": 6162740,
+        "sha256": "b2805adb8bdb29da516b7a7be16971d921c4aedb3517fa2531400b6a9f935b6b"
+      },
+      {
+        "path": "dist/assets/embedded-q0A-ZTK6.js",
+        "bytes": 2312,
+        "sha256": "c495e4422820cca06b9e274de5d79ca6a4efae6cb350c44d70258ccd60e37ce9"
+      },
+      {
+        "path": "dist/assets/esm-CncAWAVZ.js",
+        "bytes": 1352,
+        "sha256": "99985cd5bf2e6ca2938c456cd8b1775cdbba9181e8c44e3d9415653dd73feb97"
+      },
+      {
+        "path": "dist/assets/esm-DFKYyh04.js",
+        "bytes": 334,
+        "sha256": "05824c89db0441d5581cbf3c0ddbdf0c6fbdb529e0386e3f226a69ee727c3140"
+      },
+      {
+        "path": "dist/assets/files-BvSzA95Z.css",
+        "bytes": 10183,
+        "sha256": "a0bd03c2cdb4b600a58121b396da840424c00407085354cd39adee4a3064593b"
+      },
+      {
+        "path": "dist/assets/files-zpr2tVrW.js",
+        "bytes": 8697189,
+        "sha256": "d9ec318d80a7b554470a032f4bd0ed0ea03e2528fa1f0cd4e98fec1a61bc83ef"
+      },
+      {
+        "path": "dist/assets/geometry.worker-Cq7BsMQR.js",
+        "bytes": 1437489,
+        "sha256": "633e32fc5ec26a9e2d3f9986d860bc7ea7d83a3f3f1513c46a452875baa0f9ab"
+      },
+      {
+        "path": "dist/assets/jolt-physics.wasm-compat-DYKT0G4b.js",
+        "bytes": 3662128,
+        "sha256": "91da365cbd56439967f79adc7e8635d756cd3e9b67bd6b65b9af1e63a7f2328e"
+      },
+      {
+        "path": "dist/assets/main-BVetFqOZ.js",
+        "bytes": 9826245,
+        "sha256": "fe29a93105d8a36755a06f5685ac3442f1b48399f976a3e425f82abdb8828de1"
+      },
+      {
+        "path": "dist/assets/manifold-BE4c7gO-.wasm",
+        "bytes": 541470,
+        "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      {
+        "path": "dist/assets/simulation.worker-BAy-C7sQ.js",
+        "bytes": 1489325,
+        "sha256": "cea461516df299ebb0ddf3d4d67c2c930a1a9e37a862680e1fee46528b555948"
+      },
+      {
+        "path": "dist/assets/web-BcnArX8a.js",
+        "bytes": 361,
+        "sha256": "dcc9dbdf6c167cb1037f0e8a993772f72be2737991666e8af9590f95c2d82b48"
+      },
+      {
+        "path": "dist/assets/web-CiUg5jon.js",
+        "bytes": 8715,
+        "sha256": "483d6696eb46a6ef01b2b44db8aeb80809c613ee0a54eacc9c97eb3a9e5b6723"
+      },
+      {
+        "path": "dist/cad-assets/app-license.txt",
+        "bytes": 1520,
+        "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad"
+      },
+      {
+        "path": "dist/cad-assets/build-info.json",
+        "bytes": 139,
+        "sha256": "4de61977850c9bbbd7edf4eb908bd78b76d1b7d8e903d5df641ca4f356846917"
+      },
+      {
+        "path": "dist/cad-assets/manifold.wasm",
+        "bytes": 541470,
+        "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      {
+        "path": "dist/cad-assets/notices.txt",
+        "bytes": 91867,
+        "sha256": "dea50eee6d6781549af4e3740bfaf7661b29479696e5ae6cbe41eafd93c0fa70"
+      },
+      {
+        "path": "dist/embedded.html",
+        "bytes": 1119,
+        "sha256": "2456bb31295ede347345e7700d5d7c624ab4da63cbcd56b914f20f7ba22e87cd"
+      },
+      {
+        "path": "dist/icon.svg",
+        "bytes": 283,
+        "sha256": "30876dc5d178d36f341cc5126e6489a7078ac9f667a56a9e625f9d090d3d94f4"
+      },
+      {
+        "path": "dist/index.html",
+        "bytes": 2974,
+        "sha256": "4cba293fd6fc7449a8eb158d88c64cf236e09c4032e192a436187f463e969f7c"
+      },
+      {
+        "path": "dist/manifest.webmanifest",
+        "bytes": 249,
+        "sha256": "7d57494ede2e7c699fd24fd309335bb701138d85cc84d5c4ff4d9851f44ae535"
+      },
+      {
+        "path": "dist/sw.js",
+        "bytes": 1930,
+        "sha256": "6e7bbf8ceeb47b5f1a3af31cdee5fa4c9ad6fd0f436a027136cb10d62a2a7e44"
+      }
+    ],
+    "representativeRawDurableOutcomesPASS": 2,
+    "sourceMeshPNGBound": true,
+    "zeroNetworkRequests": true,
+    "fullModel26ProofRetained": "/mnt/storage/brickwright-cycle132-preview-demand-fix/browser-proof-final.json",
+    "fullModelMeasuredCommit": "4f477f1e7159f1cbb9ac912ef2c913e1afbed49f",
+    "fullModelMeasuredTree": "fb723586aeb95673c29b60db07366678d3bde62c",
+    "oldMeasured75BindingsRetainedInOriginalCommit": true,
+    "expectedChangedOldBinding": [
+      "packages/core/src/locales/de-simlab.ts"
+    ],
+    "newSketchFilesMeasured": 2,
+    "sourceScopeProof": "/mnt/storage/brickwright-cycle133-isolated-integration/scope-assessment.json",
+    "no26NativePNG14UnitReplay": true
+  },
+  "requiredMergeHeadGuard": true,
+  "noDeliveryCreditBeforeActualMainVerification": true
 }

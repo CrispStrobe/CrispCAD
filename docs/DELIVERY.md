@@ -1093,3 +1093,12 @@ attempt to admit Adafruit 4884 Feather RP2040 retained the pinned source but
 failed: an OCP face had no triangulation, and the vendor STL failed closed
 positive topology screening even with a proper rotation and positive volume.
 No failed source, fabricated face or unsupported qualification is shipped.
+
+
+### Offline library preview integration, 2026-11-16
+
+The current-main integration exposed a shared UI regression: opening Model Library unconditionally imported the optional Adafruit preview module, producing one offline HTTP request. Four actual traces bind the exact local module URL and failed unchanged zero-request assertion. The minimal general correction starts the same revision-checked loader only after explicit archive component selection. A focused negative/positive workflow passes in both Chromium and iPad WebKit: opening/browsing metadata offline makes zero requests; explicit selection loads the actual256x192PNG once, and neither action changes model history.
+
+All26unchanged model workflows then pass on the corrected runtime, matching durable source/mesh/PNG records with zero requests. The36source/42built snapshot binds to commit4f477f1/treefb723586 with75source/input/licence blob matches. The already-passed14unit checks, native outputs and PNG rendering are retained. A later main delta is restricted by source comparison to sketch open handlers, one new sketch CSS class and its locale hint. Fresh packages/build and representative offline insertion/provenance/undo/redo/restart pass in both engines on integratedaf4f8d0/tree6c5f0ce, with38source/42built files and77blob matches. The earlier26-model proof is retained; whole-tree equality to its old runtime is not claimed.
+
+The13independent originals remain local276/271/315 until actual normal owner landing is verified. Four newly identified aliases/wrappers/superseded duplicates stay withheld; the prior94source-only audit has zero flags. All526prior asset hashes and302previews remain exact. No source override, native/PNG replay, precision change, guard weakening or CI-full run occurred. See [full source/runtime proof, preserved failures and exact integration binding](evidence/ldraw-batch7-qualification-2026-11-16.json).
