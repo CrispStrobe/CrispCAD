@@ -1,0 +1,541 @@
+{
+  "kind": "ORIGINAL_CAPTURE_ONLY_NOT_QUALIFICATION",
+  "batch": "expanded-004",
+  "rootCount": 14,
+  "sourceBase": "338428fb87794c04426ef6b2802b2159e0f91db2",
+  "sourceArchive": "https://library.ldraw.org/library/updates/complete.zip",
+  "sourceArchiveSHAStatus": "publisher-declared only;upstream ZIP notlocally downloaded",
+  "mirrorArchiveSHA256": "de88fe7c474695667963f6b5b30db3ce15427353c9cc580ac31f54692d3b1562",
+  "mirrorArchiveFullSHA256Verified": true,
+  "licence": "Exact per-file CC-BY-4.0/author/HISTORY retained unchanged",
+  "roots": [
+    {
+      "rootPath": "parts/u7038.dat",
+      "sourceSHA": "247305f05bbb08e0250e6b7fb1ef8fdb771e78c4568cb8cbdc61475edc234872",
+      "retainedMeshSHA": "23d3e8d5a9d7b5a16972e8fd3692d534a0175de01198062c65df1a836f2da013",
+      "nativeResultSHA": "1d97dd75e2bd240d04792ae0e1801cf28f75692c05a9673fdcf9abddca47c48a"
+    },
+    {
+      "rootPath": "parts/u7035.dat",
+      "sourceSHA": "1ef550e490ae38983c1cae1757778b58f9d85c19fa8f11b2e407a87f2f9f18a3",
+      "retainedMeshSHA": "6260b07551417539339745b2ef28c27d7d9e168037413aaa5e24278de76ec3ec",
+      "nativeResultSHA": "7afaad12f1504ecb3a77508dbeb100f8d193d1ae307f21d67070a92369015b20"
+    },
+    {
+      "rootPath": "parts/35464.dat",
+      "sourceSHA": "0c4a292f9040030ca40a705c617f22a12357975f47dc18d3aaa1b353aa05966b",
+      "retainedMeshSHA": "16d81274ea69188201cee92fd5ff071387dea4ab62cf9b42354513fcf2a8c422",
+      "nativeResultSHA": "9f19e6238100150afb1059bc6b00f0aa71b2cdbd80fee3a21def0ebac3690326"
+    },
+    {
+      "rootPath": "parts/7134.dat",
+      "sourceSHA": "b3e72c647d3801d061b5582312f0fe5c667d406d4d6abbfce7d277683d14da7d",
+      "retainedMeshSHA": "7ce869141100574724435bc45dccae36087337b92287656dcf157a8cfd0ab6b7",
+      "nativeResultSHA": "c8ddd6139808c97335c0101e1953c9f3e2f3053f93727558fa023ea4462d343e"
+    },
+    {
+      "rootPath": "parts/7126.dat",
+      "sourceSHA": "0efc3bfad9be1f305ccedd4d56831354bdfd21f941bec24f2e90fbad1149d9e6",
+      "retainedMeshSHA": "3ca2a5ae12284abc3039677cb24a3068b24968ff4aa6ae60e93eb55dfafe3252",
+      "nativeResultSHA": "c681c99f5423e3c7a2e61b46a8a11cec1578092f98cef1f98f9926407420f204"
+    },
+    {
+      "rootPath": "parts/22388.dat",
+      "sourceSHA": "74d1f2ff6d70201b1ee77acfc720cc6c66b2418339db7201e8bb8174c8cfddd5",
+      "retainedMeshSHA": "469ea68aa06d97beb53490fb7375a0fd0f1cb91145511a74c2b7fb381c650862",
+      "nativeResultSHA": "0b655204f37665a747bce567177df09bb67bce2bc32109d8329e65db0a37ae82"
+    },
+    {
+      "rootPath": "parts/7826.dat",
+      "sourceSHA": "09c0249189068436053be27e4a2624bc8fb4ea7e836bfdcffdfd705444ac9f11",
+      "retainedMeshSHA": "2495218a9c1f7b66cfdb9eabb040027fcf7ec120c5645ad574bb5511b749a096",
+      "nativeResultSHA": "39921d72061bb0d73177d046f598c1d7f55b424e1a5272bbec33a9a39dd30395"
+    },
+    {
+      "rootPath": "parts/7827.dat",
+      "sourceSHA": "7123e4a7a522d424b48df0a2e16cdad7bdaf2be052fe75fcb7b4cb421bd2eb50",
+      "retainedMeshSHA": "9a83425739fe7d3f4ee8018ffd5d9e6020439374dd32149467e60809ec2cab2c",
+      "nativeResultSHA": "753ab6f88c1fb3b8c5971e6ef03110caf413b4b3f4bca990456100948e7d1c60"
+    },
+    {
+      "rootPath": "parts/60601.dat",
+      "sourceSHA": "f9802551d645052a00163ba5ab8aa2eb8f6a7be85fbae58a827161182971d882",
+      "retainedMeshSHA": "03ec03217657947053c18390ccf792822e4fc6fcd2a6f44c23b27e9536a77a8a",
+      "nativeResultSHA": "0d038fe63af3bef104423deeed92b253ea4afd083dcf45d13b650ab45ecae605"
+    },
+    {
+      "rootPath": "parts/87994.dat",
+      "sourceSHA": "1a6c0cb9de6da1175fbdf0bd4b7218c1a39e6dc1ff5e53b5d6080267267ee2e8",
+      "retainedMeshSHA": "38d36edcc9b6a8a62bf13fbfdf61e570fa91f9936819490e1b488c89fdc5e835",
+      "nativeResultSHA": "4a52f954a04ec4013b9209cd28e52a56d53221987817e7b02f9ebb8b2ac49d77"
+    },
+    {
+      "rootPath": "parts/2705.dat",
+      "sourceSHA": "a9d9cce495d26adeaf0b8a46460a1a45e3b7f856e13423623b00fadcb22101d0",
+      "retainedMeshSHA": "df4280270b7e7536ce58dbe41e0b96361cc3c408c30606da39293e0ce2966b1e",
+      "nativeResultSHA": "4086b26e213ef60bcfb2106c89eb6411aad04de1a4a9543c35b8ab2ce2d1760f"
+    },
+    {
+      "rootPath": "parts/u9103.dat",
+      "sourceSHA": "7174e8d28a2af68df91cee7cb223453c949b6a0b2d56890a6c438d373ea1b656",
+      "retainedMeshSHA": "24d3e778423d5f49641cfd0f6ce7cd8d9dd967783d313b6da9ea006597a0b2ad",
+      "nativeResultSHA": "4332d3e72b2180a3a5dd4340018706b87c17b8eb245d9a3efc3ee763edd3cd12"
+    },
+    {
+      "rootPath": "parts/30374.dat",
+      "sourceSHA": "db69ea3eecc2a6f2731aaad6ac8fb072c5ecbe136d1ea8a03de593014fe2e9c0",
+      "retainedMeshSHA": "bac009c54f82aa55772941f167319f30af993ba54f0815563067f119628d5bd0",
+      "nativeResultSHA": "59dcbdd96207f406538bfbb1d4e5d6f8b8f859bd2820c97d4e724d168d93e083"
+    },
+    {
+      "rootPath": "parts/6231.dat",
+      "sourceSHA": "4b78217c262c296782f5deace408b763154fe8961704279ad0ff69fa9772949e",
+      "retainedMeshSHA": "3c7486bab906d0ca532aa8ef3564744044c57fecb5eca7e719fd3ff0ef14f041",
+      "nativeResultSHA": "ca2b1e8eea075d82c3d77ce0a8f4791cfa708c18004e5d182e95f86efbd4abb8"
+    }
+  ],
+  "files": [
+    {
+      "path": "parts/u7038.dat",
+      "bytes": 2367,
+      "sha256": "247305f05bbb08e0250e6b7fb1ef8fdb771e78c4568cb8cbdc61475edc234872",
+      "crc32": "1ff30809",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/s/u7038s01.dat",
+      "bytes": 1366,
+      "sha256": "99401f3648ebd829c0e36b7cd53ecdea3f9c49107047eefffd9000ddaebb2194",
+      "crc32": "655176e1",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Subpart UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u7035.dat",
+      "bytes": 2389,
+      "sha256": "1ef550e490ae38983c1cae1757778b58f9d85c19fa8f11b2e407a87f2f9f18a3",
+      "crc32": "99830113",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/s/u7035s01.dat",
+      "bytes": 1380,
+      "sha256": "671eb5d3d288d5392db593a5e20aabddb51426e51b652498f21ba68367af1402",
+      "crc32": "a2353182",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Subpart UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/35464.dat",
+      "bytes": 975,
+      "sha256": "0c4a292f9040030ca40a705c617f22a12357975f47dc18d3aaa1b353aa05966b",
+      "crc32": "e53e5f18",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Philippe Hurbain [Philo]",
+      "role": "Part UPDATE 2018-02",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/stud23d.dat",
+      "bytes": 344,
+      "sha256": "19c03228775da6304d563dd5e3222d3b88b3dedb093ff32bade1a8ebacd95e46",
+      "crc32": "d94f8c7d",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Steffen [Steffen]",
+      "role": "Primitive UPDATE 2018-02",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/box4o4a.dat",
+      "bytes": 827,
+      "sha256": "a66f3fc32d0209b5b2432c82414997dc0910c48a074be1d96ef5ec088a2594dd",
+      "crc32": "5bffd533",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Donald Sutter [technog]",
+      "role": "Primitive UPDATE 2012-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/box2-5.dat",
+      "bytes": 609,
+      "sha256": "8f297b754f87da1dbe19eec8704a5ce03a23b794ccd7cd015508e3758a206174",
+      "crc32": "4f9ccda2",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Steffen [Steffen]",
+      "role": "Primitive UPDATE 2003-03",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/box4.dat",
+      "bytes": 948,
+      "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e",
+      "crc32": "13bb3ba1",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2012-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/7134.dat",
+      "bytes": 491,
+      "sha256": "b3e72c647d3801d061b5582312f0fe5c667d406d4d6abbfce7d277683d14da7d",
+      "crc32": "6910dc4d",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Rene Rechthaler [Blechtaler]",
+      "role": "Part UPDATE 2025-07",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/s/7134s01.dat",
+      "bytes": 1456,
+      "sha256": "d97aaa77fb2f18d0356b930ca60b4f5d9afbc4e9d8dc14548f71f0320dbe5d68",
+      "crc32": "289d7146",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Rene Rechthaler [Blechtaler]",
+      "role": "Subpart UPDATE 2025-07",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/1-4chrd.dat",
+      "bytes": 743,
+      "sha256": "ccba3a97b5cc358754e476b78b4ce61cce5f404cd15e37471b73df3e81784aec",
+      "crc32": "a39b87ea",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Max Martin Richter [MMR1988]",
+      "role": "Primitive UPDATE 2023-05",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/1-4cylo.dat",
+      "bytes": 388,
+      "sha256": "792a01362608c3f385dd7f01a1bd7d19cf9ed8a40f793266345cc86d1d98f3af",
+      "crc32": "f58eb38f",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Max Martin Richter [MMR1988]",
+      "role": "Primitive UPDATE 2010-03",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/1-4edge.dat",
+      "bytes": 545,
+      "sha256": "9ce2de7e67bbac575d52cfdc771b9d00856efc9b88002d97db8e665e50f4d467",
+      "crc32": "31ac1199",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2017-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/1-4cyli.dat",
+      "bytes": 1044,
+      "sha256": "5a7168952a5a3570327873b9a5802fa7b3be40967ab78c03b6a2bfd4419a1f10",
+      "crc32": "6a45dfb7",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2012-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/rect3.dat",
+      "bytes": 605,
+      "sha256": "07ac46908b6668d993b6de0fb001a34cd996542106b80ebc7de63317d8dde865",
+      "crc32": "dd7621a8",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Mark Kennedy [mkennedy]",
+      "role": "Primitive UPDATE 2010-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/rect.dat",
+      "bytes": 654,
+      "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71",
+      "crc32": "30c864e3",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2010-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/7126.dat",
+      "bytes": 407,
+      "sha256": "0efc3bfad9be1f305ccedd4d56831354bdfd21f941bec24f2e90fbad1149d9e6",
+      "crc32": "376c1979",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Gerald Lasser [GeraldLasser]",
+      "role": "Part UPDATE 2025-05",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/s/7126s01.dat",
+      "bytes": 1274,
+      "sha256": "50ab46e4ca720e778b166873198cde747cf8380a278bb65d57657e8d593bad7b",
+      "crc32": "f65852cd",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Gerald Lasser [GeraldLasser]",
+      "role": "Subpart UPDATE 2025-05",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/recte4.dat",
+      "bytes": 340,
+      "sha256": "183b28b7586ffce3049e9248301668b4e16a84671b0f423efd792fb84a969dfe",
+      "crc32": "b1b4cb2d",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Steffen [Steffen]",
+      "role": "Primitive UPDATE 2010-03",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/rect2p.dat",
+      "bytes": 594,
+      "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc",
+      "crc32": "62f97088",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Donald Sutter [technog]",
+      "role": "Primitive UPDATE 2010-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/22388.dat",
+      "bytes": 1258,
+      "sha256": "74d1f2ff6d70201b1ee77acfc720cc6c66b2418339db7201e8bb8174c8cfddd5",
+      "crc32": "3d6d3075",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2016-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/triangle.dat",
+      "bytes": 320,
+      "sha256": "67e7a72ed488412a974d622570704c4a734d9ba9fe671b03261fcec8520e01f2",
+      "crc32": "7ee2d9ee",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Steffen [Steffen]",
+      "role": "Primitive UPDATE 2013-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/7826.dat",
+      "bytes": 1896,
+      "sha256": "09c0249189068436053be27e4a2624bc8fb4ea7e836bfdcffdfd705444ac9f11",
+      "crc32": "f026ae71",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Gerald Lasser [GeraldLasser]",
+      "role": "Part UPDATE 2026-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/7827.dat",
+      "bytes": 1796,
+      "sha256": "7123e4a7a522d424b48df0a2e16cdad7bdaf2be052fe75fcb7b4cb421bd2eb50",
+      "crc32": "389d305d",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Gerald Lasser [GeraldLasser]",
+      "role": "Part UPDATE 2026-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/s/7825s03.dat",
+      "bytes": 1169,
+      "sha256": "86b47b8161768a8fa3c6ee7d88489ed116a6ebf92005be975944a841e00662de",
+      "crc32": "87f21766",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Gerald Lasser [GeraldLasser]",
+      "role": "Subpart UPDATE 2026-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/60601.dat",
+      "bytes": 717,
+      "sha256": "f9802551d645052a00163ba5ab8aa2eb8f6a7be85fbae58a827161182971d882",
+      "crc32": "20b439be",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Michael Heidemann [mikeheide]",
+      "role": "Part UPDATE 2019-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/s/60601s01.dat",
+      "bytes": 794,
+      "sha256": "b9a706c51be95874bcabd328ba7fddc3b0ee79423d075765976e05d7a099f7d3",
+      "crc32": "181122e7",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Ulrich R\u00c3\u00b6der [UR]",
+      "role": "Subpart UPDATE 2019-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/box4-4a.dat",
+      "bytes": 1067,
+      "sha256": "58c69e00462c0a74c1bd6d75d757d826ae13e98bd3928b0e685209003bfbee54",
+      "crc32": "94fe96f7",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Willy Tschager [Holly-Wood]",
+      "role": "Primitive UPDATE 2024-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/2-4cylo.dat",
+      "bytes": 387,
+      "sha256": "4fa9f597d775c7f15e3fc66f60e20d914134d13004b485488b7dbff684776232",
+      "crc32": "3caebe3d",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Max Martin Richter [MMR1988]",
+      "role": "Primitive UPDATE 2010-03",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/2-4edge.dat",
+      "bytes": 683,
+      "sha256": "665400f76566b161c28303cdadce40d17d979a8ff9a8a133675af2d17fbe6763",
+      "crc32": "06d0e869",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2017-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/2-4cyli.dat",
+      "bytes": 1543,
+      "sha256": "d486780f0f84893899d9eadcd13150f13a42e15e77a3cda38cdf24ded98862c6",
+      "crc32": "871b109d",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2005-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/2-4chrd.dat",
+      "bytes": 490,
+      "sha256": "3b0dfcf2cb881fae0acfe1e53b703104768878636477e540d0c893fc3fd87f8f",
+      "crc32": "6ad0d237",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Philippe Hurbain [Philo]",
+      "role": "Primitive UPDATE 2014-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/87994.dat",
+      "bytes": 667,
+      "sha256": "1a6c0cb9de6da1175fbdf0bd4b7218c1a39e6dc1ff5e53b5d6080267267ee2e8",
+      "crc32": "6acd9622",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Chris Dee [cwdee]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/4-4edge.dat",
+      "bytes": 1084,
+      "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+      "crc32": "ab561dc1",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2017-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/4-4disc.dat",
+      "bytes": 1137,
+      "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+      "crc32": "53bcfa1e",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2002-02",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/4-4cyli.dat",
+      "bytes": 2687,
+      "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+      "crc32": "12cc6c75",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2005-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/2705.dat",
+      "bytes": 693,
+      "sha256": "a9d9cce495d26adeaf0b8a46460a1a45e3b7f856e13423623b00fadcb22101d0",
+      "crc32": "d208da50",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Donald Sutter [technog]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u9103.dat",
+      "bytes": 354,
+      "sha256": "7174e8d28a2af68df91cee7cb223453c949b6a0b2d56890a6c438d373ea1b656",
+      "crc32": "f83a581b",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Philippe Hurbain [Philo]",
+      "role": "Part UPDATE 2010-02",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/4-4cylc.dat",
+      "bytes": 476,
+      "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd",
+      "crc32": "f9c76187",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Alex Taylor [anathema]",
+      "role": "Primitive UPDATE 2009-02",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/30374.dat",
+      "bytes": 961,
+      "sha256": "db69ea3eecc2a6f2731aaad6ac8fb072c5ecbe136d1ea8a03de593014fe2e9c0",
+      "crc32": "847780e6",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Steve Bliss [sbliss]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/6231.dat",
+      "bytes": 2335,
+      "sha256": "4b78217c262c296782f5deace408b763154fe8961704279ad0ff69fa9772949e",
+      "crc32": "8218701f",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/box5.dat",
+      "bytes": 963,
+      "sha256": "ccb7b8a1d36692335b10ea6aa196849afcad4b15331683ed8112a10b50977318",
+      "crc32": "50300bd7",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2012-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/1-4disc.dat",
+      "bytes": 584,
+      "sha256": "3b8faa77185c576085c38f37b13c6a04e2e889eea6a7dc8c4db2d1699a33bcda",
+      "crc32": "76ebb36f",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2002-02",
+      "licenceAllowed": true
+    }
+  ],
+  "nativeReplays": 0,
+  "editorPreviewBrowser": "NOT_RUN"
+}
