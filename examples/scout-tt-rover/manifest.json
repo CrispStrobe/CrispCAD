@@ -20,7 +20,61 @@
     "shaftEngagement": 5.8,
     "shaftClearance": 0.25,
     "deckHeight": 46,
+    "carrierBaseZ": 49,
+    "boardUndersideZ": 58,
     "skidX": -85
+  },
+  "electronicsMounts": {
+    "featherHoles": [
+      [
+        -8.89,
+        -22.86
+      ],
+      [
+        8.89,
+        -22.86
+      ],
+      [
+        -8.89,
+        22.86
+      ],
+      [
+        8.89,
+        22.86
+      ]
+    ],
+    "driverHoles": [
+      [
+        21.84,
+        6.35
+      ],
+      [
+        42.16,
+        6.35
+      ]
+    ],
+    "deckHoles": [
+      [
+        25,
+        -12.5
+      ],
+      [
+        25,
+        12.5
+      ],
+      [
+        39,
+        -12.5
+      ],
+      [
+        39,
+        12.5
+      ]
+    ],
+    "plateThickness": 3,
+    "bossHeight": 6,
+    "bossDiameter": 5,
+    "boardBore": 2.8
   },
   "parts": [
     {
@@ -174,6 +228,36 @@
       }
     },
     {
+      "id": "carrier",
+      "quantity": 1,
+      "purpose": "robot",
+      "material": "PLA",
+      "licence": "BSD-3-Clause",
+      "source": "source/carrier.cadcode",
+      "mesh": "stl/carrier.stl",
+      "printOrientation": "Flat face down, Z up",
+      "boundsMm": {
+        "min": [
+          -14,
+          -28,
+          0
+        ],
+        "max": [
+          47,
+          28,
+          9
+        ]
+      },
+      "volumeMm3": 8245.4137710407,
+      "triangles": 1432,
+      "meshChecks": {
+        "parseable": "pass",
+        "closedPositiveVolume": "pass",
+        "withinSizeLimits": "pass",
+        "withinTriangleLimits": "pass"
+      }
+    },
+    {
       "id": "skid",
       "quantity": 1,
       "purpose": "robot",
@@ -234,7 +318,7 @@
       }
     }
   ],
-  "manufacturedPartCount": 11,
+  "manufacturedPartCount": 12,
   "control": {
     "scope": "ideal-cad-simulation",
     "left": "A",
@@ -250,24 +334,29 @@
     "physicalEncoders": false
   },
   "validation": {
-    "stlScreening": "All seven unique original parts pass parse, closed-positive-volume, size and triangle checks.",
+    "stlScreening": "All 8 unique original parts pass parse, closed-positive-volume, size and triangle checks.",
     "hardwareBuilt": false
   },
   "files": [
     {
       "path": "scout-tt-rover.bcad",
-      "bytes": 3486736,
-      "sha256": "0cc04d1fb74380ddfa55492110503b1c3dfde1d588cf5fc2e9a52c834374e0e9"
+      "bytes": 3622944,
+      "sha256": "5f12065a6162370c070ab9206cf7d9123d2c72c80b8ca14bc5c488af0b3e3c85"
     },
     {
       "path": "scout-tt-print-layout.bcad",
-      "bytes": 786956,
-      "sha256": "3847f500a0eed13deca296ff6f1490f583254f17ff84969386d34f7b48fa9510"
+      "bytes": 923026,
+      "sha256": "a4bdd5d6d55eb83ceeaf67580c2c67e036363d8617b52c37b43f355c48839af7"
     },
     {
       "path": "scout-tt-fit-gauge.bcad",
       "bytes": 1638,
       "sha256": "f891db6072dff054e979fbc554f3874634324bb6dd8f77d94aed8fa51eec51a7"
+    },
+    {
+      "path": "scout-tt-electronics-carrier.bcad",
+      "bytes": 136200,
+      "sha256": "a39458543b512febe2baac35a6645d8cdb67f79f037800a382dc0aeb5af0b480"
     },
     {
       "path": "stl/chassis.stl",
@@ -320,6 +409,16 @@
       "sha256": "4d782708bd971e2aa4f9cd263c6ea2461d1d842a4aad0964474ae19811bfc076"
     },
     {
+      "path": "stl/carrier.stl",
+      "bytes": 71684,
+      "sha256": "baa4bdec014f08c167596c1eb03b017d10aa850b8f10c78e520fae8e80583196"
+    },
+    {
+      "path": "source/carrier.cadcode",
+      "bytes": 2411,
+      "sha256": "d7e5db8d3ef08e7369e00129abaf0a5cc2aaf484c541d171495dd2531f5ff689"
+    },
+    {
       "path": "stl/skid.stl",
       "bytes": 37584,
       "sha256": "0790bbf18f73a8083da213a73913b224d709bc74556b6e7e51b6b38b543d3264"
@@ -351,13 +450,13 @@
     },
     {
       "path": "BUILD-GUIDE.md",
-      "bytes": 26361,
-      "sha256": "68d7a8e2377583b0f7f53ee886b3200942e1e7390b9b1a89526899f4e4b50c17"
+      "bytes": 33262,
+      "sha256": "0da9722c815873a034b32e70dedb1a2e6a2ab18d34901d2ec1aeed9dbfe2d67f"
     },
     {
       "path": "NOTICE.md",
-      "bytes": 804,
-      "sha256": "22bb97b6877924f74a57e19c68853c928fbdf18377f0410febe9b437e9ad39dc"
+      "bytes": 970,
+      "sha256": "4500c4e80b11eb6f9d393227c82c3ee5117e08182b2b2fe8a4affd73aaadc955"
     }
   ],
   "reproduce": "npm run robot:generate; npm run robot:check"

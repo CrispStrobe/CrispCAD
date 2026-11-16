@@ -1,0 +1,413 @@
+{
+  "kind": "ORIGINAL_CAPTURE_ONLY_NOT_EDITOR_QUALIFICATION",
+  "batch": "expanded-003",
+  "sourceBase": "850bfb93f21c6244028e0ba1b4174d1281859649",
+  "rootCount": 16,
+  "sourceArchive": "https://library.ldraw.org/library/updates/complete.zip",
+  "originalArchiveSHAStatus": "publisher-declared only;upstream ZIP notlocally downloaded",
+  "mirrorArchiveSHA256": "de88fe7c474695667963f6b5b30db3ce15427353c9cc580ac31f54692d3b1562",
+  "mirrorArchiveFullSHA256Verified": true,
+  "licence": "Per-file CC-BY-4.0/author/HISTORY bytes retained",
+  "roots": [
+    {
+      "rootPath": "parts/6427k03.dat",
+      "sourceSHA": "4b72bdfd2fcd279eb17c01e970c1ab4c10306af162923815bc730156bc4515bd",
+      "retainedMeshSHA": "211ddaed0841bec680c0ca4ca7d37b201671596bc0ebb29b262f24192bddaac8",
+      "nativeResultSHA": "39bf1e3cef06e9555dd8594ea43d3bff63355059f7f848744bf63966ad4bf9a1"
+    },
+    {
+      "rootPath": "parts/u7031.dat",
+      "sourceSHA": "cae803da627bc2b7dda328683c4324b895cf9e2a5c661dc6001ef00246476dac",
+      "retainedMeshSHA": "89c435257524505d8670d9f9015435e7131b6237281edbe1b4d9faceb8c9ed70",
+      "nativeResultSHA": "8a3168f0ef9834a7af31dc0370c858b4f9ad1f958f583eb71c30d5fb25aa657f"
+    },
+    {
+      "rootPath": "parts/u7034.dat",
+      "sourceSHA": "6873a1f9e576a68ecc8e650dee754e045000c4d7957c2d42c3092b94bc693903",
+      "retainedMeshSHA": "47a9eb41ba935654f3c2e07e353518b5807e4ef3b80318fe0781c57080d4674e",
+      "nativeResultSHA": "449209eeb4a99e219bf52f2071d17f3304a7896cf9afd41eec7b38be4f36acbb"
+    },
+    {
+      "rootPath": "parts/u7032.dat",
+      "sourceSHA": "a81c69aea36328889d7935fbb7c1cfbf7a48e3dda6166212b2a95e135c0711c0",
+      "retainedMeshSHA": "75fb6826abab75bef21d32b369f3eacbf8045b256b613e060326a3134feedc8e",
+      "nativeResultSHA": "7968898c5e04ee4122e41211d247f3cace4d38ace21f16a2a8c44d9ad6878009"
+    },
+    {
+      "rootPath": "parts/u7030.dat",
+      "sourceSHA": "235a590b87c9d0575c7e032bae8cc98b0cc6339f2fcbf247aa7b3ff01600e93d",
+      "retainedMeshSHA": "85bdc7668b5b958edba34e96ee5efe7be5d699193817c03b2e688288477a6d38",
+      "nativeResultSHA": "3e6a3c2a0cde7d7ad9cf6562fc0ea5f0ed1778e8e6bdcea19a89dd8e835c514b"
+    },
+    {
+      "rootPath": "parts/3044a.dat",
+      "sourceSHA": "9b8e18ca0950ac4219e8c9a0f05ec89d10d09b59330d2ca33d2c64693c8e855b",
+      "retainedMeshSHA": "717b3ee2f04244ca7320d7ed74a9198051aa5293116d1839c77a4e3a7101e6d8",
+      "nativeResultSHA": "729715586b6158eaaa2ee3723b40f6ba2923931725b552fe5ff911f1fa651e60"
+    },
+    {
+      "rootPath": "parts/6881a.dat",
+      "sourceSHA": "3fe7f063d68a8689e6c9d8cd80464de9854d463c5f7580507ee0d87b3eb7efb9",
+      "retainedMeshSHA": "818d90ce363d798aaa89a3aa9a97dbb76f9776fa17870d32f743d2747d7a2bc5",
+      "nativeResultSHA": "925e7617a2c66b390ea63a1b7c47e69139e9d3850c9cee48360d3c4df598c544"
+    },
+    {
+      "rootPath": "parts/u9118.dat",
+      "sourceSHA": "916c2475886fd1ae2f0800462cec173060297d04a9e174ca796130d5c1f6deca",
+      "retainedMeshSHA": "a22589517bd2e8543f0e746c2fda922254dd841dd148d47f5a349e0f01693e2c",
+      "nativeResultSHA": "cdd3e2779f714a58892ae383adb5414aa66fb6f719763f2ab6dc9d74226a83c5"
+    },
+    {
+      "rootPath": "parts/u9187c.dat",
+      "sourceSHA": "245c82b2b47a73f9fc9c161e6621409b65160557436c0b92a3b08e9f1dbc01d6",
+      "retainedMeshSHA": "80878f7819ec08ef2e9c9b2bbd1e987c8f4a0c0adc913088e0889e61a762eb02",
+      "nativeResultSHA": "fc73deca36ffb41ce1c04851e21817864810e57b6910313bc7391ce0e36f7b35"
+    },
+    {
+      "rootPath": "parts/u9187d.dat",
+      "sourceSHA": "6981bc6ca44b62403ef0cd36183db27114f779cae002fa4c6875d6247459eafe",
+      "retainedMeshSHA": "9b7a0095016c1dd29c40f65172b1d83edd1afe20725f39f753fcc07e0c39bf1d",
+      "nativeResultSHA": "392aef07e17dfb7fd1be9e573a61debd0e45bb91cca9c46103a97a6b984939eb"
+    },
+    {
+      "rootPath": "parts/u7045.dat",
+      "sourceSHA": "f8defbd5a03824b23fffb7143cb12ba41a3295c357dea6757c06d6bf125f01bb",
+      "retainedMeshSHA": "72bc357d1492dc952d1d784e2d3b4c3935215c94382dfd8d6d0c2cb19b6ecb92",
+      "nativeResultSHA": "9064d4e874bffa201892372013033c6f65da84782e66cf518aeef469d5755625"
+    },
+    {
+      "rootPath": "parts/u7044.dat",
+      "sourceSHA": "86685ac8aba89e8e6cff03e87e4bb059d5b4feb90b339c8e80d400ece192dad8",
+      "retainedMeshSHA": "d31f14163ccc124381cbdfaecfcb3d799f81d22724e1c49e7ff20926480063ca",
+      "nativeResultSHA": "e0cb9bc39484b91569c7b6055faba89fc6d2650e0cbab3956aacbf66f49a81cd"
+    },
+    {
+      "rootPath": "parts/u7042.dat",
+      "sourceSHA": "377c2e089d8bbbd751df564916c12f8225dce3ad256a5dc28884aa6615641e9a",
+      "retainedMeshSHA": "ba8d2285da054a2d8f1ba1c614bda5d4c064321dfc207cd938d18b44da0ce7d7",
+      "nativeResultSHA": "64c94829a49d3cb36bb2836f191324ebfbad47ee54294bc3a4be539dae23d495"
+    },
+    {
+      "rootPath": "parts/u7039.dat",
+      "sourceSHA": "d9e0435bc363c56a4571ec62b4be6b8ece53e4339a2868a5cee8df9a06f1f724",
+      "retainedMeshSHA": "d4ef36dfa2e76b1fce4e099c3ad6270f42c666c27e74835a07212bf5a05107a8",
+      "nativeResultSHA": "149d541636ab70ce5cc34b58add2242f1d3310c55c102b8938ef17d35e9fc57c"
+    },
+    {
+      "rootPath": "parts/u7041.dat",
+      "sourceSHA": "07b9edb1f9a4aaa594aa0052bc50161b07887566708b59f39e03c2a0da2d61f4",
+      "retainedMeshSHA": "a570ac3752b268191466d3a4ca37f1dad7f088ea63e823cd0f05743dbcece592",
+      "nativeResultSHA": "68dee9fc26690fab9ccc08f50cd07851d8900c7dffe22fee0b70be29c82466f1"
+    },
+    {
+      "rootPath": "parts/u7036.dat",
+      "sourceSHA": "2e3a2a1a4f24598e6ed7a6de68e1fe2d44c594d121b2d0aafc21d2ca80f61a52",
+      "retainedMeshSHA": "905c5db885199e6fbaa7d9d39e25a66c32e49f3ff741f25fe8c0d49893c43689",
+      "nativeResultSHA": "58cb06ba163790ef75b6e900896a5ad3111c950b62ee2bf435a556205c5f494d"
+    }
+  ],
+  "files": [
+    {
+      "path": "parts/6427k03.dat",
+      "bytes": 2345,
+      "sha256": "4b72bdfd2fcd279eb17c01e970c1ab4c10306af162923815bc730156bc4515bd",
+      "crc32": "05eeb064",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Gerald Lasser [GeraldLasser]",
+      "role": "Part UPDATE 2025-03",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u7031.dat",
+      "bytes": 1674,
+      "sha256": "cae803da627bc2b7dda328683c4324b895cf9e2a5c661dc6001ef00246476dac",
+      "crc32": "ffbb8f43",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2025-12",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/rect.dat",
+      "bytes": 654,
+      "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71",
+      "crc32": "30c864e3",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2010-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/rect2p.dat",
+      "bytes": 594,
+      "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc",
+      "crc32": "62f97088",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Donald Sutter [technog]",
+      "role": "Primitive UPDATE 2010-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/box2-5.dat",
+      "bytes": 609,
+      "sha256": "8f297b754f87da1dbe19eec8704a5ce03a23b794ccd7cd015508e3758a206174",
+      "crc32": "4f9ccda2",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Steffen [Steffen]",
+      "role": "Primitive UPDATE 2003-03",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u7034.dat",
+      "bytes": 1520,
+      "sha256": "6873a1f9e576a68ecc8e650dee754e045000c4d7957c2d42c3092b94bc693903",
+      "crc32": "27f9a0b6",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/rect3.dat",
+      "bytes": 605,
+      "sha256": "07ac46908b6668d993b6de0fb001a34cd996542106b80ebc7de63317d8dde865",
+      "crc32": "dd7621a8",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Mark Kennedy [mkennedy]",
+      "role": "Primitive UPDATE 2010-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u7032.dat",
+      "bytes": 1609,
+      "sha256": "a81c69aea36328889d7935fbb7c1cfbf7a48e3dda6166212b2a95e135c0711c0",
+      "crc32": "acd1b1b7",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u7030.dat",
+      "bytes": 1554,
+      "sha256": "235a590b87c9d0575c7e032bae8cc98b0cc6339f2fcbf247aa7b3ff01600e93d",
+      "crc32": "0abb94ad",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/3044a.dat",
+      "bytes": 1833,
+      "sha256": "9b8e18ca0950ac4219e8c9a0f05ec89d10d09b59330d2ca33d2c64693c8e855b",
+      "crc32": "756e7f94",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Mastros [theorbtwo]",
+      "role": "Part UPDATE 2009-02",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/6881a.dat",
+      "bytes": 397,
+      "sha256": "3fe7f063d68a8689e6c9d8cd80464de9854d463c5f7580507ee0d87b3eb7efb9",
+      "crc32": "1919512c",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Philippe Hurbain [Philo]",
+      "role": "Part UPDATE 2011-02",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/s/6881s01.dat",
+      "bytes": 753,
+      "sha256": "1fcab54bcf35c07cb345ef22a7d6b1c1d23fecbb453e6d921d4c70f58c2777f9",
+      "crc32": "9232d05e",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Philippe Hurbain [Philo]",
+      "role": "Subpart UPDATE 2011-02",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/box5.dat",
+      "bytes": 963,
+      "sha256": "ccb7b8a1d36692335b10ea6aa196849afcad4b15331683ed8112a10b50977318",
+      "crc32": "50300bd7",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2012-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/box4.dat",
+      "bytes": 948,
+      "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e",
+      "crc32": "13bb3ba1",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "James Jessiman",
+      "role": "Primitive UPDATE 2012-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u9118.dat",
+      "bytes": 2829,
+      "sha256": "916c2475886fd1ae2f0800462cec173060297d04a9e174ca796130d5c1f6deca",
+      "crc32": "bc1efa73",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Philippe Hurbain [Philo]",
+      "role": "Part UPDATE 2023-06",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u9187c.dat",
+      "bytes": 381,
+      "sha256": "245c82b2b47a73f9fc9c161e6621409b65160557436c0b92a3b08e9f1dbc01d6",
+      "crc32": "e76d78ab",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2020-03",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/s/822s02.dat",
+      "bytes": 1935,
+      "sha256": "db9c47a8f8115aca85cd1764837c2c62c10d29a11298434ccff007230dc8ade3",
+      "crc32": "03bbd684",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "J.C. Tchang [tchang]",
+      "role": "Subpart UPDATE 2020-03",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/box3-3.dat",
+      "bytes": 709,
+      "sha256": "41b7873e9102a898c6d89c22fc2b7e733ca1afb6bd0a4b5b5a9497b13a5a86e1",
+      "crc32": "92091a81",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Mark Kennedy [mkennedy]",
+      "role": "Primitive UPDATE 2004-03",
+      "licenceAllowed": true
+    },
+    {
+      "path": "p/rect2a.dat",
+      "bytes": 586,
+      "sha256": "6d75ffb88e705a35f34e095ec0848a7bb70b577a376fdae05804da214b0d6369",
+      "crc32": "9695f27f",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Chris Dee [cwdee]",
+      "role": "Primitive UPDATE 2010-01",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u9187d.dat",
+      "bytes": 326,
+      "sha256": "6981bc6ca44b62403ef0cd36183db27114f779cae002fa4c6875d6247459eafe",
+      "crc32": "f2e4981e",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2020-03",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u7045.dat",
+      "bytes": 2215,
+      "sha256": "f8defbd5a03824b23fffb7143cb12ba41a3295c357dea6757c06d6bf125f01bb",
+      "crc32": "15449ff7",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/s/u7044s01.dat",
+      "bytes": 1317,
+      "sha256": "011919a93948c5f84995c278224de313af2f824ea9fa12dd2962fd06a159fe71",
+      "crc32": "f4b9b1e7",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Subpart UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u7044.dat",
+      "bytes": 2287,
+      "sha256": "86685ac8aba89e8e6cff03e87e4bb059d5b4feb90b339c8e80d400ece192dad8",
+      "crc32": "4f84861d",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u7042.dat",
+      "bytes": 2280,
+      "sha256": "377c2e089d8bbbd751df564916c12f8225dce3ad256a5dc28884aa6615641e9a",
+      "crc32": "7528f77e",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/s/u7041s01.dat",
+      "bytes": 1357,
+      "sha256": "efc5a7de9e6af3004a99d45af18797d40e57aa1509f6419925fdf4e55de6fa12",
+      "crc32": "7b16c08c",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Subpart UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u7039.dat",
+      "bytes": 2295,
+      "sha256": "d9e0435bc363c56a4571ec62b4be6b8ece53e4339a2868a5cee8df9a06f1f724",
+      "crc32": "5b12efc1",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/s/u7038s01.dat",
+      "bytes": 1366,
+      "sha256": "99401f3648ebd829c0e36b7cd53ecdea3f9c49107047eefffd9000ddaebb2194",
+      "crc32": "655176e1",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Subpart UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u7041.dat",
+      "bytes": 2352,
+      "sha256": "07b9edb1f9a4aaa594aa0052bc50161b07887566708b59f39e03c2a0da2d61f4",
+      "crc32": "6967f309",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/u7036.dat",
+      "bytes": 2317,
+      "sha256": "2e3a2a1a4f24598e6ed7a6de68e1fe2d44c594d121b2d0aafc21d2ca80f61a52",
+      "crc32": "17868129",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Part UPDATE 2025-09",
+      "licenceAllowed": true
+    },
+    {
+      "path": "parts/s/u7035s01.dat",
+      "bytes": 1380,
+      "sha256": "671eb5d3d288d5392db593a5e20aabddb51426e51b652498f21ba68367af1402",
+      "crc32": "a2353182",
+      "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+      "author": "Magnus Forsberg [MagFors]",
+      "role": "Subpart UPDATE 2025-09",
+      "licenceAllowed": true
+    }
+  ],
+  "nativeReplays": 0,
+  "editorPreviewBrowser": "NOT_RUN"
+}

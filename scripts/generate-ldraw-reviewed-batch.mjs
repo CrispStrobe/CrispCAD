@@ -6,11 +6,12 @@ import {fileURLToPath} from 'node:url';
 import {createCadSession,createLocalModelLibraryCatalogue} from '../packages/core/dist/index.js';
 import {createGeometryKernel,exportSTL,checkModelLibrarySTL} from '../packages/geometry/dist/index.js';
 import {convertLDrawBundle} from './lib/ldraw-model.mjs';
+import {readSelectedLDrawFiles} from './lib/ldraw-source-files.mjs';
 const root=new URL('../',import.meta.url),sha=b=>createHash('sha256').update(b).digest('hex');
 export async function generateReviewedLDrawBatch(){
  const specBytes=await readFile(new URL('library/ldraw-reviewed-batch-spec.json',root)),spec=JSON.parse(specBytes),assets=[],outputs=new Map(),wasm=await readFile(new URL('node_modules/manifold-3d/manifold.wasm',root)),kernel=await createGeometryKernel({wasmBinary:wasm});
  for(const entry of spec.roots){
-  const files=await Promise.all(entry.files.map(async f=>{const bytes=await readFile(new URL('library/sources/ldraw/'+f.path,root));if(bytes.length!==f.bytes||sha(bytes)!==f.sha256||!bytes.toString('utf8').includes('0 !LICENSE Licensed under CC BY 4.0 : see CAreadme.txt'))throw Error('Source/grant identity mismatch: '+f.path);return{path:f.path,bytes};}));
+  const files=await readSelectedLDrawFiles(entry,path=>readFile(new URL('library/'+path,root)));
   for(const f of entry.asset.licence.localEvidence){const b=await readFile(new URL('library/'+f.path,root));if(b.length!==f.bytes||sha(b)!==f.sha256)throw Error('Licence evidence identity mismatch.');}
   const c=convertLDrawBundle({rootPath:entry.rootPath,files}),s=createCadSession();let mesh;
   try{s.addCode(c.program,entry.asset.title);mesh=Buffer.from(exportSTL(kernel.evaluate(s.state.document).bodies));}finally{s.dispose();}

@@ -1,0 +1,2982 @@
+{
+  "schema": "brickwright-history-audit-v1",
+  "recorded_at_utc": "2026-11-16 07:10:59 UTC",
+  "mode": "Read-only GitHub connector audit. No repository or PR mutations. No Actions dispatch, polling or waiting.",
+  "scope": {
+    "cad": "All 47 current CAD branch heads checked against the user's exact Scout commit. Recent PR collection checked; current main compared to Scout.",
+    "lite": "Current main, recent 15 PRs and robot/CAD feature branches checked. This is not an exhaustive audit of all historical Lite branches."
+  },
+  "requested": {
+    "cad": {
+      "repo": "CrispStrobe/brickwright-cad",
+      "pr": 60,
+      "branch": "feat/printable-robot-20261115",
+      "sha": "629682c13d8cbc55b70cdbc283b3b1e6c60ae841"
+    },
+    "lite": {
+      "repo": "CrispStrobe/brickwright-lite",
+      "pr": 1792,
+      "branch": "feat/pla-rover-cad-20261115",
+      "sha": "e10b5a586da28e5a68176c7989a0a17a3d278828"
+    }
+  },
+  "cad": {
+    "main": {
+      "sha": "1371532344e546f9b26b76b3f9ad25c90ede725d",
+      "message": "Merge pull request #62 from CrispStrobe/codex/expanded-ldraw-survivors22\n\nQualify 22 authored LDraw archive models through all editor/browser gates",
+      "date": "2026-11-16T06:36:27Z"
+    },
+    "main_delta_from_scout": {
+      "base": "629682c13d8cbc55b70cdbc283b3b1e6c60ae841",
+      "head": "main",
+      "status": "diverged",
+      "ahead_by": 8,
+      "behind_by": 18,
+      "total_commits": 8,
+      "merge_base": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09",
+      "files": [
+        {
+          "filename": "docs/DELIVERY.md",
+          "status": "modified",
+          "additions": 14,
+          "deletions": 0
+        },
+        {
+          "filename": "docs/MODEL-LIBRARY.md",
+          "status": "modified",
+          "additions": 14,
+          "deletions": 0
+        },
+        {
+          "filename": "docs/evidence/ldraw-expanded-t1098-qualification-2026-11-16.json",
+          "status": "added",
+          "additions": 620,
+          "deletions": 0
+        },
+        {
+          "filename": "docs/evidence/ldraw-expanded22-qualification-2026-11-16.json",
+          "status": "added",
+          "additions": 3468,
+          "deletions": 0
+        },
+        {
+          "filename": "library/evidence/ldraw-expanded-CAreadme-20261109.txt",
+          "status": "added",
+          "additions": 93,
+          "deletions": 0
+        },
+        {
+          "filename": "library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+          "status": "added",
+          "additions": 396,
+          "deletions": 0
+        },
+        {
+          "filename": "library/evidence/ldraw-expanded-batch001-input-20261109.json",
+          "status": "added",
+          "additions": 655,
+          "deletions": 0
+        },
+        {
+          "filename": "library/evidence/ldraw-expanded-input-20261109.json",
+          "status": "added",
+          "additions": 217,
+          "deletions": 0
+        },
+        {
+          "filename": "library/ldraw-reviewed-batch-manifest.json",
+          "status": "modified",
+          "additions": 5574,
+          "deletions": 4
+        },
+        {
+          "filename": "library/ldraw-reviewed-batch-spec.json",
+          "status": "modified",
+          "additions": 6507,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/2499.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/430.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/844.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/845.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/954.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/t1050.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/t1054.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/t1067.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/t1068.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/t1093.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/t1098.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/t1100.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/t1103.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/t1108.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/u8037.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/u8038.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/u8039.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/u9117.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/u9244.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/u9253.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/u9264.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/u9400.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/meshes/ldraw/u9580.stl",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "filename": "library/previews.json",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/2-4chrd.dat",
+          "status": "added",
+          "additions": 15,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/2-4cyli.dat",
+          "status": "added",
+          "additions": 34,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/2-4cylo.dat",
+          "status": "added",
+          "additions": 14,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/2-4edge.dat",
+          "status": "added",
+          "additions": 22,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/4-4cyli.dat",
+          "status": "added",
+          "additions": 50,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/4-4cylo.dat",
+          "status": "added",
+          "additions": 15,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/4-4edge.dat",
+          "status": "added",
+          "additions": 32,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/4-4ndis.dat",
+          "status": "added",
+          "additions": 32,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/box.dat",
+          "status": "added",
+          "additions": 33,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/box3u2p.dat",
+          "status": "added",
+          "additions": 28,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/box4.dat",
+          "status": "added",
+          "additions": 32,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/box5-1.dat",
+          "status": "added",
+          "additions": 27,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/box5-2p.dat",
+          "status": "added",
+          "additions": 30,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/box5.dat",
+          "status": "added",
+          "additions": 33,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/rect.dat",
+          "status": "added",
+          "additions": 22,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/rect1.dat",
+          "status": "added",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/rect2p.dat",
+          "status": "added",
+          "additions": 19,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/p/rect3.dat",
+          "status": "added",
+          "additions": 20,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/2499.dat",
+          "status": "added",
+          "additions": 15,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/430.dat",
+          "status": "added",
+          "additions": 16,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/844.dat",
+          "status": "added",
+          "additions": 15,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/845.dat",
+          "status": "added",
+          "additions": 15,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/954.dat",
+          "status": "added",
+          "additions": 13,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/t1050.dat",
+          "status": "added",
+          "additions": 14,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/t1054.dat",
+          "status": "added",
+          "additions": 19,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/t1067.dat",
+          "status": "added",
+          "additions": 52,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/t1068.dat",
+          "status": "added",
+          "additions": 26,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/t1093.dat",
+          "status": "added",
+          "additions": 32,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/t1098.dat",
+          "status": "added",
+          "additions": 33,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/t1100.dat",
+          "status": "added",
+          "additions": 67,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/t1103.dat",
+          "status": "added",
+          "additions": 14,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/t1108.dat",
+          "status": "added",
+          "additions": 27,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/u8037.dat",
+          "status": "added",
+          "additions": 17,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/u8038.dat",
+          "status": "added",
+          "additions": 17,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/u8039.dat",
+          "status": "added",
+          "additions": 17,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/u9117.dat",
+          "status": "added",
+          "additions": 13,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/u9244.dat",
+          "status": "added",
+          "additions": 12,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/u9253.dat",
+          "status": "added",
+          "additions": 15,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/u9264.dat",
+          "status": "added",
+          "additions": 12,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/u9400.dat",
+          "status": "added",
+          "additions": 13,
+          "deletions": 0
+        },
+        {
+          "filename": "library/sources/ldraw-expanded-20261109/parts/u9580.dat",
+          "status": "added",
+          "additions": 12,
+          "deletions": 0
+        },
+        {
+          "filename": "scripts/generate-ldraw-reviewed-batch.mjs",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 1
+        },
+        {
+          "filename": "scripts/lib/ldraw-source-files.mjs",
+          "status": "added",
+          "additions": 27,
+          "deletions": 0
+        },
+        {
+          "filename": "tests/browser/model-library-expanded-batch001.spec.ts",
+          "status": "added",
+          "additions": 26,
+          "deletions": 0
+        },
+        {
+          "filename": "tests/browser/model-library-expanded-t1098.spec.ts",
+          "status": "added",
+          "additions": 19,
+          "deletions": 0
+        },
+        {
+          "filename": "tests/model-library-expanded-batch001.test.ts",
+          "status": "added",
+          "additions": 27,
+          "deletions": 0
+        },
+        {
+          "filename": "tests/model-library-expanded-ldraw.test.ts",
+          "status": "added",
+          "additions": 28,
+          "deletions": 0
+        }
+      ],
+      "overlap_with_scout_changes_from_main_merge_base": []
+    },
+    "main_eight_new_commits": [
+      {
+        "sha": "5abbbfc91a6d73ba1e018a60ebb6d0557e5743fc",
+        "message": "Preserve pinned original LDraw t1098 input and licence evidence",
+        "date": "2026-11-15T22:39:52Z",
+        "parents": [
+          "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09"
+        ],
+        "url": "https://github.com/CrispStrobe/brickwright-cad/commit/5abbbfc91a6d73ba1e018a60ebb6d0557e5743fc"
+      },
+      {
+        "sha": "0a55fe0b0ea1263938414815be69c51f77caa735",
+        "message": "Qualify authored Circuit Cubes pin and bind reviewed source locations",
+        "date": "2026-11-16T05:34:47Z",
+        "parents": [
+          "5abbbfc91a6d73ba1e018a60ebb6d0557e5743fc"
+        ],
+        "url": "https://github.com/CrispStrobe/brickwright-cad/commit/0a55fe0b0ea1263938414815be69c51f77caa735"
+      },
+      {
+        "sha": "af9907b13272da276818bf04c288a72a0d5c0dcc",
+        "message": "Record t1098 full qualification and exact tested source binding",
+        "date": "2026-11-16T05:37:58Z",
+        "parents": [
+          "0a55fe0b0ea1263938414815be69c51f77caa735"
+        ],
+        "url": "https://github.com/CrispStrobe/brickwright-cad/commit/af9907b13272da276818bf04c288a72a0d5c0dcc"
+      },
+      {
+        "sha": "2117764cc011a87e094c4029e10cb0b9bf28be08",
+        "message": "Merge pull request #61 from CrispStrobe/codex/expanded-ldraw-t1098\n\nQualify authored Circuit Cubes pin with exact reviewed source bindings",
+        "date": "2026-11-16T05:38:59Z",
+        "parents": [
+          "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09",
+          "af9907b13272da276818bf04c288a72a0d5c0dcc"
+        ],
+        "url": "https://github.com/CrispStrobe/brickwright-cad/commit/2117764cc011a87e094c4029e10cb0b9bf28be08"
+      },
+      {
+        "sha": "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc",
+        "message": "Preserve exact original inputs for 22 headless LDraw survivors",
+        "date": "2026-11-16T05:49:58Z",
+        "parents": [
+          "2117764cc011a87e094c4029e10cb0b9bf28be08"
+        ],
+        "url": "https://github.com/CrispStrobe/brickwright-cad/commit/749ce69a0d8f17798e736a34d1ab67b3b8b36dcc"
+      },
+      {
+        "sha": "ca16330c8363a0bcba38d21fb207e70611a08b2a",
+        "message": "Qualify 22 authored LDraw archive roots with full editor and browser gates",
+        "date": "2026-11-16T06:33:36Z",
+        "parents": [
+          "749ce69a0d8f17798e736a34d1ab67b3b8b36dcc"
+        ],
+        "url": "https://github.com/CrispStrobe/brickwright-cad/commit/ca16330c8363a0bcba38d21fb207e70611a08b2a"
+      },
+      {
+        "sha": "ff2d698212bda6f605d750b355c0fdae14e3fcc0",
+        "message": "Bind all 44 browser outcomes and frozen runtime for 22 authored admissions",
+        "date": "2026-11-16T06:34:41Z",
+        "parents": [
+          "ca16330c8363a0bcba38d21fb207e70611a08b2a"
+        ],
+        "url": "https://github.com/CrispStrobe/brickwright-cad/commit/ff2d698212bda6f605d750b355c0fdae14e3fcc0"
+      },
+      {
+        "sha": "1371532344e546f9b26b76b3f9ad25c90ede725d",
+        "message": "Merge pull request #62 from CrispStrobe/codex/expanded-ldraw-survivors22\n\nQualify 22 authored LDraw archive models through all editor/browser gates",
+        "date": "2026-11-16T06:36:27Z",
+        "parents": [
+          "2117764cc011a87e094c4029e10cb0b9bf28be08",
+          "ff2d698212bda6f605d750b355c0fdae14e3fcc0"
+        ],
+        "url": "https://github.com/CrispStrobe/brickwright-cad/commit/1371532344e546f9b26b76b3f9ad25c90ede725d"
+      }
+    ],
+    "all_branch_heads": [
+      {
+        "branch": "attributed-editor-export",
+        "sha": "fea5ac9d7a482b92b0257cc03f76cea17af8c512",
+        "status": "ahead",
+        "scoutAhead": 232,
+        "branchOutsideScout": 0,
+        "mergeBase": "fea5ac9d7a482b92b0257cc03f76cea17af8c512"
+      },
+      {
+        "branch": "catalogue-insertion",
+        "sha": "15a64645f74a4361751f5788aacf20783aa1853e",
+        "status": "ahead",
+        "scoutAhead": 230,
+        "branchOutsideScout": 0,
+        "mergeBase": "15a64645f74a4361751f5788aacf20783aa1853e"
+      },
+      {
+        "branch": "cc0-calibration-seed",
+        "sha": "e82daac8ce5abc7fa2bd1652bbffa463e6d961a9",
+        "status": "ahead",
+        "scoutAhead": 234,
+        "branchOutsideScout": 0,
+        "mergeBase": "e82daac8ce5abc7fa2bd1652bbffa463e6d961a9"
+      },
+      {
+        "branch": "codex/archived-ldraw-components",
+        "sha": "16ec892864d7785563b152412a3791057eb51d34",
+        "status": "ahead",
+        "scoutAhead": 71,
+        "branchOutsideScout": 0,
+        "mergeBase": "16ec892864d7785563b152412a3791057eb51d34"
+      },
+      {
+        "branch": "codex/comprehension-conformance",
+        "sha": "c2b87e71c597c533f4d3cf77dbe66c8cef53ff03",
+        "status": "ahead",
+        "scoutAhead": 123,
+        "branchOutsideScout": 0,
+        "mergeBase": "c2b87e71c597c533f4d3cf77dbe66c8cef53ff03"
+      },
+      {
+        "branch": "codex/converter-curved-primitives",
+        "sha": "ce22c2f5c513f407ae1984a9872bc5cf0650f0f2",
+        "status": "ahead",
+        "scoutAhead": 126,
+        "branchOutsideScout": 0,
+        "mergeBase": "ce22c2f5c513f407ae1984a9872bc5cf0650f0f2"
+      },
+      {
+        "branch": "codex/corner-box-origin",
+        "sha": "c55509aeedddc9915dde107faac809538555358a",
+        "status": "ahead",
+        "scoutAhead": 103,
+        "branchOutsideScout": 0,
+        "mergeBase": "c55509aeedddc9915dde107faac809538555358a"
+      },
+      {
+        "branch": "codex/cube-fasteners-reductions",
+        "sha": "3077e9be1f04bbaa881e942f5f6838897eb11feb",
+        "status": "ahead",
+        "scoutAhead": 131,
+        "branchOutsideScout": 0,
+        "mergeBase": "3077e9be1f04bbaa881e942f5f6838897eb11feb"
+      },
+      {
+        "branch": "codex/curved-hollow-parameters",
+        "sha": "962b7bf3b8703cdaa9e3e2921e46fc80fc42b425",
+        "status": "ahead",
+        "scoutAhead": 66,
+        "branchOutsideScout": 0,
+        "mergeBase": "962b7bf3b8703cdaa9e3e2921e46fc80fc42b425"
+      },
+      {
+        "branch": "codex/cutting-enclosure-parameters",
+        "sha": "f5312d0db2aded1a0341759fcfa59459847df785",
+        "status": "ahead",
+        "scoutAhead": 73,
+        "branchOutsideScout": 0,
+        "mergeBase": "f5312d0db2aded1a0341759fcfa59459847df785"
+      },
+      {
+        "branch": "codex/dimension-resize",
+        "sha": "489a0340b62d24ef3357d6e82e6259e66343b25c",
+        "status": "ahead",
+        "scoutAhead": 108,
+        "branchOutsideScout": 0,
+        "mergeBase": "489a0340b62d24ef3357d6e82e6259e66343b25c"
+      },
+      {
+        "branch": "codex/expanded-ldraw-survivors22",
+        "sha": "ff2d698212bda6f605d750b355c0fdae14e3fcc0",
+        "status": "diverged",
+        "scoutAhead": 18,
+        "branchOutsideScout": 7,
+        "mergeBase": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09"
+      },
+      {
+        "branch": "codex/expanded-ldraw-t1098",
+        "sha": "af9907b13272da276818bf04c288a72a0d5c0dcc",
+        "status": "diverged",
+        "scoutAhead": 18,
+        "branchOutsideScout": 3,
+        "mergeBase": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09"
+      },
+      {
+        "branch": "codex/italy-qualified",
+        "sha": "eb465b62e1cc55d419126b7e0b0b74151b8b5029",
+        "status": "ahead",
+        "scoutAhead": 94,
+        "branchOutsideScout": 0,
+        "mergeBase": "eb465b62e1cc55d419126b7e0b0b74151b8b5029"
+      },
+      {
+        "branch": "codex/ldraw-6934-qualified",
+        "sha": "94de879e40d8962739f8948df56055d9e1c13e0a",
+        "status": "ahead",
+        "scoutAhead": 154,
+        "branchOutsideScout": 0,
+        "mergeBase": "94de879e40d8962739f8948df56055d9e1c13e0a"
+      },
+      {
+        "branch": "codex/ldraw-authored-subcomponents",
+        "sha": "3c1523519257f2cc38244c5be699906d54734839",
+        "status": "ahead",
+        "scoutAhead": 57,
+        "branchOutsideScout": 0,
+        "mergeBase": "3c1523519257f2cc38244c5be699906d54734839"
+      },
+      {
+        "branch": "codex/ldraw-components-reserve",
+        "sha": "4800ddbe627c420792b6bfad205d2997a245bd41",
+        "status": "ahead",
+        "scoutAhead": 64,
+        "branchOutsideScout": 0,
+        "mergeBase": "4800ddbe627c420792b6bfad205d2997a245bd41"
+      },
+      {
+        "branch": "codex/ldraw-exact-batch",
+        "sha": "c40911d200afea96d6ef0b144e573689e6c76e8e",
+        "status": "ahead",
+        "scoutAhead": 106,
+        "branchOutsideScout": 0,
+        "mergeBase": "c40911d200afea96d6ef0b144e573689e6c76e8e"
+      },
+      {
+        "branch": "codex/ldraw-exact-edge-conformity",
+        "sha": "14dbc70c3477bce78a2586fb0fefdfad6d054dc1",
+        "status": "ahead",
+        "scoutAhead": 26,
+        "branchOutsideScout": 0,
+        "mergeBase": "14dbc70c3477bce78a2586fb0fefdfad6d054dc1"
+      },
+      {
+        "branch": "codex/ldraw-repair9-qualified",
+        "sha": "7b83f29c470cc8476fecf9194488e61fe0eba467",
+        "status": "ahead",
+        "scoutAhead": 24,
+        "branchOutsideScout": 0,
+        "mergeBase": "7b83f29c470cc8476fecf9194488e61fe0eba467"
+      },
+      {
+        "branch": "codex/ldraw-wholeparts2-qualified",
+        "sha": "82a6dd64b51e8d85458b3bbf1dd9df8764c5f660",
+        "status": "ahead",
+        "scoutAhead": 22,
+        "branchOutsideScout": 0,
+        "mergeBase": "82a6dd64b51e8d85458b3bbf1dd9df8764c5f660"
+      },
+      {
+        "branch": "codex/retained-basic-shapes",
+        "sha": "0d20a796cb014e27eeebeaa5b4ed3f845c88071b",
+        "status": "ahead",
+        "scoutAhead": 82,
+        "branchOutsideScout": 0,
+        "mergeBase": "0d20a796cb014e27eeebeaa5b4ed3f845c88071b"
+      },
+      {
+        "branch": "codex/retained-transitions",
+        "sha": "21c38393fca4d3a97b94d350f1974cb07168694c",
+        "status": "ahead",
+        "scoutAhead": 60,
+        "branchOutsideScout": 0,
+        "mergeBase": "21c38393fca4d3a97b94d350f1974cb07168694c"
+      },
+      {
+        "branch": "codex/reviewed-bundle-namespace",
+        "sha": "74cdc61f94fffabb51079fc8bfde83f0df0c9dd8",
+        "status": "ahead",
+        "scoutAhead": 77,
+        "branchOutsideScout": 0,
+        "mergeBase": "74cdc61f94fffabb51079fc8bfde83f0df0c9dd8"
+      },
+      {
+        "branch": "codex/scad-arc-qualified",
+        "sha": "bebe82920c436e961e84b2a0e73e71d57e5c4573",
+        "status": "ahead",
+        "scoutAhead": 104,
+        "branchOutsideScout": 0,
+        "mergeBase": "bebe82920c436e961e84b2a0e73e71d57e5c4573"
+      },
+      {
+        "branch": "codex/scad-engine-expansion",
+        "sha": "48570cebbc3f592231ca51b7a76c0692d3d6ae2a",
+        "status": "ahead",
+        "scoutAhead": 134,
+        "branchOutsideScout": 0,
+        "mergeBase": "48570cebbc3f592231ca51b7a76c0692d3d6ae2a"
+      },
+      {
+        "branch": "codex/screw-thread-redesign",
+        "sha": "cb1853c5f2f6d62fd923e1f31a079fe0be737b66",
+        "status": "ahead",
+        "scoutAhead": 51,
+        "branchOutsideScout": 0,
+        "mergeBase": "cb1853c5f2f6d62fd923e1f31a079fe0be737b66"
+      },
+      {
+        "branch": "codex/screw-tips-and-shape-repairs",
+        "sha": "901af479cbb67ff54ec5ec39c35e51a2746ec3c9",
+        "status": "ahead",
+        "scoutAhead": 100,
+        "branchOutsideScout": 0,
+        "mergeBase": "901af479cbb67ff54ec5ec39c35e51a2746ec3c9"
+      },
+      {
+        "branch": "codex/shape-palette-discoverability",
+        "sha": "d63ed25943b0561e894fa320d29c2efda8c883cb",
+        "status": "ahead",
+        "scoutAhead": 120,
+        "branchOutsideScout": 0,
+        "mergeBase": "d63ed25943b0561e894fa320d29c2efda8c883cb"
+      },
+      {
+        "branch": "codex/smooth-prim-qualified",
+        "sha": "3797c7dc811b2787a72690b3ffa5fbc67b58cb01",
+        "status": "ahead",
+        "scoutAhead": 19,
+        "branchOutsideScout": 0,
+        "mergeBase": "3797c7dc811b2787a72690b3ffa5fbc67b58cb01"
+      },
+      {
+        "branch": "codex/sync-brickwright-simlab",
+        "sha": "efb165a1aaea3ab39400f4631240e9e1727fcd95",
+        "status": "ahead",
+        "scoutAhead": 25,
+        "branchOutsideScout": 0,
+        "mergeBase": "efb165a1aaea3ab39400f4631240e9e1727fcd95"
+      },
+      {
+        "branch": "codex/uniform-cylinder-origin",
+        "sha": "194d658c0ea0f2e51856df031aea2a2b6ddd07c4",
+        "status": "ahead",
+        "scoutAhead": 79,
+        "branchOutsideScout": 0,
+        "mergeBase": "194d658c0ea0f2e51856df031aea2a2b6ddd07c4"
+      },
+      {
+        "branch": "curated-model-library-foundation",
+        "sha": "a53aa588867f47893cb9defdf8094983ec821efa",
+        "status": "ahead",
+        "scoutAhead": 236,
+        "branchOutsideScout": 0,
+        "mergeBase": "a53aa588867f47893cb9defdf8094983ec821efa"
+      },
+      {
+        "branch": "feat/atlas-forklift-20261116",
+        "sha": "8d9efa34b8cd0ca25ca2961d3d5a800f83ab528c",
+        "status": "diverged",
+        "scoutAhead": 6,
+        "branchOutsideScout": 4,
+        "mergeBase": "0e942a588e4b1f2c76fc4d287d3fbd8082719f3c"
+      },
+      {
+        "branch": "feat/circuit-cad-cosim-20261116",
+        "sha": "29d336427e5ba92320bfd0135685f8dd38974863",
+        "status": "diverged",
+        "scoutAhead": 2,
+        "branchOutsideScout": 4,
+        "mergeBase": "0ee57d91be6f4f910f8b8d6106ba894b9b1a8d1d"
+      },
+      {
+        "branch": "feat/kestrel-gripper-arm-20261116",
+        "sha": "343dcf6bdecc7bd97869279687d76844d26a8191",
+        "status": "diverged",
+        "scoutAhead": 6,
+        "branchOutsideScout": 3,
+        "mergeBase": "0e942a588e4b1f2c76fc4d287d3fbd8082719f3c"
+      },
+      {
+        "branch": "feat/printable-robot-20261115",
+        "sha": "629682c13d8cbc55b70cdbc283b3b1e6c60ae841",
+        "status": "identical",
+        "scoutAhead": 0,
+        "branchOutsideScout": 0,
+        "mergeBase": "629682c13d8cbc55b70cdbc283b3b1e6c60ae841"
+      },
+      {
+        "branch": "feat/shared-editor-selection-20261115",
+        "sha": "89b379b8df0a1f273025a1892dec12663081655f",
+        "status": "ahead",
+        "scoutAhead": 30,
+        "branchOutsideScout": 0,
+        "mergeBase": "89b379b8df0a1f273025a1892dec12663081655f"
+      },
+      {
+        "branch": "feat/steerable-3d-robot-20261115",
+        "sha": "c043b3fdfe65b61abdb2809718010d17289ae862",
+        "status": "diverged",
+        "scoutAhead": 6,
+        "branchOutsideScout": 2,
+        "mergeBase": "0e942a588e4b1f2c76fc4d287d3fbd8082719f3c"
+      },
+      {
+        "branch": "library-collision-qualification",
+        "sha": "a452efff093def4dd4111b4a650a1475e02c44bc",
+        "status": "ahead",
+        "scoutAhead": 222,
+        "branchOutsideScout": 0,
+        "mergeBase": "a452efff093def4dd4111b4a650a1475e02c44bc"
+      },
+      {
+        "branch": "library-qualification-display",
+        "sha": "a406cb4333bf01073069924d035026bdfd5a55e8",
+        "status": "ahead",
+        "scoutAhead": 218,
+        "branchOutsideScout": 0,
+        "mergeBase": "a406cb4333bf01073069924d035026bdfd5a55e8"
+      },
+      {
+        "branch": "library-qualification-evidence",
+        "sha": "f0241efdac31cdb8ac95be9a85ff31153ff86379",
+        "status": "ahead",
+        "scoutAhead": 220,
+        "branchOutsideScout": 0,
+        "mergeBase": "f0241efdac31cdb8ac95be9a85ff31153ff86379"
+      },
+      {
+        "branch": "library-source-conversion",
+        "sha": "f1766e739d86c3e55a23df2f6163288a821a2b8e",
+        "status": "ahead",
+        "scoutAhead": 224,
+        "branchOutsideScout": 0,
+        "mergeBase": "f1766e739d86c3e55a23df2f6163288a821a2b8e"
+      },
+      {
+        "branch": "local-model-library",
+        "sha": "d85cfeb256c2d967beec91a11e3e195b094ec372",
+        "status": "ahead",
+        "scoutAhead": 226,
+        "branchOutsideScout": 0,
+        "mergeBase": "d85cfeb256c2d967beec91a11e3e195b094ec372"
+      },
+      {
+        "branch": "main",
+        "sha": "1371532344e546f9b26b76b3f9ad25c90ede725d",
+        "status": "diverged",
+        "scoutAhead": 18,
+        "branchOutsideScout": 8,
+        "mergeBase": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09"
+      },
+      {
+        "branch": "model-library-catalogue-ui",
+        "sha": "478e033b172238cabba79e01853b14435a463911",
+        "status": "ahead",
+        "scoutAhead": 228,
+        "branchOutsideScout": 0,
+        "mergeBase": "478e033b172238cabba79e01853b14435a463911"
+      },
+      {
+        "branch": "offline-collision-curation",
+        "sha": "749d122bbf58bf73235054252a0d1d02b806031d",
+        "status": "ahead",
+        "scoutAhead": 156,
+        "branchOutsideScout": 0,
+        "mergeBase": "749d122bbf58bf73235054252a0d1d02b806031d"
+      }
+    ],
+    "already_in_scout_count": 40,
+    "outside_scout": [
+      {
+        "branch": "codex/expanded-ldraw-survivors22",
+        "sha": "ff2d698212bda6f605d750b355c0fdae14e3fcc0",
+        "status": "diverged",
+        "scoutAhead": 18,
+        "branchOutsideScout": 7,
+        "mergeBase": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09"
+      },
+      {
+        "branch": "codex/expanded-ldraw-t1098",
+        "sha": "af9907b13272da276818bf04c288a72a0d5c0dcc",
+        "status": "diverged",
+        "scoutAhead": 18,
+        "branchOutsideScout": 3,
+        "mergeBase": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09"
+      },
+      {
+        "branch": "feat/atlas-forklift-20261116",
+        "sha": "8d9efa34b8cd0ca25ca2961d3d5a800f83ab528c",
+        "status": "diverged",
+        "scoutAhead": 6,
+        "branchOutsideScout": 4,
+        "mergeBase": "0e942a588e4b1f2c76fc4d287d3fbd8082719f3c"
+      },
+      {
+        "branch": "feat/circuit-cad-cosim-20261116",
+        "sha": "29d336427e5ba92320bfd0135685f8dd38974863",
+        "status": "diverged",
+        "scoutAhead": 2,
+        "branchOutsideScout": 4,
+        "mergeBase": "0ee57d91be6f4f910f8b8d6106ba894b9b1a8d1d"
+      },
+      {
+        "branch": "feat/kestrel-gripper-arm-20261116",
+        "sha": "343dcf6bdecc7bd97869279687d76844d26a8191",
+        "status": "diverged",
+        "scoutAhead": 6,
+        "branchOutsideScout": 3,
+        "mergeBase": "0e942a588e4b1f2c76fc4d287d3fbd8082719f3c"
+      },
+      {
+        "branch": "feat/steerable-3d-robot-20261115",
+        "sha": "c043b3fdfe65b61abdb2809718010d17289ae862",
+        "status": "diverged",
+        "scoutAhead": 6,
+        "branchOutsideScout": 2,
+        "mergeBase": "0e942a588e4b1f2c76fc4d287d3fbd8082719f3c"
+      },
+      {
+        "branch": "main",
+        "sha": "1371532344e546f9b26b76b3f9ad25c90ede725d",
+        "status": "diverged",
+        "scoutAhead": 18,
+        "branchOutsideScout": 8,
+        "mergeBase": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09"
+      }
+    ],
+    "feature_comparisons": {
+      "atlas": {
+        "base": "629682c13d8cbc55b70cdbc283b3b1e6c60ae841",
+        "head": "8d9efa34b8cd0ca25ca2961d3d5a800f83ab528c",
+        "status": "diverged",
+        "ahead_by": 4,
+        "behind_by": 6,
+        "total_commits": 4,
+        "merge_base": "0e942a588e4b1f2c76fc4d287d3fbd8082719f3c",
+        "files": [
+          {
+            "filename": "library/sources/adafruit-motors/1143 Micro Servo - High Torque Metal Gear/1143 Micro Servo High Torque Metal Gear.stl",
+            "status": "added",
+            "additions": 0,
+            "deletions": 0
+          },
+          {
+            "filename": "library/sources/adafruit-motors/provenance.json",
+            "status": "modified",
+            "additions": 6,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/atlas-forklift.ts",
+            "status": "added",
+            "additions": 290,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/kestrel-arm.ts",
+            "status": "added",
+            "additions": 225,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/motor-assets/micro-servo-1143-collision.json",
+            "status": "added",
+            "additions": 1,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/motor-assets/micro-servo-1143.json",
+            "status": "added",
+            "additions": 1,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/motor-models.ts",
+            "status": "modified",
+            "additions": 5,
+            "deletions": 2
+          },
+          {
+            "filename": "packages/editor/src/shapes.ts",
+            "status": "modified",
+            "additions": 10,
+            "deletions": 1
+          },
+          {
+            "filename": "packages/editor/src/steerable-rover.ts",
+            "status": "added",
+            "additions": 371,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/physics/src/hints.ts",
+            "status": "modified",
+            "additions": 1,
+            "deletions": 1
+          },
+          {
+            "filename": "tests/atlas-forklift.test.ts",
+            "status": "added",
+            "additions": 100,
+            "deletions": 0
+          },
+          {
+            "filename": "tests/kestrel-arm.test.ts",
+            "status": "added",
+            "additions": 96,
+            "deletions": 0
+          },
+          {
+            "filename": "tests/steerable-rover.test.ts",
+            "status": "added",
+            "additions": 86,
+            "deletions": 0
+          }
+        ],
+        "overlap_with_scout_changes_from_main_merge_base": [
+          "packages/editor/src/shapes.ts",
+          "packages/physics/src/hints.ts"
+        ]
+      },
+      "kestrel": {
+        "base": "629682c13d8cbc55b70cdbc283b3b1e6c60ae841",
+        "head": "343dcf6bdecc7bd97869279687d76844d26a8191",
+        "status": "diverged",
+        "ahead_by": 3,
+        "behind_by": 6,
+        "total_commits": 3,
+        "merge_base": "0e942a588e4b1f2c76fc4d287d3fbd8082719f3c",
+        "files": [
+          {
+            "filename": "library/sources/adafruit-motors/1143 Micro Servo - High Torque Metal Gear/1143 Micro Servo High Torque Metal Gear.stl",
+            "status": "added",
+            "additions": 0,
+            "deletions": 0
+          },
+          {
+            "filename": "library/sources/adafruit-motors/provenance.json",
+            "status": "modified",
+            "additions": 6,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/kestrel-arm.ts",
+            "status": "added",
+            "additions": 225,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/motor-assets/micro-servo-1143-collision.json",
+            "status": "added",
+            "additions": 1,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/motor-assets/micro-servo-1143.json",
+            "status": "added",
+            "additions": 1,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/motor-models.ts",
+            "status": "modified",
+            "additions": 5,
+            "deletions": 2
+          },
+          {
+            "filename": "packages/editor/src/shapes.ts",
+            "status": "modified",
+            "additions": 7,
+            "deletions": 1
+          },
+          {
+            "filename": "packages/editor/src/steerable-rover.ts",
+            "status": "added",
+            "additions": 371,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/physics/src/hints.ts",
+            "status": "modified",
+            "additions": 1,
+            "deletions": 1
+          },
+          {
+            "filename": "tests/kestrel-arm.test.ts",
+            "status": "added",
+            "additions": 96,
+            "deletions": 0
+          },
+          {
+            "filename": "tests/steerable-rover.test.ts",
+            "status": "added",
+            "additions": 86,
+            "deletions": 0
+          }
+        ],
+        "overlap_with_scout_changes_from_main_merge_base": [
+          "packages/editor/src/shapes.ts",
+          "packages/physics/src/hints.ts"
+        ]
+      },
+      "trident": {
+        "base": "629682c13d8cbc55b70cdbc283b3b1e6c60ae841",
+        "head": "c043b3fdfe65b61abdb2809718010d17289ae862",
+        "status": "diverged",
+        "ahead_by": 2,
+        "behind_by": 6,
+        "total_commits": 2,
+        "merge_base": "0e942a588e4b1f2c76fc4d287d3fbd8082719f3c",
+        "files": [
+          {
+            "filename": "library/sources/adafruit-motors/1143 Micro Servo - High Torque Metal Gear/1143 Micro Servo High Torque Metal Gear.stl",
+            "status": "added",
+            "additions": 0,
+            "deletions": 0
+          },
+          {
+            "filename": "library/sources/adafruit-motors/provenance.json",
+            "status": "modified",
+            "additions": 6,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/motor-assets/micro-servo-1143-collision.json",
+            "status": "added",
+            "additions": 1,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/motor-assets/micro-servo-1143.json",
+            "status": "added",
+            "additions": 1,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/motor-models.ts",
+            "status": "modified",
+            "additions": 5,
+            "deletions": 2
+          },
+          {
+            "filename": "packages/editor/src/shapes.ts",
+            "status": "modified",
+            "additions": 4,
+            "deletions": 1
+          },
+          {
+            "filename": "packages/editor/src/steerable-rover.ts",
+            "status": "added",
+            "additions": 371,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/physics/src/hints.ts",
+            "status": "modified",
+            "additions": 1,
+            "deletions": 1
+          },
+          {
+            "filename": "tests/steerable-rover.test.ts",
+            "status": "added",
+            "additions": 86,
+            "deletions": 0
+          }
+        ],
+        "overlap_with_scout_changes_from_main_merge_base": [
+          "packages/editor/src/shapes.ts",
+          "packages/physics/src/hints.ts"
+        ]
+      },
+      "cosimulation": {
+        "base": "629682c13d8cbc55b70cdbc283b3b1e6c60ae841",
+        "head": "29d336427e5ba92320bfd0135685f8dd38974863",
+        "status": "diverged",
+        "ahead_by": 4,
+        "behind_by": 2,
+        "total_commits": 4,
+        "merge_base": "0ee57d91be6f4f910f8b8d6106ba894b9b1a8d1d",
+        "files": [
+          {
+            "filename": "library/sources/adafruit-motors/1143 Micro Servo - High Torque Metal Gear/1143 Micro Servo High Torque Metal Gear.stl",
+            "status": "added",
+            "additions": 0,
+            "deletions": 0
+          },
+          {
+            "filename": "library/sources/adafruit-motors/provenance.json",
+            "status": "modified",
+            "additions": 6,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/core/src/locales/de-simlab.ts",
+            "status": "modified",
+            "additions": 8,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/motor-assets/micro-servo-1143-collision.json",
+            "status": "added",
+            "additions": 1,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/motor-assets/micro-servo-1143.json",
+            "status": "added",
+            "additions": 1,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/motor-models.ts",
+            "status": "modified",
+            "additions": 5,
+            "deletions": 2
+          },
+          {
+            "filename": "packages/editor/src/shapes.ts",
+            "status": "modified",
+            "additions": 4,
+            "deletions": 1
+          },
+          {
+            "filename": "packages/editor/src/simulation-controller.ts",
+            "status": "modified",
+            "additions": 24,
+            "deletions": 8
+          },
+          {
+            "filename": "packages/editor/src/simulation-protocol.ts",
+            "status": "modified",
+            "additions": 1,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/simulation.worker.ts",
+            "status": "modified",
+            "additions": 4,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/editor/src/steerable-rover.ts",
+            "status": "added",
+            "additions": 371,
+            "deletions": 0
+          },
+          {
+            "filename": "packages/physics/src/world.ts",
+            "status": "modified",
+            "additions": 11,
+            "deletions": 0
+          },
+          {
+            "filename": "tests/actuator-impulse.test.ts",
+            "status": "added",
+            "additions": 19,
+            "deletions": 0
+          },
+          {
+            "filename": "tests/steerable-rover.test.ts",
+            "status": "added",
+            "additions": 86,
+            "deletions": 0
+          }
+        ],
+        "overlap_with_scout_changes_from_main_merge_base": [
+          "packages/editor/src/shapes.ts",
+          "packages/editor/src/simulation-controller.ts",
+          "packages/physics/src/world.ts"
+        ]
+      }
+    },
+    "ancestry": {
+      "atlas_includes_kestrel": true,
+      "kestrel_includes_trident": true,
+      "cosimulation_includes_trident": true,
+      "scout_includes_open_pr_46": true,
+      "scout_includes_sync_brickwright_simlab_followup": true
+    },
+    "recent_prs": [
+      {
+        "number": 62,
+        "title": "Qualify 22 authored LDraw archive models through all editor/browser gates",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-16T06:36:27Z",
+        "updated_at": "2026-11-16T06:36:28Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/62",
+        "head": "codex/expanded-ldraw-survivors22",
+        "head_sha": "ff2d698212bda6f605d750b355c0fdae14e3fcc0",
+        "base": "main",
+        "base_sha": "2117764cc011a87e094c4029e10cb0b9bf28be08",
+        "merge_sha": "1371532344e546f9b26b76b3f9ad25c90ede725d"
+      },
+      {
+        "number": 61,
+        "title": "Qualify authored Circuit Cubes pin with exact reviewed source bindings",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-16T05:39:00Z",
+        "updated_at": "2026-11-16T05:39:00Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/61",
+        "head": "codex/expanded-ldraw-t1098",
+        "head_sha": "af9907b13272da276818bf04c288a72a0d5c0dcc",
+        "base": "main",
+        "base_sha": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09",
+        "merge_sha": "2117764cc011a87e094c4029e10cb0b9bf28be08"
+      },
+      {
+        "number": 60,
+        "title": "Add printable Scout TT rover and qualify its CAD drive simulation",
+        "state": "open",
+        "draft": true,
+        "merged_at": null,
+        "updated_at": "2026-11-16T05:31:39Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/60",
+        "head": "feat/printable-robot-20261115",
+        "head_sha": "629682c13d8cbc55b70cdbc283b3b1e6c60ae841",
+        "base": "main",
+        "base_sha": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09",
+        "merge_sha": "8d70557b4199e515194b27b92d1a95c8a1666d64"
+      },
+      {
+        "number": 59,
+        "title": "Qualify Smooth authored default and bind bundled source licences per asset",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T20:43:46Z",
+        "updated_at": "2026-11-15T20:43:47Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/59",
+        "head": "codex/smooth-prim-qualified",
+        "head_sha": "3797c7dc811b2787a72690b3ffa5fbc67b58cb01",
+        "base": "main",
+        "base_sha": "15551325cf5e315add3c6cfc0991467d693f2319",
+        "merge_sha": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09"
+      },
+      {
+        "number": 58,
+        "title": "Qualify two whole authored LDraw parts with durable browser proof",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T18:53:38Z",
+        "updated_at": "2026-11-15T18:55:05Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/58",
+        "head": "codex/ldraw-wholeparts2-qualified",
+        "head_sha": "82a6dd64b51e8d85458b3bbf1dd9df8764c5f660",
+        "base": "main",
+        "base_sha": "596599a01a07754f18ceef5724074c9a297bc35c",
+        "merge_sha": "15551325cf5e315add3c6cfc0991467d693f2319"
+      },
+      {
+        "number": 57,
+        "title": "Qualify nine authored LDraw components with exact endpoint conversion",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T18:12:15Z",
+        "updated_at": "2026-11-15T18:12:53Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/57",
+        "head": "codex/ldraw-repair9-qualified",
+        "head_sha": "7b83f29c470cc8476fecf9194488e61fe0eba467",
+        "base": "main",
+        "base_sha": "2e18fa2167cc99637969aa13ad09647291f37fb9",
+        "merge_sha": "596599a01a07754f18ceef5724074c9a297bc35c"
+      },
+      {
+        "number": 56,
+        "title": "fix: conform exact LDraw edges and qualify authored battery top",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T17:04:31Z",
+        "updated_at": "2026-11-15T17:06:49Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/56",
+        "head": "codex/ldraw-exact-edge-conformity",
+        "head_sha": "14dbc70c3477bce78a2586fb0fefdfad6d054dc1",
+        "base": "main",
+        "base_sha": "0032418672409e6a1bb7af8d6297afef2cd1a22c",
+        "merge_sha": "2e18fa2167cc99637969aa13ad09647291f37fb9"
+      },
+      {
+        "number": 55,
+        "title": "Keep archive download regression aligned with source details UI",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T16:06:26Z",
+        "updated_at": "2026-11-15T16:06:26Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/55",
+        "head": "feat/shared-editor-selection-20261115",
+        "head_sha": "89b379b8df0a1f273025a1892dec12663081655f",
+        "base": "main",
+        "base_sha": "9cda5a5d1ebba484ef941dd02a90444f791ac9f2",
+        "merge_sha": "0032418672409e6a1bb7af8d6297afef2cd1a22c"
+      },
+      {
+        "number": 54,
+        "title": "Restore embedded catalogue and shared light/dark simulation controls",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T16:03:06Z",
+        "updated_at": "2026-11-15T16:03:06Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/54",
+        "head": "feat/shared-editor-selection-20261115",
+        "head_sha": "c7d8382d2392674fec847d8e800f305b2de65659",
+        "base": "main",
+        "base_sha": "64bb1cf694c2bead94cd9ef98a0801929fe319a6",
+        "merge_sha": "9cda5a5d1ebba484ef941dd02a90444f791ac9f2"
+      },
+      {
+        "number": 53,
+        "title": "Bring shared Brickwright simulation into the standalone CAD app",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T15:57:36Z",
+        "updated_at": "2026-11-15T15:57:36Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/53",
+        "head": "codex/sync-brickwright-simlab",
+        "head_sha": "a831e123fb7654d4133071273cf2d41823bd78b4",
+        "base": "main",
+        "base_sha": "c9dbd7db4e209bd2bb251e953fbfcdb5832da24c",
+        "merge_sha": "64bb1cf694c2bead94cd9ef98a0801929fe319a6"
+      },
+      {
+        "number": 52,
+        "title": "Optionally redesign resized screw threads by pitch or turns",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T14:17:23Z",
+        "updated_at": "2026-11-15T14:17:23Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/52",
+        "head": "codex/screw-thread-redesign",
+        "head_sha": "cb1853c5f2f6d62fd923e1f31a079fe0be737b66",
+        "base": "main",
+        "base_sha": "459ba9c43da6f7b98423697b2dd07e7c9662cfa3",
+        "merge_sha": "c9dbd7db4e209bd2bb251e953fbfcdb5832da24c"
+      },
+      {
+        "number": 51,
+        "title": "Qualify authored lighting ring separator with full editor and preview proof",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T13:19:07Z",
+        "updated_at": "2026-11-15T13:19:08Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/51",
+        "head": "codex/ldraw-authored-subcomponents",
+        "head_sha": "3c1523519257f2cc38244c5be699906d54734839",
+        "base": "main",
+        "base_sha": "2c63a29de9ba13aa89b3d03b825e6fc971de39e0",
+        "merge_sha": "459ba9c43da6f7b98423697b2dd07e7c9662cfa3"
+      },
+      {
+        "number": 50,
+        "title": "Retain bend, duct and dovetail designs with section-aware collisions",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T13:11:36Z",
+        "updated_at": "2026-11-15T13:11:36Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/50",
+        "head": "codex/retained-transitions",
+        "head_sha": "21c38393fca4d3a97b94d350f1974cb07168694c",
+        "base": "main",
+        "base_sha": "9476dfdb2ee1a78d130d8e2ec5caeb39a1164a2c",
+        "merge_sha": "2c63a29de9ba13aa89b3d03b825e6fc971de39e0"
+      },
+      {
+        "number": 49,
+        "title": "Qualify four more archived authored LDraw components",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T12:52:46Z",
+        "updated_at": "2026-11-15T12:52:46Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/49",
+        "head": "codex/ldraw-components-reserve",
+        "head_sha": "4800ddbe627c420792b6bfad205d2997a245bd41",
+        "base": "main",
+        "base_sha": "19895040c5d3613ab7e487b7a32555f7835b060c",
+        "merge_sha": "9476dfdb2ee1a78d130d8e2ec5caeb39a1164a2c"
+      },
+      {
+        "number": 47,
+        "title": "Retain curved/hollow design inputs and strengthen radial collisions",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T12:37:19Z",
+        "updated_at": "2026-11-15T12:37:19Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/47",
+        "head": "codex/curved-hollow-parameters",
+        "head_sha": "962b7bf3b8703cdaa9e3e2921e46fc80fc42b425",
+        "base": "main",
+        "base_sha": "58371c9ba62c2a6b68b5848cf3d54276828f2c64",
+        "merge_sha": "19895040c5d3613ab7e487b7a32555f7835b060c"
+      },
+      {
+        "number": 48,
+        "title": "Qualify 17 archived authored LDraw components with full editor and browser proof",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T12:31:47Z",
+        "updated_at": "2026-11-15T12:31:47Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/48",
+        "head": "codex/archived-ldraw-components",
+        "head_sha": "16ec892864d7785563b152412a3791057eb51d34",
+        "base": "main",
+        "base_sha": "5ae4c38a7256bd68f2e979921173c9f36c003732",
+        "merge_sha": "58371c9ba62c2a6b68b5848cf3d54276828f2c64"
+      },
+      {
+        "number": 45,
+        "title": "Retain cutting/enclosure dimensions and preserve stable cylinder CSG",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T11:37:45Z",
+        "updated_at": "2026-11-15T11:37:45Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/45",
+        "head": "codex/cutting-enclosure-parameters",
+        "head_sha": "f5312d0db2aded1a0341759fcfa59459847df785",
+        "base": "main",
+        "base_sha": "958fe2cbda84ec37805de9e3cd8984310fe69815",
+        "merge_sha": "5ae4c38a7256bd68f2e979921173c9f36c003732"
+      },
+      {
+        "number": 46,
+        "title": "Preserve reviewed archive package namespaces and exact refusal evidence",
+        "state": "open",
+        "draft": false,
+        "merged_at": null,
+        "updated_at": "2026-11-15T11:29:40Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/46",
+        "head": "codex/reviewed-bundle-namespace",
+        "head_sha": "74cdc61f94fffabb51079fc8bfde83f0df0c9dd8",
+        "base": "main",
+        "base_sha": "958fe2cbda84ec37805de9e3cd8984310fe69815",
+        "merge_sha": "b45a57694919555c1a76505867318c7e35b8aa24"
+      },
+      {
+        "number": 44,
+        "title": "Preserve uniform cylinder origins and qualify authored Sign03",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T11:14:32Z",
+        "updated_at": "2026-11-15T11:14:33Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/44",
+        "head": "codex/uniform-cylinder-origin",
+        "head_sha": "194d658c0ea0f2e51856df031aea2a2b6ddd07c4",
+        "base": "main",
+        "base_sha": "7058f5422d82435b35e1a6723cec6d9d6cccbacb",
+        "merge_sha": "958fe2cbda84ec37805de9e3cd8984310fe69815"
+      },
+      {
+        "number": 41,
+        "title": "Retain shape parameters, streamline surface dragging and declutter dimensions",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T11:09:50Z",
+        "updated_at": "2026-11-15T11:09:50Z",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/41",
+        "head": "codex/retained-basic-shapes",
+        "head_sha": "0d20a796cb014e27eeebeaa5b4ed3f845c88071b",
+        "base": "main",
+        "base_sha": "0c6f7c8379e25182b854e0a4f87cdec6f7a551a5",
+        "merge_sha": "7058f5422d82435b35e1a6723cec6d9d6cccbacb"
+      }
+    ],
+    "integration_assessment": [
+      "Merge current main 1371532344e546f9b26b76b3f9ad25c90ede725d into the Scout line first, preserving both parents. Main contains all eight new commits from merged PRs #61 and #62.",
+      "Current main and Scout have disjoint changed-file sets from shared merge base 53581e9cbd2565e9e088c8fcd52fb1ba5c739b09. No source-file merge conflict is indicated by that comparison; a local merge has not been run by this audit.",
+      "The three robot branches form a chain, with Atlas containing Kestrel and Trident. Their head is not a replacement for Scout: Atlas lacks six later Scout commits. A correct integration must preserve the latest Scout fixes.",
+      "Atlas/Kestrel/Trident code touches shapes.ts and physics/hints.ts also changed by Scout; inspect merge semantics. These branches contain no new build guides or retained qualification receipts. Their test files are test definitions, not proof that tests passed.",
+      "Co-simulation is a separate runtime feature line from 0ee57d91be6f4f910f8b8d6106ba894b9b1a8d1d, with four commits outside Scout and two later Scout commits absent. It includes Trident and modifies simulation-controller/protocol/worker and physics/world. Requires focused runtime qualification before use.",
+      "Keep all original feature branch refs intact. Do not treat mechanical concepts or a passing file merge as verified printable real hardware."
+    ]
+  },
+  "lite": {
+    "main": {
+      "sha": "6e8f065c6798cc4bfa1261f5c9413e69c4cbf367",
+      "message": "Merge pull request #1789 from CrispStrobe/fix/spike-palette-headers-20261114\n\nRestore LEGO extension palette headings in the adapter",
+      "date": "2026-11-15T08:05:09Z"
+    },
+    "main_already_in_requested_scout": true,
+    "pr1791_ancestor_comparison": {
+      "base": "fc333ddf88023cf17e9bb5973109b74a350f2ab7",
+      "head": "e10b5a586da28e5a68176c7989a0a17a3d278828",
+      "status": "ahead",
+      "ahead_by": 15,
+      "behind_by": 0,
+      "total_commits": 15,
+      "merge_base": "fc333ddf88023cf17e9bb5973109b74a350f2ab7",
+      "files": [
+        {
+          "filename": ".github/workflows/build.yml",
+          "status": "modified",
+          "additions": 7,
+          "deletions": 0
+        },
+        {
+          "filename": "THIRD-PARTY-NOTICES.md",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 0
+        },
+        {
+          "filename": "docs/CAD-EDITOR.md",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 0
+        },
+        {
+          "filename": "docs/CAD-SCOUT-TT-ROVER.md",
+          "status": "added",
+          "additions": 70,
+          "deletions": 0
+        },
+        {
+          "filename": "docs/evidence/2026-11-15-scout-tt-cad-integration.md",
+          "status": "added",
+          "additions": 64,
+          "deletions": 0
+        },
+        {
+          "filename": "docs/evidence/2026-11-16-scout-tt-cad-resumption.md",
+          "status": "added",
+          "additions": 75,
+          "deletions": 0
+        },
+        {
+          "filename": "licenses/adafruit-cad-parts-MIT.txt",
+          "status": "added",
+          "additions": 21,
+          "deletions": 0
+        },
+        {
+          "filename": "overlay/scratch-gui/static/cad-sdk/assets/geometry.worker-DcLpkscD.js",
+          "status": "renamed",
+          "additions": 352,
+          "deletions": 331
+        },
+        {
+          "filename": "overlay/scratch-gui/static/cad-sdk/assets/jolt-physics.wasm-compat-C_UBSAxu.js",
+          "status": "renamed",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "filename": "overlay/scratch-gui/static/cad-sdk/assets/simulation.worker-Dd3FSaCN.js",
+          "status": "renamed",
+          "additions": 4268,
+          "deletions": 4034
+        },
+        {
+          "filename": "overlay/scratch-gui/static/cad-sdk/manifest.json",
+          "status": "modified",
+          "additions": 7,
+          "deletions": 7
+        },
+        {
+          "filename": "overlay/scratch-gui/static/cad-sdk/model-library-local-CTFGH9V7.js",
+          "status": "renamed",
+          "additions": 36931,
+          "deletions": 30247
+        },
+        {
+          "filename": "overlay/scratch-gui/static/cad-sdk/sdk-CF1zjk9O.js",
+          "status": "renamed",
+          "additions": 12362,
+          "deletions": 12202
+        },
+        {
+          "filename": "overlay/scratch-gui/static/cad-sdk/sdk.js",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "filename": "overlay/scratch-vm/src/extensions/crispstrobe/adapter.js",
+          "status": "modified",
+          "additions": 17,
+          "deletions": 2
+        },
+        {
+          "filename": "packages/scratch-gui/src/components/gui/gui.jsx",
+          "status": "modified",
+          "additions": 55,
+          "deletions": 1
+        },
+        {
+          "filename": "packages/scratch-gui/src/components/menu-bar/settings-menu.jsx",
+          "status": "modified",
+          "additions": 10,
+          "deletions": 3
+        },
+        {
+          "filename": "packages/scratch-gui/src/lib/bw-project-bundle.js",
+          "status": "modified",
+          "additions": 22,
+          "deletions": 5
+        },
+        {
+          "filename": "packages/scratch-gui/src/lib/libraries/extensions/index.jsx",
+          "status": "modified",
+          "additions": 8,
+          "deletions": 0
+        },
+        {
+          "filename": "packages/scratch-gui/src/lib/themes/themePersistance.js",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 3
+        },
+        {
+          "filename": "packages/scratch-gui/webpack.config.js",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 3
+        },
+        {
+          "filename": "packages/scratch-vm/src/extension-support/extension-manager.js",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "filename": "scripts/create-cad-rover-project.mjs",
+          "status": "added",
+          "additions": 92,
+          "deletions": 0
+        },
+        {
+          "filename": "scripts/verify-cad-rover-project.mjs",
+          "status": "added",
+          "additions": 38,
+          "deletions": 0
+        },
+        {
+          "filename": "test/bundled-palette-registration.test.mjs",
+          "status": "added",
+          "additions": 65,
+          "deletions": 0
+        },
+        {
+          "filename": "test/cad-rover-project.test.mjs",
+          "status": "added",
+          "additions": 51,
+          "deletions": 0
+        },
+        {
+          "filename": "test/spike-palette-registration.test.mjs",
+          "status": "added",
+          "additions": 81,
+          "deletions": 0
+        }
+      ],
+      "overlap_with_scout_changes_from_main_merge_base": []
+    },
+    "new_robot_branches": [
+      {
+        "branch": "feat/atlas-forklift-20261116",
+        "sha": "4f9ae64d4e22028a1a0439bcd704346ba0c14b1b",
+        "message": "Sync CAD SDK and add Atlas forklift SB3 project [skip ci]",
+        "date": "2026-11-16T06:08:03Z",
+        "parents": [
+          "68a267f25744da2fdcf34f5b7b3b20d19931a76e"
+        ],
+        "comparison_with_scout": {
+          "base": "e10b5a586da28e5a68176c7989a0a17a3d278828",
+          "head": "4f9ae64d4e22028a1a0439bcd704346ba0c14b1b",
+          "status": "diverged",
+          "ahead_by": 3,
+          "behind_by": 5,
+          "total_commits": 3,
+          "merge_base": "7fbd4b5060fe22b0100adbf3e4725919ee0faeae",
+          "files": [
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/assets/geometry.worker-DkFf0PYL.js",
+              "status": "renamed",
+              "additions": 351,
+              "deletions": 331
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/assets/jolt-physics.wasm-compat-BaxusNuG.js",
+              "status": "renamed",
+              "additions": 1,
+              "deletions": 1
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/assets/simulation.worker-rCTf2Xa-.js",
+              "status": "renamed",
+              "additions": 23,
+              "deletions": 3
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/manifest.json",
+              "status": "modified",
+              "additions": 7,
+              "deletions": 7
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/model-library-local-CpWTOpFg.js",
+              "status": "renamed",
+              "additions": 36931,
+              "deletions": 30247
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/sdk-Cr3-O0Oc.js",
+              "status": "renamed",
+              "additions": 14609,
+              "deletions": 13845
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/sdk.js",
+              "status": "modified",
+              "additions": 1,
+              "deletions": 1
+            },
+            {
+              "filename": "scripts/create-atlas-forklift-project.mjs",
+              "status": "added",
+              "additions": 104,
+              "deletions": 0
+            },
+            {
+              "filename": "scripts/create-kestrel-arm-project.mjs",
+              "status": "added",
+              "additions": 98,
+              "deletions": 0
+            },
+            {
+              "filename": "scripts/create-steerable-rover-project.mjs",
+              "status": "added",
+              "additions": 103,
+              "deletions": 0
+            },
+            {
+              "filename": "test/atlas-forklift-project.test.mjs",
+              "status": "added",
+              "additions": 132,
+              "deletions": 0
+            },
+            {
+              "filename": "test/kestrel-arm-project.test.mjs",
+              "status": "added",
+              "additions": 108,
+              "deletions": 0
+            },
+            {
+              "filename": "test/steerable-rover-project.test.mjs",
+              "status": "added",
+              "additions": 109,
+              "deletions": 0
+            }
+          ],
+          "overlap_with_scout_changes_from_main_merge_base": []
+        }
+      },
+      {
+        "branch": "feat/kestrel-gripper-arm-20261116",
+        "sha": "68a267f25744da2fdcf34f5b7b3b20d19931a76e",
+        "message": "Sync CAD SDK and add Kestrel 3-servo arm SB3 project [skip ci]",
+        "date": "2026-11-16T05:25:49Z",
+        "parents": [
+          "272d913eaf86d2b3e176363aa3097566e6523927"
+        ],
+        "comparison_with_scout": {
+          "base": "e10b5a586da28e5a68176c7989a0a17a3d278828",
+          "head": "68a267f25744da2fdcf34f5b7b3b20d19931a76e",
+          "status": "diverged",
+          "ahead_by": 2,
+          "behind_by": 5,
+          "total_commits": 2,
+          "merge_base": "7fbd4b5060fe22b0100adbf3e4725919ee0faeae",
+          "files": [
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/assets/geometry.worker-DkFf0PYL.js",
+              "status": "renamed",
+              "additions": 351,
+              "deletions": 331
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/assets/jolt-physics.wasm-compat-BaxusNuG.js",
+              "status": "renamed",
+              "additions": 1,
+              "deletions": 1
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/assets/simulation.worker-rCTf2Xa-.js",
+              "status": "renamed",
+              "additions": 23,
+              "deletions": 3
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/manifest.json",
+              "status": "modified",
+              "additions": 7,
+              "deletions": 7
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/model-library-local-DWeGZ3pg.js",
+              "status": "renamed",
+              "additions": 36931,
+              "deletions": 30247
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/sdk-D1X9l11j.js",
+              "status": "renamed",
+              "additions": 13158,
+              "deletions": 12593
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/sdk.js",
+              "status": "modified",
+              "additions": 1,
+              "deletions": 1
+            },
+            {
+              "filename": "scripts/create-kestrel-arm-project.mjs",
+              "status": "added",
+              "additions": 98,
+              "deletions": 0
+            },
+            {
+              "filename": "scripts/create-steerable-rover-project.mjs",
+              "status": "added",
+              "additions": 103,
+              "deletions": 0
+            },
+            {
+              "filename": "test/kestrel-arm-project.test.mjs",
+              "status": "added",
+              "additions": 108,
+              "deletions": 0
+            },
+            {
+              "filename": "test/steerable-rover-project.test.mjs",
+              "status": "added",
+              "additions": 109,
+              "deletions": 0
+            }
+          ],
+          "overlap_with_scout_changes_from_main_merge_base": []
+        }
+      },
+      {
+        "branch": "feat/steerable-3d-robot-20261115",
+        "sha": "272d913eaf86d2b3e176363aa3097566e6523927",
+        "message": "Sync CAD SDK and add Trident steerable rover SB3 project [skip ci]",
+        "date": "2026-11-15T23:42:25Z",
+        "parents": [
+          "7fbd4b5060fe22b0100adbf3e4725919ee0faeae"
+        ],
+        "comparison_with_scout": {
+          "base": "e10b5a586da28e5a68176c7989a0a17a3d278828",
+          "head": "272d913eaf86d2b3e176363aa3097566e6523927",
+          "status": "diverged",
+          "ahead_by": 1,
+          "behind_by": 5,
+          "total_commits": 1,
+          "merge_base": "7fbd4b5060fe22b0100adbf3e4725919ee0faeae",
+          "files": [
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/assets/geometry.worker-DkFf0PYL.js",
+              "status": "renamed",
+              "additions": 351,
+              "deletions": 331
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/assets/jolt-physics.wasm-compat-BaxusNuG.js",
+              "status": "renamed",
+              "additions": 1,
+              "deletions": 1
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/assets/simulation.worker-rCTf2Xa-.js",
+              "status": "renamed",
+              "additions": 23,
+              "deletions": 3
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/manifest.json",
+              "status": "modified",
+              "additions": 7,
+              "deletions": 7
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/model-library-local-DxFfiNiE.js",
+              "status": "renamed",
+              "additions": 36931,
+              "deletions": 30247
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/sdk-BFWubIwE.js",
+              "status": "renamed",
+              "additions": 12847,
+              "deletions": 12418
+            },
+            {
+              "filename": "overlay/scratch-gui/static/cad-sdk/sdk.js",
+              "status": "modified",
+              "additions": 1,
+              "deletions": 1
+            },
+            {
+              "filename": "scripts/create-steerable-rover-project.mjs",
+              "status": "added",
+              "additions": 103,
+              "deletions": 0
+            },
+            {
+              "filename": "test/steerable-rover-project.test.mjs",
+              "status": "added",
+              "additions": 109,
+              "deletions": 0
+            }
+          ],
+          "overlap_with_scout_changes_from_main_merge_base": []
+        }
+      }
+    ],
+    "other_open_robot_lanes": {
+      "pr1788": {
+        "base": "e10b5a586da28e5a68176c7989a0a17a3d278828",
+        "head": "a7dd2b98e4fbf9a2fc04f0d8da7538d363c353df",
+        "status": "diverged",
+        "ahead_by": 31,
+        "behind_by": 45,
+        "total_commits": 31,
+        "merge_base": "7862588dceae329ba0ef09cc1fe521129304283a",
+        "files": [
+          {
+            "filename": "docs/ROBOT-LAB-VALIDATION.md",
+            "status": "modified",
+            "additions": 9,
+            "deletions": 1
+          },
+          {
+            "filename": "docs/data/robot-lab-program-gaps-20261114.json",
+            "status": "added",
+            "additions": 11484,
+            "deletions": 0
+          },
+          {
+            "filename": "scripts/lib/robot-lab-program-completion.mjs",
+            "status": "added",
+            "additions": 179,
+            "deletions": 0
+          },
+          {
+            "filename": "scripts/lib/robot-lab-program-gaps.mjs",
+            "status": "added",
+            "additions": 23,
+            "deletions": 0
+          },
+          {
+            "filename": "scripts/lib/robot-lab-run-retention.mjs",
+            "status": "added",
+            "additions": 11,
+            "deletions": 0
+          },
+          {
+            "filename": "scripts/test-robot-lab-functional.mjs",
+            "status": "modified",
+            "additions": 45,
+            "deletions": 15
+          },
+          {
+            "filename": "scripts/test-robot-lab-programs.mjs",
+            "status": "added",
+            "additions": 5,
+            "deletions": 0
+          },
+          {
+            "filename": "test/bw-sim-robot-lab-program-clock.test.mjs",
+            "status": "modified",
+            "additions": 10,
+            "deletions": 0
+          },
+          {
+            "filename": "test/helpers/robot-lab-direct-vm.mjs",
+            "status": "modified",
+            "additions": 3,
+            "deletions": 2
+          },
+          {
+            "filename": "test/robot-lab-program-completion.test.mjs",
+            "status": "added",
+            "additions": 72,
+            "deletions": 0
+          },
+          {
+            "filename": "test/robot-lab-program-gaps.test.mjs",
+            "status": "added",
+            "additions": 41,
+            "deletions": 0
+          },
+          {
+            "filename": "test/robot-lab-run-retention.test.mjs",
+            "status": "added",
+            "additions": 15,
+            "deletions": 0
+          }
+        ],
+        "overlap_with_scout_changes_from_main_merge_base": []
+      },
+      "pr1731": {
+        "base": "e10b5a586da28e5a68176c7989a0a17a3d278828",
+        "head": "b797848c221f8f971be072e42cc10ce5312ebe22",
+        "status": "diverged",
+        "ahead_by": 81,
+        "behind_by": 45,
+        "total_commits": 81,
+        "merge_base": "7862588dceae329ba0ef09cc1fe521129304283a",
+        "files": [
+          {
+            "filename": ".github/workflows/build.yml",
+            "status": "modified",
+            "additions": 18,
+            "deletions": 3
+          },
+          {
+            "filename": "docs/ROBOT-LAB-QUALIFICATION-HANDOFF-20261028.md",
+            "status": "modified",
+            "additions": 76,
+            "deletions": 0
+          },
+          {
+            "filename": "docs/data/robot-lab-experimental-checkpoint.json",
+            "status": "modified",
+            "additions": 45,
+            "deletions": 10
+          },
+          {
+            "filename": "docs/data/robot-lab-lessons.json",
+            "status": "modified",
+            "additions": 96,
+            "deletions": 0
+          },
+          {
+            "filename": "docs/data/robot-lab-mechanisms.json",
+            "status": "modified",
+            "additions": 80,
+            "deletions": 0
+          },
+          {
+            "filename": "docs/data/robot-lab-qualification.json",
+            "status": "modified",
+            "additions": 43,
+            "deletions": 0
+          },
+          {
+            "filename": "docs/generated/browser-gate-readings.json",
+            "status": "modified",
+            "additions": 12,
+            "deletions": 0
+          },
+          {
+            "filename": "lanes/2026-11-03-robot-lab-pending.md",
+            "status": "modified",
+            "additions": 12,
+            "deletions": 5
+          },
+          {
+            "filename": "lanes/2026-11-12-robot-r3-geometry-repairs.md",
+            "status": "added",
+            "additions": 29,
+            "deletions": 0
+          },
+          {
+            "filename": "lanes/2026-11-12-robot-r4-start-guards.md",
+            "status": "modified",
+            "additions": 29,
+            "deletions": 8
+          },
+          {
+            "filename": "lanes/2026-11-12-scoped-robot-menu-browser-qualification.md",
+            "status": "modified",
+            "additions": 20,
+            "deletions": 6
+          },
+          {
+            "filename": "lanes/2026-11-12-solstice-held-browser-controller.md",
+            "status": "modified",
+            "additions": 15,
+            "deletions": 3
+          },
+          {
+            "filename": "lanes/2026-11-12-solstice-held-startup-route.md",
+            "status": "modified",
+            "additions": 20,
+            "deletions": 5
+          },
+          {
+            "filename": "lanes/2026-11-12-solstice-startup-browser-plumbing.md",
+            "status": "modified",
+            "additions": 11,
+            "deletions": 1
+          },
+          {
+            "filename": "lanes/2026-11-12-solstice-startup-worker-diagnostic.md",
+            "status": "modified",
+            "additions": 8,
+            "deletions": 1
+          },
+          {
+            "filename": "lanes/2026-11-12-tile-menu-focus.md",
+            "status": "modified",
+            "additions": 6,
+            "deletions": 1
+          },
+          {
+            "filename": "overlay/scratch-gui/src/components/menu/menu.jsx",
+            "status": "modified",
+            "additions": 8,
+            "deletions": 2
+          },
+          {
+            "filename": "overlay/scratch-gui/src/lib/bw-sim/measurements/startup-diagnostic-consumer.js",
+            "status": "added",
+            "additions": 48,
+            "deletions": 0
+          },
+          {
+            "filename": "overlay/scratch-gui/src/lib/bw-sim/measurements/startup-diagnostic.js",
+            "status": "added",
+            "additions": 51,
+            "deletions": 0
+          },
+          {
+            "filename": "overlay/scratch-gui/src/lib/bw-sim/model/example-catalog.js",
+            "status": "modified",
+            "additions": 60,
+            "deletions": 0
+          },
+          {
+            "filename": "overlay/scratch-gui/src/lib/bw-sim/model/experimental-models.js",
+            "status": "modified",
+            "additions": 0,
+            "deletions": 114
+          },
+          {
+            "filename": "overlay/scratch-gui/src/lib/bw-sim/physics/physics-client.js",
+            "status": "modified",
+            "additions": 3,
+            "deletions": 2
+          },
+          {
+            "filename": "overlay/scratch-gui/src/lib/bw-sim/physics/physics-host.js",
+            "status": "modified",
+            "additions": 3,
+            "deletions": 2
+          },
+          {
+            "filename": "overlay/scratch-gui/src/lib/bw-sim/sim-session.js",
+            "status": "modified",
+            "additions": 46,
+            "deletions": 1
+          },
+          {
+            "filename": "overlay/scratch-gui/src/lib/bw-sim/sim-worker-protocol.js",
+            "status": "modified",
+            "additions": 8,
+            "deletions": 3
+          },
+          {
+            "filename": "overlay/scratch-gui/src/lib/bw-sim/view/sim-view3d.js",
+            "status": "modified",
+            "additions": 12,
+            "deletions": 3
+          },
+          {
+            "filename": "overlay/scratch-gui/src/lib/menu-keyboard.js",
+            "status": "modified",
+            "additions": 7,
+            "deletions": 0
+          },
+          {
+            "filename": "overlay/scratch-gui/src/lib/robotLabDialect.js",
+            "status": "modified",
+            "additions": 1,
+            "deletions": 1
+          },
+          {
+            "filename": "overlay/scratch-gui/static/sim-lab/lessons/apex.de.json",
+            "status": "modified",
+            "additions": 2,
+            "deletions": 2
+          },
+          {
+            "filename": "overlay/scratch-gui/static/sim-lab/lessons/apex.en.json",
+            "status": "modified",
+            "additions": 2,
+            "deletions": 2
+          },
+          {
+            "filename": "overlay/scratch-gui/static/sim-lab/lessons/tempest-pendulum.de.json",
+            "status": "modified",
+            "additions": 15,
+            "deletions": 13
+          },
+          {
+            "filename": "overlay/scratch-gui/static/sim-lab/lessons/tempest-pendulum.en.json",
+            "status": "modified",
+            "additions": 15,
+            "deletions": 13
+          },
+          {
+            "filename": "overlay/scratch-gui/static/sim-lab/models/apex.ldr",
+            "status": "modified",
+            "additions": 103,
+            "deletions": 32
+          },
+          {
+            "filename": "overlay/scratch-gui/static/sim-lab/models/apex.mpd",
+            "status": "modified",
+            "additions": 103,
+            "deletions": 32
+          },
+          {
+            "filename": "overlay/scratch-gui/static/sim-lab/models/aster-governor.ldr",
+            "status": "modified",
+            "additions": 10,
+            "deletions": 29
+          },
+          {
+            "filename": "overlay/scratch-gui/static/sim-lab/models/aster-governor.mpd",
+            "status": "modified",
+            "additions": 10,
+            "deletions": 29
+          },
+          {
+            "filename": "overlay/scratch-gui/static/sim-lab/models/tempest-pendulum.ldr",
+            "status": "modified",
+            "additions": 31,
+            "deletions": 38
+          },
+          {
+            "filename": "overlay/scratch-gui/static/sim-lab/models/tempest-pendulum.mpd",
+            "status": "modified",
+            "additions": 31,
+            "deletions": 38
+          },
+          {
+            "filename": "overlay/scratch-gui/static/sim-lab/models/vesper-quickreturn.ldr",
+            "status": "modified",
+            "additions": 1,
+            "deletions": 13
+          },
+          {
+            "filename": "overlay/scratch-gui/static/sim-lab/models/vesper-quickreturn.mpd",
+            "status": "modified",
+            "additions": 1,
+            "deletions": 13
+          },
+          {
+            "filename": "overlay/scratch-vm/src/extensions/crispstrobe/robotlab/index.js",
+            "status": "modified",
+            "additions": 1,
+            "deletions": 1
+          },
+          {
+            "filename": "packages/scratch-gui/src/components/menu/menu.jsx",
+            "status": "modified",
+            "additions": 8,
+            "deletions": 2
+          },
+          {
+            "filename": "packages/scratch-gui/src/lib/menu-keyboard.js",
+            "status": "modified",
+            "additions": 7,
+            "deletions": 0
+          },
+          {
+            "filename": "scripts/gen-robot-lab-catalog.mjs",
+            "status": "modified",
+            "additions": 3,
+            "deletions": 1
+          },
+          {
+            "filename": "scripts/lib/robot-lab-qualification.mjs",
+            "status": "modified",
+            "additions": 3,
+            "deletions": 1
+          },
+          {
+            "filename": "scripts/lib/sim-lab-browser-recorder.mjs",
+            "status": "modified",
+            "additions": 26,
+            "deletions": 2
+          },
+          {
+            "filename": "scripts/lib/sim-lab-intake-roundtrip.mjs",
+            "status": "modified",
+            "additions": 12,
+            "deletions": 2
+          },
+          {
+            "filename": "scripts/lib/sim-lab-mechanics-gate.mjs",
+            "status": "modified",
+            "additions": 4,
+            "deletions": 2
+          },
+          {
+            "filename": "scripts/lib/sim-lab-q5-browser-gate.mjs",
+            "status": "modified",
+            "additions": 90,
+            "deletions": 21
+          },
+          {
+            "filename": "scripts/lib/sim-lab-q5-held.mjs",
+            "status": "added",
+            "additions": 251,
+            "deletions": 0
+          },
+          {
+            "filename": "scripts/lib/sim-lab-r3-judges.mjs",
+            "status": "added",
+            "additions": 273,
+            "deletions": 0
+          },
+          {
+            "filename": "scripts/lib/sim-lab-walking-beam-startup-diagnostic.mjs",
+            "status": "added",
+            "additions": 40,
+            "deletions": 0
+          },
+          {
+            "filename": "scripts/verify-sim-lab-browser.mjs",
+            "status": "modified",
+            "additions": 38,
+            "deletions": 14
+          },
+          {
+            "filename": "test/bw-sim-example-catalog.test.mjs",
+            "status": "modified",
+            "additions": 1,
+            "deletions": 1
+          },
+          {
+            "filename": "test/bw-sim-gpu-frame-queue.test.mjs",
+            "status": "modified",
+            "additions": 47,
+            "deletions": 6
+          },
+          {
+            "filename": "test/bw-sim-models.test.mjs",
+            "status": "modified",
+            "additions": 2,
+            "deletions": 2
+          },
+          {
+            "filename": "test/bw-sim-qualification.test.mjs",
+            "status": "modified",
+            "additions": 44,
+            "deletions": 0
+          },
+          {
+            "filename": "test/bw-sim-resonance-intake.test.mjs",
+            "status": "modified",
+            "additions": 3,
+            "deletions": 3
+          },
+          {
+            "filename": "test/bw-sim-startup-diagnostic-session.test.mjs",
+            "status": "added",
+            "additions": 120,
+            "deletions": 0
+          },
+          {
+            "filename": "test/bw-sim-startup-diagnostic.test.mjs",
+            "status": "added",
+            "additions": 94,
+            "deletions": 0
+          },
+          {
+            "filename": "test/bw-sim-tempest-instructions.test.mjs",
+            "status": "added",
+            "additions": 56,
+            "deletions": 0
+          },
+          {
+            "filename": "test/ci-browser-scope.test.mjs",
+            "status": "modified",
+            "additions": 1,
+            "deletions": 1
+          },
+          {
+            "filename": "test/cycle-core-qualification.test.mjs",
+            "status": "modified",
+            "additions": 1,
+            "deletions": 0
+          },
+          {
+            "filename": "test/debug-ci-efficiency.test.mjs",
+            "status": "modified",
+            "additions": 3,
+            "deletions": 0
+          },
+          {
+            "filename": "test/fixtures/model-files/apex-source/LICENSE.txt",
+            "status": "added",
+            "additions": 50,
+            "deletions": 0
+          },
+          {
+            "filename": "test/fixtures/model-files/apex-source/SOURCES.md",
+            "status": "added",
+            "additions": 7,
+            "deletions": 0
+          },
+          {
+            "filename": "test/fixtures/model-files/apex-source/models/apex.ldr",
+            "status": "added",
+            "additions": 1066,
+            "deletions": 0
+          },
+          {
+            "filename": "test/fixtures/model-files/apex-source/programs/apex.bw",
+            "status": "added",
+            "additions": 89,
+            "deletions": 0
+          },
+          {
+            "filename": "test/fixtures/model-files/apex-source/provenance.json",
+            "status": "added",
+            "additions": 10,
+            "deletions": 0
+          },
+          {
+            "filename": "test/fixtures/model-files/tempest-pendulum-source/LICENSE.txt",
+            "status": "added",
+            "additions": 50,
+            "deletions": 0
+          },
+          {
+            "filename": "test/fixtures/model-files/tempest-pendulum-source/SOURCES.md",
+            "status": "added",
+            "additions": 9,
+            "deletions": 0
+          },
+          {
+            "filename": "test/fixtures/model-files/tempest-pendulum-source/models/tempest-pendulum.ldr",
+            "status": "added",
+            "additions": 155,
+            "deletions": 0
+          },
+          {
+            "filename": "test/fixtures/model-files/tempest-pendulum-source/programs/tempest-pendulum.bw",
+            "status": "added",
+            "additions": 185,
+            "deletions": 0
+          },
+          {
+            "filename": "test/fixtures/model-files/tempest-pendulum-source/provenance.json",
+            "status": "added",
+            "additions": 10,
+            "deletions": 0
+          },
+          {
+            "filename": "test/helpers/reviewed-concurrency-projections.mjs",
+            "status": "modified",
+            "additions": 17,
+            "deletions": 10
+          },
+          {
+            "filename": "test/menu-keyboard.test.mjs",
+            "status": "modified",
+            "additions": 16,
+            "deletions": 1
+          },
+          {
+            "filename": "test/menu-submenu-focus.test.mjs",
+            "status": "added",
+            "additions": 81,
+            "deletions": 0
+          },
+          {
+            "filename": "test/model-api-protocol.test.mjs",
+            "status": "modified",
+            "additions": 1,
+            "deletions": 1
+          },
+          {
+            "filename": "test/pin-move-chain.test.mjs",
+            "status": "modified",
+            "additions": 3,
+            "deletions": 1
+          },
+          {
+            "filename": "test/reviewed-concurrency-projections.test.mjs",
+            "status": "modified",
+            "additions": 17,
+            "deletions": 0
+          },
+          {
+            "filename": "test/robot-lab-addon-shards.test.mjs",
+            "status": "modified",
+            "additions": 3,
+            "deletions": 3
+          },
+          {
+            "filename": "test/robot-lab-held-solstice.test.mjs",
+            "status": "added",
+            "additions": 422,
+            "deletions": 0
+          },
+          {
+            "filename": "test/robot-lab-held-startup-telemetry.test.mjs",
+            "status": "added",
+            "additions": 137,
+            "deletions": 0
+          },
+          {
+            "filename": "test/robot-lab-mechanism-search.test.mjs",
+            "status": "modified",
+            "additions": 1,
+            "deletions": 1
+          },
+          {
+            "filename": "test/robot-lab-walking-beam-reference.test.mjs",
+            "status": "added",
+            "additions": 31,
+            "deletions": 0
+          },
+          {
+            "filename": "test/robot-lab-walking-beam-startup-diagnostic.test.mjs",
+            "status": "added",
+            "additions": 45,
+            "deletions": 0
+          },
+          {
+            "filename": "test/sim-lab-startup-diagnostic-recorder.test.mjs",
+            "status": "added",
+            "additions": 108,
+            "deletions": 0
+          },
+          {
+            "filename": "test/workflow-concurrency-isolation.test.mjs",
+            "status": "modified",
+            "additions": 23,
+            "deletions": 0
+          }
+        ],
+        "overlap_with_scout_changes_from_main_merge_base": []
+      }
+    },
+    "recent_prs": [
+      {
+        "number": 1785,
+        "title": "Expand MakeCode Arcade import coverage",
+        "state": "open",
+        "draft": true,
+        "merged_at": null,
+        "updated_at": "2026-11-16T07:03:22Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1785",
+        "head": "lane/arcade-instance-overlap-20261114",
+        "head_sha": "68ec2365f5a13ee40acc6a55aa852719c78abbce",
+        "base": "main",
+        "base_sha": "6e8f065c6798cc4bfa1261f5c9413e69c4cbf367",
+        "merge_sha": "f9b90eed8c8c9da5f7f9ece0252ef104ef321f32"
+      },
+      {
+        "number": 1792,
+        "title": "Enable Scout TT rover projects with shared CAD controls",
+        "state": "open",
+        "draft": true,
+        "merged_at": null,
+        "updated_at": "2026-11-16T05:30:27Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1792",
+        "head": "feat/pla-rover-cad-20261115",
+        "head_sha": "e10b5a586da28e5a68176c7989a0a17a3d278828",
+        "base": "main",
+        "base_sha": "6e8f065c6798cc4bfa1261f5c9413e69c4cbf367",
+        "merge_sha": "0310e8e682e3ec3686d408f2d31b22885af27b7f"
+      },
+      {
+        "number": 1791,
+        "title": "Add shared opt-in CAD simulation and repair Robot Lab interactions",
+        "state": "open",
+        "draft": true,
+        "merged_at": null,
+        "updated_at": "2026-11-15T18:29:23Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1791",
+        "head": "feat/robot-cad-selection-20261115",
+        "head_sha": "fc333ddf88023cf17e9bb5973109b74a350f2ab7",
+        "base": "main",
+        "base_sha": "6e8f065c6798cc4bfa1261f5c9413e69c4cbf367",
+        "merge_sha": "a9f624aa7faf8877f808c62dc1e5a723413b7245"
+      },
+      {
+        "number": 1789,
+        "title": "Restore LEGO extension palette headings in the adapter",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-15T08:05:09Z",
+        "updated_at": "2026-11-15T08:05:09Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1789",
+        "head": "fix/spike-palette-headers-20261114",
+        "head_sha": "284746c055da5af9337120b81dd21d5b55c161a8",
+        "base": "main",
+        "base_sha": "c6cae060ba12bb70072f0fa153fa2474dc41c0fe",
+        "merge_sha": "6e8f065c6798cc4bfa1261f5c9413e69c4cbf367"
+      },
+      {
+        "number": 1790,
+        "title": "fix(robot-lab): prevent text selection and dismiss unchanged warnings",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-14T21:43:08Z",
+        "updated_at": "2026-11-14T21:43:08Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1790",
+        "head": "fix/robot-lab-pane-ux-20261114",
+        "head_sha": "3761e30154c79301aff8157becdcfb2b397b8833",
+        "base": "main",
+        "base_sha": "7862588dceae329ba0ef09cc1fe521129304283a",
+        "merge_sha": "c6cae060ba12bb70072f0fa153fa2474dc41c0fe"
+      },
+      {
+        "number": 1788,
+        "title": "Robot Lab: track complete programs and remaining gaps",
+        "state": "open",
+        "draft": false,
+        "merged_at": null,
+        "updated_at": "2026-11-14T19:09:39Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1788",
+        "head": "lane/robot-program-completion-20261114",
+        "head_sha": "a7dd2b98e4fbf9a2fc04f0d8da7538d363c353df",
+        "base": "main",
+        "base_sha": "7862588dceae329ba0ef09cc1fe521129304283a",
+        "merge_sha": "f0cbd09931bb9590c54e5ad09a669fbc5d1c8da8"
+      },
+      {
+        "number": 1731,
+        "title": "Robot Lab: integrate R3 and R4 examples and menu focus repair",
+        "state": "open",
+        "draft": false,
+        "merged_at": null,
+        "updated_at": "2026-11-14T18:27:42Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1731",
+        "head": "lane/robot-r3-geometry-20261112",
+        "head_sha": "b797848c221f8f971be072e42cc10ce5312ebe22",
+        "base": "main",
+        "base_sha": "7862588dceae329ba0ef09cc1fe521129304283a",
+        "merge_sha": "b0ae839b56aaf996b6e03efb3d849d757e2a9690"
+      },
+      {
+        "number": 1784,
+        "title": "Robot Lab: improve Solstice linkage convergence",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-14T17:20:43Z",
+        "updated_at": "2026-11-14T17:20:44Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1784",
+        "head": "lane/solstice-precision-current-20261114",
+        "head_sha": "6ea6f25e71730b47bcc4afbe2f021987137bc6be",
+        "base": "main",
+        "base_sha": "9fb8210ee3e299c46f0776f510b63812dafecd55",
+        "merge_sha": "7862588dceae329ba0ef09cc1fe521129304283a"
+      },
+      {
+        "number": 1782,
+        "title": "Reject non-finite rope lengths",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-14T17:20:05Z",
+        "updated_at": "2026-11-14T17:20:05Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1782",
+        "head": "lane/robot-rope-finite-length-20261114",
+        "head_sha": "f578fceab277eb0432121c9f1a66f045d1739f9e",
+        "base": "main",
+        "base_sha": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "merge_sha": "20cf9828b9461904e3dc5923031485b4f1735e10"
+      },
+      {
+        "number": 1783,
+        "title": "Robot Lab: run and record functional coverage for 82 models",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-14T12:18:20Z",
+        "updated_at": "2026-11-14T12:18:21Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1783",
+        "head": "lane/robot-functional-runner-20261114",
+        "head_sha": "e6877a93d838450bd18389ae1183c03bc237363c",
+        "base": "main",
+        "base_sha": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "merge_sha": "9fb8210ee3e299c46f0776f510b63812dafecd55"
+      },
+      {
+        "number": 1780,
+        "title": "Stop recordings on time with stale readings",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-14T11:58:39Z",
+        "updated_at": "2026-11-14T11:58:40Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1780",
+        "head": "lane/robot-recording-timeout-20261114",
+        "head_sha": "a99d38d910d66619a6facfb845b99d67de6a2193",
+        "base": "main",
+        "base_sha": "3d9e85af8c5fc918873b69b1b5da68b3acdcb7c9",
+        "merge_sha": "2d4b2da92d62867e1c64e1703e3c8bce06c527d6"
+      },
+      {
+        "number": 1781,
+        "title": "Robot Lab: preview default joint and rope measurements",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-14T11:56:45Z",
+        "updated_at": "2026-11-14T11:56:46Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1781",
+        "head": "lane/robot-measurement-default-preview-20261114",
+        "head_sha": "8c3f733af6d10d38cd238d4ef4f858852226ec6b",
+        "base": "main",
+        "base_sha": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "merge_sha": "02f146429e3b8ee7badccebfd5d666589b87b764"
+      },
+      {
+        "number": 1787,
+        "title": "Select TypeScript inputs for explicit block and TS Arcade projects",
+        "state": "closed",
+        "draft": false,
+        "merged_at": null,
+        "updated_at": "2026-11-14T11:30:33Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1787",
+        "head": "lane/makecode-inactive-python-20261114",
+        "head_sha": "371e8a689db9f1b2fd8f747c68438a4eef3f9e1b",
+        "base": "main",
+        "base_sha": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "merge_sha": "5963ec7b0d3d8b3f996af8b02f18e287a49de729"
+      },
+      {
+        "number": 1786,
+        "title": "Parse contextual type identifiers without losing alias or readonly semantics",
+        "state": "closed",
+        "draft": false,
+        "merged_at": null,
+        "updated_at": "2026-11-14T11:30:32Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1786",
+        "head": "lane/makecode-contextual-type-20261114",
+        "head_sha": "1af8a1dfcf8604ff0e0b151c947bad5909aac31d",
+        "base": "main",
+        "base_sha": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "merge_sha": "1335b5715300b43d0c998709f8b7ffadff791dca"
+      },
+      {
+        "number": 1777,
+        "title": "Robot Lab: show loading status during catalogue retries",
+        "state": "closed",
+        "draft": false,
+        "merged_at": "2026-11-14T09:27:24Z",
+        "updated_at": "2026-11-14T09:27:25Z",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1777",
+        "head": "lane/robot-measurement-small-20261114",
+        "head_sha": "f707f11ede3ed8b27365aed64eb717433674bb9f",
+        "base": "main",
+        "base_sha": "444eb36116582bcb5d5843e3d768eafb6eb0aa4f",
+        "merge_sha": "43f534195db2dcfa072a68b17654fad4d14a7c08"
+      }
+    ],
+    "integration_assessment": [
+      "Requested Scout e10b5a586da28e5a68176c7989a0a17a3d278828 includes current main 6e8f065c6798cc4bfa1261f5c9413e69c4cbf367 and exact PR #1791 head fc333ddf88023cf17e9bb5973109b74a350f2ab7.",
+      "The three new model branches form Trident -> Kestrel -> Atlas. Atlas at 4f9ae64d4e22028a1a0439bcd704346ba0c14b1b is three commits beyond common base 7fbd4b5060fe22b0100adbf3e4725919ee0faeae but lacks five later Scout commits.",
+      "Their substantive additions are model-specific SB3 generator scripts/tests plus generated CAD SDK assets. Resolve generated SDK files by building from the final clean integrated CAD source and syncing, rather than selecting either stale bundle.",
+      "PR #1788 program qualification and #1731 Robot Lab R3/R4 are separate divergent lanes. Ancestry comparison does not prove whether individual fixes were cherry-picked; do not blindly merge the entire lanes as a CAD requirement.",
+      "PR #1785 is active MakeCode Arcade importer work unrelated to this robot design and should remain on its lane."
+    ]
+  },
+  "source_endpoints": [
+    "https://api.github.com/repos/CrispStrobe/brickwright-cad/branches?per_page=100",
+    "https://api.github.com/repos/CrispStrobe/brickwright-cad/branches/main",
+    "https://api.github.com/repos/CrispStrobe/brickwright-lite/branches/main",
+    "https://api.github.com/repos/CrispStrobe/brickwright-cad/pulls?state=all&sort=updated&direction=desc&per_page=20",
+    "https://api.github.com/repos/CrispStrobe/brickwright-lite/pulls?state=all&sort=updated&direction=desc&per_page=15",
+    "https://api.github.com/repos/CrispStrobe/brickwright-cad/compare/53581e9cbd2565e9e088c8fcd52fb1ba5c739b09...1371532344e546f9b26b76b3f9ad25c90ede725d?per_page=10&page=1"
+  ]
+}
+
