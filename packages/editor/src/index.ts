@@ -36,6 +36,10 @@ import { mountParametersPanel, propertyLabels } from './parameters-panel.js';
 export interface CadFile { name: string; bytes: Uint8Array; mime: string }
 export interface CadEditorOptions {
   headerContent?: HTMLElement;
+  /** Host-owned controls stay in light DOM, slotted into the single tool row. */
+  toolbarContent?:HTMLElement;
+  /** Embedded hosts already own project files; avoid a second File menu. */
+  embedded?:boolean;
   /** Desktop hosts provide the sole File menu through their native menu bar. */
   nativeMenus?:boolean;
   modelLibrary?: ModelLibraryOptions;
@@ -81,6 +85,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   if (shadow.childElementCount) throw new Error(t('Mount target is already in use'));
   const style = el('style'); style.textContent = themedEditorStyle(editorStyle);host.dataset.cadColorMode=options.colorMode??'dark'; const shell = el('section', 'editor'); shell.setAttribute('aria-label', 'CAD editor');
   const toolbar = el('div', 'toolbar'); toolbar.setAttribute('role', 'toolbar'); toolbar.setAttribute('aria-label', 'Model tools');
+  if(options.embedded){shell.classList.add('embedded');style.textContent+='\n.editor.embedded .design-bar{grid-template-columns:minmax(76px,130px) minmax(0,1fr) auto}.editor.embedded .project-actions,.editor.embedded .units-label{display:none}.editor.embedded .toolbar{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}.editor.embedded .toolbar>slot{order:-2}';}
+  if(options.toolbarContent){const slot=document.createElement('slot');slot.name='host-toolbar-controls';slot.style.display='inline-flex';slot.style.flexShrink='0';options.toolbarContent.slot=slot.name;host.append(options.toolbarContent);toolbar.append(slot);}
   const iterationControl=options.headerContent?.querySelector<HTMLSelectElement>('#iterations');const projectsControl=options.headerContent?.querySelector<HTMLButtonElement>('#library');
   const main = el('div', 'main'); const tree = el('aside', 'panel tree'); const viewHost = el('div', 'viewport'); const inspector = el('aside', 'panel inspector');
   let rightPane={shapesFirst:true,split:50};const setRightPane=(value:typeof rightPane)=>{if(typeof value.shapesFirst!=='boolean'||!Number.isFinite(value.split)||value.split<20||value.split>80)throw new Error(t('Choose a pane split between 20 and 80 percent'));rightPane={...value};main.dataset.shapesFirst=String(value.shapesFirst);main.style.setProperty('--right-pane-split',`${value.split}%`);};setRightPane(options.rightPane??rightPane);
@@ -104,7 +110,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   function toolGroup(label: string, className = '') {
     if(['File','Edit','Combine'].includes(label)){
       const group=el('details',`command-menu ${className}`);const trigger=el('summary','',`${t(label)} ▾`);trigger.setAttribute('aria-label',t`${t(label)} menu`);if(label!=='File'){trigger.textContent='';const icon=toolIcon(label==='Combine'?'Union':'Edit');if(icon)trigger.append(icon);trigger.title=t(label);}
-      const tools=el('div','command-popup');group.append(trigger,tools);toolbar.append(group);group.hidden=label==='File'&&options.nativeMenus===true;toolParent=tools;menus.push(group);
+      const tools=el('div','command-popup');group.append(trigger,tools);toolbar.append(group);group.hidden=label==='File'&&(options.nativeMenus===true||options.embedded===true);toolParent=tools;menus.push(group);
       group.addEventListener('toggle',()=>{if(group.open)menus.forEach(menu=>{if(menu!==group)menu.open=false;});});
       tools.addEventListener('click',event=>{if((event.target as Element).closest('button:not(:disabled)'))group.open=false;});return;
     }
@@ -116,7 +122,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   function togglePanel(panel: HTMLElement, toggle: HTMLButtonElement) { const visible = getComputedStyle(panel).display !== 'none'; panel.classList.toggle('closed', visible); panel.classList.toggle('open', !visible); toggle.setAttribute('aria-pressed', String(!visible)); }
   const simulation=mountSimulationPanel(viewHost,session,options.wasmURL,whenIdle,value=>viewport.setSimulationPoses(value),{connectorHandles:visible=>viewport.setConnectorHandlesVisible(visible),dragEnabled:enabled=>viewport.setSimulationDragEnabled(enabled),pickPoint:done=>viewport.pickPoint(done),traces:paths=>viewport.setSimulationTraces(paths),canvas:viewport.canvas,onExport:options.onExport,onInterrupt:options.onSimulationInterrupt});
   viewport.setSimulationDrag(value=>{void(value?simulation.dragBody(value.bodyId,value.point,value.target):simulation.releaseDrag()).catch(error=>{viewport.cancelSimulationDrag();options.onError?.(error);});});
-  button('Simulate',()=>simulation.open(),toolbar,'compact-icon');
+  if(!options.embedded)button('Simulate',()=>simulation.open(),toolbar,'compact-icon');
   const partsToggle = button('Objects', () => togglePanel(tree, partsToggle), status, 'panel-toggle objects-toggle');
   partsToggle.title = t('Show objects');
   const propertiesToggle = button('Properties', () => togglePanel(inspector, propertiesToggle), status, 'panel-toggle properties-toggle');
@@ -178,6 +184,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const toolbarResize=new ResizeObserver(fitSelectionActions);toolbarResize.observe(toolbar);
   toolGroup('File', 'file-tools');
   button('Model library',()=>modelLibraryPanel.open());
+  if(options.embedded)button('Model library',()=>modelLibraryPanel.open(),toolbar,'compact-icon');
   button('Model source',()=>modelSourcePanel.toggle());
   if(projectsControl){projectsControl.textContent=t('Projects');toolParent.append(projectsControl);}
   if(iterationControl)button('History…',()=>{tree.classList.remove('closed');tree.classList.add('open');partsToggle.setAttribute('aria-pressed','true');iterationControl.focus();});
@@ -189,6 +196,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   input.accept='.bcad,.bcadhistory,.json,.stl';input.addEventListener('change', () => { const file = input.files?.[0]; input.value = ''; if (file) run(async () => { if (file.size > 64 * 1024 * 1024) throw new Error(t('Project exceeds 64 MiB')); await openFile(file.name, new Uint8Array(await file.arrayBuffer())); }); });
   const save = button('Save project', () => deliver('bcad'), toolParent, 'primary'); save.disabled = !options.onExport&&!options.saveProject;
   const projectActions=el('div','project-actions');projectActions.setAttribute('role','group');projectActions.setAttribute('aria-label',t('Project actions'));
+  projectActions.hidden=options.embedded===true;
   const quickAction=(icon:string,label:string,action:()=>unknown)=>{const control=button(icon,action,projectActions,'project-action');control.setAttribute('aria-label',t(label));control.title=t(label);return control;};
   quickAction('New','New project',newProject);quickAction('Open','Open project',chooseOpen);
   const quickSave=quickAction('Save project','Save project file',()=>deliver('bcad'));quickSave.disabled=save.disabled;quickSave.title=t('Save a portable project file, including history. Your working project autosaves.');
@@ -522,7 +530,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { simulation.refresh(); viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;

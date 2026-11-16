@@ -1089,3 +1089,15 @@ Local qualification totals228/223/267, a cohort gain of16/16/16 from delivered21
 The fourth ranked batch converts30 original roots:14pass strict native/STL screening and16return NotManifold, with A/B cause unresolved. Only the14survivors enter editor qualification. Their44original source files and complete CC-BY-4.0 closures remain unchanged. Fresh package compilation on main338428f passes before14actual editor/provenance/history/refusal checks,14previews and the final asset build. All28Chromium/iPad WebKit workflows pass in seven bounded chunks with unchanged assertions and durable per-model results. Converter/native successes are not replayed.
 
 All28raw attachments match source/mesh/preview hashes with zero offline/external requests. All19tested files,41built files and66committed source/input/licence bindings match. Prior456asset hashes and267previews remain exact. Local qualification is242/237/281, a gain of14/14/14 from delivered228/223/267; owner delivery is separate for this same cohort. Target300 leaves58admissions after delivery. The source-fit pool585 includes467unconverted roots; the next30are pinned separately. Of45cumulative NotManifold refusals, one has scoped source-boundary proof and44remain A/B unresolved; two missing-texture refusals remain blocked. No implementation, source, dependency, default, units, tolerance or limit change is made. See [per-model proof and exact tested/runtime binding](evidence/ldraw-batch4-qualification-2026-11-16.json).
+
+### Adafruit component thumbnails
+
+All 482 component folders now have bundled 256×192 PNG thumbnails and a larger
+selection preview; the separate archive-root metadata folder has no component
+image. The set uses 367 upstream images, 111 STEP renders, two STL renders and two
+embedded Fusion previews, preserving their source identities and original MIT
+attribution. Images remain available offline after the lazy preview module loads.
+`library/adafruit-thumbnail-manifest.json` binds them to media revision
+`bd5c73276191131f3b4b53ce10980c63ef129d05`; regenerate with
+`scripts/sync-adafruit-previews.mjs`. Archive originals still require their own
+verified download/cache and geometry screening before insertion.
