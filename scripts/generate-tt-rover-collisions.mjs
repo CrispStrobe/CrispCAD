@@ -18,7 +18,7 @@ const solid=mesh=>{const m=new M.Mesh({numProp:3,vertProperties:new Float32Array
 
 // Coarser collision sampling preserves the holes, socket and clamp slit.
 // The printer always receives the original higher-resolution CodeProgram.
-function compactSource(source,part){return part==='standoff'?source.replace(/,32\)/g,',24)'):source.replace(/sphere\(7,32\)/g,'sphere(7,24)').replace(/cylinder\(7,8,32\)/g,'cylinder(7,8,24)').replace(/,32\)/g,',12)').replace(/,48\)/g,',24)');}
+function compactSource(source,part){return part==='carrier'?source.replace(/,16\)/g,',12)'):part==='standoff'?source.replace(/,32\)/g,',24)'):source.replace(/sphere\(7,32\)/g,'sphere(7,24)').replace(/cylinder\(7,8,32\)/g,'cylinder(7,8,24)').replace(/,32\)/g,',12)').replace(/,48\)/g,',24)');}
 function convexProfiles(contours){
  const points=contours.flat(),cross=(a,b,c)=>(points[b][0]-points[a][0])*(points[c][1]-points[b][1])-(points[b][1]-points[a][1])*(points[c][0]-points[b][0]);
  let polygons=M.triangulate(contours).map(t=>cross(...t)<0?t.toReversed():t),changed=true;
@@ -45,22 +45,31 @@ function wheelCandidates(){
  }finally{owned.reverse().forEach(s=>s.delete());}
 }
 function simplifiedCandidates(mesh,tolerance){const original=solid(mesh);let simpler;try{simpler=original.simplify(tolerance);return kernel.partitionConvex(data(simpler));}finally{simpler?.delete();original.delete();}}
+function carrierCandidates(){
+ // The plate and six bored bosses are prisms. Convex planar sections avoid
+ // spending hundreds of tetrahedra on their constant-height regions; actual
+ // conical screw seats are cut afterwards and remain part of the live check.
+ const evaluate=expression=>{const doc=partDocument('carrier');doc.nodes.carrier.program.source=compactSource(ttRoverPartPrograms.carrier.source.replace(/return[^]*$/,'return '+expression+';'),'carrier');return kernel.evaluate(doc).bodies[0];};
+ const base=extrudedCandidates(evaluate('subtract(plate,boardBores,deckBores)'));
+ const bosses=extrudedCandidates(evaluate('subtract(bosses,boardBores)'));
+ return [...kernel.collisionCSG.subtract(base,[evaluate('union(undersideHeads,deckHeads)')]),...bosses];
+}
 
 const records={};
 async function record(id,mesh,candidates,source,licence='BSD-3-Clause'){
  const checked=await prepareCollision(mesh,kernel,{candidates});records[id]={licence,source,certificate:checked.certificate,hulls:checked.hulls.map(h=>({positions:Array.from(h.positions),indices:Array.from(h.indices)}))};
  console.log(id,checked.hulls.length,'hulls',checked.certificate.relativeError,'volume fraction',checked.certificate.boundsErrorMm,'mm bounds error');
 }
-for(const part of ['chassis','cradle','wheel','deck','standoff','skid']){
+for(const part of ['chassis','cradle','wheel','deck','standoff','skid','carrier']){
  const doc=partDocument(part),mesh=kernel.evaluate(doc).bodies[0];doc.nodes[part].program.source=compactSource(doc.nodes[part].program.source,part);const compact=kernel.evaluate(doc).bodies[0];
- const candidates=part==='wheel'?wheelCandidates():['chassis','deck','standoff'].includes(part)?extrudedCandidates(compact):kernel.partitionConvex(compact);
+ const candidates=part==='wheel'?wheelCandidates():part==='carrier'?carrierCandidates():['chassis','deck','standoff'].includes(part)?extrudedCandidates(compact):kernel.partitionConvex(compact);
  await record(part,mesh,candidates,{codeSHA256:hash(ttRoverPartPrograms[part].source),method:part==='wheel'?'32 radial sectors; retained socket, slit and bolt cuts':'Reduced facet count; retained manufacturing cuts'});
 }
 const motor=createMotorDocument('tt-gearmotor'),motorGeometry=kernel.evaluate(motor);
 for(const id of ['casing','shaft']){const mesh=motorGeometry.bodies.find(b=>b.id===id),tolerance=id==='shaft'?.02:.05;await record(id,mesh,simplifiedCandidates(mesh,tolerance),{asset:'adafruit-tt-gearmotor',original:structuredClone(motor.provenance.records[0].asset.original),method:`Manifold simplify(${tolerance} mm), convex decomposition, current-source CSG qualification`},'MIT');}
 const assembly=createTTRoverDocument(),tire=structuredClone(assembly.nodes['left-tire-0']),tireDoc=createDocument();tireDoc.version=8;tire.id='tire';tire.transform=identityTransform();delete tire.physics.collisionAssembly;tireDoc.nodes={tire};tireDoc.roots=['tire'];
 const circle=M.CrossSection.circle(1.5,12),profile=circle.translate([30,0]);try{await record('tire',kernel.evaluate(tireDoc).bodies[0],radialCandidates(profile,64),{codeSHA256:hash(tire.program.source),method:'64 convex angular sectors of the original 12-sided minor profile'});}finally{profile.delete();circle.delete();}
-const quantities={chassis:1,cradle:2,wheel:2,deck:1,standoff:4,skid:1,casing:2,shaft:2,tire:4},sceneHulls=3+Object.entries(quantities).reduce((n,[id,q])=>n+q*records[id].hulls.length,0);
+const quantities={chassis:1,cradle:2,wheel:2,deck:1,standoff:4,skid:1,carrier:1,casing:2,shaft:2,tire:4},sceneHulls=3+Object.entries(quantities).reduce((n,[id,q])=>n+q*records[id].hulls.length,0);
 if(sceneHulls>4096)throw Error('Rover exceeds the unchanged 4096-piece scene budget: '+sceneHulls);
 const output={format:'brickwright-rover-collision-candidates',version:1,qualification:{volumeFraction:.02,boundsMm:.2,sceneHulls,recheckedAtRuntime:true},records},target='packages/editor/src/robot-assets/tt-rover-collisions.json',bytes=JSON.stringify(output)+'\n';
 if(args[0]==='--write'){mkdirSync('packages/editor/src/robot-assets',{recursive:true});writeFileSync(target,bytes);}else if(readFileSync(target,'utf8')!==bytes)throw Error('Rover collision candidates differ; regenerate intentionally.');

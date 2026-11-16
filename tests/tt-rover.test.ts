@@ -24,16 +24,16 @@ it('ships an editable A/B rover with retained Adafruit provenance and a free mov
  const provenance=doc.provenance!.records;
  expect(provenance).toHaveLength(1);expect(provenance[0].asset.licence.spdx).toBe('MIT');
  expect(validateModelLibraryCatalogue({format:'brickwright-model-library',version:1,assets:provenance.map(p=>p.asset)}).valid).toBe(true);
- expect(doc.roots.filter(id=>doc.nodes[id].kind==='code'&&doc.nodes[id].physics?.sourcePreset===TT_ROVER_ID)).toHaveLength(11);
+ expect(doc.roots.filter(id=>doc.nodes[id].kind==='code'&&doc.nodes[id].physics?.sourcePreset===TT_ROVER_ID)).toHaveLength(12);
  expect(doc.roots.every(id=>doc.nodes[id].physics?.motion==='dynamic')).toBe(true);
  expect(Buffer.byteLength(serializeDocument(doc))).toBeLessThan(16*1024*1024);
 });
 
 it('separates manufacturing geometry from purchased hardware and imports in one history step',()=>{
  const print=createTTRoverDocument('robot-tt-rover-print');
- expect(print.roots).toHaveLength(11);expect(print.joints).toBeUndefined();expect(print.provenance).toBeUndefined();
+ expect(print.roots).toHaveLength(12);expect(print.joints).toBeUndefined();expect(print.provenance).toBeUndefined();
  expect(print.roots.every(id=>print.nodes[id].kind==='code'&&print.nodes[id].physics?.sourcePreset===TT_ROVER_ID)).toBe(true);
- expect(Object.values(ttRoverPrintQuantities).reduce((a,b)=>a+b,0)).toBe(11);
+ expect(Object.values(ttRoverPrintQuantities).reduce((a,b)=>a+b,0)).toBe(12);
  const session=createCadSession();session.insert(createTTRoverDocument());
  expect(session.state.document.simulation?.fixBase).toBe(false);
  expect(session.state.document.joints!.filter(j=>j.control).map(j=>j.control?.port)).toEqual(['A','B']);
