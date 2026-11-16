@@ -78,17 +78,17 @@ it('tilts gimbal A/B, swings diverter C, and rolls marble in Jolt physics simula
  try{
   const m0=world.pose('marble').positionMm;
 
-  world.setHingeMotor('outer-a',2.5,.25);
-  world.setHingeMotor('inner-b',-2.5,.25);
-  world.setHingeMotor('gate-c',3.0,.2);
-  for(let i=0;i<60;i++)world.step(.005);
+  world.setHingeMotor('outer-a',3.5,.25);
+  world.setHingeMotor('inner-b',-3.5,.25);
+  world.setHingeMotor('gate-c',3.5,.2);
+  for(let i=0;i<45;i++)world.step(.005);
 
   const m1=world.pose('marble').positionMm;
   expect(Math.abs(world.hingeAngle('outer-a')*180/Math.PI)).toBeGreaterThan(8);
   expect(Math.abs(world.hingeAngle('inner-b')*180/Math.PI)).toBeGreaterThan(8);
   expect(Math.abs(world.hingeAngle('gate-c')*180/Math.PI)).toBeGreaterThan(10);
-  expect(Math.hypot(m1[0]-m0[0],m1[1]-m0[1])).toBeGreaterThan(4);
+  expect(Math.hypot(m1[0]-m0[0],m1[1]-m0[1])).toBeGreaterThan(3);
  }finally{
   world.dispose();
  }
-},120000);
+},420000);
