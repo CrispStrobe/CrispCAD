@@ -34,7 +34,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   let drag:{id:number;x:number;y:number;w:number;h:number;r:number;d:number;unit:number;kind:string;viewBox:string}|undefined;
   let valid=false;
   const bounded=(value:number)=>Math.min(100000,Math.max(.01,value));
-  const compact=(input:HTMLInputElement,icon:string)=>{const label=input.parentElement!;label.firstChild!.textContent='';label.classList.add('sketch-dimension');const picture=toolIcon(icon);if(picture)label.prepend(picture);input.title=input.getAttribute('aria-label')!;label.append(element('small','mm'));};
+  const compact=(input:HTMLInputElement,icon:string)=>{const label=input.parentElement!;label.firstChild!.textContent='';label.classList.add('sketch-dimension');const picture=toolIcon(icon);if(picture)label.prepend(picture);input.title=input.getAttribute('aria-label')!;label.append(element('small','mm'));const caption=element('span',input.getAttribute('aria-label')!);caption.className='sketch-dimension-name';label.prepend(caption);};
   compact(width,'Sketch width');compact(depth,'Sketch depth');compact(radius,'Sketch radius');compact(length,'Extrude');
   function draw(){
    width.parentElement!.hidden=depth.parentElement!.hidden=kind.value!=='rectangle';radius.parentElement!.hidden=kind.value!=='circle';preview.replaceChildren();valid=false;
