@@ -1,4 +1,5 @@
 import {atlasForkliftCatalog,isAtlasForklift,createAtlasForkliftDocument,atlasForkliftPreview} from './atlas-forklift.js';
+import {mantisWalkerCatalog,isMantisWalker,createMantisWalkerDocument,mantisWalkerPreview} from './mantis-walker.js';
 import {roverCatalog,isTTRover,createTTRoverDocument,ttRoverPreview} from './tt-rover.js';
 import {steerableRoverCatalog,isSteerableRover,createSteerableRoverDocument,steerableRoverPreview} from './steerable-rover.js';
 import {simulationExampleCatalog,isSimulationExample,createSimulationExample,simulationExampleGeometry} from './simulation-examples.js';
@@ -56,7 +57,7 @@ const templates:ShapePreset[]=[
 const screwNames=[['hex-head-screw','Hex-head screw'],['socket-head-screw','Socket-head screw'],['countersunk-screw','Countersunk screw'],['pan-head-screw','Pan-head screw'],['set-screw','Set screw'],['wood-screw','Wood screw']];
 const entries=[...templates,...screwNames.map(([id,name])=>({id,name,category:'',description:'A screw with editable head, drive and V-thread dimensions.',keywords:'screw bolt thread fastener hex socket countersunk pan',color:'#b0b7c2'})),...originalCatalog];
 export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
- ...roverCatalog,...steerableRoverCatalog,...atlasForkliftCatalog,...motorCatalog,...simulationExampleCatalog,
+ ...roverCatalog,...steerableRoverCatalog,...atlasForkliftCatalog,...mantisWalkerCatalog,...motorCatalog,...simulationExampleCatalog,
  ...Object.entries(essentials).flatMap(([category,ids])=>ids.map(id=>Object.freeze({...entries.find(p=>p.id===id)!,category,additional:false}))),
  ...entries.filter(p=>!Object.values(essentials).flat().includes(p.id)).map(p=>Object.freeze({...p,category:'Additional shapes',additional:true})),
 ]);
@@ -65,6 +66,7 @@ export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
 export function presetGeometry(id: string, preview = false, recipe?:GeneratorRecipe): THREE.BufferGeometry {
   if(isTTRover(id))return ttRoverPreview(id);
  if(isAtlasForklift(id))return atlasForkliftPreview(id);
+ if(isMantisWalker(id))return mantisWalkerPreview(id);
  if(isSteerableRover(id))return steerableRoverPreview(id);
   if(isSimulationExample(id))return simulationExampleGeometry(id);
   if(isMotorModel(id))return motorGeometry(id);
@@ -95,6 +97,7 @@ const previews = new Map<string,string>();
 export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: {svg?:string;recipe?:GeneratorRecipe;font?:GeneratorRecipe['font']} = {}) {
   if(isTTRover(id))return createTTRoverDocument(id);
  if(isAtlasForklift(id))return createAtlasForkliftDocument(id);
+ if(isMantisWalker(id))return createMantisWalkerDocument(id);
  if(isSteerableRover(id))return createSteerableRoverDocument(id);
   const preset = shapeCatalog.find(p => p.id === id); if (!preset) throw new Error(t('Unknown shape'));
   if(isSimulationExample(id))return createSimulationExample(id);
