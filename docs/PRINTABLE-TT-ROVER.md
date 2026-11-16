@@ -206,8 +206,12 @@ cable before making a carrier. The deck intentionally supplies mounting slots
 instead of claiming verified PCB-specific hole positions. The bottom of these
 envelopes sits 1 mm above the deck for an insulating pad. Support boards on an
 insulating pad or carrier and secure the carrier; avoid tightening a strap
-across exposed components. Increase the stand-off height if the actual board's
-solder joints, headers or carrier need more clearance.
+across exposed components. If the actual board's solder joints, headers or
+carrier need more clearance above the deck, raise the board carrier on
+insulating spacers and update its clearance envelope. The four printed deck
+standoffs set the height of the whole deck; changing them does not increase
+board-to-deck clearance. Adjust those posts separately if the revised layout
+needs more space below the deck.
 
 ## Fit gauge and tolerances
 
