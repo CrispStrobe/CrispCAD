@@ -84,7 +84,7 @@ it('drives wheels A/B, tilts bucket C, and pushes payload in Jolt physics simula
   world.setHingeMotor('drive-left-a',-8,.35);
   world.setHingeMotor('drive-right-b',-8,.35);
   world.setHingeMotor('bucket-c',3.5,.25);
-  for(let i=0;i<100;i++)world.step(.005);
+  for(let i=0;i<150;i++)world.step(.005);
 
   const c1=world.pose('chassis').positionMm;
   const p1=world.pose('payload').positionMm;
