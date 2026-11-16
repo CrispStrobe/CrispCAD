@@ -6,6 +6,10 @@ standalone CAD and the shared Brickwright SDK. Existing hinge joints have speed
 and Reset operate in a dedicated worker at 200 Hz. The first body can explicitly
 be fixed as a base (enabled by default). Closing/resetting restores the design;
 editing invalidates the preview, and simulation never writes document/history.
+Projects can save `simulation.fixBase`; the Scout TT rover saves `false` so its
+chassis remains mobile when imported into an empty workspace. Existing documents
+without this setting keep the prior default, and a manual preview override stays
+outside model history.
 Manual previews pause on focus loss. Program-driven controls may continue while
 the CAD tab is hidden; page hiding stops them.
 
@@ -30,8 +34,21 @@ manufactured-mechanism accuracy.
 - Mass, center of mass and the complete inertia tensor come from signed
   tetrahedral integrals of the actual evaluated solid, not from overlapping
   collision hulls. Jolt receives an explicit COM offset and full mass/inertia.
+- Parts connected by fixed mates form one native compound rigid body. Their
+  evaluated masses and centers are summed, and their inertia tensors are
+  combined using the parallel-axis theorem. This prevents solver drift across
+  small shafts and much heavier attached wheels. Every original part retains
+  its document identity, editable geometry, world-space pose delta, contact
+  material and picking/force interface. A static member fixes its whole rigid
+  component; initial part velocities are projected onto the component while
+  conserving linear and angular momentum.
+- Compound leaves retain their original part IDs. Native part-pair filtering
+  removes only the intended mate contacts before narrow-phase collision and
+  continuous casts. Separate contact materials remain effective for each part;
+  heterogeneous assemblies disable manifold reduction so adjacent parts cannot
+  inherit one another's friction or restitution.
 - Hinge presets contain separate leaves and a pin, local joint frames, angular
-  limits, a hinge constraint and a fixed pin constraint. Inserting, duplicating,
+  limits, a hinge constraint and a fixed pin connection. Inserting, duplicating,
   deleting, saving and reopening retain/remap the relevant references.
 - References such as the ruler are rendered but excluded from printable meshes,
   mass and simulation. Boolean operations cannot silently absorb reference
@@ -63,7 +80,8 @@ A compound is accepted only after comparison with the evaluated source solid:
   Default total relative difference is at most 2%; default outer bounds deviation
   is at most 0.2 mm. These are preview limits, not a Hausdorff-distance proof or a
   guarantee that every small cavity is clear. Fit-critical openings need probes.
-- Maximum 64 vertices per hull, 2048 hulls per body and 4096 per world. Difficult
+- Maximum 64 vertices per hull, 2048 hulls per evaluated source part and 4096
+  per world, including all parts aggregated by fixed mates. Difficult
   geometry is rejected rather than silently replaced with a box or convex hull.
 - Each Jolt hull is centered and conditioned near unit size, then wrapped in a
   scaled shape to recover SI geometry. Its hull-building tolerance is bounded by
@@ -76,6 +94,28 @@ Jolt manifold/contact-cache distances are explicitly tuned for millimetre-scale
 geometry in SI. Sleeping and body-pair contact caching are disabled in this
 correctness baseline. A knurl-tip regression covers a real missed-contact case
 from metre-scale defaults. Interactive performance tuning must retain this test.
+
+For hinge-connected rigid components, a bounded geometric proof can exclude
+their whole native body pair early. Every non-mated pair of qualified convex
+hulls must have disjoint axial or radial intervals through a full revolution,
+with at least 0.25 mm clearance plus a frame/roundoff reserve. Radial minima use
+the complete projected convex hull, including axis-crossing interiors. Frame
+uncertainty is scaled by the material's lever arm; uncertain frames, potential
+future contacts and proof-budget exhaustion retain native part-pair filtering.
+This avoids pathological continuous casting between overlapping compound bounds
+while preserving the existing continuous collision mode and geometry gates.
+
+The separation proof assumes an ideal hinge. Optimized hinges use 40 position
+iterations, and the world checks actual anchor separation plus rotor radius
+times normalized-axis skew before and after every 5 ms substep. Reaching
+0.249 mm permanently restores native part-pair filtering for that body pair,
+leaving a 0.001 mm cushion inside the geometric reserve. External impulse,
+velocity and drag APIs restore filtering before changing an affected body;
+nonzero authored initial velocities also retain native filtering. These are
+sampled safeguards, not a rollback or a guarantee against arbitrary forces
+within a completed substep. The stock Scout motor sequence is separately
+runtime-qualified on both normal and debug Wasm, with its full anchor-plus-axis
+bound measured at every 200 Hz step.
 
 The gate is deliberately fail-closed. A certificate records a geometric preview
 qualification; it does not certify fatigue, manufacturing clearance, friction,

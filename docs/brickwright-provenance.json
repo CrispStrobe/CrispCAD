@@ -24,7 +24,8 @@
     {
       "file": "packages/editor/src/vendor/transform-math.js",
       "source": "overlay/scratch-gui/src/lib/bw-sim/editor/transform-math.js",
-      "sha256": "7090ecf2dc33cddc8221676ca07a83c6b8e25ac1c2bab86f0f8c2a894c91a505"
+      "sha256": "7090ecf2dc33cddc8221676ca07a83c6b8e25ac1c2bab86f0f8c2a894c91a505",
+      "commit": "acbcb1fc7b83af4002978ddb00a84df2beb6ec10"
     }
   ]
 }

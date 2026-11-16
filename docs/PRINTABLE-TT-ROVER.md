@@ -34,6 +34,13 @@ manufacturer PCB models. They are fixed to the deck so they follow the simulated
 chassis. The underlying original, editable geometry is in
 [`packages/editor/src/tt-rover.ts`][rover-source].
 
+For the [ready-to-run Lite project][lite-example], download `lite/tt-rover.sb3`
+from the repository alongside the build kit.
+It embeds this editable assembly and a forward/turn/reverse/brake block program.
+Its accompanying manifest hashes the exact document, program, archive and
+licensing notices. Follow `lite/README.md` for loading instructions; the project
+does not change the user's workspace preferences automatically.
+
 ## Generate and reproduce the kit
 
 From the repository root, after installing its locked dependencies with
@@ -101,6 +108,14 @@ shaft end in the assembled pose. The [supplier drawing][tt-drawing] and actual
 motor remain the physical reference. Do not substitute a nominally similar TT
 motor without checking its shaft and casing.
 
+The front of each cradle narrows to 24 mm from local X 2 onward. This relief
+cuts back both the floor lips and the ends of the side rails, so the wheel's
+reinforced clamp ears can rotate past them. It leaves 0.5 mm nominal axial
+clearance to the inward hub face while retaining the full shaft engagement.
+The front M3 seats retain 3.3 mm of material outside the through-hole and
+1.7 mm outside the countersink. Verify a full wheel revolution by hand after
+assembly; actual print error, shaft runout and fastener projection still matter.
+
 ## Bill of materials
 
 ### Print in PLA
@@ -148,6 +163,13 @@ bolt if a chosen head, washer or nut differs substantially from this stack.
 M3 × 10 skid screws leave almost no spare thread after the 7 mm plastic stack,
 washer and nut, so the build recommendation is M3 × 12. The nut pockets and listed
 lengths are sized around standard nuts, not thicker nylon-insert locknuts.
+
+For the wheel clamps, keep the screw head/washer outside diameter at or below
+7 mm and their combined projection beyond the ear at or below 4 mm. This
+envelope retains at least 0.5 mm nominal clearance behind the relieved cradle.
+A 5.5 mm-diameter, 3 mm-high M3 socket head with a 0.5 mm-thick, 7 mm-diameter
+washer fits that envelope; check the actual hardware. Rotate the free wheel
+for tool access, especially on the right where the screw initially faces down.
 
 The split clamp retains the printed wheel without relying on the motor's axial
 shaft bore. That bore is not a verified M2 machine thread. Adafruit's own
@@ -343,6 +365,37 @@ measured electrical model of a 3777. Ground friction, skid friction, printed-par
 mass from solid geometry, and battery mass are illustrative. A path trace is
 useful for comparing commands, but is not a physical odometry measurement.
 
+### Qualified collision geometry
+
+The displayed and printed solids retain the original manufacturing detail.
+Simulation uses reproducible compound candidates with fewer facets, including
+the keyed sockets, clamp splits, mounting holes and tire grooves. Every start
+compares those candidates against the live solid using the existing 2% volume
+difference and 0.2 mm bounds limits. The scene keeps the existing 4,096-piece
+budget; serialized certificates are never treated as proof of qualification.
+Editing a part's CAD Script invalidates its saved candidates, and undo restores
+the previous program and candidates together.
+
+To regenerate or verify the stock simulation candidates after changing the
+shared recipes, run these before regenerating the print kit:
+
+```sh
+npm run robot:collisions:generate
+npm run robot:collisions:check
+npm run robot:generate
+npm run robot:check
+```
+
+Collision qualification measures geometric approximation. It does not establish
+the strength, fit, friction or electrical performance of a physical robot.
+
+`npm run robot:verify` separately runs the complete assembled robot through
+settling, forward travel, braking, reverse travel and a differential turn at
+the editor's default 0.02 Nm motor limit. It checks finite poses, moving-base
+travel, joint-frame alignment and floor penetration. The saved local results
+are engineering evidence for the simulation and are separate from physical
+prototype testing.
+
 The current Lite connection drives the shared CAD simulation through its SDK.
 A physical Adafruit controller transport and deployment workflow are separate
 work. Selecting this rover does not install firmware or connect to a real motor
@@ -376,6 +429,7 @@ from the future physical print, assembly and drive tests. GitHub Actions is not
 required for this build workflow.
 
 [tt-product]: https://www.adafruit.com/product/3777
+[lite-example]: https://github.com/CrispStrobe/brickwright-cad/tree/feat/printable-robot-20261115/examples/scout-tt-rover/lite
 [tt-drawing]: https://cdn-shop.adafruit.com/product-files/3777/3777_diagram.jpg
 [shaft-screw]: https://forums.adafruit.com/viewtopic.php?t=136463
 [bought-wheel]: https://www.adafruit.com/product/3757

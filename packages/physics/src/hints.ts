@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from '@brickwright/cad-core';
 import {simplifyRadialProfile} from './radial-profile.js';
-import { documentGeometryKey, validateDocument } from '@brickwright/cad-core';
+import { documentGeometryKey, validateDocument, pruneModelProvenance } from '@brickwright/cad-core';
 import type {CadDocument,Vec3,Transform} from '@brickwright/cad-core';
 import type {GeometryKernel,GeometryResult} from '@brickwright/cad-geometry';
 import {prepareCollision} from './collision.js';
@@ -28,7 +28,11 @@ export async function prepareDocumentCollisions(input:CadDocument,result:Geometr
  const doc=validateDocument(input);if(result.sourceKey!==documentGeometryKey(doc))throw new Error(t('Geometry is stale for collision preparation'));const prepared=new Map<string,PreparedCollision>();
  const localCache=new Map<string,import('@brickwright/cad-geometry').BodyMesh>();
  const worldPoint=(p:Vec3,transforms:Transform[])=>transforms.reduceRight((value,t)=>point(value,t),p);
- function worldMesh(id:string,parents:Transform[]){let body=localCache.get(id);if(!body){const nodes:CadDocument['nodes']={};const visit=(key:string)=>{if(nodes[key])return;const n=doc.nodes[key];nodes[key]=n;if(n.kind==='boolean')n.inputs.forEach(visit);};visit(id);body=kernel.evaluate({...doc,nodes,roots:[id],joints:undefined,provenance:undefined,tracers:undefined,parametric:doc.parametric?{...doc.parametric,bindings:doc.parametric.bindings.filter(b=>Object.hasOwn(nodes,b.nodeId))}:undefined}).bodies[0];localCache.set(id,body);}if(!parents.length)return body;const positions=new Float32Array(body.positions.length),min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(let i=0;i<positions.length;i+=3){const p=worldPoint([body.positions[i],body.positions[i+1],body.positions[i+2]],parents);for(let j=0;j<3;j++){positions[i+j]=p[j];min[j]=Math.min(min[j],p[j]);max[j]=Math.max(max[j],p[j]);}}return {...body,positions,bounds:{min,max}};}
+ function worldMesh(id:string,parents:Transform[]){let body=localCache.get(id);if(!body){const nodes:CadDocument['nodes']={};const visit=(key:string)=>{if(nodes[key])return;const n=doc.nodes[key];nodes[key]=n;if(n.kind==='boolean')n.inputs.forEach(visit);};visit(id);const fragment:CadDocument={...doc,nodes,roots:[id],joints:undefined,parametric:doc.parametric?{...doc.parametric,bindings:doc.parametric.bindings.filter(b=>Object.hasOwn(nodes,b.nodeId))}:undefined};
+   // Construction evaluation is a private subset. Retain only source records
+   // and tracers that still belong to that subset, without changing the scene.
+   pruneModelProvenance(fragment);if(fragment.version>=8&&fragment.tracers)fragment.tracers=fragment.tracers.filter(trace=>trace.bodyId===id);
+   body=kernel.evaluate(fragment).bodies[0];localCache.set(id,body);}if(!parents.length)return body;const positions=new Float32Array(body.positions.length),min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(let i=0;i<positions.length;i+=3){const p=worldPoint([body.positions[i],body.positions[i+1],body.positions[i+2]],parents);for(let j=0;j<3;j++){positions[i+j]=p[j];min[j]=Math.min(min[j],p[j]);max[j]=Math.max(max[j],p[j]);}}return {...body,positions,bounds:{min,max}};}
  function candidatesFor(id:string,parents:Transform[],refineAnnular=false):ConvexPiece[]{
   const node=doc.nodes[id],hint=node.physics?.collisionHint;
   if(node.physics?.collisionAssembly){const transforms=[...parents,node.transform];return node.physics.collisionAssembly.map(piece=>({positions:new Float64Array(piece.positions.flatMap((_,i)=>i%3===0?worldPoint(piece.positions.slice(i,i+3) as Vec3,transforms):[])),indices:new Uint32Array(piece.indices)}));}

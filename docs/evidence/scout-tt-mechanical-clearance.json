@@ -1,0 +1,70 @@
+{
+  "format": "brickwright-mechanical-clearance",
+  "version": 1,
+  "checkedOn": "2026-11-15",
+  "model": "robot-tt-rover",
+  "status": "pass for nominal CAD geometry",
+  "method": {
+    "geometry": "createGeometryKernel evaluated the actual CAD Script and Adafruit motor meshes; no physics collision proxies were used",
+    "operation": "Manifold intersection volume and minGap with 10 mm search length",
+    "motion": "Rotate each wheel about its global +Y axle, through its assembly origin",
+    "anglesDegrees": {"first": 0, "last": 359, "step": 1, "count": 360},
+    "pairs": 6,
+    "intersectionAndDistanceChecks": 2160,
+    "intersectionToleranceMm3": 0.000001
+  },
+  "geometrySources": {
+    "programFile": "packages/editor/src/tt-rover.ts",
+    "hashDefinition": "SHA-256 of each ttRoverPartPrograms entry's exact UTF-8 source string; no parameter overrides",
+    "programSourceSha256": {
+      "chassis": "5e903eedaeb441393b13fb548553eb91e85926cd5856e5bf317f686bef118d67",
+      "cradle": "8261fe0f53b497702240c0656cbafa3f589fbe39c4b5e0afc8f4ba984a015ecb",
+      "wheel": "db4a3335c882731b51275da5f843b407d4c09ddaa988924b379acc57a15e9988",
+      "deck": "c140a51a17abe88fc955c73628f51df33a6e116a35ac9b2d9edcd1776748b27f",
+      "standoff": "4d782708bd971e2aa4f9cd263c6ea2461d1d842a4aad0964474ae19811bfc076",
+      "skid": "77244f4063fca518d244c7d5695baed0dd822bb28b9b616c0ce7822fc8889c71",
+      "fit": "fb8e791b4289365a6cbc63af86c438469cc49e7028a35ffaa7127687d37f92a8"
+    },
+    "motorAssetFile": "packages/editor/src/motor-assets/tt-gearmotor.json",
+    "motorAssetSha256": "7fc225ba4095f0db2d2741c319dea06ce72582ece4015da1195d86dc8f21c40e"
+  },
+  "results": [
+    {"moving": "left-wheel", "fixed": "left-cradle", "minimumGapMm": 0.5, "firstMinimumAngleDegrees": 9, "maximumIntersectionMm3": 0},
+    {"moving": "left-wheel", "fixed": "left-casing", "minimumGapMm": 3.200000762939453, "firstMinimumAngleDegrees": 0, "maximumIntersectionMm3": 0},
+    {"moving": "left-wheel", "fixed": "chassis", "minimumGapMm": 1.5, "firstMinimumAngleDegrees": 26, "maximumIntersectionMm3": 0},
+    {"moving": "right-wheel", "fixed": "right-cradle", "minimumGapMm": 0.5, "firstMinimumAngleDegrees": 9, "maximumIntersectionMm3": 0},
+    {"moving": "right-wheel", "fixed": "right-casing", "minimumGapMm": 1.2000007629394531, "firstMinimumAngleDegrees": 0, "maximumIntersectionMm3": 0},
+    {"moving": "right-wheel", "fixed": "chassis", "minimumGapMm": 1.5, "firstMinimumAngleDegrees": 26, "maximumIntersectionMm3": 0}
+  ],
+  "continuousRotationBoundsMm": {
+    "explanation": "Y-axis rotation preserves axial separation. The narrowed front foot and rail ends stay inside local Y +/-12; the wheel's closest face is 12.5 from the motor center. Behind local X=2, only the hub/ear sweep can reach the wider cradle: its maximum radial reach is sqrt(12.5^2+9.5^2), less than the 17.3 axle-to-cut distance. The rim is farther outboard.",
+    "frontCradleAxialGap": 0.5,
+    "maximumClampEarRadius": 15.700318468107582,
+    "axleToRearCutBoundary": 17.3,
+    "rearCradleToEarSweptDiskGap": 1.599681531892418,
+    "rimAxialGapToWidestCradle": 7.4,
+    "chassisAxialGap": 1.5,
+    "frontM3ThroughHoleEdgeMaterial": 3.3,
+    "frontM3CountersinkEdgeMaterial": 1.7
+  },
+  "originalDefectReproduced": {
+    "method": "Remove only the two new full-height outer-lip cutters in memory, then intersect each actual wheel at 90 degrees with its original cradle; no repository source was altered",
+    "leftIntersectionMm3": 14.039956054708455,
+    "rightIntersectionMm3": 60.839928588888135
+  },
+  "regression": {
+    "file": "tests/tt-rover-clearance.test.ts",
+    "command": "npx vitest run tests/tt-rover-clearance.test.ts",
+    "anglesDegrees": [90, 270],
+    "checks": "Both wheels against actual cradle, casing and chassis solids; zero intersection and retained minimum clearances",
+    "result": "4 tests passed",
+    "observedTestTimeSeconds": 0.967,
+    "observedTotalTimeSeconds": 2.61
+  },
+  "limits": [
+    "Nominal mesh clearance does not qualify printed fit, material strength, clamp force, wear or manufacturing tolerances.",
+    "The 360 sampled angles are complemented by the stated all-angle geometric bounds; they are not a continuous numerical sweep.",
+    "Purchased clamp fasteners, straps and wires are not part of these measured wheel meshes; observe the build guide's hardware envelope and routing limits.",
+    "This report does not qualify the separate simulation collision assemblies, electronics, firmware or a physically assembled robot."
+  ]
+}
