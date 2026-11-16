@@ -7,7 +7,7 @@ import {resolve} from 'node:path';
 import {zipSync} from 'fflate';
 import {validateDocument,setLocale} from '../packages/core/dist/index.js';
 import {createGeometryKernel,exportSTL,checkModelLibrarySTL} from '../packages/geometry/dist/index.js';
-import {createTTRoverDocument,createTTRoverPart,ttRoverPartPrograms,ttRoverPrintQuantities,ttRoverDimensions} from '../packages/editor/dist/tt-rover.js';
+import {createTTRoverDocument,createTTRoverPart,ttRoverPartPrograms,ttRoverPrintQuantities,ttRoverDimensions,ttRoverElectronics} from '../packages/editor/dist/tt-rover.js';
 
 const root=new URL('../',import.meta.url),destination=new URL('examples/scout-tt-rover/',root);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -23,6 +23,7 @@ export async function generateTTRover(){
  outputs.set('scout-tt-rover.bcad',docBytes(assembly));
  outputs.set('scout-tt-print-layout.bcad',docBytes(createTTRoverDocument('robot-tt-rover-print')));
  outputs.set('scout-tt-fit-gauge.bcad',docBytes(createTTRoverPart('fit')));
+ outputs.set('scout-tt-electronics-carrier.bcad',docBytes(createTTRoverPart('carrier')));
  for(const part of Object.keys(ttRoverPartPrograms)){
   const doc=createTTRoverPart(part),geometry=kernel.evaluate(doc);
   if(geometry.bodies.length!==1||geometry.bodies[0].bounds.min[2]<-1e-5)throw new Error(part+': invalid print placement');
@@ -36,9 +37,9 @@ export async function generateTTRover(){
  outputs.set('LICENSE.txt',await readFile(new URL('LICENSE',root)));
  outputs.set('ADAFRUIT-MIT-LICENSE.txt',await readFile(new URL('library/sources/adafruit-motors/LICENSE',root)));
  outputs.set('BUILD-GUIDE.md',await readFile(new URL('docs/PRINTABLE-TT-ROVER.md',root)));
- outputs.set('NOTICE.md',Buffer.from('# Scout TT rover notices\n\nThe original chassis, cradles, wheels, deck, standoffs, skid and fit gauge are BSD-3-Clause (LICENSE.txt). The assembled BCAD file embeds Adafruit 3777 TT motor mesh derivatives and exact retained source/provenance metadata: Copyright (c) 2016 Adafruit Industries, MIT (ADAFRUIT-MIT-LICENSE.txt). The PCB and battery envelopes are original approximate clearance geometry, not vendor CAD. Purchased motors, electronics, batteries, fasteners and rubber tires are not PLA print parts.\n\nPrint only the STL files under stl/, using the quantities and orientations in manifest.json. The wide print-layout document is an inventory layout, not a single printer bed. Physical fit and drive behavior require a prototype; these files record geometry checks, not a completed hardware build.\n'));
+ outputs.set('NOTICE.md',Buffer.from('# Scout TT rover notices\n\nThe original chassis, cradles, wheels, deck, electronics carrier, standoffs, skid and fit gauge are BSD-3-Clause (LICENSE.txt). The assembled BCAD file embeds Adafruit 3777 TT motor mesh derivatives and exact retained source/provenance metadata: Copyright (c) 2016 Adafruit Industries, MIT (ADAFRUIT-MIT-LICENSE.txt). The PCB and battery envelopes are original approximate clearance geometry, not vendor CAD. Carrier mounting dimensions are independently read from the exact Adafruit board revisions cited in the build guide; no PCB artwork is included. Purchased motors, electronics, batteries, fasteners and rubber tires are not PLA print parts.\n\nPrint only the STL files under stl/, using the quantities and orientations in manifest.json. The wide print-layout document is an inventory layout, not a single printer bed. Physical fit and drive behavior require a prototype; these files record geometry checks, not a completed hardware build.\n'));
  const files=[...outputs].map(([path,bytes])=>({path,bytes:bytes.length,sha256:hash(bytes)}));
- const manifest={format:'brickwright-printable-robot-kit',version:1,id:'scout-tt-rover',units:'mm',sourceUpAxis:'Z',dimensions:ttRoverDimensions,parts,manufacturedPartCount:Object.values(ttRoverPrintQuantities).reduce((a,b)=>a+b,0),control:{scope:'ideal-cad-simulation',left:'A',right:'B',positiveAxis:[0,1,0],positiveTravel:'+X',fixBase:false,physicalTransport:false,physicalEncoders:false},validation:{stlScreening:'All seven unique original parts pass parse, closed-positive-volume, size and triangle checks.',hardwareBuilt:false},files,reproduce:'npm run robot:generate; npm run robot:check'};
+ const manifest={format:'brickwright-printable-robot-kit',version:1,id:'scout-tt-rover',units:'mm',sourceUpAxis:'Z',dimensions:ttRoverDimensions,electronicsMounts:ttRoverElectronics,parts,manufacturedPartCount:Object.values(ttRoverPrintQuantities).reduce((a,b)=>a+b,0),control:{scope:'ideal-cad-simulation',left:'A',right:'B',positiveAxis:[0,1,0],positiveTravel:'+X',fixBase:false,physicalTransport:false,physicalEncoders:false},validation:{stlScreening:`All ${parts.length} unique original parts pass parse, closed-positive-volume, size and triangle checks.`,hardwareBuilt:false},files,reproduce:'npm run robot:generate; npm run robot:check'};
  outputs.set('manifest.json',json(manifest));
  const zipFiles=Object.fromEntries([...outputs].map(([path,bytes])=>[path,[bytes,{mtime:new Date('2026-11-15T00:00:00Z')}]]));
  outputs.set('scout-tt-rover-kit.zip',Buffer.from(zipSync(zipFiles,{level:9})));

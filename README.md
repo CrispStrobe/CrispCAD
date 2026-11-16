@@ -111,9 +111,11 @@ and [source-research tools](docs/SOURCE-RESEARCH.md).
 
 ## Printable Scout TT rover
 
-**Shapes → Robots** includes the Scout TT rover, its PLA print layout and a
-five-socket shaft fit gauge. The assembly combines two existing Adafruit 3777
-TT motor models with eleven original PLA parts and stable **A / left** and
+![Scout TT rover and the original PLA electronics carrier](docs/images/scout-tt-electronics-carrier.png)
+
+**Shapes → Robots** includes the Scout TT rover, its PLA print layout, a
+five-socket shaft fit gauge and a bolted electronics carrier. The assembly combines two existing Adafruit 3777
+TT motor models with twelve original PLA parts and stable **A / left** and
 **B / right** joint ports for the shared CAD controls in Brickwright Lite.
 
 Open the [assembled BCAD model](examples/scout-tt-rover/scout-tt-rover.bcad),
@@ -134,9 +136,12 @@ npm run robot:check
 ```
 
 These local commands create and reproduce `examples/scout-tt-rover/`, including
-editable BCAD projects, seven unique screened STLs, CAD Script sources, a manifest,
+editable BCAD projects, eight unique screened STLs, CAD Script sources, a manifest,
 notices and `scout-tt-rover-kit.zip`. Print the original PLA parts using their listed
 quantities; the assembled file also contains purchased-component geometry.
+The original carrier provides through-bolt mounting patterns for the pinned
+Feather RP2040 Rev B and DRV8833 board revisions, six insulating bosses and
+flush deck fasteners. The guide records their source dimensions and assembly order.
 
 ## Navigation
 

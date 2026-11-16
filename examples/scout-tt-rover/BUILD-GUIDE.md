@@ -3,7 +3,7 @@
 Scout is an original differential-drive robot built around two Adafruit 3777
 yellow TT gearmotors. The assembled CAD model has independent **A / left** and
 **B / right** drives, a moving chassis, a rear skid, and an electronics deck.
-Its eleven structural parts are designed for PLA printing. Purchased motors,
+Its twelve structural parts, including a removable electronics carrier, are designed for PLA printing. Purchased motors,
 rubber tires, batteries and electronics remain separate components.
 
 **Physical prototype status: unprinted and untested.** Dimensions below are a
@@ -14,17 +14,18 @@ different things from a physical fit or load test.
 
 ## Open the model
 
-The shared shape catalogue has three entries in **Robots**:
+The shared shape catalogue has four entries in **Robots**:
 
 | Entry | Purpose |
 | --- | --- |
 | **Scout TT rover** (`robot-tt-rover`) | Complete assembly with Adafruit motor geometry, purchased-component envelopes, tires and A/B simulation joints |
-| **Scout PLA print layout** (`robot-tt-rover-print`) | Eleven original PLA parts, already oriented for printing |
+| **Scout PLA print layout** (`robot-tt-rover-print`) | Twelve original PLA parts, already oriented for printing |
 | **Scout shaft fit gauge** (`robot-tt-rover-fit`) | Five double-D test sockets, identified by one through five dots |
+| **Scout electronics carrier** (`robot-tt-rover-carrier`) | Separate printable mount for the selected Feather RP2040 and DRV8833 boards |
 
 The print layout arranges parts for inspection; its full spread exceeds many
 printer beds. Export individual parts or use the generated individual part files.
-There are **six unique robot print parts**, plus the separate fit gauge: seven
+There are **seven unique robot print parts**, plus the separate fit gauge: eight
 unique STL/source designs in total. Print quantities are listed below.
 
 The complete assembly contains purchased motor and tire bodies and an AA-pack
@@ -59,9 +60,9 @@ and compares their bytes with the saved files. No GitHub Actions job is needed.
 | --- | --- |
 | `scout-tt-rover-kit.zip` | Complete portable build kit, including the files below |
 | `scout-tt-rover.bcad` | Editable assembled robot, motor provenance and stable A/B joints |
-| `scout-tt-print-layout.bcad` | Editable inventory of the eleven PLA pieces in printing orientations |
+| `scout-tt-print-layout.bcad` | Editable inventory of the twelve PLA pieces in printing orientations |
 | `scout-tt-fit-gauge.bcad` | Editable five-socket fit gauge |
-| `stl/chassis.stl`, `cradle.stl`, `wheel.stl`, `deck.stl`, `standoff.stl`, `skid.stl`, `fit.stl` | Seven unique individual print meshes; use the quantity table below |
+| `stl/chassis.stl`, `cradle.stl`, `wheel.stl`, `deck.stl`, `standoff.stl`, `skid.stl`, `carrier.stl`, `fit.stl` | Eight unique individual print meshes; use the quantity table below |
 | `source/*.cadcode` | Matching original CAD Script recipes |
 | `manifest.json` | Part quantities, units, bounds, volumes, triangle counts, geometry-check results and SHA-256 identities of the included source/model/notice files |
 | `BUILD-GUIDE.md` | A copy of this guide |
@@ -93,9 +94,11 @@ All model dimensions are millimetres. X is forward, Y is left and Z is up.
 | Motor cradle | 74 × 28.2 footprint, 2.8 floor; shallow rails stop before the output shaft |
 | Electronics deck | 80 × 56 × 3; lower face at Z 46 |
 | Deck standoffs | Four, Ø9 outside, Ø3.4 through-hole, 28 tall |
+| Electronics carrier | 61 × 56 × 9; removable 3 mm plate with six 6 mm insulating bosses |
+| Board mounting level | PCB underside at Z 58; 6 above carrier plate and 9 above deck |
 | Rear skid | 32 × 20 × 14; centered at X −85 |
 
-The assembled CAD envelope is approximately 160 × 149 × 63.5 before protruding
+The assembled CAD envelope is approximately 160 × 149 × 66 before protruding
 fasteners, straps and wiring. The tire starts 0.5 above the ground plane and the
 skid touches it; the dynamic model settles under gravity.
 
@@ -128,7 +131,8 @@ assembly; actual print error, shaft runout and fastener projection still matter.
 | Electronics deck | 1 | 80 × 56 × 3 | Flat face down |
 | Deck standoff | 4 | Ø9 × 28 | Bore vertical |
 | Rear skid | 1 | 32 × 20 × 14 | **Flat mounting flange down**, rounded toe up; individual print document already flips it |
-| Shaft fit gauge | 1 first | 74 × 18 × 4 | Flat face down; separate from the eleven robot parts |
+| Electronics carrier | 1 | 61 × 56 × 9 | Broad underside down, six PCB bosses up |
+| Shaft fit gauge | 1 first | 74 × 18 × 4 | Flat face down; separate from the twelve robot parts |
 
 The shape recipes aim to print without generated supports: wheel clamp ears have
 sloped lower faces, cradles have open strap channels, and the skid prints upside
@@ -147,17 +151,19 @@ faces free of elephant's foot and remove any strings from the clamp slit.
 | --- | ---: | --- |
 | [Adafruit 3777 yellow TT motor][tt-product] | 2 | Left and right drive; other TT variants need a new fit check |
 | O-ring, 56 mm inside diameter × 3 mm cross-section | 4 | Two elastomer tires per wheel; rubber is purchased, not printed in PLA |
-| M3 × 12, 90° countersunk screws | 8 | Four cradle fasteners each; heads finish flush with the cradle floor beneath the motor |
+| M3 × 12, 90° countersunk screws | 12 | Eight cradle fasteners and four carrier-to-deck fasteners; heads finish flush |
 | M3 × 40 machine screws | 4 | Deck → standoff → chassis |
 | M3 × 12 machine screws | 2 | Rear skid flange → chassis; 12 mm leaves room for a washer and full nut engagement |
 | M3 × 20 machine screws | 2 | Wheel split clamps |
-| Standard M3 hex nuts | 16 | Eight cradle, four deck, two skid, two clamp; clamp pockets use ordinary thin hex nuts |
-| Thin M3 flat washers | About 24 | Under nuts and non-countersunk heads as space permits, with a few spares |
+| Standard M3 hex nuts | 20 | Eight cradle, four deck, two skid, two clamp and four carrier; clamp pockets use ordinary thin hex nuts |
+| Thin M3 flat washers | About 28 | Under nuts and non-countersunk heads as space permits, with a few spares |
+| M2.5 × 16, 90° countersunk screws | 6 | Four Feather and two driver through-bolts; fit from the carrier underside before mounting it |
+| M2.5 hex nuts and thin insulating washers | 6 each | Retain the boards above their printed bosses; check nearby components |
 | Small reusable ties or cable ties, about 2.5 mm wide | 4 plus spares | Two per motor; thickness must fit the 1.4 mm-deep underside channels |
 | Battery straps, up to about 12 mm wide | 2 | Pass through chassis slots at X −85 and −45 |
 | Firm insulating pad, 6 mm thick | 1 | Between AA holder and chassis; remains at least 5 mm thick under strap pressure |
 
-Keep countersunk cradle heads bare so they can seat in their conical recesses.
+Keep countersunk cradle and carrier heads bare so they can seat in their conical recesses.
 Check bolt projection with the actual washers and nuts; use a suitable longer
 bolt if a chosen head, washer or nut differs substantially from this stack.
 M3 × 10 skid screws leave almost no spare thread after the 7 mm plastic stack,
@@ -187,7 +193,7 @@ are not the Scout printed wheel.
 | [Adafruit DRV8833 breakout, 3297][drv8833] | 1 | Two motor channels with the board's default current limiting retained |
 | Feather-format 3.3 V controller, such as [Feather RP2040, 4884][feather-rp2040] | 1 | Controller candidate; firmware and physical transport require a separate implementation |
 | USB power source/cable for the controller | 1 | Separate logic power during initial bench testing |
-| Insulated wire, connectors and a small insulated board carrier | As needed | Secure wiring and adapt the real boards to the slotted deck |
+| Insulated wire and connectors | As needed | Secure wiring to the printed carrier and slotted deck |
 
 The AA holder's official dimensions are approximate: 2.5 × 2.75 × 0.75 inches,
 with ±0.1 inch stated tolerance. The model reserves **66.1 × 72.4 × 21.6** at
@@ -198,16 +204,91 @@ hard insulating support that does not compress below 5 mm under the straps, and
 cover any exposed bolt tips. Confirm the actual holder and keep its switch and
 cover accessible. The simulation's pack mass is illustrative.
 
-The deck shows an original **22.86 × 50.8 × 8** Feather keep-out and an original
-**26 × 18 × 8** driver keep-out. The [Feather specification][feather-spec] gives
-the classic board size and 2.54 mounting-hole diameter; it does not establish
-every board's connector clearance. Measure the chosen boards, headers and USB
-cable before making a carrier. The deck intentionally supplies mounting slots
-instead of claiming verified PCB-specific hole positions. The bottom of these
-envelopes sits 1 mm above the deck for an insulating pad. Support boards on an
-insulating pad or carrier and secure the carrier; avoid tightening a strap
-across exposed components. Increase the stand-off height if the actual board's
-solder joints, headers or carrier need more clearance.
+The assembly retains original **22.86 × 50.8 × 8** Feather and **26 × 18 × 8**
+driver keep-outs. These remain conservative component envelopes, not vendor PCB
+meshes. Their undersides now sit on the printed carrier's mounting bosses at
+Z 58. The carrier supplies actual through-bolt mounting positions for the
+specific board revisions below. Its four M3 mounting holes fit the existing
+deck slots; the deck and its 28 mm posts retain their original dimensions.
+
+## Removable electronics carrier
+
+The original BSD-3-Clause carrier replaces the previously unspecified insulated
+board carrier. It prints as one flat piece with six upright bosses, using no
+snap fits, heat-set inserts or self-tapping threads. Two board islands
+and an overlapping joining web leave the four existing deck-post screw heads exposed.
+All four carrier-to-deck screws sit outside both PCB outlines, so a 4 mm
+screwdriver shaft can reach their heads with the boards installed. This allows
+the builder to counterhold each screw while tightening its nut beneath the deck.
+The bottom countersinks have 45-degree walls; inspect the slicer preview and
+remove elephant's foot before seating their heads. Both rows of deck fasteners are
+shifted 1.5 mm toward the centre along their slots to clear the nearby post: use an M3 washer no more
+than 7 mm outside diameter there, leaving about 1.55 mm nominal clearance to the
+Ø9 post. Keep the existing deck-post screw heads and washers at or below
+7 mm outside diameter too: the right-hand carrier island leaves 0.5 mm nominal
+clearance to their edges. Verify the real hardware, tool access and print
+tolerances before tightening.
+
+The two board layouts were checked against Adafruit's exact fabrication data.
+These are dimensional references only: no PCB artwork or another mount design
+is redistributed or used as carrier geometry.
+
+| Interface | Source dimensions | Position in the carrier |
+| --- | --- | --- |
+| [Feather RP2040 Rev B PCB][feather-layout] | 50.8 × 22.86 outline; mounting-hole centres `(2.54, 2.54)`, `(2.54, 20.32)`, `(48.26, 2.54)`, `(48.26, 20.32)`; source drill Ø2.50 for the two plated USB-end holes at X 2.54, Ø2.54 for the two unplated far-end holes at X 48.26 | Rotate the centred PCB +90° about Z: bosses at X ±8.89 and Y ±22.86; USB faces −Y |
+| [DRV8833 PCB][driver-layout] | Outline X −2.286 to 15.494 and Y −1.27 to 24.13; mounting-hole centres `(12.954, 1.27)` and `(12.954, 21.59)`; source drill Ø2.50 for both plated holes | Centre the PCB, rotate +90° about Z, then move +32 in X: bosses at `(21.84, 6.35)` and `(42.16, 6.35)` |
+| Carrier to deck | Four Ø3.4 bores and upper 90° countersinks, nominal Ø6.6 opening | `(25, -12.5)`, `(25, 12.5)`, `(39, -12.5)`, `(39, 12.5)`, within the existing driver-side deck slots |
+| Boards to carrier | Six Ø2.8 through-bores; Ø5 bosses; underside 90° countersinks, nominal Ø5.6 opening | Printed plate Z 0–3; bosses Z 3–9; nominal 6 mm gap under each PCB |
+
+Before assembly, compare the real boards' hole centres and connector direction
+with this table, and check that the actual M2.5 screws pass freely through the
+PCB mounting holes. The source drill sizes are not printed clearance allowances.
+The Feather source is pinned to commit
+`ea88166891ee0a1697a3899a5d55ab3722a2f125`, file `Adafruit Feather RP2040 rev B.brd`;
+the driver source is pinned to `dda79a86d6518d05a35091cb8b03b9c0d57d04e2`, file
+`Adafruit DRV8833.brd`. The [Feather specification][feather-spec] also documents
+the classic outline and hole diameter, while the [driver fabrication page][driver-fab]
+provides a dimensioned drawing. Other Feather boards and similar motor-driver
+breakouts are not automatically compatible.
+
+1. Seat the six M2.5 × 16 countersunk screws from the carrier underside, with
+   every head flush or recessed. The printed holes are clearance bores: do not
+   cut threads into the bosses. Clear a tight bore gently and reject a print
+   whose bosses crack. Head shape and actual print compensation still need a
+   fit check.
+2. Put the four M3 × 12 countersunk carrier screws through the upper recesses.
+   Their heads remain accessible beside the driver board. Mount both boards over
+   the M2.5 screws and bosses, using insulating washers
+   beneath the top nuts. Tighten gently so that the PCB stays flat. Installing
+   the screws and boards on the bench retains access to the lower screw heads;
+   do this before bolting the carrier to the deck.
+3. Confirm every board underside is clear of solder tails and components. The
+   M3 heads must be flush to retain the full nominal 6 mm clearance. This is an
+   allowance for inspection, not a qualification of arbitrary headers. The
+   board screws extend above the nuts; trim or substitute a suitable length
+   if an added shield or enclosure needs that space. No stacked FeatherWing
+   envelope has been qualified.
+4. Lower the carrier onto the deck, put its M3 screws through the four matching
+   slots, and install washers and nuts below. With a nominal 1.6 mm PCB, 0.5 mm
+   washer and 2 mm nut, the M2.5 stack is about 13.1 mm from the carrier underside;
+   a 16 mm screw leaves roughly 2.9 mm above it before countersink seating
+   variation. The M3 stack is approximately 8.9 mm with one 0.5 mm washer and a
+   2.4 mm nut; verify the actual hardware and its projection below the deck.
+5. Route the Feather USB cable toward −Y and wires away from the wheel sweeps.
+   Keep access to USB, reset/boot controls, driver terminals and all fasteners.
+   Anchor cables with light ties through unused deck slots; do not clamp a tie
+   across exposed PCB components.
+
+The carrier's retained `boardClearance` accepts 6–20 mm and `boardBore` accepts
+2.6–3.0 mm; values outside these design bounds refuse geometry evaluation. The
+stock values are 6 and 2.8 mm. The bore cut follows the boss height, so a taller
+post remains open all the way through. These ranges retain the nominal solder
+gap and at least 1 mm nominal radial wall at the largest bore; they are editing
+bounds, not a physical strength qualification. Changing boss height also requires
+moving the component envelopes by the same amount and rechecking fastener
+lengths and collision candidates. The four long deck posts set the height of the entire deck; changing
+them does not change board-to-carrier clearance. Physical fit, thermal behaviour
+near the driver and fastener retention remain to be checked on a printed unit.
 
 ## Fit gauge and tolerances
 
@@ -267,8 +348,9 @@ values are starting points, not calibrated machine-independent tolerances.
 8. **Secure the power pack and electronics.** Place the firm 6 mm insulating pad
    and AA holder in the rear bay, check clearance over the skid-bolt tips, then
    route both straps through the chassis slots.
-   Fit the real controller and driver on an insulated carrier on the deck.
-   Leave the holder switch, battery lid and controller USB accessible.
+   Assemble the printed carrier and its PCB bolts as described above, then bolt
+   it through the existing deck slots. Leave the holder switch, battery lid,
+   board controls and controller USB accessible.
 9. **Check free movement.** Lift the drive wheels and turn them by hand. Check
    both hubs, cradles, wires, tires and the rear skid for interference. Keep
    wires outside the wheel sweep and leave strain relief near motor terminals.
@@ -403,7 +485,7 @@ driver.
 
 ## Source, export and licensing
 
-The chassis, cradles, wheels, deck, standoffs, skid, gauge and simple component
+The chassis, cradles, wheels, deck, standoffs, skid, carrier, gauge and simple component
 envelopes are original Brickwright designs under the repository's
 [BSD-3-Clause license][brickwright-license]. Their retained CAD Script supports edits and
 individual STL regeneration. Export those printed components in millimetres.
@@ -440,8 +522,12 @@ required for this build workflow.
 [feather-spec]: https://learn.adafruit.com/adafruit-feather/feather-specification
 [adafruit-source]: https://github.com/adafruit/Adafruit_CAD_Parts/tree/9f2a89f3d5c3491886d58cb7fe83385417563cf4
 [lite-cad]: https://github.com/CrispStrobe/brickwright-lite/blob/fc333ddf88023cf17e9bb5973109b74a350f2ab7/docs/CAD-EDITOR.md
-[rover-source]: https://github.com/CrispStrobe/brickwright-cad/blob/feat/printable-robot-20261115/packages/editor/src/tt-rover.ts
+[rover-source]: https://github.com/CrispStrobe/brickwright-cad/blob/feat/scout-tt-integration-20261116/packages/editor/src/tt-rover.ts
 [brickwright-license]: https://github.com/CrispStrobe/brickwright-cad/blob/53581e9cbd2565e9e088c8fcd52fb1ba5c739b09/LICENSE
 [adafruit-license]: https://github.com/CrispStrobe/brickwright-cad/blob/53581e9cbd2565e9e088c8fcd52fb1ba5c739b09/library/sources/adafruit-motors/LICENSE
 [attribution]: https://github.com/CrispStrobe/brickwright-cad/blob/53581e9cbd2565e9e088c8fcd52fb1ba5c739b09/docs/MODEL-ATTRIBUTION.md
 [archive-guide]: https://github.com/CrispStrobe/brickwright-cad/blob/53581e9cbd2565e9e088c8fcd52fb1ba5c739b09/docs/ADAFRUIT-CAD-ARCHIVE.md
+
+[feather-layout]: https://github.com/adafruit/Adafruit-Feather-RP2040-PCB/blob/ea88166891ee0a1697a3899a5d55ab3722a2f125/Adafruit%20Feather%20RP2040%20rev%20B.brd
+[driver-layout]: https://github.com/adafruit/Adafruit-DRV8833-Motor-Driver-Breakout-PCB/blob/dda79a86d6518d05a35091cb8b03b9c0d57d04e2/Adafruit%20DRV8833.brd
+[driver-fab]: https://learn.adafruit.com/adafruit-drv8833-dc-stepper-motor-driver-breakout-board/downloads

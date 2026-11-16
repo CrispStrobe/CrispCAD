@@ -1,0 +1,1552 @@
+{
+  "schema": "brickwright-continuation-history-audit-v1",
+  "recorded_at_utc": "2026-11-16 09:07:28 UTC",
+  "mode": "Read-only GitHub connector audit. No remote mutations. No Actions dispatch, waiting or polling.",
+  "scope": {
+    "cad": "All 49 current branch heads compared with the prior complete 47-head audit. Recent 15 PRs and current main/Scout/circuit ancestry checked.",
+    "lite": "Current main, latest 20 PRs and all feature refs inventoried, with six current robot/CAD branches inspected. This is not an exhaustive audit of all historical Lite branches."
+  },
+  "requested": {
+    "cad": {
+      "repo": "CrispStrobe/brickwright-cad",
+      "pr": 60,
+      "branch": "feat/printable-robot-20261115",
+      "sha": "629682c13d8cbc55b70cdbc283b3b1e6c60ae841"
+    },
+    "lite": {
+      "repo": "CrispStrobe/brickwright-lite",
+      "pr": 1792,
+      "branch": "feat/pla-rover-cad-20261115",
+      "sha": "e10b5a586da28e5a68176c7989a0a17a3d278828"
+    }
+  },
+  "recovered": {
+    "cad": {
+      "branch": "feat/scout-tt-integration-20261116",
+      "sha": "ce3150ec592e70cb8f6b23ae7c3b6b16b42b8012",
+      "parent": "270900f0df68a921627aa4147ec0acb3eef62add",
+      "status": "Final carrier package saved, newer than pasted log."
+    },
+    "lite": {
+      "branch": "feat/scout-tt-integration-20261116",
+      "sha": "7b9e191691081e9b1b608a18674eb86c7f5d9e87",
+      "parent": "0f978c8df068acd30e645d41ab69c3f5d4340713",
+      "status": "Final control-verifier corrections saved. CAD SDK still pins 0ee57d91be6f4f910f8b8d6106ba894b9b1a8d1d."
+    }
+  },
+  "cad": {
+    "main": "850bfb93f21c6244028e0ba1b4174d1281859649",
+    "all_branch_heads": [
+      {
+        "branch": "attributed-editor-export",
+        "sha": "fea5ac9d7a482b92b0257cc03f76cea17af8c512"
+      },
+      {
+        "branch": "catalogue-insertion",
+        "sha": "15a64645f74a4361751f5788aacf20783aa1853e"
+      },
+      {
+        "branch": "cc0-calibration-seed",
+        "sha": "e82daac8ce5abc7fa2bd1652bbffa463e6d961a9"
+      },
+      {
+        "branch": "codex/archived-ldraw-components",
+        "sha": "16ec892864d7785563b152412a3791057eb51d34"
+      },
+      {
+        "branch": "codex/comprehension-conformance",
+        "sha": "c2b87e71c597c533f4d3cf77dbe66c8cef53ff03"
+      },
+      {
+        "branch": "codex/converter-curved-primitives",
+        "sha": "ce22c2f5c513f407ae1984a9872bc5cf0650f0f2"
+      },
+      {
+        "branch": "codex/corner-box-origin",
+        "sha": "c55509aeedddc9915dde107faac809538555358a"
+      },
+      {
+        "branch": "codex/cube-fasteners-reductions",
+        "sha": "3077e9be1f04bbaa881e942f5f6838897eb11feb"
+      },
+      {
+        "branch": "codex/curved-hollow-parameters",
+        "sha": "962b7bf3b8703cdaa9e3e2921e46fc80fc42b425"
+      },
+      {
+        "branch": "codex/cutting-enclosure-parameters",
+        "sha": "f5312d0db2aded1a0341759fcfa59459847df785"
+      },
+      {
+        "branch": "codex/dimension-resize",
+        "sha": "489a0340b62d24ef3357d6e82e6259e66343b25c"
+      },
+      {
+        "branch": "codex/expanded-ldraw-batch002-qualified",
+        "sha": "16ef1477ea0a5e5885fa62340c5830aa23718b33"
+      },
+      {
+        "branch": "codex/expanded-ldraw-survivors22",
+        "sha": "ff2d698212bda6f605d750b355c0fdae14e3fcc0"
+      },
+      {
+        "branch": "codex/expanded-ldraw-t1098",
+        "sha": "af9907b13272da276818bf04c288a72a0d5c0dcc"
+      },
+      {
+        "branch": "codex/italy-qualified",
+        "sha": "eb465b62e1cc55d419126b7e0b0b74151b8b5029"
+      },
+      {
+        "branch": "codex/ldraw-6934-qualified",
+        "sha": "94de879e40d8962739f8948df56055d9e1c13e0a"
+      },
+      {
+        "branch": "codex/ldraw-authored-subcomponents",
+        "sha": "3c1523519257f2cc38244c5be699906d54734839"
+      },
+      {
+        "branch": "codex/ldraw-components-reserve",
+        "sha": "4800ddbe627c420792b6bfad205d2997a245bd41"
+      },
+      {
+        "branch": "codex/ldraw-exact-batch",
+        "sha": "c40911d200afea96d6ef0b144e573689e6c76e8e"
+      },
+      {
+        "branch": "codex/ldraw-exact-edge-conformity",
+        "sha": "14dbc70c3477bce78a2586fb0fefdfad6d054dc1"
+      },
+      {
+        "branch": "codex/ldraw-repair9-qualified",
+        "sha": "7b83f29c470cc8476fecf9194488e61fe0eba467"
+      },
+      {
+        "branch": "codex/ldraw-wholeparts2-qualified",
+        "sha": "82a6dd64b51e8d85458b3bbf1dd9df8764c5f660"
+      },
+      {
+        "branch": "codex/retained-basic-shapes",
+        "sha": "0d20a796cb014e27eeebeaa5b4ed3f845c88071b"
+      },
+      {
+        "branch": "codex/retained-transitions",
+        "sha": "21c38393fca4d3a97b94d350f1974cb07168694c"
+      },
+      {
+        "branch": "codex/reviewed-bundle-namespace",
+        "sha": "74cdc61f94fffabb51079fc8bfde83f0df0c9dd8"
+      },
+      {
+        "branch": "codex/scad-arc-qualified",
+        "sha": "bebe82920c436e961e84b2a0e73e71d57e5c4573"
+      },
+      {
+        "branch": "codex/scad-engine-expansion",
+        "sha": "48570cebbc3f592231ca51b7a76c0692d3d6ae2a"
+      },
+      {
+        "branch": "codex/screw-thread-redesign",
+        "sha": "cb1853c5f2f6d62fd923e1f31a079fe0be737b66"
+      },
+      {
+        "branch": "codex/screw-tips-and-shape-repairs",
+        "sha": "901af479cbb67ff54ec5ec39c35e51a2746ec3c9"
+      },
+      {
+        "branch": "codex/shape-palette-discoverability",
+        "sha": "d63ed25943b0561e894fa320d29c2efda8c883cb"
+      },
+      {
+        "branch": "codex/smooth-prim-qualified",
+        "sha": "3797c7dc811b2787a72690b3ffa5fbc67b58cb01"
+      },
+      {
+        "branch": "codex/sync-brickwright-simlab",
+        "sha": "efb165a1aaea3ab39400f4631240e9e1727fcd95"
+      },
+      {
+        "branch": "codex/uniform-cylinder-origin",
+        "sha": "194d658c0ea0f2e51856df031aea2a2b6ddd07c4"
+      },
+      {
+        "branch": "curated-model-library-foundation",
+        "sha": "a53aa588867f47893cb9defdf8094983ec821efa"
+      },
+      {
+        "branch": "feat/atlas-forklift-20261116",
+        "sha": "8d9efa34b8cd0ca25ca2961d3d5a800f83ab528c"
+      },
+      {
+        "branch": "feat/circuit-cad-cosim-20261116",
+        "sha": "10c58fbfd96a9f1f95787e47e1a301614c9d163f"
+      },
+      {
+        "branch": "feat/kestrel-gripper-arm-20261116",
+        "sha": "343dcf6bdecc7bd97869279687d76844d26a8191"
+      },
+      {
+        "branch": "feat/printable-robot-20261115",
+        "sha": "629682c13d8cbc55b70cdbc283b3b1e6c60ae841"
+      },
+      {
+        "branch": "feat/scout-tt-integration-20261116",
+        "sha": "ce3150ec592e70cb8f6b23ae7c3b6b16b42b8012"
+      },
+      {
+        "branch": "feat/shared-editor-selection-20261115",
+        "sha": "89b379b8df0a1f273025a1892dec12663081655f"
+      },
+      {
+        "branch": "feat/steerable-3d-robot-20261115",
+        "sha": "c043b3fdfe65b61abdb2809718010d17289ae862"
+      },
+      {
+        "branch": "library-collision-qualification",
+        "sha": "a452efff093def4dd4111b4a650a1475e02c44bc"
+      },
+      {
+        "branch": "library-qualification-display",
+        "sha": "a406cb4333bf01073069924d035026bdfd5a55e8"
+      },
+      {
+        "branch": "library-qualification-evidence",
+        "sha": "f0241efdac31cdb8ac95be9a85ff31153ff86379"
+      },
+      {
+        "branch": "library-source-conversion",
+        "sha": "f1766e739d86c3e55a23df2f6163288a821a2b8e"
+      },
+      {
+        "branch": "local-model-library",
+        "sha": "d85cfeb256c2d967beec91a11e3e195b094ec372"
+      },
+      {
+        "branch": "main",
+        "sha": "850bfb93f21c6244028e0ba1b4174d1281859649"
+      },
+      {
+        "branch": "model-library-catalogue-ui",
+        "sha": "478e033b172238cabba79e01853b14435a463911"
+      },
+      {
+        "branch": "offline-collision-curation",
+        "sha": "749d122bbf58bf73235054252a0d1d02b806031d"
+      }
+    ],
+    "changes_since_prior_audit": {
+      "prior": "docs/evidence/scout-tt-history-reconciliation-2026-11-16.json at ce3150ec592e70cb8f6b23ae7c3b6b16b42b8012",
+      "unchanged_count": 45,
+      "changed": [
+        {
+          "branch": "feat/circuit-cad-cosim-20261116",
+          "sha": "10c58fbfd96a9f1f95787e47e1a301614c9d163f",
+          "previous": "29d336427e5ba92320bfd0135685f8dd38974863"
+        },
+        {
+          "branch": "main",
+          "sha": "850bfb93f21c6244028e0ba1b4174d1281859649",
+          "previous": "1371532344e546f9b26b76b3f9ad25c90ede725d"
+        }
+      ],
+      "added": [
+        {
+          "branch": "codex/expanded-ldraw-batch002-qualified",
+          "sha": "16ef1477ea0a5e5885fa62340c5830aa23718b33"
+        },
+        {
+          "branch": "feat/scout-tt-integration-20261116",
+          "sha": "ce3150ec592e70cb8f6b23ae7c3b6b16b42b8012"
+        }
+      ],
+      "removed": []
+    },
+    "recent_prs": [
+      {
+        "number": 64,
+        "title": "Expose shared circuit-driven CAD mechanics and integrate current rover branches",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/64",
+        "state": "open",
+        "draft": false,
+        "merged": false,
+        "head": "feat/circuit-cad-cosim-20261116",
+        "head_sha": "10c58fbfd96a9f1f95787e47e1a301614c9d163f",
+        "base": "main",
+        "base_sha": "850bfb93f21c6244028e0ba1b4174d1281859649",
+        "updated_at": "2026-11-16T08:50:20Z"
+      },
+      {
+        "number": 63,
+        "title": "Qualify 21 authored models with guarded standalone LDraw source binding",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/63",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "codex/expanded-ldraw-batch002-qualified",
+        "head_sha": "16ef1477ea0a5e5885fa62340c5830aa23718b33",
+        "base": "main",
+        "base_sha": "1371532344e546f9b26b76b3f9ad25c90ede725d",
+        "updated_at": "2026-11-16T08:33:30Z"
+      },
+      {
+        "number": 62,
+        "title": "Qualify 22 authored LDraw archive models through all editor/browser gates",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/62",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "codex/expanded-ldraw-survivors22",
+        "head_sha": "ff2d698212bda6f605d750b355c0fdae14e3fcc0",
+        "base": "main",
+        "base_sha": "2117764cc011a87e094c4029e10cb0b9bf28be08",
+        "updated_at": "2026-11-16T06:36:28Z"
+      },
+      {
+        "number": 61,
+        "title": "Qualify authored Circuit Cubes pin with exact reviewed source bindings",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/61",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "codex/expanded-ldraw-t1098",
+        "head_sha": "af9907b13272da276818bf04c288a72a0d5c0dcc",
+        "base": "main",
+        "base_sha": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09",
+        "updated_at": "2026-11-16T05:39:00Z"
+      },
+      {
+        "number": 60,
+        "title": "Add printable Scout TT rover and qualify its CAD drive simulation",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/60",
+        "state": "open",
+        "draft": true,
+        "merged": false,
+        "head": "feat/printable-robot-20261115",
+        "head_sha": "629682c13d8cbc55b70cdbc283b3b1e6c60ae841",
+        "base": "main",
+        "base_sha": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09",
+        "updated_at": "2026-11-16T05:31:39Z"
+      },
+      {
+        "number": 59,
+        "title": "Qualify Smooth authored default and bind bundled source licences per asset",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/59",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "codex/smooth-prim-qualified",
+        "head_sha": "3797c7dc811b2787a72690b3ffa5fbc67b58cb01",
+        "base": "main",
+        "base_sha": "15551325cf5e315add3c6cfc0991467d693f2319",
+        "updated_at": "2026-11-15T20:43:47Z"
+      },
+      {
+        "number": 58,
+        "title": "Qualify two whole authored LDraw parts with durable browser proof",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/58",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "codex/ldraw-wholeparts2-qualified",
+        "head_sha": "82a6dd64b51e8d85458b3bbf1dd9df8764c5f660",
+        "base": "main",
+        "base_sha": "596599a01a07754f18ceef5724074c9a297bc35c",
+        "updated_at": "2026-11-15T18:55:05Z"
+      },
+      {
+        "number": 57,
+        "title": "Qualify nine authored LDraw components with exact endpoint conversion",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/57",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "codex/ldraw-repair9-qualified",
+        "head_sha": "7b83f29c470cc8476fecf9194488e61fe0eba467",
+        "base": "main",
+        "base_sha": "2e18fa2167cc99637969aa13ad09647291f37fb9",
+        "updated_at": "2026-11-15T18:12:53Z"
+      },
+      {
+        "number": 56,
+        "title": "fix: conform exact LDraw edges and qualify authored battery top",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/56",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "codex/ldraw-exact-edge-conformity",
+        "head_sha": "14dbc70c3477bce78a2586fb0fefdfad6d054dc1",
+        "base": "main",
+        "base_sha": "0032418672409e6a1bb7af8d6297afef2cd1a22c",
+        "updated_at": "2026-11-15T17:06:49Z"
+      },
+      {
+        "number": 55,
+        "title": "Keep archive download regression aligned with source details UI",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/55",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "feat/shared-editor-selection-20261115",
+        "head_sha": "89b379b8df0a1f273025a1892dec12663081655f",
+        "base": "main",
+        "base_sha": "9cda5a5d1ebba484ef941dd02a90444f791ac9f2",
+        "updated_at": "2026-11-15T16:06:26Z"
+      },
+      {
+        "number": 54,
+        "title": "Restore embedded catalogue and shared light/dark simulation controls",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/54",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "feat/shared-editor-selection-20261115",
+        "head_sha": "c7d8382d2392674fec847d8e800f305b2de65659",
+        "base": "main",
+        "base_sha": "64bb1cf694c2bead94cd9ef98a0801929fe319a6",
+        "updated_at": "2026-11-15T16:03:06Z"
+      },
+      {
+        "number": 53,
+        "title": "Bring shared Brickwright simulation into the standalone CAD app",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/53",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "codex/sync-brickwright-simlab",
+        "head_sha": "a831e123fb7654d4133071273cf2d41823bd78b4",
+        "base": "main",
+        "base_sha": "c9dbd7db4e209bd2bb251e953fbfcdb5832da24c",
+        "updated_at": "2026-11-15T15:57:36Z"
+      },
+      {
+        "number": 52,
+        "title": "Optionally redesign resized screw threads by pitch or turns",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/52",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "codex/screw-thread-redesign",
+        "head_sha": "cb1853c5f2f6d62fd923e1f31a079fe0be737b66",
+        "base": "main",
+        "base_sha": "459ba9c43da6f7b98423697b2dd07e7c9662cfa3",
+        "updated_at": "2026-11-15T14:17:23Z"
+      },
+      {
+        "number": 51,
+        "title": "Qualify authored lighting ring separator with full editor and preview proof",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/51",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "codex/ldraw-authored-subcomponents",
+        "head_sha": "3c1523519257f2cc38244c5be699906d54734839",
+        "base": "main",
+        "base_sha": "2c63a29de9ba13aa89b3d03b825e6fc971de39e0",
+        "updated_at": "2026-11-15T13:19:08Z"
+      },
+      {
+        "number": 50,
+        "title": "Retain bend, duct and dovetail designs with section-aware collisions",
+        "url": "https://github.com/CrispStrobe/brickwright-cad/pull/50",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "codex/retained-transitions",
+        "head_sha": "21c38393fca4d3a97b94d350f1974cb07168694c",
+        "base": "main",
+        "base_sha": "9476dfdb2ee1a78d130d8e2ec5caeb39a1164a2c",
+        "updated_at": "2026-11-15T13:11:36Z"
+      }
+    ],
+    "scout_recent_commits": [
+      {
+        "sha": "ce3150ec592e70cb8f6b23ae7c3b6b16b42b8012",
+        "message": "Qualify and package Scout TT with a bolted PLA electronics carrier [skip ci]\n\nAdd accessible Feather RP2040/DRV8833 mounting with open through-bores,\ninsulating bosses and verified screw/washer/tool clearances. Preserve original\nMIT motor provenance and BSD-3-Clause print designs. Include the updated\neditable assembly, 12-piece kit, eight screened STL designs and runnable SB3.\n\nLocal checks: 45 focused robot/physics/history tests and 26 newly merged\nlibrary controls pass; standalone build, localization and exact kit/collision\nreproduction pass. Exact shipped-model Jolt: 179.070 mm forward,\n-184.996 mm reverse, 131.111 degrees turn; 4,017 hulls within 4,096.\n\nRetain detailed source identities, failed intermediate attempts and practical\nlimits. No hardware or browser pass is claimed; no GitHub Actions awaited.",
+        "date": "2026-11-16T07:40:07Z",
+        "parents": [
+          "270900f0df68a921627aa4147ec0acb3eef62add"
+        ]
+      },
+      {
+        "sha": "270900f0df68a921627aa4147ec0acb3eef62add",
+        "message": "Checkpoint Scout PLA electronics carrier and recent history reconciliation [skip ci]\n\nSave the original carrier, pinned board mounting dimensions, revised build\ninstructions and complete recent-branch inventory. Preserve the unchanged\n4096-piece scene budget and 2%/.2 mm qualification thresholds.\n\nCollision optimization and complete drive requalification remain in progress.\nThis is a recoverable intermediate checkpoint, not a hardware validation claim.",
+        "date": "2026-11-16T07:22:23Z",
+        "parents": [
+          "c0ed44c70f58879c0b078535980293eb69593b6d"
+        ]
+      },
+      {
+        "sha": "c0ed44c70f58879c0b078535980293eb69593b6d",
+        "message": "Merge latest reviewed CAD library history into Scout TT continuation\n\nRetain Scout PR #60 at 629682c and main through merged PRs #61 and #62.\nThe 81-file main delta has no overlapping changes against merge base 53581e9.\nParallel robot experiments remain on their existing branches for review.\nLocal validation follows; GitHub Actions is not required or awaited.",
+        "date": "2026-11-16T07:11:03Z",
+        "parents": [
+          "629682c13d8cbc55b70cdbc283b3b1e6c60ae841",
+          "1371532344e546f9b26b76b3f9ad25c90ede725d"
+        ]
+      }
+    ],
+    "main_new_commits": [
+      {
+        "sha": "09b1ac04345c466e8de3ae8c7988788db10c8216",
+        "message": "Preserve original source closures for 21 batch-two native survivors",
+        "date": "2026-11-16T07:12:53Z",
+        "parents": [
+          "1371532344e546f9b26b76b3f9ad25c90ede725d"
+        ]
+      },
+      {
+        "sha": "149ff4cbefa86900fb158e48cda724c51b532948",
+        "message": "Qualify 21 authored LDraw roots and bind standalone original sources",
+        "date": "2026-11-16T08:30:23Z",
+        "parents": [
+          "09b1ac04345c466e8de3ae8c7988788db10c8216"
+        ]
+      },
+      {
+        "sha": "16ef1477ea0a5e5885fa62340c5830aa23718b33",
+        "message": "Bind 21 model qualifications, standalone-source fix and preserved first failure",
+        "date": "2026-11-16T08:31:30Z",
+        "parents": [
+          "149ff4cbefa86900fb158e48cda724c51b532948"
+        ]
+      },
+      {
+        "sha": "850bfb93f21c6244028e0ba1b4174d1281859649",
+        "message": "Merge pull request #63 from CrispStrobe/codex/expanded-ldraw-batch002-qualified\n\nQualify 21 authored models with guarded standalone LDraw source binding",
+        "date": "2026-11-16T08:33:29Z",
+        "parents": [
+          "1371532344e546f9b26b76b3f9ad25c90ede725d",
+          "16ef1477ea0a5e5885fa62340c5830aa23718b33"
+        ]
+      }
+    ],
+    "main_delta": {
+      "base": "1371532344e546f9b26b76b3f9ad25c90ede725d",
+      "head": "850bfb93f21c6244028e0ba1b4174d1281859649",
+      "file_count": 53,
+      "files": [
+        {
+          "path": "docs/DELIVERY.md",
+          "status": "modified",
+          "sha": "7c2da2fe00c4af7d20163b7f7a2603f390ee0187",
+          "additions": 9,
+          "deletions": 0
+        },
+        {
+          "path": "docs/MODEL-LIBRARY.md",
+          "status": "modified",
+          "sha": "8adbfd4c50aa39d87668aa7e84cad6a94905bb59",
+          "additions": 9,
+          "deletions": 0
+        },
+        {
+          "path": "docs/evidence/ldraw-batch2-qualification-2026-11-16.json",
+          "status": "added",
+          "sha": "b67aed424abb9b5ed0c03d85b0bc99a29efd78cf",
+          "additions": 3349,
+          "deletions": 0
+        },
+        {
+          "path": "library/evidence/ldraw-expanded-batch002-input-20261109.json",
+          "status": "added",
+          "sha": "321737d47766da5894700160570cb42682a3b96a",
+          "additions": 437,
+          "deletions": 0
+        },
+        {
+          "path": "library/ldraw-reviewed-batch-manifest.json",
+          "status": "modified",
+          "sha": "68c32ab4f31b5cdfeafd8cd7dbb6c8f911b8f928",
+          "additions": 4311,
+          "deletions": 3
+        },
+        {
+          "path": "library/ldraw-reviewed-batch-spec.json",
+          "status": "modified",
+          "sha": "9e3924d20effaff3ee4aacb52dac881e1059a4a2",
+          "additions": 4984,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/11236.stl",
+          "status": "added",
+          "sha": "9a8818eb17934d2f672db79cd148fb74f56af8ce",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/268.stl",
+          "status": "added",
+          "sha": "aaf8317752fec1ed77414b273718de06c20e2d14",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/3069a.stl",
+          "status": "added",
+          "sha": "4ea33fba73b5e5407533f5f6893fff54f5476d1d",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/3070a.stl",
+          "status": "added",
+          "sha": "4c971ee6b2e6cfb96f45ea630546ad7498e1c224",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/32340.stl",
+          "status": "added",
+          "sha": "97707fb9a5379e5c125d32e15c949a7b198e31bd",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/35544.stl",
+          "status": "added",
+          "sha": "758ffa956bd2ef712345edf063687c0b978a8c7c",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/4252.stl",
+          "status": "added",
+          "sha": "596d2393a33cedd481f57aefce1dd1ebe1df0c84",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/6164.stl",
+          "status": "added",
+          "sha": "d9782a0e9ca3d21b5399efbbf55e03c1438cd01a",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/6202.stl",
+          "status": "added",
+          "sha": "a6397479a2bf39fd0642010094190c338774caf6",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/70591.stl",
+          "status": "added",
+          "sha": "8add687d85fdc55025487a904c7bfac9c1d10ad0",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/88326.stl",
+          "status": "added",
+          "sha": "f05863dd6887acf097b371b1153340b7d82e0e12",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/u7033.stl",
+          "status": "added",
+          "sha": "9f146eaf10920a77fecee4f6948147f8c5e7faf3",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/u8031.stl",
+          "status": "added",
+          "sha": "b2725b49673794a3d7efb2b21d3d1c8ded513cc8",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/u8032.stl",
+          "status": "added",
+          "sha": "16ee54acc86361fa5f68c4965da6b3604153e481",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/u8033.stl",
+          "status": "added",
+          "sha": "59c108acbf2dcd0232b1cf691611e89731217c85",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/u8034.stl",
+          "status": "added",
+          "sha": "09344410129e3aff73eaf1cf6d09f0d6d4556d0a",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/u8035.stl",
+          "status": "added",
+          "sha": "f81ade5f79656988473ceff09a6e18fff05eb6da",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/u8036.stl",
+          "status": "added",
+          "sha": "007159a2f308f9cbd2d4b324d20a4eeb7bffb289",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/u9065.stl",
+          "status": "added",
+          "sha": "a1087361c158643c1124ad6bbedc2aea2405158b",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/u9116.stl",
+          "status": "added",
+          "sha": "3b264063fd0623d30aa7cd034d9f7c3238431225",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/meshes/ldraw/u9553.stl",
+          "status": "added",
+          "sha": "1c6c28aa7001913eaadcf8476b0294c376344f6d",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "library/previews.json",
+          "status": "modified",
+          "sha": "d551c866d8b93914ac1a159de5415d5d849c39d3",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/p/box5-4a.dat",
+          "status": "added",
+          "sha": "5f83358252f305cace9941f01d104a0172027862",
+          "additions": 28,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/11236.dat",
+          "status": "added",
+          "sha": "9e3e23a34f89c2b55d9f96ab3e65288cbca14ab1",
+          "additions": 19,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/268.dat",
+          "status": "added",
+          "sha": "a0cb4b880da8f930d340a89abd59654a8851f713",
+          "additions": 16,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/3069a.dat",
+          "status": "added",
+          "sha": "80efb8ce722d436cf7949b5211877ba17ca3e495",
+          "additions": 23,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/3070a.dat",
+          "status": "added",
+          "sha": "79aeebed6301979db15cdeae019203bd8484c076",
+          "additions": 24,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/32340.dat",
+          "status": "added",
+          "sha": "8f58f66d704ade4911e0e709de52a46badf6400d",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/35544.dat",
+          "status": "added",
+          "sha": "565b62dd0d7a428d1d168586c83d97fe4376bcea",
+          "additions": 17,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/4252.dat",
+          "status": "added",
+          "sha": "7a4fc4fea3ffc68ae374b3a28c1905d9976b5a2a",
+          "additions": 24,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/6164.dat",
+          "status": "added",
+          "sha": "d1848e97c492bb328f4604867243e4411a82b932",
+          "additions": 14,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/6202.dat",
+          "status": "added",
+          "sha": "df0aa1e4e0e954e82b0ad510f68182d46f0e63a5",
+          "additions": 17,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/70591.dat",
+          "status": "added",
+          "sha": "a726baa40cf33b25f91d726961574fc184906458",
+          "additions": 19,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/88326.dat",
+          "status": "added",
+          "sha": "d7bbae085bcee61e3f6ded1ab137ad69290de41d",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u7033.dat",
+          "status": "added",
+          "sha": "d6e8dbe5aae40212a64fc9e3cf35a0a19c6d0b93",
+          "additions": 32,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u8031.dat",
+          "status": "added",
+          "sha": "cb88242f1bc454e4fcf4cd5d442d7b2cdaf86779",
+          "additions": 16,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u8032.dat",
+          "status": "added",
+          "sha": "11ac97ec5e4f81c7b3a771a587bde4531aed5b70",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u8033.dat",
+          "status": "added",
+          "sha": "928cd974d46d7a563e09386794455dae36bd9039",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u8034.dat",
+          "status": "added",
+          "sha": "209bc6e4d14b25c1a79d34ee8a15dffb0d6c56b6",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u8035.dat",
+          "status": "added",
+          "sha": "91664932967a730f84d1b8a27bb67629e3af3114",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u8036.dat",
+          "status": "added",
+          "sha": "b9ad92c3af2284b534bca8be8e468ff225ca2642",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u9065.dat",
+          "status": "added",
+          "sha": "ce19e8a3f4bd7d0b5fe96cdc0228fcde5432a640",
+          "additions": 51,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u9116.dat",
+          "status": "added",
+          "sha": "c6f5764d5d3baf96c3417cfe46a49a8f53e6259c",
+          "additions": 30,
+          "deletions": 0
+        },
+        {
+          "path": "library/sources/ldraw-expanded-20261109/parts/u9553.dat",
+          "status": "added",
+          "sha": "3c320bc5e33ade9556b111973f395ee8aab0a817",
+          "additions": 25,
+          "deletions": 0
+        },
+        {
+          "path": "scripts/lib/ldraw-source-files.mjs",
+          "status": "modified",
+          "sha": "3d397a1c32d9da25b8cd459eb289bdf9cf8e3cc2",
+          "additions": 6,
+          "deletions": 2
+        },
+        {
+          "path": "tests/browser/model-library-expanded-batch002.spec.ts",
+          "status": "added",
+          "sha": "4a4c1a73c63fe6cacfa60db047cb64c454dd40b1",
+          "additions": 26,
+          "deletions": 0
+        },
+        {
+          "path": "tests/model-library-expanded-batch002.test.ts",
+          "status": "added",
+          "sha": "46901a9b11e545450060d9edb7fce534168cc0b4",
+          "additions": 41,
+          "deletions": 0
+        }
+      ],
+      "overlap_with_scout_delta_from_same_base": []
+    },
+    "comparisons": {
+      "main_to_scout": {
+        "base": "850bfb93f21c6244028e0ba1b4174d1281859649",
+        "head": "ce3150ec592e70cb8f6b23ae7c3b6b16b42b8012",
+        "status": "diverged",
+        "ahead_by": 21,
+        "behind_by": 4,
+        "total_commits": 21,
+        "merge_base": "1371532344e546f9b26b76b3f9ad25c90ede725d",
+        "changed_paths": [
+          "README.md",
+          "docs/CODE-MODE.md",
+          "docs/INTEGRATION.md",
+          "docs/PHYSICS.md",
+          "docs/PRINTABLE-TT-ROVER.md",
+          "docs/ROADMAP.md",
+          "docs/SHARED-EDITOR-INTERACTION.md",
+          "docs/SHARED-SIMULATION-FOLLOWUP.md",
+          "docs/SIMLAB-PARITY.md",
+          "docs/brickwright-provenance.json",
+          "docs/evidence/package-namespace-and-wall01-trace-2026-11-15.json",
+          "docs/evidence/scout-tt-carrier-mechanics-2026-11-16.json",
+          "docs/evidence/scout-tt-carrier-validation-2026-11-16.md",
+          "docs/evidence/scout-tt-history-integration.json",
+          "docs/evidence/scout-tt-history-reconciliation-2026-11-16.json",
+          "docs/evidence/scout-tt-mechanical-clearance.json",
+          "docs/evidence/scout-tt-resumption-2026-11-16.md",
+          "docs/evidence/shared-simulation-native-2026-11-15.json",
+          "docs/images/scout-tt-electronics-carrier.png",
+          "docs/images/scout-tt-rover.png",
+          "evidence/tt-rover-physics-debug.json",
+          "evidence/tt-rover-physics.json",
+          "examples/scout-tt-rover/ADAFRUIT-MIT-LICENSE.txt",
+          "examples/scout-tt-rover/BUILD-GUIDE.md",
+          "examples/scout-tt-rover/LICENSE.txt",
+          "examples/scout-tt-rover/NOTICE.md",
+          "examples/scout-tt-rover/lite/ADAFRUIT-MIT-LICENSE.txt",
+          "examples/scout-tt-rover/lite/BRICKWRIGHT-BSD-3-CLAUSE.txt",
+          "examples/scout-tt-rover/lite/README.md",
+          "examples/scout-tt-rover/lite/manifest.json",
+          "examples/scout-tt-rover/lite/tt-rover-program.txt",
+          "examples/scout-tt-rover/lite/tt-rover.bcad",
+          "examples/scout-tt-rover/lite/tt-rover.sb3",
+          "examples/scout-tt-rover/manifest.json",
+          "examples/scout-tt-rover/scout-tt-electronics-carrier.bcad",
+          "examples/scout-tt-rover/scout-tt-fit-gauge.bcad",
+          "examples/scout-tt-rover/scout-tt-print-layout.bcad",
+          "examples/scout-tt-rover/scout-tt-rover-kit.zip",
+          "examples/scout-tt-rover/scout-tt-rover.bcad",
+          "examples/scout-tt-rover/source/carrier.cadcode",
+          "examples/scout-tt-rover/source/chassis.cadcode",
+          "examples/scout-tt-rover/source/cradle.cadcode",
+          "examples/scout-tt-rover/source/deck.cadcode",
+          "examples/scout-tt-rover/source/fit.cadcode",
+          "examples/scout-tt-rover/source/skid.cadcode",
+          "examples/scout-tt-rover/source/standoff.cadcode",
+          "examples/scout-tt-rover/source/wheel.cadcode",
+          "examples/scout-tt-rover/stl/carrier.stl",
+          "examples/scout-tt-rover/stl/chassis.stl",
+          "examples/scout-tt-rover/stl/cradle.stl",
+          "examples/scout-tt-rover/stl/deck.stl",
+          "examples/scout-tt-rover/stl/fit.stl",
+          "examples/scout-tt-rover/stl/skid.stl",
+          "examples/scout-tt-rover/stl/standoff.stl",
+          "examples/scout-tt-rover/stl/wheel.stl",
+          "package.json",
+          "packages/core/src/locales/de-simulation.ts",
+          "packages/core/src/session.ts",
+          "packages/core/src/simulation.ts",
+          "packages/editor/src/robot-assets/README.md",
+          "packages/editor/src/robot-assets/tt-rover-collisions.json",
+          "packages/editor/src/shapes.ts",
+          "packages/editor/src/simulation-authoring.ts",
+          "packages/editor/src/simulation-controller.ts",
+          "packages/editor/src/simulation-video.ts",
+          "packages/editor/src/tt-rover-collisions.ts",
+          "packages/editor/src/tt-rover.ts",
+          "packages/editor/src/vendor/touch-gestures.js",
+          "packages/editor/src/viewport.ts",
+          "packages/physics/src/hinge-clearance.ts",
+          "packages/physics/src/hints.ts",
+          "packages/physics/src/mass.ts",
+          "packages/physics/src/world.ts",
+          "scripts/generate-tt-rover-collisions.mjs",
+          "scripts/generate-tt-rover.mjs",
+          "scripts/lib/openscad-bundle-namespace.mjs",
+          "scripts/qualify-catalog-physics.mjs",
+          "scripts/qualify-tt-rover-physics.mjs",
+          "scripts/rasterize-tt-rover-preview.py",
+          "scripts/render-tt-rover-preview.mjs",
+          "scripts/sync-editor-interaction.mjs",
+          "scripts/verify-brickwright-sync.mjs",
+          "tests/browser/simlab-parity.spec.ts",
+          "tests/code-collision-candidates.test.ts",
+          "tests/hinge-clearance.test.ts",
+          "tests/openscad-bundle-namespace.test.ts",
+          "tests/physics-construction-fragments.test.ts",
+          "tests/physics-fixed-assemblies.test.ts",
+          "tests/shared-touch.test.ts",
+          "tests/simulation-base.test.ts",
+          "tests/tt-rover-clearance.test.ts",
+          "tests/tt-rover-electronics.test.ts",
+          "tests/tt-rover-physics.test.ts",
+          "tests/tt-rover.test.ts"
+        ]
+      },
+      "scout_to_circuit": {
+        "base": "ce3150ec592e70cb8f6b23ae7c3b6b16b42b8012",
+        "head": "10c58fbfd96a9f1f95787e47e1a301614c9d163f",
+        "status": "diverged",
+        "ahead_by": 8,
+        "behind_by": 13,
+        "total_commits": 8,
+        "merge_base": "0ee57d91be6f4f910f8b8d6106ba894b9b1a8d1d",
+        "changed_paths": [
+          "library/sources/adafruit-motors/1143 Micro Servo - High Torque Metal Gear/1143 Micro Servo High Torque Metal Gear.stl",
+          "library/sources/adafruit-motors/provenance.json",
+          "packages/core/src/locales/de-simlab.ts",
+          "packages/editor/src/motor-assets/micro-servo-1143-collision.json",
+          "packages/editor/src/motor-assets/micro-servo-1143.json",
+          "packages/editor/src/motor-models.ts",
+          "packages/editor/src/shapes.ts",
+          "packages/editor/src/simulation-controller.ts",
+          "packages/editor/src/simulation-protocol.ts",
+          "packages/editor/src/simulation.worker.ts",
+          "packages/editor/src/steerable-rover.ts",
+          "packages/physics/src/world.ts",
+          "tests/actuator-impulse.test.ts",
+          "tests/steerable-rover.test.ts"
+        ]
+      },
+      "main_to_circuit": {
+        "base": "850bfb93f21c6244028e0ba1b4174d1281859649",
+        "head": "10c58fbfd96a9f1f95787e47e1a301614c9d163f",
+        "status": "diverged",
+        "ahead_by": 24,
+        "behind_by": 12,
+        "total_commits": 24,
+        "merge_base": "53581e9cbd2565e9e088c8fcd52fb1ba5c739b09",
+        "changed_paths": [
+          "README.md",
+          "docs/CODE-MODE.md",
+          "docs/INTEGRATION.md",
+          "docs/PHYSICS.md",
+          "docs/PRINTABLE-TT-ROVER.md",
+          "docs/ROADMAP.md",
+          "docs/SHARED-EDITOR-INTERACTION.md",
+          "docs/SHARED-SIMULATION-FOLLOWUP.md",
+          "docs/SIMLAB-PARITY.md",
+          "docs/brickwright-provenance.json",
+          "docs/evidence/package-namespace-and-wall01-trace-2026-11-15.json",
+          "docs/evidence/scout-tt-history-integration.json",
+          "docs/evidence/scout-tt-mechanical-clearance.json",
+          "docs/evidence/shared-simulation-native-2026-11-15.json",
+          "docs/images/scout-tt-rover.png",
+          "evidence/tt-rover-physics-debug.json",
+          "evidence/tt-rover-physics.json",
+          "examples/scout-tt-rover/ADAFRUIT-MIT-LICENSE.txt",
+          "examples/scout-tt-rover/BUILD-GUIDE.md",
+          "examples/scout-tt-rover/LICENSE.txt",
+          "examples/scout-tt-rover/NOTICE.md",
+          "examples/scout-tt-rover/lite/ADAFRUIT-MIT-LICENSE.txt",
+          "examples/scout-tt-rover/lite/BRICKWRIGHT-BSD-3-CLAUSE.txt",
+          "examples/scout-tt-rover/lite/README.md",
+          "examples/scout-tt-rover/lite/manifest.json",
+          "examples/scout-tt-rover/lite/tt-rover-program.txt",
+          "examples/scout-tt-rover/lite/tt-rover.bcad",
+          "examples/scout-tt-rover/lite/tt-rover.sb3",
+          "examples/scout-tt-rover/manifest.json",
+          "examples/scout-tt-rover/scout-tt-fit-gauge.bcad",
+          "examples/scout-tt-rover/scout-tt-print-layout.bcad",
+          "examples/scout-tt-rover/scout-tt-rover-kit.zip",
+          "examples/scout-tt-rover/scout-tt-rover.bcad",
+          "examples/scout-tt-rover/source/chassis.cadcode",
+          "examples/scout-tt-rover/source/cradle.cadcode",
+          "examples/scout-tt-rover/source/deck.cadcode",
+          "examples/scout-tt-rover/source/fit.cadcode",
+          "examples/scout-tt-rover/source/skid.cadcode",
+          "examples/scout-tt-rover/source/standoff.cadcode",
+          "examples/scout-tt-rover/source/wheel.cadcode",
+          "examples/scout-tt-rover/stl/chassis.stl",
+          "examples/scout-tt-rover/stl/cradle.stl",
+          "examples/scout-tt-rover/stl/deck.stl",
+          "examples/scout-tt-rover/stl/fit.stl",
+          "examples/scout-tt-rover/stl/skid.stl",
+          "examples/scout-tt-rover/stl/standoff.stl",
+          "examples/scout-tt-rover/stl/wheel.stl",
+          "library/sources/adafruit-motors/1143 Micro Servo - High Torque Metal Gear/1143 Micro Servo High Torque Metal Gear.stl",
+          "library/sources/adafruit-motors/provenance.json",
+          "package.json",
+          "packages/core/src/locales/de-simlab.ts",
+          "packages/core/src/locales/de-simulation.ts",
+          "packages/core/src/session.ts",
+          "packages/core/src/simulation.ts",
+          "packages/editor/src/motor-assets/micro-servo-1143-collision.json",
+          "packages/editor/src/motor-assets/micro-servo-1143.json",
+          "packages/editor/src/motor-models.ts",
+          "packages/editor/src/robot-assets/README.md",
+          "packages/editor/src/robot-assets/tt-rover-collisions.json",
+          "packages/editor/src/shapes.ts",
+          "packages/editor/src/simulation-authoring.ts",
+          "packages/editor/src/simulation-controller.ts",
+          "packages/editor/src/simulation-protocol.ts",
+          "packages/editor/src/simulation-video.ts",
+          "packages/editor/src/simulation.worker.ts",
+          "packages/editor/src/steerable-rover.ts",
+          "packages/editor/src/tt-rover-collisions.ts",
+          "packages/editor/src/tt-rover.ts",
+          "packages/editor/src/vendor/touch-gestures.js",
+          "packages/editor/src/viewport.ts",
+          "packages/physics/src/hinge-clearance.ts",
+          "packages/physics/src/hints.ts",
+          "packages/physics/src/mass.ts",
+          "packages/physics/src/world.ts",
+          "scripts/generate-tt-rover-collisions.mjs",
+          "scripts/generate-tt-rover.mjs",
+          "scripts/lib/openscad-bundle-namespace.mjs",
+          "scripts/qualify-catalog-physics.mjs",
+          "scripts/qualify-tt-rover-physics.mjs",
+          "scripts/sync-editor-interaction.mjs",
+          "scripts/verify-brickwright-sync.mjs",
+          "tests/actuator-impulse.test.ts",
+          "tests/browser/simlab-parity.spec.ts",
+          "tests/code-collision-candidates.test.ts",
+          "tests/hinge-clearance.test.ts",
+          "tests/openscad-bundle-namespace.test.ts",
+          "tests/physics-construction-fragments.test.ts",
+          "tests/physics-fixed-assemblies.test.ts",
+          "tests/shared-touch.test.ts",
+          "tests/simulation-base.test.ts",
+          "tests/steerable-rover.test.ts",
+          "tests/tt-rover-clearance.test.ts",
+          "tests/tt-rover-physics.test.ts",
+          "tests/tt-rover.test.ts"
+        ]
+      },
+      "trident_to_kestrel": {
+        "base": "c043b3fdfe65b61abdb2809718010d17289ae862",
+        "head": "343dcf6bdecc7bd97869279687d76844d26a8191",
+        "status": "ahead",
+        "ahead_by": 1,
+        "behind_by": 0,
+        "total_commits": 1,
+        "merge_base": "c043b3fdfe65b61abdb2809718010d17289ae862",
+        "changed_paths": [
+          "packages/editor/src/kestrel-arm.ts",
+          "packages/editor/src/shapes.ts",
+          "tests/kestrel-arm.test.ts"
+        ]
+      },
+      "kestrel_to_atlas": {
+        "base": "343dcf6bdecc7bd97869279687d76844d26a8191",
+        "head": "8d9efa34b8cd0ca25ca2961d3d5a800f83ab528c",
+        "status": "ahead",
+        "ahead_by": 1,
+        "behind_by": 0,
+        "total_commits": 1,
+        "merge_base": "343dcf6bdecc7bd97869279687d76844d26a8191",
+        "changed_paths": [
+          "packages/editor/src/atlas-forklift.ts",
+          "packages/editor/src/shapes.ts",
+          "tests/atlas-forklift.test.ts"
+        ]
+      }
+    },
+    "instructions": {
+      "path": "AGENTS.md",
+      "ref": "850bfb93f21c6244028e0ba1b4174d1281859649",
+      "blob_sha": "6c4c59d4e82d919b8ae80bdaad2457642c63ed35",
+      "content": "# Project instructions\n\n- Keep this CAD implementation independent and BSD-3-Clause. New runtime dependencies\n  must meet the owner's MIT/Apache/BSD-like license requirement, including their\n  transitive/native/WASM dependency closure.\n- Reference applications are learning sources. Do not copy Layerling implementation\n  or assets. Solidcraft's UI kit, look, theme, branding and interface design are\n  excluded; see docs/PARAMETRIC-CAD-STRATEGY.md for the reviewed boundaries.\n- OpenSCAD and ImplicitCAD are ideas-only references: consult documentation,\n  not their GPL/AGPL implementations. Keep our CAD Script compiler original;\n  see docs/CODE-MODE.md for the implemented language and reference boundary.\n- The repository remains private. On 2026-11-13 the owner requested no GitHub Actions\n  while private to conserve Free-tier CI allowance. Actions is disabled, and the\n  old workflow is archived outside .github/workflows. Run checks/builds locally;\n  do not enable cloud workflows or change visibility unless the owner directs it.\n- Preserve saved project definitions and every existing history revision. UI/view\n  preferences and transient drag previews do not belong in model history.\n",
+      "main_delta_contains_instruction_file": false
+    },
+    "integration_assessment": [
+      "Merge CAD main 850bfb93f21c6244028e0ba1b4174d1281859649 into recovered Scout ce3150ec592e70cb8f6b23ae7c3b6b16b42b8012, preserving both parents. The 53-file PR63 delta has zero path overlap with Scout changes against shared base1371532344e546f9b26b76b3f9ad25c90ede725d.",
+      "Retain Trident, Kestrel, Atlas and circuit co-simulation branches separately. They are inventoried, not silently merged.",
+      "PR64 circuit branch contains pre-carrier Scout0ee57d9 plus Trident. It is not a superset of current Scout: ahead8/behind13 with mergebase0ee57d9, and behind current main12.",
+      "Original draft PR60 remains at629682c and has an outdated 11-piece/7-STL body; update its branch and metadata only after complete integration."
+    ]
+  },
+  "lite": {
+    "main": "6e8f065c6798cc4bfa1261f5c9413e69c4cbf367",
+    "recent_prs": [
+      {
+        "number": 1792,
+        "title": "Enable Scout TT rover projects with shared CAD controls",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1792",
+        "state": "open",
+        "draft": true,
+        "merged": false,
+        "head": "feat/pla-rover-cad-20261115",
+        "head_sha": "e10b5a586da28e5a68176c7989a0a17a3d278828",
+        "base": "main",
+        "base_sha": "6e8f065c6798cc4bfa1261f5c9413e69c4cbf367",
+        "updated_at": "2026-11-16T05:30:27Z"
+      },
+      {
+        "number": 1791,
+        "title": "Add shared opt-in CAD simulation and repair Robot Lab interactions",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1791",
+        "state": "open",
+        "draft": true,
+        "merged": false,
+        "head": "feat/robot-cad-selection-20261115",
+        "head_sha": "fc333ddf88023cf17e9bb5973109b74a350f2ab7",
+        "base": "main",
+        "base_sha": "6e8f065c6798cc4bfa1261f5c9413e69c4cbf367",
+        "updated_at": "2026-11-15T18:29:23Z"
+      },
+      {
+        "number": 1790,
+        "title": "fix(robot-lab): prevent text selection and dismiss unchanged warnings",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1790",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "fix/robot-lab-pane-ux-20261114",
+        "head_sha": "3761e30154c79301aff8157becdcfb2b397b8833",
+        "base": "main",
+        "base_sha": "7862588dceae329ba0ef09cc1fe521129304283a",
+        "updated_at": "2026-11-14T21:43:08Z"
+      },
+      {
+        "number": 1789,
+        "title": "Restore LEGO extension palette headings in the adapter",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1789",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "fix/spike-palette-headers-20261114",
+        "head_sha": "284746c055da5af9337120b81dd21d5b55c161a8",
+        "base": "main",
+        "base_sha": "c6cae060ba12bb70072f0fa153fa2474dc41c0fe",
+        "updated_at": "2026-11-15T08:05:09Z"
+      },
+      {
+        "number": 1788,
+        "title": "Robot Lab: track complete programs and remaining gaps",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1788",
+        "state": "open",
+        "draft": false,
+        "merged": false,
+        "head": "lane/robot-program-completion-20261114",
+        "head_sha": "a7dd2b98e4fbf9a2fc04f0d8da7538d363c353df",
+        "base": "main",
+        "base_sha": "7862588dceae329ba0ef09cc1fe521129304283a",
+        "updated_at": "2026-11-14T19:09:39Z"
+      },
+      {
+        "number": 1787,
+        "title": "Select TypeScript inputs for explicit block and TS Arcade projects",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1787",
+        "state": "closed",
+        "draft": false,
+        "merged": false,
+        "head": "lane/makecode-inactive-python-20261114",
+        "head_sha": "371e8a689db9f1b2fd8f747c68438a4eef3f9e1b",
+        "base": "main",
+        "base_sha": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "updated_at": "2026-11-14T11:30:33Z"
+      },
+      {
+        "number": 1786,
+        "title": "Parse contextual type identifiers without losing alias or readonly semantics",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1786",
+        "state": "closed",
+        "draft": false,
+        "merged": false,
+        "head": "lane/makecode-contextual-type-20261114",
+        "head_sha": "1af8a1dfcf8604ff0e0b151c947bad5909aac31d",
+        "base": "main",
+        "base_sha": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "updated_at": "2026-11-14T11:30:32Z"
+      },
+      {
+        "number": 1785,
+        "title": "Expand MakeCode Arcade import coverage",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1785",
+        "state": "open",
+        "draft": true,
+        "merged": false,
+        "head": "lane/arcade-instance-overlap-20261114",
+        "head_sha": "68ec2365f5a13ee40acc6a55aa852719c78abbce",
+        "base": "main",
+        "base_sha": "6e8f065c6798cc4bfa1261f5c9413e69c4cbf367",
+        "updated_at": "2026-11-16T07:03:22Z"
+      },
+      {
+        "number": 1784,
+        "title": "Robot Lab: improve Solstice linkage convergence",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1784",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "lane/solstice-precision-current-20261114",
+        "head_sha": "6ea6f25e71730b47bcc4afbe2f021987137bc6be",
+        "base": "main",
+        "base_sha": "9fb8210ee3e299c46f0776f510b63812dafecd55",
+        "updated_at": "2026-11-14T17:20:44Z"
+      },
+      {
+        "number": 1783,
+        "title": "Robot Lab: run and record functional coverage for 82 models",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1783",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "lane/robot-functional-runner-20261114",
+        "head_sha": "e6877a93d838450bd18389ae1183c03bc237363c",
+        "base": "main",
+        "base_sha": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "updated_at": "2026-11-14T12:18:21Z"
+      },
+      {
+        "number": 1782,
+        "title": "Reject non-finite rope lengths",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1782",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "lane/robot-rope-finite-length-20261114",
+        "head_sha": "f578fceab277eb0432121c9f1a66f045d1739f9e",
+        "base": "main",
+        "base_sha": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "updated_at": "2026-11-14T17:20:05Z"
+      },
+      {
+        "number": 1781,
+        "title": "Robot Lab: preview default joint and rope measurements",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1781",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "lane/robot-measurement-default-preview-20261114",
+        "head_sha": "8c3f733af6d10d38cd238d4ef4f858852226ec6b",
+        "base": "main",
+        "base_sha": "43f534195db2dcfa072a68b17654fad4d14a7c08",
+        "updated_at": "2026-11-14T11:56:46Z"
+      },
+      {
+        "number": 1780,
+        "title": "Stop recordings on time with stale readings",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1780",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "lane/robot-recording-timeout-20261114",
+        "head_sha": "a99d38d910d66619a6facfb845b99d67de6a2193",
+        "base": "main",
+        "base_sha": "3d9e85af8c5fc918873b69b1b5da68b3acdcb7c9",
+        "updated_at": "2026-11-14T11:58:40Z"
+      },
+      {
+        "number": 1779,
+        "title": "Fix closed numeric conditional accessors in Arcade imports",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1779",
+        "state": "open",
+        "draft": false,
+        "merged": false,
+        "head": "lane/arcade-closed-number-conditional-20261114",
+        "head_sha": "c1d18ddaeca936f29a256860164847917a717689",
+        "base": "main",
+        "base_sha": "13699da3e9780fb5f279e08411d1618215c2ede5",
+        "updated_at": "2026-11-14T08:03:44Z"
+      },
+      {
+        "number": 1778,
+        "title": "machines: preserve quoted DOSBox image paths",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1778",
+        "state": "open",
+        "draft": false,
+        "merged": false,
+        "head": "fix/x86-dosbox-quoted-paths-20261114",
+        "head_sha": "ed22aa3bd083dc85e94d0ac581cd7516f9b9de5a",
+        "base": "main",
+        "base_sha": "13699da3e9780fb5f279e08411d1618215c2ede5",
+        "updated_at": "2026-11-14T07:43:33Z"
+      },
+      {
+        "number": 1777,
+        "title": "Robot Lab: show loading status during catalogue retries",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1777",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "lane/robot-measurement-small-20261114",
+        "head_sha": "f707f11ede3ed8b27365aed64eb717433674bb9f",
+        "base": "main",
+        "base_sha": "444eb36116582bcb5d5843e3d768eafb6eb0aa4f",
+        "updated_at": "2026-11-14T09:27:25Z"
+      },
+      {
+        "number": 1776,
+        "title": "Let active main validation finish so Pages can deploy",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1776",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "fix/pages-main-validation-preservation",
+        "head_sha": "046708dc2a7d84e73df188d417d97cddd2cd4a7c",
+        "base": "main",
+        "base_sha": "e7b7cd420fc28c63c1a7a214bcae3c769897ec66",
+        "updated_at": "2026-11-14T06:21:48Z"
+      },
+      {
+        "number": 1775,
+        "title": "Duplicate each selected part once",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1775",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "lane/robot-clone-selection-unique-20261114",
+        "head_sha": "34c25337e9eb0f4575f010c30ab8d0672cd2bf96",
+        "base": "main",
+        "base_sha": "e7b7cd420fc28c63c1a7a214bcae3c769897ec66",
+        "updated_at": "2026-11-14T09:27:21Z"
+      },
+      {
+        "number": 1774,
+        "title": "Discard measurement imports after model changes",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1774",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "lane/robot-csv-import-identity-20261114",
+        "head_sha": "c6faffc2f0e3029dc2dcfe38cd83c19d93803796",
+        "base": "main",
+        "base_sha": "e7b7cd420fc28c63c1a7a214bcae3c769897ec66",
+        "updated_at": "2026-11-14T09:06:07Z"
+      },
+      {
+        "number": 1773,
+        "title": "machines: release held input when window loses focus",
+        "url": "https://github.com/CrispStrobe/brickwright-lite/pull/1773",
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": "lane/x86-console-window-blur-20261114",
+        "head_sha": "25d28ab9ac8c583e05e5b45a739782e679c2b756",
+        "base": "main",
+        "base_sha": "b69900b163a1a2e47be20e621efa44513733472f",
+        "updated_at": "2026-11-14T07:42:46Z"
+      }
+    ],
+    "robot_feature_refs": [
+      {
+        "branch": "feat/atlas-forklift-20261116",
+        "sha": "4f9ae64d4e22028a1a0439bcd704346ba0c14b1b"
+      },
+      {
+        "branch": "feat/kestrel-gripper-arm-20261116",
+        "sha": "68a267f25744da2fdcf34f5b7b3b20d19931a76e"
+      },
+      {
+        "branch": "feat/pla-rover-cad-20261115",
+        "sha": "e10b5a586da28e5a68176c7989a0a17a3d278828"
+      },
+      {
+        "branch": "feat/robot-cad-selection-20261115",
+        "sha": "fc333ddf88023cf17e9bb5973109b74a350f2ab7"
+      },
+      {
+        "branch": "feat/scout-tt-integration-20261116",
+        "sha": "7b9e191691081e9b1b608a18674eb86c7f5d9e87"
+      },
+      {
+        "branch": "feat/steerable-3d-robot-20261115",
+        "sha": "272d913eaf86d2b3e176363aa3097566e6523927"
+      }
+    ],
+    "scout_recent_commits": [
+      {
+        "sha": "7b9e191691081e9b1b608a18674eb86c7f5d9e87",
+        "message": "Refuse limited rover hinges, displaced anchors and executable monitors [skip ci]",
+        "date": "2026-11-16T07:24:00Z",
+        "parents": [
+          "0f978c8df068acd30e645d41ab69c3f5d4340713"
+        ]
+      },
+      {
+        "sha": "0f978c8df068acd30e645d41ab69c3f5d4340713",
+        "message": "Validate Scout rover control topology and saved executable demo [skip ci]",
+        "date": "2026-11-16T07:18:14Z",
+        "parents": [
+          "e10b5a586da28e5a68176c7989a0a17a3d278828"
+        ]
+      },
+      {
+        "sha": "e10b5a586da28e5a68176c7989a0a17a3d278828",
+        "message": "Record resumed Scout TT local verification [skip ci]",
+        "date": "2026-11-16T05:29:31Z",
+        "parents": [
+          "3ae00ea69a307d1eb8647bd514037c53da692901"
+        ]
+      },
+      {
+        "sha": "3ae00ea69a307d1eb8647bd514037c53da692901",
+        "message": "Record local Scout TT CAD integration validation [skip ci]",
+        "date": "2026-11-15T23:43:11Z",
+        "parents": [
+          "d1d97fc47b01f77a4fa291a45cf64ade982de5e3"
+        ]
+      }
+    ],
+    "main_to_scout": {
+      "base": "6e8f065c6798cc4bfa1261f5c9413e69c4cbf367",
+      "head": "7b9e191691081e9b1b608a18674eb86c7f5d9e87",
+      "status": "ahead",
+      "ahead_by": 37,
+      "behind_by": 0,
+      "total_commits": 37,
+      "merge_base": "6e8f065c6798cc4bfa1261f5c9413e69c4cbf367"
+    },
+    "sdk_manifest": {
+      "format": "brickwright-cad-sdk",
+      "version": 1,
+      "repository": "https://github.com/CrispStrobe/brickwright-cad",
+      "commit": "0ee57d91be6f4f910f8b8d6106ba894b9b1a8d1d",
+      "dirty": false,
+      "entry": "sdk.js",
+      "wasm": "cad-assets/manifold.wasm",
+      "files": {
+        "LICENSE": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad",
+        "NOTICE.txt": "dea50eee6d6781549af4e3740bfaf7661b29479696e5ae6cbe41eafd93c0fa70",
+        "assets/geometry.worker-DcLpkscD.js": "45499367cbbe6ff4ee4c310a336395c03415a5321e5ada8ff64c8a17cf2e41c4",
+        "assets/jolt-physics.wasm-compat-C_UBSAxu.js": "89ab72253c6a6efbc896d4377e9a2eed438f4ec476f9e06d60a8e3d029c34c6c",
+        "assets/simulation.worker-Dd3FSaCN.js": "4e4b4e217968dbd6c28eae171caf14fd598cd2b29753abd7963424ae6210722c",
+        "cad-assets/manifold.wasm": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c",
+        "model-library-cache-DiMFGzp9.js": "75dc4ad7999b4571b227f1c675ca00af698fcc886dc73e98dd4c0eb2604e2b20",
+        "model-library-local-CTFGH9V7.js": "c47455613c7021e12571aa3dd63d5dacc1773c19de25a898e6d96fd4c7522387",
+        "sdk-CF1zjk9O.js": "ef4911016c67659dae1b9c7be8c6ce89dc5aed056a1324da32fdc904d7edc1e2",
+        "sdk.js": "47f0fe50503b264f79a4617e5d94c0b070ada0ad71975d15568ddb28895e0f23"
+      }
+    },
+    "integration_assessment": [
+      "Current Lite main is already an ancestor of recovered Scout7b9e191 (ahead37/behind0), and the requested PR1792 original head remains e10b5a5.",
+      "Retain Scout verifier commits0f978c8 and7b9e191; SDK refresh from the new clean committed CAD source remains pending.",
+      "Existing draft PR1792 metadata and source branch remain at pre-carrier e10b5a5; update after SDK and saved-project validation.",
+      "Other active importer/Robot Lab lanes and alternate robot feature branches are inventoried separately, not merged wholesale."
+    ]
+  },
+  "source_endpoints": [
+    "https://api.github.com/repos/CrispStrobe/brickwright-cad/branches?per_page=100",
+    "https://api.github.com/repos/CrispStrobe/brickwright-cad/compare/1371532344e546f9b26b76b3f9ad25c90ede725d...850bfb93f21c6244028e0ba1b4174d1281859649",
+    "https://github.com/CrispStrobe/brickwright-cad/pull/60",
+    "https://github.com/CrispStrobe/brickwright-cad/pull/63",
+    "https://github.com/CrispStrobe/brickwright-cad/pull/64",
+    "https://api.github.com/repos/CrispStrobe/brickwright-lite/git/matching-refs/heads/feat/",
+    "https://github.com/CrispStrobe/brickwright-lite/pull/1792",
+    "https://api.github.com/repos/CrispStrobe/brickwright-lite/git/ref/heads/feat/scout-tt-integration-20261116"
+  ]
+}
