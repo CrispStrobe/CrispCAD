@@ -1082,3 +1082,13 @@ attempt to admit Adafruit 4884 Feather RP2040 retained the pinned source but
 failed: an OCP face had no triangulation, and the vendor STL failed closed
 positive topology screening even with a proper rotation and positive volume.
 No failed source, fabricated face or unsupported qualification is shipped.
+
+## Host-owned complete robot projects — 2026-11-16
+
+`CadEditorOptions.presetProjects` optionally identifies preset IDs whose cards
+open a whole host project instead of inserting geometry. Those cards say Open
+… project and Complete project, including in docked mode; pointer placement
+remains available for ordinary shapes and manufacturing variants. The host
+owns confirmation, bundle validation and atomic project replacement. Standalone
+CAD keeps its existing model-only behavior and has no dependency on Lite, its
+VM, circuits or Widgets. No document or geometry format changes are required.

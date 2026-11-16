@@ -40,6 +40,8 @@ export interface CadEditorOptions {
   toolbarContent?:HTMLElement;
   /** Embedded hosts already own project files; avoid a second File menu. */
   embedded?:boolean;
+  /** Optional whole-project choices supplied by an embedding application. */
+  presetProjects?:{ids:readonly string[];open:(presetId:string)=>Promise<void>};
   /** Desktop hosts provide the sole File menu through their native menu bar. */
   nativeMenus?:boolean;
   modelLibrary?: ModelLibraryOptions;
@@ -146,10 +148,11 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   async function dropShapePlacement(point:PlacementPointer):Promise<boolean>{const active=placing;if(!active||active.dropping)return false;active.dropping=true;active.point=point;try{const built=await active.ready;if(disposed||placing!==active)return false;if(session.state.document.id!==active.projectId||session.state.revision!==active.revision){cancelShapePlacement();return false;}const pose=viewport.movePlacement(point);if(!pose){cancelShapePlacement();return false;}const fragment=placeFragment(built.document,pose);if(active.role==='hole'){fragment.version=7;for(const id of fragment.roots)fragment.nodes[id].role='hole';}await client.evaluate(fragment);if(disposed||placing!==active)return false;if(session.state.document.id!==active.projectId||session.state.revision!==active.revision){cancelShapePlacement();return false;}placing=undefined;viewport.cancelPlacement();session.insert(fragment,[0,0,0],{mergeParameters:true,label:'Place shape'});await whenIdle();picker.placed(active.name);viewport.canvas.focus({preventScroll:true});return true;}catch(error){if(placing===active)cancelShapePlacement();throw error;}}
   viewport.setPlacementHandlers(point=>{void dropShapePlacement(point).catch(report);},cancelShapePlacement);
   const picker = mountShapePicker(main, shapesButton, async (preset, text, svg,font) => {
+    if(options.presetProjects?.ids.includes(preset.id)){await options.presetProjects.open(preset.id);return;}
     const projectId=session.state.document.id,wasEmpty=!session.state.document.roots.length;const {document:doc,geometry:result}=await buildPreset(preset,text,svg,font);
     if(disposed)return;if(session.state.document.id!==projectId)throw new Error(t('Shape insertion was canceled because a different model was opened'));
     const minZ=Math.min(...result.bodies.map(body=>body.bounds.min[2]));session.insert(doc,[session.state.document.roots.length*12,0,-minZ],{mergeParameters:true});await whenIdle();if(wasEmpty)viewport.frame();
-  },report,preset=>{let preview=previewCache.get(preset.id);if(!preview){preview=buildPreset(preset,'ABC').then(built=>evaluatedPreview(built.geometry.bodies));previewCache.set(preset.id,preview);}return preview;},{layout:options.shapeBrowserLayout,onLayoutChange:options.onShapeBrowserLayoutChange,placement:{begin:beginShapePlacement,move:moveShapePlacement,drop:dropShapePlacement,cancel:cancelShapePlacement}});
+  },report,preset=>{let preview=previewCache.get(preset.id);if(!preview){preview=buildPreset(preset,'ABC').then(built=>evaluatedPreview(built.geometry.bodies));previewCache.set(preset.id,preview);}return preview;},{projectPresetIds:options.presetProjects?.ids,layout:options.shapeBrowserLayout,onLayoutChange:options.onShapeBrowserLayoutChange,placement:{begin:beginShapePlacement,move:moveShapePlacement,drop:dropShapePlacement,cancel:cancelShapePlacement}});
 
   const add = (shape: Primitive) => {
     const transform = identityTransform(); const height = shape.kind === 'box' ? shape.size[2] : shape.kind === 'cylinder' ? shape.height : shape.radius * 2;

@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+ "Complete project":"Komplettes Projekt",
+ "Open {0} project":"Projekt {0} öffnen",
+ "Opened {0} project.":"Projekt {0} geöffnet.",
  "Drag the corner to resize; drag the upper handle to set height. Then choose Create extrusion.":"Ziehe die Ecke für die Größe und den oberen Griff für die Höhe. Wähle danach Extrusion erstellen.",
  "Invalid position servo target":"Ungültiger Positionsservo-Sollwert",
  "Invalid body sensor ray":"Ungültiger Sensorstrahl am Körper",
