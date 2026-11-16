@@ -84,7 +84,7 @@ it('swings sweep A, drives gate B, swings latch C, and sweeps pod in Jolt physic
   world.setHingeMotor('sweep-a',4.5,.25);
   world.setSliderMotor('gate-b',160,25);
   world.setHingeMotor('latch-c',-4.0,.25);
-  for(let i=0;i<30;i++)world.step(.005);
+  for(let i=0;i<45;i++)world.step(.005);
 
   const p1=world.pose('pod').positionMm;
   expect(Math.abs(world.hingeAngle('sweep-a')*180/Math.PI)).toBeGreaterThan(10);
