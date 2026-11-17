@@ -1,0 +1,2130 @@
+{
+  "atUTC": "2026-11-17T18:55:41.490982+00:00",
+  "status": "ALL6_LOCAL_QUALIFIED_DELIVERY_PENDING",
+  "qualificationCohort": "expanded-batch012-six",
+  "localQualificationUserCycle": 168,
+  "mainCounts": [
+    293,
+    288,
+    332
+  ],
+  "localCounts": [
+    299,
+    294,
+    338
+  ],
+  "cohortDelta": [
+    6,
+    6,
+    6
+  ],
+  "targetRecords": 300,
+  "additionalAfterCohortDelivery": 1,
+  "models": [
+    {
+      "id": "corpus-ldraw-expanded-30385",
+      "rootPath": "parts/30385.dat",
+      "author": "Paul Easter [pneaster]",
+      "licence": {
+        "spdx": "CC-BY-4.0",
+        "scope": "asset",
+        "attribution": "Paul Easter [pneaster]. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file parts/30385.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/30385.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+        "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+        "localEvidence": [
+          {
+            "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+            "bytes": 18657,
+            "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+            "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+          },
+          {
+            "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+            "bytes": 4151,
+            "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+            "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+          }
+        ],
+        "capturedOn": "2026-11-16",
+        "review": "accepted",
+        "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+      },
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/30385.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/30385.dat",
+        "bytes": 13182,
+        "sha256": "fc3be31f7f8ec729d45d2d46e12926933e31b74560120ee3720f9e9771fb94c9",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/30385.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/30385.dat",
+          "bytes": 13182,
+          "sha256": "fc3be31f7f8ec729d45d2d46e12926933e31b74560120ee3720f9e9771fb94c9",
+          "crc32": "5e95a017",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Paul Easter [pneaster]",
+          "role": "Part UPDATE 2011-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cylc.dat",
+          "bytes": 476,
+          "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd",
+          "crc32": "f9c76187",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Alex Taylor [anathema]",
+          "role": "Primitive UPDATE 2009-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+          "crc32": "53bcfa1e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalBytes": 18566,
+      "expandedBytes": 19650,
+      "mesh": {
+        "path": "meshes/ldraw/30385.stl",
+        "bytes": 11384,
+        "sha256": "6ca58cbd42d4d524f7409085a9b4dd5529008ce65eb413829fda9ebd232cf63e",
+        "format": "stl"
+      },
+      "triangles": 226,
+      "nativePositiveVolumeMm3": 478.34097996843866,
+      "constructionWork": 3110,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle166-editor6/per-model/chromium-corpus-ldraw-expanded-30385.json",
+        "/mnt/storage/brickwright-cycle166-editor6/per-model/ipad-webkit-corpus-ldraw-expanded-30385.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-95195",
+      "rootPath": "parts/95195.dat",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": {
+        "spdx": "CC-BY-4.0",
+        "scope": "asset",
+        "attribution": "Philippe Hurbain [Philo]. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file parts/95195.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/95195.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+        "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+        "localEvidence": [
+          {
+            "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+            "bytes": 18657,
+            "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+            "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+          },
+          {
+            "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+            "bytes": 4151,
+            "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+            "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+          }
+        ],
+        "capturedOn": "2026-11-16",
+        "review": "accepted",
+        "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+      },
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/95195.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/95195.dat",
+        "bytes": 19382,
+        "sha256": "753c33f4f4f661a172606e625a9248b1b19e2049f4d9608837e83ee77e8899ce",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/95195.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/95195.dat",
+          "bytes": 19382,
+          "sha256": "753c33f4f4f661a172606e625a9248b1b19e2049f4d9608837e83ee77e8899ce",
+          "crc32": "79413934",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Philippe Hurbain [Philo]",
+          "role": "Part UPDATE 2020-02",
+          "licenceAllowed": true
+        }
+      ],
+      "originalBytes": 19382,
+      "expandedBytes": 19382,
+      "mesh": {
+        "path": "meshes/ldraw/95195.stl",
+        "bytes": 14884,
+        "sha256": "b944d5e2ee169505fa747cd70d11b2e4f3aeb6ecbda2f9c62babd8a6beb53f8b",
+        "format": "stl"
+      },
+      "triangles": 296,
+      "nativePositiveVolumeMm3": 2912.5367501943083,
+      "constructionWork": 1661,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle166-editor6/per-model/chromium-corpus-ldraw-expanded-95195.json",
+        "/mnt/storage/brickwright-cycle166-editor6/per-model/ipad-webkit-corpus-ldraw-expanded-95195.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-50231",
+      "rootPath": "parts/50231.dat",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": {
+        "spdx": "CC-BY-4.0",
+        "scope": "asset",
+        "attribution": "Philippe Hurbain [Philo]. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file parts/50231.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/50231.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+        "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+        "localEvidence": [
+          {
+            "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+            "bytes": 18657,
+            "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+            "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+          },
+          {
+            "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+            "bytes": 4151,
+            "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+            "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+          }
+        ],
+        "capturedOn": "2026-11-16",
+        "review": "accepted",
+        "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+      },
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/50231.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/50231.dat",
+        "bytes": 27755,
+        "sha256": "7edc6bb9b57ed93df3c3cfde8932e483b5fbeb8e3e78582dbbef1eafe94fa36b",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/50231.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/50231.dat",
+          "bytes": 27755,
+          "sha256": "7edc6bb9b57ed93df3c3cfde8932e483b5fbeb8e3e78582dbbef1eafe94fa36b",
+          "crc32": "409d474e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Philippe Hurbain [Philo]",
+          "role": "Part UPDATE 2019-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalBytes": 27755,
+      "expandedBytes": 27755,
+      "mesh": {
+        "path": "meshes/ldraw/50231.stl",
+        "bytes": 20684,
+        "sha256": "29e128704babb6f31cc6e03d28474051c3b8b7854912934d11880fa28ef6728e",
+        "format": "stl"
+      },
+      "triangles": 412,
+      "nativePositiveVolumeMm3": 128.79594879280342,
+      "constructionWork": 2184,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle166-editor6/per-model/chromium-corpus-ldraw-expanded-50231.json",
+        "/mnt/storage/brickwright-cycle166-editor6/per-model/ipad-webkit-corpus-ldraw-expanded-50231.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-99464",
+      "rootPath": "parts/99464.dat",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": {
+        "spdx": "CC-BY-4.0",
+        "scope": "asset",
+        "attribution": "Philippe Hurbain [Philo]. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file parts/99464.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/99464.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+        "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+        "localEvidence": [
+          {
+            "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+            "bytes": 18657,
+            "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+            "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+          },
+          {
+            "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+            "bytes": 4151,
+            "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+            "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+          }
+        ],
+        "capturedOn": "2026-11-16",
+        "review": "accepted",
+        "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+      },
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/99464.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/99464.dat",
+        "bytes": 25256,
+        "sha256": "ded7bca368f3a6b81e2989fe50dd86b34f749ce6a946f42ccded6bd8cf11c749",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/99464.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/99464.dat",
+          "bytes": 25256,
+          "sha256": "ded7bca368f3a6b81e2989fe50dd86b34f749ce6a946f42ccded6bd8cf11c749",
+          "crc32": "8ab4d133",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Philippe Hurbain [Philo]",
+          "role": "Part UPDATE 2019-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect.dat",
+          "bytes": 654,
+          "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71",
+          "crc32": "30c864e3",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalBytes": 25910,
+      "expandedBytes": 26564,
+      "mesh": {
+        "path": "meshes/ldraw/99464.stl",
+        "bytes": 19084,
+        "sha256": "72cf3d1589bb94d8881c93501e023416c7f469bb184dede529065a65e68434e9",
+        "format": "stl"
+      },
+      "triangles": 380,
+      "nativePositiveVolumeMm3": 86.28545155925885,
+      "constructionWork": 2044,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle166-editor6/per-model/chromium-corpus-ldraw-expanded-99464.json",
+        "/mnt/storage/brickwright-cycle166-editor6/per-model/ipad-webkit-corpus-ldraw-expanded-99464.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-384",
+      "rootPath": "parts/384.dat",
+      "author": "Michael Heidemann [mikeheide]",
+      "licence": {
+        "spdx": "CC-BY-4.0",
+        "scope": "asset",
+        "attribution": "Michael Heidemann [mikeheide]. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file parts/384.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/384.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+        "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+        "localEvidence": [
+          {
+            "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+            "bytes": 18657,
+            "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+            "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+          },
+          {
+            "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+            "bytes": 4151,
+            "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+            "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+          }
+        ],
+        "capturedOn": "2026-11-16",
+        "review": "accepted",
+        "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+      },
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/384.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/384.dat",
+        "bytes": 2088,
+        "sha256": "d4ad4fae61e9a27afd4eafd0101d0a3d72384a024f5d004b5a0dabce4172fc5b",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/384.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/384.dat",
+          "bytes": 2088,
+          "sha256": "d4ad4fae61e9a27afd4eafd0101d0a3d72384a024f5d004b5a0dabce4172fc5b",
+          "crc32": "4713eb80",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Michael Heidemann [mikeheide]",
+          "role": "Part UPDATE 2019-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect2p.dat",
+          "bytes": 594,
+          "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc",
+          "crc32": "62f97088",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Donald Sutter [technog]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4cylc.dat",
+          "bytes": 430,
+          "sha256": "fdcb54ba2e2731cbb86ea6b2fddb25c7dda060a7780629a72003e0278805dd30",
+          "crc32": "54d86c48",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Mark Kennedy [mkennedy]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4edge.dat",
+          "bytes": 545,
+          "sha256": "9ce2de7e67bbac575d52cfdc771b9d00856efc9b88002d97db8e665e50f4d467",
+          "crc32": "31ac1199",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4disc.dat",
+          "bytes": 584,
+          "sha256": "3b8faa77185c576085c38f37b13c6a04e2e889eea6a7dc8c4db2d1699a33bcda",
+          "crc32": "76ebb36f",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/1-4cyli.dat",
+          "bytes": 1044,
+          "sha256": "5a7168952a5a3570327873b9a5802fa7b3be40967ab78c03b6a2bfd4419a1f10",
+          "crc32": "6a45dfb7",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cylo.dat",
+          "bytes": 383,
+          "sha256": "d6ca97ee2e75918b3309a5c88aafcd2455b3a316f7cef8963517c19f1d86b38f",
+          "crc32": "f4c91151",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Mark Kennedy [mkennedy]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4ndis.dat",
+          "bytes": 1219,
+          "sha256": "21202dc15823f4336bc2544244d0b539b76745c89f7a59ad18cdd03ad45cc543",
+          "crc32": "8862ff07",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalBytes": 10658,
+      "expandedBytes": 27068,
+      "mesh": {
+        "path": "meshes/ldraw/384.stl",
+        "bytes": 8884,
+        "sha256": "3a32fb0e187b9d5a14605456ba4f6423ca4c20c22a2d6941bc9fd93cbb5fa959",
+        "format": "stl"
+      },
+      "triangles": 176,
+      "nativePositiveVolumeMm3": 2223.3560776295894,
+      "constructionWork": 1473,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle166-editor6/per-model/chromium-corpus-ldraw-expanded-384.json",
+        "/mnt/storage/brickwright-cycle166-editor6/per-model/ipad-webkit-corpus-ldraw-expanded-384.json"
+      ]
+    },
+    {
+      "id": "corpus-ldraw-expanded-65384",
+      "rootPath": "parts/65384.dat",
+      "author": "Philippe Hurbain [Philo]",
+      "licence": {
+        "spdx": "CC-BY-4.0",
+        "scope": "asset",
+        "attribution": "Philippe Hurbain [Philo]. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file parts/65384.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/65384.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+        "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+        "localEvidence": [
+          {
+            "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+            "bytes": 18657,
+            "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+            "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+          },
+          {
+            "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+            "bytes": 4151,
+            "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+            "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+          }
+        ],
+        "capturedOn": "2026-11-16",
+        "review": "accepted",
+        "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+      },
+      "sourceRevision": {
+        "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+        "commit": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+        "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/65384.dat"
+      },
+      "original": {
+        "path": "sources/ldraw-expanded-20261109/parts/65384.dat",
+        "bytes": 10624,
+        "sha256": "3023a6c52b767dfb1e80ae21b6bf6fedbf7e0cd97c0f94ec47f37f2ae0761a49",
+        "format": "ldraw",
+        "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/481cf1184e2d02a7e6ee9dd34e859ea418bd6d86/library/sources/ldraw-expanded-20261109/parts/65384.dat"
+      },
+      "closure": [
+        {
+          "path": "parts/65384.dat",
+          "bytes": 10624,
+          "sha256": "3023a6c52b767dfb1e80ae21b6bf6fedbf7e0cd97c0f94ec47f37f2ae0761a49",
+          "crc32": "a62f8849",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Philippe Hurbain [Philo]",
+          "role": "Part UPDATE 2023-04",
+          "licenceAllowed": true
+        },
+        {
+          "path": "parts/s/65384s01.dat",
+          "bytes": 2711,
+          "sha256": "e4170358361449df45411665aa270821b09ad89886388c5fc7fe0d6801af8e17",
+          "crc32": "09c7782d",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Philippe Hurbain [Philo]",
+          "role": "Subpart UPDATE 2023-04",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/rect2p.dat",
+          "bytes": 594,
+          "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc",
+          "crc32": "62f97088",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Donald Sutter [technog]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        }
+      ],
+      "originalBytes": 13929,
+      "expandedBytes": 22656,
+      "mesh": {
+        "path": "meshes/ldraw/65384.stl",
+        "bytes": 15884,
+        "sha256": "5a4f15646d2cbfc6734bff9e0c4cb09d03ae42be71b6e3eba1a4c06c8165b2a0",
+        "format": "stl"
+      },
+      "triangles": 316,
+      "nativePositiveVolumeMm3": 99.78564654204577,
+      "constructionWork": 1745,
+      "classification": "editor-usable",
+      "experimental": false,
+      "allGates": "PASS",
+      "mainDelivered": false,
+      "browserOutcomePaths": [
+        "/mnt/storage/brickwright-cycle166-editor6/per-model/chromium-corpus-ldraw-expanded-65384.json",
+        "/mnt/storage/brickwright-cycle166-editor6/per-model/ipad-webkit-corpus-ldraw-expanded-65384.json"
+      ]
+    }
+  ],
+  "actualRemainingGatePhases": [
+    {
+      "phase": 0,
+      "command": [
+        "npm",
+        "run",
+        "build:packages"
+      ],
+      "guard": {
+        "fastFreeBytes": 13251792896,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4220366848,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          1.16796875,
+          0.623046875,
+          0.49072265625
+        ],
+        "cpuPSISomeAvg60Percent": 1.27,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 45,
+      "status": "PASS",
+      "sourceHead": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/mnt/storage/brickwright-cycle166-editor6/phase-0-files.log",
+        "npm",
+        "run",
+        "build:packages"
+      ],
+      "pid": 3325812,
+      "minimumObservedFastFreeBytes": 13251792896,
+      "minimumObservedAvailableMemoryBytes": 4134723584,
+      "exitCode": 0,
+      "elapsedSeconds": 9.474766238126904,
+      "childUserCPUSeconds": 0.8231959999999999,
+      "childSystemCPUSeconds": 0.508371
+    },
+    {
+      "phase": 1,
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/model-library-expanded-batch012.test.ts",
+        "--maxWorkers=1"
+      ],
+      "guard": {
+        "fastFreeBytes": 13244788736,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4243587072,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          0.4248046875,
+          0.5966796875,
+          0.81201171875
+        ],
+        "cpuPSISomeAvg60Percent": 0.11,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 45,
+      "status": "PASS",
+      "sourceHead": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle166-browser-work/phase-1-resume-files.log",
+        "npx",
+        "vitest",
+        "run",
+        "tests/model-library-expanded-batch012.test.ts",
+        "--maxWorkers=1"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle166-editor6/phase-1-resume.log",
+      "tracePath": "/mnt/storage/brickwright-cycle166-editor6/phase-1-resume-files.log",
+      "pid": 3329278,
+      "minimumObservedFastFreeBytes": 13244788736,
+      "minimumObservedAvailableMemoryBytes": 4000292864,
+      "exitCode": 0,
+      "elapsedSeconds": 8.29877518909052,
+      "childUserCPUSeconds": 5.050892,
+      "childSystemCPUSeconds": 2.048034
+    },
+    {
+      "phase": 2,
+      "command": [
+        "node",
+        "scripts/generate-library-previews.mjs",
+        "--asset-id",
+        "corpus-ldraw-expanded-30385",
+        "--asset-id",
+        "corpus-ldraw-expanded-95195",
+        "--asset-id",
+        "corpus-ldraw-expanded-50231",
+        "--asset-id",
+        "corpus-ldraw-expanded-99464",
+        "--asset-id",
+        "corpus-ldraw-expanded-384",
+        "--asset-id",
+        "corpus-ldraw-expanded-65384"
+      ],
+      "guard": {
+        "fastFreeBytes": 13252993024,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4292554752,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          1.517578125,
+          0.67919921875,
+          0.58447265625
+        ],
+        "cpuPSISomeAvg60Percent": 0.16,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 90,
+      "status": "PASS",
+      "sourceHead": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle166-browser-work/phase-2-browserpath-fix-files.log",
+        "node",
+        "scripts/generate-library-previews.mjs",
+        "--asset-id",
+        "corpus-ldraw-expanded-30385",
+        "--asset-id",
+        "corpus-ldraw-expanded-95195",
+        "--asset-id",
+        "corpus-ldraw-expanded-50231",
+        "--asset-id",
+        "corpus-ldraw-expanded-99464",
+        "--asset-id",
+        "corpus-ldraw-expanded-384",
+        "--asset-id",
+        "corpus-ldraw-expanded-65384"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle166-editor6/phase-2-browserpath-fix.log",
+      "tracePath": "/mnt/storage/brickwright-cycle166-editor6/phase-2-browserpath-fix-files.log",
+      "pid": 3334402,
+      "minimumObservedFastFreeBytes": 13252993024,
+      "minimumObservedAvailableMemoryBytes": 4044451840,
+      "exitCode": 0,
+      "elapsedSeconds": 3.8617615969851613,
+      "childUserCPUSeconds": 2.107471,
+      "childSystemCPUSeconds": 0.9661489999999999
+    },
+    {
+      "phase": 3,
+      "command": [
+        "bash",
+        "/mnt/storage/brickwright-cycle166-editor6/cold-app-build.sh"
+      ],
+      "guard": {
+        "fastFreeBytes": 13252902912,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4082507776,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          1.517578125,
+          0.67919921875,
+          0.58447265625
+        ],
+        "cpuPSISomeAvg60Percent": 1.88,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 90,
+      "status": "PASS",
+      "sourceHead": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle166-browser-work/phase-3-browserpath-fix-files.log",
+        "bash",
+        "/mnt/storage/brickwright-cycle166-editor6/cold-app-build.sh"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle166-editor6/phase-3-browserpath-fix.log",
+      "tracePath": "/mnt/storage/brickwright-cycle166-editor6/phase-3-browserpath-fix-files.log",
+      "pid": 3334478,
+      "minimumObservedFastFreeBytes": 13252878336,
+      "minimumObservedAvailableMemoryBytes": 3016421376,
+      "exitCode": 0,
+      "elapsedSeconds": 49.98270205594599,
+      "childUserCPUSeconds": 36.168389000000005,
+      "childSystemCPUSeconds": 6.081953
+    },
+    {
+      "phase": 4,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--list",
+        "--reporter=line"
+      ],
+      "guard": {
+        "fastFreeBytes": 13252878336,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4305633280,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          2.078125,
+          0.99853515625,
+          0.7021484375
+        ],
+        "cpuPSISomeAvg60Percent": 26.14,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 20,
+      "status": "PASS",
+      "sourceHead": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle166-browser-work/phase-4-browserpath-fix-files.log",
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--list",
+        "--reporter=line"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle166-editor6/phase-4-browserpath-fix.log",
+      "tracePath": "/mnt/storage/brickwright-cycle166-editor6/phase-4-browserpath-fix-files.log",
+      "pid": 3334700,
+      "minimumObservedFastFreeBytes": 13252509696,
+      "minimumObservedAvailableMemoryBytes": 3943981056,
+      "exitCode": 0,
+      "elapsedSeconds": 7.747555574867874,
+      "childUserCPUSeconds": 5.676897000000004,
+      "childSystemCPUSeconds": 1.4144830000000006
+    },
+    {
+      "phase": 5,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle166-editor6/browser-output-chunk-1",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13252509696,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4228022272,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          1.912109375,
+          0.99951171875,
+          0.7060546875
+        ],
+        "cpuPSISomeAvg60Percent": 26.56,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle166-browser-work/phase-5-browserpath-fix-files.log",
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle166-editor6/browser-output-chunk-1",
+        "--reporter=line,json"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle166-editor6/phase-5-browserpath-fix.log",
+      "tracePath": "/mnt/storage/brickwright-cycle166-editor6/phase-5-browserpath-fix-files.log",
+      "pid": 3334744,
+      "minimumObservedFastFreeBytes": 13249802240,
+      "minimumObservedAvailableMemoryBytes": 2631692288,
+      "exitCode": 0,
+      "elapsedSeconds": 158.10723035177216,
+      "childUserCPUSeconds": 29.322605000000003,
+      "childSystemCPUSeconds": 25.771190000000004
+    },
+    {
+      "phase": 6,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle166-editor6/browser-output-chunk-2",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13249802240,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4224184320,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          3.76806640625,
+          2.29541015625,
+          1.259765625
+        ],
+        "cpuPSISomeAvg60Percent": 53.98,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle166-browser-work/phase-6-browserpath-fix-files.log",
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle166-editor6/browser-output-chunk-2",
+        "--reporter=line,json"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle166-editor6/phase-6-browserpath-fix.log",
+      "tracePath": "/mnt/storage/brickwright-cycle166-editor6/phase-6-browserpath-fix-files.log",
+      "pid": 3335520,
+      "minimumObservedFastFreeBytes": 13246156800,
+      "minimumObservedAvailableMemoryBytes": 2784768000,
+      "exitCode": 0,
+      "elapsedSeconds": 152.76665043085814,
+      "childUserCPUSeconds": 28.414057999999997,
+      "childSystemCPUSeconds": 24.665173999999993
+    },
+    {
+      "phase": 7,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle166-editor6/browser-output-chunk-3",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13246156800,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4279971840,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          4.2333984375,
+          3.1044921875,
+          1.72509765625
+        ],
+        "cpuPSISomeAvg60Percent": 55.6,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle166-browser-work/phase-7-browserpath-fix-files.log",
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle166-editor6/browser-output-chunk-3",
+        "--reporter=line,json"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle166-editor6/phase-7-browserpath-fix.log",
+      "tracePath": "/mnt/storage/brickwright-cycle166-editor6/phase-7-browserpath-fix-files.log",
+      "pid": 3336376,
+      "minimumObservedFastFreeBytes": 13244137472,
+      "minimumObservedAvailableMemoryBytes": 2875842560,
+      "exitCode": 0,
+      "elapsedSeconds": 148.6153858769685,
+      "childUserCPUSeconds": 27.88543999999999,
+      "childSystemCPUSeconds": 24.334063999999998
+    },
+    {
+      "phase": 8,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle166-editor6/browser-output-chunk-4",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13244137472,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4238462976,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          3.7607421875,
+          3.51904296875,
+          2.10302734375
+        ],
+        "cpuPSISomeAvg60Percent": 58.52,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle166-browser-work/phase-8-browserpath-fix-files.log",
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle166-editor6/browser-output-chunk-4",
+        "--reporter=line,json"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle166-editor6/phase-8-browserpath-fix.log",
+      "tracePath": "/mnt/storage/brickwright-cycle166-editor6/phase-8-browserpath-fix-files.log",
+      "pid": 3337172,
+      "minimumObservedFastFreeBytes": 13242675200,
+      "minimumObservedAvailableMemoryBytes": 2710958080,
+      "exitCode": 0,
+      "elapsedSeconds": 143.46842880081385,
+      "childUserCPUSeconds": 28.029269,
+      "childSystemCPUSeconds": 24.027423999999996
+    },
+    {
+      "phase": 9,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle166-editor6/browser-output-chunk-5",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13242695680,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4312838144,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          3.693359375,
+          3.7421875,
+          2.40283203125
+        ],
+        "cpuPSISomeAvg60Percent": 56.23,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle166-browser-work/phase-9-browserpath-fix-files.log",
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle166-editor6/browser-output-chunk-5",
+        "--reporter=line,json"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle166-editor6/phase-9-browserpath-fix.log",
+      "tracePath": "/mnt/storage/brickwright-cycle166-editor6/phase-9-browserpath-fix-files.log",
+      "pid": 3337742,
+      "minimumObservedFastFreeBytes": 13242204160,
+      "minimumObservedAvailableMemoryBytes": 2959298560,
+      "exitCode": 0,
+      "elapsedSeconds": 151.61171178007498,
+      "childUserCPUSeconds": 28.239577999999995,
+      "childSystemCPUSeconds": 24.648014000000003
+    },
+    {
+      "phase": 10,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle166-editor6/browser-output-chunk-6",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13242413056,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4322709504,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          3.94140625,
+          4.08203125,
+          2.75
+        ],
+        "cpuPSISomeAvg60Percent": 62.2,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle166-browser-work/phase-10-browserpath-fix-files.log",
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle166-editor6/browser-output-chunk-6",
+        "--reporter=line,json"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle166-editor6/phase-10-browserpath-fix.log",
+      "tracePath": "/mnt/storage/brickwright-cycle166-editor6/phase-10-browserpath-fix-files.log",
+      "pid": 3338185,
+      "minimumObservedFastFreeBytes": 13242216448,
+      "minimumObservedAvailableMemoryBytes": 2997014528,
+      "exitCode": 0,
+      "elapsedSeconds": 139.86504156608135,
+      "childUserCPUSeconds": 27.895958000000007,
+      "childSystemCPUSeconds": 23.159216000000015
+    }
+  ],
+  "browserProof": {
+    "status": "ALL6_GATES_LOCAL_QUALIFIED_DELIVERY_PENDING",
+    "mainCounts": [
+      293,
+      288,
+      332
+    ],
+    "allGateCompletedCandidates": 6,
+    "rawAndDurableBrowserOutcomesMatched": 12,
+    "expectedBrowserOutcomes": 12,
+    "models": [
+      "corpus-ldraw-expanded-30385",
+      "corpus-ldraw-expanded-95195",
+      "corpus-ldraw-expanded-50231",
+      "corpus-ldraw-expanded-99464",
+      "corpus-ldraw-expanded-384",
+      "corpus-ldraw-expanded-65384"
+    ],
+    "localAllGateCounts": [
+      299,
+      294,
+      338
+    ],
+    "zeroNetworkRequests": true,
+    "nativeReplayed": false,
+    "reports": [
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/browser-phase-5.json",
+        "sha256": "2cc92c2075bc59aa0b35587d1316ec0345fb0d20a981ac84cd69eca5d7756eab",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/browser-phase-6.json",
+        "sha256": "e9408a5e7376474e874354e6293de8181751a8672ce9367e45bca101c7dcfdd2",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/browser-phase-7.json",
+        "sha256": "680f0178c6f16e1b6a3fb409f8a6139eae86a77a60e65193b5411b16d2d127d6",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/browser-phase-8.json",
+        "sha256": "0e3496dca12c8508c6c2c884dffb2122a643157f3b0d5122bf239bd69af7f025",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/browser-phase-9.json",
+        "sha256": "5b4197f089433feae23d7930e37f58d6acc74c59eb5c38d9e922c43f5bcb99b6",
+        "exitCode": 0
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/browser-phase-10.json",
+        "sha256": "54374be76d95ccdf88d06ddd693ba71e050caade0f7432837b735eb7f7503805",
+        "exitCode": 0
+      }
+    ],
+    "proofIsNotMainDelivery": true
+  },
+  "testedCommitBinding": {
+    "testedCommit": "42bbb01c56b06f49e19d8c81013a9b5972acfe64",
+    "testedTree": "610a55c03580639af8bc1ffe7a044281c2b60b73",
+    "sourceInputCommit": "481cf1184e2d02a7e6ee9dd34e859ea418bd6d86",
+    "sourceInputTree": "bc4663d2d027201b6b048afc34b3adf5c97d4912",
+    "testedChangedSourceDataFiles": [
+      {
+        "path": "library/ldraw-reviewed-batch-manifest.json",
+        "bytes": 2822708,
+        "sha256": "69c0508885c047bb307e93ed4d13785f259784af766b6f51b57f5813732e1755"
+      },
+      {
+        "path": "library/ldraw-reviewed-batch-spec.json",
+        "bytes": 3243393,
+        "sha256": "5f1a80553fc36824b16ae46ee797723143d247e90102e01080f625bcfc5f3808"
+      },
+      {
+        "path": "library/meshes/ldraw/30385.stl",
+        "bytes": 11384,
+        "sha256": "6ca58cbd42d4d524f7409085a9b4dd5529008ce65eb413829fda9ebd232cf63e"
+      },
+      {
+        "path": "library/meshes/ldraw/384.stl",
+        "bytes": 8884,
+        "sha256": "3a32fb0e187b9d5a14605456ba4f6423ca4c20c22a2d6941bc9fd93cbb5fa959"
+      },
+      {
+        "path": "library/meshes/ldraw/50231.stl",
+        "bytes": 20684,
+        "sha256": "29e128704babb6f31cc6e03d28474051c3b8b7854912934d11880fa28ef6728e"
+      },
+      {
+        "path": "library/meshes/ldraw/65384.stl",
+        "bytes": 15884,
+        "sha256": "5a4f15646d2cbfc6734bff9e0c4cb09d03ae42be71b6e3eba1a4c06c8165b2a0"
+      },
+      {
+        "path": "library/meshes/ldraw/95195.stl",
+        "bytes": 14884,
+        "sha256": "b944d5e2ee169505fa747cd70d11b2e4f3aeb6ecbda2f9c62babd8a6beb53f8b"
+      },
+      {
+        "path": "library/meshes/ldraw/99464.stl",
+        "bytes": 19084,
+        "sha256": "72cf3d1589bb94d8881c93501e023416c7f469bb184dede529065a65e68434e9"
+      },
+      {
+        "path": "library/previews.json",
+        "bytes": 5244451,
+        "sha256": "b6c8b220cb31d4531236b4dd51a3bb6b46bf22b28a252f4bb188ad5e4d7a9be2"
+      },
+      {
+        "path": "tests/browser/model-library-expanded-batch012.spec.ts",
+        "bytes": 5972,
+        "sha256": "f8d17a3bbc8646a6112fb65de01d62d848ebf11a534485bd3e3c01f3b46e4bb5"
+      },
+      {
+        "path": "tests/model-library-expanded-batch012.test.ts",
+        "bytes": 3978,
+        "sha256": "7fa9adedf7d8a50fc26400851a703048a28897de24c8f1f162ba15b3da379048"
+      }
+    ],
+    "builtFiles": [
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/README.md",
+        "bytes": 406,
+        "sha256": "abc4e1333f5195f98c4e34265b80c5016134b85254ff44afd05f6ed7d0e47577"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/brickwright.png",
+        "bytes": 17259,
+        "sha256": "4f12ea0f0f21056104c7c665a8ad2082dfaf1265d131e402e793909cef6b4065"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/cometbeat.png",
+        "bytes": 12576,
+        "sha256": "93c1e0820b28de7b4209a37abe4e9b6e320a1a495bd9c44e056b492454cc6769"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/crispaudio.png",
+        "bytes": 20854,
+        "sha256": "482b887823d8cbe42fb450bf9a1e7fc50213f4c80364d75387559876e157fb3d"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/crispbingo.png",
+        "bytes": 12310,
+        "sha256": "974a26f8a7f20b8b61d806a1f7ef7d24ef82c1a775b8c154c96f5b7015939910"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/crispchess.png",
+        "bytes": 18694,
+        "sha256": "375e1c4df95c0a294aaf5dc078bdbc99d8753100812649821cc88be87ec7a33a"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/crispcloud.png",
+        "bytes": 21564,
+        "sha256": "7736e71fd28f2400424a106513224a4dd9953ae11049c219210964cfc7ebdcfb"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/crispdeck.png",
+        "bytes": 12518,
+        "sha256": "3cf496171fcfe2ea3af23c6901d3b4375546d383a34288f3e433d58b8acd17ab"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/crisperplayer.png",
+        "bytes": 28416,
+        "sha256": "732bf35419dbf4a3cdb604ff18e72f7f667901052c0c12b091a535440a9cec67"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/crisperweaver.png",
+        "bytes": 21766,
+        "sha256": "ca56b9ba5f7b4de928b7baf6979bbabe01314c0382f9a85d558f673f9435de43"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/crispmath.png",
+        "bytes": 10714,
+        "sha256": "d85b699f750768c23d683180a37385f4c36fdbed796989f464de26840ea8915e"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/crispmesh.png",
+        "bytes": 20375,
+        "sha256": "f10da8d3835dd3d13e9a8c8422338fda2a746ef5401a42efc3f2f5bbc90ff7ad"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/crispsorter.png",
+        "bytes": 23362,
+        "sha256": "9b92d82e86f687bedf3f3378c27e7b4c24c83d3a953f337e5ec1cfde798666bf"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/crispsudoku.png",
+        "bytes": 24934,
+        "sha256": "af8ee9c4eae94cfe68af1e38062f7d1da9346ada0734476f19c9a705eb73db5c"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/crisptuner.png",
+        "bytes": 10185,
+        "sha256": "cbac4f2381e240dd9c7879bc200262037f6bf9c35c688b65aba09402a077e033"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/hectopolis.png",
+        "bytes": 8345,
+        "sha256": "687f651d1f4d98fd4653b85191c6fc273e2497447916fb4bf9be447b7f2c6ed3"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/kerotakis.png",
+        "bytes": 7514,
+        "sha256": "0b6a24aec16e25ee6d2e098c40fd56cf530c26f917f70a69f9bb68cda4409d92"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/naga.png",
+        "bytes": 10760,
+        "sha256": "93f34940d26e229849e697f5bc98a3d28d4ed5e2caa926a34aabd93e37e74da6"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/numbernebula.png",
+        "bytes": 29684,
+        "sha256": "39d20c36896f98452b5bc6f0f4608caab1dd4ea7fc74034c88c93c90f9521bdb"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/app-showcase/word-universe.png",
+        "bytes": 21617,
+        "sha256": "081ee34a1707823873a44fdfe4c7d4bebeb3c2fa4d7b099a44360867b1c581e7"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/assets/adafruit-preview-data-C_BcSKUk.js",
+        "bytes": 6162740,
+        "sha256": "b2805adb8bdb29da516b7a7be16971d921c4aedb3517fa2531400b6a9f935b6b"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/assets/embedded-CfhQ23-U.js",
+        "bytes": 2312,
+        "sha256": "8f88f3bba2d6198567833362683fe07ac04501099e5e3dca29b6a5f81b6af80e"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/assets/esm-DDe2dpXc.js",
+        "bytes": 1352,
+        "sha256": "79789fb7149c27673ac3f62bfec6a257c2f367d22223ef6e4ef3874637fafc7b"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/assets/esm-J6sI7DtB.js",
+        "bytes": 334,
+        "sha256": "eb3e8b85f2973dee34ce204ccef24cc963ac4f6951dae520a24a1f86ea8aef42"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/assets/files-BvSzA95Z.css",
+        "bytes": 10183,
+        "sha256": "a0bd03c2cdb4b600a58121b396da840424c00407085354cd39adee4a3064593b"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/assets/files-DPVBuDx4.js",
+        "bytes": 9321724,
+        "sha256": "57256d2213a0df3952868d0c82cb48c55062630ab4efd34291f2a36acee8c0e3"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/assets/geometry.worker-BjGALSsl.js",
+        "bytes": 1438621,
+        "sha256": "80cf0c49cb56c8f0580a6ac1da63e226e07727b4d7ae5d55209bace4d0b3bf5d"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/assets/jolt-physics.wasm-compat-I5zyqY5q.js",
+        "bytes": 3662128,
+        "sha256": "9e84052c2668d6432c9d72a053e07028423db2394fea48828e0e613ed8091470"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/assets/main-uiEUJQIQ.js",
+        "bytes": 11108309,
+        "sha256": "791f30cdcb8e9c7e2a615c17d6bcd0f155b58a770a4e3830ed3600310b1c60f7"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/assets/manifold-BE4c7gO-.wasm",
+        "bytes": 541470,
+        "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/assets/simulation.worker-DxQkvIu-.js",
+        "bytes": 1491809,
+        "sha256": "747f44b61f73b5e69e4213e50a5f50759d6266d379613cb813c9bf597368e45e"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/assets/web-Bw8e1vDV.js",
+        "bytes": 361,
+        "sha256": "1f428f79d5fe90f078787bb96a459bef8aeef111c41900685a4533b070c9c957"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/assets/web-DRwDkidd.js",
+        "bytes": 8715,
+        "sha256": "de86688da9d2e02aadb81e14ab58e96d9738608fbbdbd3d5815ef762f381fdcc"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/cad-assets/app-license.txt",
+        "bytes": 1520,
+        "sha256": "ed121de3496066a2ddc8c11b30b48142165ab84bdb066fee351392ecaccf36ad"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/cad-assets/build-info.json",
+        "bytes": 138,
+        "sha256": "f24911ede88a55ac042ec19bb6bd6595d53ebd13ed43a2bd2099e26aaf32a3d8"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/cad-assets/manifold.wasm",
+        "bytes": 541470,
+        "sha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/cad-assets/notices.txt",
+        "bytes": 91867,
+        "sha256": "dea50eee6d6781549af4e3740bfaf7661b29479696e5ae6cbe41eafd93c0fa70"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/embedded.html",
+        "bytes": 1119,
+        "sha256": "f77cb3648343e8f09f4c09cfe8610e286a6b6a74354de76a42ae617dcd16d9f3"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/icon.svg",
+        "bytes": 283,
+        "sha256": "30876dc5d178d36f341cc5126e6489a7078ac9f667a56a9e625f9d090d3d94f4"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/index.html",
+        "bytes": 2974,
+        "sha256": "406945d79631519b196cf0d64d6658919af55e76655ac26e817a43945a8ae8cb"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/manifest.webmanifest",
+        "bytes": 249,
+        "sha256": "7d57494ede2e7c699fd24fd309335bb701138d85cc84d5c4ff4d9851f44ae535"
+      },
+      {
+        "path": "/mnt/storage/brickwright-cycle166-editor6/build-context/dist/sw.js",
+        "bytes": 1930,
+        "sha256": "56d97a4be65bb0875eb9c5d2eedd5b65ce1bf6ebe4b2647368d1161c485edab1"
+      }
+    ],
+    "allCommittedBindings": [
+      {
+        "path": "library/evidence/ldraw-expanded-CAreadme-20261109.txt",
+        "bytes": 4151,
+        "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+        "bytes": 18657,
+        "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+      },
+      {
+        "path": "library/evidence/ldraw-expanded-batch012-input-20261109.json",
+        "bytes": 10504,
+        "sha256": "3301269c9fa738c9ca335f74ac6a672b4bbcf80f412607dccf3f9fa3376fa181"
+      },
+      {
+        "path": "library/ldraw-reviewed-batch-manifest.json",
+        "bytes": 2822708,
+        "sha256": "69c0508885c047bb307e93ed4d13785f259784af766b6f51b57f5813732e1755"
+      },
+      {
+        "path": "library/ldraw-reviewed-batch-spec.json",
+        "bytes": 3243393,
+        "sha256": "5f1a80553fc36824b16ae46ee797723143d247e90102e01080f625bcfc5f3808"
+      },
+      {
+        "path": "library/meshes/ldraw/30385.stl",
+        "bytes": 11384,
+        "sha256": "6ca58cbd42d4d524f7409085a9b4dd5529008ce65eb413829fda9ebd232cf63e"
+      },
+      {
+        "path": "library/meshes/ldraw/384.stl",
+        "bytes": 8884,
+        "sha256": "3a32fb0e187b9d5a14605456ba4f6423ca4c20c22a2d6941bc9fd93cbb5fa959"
+      },
+      {
+        "path": "library/meshes/ldraw/50231.stl",
+        "bytes": 20684,
+        "sha256": "29e128704babb6f31cc6e03d28474051c3b8b7854912934d11880fa28ef6728e"
+      },
+      {
+        "path": "library/meshes/ldraw/65384.stl",
+        "bytes": 15884,
+        "sha256": "5a4f15646d2cbfc6734bff9e0c4cb09d03ae42be71b6e3eba1a4c06c8165b2a0"
+      },
+      {
+        "path": "library/meshes/ldraw/95195.stl",
+        "bytes": 14884,
+        "sha256": "b944d5e2ee169505fa747cd70d11b2e4f3aeb6ecbda2f9c62babd8a6beb53f8b"
+      },
+      {
+        "path": "library/meshes/ldraw/99464.stl",
+        "bytes": 19084,
+        "sha256": "72cf3d1589bb94d8881c93501e023416c7f469bb184dede529065a65e68434e9"
+      },
+      {
+        "path": "library/previews.json",
+        "bytes": 5244451,
+        "sha256": "b6c8b220cb31d4531236b4dd51a3bb6b46bf22b28a252f4bb188ad5e4d7a9be2"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4cylc.dat",
+        "bytes": 430,
+        "sha256": "fdcb54ba2e2731cbb86ea6b2fddb25c7dda060a7780629a72003e0278805dd30"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4cyli.dat",
+        "bytes": 1044,
+        "sha256": "5a7168952a5a3570327873b9a5802fa7b3be40967ab78c03b6a2bfd4419a1f10"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4disc.dat",
+        "bytes": 584,
+        "sha256": "3b8faa77185c576085c38f37b13c6a04e2e889eea6a7dc8c4db2d1699a33bcda"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/1-4edge.dat",
+        "bytes": 545,
+        "sha256": "9ce2de7e67bbac575d52cfdc771b9d00856efc9b88002d97db8e665e50f4d467"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cylc.dat",
+        "bytes": 476,
+        "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cyli.dat",
+        "bytes": 2687,
+        "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4cylo.dat",
+        "bytes": 383,
+        "sha256": "d6ca97ee2e75918b3309a5c88aafcd2455b3a316f7cef8963517c19f1d86b38f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4disc.dat",
+        "bytes": 1137,
+        "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4edge.dat",
+        "bytes": 1084,
+        "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/4-4ndis.dat",
+        "bytes": 1219,
+        "sha256": "21202dc15823f4336bc2544244d0b539b76745c89f7a59ad18cdd03ad45cc543"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect.dat",
+        "bytes": 654,
+        "sha256": "ffeb2dd3d9b83c38841f18f1f74800fbba9e90c5fb6badfff2a795f08a96cb71"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/p/rect2p.dat",
+        "bytes": 594,
+        "sha256": "faac2b36241a9de0c0108471e59c45734df6c79813332d9cacf97f6391886acc"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/30385.dat",
+        "bytes": 13182,
+        "sha256": "fc3be31f7f8ec729d45d2d46e12926933e31b74560120ee3720f9e9771fb94c9"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/384.dat",
+        "bytes": 2088,
+        "sha256": "d4ad4fae61e9a27afd4eafd0101d0a3d72384a024f5d004b5a0dabce4172fc5b"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/50231.dat",
+        "bytes": 27755,
+        "sha256": "7edc6bb9b57ed93df3c3cfde8932e483b5fbeb8e3e78582dbbef1eafe94fa36b"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/65384.dat",
+        "bytes": 10624,
+        "sha256": "3023a6c52b767dfb1e80ae21b6bf6fedbf7e0cd97c0f94ec47f37f2ae0761a49"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/95195.dat",
+        "bytes": 19382,
+        "sha256": "753c33f4f4f661a172606e625a9248b1b19e2049f4d9608837e83ee77e8899ce"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/99464.dat",
+        "bytes": 25256,
+        "sha256": "ded7bca368f3a6b81e2989fe50dd86b34f749ce6a946f42ccded6bd8cf11c749"
+      },
+      {
+        "path": "library/sources/ldraw-expanded-20261109/parts/s/65384s01.dat",
+        "bytes": 2711,
+        "sha256": "e4170358361449df45411665aa270821b09ad89886388c5fc7fe0d6801af8e17"
+      },
+      {
+        "path": "tests/browser/model-library-expanded-batch012.spec.ts",
+        "bytes": 5972,
+        "sha256": "f8d17a3bbc8646a6112fb65de01d62d848ebf11a534485bd3e3c01f3b46e4bb5"
+      },
+      {
+        "path": "tests/model-library-expanded-batch012.test.ts",
+        "bytes": 3978,
+        "sha256": "7fa9adedf7d8a50fc26400851a703048a28897de24c8f1f162ba15b3da379048"
+      }
+    ],
+    "allCommittedBindingsMatch": true,
+    "mismatches": []
+  },
+  "validationFiles": [
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/execution.json",
+      "bytes": 23611,
+      "sha256": "4c2703a7aa5a92705a77157cf2c2ae40da3f4d7e19a055d91b7486a2bfcd1d51"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/browserpath-resume-admission.json",
+      "bytes": 541,
+      "sha256": "9aaec2e1029ad841fbabf4ae5023ddfc0fb3dcab634ec9cbfe85fa1f4a8ac999"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/tested-owned-hashes.json",
+      "bytes": 1769,
+      "sha256": "6c18db6345852638f92db8ce4de7b3b2dbd2eb1b62f092bd81ff105a452958e3"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/tested-built-hashes.json",
+      "bytes": 8912,
+      "sha256": "b90d769ccf4578c99050104f7f5ebacb8f8d545e8b9120a2dfa2a9b6df9b1271"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/browser-proof-final.json",
+      "bytes": 1801,
+      "sha256": "863333d777fd3f18f957fe254de4b9af18c99916f6c944cb24dce52c56393939"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/browser-chunks.json",
+      "bytes": 1303,
+      "sha256": "2e13455b8af04f23005de9c2d1e0aff61617d557545fc226bd6e27a1240baeed"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/browser-template-binding.json",
+      "bytes": 203,
+      "sha256": "675fa9444405e7eebbe9b4add22e1b52bf381ee7696c0a592c1d27cf5b965ac0"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/source-capture-exclusions.json",
+      "bytes": 180,
+      "sha256": "8a45bbaed57041e352a52d23ed474ec73ea2f0fd8242f1f57e193a15ac9994fd"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/source-capture-binding.json",
+      "bytes": 4475,
+      "sha256": "b0218e33601d4fa2f9f236ae8118ff2498d4c1e445913af0ec170258526362f3"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/cold-build-write-allocation.json",
+      "bytes": 2326,
+      "sha256": "8aa5256f67e4107571a170501b9fa889145deb7de71869c55a9b0d60df37a455"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/retained-passed-package-and-editor.json",
+      "bytes": 3385,
+      "sha256": "1c391168b4146c86c0613838f17d082e52a303659ab37d852c016cf78ef71b4a"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/preview-browserpath-cause-and-fix.json",
+      "bytes": 1769,
+      "sha256": "cc7591ca5f115d94761b1d374641eb4204838f6614ba55cade3b8fa6c2470744"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/preview-browserpath-failure-execution.json",
+      "bytes": 5813,
+      "sha256": "79d013671c629f44a7241d6aeab2bc09d08aaec3febeaf116f7bac7b8e57df19"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/preview-browserpath-failure-log.txt",
+      "bytes": 1279,
+      "sha256": "d6b38e34b397f31af2d60ca74fa48f923130a307161c9daccde3730d183cb0be"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/first-focused-timeout-execution.json",
+      "bytes": 3257,
+      "sha256": "4853720cb11f0d4d2435470f46b411820e6b05dec8d420f67df7a0bee06260eb"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/focused-startup-timeout-and-io-correction.json",
+      "bytes": 2918,
+      "sha256": "73142b37c6198a837af5a7414568b85a65ca466afbe701f2ed3dc52c19beef9b"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/run-unfinished-browserpath-corrected.py",
+      "bytes": 10300,
+      "sha256": "9c5c5c7ea556e376bda82b61fa5890371be0f2c20095983f5e82ddd8ad6f8e6b"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/playwright-cold.config.mts",
+      "bytes": 463,
+      "sha256": "cd69370f56418f0b15470bf1ede986d51c1cd900aba96f6e943bd2b6b119bdf0"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/cold-app-build.sh",
+      "bytes": 363,
+      "sha256": "777334d9c33eebca66a593e20c0c8da87f07e02236369d9bdfb48aa76f92d1f5"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/browser-phase-5.json",
+      "bytes": 7831,
+      "sha256": "2cc92c2075bc59aa0b35587d1316ec0345fb0d20a981ac84cd69eca5d7756eab"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/browser-phase-6.json",
+      "bytes": 7831,
+      "sha256": "e9408a5e7376474e874354e6293de8181751a8672ce9367e45bca101c7dcfdd2"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/browser-phase-7.json",
+      "bytes": 7831,
+      "sha256": "680f0178c6f16e1b6a3fb409f8a6139eae86a77a60e65193b5411b16d2d127d6"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/browser-phase-8.json",
+      "bytes": 7831,
+      "sha256": "0e3496dca12c8508c6c2c884dffb2122a643157f3b0d5122bf239bd69af7f025"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/browser-phase-9.json",
+      "bytes": 7819,
+      "sha256": "5b4197f089433feae23d7930e37f58d6acc74c59eb5c38d9e922c43f5bcb99b6"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/browser-phase-10.json",
+      "bytes": 7839,
+      "sha256": "54374be76d95ccdf88d06ddd693ba71e050caade0f7432837b735eb7f7503805"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/per-model/chromium-corpus-ldraw-expanded-30385.json",
+      "bytes": 771,
+      "sha256": "f8cf7cee978c4cc9f3946a8ca5de22a262680cfe7903d09dae5c1236a1aa98ba"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/per-model/ipad-webkit-corpus-ldraw-expanded-30385.json",
+      "bytes": 774,
+      "sha256": "8599a2a534759b3ccd4842f2e30f69d960ab2e347e21a0c89f599cd4275bf1f9"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/per-model/chromium-corpus-ldraw-expanded-95195.json",
+      "bytes": 771,
+      "sha256": "4f47bd7346ebc4cc73f9613e0c6d28e2c812c738600b4e81ef4bebed155310ee"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/per-model/ipad-webkit-corpus-ldraw-expanded-95195.json",
+      "bytes": 774,
+      "sha256": "f420eb2de5b89ac627bdef9e2235ed89e35b7a149c40fcfb7c05b02836be6bbe"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/per-model/chromium-corpus-ldraw-expanded-50231.json",
+      "bytes": 771,
+      "sha256": "d98cb7a356824e5ad46cc5d2b70b7df4d0559d033e64cc03abe8cefa4626fad2"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/per-model/ipad-webkit-corpus-ldraw-expanded-50231.json",
+      "bytes": 774,
+      "sha256": "f70db51012de6dcec6a928fef0e13034453002bc0789fa5371afb8c4b837148f"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/per-model/chromium-corpus-ldraw-expanded-99464.json",
+      "bytes": 771,
+      "sha256": "978ce9510a99ff268d243f315c5f2036062f999d27918a6c00ac7be299b3e82b"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/per-model/ipad-webkit-corpus-ldraw-expanded-99464.json",
+      "bytes": 774,
+      "sha256": "7bf0051dcc086c7f1d2212fe78282124a24c972e9f850a72663824d119d2d196"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/per-model/chromium-corpus-ldraw-expanded-384.json",
+      "bytes": 769,
+      "sha256": "c8b6e9c1b8ca69fdf524050002ef3e7cad89e07d51728018be5e15cbbcca4434"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/per-model/ipad-webkit-corpus-ldraw-expanded-384.json",
+      "bytes": 772,
+      "sha256": "d44e681af2fad35923e276d7990ae6f7e54d4b84cde63d4dad79e53b76b395dc"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/per-model/chromium-corpus-ldraw-expanded-65384.json",
+      "bytes": 771,
+      "sha256": "d470dd03714178276c305544105950163bd7a93d8e3f35766512b0acf4dbf249"
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle166-editor6/per-model/ipad-webkit-corpus-ldraw-expanded-65384.json",
+      "bytes": 774,
+      "sha256": "a1785dbb8d9b4e33440370c96f62439bef7d41ab846340b7cd7a782613fe24fe"
+    }
+  ],
+  "priorPreservation": {
+    "assetSHAEntries": 586,
+    "previews": 332,
+    "allExact": true
+  },
+  "implementationChanges": [],
+  "sourceIndependenceRequired": true,
+  "knownColdProofDirectoryExcludedOnly": [
+    {
+      "path": "test-results",
+      "target": "/mnt/akademie_storage/brickwright-cycle136-cold-test-results/raw",
+      "reason": "closed proof DIRECTORY,not runtime source"
+    }
+  ],
+  "failureTaxonomy": {
+    "screenedRoots": 50,
+    "converterPASS": 48,
+    "strictNativePASS": 6,
+    "nativeNotManifoldABUnresolved": 42,
+    "sourceScopedQuad1DegreeGuardIncompatibility": 2,
+    "physicalDefectClaimed": false,
+    "generalBClaimed": false
+  },
+  "resourcePolicy": {
+    "originalLimitsUnchanged": true,
+    "nativePackageFocusedReplay": false,
+    "measuredColdHostWriteAllowanceBytes": 104745862,
+    "admission": {
+      "fastFreeBytes": 13252993024,
+      "requiredExclusiveFreeBytes": 12884901888,
+      "availableMemoryBytes": 4292554752,
+      "requiredExclusiveMemoryBytes": 2147483648,
+      "loadAvgDiagnosticOnly": [
+        1.517578125,
+        0.67919921875,
+        0.58447265625
+      ],
+      "cpuPSISomeAvg60Percent": 0.16,
+      "cpuPSIAdmissionMaximumExclusive": 5.0,
+      "allowedCPUs": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "selectedCPU": 0,
+      "sameNonblockingHeavyLock": true,
+      "projectedAdditionalWriteReserveBytes": 104745862,
+      "projectedFastFreeAfterReserveBytes": 13148247162
+    },
+    "failureHistoryPreserved": true,
+    "browserInstallLookupFixedWithoutDownload": true
+  },
+  "sourcePool": {
+    "closureBudgetFit": 585,
+    "previousDeliveredExpandedRoots": 124,
+    "pendingCohort": 6,
+    "nativeNotManifoldTotal": 241,
+    "withheldNonIndependent": 4,
+    "converterQuadRefused": 3,
+    "unconverted": 207,
+    "archiveExhaustionNotProven": true
+  }
+}

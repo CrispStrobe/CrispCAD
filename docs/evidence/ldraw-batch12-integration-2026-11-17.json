@@ -1,0 +1,547 @@
+{
+  "status": "EXACT_FULL_UPSTREAM_INTEGRATION_PASS",
+  "atUTC": "2026-11-17T19:05:26.523738+00:00",
+  "head": "9c57a37700db5c682993da5b0b96d0c9354ef2f3",
+  "tree": "0ef242194ada874f9407723ab3291c045f3a7b8a",
+  "fullUpstreamMerged": "e803d8f49d9c9245e340a9f1b86e2e036c709dcc",
+  "cohortTestedCommit": "42bbb01c56b06f49e19d8c81013a9b5972acfe64",
+  "cohort12RawDurableProofRetained": true,
+  "all33CohortCommittedBindingsMatch": true,
+  "all598AssetHashesMatch": true,
+  "prior586AssetsAnd332PreviewsPreserved": true,
+  "actualIntegrationPhases": [
+    {
+      "phase": 0,
+      "command": [
+        "npm",
+        "run",
+        "build:packages"
+      ],
+      "guard": {
+        "fastFreeBytes": 13236412416,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4349747200,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          0.40087890625,
+          2.4375,
+          2.515625
+        ],
+        "cpuPSISomeAvg60Percent": 3.5,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 45,
+      "status": "PASS",
+      "sourceHead": "9c57a37700db5c682993da5b0b96d0c9354ef2f3",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle168-integration-work/phase-0-browserpath-fix-files.log",
+        "npm",
+        "run",
+        "build:packages"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle168-integration6/phase-0-browserpath-fix.log",
+      "tracePath": "/mnt/storage/brickwright-cycle168-integration6/phase-0-browserpath-fix-files.log",
+      "pid": 3339332,
+      "minimumObservedFastFreeBytes": 13235802112,
+      "minimumObservedAvailableMemoryBytes": 3506827264,
+      "exitCode": 0,
+      "elapsedSeconds": 21.787713313940912,
+      "childUserCPUSeconds": 17.676493999999998,
+      "childSystemCPUSeconds": 2.852887
+    },
+    {
+      "phase": 1,
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/simulation-telemetry-controller.test.ts",
+        "--maxWorkers=1"
+      ],
+      "guard": {
+        "fastFreeBytes": 13234991104,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4321996800,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          0.43115234375,
+          1.662109375,
+          2.21044921875
+        ],
+        "cpuPSISomeAvg60Percent": 2.04,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 45,
+      "status": "PASS",
+      "sourceHead": "9c57a37700db5c682993da5b0b96d0c9354ef2f3",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle168-integration-work/phase-1-scoped-resume-files.log",
+        "npx",
+        "vitest",
+        "run",
+        "tests/simulation-telemetry-controller.test.ts",
+        "--maxWorkers=1"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle168-integration6/phase-1-scoped-resume.log",
+      "tracePath": "/mnt/storage/brickwright-cycle168-integration6/phase-1-scoped-resume-files.log",
+      "pid": 3339884,
+      "minimumObservedFastFreeBytes": 13234991104,
+      "minimumObservedAvailableMemoryBytes": 4144332800,
+      "exitCode": 0,
+      "elapsedSeconds": 4.7570872297510505,
+      "childUserCPUSeconds": 3.178919,
+      "childSystemCPUSeconds": 1.3442889999999998
+    },
+    {
+      "phase": 2,
+      "command": [
+        "bash",
+        "/mnt/storage/brickwright-cycle168-integration6/cold-app-build.sh"
+      ],
+      "guard": {
+        "fastFreeBytes": 13234991104,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4347252736,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          0.63720703125,
+          1.6845703125,
+          2.21484375
+        ],
+        "cpuPSISomeAvg60Percent": 4.51,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 90,
+      "status": "PASS",
+      "sourceHead": "9c57a37700db5c682993da5b0b96d0c9354ef2f3",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle168-integration-work/phase-2-scoped-resume-files.log",
+        "bash",
+        "/mnt/storage/brickwright-cycle168-integration6/cold-app-build.sh"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle168-integration6/phase-2-scoped-resume.log",
+      "tracePath": "/mnt/storage/brickwright-cycle168-integration6/phase-2-scoped-resume-files.log",
+      "pid": 3339922,
+      "minimumObservedFastFreeBytes": 13234987008,
+      "minimumObservedAvailableMemoryBytes": 2819670016,
+      "exitCode": 0,
+      "elapsedSeconds": 51.202008028980345,
+      "childUserCPUSeconds": 37.815698000000005,
+      "childSystemCPUSeconds": 6.6001590000000006
+    },
+    {
+      "phase": 3,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle168-integration6/playwright-cold.config.mts",
+        "--list",
+        "--reporter=line"
+      ],
+      "guard": {
+        "fastFreeBytes": 13234987008,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4214833152,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          1.7802734375,
+          1.81494140625,
+          2.22900390625
+        ],
+        "cpuPSISomeAvg60Percent": 31.2,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 20,
+      "status": "PASS",
+      "sourceHead": "9c57a37700db5c682993da5b0b96d0c9354ef2f3",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle168-integration-work/phase-3-scoped-resume-files.log",
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle168-integration6/playwright-cold.config.mts",
+        "--list",
+        "--reporter=line"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle168-integration6/phase-3-scoped-resume.log",
+      "tracePath": "/mnt/storage/brickwright-cycle168-integration6/phase-3-scoped-resume-files.log",
+      "pid": 3340051,
+      "minimumObservedFastFreeBytes": 13234987008,
+      "minimumObservedAvailableMemoryBytes": 3905986560,
+      "exitCode": 0,
+      "elapsedSeconds": 6.634609440341592,
+      "childUserCPUSeconds": 5.328252999999997,
+      "childSystemCPUSeconds": 1.1831839999999998
+    },
+    {
+      "phase": 4,
+      "command": [
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle168-integration6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle168-integration6/browser-output",
+        "--reporter=line,json"
+      ],
+      "guard": {
+        "fastFreeBytes": 13234987008,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4275179520,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          1.79833984375,
+          1.818359375,
+          2.2275390625
+        ],
+        "cpuPSISomeAvg60Percent": 32.07,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 300,
+      "status": "PASS",
+      "sourceHead": "9c57a37700db5c682993da5b0b96d0c9354ef2f3",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle168-integration-work/phase-4-scoped-resume-files.log",
+        "npx",
+        "playwright",
+        "test",
+        "tests/browser/model-library-expanded-batch012.spec.ts",
+        "--config",
+        "/mnt/storage/brickwright-cycle168-integration6/playwright-cold.config.mts",
+        "--output",
+        "/mnt/storage/brickwright-cycle168-integration6/browser-output",
+        "--reporter=line,json"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle168-integration6/phase-4-scoped-resume.log",
+      "tracePath": "/mnt/storage/brickwright-cycle168-integration6/phase-4-scoped-resume-files.log",
+      "pid": 3340077,
+      "minimumObservedFastFreeBytes": 13234765824,
+      "minimumObservedAvailableMemoryBytes": 2616217600,
+      "exitCode": 0,
+      "elapsedSeconds": 150.29212882881984,
+      "childUserCPUSeconds": 28.071655000000007,
+      "childSystemCPUSeconds": 24.891132999999996
+    }
+  ],
+  "preservedUnqualifiedOverbroadRobotTestFailure": {
+    "atUTC": "2026-11-17T19:01:34.876526+00:00",
+    "status": "OVERBROAD_DEBUG_JOLT_GROUP_COLLECTION_OOM_PRESERVED_SCOPE_CORRECTION_PREPARED",
+    "actualFirstFailure": {
+      "phase": 1,
+      "heapMiB": 768,
+      "exit": 134,
+      "seconds": 19.58769729686901,
+      "reportedCases": 0,
+      "lastBoundDependencyOpened": "/mnt/akademie_storage/brickwright-cycle96-integration/verified-jolt10/package/dist/jolt-physics.debug.wasm-compat.js",
+      "moduleBytes": 12438977,
+      "moduleAloneCauseProven": false
+    },
+    "unrelatedRobotSuites": {
+      "quasarDeclaredPhysicsTestTimeoutSeconds": 420,
+      "atlasDeclaredPhysicsTestTimeoutSeconds": 120,
+      "CADFocusedCommandBudgetSeconds": 45,
+      "robotPhysicsQualificationClaimed": false
+    },
+    "scopeBasis": "Standing user instruction: do not block model qualification on unrelated broad debug-Jolt test OOM; required CAD affected shared-controller test and final runtime offline model insertion are retained. Robot definition changes do not touch model library/catalogue/geometry. No required assertion removed.",
+    "requiredCADChecks": [
+      "simulation-telemetry-controller.test.ts all assertions",
+      "full app build merged runtime",
+      "original representative both-engine offline insertion/provenance/history/restart assertions"
+    ],
+    "packagePASSRetained": {
+      "phase": 0,
+      "command": [
+        "npm",
+        "run",
+        "build:packages"
+      ],
+      "guard": {
+        "fastFreeBytes": 13236412416,
+        "requiredExclusiveFreeBytes": 12884901888,
+        "availableMemoryBytes": 4349747200,
+        "requiredExclusiveMemoryBytes": 2147483648,
+        "loadAvgDiagnosticOnly": [
+          0.40087890625,
+          2.4375,
+          2.515625
+        ],
+        "cpuPSISomeAvg60Percent": 3.5,
+        "cpuPSIAdmissionMaximumExclusive": 5.0,
+        "allowedCPUs": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "selectedCPU": 0,
+        "sameNonblockingHeavyLock": true,
+        "psiRole": "Recorded only after one successful admission; no own-contention re-admission veto"
+      },
+      "timeoutSeconds": 45,
+      "status": "PASS",
+      "sourceHead": "9c57a37700db5c682993da5b0b96d0c9354ef2f3",
+      "parentAffinity": [
+        0
+      ],
+      "parentNice": 19,
+      "nodeHeapMiB": 768,
+      "actualTracedCommand": [
+        "strace",
+        "-f",
+        "-qq",
+        "-y",
+        "-e",
+        "trace=openat,creat,rename,renameat,renameat2,unlink,unlinkat,mkdir,mkdirat,truncate,ftruncate,chdir,fchdir",
+        "-o",
+        "/tmp/brickwright-cad-cycle168-integration-work/phase-0-browserpath-fix-files.log",
+        "npm",
+        "run",
+        "build:packages"
+      ],
+      "logPath": "/mnt/storage/brickwright-cycle168-integration6/phase-0-browserpath-fix.log",
+      "tracePath": "/mnt/storage/brickwright-cycle168-integration6/phase-0-browserpath-fix-files.log",
+      "pid": 3339332,
+      "minimumObservedFastFreeBytes": 13235802112,
+      "minimumObservedAvailableMemoryBytes": 3506827264,
+      "exitCode": 0,
+      "elapsedSeconds": 21.787713313940912,
+      "childUserCPUSeconds": 17.676493999999998,
+      "childSystemCPUSeconds": 2.852887
+    },
+    "modelNativeOrPreviewOrCohortReplay": false,
+    "newRuntimeOrProductSourceChanges": false,
+    "allCapsUnchanged": true,
+    "producerSHA256": "8d6f9a9836e67af43d95aafb7e22fe419bd2a44533bdb50f1b6ddb6034d8013b",
+    "readyCommand": "flock -n -E75 /mnt/volume1/code/supervisor2-20261114/heavy-local.lock python /mnt/storage/brickwright-cycle168-integration6/run-scoped-remaining-chain.py"
+  },
+  "integrationRawDurableOutcomesMatched": 2,
+  "integrationBrowserMatchesOriginalCohortOutcomes": {
+    "chromium": {
+      "candidateID": "corpus-ldraw-expanded-50231",
+      "sourceSha256": "7edc6bb9b57ed93df3c3cfde8932e483b5fbeb8e3e78582dbbef1eafe94fa36b",
+      "meshSha256": "29e128704babb6f31cc6e03d28474051c3b8b7854912934d11880fa28ef6728e",
+      "previewSha256": "dd569f98318e7a9f176d32d0fbde73d358640fade48cec35c8153c8515acefca",
+      "project": "chromium",
+      "layout": "PASS viewport-contained dialog and fully visible insertion button",
+      "preview": "PASS exact bundled PNG and220x180 actual pixels",
+      "editor": "PASS editable mesh with complete canonical source/dependency/quality provenance",
+      "licence": "PASS complete exact CC-BY-4.0 and CAreadme texts",
+      "history": "PASS undo/redo and actual page restart",
+      "networkRequestsDuringOfflineInsertion": 0,
+      "externalNetworkRequests": 0
+    },
+    "ipad-webkit": {
+      "candidateID": "corpus-ldraw-expanded-50231",
+      "sourceSha256": "7edc6bb9b57ed93df3c3cfde8932e483b5fbeb8e3e78582dbbef1eafe94fa36b",
+      "meshSha256": "29e128704babb6f31cc6e03d28474051c3b8b7854912934d11880fa28ef6728e",
+      "previewSha256": "dd569f98318e7a9f176d32d0fbde73d358640fade48cec35c8153c8515acefca",
+      "project": "ipad-webkit",
+      "layout": "PASS viewport-contained dialog and fully visible insertion button",
+      "preview": "PASS exact bundled PNG and220x180 actual pixels",
+      "editor": "PASS editable mesh with complete canonical source/dependency/quality provenance",
+      "licence": "PASS complete exact CC-BY-4.0 and CAreadme texts",
+      "history": "PASS undo/redo and actual page restart",
+      "networkRequestsDuringOfflineInsertion": 0,
+      "externalNetworkRequests": 0
+    }
+  },
+  "changedSourceFilesBound": 364,
+  "builtFilesBound": 42,
+  "validationFiles": [
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/prepared-binding.json",
+      "sha256": "bcd0e11c1bbb556f60f77e0f1090c81cbe48339414580da5fb153dd99649a944",
+      "bytes": 1823
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/execution.json",
+      "sha256": "392a76ae5320804e40db82d49e1b701ac6aeacc5095a9d236ff5dd35b69be935",
+      "bytes": 9958
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/browserpath-resume-admission.json",
+      "sha256": "da775b66e86cbfeae66d27cdc93788a105d262bad608e3b60332d95ac742fca4",
+      "bytes": 541
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/write-allocation.json",
+      "sha256": "c6dd26775a4a13de7b39727366eb7ad6baf5e63926d9344ec4b8205f28133145",
+      "bytes": 494
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/tested-source-hashes.json",
+      "sha256": "caafbebcf464fa6cb160b0c7c9f40b1af4fe801f6b5d4f8db2d7fbb16fa47cd6",
+      "bytes": 59530
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/tested-built-hashes.json",
+      "sha256": "fc88cbffb53c08b2d521e59a4549545e8cdeeea0145972adf1b61d133f5520a8",
+      "bytes": 9123
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/browser-phase-4.json",
+      "sha256": "b4b062cd2d8f451a1287ace1a805a0c78d9baa484981030196be1f97b41ca33f",
+      "bytes": 7837
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/pr74-merge-binding.json",
+      "sha256": "7a145409cc23a879ac8b8bc3dfe48a1c17849e33b6820837021afc4b1b30158f",
+      "bytes": 390
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/overbroad-test-scope-correction.json",
+      "sha256": "e81e72a3b2698a479fd1659fd661795075f09880efee2104dd39c0b5764700d2",
+      "bytes": 3428
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/first-overbroad-robot-group-execution.json",
+      "sha256": "e8ebe570c157635663f08eb91aff78af9a9f5e9c58f8770eb111109a3983b6a2",
+      "bytes": 3790
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/first-overbroad-robot-group.log",
+      "sha256": "86efcb87b9985a21d69875cbdb8dcbf6d3235281aedd29e541eb453497f882e1",
+      "bytes": 918
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/run-scoped-remaining-chain.py",
+      "sha256": "8d6f9a9836e67af43d95aafb7e22fe419bd2a44533bdb50f1b6ddb6034d8013b",
+      "bytes": 7270
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/per-model/chromium-corpus-ldraw-expanded-50231.json",
+      "sha256": "d98cb7a356824e5ad46cc5d2b70b7df4d0559d033e64cc03abe8cefa4626fad2",
+      "bytes": 771
+    },
+    {
+      "path": "/mnt/storage/brickwright-cycle168-integration6/per-model/ipad-webkit-corpus-ldraw-expanded-50231.json",
+      "sha256": "f70db51012de6dcec6a928fef0e13034453002bc0789fa5371afb8c4b837148f",
+      "bytes": 774
+    }
+  ],
+  "mainCounts": [
+    293,
+    288,
+    332
+  ],
+  "qualifiedLocalCounts": [
+    299,
+    294,
+    338
+  ],
+  "newMainCredit": 0,
+  "nativeOrPreviewReplay": false,
+  "mismatches": []
+}
