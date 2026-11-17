@@ -23,3 +23,6 @@ Stop/release previously left preview poses active while the host reported Ready,
 
 
 Native trackpad host parity: the integrated Tauri app now uses the existing CAD native event contract. An isolated AppKit/WKWebView test showed that ordinary HTML scrolling works without the native router while precise scrolling over Blockly does not reach its SVG handler. The router delegates only handled editor input; unhandled events must be forwarded to their original NSWindow. Application-level redispatch suppressed ordinary panel scrolling in the native regression. The standalone macOS host now uses the same corrected window forwarding. The browser SDK runtime is unchanged by this native-host-only follow-up.
+
+
+Stopped replay follow-up: retain the last measured snapshot so Previous recorded frame starts at the end of the recording. Returning to Live with no mechanical worker restores the design instead of creating another hidden preview lock. A regression using actual 20 Hz recording intervals fails with the prior Stop/Live behavior; all 31 targeted tests now pass.

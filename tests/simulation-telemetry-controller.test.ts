@@ -149,3 +149,17 @@ it('returns to the editable design on manual Stop without requiring Reset',async
   expect(f.frameChanged).toHaveBeenLastCalledWith(null);
  }finally{f.dispose();}
 });
+
+it('inspects the end of a stopped recording and returns from replay to the editable design',async()=>{
+ const f=fixture();try{
+  const lease=await f.controller.acquireExternalClock();
+  for(const time of [.05,.1]){client.send.mockResolvedValueOnce(fullFrame(time));await lease.step([]);}
+  lease.release();f.frameChanged.mockClear();
+  f.controller.previousFrame();
+  expect(f.frameChanged).toHaveBeenLastCalledWith(fullFrame(.05));
+  f.controller.live();
+  expect(f.frameChanged).toHaveBeenLastCalledWith(null);
+  expect(f.controller.state.state).toBe('idle');
+  expect(f.controller.snapshot().time).toBe(.1);
+ }finally{f.dispose();}
+});

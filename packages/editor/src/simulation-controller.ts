@@ -66,7 +66,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
   // replay/export; a new preparation starts a fresh recording.
   epoch++;pause();client?.dispose();client=undefined;preparing=undefined;
   for(const [id,value]of settings)settings.set(id,{...value,speed:0});
-  frame=emptyFrame();replayTime=undefined;frameChanged(null);notify();
+  replayTime=undefined;frameChanged(null);notify();
  }
  async function travel(ref:string,kind:Drive,distance:number,speed:number){
   const motor=find(ref,kind);if(!Number.isFinite(distance)||Math.abs(distance)>(kind==='hinge'?36000:100000)||!Number.isFinite(speed)||Math.abs(speed)>(kind==='hinge'?720:1000)||speed===0)throw new Error(t('Invalid CAD motor travel command'));
@@ -128,7 +128,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
   previousFrame(){const saved=replay.previous(replayTime??frame.time);if(saved)seekReplay(saved.time);},
   playReplay(){if(program)interruptProgram?.();pause();const range=replay.range();if(range.count<2)return;let cursor=replayTime===undefined||replayTime>=range.last?range.first:replayTime,last=performance.now();replayPlaying=true;showReplay(cursor);notify();const tick=()=>{if(!replayPlaying||disposed)return;const now=performance.now();cursor=Math.min(range.last,cursor+Math.min(.1,Math.max(0,(now-last)/1000))*timeScale);last=now;showReplay(cursor);if(cursor>=range.last){stopReplay();notify();}else replayTimer=setTimeout(tick,16);};replayTimer=setTimeout(tick,16);},
   pauseReplay(){stopReplay();notify();},get replayPlaying(){return replayPlaying;},
-  live(){stopReplay();replayTime=undefined;frameChanged(frame);notify();},
+  live(){stopReplay();replayTime=undefined;frameChanged(client?frame:null);notify();},
   snapshot:()=>structuredClone(frame),
   get state(){return {state:preparing?'preparing':playing||externalOwner?'running':client||replayTime!==undefined?'paused':'idle',program,error,time:frame.time};},
   dispose(){if(disposed)return;if(program){program=false;interruptProgram?.();}reset();disposed=true;unsubscribe();document.removeEventListener('visibilitychange',hidden);window.removeEventListener('blur',blur);}
