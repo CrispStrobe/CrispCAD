@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Generate pre-qualified convex collision candidates for Atlas forklift rover parts.
+import {identityTransform} from '../packages/core/dist/index.js';
 import {atlasForkliftPartPrograms,createAtlasForkliftPart} from '../packages/editor/dist/atlas-forklift.js';
 import {compactSource,generateRobotCollisionAssets} from './lib/robot-collision-candidates.mjs';
 
@@ -8,21 +9,23 @@ if(process.argv.length!==3||(mode!=='--write'&&mode!=='--check')){
  throw Error('Usage: node scripts/generate-atlas-forklift-collisions.mjs --write|--check');
 }
 
+function evalPartExpr(part,partDocument,kernel,expression,compact=true){
+ const doc=partDocument(part);
+ doc.nodes[part].transform=identityTransform();
+ delete doc.nodes[part].physics.collisionAssembly;
+ const src=atlasForkliftPartPrograms[part].source.replace(/return[^]*$/,'return '+expression+';');
+ doc.nodes[part].program.source=compact?compactSource(src):src;
+ return kernel.evaluate(doc).bodies[0];
+}
+
 function chassisCandidates({kernel,extrudedCandidates,partDocument}){
- const evalExpr=expression=>{
-  const doc=partDocument('chassis');
-  doc.nodes.chassis.program.source=compactSource(atlasForkliftPartPrograms.chassis.source.replace(/return[^]*$/,'return '+expression+';'));
-  return kernel.evaluate(doc).bodies[0];
- };
  return [
-  ...extrudedCandidates(evalExpr('rearSkid'),-13.5,0),
-  ...extrudedCandidates(evalExpr('subtract(plate,ttBores,featherBores,mastBores,deckCutouts)'),0,4),
-  ...extrudedCandidates(evalExpr('subtract(featherBosses,featherBores)'),4,7),
+  ...extrudedCandidates(evalPartExpr('chassis',partDocument,kernel,'rearSkid'),-13.5,0),
+  ...extrudedCandidates(evalPartExpr('chassis',partDocument,kernel,'subtract(plate,ttBores,featherBores,mastBores,deckCutouts)'),0,4),
+  ...extrudedCandidates(evalPartExpr('chassis',partDocument,kernel,'subtract(featherBosses,featherBores)'),4,7),
  ];
 }
 
-// Decompose by manufacturing layers rather than slicing these mostly planar
-// parts into dozens of BSP slivers. Each result still passes live source CSG.
 function expressionMesh(part,expression,context,rotation){
  const doc=context.partDocument(part);
  const result=rotation?`rotate([${rotation}],${expression})`:expression;
@@ -51,6 +54,30 @@ function crateCandidates(context){
  return [[0,6.5],[6.5,8],[8,14],[14,22],[22,35]].flatMap(([min,max])=>context.extrudedCandidates(mesh,min,max));
 }
 
+
+function wheelCandidates({kernel,extrudedCandidates,partDocument}){
+ return [
+  ...extrudedCandidates(evalPartExpr('wheel',partDocument,kernel,'subtract(move([0,0,4],cylinder(30,8,24)),move([0,0,4],box(5.6,3.9,14)),spokes)',false),0,8),
+  ...extrudedCandidates(evalPartExpr('wheel',partDocument,kernel,'subtract(hub,move([0,0,10],box(5.6,3.9,16)))'),8,14),
+ ];
+}
+
+function cradleCandidates({kernel,extrudedCandidates,partDocument}){
+ return [
+  ...extrudedCandidates(evalPartExpr('cradle',partDocument,kernel,'subtract(foot,mountBores)'),0,2.8),
+  ...extrudedCandidates(evalPartExpr('cradle',partDocument,kernel,'union(rails,stop)'),2.8,8.8),
+ ];
+}
+
+function mastCandidates({kernel,extrudedCandidates,partDocument}){
+ return [
+  ...extrudedCandidates(evalPartExpr('mast',partDocument,kernel,'subtract(union(flange,leftRail,rightRail,midBrace,topBar),railSlots,topBores)'),0,4),
+  ...extrudedCandidates(evalPartExpr('mast',partDocument,kernel,'subtract(union(flange,leftRail,rightRail,topBar),railSlots,topBores)'),4,8),
+  ...extrudedCandidates(evalPartExpr('mast',partDocument,kernel,'flange'),8,14),
+ ];
+}
+
+
 await generateRobotCollisionAssets({
  mode,
  format:'brickwright-atlas-forklift-collision-candidates',
@@ -62,8 +89,11 @@ await generateRobotCollisionAssets({
  baseHulls:2*(464+127)+(304+32)+4*16, // Twin TT motors (casing+shaft), tilt MG90S (casing+shaft), and 4 O-ring tires
  customCandidates:{
   chassis:chassisCandidates,
-  forks:forksCandidates,
+  wheel:wheelCandidates,
   crate:crateCandidates,
-  wheel:({simplifiedCandidates,mesh})=>simplifiedCandidates(mesh,.05),
+  cradle:cradleCandidates,
+  mast:mastCandidates,
+  forks:forksCandidates,
+  carriage:({simplifiedCandidates,compact})=>simplifiedCandidates(compact,.08),
  },
 });

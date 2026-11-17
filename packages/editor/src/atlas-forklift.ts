@@ -80,7 +80,7 @@ return subtract(body,
   ${cuts(['mountBores','railSlots'])});`),
 
  wheel:program(`// Spoked 60 mm drive wheel with O-ring tread groove and Double-D TT motor press-fit bore.
-let rim=subtract(cylinder(30,8,24),move([0,0,4],torus(30,1.4,6,20)),move([0,0,4],box(5.6,3.9,14)));
+let rim=subtract(cylinder(30,8,24),move([0,0,4],torus(30,0.9,6,20)),move([0,0,4],box(5.6,3.9,14)));
 let hub=move([0,0,11],cylinder(8,6,20));
 let spokes=union(
   ${[0,60,120,180,240,300].map(deg=>{const rad=deg*Math.PI/180;return `move([${(18.5*Math.cos(rad)).toFixed(2)},${(18.5*Math.sin(rad)).toFixed(2)},4],cylinder(4.2,12,16))`;}).join(',\n  ')}

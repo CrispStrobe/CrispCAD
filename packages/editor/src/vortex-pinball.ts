@@ -5,12 +5,13 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {createDocument,defaultPartPhysics,defaultSimulationSettings,identityTransform,jointAtWorldFrame,t} from '@brickwright/cad-core';
 import type {CadDocument,CodeProgram,SolidNode,Vec3} from '@brickwright/cad-core';
 import {createMotorDocument} from './motor-models.js';
+import {vortexPinballCollisionAssembly} from './vortex-pinball-collisions.js';
 
 export const VORTEX_PINBALL_ID='robot-vortex-pinball';
 export const vortexPinballCatalog=[
  {id:VORTEX_PINBALL_ID,name:'Vortex 3-axis pinball arena',category:'Robots',description:'A PLA-printable tabletop pinball arena with two Adafruit 1143 micro-servo flippers (left A, right B), a linear shooter plunger slider (C), and a free playfield puck.',keywords:'robot pinball flipper plunger slider servo puck arena pla printable adafruit 1143',color:'#ec4899'},
  {id:'robot-vortex-pinball-print',name:'Vortex pinball PLA print layout',category:'Robots',description:'All original PLA parts for the Vortex pinball arena (walled playfield, left & right flippers, shooter plunger, puck), laid out in support-free print orientation.',keywords:'robot pinball pla arena flipper plunger puck print layout',color:'#ec4899'},
- {id:'robot-vortex-pinball-fit',name:'Vortex pinball spline & lane gauge',category:'Robots',description:'Micro-servo 1143 spline socket & shooter lane clearance coupon with 0.15–0.45 mm tolerance.',keywords:'robot pinball tolerance coupon servo spline lane fit gauge 1143',color:'#e8ab47'},
+ {id:'robot-vortex-pinball-fit',name:'Vortex pinball spline & lane gauge',category:'Robots',description:'Five-step micro-servo 1143 spline socket (0.15–0.55 mm clearance) & shooter lane clearance coupon.',keywords:'robot pinball tolerance coupon servo spline lane fit gauge 1143',color:'#e8ab47'},
 ];
 export const isVortexPinball=(id:string)=>vortexPinballCatalog.some(p=>p.id===id);
 export const vortexPinballDimensions=Object.freeze({
@@ -19,36 +20,82 @@ export const vortexPinballDimensions=Object.freeze({
 });
 
 const program=(source:string):CodeProgram=>({version:1,language:'brickwright-cad-script',parameters:{},source:'// Original Vortex 3-axis pinball arena part; BSD-3-Clause. Millimetres.\n'+source.trim()+'\n'});
+const cuts=(items:string[])=>items.join(',\n  ');
+
+const flipperProgram=(sign:1|-1)=>program(`param splineClearance:mm=0.2;
+// Flipper paddle with bottom Ø5.0 mm MG90S spline socket, M2 countersunk bore, and lightened arm.
+let hub=move([0,0,25],cylinder(6,10,20));
+let arm=move([${sign*11},0,26],box(30,8,8));
+let blade=move([${sign*22},0,13],box(8,8,26));
+let body=union(hub,arm,blade);
+let splineSocket=move([0,0,22],cylinder((5.0 mm + splineClearance)/2,4.2,24));
+let screwBore=move([0,0,25],cylinder(1.15,12,16));
+let screwCs=move([0,0,28.8],cylinder(2.3,2.8,16));
+let armBores=union(
+  move([${sign*10},0,26],rotate([90,0,0],cylinder(1.8,10,12))),
+  move([${sign*17},0,26],rotate([90,0,0],cylinder(1.8,10,12)))
+);
+return subtract(body,
+  ${cuts(['splineSocket','screwBore','screwCs','armBores'])});`);
 
 export const vortexPinballPartPrograms={
- arena:program(`let deck=move([0,0,3],box(120,160,6));
-let leftWall=move([-57,0,13],box(6,160,14));
-let rightWall=move([57,0,13],box(6,160,14));
-let topWall=move([0,77,13],box(108,6,14));
-let bottomWall=move([0,-77,13],box(108,6,14));
-let bumper=move([0,34,13],box(16,16,14));
-return union(deck,leftWall,rightWall,topWall,bottomWall,bumper);`),
-
- leftFlipper:program(`let arm=move([11,0,26],box(30,8,8));
-let blade=move([22,0,12],box(8,8,24));
-return union(arm,blade);`),
-
- rightFlipper:program(`let arm=move([-11,0,26],box(30,8,8));
-let blade=move([-22,0,12],box(8,8,24));
-return union(arm,blade);`),
-
- plunger:program(`return move([0,0,7],box(12,16,14));`),
-
- puck:program(`return move([0,0,7],cylinder(8,14,24));`),
-
- fit:program(`let bar=move([0,0,2],box(68,22,4));
-let holes=union(
-  move([-22,0,2],cylinder(2.4,10,16)),
-  move([-8,0,2],cylinder(2.55,10,16)),
-  move([6,0,2],cylinder(2.7,10,16)),
-  move([22,0,2],box(16.3,16.3,10))
+ arena:program(`param m3Bore:mm=3.4;
+// Pinball playfield deck with M3 mounting bores, upper-left Feather M2.5 carrier standoffs,
+// flipper M2 pilot holes, and bumper post M3 bore.
+let deck=move([0,0,3],box(120,160,6));
+let leftWall=move([-57,0,12],box(6,160,16));
+let rightWall=move([57,0,12],box(6,160,16));
+let topWall=move([0,77,12],box(108,6,16));
+let bottomWall=move([0,-77,12],box(108,6,16));
+let bumper=move([0,34,12],box(16,16,16));
+let featherBosses=union(
+  ${[[-42.43,18.6],[-42.43,69.4],[-19.57,18.6],[-19.57,69.4]].map(([x,y])=>`move([${x},${y},7.5],cylinder(2.6,3,16))`).join(',\n  ')}
 );
-return subtract(bar,holes);`),
+let body=union(deck,leftWall,rightWall,topWall,bottomWall,bumper,featherBosses);
+let cornerBores=union(
+  ${[[-49,-69],[49,-69],[-49,69],[49,69]].flatMap(([x,y])=>[
+   `move([${x},${y},3],cylinder(m3Bore/2,8,16))`,
+   `move([${x},${y},5],cylinder(3.1,3,16))`,
+  ]).join(',\n  ')},
+  move([0,34,10],cylinder(m3Bore/2,24,16))
+);
+let featherBores=union(
+  ${[[-42.43,18.6],[-42.43,69.4],[-19.57,18.6],[-19.57,69.4]].map(([x,y])=>`move([${x},${y},5],cylinder(1.1,12,12))`).join(',\n  ')}
+);
+let flipperM2Bores=union(
+  move([-28,-58.4,3],cylinder(1.1,8,12)),
+  move([-28,-31.3,3],cylinder(1.1,8,12)),
+  move([28,-58.4,3],cylinder(1.1,8,12)),
+  move([28,-31.3,3],cylinder(1.1,8,12))
+);
+return subtract(body,
+  ${cuts(['cornerBores','featherBores','flipperM2Bores'])});`),
+
+ leftFlipper:flipperProgram(1),
+
+ rightFlipper:flipperProgram(-1),
+
+ plunger:program(`// Linear shooter plunger block with top M2.5 drive bore.
+let block=move([0,0,7],box(12,16,14));
+let bore=move([0,0,11],cylinder(1.35,8,12));
+return subtract(block,bore);`),
+
+ puck:program(`// Printable pinball puck with top alignment dimple.
+let disc=move([0,0,7],cylinder(8,14,24));
+let dimple=move([0,0,13.6],cylinder(3.0,1.2,16));
+return subtract(disc,dimple);`),
+
+ fit:program(`// Five-step servo spline (0.15..0.55 mm) & shooter lane clearance coupon.
+let bar=hull(move([-32,0,2],cylinder(11,4,24)),move([32,0,2],cylinder(11,4,24)));
+let endBlock=move([40,0,2],box(24,24,4));
+let sockets=union(
+  ${[0.15,0.25,0.35,0.45,0.55].map((c,i)=>`move([${-28+i*14},1,2.2],cylinder((5.0 mm + ${c} mm)/2,4.4,20))`).join(',\n  ')}
+);
+let dots=union(
+  ${[0.15,0.25,0.35,0.45,0.55].flatMap((_,i)=>Array.from({length:i+1},(__,d)=>`move([${-30+i*14+d*1.3},-5.2,3.7],cylinder(0.45,0.9,10))`)).join(',\n  ')}
+);
+let laneTest=move([40,0,2],box(16.3,16.3,10));
+return subtract(union(bar,endBlock),sockets,dots,laneTest);`),
 } as const;
 
 export type VortexPinballPart=keyof typeof vortexPinballPartPrograms;
@@ -71,32 +118,8 @@ const colors:Record<VortexPinballPart,string>={
  fit:'#e8ab47',
 };
 
-type CollisionPiece={positions:number[];indices:number[]};
-const boxPiece=(cx:number,cy:number,cz:number,sx:number,sy:number,sz:number):CollisionPiece=>{
- const x0=cx-sx/2,x1=cx+sx/2,y0=cy-sy/2,y1=cy+sy/2,z0=cz-sz/2,z1=cz+sz/2;
- return {
-  positions:[x0,y0,z0,x1,y0,z0,x1,y1,z0,x0,y1,z0,x0,y0,z1,x1,y0,z1,x1,y1,z1,x0,y1,z1],
-  indices:[0,2,1,0,3,2,4,5,6,4,6,7,0,1,5,0,5,4,1,2,6,1,6,5,2,3,7,2,7,6,3,0,4,3,4,7],
- };
-};
-
-const partCollisions:Partial<Record<VortexPinballPart,CollisionPiece[]>>={
- arena:[
-  boxPiece(0,0,3,120,160,6),
-  boxPiece(-57,0,13,6,160,14),
-  boxPiece(57,0,13,6,160,14),
-  boxPiece(0,77,13,108,6,14),
-  boxPiece(0,-77,13,108,6,14),
-  boxPiece(0,34,13,16,16,14),
- ],
- leftFlipper:[boxPiece(11,0,26,30,8,8),boxPiece(22,0,12,8,8,24)],
- rightFlipper:[boxPiece(-11,0,26,30,8,8),boxPiece(-22,0,12,8,8,24)],
- plunger:[boxPiece(0,0,7,12,16,14)],
- puck:[boxPiece(0,0,7,14,14,14)],
-};
-
 function addPart(doc:CadDocument,part:VortexPinballPart,id:string,position:Vec3,rotation:Vec3=[0,0,0],motion:'dynamic'|'static'='dynamic',friction=.05,restitution=.4){
- const collisionAssembly=partCollisions[part]?.map(piece=>({positions:[...piece.positions],indices:[...piece.indices]}));
+ const collisionAssembly=vortexPinballCollisionAssembly(part);
  const node:SolidNode={
   id,
   name:t(names[part]),
@@ -196,7 +219,7 @@ export function createVortexPinballDocument(id=VORTEX_PINBALL_ID):CadDocument{
 /** Lightweight catalogue silhouette. The inserted assembly uses the real source model. */
 export function vortexPinballPreview(id:string):THREE.BufferGeometry{
  const geometries:THREE.BufferGeometry[]=[];
- if(id==='robot-vortex-pinball-fit')geometries.push(new THREE.BoxGeometry(68,22,4).translate(0,0,2));
+ if(id==='robot-vortex-pinball-fit')geometries.push(new THREE.BoxGeometry(96,24,4).translate(4,0,2));
  else if(id==='robot-vortex-pinball-print'){
   geometries.push(
    new THREE.BoxGeometry(120,160,6).translate(-20,0,3),
@@ -208,7 +231,7 @@ export function vortexPinballPreview(id:string):THREE.BufferGeometry{
  }else{
   geometries.push(
    new THREE.BoxGeometry(120,160,6).translate(0,0,3),
-   new THREE.BoxGeometry(16,16,14).translate(0,34,13),
+   new THREE.BoxGeometry(16,16,16).translate(0,34,12),
    new THREE.BoxGeometry(30,8,8).translate(-17,-50,39),
    new THREE.BoxGeometry(30,8,8).translate(17,-50,39),
    new THREE.BoxGeometry(12,16,14).translate(44,-56,15),
