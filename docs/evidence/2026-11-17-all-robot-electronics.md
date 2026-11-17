@@ -46,3 +46,11 @@ Nova's first added drive proxy touched the ground and failed its travel gate;
 raising its clearance fixed the failure without changing the original 5 mm travel
 or payload gates. The final browser/co-simulation/native receipts distinguish
 those scopes and record their exact source commits. No Actions were requested.
+
+The isolated SDK WebKit check now passes all 22 complete views with no browser or
+host errors. Its legacy Atlas action preserves the custom title, increments the
+revision once, restores the exact prior serialized document on Undo and installs
+hardware again on Redo. The committed verifier regenerates its isolated fixtures
+and never opens the user's app profile. Updated Atlas/Mantis/Nova screenshots are
+in `docs/images/`. The complete 27-suite local selection passed 240/240, and
+German message/placeholder checks passed (1,775 messages).
