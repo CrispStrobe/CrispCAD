@@ -170,7 +170,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             view.routeCameraWheel(payload) { [weak self] handled in
                 guard let self, !handled else { return }
                 self.forwardingWheel = true
-                NSApp.sendEvent(event)
+                event.window?.sendEvent(event)
                 self.forwardingWheel = false
             }
             return nil
