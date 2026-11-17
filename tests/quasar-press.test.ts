@@ -97,7 +97,7 @@ it('indexes a real blank under the raised ram and ejects it clear of the dial',a
   world.setSliderMotor('eject-c',0,.05);advance(.5);
   expect(Math.abs(world.sliderPosition('eject-c'))).toBeLessThan(1);
   expect(blankCenter()[0]).toBeGreaterThan(25);
-  expect(blankCenter()[2]).toBeLessThan(20); // off the dial and down on the receiving base
+  expect(blankCenter()[2]).toBeLessThan(20); // off the dial and down on the work surface
   expect(blankCenter()[2]).toBeGreaterThan(5);
  }finally{world.dispose();}
 },420000);
