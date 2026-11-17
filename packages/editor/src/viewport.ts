@@ -21,6 +21,7 @@ import type { GeometryResult } from '@brickwright/cad-geometry';
 import { TOUCH_SLOP_PX, createTouchTracker } from './vendor/touch-gestures.js';
 import {displayGridSpacing,workplaneGridGeometry,type GridDisplay} from './workplane-grid.js';
 import {surfaceGeometry} from './surface-geometry.js';
+import {componentAppearance} from './component-appearance.js';
 import {mountResizeControls} from './resize-controls.js';
 import type {ResizeFrame} from './resize-math.js';
 import {resizedTransforms} from './resize-math.js';
@@ -315,9 +316,11 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   function update(result: GeometryResult) {
     cancelTransform(); clear();
     for (const body of result.bodies) {
-      const geometry=surfaceGeometry(body.positions,body.indices);
-      const material = new THREE.MeshStandardMaterial({ color: body.hole?'#9eb8c8':body.color,transparent:!!body.hole,opacity:body.hole?.3:1,depthWrite:!body.hole, metalness: 0.08, roughness: 0.65, flatShading: false });
-      const mesh = new THREE.Mesh(geometry, material); mesh.userData.id = body.id;meshBounds.register(mesh,body.positions,body.bounds);
+      const appearance=body.hole?undefined:componentAppearance(session.state.document.nodes[body.id],session.state.document.nodes);
+      const geometry=appearance??surfaceGeometry(body.positions,body.indices);
+      const material = new THREE.MeshStandardMaterial({ color: body.hole?'#9eb8c8':appearance?'#ffffff':body.color,vertexColors:!!appearance,transparent:!!body.hole,opacity:body.hole?.3:1,depthWrite:!body.hole, metalness: 0.08, roughness: 0.65, flatShading: false });
+      const mesh = new THREE.Mesh(geometry, material); mesh.userData.id = body.id;
+      if(appearance){geometry.computeBoundingBox();meshBounds.register(mesh,geometry.getAttribute('position').array as Float32Array,{min:geometry.boundingBox!.min.toArray(),max:geometry.boundingBox!.max.toArray()});}else meshBounds.register(mesh,body.positions,body.bounds);
       const outline = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 28), new THREE.LineBasicMaterial({ color: '#172a36', transparent: true, opacity: 0.8 })); mesh.add(outline);
       meshes.set(body.id, mesh); outlines.set(body.id, outline); scene.add(mesh);
     } setSelection(selected); draw();

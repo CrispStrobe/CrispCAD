@@ -31,7 +31,7 @@ it('ships an editable A/B/C steerable rover with TT drive motors, 1143 micro-ser
   expect(rotatePoint(joint.axisA,a.rotation)).toEqual(rotatePoint(joint.axisB,b.rotation));
  }
  const provenance=doc.provenance!.records;
- expect(provenance).toHaveLength(2);
+ expect(provenance).toHaveLength(3);
  expect(provenance.every(r=>r.asset.licence.spdx==='MIT')).toBe(true);
  expect(validateModelLibraryCatalogue({format:'brickwright-model-library',version:1,assets:provenance.map(p=>p.asset)}).valid).toBe(true);
  expect(doc.roots.filter(id=>doc.nodes[id].kind==='code'&&doc.nodes[id].physics?.sourcePreset===STEERABLE_ROVER_ID)).toHaveLength(12);

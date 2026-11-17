@@ -1,3 +1,4 @@
+import {addComponentAppearance} from './component-provenance.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit motor & micro-servo derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -347,6 +348,7 @@ export function createSteerableRoverDocument(id=STEERABLE_ROVER_ID):CadDocument{
   fixed(doc,'deck',key);
  }
 
+ addComponentAppearance(doc,'feather-envelope','visual-feather-rp2040');
  doc.tracers=[{id:'rover-path',bodyId:'chassis',point:[0,0,4],color:'#38a99a'}];
  doc.simulation={...defaultSimulationSettings(),...doc.simulation,selfCollisions:false};
  return doc;
