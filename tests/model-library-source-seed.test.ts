@@ -38,7 +38,7 @@ it('admits only the supported seed, retains exact original bytes and URL, and ex
 it('bundles every reviewed corpus entry exactly once alongside the other reviewed cohorts',()=>{
   const allIds=bundledCorpus.catalogue.assets.map(asset=>asset.id);
   expect(new Set(allIds).size).toBe(allIds.length);
-  expect(allIds.filter(id=>id.startsWith('corpus-angelo-')).sort()).toEqual(corpusManifest.assets.map((asset:any)=>asset.id).sort());
+  expect(allIds.filter(id=>id.startsWith('corpus-angelo-')||id==='corpus-smooth-prim-authored-default').sort()).toEqual(corpusManifest.assets.map((asset:any)=>asset.id).sort());
 });
 
 it.each(corpusManifest.assets)('bundles and inserts reviewed corpus source $id with original identity and attribution',async(raw:any)=>{
@@ -47,14 +47,15 @@ it.each(corpusManifest.assets)('bundles and inserts reviewed corpus source $id w
     expect(asset).toBeDefined();expect(previews.has(asset.original.sha256)).toBe(true);
     const bytes=localFiles.get(asset.original.path!)!;
     expect(bytes).toEqual(new Uint8Array(read(asset.original.path!)));
-    expect(licenceTexts.get(asset.id)).toBe(read('evidence/corpus-selection-MIT-LICENSE.txt').toString());
+    const expectedLicence=read(raw.licence.spdx==='CC0-1.0'?'evidence/smooth-prim-CC0-LICENSE.txt':'evidence/corpus-selection-MIT-LICENSE.txt').toString();
+    expect(licenceTexts.get(asset.id)).toBe(expectedLicence);
     const session=createCadSession(),before=session.serialize();
     await insertModelLibrarySource(session,catalogue,{assetId:asset.id,file:'original'},bytes,{sourceFiles:localFiles,evaluate:kernel.evaluate,modificationNotes:'Default source geometry; colour omitted by translator; coordinates preserved.'});
     expect(kernel.evaluate(session.state.document).volume).toBeGreaterThan(0);
     const record=session.state.document.provenance!.records[0];
     expect(record.selectedFile).toEqual(asset.original);expect(record.asset.sourceRevision!.commit).toBe(raw.version);
     const sidecar=await createModelAttributionSidecar(session.state.document,{filename:'selected.stl',format:'stl',bytes:new Uint8Array([1]),modificationNotes:'Test output identity only.'});
-    expect(sidecar.records[0].asset.licence.attribution).toContain(read('evidence/corpus-selection-MIT-LICENSE.txt').toString().replace(/\s+/g,' ').trim());
+    expect(sidecar.records[0].asset.licence.attribution).toContain(raw.licence.spdx==='CC0-1.0'?asset.licence.attribution:expectedLicence.replace(/\s+/g,' ').trim());
     const saved=session.serialize();expect(createCadSession(JSON.parse(saved)).serialize()).toBe(saved);
     session.undo();expect(session.serialize()).toBe(before);session.redo();expect(session.serialize()).toBe(saved);session.dispose();
 });
