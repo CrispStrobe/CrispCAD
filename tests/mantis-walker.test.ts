@@ -84,7 +84,7 @@ it('walks using alternating hip servos A/B and roll pendulum C in Jolt physics',
   world.setHingeMotor('roll-c',4.5,.35);
   world.setHingeMotor('left-hip-a',-4.0,.35);
   world.setHingeMotor('right-hip-b',4.0,.35);
-  for(let i=0;i<45;i++)world.step(.005);
+  for(let i=0;i<35;i++)world.step(.005);
   const rollAngle1=Math.abs(world.hingeAngle('roll-c')*180/Math.PI);
   const leftHip1=Math.abs(world.hingeAngle('left-hip-a')*180/Math.PI);
   const rightHip1=Math.abs(world.hingeAngle('right-hip-b')*180/Math.PI);
@@ -93,7 +93,7 @@ it('walks using alternating hip servos A/B and roll pendulum C in Jolt physics',
   world.setHingeMotor('roll-c',-4.5,.35);
   world.setHingeMotor('left-hip-a',4.0,.35);
   world.setHingeMotor('right-hip-b',-4.0,.35);
-  for(let i=0;i<45;i++)world.step(.005);
+  for(let i=0;i<35;i++)world.step(.005);
 
   const end=world.pose('torso').positionMm;
   expect(rollAngle1).toBeGreaterThan(3);

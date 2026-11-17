@@ -322,8 +322,8 @@ export function createSteerableRoverDocument(id=STEERABLE_ROVER_ID):CadDocument{
   id:battery,
   name:t('Purchased AA pack envelope'),
   kind:'box',
-  size:[66.1,72.4,21.6],
-  transform:{...identityTransform(),position:[-85,0,28.3]},
+  size:[62,30,30],
+  transform:{...identityTransform(),position:[-5,0,32.5]},
   color:'#465461',
   physics:{...defaultPartPhysics(),densityKgM3:1400,restitution:.02},
  };
@@ -363,7 +363,7 @@ export function steerableRoverPreview(id:string):THREE.BufferGeometry{
    new THREE.BoxGeometry(155,106,4).translate(-47.5,0,15.5),
    new THREE.BoxGeometry(107,60,3).translate(-21.5,0,76),
    new THREE.BoxGeometry(58,36,3).translate(59,0,76),
-   new THREE.BoxGeometry(66,72,22).translate(-85,0,28.3),
+   new THREE.BoxGeometry(62,30,30).translate(-5,0,32.5),
    new THREE.BoxGeometry(14,25,40).translate(75,0,48),
   );
   for(const y of [-70.5,70.5])geometries.push(new THREE.CylinderGeometry(31.5,31.5,8,32).translate(-35,y,31.5));
