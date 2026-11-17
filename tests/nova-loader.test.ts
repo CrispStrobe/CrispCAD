@@ -81,15 +81,23 @@ it('drives wheels A/B, tilts bucket C, and pushes payload in Jolt physics simula
   const c0=world.pose('chassis').positionMm;
   const p0=world.pose('payload').positionMm;
 
-  world.setHingeMotor('drive-left-a',-8,.35);
-  world.setHingeMotor('drive-right-b',-8,.35);
+  // Positive rotation about +Y drives toward the payload at +X.
+  world.setHingeMotor('drive-left-a',8,.35);
+  world.setHingeMotor('drive-right-b',8,.35);
   world.setHingeMotor('bucket-c',3.5,.25);
-  for(let i=0;i<150;i++)world.step(.005);
+  const wheelIds=['drive-left-a','drive-right-b'];
+  const previous=wheelIds.map(id=>world.hingeAngle(id)),travel=[0,0];
+  // Jolt reports principal angles. Near a full revolution, a moving wheel
+  // returns close to zero; measure continuous signed travel, as the worker does.
+  for(let i=0;i<150;i++){
+   world.step(.005);
+   wheelIds.forEach((id,index)=>{const angle=world.hingeAngle(id);travel[index]+=Math.atan2(Math.sin(angle-previous[index]),Math.cos(angle-previous[index]));previous[index]=angle;});
+  }
 
   const c1=world.pose('chassis').positionMm;
   const p1=world.pose('payload').positionMm;
-  expect(Math.abs(world.hingeAngle('drive-left-a')*180/Math.PI)).toBeGreaterThan(20);
-  expect(Math.abs(world.hingeAngle('drive-right-b')*180/Math.PI)).toBeGreaterThan(20);
+  expect(travel[0]*180/Math.PI).toBeGreaterThan(180);
+  expect(travel[1]*180/Math.PI).toBeGreaterThan(180);
   expect(Math.abs(world.hingeAngle('bucket-c')*180/Math.PI)).toBeGreaterThan(8);
   expect(Math.hypot(c1[0]-c0[0],c1[1]-c0[1])).toBeGreaterThan(5);
   expect(Math.hypot(p1[0]-p0[0],p1[1]-p0[1])).toBeGreaterThan(2);
