@@ -74,6 +74,11 @@ it('raises the pallet crate with slider A, tilts forks via servo C, and drives i
  const doc=createAtlasForkliftDocument();
  const geometry=kernel.evaluate(doc);
  const prepared=await prepareDocumentCollisions(doc,geometry,kernel);
+ // Bound the contact work at the fork/crate interface. A BSP fallback here
+ // previously passed geometry checks but made the live example stall.
+ expect(prepared.get('forks')!.hulls.length).toBeLessThanOrEqual(64);
+ expect(prepared.get('pallet-crate')!.hulls.length).toBeLessThanOrEqual(16);
+ for(const id of ['forks','pallet-crate'])expect(prepared.get(id)!.certificate.strategy).toBe('supplied');
  const world=await createPhysicsWorld(doc,geometry,prepared,{J,ground:true,groundFriction:.8,groundRestitution:.02});
  try{
   const crateZ0=world.pose('pallet-crate').positionMm[2];
