@@ -95,3 +95,21 @@ it('slides rail A, pans B, tilts C, and knocks beacon target in Jolt physics sim
   world.dispose();
  }
 },420000);
+
+// The short velocity-motor demonstration above does not exercise the coupled
+// position loop. Keep both commanded axes settled through sustained rail drive.
+it('settles coupled pan and tilt position servos during sustained rail actuation',async()=>{
+ const doc=createPolarisTrackerDocument(),source=JSON.stringify(doc),geometry=kernel.evaluate(doc);
+ const prepared=await prepareDocumentCollisions(doc,geometry,kernel);
+ const world=await createPhysicsWorld(doc,geometry,prepared);let lateError=0;
+ try{
+  for(let i=0;i<1200;i++){
+   world.applyJointImpulse('rail-a',.001);
+   for(const id of ['pan-b','tilt-c'])world.setHingeServo(id,Math.PI/12,.35);
+   world.step(.005);
+   if(i>=1000)for(const id of ['pan-b','tilt-c'])lateError=Math.max(lateError,Math.abs(world.hingeAngle(id)*180/Math.PI-15));
+  }
+  expect(lateError).toBeLessThan(.5);
+  expect(JSON.stringify(doc)).toBe(source);
+ }finally{world.dispose();}
+},60000);

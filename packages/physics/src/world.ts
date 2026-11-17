@@ -40,6 +40,21 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
  // Authored robot mode: connector limits control internal travel. Loose objects
  // and ground remain independent collision participants.
  if(sceneSettings.selfCollisions===false){const parent=new Map(meshes.map(mesh=>[mesh.id,mesh.id]));const root=(id:string):string=>{const p=parent.get(id)!;if(p===id)return id;const r=root(p);parent.set(id,r);return r;};for(const joint of doc.joints??[])parent.set(root(joint.bodyB),root(joint.bodyA));const links=[...assemblies.keys()];for(let i=0;i<links.length;i++)for(let j=i+1;j<links.length;j++)if(root(links[i])===root(links[j]))group.DisableCollision(bodyIndex.get(links[i])!,bodyIndex.get(links[j])!);}
+ // Serial position axes can have very different inertias. Give
+ // their joint rows enough iterations to converge instead of injecting a
+ // new velocity correction into an under-solved chain on every 5 ms tick.
+ // Independent motors and contact iterations keep their existing settings.
+ const servoParents=new Map([...assemblies.keys()].map(id=>[id,id]));
+ const servoRoot=(id:string):string=>{const p=servoParents.get(id)!;if(p===id)return id;const r=servoRoot(p);servoParents.set(id,r);return r;};
+ const servoComponent=(id:string)=>servoRoot(fixedRoot(id));
+ for(const joint of doc.joints??[])servoParents.set(servoComponent(joint.bodyB),servoComponent(joint.bodyA));
+ const positionAxes=(doc.joints??[]).filter(j=>j.kind==='hinge'&&j.limits);
+ const serialComponents=new Set(positionAxes.filter(a=>positionAxes.some(b=>a.id!==b.id&&fixedRoot(a.bodyB)===fixedRoot(b.bodyA))).map(j=>servoComponent(j.bodyA)));
+ const tunedComponents=new Set<string>();
+ const tuneSerialServo=(bodyId:string)=>{const component=servoComponent(bodyId);if(!serialComponents.has(component)||tunedComponents.has(component))return;tunedComponents.add(component);
+  const axes=positionAxes.filter(j=>servoComponent(j.bodyA)===component).length,iterations=Math.min(320,80*axes);
+  for(const joint of doc.joints??[])if(servoComponent(joint.bodyA)===component)constraints.get(joint.id)?.SetNumVelocityStepsOverride(iterations);
+ };
  const originalExcluded=new Set((doc.joints??[]).map(j=>pairKey(j.bodyA,j.bodyB))),separatedHingePairs=new Set<string>();
  const separatedFrames=new Map<string,{bodyA:string;bodyB:string;anchorA:Vec3;anchorB:Vec3;axisA:Vec3;axisB:Vec3;radiusB:number}>();
  for(const joint of doc.joints??[]){if(joint.kind!=='hinge'||joint.collideConnected===false)continue;const a=fixedRoot(joint.bodyA),b=fixedRoot(joint.bodyB),key=pairKey(a,b);if(a===b||separatedHingePairs.has(key))continue;const tr=doc.nodes[joint.bodyA].transform,tb=doc.nodes[joint.bodyB].transform,anchor=rotate(joint.anchorA.map((v,i)=>v*tr.scale[i]),tr.rotation).map((v,i)=>v+tr.position[i]) as Vec3,axis=rotate(joint.axisA,tr.rotation) as Vec3,otherAnchor=rotate(joint.anchorB.map((v,i)=>v*tb.scale[i]),tb.rotation).map((v,i)=>v+tb.position[i]),otherAxis=rotate(joint.axisB,tb.rotation),members=(root:string)=>assemblies.get(root)!.map(mesh=>({id:mesh.id,hulls:prepared.get(mesh.id)!.hulls}));
@@ -177,6 +192,7 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
   setHingeServo(id:string,angleRad:number,maxTorqueNm:number){
    if(disposed||!Number.isFinite(angleRad)||Math.abs(angleRad)>Math.PI*2||!Number.isFinite(maxTorqueNm)||maxTorqueNm<=0||maxTorqueNm>100||doc.joints?.find(j=>j.id===id)?.kind!=='hinge')throw new Error(t('Invalid position servo target'));
    const joint=doc.joints!.find(j=>j.id===id)!,hinge=J.castObject(constraints.get(id),J.HingeConstraint),motor=hinge.GetMotorSettings();
+   tuneSerialServo(joint.bodyA);
    motor.mMinTorqueLimit=-maxTorqueNm;motor.mMaxTorqueLimit=maxTorqueNm;
    // Ideal internal position loop. Native velocity constraints enforce the
    // torque bound implicitly; measuring again each coupled step closes the loop.

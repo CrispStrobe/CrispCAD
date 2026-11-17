@@ -1164,3 +1164,11 @@ A consecutive isolated Atlas comparison reduced convex pieces from 3,624 to
 1,811, collision preprocessing from 8.38 to 3.63 seconds, and one simulated second
 from 1.92 to 0.96 wall seconds. These measurements exclude the electrical solver
 and GUI. The Lite receipt records the separate built-app browser measurements.
+
+Serial bounded servo axes now receive a higher native joint-iteration budget on
+first position control (80 per bounded axis, capped at 320), scoped to their
+connected mechanism. Independent/star-topology actuators and contact iterations
+retain the existing settings. This addresses under-converged coupled axes without
+changing the position gain, speed/torque bounds or 200 Hz timestep. Polaris has a
+six-second rail-drive/pan/tilt regression requiring under 0.5 degrees late error;
+the release-backend diagnostic improved from about 43 degrees to 0.06 degrees.
