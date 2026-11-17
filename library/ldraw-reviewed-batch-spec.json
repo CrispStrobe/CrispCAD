@@ -59068,6 +59068,751 @@
           "faces": 162
         }
       }
+    },
+    {
+      "rootPath": "parts/7930.dat",
+      "files": [
+        {
+          "path": "parts/7930.dat",
+          "bytes": 2756,
+          "sha256": "1792a50a70a606418a683b2ee970b387d86adaa0440383e7db87ed3e4db538c9",
+          "crc32": "fcee82b7",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Part UPDATE 2026-07",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cylc.dat",
+          "bytes": 476,
+          "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd",
+          "crc32": "f9c76187",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Alex Taylor [anathema]",
+          "role": "Primitive UPDATE 2009-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4edge.dat",
+          "bytes": 1084,
+          "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+          "crc32": "ab561dc1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4disc.dat",
+          "bytes": 1137,
+          "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+          "crc32": "53bcfa1e",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2002-02",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cyli.dat",
+          "bytes": 2687,
+          "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+          "crc32": "12cc6c75",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4ring2.dat",
+          "bytes": 1628,
+          "sha256": "6fb38804b1f5e9bee8c0b80caf1397b09454fc58b048dc19045b6f37c8762ab0",
+          "crc32": "b004f7bb",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2009-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/4-4cylo.dat",
+          "bytes": 383,
+          "sha256": "d6ca97ee2e75918b3309a5c88aafcd2455b3a316f7cef8963517c19f1d86b38f",
+          "crc32": "f4c91151",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Mark Kennedy [mkennedy]",
+          "role": "Primitive UPDATE 2010-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/2-4cylo.dat",
+          "bytes": 387,
+          "sha256": "4fa9f597d775c7f15e3fc66f60e20d914134d13004b485488b7dbff684776232",
+          "crc32": "3caebe3d",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Max Martin Richter [MMR1988]",
+          "role": "Primitive UPDATE 2010-03",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/2-4edge.dat",
+          "bytes": 683,
+          "sha256": "665400f76566b161c28303cdadce40d17d979a8ff9a8a133675af2d17fbe6763",
+          "crc32": "06d0e869",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2017-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/2-4cyli.dat",
+          "bytes": 1543,
+          "sha256": "d486780f0f84893899d9eadcd13150f13a42e15e77a3cda38cdf24ded98862c6",
+          "crc32": "871b109d",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2005-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/2-4chrd.dat",
+          "bytes": 490,
+          "sha256": "3b0dfcf2cb881fae0acfe1e53b703104768878636477e540d0c893fc3fd87f8f",
+          "crc32": "6ad0d237",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Philippe Hurbain [Philo]",
+          "role": "Primitive UPDATE 2014-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box3u4a.dat",
+          "bytes": 545,
+          "sha256": "15463f41f9947dd75486dc7af3231b1037704f1b654c2555e3ba705817a2db75",
+          "crc32": "5582a934",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "Niels Karsdorp [nielsk]",
+          "role": "Primitive UPDATE 2009-01",
+          "licenceAllowed": true
+        },
+        {
+          "path": "p/box4.dat",
+          "bytes": 948,
+          "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e",
+          "crc32": "13bb3ba1",
+          "grant": "Licensed under CC BY 4.0 : see CAreadme.txt",
+          "author": "James Jessiman",
+          "role": "Primitive UPDATE 2012-01",
+          "licenceAllowed": true
+        }
+      ],
+      "expectedMeshSha256": "87678ead0b6b9b8eca2d90df23a4978255883ad4556fd318eabde20e1afc1ba9",
+      "asset": {
+        "id": "corpus-ldraw-expanded-7930",
+        "title": "LDraw Door  1 x  3 x  4",
+        "author": "James Jessiman",
+        "version": "c4053b729604eebe7c042273c805692def72760e",
+        "sourceRevision": {
+          "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+          "commit": "c4053b729604eebe7c042273c805692def72760e",
+          "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/parts/7930.dat"
+        },
+        "licence": {
+          "spdx": "CC-BY-4.0",
+          "scope": "asset",
+          "attribution": "James Jessiman. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file parts/7930.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/parts/7930.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+          "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+          "localEvidence": [
+            {
+              "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+              "bytes": 18657,
+              "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+              "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+            },
+            {
+              "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+              "bytes": 4151,
+              "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+              "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+            }
+          ],
+          "capturedOn": "2026-11-16",
+          "review": "accepted",
+          "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+        },
+        "original": {
+          "path": "sources/ldraw-expanded-20261109/parts/7930.dat",
+          "bytes": 2756,
+          "sha256": "1792a50a70a606418a683b2ee970b387d86adaa0440383e7db87ed3e4db538c9",
+          "format": "ldraw",
+          "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/parts/7930.dat"
+        },
+        "derivatives": [
+          {
+            "path": "meshes/ldraw/7930.stl",
+            "bytes": 12884,
+            "sha256": "87678ead0b6b9b8eca2d90df23a4978255883ad4556fd318eabde20e1afc1ba9",
+            "format": "stl"
+          }
+        ],
+        "modificationNotes": "Complete unchanged authored original/default closure. Existing bounded LDraw conversion;nominal0.4mm/LDU,-Yup to Zup;source/origin/BFC/transforms preserved. Display edge/conditional lines omitted. No source pruning/repair/snapping/tolerance/limit changes;no physical certification. Editable STL mesh;archival DAT provenance.",
+        "conversion": {
+          "sourceUnits": "ldu",
+          "sourceUpAxis": "-Y",
+          "unitAssumption": "LDraw nominal0.4mm/LDU and -Yup per https://ldraw.org/article/218.html and the pinned publisher README; standard display conversion, no guessed STL units.",
+          "toMillimetresZUp": [
+            0.4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -0.4,
+            0,
+            0,
+            0.4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "quality": {
+          "fileSha256": "87678ead0b6b9b8eca2d90df23a4978255883ad4556fd318eabde20e1afc1ba9",
+          "toolVersion": "brickwright-stl-quality/1",
+          "checkedOn": "2026-11-17",
+          "screeningPolicy": {
+            "maxTriangles": 10000,
+            "maxExtentMm": 200,
+            "toMillimetresZUp": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "maxAnalysisBytes": 16777216,
+            "maxAnalysisTriangles": 83333
+          },
+          "parseable": true,
+          "closedPositiveVolume": true,
+          "withinSizeLimits": true,
+          "withinTriangleLimits": true
+        },
+        "archiveSelection": {
+          "inputEvidence": "evidence/ldraw-expanded-batch013-input-20261109.json",
+          "publisherArchive": {
+            "url": "https://library.ldraw.org/library/updates/complete.zip",
+            "sha256": "023083918da2d3697c794fb4267975509584f3611b993095874206a803fa610f",
+            "date": "2026-11-09",
+            "bytes": 146853687
+          },
+          "publisherArchiveSHAIsDeclaredNotFullDownloadVerified": true,
+          "mirrorManifestSHA256": "211a176510346822bc745abfa955123c6242727367214ec3befcd473d7dfc466",
+          "publisherRepository": "https://github.com/CrispStrobe/ldraw-stl",
+          "publisherMetadataCommit": "4db772233e23027ccb577be462134f5a954f826b",
+          "snapshotCommit": "c4053b729604eebe7c042273c805692def72760e",
+          "CRC32VerifiedOriginals": true,
+          "mirrorArchiveSHA256Verified": "de88fe7c474695667963f6b5b30db3ce15427353c9cc580ac31f54692d3b1562"
+        },
+        "sourceBundle": {
+          "format": "brickwright-ldraw-bundle",
+          "version": 1,
+          "rootPath": "parts/7930.dat",
+          "dependencies": [
+            {
+              "path": "p/4-4cylc.dat",
+              "file": {
+                "path": "sources/ldraw-expanded-20261109/p/4-4cylc.dat",
+                "bytes": 476,
+                "sha256": "0183cffc7f56a2f3e5e3511f0d07ac484d3039c2d41bee802a94344ec95ec8bd",
+                "format": "ldraw"
+              },
+              "author": "Alex Taylor [anathema]",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/4-4cylc.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+                "commit": "c4053b729604eebe7c042273c805692def72760e"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "Alex Taylor [anathema]. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file p/4-4cylc.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/4-4cylc.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                "localEvidence": [
+                  {
+                    "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                    "bytes": 18657,
+                    "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+                  },
+                  {
+                    "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+                    "bytes": 4151,
+                    "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+                  }
+                ],
+                "capturedOn": "2026-11-16",
+                "review": "accepted",
+                "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+              }
+            },
+            {
+              "path": "p/4-4edge.dat",
+              "file": {
+                "path": "sources/ldraw-expanded-20261109/p/4-4edge.dat",
+                "bytes": 1084,
+                "sha256": "54a52196e421fd1717d291ff52ea57553b1fb238907c1678cc1f1a84c698b1da",
+                "format": "ldraw"
+              },
+              "author": "James Jessiman",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/4-4edge.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+                "commit": "c4053b729604eebe7c042273c805692def72760e"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "James Jessiman. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file p/4-4edge.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/4-4edge.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                "localEvidence": [
+                  {
+                    "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                    "bytes": 18657,
+                    "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+                  },
+                  {
+                    "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+                    "bytes": 4151,
+                    "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+                  }
+                ],
+                "capturedOn": "2026-11-16",
+                "review": "accepted",
+                "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+              }
+            },
+            {
+              "path": "p/4-4disc.dat",
+              "file": {
+                "path": "sources/ldraw-expanded-20261109/p/4-4disc.dat",
+                "bytes": 1137,
+                "sha256": "a00b5547776f61a7389d303616987c76b3c4de86ad8ec32f22857e1bd5e5e40f",
+                "format": "ldraw"
+              },
+              "author": "James Jessiman",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/4-4disc.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+                "commit": "c4053b729604eebe7c042273c805692def72760e"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "James Jessiman. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file p/4-4disc.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/4-4disc.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                "localEvidence": [
+                  {
+                    "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                    "bytes": 18657,
+                    "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+                  },
+                  {
+                    "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+                    "bytes": 4151,
+                    "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+                  }
+                ],
+                "capturedOn": "2026-11-16",
+                "review": "accepted",
+                "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+              }
+            },
+            {
+              "path": "p/4-4cyli.dat",
+              "file": {
+                "path": "sources/ldraw-expanded-20261109/p/4-4cyli.dat",
+                "bytes": 2687,
+                "sha256": "4a742c2765b6ebf98245baaf8a160a4ff587fc93d36c8ee2b9074712a2f968c4",
+                "format": "ldraw"
+              },
+              "author": "James Jessiman",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/4-4cyli.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+                "commit": "c4053b729604eebe7c042273c805692def72760e"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "James Jessiman. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file p/4-4cyli.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/4-4cyli.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                "localEvidence": [
+                  {
+                    "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                    "bytes": 18657,
+                    "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+                  },
+                  {
+                    "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+                    "bytes": 4151,
+                    "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+                  }
+                ],
+                "capturedOn": "2026-11-16",
+                "review": "accepted",
+                "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+              }
+            },
+            {
+              "path": "p/4-4ring2.dat",
+              "file": {
+                "path": "sources/ldraw-expanded-20261109/p/4-4ring2.dat",
+                "bytes": 1628,
+                "sha256": "6fb38804b1f5e9bee8c0b80caf1397b09454fc58b048dc19045b6f37c8762ab0",
+                "format": "ldraw"
+              },
+              "author": "James Jessiman",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/4-4ring2.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+                "commit": "c4053b729604eebe7c042273c805692def72760e"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "James Jessiman. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file p/4-4ring2.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/4-4ring2.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                "localEvidence": [
+                  {
+                    "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                    "bytes": 18657,
+                    "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+                  },
+                  {
+                    "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+                    "bytes": 4151,
+                    "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+                  }
+                ],
+                "capturedOn": "2026-11-16",
+                "review": "accepted",
+                "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+              }
+            },
+            {
+              "path": "p/4-4cylo.dat",
+              "file": {
+                "path": "sources/ldraw-expanded-20261109/p/4-4cylo.dat",
+                "bytes": 383,
+                "sha256": "d6ca97ee2e75918b3309a5c88aafcd2455b3a316f7cef8963517c19f1d86b38f",
+                "format": "ldraw"
+              },
+              "author": "Mark Kennedy [mkennedy]",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/4-4cylo.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+                "commit": "c4053b729604eebe7c042273c805692def72760e"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "Mark Kennedy [mkennedy]. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file p/4-4cylo.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/4-4cylo.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                "localEvidence": [
+                  {
+                    "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                    "bytes": 18657,
+                    "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+                  },
+                  {
+                    "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+                    "bytes": 4151,
+                    "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+                  }
+                ],
+                "capturedOn": "2026-11-16",
+                "review": "accepted",
+                "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+              }
+            },
+            {
+              "path": "p/2-4cylo.dat",
+              "file": {
+                "path": "sources/ldraw-expanded-20261109/p/2-4cylo.dat",
+                "bytes": 387,
+                "sha256": "4fa9f597d775c7f15e3fc66f60e20d914134d13004b485488b7dbff684776232",
+                "format": "ldraw"
+              },
+              "author": "Max Martin Richter [MMR1988]",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/2-4cylo.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+                "commit": "c4053b729604eebe7c042273c805692def72760e"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "Max Martin Richter [MMR1988]. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file p/2-4cylo.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/2-4cylo.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                "localEvidence": [
+                  {
+                    "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                    "bytes": 18657,
+                    "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+                  },
+                  {
+                    "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+                    "bytes": 4151,
+                    "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+                  }
+                ],
+                "capturedOn": "2026-11-16",
+                "review": "accepted",
+                "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+              }
+            },
+            {
+              "path": "p/2-4edge.dat",
+              "file": {
+                "path": "sources/ldraw-expanded-20261109/p/2-4edge.dat",
+                "bytes": 683,
+                "sha256": "665400f76566b161c28303cdadce40d17d979a8ff9a8a133675af2d17fbe6763",
+                "format": "ldraw"
+              },
+              "author": "James Jessiman",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/2-4edge.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+                "commit": "c4053b729604eebe7c042273c805692def72760e"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "James Jessiman. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file p/2-4edge.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/2-4edge.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                "localEvidence": [
+                  {
+                    "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                    "bytes": 18657,
+                    "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+                  },
+                  {
+                    "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+                    "bytes": 4151,
+                    "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+                  }
+                ],
+                "capturedOn": "2026-11-16",
+                "review": "accepted",
+                "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+              }
+            },
+            {
+              "path": "p/2-4cyli.dat",
+              "file": {
+                "path": "sources/ldraw-expanded-20261109/p/2-4cyli.dat",
+                "bytes": 1543,
+                "sha256": "d486780f0f84893899d9eadcd13150f13a42e15e77a3cda38cdf24ded98862c6",
+                "format": "ldraw"
+              },
+              "author": "James Jessiman",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/2-4cyli.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+                "commit": "c4053b729604eebe7c042273c805692def72760e"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "James Jessiman. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file p/2-4cyli.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/2-4cyli.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                "localEvidence": [
+                  {
+                    "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                    "bytes": 18657,
+                    "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+                  },
+                  {
+                    "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+                    "bytes": 4151,
+                    "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+                  }
+                ],
+                "capturedOn": "2026-11-16",
+                "review": "accepted",
+                "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+              }
+            },
+            {
+              "path": "p/2-4chrd.dat",
+              "file": {
+                "path": "sources/ldraw-expanded-20261109/p/2-4chrd.dat",
+                "bytes": 490,
+                "sha256": "3b0dfcf2cb881fae0acfe1e53b703104768878636477e540d0c893fc3fd87f8f",
+                "format": "ldraw"
+              },
+              "author": "Philippe Hurbain [Philo]",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/2-4chrd.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+                "commit": "c4053b729604eebe7c042273c805692def72760e"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "Philippe Hurbain [Philo]. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file p/2-4chrd.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/2-4chrd.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                "localEvidence": [
+                  {
+                    "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                    "bytes": 18657,
+                    "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+                  },
+                  {
+                    "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+                    "bytes": 4151,
+                    "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+                  }
+                ],
+                "capturedOn": "2026-11-16",
+                "review": "accepted",
+                "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+              }
+            },
+            {
+              "path": "p/box3u4a.dat",
+              "file": {
+                "path": "sources/ldraw-expanded-20261109/p/box3u4a.dat",
+                "bytes": 545,
+                "sha256": "15463f41f9947dd75486dc7af3231b1037704f1b654c2555e3ba705817a2db75",
+                "format": "ldraw"
+              },
+              "author": "Niels Karsdorp [nielsk]",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/box3u4a.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+                "commit": "c4053b729604eebe7c042273c805692def72760e"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "Niels Karsdorp [nielsk]. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file p/box3u4a.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/box3u4a.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                "localEvidence": [
+                  {
+                    "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                    "bytes": 18657,
+                    "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+                  },
+                  {
+                    "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+                    "bytes": 4151,
+                    "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+                  }
+                ],
+                "capturedOn": "2026-11-16",
+                "review": "accepted",
+                "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+              }
+            },
+            {
+              "path": "p/box4.dat",
+              "file": {
+                "path": "sources/ldraw-expanded-20261109/p/box4.dat",
+                "bytes": 948,
+                "sha256": "2cbfcf075ef5c87c6a5f543f837972a78d43274ac7771b92229b5fe5da797c1e",
+                "format": "ldraw"
+              },
+              "author": "James Jessiman",
+              "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/box4.dat",
+              "sourceRevision": {
+                "repositoryUrl": "https://github.com/CrispStrobe/brickwright-cad",
+                "commit": "c4053b729604eebe7c042273c805692def72760e"
+              },
+              "licence": {
+                "spdx": "CC-BY-4.0",
+                "scope": "asset",
+                "attribution": "James Jessiman. LDraw.org Official Parts Library. Original CC-BY-4.0 grant and complete per-file HISTORY retained. Original official publication: https://library.ldraw.org/library/updates/complete.zip (file p/box4.dat, publisher archive2026-11-09). Immutable captured bytes: https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/sources/ldraw-expanded-20261109/p/box4.dat. Licence: https://creativecommons.org/licenses/by/4.0/. Nominal0.4mm/LDU to millimetres/Zup display conversion; edge/conditional-line appearance omitted; no physical calibration or certification.",
+                "evidenceUrl": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                "localEvidence": [
+                  {
+                    "path": "evidence/ldraw-expanded-CC-BY-4.0-20261109.txt",
+                    "bytes": 18657,
+                    "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CC-BY-4.0-20261109.txt"
+                  },
+                  {
+                    "path": "evidence/ldraw-expanded-CAreadme-20261109.txt",
+                    "bytes": 4151,
+                    "sha256": "c67a824bdab18e646337b5b26f7f039c84b0be71273c0c878e2749e648820497",
+                    "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-cad/c4053b729604eebe7c042273c805692def72760e/library/evidence/ldraw-expanded-CAreadme-20261109.txt"
+                  }
+                ],
+                "capturedOn": "2026-11-16",
+                "review": "accepted",
+                "reviewer": "Existing CAD owner;exact per-file CC-BY-4.0/author/HISTORY and original CRC32/SHA complete unchanged closure"
+              }
+            }
+          ]
+        },
+        "measurements": {
+          "triangles": 256,
+          "boundsMm": {
+            "min": [
+              -0.800000011920929,
+              -2.4000000953674316,
+              -33.599998474121094
+            ],
+            "max": [
+              20,
+              0.800000011920929,
+              0
+            ]
+          },
+          "signedVolumeMm3": 514.0931112098002
+        },
+        "converterMetrics": {
+          "originalBytes": 14747,
+          "expandedBytes": 26788,
+          "instances": 24,
+          "work": 1749,
+          "points": 128,
+          "faces": 149
+        }
+      }
     }
   ]
 }
