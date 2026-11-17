@@ -47,16 +47,24 @@ function cradleCandidates({kernel,extrudedCandidates,partDocument}){
  ];
 }
 
+function mastCandidates({kernel,extrudedCandidates,partDocument}){
+ return [
+  ...extrudedCandidates(evalPartExpr('mast',partDocument,kernel,'subtract(union(flange,leftRail,rightRail,midBrace,topBar),railSlots,topBores)'),0,4),
+  ...extrudedCandidates(evalPartExpr('mast',partDocument,kernel,'subtract(union(flange,leftRail,rightRail,topBar),railSlots,topBores)'),4,8),
+  ...extrudedCandidates(evalPartExpr('mast',partDocument,kernel,'flange'),8,14),
+ ];
+}
+
 function forksCandidates({kernel,extrudedCandidates,simplifiedCandidates,partDocument}){
  const spineMesh=evalPartExpr('forks',partDocument,kernel,'subtract(spine,backrestWindows)');
- const earMesh=evalPartExpr('forks',partDocument,kernel,'subtract(ear,splineSocket,screwBore,screwCs)');
+ const earMesh=evalPartExpr('forks',partDocument,kernel,'ear');
  const leftTineMesh=evalPartExpr('forks',partDocument,kernel,'subtract(leftTine,tipBevels)');
  const rightTineMesh=evalPartExpr('forks',partDocument,kernel,'subtract(rightTine,tipBevels)');
  return [
   ...extrudedCandidates(spineMesh,0,9),
   ...extrudedCandidates(spineMesh,9,19),
   ...extrudedCandidates(spineMesh,19,24),
-  ...simplifiedCandidates(earMesh,.05),
+  ...extrudedCandidates(earMesh,15,24),
   ...simplifiedCandidates(leftTineMesh,.05),
   ...simplifiedCandidates(rightTineMesh,.05),
  ];
@@ -76,7 +84,7 @@ await generateRobotCollisionAssets({
   wheel:wheelCandidates,
   crate:crateCandidates,
   cradle:cradleCandidates,
-  mast:({simplifiedCandidates,compact})=>simplifiedCandidates(compact,.08),
+  mast:mastCandidates,
   forks:forksCandidates,
   carriage:({simplifiedCandidates,compact})=>simplifiedCandidates(compact,.08),
  },
