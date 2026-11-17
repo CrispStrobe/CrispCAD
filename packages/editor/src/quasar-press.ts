@@ -16,22 +16,22 @@ export const isQuasarPress=(id:string)=>quasarPressCatalog.some(p=>p.id===id);
 export const quasarPressDimensions=Object.freeze({
  dialLimitDeg:120,
  ramLimitsMm:[-14,4] as const,
- ejectLimitsMm:[0,70] as const,
+ ejectLimitsMm:[0,80] as const,
 });
 
 const program=(source:string):CodeProgram=>({version:1,language:'brickwright-cad-script',parameters:{},source:'// Original Quasar 3-axis rotary press part; BSD-3-Clause. Millimetres.\n'+source.trim()+'\n'});
 
 export const quasarPressPartPrograms={
  stand:program(`let base=move([0,0,3],box(120,100,6));
-let column=move([48,0,36],box(14,32,60));
-let head=move([32,0,62],box(46,28,8));
+let column=move([0,48,36],box(32,14,60));
+let head=move([10,22,62],box(60,68,8));
 return subtract(union(base,column,head),move([20,0,62],box(14.8,14.8,24)));`),
 
  dialPlate:program(`let plate=move([0,0,4.5],cylinder(36,9,48));
 // Through channel guides the blank during indexing. A low outer stop
 // retains it; the ejector wedge lifts it over the stop after pressing.
-let channel=move([0,0,9],box(12.8,100,6));
-let stop=move([0,-28,6.3],box(12.8,2,1));
+let channel=move([0,0,9],box(16,100,6));
+let stop=move([0,-28,6.3],box(16,2,1));
 return union(subtract(plate,channel),stop);`),
 
  ram:program(`return move([0,0,7],box(14,14,14));`),
@@ -80,10 +80,7 @@ const boxPiece=(cx:number,cy:number,cz:number,sx:number,sy:number,sz:number):Col
 };
 
 const partCollisions:Partial<Record<QuasarPressPart,CollisionPiece[]>>={
- stand:[boxPiece(0,0,3,120,100,6),boxPiece(48,0,36,14,32,60),boxPiece(32,0,62,46,28,8)],
- dialPlate:[boxPiece(0,0,3,56,56,6)],
  ram:[boxPiece(0,0,7,14,14,14)],
- wiper:[boxPiece(0,0,5,12,14,10)],
  blank:[boxPiece(0,0,5,12,12,10)],
 };
 
@@ -202,8 +199,8 @@ export function quasarPressPreview(id:string):THREE.BufferGeometry{
  }else{
   geometries.push(
    new THREE.BoxGeometry(120,100,6).translate(0,0,3),
-   new THREE.BoxGeometry(14,32,60).translate(48,0,36),
-   new THREE.BoxGeometry(46,28,8).translate(32,0,62),
+   new THREE.BoxGeometry(32,14,60).translate(0,48,36),
+   new THREE.BoxGeometry(60,68,8).translate(10,22,62),
    new THREE.CylinderGeometry(36,36,6,20).rotateX(Math.PI/2).translate(0,0,38),
    new THREE.BoxGeometry(14,14,14).translate(20,0,63),
    new THREE.BoxGeometry(12,14,10).translate(-50,0,43.6),

@@ -81,18 +81,21 @@ it('indexes a real blank under the raised ram and ejects it clear of the dial',a
  const advance=(seconds:number)=>{for(let i=0;i<seconds/.005;i++){world.setHingeServo('dial-a',Math.min(Math.PI/2,world.time*Math.PI/3),.35);world.step(.005);}};
  const blankCenter=()=>{const pose=world.pose('blank');return new Vector3(0,-20,46.2).applyQuaternion(new Quaternion(...pose.quaternion)).add(new Vector3(...pose.positionMm)).toArray();};
  try{
-  world.setSliderMotor('ram-b',20,10);advance(3);
+  world.setSliderMotor('ram-b',20,.2);advance(3);
   expect(world.hingeAngle('dial-a')*180/Math.PI).toBeCloseTo(90,0);
   const indexed=blankCenter();
   expect(indexed[0]).toBeGreaterThan(12);expect(Math.abs(indexed[1])).toBeLessThan(10);
-  world.setSliderMotor('ram-b',-20,10);advance(1);
+  world.setSliderMotor('ram-b',-20,.1);advance(1);
   expect(world.sliderPosition('ram-b')).toBeLessThan(-3);
   expect(world.sliderPosition('ram-b')).toBeGreaterThan(-6); // contact stops the rigid ram before it intersects the blank
-  world.setSliderMotor('ram-b',20,10);advance(1);
+  world.setSliderMotor('ram-b',20,.2);advance(1);
   expect(world.sliderPosition('ram-b')).toBeGreaterThan(0);
-  world.setSliderMotor('ram-b',0,10);
-  world.setSliderMotor('eject-c',60,10);advance(2);
+  world.setSliderMotor('ram-b',0,.2);
+  world.setSliderMotor('eject-c',60,.05);advance(2);
   expect(world.sliderPosition('eject-c')).toBeGreaterThan(60);
+  world.setSliderMotor('eject-c',-60,.05);advance(2);
+  world.setSliderMotor('eject-c',0,.05);advance(.5);
+  expect(Math.abs(world.sliderPosition('eject-c'))).toBeLessThan(1);
   expect(blankCenter()[0]).toBeGreaterThan(25);
   expect(blankCenter()[2]).toBeLessThan(20); // off the dial and down on the receiving base
   expect(blankCenter()[2]).toBeGreaterThan(5);

@@ -143,17 +143,19 @@ let tipBevels=union(
 return subtract(body,
   ${cuts(['splineSocket','screwBore','screwCs','backrestWindows','tipBevels'])});`),
 
- crate:program(`// Printable pallet crate with solid fork-pocket skids, 4x M3 tie-down bores, and center drain bore.
+ crate:program(`// Printable pallet crate with solid fork-pocket skids and top cargo recess.
 let deck=move([0,0,11],box(36,48,22));
 let skidL=move([0,21.5,28.5],box(36,5,13));
 let skidC=move([0,0,28.5],box(36,16,13));
 let skidR=move([0,-21.5,28.5],box(36,5,13));
 let body=union(deck,skidL,skidC,skidR);
-let tieBores=union(
-  ${[-14,14].flatMap(x=>[-20,20].map(y=>`move([${x},${y},11],cylinder(1.7,24,12))`)).join(',\n  ')},
-  move([0,0,11],cylinder(2.5,24,12))
+let cargoPocket=move([0,0,3],box(26,38,7));
+let sideSlots=union(
+  move([0,24,11],box(20,3,6)),
+  move([0,-24,11],box(20,3,6))
 );
-return subtract(body,tieBores);`),
+return subtract(body,
+  ${cuts(['cargoPocket','sideSlots'])});`),
 
  fit:program(`// Five-step micro-servo spline (0.15..0.55 mm), Double-D TT bore, and mast slide clearance gauge.
 let bar=hull(move([-32,0,2],cylinder(11,4,24)),move([32,0,2],cylinder(11,4,24)));

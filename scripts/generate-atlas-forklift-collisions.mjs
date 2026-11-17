@@ -26,12 +26,34 @@ function chassisCandidates({kernel,extrudedCandidates,partDocument}){
  ];
 }
 
-function crateCandidates({kernel,extrudedCandidates,partDocument}){
+function expressionMesh(part,expression,context,rotation){
+ const doc=context.partDocument(part);
+ const result=rotation?`rotate([${rotation}],${expression})`:expression;
+ doc.nodes[part].program.source=compactSource(atlasForkliftPartPrograms[part].source.replace(/return[^]*$/,'return '+result+';'));
+ return context.kernel.evaluate(doc).bodies[0];
+}
+function alongY(part,expression,layers,context){
+ const mesh=expressionMesh(part,expression,context,'90,0,0');
+ return layers.flatMap(([min,max])=>context.extrudedCandidates(mesh,min,max)).map(piece=>({
+  positions:new Float32Array(Array.from(piece.positions).flatMap((_,i)=>i%3===0?[piece.positions[i],piece.positions[i+2],-piece.positions[i+1]]:[])),indices:new Uint32Array(piece.indices),
+ }));
+}
+function forksCandidates(context){
+ const spine=expressionMesh('forks','subtract(spine,backrestWindows)',context,'0,90,0');
+ const main=context.extrudedCandidates(spine,-6,0).map(piece=>({
+  positions:new Float32Array(Array.from(piece.positions).flatMap((_,i)=>i%3===0?[-piece.positions[i+2],piece.positions[i+1],piece.positions[i]]:[])),indices:new Uint32Array(piece.indices),
+ }));
  return [
-  ...extrudedCandidates(evalPartExpr('crate',partDocument,kernel,'subtract(deck,tieBores)'),0,22),
-  ...extrudedCandidates(evalPartExpr('crate',partDocument,kernel,'union(skidL,skidC,skidR)'),22,35),
+  ...main,
+  ...alongY('forks','subtract(ear,splineSocket,screwBore,screwCs)',[[-21,-19],[-19,-18.9],[-18.9,-16.5]],context),
+  ...alongY('forks','subtract(union(leftTine,rightTine),tipBevels)',[[-18,-10],[10,18]],context),
  ];
 }
+function crateCandidates(context){
+ const mesh=expressionMesh('crate','subtract(body,cargoPocket,sideSlots)',context);
+ return [[0,6.5],[6.5,8],[8,14],[14,22],[22,35]].flatMap(([min,max])=>context.extrudedCandidates(mesh,min,max));
+}
+
 
 function wheelCandidates({kernel,extrudedCandidates,partDocument}){
  return [
@@ -55,20 +77,6 @@ function mastCandidates({kernel,extrudedCandidates,partDocument}){
  ];
 }
 
-function forksCandidates({kernel,extrudedCandidates,simplifiedCandidates,partDocument}){
- const spineMesh=evalPartExpr('forks',partDocument,kernel,'subtract(spine,backrestWindows)');
- const earMesh=evalPartExpr('forks',partDocument,kernel,'ear');
- const leftTineMesh=evalPartExpr('forks',partDocument,kernel,'subtract(leftTine,tipBevels)');
- const rightTineMesh=evalPartExpr('forks',partDocument,kernel,'subtract(rightTine,tipBevels)');
- return [
-  ...extrudedCandidates(spineMesh,0,9),
-  ...extrudedCandidates(spineMesh,9,19),
-  ...extrudedCandidates(spineMesh,19,24),
-  ...extrudedCandidates(earMesh,15,24),
-  ...simplifiedCandidates(leftTineMesh,.05),
-  ...simplifiedCandidates(rightTineMesh,.05),
- ];
-}
 
 await generateRobotCollisionAssets({
  mode,
