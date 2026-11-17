@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -239,6 +240,7 @@ export function createLabyrinthTilterDocument(id=LABYRINTH_TILTER_ID):CadDocumen
  addServo('inner','Inner pitch servo','B',[0,-64.18,48],[-90,0,0],[0,-37,48],[0,1,0],[-tiltLimit,tiltLimit],'outer-ring','maze-tray');
  addServo('gate','Maze diverter servo','C',[20,10,48],[0,0,0],[20,10,75.18],[0,0,1],[-gateLimit,gateLimit],'maze-tray','diverter');
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'marble-path',bodyId:'marble',point:[0,0,7],color:'#f59e0b'}];
  return doc;
 }

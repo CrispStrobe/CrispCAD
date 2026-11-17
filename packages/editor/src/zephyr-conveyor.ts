@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -179,6 +180,7 @@ export function createZephyrConveyorDocument(id=ZEPHYR_CONVEYOR_ID):CadDocument{
  doc.joints!.push(gateJoint);
  fixed(doc,'gate-shaft','diverter');
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'parcel-path',bodyId:'parcel',point:[0,0,7],color:'#f59e0b'}];
  return doc;
 }

@@ -50,6 +50,8 @@ def mesh(shape,transform):
 for slug,name,transform in [
  ('feather-rp2040','4884 Feather RP2040.step',lambda p:[11.43-p[1],p[0]-25.4,p[2]-4]),
  ('aa-holder-830','830 Battery Holder 4xAA.step',lambda p:[p[0]-32.3,p[1]-35,p[2]-10.6]),
+ ('metro-mini','2590 Metro Mini Rev B.step',lambda p:[p[0]-21.59,p[1]-8.89,p[2]-3]),
+ ('buck-5v','4739 MPM3610 5V Buck.step',lambda p:[p[0]-5.08,p[1]-8.5725,p[2]-2]),
 ]:
  omitted.clear()
  source=next(f for f in provenance['files'] if f['local']==name)

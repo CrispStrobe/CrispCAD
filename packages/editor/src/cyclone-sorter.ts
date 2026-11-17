@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -261,6 +262,7 @@ export function createCycloneSorterDocument(id=CYCLONE_SORTER_ID):CadDocument{
  doc.joints.push(sweepJoint);
  fixed(doc,'sweeper-shaft','paddle');
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'sweeper-tip-path',bodyId:'paddle',point:[46,0,6],color:'#0ea5e9'}];
  doc.simulation={...defaultSimulationSettings(),...doc.simulation,selfCollisions:false};
  return doc;

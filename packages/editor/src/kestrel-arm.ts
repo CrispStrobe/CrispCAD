@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -194,6 +195,7 @@ export function createKestrelArmDocument(id=KESTREL_ARM_ID):CadDocument{
  addServo('lift','Shoulder lift servo','B',[0,19,62],[90,0,0],[0,-8.18,62],[0,1,0],[-45*deg,45*deg],'turret','boom');
  addServo('grip','Gripper jaw servo','C',[110,12.18,74],[90,0,0],[110,-15,74],[0,1,0],[-15*deg,45*deg],'boom','jaw');
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'gripper-tip-path',bodyId:'boom',point:[150,-10,50],color:'#d97736'}];
  return doc;
 }

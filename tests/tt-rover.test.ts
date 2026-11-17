@@ -22,7 +22,7 @@ it('ships an editable A/B rover with retained Adafruit provenance and a free mov
   expect(rotatePoint(joint.axisA,a.rotation)).toEqual(rotatePoint(joint.axisB,b.rotation));
  }
  const provenance=doc.provenance!.records;
- expect(provenance).toHaveLength(3);expect(provenance[0].asset.licence.spdx).toBe('MIT');
+ expect(provenance).toHaveLength(4);expect(provenance[0].asset.licence.spdx).toBe('MIT');
  expect(validateModelLibraryCatalogue({format:'brickwright-model-library',version:1,assets:provenance.map(p=>p.asset)}).valid).toBe(true);
  expect(doc.roots.filter(id=>doc.nodes[id].kind==='code'&&doc.nodes[id].physics?.sourcePreset===TT_ROVER_ID)).toHaveLength(12);
  expect(doc.roots.every(id=>doc.nodes[id].physics?.motion==='dynamic')).toBe(true);

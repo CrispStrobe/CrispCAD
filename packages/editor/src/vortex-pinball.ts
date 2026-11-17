@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -212,6 +213,7 @@ export function createVortexPinballDocument(id=VORTEX_PINBALL_ID):CadDocument{
  plungerSlider.control={port:'C'};
  doc.joints!.push(plungerSlider);
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'puck-path',bodyId:'puck',point:[0,0,7],color:'#f59e0b'}];
  return doc;
 }

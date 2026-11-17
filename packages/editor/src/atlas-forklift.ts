@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit motor & micro-servo derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -334,6 +335,7 @@ export function createAtlasForkliftDocument(id=ATLAS_FORKLIFT_ID):CadDocument{
  // Dynamic printable pallet crate resting ahead of the forks on Z=0.
  addPart(doc,'crate','pallet-crate',[105,0,35],[180,0,0],.85);
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'fork-tip-path',bodyId:'forks',point:[120,0,8],color:'#e09f3e'}];
  doc.simulation={...defaultSimulationSettings(),...doc.simulation,selfCollisions:false};
  return doc;

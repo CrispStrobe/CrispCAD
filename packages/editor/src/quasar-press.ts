@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -184,6 +185,7 @@ export function createQuasarPressDocument(id=QUASAR_PRESS_ID):CadDocument{
  ejectSlider.control={port:'C'};
  doc.joints!.push(ejectSlider);
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'blank-path',bodyId:'blank',point:[0,0,5],color:'#f59e0b'}];
  return doc;
 }

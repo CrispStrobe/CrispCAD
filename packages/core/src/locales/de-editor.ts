@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "Add controller and power": "Steuerung und Stromversorgung ergänzen",
+  "Stop simulation before adding electronics.": "Simulation vor dem Ergänzen der Elektronik stoppen.",
+  "The design changed before this edit could be applied.": "Das Modell wurde vor dem Anwenden dieser Änderung verändert.",
   "CAD editor": "CAD-Editor",
   "Model tools": "Modellwerkzeuge",
   "Editor status": "Editorstatus",

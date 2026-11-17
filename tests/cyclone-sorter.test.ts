@@ -34,7 +34,7 @@ it('ships an editable 2-axis XY gantry sorter with sliders A/B, servo C and dyna
   expect(Math.hypot(...aa.map((v,i)=>v-ab[i]))).toBeLessThan(1e-6);
  }
  const provenance=doc.provenance!.records;
- expect(provenance).toHaveLength(1);
+ expect(provenance).toHaveLength(3);
  expect(provenance[0].asset.licence.spdx).toBe('MIT');
 });
 
@@ -49,7 +49,7 @@ it('separates manufacturing geometry from purchased hardware and imports in one 
  session.undo();
  expect(session.state.document.roots).toHaveLength(0);
  session.redo();
- expect(session.state.document.roots).toHaveLength(8);
+ expect(session.state.document.roots).toHaveLength(14);
  session.dispose();
 });
 

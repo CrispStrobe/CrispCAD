@@ -30,6 +30,24 @@
       "units": "unknown",
       "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-media-lab/fb6c7632c50e9a1d58ab57167d6d3f9f9365ae73/projects/adafruit-cad-parts/original/LICENSE",
       "local": "LICENSE"
+    },
+    {
+      "path": "2590 Metro Mini/2590 Metro Mini Rev B.step",
+      "bytes": 2480550,
+      "sha256": "47e7be651aad4f280bc7b71b896f785667b42e42456f7981e9e1e92d9d16daa3",
+      "format": "step",
+      "units": "unknown",
+      "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-media-lab/fb6c7632c50e9a1d58ab57167d6d3f9f9365ae73/projects/adafruit-cad-parts/original/2590%20Metro%20Mini/2590%20Metro%20Mini%20Rev%20B.step",
+      "local": "2590 Metro Mini Rev B.step"
+    },
+    {
+      "path": "4739 MPM3610 5V Buck/4739 MPM3610 5V Buck.step",
+      "bytes": 413342,
+      "sha256": "de3422cba5b55ba3d10e7a11a5f9ad4b846e3274a836d52334049f8ecaf4b055",
+      "format": "step",
+      "units": "unknown",
+      "url": "https://raw.githubusercontent.com/CrispStrobe/brickwright-media-lab/fb6c7632c50e9a1d58ab57167d6d3f9f9365ae73/projects/adafruit-cad-parts/original/4739%20MPM3610%205V%20Buck/4739%20MPM3610%205V%20Buck.step",
+      "local": "4739 MPM3610 5V Buck.step"
     }
   ]
 }

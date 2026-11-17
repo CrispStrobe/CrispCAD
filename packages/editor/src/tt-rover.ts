@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 import {addComponentAppearance} from './component-provenance.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit motor derivatives retain their MIT provenance.
@@ -153,6 +154,7 @@ export function createTTRoverDocument(id=TT_ROVER_ID):CadDocument{
  addComponentAppearance(doc,'feather-envelope','visual-feather-rp2040');
  addComponentAppearance(doc,'battery-envelope','visual-aa-holder-830');
  addComponentAppearance(doc,'driver-envelope','visual-drv8833');
+ addRobotElectronics(doc);
  doc.tracers=[{id:'rover-path',bodyId:'chassis',point:[-20,0,4],color:'#38a99a'}];
  doc.simulation={...defaultSimulationSettings(),...doc.simulation,selfCollisions:false};
  return doc;

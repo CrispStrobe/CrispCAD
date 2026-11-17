@@ -34,7 +34,7 @@ it('ships an editable mobile forklift with TT drives (A/B), linear mast slider (
   expect(Math.hypot(...aa.map((v,i)=>v-ab[i]))).toBeLessThan(1e-6);
  }
  const provenance=doc.provenance!.records;
- expect(provenance).toHaveLength(2);
+ expect(provenance).toHaveLength(4);
  expect(provenance.every(r=>r.asset.licence.spdx==='MIT')).toBe(true);
 });
 
@@ -49,7 +49,7 @@ it('separates manufacturing geometry from purchased hardware and imports in one 
  session.undo();
  expect(session.state.document.roots).toHaveLength(0);
  session.redo();
- expect(session.state.document.roots).toHaveLength(19);
+ expect(session.state.document.roots).toHaveLength(26);
  session.dispose();
 });
 

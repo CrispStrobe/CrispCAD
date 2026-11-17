@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -173,6 +174,7 @@ export function createStratosGimbalDocument(id=STRATOS_GIMBAL_ID):CadDocument{
  addServo('pitch','Pitch cradle servo','B',[-52,0,82],[0,Math.PI/2,0],[-24.82,0,82],[1,0,0],[-pitchLimit,pitchLimit],'yaw-yoke','pitch-frame');
  addServo('roll','Roll sensor servo','C',[0,-34,82],[-Math.PI/2,0,0],[0,-6.82,82],[0,1,0],[-rollLimit,rollLimit],'pitch-frame','sensor-pod');
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'pod-path',bodyId:'sensor-pod',point:[0,13,8],color:'#0284c7'}];
  return doc;
 }

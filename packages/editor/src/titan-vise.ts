@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -176,6 +177,7 @@ export function createTitanViseDocument(id=TITAN_VISE_ID):CadDocument{
  rightSlider.control={port:'C'};
  doc.joints!.push(rightSlider);
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'workpiece-spin',bodyId:'workpiece',point:[8,0,7],color:'#f59e0b'}];
  return doc;
 }

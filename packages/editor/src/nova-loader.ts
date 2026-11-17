@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -23,7 +24,9 @@ const program=(source:string):CodeProgram=>({version:1,language:'brickwright-cad
 export const novaLoaderPartPrograms={
  chassis:program(`let hull=move([-5,0,18],box(66,48,18));
 let skid=move([-34,0,2],box(14,24,4));
-return union(hull,skid);`),
+// Clearance bays expose the compact geared wheel drives.
+let motorBays=union(move([0,22,16],box(15,10,32)),move([0,-22,16],box(15,10,32)));
+return subtract(union(hull,skid),motorBays);`),
 
  wheel:program(`return move([0,0,18],rotate([90,0,0],cylinder(18,12,24)));`),
 
@@ -169,6 +172,7 @@ export function createNovaLoaderDocument(id=NOVA_LOADER_ID):CadDocument{
  doc.joints!.push(bucketJoint);
  fixed(doc,'bucket-shaft','bucket');
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'loader-path',bodyId:'chassis',point:[0,0,10],color:'#d97706'}];
  return doc;
 }

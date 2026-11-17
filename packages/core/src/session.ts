@@ -117,6 +117,15 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       for(const id of ids)d.nodes[id].provenance=[...new Set([...(d.nodes[id].provenance??[]),source.id])];
     });},
     rename(title: string) { commit('Rename design', d => { d.title = title; }); },
+    /** One atomic assembly edit, preserving project identity and all prior Undo.
+     * A fully mutable candidate keeps extension code away from frozen snapshots. */
+    editAssembly(title:string,edit:(draft:CadDocument)=>void,options:{expectedRevision?:number}={}){
+      if(options.expectedRevision!==undefined&&options.expectedRevision!==revision)throw new Error(t('The design changed before this edit could be applied.'));
+      const candidate=structuredClone(document),result=edit(candidate);
+      if(result!==undefined)throw new Error('Assembly edits must finish synchronously');
+      if(candidate.id!==document.id)throw new Error('Assembly edits must keep the project identity');
+      commit(title,d=>{for(const key of Object.keys(d))delete (d as any)[key];Object.assign(d,candidate);});
+    },
     setParametric(design: ParametricDesign) {commit('Edit parameters',d=>{if(d.version===1)d.version=2;d.parametric=structuredClone(design);});},
     detachGenerator(id:string){commit('Detach shape generator',d=>{if(!d.nodes[id]?.generator)throw new Error(t('No generator to detach'));if(isCube(d.nodes[id]))throw new Error(t('Cube edges are linked; use a Box for independent dimensions'));delete d.nodes[id].generator;if(d.nodes[id].physics)d.nodes[id].physics={...d.nodes[id].physics!,sourcePreset:undefined};});},
     replaceGenerated(id:string,fragment:CadDocument,options:{resetScale?:boolean;label?:string}={}){

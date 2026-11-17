@@ -8,16 +8,16 @@ import {createMotorDocument} from '../packages/editor/src/motor-models.js';
 
 it('saves explicit licensed display references while preserving Scout colliders and drive ownership',()=>{
  const doc=parseDocument(serializeDocument(createTTRoverDocument('robot-tt-rover')));
- expect(doc.nodes['feather-envelope'].kind).toBe('box');
+ expect(doc.nodes['electronics-controller'].kind).toBe('box');
  expect(doc.nodes['battery-envelope'].kind).toBe('box');
  expect(doc.joints!.filter(j=>j.control).map(j=>j.control?.port)).toEqual(['A','B']);
- expect(doc.provenance!.records.map(r=>r.id)).toContain('adafruit-feather-4884-appearance');
+ expect(doc.provenance!.records.map(r=>r.id)).toContain('adafruit-metro-mini-2590-appearance');
  expect(doc.provenance!.records.map(r=>r.id)).toContain('adafruit-holder-830-appearance');
- expect(doc.nodes['driver-envelope'].name).toContain('illustrative');
- expect(doc.nodes['feather-envelope']).not.toHaveProperty('positions');
+ expect(doc.nodes['electronics-driver-0'].name).toContain('H-bridge');
+ expect(doc.nodes['electronics-controller']).not.toHaveProperty('positions');
  expect(doc.nodes['battery-envelope']).not.toHaveProperty('positions');
  const before=serializeDocument(doc);
- for(const id of ['feather-envelope','battery-envelope','driver-envelope']){
+ for(const id of ['electronics-controller','battery-envelope','electronics-driver-0']){
   const node=doc.nodes[id];const g=componentAppearance(node,doc.nodes)!;
   expect(g.getAttribute('position').count).toBeGreaterThan(100);
   expect(g.getAttribute('color').count).toBe(g.getAttribute('position').count);
@@ -27,22 +27,24 @@ it('saves explicit licensed display references while preserving Scout colliders 
  expect(serializeDocument(doc)).toBe(before);
 });
 it('uses actual 22.86 x 50.8 mm Feather outline and USB geometry, without stretching to its envelope',()=>{
- const doc=createTTRoverDocument('robot-tt-rover');const node=structuredClone(doc.nodes['feather-envelope']);node.transform=identityTransform();
+ const doc=createTTRoverDocument('robot-tt-rover');const node=structuredClone(doc.nodes['electronics-controller']);node.transform=identityTransform();
+ if(node.kind==='box')node.size=[22.86,50.8,8];node.physics!.sourcePreset='visual-feather-rp2040';
  const g=componentAppearance(node)!;g.computeBoundingBox();const b=g.boundingBox!;
  expect(b.min.x).toBeCloseTo(-11.43,1);expect(b.max.x).toBeCloseTo(11.43,1);
  expect(b.min.y).toBeLessThan(-25.4);expect(b.max.y).toBeCloseTo(25.4,1);
  expect(b.min.z).toBeCloseTo(-4,1);expect(b.max.z).toBeGreaterThan(2);g.dispose();
 });
 it('tracks body transforms and falls back to editable geometry after a collider dimension change',()=>{
- const doc=createTTRoverDocument('robot-tt-rover');const node=doc.nodes['feather-envelope'];
+ const doc=createTTRoverDocument('robot-tt-rover');const node=doc.nodes['electronics-controller'];
  const a=componentAppearance(node)!;node.transform.position[0]+=100;const b=componentAppearance(node)!;
  expect(b.getAttribute('position').getX(0)-a.getAttribute('position').getX(0)).toBeCloseTo(100,4);a.dispose();b.dispose();
  if(node.kind==='box')node.size[0]+=1;expect(componentAppearance(node)).toBeUndefined();
 });
 it('does not substitute a differently sized Trident battery with an incompatible holder',()=>{
  const doc=createSteerableRoverDocument('robot-steerable-rover');
- const feather=componentAppearance(doc.nodes['feather-envelope']);expect(feather).toBeDefined();feather!.dispose();
- expect(componentAppearance(doc.nodes['battery-envelope'])).toBeUndefined();
+ const feather=componentAppearance(doc.nodes['electronics-controller']);expect(feather).toBeDefined();feather!.dispose();
+ expect(doc.nodes['battery-envelope'].physics!.sourcePreset).toBe('visual-power-source');
+ const battery=componentAppearance(doc.nodes['battery-envelope']);expect(battery).toBeDefined();battery!.dispose();
 });
 for(const id of ['tt-gearmotor','dc-toy-motor','micro-servo-1143'])it(`${id}: distinct source-solid materials keep the articulated shaft and edited shapes intact`,()=>{
  const doc=createMotorDocument(id);const before=serializeDocument(doc);

@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -179,6 +180,7 @@ export function createVectorPlotterDocument(id=VECTOR_PLOTTER_ID):CadDocument{
  doc.joints!.push(penJoint);
  fixed(doc,'pen-shaft','pen-arm');
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'stylus-path',bodyId:'pen-arm',point:[33,0,0],color:'#e8ab47'}];
  return doc;
 }

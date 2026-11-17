@@ -1,4 +1,5 @@
 import {physicsMaterials} from '@brickwright/cad-core';
+import {canAddRobotElectronics,addRobotElectronics} from './robot-electronics.js';
 import {mountSimulationPanel} from './simulation-panel.js';
 import {mountScrewRedesign} from './screw-redesign.js';
 // SPDX-License-Identifier: BSD-3-Clause
@@ -288,6 +289,13 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   function buildInspector() {
     inspector.replaceChildren(); const header = el('div', 'panel-header'); header.append(el('h2', '', t('Properties'))); button('Close properties', () => { inspector.classList.remove('open'); inspector.classList.add('closed'); propertiesToggle.setAttribute('aria-pressed', 'false'); }, header); inspector.append(header);
+    if(canAddRobotElectronics(session.state.document)){
+      const complete=button('Add controller and power',()=>{
+        if(simulation.state.state!=='idle')throw new Error(t('Stop simulation before adding electronics.'));
+        session.editAssembly(t('Add controller and power'),addRobotElectronics,{expectedRevision:session.state.revision});
+      },inspector);
+      complete.dataset.testid='add-robot-electronics';
+    }
     const selection = session.state.selection;const styleRow=el('div','object-style');inspector.append(styleRow);
     if(selection.some(id=>session.state.document.roots.includes(id))){const dimensions=el('div','property-matrix actual-size');dimensions.setAttribute('role','group');dimensions.setAttribute('aria-label',t('Dimensions after transform (mm)'));const marker=el('div','property-kind');marker.title=t('Dimensions after transform (mm)');marker.append(toolIcon('Dimensions')!,el('small','','mm'));dimensions.append(marker);inspector.append(dimensions);for(const axis of ['X','Y','Z']){const bodies=built?.bodies.filter(body=>selection.includes(body.id))??[];const i=['X','Y','Z'].indexOf(axis),size=bodies.length?Math.max(...bodies.map(body=>body.bounds.max[i]))-Math.min(...bodies.map(body=>body.bounds.min[i])):'';const input=field(dimensions,t`Size ${axis} (mm)`,typeof size==='number'?Number(size.toFixed(3)):'',()=>{},'number','.1');input.readOnly=true;input.dataset.sizeAxis=axis;input.title=t`Size ${axis} (mm)`;input.parentElement!.querySelector('.field-name')!.textContent=axis;}}
     if(selection.length&&selection.every(id=>session.state.document.roots.includes(id)&&!session.state.document.nodes[id].reference)){const roles=el('div','shape-role');roles.setAttribute('role','group');roles.setAttribute('aria-label',t('Solid or hole'));for(const role of ['solid','hole'] as const){const label=role==='solid'?'Solid':'Hole',b=button(label,()=>session.setRole(role),roles,'role-icon');b.setAttribute('aria-pressed',String(selection.every(id=>(session.state.document.nodes[id].role??'solid')===role)));b.dataset.testid=`role-${role}`;b.style.setProperty('--part-colour',session.state.document.nodes[selection[0]].color);b.title=role==='hole'?t('Union subtracts hole shapes from solid shapes'):t('Printable solid');}styleRow.append(roles);}

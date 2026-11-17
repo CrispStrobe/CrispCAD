@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -181,6 +182,7 @@ export function createAegisSentryDocument(id=AEGIS_SENTRY_ID):CadDocument{
 
  addServo('latch','East latch servo','C',[42,32,6],[0,0,0],[42,32,33.18],[0,0,1],[-latchLimit,latchLimit],'outpost','latch');
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'pod-path',bodyId:'pod',point:[0,0,7],color:'#f59e0b'}];
  return doc;
 }

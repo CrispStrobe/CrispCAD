@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -180,6 +181,7 @@ export function createPolarisTrackerDocument(id=POLARIS_TRACKER_ID):CadDocument{
  addServo('pan','Pan yaw servo','B',[0,0,16],[0,0,0],[0,0,43.18],[0,0,1],[-panLimit,panLimit],'carriage','yoke');
  addServo('tilt','Tilt pitch servo','C',[0,-18,72],[-90,0,0],[0,9.18,72],[0,1,0],[-tiltLimit,tiltLimit],'yoke','sensor-head');
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'beacon-path',bodyId:'beacon-target',point:[0,0,6],color:'#f59e0b'}];
  return doc;
 }

@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -283,6 +284,7 @@ export function createHeliosCatapultDocument(id=HELIOS_CATAPULT_ID):CadDocument{
  addServo('throw','Catapult throw servo','B',[0,19,62],[90,0,0],[0,-8.18,62],[0,1,0],[heliosCatapultDimensions.throwMinDeg*deg,heliosCatapultDimensions.throwMaxDeg*deg],'turret','arm');
  addServo('gate','Target gate servo','C',[95,0,4.8],[0,0,0],[95,0,31.98],[0,0,1],[-heliosCatapultDimensions.gateLimitDeg*deg,heliosCatapultDimensions.gateLimitDeg*deg],'gate-base','goalie');
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'payload-flight-path',bodyId:'payload',point:[0,0,6],color:'#eab308'}];
  doc.simulation={...defaultSimulationSettings(),...doc.simulation,selfCollisions:false};
  return doc;

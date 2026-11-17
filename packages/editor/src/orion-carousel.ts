@@ -1,3 +1,4 @@
+import {addRobotElectronics} from './robot-electronics.js';
 // SPDX-License-Identifier: BSD-3-Clause
 // Original printable mechanics. Adafruit micro-servo 1143 derivatives retain their MIT provenance.
 import * as THREE from 'three';
@@ -223,6 +224,7 @@ export function createOrionCarouselDocument(id=ORION_CAROUSEL_ID):CadDocument{
 
  addServo('gate','Chute diverter servo','C',[68,52,6],[0,0,0],[68,52,33.18],[0,0,1],[-gateLimit,gateLimit],'base','diverter');
 
+ addRobotElectronics(doc);
  doc.tracers=[{id:'cargo-path',bodyId:'cargo-cube',point:[0,0,7],color:'#f59e0b'}];
  return doc;
 }
