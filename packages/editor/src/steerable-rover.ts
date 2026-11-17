@@ -5,6 +5,8 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {createDocument,defaultPartPhysics,defaultSimulationSettings,identityTransform,jointAtWorldFrame,t} from '@brickwright/cad-core';
 import type {CadDocument,CodeProgram,SolidNode,Vec3} from '@brickwright/cad-core';
 import {createMotorDocument} from './motor-models.js';
+import {ttRoverCollisionAssembly} from './tt-rover-collisions.js';
+import {steerableRoverCollisionAssembly} from './steerable-rover-collisions.js';
 
 export const STEERABLE_ROVER_ID='robot-steerable-rover';
 export const steerableRoverCatalog=[
@@ -162,7 +164,7 @@ const partCollisions:Partial<Record<SteerableRoverPart,CollisionPiece[]>>={
 };
 
 function addPart(doc:CadDocument,part:SteerableRoverPart,id:string,position:Vec3,rotation:Vec3=[0,0,0]){
- const collisionAssembly=partCollisions[part]?.map(piece=>({positions:[...piece.positions],indices:[...piece.indices]}));
+ const collisionAssembly=steerableRoverCollisionAssembly(part)??partCollisions[part]?.map(piece=>({positions:[...piece.positions],indices:[...piece.indices]}));
  const node:SolidNode={
   id,
   name:t(names[part]),
@@ -241,7 +243,7 @@ export function createSteerableRoverDocument(id=STEERABLE_ROVER_ID):CadDocument{
    const node=structuredClone(original);
    node.id=side+'-'+key;
    if(node.kind==='boolean')node.inputs=node.inputs.map(input=>side+'-'+input);
-   if(ttMotor.roots.includes(key))node.transform.position=[-54.3,y,20.3];
+   if(ttMotor.roots.includes(key)){node.transform.position=[-54.3,y,20.3];node.physics={...node.physics!,collisionAssembly:ttRoverCollisionAssembly(key)};}
    node.name=t(side==='left'?'Left TT motor':'Right TT motor')+(key==='shaft'?' · '+t('Output shaft'):'');
    doc.nodes[node.id]=node;
   }
@@ -261,7 +263,7 @@ export function createSteerableRoverDocument(id=STEERABLE_ROVER_ID):CadDocument{
     program:program('return torus(30,1.5,6,16);'),
     transform:{...identityTransform(),position:[-35,Math.sign(y)*(74.5-offset),31.5],rotation:[90,0,0]},
     color:'#303c40',
-    physics:{...defaultPartPhysics(),densityKgM3:1100,material:'rubber',friction:1,restitution:.03},
+    physics:{...defaultPartPhysics(),densityKgM3:1100,material:'rubber',friction:1,restitution:.03,collisionAssembly:steerableRoverCollisionAssembly('tire')},
    };
    doc.roots.push(key);
    fixed(doc,side+'-wheel',key);
@@ -308,7 +310,7 @@ export function createSteerableRoverDocument(id=STEERABLE_ROVER_ID):CadDocument{
    program:program('return torus(30,1.5,6,16);'),
    transform:{...identityTransform(),position:[75,yOffset,31.5],rotation:[90,0,0]},
    color:'#303c40',
-   physics:{...defaultPartPhysics(),densityKgM3:1100,material:'rubber',friction:1,restitution:.03},
+   physics:{...defaultPartPhysics(),densityKgM3:1100,material:'rubber',friction:1,restitution:.03,collisionAssembly:steerableRoverCollisionAssembly('tire')},
   };
   doc.roots.push(key);
   fixed(doc,'front-wheel',key);

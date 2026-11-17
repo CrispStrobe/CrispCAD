@@ -151,7 +151,7 @@ export function createKestrelArmDocument(id=KESTREL_ARM_ID):CadDocument{
   return doc;
  }
 
- doc.simulation={...defaultSimulationSettings(),fixBase:true,groundFriction:.8,groundRestitution:.02};
+ doc.simulation={...defaultSimulationSettings(),fixBase:true,groundFriction:.8,groundRestitution:.02,selfCollisions:false};
  doc.joints=[];
 
  // Static grounded pedestal holding yaw servo A.

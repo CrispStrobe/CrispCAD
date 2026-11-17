@@ -137,7 +137,7 @@ export function createLabyrinthTilterDocument(id=LABYRINTH_TILTER_ID):CadDocumen
   return doc;
  }
 
- doc.simulation={...defaultSimulationSettings(),fixBase:true,groundFriction:.6,groundRestitution:.05};
+ doc.simulation={...defaultSimulationSettings(),fixBase:true,groundFriction:.6,groundRestitution:.05,selfCollisions:false};
  doc.joints=[];
 
  addPart(doc,'stand','stand',[0,0,0],[0,0,0],'static',.3);

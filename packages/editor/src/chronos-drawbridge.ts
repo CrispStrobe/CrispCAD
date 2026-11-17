@@ -126,7 +126,7 @@ export function createChronosDrawbridgeDocument(id=CHRONOS_DRAWBRIDGE_ID):CadDoc
   return doc;
  }
 
- doc.simulation={...defaultSimulationSettings(),fixBase:true,groundFriction:.6,groundRestitution:.05};
+ doc.simulation={...defaultSimulationSettings(),fixBase:true,groundFriction:.6,groundRestitution:.05,selfCollisions:false};
  doc.joints=[];
 
  addPart(doc,'deck','deck',[0,0,0],[0,0,0],'static',.12);

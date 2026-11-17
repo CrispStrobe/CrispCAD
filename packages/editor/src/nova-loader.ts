@@ -121,7 +121,7 @@ export function createNovaLoaderDocument(id=NOVA_LOADER_ID):CadDocument{
   return doc;
  }
 
- doc.simulation={...defaultSimulationSettings(),fixBase:false,groundFriction:.8,groundRestitution:.05};
+ doc.simulation={...defaultSimulationSettings(),fixBase:false,groundFriction:.8,groundRestitution:.05,selfCollisions:false};
  doc.joints=[];
 
  addPart(doc,'chassis','chassis',[0,0,2],[0,0,0],'dynamic',.15);

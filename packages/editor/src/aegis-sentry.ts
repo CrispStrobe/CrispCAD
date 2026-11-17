@@ -130,7 +130,7 @@ export function createAegisSentryDocument(id=AEGIS_SENTRY_ID):CadDocument{
   return doc;
  }
 
- doc.simulation={...defaultSimulationSettings(),fixBase:true,groundFriction:.6,groundRestitution:.05};
+ doc.simulation={...defaultSimulationSettings(),fixBase:true,groundFriction:.6,groundRestitution:.05,selfCollisions:false};
  doc.joints=[];
 
  addPart(doc,'outpost','outpost',[0,0,0],[0,0,0],'static',.06);

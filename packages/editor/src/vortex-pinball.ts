@@ -140,7 +140,7 @@ export function createVortexPinballDocument(id=VORTEX_PINBALL_ID):CadDocument{
   return doc;
  }
 
- doc.simulation={...defaultSimulationSettings(),fixBase:true,groundFriction:.6,groundRestitution:.05};
+ doc.simulation={...defaultSimulationSettings(),fixBase:true,groundFriction:.6,groundRestitution:.05,selfCollisions:false};
  doc.joints=[];
 
  addPart(doc,'arena','arena',[0,0,0],[0,0,0],'static',.03,.5);

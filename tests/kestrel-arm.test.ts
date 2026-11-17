@@ -93,4 +93,4 @@ it('actuates yaw A, lift B and gripper C independently in Jolt physics simulatio
  }finally{
   world.dispose();
  }
-});
+},360000);

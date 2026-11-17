@@ -130,7 +130,7 @@ export function createZephyrConveyorDocument(id=ZEPHYR_CONVEYOR_ID):CadDocument{
   return doc;
  }
 
- doc.simulation={...defaultSimulationSettings(),fixBase:true,groundFriction:.6,groundRestitution:.05};
+ doc.simulation={...defaultSimulationSettings(),fixBase:true,groundFriction:.6,groundRestitution:.05,selfCollisions:false};
  doc.joints=[];
 
  addPart(doc,'frame','frame',[0,0,0],[0,0,0],'static',.04);
