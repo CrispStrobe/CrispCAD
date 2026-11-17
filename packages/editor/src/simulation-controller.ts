@@ -30,6 +30,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
  function fail(value:unknown){if(disposed)return;reset();error=value instanceof Error?value.message:String(value);notify();}
  async function prepare(){
   if(disposed)throw new Error(t('Editor was disposed'));if(client&&!preparing)return;if(preparing)return preparing;
+  replay.clear();traces.clear();replayTime=undefined;
   const expected=epoch;error='';
   const pending=(async()=>{await ready();if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));client=createSimulationClient();const first=await client.send({op:'start',document:structuredClone(session.state.document),wasmURL:new URL(wasmURL,document.baseURI).href,fixBase:fixBase(),rigidPreview,locale:getLocale()});if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));frame=first;present(frame);})();
   preparing=pending;notify();
@@ -60,7 +61,13 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
  async function setDrive(ref:string,kind:Drive,speed:number,limit:number,asProgram=true){if(externalOwner)throw new Error(t('The circuit owns this simulation clock'));const motor=find(ref,kind);validateDrive(kind,speed,limit);const command=commandEpoch,version=ticket(motor.id);cancel(t('Motor command was replaced'),motor.id);if(asProgram)await start(true);else await prepare();if(command!==commandEpoch||tickets.get(motor.id)!==version)throw new Error(t('Motor command was replaced'));await sendDrive(motor.id,kind,speed,limit);notify();}
  async function stopDrive(ref:string,kind:Drive,action:'brake'|'coast'='brake'){if(externalOwner)throw new Error(t('The circuit owns this simulation clock'));const motor=find(ref,kind);if(!['brake','coast'].includes(action))throw new Error(t('Unsupported CAD stop action'));ticket(motor.id);cancel(t('Motor command was replaced'),motor.id);await brake(motor.id,kind,action);notify();}
  async function stopMotors(){if(externalOwner)throw new Error(t('The circuit owns this simulation clock'));stopReplay();for(const motor of [...motors(),...sliders()])ticket(motor.id);cancel(t('Simulation was stopped'));if(client&&!preparing)await client.send({op:'stop-motors'});for(const [id,value]of settings)settings.set(id,{...value,speed:0});notify();}
- async function stop(){pause();await stopMotors();}
+ async function stop(){
+  // Stop returns the viewport to the design. Keep the previous recording for
+  // replay/export; a new preparation starts a fresh recording.
+  epoch++;pause();client?.dispose();client=undefined;preparing=undefined;
+  for(const [id,value]of settings)settings.set(id,{...value,speed:0});
+  frame=emptyFrame();replayTime=undefined;frameChanged(null);notify();
+ }
  async function travel(ref:string,kind:Drive,distance:number,speed:number){
   const motor=find(ref,kind);if(!Number.isFinite(distance)||Math.abs(distance)>(kind==='hinge'?36000:100000)||!Number.isFinite(speed)||Math.abs(speed)>(kind==='hinge'?720:1000)||speed===0)throw new Error(t('Invalid CAD motor travel command'));
   const command=commandEpoch,version=ticket(motor.id);cancel(t('Motor command was replaced'),motor.id);await start(true);if(command!==commandEpoch||tickets.get(motor.id)!==version)throw new Error(t('Motor command was replaced'));if(distance===0){await stopDrive(motor.id,kind);return 'completed';}
@@ -95,7 +102,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
     pending=true;try{const next=await client!.send({op:'actuator-step',impulses,rays,servos,telemetryOnly:true});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));return structuredClone(next);}finally{pending=false;}
    },
    present(){if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));present(frame);notify();},
-   release(){if(externalOwner===owner){const ownedClient=client;pause();if(ownedClient)void ownedClient.send({op:'stop-motors'}).catch(()=>{});}}
+   release(){if(externalOwner===owner)void stop();}
   };
  }
  return {motors,sliders,prepare,start,pause,reset,stop,stopMotors,acquireExternalClock,
@@ -123,7 +130,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
   pauseReplay(){stopReplay();notify();},get replayPlaying(){return replayPlaying;},
   live(){stopReplay();replayTime=undefined;frameChanged(frame);notify();},
   snapshot:()=>structuredClone(frame),
-  get state(){return {state:preparing?'preparing':playing||externalOwner?'running':client?'paused':'idle',program,error,time:frame.time};},
+  get state(){return {state:preparing?'preparing':playing||externalOwner?'running':client||replayTime!==undefined?'paused':'idle',program,error,time:frame.time};},
   dispose(){if(disposed)return;if(program){program=false;interruptProgram?.();}reset();disposed=true;unsubscribe();document.removeEventListener('visibilitychange',hidden);window.removeEventListener('blur',blur);}
  };
 }

@@ -36,7 +36,11 @@ return union(subtract(plate,channel),stop);`),
 
  ram:program(`return move([0,0,7],box(14,14,14));`),
 
- wiper:program(`return move([0,5,0],rotate([90,0,0],extrude(10,[[-8,0],[8,0],[8,0.2],[-8,5]])));`),
+ wiper:program(`let wedge=move([0,5,0],rotate([90,0,0],extrude(10,[[-8,0],[8,0],[8,0.2],[-8,5]])));
+// A printable carriage supports the wedge instead of an unrealistically
+// light unsupported blade. Its 12 mm width clears the 16 mm dial channel.
+let carriage=move([-16,0,3],box(22,12,6));
+return union(wedge,carriage);`),
 
  blank:program(`return move([0,0,5],box(12,12,10));`),
 

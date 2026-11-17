@@ -15,3 +15,8 @@ The 16 mm channel leaves clearance around the 12 mm blank so a slightly yawed wo
 Atlas qualification rejected the imported solid crate for the existing coupled demo: its tilt drifted to about 52 degrees for a 15 degree target. Retaining the original hollow crate and precise spline fork candidates restores approximately 15.55 degrees in the same six-second coupled harness while keeping the newer cradle/wheel/mast optimizations. The collision certificates retain all original tolerances; the fork/crate contact product is 784.
 
 App/VM workpiece-cycle and native build validation are recorded separately in the Lite repository after SDK integration.
+
+
+The complete-project stress run exposed a remaining low-mass wedge instability. A source-modelled printable pusher carriage now supports the wedge; the mass/inertia comes from its visible 22×12×6 mm geometry, not a hidden mass override. Three complete WebKit cycles (closed Controls, open Controls, and after centering controls) passed index/contact/ejection/return checks. The trajectory proof now explicitly requires clearing the dial edge before falling, so a workpiece tunnelling through the dial cannot pass as ejection.
+
+Stop/release previously left preview poses active while the host reported Ready, blocking selection and dragging until Reset. Stop now disposes the worker and restores the editable design immediately while retaining recorded replay/traces for inspection/export. A fresh preparation starts a fresh recording. Pause still preserves the preview. Both new regressions failed before the fix. Combined Quasar, Atlas and controller tests pass 30/30.

@@ -117,3 +117,35 @@ it('keeps a circuit clock acquisition alive when the window blurs during prepara
   lease.release();
  }finally{f.dispose();}
 });
+
+it('returns to the editable design when a circuit releases its clock, retaining recorded motion',async()=>{
+ const f=fixture(),source=f.session.serialize();try{
+  const lease=await f.controller.acquireExternalClock();
+  client.send.mockResolvedValueOnce(fullFrame(.005));await lease.step([]);
+  const recording=f.controller.replayRange();f.frameChanged.mockClear();
+  lease.release();
+  expect(f.controller.state.state).toBe('idle');
+  expect(f.frameChanged).toHaveBeenLastCalledWith(null);
+  expect(client.dispose).toHaveBeenCalled();
+  expect(f.controller.replayRange()).toEqual(recording);
+  expect(f.session.serialize()).toBe(source);
+  f.controller.previousFrame();
+  expect(f.frameChanged).toHaveBeenLastCalledWith(fullFrame());
+  expect(f.controller.state.state).toBe('paused');
+  await f.controller.stop();
+  expect(f.controller.state.state).toBe('idle');
+  expect(f.controller.replayRange()).toEqual(recording);
+  const replacement=await f.controller.acquireExternalClock();
+  expect(replacement.snapshot().time).toBe(0);
+  expect(client.send).toHaveBeenLastCalledWith(expect.objectContaining({op:'start'}));
+ }finally{f.dispose();}
+});
+
+it('returns to the editable design on manual Stop without requiring Reset',async()=>{
+ const f=fixture();try{
+  await f.controller.prepare();f.frameChanged.mockClear();
+  await f.controller.stop();
+  expect(f.controller.state.state).toBe('idle');
+  expect(f.frameChanged).toHaveBeenLastCalledWith(null);
+ }finally{f.dispose();}
+});
