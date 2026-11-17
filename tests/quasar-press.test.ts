@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {beforeAll,expect,it} from 'vitest';
+import {Vector3,Quaternion} from 'three';
 import {readFileSync} from 'node:fs';
 import initJolt from 'jolt-physics/debug-wasm-compat';
 import {createGeometryKernel,exportSTL,checkModelLibrarySTL} from '@brickwright/cad-geometry';
@@ -73,24 +74,27 @@ for(const part of Object.keys(quasarPressPartPrograms) as QuasarPressPart[]){
  });
 }
 
-it('rotates dial A, stamps ram B, and sweeps ejector C in Jolt physics simulation',async()=>{
- const doc=createQuasarPressDocument();
- const geometry=kernel.evaluate(doc);
+it('indexes a real blank under the raised ram and ejects it clear of the dial',async()=>{
+ const doc=createQuasarPressDocument(),geometry=kernel.evaluate(doc);
  const prepared=await prepareDocumentCollisions(doc,geometry,kernel);
- const world=await createPhysicsWorld(doc,geometry,prepared,{J,ground:true,groundFriction:.6,groundRestitution:.05});
+ const world=await createPhysicsWorld(doc,geometry,prepared,{J,ground:true});
+ const advance=(seconds:number)=>{for(let i=0;i<seconds/.005;i++){world.setHingeServo('dial-a',Math.min(Math.PI/2,world.time*Math.PI/3),.35);world.step(.005);}};
+ const blankCenter=()=>{const pose=world.pose('blank');return new Vector3(0,-20,46.2).applyQuaternion(new Quaternion(...pose.quaternion)).add(new Vector3(...pose.positionMm)).toArray();};
  try{
-  world.setHingeMotor('dial-a',4.5,.25);
-  for(let i=0;i<25;i++)world.step(.005);
-
-  world.setSliderMotor('ram-b',-120,25);
-  world.setSliderMotor('eject-c',160,25);
-  for(let i=0;i<25;i++)world.step(.005);
-
-  expect(Math.abs(world.hingeAngle('dial-a')*180/Math.PI)).toBeGreaterThan(15);
+  world.setSliderMotor('ram-b',20,10);advance(3);
+  expect(world.hingeAngle('dial-a')*180/Math.PI).toBeCloseTo(90,0);
+  const indexed=blankCenter();
+  expect(indexed[0]).toBeGreaterThan(12);expect(Math.abs(indexed[1])).toBeLessThan(10);
+  world.setSliderMotor('ram-b',-20,10);advance(1);
   expect(world.sliderPosition('ram-b')).toBeLessThan(-3);
-  expect(world.sliderPosition('eject-c')).toBeGreaterThan(12);
-  expect(world.pose('blank').positionMm[2]).toBeGreaterThan(-2);
- }finally{
-  world.dispose();
- }
+  expect(world.sliderPosition('ram-b')).toBeGreaterThan(-6); // contact stops the rigid ram before it intersects the blank
+  world.setSliderMotor('ram-b',20,10);advance(1);
+  expect(world.sliderPosition('ram-b')).toBeGreaterThan(0);
+  world.setSliderMotor('ram-b',0,10);
+  world.setSliderMotor('eject-c',60,10);advance(2);
+  expect(world.sliderPosition('eject-c')).toBeGreaterThan(60);
+  expect(blankCenter()[0]).toBeGreaterThan(25);
+  expect(blankCenter()[2]).toBeLessThan(20); // off the dial and down on the receiving base
+  expect(blankCenter()[2]).toBeGreaterThan(5);
+ }finally{world.dispose();}
 },420000);

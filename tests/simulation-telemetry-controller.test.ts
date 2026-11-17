@@ -98,3 +98,22 @@ it('rejects invalid compact actuator commands without consuming the lease',async
   client.send.mockResolvedValueOnce(telemetry());await expect(lease.stepTelemetry([])).resolves.toEqual(telemetry());
  }finally{f.dispose();}
 });
+
+
+it('keeps a circuit clock acquisition alive when the window blurs during preparation',async()=>{
+ const f=fixture(),initial=deferred<SimulationFrame>();
+ try{
+  client.send.mockReturnValueOnce(initial.promise);
+  const acquiring=f.controller.acquireExternalClock();
+  await vi.waitFor(()=>expect(client.send).toHaveBeenCalled());
+  expect(f.controller.state.state).toBe('preparing');
+  window.dispatchEvent(new Event('blur'));
+  initial.resolve(fullFrame());
+  const lease=await acquiring;
+  expect(f.controller.state.state).toBe('running');
+  client.send.mockResolvedValueOnce(fullFrame(.005));
+  await lease.step([]);
+  expect(f.controller.state.time).toBe(.005);
+  lease.release();
+ }finally{f.dispose();}
+});

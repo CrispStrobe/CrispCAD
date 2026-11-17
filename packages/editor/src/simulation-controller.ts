@@ -70,7 +70,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
  }
  function seekReplay(time:number){if(!Number.isFinite(time))throw new Error(t('Invalid replay time'));if(program)interruptProgram?.();pause();const saved=replay.at(time);if(saved){replayTime=saved.time;frameChanged(saved);notify();}}
  const hidden=()=>{if(document.hidden){if(program)interruptProgram?.();void stop().catch(fail);}};
- const blur=()=>{if(!program){if(preparing)reset();else pause();}};
+ const blur=()=>{if(!program&&!externalOwner){if(preparing)reset();else pause();}};
  document.addEventListener('visibilitychange',hidden);window.addEventListener('blur',blur);
  let revision=session.state.revision,documentId=session.state.document.id;const unsubscribe=session.subscribe(state=>{if(state.revision!==revision){revision=state.revision;if(state.document.id!==documentId){documentId=state.document.id;fixBaseOverride=undefined;}if(program)interruptProgram?.();settings.clear();reset();}});
  async function acquireExternalClock(){
