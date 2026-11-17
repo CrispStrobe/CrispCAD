@@ -261,6 +261,7 @@ export function createAtlasForkliftDocument(id=ATLAS_FORKLIFT_ID):CadDocument{
  addPart(doc,'crate','pallet-crate',[105,0,35],[180,0,0],.85);
 
  doc.tracers=[{id:'fork-tip-path',bodyId:'forks',point:[120,0,8],color:'#e09f3e'}];
+ doc.simulation={...defaultSimulationSettings(),...doc.simulation,selfCollisions:false};
  return doc;
 }
 

@@ -62,3 +62,17 @@ it('permanently restores native part filtering before external mutations of a se
  for(const mutate of mutations){const world=await worldFor(doc);try{expect(world.separatedHingePairCount).toBe(1);mutate(world);expect(world.separatedHingePairCount).toBe(0);world.releaseGrab();world.step(.005);expect(world.separatedHingePairCount).toBe(0);}finally{world.dispose();}}
  const moving=structuredClone(doc);moving.nodes.left.physics!.initialVelocityMmS=[100,0,0];const world=await worldFor(moving);try{expect(world.separatedHingePairCount).toBe(0);}finally{world.dispose();}
 });
+
+it('supports explicit adjacent-link exclusion while retaining other-body contacts and legacy behavior',async()=>{
+ const authored=(exclude:boolean,obstacle=false)=>{const d=fixture();d.nodes.left.physics!.motion='static';d.nodes.rotor={...structuredClone(d.nodes.right),id:'rotor',name:'rotor',transform:{...identityTransform(),position:[20,0,23]}};d.roots.push('rotor');const joint=jointAtWorldFrame(d,'hinge','left','rotor',[-20,0,20],[0,1,0]);if(exclude)joint.collideConnected=false;d.joints!.push(joint);if(obstacle){d.nodes.probe={...structuredClone(d.nodes.left),id:'probe',name:'probe',transform:{...identityTransform(),position:[20,0,30]}};d.roots.push('probe');}return {d,id:joint.id};};
+ const angles:number[]=[];
+ for(const [exclude,obstacle]of [[false,false],[true,false],[true,true]]){const {d,id}=authored(exclude,obstacle),world=await worldFor(d);try{for(let i=0;i<20;i++)world.step(.005);angles.push(Math.abs(world.hingeAngle(id)));}finally{world.dispose();}}
+ expect(angles[0]).toBeGreaterThan(.01);expect(angles[1]).toBeLessThan(1e-5);expect(angles[2]).toBeGreaterThan(.005);
+});
+
+it('robot self-collision mode retains loose-object contacts and ground, and serializes the explicit choice',async()=>{
+ const d=fixture();d.nodes.left.physics!.motion='static';d.simulation!.selfCollisions=false;d.nodes.rotor={...structuredClone(d.nodes.right),id:'rotor',name:'rotor',transform:{...identityTransform(),position:[20,0,23]}};d.roots.push('rotor');const hinge=jointAtWorldFrame(d,'hinge','left','rotor',[-20,0,20],[0,1,0]);d.joints!.push(hinge);const world=await worldFor(d);
+ try{world.step(.1);expect(Math.abs(world.hingeAngle(hinge.id))).toBeLessThan(1e-5);}finally{world.dispose();}
+ d.nodes.probe={...structuredClone(d.nodes.left),id:'probe',name:'probe',transform:{...identityTransform(),position:[20,0,30]}};d.roots.push('probe');const contact=await worldFor(d);try{contact.step(.1);expect(Math.abs(contact.hingeAngle(hinge.id))).toBeGreaterThan(.005);}finally{contact.dispose();}
+ const falling=fixture();falling.simulation={...defaultSimulationSettings(),selfCollisions:false};const ground=await worldFor(falling);try{for(let i=0;i<300;i++)ground.step(.005);expect(ground.boundsMm('left').min[2]).toBeGreaterThan(-.1);}finally{ground.dispose();}
+});

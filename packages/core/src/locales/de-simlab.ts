@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages:Record<string,string>={
+ "Self collisions inside connected robots":"Selbstkollisionen innerhalb verbundener Roboter",
+ "Collisions between connected links":"Kollisionen zwischen verbundenen Gliedern",
+ "Invalid connected-link collision setting":"Ungültige Kollisionseinstellung für verbundene Glieder",
  "Complete project":"Komplettes Projekt",
  "Open {0} project":"Projekt {0} öffnen",
  "Opened {0} project.":"Projekt {0} geöffnet.",

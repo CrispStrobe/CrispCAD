@@ -202,6 +202,7 @@ export function createHeliosCatapultDocument(id=HELIOS_CATAPULT_ID):CadDocument{
  addServo('gate','Target gate servo','C',[95,0,4.8],[0,0,0],[95,0,31.98],[0,0,1],[-heliosCatapultDimensions.gateLimitDeg*deg,heliosCatapultDimensions.gateLimitDeg*deg],'gate-base','goalie');
 
  doc.tracers=[{id:'payload-flight-path',bodyId:'payload',point:[0,0,6],color:'#eab308'}];
+ doc.simulation={...defaultSimulationSettings(),...doc.simulation,selfCollisions:false};
  return doc;
 }
 

@@ -24,6 +24,9 @@ export interface PartPhysics {
 export interface CadJoint {
   id: string;
   kind: 'hinge' | 'fixed' | 'slider' | 'pivot';
+  /** false: adjacent rigid links do not collide; other contacts remain active.
+   * Undefined retains the original mated-part exclusion behavior. */
+  collideConnected?:boolean;
   bodyA: string;
   bodyB: string;
   /** Anchors and axes in each root body's untransformed millimetre coordinates. */
@@ -57,5 +60,5 @@ export function checkPhysics(doc: CadDocument) {
  }
  if(doc.joints===undefined)return;
  if(!Array.isArray(doc.joints)||doc.joints.length>2000)fail(t('bad joint list'));const ids=new Set<string>(),ports=new Set<string>();
- for(const j of doc.joints){if(!j||typeof j.id!=='string'||!/^[a-zA-Z0-9_-]{1,96}$/.test(j.id)||ids.has(j.id)||!['hinge','fixed','slider','pivot'].includes(j.kind)||(['slider','pivot'].includes(j.kind)&&doc.version<8)||j.bodyA===j.bodyB||![j.bodyA,j.bodyB].every(id=>doc.roots.includes(id)&&!doc.nodes[id].reference&&doc.nodes[id].role!=='hole')||![j.anchorA,j.anchorB,j.axisA,j.axisB].every(vector)||Math.abs(Math.hypot(...j.axisA)-1)>1e-5||Math.abs(Math.hypot(...j.axisB)-1)>1e-5||j.limits!==undefined&&(!Array.isArray(j.limits)||j.limits.length!==2||!['hinge','slider'].includes(j.kind)||!j.limits.every(v=>number(v,j.kind==='slider'?-100000:-Math.PI*2,j.kind==='slider'?100000:Math.PI*2))||j.limits[0]>j.limits[1]))fail(t('bad joint'));if(j.coneAngle!==undefined&&(j.kind!=='pivot'||!number(j.coneAngle,0,Math.PI)))fail(t('Invalid pivot cone angle'));ids.add(j.id);if(j.control!==undefined){if(!['hinge','slider'].includes(j.kind)||!j.control||typeof j.control.port!=='string'||!/^[A-Z][A-Z0-9_-]{0,15}$/.test(j.control.port)||ports.has(j.control.port))fail(t('Invalid or duplicate CAD motor port'));ports.add(j.control.port);}}
+ for(const j of doc.joints){if(!j||typeof j.id!=='string'||!/^[a-zA-Z0-9_-]{1,96}$/.test(j.id)||ids.has(j.id)||!['hinge','fixed','slider','pivot'].includes(j.kind)||(['slider','pivot'].includes(j.kind)&&doc.version<8)||j.bodyA===j.bodyB||![j.bodyA,j.bodyB].every(id=>doc.roots.includes(id)&&!doc.nodes[id].reference&&doc.nodes[id].role!=='hole')||![j.anchorA,j.anchorB,j.axisA,j.axisB].every(vector)||Math.abs(Math.hypot(...j.axisA)-1)>1e-5||Math.abs(Math.hypot(...j.axisB)-1)>1e-5||j.limits!==undefined&&(!Array.isArray(j.limits)||j.limits.length!==2||!['hinge','slider'].includes(j.kind)||!j.limits.every(v=>number(v,j.kind==='slider'?-100000:-Math.PI*2,j.kind==='slider'?100000:Math.PI*2))||j.limits[0]>j.limits[1]))fail(t('bad joint'));if(j.collideConnected!==undefined&&typeof j.collideConnected!=='boolean')fail(t('Invalid connected-link collision setting'));if(j.coneAngle!==undefined&&(j.kind!=='pivot'||!number(j.coneAngle,0,Math.PI)))fail(t('Invalid pivot cone angle'));ids.add(j.id);if(j.control!==undefined){if(!['hinge','slider'].includes(j.kind)||!j.control||typeof j.control.port!=='string'||!/^[A-Z][A-Z0-9_-]{0,15}$/.test(j.control.port)||ports.has(j.control.port))fail(t('Invalid or duplicate CAD motor port'));ports.add(j.control.port);}}
 }

@@ -191,6 +191,7 @@ export function createCycloneSorterDocument(id=CYCLONE_SORTER_ID):CadDocument{
  fixed(doc,'sweeper-shaft','paddle');
 
  doc.tracers=[{id:'sweeper-tip-path',bodyId:'paddle',point:[44,0,6],color:'#0ea5e9'}];
+ doc.simulation={...defaultSimulationSettings(),...doc.simulation,selfCollisions:false};
  return doc;
 }
 

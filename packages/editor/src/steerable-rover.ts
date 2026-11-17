@@ -346,6 +346,7 @@ export function createSteerableRoverDocument(id=STEERABLE_ROVER_ID):CadDocument{
  }
 
  doc.tracers=[{id:'rover-path',bodyId:'chassis',point:[0,0,4],color:'#38a99a'}];
+ doc.simulation={...defaultSimulationSettings(),...doc.simulation,selfCollisions:false};
  return doc;
 }
 

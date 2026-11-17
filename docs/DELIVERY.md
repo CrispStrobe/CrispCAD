@@ -1129,3 +1129,18 @@ The ninth ranked batch verifies licence/provenance, complete dependency closures
 The5survivors—24246,3496,u9208,33234,u9473—retain27exact originals atc42ac7b. Five actual editor/provenance/history/substituted-byte refusal cases,5actual PNGs and the final app build pass. A preserved harness capture failure treated the closed cold-proof directory symlink as a source file; the scoped correction excludes only that exact verified directory and refuses any other non-file source. After the preserved zero-child PSI veto and PR299 lock contention, the scheduled parser/browser-only continuation matches10source/42built hashes and passes all10Chromium/iPad WebKit workflows in three bounded chunks. All raw attachments equal durable source/mesh/PNG records with zero offline/external requests. The raw receipt retains the earlier no-child pre-parser capture row; an exact projection accounts for all7successful child phases, without test replay or removal of an executed failure.
 
 Measured commit27b9338/treeb33f2faa binds all40source/input/licence/tested files and23validation artifacts. All566prior source/mesh hashes and322previews remain exact. Local qualification is288/283/327, a gain of5/5/5 from delivered283/278/322; main delivery remains separate until verified owner landing. Target300 leaves12additional admissions after this cohort. No native, focused editor, PNG, build or package replay occurred in the browser continuation. The next30source-ready roots/117originals remain unconverted. The585closure-budget pool has317unconverted roots,144native NotManifold refusals, one converter quad refusal and four withheld non-independent roots; geometry yield remains unknown, so no numerical source deficit or archive exhaustion is asserted. See [per-model gates, preserved failures and exact commit/runtime binding](evidence/ldraw-batch9-qualification-2026-11-16.json).
+
+## Robot simulation responsiveness — 2026-11-17
+
+New robot documents explicitly turn off self collisions inside each joint-connected
+robot. Ground and loose-object contacts remain enabled; connector travel limits
+remain authoritative. This is an interactive articulated-robot model, not an
+internal clearance qualification. World settings exposes the choice; re-enabling
+it restores the prior detailed behavior. Existing documents retain their previous
+default. Individual connected-link contact exclusion is also explicit and editable.
+No mesh, convex certificate tolerance, solver impulse limit or time budget changed.
+
+The fixed-assembly/physics/hinge suite passes49 controls, including a loose obstacle
+and ground with robot self-collisions disabled and the legacy contact behavior.
+The Lite host must regenerate whole-project examples and verify every robot SB3
+hash in its final build; otherwise its static mirror can ship old electrical models.

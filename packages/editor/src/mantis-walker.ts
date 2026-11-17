@@ -173,6 +173,7 @@ export function createMantisWalkerDocument(id=MANTIS_WALKER_ID):CadDocument{
  addServo('roll','Roll balance servo','C',[-27.18,0,44],[0,90,0],[0,0,44],[1,0,0],[-rollLimit,rollLimit],'torso','pendulum');
 
  doc.tracers=[{id:'walker-path',bodyId:'torso',point:[0,0,26],color:'#8b5cf6'}];
+ doc.simulation={...defaultSimulationSettings(),...doc.simulation,selfCollisions:false};
  return doc;
 }
 
