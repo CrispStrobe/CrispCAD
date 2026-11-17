@@ -5,12 +5,15 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {createDocument,defaultPartPhysics,defaultSimulationSettings,identityTransform,jointAtWorldFrame,t} from '@brickwright/cad-core';
 import type {CadDocument,CodeProgram,SolidNode,Vec3} from '@brickwright/cad-core';
 import {createMotorDocument} from './motor-models.js';
+import {atlasForkliftCollisionAssembly} from './atlas-forklift-collisions.js';
+import {ttRoverCollisionAssembly} from './tt-rover-collisions.js';
+import {steerableRoverCollisionAssembly} from './steerable-rover-collisions.js';
 
 export const ATLAS_FORKLIFT_ID='robot-atlas-forklift';
 export const atlasForkliftCatalog=[
- {id:ATLAS_FORKLIFT_ID,name:'Atlas forklift rover',category:'Robots',description:'A PLA-printable mobile forklift with twin Adafruit TT drive motors (A/B), a motorized linear lift mast (slider A), an Adafruit 1143 micro-servo fork tilt (C), and a pallet crate.',keywords:'robot forklift rover slider lift servo pla printable adafruit 1143 3777 atlas',color:'#e09f3e'},
+ {id:ATLAS_FORKLIFT_ID,name:'Atlas forklift rover',category:'Robots',description:'A PLA-printable mobile forklift with twin Adafruit TT drive motors (A/B), a motorized linear lift mast (slider D), an Adafruit 1143 micro-servo fork tilt (C), and a pallet crate.',keywords:'robot forklift rover slider lift servo pla printable adafruit 1143 3777 atlas',color:'#e09f3e'},
  {id:'robot-atlas-forklift-print',name:'Atlas forklift PLA print layout',category:'Robots',description:'All original PLA parts for the Atlas forklift (chassis, cradles, wheels, mast, carriage, forks, pallet crate), laid flat in support-free print orientation.',keywords:'robot forklift pla chassis mast carriage forks pallet print layout',color:'#e09f3e'},
- {id:'robot-atlas-forklift-fit',name:'Atlas mast & spline gauge',category:'Robots',description:'Mast rail slide clearance, Double-D TT shaft sockets, and micro-servo spline fit coupon.',keywords:'robot forklift tolerance coupon slider rail spline fit gauge',color:'#38a99a'},
+ {id:'robot-atlas-forklift-fit',name:'Atlas mast & spline gauge',category:'Robots',description:'Mast rail slide clearance, Double-D TT shaft sockets, and five-step micro-servo spline fit coupon.',keywords:'robot forklift tolerance coupon slider rail spline fit gauge',color:'#38a99a'},
 ];
 export const isAtlasForklift=(id:string)=>atlasForkliftCatalog.some(p=>p.id===id);
 export const atlasForkliftDimensions=Object.freeze({
@@ -24,54 +27,152 @@ export const atlasForkliftDimensions=Object.freeze({
 });
 
 const program=(source:string):CodeProgram=>({version:1,language:'brickwright-cad-script',parameters:{},source:'// Original Atlas forklift rover part; BSD-3-Clause. Millimetres.\n'+source.trim()+'\n'});
+const cuts=(items:string[])=>items.join(',\n  ');
 const bore=(x:number,y:number,z=0,h=30,r=1.7)=>`move([${x},${y},${z}],cylinder(${r},${h},12))`;
 const motorHoles=[-31,32].flatMap(x=>[-7,7].map(y=>[x+5.7,y]));
 
 export const atlasForkliftPartPrograms={
  chassis:program(`param thickness:mm=4;
+// Mobile chassis deck with TT cradle countersunk M3 bores, Feather controller standoffs,
+// rear ground skid, and front M3 mast flange mounting holes.
 let plate=move([-27.5,0,thickness/2],box(155,106,thickness));
 let rearSkid=move([-95,0,-6.75],cylinder(10,13.5,16));
-let body=union(plate,rearSkid);
+let featherBosses=union(
+  ${[-55,-4.2].flatMap(x=>[-11.43,11.43].map(y=>`move([${x},${y},5.5],cylinder(2.6,3,16))`)).join(',\n  ')}
+);
+let body=union(plate,rearSkid,featherBosses);
+let ttBores=union(
+  ${[-44,44].flatMap(my=>motorHoles.flatMap(([x,y])=>[
+   bore(-60+x,my+y,2,12,1.7),
+   `move([${-60+x},${my+y},3.2],cylinder(3.0,2.5,12))`,
+  ])).join(',\n  ')}
+);
+let featherBores=union(
+  ${[-55,-4.2].flatMap(x=>[-11.43,11.43].map(y=>`move([${x},${y},4],cylinder(1.1,10,12))`)).join(',\n  ')}
+);
+let mastBores=union(
+  move([47,-10,2],cylinder(1.7,10,12)),
+  move([47,10,2],cylinder(1.7,10,12))
+);
+let deckCutouts=union(
+  move([-74,0,2],box(16,18,10)),
+  move([-29,0,2],box(18,14,10)),
+  move([-74,-16,2],box(10,4,10)),
+  move([-74,16,2],box(10,4,10))
+);
 return subtract(body,
-  ${[-44,44].flatMap(my=>motorHoles.map(([x,y])=>bore(-60+x,my+y,2,12))).join(',\n  ')});`),
+  ${cuts(['ttBores','featherBores','mastBores','deckCutouts'])});`),
 
  cradle:program(`param floor:mm=2.8;
+// Adafruit TT gearmotor U-cradle with aligned M3 chassis mounting bores and lightened cheeks.
 let foot=move([0,-1,floor/2],box(74,28.2,floor));
 let rails=union(move([-13.5,-14.1,floor+3 mm],box(43,2,6)),move([-13.5,12.1,floor+3 mm],box(43,2,6)));
 let stop=move([-36.5,-1,floor+2 mm],box(1,28.2,4));
-return union(foot,rails,stop);`),
+let body=union(foot,rails,stop);
+let mountBores=union(
+  ${[-31,32].flatMap(x=>[-7,7].map(y=>`move([${x},${y},1.4],cylinder(1.7,6,12))`)).join(',\n  ')}
+);
+let railSlots=union(
+  move([-22,-1,5.8],rotate([90,0,0],cylinder(1.6,32,12))),
+  move([-5,-1,5.8],rotate([90,0,0],cylinder(1.6,32,12)))
+);
+return subtract(body,
+  ${cuts(['mountBores','railSlots'])});`),
 
- wheel:program(`let rim=subtract(cylinder(30,8,24),move([0,0,4],torus(30,1.4,6,20)),move([0,0,4],box(5.6,3.9,14)));
+ wheel:program(`// Spoked 60 mm drive wheel with O-ring tread groove and Double-D TT motor press-fit bore.
+let rim=subtract(cylinder(30,8,24),move([0,0,4],torus(30,1.4,6,20)),move([0,0,4],box(5.6,3.9,14)));
 let hub=move([0,0,11],cylinder(8,6,20));
-return subtract(union(move([0,0,4],rim),hub),move([0,0,10],box(5.6,3.9,16)));`),
+let spokes=union(
+  ${[0,60,120,180,240,300].map(deg=>{const rad=deg*Math.PI/180;return `move([${(18.5*Math.cos(rad)).toFixed(2)},${(18.5*Math.sin(rad)).toFixed(2)},4],cylinder(4.2,12,16))`;}).join(',\n  ')}
+);
+return subtract(union(move([0,0,4],rim),hub),move([0,0,10],box(5.6,3.9,16)),spokes);`),
 
- mast:program(`let flange=move([3,0,7],box(6,44,14));
+ mast:program(`// Twin-rail vertical forklift mast with chassis M3 bolt holes, center tie brace, and lightened rails.
+let flange=move([3,0,7],box(6,44,14));
 let leftRail=move([37,18,4],box(74,8,8));
 let rightRail=move([37,-18,4],box(74,8,8));
+let midBrace=move([38,0,2],box(8,36,4));
 let topBar=move([71,0,4],box(6,44,8));
-return union(flange,leftRail,rightRail,topBar);`),
+let body=union(flange,leftRail,rightRail,midBrace,topBar);
+let baseBores=union(
+  move([3,-10,11],rotate([0,90,0],cylinder(1.7,10,12))),
+  move([3,10,11],rotate([0,90,0],cylinder(1.7,10,12)))
+);
+let railSlots=union(
+  ${[18,36,54].flatMap(x=>[-18,18].map(y=>`move([${x},${y},4],box(10,3,12))`)).join(',\n  ')}
+);
+let topBores=union(
+  move([71,-14,4],cylinder(1.7,12,12)),
+  move([71,14,4],cylinder(1.7,12,12))
+);
+return subtract(body,
+  ${cuts(['baseBores','railSlots','topBores'])});`),
 
- carriage:program(`return move([0,0,12],box(8,26,24));`),
+ carriage:program(`// Linear mast slider carriage with MG90S tilt servo ear bores and central relief pocket.
+let block=move([0,0,17],box(8,26,34));
+let earBores=union(
+  move([2,0,3.6],rotate([90,0,0],cylinder(1.1,30,12))),
+  move([2,0,30.7],rotate([90,0,0],cylinder(1.1,30,12)))
+);
+let guideGrooves=union(
+  move([-3.5,-11.5,17],box(3,3,38)),
+  move([-3.5,11.5,17],box(3,3,38))
+);
+let lighten=move([0,0,17],rotate([0,90,0],cylinder(4.2,12,16)));
+return subtract(block,
+  ${cuts(['earBores','guideGrooves','lighten'])});`),
 
- forks:program(`let spine=move([3,0,12],box(6,40,24));
-let ear=move([-6.5,-18.75,19.5],box(13,4.5,9));
+ forks:program(`param splineClearance:mm=0.2;
+// Articulated twin tines with MG90S tilt spline socket, M2 countersunk bore, and backrest windows.
+let spine=move([3,0,12],box(6,40,24));
+let ear=move([-7.5,-18.75,19.5],box(15,4.5,9));
 let leftTine=move([28,14,2.5],box(44,8,5));
 let rightTine=move([28,-14,2.5],box(44,8,5));
-return union(spine,ear,leftTine,rightTine);`),
+let body=union(spine,ear,leftTine,rightTine);
+let splineSocket=move([-10,-16.8,20],rotate([90,0,0],cylinder((5.0 mm + splineClearance)/2,4.2,24)));
+let screwBore=move([-10,-18.75,20],rotate([90,0,0],cylinder(1.15,8,16)));
+let screwCs=move([-10,-20.2,20],rotate([90,0,0],cylinder(2.2,2.4,16)));
+let backrestWindows=union(
+  move([3,-10,14],box(10,10,10)),
+  move([3,10,14],box(10,10,10))
+);
+let tipBevels=union(
+  move([47,14,0],rotate([0,-25,0],box(8,10,4))),
+  move([47,-14,0],rotate([0,-25,0],box(8,10,4)))
+);
+return subtract(body,
+  ${cuts(['splineSocket','screwBore','screwCs','backrestWindows','tipBevels'])});`),
 
- crate:program(`let deck=move([0,0,11],box(36,48,22));
+ crate:program(`// Printable pallet crate with solid fork-pocket skids and top cargo recess.
+let deck=move([0,0,11],box(36,48,22));
 let skidL=move([0,21.5,28.5],box(36,5,13));
 let skidC=move([0,0,28.5],box(36,16,13));
 let skidR=move([0,-21.5,28.5],box(36,5,13));
-return union(deck,skidL,skidC,skidR);`),
-
- fit:program(`let bar=move([0,0,2],box(68,22,4));
-let holes=union(
-  move([-20,0,2],box(8.4,8.4,10)),
-  move([0,0,2],box(5.6,3.9,10)),
-  move([20,0,2],cylinder(2.55,10,16))
+let body=union(deck,skidL,skidC,skidR);
+let cargoPocket=move([0,0,3],box(26,38,7));
+let sideSlots=union(
+  move([0,24,11],box(20,3,6)),
+  move([0,-24,11],box(20,3,6))
 );
-return subtract(bar,holes);`),
+return subtract(body,
+  ${cuts(['cargoPocket','sideSlots'])});`),
+
+ fit:program(`// Five-step micro-servo spline (0.15..0.55 mm), Double-D TT bore, and mast slide clearance gauge.
+let bar=hull(move([-32,0,2],cylinder(11,4,24)),move([32,0,2],cylinder(11,4,24)));
+let railPad=move([0,-11,4],box(72,6,8));
+let body=union(bar,railPad);
+let sockets=union(
+  ${[0.15,0.25,0.35,0.45,0.55].map((c,i)=>`move([${-28+i*14},1,2.2],cylinder((5.0 mm + ${c} mm)/2,4.4,20))`).join(',\n  ')}
+);
+let dots=union(
+  ${[0.15,0.25,0.35,0.45,0.55].flatMap((_,i)=>Array.from({length:i+1},(__,d)=>`move([${-30+i*14+d*1.3},-5.2,3.7],cylinder(0.45,0.9,10))`)).join(',\n  ')}
+);
+let extraBores=union(
+  move([-33,6.5,2],box(5.6,3.9,10)),
+  move([33,6.5,2],cylinder(1.7,8,16)),
+  move([0,-11,2.5],box(8.4,8,5.4))
+);
+return subtract(body,sockets,dots,extraBores);`),
 } as const;
 
 export type AtlasForkliftPart=keyof typeof atlasForkliftPartPrograms;
@@ -98,35 +199,8 @@ const colors:Record<AtlasForkliftPart,string>={
  fit:'#38a99a',
 };
 
-type CollisionPiece={positions:number[];indices:number[]};
-const boxPiece=(cx:number,cy:number,cz:number,sx:number,sy:number,sz:number):CollisionPiece=>{
- const x0=cx-sx/2,x1=cx+sx/2,y0=cy-sy/2,y1=cy+sy/2,z0=cz-sz/2,z1=cz+sz/2;
- return {
-  positions:[x0,y0,z0,x1,y0,z0,x1,y1,z0,x0,y1,z0,x0,y0,z1,x1,y0,z1,x1,y1,z1,x0,y1,z1],
-  indices:[0,2,1,0,3,2,4,5,6,4,6,7,0,1,5,0,5,4,1,2,6,1,6,5,2,3,7,2,7,6,3,0,4,3,4,7],
- };
-};
-const cylPiece=(cx:number,cy:number,cz:number,r:number,h:number,segs=20):CollisionPiece=>{
- const z0=cz-h/2,z1=cz+h/2,positions:number[]=[],indices:number[]=[];
- for(let i=0;i<segs;i++){const a=i*2*Math.PI/segs;positions.push(cx+r*Math.cos(a),cy+r*Math.sin(a),z0);}
- for(let i=0;i<segs;i++){const a=i*2*Math.PI/segs;positions.push(cx+r*Math.cos(a),cy+r*Math.sin(a),z1);}
- for(let i=1;i<segs-1;i++)indices.push(0,i+1,i,segs,segs+i,segs+i+1);
- for(let i=0;i<segs;i++){const n=(i+1)%segs;indices.push(i,n,segs+n,i,segs+n,segs+i);}
- return {positions,indices};
-};
-
-const partCollisions:Partial<Record<AtlasForkliftPart,CollisionPiece[]>>={
- chassis:[boxPiece(-27.5,0,2,155,106,4),cylPiece(-95,0,-6.75,10,13.5,16)],
- cradle:[boxPiece(0,-1,1.4,74,28.2,2.8),boxPiece(-13.5,-14.1,5.8,43,2,6),boxPiece(-13.5,12.1,5.8,43,2,6),boxPiece(-36.5,-1,4.8,1,28.2,4)],
- wheel:[cylPiece(0,0,4,30,8,20),cylPiece(0,0,11,8,6,16)],
- mast:[boxPiece(3,0,7,6,44,14),boxPiece(37,18,4,74,8,8),boxPiece(37,-18,4,74,8,8),boxPiece(71,0,4,6,44,8)],
- carriage:[boxPiece(0,0,12,8,26,24)],
- forks:[boxPiece(3,0,12,6,40,24),boxPiece(-6.5,-18.75,19.5,13,4.5,9),boxPiece(28,14,2.5,44,8,5),boxPiece(28,-14,2.5,44,8,5)],
- crate:[boxPiece(0,0,11,36,48,22),boxPiece(0,21.5,28.5,36,5,13),boxPiece(0,0,28.5,36,16,13),boxPiece(0,-21.5,28.5,36,5,13)],
-};
-
 function addPart(doc:CadDocument,part:AtlasForkliftPart,id:string,position:Vec3,rotation:Vec3=[0,0,0],friction=.4){
- const collisionAssembly=partCollisions[part]?.map(piece=>({positions:[...piece.positions],indices:[...piece.indices]}));
+ const collisionAssembly=atlasForkliftCollisionAssembly(part);
  const node:SolidNode={
   id,
   name:t(names[part]),
@@ -156,7 +230,7 @@ export function createAtlasForkliftPart(part:AtlasForkliftPart):CadDocument{
  return doc;
 }
 
-/** Assembled mobile forklift with twin TT rear drive (A/B), linear mast slider (A), and servo fork tilt (C). */
+/** Assembled mobile forklift with twin TT rear drive (A/B), linear mast slider (D), and servo fork tilt (C). */
 export function createAtlasForkliftDocument(id=ATLAS_FORKLIFT_ID):CadDocument{
  if(id==='robot-atlas-forklift-fit')return createAtlasForkliftPart('fit');
  const doc=createDocument(t(id==='robot-atlas-forklift-print'?'Atlas forklift PLA print layout':'Atlas forklift rover'));
@@ -195,7 +269,7 @@ export function createAtlasForkliftDocument(id=ATLAS_FORKLIFT_ID):CadDocument{
    const node=structuredClone(original);
    node.id=side+'-'+key;
    if(node.kind==='boolean')node.inputs=node.inputs.map(input=>side+'-'+input);
-   if(ttMotor.roots.includes(key))node.transform.position=[-54.3,y,20.3];
+   if(ttMotor.roots.includes(key)){node.transform.position=[-54.3,y,20.3];node.physics={...node.physics!,collisionAssembly:ttRoverCollisionAssembly(key)};}
    node.name=t(side==='left'?'Left TT motor':'Right TT motor')+(key==='shaft'?' · '+t('Output shaft'):'');
    doc.nodes[node.id]=node;
   }
@@ -215,14 +289,14 @@ export function createAtlasForkliftDocument(id=ATLAS_FORKLIFT_ID):CadDocument{
     program:program('return torus(30,1.5,6,16);'),
     transform:{...identityTransform(),position:[-35,Math.sign(y)*(74.5-offset),31.5],rotation:[90,0,0]},
     color:'#303c40',
-    physics:{...defaultPartPhysics(),densityKgM3:1100,material:'rubber',friction:1,restitution:.03},
+    physics:{...defaultPartPhysics(),densityKgM3:1100,material:'rubber',friction:1,restitution:.03,collisionAssembly:steerableRoverCollisionAssembly('tire')},
    };
    doc.roots.push(key);
    fixed(doc,side+'-wheel',key);
   }
  }
 
- // Vertical twin-rail mast fixed to chassis front + sliding carriage (slider port A).
+ // Vertical twin-rail mast fixed to chassis front + sliding carriage (slider port D).
  addPart(doc,'mast','mast',[58,0,12],[0,-90,0]);
  fixed(doc,'chassis','mast');
 
@@ -268,7 +342,7 @@ export function createAtlasForkliftDocument(id=ATLAS_FORKLIFT_ID):CadDocument{
 /** Lightweight catalogue silhouette. The inserted assembly uses the real source model. */
 export function atlasForkliftPreview(id:string):THREE.BufferGeometry{
  const geometries:THREE.BufferGeometry[]=[];
- if(id==='robot-atlas-forklift-fit')geometries.push(new THREE.BoxGeometry(68,22,4).translate(0,0,2));
+ if(id==='robot-atlas-forklift-fit')geometries.push(new THREE.BoxGeometry(86,28,4).translate(0,-2,2));
  else if(id==='robot-atlas-forklift-print'){
   geometries.push(
    new THREE.BoxGeometry(155,106,4).translate(-47.5,0,2),
@@ -280,7 +354,7 @@ export function atlasForkliftPreview(id:string):THREE.BufferGeometry{
   geometries.push(
    new THREE.BoxGeometry(155,106,4).translate(-27.5,0,15.5),
    new THREE.BoxGeometry(8,44,74).translate(54,0,49),
-   new THREE.BoxGeometry(8,26,24).translate(63,0,26),
+   new THREE.BoxGeometry(8,26,34).translate(63,0,31),
    new THREE.BoxGeometry(44,36,5).translate(100,0,8.5),
    new THREE.BoxGeometry(36,48,35).translate(102,0,17.5),
   );

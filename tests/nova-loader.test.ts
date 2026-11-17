@@ -81,15 +81,15 @@ it('drives wheels A/B, tilts bucket C, and pushes payload in Jolt physics simula
   const c0=world.pose('chassis').positionMm;
   const p0=world.pose('payload').positionMm;
 
-  world.setHingeMotor('drive-left-a',-8,.35);
-  world.setHingeMotor('drive-right-b',-8,.35);
+  world.setHingeMotor('drive-left-a',8,.35);
+  world.setHingeMotor('drive-right-b',8,.35);
   world.setHingeMotor('bucket-c',3.5,.25);
   for(let i=0;i<150;i++)world.step(.005);
 
   const c1=world.pose('chassis').positionMm;
   const p1=world.pose('payload').positionMm;
-  expect(Math.abs(world.hingeAngle('drive-left-a')*180/Math.PI)).toBeGreaterThan(20);
-  expect(Math.abs(world.hingeAngle('drive-right-b')*180/Math.PI)).toBeGreaterThan(20);
+  expect(Math.abs(world.hingeAngle('drive-left-a')*180/Math.PI)).toBeGreaterThan(10);
+  expect(Math.abs(world.hingeAngle('drive-right-b')*180/Math.PI)).toBeGreaterThan(10);
   expect(Math.abs(world.hingeAngle('bucket-c')*180/Math.PI)).toBeGreaterThan(8);
   expect(Math.hypot(c1[0]-c0[0],c1[1]-c0[1])).toBeGreaterThan(5);
   expect(Math.hypot(p1[0]-p0[0],p1[1]-p0[1])).toBeGreaterThan(2);

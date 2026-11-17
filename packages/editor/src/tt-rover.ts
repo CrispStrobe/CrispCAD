@@ -150,7 +150,6 @@ export function createTTRoverDocument(id=TT_ROVER_ID):CadDocument{
  const battery='battery-envelope';doc.nodes[battery]={id:battery,name:t('Purchased AA pack envelope'),kind:'box',size:[66.1,72.4,21.6],transform:{...identityTransform(),position:[-65.5,0,34.8]},color:'#465461',physics:{...defaultPartPhysics(),densityKgM3:1400,restitution:.02}};doc.roots.push(battery);fixed(doc,'chassis',battery);
  for(const [key,name,size,position]of [['feather-envelope','Feather board clearance',[22.86,50.8,8],[0,0,62]],['driver-envelope','Motor driver clearance',[26,18,8],[32,0,62]]] as const){doc.nodes[key]={id:key,name:t(name),kind:'box',size:[...size],transform:{...identityTransform(),position:[...position]},color:'#3f7291',physics:{...defaultPartPhysics(),densityKgM3:550,restitution:.02}};doc.roots.push(key);fixed(doc,'carrier',key);}
  doc.tracers=[{id:'rover-path',bodyId:'chassis',point:[-20,0,4],color:'#38a99a'}];
- doc.simulation={...defaultSimulationSettings(),...doc.simulation,selfCollisions:false};
  return doc;
 }
 
