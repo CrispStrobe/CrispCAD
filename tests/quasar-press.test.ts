@@ -23,6 +23,9 @@ it('ships an editable A/B/C rotary press with dial servo, ram slider, ejector wi
  expect(doc.simulation?.fixBase).toBe(true);
  expect(doc.nodes.stand.physics?.motion).toBe('static');
  expect(doc.nodes.blank.physics?.motion).toBe('dynamic');
+ // The dial's 1 mm retaining lip tops out at world Z=41.8. A wedge
+ // below it can stall on the lip even though its slider has spare travel.
+ expect(doc.nodes.wiper.transform.position[2]).toBeGreaterThan(41.8);
  const hinges=doc.joints!.filter(j=>j.kind==='hinge'&&j.control);
  expect(hinges.map(j=>j.control?.port)).toEqual(['A']);
  expect(hinges.map(j=>j.bodyB)).toEqual(['dial-shaft']);

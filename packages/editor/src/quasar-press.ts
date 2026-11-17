@@ -140,7 +140,9 @@ export function createQuasarPressDocument(id=QUASAR_PRESS_ID):CadDocument{
  addPart(doc,'stand','stand',[0,0,0],[0,0,0],'static',.1);
  addPart(doc,'dialPlate','dial-plate',[0,0,35],[0,0,0],'dynamic',.4);
  addPart(doc,'ram','ram',[20,0,56]);
- addPart(doc,'wiper','wiper',[-50,0,41.1]);
+ // Clear the retaining lip (top 41.8 mm). The wedge must lift the blank,
+ // rather than jamming its own leading edge against that lip.
+ addPart(doc,'wiper','wiper',[-50,0,42.1]);
  addPart(doc,'blank','blank',[0,-20,41.2],[0,0,0],'dynamic',.35);
 
  const servoMotor=createMotorDocument('micro-servo-1143');
@@ -179,7 +181,7 @@ export function createQuasarPressDocument(id=QUASAR_PRESS_ID):CadDocument{
  ramSlider.control={port:'B'};
  doc.joints!.push(ramSlider);
 
- const ejectSlider=jointAtWorldFrame(doc,'slider','stand','wiper',[-50,0,43.6],[1,0,0]);
+ const ejectSlider=jointAtWorldFrame(doc,'slider','stand','wiper',[-50,0,44.6],[1,0,0]);
  ejectSlider.id='eject-c';
  ejectSlider.limits=[...quasarPressDimensions.ejectLimitsMm];
  ejectSlider.control={port:'C'};
