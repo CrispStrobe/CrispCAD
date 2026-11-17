@@ -16,10 +16,11 @@ beforeAll(async()=>{
  J=await initJolt();
 });
 
-it('ships an editable A/B/C 3-servo wheelless walker with Adafruit 1143 servos',()=>{
+it('ships an editable A/B/C 3-servo wheelless walker with Adafruit 1143 servos and electronics carrier',()=>{
  const doc=parseDocument(serializeDocument(createPresetDocument(MANTIS_WALKER_ID)));
  expect(shapeCatalog.some(p=>p.id===MANTIS_WALKER_ID&&p.category==='Robots')).toBe(true);
  expect(doc.simulation?.fixBase).toBe(false);
+ expect(doc.simulation?.selfCollisions).toBe(false);
  const drives=doc.joints!.filter(j=>j.kind==='hinge'&&j.control);
  expect(drives.map(j=>j.control?.port)).toEqual(['A','B','C']);
  expect(drives.map(j=>j.bodyB)).toEqual(['left-hip-shaft','right-hip-shaft','roll-shaft']);
@@ -40,14 +41,17 @@ it('separates manufacturing geometry from purchased hardware and imports in one 
  const printDoc=createPresetDocument('robot-mantis-walker-print');
  expect(printDoc.provenance).toBeUndefined();
  expect(printDoc.joints).toBeUndefined();
- expect(printDoc.roots).toEqual(['torso','left-leg','right-leg','pendulum']);
+ expect(printDoc.roots).toEqual(['torso','left-leg','right-leg','pendulum','carrier']);
+ const carrierDoc=createPresetDocument('robot-mantis-walker-carrier');
+ expect(carrierDoc.provenance).toBeUndefined();
+ expect(carrierDoc.roots).toEqual(['carrier']);
  const session=createCadSession();
  session.insert(createMantisWalkerDocument());
  expect(session.state.document.simulation?.fixBase).toBe(false);
  session.undo();
  expect(session.state.document.roots).toHaveLength(0);
  session.redo();
- expect(session.state.document.roots).toHaveLength(10);
+ expect(session.state.document.roots).toHaveLength(13);
  session.dispose();
 });
 
@@ -63,7 +67,7 @@ for(const part of Object.keys(mantisWalkerPartPrograms) as MantisWalkerPart[]){
   expect(body.bounds.max[1]-body.bounds.min[1]).toBeLessThanOrEqual(180);
   expect(body.bounds.max[2]-body.bounds.min[2]).toBeLessThanOrEqual(180);
   const stl=exportSTL(result.bodies);
-  const screen=await checkModelLibrarySTL(stl,{checkedOn:'2026-11-16',toMillimetresZUp:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],maxExtentMm:180});
+  const screen=await checkModelLibrarySTL(stl,{checkedOn:'2026-11-17',toMillimetresZUp:[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],maxExtentMm:180});
   expect(Object.values(screen.checks)).toEqual(['pass','pass','pass','pass']);
  });
 }
@@ -80,7 +84,7 @@ it('walks using alternating hip servos A/B and roll pendulum C in Jolt physics',
   world.setHingeMotor('roll-c',4.5,.35);
   world.setHingeMotor('left-hip-a',-4.0,.35);
   world.setHingeMotor('right-hip-b',4.0,.35);
-  for(let i=0;i<20;i++)world.step(.005);
+  for(let i=0;i<35;i++)world.step(.005);
   const rollAngle1=Math.abs(world.hingeAngle('roll-c')*180/Math.PI);
   const leftHip1=Math.abs(world.hingeAngle('left-hip-a')*180/Math.PI);
   const rightHip1=Math.abs(world.hingeAngle('right-hip-b')*180/Math.PI);
@@ -89,7 +93,7 @@ it('walks using alternating hip servos A/B and roll pendulum C in Jolt physics',
   world.setHingeMotor('roll-c',-4.5,.35);
   world.setHingeMotor('left-hip-a',4.0,.35);
   world.setHingeMotor('right-hip-b',-4.0,.35);
-  for(let i=0;i<20;i++)world.step(.005);
+  for(let i=0;i<35;i++)world.step(.005);
 
   const end=world.pose('torso').positionMm;
   expect(rollAngle1).toBeGreaterThan(3);
