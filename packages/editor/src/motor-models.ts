@@ -6,10 +6,15 @@ import type {CadDocument,Vec3,ModelLibraryAsset} from '@brickwright/cad-core';
 import yellow from './motor-assets/tt-gearmotor.json' with {type:'json'};
 import dc from './motor-assets/dc-toy-motor.json' with {type:'json'};
 import microServo from './motor-assets/micro-servo-1143.json' with {type:'json'};
-import dcCollision from './motor-assets/dc-toy-motor-collision.json' with {type:'json'};
-import yellowCollision from './motor-assets/tt-gearmotor-collision.json' with {type:'json'};
-import microServoCollision from './motor-assets/micro-servo-1143-collision.json' with {type:'json'};
-const colliders:Record<string,typeof dcCollision>={'dc-toy-motor':dcCollision,'tt-gearmotor':yellowCollision,'micro-servo-1143':microServoCollision};
+import compactCollisions from './motor-assets/compact-collision-candidates.json' with {type:'json'};
+import type {PartPhysics} from '@brickwright/cad-core';
+type CollisionAssembly=NonNullable<PartPhysics['collisionAssembly']>;
+// Candidates are requalified against the full source mesh by the physics worker.
+// Visual meshes and source mass properties remain unchanged.
+export function motorCollisionAssembly(id:string,part:'casing'|'shaft'):CollisionAssembly|undefined{
+ const records=compactCollisions.records as Record<string,Partial<Record<'casing'|'shaft',{hulls:CollisionAssembly}>>>;
+ const candidate=records[id]?.[part]?.hulls;return candidate?structuredClone(candidate):undefined;
+}
 const models:Record<string,typeof yellow>={'tt-gearmotor':yellow,'dc-toy-motor':dc,'micro-servo-1143':microServo};
 export const motorCatalog=[
  {id:'dc-toy-motor',name:'DC toy motor',category:'Motors',description:'Adafruit 711 DC motor with an articulated output shaft. Ideal hinge drive; electrical performance is not modelled.',keywords:'dc motor 130 can brushed electric 711',color:'#aab4bd'},
@@ -34,10 +39,10 @@ export function createMotorDocument(id:string):CadDocument{
  const caseParts:string[]=[];
  for(const [index,part]of model.parts.entries()){
   const key=index===model.shaft?'shaft':`case-${index}`;
-  document.nodes[key]={id:key,name:index===model.shaft?t('Output shaft'):t('Motor casing'),kind:'mesh',positions:[...part.positions],indices:[...part.indices],color:index===model.shaft?'#e1e6eb':preset.color,transform:identityTransform(),provenance:[record],physics:{...defaultPartPhysics(),sourcePreset:id}};
+  document.nodes[key]={id:key,name:index===model.shaft?t('Output shaft'):t('Motor casing'),kind:'mesh',positions:[...part.positions],indices:[...part.indices],color:index===model.shaft?'#e1e6eb':preset.color,transform:identityTransform(),provenance:[record],physics:{...defaultPartPhysics(),sourcePreset:id,...(index===model.shaft?{collisionAssembly:motorCollisionAssembly(id,'shaft')}:{})}};
   if(index!==model.shaft)caseParts.push(key);
  }
- document.nodes.casing={id:'casing',name:t('Motor casing'),kind:'boolean',operation:'union',inputs:caseParts,color:preset.color,transform:identityTransform(),provenance:[record],physics:{...defaultPartPhysics(),sourcePreset:id,collisionAssembly:structuredClone(colliders[id])}};
+ document.nodes.casing={id:'casing',name:t('Motor casing'),kind:'boolean',operation:'union',inputs:caseParts,color:preset.color,transform:identityTransform(),provenance:[record],physics:{...defaultPartPhysics(),sourcePreset:id,collisionAssembly:motorCollisionAssembly(id,'casing')}};
  document.roots=['casing','shaft'];
  document.joints=[{id:'motor-output',kind:'hinge',bodyA:'casing',bodyB:'shaft',anchorA:[...model.anchor] as Vec3,anchorB:[...model.anchor] as Vec3,axisA:[...model.axis] as Vec3,axisB:[...model.axis] as Vec3,control:{port:'A'}}];
  return document;

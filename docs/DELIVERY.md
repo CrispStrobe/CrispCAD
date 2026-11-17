@@ -1144,3 +1144,23 @@ The fixed-assembly/physics/hinge suite passes49 controls, including a loose obst
 and ground with robot self-collisions disabled and the legacy contact behavior.
 The Lite host must regenerate whole-project examples and verify every robot SB3
 hash in its final build; otherwise its static mirror can ship old electrical models.
+
+### Shared motor collision preprocessing, 2026-11-17
+
+The TT motor, micro servo and DC toy motor now share deterministic compact
+collision candidates for both casing and shaft. They retain the full visual
+source meshes and mass properties; each candidate must pass the existing
+full-resolution CSG check (2% volume, 0.2 mm bounds) again at runtime. Old saved
+projects retain their serialized geometry. Reopen a complete robot example to
+use the new candidates. The rover specializations reuse the common motor
+candidates rather than replacing them with older, larger compounds.
+
+`npm run motor:collisions:generate` intentionally regenerates the six candidate
+sets; `npm run motor:collisions:check` reproduces the asset byte for byte. The
+original source and MIT provenance remain recorded. Coarse candidates that fail
+qualification are rejected; no tolerance, timestep or solver guard is widened.
+
+A consecutive isolated Atlas comparison reduced convex pieces from 3,624 to
+1,811, collision preprocessing from 8.38 to 3.63 seconds, and one simulated second
+from 1.92 to 0.96 wall seconds. These measurements exclude the electrical solver
+and GUI. The Lite receipt records the separate built-app browser measurements.

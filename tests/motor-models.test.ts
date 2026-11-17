@@ -16,6 +16,15 @@ for(const preset of motorCatalog)it(`${preset.name}: closed source-derived solid
  doc.nodes.casing.physics!.motion='static';
  const geometry=kernel.evaluate(doc);expect(geometry.bodies).toHaveLength(2);expect(geometry.bodies.every(b=>b.volume>0)).toBe(true);
  const prepared=await prepareDocumentCollisions(doc,geometry,kernel);
+ // Fail if a bad candidate silently falls back to the expensive generic BSP.
+ const limits:Record<string,number>={'tt-gearmotor':650,'micro-servo-1143':400,'dc-toy-motor':700};
+ expect([...prepared.values()].reduce((n,p)=>n+p.hulls.length,0)).toBeLessThan(limits[preset.id]);
+ for(const collision of prepared.values()){
+  expect(collision.certificate.strategy).toBe('supplied');
+  expect(collision.certificate.tolerance).toEqual({volumeFraction:.02,boundsMm:.2});
+  expect(collision.certificate.relativeError).toBeLessThanOrEqual(.02);
+  expect(collision.certificate.boundsErrorMm).toBeLessThanOrEqual(.2);
+ }
  const world=await createPhysicsWorld(doc,geometry,prepared,{J,ground:false});
  try {
   const before=world.pose('casing');world.setHingeMotor('motor-output',Math.PI,.02);
