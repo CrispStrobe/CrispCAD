@@ -16,6 +16,7 @@ import {quasarPressCatalog,isQuasarPress,createQuasarPressDocument,quasarPressPr
 import {novaLoaderCatalog,isNovaLoader,createNovaLoaderDocument,novaLoaderPreview} from './nova-loader.js';
 import {vectorPlotterCatalog,isVectorPlotter,createVectorPlotterDocument,vectorPlotterPreview} from './vector-plotter.js';
 import {aegisSentryCatalog,isAegisSentry,createAegisSentryDocument,aegisSentryPreview} from './aegis-sentry.js';
+import {stratosGimbalCatalog,isStratosGimbal,createStratosGimbalDocument,stratosGimbalPreview} from './stratos-gimbal.js';
 import {roverCatalog,isTTRover,createTTRoverDocument,ttRoverPreview} from './tt-rover.js';
 import {steerableRoverCatalog,isSteerableRover,createSteerableRoverDocument,steerableRoverPreview} from './steerable-rover.js';
 import {simulationExampleCatalog,isSimulationExample,createSimulationExample,simulationExampleGeometry} from './simulation-examples.js';
@@ -73,7 +74,7 @@ const templates:ShapePreset[]=[
 const screwNames=[['hex-head-screw','Hex-head screw'],['socket-head-screw','Socket-head screw'],['countersunk-screw','Countersunk screw'],['pan-head-screw','Pan-head screw'],['set-screw','Set screw'],['wood-screw','Wood screw']];
 const entries=[...templates,...screwNames.map(([id,name])=>({id,name,category:'',description:'A screw with editable head, drive and V-thread dimensions.',keywords:'screw bolt thread fastener hex socket countersunk pan',color:'#b0b7c2'})),...originalCatalog];
 export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
- ...roverCatalog,...steerableRoverCatalog,...atlasForkliftCatalog,...mantisWalkerCatalog,...cycloneSorterCatalog,...heliosCatapultCatalog,...labyrinthTilterCatalog,...apexScaraCatalog,...orionCarouselCatalog,...vortexPinballCatalog,...titanViseCatalog,...hermesCraneCatalog,...chronosDrawbridgeCatalog,...polarisTrackerCatalog,...borealLauncherCatalog,...zephyrConveyorCatalog,...quasarPressCatalog,...novaLoaderCatalog,...vectorPlotterCatalog,...aegisSentryCatalog,...motorCatalog,...simulationExampleCatalog,
+ ...roverCatalog,...steerableRoverCatalog,...atlasForkliftCatalog,...mantisWalkerCatalog,...cycloneSorterCatalog,...heliosCatapultCatalog,...labyrinthTilterCatalog,...apexScaraCatalog,...orionCarouselCatalog,...vortexPinballCatalog,...titanViseCatalog,...hermesCraneCatalog,...chronosDrawbridgeCatalog,...polarisTrackerCatalog,...borealLauncherCatalog,...zephyrConveyorCatalog,...quasarPressCatalog,...novaLoaderCatalog,...vectorPlotterCatalog,...aegisSentryCatalog,...stratosGimbalCatalog,...motorCatalog,...simulationExampleCatalog,
  ...Object.entries(essentials).flatMap(([category,ids])=>ids.map(id=>Object.freeze({...entries.find(p=>p.id===id)!,category,additional:false}))),
  ...entries.filter(p=>!Object.values(essentials).flat().includes(p.id)).map(p=>Object.freeze({...p,category:'Additional shapes',additional:true})),
 ]);
@@ -99,6 +100,7 @@ export function presetGeometry(id: string, preview = false, recipe?:GeneratorRec
  if(isNovaLoader(id))return novaLoaderPreview(id);
  if(isVectorPlotter(id))return vectorPlotterPreview(id);
  if(isAegisSentry(id))return aegisSentryPreview(id);
+ if(isStratosGimbal(id))return stratosGimbalPreview(id);
  if(isSteerableRover(id))return steerableRoverPreview(id);
   if(isSimulationExample(id))return simulationExampleGeometry(id);
   if(isMotorModel(id))return motorGeometry(id);
@@ -146,6 +148,7 @@ export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: 
  if(isNovaLoader(id))return createNovaLoaderDocument(id);
  if(isVectorPlotter(id))return createVectorPlotterDocument(id);
  if(isAegisSentry(id))return createAegisSentryDocument(id);
+ if(isStratosGimbal(id))return createStratosGimbalDocument(id);
  if(isSteerableRover(id))return createSteerableRoverDocument(id);
   const preset = shapeCatalog.find(p => p.id === id); if (!preset) throw new Error(t('Unknown shape'));
   if(isSimulationExample(id))return createSimulationExample(id);
