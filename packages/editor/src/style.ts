@@ -97,4 +97,10 @@ export const editorStyle = `
 .shape-parameters>.surface-detail[open]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 7px}.surface-detail>summary{grid-column:1/-1;cursor:pointer}.surface-detail>.field{margin:0;font-size:10px}
 
 .screw-redesign{margin:6px 0;padding:6px 0;border-bottom:1px solid var(--line);font-size:11px;color:#b6c8d6}.screw-redesign>summary{cursor:pointer;color:var(--accent)}.inspector:has(>.screw-redesign[open])>.shape-parameters{display:none}
+/* Properties is a vertical pane. Intrinsic select/label widths must not
+   create a second scrolling axis on touch screens. */
+.inspector{overflow-x:hidden;overflow-y:auto;overscroll-behavior-x:none;touch-action:pan-y}
+.inspector .field{min-width:0;overflow-wrap:anywhere}
+.inspector input,.inspector select{min-width:0;max-width:100%}
+.inspector .field[hidden]{display:none}
 `;
