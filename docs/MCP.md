@@ -91,6 +91,11 @@ IDs, localized titles, retained source and empty initial parameter overrides.
 Use a source with `cad_preview_code`, then create with the expected current
 revision. Listing examples never changes the headless project or history.
 
+`cad_compile_blocks` is read-only. Supply a block program as JSON text (format
+`brickwright-cad-blocks`, see [block modelling](CAD-BLOCKS.md)) and outputFormat
+(cadcode/openscad/jscad). It returns parametric source; pass CAD Script output to
+`cad_create_code_object` to add it to the model.
+
 `cad_convert_code` is read-only. Supply source, inputFormat (cadcode/openscad/jscad),
 outputFormat (cadcode/openscad/jscad), optional parameter overrides and optional
 JSCAD entryPoint/arguments. Results identify snapshots and return warnings plus

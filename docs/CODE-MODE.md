@@ -108,6 +108,11 @@ or evaluated OpenSCAD/JSCAD snapshots. `extrude(height, [[x,y], ...])` builds a
 simple planar polygon, with 3–256 points. See [converter coverage](CODE-CONVERTERS.md)
 for exact limits, parameter semantics, provenance and the VPS ingestion interface.
 
+## Blocks and pseudocode
+
+[Block modelling](CAD-BLOCKS.md) compiles TinkerCAD-style block programs into
+this language, with parametric OpenSCAD/JSCAD exports from the same tree.
+
 ## Code alongside manual modeling
 
 [Model source](UNIFIED-DESIGN-SOURCE.md) is the design-level companion to Code an

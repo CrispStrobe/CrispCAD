@@ -9,3 +9,5 @@ export async function loadBundledModelLibrary(){
 }
 export function mountCadEditor(host:HTMLElement,options:CadEditorOptions){return mountSharedCadEditor(host,{...options,modelLibrary:options.modelLibrary??{load:loadBundledModelLibrary}});}
 export {createDocument,createCadSession,parseDocument,serializeDocument,setLocale} from '@brickwright/cad-core';
+// Block/pseudocode modelling: hosts compile their block workspaces through the same core.
+export {compileBlocksToCadScript,exportBlocksOpenSCAD,exportBlocksJSCAD,validateBlocksProgram,CadBlocksError,BLOCK_SHAPES} from '@brickwright/cad-core';
