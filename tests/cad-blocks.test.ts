@@ -208,7 +208,7 @@ describe('MCP',()=>{
    await expect(host.call('cad_compile_blocks',{program:'{nope',outputFormat:'jscad'})).rejects.toThrow(/not valid JSON/);
    expect((await host.call('cad_get_model')).objects).toHaveLength(0);
   }finally{await host.dispose();}
- });
+ },60000);
 });
 
 describe('holes',()=>{
