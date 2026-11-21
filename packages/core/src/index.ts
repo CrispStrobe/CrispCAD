@@ -43,3 +43,5 @@ export * from './openscad-bundle.js';
 
 export * from './simulation.js';
 export * from './screw-redesign.js';
+export {compileBlocksToCadScript,applyBlocksModel,exportBlocksOpenSCAD,exportBlocksJSCAD,validateBlocksProgram,CadBlocksError,BLOCK_SHAPES,BLOCK_LIMITS} from './cad-blocks.js';
+export type {CadBlocksProgram,BlockStmt,BlockExpr,BlockParam,BlockShapeKind,BlockBinaryOp,BlockMathFn,BlockAxis,CompiledBlocks,CompiledBlocksPart,BlocksModelResult} from './cad-blocks.js';

@@ -14,6 +14,7 @@ import {messages as mcp} from './locales/de-mcp.js';
 import {messages as host} from './locales/de-host.js';
 import {messages as adafruit} from './locales/de-adafruit.js';
 import {messages as simulation} from './locales/de-simulation.js';
+import {messages as blocks} from './locales/de-blocks.js';
 export type Locale='en'|'de';
 export const supportedLocales=Object.freeze([{code:'en' as const,name:'English'},{code:'de' as const,name:'Deutsch'}]);
 let locale:Locale='en';
@@ -24,7 +25,7 @@ export function t(message:string):string;
 export function t(parts:TemplateStringsArray,...values:unknown[]):string;
 export function t(message:string|TemplateStringsArray,...values:unknown[]):string {
  const key=typeof message==='string'?message:message.reduce((s,part,i)=>s+(i?`{${i-1}}`:'')+part,'');
- const translated=locale==='de'?(simlab[key]??adafruit[key]??simulation[key]??engineWorkflows[key]??modelSource[key]??converters[key]??modelLibrary[key]??additions[key]??editor[key]??diagnostics[key]??host[key]??readout[key]??mcp[key]??workbench[key]??history[key]??key):key;
+ const translated=locale==='de'?(blocks[key]??simlab[key]??adafruit[key]??simulation[key]??engineWorkflows[key]??modelSource[key]??converters[key]??modelLibrary[key]??additions[key]??editor[key]??diagnostics[key]??host[key]??readout[key]??mcp[key]??workbench[key]??history[key]??key):key;
  return typeof message==='string'?translated:translated.replace(/\{(\d+)\}/g,(_,index)=>String(values[Number(index)]));
 }
 /** Locale-specific display only. Saved model values and source use canonical syntax. */
