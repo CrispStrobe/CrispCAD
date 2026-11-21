@@ -18,7 +18,7 @@ export const messages:Record<string,string>={
   "Parameter {0} needs a value": "Parameter {0} braucht einen Wert",
   "Parameter {0} needs finite numbers": "Parameter {0} braucht endliche Zahlen",
   "Random numbers need fixed limits so the model stays reproducible": "Zufallszahlen brauchen feste Grenzen, damit das Modell reproduzierbar bleibt",
-  "Text cannot yet be exported to JSCAD": "Text kann noch nicht nach JSCAD exportiert werden",
+  "Colours must be written #rrggbb": "Farben werden als #rrggbb geschrieben",
   "Text must contain 1–64 characters": "Text muss 1–64 Zeichen enthalten",
   "The block program is too large": "Das Blockprogramm ist zu groß",
   "The loop counter {0} can only be used inside its loop": "Der Schleifenzähler {0} kann nur innerhalb seiner Schleife verwendet werden",

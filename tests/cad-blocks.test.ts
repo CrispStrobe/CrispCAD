@@ -2,7 +2,7 @@
 import {beforeAll,describe,expect,it} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
-import {compileBlocksToCadScript,exportBlocksOpenSCAD,exportBlocksJSCAD,importOpenSCAD,createCadSession,compileCode,CadBlocksError,BLOCK_SHAPES} from '@brickwright/cad-core';
+import {compileBlocksToCadScript,applyBlocksModel,exportBlocksOpenSCAD,exportBlocksJSCAD,importOpenSCAD,createCadSession,compileCode,CadBlocksError,BLOCK_SHAPES} from '@brickwright/cad-core';
 import type {CadBlocksProgram,BlockStmt,BlockExpr,BlockParam,BlockShapeKind} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
@@ -77,7 +77,78 @@ describe('shapes',()=>{
   expect(compileBlocksToCadScript(p).source).toContain('text2d("Hi", 10, "sans", "center", "center"');
   expect(exportBlocksOpenSCAD(p)).toContain('text("Hi", size = 10, halign = "center", valign = "center")');
   expect(viaCad(p).size[2]).toBeCloseTo(3,9);
-  expect(()=>exportBlocksJSCAD(p)).toThrow(CadBlocksError);
+  // JSCAD draws it in its own single-stroke font, stroked to the same cap height.
+  const js=viaJscad(program([shape('text',{size:10,height:3},'H')])),cad=viaCad(program([shape('text',{size:10,height:3},'H')]));
+  expect(js.size[2]).toBeCloseTo(3,6);
+  expect(js.size[1]).toBeCloseTo(cad.size[1],0);
+  expect(js.volume).toBeGreaterThan(cad.volume*0.5);
+  expect(js.volume).toBeLessThan(cad.volume*1.5);
+  expect(exportBlocksJSCAD(p)).toContain('textShape("Hi", 10, 3)');
+ });
+});
+
+describe('colours',()=>{
+ const paint=(color:string,...body:BlockStmt[]):BlockStmt=>({k:'color',color,body});
+ const partVolumes=(p:CadBlocksProgram)=>compileBlocksToCadScript(p).parts.map(part=>{
+  const s=createCadSession();s.addCode(part.program);return {color:part.color,volume:kernel.evaluate(s.state.document).volume};});
+ it('splits a painted model into one part per colour whose union is the whole model',()=>{
+  // A top-level hole cuts both colours: (A ∪ B) − H = (A − H) ∪ (B − H).
+  const p=program([paint('#FF0000',box(10,10,10)),move(20,0,0,paint('#0000ff',box(10,10,10))),
+   {k:'hole',body:[move(10,0,0,box(30,2,2))]}]);
+  const parts=partVolumes(p);
+  expect(parts.map(x=>x.color)).toEqual(['#ff0000','#0000ff']);
+  for(const part of parts)expect(part.volume).toBeCloseTo(1000-10*2*2,6);
+  expect(viaCad(p).volume).toBeCloseTo(2*(1000-40),6);
+  expect(compileBlocksToCadScript(program([box()])).parts).toHaveLength(1);
+  expect(compileBlocksToCadScript(program([paint('#00ff00',box())])).parts[0].color).toBe('#00ff00');
+ });
+ it('gives a group one colour (its painter, else its first colour) and the innermost colour wins',()=>{
+  const p=program([
+   {k:'group',body:[paint('#ff0000',box(10,10,10)),move(20,0,0,paint('#0000ff',box(10,10,10)))]},
+   paint('#00ff00',move(0,20,0,box(10,10,10)),paint('#ffff00',move(0,40,0,box(10,10,10))))]);
+  expect(partVolumes(p)).toEqual([{color:'#ff0000',volume:expect.closeTo(2000,6)},{color:'#00ff00',volume:expect.closeTo(1000,6)},{color:'#ffff00',volume:expect.closeTo(1000,6)}]);
+  // Uncoloured solids form their own part, which the host paints with its default.
+  expect(partVolumes(program([box(),paint('#ff0000',move(20,0,0,box()))])).map(x=>x.color)).toEqual([undefined,'#ff0000']);
+ });
+ it('keeps loops, variables and parameters in every part',()=>{
+  const p=program([{k:'set',name:'x',value:n(0)},{k:'repeat',count:v('n'),body:[paint('#ff0000',move(v('x'),0,0,box(5,5,5))),
+   paint('#0000ff',move(v('x'),10,0,box(5,5,5))),{k:'change',name:'x',by:n(10)}]}],[{name:'n',value:3}]);
+  const parts=compileBlocksToCadScript(p).parts;
+  expect(parts).toHaveLength(2);
+  for(const part of parts)expect(part.source).toContain('param n: scalar = 3;');
+  expect(partVolumes(p).map(x=>x.volume)).toEqual([expect.closeTo(375,6),expect.closeTo(375,6)]);
+ });
+ it('exports colours natively to OpenSCAD and JSCAD',()=>{
+  const p=program([paint('#ff8000',box())]);
+  expect(exportBlocksOpenSCAD(p)).toContain('color("#ff8000") {');
+  expect(exportBlocksJSCAD(p)).toContain('colorize([1,0.501960784314,0]');
+  const geometry=runJscad(exportBlocksJSCAD(p)).main!() as {color?:number[]};
+  expect(geometry.color?.slice(0,3)).toEqual([1,0.501960784314,0]);
+  agree(p,{volume:1000,size:[10,10,10]});
+  expect(()=>compileBlocksToCadScript(program([paint('red',box())]))).toThrow(CadBlocksError);
+ });
+});
+
+describe('applyBlocksModel',()=>{
+ const paint=(color:string,...body:BlockStmt[]):BlockStmt=>({k:'color',color,body});
+ it('adds one object per colour in one undo step, then updates them in place and keeps parameter overrides',()=>{
+  const s=createCadSession();
+  const first=program([paint('#ff0000',box(v('w'),10,10)),paint('#0000ff',move(30,0,0,box()))],[{name:'w',value:10}]);
+  const a=applyBlocksModel(s,'Robot',compileBlocksToCadScript(first));
+  expect(a.status).toBe('built');
+  const nodes=()=>s.state.document.roots.map(id=>s.state.document.nodes[id]);
+  expect(nodes().map(x=>[x.name,x.color])).toEqual([['Robot','#ff0000'],['Robot (#0000ff)','#0000ff']]);
+  s.updateCode(a.ids[0],{...(nodes()[0] as {program:{version:1;language:'brickwright-cad-script';source:string;parameters:Record<string,string>}}).program,parameters:{w:'25'}});
+  expect(applyBlocksModel(s,'Robot',compileBlocksToCadScript(first)).status).toBe('unchanged');
+  // Changing the model updates in place, keeps the override and drops the blue part.
+  const second=program([paint('#ff0000',box(v('w'),20,10))],[{name:'w',value:10}]);
+  const b=applyBlocksModel(s,'Robot',compileBlocksToCadScript(second));
+  expect(b).toEqual({status:'updated',ids:[a.ids[0]]});
+  expect(nodes().map(x=>x.name)).toEqual(['Robot']);
+  expect((nodes()[0] as {program:{parameters:Record<string,string>}}).program.parameters).toEqual({w:'25'});
+  expect(kernel.evaluate(s.state.document).volume).toBeCloseTo(25*20*10,6);
+  s.undo();
+  expect(nodes().map(x=>x.name)).toEqual(['Robot','Robot (#0000ff)']);
  });
 });
 

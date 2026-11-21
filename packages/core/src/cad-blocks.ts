@@ -10,6 +10,9 @@
 // (SSA), so the result stays parametric instead of being a frozen snapshot.
 import {t} from './i18n.js';
 import type {CodeProgram} from './code.js';
+import {identityTransform,newId,pruneDocument,type CadDocument} from './document.js';
+import {uniqueObjectName} from './fragments.js';
+import type {CadSession} from './session.js';
 
 // ---------------------------------------------------------------------------
 // Public syntax tree
@@ -36,6 +39,8 @@ export type BlockStmt = Located & (
  | {k:'shape';shape:BlockShapeKind;args?:Partial<Record<string,BlockExpr>>;text?:string}
  | {k:'move'|'rotate'|'scale';x:BlockExpr;y:BlockExpr;z:BlockExpr;body:Body}
  | {k:'mirror';axis:BlockAxis;body:Body}
+ /** Paints the solids in its body (#rrggbb); the innermost colour wins, a group takes one colour. */
+ | {k:'color';color:string;body:Body}
  | {k:'group'|'intersect'|'hull';body:Body}
  | {k:'subtract';body:Body;cutters:Body}
  /** TinkerCAD-style hole: cuts every solid of the enclosing group (or model), through moves, loops and ifs. */
@@ -95,6 +100,9 @@ type Core =
  | {c:'text';text:string;size:E;h:E}
  | {c:'move'|'rotate'|'scale';v:[E,E,E];body:Core[]}
  | {c:'mirror';axis:0|1|2;body:Core[]}
+ | {c:'color';color:string;body:Core[]}
+ /** A group's result: one solid, so one colour (its own colour block's, else its first coloured member's). */
+ | {c:'unit';body:Core[]}
  | {c:'union'|'intersect'|'hull';body:Core[]}
  | {c:'subtract';base:Core[];cut:Core[]}
  | {c:'hole';body:Core[]}
@@ -102,7 +110,7 @@ type Core =
  | {c:'if';cond:E;then:Core[];else:Core[]};
 interface Binding {name:string;value:E;seq:number}
 interface Scope {lets:Binding[];body:Core[]}
-interface Compiled {params:(BlockParam&{ident:string})[];scope:Scope;name:string}
+interface Compiled {params:(BlockParam&{ident:string})[];scope:Scope;name:string;root:Core[]}
 
 const num=(v:number):E=>({k:'num',v});
 const ref=(name:string):E=>({k:'ref',name});
@@ -152,7 +160,7 @@ class Names {
 const isObj=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const BINOPS=new Set<string>(['+','-','*','/','%','<','>','<=','>=','==','!=','&&','||']);
 const FNS:Record<BlockMathFn,number>={abs:1,floor:1,ceil:1,round:1,sqrt:1,sin:1,cos:1,tan:1,asin:1,acos:1,atan:1,ln:1,log:1,exp:1,pow10:1,min:2,max:2,pow:2,atan2:2};
-const STMT_KINDS=new Set(['set','change','shape','move','rotate','scale','mirror','group','intersect','hull','hole','subtract','repeat','for','if','comment']);
+const STMT_KINDS=new Set(['set','change','shape','move','rotate','scale','mirror','color','group','intersect','hull','hole','subtract','repeat','for','if','comment']);
 
 export function validateBlocksProgram(program:unknown):asserts program is CadBlocksProgram{
  let nodes=0;
@@ -187,6 +195,7 @@ export function validateBlocksProgram(program:unknown):asserts program is CadBlo
      if(spec.text&&(typeof st.text!=='string'||!st.text.trim()||st.text.length>BLOCK_LIMITS.textLength))fail(t('Text must contain 1–64 characters'),id);break;}
     case 'move':case 'rotate':case 'scale':expr(st.x,depth+1,id);expr(st.y,depth+1,id);expr(st.z,depth+1,id);body(st.body,depth+1);break;
     case 'mirror':if(!['x','y','z'].includes(st.axis as string))fail(t('Mirror axis must be x, y or z'),id);body(st.body,depth+1);break;
+    case 'color':if(typeof st.color!=='string'||!/^#[0-9a-fA-F]{6}$/.test(st.color))fail(t('Colours must be written #rrggbb'),id);body(st.body,depth+1);break;
     case 'group':case 'intersect':case 'hull':case 'hole':body(st.body,depth+1);break;
     case 'subtract':body(st.body,depth+1);body(st.cutters,depth+1);break;
     case 'repeat':expr(st.count,depth+1,id);body(st.body,depth+1);break;
@@ -228,7 +237,7 @@ function assigned(body:Body,out=new Set<string>()):Set<string>{
  return out;
 }
 function children(s:BlockStmt):Body[]{
- switch(s.k){case 'move':case 'rotate':case 'scale':case 'mirror':case 'group':case 'intersect':case 'hull':case 'hole':case 'repeat':case 'for':return [s.body];case 'subtract':return [s.body,s.cutters];case 'if':return [s.then,s.else??[]];default:return [];}
+ switch(s.k){case 'move':case 'rotate':case 'scale':case 'mirror':case 'color':case 'group':case 'intersect':case 'hull':case 'hole':case 'repeat':case 'for':return [s.body];case 'subtract':return [s.body,s.cutters];case 'if':return [s.then,s.else??[]];default:return [];}
 }
 function reads(e:BlockExpr,out=new Set<string>()):Set<string>{
  if(e.k==='var')out.add(e.name);else if(e.k==='op'){reads(e.a,out);reads(e.b,out);}else if(e.k==='not'||e.k==='neg')reads(e.a,out);else if(e.k==='fn')e.args.forEach(a=>reads(a,out));else if(e.k==='random'){reads(e.min,out);reads(e.max,out);}
@@ -309,9 +318,10 @@ class FrontEnd {
 
  run():Compiled{
   const params=this.program.params.map(p=>{const ident=this.names.fresh(p.name);this.env.set(p.name,{name:ident});this.paramIdents.set(p.name,ident);return {...p,ident};});
-  this.scope.body=closeGroup(this.body(this.program.body));
+  const root=this.body(this.program.body);
+  this.scope.body=closeGroup(root);
   pruneBindings(this.scope);
-  return {params,scope:this.scope,name:this.program.name??'Blocks model'};
+  return {params,scope:this.scope,name:this.program.name??'Blocks model',root};
  }
 
  private let(raw:string,value:E):string{
@@ -362,10 +372,11 @@ class FrontEnd {
    case 'shape':return [lowerShape(s,x)];
    case 'move':case 'rotate':case 'scale':{const v:[E,E,E]=[x(s.x),x(s.y),x(s.z)];return [{c:s.k,v,body:this.body(s.body)}];}
    case 'mirror':return [{c:'mirror',axis:s.axis==='x'?0:s.axis==='y'?1:2,body:this.body(s.body)}];
-   case 'group':return closeGroup(this.body(s.body));
+   case 'color':return [{c:'color',color:s.color.toLowerCase(),body:this.body(s.body)}];
+   case 'group':return unit(closeGroup(this.body(s.body)));
    case 'hole':return [{c:'hole',body:closeGroup(this.body(s.body))}];
-   case 'intersect':case 'hull':{const {solids,holes}=splitHoles(this.body(s.body)),node:Core={c:s.k,body:solids};return holes.length?[{c:'subtract',base:[node],cut:holes}]:[node];}
-   case 'subtract':{const base=closeGroup(this.body(s.body));return [{c:'subtract',base,cut:closeGroup(this.body(s.cutters))}];}
+   case 'intersect':case 'hull':{const {solids,holes}=splitHoles(this.body(s.body)),node:Core={c:s.k,body:solids};return unit(holes.length?[{c:'subtract',base:[node],cut:holes}]:[node]);}
+   case 'subtract':{const base=closeGroup(this.body(s.body));return unit([{c:'subtract',base,cut:closeGroup(this.body(s.cutters))}]);}
    case 'if':return [this.ifStmt(s)];
    case 'repeat':case 'for':return [this.loop(s)];
   }
@@ -444,7 +455,7 @@ function splitHoles(list:Core[]):{solids:Core[];holes:Core[]}{
   switch(c.c){
    case 'hole':holes.push(...c.body);break;
    case 'move':case 'rotate':case 'scale':{const part=splitHoles(c.body);if(part.solids.length)solids.push({...c,body:part.solids});if(part.holes.length)holes.push({...c,body:part.holes});break;}
-   case 'mirror':{const part=splitHoles(c.body);if(part.solids.length)solids.push({...c,body:part.solids});if(part.holes.length)holes.push({...c,body:part.holes});break;}
+   case 'mirror':case 'color':{const part=splitHoles(c.body);if(part.solids.length)solids.push({...c,body:part.solids});if(part.holes.length)holes.push({...c,body:part.holes});break;}
    case 'loop':{const part=splitHoles(c.scope.body);
     if(part.solids.length)solids.push({...c,scope:{lets:[...c.scope.lets],body:part.solids}});
     if(part.holes.length)holes.push({...c,scope:{lets:[...c.scope.lets],body:part.holes}});break;}
@@ -456,6 +467,7 @@ function splitHoles(list:Core[]):{solids:Core[];holes:Core[]}{
  }
  return {solids,holes};
 }
+const unit=(list:Core[]):Core[]=>list.length?[{c:'unit',body:list}]:[];
 /** A group applies its holes to its own solids, as TinkerCAD's Group does. */
 function closeGroup(list:Core[]):Core[]{
  const {solids,holes}=splitHoles(list);
@@ -470,7 +482,7 @@ function pruneBindings(root:Scope){
  const visit=(list:Core[])=>{for(const c of list){switch(c.c){
   case 'cuboid':use(c.w);use(c.d);use(c.h);break;case 'frustum':use(c.r1);use(c.r2);use(c.h);use(c.n);break;case 'sphere':use(c.r);use(c.n);break;
   case 'prism':use(c.h);c.pts.flat().forEach(use);break;case 'revolve':use(c.n);c.pts.flat().forEach(use);break;case 'text':use(c.size);use(c.h);break;
-  case 'move':case 'rotate':case 'scale':c.v.forEach(use);visit(c.body);break;case 'mirror':case 'union':case 'intersect':case 'hull':case 'hole':visit(c.body);break;
+  case 'move':case 'rotate':case 'scale':c.v.forEach(use);visit(c.body);break;case 'mirror':case 'color':case 'unit':case 'union':case 'intersect':case 'hull':case 'hole':visit(c.body);break;
   case 'subtract':visit(c.base);visit(c.cut);break;case 'if':use(c.cond);visit(c.then);visit(c.else);break;
   case 'loop':use(c.from);use(c.to);use(c.step);collect(c.scope);break;}}};
  const collect=(scope:Scope)=>{scopes.push(scope);scope.lets.forEach(b=>all.set(b.name,b));visit(scope.body);};
@@ -569,7 +581,8 @@ function cadShape(s:Core,pad:string):string{
   case 'text':return `move([0, 0, ${e(neg(half(s.h)))}], extrudeProfile(${e(s.h)}, text2d(${JSON.stringify(s.text)}, ${e(s.size)}, "sans", "center", "center", 1, 8)))`;
   case 'move':case 'rotate':case 'scale':return `${s.c}(${v(s.v)}, ${cadShapes(s.body,pad)})`;
   case 'mirror':return `mirror(${v([0,1,2].map(i=>num(i===s.axis?1:0)))}, ${cadShapes(s.body,pad)})`;
-  case 'union':return cadShapes(s.body,pad);
+  // CAD Script has no colours: a code object has one, so colours become parts (colorParts).
+  case 'union':case 'unit':case 'color':return cadShapes(s.body,pad);
   case 'intersect':case 'hull':return s.body.length===0?'empty()':s.body.length===1&&s.c==='intersect'?cadShape(s.body[0],pad):`${s.c}(\n${list(s.body)})`;
   case 'subtract':return s.cut.length===0?cadShapes(s.base,pad):`subtract(\n${inner}${cadShapes(s.base,inner)},\n${list(s.cut)})`;
   case 'if':return `choose(${e(s.cond)},\n${inner}${cadShapes(s.then,inner)},\n${inner}${cadShapes(s.else,inner)})`;
@@ -586,16 +599,122 @@ function collectLets(scope:Scope,out:Binding[]=[]):Binding[]{
 }
 const comment=(text:string)=>text.replace(/[\r\n]+/g,' ').slice(0,200);
 
-export interface CompiledBlocks {program:CodeProgram;source:string}
-/** Native CAD Script. Block variables become lazy `const` formulas, block parameters become `param`s. */
-export function compileBlocksToCadScript(program:CadBlocksProgram):CompiledBlocks{
- const c=compile(program);
+/** One code object of a model: all of its solids of one colour (no colour: the host's default). */
+export interface CompiledBlocksPart {color?:string;program:CodeProgram;source:string}
+export interface CompiledBlocks {program:CodeProgram;source:string;
+ /** One part per colour, in order of first use; a single part (the whole model) when it uses at most one colour. */
+ parts:CompiledBlocksPart[]}
+function cadSource(c:Compiled):{program:CodeProgram;source:string}{
  const lines=[`// ${comment(c.name)} — generated from blocks by Brickwright CAD. Units: mm, degrees.`,`// Edit the blocks to change this definition; parameters stay editable here.`];
  for(const p of c.params)lines.push(`param ${p.ident}: scalar = ${fmt(p.value)};${p.ident!==p.name?` // ${comment(p.name)}`:''}`);
  for(const b of collectLets(c.scope))lines.push(`const ${b.name} = ${printExpr(b.value,'cad')};`);
  lines.push(`return ${cadShapes(c.scope.body,'')};`);
  const source=lines.join('\n')+'\n';
  return {source,program:{version:1,language:'brickwright-cad-script',source,parameters:{}}};
+}
+/** Native CAD Script. Block variables become lazy `const` formulas, block parameters become `param`s. */
+export function compileBlocksToCadScript(program:CadBlocksProgram):CompiledBlocks{
+ const c=compile(program),whole=cadSource(c);
+ return {...whole,parts:colorParts(c).map(({color,compiled})=>({...(color?{color}:{}),...(compiled===c?whole:cadSource(compiled))}))};
+}
+
+// ---------------------------------------------------------------------------
+// Colours. A code object has one colour, so a model painted in several becomes one
+// object per colour. Exact, because holes cut every solid of their level whatever its
+// colour ((A ∪ B) − H = (A − H) ∪ (B − H)) and a group is one solid of one colour.
+
+const NO_COLOR='';
+/** The first colour painted inside (holes and cutters do not count). */
+function firstColor(list:Core[]):string|undefined{
+ for(const c of list){
+  if(c.c==='color')return c.color;
+  if(c.c==='hole')continue;
+  const inner=c.c==='subtract'?c.base:c.c==='loop'?c.scope.body:c.c==='if'?[...c.then,...c.else]:'body' in c?c.body:[];
+  const found=firstColor(inner);if(found!==undefined)return found;
+ }
+ return undefined;
+}
+const atomic=(c:Core)=>c.c==='unit'||c.c==='union'||c.c==='intersect'||c.c==='hull'||c.c==='subtract';
+function colorsOf(list:Core[],inherited:string|undefined,out:Set<string>):void{
+ for(const c of list){
+  switch(c.c){
+   case 'color':colorsOf(c.body,c.color,out);break;
+   case 'hole':break;
+   case 'move':case 'rotate':case 'scale':case 'mirror':colorsOf(c.body,inherited,out);break;
+   case 'loop':colorsOf(c.scope.body,inherited,out);break;
+   case 'if':colorsOf(c.then,inherited,out);colorsOf(c.else,inherited,out);break;
+   default:out.add(inherited??(atomic(c)?firstColor([c]):undefined)??NO_COLOR);
+  }
+ }
+}
+/** The model's solids of one colour, with every hole kept (holes are colourless). */
+function onlyColor(list:Core[],keep:string,inherited:string|undefined):Core[]{
+ const out:Core[]=[];
+ for(const c of list){
+  switch(c.c){
+   case 'color':{const body=onlyColor(c.body,keep,c.color);if(body.length)out.push({...c,body});break;}
+   case 'hole':out.push(c);break;
+   case 'move':case 'rotate':case 'scale':case 'mirror':{const body=onlyColor(c.body,keep,inherited);if(body.length)out.push({...c,body});break;}
+   case 'loop':{const body=onlyColor(c.scope.body,keep,inherited);if(body.length)out.push({...c,scope:{lets:[...c.scope.lets],body}});break;}
+   case 'if':{const a=onlyColor(c.then,keep,inherited),b=onlyColor(c.else,keep,inherited);if(a.length||b.length)out.push({...c,then:a,else:b});break;}
+   default:if((inherited??(atomic(c)?firstColor([c]):undefined)??NO_COLOR)===keep)out.push(c);
+  }
+ }
+ return out;
+}
+function colorParts(c:Compiled):{color?:string;compiled:Compiled}[]{
+ const colors=new Set<string>();colorsOf(c.root,undefined,colors);
+ if(colors.size<=1){const only=[...colors][0];return [{...(only?{color:only}:{}),compiled:c}];}
+ return [...colors].map(color=>{
+  const scope:Scope={lets:[...c.scope.lets],body:closeGroup(onlyColor(c.root,color,undefined))};
+  pruneBindings(scope);
+  return {...(color?{color}:{}),compiled:{...c,scope}};
+ });
+}
+
+/** Parameter overrides set in the editor that the new source still declares. */
+function keptOverrides(overrides:Record<string,string>|undefined,source:string):Record<string,string>{
+ return Object.fromEntries(Object.entries(overrides??{}).filter(([name])=>/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)&&new RegExp(`(^|\\n)param ${name}:`).test(source)));
+}
+export interface BlocksModelResult {status:'built'|'updated'|'unchanged';ids:string[]}
+/**
+ * Puts a compiled block model into a session as one undo step: one code object per
+ * colour part, found again by name on the next build (`name`, then `name (#rrggbb)` for
+ * further colours). Parameter overrides the new source still declares are kept, and
+ * colour parts the model no longer has are removed.
+ */
+export function applyBlocksModel(session:CadSession,name:string,compiled:CompiledBlocks):BlocksModelResult{
+ const label=(part:CompiledBlocksPart,i:number)=>i===0?name:`${name} (${part.color??'default'})`;
+ const isPart=(n:string)=>n===name||n.startsWith(`${name} (`)&&n.endsWith(')');
+ const before=session.state.document;
+ const found=before.roots.map(id=>before.nodes[id]).filter(n=>n.kind==='code'&&isPart(n.name));
+ const ids:string[]=[];
+ const revision=session.state.revision;
+ session.editAssembly(found.length?'Update block model':'Add block model',(d:CadDocument)=>{
+  d.version=Math.max(d.version,4) as CadDocument['version'];
+  const byName=new Map(d.roots.map(id=>d.nodes[id]).filter(n=>n.kind==='code'&&isPart(n.name)).map(n=>[n.name,n]));
+  const wanted=new Set<string>();
+  compiled.parts.forEach((part,i)=>{
+   const partName=label(part,i);wanted.add(partName);
+   const existing=byName.get(partName);
+   if(existing&&existing.kind==='code'){
+    if(existing.program.source!==part.program.source){
+     const next={...existing,program:{...structuredClone(part.program),parameters:keptOverrides(existing.program.parameters,part.program.source)}};
+     if(next.physics){next.physics={...next.physics};delete next.physics.collisionAssembly;}
+     d.nodes[existing.id]=next;
+    }
+    if(part.color&&existing.color!==part.color)d.nodes[existing.id]={...d.nodes[existing.id],color:part.color};
+    ids.push(existing.id);
+   }else{
+    const id=newId();
+    d.nodes[id]={id,kind:'code',program:structuredClone(part.program),name:uniqueObjectName(partName,new Set(d.roots.map(key=>d.nodes[key].name))),color:part.color??'#76b7ce',transform:identityTransform()};
+    d.roots.push(id);ids.push(id);
+   }
+  });
+  const stale=[...byName.values()].filter(n=>!wanted.has(n.name)).map(n=>n.id);
+  if(stale.length){d.roots=d.roots.filter(id=>!stale.includes(id));if(d.joints)d.joints=d.joints.filter(j=>d.roots.includes(j.bodyA)&&d.roots.includes(j.bodyB));pruneDocument(d);}
+ });
+ return {status:session.state.revision===revision?'unchanged':found.length?'updated':'built',ids};
 }
 
 // ---------------------------------------------------------------------------
@@ -620,6 +739,8 @@ function scadShape(s:Core,pad:string):string[]{
   case 'rotate':case 'scale':return scadBlock(`${s.c}(${v(s.v)})`,s.body,pad);
   case 'mirror':return scadBlock(`mirror(${v([0,1,2].map(i=>num(i===s.axis?1:0)))})`,s.body,pad);
   case 'union':return scadBlock('union()',s.body,pad);
+  case 'unit':return scadList(s.body,pad);
+  case 'color':return scadBlock(`color(${JSON.stringify(s.color)})`,s.body,pad);
   case 'intersect':return s.body.length?scadBlock('intersection()',s.body,pad):[];
   case 'hull':return s.body.length?scadBlock('hull()',s.body,pad):[];
   case 'subtract':{
@@ -658,12 +779,14 @@ function jsShape(s:Core,pad:string):string{
   case 'sphere':return `sphere({radius: ${e(s.r)}, segments: ${e(s.n)}})`;
   case 'prism':return `translate([0, 0, ${e(neg(half(s.h)))}], extrudeLinear({height: ${e(s.h)}}, ${pts(s.pts)}))`;
   case 'revolve':return `extrudeRotate({segments: ${e(s.n)}}, ${pts(s.pts)})`;
-  case 'text':throw new CadBlocksError(t('Text cannot yet be exported to JSCAD'),undefined,'unsupported-feature');
+  // JSCAD's own single-stroke font, stroked to the engine font's cap height and weight.
+  case 'text':return `textShape(${JSON.stringify(s.text)}, ${e(s.size)}, ${e(s.h)})`;
   case 'move':return `translate(${v(s.v)}, ${jsList(s.body,pad)})`;
   case 'rotate':return `rotate(${v(s.v.map(x=>op('*',x,num(Math.PI/180))))}, ${jsList(s.body,pad)})`;
   case 'scale':return `sscale(${v(s.v)}, ${jsList(s.body,pad)})`;
   case 'mirror':return `mirror({normal: ${v([0,1,2].map(i=>num(i===s.axis?1:0)))}}, ${jsList(s.body,pad)})`;
-  case 'union':return jsList(s.body,pad);
+  case 'union':case 'unit':return jsList(s.body,pad);
+  case 'color':return `colorize(${JSON.stringify([1,3,5].map(i=>r12(parseInt(s.color.slice(i,i+2),16)/255)))}, ${jsList(s.body,pad)})`;
   case 'intersect':return s.body.length<2?jsList(s.body,pad):`intersect(\n${s.body.map(c=>inner+jsShape(c,inner)).join(',\n')})`;
   case 'hull':return s.body.length?`hull(\n${s.body.map(c=>inner+jsShape(c,inner)).join(',\n')})`:'group([])';
   case 'subtract':return s.cut.length?`subtract(${jsList(s.base,pad)},\n${s.cut.map(c=>inner+jsShape(c,inner)).join(',\n')})`:jsList(s.base,pad);
@@ -675,12 +798,13 @@ function jsShape(s:Core,pad:string):string{
   }
  }
 }
-const JSCAD_PRELUDE=`const {primitives, booleans, transforms, extrusions, hulls, geometries} = require('@jscad/modeling');
+const JSCAD_PRELUDE=`const {primitives, booleans, transforms, extrusions, hulls, geometries, colors, text, expansions, measurements} = require('@jscad/modeling');
 const {cuboid, cylinder, cylinderElliptic, sphere, polygon} = primitives;
 const {union, subtract, intersect} = booleans;
 const {translate, rotate, scale, mirror} = transforms;
 const {extrudeLinear, extrudeRotate} = extrusions;
 const {hull} = hulls;
+const {colorize} = colors;
 
 // Helpers: degree trigonometry, inclusive loops and empty-safe groups, like the blocks.
 const sinDeg = (d) => Math.sin(d * Math.PI / 180);
@@ -701,6 +825,17 @@ const cone = (bottom, top, height, segments) => cylinderElliptic({height, segmen
 const poly = (points) => {
   const area = points.reduce((sum, p, i) => sum + p[0] * points[(i + 1) % points.length][1] - points[(i + 1) % points.length][0] * p[1], 0);
   return polygon({points: area < 0 ? [...points].reverse() : points});
+};
+// Text: JSCAD's built-in single-stroke font, stroked into outlines (cap height = size).
+const textShape = (message, size, height) => {
+  const delta = size * 0.06;
+  const strokes = text.vectorText({height: (size - 2 * delta) / 1.5, align: 'center'}, message)
+    .filter((points) => points.length > 1)
+    .map((points) => expansions.expand({delta, corners: 'round', segments: 8}, geometries.path2.fromPoints({}, points)));
+  if (!strokes.length) return geometries.geom3.create();
+  const outline = union(strokes);
+  const [[x0, y0], [x1, y1]] = measurements.measureBoundingBox(outline);
+  return translate([-(x0 + x1) / 2, -(y0 + y1) / 2, -height / 2], extrudeLinear({height}, outline));
 };
 const sscale = (factors, shape) => factors.reduce((result, f, axis) => f < 0
   ? mirror({normal: [0, 1, 2].map((i) => (i === axis ? 1 : 0))}, result) : result, scale(factors.map(Math.abs), shape));

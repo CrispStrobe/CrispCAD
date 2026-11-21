@@ -48,6 +48,10 @@ Statements carry an optional `id` (the Scratch block id). Errors are
   `if` branches, and stop at `group` boundaries. In `intersect`/`hull` bodies they
   cut the result. Block editors can therefore express cutting with single-body
   C-blocks; the explicit two-body `subtract` remains available in JSON.
+- **Colours**: `{"k":"color","color":"#rrggbb","body":[…]}` paints the solids in
+  its body; the innermost colour wins. A `group` (also `intersect`, `hull`,
+  `subtract`) is one solid of one colour: its own colour block's, else the first
+  colour painted inside it, as TinkerCAD's Group does. See [Colours](#colours).
 - **Control**: `repeat n`, `for var from to [step]` (inclusive, directed),
   `if/else`, `comment`.
 - **Values**: numbers, variables, `+ - * / %`, comparisons, `&& || !`, unary minus,
@@ -78,15 +82,36 @@ Each `set`/`change` creates a new named binding (single assignment), e.g.
 Names are sanitised once for all three languages (umlauts transliterated,
 keywords/builtins suffixed `_v`, collisions numbered). Unused bindings are dropped.
 
+## Colours
+
+A code object has one colour, so `compileBlocksToCadScript` also returns `parts`:
+one CAD Script program per colour, in order of first use (solids without a colour
+form a part with no `color`, which the host paints with its default). The parts are
+exact. Holes cut every solid of their level whatever its colour, because
+(A ∪ B) − H = (A − H) ∪ (B − H). Variables, loops and parameters are kept in every
+part, and `source`/`program` remain the whole model. A model with at most one
+colour has a single part.
+
+`applyBlocksModel(session, name, compiled)` puts a compiled model into a session
+as **one undo step**: one code object per part, named `name`, then
+`name (#rrggbb)`. A later build finds them again by name and updates them in place.
+It keeps the parameter overrides that the new source still declares, and removes
+colour parts the model no longer has. Its result is `built`, `updated` or
+`unchanged`. Brickwright Lite's CAD shapes blocks use it.
+
+OpenSCAD and JSCAD keep colours natively: `color("#rrggbb") { … }` and
+`colorize([r, g, b], …)`.
+
 ## Limits and known gaps
 
 4,096 tree nodes, nesting depth 32, 64 parameters and 64-character text. The
 generated CAD Script remains subject to the normal [code limits](CODE-MODE.md),
 including 256 statements and loops of at most 256 values.
 
-- Text exports to CAD Script and OpenSCAD. JSCAD export refuses text rather than
-  substituting a different stroke font.
-- Colours are not part of the block program yet; a code body has one appearance.
+- Text keeps the engine font in CAD Script and its family name in OpenSCAD.
+  JSCAD has no outline fonts, so the export draws the text in JSCAD's built-in
+  single-stroke font, stroked to the same cap height (= size) and a similar weight.
+  The letter shapes and widths differ from the editor's.
 - Tessellation follows each target's own kernel, so curved volumes agree to within
   about 2 %. Boxes, booleans and transforms agree exactly.
 
