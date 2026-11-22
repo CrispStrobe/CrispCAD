@@ -178,7 +178,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     const settings={title:title.value.trim(),scale:scale.value as DrawingScale,hiddenLines:hidden.checked};
     const cut=operationScalar(position),second=operationScalar(secondPosition),at=operationScalar(jogAt);
     if(section.checked&&cut==='')throw new Error(t('Enter a section position in millimetres.'));
-    const useJog=!assembly&&section.checked&&offset.checked;
+    const useJog=section.checked&&offset.checked;
     if(useJog&&(second===''||at===''))throw new Error(t('Enter the second section position and the jog coordinate.'));
     const cuttingPlane=section.checked?{section:{axis:axis.value==='u'?'u' as const:'v' as const,position:cut,...(useJog?{jog:{at,position:second}}:{})}}:{};
     if(assembly){
@@ -270,9 +270,9 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    };
    const render=()=>{
     axis.parentElement!.hidden=position.parentElement!.hidden=!section.checked;
-    offset.parentElement!.hidden=assembly||!section.checked;
-    secondPosition.parentElement!.hidden=jogAt.parentElement!.hidden=jogHint.hidden=assembly||!section.checked||!offset.checked;
-    const across=axis.value==='u'?t('Sketch Y'):t('Sketch X');
+    offset.parentElement!.hidden=!section.checked;
+    secondPosition.parentElement!.hidden=jogAt.parentElement!.hidden=jogHint.hidden=!section.checked||!offset.checked;
+    const across=assembly?(axis.value==='u'?t('World Y'):t('World X')):(axis.value==='u'?t('Sketch Y'):t('Sketch X'));
     jogHint.textContent=t`The jog switches to the second cut at this coordinate along ${across}.`;
     preview.replaceChildren();layout=undefined;pages=[];status.textContent='';
     previewPage.disabled=true;

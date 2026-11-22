@@ -34,7 +34,7 @@ import {mountModelSourcePanel} from './model-source-panel.js';
 import {mountCodePanel} from './code-panel.js';
 import {exportSketchDxf} from './sketch-dxf.js';
 import {exportDrawingSetPdf} from './drawing-pdf.js';
-import {resolveAssemblyCut} from './assembly-drawing.js';
+import {assemblyCutKey,resolveAssemblyCut} from './assembly-drawing.js';
 import {createAssemblyProjectionClient} from './assembly-projection-client.js';
 import {mountDrawingPanel} from './drawing-panel.js';
 import {exportSketchPdf} from './sketch-pdf.js';
@@ -192,7 +192,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       if(!isAssemblyDrawingSource(sheet.source)||!sheet.section)continue;
       try{
         const cut=resolveAssemblyCut(current,sheet.section);
-        const key=`${cut.axis}:${cut.position}`;
+        const key=assemblyCutKey(cut);
         let cache=assemblySections.get(geometry);
         if(!cache){cache=new Map();assemblySections.set(geometry,cache);}
         let result=cache.get(key);

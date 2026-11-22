@@ -47,7 +47,7 @@ it('keeps a linked assembly across project and model source round trips and expo
  expect(parseDocument(session.serialize()).drawings).toEqual([{...assembly,id}]);
  expect(validateDocument(compileModelSource(session.modelSource,before)).drawings).toEqual(before.drawings);
  expect(()=>validateDocument({...before,version:20})).toThrow('drawing sheets');
- expect(()=>session.saveDrawingSheet({...assembly,section:{axis:'u',position:0,jog:{at:1,position:2}}})).toThrow('drawing sheets');
+ expect(()=>session.saveDrawingSheet({...assembly,section:{axis:'u',position:0,jog:{at:'',position:2}}})).toThrow('drawing sheets');
  expect(session.state.document).toBe(before);
 
  const source=drawingSourceFor(before,partId)!;
@@ -170,4 +170,40 @@ it('slices evaluated assemblies, preserves through openings and exports a linked
  session.setParametric(parameters);
  expect(kernel.sliceAssembly(geometry,resolveAssemblyCut(session.state.document,draft.section!))
   .bodies[0].loops).toHaveLength(1);
+});
+
+it('clips both assembly cuts at the jog and joins material separately for each body',()=>{
+ const session=createCadSession();
+ session.setParametric({version:1,parameters:{second:{expression:'12',unit:'mm'}},bindings:[]});
+ const plate=session.addSketchExtrusion({kind:'region',id:'plate',loops:[
+  {kind:'outline',id:'outside',points:[[-20,-10],[20,-10],[20,22],[-20,22]]},
+  {kind:'circle',id:'first',center:[-10,0],radius:3,segments:64},
+  {kind:'circle',id:'second',center:[10,12],radius:3,segments:64}
+ ]},{distance:6});
+ const bracket=session.add({kind:'box',size:[10,8,8]},
+  {name:'Bracket',transform:{...identityTransform(),position:[30,12,0]}});
+ const options:DrawingInputs={...assembly,section:{axis:'v',position:0,jog:{at:0,position:'second'}}};
+ session.saveDrawingSheet(options);
+ const doc=session.state.document;
+ expect(doc.version).toBe(24);
+ expect(parseDocument(session.serialize()).drawings).toEqual(doc.drawings);
+ expect(validateDocument(compileModelSource(session.modelSource,doc)).drawings).toEqual(doc.drawings);
+ expect(()=>validateDocument({...doc,version:23})).toThrow('drawing sheets');
+ const geometry=kernel.evaluate(doc),cut=resolveAssemblyCut(doc,options.section!);
+ const section=kernel.sliceAssembly(geometry,cut);
+ expect(section.bodies.map(body=>[body.id,body.loops.length])).toEqual([[plate,3],[bracket,1]]);
+ const span=section.bodies[0].loops.map(loop=>{
+  const xs=loop.map(point=>point[0]);
+  return [Math.round(Math.min(...xs)),Math.round(Math.max(...xs))];
+ }).sort((a,b)=>a[0]-b[0]);
+ expect(span).toEqual([[-20,-13],[-7,7],[13,20]]);
+ const projection={...projectAssembly(geometry),sections:[section]};
+ const page=layoutDrawing(doc,options,projection);
+ expect(page.paths.find(path=>path.stroke==='cut')?.points).toHaveLength(4);
+ expect(page.texts.map(text=>text.text)).toContain('Offset section A-A');
+ expect(page.texts.map(text=>text.text)).toContain('World Y = 0 / 12 mm');
+ expect(()=>layoutDrawing(doc,{...options,section:{axis:'v',position:0,jog:{at:1,position:12}}},projection))
+  .toThrow('needs evaluated cut geometry');
+ expect(()=>kernel.sliceAssembly(geometry,{...cut,jog:{at:40,position:12}})).toThrow('Both legs');
+ expect(()=>kernel.sliceAssembly(geometry,{...cut,jog:{at:0,position:0}})).toThrow('different positions');
 });

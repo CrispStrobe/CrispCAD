@@ -8,24 +8,31 @@ import type {DrawingLayout} from './drawing-page.js';
 
 export function addAssemblySection(page:DrawingLayout,projection:AssemblyProjection,section:AssemblySection,topX:number,topY:number,rightX:number){
  if(!section.bodies.length)throw new Error(t('The section plane misses the assembly solids.'));
- const {axis,position}=section.cut,across=axis===0?1:0;
+ const {axis,position,jog}=section.cut,across=axis===0?1:0;
  const {origin}=projection,[top,front]=projection.views;
  const width=(axis===0?top.height:top.width)*page.factor,height=front.height*page.factor;
  if(rightX+width>274||topY+height>169)throw new Error(t('This drawing does not fit on A4 at this scale. Choose a smaller scale.'));
- const cut=(position-origin[axis])*page.factor;
+ const planeAlong=(value:number)=>(value-origin[axis])*page.factor;
+ const first=planeAlong(position),second=jog?planeAlong(jog.position):first;
  const span=axis===0?top.height:top.width;
- const mark=(along:number,perpendicular:number):SketchPoint=>axis===0
-  ?[topX+cut+perpendicular,topY+along]
-  :[topX+along,topY+cut+perpendicular];
- const ends=[-3,span*page.factor+3],direction=axis===0?-1:1;
- page.paths.push({stroke:'cut',points:ends.map(end=>mark(end,0))});
- for(const end of ends){
-  page.paths.push({stroke:'visible',points:[mark(end-1.1,-direction*2),mark(end,direction*2),mark(end+1.1,-direction*2)]});
-  const [x,y]=mark(end,-direction*4);
+ const mark=(along:number,plane:number,offset=0):SketchPoint=>axis===0
+  ?[topX+plane+offset,topY+along]
+  :[topX+along,topY+plane+offset];
+ const firstEnd=-3,lastEnd=span*page.factor+3,direction=axis===0?-1:1;
+ const line=[mark(firstEnd,first)];
+ if(jog){
+  const transition=(jog.at-origin[across])*page.factor;
+  line.push(mark(transition,first),mark(transition,second));
+ }
+ line.push(mark(lastEnd,second));
+ page.paths.push({stroke:'cut',points:line});
+ for(const [end,plane] of [[firstEnd,first],[lastEnd,second]]){
+  page.paths.push({stroke:'visible',points:[mark(end-1.1,plane,-direction*2),mark(end,plane,direction*2),mark(end+1.1,plane,-direction*2)]});
+  const [x,y]=mark(end,plane,-direction*4);
   page.texts.push({x:x+1,y:y+1,text:'A',size:2.8});
  }
- page.texts.push({x:rightX,y:topY+height+4,text:t('Section A-A'),size:3.5});
- const value=dimensionText(position);
+ page.texts.push({x:rightX,y:topY+height+4,text:jog?t('Offset section A-A'):t('Section A-A'),size:3.5});
+ const value=dimensionText(position)+(jog?' / '+dimensionText(jog.position):'');
  page.texts.push({x:rightX,y:topY+height+9,text:axis===0?t`World X = ${value} mm`:t`World Y = ${value} mm`,size:2.8});
  let crossingsChecked=0;
  for(const [index,body] of section.bodies.entries()){

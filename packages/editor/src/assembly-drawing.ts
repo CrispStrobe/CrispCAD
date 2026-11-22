@@ -171,10 +171,19 @@ export function projectAssembly(geometry:GeometryResult){
 
 export type AssemblyProjection=ReturnType<typeof projectAssembly>&{sections?:AssemblySection[]};
 
+export const assemblyCutKey=(cut:AssemblyCut)=>cut.jog
+ ? `${cut.axis}:${cut.position}:${cut.jog.position}:${cut.jog.at}`
+ : `${cut.axis}:${cut.position}`;
+
 export function resolveAssemblyCut(doc:CadDocument,section:DrawingSection):AssemblyCut{
- const position=featureValue(section.position,doc);
- if(Math.abs(position)>100000)throw new Error(t('Section position is outside the assembly coordinate range.'));
- return {axis:section.axis==='u'?0:1,position};
+ const coordinate=(value:DrawingSection['position'])=>{
+  const position=featureValue(value,doc);
+  if(Math.abs(position)>100000)throw new Error(t('Section position is outside the assembly coordinate range.'));
+  return position;
+ };
+ const {jog}=section;
+ return {axis:section.axis==='u'?0:1,position:coordinate(section.position),
+  ...(jog?{jog:{at:coordinate(jog.at),position:coordinate(jog.position)}}:{})};
 }
 
 const cache=new WeakMap<GeometryResult,AssemblyProjection>();
@@ -207,7 +216,8 @@ export function layoutAssemblyDrawing(sheet:DrawingInputs,projection:AssemblyPro
   page.texts.push({x:left,y:bottom+view.height*factor+4,text:t(view.view),size:3.5});
  }
  if(cut){
-  const section=projection.sections?.find(item=>item.cut.axis===cut.axis&&item.cut.position===cut.position);
+  const key=assemblyCutKey(cut);
+  const section=projection.sections?.find(item=>assemblyCutKey(item.cut)===key);
   if(!section)throw new Error(t('The assembly section needs evaluated cut geometry.'));
   addAssemblySection(page,projection,section,x,topY,rightX);
  }

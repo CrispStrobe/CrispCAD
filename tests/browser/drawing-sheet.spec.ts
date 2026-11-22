@@ -315,7 +315,7 @@ test('assembly views use current solid placements and export a linked PDF',async
  const cut=dialog.getByLabel('Section position (mm)',{exact:true});
  await section.check();
  await expect(axis.locator('option:checked')).toHaveText('World Y');
- await expect(dialog.getByLabel('Offset section')).toBeHidden();
+ await expect(dialog.getByLabel('Offset section')).toBeVisible();
  await cut.fill('99999');
  await expect(dialog.getByRole('status',{name:'Drawing status'})).toContainText('misses the assembly solids');
  await cut.fill('0');
@@ -343,6 +343,12 @@ test('assembly views use current solid placements and export a linked PDF',async
  await expect(preview).toContainText('Assembly · 2 bodies');
  expect(await paths()).not.toEqual(before);
  expect(workers).toHaveLength(2);
+ const offset=dialog.getByLabel('Offset section',{exact:true});
+ await offset.check();
+ await dialog.getByLabel('Second section position (mm)').fill('42');
+ await dialog.getByLabel('Jog at (mm)').fill('8');
+ await expect(preview).toContainText('World Y = 0 / 42 mm');
+ await expect(preview.locator('.drawing-cut')).toHaveAttribute('d',/^M (?:[^L]+L ){3}[^L]+$/);
  await pageSelect.selectOption('1');
  await expect(preview).toContainText('Rear cover');
  const [download]=await Promise.all([
@@ -353,6 +359,9 @@ test('assembly views use current solid placements and export a linked PDF',async
  expect(pdf).toContain('/Type /Pages /Count 2');
  expect(pdf).toContain('[3.5 1 0.7 1] 0 d');
  expect(pdf).toContain('<'+Buffer.from('Rear cover','latin1').toString('hex')+'>');
+ expect(pdf).toContain('<'+Buffer.from('World Y = 0 / 42 mm','latin1').toString('hex')+'>');
+ await press(dialog.getByRole('button',{name:'Save drawing sheet',exact:true}));
+ await expect(dialog).toBeHidden();
  await page.reload();
  await ready();
  if(!await sheet.isVisible())await press(page.getByRole('button',{name:'Objects',exact:true}));
@@ -362,6 +371,9 @@ test('assembly views use current solid placements and export a linked PDF',async
  await expect(parts).toBeChecked();
  await expect(section).toBeChecked();
  await expect(cut).toHaveValue('0');
+ await expect(offset).toBeChecked();
+ await expect(dialog.getByLabel('Second section position (mm)')).toHaveValue('42');
+ await expect(dialog.getByLabel('Jog at (mm)')).toHaveValue('8');
  await expect(preview.locator('.drawing-section').first()).toBeVisible();
  await pageSelect.selectOption('1');
  await expect(preview).toContainText('Rear cover');

@@ -194,8 +194,13 @@ evaluated geometry and carries through preview, PDF and SB3 reopen. Named
 length parameters can drive its position. The drawing reports when the plane
 misses the solids.
 
-Jogged assembly sections, dimensions on model edges, and multiple jogs in
-sketch sections remain open.
+Enable **Offset section** to add a single jog. The first cut contributes
+material before the jog coordinate and the second cut contributes material
+after it. The top view marks the stepped path. The section keeps distinct
+components separately hatched and merges touching cut regions from the same
+component at the jog. Both legs must cross material.
+
+Dimensions on model edges and multiple jogs remain open.
 
 ## Completion criteria
 
