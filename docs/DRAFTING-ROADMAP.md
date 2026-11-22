@@ -85,8 +85,14 @@ plane. The preview draws their original sketch coordinates as dashed outlines.
 Drag near an endpoint, edge midpoint, circle or arc center, or an intersection
 between the two references. The preview highlights the active target. Snapping
 writes the exact coordinates into the draft. The reference choices stay in the
-dialog, and the committed shape stores coordinates. Graphical curve editing,
-persistent constraints, and tangent snaps remain open.
+dialog, and the committed shape stores coordinates. Persistent constraints and
+tangent snaps remain open.
+
+Enable **Edit edge curves** to reveal a blue handle at the midpoint of each
+outline edge. Drag the handle across its chord to turn a straight edge into
+an arc, change the arc radius, or return the edge to straight. The endpoints
+stay fixed, and a rejected curve restores the preceding outline. The vectors
+remain editable as DXF bulges and preserve their shape on export.
 
 ## Full-size drilling template
 

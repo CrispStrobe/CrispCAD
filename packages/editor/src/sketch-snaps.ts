@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {evaluateSketch,featureValue,isSketchPoint,sketchBulgeArc} from '@brickwright/cad-core';
+import {evaluateSketch,featureValue,isSketchPoint,sketchBulgeArc,sketchBulgeMidpoint} from '@brickwright/cad-core';
 import type {CadDocument,PlanarSketch,SketchPoint} from '@brickwright/cad-core';
 
 type Line = {kind:'line'; a:SketchPoint; b:SketchPoint};
@@ -60,14 +60,12 @@ export function sketchSnapReference(sketch:PlanarSketch, doc:CadDocument) {
  const addLoop=(vertices:SketchPoint[],bulges?:number[])=>vertices.forEach((a,i)=>{
   const b=vertices[(i+1)%vertices.length];
   points.push({kind:'Endpoint',point:a});
-  const arc=sketchBulgeArc(a,b,bulges?.[i]??0);
+  const bulge=bulges?.[i]??0,arc=sketchBulgeArc(a,b,bulge);
+  points.push({kind:'Midpoint',point:sketchBulgeMidpoint(a,b,bulge)});
   if(arc){
-   const mid=arc.start+arc.sweep/2;
-   points.push({kind:'Midpoint',point:advance(arc.center,[Math.cos(mid),Math.sin(mid)],arc.radius)});
    points.push({kind:'Center',point:arc.center});
    edges.push({kind:'circle',...arc});
   }else{
-   points.push({kind:'Midpoint',point:advance(a,subtract(b,a),.5)});
    edges.push({kind:'line',a,b});
   }
  });

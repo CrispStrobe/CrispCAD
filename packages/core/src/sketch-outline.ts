@@ -52,6 +52,11 @@ export function sketchBulgeArc(a: SketchPoint, b: SketchPoint, bulge: number) {
   return {center, radius, start: Math.atan2(a[1]-center[1], a[0]-center[0]), sweep: 4*Math.atan(bulge)};
 }
 
+/** The halfway point along the signed arc, or the midpoint of a straight edge. */
+export function sketchBulgeMidpoint([ax,ay]:SketchPoint,[bx,by]:SketchPoint,bulge:number):SketchPoint {
+  return [(ax+bx+(by-ay)*bulge)/2,(ay+by-(bx-ax)*bulge)/2];
+}
+
 /** Build a simple counter-clockwise contour from native DXF bulges.
  * The authored bulge is tan(signed sweep/4) for the outgoing edge.
  */

@@ -282,3 +282,40 @@ test('outline vertices snap to an analytic intersection between reference sketch
  await page.getByRole('button',{name:'Undo',exact:true}).click();
  await expect(page.getByTestId('object-name')).toHaveCount(2);
 });
+
+test('curves an outline edge by dragging its midpoint and exports the signed bulge', async ({page}) => {
+ await page.goto('/');
+ const ready=()=>expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await ready();
+ await page.getByRole('button',{name:'Sketch',exact:true}).click();
+ const dialog=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await dialog.getByLabel('Profile',{exact:true}).selectOption('outline');
+ const points=dialog.getByLabel('Outline points X, Y (mm)');
+ await expect(dialog.locator('[data-resize="curve"]')).toHaveCount(0);
+ await dialog.getByRole('checkbox',{name:'Edit edge curves'}).check();
+ const edge=dialog.locator('[data-resize="curve"][data-edge="0"]');
+ const [start,destination]=await edge.evaluate(node=>{
+  const handle=node as SVGCircleElement,x=handle.cx.baseVal.value,y=handle.cy.baseVal.value;
+  const matrix=handle.getScreenCTM()!;
+  return [y,y+10].map(y=>{
+   const point=new DOMPoint(x,y).matrixTransform(matrix);
+   return {x:point.x,y:point.y};
+  });
+ });
+ await page.mouse.move(start.x,start.y);
+ await page.mouse.down();
+ await page.mouse.move(destination.x,destination.y);
+ await page.mouse.up();
+ await expect(points).toHaveValue('0, 0, 0.5\n40, 0\n30, 30\n0, 30');
+ await dialog.getByRole('button',{name:'Create extrusion'}).click();
+ await ready();
+ const exportButton=page.getByRole('button',{name:'Export sketch as DXF'});
+ if(!await exportButton.isVisible())await page.getByRole('button',{name:'Properties',exact:true}).click();
+ const [download]=await Promise.all([page.waitForEvent('download'),exportButton.click()]);
+ const path=await download.path();
+ if(!path)throw Error('Missing export');
+ const dxf=await (await import('node:fs/promises')).readFile(path,'utf8');
+ expect(dxf).toContain('10\r\n0\r\n20\r\n0\r\n42\r\n0.5');
+ await page.getByRole('button',{name:'Undo',exact:true}).click();
+ await expect(page.getByTestId('object-name')).toHaveCount(0);
+});

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {expect,it} from 'vitest';
-import {formatSketchPoints,parseSketchOutline,parseSketchPoint} from '../packages/editor/src/sketch-point-entry.js';
+import {formatSketchPoints,parseSketchOutline,parseSketchPoint,sketchDraggedBulge} from '../packages/editor/src/sketch-point-entry.js';
 
 it('resolves relative outline points and preserves signed arc bulges',()=>{
  const outline=parseSketchOutline(['5, 10','@40, 0, -0.5','@-10, 30','5, 40']);
@@ -14,4 +14,12 @@ it('keeps an absolute origin for each loop and rejects malformed coordinates',()
  expect(()=>parseSketchOutline(['1, 2, Infinity'])).toThrow('finite bulge');
  expect(()=>parseSketchOutline(['1e400, 2'])).toThrow('Enter coordinates');
  expect(()=>parseSketchOutline(Array(257).fill('0,0'))).toThrow('3–256');
+});
+
+it('applies a signed sagitta drag perpendicular to the chord with grid snapping',()=>{
+ expect(sketchDraggedBulge([0,0],[40,0],0,[8,-10],1)).toBe(.5);
+ expect(sketchDraggedBulge([0,0],[40,0],.5,[0,10],1)).toBe(0);
+ expect(sketchDraggedBulge([0,0],[0,40],0,[-10,10],1)).toBe(-.5);
+ expect(sketchDraggedBulge([0,0],[40,0],0,[0,-4.4],1)).toBe(.2);
+ expect(sketchDraggedBulge([0,0],[40,0],0,[0,-4.4],0)).toBe(.22);
 });

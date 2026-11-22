@@ -37,3 +37,13 @@ export function parseSketchOutline(rows: string[]) {
 export function formatSketchPoints(points: SketchPoint[], bulges?: number[]) {
   return points.map(([x, y], i) => bulges?.[i] ? [x,y,bulges[i]].join(', ') : [x,y].join(', '));
 }
+
+/** Move the arc's midpoint perpendicular to its chord while keeping its endpoints fixed. */
+export function sketchDraggedBulge([ax,ay]:SketchPoint,[bx,by]:SketchPoint,bulge:number,[dx,dy]:SketchPoint,step:number) {
+  const x=bx-ax,y=by-ay,chord=Math.hypot(x,y);
+  if(!chord)return bulge;
+  const offset=(dx*y-dy*x)/chord;
+  const distance=chord*bulge/2+offset;
+  const snapped=step>0?Math.round(distance/step)*step:distance;
+  return Number((2*snapped/chord).toFixed(8));
+}
