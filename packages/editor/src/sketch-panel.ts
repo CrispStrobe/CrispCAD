@@ -54,8 +54,10 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   points.setAttribute('aria-label',t('Outline points X, Y (mm)'));
   points.rows=4;
   points.spellcheck=false;
-  points.value=(profile?.kind==='outline'?profile.points:[[0,0],[40,0],[30,30],[0,30]]).map(point=>point.join(', ')).join('\n');
-  pointsLabel.append(points);
+  const formatPoints=(points:SketchPoint[],bulges?:number[])=>points.map(([x,y],i)=>
+   bulges?.[i]?[x,y,bulges[i]].join(', '):[x,y].join(', '));
+  points.value=profile?.kind==='outline'?formatPoints(profile.points,profile.bulges).join('\n'):'0, 0\n40, 0\n30, 30\n0, 30';
+  pointsLabel.append(points,element('small',t('For an arc, add its bulge as a third value. Use 1 for a semicircle, or -1 to curve in the opposite direction.')));
   form.append(pointsLabel);
   const regionLabel=element('label',t('Region loops (mm)'));
   const region=element('textarea');
@@ -65,11 +67,11 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   region.maxLength=65536;
   const formatLoops=(loops:SketchLoop[])=>loops.map(loop=>loop.kind==='circle'
    ? 'CIRCLE '+[...loop.center,loop.radius].join(', ')
-   : loop.points.map(point=>point.join(', ')).join(' | ')).join('\n');
+   : formatPoints(loop.points,loop.bulges).join(' | ')).join('\n');
   let singleDxfLayer=profile?.kind==='outline'||profile?.kind==='circle'?profile.dxfLayer:undefined;
   let regionLoops=profile?.kind==='region'?profile.loops:[];
   region.value=regionLoops.length?formatLoops(regionLoops):'0, 0 | 40, 0 | 40, 30 | 0, 30\nCIRCLE 10, 15, 2';
-  regionLabel.append(region,element('small',t('One loop per line. Separate outline points with |. For circles type CIRCLE X, Y, radius. Circle values can use named dimensions.')));
+  regionLabel.append(region,element('small',t('One loop per line. Separate outline points with | and add an optional bulge for arcs. For circles type CIRCLE X, Y, radius. Circle values can use named dimensions.')));
   form.append(regionLabel);
   const length=field('Extrusion distance (mm)',node?.kind==='extrusion'?node.distance:10);
   const symmetric=element('input');symmetric.type='checkbox';symmetric.checked=node?.kind==='extrusion'?node.symmetric:false;symmetric.setAttribute('aria-label',t('Symmetric extrusion'));const check=element('label',t('Symmetric extrusion'));check.className='sketch-toggle';check.prepend(symmetric);form.append(check);
@@ -83,6 +85,18 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     throw new Error(t('Enter coordinates as X, Y in millimetres.'));
    }
    return [Number(pair[0]),Number(pair[1])];
+  };
+  const parseOutline=(rows:string[])=>{
+   const points:SketchPoint[]=[],bulges:number[]=[];
+   for(const row of rows){
+    const coordinates=row.split(',');
+    if(coordinates.length>3)throw new Error(t('Enter coordinates as X, Y in millimetres.'));
+    const bulge=coordinates.length===3?coordinates.pop()!.trim():'0';
+    if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(bulge))throw new Error(t('Enter one finite bulge per outline point.'));
+    points.push(parsePoint(coordinates.join(',')));
+    bulges.push(Number(bulge));
+   }
+   return bulges.some(Boolean)?{points,bulges}:{points};
   };
   function definition():SketchProfile{
    const id=existing?.profile.id??'profile-preview';
@@ -99,7 +113,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
       if(values.length!==3||!values.every(value=>value.trim()))throw new Error(t('For a circle enter CIRCLE X, Y, radius.'));
       return {kind:'circle',id,center:[scalar(values[0]),scalar(values[1])],radius:scalar(values[2]),segments:original?.kind==='circle'?original.segments:64,...layer};
      }
-     return {kind:'outline',id,points:row.split('|').map(parsePoint),...layer};
+     return {kind:'outline',id,...parseOutline(row.split('|')),...layer};
     });
     return {kind:'region',id,loops};
    }
@@ -107,7 +121,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    if(kind.value==='outline'){
     const rows=points.value.trim().split(/\r?\n/);
     if(rows.length>256)throw new Error(t('An outline needs 3–256 finite points within 100000 mm of the sketch origin.'));
-    return {kind:'outline',id,points:rows.map(parsePoint),...layer};
+    return {kind:'outline',id,...parseOutline(rows),...layer};
    }
    if(kind.value==='rectangle')return {kind:'rectangle',id,width:scalar(width.value),depth:scalar(depth.value)};
    const location=parsePoint(center.value);
@@ -245,7 +259,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
       regionLoops=imported.loops;
       region.value=formatLoops(regionLoops);
      }
-     if(imported.kind==='outline')points.value=imported.points.map(point=>point.join(', ')).join('\n');
+     if(imported.kind==='outline')points.value=formatPoints(imported.points,imported.bulges).join('\n');
      if(imported.kind==='circle'){
       radius.value=String(imported.radius);
       center.value=imported.center?.join(', ')??'0, 0';

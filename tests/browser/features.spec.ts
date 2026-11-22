@@ -149,3 +149,30 @@ test('DXF export follows the driving spacing of the mounting holes', async ({pag
  await page.getByRole('button', {name: 'Edit sketch & extrusion'}).click();
  await expect(sketch.getByLabel('Region loops (mm)')).toHaveValue(region);
 });
+
+test('rounded DXF outlines preserve the editable bulge through export', async ({page}) => {
+ await page.goto('/');
+ const editor = page.locator('#cad-root');
+ await expect(editor).toHaveAttribute('data-state', 'ready');
+ await page.getByRole('button', {name: 'Sketch', exact: true}).click();
+ const sketch = page.getByRole('dialog', {name: 'Sketch and extrusion'});
+ await sketch.getByText('Import DXF outline', {exact: true}).click();
+ const text = ['0','SECTION','2','HEADER','9','$INSUNITS','70',4,'0','ENDSEC','0','SECTION','2','ENTITIES',
+  '0','LWPOLYLINE','90',4,'70',1,'10',0,'20',0,'42',1,'10',40,'20',0,'10',40,'20',30,'10',0,'20',30,
+  '0','ENDSEC','0','EOF'].join('\n');
+ await sketch.getByLabel('Choose DXF file').setInputFiles({name: 'Rounded plate.dxf', mimeType: 'application/dxf', buffer: Buffer.from(text)});
+ const points = sketch.getByLabel('Outline points X, Y (mm)');
+ await expect(points).toHaveValue('0, 0, 1\n40, 0\n40, 30\n0, 30');
+ await expect(sketch.getByLabel('Sketch preview')).toContainText('40 × 50 mm');
+ await points.fill('0, 0, 0.5\n40, 0\n40, 30\n0, 30');
+ await sketch.getByRole('button', {name: 'Create extrusion'}).click();
+ await expect(sketch).toBeHidden();
+ await expect(editor).toHaveAttribute('data-state', 'ready');
+ const exportButton = page.getByRole('button', {name: 'Export sketch as DXF'});
+ if (!await exportButton.isVisible()) await page.getByRole('button', {name: 'Properties', exact: true}).click();
+ const [download] = await Promise.all([page.waitForEvent('download'), exportButton.click()]);
+ const path = await download.path();
+ if (!path) throw new Error('Expected a local DXF download');
+ const dxf = await (await import('node:fs/promises')).readFile(path, 'utf8');
+ expect(dxf).toContain('10\r\n0\r\n20\r\n0\r\n42\r\n0.5');
+});

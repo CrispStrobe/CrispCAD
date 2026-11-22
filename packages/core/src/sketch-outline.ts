@@ -3,6 +3,7 @@ import {t} from './i18n.js';
 
 export type SketchPoint = [number, number];
 export const maxSketchOutlinePoints = 256;
+const maxSketchCurveVertices = 1024;
 
 export function isSketchPoint(value: unknown): value is SketchPoint {
   return Array.isArray(value) && value.length === 2 &&
@@ -20,12 +21,7 @@ export const sketchSegmentsIntersect = (a: SketchPoint, b: SketchPoint, c: Sketc
       (q === 0 && on(d, a, b)) || (r === 0 && on(a, c, d)) || (s === 0 && on(b, c, d));
   };
 
-/** Validate one simple closed loop and return the winding expected by the kernel. */
-export function sketchOutline(points: SketchPoint[]): SketchPoint[] {
-  if (!Array.isArray(points) || points.length < 3 || points.length > maxSketchOutlinePoints ||
-      !points.every(isSketchPoint)) {
-    throw new Error(t('An outline needs 3–256 finite points within 100000 mm of the sketch origin.'));
-  }
+function normalizeOutline(points: SketchPoint[]): SketchPoint[] {
   const invalid = () => new Error(t('Outline edges must form one closed loop without crossings or overlaps.'));
   let area2 = 0;
   for (let i = 0; i < points.length; i++) {
@@ -42,4 +38,49 @@ export function sketchOutline(points: SketchPoint[]): SketchPoint[] {
   }
   if (Math.abs(area2) < .0002) throw invalid();
   return area2 < 0 ? [...points].reverse() : points;
+}
+
+
+/** Build a simple counter-clockwise contour from native DXF bulges.
+ * The authored bulge is tan(signed sweep/4) for the outgoing edge.
+ */
+export function sketchOutline(points: SketchPoint[], bulges?: number[]): SketchPoint[] {
+  const hasCurves = bulges !== undefined;
+  if (!Array.isArray(points) || points.length < (hasCurves ? 2 : 3) ||
+      points.length > maxSketchOutlinePoints || !points.every(isSketchPoint)) {
+    throw new Error(t('An outline needs 3–256 finite points within 100000 mm of the sketch origin.'));
+  }
+  if (!hasCurves) return normalizeOutline(points);
+  if (!Array.isArray(bulges) || bulges.length !== points.length ||
+      !bulges.every(value => typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= 10000)) {
+    throw new Error(t('Enter one finite bulge per outline point.'));
+  }
+  const contour: SketchPoint[] = [];
+  const tolerance = .025;
+  const invalid = () => new Error(t('Rounded outline exceeds the curve size or detail limit.'));
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i], b = points[(i+1)%points.length], bulge = bulges[i];
+    const dx = b[0]-a[0], dy = b[1]-a[1], chord = Math.hypot(dx,dy);
+    if (chord < .00001) throw new Error(t('Outline edges must form one closed loop without crossings or overlaps.'));
+    contour.push(a);
+    if (bulge === 0) continue;
+    const sweep = 4 * Math.atan(bulge);
+    const radius = chord * (Math.abs(bulge) + 1 / Math.abs(bulge)) / 4;
+    if (chord * Math.abs(bulge) < tolerance * 2 && Math.abs(sweep) < Math.PI / 32 && points.length > 2) continue;
+    const centerOffset = (1/bulge - bulge) / 4;
+    const centerX = (a[0]+b[0])/2 - dy*centerOffset;
+    const centerY = (a[1]+b[1])/2 + dx*centerOffset;
+    const start = Math.atan2(a[1]-centerY, a[0]-centerX);
+    const step = Math.min(Math.PI/32, 4*Math.asin(Math.sqrt(Math.min(1,tolerance/(2*radius)))));
+    const segments = Math.max(2, Math.ceil(Math.abs(sweep)/step));
+    if (contour.length + segments - 1 > maxSketchCurveVertices) throw invalid();
+    for (let j = 1; j < segments; j++) {
+      const angle = start+sweep*j/segments;
+      const point: SketchPoint = [centerX+radius*Math.cos(angle),centerY+radius*Math.sin(angle)];
+      if (!isSketchPoint(point)) throw invalid();
+      contour.push(point);
+    }
+  }
+  if (contour.length < 3 || contour.length > maxSketchCurveVertices) throw invalid();
+  return normalizeOutline(contour);
 }

@@ -8,7 +8,7 @@ const mmPerUnit: Record<number, number> = {1: 25.4, 2: 304.8, 4: 1, 5: 10, 6: 10
 
 export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
   const invalid = () => new Error(t('This file is not a supported text DXF drawing.'));
-  const unsupported = () => new Error(t('Use circles and closed, straight 2D lightweight polylines. Remove unsupported drawing entities before importing.'));
+  const unsupported = () => new Error(t('Use circles and closed 2D lightweight polylines. Remove unsupported drawing entities before importing.'));
   if (source.length > maxSketchDxfBytes || source.includes('\0')) throw invalid();
   const lines = source.replace(/^\uFEFF/, '').split(/\r?\n/);
   if (lines.at(-1) === '') lines.pop();
@@ -71,7 +71,8 @@ export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
     if (read(67, 0) !== 0 || (fields.find(group => group.code === 410)?.value ?? 'Model').toUpperCase() !== 'MODEL' ||
         read(210, 0) !== 0 || read(220, 0) !== 0 || read(230, 1) !== 1 ||
         fields.some(group => [30, 38, 39, 40, 41, 42, 43].includes(group.code) &&
-          !(entity.value === 'CIRCLE' && group.code === 40) && number(group.value) !== 0)) throw unsupported();
+          !(entity.value === 'CIRCLE' && group.code === 40) &&
+          !(entity.value === 'LWPOLYLINE' && group.code === 42) && number(group.value) !== 0)) throw unsupported();
 
     if (entity.value === 'CIRCLE') {
       const radius = read(40) * scale;
@@ -83,13 +84,20 @@ export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
 
     const flags = read(70);
     const count = read(90);
-    if ((flags !== 1 && flags !== 129) || !Number.isInteger(count) || count < 3 || count > maxSketchOutlinePoints) throw unsupported();
-    const coordinates = fields.filter(group => group.code === 10 || group.code === 20);
-    if (coordinates.length !== count * 2) throw invalid();
+    if ((flags !== 1 && flags !== 129) || !Number.isInteger(count) || count < 2 || count > maxSketchOutlinePoints) throw unsupported();
+    const coordinates = fields.filter(group => [10, 20, 42].includes(group.code));
     const points: SketchPoint[] = [];
-    for (let i = 0; i < coordinates.length; i += 2) {
-      if (coordinates[i].code !== 10 || coordinates[i + 1].code !== 20) throw invalid();
-      points.push([number(coordinates[i].value) * scale, number(coordinates[i + 1].value) * scale]);
+    const bulges: number[] = [];
+    for (let i = 0; i < coordinates.length;) {
+      const x = coordinates[i++], y = coordinates[i++];
+      if (x.code !== 10 || y?.code !== 20) throw invalid();
+      points.push([number(x.value) * scale, number(y.value) * scale]);
+      bulges.push(coordinates[i]?.code === 42 ? number(coordinates[i++].value) : 0);
+    }
+    if (points.length !== count) throw invalid();
+    if (bulges.some(Boolean)) {
+      sketchOutline(points, bulges);
+      return {kind: 'outline' as const, id, points, bulges, ...dxfLayer};
     }
     return {kind: 'outline' as const, id, points: sketchOutline(points), ...dxfLayer};
   });

@@ -60,26 +60,30 @@ export function exportSketchDxf(doc: CadDocument, featureId: string) {
     pair(30, 0);
     pair(40, radius);
   };
-  const polyline = (points: SketchPoint[], layer = '0') => {
+  const polyline = (points: SketchPoint[], layer = '0', bulges?: number[]) => {
     pair(0, 'LWPOLYLINE');
     pair(100, 'AcDbEntity');
     pair(8, registerLayer(layer));
     pair(100, 'AcDbPolyline');
     pair(90, points.length);
     pair(70, 1);
-    for (const [x, y] of points) {
+    points.forEach(([x, y], index) => {
       pair(10, x);
       pair(20, y);
-    }
+      const bulge = bulges?.[index];
+      if (bulge) pair(42, bulge);
+    });
   };
   if (profile.kind === 'region') {
     for (const loop of profile.loops) {
       if (loop.kind === 'circle') circle([featureValue(loop.center[0], doc), featureValue(loop.center[1], doc)], featureValue(loop.radius, doc), loop.dxfLayer);
-      else polyline(loop.points, loop.dxfLayer);
+      else polyline(loop.points, loop.dxfLayer, loop.bulges);
     }
   } else if (profile.kind === 'circle') {
     circle(profile.center ?? [0,0], featureValue(profile.radius, doc), profile.dxfLayer);
-  } else polyline(contour, profile.kind === 'outline' ? profile.dxfLayer : undefined);
+  } else if (profile.kind === 'outline') {
+    polyline(profile.bulges ? profile.points : contour, profile.dxfLayer, profile.bulges);
+  } else polyline(contour);
 
   pair(0, 'ENDSEC');
   pair(0, 'EOF');

@@ -5,7 +5,7 @@ import type {FeatureScalar} from './features.js';
 import type {SketchPoint} from './sketch-outline.js';
 
 export type SketchLoop =
-  | {kind: 'outline'; id: string; points: SketchPoint[]; dxfLayer?: string}
+  | {kind: 'outline'; id: string; points: SketchPoint[]; bulges?: number[]; dxfLayer?: string}
   | SketchCircleLoop;
 
 type SketchCircleLoop = {kind: 'circle'; id: string; center: [FeatureScalar, FeatureScalar]; radius: FeatureScalar; segments: number; dxfLayer?: string};
@@ -86,7 +86,7 @@ export function evaluateSketchRegion(loops: SketchLoop[], resolve = (scalar: Fea
       });
       area = Math.PI * radius ** 2;
     } else if (loop.kind === 'outline') {
-      points = sketchOutline(loop.points);
+      points = sketchOutline(loop.points, loop.bulges);
       resolvedLoop = loop;
       const [x,y] = points[0];
       area = edges(points).reduce((sum,[[ax,ay],[bx,by]]) => sum + (ax-x)*(by-y) - (ay-y)*(bx-x),0)/2;
@@ -115,8 +115,8 @@ export function evaluateSketchRegion(loops: SketchLoop[], resolve = (scalar: Fea
   return {
     contour: boundary.points,
     holes: holes.map(hole => [...hole.points].reverse()),
-    edgeIds: [boundary,...holes].flatMap(({loop,points}) => loop.kind === 'circle'
+    edgeIds: [boundary,...holes].flatMap(({loop}) => loop.kind === 'circle'
       ? [loop.id+':circumference']
-      : points.map((_,i) => loop.id+':edge-'+i))
+      : loop.points.map((_,i) => loop.id+':edge-'+i))
   };
 }

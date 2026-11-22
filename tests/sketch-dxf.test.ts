@@ -52,7 +52,7 @@ it('keeps a translated analytic circle through export and reimport', () => {
 it('requires explicit missing-unit consent and rejects unsupported or self-crossing geometry', () => {
   expect(() => readSketchDxf(drawing(circle, 0))).toThrow('has no units');
   expect(readSketchDxf(drawing(circle, 0), true)).toMatchObject({radius: 1.5});
-  for (const entity of [square.replace('\n70\n1\n', '\n70\n0\n'), square + '\n42\n0.5',
+  for (const entity of [square.replace('\n70\n1\n', '\n70\n0\n'), square + '\n43\n0.5',
     circle + '\n30\n1', circle + '\n210\n1']) {
     expect(() => readSketchDxf(drawing(entity))).toThrow('Use circles');
   }
@@ -153,4 +153,44 @@ it('retains named DXF layers on both mixed regions and single loops', () => {
   }
   expect(() => readSketchDxf(drawing(track(plate,'Bad/Layer')))).toThrow('Invalid DXF layer name');
   session.dispose();
+});
+
+const halfRoundPlate = '0\nLWPOLYLINE\n90\n4\n70\n1\n10\n0\n20\n0\n42\n1\n10\n40\n20\n0\n10\n40\n20\n30\n10\n0\n20\n30';
+
+it('keeps native curved polyline segments when extruding, reopening and exporting a rounded plate', () => {
+  const profile = readSketchDxf(drawing([halfRoundPlate, hole(20, -10, 2)].join('\n')));
+  expect(profile).toMatchObject({
+    kind:'region', loops:[{kind:'outline',bulges:[1,0,0,0]}, {kind:'circle'}]
+  });
+  const session = createCadSession();
+  const id = session.addSketchExtrusion(profile, {distance:5});
+  const doc = parseDocument(session.serialize());
+  const [body] = kernel.evaluate(doc).bodies;
+  expect(body.bounds.min[1]).toBeCloseTo(-20);
+  expect(body.bounds.max[1]).toBeCloseTo(30);
+  expect(body.volume).toBeCloseTo((1200 + Math.PI * (200 - 4)) * 5, -1);
+  const text = new TextDecoder().decode(exportSketchDxf(doc, id).bytes);
+  expect(text).toContain('10\r\n0\r\n20\r\n0\r\n42\r\n1');
+  expect(readSketchDxf(text)).toEqual(profile);
+  session.dispose();
+});
+
+it('accepts an authored two-arc circle and preserves clockwise signs', () => {
+  const source = '0\nLWPOLYLINE\n90\n2\n70\n1\n10\n-10\n20\n0\n42\n-1\n10\n10\n20\n0\n42\n-1';
+  const profile = readSketchDxf(drawing(source));
+  expect(profile).toMatchObject({kind:'outline',points:[[-10,0],[10,0]],bulges:[-1,-1]});
+  const session = createCadSession();
+  const id = session.addSketchExtrusion(profile, {distance:2});
+  const [body] = kernel.evaluate(session.state.document).bodies;
+  expect(body.bounds.min[1]).toBeCloseTo(-10);
+  expect(body.bounds.max[1]).toBeCloseTo(10);
+  expect(body.volume).toBeCloseTo(200*Math.PI, -1);
+  expect(readSketchDxf(new TextDecoder().decode(exportSketchDxf(session.state.document,id).bytes))).toEqual(profile);
+  session.dispose();
+});
+
+it('rejects malformed, off-workspace and self-crossing curved polylines', () => {
+  expect(() => readSketchDxf(drawing(halfRoundPlate.replace('42\n1','42\n1\n42\n1')))).toThrow('supported text DXF');
+  expect(() => readSketchDxf(drawing(halfRoundPlate.replace('42\n1','42\n10000')))).toThrow('curve size or detail limit');
+  expect(() => readSketchDxf(drawing(halfRoundPlate.replace('42\n1','42\n-2')))).toThrow('without crossings');
 });
