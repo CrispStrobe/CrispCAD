@@ -367,6 +367,22 @@ test('assembly views use current solid placements and export a linked PDF',async
  await dialog.getByLabel('Jog at (mm)').fill('8');
  await expect(preview).toContainText('World Y = 0 / 42 mm');
  await expect(preview.locator('.drawing-cut')).toHaveAttribute('d',/^M (?:[^L]+L ){3}[^L]+$/);
+ const addJog=dialog.getByRole('button',{name:'Add jog',exact:true});
+ await press(addJog);
+ const jogTwo=dialog.getByLabel('Jog 2 at (mm)',{exact:true});
+ const third=dialog.getByLabel('Position after jog 2 (mm)',{exact:true});
+ await jogTwo.fill('7');
+ await third.fill('0');
+ await expect(dialog.getByRole('status',{name:'Drawing status'})).toContainText('in increasing order');
+ await jogTwo.fill('9');
+ await expect(preview).toContainText('World Y = 0 / 42 / 0 mm');
+ await expect(preview.locator('.drawing-cut')).toHaveAttribute('d',/^M (?:[^L]+L ){5}[^L]+$/);
+ await press(dialog.getByRole('button',{name:'Remove jog 2',exact:true}));
+ await expect(preview).toContainText('World Y = 0 / 42 mm');
+ await press(addJog);
+ await jogTwo.fill('9');
+ await third.fill('0');
+ await expect(preview).toContainText('World Y = 0 / 42 / 0 mm');
  await pageSelect.selectOption('1');
  await expect(preview).toContainText('Rear cover');
  const [download]=await Promise.all([
@@ -377,7 +393,7 @@ test('assembly views use current solid placements and export a linked PDF',async
  expect(pdf).toContain('/Type /Pages /Count 2');
  expect(pdf).toContain('[3.5 1 0.7 1] 0 d');
  expect(pdf).toContain('<'+Buffer.from('Rear cover','latin1').toString('hex')+'>');
- expect(pdf).toContain('<'+Buffer.from('World Y = 0 / 42 mm','latin1').toString('hex')+'>');
+ expect(pdf).toContain('<'+Buffer.from('World Y = 0 / 42 / 0 mm','latin1').toString('hex')+'>');
  await press(dialog.getByRole('button',{name:'Save drawing sheet',exact:true}));
  await expect(dialog).toBeHidden();
  await page.reload();
@@ -392,6 +408,9 @@ test('assembly views use current solid placements and export a linked PDF',async
  await expect(offset).toBeChecked();
  await expect(dialog.getByLabel('Second section position (mm)')).toHaveValue('42');
  await expect(dialog.getByLabel('Jog at (mm)')).toHaveValue('8');
+ await expect(jogTwo).toHaveValue('9');
+ await expect(third).toHaveValue('0');
+ await expect(preview).toContainText('World Y = 0 / 42 / 0 mm');
  await expect(preview.locator('.drawing-section').first()).toBeVisible();
  await expect(preview.locator('.drawing-annotation')).toHaveCount(5);
  await pageSelect.selectOption('1');

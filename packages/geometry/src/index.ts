@@ -8,4 +8,5 @@ export {getBundledFontData} from './font-profile.js';
 
 export {GeometryResourceLimitError} from './limits.js';
 
+export {assemblyCutJogs} from './assembly-section.js';
 export type {AssemblyCut, AssemblySection} from './assembly-section.js';

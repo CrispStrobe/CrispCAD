@@ -208,7 +208,14 @@ the edge remains visible in that view. If a geometry change removes the
 edge or it can no longer be seen in the selected view, replace or remove the
 dimension before exporting.
 
-Model-edge arc and radius dimensions and multiple jogs remain open.
+Assembly drawings also support up to four jogs. Enable **Offset section**,
+set the first jog, and use **Add jog** to continue the cutting path. Each jog
+has a coordinate along the section and a new parallel cut position. Jog
+coordinates must increase along the displayed world axis, adjacent positions
+must differ, and each leg must cross solid material. The preview and PDF show
+the full stepped path. Older one-jog sheets keep their original format.
+
+Model-edge arc and radius dimensions remain open.
 
 ## Completion criteria
 

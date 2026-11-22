@@ -243,3 +243,47 @@ it('saves a projected model-edge measurement across project formats and body pla
  session.undo();
  expect(drawn().annotationIssues).toEqual([]);
 });
+
+it('resolves multiple jog expressions and clips each leg to its interval',()=>{
+ const session=createCadSession();
+ session.setParametric({version:1,parameters:{spacing:{expression:'14',unit:'mm'}},bindings:[]});
+ const plate=session.addSketchExtrusion({kind:'region',id:'plate',loops:[
+  {kind:'outline',id:'outside',points:[[-22,-16],[22,-16],[22,16],[-22,16]]},
+  {kind:'circle',id:'left',center:[-14,-10],radius:2,segments:32},
+  {kind:'circle',id:'middle',center:[0,0],radius:2,segments:32},
+  {kind:'circle',id:'right',center:[14,10],radius:2,segments:32}
+ ]},{distance:6});
+ const outline:DrawingInputs={...assembly,section:{
+  axis:'v',position:-10,jog:{at:'-spacing / 2',position:0},additionalJogs:[{at:'spacing / 2',position:10}]
+ }};
+ session.saveDrawingSheet(outline);
+ const doc=session.state.document;
+ expect(doc.version).toBe(26);
+ expect(parseDocument(session.serialize()).drawings).toEqual(doc.drawings);
+ expect(validateDocument(compileModelSource(session.modelSource,doc)).drawings).toEqual(doc.drawings);
+ expect(()=>validateDocument({...doc,version:25})).toThrow('drawing sheets');
+ expect(()=>session.saveDrawingSheet({...outline,source:drawingSourceFor(doc,plate)!})).toThrow('drawing sheets');
+ expect(()=>session.saveDrawingSheet({...outline,section:{...outline.section!,jog:undefined}})).toThrow('drawing sheets');
+ expect(()=>session.saveDrawingSheet({...outline,section:{...outline.section!,additionalJogs:
+  Array.from({length:4},(_,i)=>({at:i+1,position:i+1}))}})).toThrow('drawing sheets');
+ const geometry=kernel.evaluate(doc),cut=resolveAssemblyCut(doc,outline.section!);
+ expect(cut.additionalJogs).toEqual([{at:7,position:10}]);
+ const section=kernel.sliceAssembly(geometry,cut);
+ const span=section.bodies[0].loops.map(loop=>{
+  const xs=loop.map(point=>point[0]);
+  return [Math.round(Math.min(...xs)),Math.round(Math.max(...xs))];
+ }).sort((a,b)=>a[0]-b[0]);
+ expect(span).toEqual([[-22,-16],[-12,-2],[2,12],[16,22]]);
+ const projection={...projectAssembly(geometry),sections:[section]};
+ const page=layoutDrawing(doc,outline,projection);
+ expect(page.paths.find(path=>path.stroke==='cut')?.points).toHaveLength(6);
+ const legend='World Y = -10 / 0 / 10 mm';
+ expect(page.texts.map(text=>text.text)).toContain(legend);
+ expect(new TextDecoder().decode(exportDrawingPdf(page,outline.title).bytes))
+  .toContain('<'+Buffer.from(legend,'latin1').toString('hex')+'>');
+ expect(()=>kernel.sliceAssembly(geometry,{...cut,additionalJogs:[{at:-7,position:10}]})).toThrow('in increasing order');
+ expect(()=>kernel.sliceAssembly(geometry,{...cut,additionalJogs:[{at:7,position:0}]})).toThrow('legs 2 and 3');
+ expect(()=>kernel.sliceAssembly(geometry,{...cut,additionalJogs:[{at:7,position:20}]})).toThrow('Section leg 3 misses');
+ expect(()=>layoutDrawing(doc,{...outline,section:{...outline.section!,additionalJogs:[{at:8,position:10}]}},projection))
+  .toThrow('needs evaluated cut geometry');
+});

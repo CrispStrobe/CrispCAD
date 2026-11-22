@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {featureValue,t} from '@brickwright/cad-core';
 import type {CadDocument,DrawingInputs,DrawingSection,SketchPoint,Vec3} from '@brickwright/cad-core';
+import {assemblyCutJogs} from '@brickwright/cad-geometry';
 import type {AssemblyCut,AssemblySection,BodyMesh,GeometryResult} from '@brickwright/cad-geometry';
 import {addAssemblyEdgeDimensions,assemblyDrawingEdges} from './assembly-edge-dimension.js';
 import {addAssemblySection} from './assembly-section-view.js';
@@ -175,9 +176,8 @@ export function projectAssembly(geometry:GeometryResult){
 
 export type AssemblyProjection=ReturnType<typeof projectAssembly>&{sections?:AssemblySection[]};
 
-export const assemblyCutKey=(cut:AssemblyCut)=>cut.jog
- ? `${cut.axis}:${cut.position}:${cut.jog.position}:${cut.jog.at}`
- : `${cut.axis}:${cut.position}`;
+export const assemblyCutKey=(cut:AssemblyCut)=>
+ [cut.axis,cut.position,...assemblyCutJogs(cut).flatMap(jog=>[jog.at,jog.position])].join(':');
 
 export function resolveAssemblyCut(doc:CadDocument,section:DrawingSection):AssemblyCut{
  const coordinate=(value:DrawingSection['position'])=>{
@@ -185,9 +185,10 @@ export function resolveAssemblyCut(doc:CadDocument,section:DrawingSection):Assem
   if(Math.abs(position)>100000)throw new Error(t('Section position is outside the assembly coordinate range.'));
   return position;
  };
- const {jog}=section;
+ const {jog,additionalJogs}=section;
+ const resolveJog=({at,position}:NonNullable<DrawingSection['jog']>)=>({at:coordinate(at),position:coordinate(position)});
  return {axis:section.axis==='u'?0:1,position:coordinate(section.position),
-  ...(jog?{jog:{at:coordinate(jog.at),position:coordinate(jog.position)}}:{})};
+  ...(jog?{jog:resolveJog(jog)}:{}),...(additionalJogs?{additionalJogs:additionalJogs.map(resolveJog)}:{})};
 }
 
 const cache=new WeakMap<GeometryResult,AssemblyProjection>();

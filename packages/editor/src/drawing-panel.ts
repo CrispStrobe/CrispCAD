@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {drawingAssemblyAvailable,isAssemblyDrawingSource,drawingAnnotationLimit,drawingScales,drawingSourceFor,evaluateExtrusion,isDrawingVertex,newId,resolveDrawingSource,t,validDrawingPosition} from '@brickwright/cad-core';
-import type {CadSession,DrawingAnnotation,DrawingDimensionKind,DrawingInputs,DrawingScale,SketchPoint} from '@brickwright/cad-core';
+import {assemblySectionJogLimit,drawingAssemblyAvailable,isAssemblyDrawingSource,drawingAnnotationLimit,drawingScales,drawingSourceFor,evaluateExtrusion,isDrawingVertex,newId,resolveDrawingSource,t,validDrawingPosition} from '@brickwright/cad-core';
+import type {CadSession,DrawingAnnotation,DrawingDimensionKind,DrawingInputs,DrawingScale,DrawingSectionJog,SketchPoint} from '@brickwright/cad-core';
 import type {AssemblyProjection} from './assembly-drawing.js';
 import type {CadFile} from './index.js';
 import {mountAssemblyEdgeControls} from './assembly-edge-controls.js';
@@ -105,6 +105,48 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    label('Jog at (mm)',jogAt);
    const jogHint=element('small');
    form.append(jogHint);
+   const extraJogs=element('div'),addJog=element('button',t('Add jog'));
+   extraJogs.className='drawing-jog-list';
+   const jogRows:{at:HTMLInputElement;position:HTMLInputElement;remove:HTMLButtonElement}[]=[];
+   const updateJogRows=()=>{
+    for(const [i,row] of jogRows.entries()){
+     const number=i+2;
+     const relabel=(input:HTMLInputElement,label:string)=>{
+      input.setAttribute('aria-label',label);
+      input.parentElement!.firstChild!.textContent=label;
+     };
+     relabel(row.at,t`Jog ${number} at (mm)`);
+     relabel(row.position,t`Position after jog ${number} (mm)`);
+     row.remove.textContent=t`Remove jog ${number}`;
+    }
+    addJog.disabled=jogRows.length>=assemblySectionJogLimit-1;
+   };
+   const appendJog=(jog?:DrawingSectionJog)=>{
+    const row=element('div'),at=element('input'),position=element('input'),remove=element('button');
+    at.maxLength=position.maxLength=160;
+    at.value=String(jog?.at??'');
+    position.value=String(jog?.position??'');
+    label('Jog at (mm)',at,row);label('Section position (mm)',position,row);
+    row.append(remove);extraJogs.append(row);
+    const controls={at,position,remove};
+    jogRows.push(controls);
+    at.oninput=position.oninput=()=>render();
+    remove.onclick=()=>{
+     jogRows.splice(jogRows.indexOf(controls),1);
+     row.remove();updateJogRows();render();
+     addJog.focus();
+    };
+    updateJogRows();
+    return at;
+   };
+   if(assembly){
+    form.append(extraJogs,addJog);
+    for(const jog of saved?.section?.additionalJogs??[])appendJog(jog);
+    addJog.onclick=()=>{
+     const at=appendJog();
+     render();at.focus();
+    };
+   }
    const annotations=structuredClone(saved?.annotations??[]),edgeDimensions=structuredClone(saved?.edgeDimensions??[]);
    const edgePanel=element('details');edgePanel.className='drawing-dimensions';
    const dimensions=element('details');dimensions.className='drawing-dimensions';
@@ -182,7 +224,15 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     if(section.checked&&cut==='')throw new Error(t('Enter a section position in millimetres.'));
     const useJog=section.checked&&offset.checked;
     if(useJog&&(second===''||at===''))throw new Error(t('Enter the second section position and the jog coordinate.'));
-    const cuttingPlane=section.checked?{section:{axis:axis.value==='u'?'u' as const:'v' as const,position:cut,...(useJog?{jog:{at,position:second}}:{})}}:{};
+    const additionalJogs=useJog?jogRows.map((row,i)=>{
+     const at=operationScalar(row.at),position=operationScalar(row.position);
+     if(at===''||position==='')throw new Error(t`Enter the coordinate and cut position for jog ${i+2}.`);
+     return {at,position};
+    }):[];
+    const cuttingPlane=section.checked?{section:{
+     axis:axis.value==='u'?'u' as const:'v' as const,position:cut,
+     ...(useJog?{jog:{at,position:second}}:{}),...(additionalJogs.length?{additionalJogs}:{})
+    }}:{};
     if(assembly){
      if(!drawingAssemblyAvailable(current))throw new Error(t('Add a solid body to draw the assembly.'));
      return {...settings,source:{kind:'assembly'},...cuttingPlane,...(partsList.checked?{partsList:true}:{}),
@@ -277,7 +327,9 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     offset.parentElement!.hidden=!section.checked;
     secondPosition.parentElement!.hidden=jogAt.parentElement!.hidden=jogHint.hidden=!section.checked||!offset.checked;
     const across=assembly?(axis.value==='u'?t('World Y'):t('World X')):(axis.value==='u'?t('Sketch Y'):t('Sketch X'));
-    jogHint.textContent=t`The jog switches to the second cut at this coordinate along ${across}.`;
+    extraJogs.hidden=addJog.hidden=!section.checked||!offset.checked;
+    jogHint.textContent=jogRows.length?t`Enter jog coordinates along ${across} in increasing order.`:
+     t`The jog switches to the second cut at this coordinate along ${across}.`;
     preview.replaceChildren();layout=undefined;pages=[];status.textContent='';
     edgeControls?.refresh();
     previewPage.disabled=true;

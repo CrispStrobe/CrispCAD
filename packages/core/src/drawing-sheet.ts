@@ -8,7 +8,9 @@ export const drawingScales = ['1:5','1:2','1:1','2:1','5:1'] as const;
 export type DrawingScale = typeof drawingScales[number];
 export type DrawingSource = {featureId:string; sketchId:string; profileId:string};
 export type AssemblyDrawingSource = {kind:'assembly'};
-export type DrawingSection = {axis:'u'|'v'; position:FeatureScalar; jog?:{at:FeatureScalar; position:FeatureScalar}};
+export type DrawingSectionJog = {at:FeatureScalar; position:FeatureScalar};
+export const assemblySectionJogLimit=4;
+export type DrawingSection = {axis:'u'|'v'; position:FeatureScalar; jog?:DrawingSectionJog; additionalJogs?:DrawingSectionJog[]};
 export type DrawingDimensionKind = 'linear-x'|'linear-y'|'aligned'|'diameter'|'radius'|'arc-length';
 export type DrawingAnnotation = {
  id:string; sketchId:string; kind:DrawingDimensionKind; from:string; to?:string; at:[number,number];
@@ -43,6 +45,8 @@ const sectionScalar=(value:unknown):value is FeatureScalar=>typeof value==='numb
  ? Number.isFinite(value)&&Math.abs(value)<=100000
  : typeof value==='string'&&!!value.trim()&&value.length<=160&&!/[\u0000-\u001f]/.test(value);
 
+const validJog=(value:unknown)=>record(value)&&sectionScalar(value.at)&&sectionScalar(value.position);
+
 export function checkDrawingSheets(doc:CadDocument) {
  if(doc.drawings===undefined)return;
  const unique=new Set<string>();
@@ -61,7 +65,10 @@ export function checkDrawingSheets(doc:CadDocument) {
    if(doc.version<10||!record(sheet.section)||!['u','v'].includes(String(sheet.section.axis)))throw invalid();
    if(!sectionScalar(sheet.section.position))throw invalid();
    const jog=sheet.section.jog;
-   if(jog!==undefined&&(doc.version<17||!record(jog)||!sectionScalar(jog.at)||!sectionScalar(jog.position)))throw invalid();
+   if(jog!==undefined&&(doc.version<17||!validJog(jog)))throw invalid();
+   const extra=sheet.section.additionalJogs;
+   if(extra!==undefined&&(doc.version<26||!isAssemblyDrawingSource(sheet.source)||!jog||
+      !Array.isArray(extra)||!extra.length||extra.length>=assemblySectionJogLimit||!Array.from(extra).every(validJog)))throw invalid();
   }
   if(sheet.edgeDimensions!==undefined){
    if(doc.version<25||!isAssemblyDrawingSource(sheet.source)||!Array.isArray(sheet.edgeDimensions)||sheet.edgeDimensions.length>drawingAnnotationLimit)throw invalid();
