@@ -2,7 +2,7 @@
 import {t} from './i18n.js';
 import type {FeatureScalar,SketchProfile} from './features.js';
 import type {SketchOutlineProfile} from './sketch-region.js';
-import type {CadDocument} from './document.js';
+import type {CadDocument,Vec3} from './document.js';
 
 export const drawingScales = ['1:5','1:2','1:1','2:1','5:1'] as const;
 export type DrawingScale = typeof drawingScales[number];
@@ -13,8 +13,11 @@ export type DrawingDimensionKind = 'linear-x'|'linear-y'|'aligned'|'diameter'|'r
 export type DrawingAnnotation = {
  id:string; sketchId:string; kind:DrawingDimensionKind; from:string; to?:string; at:[number,number];
 };
+export type AssemblyEdgeDimension={
+ id:string; bodyId:string; view:0|1|2; endpoints:[Vec3,Vec3]; at:[number,number];
+};
 export const drawingAnnotationLimit=24;
-export type DrawingInputs = {title:string; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]; partsList?:boolean};
+export type DrawingInputs = {title:string; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]; partsList?:boolean; edgeDimensions?:AssemblyEdgeDimension[]};
 export type DrawingSheet = DrawingInputs & {id:string};
 
 const record = (value:unknown):value is Record<string,unknown> => !!value && typeof value==='object' && !Array.isArray(value);
@@ -32,6 +35,9 @@ const anchor=(value:unknown):value is string=>typeof value==='string'&&
 export function validDrawingPosition(x:number,y:number){
  return Number.isFinite(x)&&Number.isFinite(y)&&x>=10&&x<=265&&y>=28&&y<=176;
 }
+
+const edgePoint=(value:unknown):value is Vec3=>Array.isArray(value)&&value.length===3&&
+ Array.from(value).every(axis=>typeof axis==='number'&&Number.isFinite(axis)&&Math.abs(axis)<=1e6);
 
 const sectionScalar=(value:unknown):value is FeatureScalar=>typeof value==='number'
  ? Number.isFinite(value)&&Math.abs(value)<=100000
@@ -56,6 +62,18 @@ export function checkDrawingSheets(doc:CadDocument) {
    if(!sectionScalar(sheet.section.position))throw invalid();
    const jog=sheet.section.jog;
    if(jog!==undefined&&(doc.version<17||!record(jog)||!sectionScalar(jog.at)||!sectionScalar(jog.position)))throw invalid();
+  }
+  if(sheet.edgeDimensions!==undefined){
+   if(doc.version<25||!isAssemblyDrawingSource(sheet.source)||!Array.isArray(sheet.edgeDimensions)||sheet.edgeDimensions.length>drawingAnnotationLimit)throw invalid();
+   const edgeIds=new Set<string>();
+   for(const edge of sheet.edgeDimensions){
+    if(!record(edge)||!id(edge.id)||edgeIds.has(edge.id)||!id(edge.bodyId)||(edge.view!==0&&edge.view!==1&&edge.view!==2)||
+       !Array.isArray(edge.endpoints)||edge.endpoints.length!==2||
+       !Array.isArray(edge.at)||edge.at.length!==2||!validDrawingPosition(edge.at[0],edge.at[1]))throw invalid();
+    const [a,b]=edge.endpoints;
+    if(!edgePoint(a)||!edgePoint(b)||a.every((coordinate,index)=>coordinate===b[index]))throw invalid();
+    edgeIds.add(edge.id);
+   }
   }
   if(sheet.annotations!==undefined){
    if(doc.version<11||!Array.isArray(sheet.annotations)||sheet.annotations.length>drawingAnnotationLimit)throw invalid();

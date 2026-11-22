@@ -13,7 +13,7 @@ self.onmessage=(event:MessageEvent<AssemblyProjectionRequest>)=>{
   setLocale(event.data.locale);
   const projection=projectAssembly(event.data.geometry);
   self.postMessage({projection} satisfies AssemblyProjectionResponse,
-   {transfer:projection.views.map(view=>view.segments.buffer)});
+   {transfer:projection.views.flatMap(view=>[view.segments.buffer,view.edgePicks.buffer])});
  }catch(error){
   self.postMessage({error:error instanceof Error?error.message:String(error)} satisfies AssemblyProjectionResponse);
  }

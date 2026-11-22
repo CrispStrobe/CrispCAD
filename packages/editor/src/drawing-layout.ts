@@ -40,7 +40,7 @@ export function layoutDrawing(doc:CadDocument,sheet:DrawingInputs,geometry?:Geom
  if(isAssemblyDrawingSource(sheet.source)){
   if(!geometry)throw new Error(t('The assembly drawing needs evaluated geometry.'));
   if(geometry.sourceKey&&geometry.sourceKey!==documentGeometryKey(doc))throw new Error(t('The assembly geometry changed. Refresh the drawing.'));
-  return layoutAssemblyDrawing(sheet,assemblyProjection(geometry),sheet.section?resolveAssemblyCut(doc,sheet.section):undefined);
+  return layoutAssemblyDrawing(doc,sheet,assemblyProjection(geometry),sheet.section?resolveAssemblyCut(doc,sheet.section):undefined);
  }
  const source=resolveDrawingSource(doc,sheet.source);
  if(!source)throw new Error(t('Drawing source unavailable. Choose another sketch extrusion.'));

@@ -2,6 +2,7 @@
 import {featureValue,t} from '@brickwright/cad-core';
 import type {CadDocument,DrawingInputs,DrawingSection,SketchPoint,Vec3} from '@brickwright/cad-core';
 import type {AssemblyCut,AssemblySection,BodyMesh,GeometryResult} from '@brickwright/cad-geometry';
+import {addAssemblyEdgeDimensions,assemblyDrawingEdges} from './assembly-edge-dimension.js';
 import {addAssemblySection} from './assembly-section-view.js';
 import {addDrawingFrame,drawingViews} from './drawing-page.js';
 import type {DrawingLayout} from './drawing-page.js';
@@ -107,7 +108,7 @@ function viewLines(models:ReturnType<typeof topology>[],view:View,min:Vec3,max:V
    grid(triangle.box,index=>{spend();cells[index].push(triangle);});
   }
  }
- const segments:number[]=[];
+ const segments:number[]=[],edgePicks:number[]=[];
  for(const [i,model] of models.entries()){
   for(const edge of model.edges){
    const [n,...neighbors]=edge.normals;
@@ -138,7 +139,10 @@ function viewLines(models:ReturnType<typeof topology>[],view:View,min:Vec3,max:V
    covered.sort((a,b)=>a[0]-b[0]);
    const at=(t:number):SketchPoint=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
    const segment=(start:number,end:number,hidden:boolean)=>{
-    if((end-start)*length>1e-5)segments.push(...at(start),...at(end),hidden?1:0);
+    if((end-start)*length<=1e-5)return;
+    const from=at(start),to=at(end);
+    segments.push(...from,...to,hidden?1:0);
+    if(!hidden)edgePicks.push(i,...model.vertices[edge.a],...model.vertices[edge.b],...from,...to);
    };
    let cursor=0;
    for(let k=0;k<covered.length;k++){
@@ -152,7 +156,7 @@ function viewLines(models:ReturnType<typeof topology>[],view:View,min:Vec3,max:V
    segment(cursor,1,false);
   }
  }
- return {view:view.view,width,height,segments:Float64Array.from(segments)};
+ return {view:view.view,width,height,segments:Float64Array.from(segments),edgePicks:Float64Array.from(edgePicks)};
 }
 
 export function projectAssembly(geometry:GeometryResult){
@@ -195,7 +199,7 @@ export function assemblyProjection(input:GeometryResult|AssemblyProjection):Asse
  return projection;
 }
 
-export function layoutAssemblyDrawing(sheet:DrawingInputs,projection:AssemblyProjection,cut?:AssemblyCut):DrawingLayout{
+export function layoutAssemblyDrawing(doc:CadDocument,sheet:DrawingInputs,projection:AssemblyProjection,cut?:AssemblyCut):DrawingLayout{
  const [top,front,right]=projection.views;
  const [num,denom]=sheet.scale.split(':').map(Number),factor=num/denom;
  const x=24,baseline=47,gap=20;
@@ -204,7 +208,8 @@ export function layoutAssemblyDrawing(sheet:DrawingInputs,projection:AssemblyPro
   throw new Error(t('This drawing does not fit on A4 at this scale. Choose a smaller scale.'));
  }
  const page:DrawingLayout={width:297,height:210,paths:[],texts:[],circles:[],anchors:[],annotationIssues:[],factor};
- for(const [view,left,bottom] of [[top,x,topY],[front,x,baseline],[right,rightX,baseline]] as const){
+ const placements=[[top,x,topY],[front,x,baseline],[right,rightX,baseline]] as const;
+ for(const [view,left,bottom] of placements){
   const point=(u:number,v:number):SketchPoint=>[left+u*factor,bottom+v*factor];
   const {segments}=view;
   for(const hidden of sheet.hiddenLines?[1,0]:[0]){
@@ -221,6 +226,8 @@ export function layoutAssemblyDrawing(sheet:DrawingInputs,projection:AssemblyPro
   if(!section)throw new Error(t('The assembly section needs evaluated cut geometry.'));
   addAssemblySection(page,projection,section,x,topY,rightX);
  }
+ page.assemblyEdges=assemblyDrawingEdges(projection,placements,factor);
+ addAssemblyEdgeDimensions(page,doc,sheet.edgeDimensions??[]);
  const count=projection.bodyIds.length;
  const subtitle=count===1?t('Assembly · 1 body'):t`Assembly · ${count} bodies`;
  addDrawingFrame(page,sheet.title,subtitle,sheet.scale);

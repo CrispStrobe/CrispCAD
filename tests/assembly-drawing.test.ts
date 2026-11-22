@@ -6,6 +6,7 @@ import type {DrawingInputs} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {projectAssembly,resolveAssemblyCut} from '../packages/editor/src/assembly-drawing.js';
+import {pickAssemblyEdge,saveAssemblyEdge} from '../packages/editor/src/assembly-edge-dimension.js';
 import {layoutAssemblyPartsList} from '../packages/editor/src/assembly-parts-list.js';
 import {layoutDrawing,layoutDrawingPages} from '../packages/editor/src/drawing-layout.js';
 import {exportDrawingPdf,exportDrawingSetPdf} from '../packages/editor/src/drawing-pdf.js';
@@ -206,4 +207,39 @@ it('clips both assembly cuts at the jog and joins material separately for each b
   .toThrow('needs evaluated cut geometry');
  expect(()=>kernel.sliceAssembly(geometry,{...cut,jog:{at:40,position:12}})).toThrow('Both legs');
  expect(()=>kernel.sliceAssembly(geometry,{...cut,jog:{at:0,position:0}})).toThrow('different positions');
+});
+
+it('saves a projected model-edge measurement across project formats and body placement changes',()=>{
+ const session=createCadSession();
+ const bodyId=session.add({kind:'box',size:[30,18,12]},{transform:identityTransform()});
+ const initial=session.state.document;
+ const draft={...assembly,hiddenLines:false};
+ const page=layoutDrawing(initial,draft,kernel.evaluate(initial));
+ const edge=page.assemblyEdges!.find(item=>item.bodyId===bodyId&&item.view===0&&
+  Math.abs(item.projected[1][0]-item.projected[0][0])>29)!;
+ const [a,b]=edge.visible;
+ expect(pickAssemblyEdge([edge],[(a[0]+b[0])/2,(a[1]+b[1])/2],3)).toBe(edge);
+ expect(pickAssemblyEdge([edge],[0,0],3)).toBeUndefined();
+ const id=session.saveDrawingSheet({...draft,edgeDimensions:[saveAssemblyEdge(edge,initial,[80,120],'edge-dim')]});
+ const saved=session.state.document;
+ expect(saved.version).toBe(25);
+ expect(parseDocument(session.serialize()).drawings).toEqual(saved.drawings);
+ expect(validateDocument(compileModelSource(session.modelSource,saved)).drawings).toEqual(saved.drawings);
+ expect(()=>validateDocument({...saved,version:24})).toThrow('drawing sheets');
+
+ const drawn=()=>{
+  const doc=session.state.document;
+  return layoutDrawing(doc,doc.drawings!.find(sheet=>sheet.id===id)!,kernel.evaluate(doc));
+ };
+ expect(drawn().texts.map(text=>text.text)).toContain('30 mm');
+ expect(drawn().paths.filter(path=>path.stroke==='annotation')).toHaveLength(5);
+ expect(new TextDecoder().decode(exportDrawingPdf(drawn(),draft.title).bytes))
+  .toContain('<'+Buffer.from('30 mm','latin1').toString('hex')+'>');
+ session.update(bodyId,{transform:{...identityTransform(),position:[12,8,3],rotation:[0,0,90]}});
+ expect(drawn().annotationIssues).toEqual([]);
+ expect(drawn().texts.map(text=>text.text)).toContain('30 mm');
+ session.update(bodyId,{size:[40,18,12]});
+ expect(drawn().annotationIssues).toEqual(['edge-dim']);
+ session.undo();
+ expect(drawn().annotationIssues).toEqual([]);
 });

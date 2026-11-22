@@ -322,6 +322,23 @@ test('assembly views use current solid placements and export a linked PDF',async
  await expect(preview).toContainText('World Y = 0 mm');
  await expect(preview.locator('.drawing-hatch').first()).toBeVisible();
  await expect(preview.locator('.drawing-visible').first()).toBeVisible();
+ await press(dialog.getByText('Model edge dimensions',{exact:true}));
+ await press(dialog.getByRole('button',{name:'Add edge dimension',exact:true}));
+ await preview.scrollIntoViewIfNeeded();
+ const picks=await preview.evaluate(svg=>{
+  const segment=svg.querySelector('.drawing-visible')!.getAttribute('d')!.split('M ')[1];
+  const [x1,y1,x2,y2]=segment.trim().replace('L ','').split(/\s+/).map(Number);
+  const screen=(x:number,y:number)=>{
+   const point=new DOMPoint(x,y).matrixTransform((svg as SVGSVGElement).getScreenCTM()!);
+   return {x:point.x,y:point.y};
+  };
+  return {edge:screen((x1+x2)/2,(y1+y2)/2),label:screen(80,92)};
+ });
+ const pick=({x,y}:{x:number,y:number})=>hasTouch?page.touchscreen.tap(x,y):page.mouse.click(x,y);
+ await pick(picks.edge);
+ await expect(preview.locator('.drawing-model-edge-marker')).toHaveCount(1);
+ await pick(picks.label);
+ await expect(preview.locator('.drawing-annotation')).toHaveCount(5);
  const paths=()=>preview.locator('.drawing-visible').evaluateAll(items=>items.map(item=>item.getAttribute('d')));
  const before=await paths();
  expect(workers).toHaveLength(1);
@@ -342,6 +359,7 @@ test('assembly views use current solid placements and export a linked PDF',async
  await press(sheet);
  await expect(preview).toContainText('Assembly · 2 bodies');
  expect(await paths()).not.toEqual(before);
+ await expect(preview.locator('.drawing-annotation')).toHaveCount(5);
  expect(workers).toHaveLength(2);
  const offset=dialog.getByLabel('Offset section',{exact:true});
  await offset.check();
@@ -375,6 +393,7 @@ test('assembly views use current solid placements and export a linked PDF',async
  await expect(dialog.getByLabel('Second section position (mm)')).toHaveValue('42');
  await expect(dialog.getByLabel('Jog at (mm)')).toHaveValue('8');
  await expect(preview.locator('.drawing-section').first()).toBeVisible();
+ await expect(preview.locator('.drawing-annotation')).toHaveCount(5);
  await pageSelect.selectOption('1');
  await expect(preview).toContainText('Rear cover');
 });

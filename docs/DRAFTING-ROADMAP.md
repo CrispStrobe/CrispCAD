@@ -200,7 +200,15 @@ after it. The top view marks the stepped path. The section keeps distinct
 components separately hatched and merges touching cut regions from the same
 component at the jog. Both legs must cross material.
 
-Dimensions on model edges and multiple jogs remain open.
+In **Model edge dimensions**, choose **Add edge dimension**, pick a visible
+model edge and place its label on the sheet. The label measures the full
+edge as projected in the chosen orthographic view. Edge links use the
+solid body and its local endpoints, so placement edits retain the link when
+the edge remains visible in that view. If a geometry change removes the
+edge or it can no longer be seen in the selected view, replace or remove the
+dimension before exporting.
+
+Model-edge arc and radius dimensions and multiple jogs remain open.
 
 ## Completion criteria
 

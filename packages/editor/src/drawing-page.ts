@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from '@brickwright/cad-core';
 import type {DrawingScale,SketchPoint} from '@brickwright/cad-core';
+import type {AssemblyDrawingEdge} from './assembly-edge-dimension.js';
 import type {DrawingAnchorPoint} from './drawing-annotation.js';
 
 type Stroke = 'visible'|'hidden'|'center'|'dimension'|'border'|'cut'|'hatch'|'section'|'annotation';
@@ -9,7 +10,7 @@ export type DrawingCircle = {center:SketchPoint; radius:number};
 export type DrawingText = {x:number; y:number; size:number; text:string};
 export type DrawingLayout = {
  width:number; height:number; paths:DrawingPath[]; circles:DrawingCircle[]; texts:DrawingText[];
- anchors:DrawingAnchorPoint[]; annotationIssues:string[]; factor:number;
+ anchors:DrawingAnchorPoint[]; annotationIssues:string[]; factor:number; assemblyEdges?:AssemblyDrawingEdge[];
 };
 export const drawingViews = [
  {view:'Top view', horizontal:0, vertical:1, depth:2, near:1},
