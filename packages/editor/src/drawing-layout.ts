@@ -1,23 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {drawingArcId,drawingOutlines,drawingVertexId,evaluateExtrusion,featureValue,resolveDrawingSource,sketchBulgeArc,sketchPoint,t} from '@brickwright/cad-core';
+import {documentGeometryKey,drawingArcId,drawingOutlines,drawingVertexId,evaluateExtrusion,featureValue,isAssemblyDrawingSource,resolveDrawingSource,sketchBulgeArc,sketchPoint,t} from '@brickwright/cad-core';
 import type {CadDocument,DrawingInputs,SketchPoint,Vec3} from '@brickwright/cad-core';
+import type {GeometryResult} from '@brickwright/cad-geometry';
+import {layoutAssemblyDrawing} from './assembly-drawing.js';
+import {addDrawingFrame,drawingBorder as border,drawingViews as order} from './drawing-page.js';
+import type {DrawingCircle,DrawingLayout,DrawingPath,DrawingText} from './drawing-page.js';
+export type {DrawingLayout} from './drawing-page.js';
 
 import {dimensionText,placeDrawingAnnotation} from './drawing-annotation.js';
 import type {DrawingAnchorPoint} from './drawing-annotation.js';
 import {offsetSectionMaterial,sectionMaterial} from './drawing-section.js';
 
-type Stroke = 'visible'|'hidden'|'center'|'dimension'|'border'|'cut'|'hatch'|'section'|'annotation';
-export type DrawingPath = {points:SketchPoint[]; stroke:Stroke; closed?:boolean};
-type DrawingCircle = {center:SketchPoint; radius:number};
-type DrawingText = {x:number; y:number; size:number; text:string};
-const order = [
- {view:'Top view', horizontal:0, vertical:1, depth:2, near:1},
- {view:'Front view', horizontal:0, vertical:2, depth:1, near:-1},
- {view:'Right view', horizontal:1, vertical:2, depth:0, near:1}
-] as const;
 const label=dimensionText;
-
-const border=(a:number,b:number,w:number,h:number):SketchPoint[]=>[[a,b],[a+w,b],[a+w,b+h],[a,b+h]];
 const bounds=(points:SketchPoint[])=>{
  const x=points.map(p=>p[0]),y=points.map(p=>p[1]);
  return {left:Math.min(...x),bottom:Math.min(...y),right:Math.max(...x),top:Math.max(...y)};
@@ -40,7 +34,12 @@ function outlineCorners(points:SketchPoint[],bulges?:number[]){
  });
 }
 
-export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
+export function layoutDrawing(doc:CadDocument,sheet:DrawingInputs,geometry?:GeometryResult):DrawingLayout {
+ if(isAssemblyDrawingSource(sheet.source)){
+  if(!geometry)throw new Error(t('The assembly drawing needs evaluated geometry.'));
+  if(geometry.sourceKey&&geometry.sourceKey!==documentGeometryKey(doc))throw new Error(t('The assembly geometry changed. Refresh the drawing.'));
+  return layoutAssemblyDrawing(sheet,geometry);
+ }
  const source=resolveDrawingSource(doc,sheet.source);
  if(!source)throw new Error(t('Drawing source unavailable. Choose another sketch extrusion.'));
  const {node,sketch}=source;
@@ -92,7 +91,7 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
   const limits=bounds(boxSamples.map(project));
   const width=limits.right-limits.left,height=limits.top-limits.bottom;
   const drawings:DrawingPath[]=[],circles:DrawingCircle[]=[];
-  const line=(points:SketchPoint[],stroke:Stroke,closed?:boolean)=>drawings.push({points,stroke,closed});
+  const line=(points:SketchPoint[],stroke:DrawingPath['stroke'],closed?:boolean)=>drawings.push({points,stroke,closed});
   if(faceOn){
    for(const [i,loop] of contours.entries()){
     const circle=circleAt(i);
@@ -152,7 +151,7 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
  }
  const paths:DrawingPath[]=[],texts:DrawingText[]=[],circles:DrawingCircle[]=[];
  const anchors:DrawingAnchorPoint[]=[];
- const addPath=(stroke:Stroke,points:SketchPoint[],closed?:boolean)=>paths.push({stroke,points,closed});
+ const addPath=(stroke:DrawingPath['stroke'],points:SketchPoint[],closed?:boolean)=>paths.push({stroke,points,closed});
  const addText=(x:number,y:number,text:string,size=3)=>texts.push({x,y,text,size});
  for(const [view,x,y] of [[top,minX,topY],[front,minX,baseline],[right,rightX,baseline]] as const){
   const {limits,width,height}=view,w=width*factor,h=height*factor;
@@ -250,15 +249,7 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
   const coordinate=axis===0?t('Sketch X'):t('Sketch Y');
   addText(rightX,topY+height+9,coordinate+' = '+label(cut)+(jog?' / '+label(jog.position):'')+' mm',2.8);
  }
- addPath('border',border(8,8,281,194),true);
- addPath('border',[[8,26],[289,26]]);
- addText(14,190,sheet.title,5);
- addText(14,183,t`Sketch extrusion · ${sketch.name}`,3.5);
- addText(14,17,t`Scale ${sheet.scale} · mm · A4`,3.5);
- addText(110,17,t('Print at actual size (100%).'),3);
- addPath('dimension',[[229,14],[279,14]]);
- for(const x of [229,279])addPath('dimension',[[x,12],[x,16]]);
- addText(229,18,t('50 mm scale check'),2.5);
+ addDrawingFrame({paths,texts},sheet.title,t`Sketch extrusion · ${sketch.name}`,sheet.scale);
  const diameters=new Map<string,number>();
  for(const id of loopIds.slice(1)){
   const circle=circlesByLoop.get(id);
@@ -282,4 +273,3 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
  }
  return {width:297,height:210,paths,texts,circles,anchors,annotationIssues,factor};
 }
-export type DrawingLayout = ReturnType<typeof layoutDrawing>;

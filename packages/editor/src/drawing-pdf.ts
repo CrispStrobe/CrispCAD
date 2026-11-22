@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from '@brickwright/cad-core';
+import type {GeometryResult} from '@brickwright/cad-geometry';
 import type {CadDocument} from '@brickwright/cad-core';
 import {layoutDrawing} from './drawing-layout.js';
 import type {DrawingLayout} from './drawing-layout.js';
@@ -38,13 +39,13 @@ export function exportDrawingPdf(layout:DrawingLayout,title:string){
  return file(title,singlePagePdf(layout.width,layout.height,drawingContent(layout)));
 }
 
-export function exportDrawingSetPdf(doc:CadDocument){
+export function exportDrawingSetPdf(doc:CadDocument,geometry?:GeometryResult){
  const sheets=doc.drawings??[];
  if(!sheets.length)throw new Error(t('Save a drawing sheet before exporting a drawing set.'));
  const pages=sheets.map((sheet,i)=>{
   let layout:DrawingLayout;
   try{
-   layout=layoutDrawing(doc,sheet);
+   layout=layoutDrawing(doc,sheet,geometry);
    if(layout.annotationIssues.length)throw new Error(t('Repair or remove unavailable drawing dimensions before exporting.'));
   }
   catch(error){

@@ -1,5 +1,6 @@
 import {expect,test} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
+import {addShape} from './ui.js';
 
 test('a linked sheet follows its sketch and survives reopen, source removal, and Undo',async({page})=>{
  await page.goto('/');
@@ -262,4 +263,55 @@ test('curved dimensions follow the authored arc and survive drawing reopen',asyn
  ]);
  const pdf=await readFile((await download.path())!,'utf8');
  expect(pdf).toContain('<'+Buffer.from('Arc length 41.646 mm','latin1').toString('hex')+'>');
+});
+
+test('assembly views use current solid placements and export a linked PDF',async({page,hasTouch})=>{
+ const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
+ const ready=()=>expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await page.goto('/');
+ await ready();
+ await addShape(page,'Box',hasTouch);
+ await ready();
+ await addShape(page,'Box',hasTouch);
+ await ready();
+ const position=page.getByLabel('Position Y',{exact:true});
+ if(!await position.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
+ await position.fill('20');
+ await position.press('Tab');
+ await ready();
+ const open=page.getByRole('button',{name:'Create assembly drawing',exact:true});
+ if(!await open.isVisible())await press(page.getByRole('button',{name:'Objects',exact:true}));
+ await press(open);
+ const dialog=page.getByRole('dialog',{name:'Drawing sheet',exact:true});
+ const preview=dialog.getByRole('img',{name:'Drawing preview'});
+ await dialog.getByLabel('Sheet title').fill('Assembly overview');
+ await expect(preview).toContainText('Assembly · 2 bodies');
+ for(const view of ['Top view','Front view','Right view'])await expect(preview).toContainText(view);
+ await expect(preview.locator('.drawing-hidden').first()).toBeVisible();
+ await dialog.getByLabel('Show hidden lines').uncheck();
+ await expect(preview.locator('.drawing-hidden')).toHaveCount(0);
+ await expect(preview.locator('.drawing-visible').first()).toBeVisible();
+ const paths=()=>preview.locator('.drawing-visible').evaluateAll(items=>items.map(item=>item.getAttribute('d')));
+ const before=await paths();
+ await press(dialog.getByRole('button',{name:'Save drawing sheet',exact:true}));
+ await expect(dialog).toBeHidden();
+
+ await position.fill('42');
+ await position.press('Tab');
+ await ready();
+ const sheet=page.getByRole('button',{name:'Drawing: Assembly overview',exact:true});
+ await press(sheet);
+ await expect(preview).toContainText('Assembly · 2 bodies');
+ expect(await paths()).not.toEqual(before);
+ const [download]=await Promise.all([
+  page.waitForEvent('download'),press(dialog.getByRole('button',{name:'Export drawing PDF',exact:true}))
+ ]);
+ const pdf=await readFile((await download.path())!,'utf8');
+ expect(pdf).toContain('<'+Buffer.from('Assembly overview','latin1').toString('hex')+'>');
+ await page.reload();
+ await ready();
+ if(!await sheet.isVisible())await press(page.getByRole('button',{name:'Objects',exact:true}));
+ await press(sheet);
+ await expect(preview).toContainText('Assembly · 2 bodies');
+ await expect(dialog.getByLabel('Show hidden lines')).not.toBeChecked();
 });

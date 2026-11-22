@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {compileModelSource,createCadSession,drawingSourceFor,parseDocument,resolveDrawingSource,validateDocument} from '@brickwright/cad-core';
-import type {DrawingInputs,SketchPlane} from '@brickwright/cad-core';
+import type {DrawingInputs,DrawingSource,SketchPlane} from '@brickwright/cad-core';
 import {expect,it} from 'vitest';
 import {placeDrawingAnnotation} from '../packages/editor/src/drawing-annotation.js';
 import {layoutDrawing} from '../packages/editor/src/drawing-layout.js';
@@ -16,7 +16,7 @@ function fixture(plane:SketchPlane='XY'){
   {kind:'circle',id:'first',center:['20 mm-spacing / 2',15],radius:2,segments:13},
   {kind:'circle',id:'second',center:['20 mm+spacing / 2',15],radius:3,segments:13}
  ]},{plane,name:'Motor plate',distance:6});
- const inputs:DrawingInputs={title:'Plate drawing',source:drawingSourceFor(s.state.document,id)!,scale:'1:1',hiddenLines:true};
+ const inputs:DrawingInputs&{source:DrawingSource}={title:'Plate drawing',source:drawingSourceFor(s.state.document,id)!,scale:'1:1',hiddenLines:true};
  return {s,id,inputs,design};
 }
 

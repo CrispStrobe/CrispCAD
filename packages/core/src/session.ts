@@ -1,4 +1,4 @@
-import {initializeDrawingOutlineIds,isDrawingArc,isDrawingVertex,resolveDrawingSource,retainDrawingVertexIds} from './drawing-sheet.js';
+import {drawingAssemblyAvailable,initializeDrawingOutlineIds,isAssemblyDrawingSource,isDrawingArc,isDrawingVertex,resolveDrawingSource,retainDrawingVertexIds} from './drawing-sheet.js';
 import type {DrawingInputs} from './drawing-sheet.js';
 import {upgradeSimulation,jointAtWorldFrame,materialPhysics,simulationTracers} from './simulation.js';
 import type {SimulationSettings} from './simulation.js';
@@ -190,15 +190,16 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     saveDrawingSheet(inputs:DrawingInputs,sheetId?:string){
       const id=sheetId??newId();
       commit(sheetId?'Edit drawing sheet':'Add drawing sheet',d=>{
-        const source=resolveDrawingSource(d,inputs.source);
-        if(!source)throw new Error(t('Choose an available drawing source.'));
+        const assembly=isAssemblyDrawingSource(inputs.source);
+        const source=isAssemblyDrawingSource(inputs.source)?undefined:resolveDrawingSource(d,inputs.source);
+        if(assembly?!drawingAssemblyAvailable(d):!source)throw new Error(t('Choose an available drawing source.'));
         const sheets=d.drawings??[];
         if(sheetId&&!sheets.some(sheet=>sheet.id===id))throw new Error(t('Drawing sheet does not exist.'));
         const sheet={...structuredClone(inputs),id};
         const outlineAnnotations=sheet.annotations?.filter(annotation=>
           [annotation.from,annotation.to].some(anchor=>isDrawingVertex(anchor)||isDrawingArc(anchor)))??[];
-        const outlineDimensions=outlineAnnotations.filter(annotation=>annotation.sketchId===source.sketch.id);
-        if(outlineDimensions.length){
+        const outlineDimensions=outlineAnnotations.filter(annotation=>annotation.sketchId===source?.sketch.id);
+        if(source&&outlineDimensions.length){
           const links=initializeDrawingOutlineIds(source.sketch.profile,newId);
           for(const annotation of outlineDimensions){
             annotation.from=links.get(annotation.from)??annotation.from;
@@ -207,7 +208,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         }
         const aligned=sheet.annotations?.some(annotation=>annotation.kind==='aligned');
         const curved=sheet.annotations?.some(annotation=>annotation.kind==='radius'||annotation.kind==='arc-length');
-        const version=curved?20:aligned?19:outlineAnnotations.length?18:sheet.section?.jog!==undefined?17:sheet.annotations!==undefined?11:sheet.section?10:9;
+        const version=assembly?21:curved?20:aligned?19:outlineAnnotations.length?18:sheet.section?.jog!==undefined?17:sheet.annotations!==undefined?11:sheet.section?10:9;
         if(d.version<version)d.version=version;
         d.drawings=sheetId?sheets.map(item=>item.id===id?sheet:item):[...sheets,sheet];
       });

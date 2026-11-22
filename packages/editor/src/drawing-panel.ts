@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {drawingAnnotationLimit,drawingScales,drawingSourceFor,evaluateExtrusion,isDrawingVertex,newId,resolveDrawingSource,t,validDrawingPosition} from '@brickwright/cad-core';
+import {drawingAssemblyAvailable,isAssemblyDrawingSource,drawingAnnotationLimit,drawingScales,drawingSourceFor,evaluateExtrusion,isDrawingVertex,newId,resolveDrawingSource,t,validDrawingPosition} from '@brickwright/cad-core';
 import type {CadSession,DrawingAnnotation,DrawingDimensionKind,DrawingInputs,DrawingScale,SketchPoint} from '@brickwright/cad-core';
+import type {GeometryResult} from '@brickwright/cad-geometry';
 import type {CadFile} from './index.js';
 import {layoutDrawing} from './drawing-layout.js';
 import type {DrawingLayout} from './drawing-layout.js';
@@ -14,18 +15,28 @@ const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{
  return el;
 };
 
-function previewDrawing(layout:DrawingLayout) {
+function previewDrawing(layout:DrawingLayout,assembly:boolean) {
  const ns='http://www.w3.org/2000/svg';
  const svg=document.createElementNS(ns,'svg');
  svg.setAttribute('viewBox',`0 0 ${layout.width} ${layout.height}`);
  svg.setAttribute('aria-label',t('Drawing preview'));
  svg.setAttribute('role','img');
- for(const {points,stroke,closed} of layout.paths){
+ const addPath=(stroke:string,d:string)=>{
   const path=document.createElementNS(ns,'path');
-  path.setAttribute('d',points.map(([x,y],i)=>(i?'L ':'M ')+x+' '+(layout.height-y)).join(' ')+(closed?' Z':''));
+  path.setAttribute('d',d);
   path.setAttribute('class','drawing-'+stroke);
   svg.append(path);
+ };
+ const projected=new Map<string,string[]>();
+ for(const {points,stroke,closed} of layout.paths){
+  const d=points.map(([x,y],i)=>(i?'L ':'M ')+x+' '+(layout.height-y)).join(' ')+(closed?' Z':'');
+  if(assembly&&(stroke==='visible'||stroke==='hidden')){
+   const group=projected.get(stroke);
+   if(group)group.push(d);
+   else projected.set(stroke,[d]);
+  }else addPath(stroke,d);
  }
+ for(const [stroke,paths] of projected)addPath(stroke,paths.join(' '));
  for(const {center:[x,y],radius} of layout.circles){
   const circle=document.createElementNS(ns,'circle');
   circle.setAttribute('cx',String(x));circle.setAttribute('cy',String(layout.height-y));circle.setAttribute('r',String(radius));
@@ -39,38 +50,41 @@ function previewDrawing(layout:DrawingLayout) {
  return svg;
 }
 
-export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport?: (file:CadFile)=>void|Promise<void>){
+export function mountDrawingPanel(parent:HTMLElement,session:CadSession,whenIdle:()=>Promise<GeometryResult>,onExport?: (file:CadFile)=>void|Promise<void>){
  const dialog=element('dialog');dialog.className='sketch-dialog drawing-dialog';
  dialog.setAttribute('aria-label',t('Drawing sheet'));parent.append(dialog);
  dialog.addEventListener('keydown',event=>event.stopPropagation());
  let refresh:(()=>void)|undefined;
  const unsubscribe=session.subscribe(()=>{if(dialog.open)refresh?.();});
  return {
-  open(options:{featureId:string}|{sheetId:string}){
+  open(options:{featureId:string}|{sheetId:string}|{assembly:true}){
    const doc=session.state.document;
    const saved='sheetId' in options?doc.drawings?.find(sheet=>sheet.id===options.sheetId):undefined;
-   const initial= 'featureId' in options ? drawingSourceFor(doc,options.featureId) : saved?.source;
-   if(!initial)throw new Error(t('Choose an available drawing source.'));
+   const initial='featureId' in options?drawingSourceFor(doc,options.featureId):saved?.source;
+   const assembly='assembly' in options||isAssemblyDrawingSource(initial);
+   const part=isAssemblyDrawingSource(initial)?undefined:initial;
+   if(!assembly&&!part)throw new Error(t('Choose an available drawing source.'));
    dialog.replaceChildren();
-   const title=element('input');title.maxLength=80;title.value=saved?.title??(doc.sketches?.[initial.sketchId]?.name??t('Drawing sheet')).slice(0,80);
+   const name=assembly?doc.title:doc.sketches?.[part!.sketchId]?.name??t('Drawing sheet');
+   const title=element('input');title.maxLength=80;title.value=saved?.title??name.trim().slice(0,80);
    const source=element('select');
    const scale=element('select');
    for(const ratio of drawingScales)scale.add(new Option(ratio,ratio));
-   scale.value=saved?.scale??'1:1';
+   scale.value=saved?.scale??(assembly?'1:2':'1:1');
    const hidden=element('input');hidden.type='checkbox';hidden.checked=saved?.hiddenLines??true;
    const form=element('div');form.className='drawing-form';
    const label=(text:string,control:HTMLInputElement|HTMLSelectElement,parent:HTMLElement=form)=>{
     control.setAttribute('aria-label',t(text));
     const field=element('label',t(text));field.append(control);parent.append(field);
    };
-   label('Sheet title',title);label('Drawing source',source);label('Drawing scale',scale);label('Show hidden lines',hidden);
+   label('Sheet title',title);if(!assembly)label('Drawing source',source);label('Drawing scale',scale);label('Show hidden lines',hidden);
    const section=element('input');section.type='checkbox';section.checked=!!saved?.section;
    const axis=element('select');
    axis.add(new Option(t('Sketch X'),'u'));axis.add(new Option(t('Sketch Y'),'v'));
    axis.value=saved?.section?.axis??'v';
    const position=element('input');position.type='text';position.maxLength=160;
    position.value=String(saved?.section?.position??'0');
-   label('Show section A-A',section);
+   label('Show section A-A',section);section.parentElement!.hidden=assembly;
    label('Section axis',axis);label('Section position (mm)',position);
    const offset=element('input');offset.type='checkbox';offset.checked=!!saved?.section?.jog;
    const secondPosition=element('input'),jogAt=element('input');
@@ -102,7 +116,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
    const pick=element('button',t('Pick dimension position'));
    const add=element('button',t('Add dimension'));
    const list=element('ul');list.className='drawing-dimension-list';
-   dimensions.append(pick,add,list);form.append(dimensions);
+   dimensions.append(pick,add,list);if(!assembly)form.append(dimensions);
    const heading=element('header');
    const close=element('button','×');close.setAttribute('aria-label',t('Close drawing'));
    close.onclick=()=>dialog.close();heading.append(element('h2',t('Drawing sheet')),close);
@@ -118,21 +132,23 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
    footer.append(save);
    const body=element('div');body.className='drawing-body';body.append(preview,form);
    dialog.append(heading,body,footer);
-   let choice=initial.featureId,lastRevision=-1;
+   let choice=part?.featureId??'',lastRevision=-1,renderTicket=0;
    const listSources=()=>{
+    if(!part)return;
     const current=session.state.document;
     const valid=Object.values(current.nodes).flatMap(node=>{
      const ref=drawingSourceFor(current,node.id);
      return ref?[{ref,name:current.sketches![ref.sketchId].name+' · '+node.name}]:[];
     });
     source.replaceChildren(...valid.map(({ref,name})=>new Option(name,ref.featureId)));
-    const initialMissing=choice===initial.featureId&&!resolveDrawingSource(current,initial);
+    const initialMissing=choice===part.featureId&&!resolveDrawingSource(current,part);
     if(initialMissing||!valid.some(item=>item.ref.featureId===choice)){
      source.add(new Option(t('Unavailable drawing source'),''),0);source.value='';
     }else source.value=choice;
    };
    let centerAutomatically=!saved?.section;
    const centerCut=()=>{
+    if(assembly)return;
     const current=session.state.document,ref=drawingSourceFor(current,source.value);
     if(!ref)return;
     const resolved=resolveDrawingSource(current,ref)!;
@@ -142,14 +158,19 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
    };
    const read=():DrawingInputs=>{
     const current=session.state.document;
+    if(!title.value.trim())throw new Error(t('Enter a drawing sheet title.'));
+    const settings={title:title.value.trim(),scale:scale.value as DrawingScale,hiddenLines:hidden.checked};
+    if(assembly){
+     if(!drawingAssemblyAvailable(current))throw new Error(t('Add a solid body to draw the assembly.'));
+     return {...settings,source:{kind:'assembly'}};
+    }
     const ref=drawingSourceFor(current,source.value);
     if(!ref)throw new Error(t('Drawing source unavailable. Choose another sketch extrusion.'));
-    if(!title.value.trim())throw new Error(t('Enter a drawing sheet title.'));
     const cut=operationScalar(position),second=operationScalar(secondPosition),at=operationScalar(jogAt);
     if(section.checked&&cut==='')throw new Error(t('Enter a section position in millimetres.'));
     const useJog=section.checked&&offset.checked;
     if(useJog&&(second===''||at===''))throw new Error(t('Enter the second section position and the jog coordinate.'));
-    return {title:title.value.trim(),source:ref,scale:scale.value as DrawingScale,hiddenLines:hidden.checked,
+    return {...settings,source:ref,
      ...(section.checked?{section:{axis:axis.value==='u'?'u':'v',position:cut,...(useJog?{jog:{at,position:second}}:{})}}:{}),
      ...(annotations.length?{annotations}:{})};
    };
@@ -231,14 +252,25 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
     const across=axis.value==='u'?t('Sketch Y'):t('Sketch X');
     jogHint.textContent=t`The jog switches to the second cut at this coordinate along ${across}.`;
     preview.replaceChildren();layout=undefined;status.textContent='';
+    save.disabled=pdf.disabled=true;
+    const ticket=++renderTicket,current=session.state.document;
+    const show=(draft:DrawingInputs,geometry?:GeometryResult)=>{
+     layout=layoutDrawing(current,draft,geometry);
+     preview.append(previewDrawing(layout,assembly));
+     save.disabled=false;
+     pdf.disabled=!!layout.annotationIssues.length;
+     status.textContent=layout.annotationIssues.length?t('Repair or remove unavailable drawing dimensions before exporting.'):'';
+    };
+    const report=(error:unknown)=>{status.textContent=error instanceof Error?error.message:String(error);};
     try{
-     layout=layoutDrawing(session.state.document,read());
-     preview.append(previewDrawing(layout));
-    }catch(error){status.textContent=error instanceof Error?error.message:String(error);}
-    save.disabled=!layout;
-    pdf.disabled=!layout||!!layout.annotationIssues.length;
-    if(layout?.annotationIssues.length)status.textContent=t('Repair or remove unavailable drawing dimensions before exporting.');
-    refreshDimensions();
+     const draft=read();
+     if(assembly){
+      status.textContent=t('Projecting assembly…');
+      const active=()=>dialog.open&&dialog.firstChild===heading&&ticket===renderTicket&&session.state.document===current;
+      void whenIdle().then(geometry=>{if(active())show(draft,geometry);}).catch(error=>{if(active())report(error);});
+     }else show(draft);
+    }catch(error){report(error);}
+    if(!assembly)refreshDimensions();
     if(!layout&&picking)setPicking(false);
    };
    kind.onchange=refreshDimensions;
@@ -250,7 +282,9 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
      status.textContent=t('Pick a position inside the drawing area.');
      return;
     }
-    const source=read().source,next:DrawingAnnotation={id:editing??newId(),sketchId:source.sketchId,
+    const source=read().source;
+    if(isAssemblyDrawingSource(source))return;
+    const next:DrawingAnnotation={id:editing??newId(),sketchId:source.sketchId,
      kind:kind.value as DrawingDimensionKind,from:from.value,at,
      ...(singleAnchor()?{}:{to:to.value})};
     if(!placeDrawingAnnotation(next,source.sketchId,layout.anchors,layout.factor)){

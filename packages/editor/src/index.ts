@@ -8,7 +8,7 @@ import {mountModelLibraryPanel, type ModelLibraryOptions} from './model-library-
 export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
 import { t } from '@brickwright/cad-core';
-import { constructionInputs, createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters,redesignScrew } from '@brickwright/cad-core';
+import { drawingAssemblyAvailable,isAssemblyDrawingSource,constructionInputs, createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters,redesignScrew } from '@brickwright/cad-core';
 import type { CadDocument, CadSession, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe } from '@brickwright/cad-core';
 import { importSTL } from '@brickwright/cad-geometry';
 import type { GeometryResult } from '@brickwright/cad-geometry';
@@ -176,7 +176,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   },toolbar,'compact-icon');
   paletteButton.title=t('Command palette (Ctrl/⌘+Shift+P)');
   paletteButton.setAttribute('aria-keyshortcuts','Control+Shift+P Meta+Shift+P');
-  const drawingPanel=mountDrawingPanel(shell,session,options.onExport);
+  const drawingPanel=mountDrawingPanel(shell,session,whenIdle,options.onExport);
   const modelSourcePanel=mountModelSourcePanel(shell,status,session,doc=>client.evaluate(doc),(recipe,name)=>createPresetDocument(recipe.preset,name,{recipe}));
   const codePanel=mountCodePanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();},options.onExport,()=>run(()=>modelSourcePanel.open()));
   button('Code',()=>codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined),toolbar,'compact-icon').title=t('Code an object');
@@ -335,12 +335,20 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
         }
       }
     }
-    if(doc.drawings?.length){
-      const group=section('drawings',t`Drawings · ${doc.drawings.length}`,content,true);
-      if(options.onExport&&doc.drawings.length>1){
-        button('Export drawing set (PDF)',()=>options.onExport!(exportDrawingSetPdf(session.state.document)),group);
+    const assemblyAvailable=drawingAssemblyAvailable(doc);
+    if(assemblyAvailable||doc.drawings?.length){
+      const sheets=doc.drawings??[];
+      const group=section('drawings',t`Drawings · ${sheets.length}`,content,true);
+      if(assemblyAvailable)button('Create assembly drawing',()=>drawingPanel.open({assembly:true}),group);
+      if(options.onExport&&sheets.length>1){
+        button('Export drawing set (PDF)',async()=>{
+          const current=session.state.document;
+          const geometry=sheets.some(sheet=>isAssemblyDrawingSource(sheet.source))?await whenIdle():undefined;
+          if(session.state.document!==current)throw new Error(t('The design changed while preparing the drawing set. Export again.'));
+          await options.onExport!(exportDrawingSetPdf(current,geometry));
+        },group);
       }
-      for(const sheet of doc.drawings)button(t`Drawing: ${sheet.title}`,()=>drawingPanel.open({sheetId:sheet.id}),group);
+      for(const sheet of sheets)button(t`Drawing: ${sheet.title}`,()=>drawingPanel.open({sheetId:sheet.id}),group);
     }
     const parameters=Object.entries(doc.parametric?.parameters??{});if(parameters.length){const group=section('parameters',t`Parameters · ${parameters.length}`,content);button('Edit model parameters',()=>parametersPanel.open(),group);for(const [name,p] of parameters){const entry=el('div','browser-value');entry.append(el('span','',name),el('span','',p.expression));group.append(entry);}}
 

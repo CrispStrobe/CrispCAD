@@ -7,13 +7,14 @@ import type {CadDocument} from './document.js';
 export const drawingScales = ['1:5','1:2','1:1','2:1','5:1'] as const;
 export type DrawingScale = typeof drawingScales[number];
 export type DrawingSource = {featureId:string; sketchId:string; profileId:string};
+export type AssemblyDrawingSource = {kind:'assembly'};
 export type DrawingSection = {axis:'u'|'v'; position:FeatureScalar; jog?:{at:FeatureScalar; position:FeatureScalar}};
 export type DrawingDimensionKind = 'linear-x'|'linear-y'|'aligned'|'diameter'|'radius'|'arc-length';
 export type DrawingAnnotation = {
  id:string; sketchId:string; kind:DrawingDimensionKind; from:string; to?:string; at:[number,number];
 };
 export const drawingAnnotationLimit=24;
-export type DrawingInputs = {title:string; source:DrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]};
+export type DrawingInputs = {title:string; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]};
 export type DrawingSheet = DrawingInputs & {id:string};
 
 const record = (value:unknown):value is Record<string,unknown> => !!value && typeof value==='object' && !Array.isArray(value);
@@ -44,8 +45,10 @@ export function checkDrawingSheets(doc:CadDocument) {
  for(const sheet of doc.drawings){
   if(!record(sheet)||!id(sheet.id)||unique.has(sheet.id)||typeof sheet.title!=='string'||
      !sheet.title.trim()||sheet.title.length>80||/[\u0000-\u001f]/.test(sheet.title)||
-     !drawingScales.includes(sheet.scale as DrawingScale)||typeof sheet.hiddenLines!=='boolean'||!record(sheet.source)||
-     !id(sheet.source.featureId)||!id(sheet.source.sketchId)||!id(sheet.source.profileId))throw invalid();
+     !drawingScales.includes(sheet.scale as DrawingScale)||typeof sheet.hiddenLines!=='boolean'||!record(sheet.source))throw invalid();
+  if(isAssemblyDrawingSource(sheet.source)){
+   if(doc.version<21||sheet.section!==undefined||sheet.annotations!==undefined)throw invalid();
+  }else if(Object.hasOwn(sheet.source,'kind')||!id(sheet.source.featureId)||!id(sheet.source.sketchId)||!id(sheet.source.profileId))throw invalid();
   if(sheet.section!==undefined){
    if(doc.version<10||!record(sheet.section)||!['u','v'].includes(String(sheet.section.axis)))throw invalid();
    if(!sectionScalar(sheet.section.position))throw invalid();
@@ -73,6 +76,14 @@ export function checkDrawingSheets(doc:CadDocument) {
   }
   unique.add(sheet.id);
  }
+}
+
+export function isAssemblyDrawingSource(value:unknown):value is AssemblyDrawingSource{
+ return record(value)&&value.kind==='assembly';
+}
+
+export function drawingAssemblyAvailable(doc:CadDocument){
+ return doc.roots.some(id=>!doc.nodes[id].reference&&doc.nodes[id].role!=='hole');
 }
 
 /** A drawing survives removal of its source so it can be repaired or restored by Undo. */

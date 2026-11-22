@@ -166,8 +166,19 @@ Arc links follow the ordered endpoints and update when the curvature changes.
 If the edge is straightened or the directed endpoint pair is removed, repair
 or remove the dimension before exporting.
 
-Multiple jogs, dimensions on model edges outside the sketch, and assembly
-views remain open.
+## Assembly drawing sheets
+
+Open **Objects → Drawings → Create assembly drawing** for linked top, front
+and right views of the complete solid assembly in its design position.
+The views use the evaluated geometry of solids, including transformed and
+imported bodies. Reference bodies and hole cutters are excluded. Hidden
+edges can be shown as dashed lines. Choose a smaller scale to fit a larger
+assembly on A4. A drawing set can mix assembly and sketch sheets.
+
+The projection uses mesh silhouettes and sharp edges, clips them by depth,
+and omits coplanar triangulation seams. Detailed meshes may exceed the
+projection budget. Assembly view sections, parts lists, and dimensions on
+model edges remain open, along with multiple jogs in sketch sections.
 
 ## Completion criteria
 
