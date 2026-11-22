@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {evaluateSketch, featureValue, t} from '@brickwright/cad-core';
+import {evaluateSketch, featureValue, resolveSketchPath, t} from '@brickwright/cad-core';
 import type {CadDocument,PlanarSketch,SketchPoint} from '@brickwright/cad-core';
 
 /** Export the authored sketch in its local plane, at its evaluated size in mm. */
@@ -90,7 +90,7 @@ function writeSketchDxf(doc:CadDocument,sketch:PlanarSketch){
   } else if (profile.kind === 'circle') {
     circle(profile.center ?? [0,0], featureValue(profile.radius, doc), profile.dxfLayer);
   } else if (profile.kind === 'path') {
-    polyline(profile.points, profile.dxfLayer, profile.bulges, false);
+    polyline(resolveSketchPath(profile,doc), profile.dxfLayer, profile.bulges, false);
   } else if (profile.kind === 'outline') {
     polyline(profile.bulges ? profile.points : contour, profile.dxfLayer, profile.bulges);
   } else polyline(contour);

@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {evaluateSketch,newId,t,trimSketchProfile,FeatureEvaluationError} from '@brickwright/cad-core';
-import type {CadSession,PlanarSketch,SketchPlane,SketchProfile} from '@brickwright/cad-core';
+import {closePathProfile,evaluateSketch,newId,resolveSketchPath,t,trimSketchProfile,FeatureEvaluationError} from '@brickwright/cad-core';
+import type {CadSession,PlanarSketch,SketchPathProfile,SketchPlane} from '@brickwright/cad-core';
 import {formatSketchPoints,parseSketchOutline,parseSketchPoint} from './sketch-point-entry.js';
 import {operationField} from './body-operation-panel.js';
 import {maxSketchDxfBytes,readSketchPathDxf} from './import-sketch-dxf.js';
 import {exportSketchPathDxf} from './sketch-dxf.js';
 
-type Path=Extract<SketchProfile,{kind:'path'}>;
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,value?:string)=>{
  const node=document.createElement(tag);
  if(value!==undefined)node.textContent=value;
@@ -27,6 +26,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   const profile=existing?.profile.kind==='path'?existing.profile:undefined;
   const profileId=profile?.id??newId();
   let dxfLayer=profile?.dxfLayer,draftRevision=0;
+  let vertexIds=profile?.vertexIds,anchors=profile?.anchors;
   dialog.replaceChildren();
 
   const header=element('header'),close=element('button','×');
@@ -50,6 +50,18 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   fields.append(operationField(t('Sketch name'),name).label,operationField(t('Sketch plane'),plane).label,
    operationField(t('Path points X, Y (mm)'),points).label,
    element('small',t('Enter one point per line. Use @dX, dY for a relative point. Add a third value for an arc bulge on the outgoing edge.')));
+
+  const locks=element('details');
+  locks.className='sketch-expressions';
+  const vertex=element('select'),lockX=element('input'),lockY=element('input');
+  const applyLock=element('button',t('Lock point')),removeLock=element('button',t('Unlock point'));
+  locks.append(element('summary',t('Point locks')),
+   element('p',t('Fix a point with millimetres or a project parameter, such as width / 2. Unlock points before inserting, removing, or reordering rows.')),
+   operationField(t('Path point'),vertex).label,operationField(t('Locked X (mm)'),lockX).label,
+   operationField(t('Locked Y (mm)'),lockY).label,applyLock,removeLock);
+  const closureHint=element('small',t('Closing uses the current positions of locked points. The outline has no point locks.'));
+  locks.append(closureHint);
+  fields.append(locks);
 
   const trim=element('details');
   trim.className='sketch-expressions';
@@ -91,20 +103,55 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   }
   dialog.append(header,body,footer);
 
-  function read():PlanarSketch&{profile:Path}{
+  function read():PlanarSketch&{profile:SketchPathProfile}{
    return {version:1,id:id??'preview-path',name:name.value.trim(),plane:plane.value as SketchPlane,
-    profile:{kind:'path',id:profileId,...parseSketchOutline(points.value.trim().split(/\r?\n/)),...(dxfLayer?{dxfLayer}:{})}};
+    profile:{kind:'path',id:profileId,...parseSketchOutline(points.value.trim().split(/\r?\n/)),...(dxfLayer?{dxfLayer}:{}),...(anchors?{anchors,vertexIds}:{})}};
   }
   function report(error:unknown){
    status.textContent=error instanceof FeatureEvaluationError?error.diagnostic.message:error instanceof Error?error.message:String(error);
   }
+  function writePath(next:SketchPathProfile){
+   points.value=formatSketchPoints(next.points,next.bulges).join('\n');
+   vertexIds=next.vertexIds;
+   anchors=next.anchors;
+  }
+  function updateLockFields(){
+   const index=vertex.selectedIndex,anchor=anchors?.find(item=>item.vertexId===vertexIds?.[index]);
+   removeLock.disabled=!anchor;
+   applyLock.textContent=t(anchor?'Update point lock':'Lock point');
+   applyLock.disabled=true;
+   lockX.value=anchor===undefined?'':String(anchor.x);
+   lockY.value=anchor===undefined?'':String(anchor.y);
+   try{
+    const draft=read();
+    if(index<0||vertexIds&&vertexIds.length!==draft.profile.points.length)return;
+    const point=resolveSketchPath(draft.profile,doc)[index];
+    if(!point)return;
+    applyLock.disabled=false;
+    if(anchor)return;
+    lockX.value=String(point[0]);
+    lockY.value=String(point[1]);
+   }catch{/* The preview reports invalid geometry. */}
+  }
   function draw(){
+   closureHint.hidden=!anchors?.length;
    preview.replaceChildren();
    status.textContent='';
    save.disabled=closePath.disabled=trimButton.disabled=exportPath.disabled=true;
    layer.textContent=dxfLayer?t`DXF layer: ${dxfLayer}`:'';
+   const selected=vertex.selectedIndex;
+   let count=vertexIds?.length??0;
+   try{count=vertexIds?.length??read().profile.points.length;}catch{/* Locks can still be removed. */}
+   vertex.replaceChildren(...Array.from({length:count},(_,index)=>{
+    const number=index+1;
+    return new Option(anchors?.some(anchor=>anchor.vertexId===vertexIds?.[index])?t`Point ${number} (locked)`:t`Point ${number}`,String(index));
+   }));
+   vertex.selectedIndex=Math.max(0,Math.min(selected,count-1));
+   updateLockFields();
    try{
-    const {contour}=evaluateSketch(read(),doc),x=contour.map(point=>point[0]),y=contour.map(point=>-point[1]);
+    const draft=read();
+    if(vertexIds&&vertexIds.length!==draft.profile.points.length)throw new Error(t('Restore the original point count or unlock the points.'));
+    const {contour}=evaluateSketch(draft,doc),x=contour.map(point=>point[0]),y=contour.map(point=>-point[1]);
     const left=Math.min(...x),top=Math.min(...y),width=Math.max(...x)-left,height=Math.max(...y)-top,margin=Math.max(width,height,1)*.15;
     const svg=document.createElementNS(svgNS,'svg');
     svg.setAttribute('viewBox',`${left-margin} ${top-margin} ${width+2*margin} ${height+2*margin}`);
@@ -113,12 +160,15 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
     line.setAttribute('points',contour.map(([x,y])=>`${x},${-y}`).join(' '));
     line.setAttribute('class','sketch-path-line');
     svg.append(line);
-    for(const point of [contour[0],contour.at(-1)!]){
+    const vertices=resolveSketchPath(draft.profile,doc);
+    for(const [index,point] of vertices.entries()){
+     const locked=anchors?.some(anchor=>anchor.vertexId===vertexIds?.[index]);
+     if(!locked&&index!==0&&index!==vertices.length-1)continue;
      const endpoint=document.createElementNS(svgNS,'circle');
      endpoint.setAttribute('cx',String(point[0]));
      endpoint.setAttribute('cy',String(-point[1]));
      endpoint.setAttribute('r',String(margin*.15));
-     endpoint.setAttribute('class','sketch-handle');
+     endpoint.setAttribute('class',locked?'sketch-handle sketch-path-locked':'sketch-handle');
      svg.append(endpoint);
     }
     preview.append(svg);
@@ -128,10 +178,45 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   function changed(event:Event){
    if(event.target===file)return;
    draftRevision++;
+   if(event.target instanceof Node&&locks.contains(event.target)){
+    if(event.target===vertex)updateLockFields();
+    return;
+   }
    draw();
   }
   fields.addEventListener('input',changed);
   fields.addEventListener('change',changed);
+
+  applyLock.onclick=()=>{
+   try{
+    const draft=read(),index=vertex.selectedIndex;
+    const ids=vertexIds??draft.profile.points.map(()=>newId());
+    const vertexId=ids[index],x=lockX.value.trim(),y=lockY.value.trim();
+    const scalar=(value:string)=>Number.isFinite(Number(value))?Number(value):value;
+    if(!x||!y||!vertexId)throw new Error(t('Enter both locked coordinates.'));
+    const next=[...(anchors??[]).filter(anchor=>anchor.vertexId!==vertexId),{vertexId,x:scalar(x),y:scalar(y)}];
+    evaluateSketch({...draft,profile:{...draft.profile,vertexIds:ids,anchors:next}},doc);
+    vertexIds=ids;
+    anchors=next;
+    draftRevision++;
+    draw();
+   }catch(error){report(error);}
+  };
+  removeLock.onclick=()=>{
+   const index=vertex.selectedIndex,vertexId=vertexIds?.[index];
+   const remaining=anchors?.filter(anchor=>anchor.vertexId!==vertexId);
+   try{
+    const {profile:draft}=read();
+    if(draft.points.length===vertexIds?.length){
+     draft.points[index]=resolveSketchPath(draft,doc)[index];
+     points.value=formatSketchPoints(draft.points,draft.bulges).join('\n');
+    }
+   }catch{/* Keep unfinished point entries editable when the lock is removed. */}
+   anchors=remaining?.length?remaining:undefined;
+   if(!anchors)vertexIds=undefined;
+   draftRevision++;
+   draw();
+  };
 
   const active=()=>dialog.open&&dialog.firstChild===header;
   file.onchange=async()=>{
@@ -143,7 +228,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
     const imported=readSketchPathDxf(await chosen.text(),assumeMm.checked);
     if(!active())return;
     if(start!==draftRevision||session.state.revision!==revision)throw new Error(t('The path changed while reading DXF. Choose the file again.'));
-    points.value=formatSketchPoints(imported.points,imported.bulges).join('\n');
+    writePath(imported);
     dxfLayer=imported.dxfLayer;
     if(!existing)name.value=chosen.name.replace(/\.dxf$/i,'').replace(/[\u0000-\u001f]/g,'').trim().slice(0,160)||t('Sketch path');
     draftRevision++;
@@ -173,13 +258,13 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   closePath.onclick=()=>change(()=>{
    const {name,plane,profile}=read();
    if(id)session.closeSketchPath(id,profile,{name,plane});
-   else session.addSketch({...profile,kind:'outline'},{name,plane});
+   else session.addSketch(closePathProfile(profile,doc),{name,plane});
   });
   trimButton.onclick=()=>{
    try{
     const path=trimSketchProfile(read(),doc,parseSketchPoint(first.value),parseSketchPoint(second.value),side.value==='left'?'left':'right');
     if(path.kind!=='path')return;
-    points.value=formatSketchPoints(path.points,path.bulges).join('\n');
+    writePath(path);
     draftRevision++;
     draw();
    }catch(error){report(error);}

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {evaluateSketch,featureValue,isSketchPoint,sketchBulgeArc,sketchBulgeMidpoint} from '@brickwright/cad-core';
+import {evaluateSketch,featureValue,isSketchPoint,resolveSketchPath,sketchBulgeArc,sketchBulgeMidpoint} from '@brickwright/cad-core';
 import type {CadDocument,PlanarSketch,SketchPoint} from '@brickwright/cad-core';
 
 type Line = {kind:'line'; a:SketchPoint; b:SketchPoint};
@@ -79,7 +79,7 @@ export function sketchSnapReference(sketch:PlanarSketch, doc:CadDocument) {
  const profile=sketch.profile;
  if(profile.kind==='rectangle')addLoop(contour);
  if(profile.kind==='outline')addLoop(profile.points,profile.bulges);
- if(profile.kind==='path')addLoop(profile.points,profile.bulges,false);
+ if(profile.kind==='path')addLoop(resolveSketchPath(profile,doc),profile.bulges,false);
  if(profile.kind==='circle')addCircle(profile.center??[0,0],featureValue(profile.radius,doc));
  if(profile.kind==='region')for(const loop of profile.loops){
   if(loop.kind==='outline')addLoop(loop.points,loop.bulges);

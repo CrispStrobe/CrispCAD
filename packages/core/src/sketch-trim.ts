@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {evaluateSketch} from './features.js';
+import {evaluateSketch,resolveSketchPath} from './features.js';
 import type {PlanarSketch,SketchProfile} from './features.js';
 import type {SketchLoop} from './sketch-region.js';
+import {newId} from './document.js';
 import type {CadDocument} from './document.js';
 import {isSketchPoint,sketchBulgeArc} from './sketch-outline.js';
 import type {SketchPoint} from './sketch-outline.js';
@@ -78,7 +79,9 @@ export function trimSketchProfile(sketch:PlanarSketch,context:Pick<CadDocument,'
  const profile=sketch.profile;
  let result:SketchProfile;
  if(profile.kind==='path'){
-  const pieces=profile.points.slice(0,-1).flatMap((point,i)=>split(point,profile.points[i+1],profile.bulges?.[i]??0));
+  const vertices=resolveSketchPath(profile,context);
+  const sourceIndices=new Map(vertices.map((point,index)=>[point,index]));
+  const pieces=vertices.slice(0,-1).flatMap((point,i)=>split(point,vertices[i+1],profile.bulges?.[i]??0));
   const first=pieces.findIndex(piece=>piece.keep);
   if(first<0||pieces.every(piece=>piece.keep))throw new Error(t('The trim line must cross the open path.'));
   let last=pieces.length-1;
@@ -87,6 +90,19 @@ export function trimSketchProfile(sketch:PlanarSketch,context:Pick<CadDocument,'
   if(remaining.some(piece=>!piece.keep))throw new Error(t('This trim would leave separate paths. Choose a different line or side.'));
   const {points,bulges}=pointsFrom(remaining);
   result={...profile,points};
+  if(profile.vertexIds&&profile.anchors){
+   const {vertexIds}=profile;
+   const retainedIds=points.map(point=>vertexIds[sourceIndices.get(point)??-1]??newId());
+   const anchors=profile.anchors.filter(anchor=>retainedIds.includes(anchor.vertexId));
+   if(anchors.length){
+    result.vertexIds=retainedIds;
+    result.anchors=anchors;
+    result.points=points.map(point=>profile.points[sourceIndices.get(point)??-1]??point);
+   }else{
+    delete result.vertexIds;
+    delete result.anchors;
+   }
+  }
   if(bulges.some(Boolean))result.bulges=bulges;
   else delete result.bulges;
  }else if(profile.kind==='outline')result=cut(profile);

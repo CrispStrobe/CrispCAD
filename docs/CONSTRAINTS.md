@@ -1,5 +1,13 @@
 # Constraint solving: concrete next architecture
 
+## Implemented in drafting
+
+Retained open paths support fixed X and Y coordinates, including dimensioned
+parameter expressions. Each lock refers to a persistent vertex ID. The editor
+resolves the coordinates directly and validates the resulting geometry in the
+current session transaction. This covers exact point locks. Coupled segment and
+profile constraints still require the geometric worker described below.
+
 ## Follow-up review — 2026-11-14
 
 Reviewed current main `5dc27dc0b297683d47e94ade2b4ca22ed530d429` against our

@@ -12,11 +12,16 @@ import type {Quantity, ParameterUnit} from './parameters.js';
 /** A literal or bounded expression, never an executable script or a triangle index. */
 export type FeatureScalar = number | string;
 export type SketchPlane = 'XY' | 'XZ' | 'YZ';
+export type SketchPathAnchor = {vertexId:string; x:FeatureScalar; y:FeatureScalar};
+export type SketchPathProfile = {
+  kind:'path'; id:string; points:SketchPoint[]; bulges?:number[]; dxfLayer?:string;
+  vertexIds?:string[]; anchors?:SketchPathAnchor[];
+};
 export type SketchProfile =
   {kind:'rectangle'; id:string; width:FeatureScalar; depth:FeatureScalar} |
   {kind:'circle'; id:string; radius:FeatureScalar; segments:number; center?:SketchPoint; dxfLayer?:string} |
   {kind:'outline'; id:string; points:SketchPoint[]; bulges?:number[]; dxfLayer?:string} |
-  {kind:'path'; id:string; points:SketchPoint[]; bulges?:number[]; dxfLayer?:string} |
+  SketchPathProfile |
   {kind:'region'; id:string; loops:SketchLoop[]};
 /** Profiles are analytic design inputs. Rectangle closure/orthogonality and circle
  * closure are enforced by construction; a general constraint solver comes later. */
@@ -103,6 +108,34 @@ export function featureValue(input:FeatureScalar,doc:Pick<CadDocument,'parametri
   if((q.length!==0||q.angle!==0)&&(q.length!==length||q.angle!==angle))throw new Error(t`Expression must produce ${unit}`);
   if(Math.abs(q.value)>1e6)throw new Error(t('Expression exceeds the finite design range'));return q.value;
 }
+/** Resolve exact point locks in the local sketch plane, without tessellating the edges. */
+export function resolveSketchPath(profile:SketchPathProfile,doc:Pick<CadDocument,'parametric'>):SketchPoint[] {
+  const {points,vertexIds,anchors}=profile;
+  if(vertexIds===undefined&&anchors===undefined)return points;
+  if(!Array.isArray(points)||points.length>256||!Array.from(points).every(isSketchPoint)||!Array.isArray(vertexIds)||vertexIds.length!==points.length||
+    !Array.from(vertexIds).every(idOk)||new Set(vertexIds).size!==vertexIds.length||
+    !Array.isArray(anchors)||anchors.length<1||anchors.length>points.length){
+    throw new Error(t('Invalid path point locks.'));
+  }
+  const indices=new Map(vertexIds.map((id,index)=>[id,index]));
+  const resolved=points.slice();
+  const applied=new Set<string>();
+  for(const anchor of anchors){
+    if(!record(anchor)||!indices.has(anchor.vertexId)||applied.has(anchor.vertexId)||
+      ![anchor.x,anchor.y].every(value=>typeof value==='number'||typeof value==='string')){
+      throw new Error(t('Invalid path point locks.'));
+    }
+    applied.add(anchor.vertexId);
+    resolved[indices.get(anchor.vertexId)!]=[featureValue(anchor.x,doc),featureValue(anchor.y,doc)];
+  }
+  return resolved;
+}
+
+export function closePathProfile(profile:SketchPathProfile,doc:Pick<CadDocument,'parametric'>):Extract<SketchProfile,{kind:'outline'}> {
+  const outline=structuredClone({kind:'outline' as const,id:profile.id,points:resolveSketchPath(profile,doc)});
+  return {...outline,...(profile.bulges?{bulges:[...profile.bulges]}:{}),...(profile.dxfLayer?{dxfLayer:profile.dxfLayer}:{})};
+}
+
 function dimension(input:FeatureScalar,doc:Pick<CadDocument,'parametric'>):number {const v=featureValue(input,doc);if(v<.01||v>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));return v;}
 export function evaluateSketch(sketch:PlanarSketch,doc:Pick<CadDocument,'parametric'>):{contour:SketchPoint[];holes?:SketchPoint[][];loopIds?:string[];edgeIds:string[]} {
   try {
@@ -111,7 +144,7 @@ export function evaluateSketch(sketch:PlanarSketch,doc:Pick<CadDocument,'paramet
     if((p.kind==='outline'||p.kind==='circle'||p.kind==='path')&&p.dxfLayer!==undefined&&!isSketchDxfLayer(p.dxfLayer))throw new Error(t('Invalid DXF layer name.'));
     if(p.kind==='region')return evaluateSketchRegion(p.loops, value => featureValue(value, doc));
     if(p.kind==='rectangle') {const w=dimension(p.width,doc)/2,d=dimension(p.depth,doc)/2;return {contour:[[-w,-d],[w,-d],[w,d],[-w,d]],edgeIds:['bottom','right','top','left'].map(side=>`${p.id}:${side}`)};}
-    if(p.kind==='path')return {contour:sketchPath(p.points,p.bulges),edgeIds:p.points.slice(0,-1).map((_,i)=>`${p.id}:edge-${i}`)};
+    if(p.kind==='path')return {contour:sketchPath(resolveSketchPath(p,doc),p.bulges),edgeIds:p.points.slice(0,-1).map((_,i)=>`${p.id}:edge-${i}`)};
     if(p.kind==='outline') {const contour=sketchOutline(p.points,p.bulges);return {contour,edgeIds:p.points.map((_,i)=>`${p.id}:edge-${i}`)};}
     if(p.kind==='circle') {const center=p.center??[0,0];if(!isSketchPoint(center))throw new Error(t('Circle center must be within 100000 mm of the sketch origin.'));const r=dimension(p.radius,doc);if(!Number.isInteger(p.segments)||p.segments<12||p.segments>256)throw new Error(t('Circle segments must be an integer between 12 and 256'));return {contour:Array.from({length:p.segments},(_,i)=>[center[0]+r*Math.cos(i*2*Math.PI/p.segments),center[1]+r*Math.sin(i*2*Math.PI/p.segments)]),edgeIds:[`${p.id}:circumference`]};}
     throw new Error(t('Unsupported sketch profile version or kind'));
@@ -150,7 +183,10 @@ export function evaluateRevolution(node:RevolutionFeature&{id:string},doc:CadDoc
 }
 export function checkFeatures(doc:CadDocument) {
   if(doc.sketches!==undefined){if(doc.version<3||!record(doc.sketches)||Object.keys(doc.sketches).length>256)throw new Error(t('Sketches require document version 3 and at most 256 sketches'));
-    for(const [id,sketch] of Object.entries(doc.sketches)){if(!idOk(id)||sketch.id!==id)throw new Error(t('Invalid sketch identity'));if(sketch.profile?.kind==='path'&&doc.version<15)throw new Error(t('Open sketch paths require document version 15'));evaluateSketch(sketch,doc);}}
+    for(const [id,sketch] of Object.entries(doc.sketches)){if(!idOk(id)||sketch.id!==id)throw new Error(t('Invalid sketch identity'));if(sketch.profile?.kind==='path'){
+      if(doc.version<15)throw new Error(t('Open sketch paths require document version 15'));
+      if(doc.version<16&&(sketch.profile.anchors!==undefined||sketch.profile.vertexIds!==undefined))throw new Error(t('Path point locks require document version 16'));
+    }evaluateSketch(sketch,doc);}}
   for(const node of Object.values(doc.nodes)){
     if(node.kind==='extrusion'){if(doc.version<3)throw new Error(t('Extrusion features require document version 3'));evaluateExtrusion(node,doc);}
     else if(node.kind==='mirror')evaluateMirror(node,doc);
@@ -165,6 +201,7 @@ export function sketchExpressions(sketch:PlanarSketch):string[] {
   const profile=sketch.profile;
   const values=profile.kind==='rectangle'?[profile.width,profile.depth]:
     profile.kind==='circle'?[profile.radius]:
+    profile.kind==='path'?profile.anchors?.flatMap(anchor=>[anchor.x,anchor.y])??[]:
     profile.kind==='region'?profile.loops.flatMap(loop=>loop.kind==='circle'?[...loop.center,loop.radius]:[]):[];
   return values.filter((value):value is string=>typeof value==='string');
 }
@@ -176,6 +213,11 @@ export function rewriteSketchExpressions(sketch:PlanarSketch,rewrite:(s:string)=
     profile.depth=transform(profile.depth);
   }else if(profile.kind==='circle'){
     profile.radius=transform(profile.radius);
+  }else if(profile.kind==='path'){
+    for(const anchor of profile.anchors??[]){
+      anchor.x=transform(anchor.x);
+      anchor.y=transform(anchor.y);
+    }
   }else if(profile.kind==='region'){
     for(const loop of profile.loops){
       if(loop.kind!=='circle')continue;

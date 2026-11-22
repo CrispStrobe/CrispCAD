@@ -246,3 +246,15 @@ unitless file, confirm millimetres in the path dialog. The importer retains
 the signed arc bulges and the layer. **Export path as DXF** writes the current
 draft as an open lightweight polyline in millimetres. The path stays editable
 after export and reimport. [Autodesk LWPOLYLINE reference](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-DXF/files/GUID-748FC305-F3F2-4F74-825A-61F04D757A50.htm)
+
+### Point locks on open paths
+
+Open **Point locks**, select a point, and enter the two coordinates in the
+sketch plane. Coordinates accept millimetres and project parameter expressions.
+Locked vertices have a distinct marker in the preview. The saved path follows
+parameter edits, and trimming keeps the locks on surviving points. DXF export
+and closure into an outline use the current coordinates. Unlocking a point
+keeps its current position when the point rows are valid.
+
+Document version 16 stores the vertex identities and locks. Coupled constraints,
+degrees of freedom, and constraints on closed profiles remain open.
