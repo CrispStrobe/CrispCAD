@@ -50,7 +50,7 @@ function previewDrawing(layout:DrawingLayout,assembly:boolean) {
  return svg;
 }
 
-export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectAssembly:()=>Promise<AssemblyProjection|undefined>,onExport?: (file:CadFile)=>void|Promise<void>){
+export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectAssembly:(sheets:readonly DrawingInputs[])=>Promise<AssemblyProjection|undefined>,onExport?: (file:CadFile)=>void|Promise<void>){
  const dialog=element('dialog');dialog.className='sketch-dialog drawing-dialog';
  dialog.setAttribute('aria-label',t('Drawing sheet'));parent.append(dialog);
  dialog.addEventListener('keydown',event=>event.stopPropagation());
@@ -85,13 +85,14 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     label('Preview page',previewPage);
     previewPage.parentElement!.hidden=true;
    }
-   const section=element('input');section.type='checkbox';section.checked=!!saved?.section;
+   const section=element('input');section.type='checkbox';section.checked=!!saved?.section;section.disabled=assembly&&!saved?.section;
    const axis=element('select');
-   axis.add(new Option(t('Sketch X'),'u'));axis.add(new Option(t('Sketch Y'),'v'));
+   axis.add(new Option(assembly?t('World X'):t('Sketch X'),'u'));
+   axis.add(new Option(assembly?t('World Y'):t('Sketch Y'),'v'));
    axis.value=saved?.section?.axis??'v';
    const position=element('input');position.type='text';position.maxLength=160;
    position.value=String(saved?.section?.position??'0');
-   label('Show section A-A',section);section.parentElement!.hidden=assembly;
+   label('Show section A-A',section);
    label('Section axis',axis);label('Section position (mm)',position);
    const offset=element('input');offset.type='checkbox';offset.checked=!!saved?.section?.jog;
    const secondPosition=element('input'),jogAt=element('input');
@@ -154,8 +155,16 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     }else source.value=choice;
    };
    let centerAutomatically=!saved?.section;
+   let assemblyBounds:AssemblyProjection|undefined;
    const centerCut=()=>{
-    if(assembly)return;
+    if(assembly){
+     if(!assemblyBounds)return;
+     const coordinate=axis.value==='u'?0:1;
+     const top=assemblyBounds.views[0];
+     const span=coordinate===0?top.width:top.height;
+     position.value=String(Number((assemblyBounds.origin[coordinate]+span/2).toFixed(6)));
+     return;
+    }
     const current=session.state.document,ref=drawingSourceFor(current,source.value);
     if(!ref)return;
     const resolved=resolveDrawingSource(current,ref)!;
@@ -167,18 +176,18 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     const current=session.state.document;
     if(!title.value.trim())throw new Error(t('Enter a drawing sheet title.'));
     const settings={title:title.value.trim(),scale:scale.value as DrawingScale,hiddenLines:hidden.checked};
+    const cut=operationScalar(position),second=operationScalar(secondPosition),at=operationScalar(jogAt);
+    if(section.checked&&cut==='')throw new Error(t('Enter a section position in millimetres.'));
+    const useJog=!assembly&&section.checked&&offset.checked;
+    if(useJog&&(second===''||at===''))throw new Error(t('Enter the second section position and the jog coordinate.'));
+    const cuttingPlane=section.checked?{section:{axis:axis.value==='u'?'u' as const:'v' as const,position:cut,...(useJog?{jog:{at,position:second}}:{})}}:{};
     if(assembly){
      if(!drawingAssemblyAvailable(current))throw new Error(t('Add a solid body to draw the assembly.'));
-     return {...settings,source:{kind:'assembly'},...(partsList.checked?{partsList:true}:{})};
+     return {...settings,source:{kind:'assembly'},...cuttingPlane,...(partsList.checked?{partsList:true}:{})};
     }
     const ref=drawingSourceFor(current,source.value);
     if(!ref)throw new Error(t('Drawing source unavailable. Choose another sketch extrusion.'));
-    const cut=operationScalar(position),second=operationScalar(secondPosition),at=operationScalar(jogAt);
-    if(section.checked&&cut==='')throw new Error(t('Enter a section position in millimetres.'));
-    const useJog=section.checked&&offset.checked;
-    if(useJog&&(second===''||at===''))throw new Error(t('Enter the second section position and the jog coordinate.'));
-    return {...settings,source:ref,
-     ...(section.checked?{section:{axis:axis.value==='u'?'u':'v',position:cut,...(useJog?{jog:{at,position:second}}:{})}}:{}),
+    return {...settings,source:ref,...cuttingPlane,
      ...(annotations.length?{annotations}:{})};
    };
    let layout:DrawingLayout|undefined,pages:DrawingLayout[]=[];
@@ -260,8 +269,9 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     highlightAnchors();
    };
    const render=()=>{
-    axis.parentElement!.hidden=position.parentElement!.hidden=offset.parentElement!.hidden=!section.checked;
-    secondPosition.parentElement!.hidden=jogAt.parentElement!.hidden=jogHint.hidden=!section.checked||!offset.checked;
+    axis.parentElement!.hidden=position.parentElement!.hidden=!section.checked;
+    offset.parentElement!.hidden=assembly||!section.checked;
+    secondPosition.parentElement!.hidden=jogAt.parentElement!.hidden=jogHint.hidden=assembly||!section.checked||!offset.checked;
     const across=axis.value==='u'?t('Sketch Y'):t('Sketch X');
     jogHint.textContent=t`The jog switches to the second cut at this coordinate along ${across}.`;
     preview.replaceChildren();layout=undefined;pages=[];status.textContent='';
@@ -269,6 +279,11 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     save.disabled=pdf.disabled=true;
     const ticket=++renderTicket,current=session.state.document;
     const show=(draft:DrawingInputs,projection?:AssemblyProjection)=>{
+     if(projection){
+      assemblyBounds=projection;
+      section.disabled=false;
+      if(centerAutomatically&&!draft.section)centerCut();
+     }
      pages=layoutDrawingPages(current,draft,projection);
      layout=pages[0];
      if(assembly){
@@ -290,7 +305,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
      if(assembly){
       status.textContent=t('Projecting assembly…');
       const active=()=>dialog.open&&dialog.firstChild===heading&&ticket===renderTicket&&session.state.document===current;
-      void projectAssembly().then(projection=>{if(active()&&projection)show(draft,projection);}).catch(error=>{if(active())report(error);});
+      void projectAssembly([draft]).then(projection=>{if(active()&&projection)show(draft,projection);}).catch(error=>{if(active())report(error);});
      }else show(draft);
     }catch(error){report(error);}
     if(!assembly)refreshDimensions();

@@ -4,7 +4,7 @@ import type {CadDocument,DrawingInputs,SketchPoint,Vec3} from '@brickwright/cad-
 import type {GeometryResult} from '@brickwright/cad-geometry';
 import {layoutAssemblyPartsList} from './assembly-parts-list.js';
 import type {AssemblyProjection} from './assembly-drawing.js';
-import {assemblyProjection,layoutAssemblyDrawing} from './assembly-drawing.js';
+import {assemblyProjection,layoutAssemblyDrawing,resolveAssemblyCut} from './assembly-drawing.js';
 import {addDrawingFrame,drawingBorder as border,drawingViews as order} from './drawing-page.js';
 import type {DrawingCircle,DrawingLayout,DrawingPath,DrawingText} from './drawing-page.js';
 export type {DrawingLayout} from './drawing-page.js';
@@ -40,7 +40,7 @@ export function layoutDrawing(doc:CadDocument,sheet:DrawingInputs,geometry?:Geom
  if(isAssemblyDrawingSource(sheet.source)){
   if(!geometry)throw new Error(t('The assembly drawing needs evaluated geometry.'));
   if(geometry.sourceKey&&geometry.sourceKey!==documentGeometryKey(doc))throw new Error(t('The assembly geometry changed. Refresh the drawing.'));
-  return layoutAssemblyDrawing(sheet,assemblyProjection(geometry));
+  return layoutAssemblyDrawing(sheet,assemblyProjection(geometry),sheet.section?resolveAssemblyCut(doc,sheet.section):undefined);
  }
  const source=resolveDrawingSource(doc,sheet.source);
  if(!source)throw new Error(t('Drawing source unavailable. Choose another sketch extrusion.'));

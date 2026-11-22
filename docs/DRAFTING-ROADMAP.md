@@ -187,8 +187,15 @@ current assembly. Use **Preview page** to inspect the list. Long names wrap,
 and larger lists continue on additional pages in single-sheet and drawing-set
 PDF exports. The SB3 stores the option with the sheet.
 
-Assembly view sections and dimensions on model edges remain open, along
-with multiple jogs in sketch sections.
+Enable **Show section A-A** to cut an assembly at a world X or Y
+coordinate. The top view marks the cutting plane, and the section hatches
+each solid separately while leaving holes and gaps clear. The section uses the
+evaluated geometry and carries through preview, PDF and SB3 reopen. Named
+length parameters can drive its position. The drawing reports when the plane
+misses the solids.
+
+Jogged assembly sections, dimensions on model edges, and multiple jogs in
+sketch sections remain open.
 
 ## Completion criteria
 

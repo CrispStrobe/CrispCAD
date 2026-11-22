@@ -311,6 +311,16 @@ test('assembly views use current solid placements and export a linked PDF',async
  await expect(preview.locator('.drawing-hidden').first()).toBeVisible();
  await dialog.getByLabel('Show hidden lines').uncheck();
  await expect(preview.locator('.drawing-hidden')).toHaveCount(0);
+ const section=dialog.getByLabel('Show section A-A'),axis=dialog.getByLabel('Section axis',{exact:true});
+ const cut=dialog.getByLabel('Section position (mm)',{exact:true});
+ await section.check();
+ await expect(axis.locator('option:checked')).toHaveText('World Y');
+ await expect(dialog.getByLabel('Offset section')).toBeHidden();
+ await cut.fill('99999');
+ await expect(dialog.getByRole('status',{name:'Drawing status'})).toContainText('misses the assembly solids');
+ await cut.fill('0');
+ await expect(preview).toContainText('World Y = 0 mm');
+ await expect(preview.locator('.drawing-hatch').first()).toBeVisible();
  await expect(preview.locator('.drawing-visible').first()).toBeVisible();
  const paths=()=>preview.locator('.drawing-visible').evaluateAll(items=>items.map(item=>item.getAttribute('d')));
  const before=await paths();
@@ -341,6 +351,7 @@ test('assembly views use current solid placements and export a linked PDF',async
  const pdf=await readFile((await download.path())!,'utf8');
  expect(pdf).toContain('<'+Buffer.from('Assembly overview','latin1').toString('hex')+'>');
  expect(pdf).toContain('/Type /Pages /Count 2');
+ expect(pdf).toContain('[3.5 1 0.7 1] 0 d');
  expect(pdf).toContain('<'+Buffer.from('Rear cover','latin1').toString('hex')+'>');
  await page.reload();
  await ready();
@@ -349,6 +360,9 @@ test('assembly views use current solid placements and export a linked PDF',async
  await expect(preview).toContainText('Assembly · 2 bodies');
  await expect(dialog.getByLabel('Show hidden lines')).not.toBeChecked();
  await expect(parts).toBeChecked();
+ await expect(section).toBeChecked();
+ await expect(cut).toHaveValue('0');
+ await expect(preview.locator('.drawing-section').first()).toBeVisible();
  await pageSelect.selectOption('1');
  await expect(preview).toContainText('Rear cover');
 });

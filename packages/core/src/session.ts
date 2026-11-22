@@ -208,7 +208,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         }
         const aligned=sheet.annotations?.some(annotation=>annotation.kind==='aligned');
         const curved=sheet.annotations?.some(annotation=>annotation.kind==='radius'||annotation.kind==='arc-length');
-        const version=assembly?(sheet.partsList===undefined?21:22):curved?20:aligned?19:outlineAnnotations.length?18:sheet.section?.jog!==undefined?17:sheet.annotations!==undefined?11:sheet.section?10:9;
+        const version=assembly?(sheet.section!==undefined?23:sheet.partsList===undefined?21:22):curved?20:aligned?19:outlineAnnotations.length?18:sheet.section?.jog!==undefined?17:sheet.annotations!==undefined?11:sheet.section?10:9;
         if(d.version<version)d.version=version;
         d.drawings=sheetId?sheets.map(item=>item.id===id?sheet:item):[...sheets,sheet];
       });

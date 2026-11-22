@@ -5,7 +5,7 @@ import {compileModelSource,createCadSession,drawingSourceFor,identityTransform,p
 import type {DrawingInputs} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
-import {projectAssembly} from '../packages/editor/src/assembly-drawing.js';
+import {projectAssembly,resolveAssemblyCut} from '../packages/editor/src/assembly-drawing.js';
 import {layoutAssemblyPartsList} from '../packages/editor/src/assembly-parts-list.js';
 import {layoutDrawing,layoutDrawingPages} from '../packages/editor/src/drawing-layout.js';
 import {exportDrawingPdf,exportDrawingSetPdf} from '../packages/editor/src/drawing-pdf.js';
@@ -47,7 +47,7 @@ it('keeps a linked assembly across project and model source round trips and expo
  expect(parseDocument(session.serialize()).drawings).toEqual([{...assembly,id}]);
  expect(validateDocument(compileModelSource(session.modelSource,before)).drawings).toEqual(before.drawings);
  expect(()=>validateDocument({...before,version:20})).toThrow('drawing sheets');
- expect(()=>session.saveDrawingSheet({...assembly,section:{axis:'u',position:0}})).toThrow('drawing sheets');
+ expect(()=>session.saveDrawingSheet({...assembly,section:{axis:'u',position:0,jog:{at:1,position:2}}})).toThrow('drawing sheets');
  expect(session.state.document).toBe(before);
 
  const source=drawingSourceFor(before,partId)!;
@@ -116,7 +116,7 @@ it('wraps long names and continues item numbers across parts-list pages',()=>{
  const longName='W'.repeat(150);
  const ids=Array.from({length:31},(_,i)=>session.add(
   {kind:'box',size:[2,2,2]},{name:i===0?longName:`Component ${i+1}`}));
- const pages=layoutAssemblyPartsList(session.state.document,assembly,{views:[],bodyIds:ids});
+ const pages=layoutAssemblyPartsList(session.state.document,assembly,{views:[],origin:[0,0,0],bodyIds:ids});
  expect(pages).toHaveLength(2);
  const rows=pages.flatMap(page=>page.texts.filter(text=>text.x===17&&/^\d+$/.test(text.text)).map(text=>Number(text.text)));
  expect(rows).toEqual(Array.from({length:31},(_,i)=>i+1));
@@ -124,4 +124,50 @@ it('wraps long names and continues item numbers across parts-list pages',()=>{
  expect(pages[1].texts.map(text=>text.text)).toContain('Component 31');
  expect(pages[1].texts.map(text=>text.text)).toContain('Parts list 2 of 2');
  for(const page of pages)expect(page.texts.filter(text=>text.x===38).every(text=>text.y>=30)).toBe(true);
+});
+
+it('slices evaluated assemblies, preserves through openings and exports a linked section',()=>{
+ const session=createCadSession();
+ session.setParametric({version:1,parameters:{cut:{expression:'0',unit:'mm'}},bindings:[]});
+ const plate=session.addSketchExtrusion({kind:'region',id:'plate',loops:[
+  {kind:'outline',id:'outside',points:[[-20,-15],[20,-15],[20,15],[-20,15]]},
+  {kind:'circle',id:'bore',center:[0,0],radius:5,segments:64}
+ ]},{distance:6});
+ const body=session.add({kind:'box',size:[10,9,8]},
+  {name:'Bracket',transform:{...identityTransform(),position:[28,0,0],rotation:[0,0,15]}});
+ const cutter=session.add({kind:'box',size:[6,6,6]},{name:'Unused cutter'});
+ session.setRole('hole',[cutter]);
+ const draft:DrawingInputs={...assembly,section:{axis:'v',position:'cut'},partsList:true};
+ session.saveDrawingSheet(draft);
+ const doc=session.state.document;
+ expect(doc.version).toBe(23);
+ expect(parseDocument(session.serialize()).drawings).toEqual(doc.drawings);
+ expect(validateDocument(compileModelSource(session.modelSource,doc)).drawings).toEqual(doc.drawings);
+ expect(()=>validateDocument({...doc,version:22})).toThrow('drawing sheets');
+ const geometry=kernel.evaluate(doc),cut=resolveAssemblyCut(doc,draft.section!);
+ const section=kernel.sliceAssembly(geometry,cut);
+ expect(section.bodies.map(solid=>[solid.id,solid.loops.length])).toEqual([[plate,2],[body,1]]);
+ const normalCut=kernel.sliceAssembly(geometry,{axis:0,position:-10});
+ expect(normalCut.bodies.map(solid=>[solid.id,solid.loops.length])).toEqual([[plate,1]]);
+ const projection={...projectAssembly(geometry),sections:[section]};
+ const [view,list]=layoutDrawingPages(doc,draft,projection);
+ expect(view.paths.filter(path=>path.stroke==='section')).toHaveLength(3);
+ expect(view.paths.filter(path=>path.stroke==='cut')).toHaveLength(1);
+ expect(view.paths.some(path=>path.stroke==='hatch')).toBe(true);
+ const rightX=44+projection.views[1].width;
+ const leftOfHole=rightX+15,rightOfHole=rightX+25;
+ expect(view.paths.filter(path=>path.stroke==='hatch').every(path=>
+  Math.max(...path.points.map(([x])=>x))<=leftOfHole+1e-6||
+  Math.min(...path.points.map(([x])=>x))>=rightOfHole-1e-6)).toBe(true);
+ const pdf=new TextDecoder().decode(exportDrawingPdf(view,draft.title,[list]).bytes);
+ expect(pdf).toContain('[3.5 1 0.7 1] 0 d');
+ expect(pdf).toContain('<'+Buffer.from('World Y = 0 mm','latin1').toString('hex')+'>');
+ const miss={axis:1 as const,position:100};
+ expect(()=>layoutDrawing(doc,{...draft,section:{axis:'v',position:100}},
+  {...projection,sections:[kernel.sliceAssembly(geometry,miss)]})).toThrow('misses the assembly solids');
+ const parameters=structuredClone(doc.parametric!);
+ parameters.parameters.cut.expression='10';
+ session.setParametric(parameters);
+ expect(kernel.sliceAssembly(geometry,resolveAssemblyCut(session.state.document,draft.section!))
+  .bodies[0].loops).toHaveLength(1);
 });

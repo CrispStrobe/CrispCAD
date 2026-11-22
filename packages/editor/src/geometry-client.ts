@@ -2,11 +2,13 @@
 import {FeatureEvaluationError,getLocale,t} from '@brickwright/cad-core';
 import type {FeatureDiagnostic} from '@brickwright/cad-core';
 import type { CadDocument,PlanarSketch,SketchProfile } from '@brickwright/cad-core';
-import type { GeometryResult } from '@brickwright/cad-geometry';
+import type { AssemblyCut,AssemblySection,GeometryResult } from '@brickwright/cad-geometry';
 /** A timed-out/crashed kernel is discarded; the next edit starts a fresh worker. */
 type OffsetRequest={offset:{sketch:PlanarSketch;context:Pick<CadDocument,'parametric'>;distance:number}};
-export type GeometryRequest=({document:CadDocument}|OffsetRequest)&{request:number;wasmURL:string;locale:string};
-type WorkerResult=GeometryResult|SketchProfile;
+type SliceRequest={slice:{geometry:GeometryResult;cut:AssemblyCut}};
+type GeometryPayload={document:CadDocument}|OffsetRequest|SliceRequest;
+export type GeometryRequest=GeometryPayload&{request:number;wasmURL:string;locale:string};
+type WorkerResult=GeometryResult|SketchProfile|AssemblySection;
 export function createGeometryClient(wasmURL: string, createWorker?: () => Worker) {
   let worker: Worker | null = null; let sequence = 0; let disposed = false;
   const pending = new Map<number, { resolve: (r: WorkerResult) => void; reject: (e: Error) => void; timer: ReturnType<typeof setTimeout> }>();
@@ -25,7 +27,7 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
     worker.onerror = event => fail(new Error(event.message || t('Geometry worker failed')));
     return worker;
   };
-  function send<R extends WorkerResult>(payload:{document:CadDocument}|OffsetRequest):Promise<R>{
+  function send<R extends WorkerResult>(payload:GeometryPayload):Promise<R>{
     if (disposed) return Promise.reject(new Error(t('Editor was disposed')));
     const request = ++sequence;
     return new Promise((resolve, reject) => {
@@ -36,6 +38,7 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
   }
   return {
     evaluate(document:CadDocument){return send<GeometryResult>({document});},
+    sliceAssembly(geometry:GeometryResult,cut:AssemblyCut){return send<AssemblySection>({slice:{geometry,cut}});},
     offsetSketch(sketch:PlanarSketch,context:Pick<CadDocument,'parametric'>,distance:number){
       return send<SketchProfile>({offset:{sketch,context,distance}});
     },

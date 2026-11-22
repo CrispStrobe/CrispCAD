@@ -14,6 +14,11 @@ self.onmessage = async (event: MessageEvent<GeometryRequest>) => {
       self.postMessage({request,result:ready.offsetSketch(sketch,context,distance)});
       return;
     }
+    if('slice' in event.data){
+      const {geometry,cut}=event.data.slice;
+      self.postMessage({request,result:ready.sliceAssembly(geometry,cut)});
+      return;
+    }
     const result=ready.evaluate(event.data.document);
     self.postMessage({ request, result }, { transfer: result.bodies.flatMap(b => [b.positions.buffer, b.indices.buffer]) });
   } catch (error) { self.postMessage({ request, error: error instanceof Error ? error.message : String(error), ...(error instanceof FeatureEvaluationError?{diagnostic:error.diagnostic}:{}) }); }

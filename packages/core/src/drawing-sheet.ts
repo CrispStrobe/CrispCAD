@@ -47,7 +47,8 @@ export function checkDrawingSheets(doc:CadDocument) {
      !sheet.title.trim()||sheet.title.length>80||/[\u0000-\u001f]/.test(sheet.title)||
      !drawingScales.includes(sheet.scale as DrawingScale)||typeof sheet.hiddenLines!=='boolean'||!record(sheet.source))throw invalid();
   if(isAssemblyDrawingSource(sheet.source)){
-   if(doc.version<21||sheet.section!==undefined||sheet.annotations!==undefined)throw invalid();
+   if(doc.version<21||sheet.annotations!==undefined)throw invalid();
+   if(sheet.section!==undefined&&(doc.version<23||!record(sheet.section)||sheet.section.jog!==undefined))throw invalid();
   }else if(Object.hasOwn(sheet.source,'kind')||!id(sheet.source.featureId)||!id(sheet.source.sketchId)||!id(sheet.source.profileId))throw invalid();
   if(sheet.partsList!==undefined&&(doc.version<22||!isAssemblyDrawingSource(sheet.source)||typeof sheet.partsList!=='boolean'))throw invalid();
   if(sheet.section!==undefined){

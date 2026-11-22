@@ -9,9 +9,9 @@ export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
 import { t } from '@brickwright/cad-core';
 import { drawingAssemblyAvailable,isAssemblyDrawingSource,constructionInputs, createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters,redesignScrew } from '@brickwright/cad-core';
-import type { CadDocument, CadSession, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe } from '@brickwright/cad-core';
+import type { CadDocument, CadSession, DrawingInputs, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe } from '@brickwright/cad-core';
 import { importSTL } from '@brickwright/cad-geometry';
-import type { GeometryResult } from '@brickwright/cad-geometry';
+import type { AssemblySection,GeometryResult } from '@brickwright/cad-geometry';
 import { createGeometryClient } from './geometry-client.js';
 import {mountTransformReadout} from './transform-readout.js';
 import type {GridDisplay} from './workplane-grid.js';
@@ -34,6 +34,7 @@ import {mountModelSourcePanel} from './model-source-panel.js';
 import {mountCodePanel} from './code-panel.js';
 import {exportSketchDxf} from './sketch-dxf.js';
 import {exportDrawingSetPdf} from './drawing-pdf.js';
+import {resolveAssemblyCut} from './assembly-drawing.js';
 import {createAssemblyProjectionClient} from './assembly-projection-client.js';
 import {mountDrawingPanel} from './drawing-panel.js';
 import {exportSketchPdf} from './sketch-pdf.js';
@@ -178,12 +179,37 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   paletteButton.title=t('Command palette (Ctrl/⌘+Shift+P)');
   paletteButton.setAttribute('aria-keyshortcuts','Control+Shift+P Meta+Shift+P');
   const assemblyProjection=createAssemblyProjectionClient();
-  async function projectDrawingAssembly(){
+  const assemblySections=new WeakMap<GeometryResult,Map<string,Promise<AssemblySection>>>();
+  async function projectDrawingAssembly(sheets:readonly DrawingInputs[]){
     const current=session.state.document;
+    const active=()=>!disposed&&session.state.document===current;
     const geometry=await whenIdle();
-    if(disposed||session.state.document!==current)return undefined;
+    if(!active())return undefined;
     const projection=await assemblyProjection.project(geometry);
-    return !disposed&&session.state.document===current?projection:undefined;
+    if(!active())return undefined;
+    const sections:AssemblySection[]=[];
+    for(const sheet of sheets){
+      if(!isAssemblyDrawingSource(sheet.source)||!sheet.section)continue;
+      try{
+        const cut=resolveAssemblyCut(current,sheet.section);
+        const key=`${cut.axis}:${cut.position}`;
+        let cache=assemblySections.get(geometry);
+        if(!cache){cache=new Map();assemblySections.set(geometry,cache);}
+        let result=cache.get(key);
+        if(!result){
+          if(cache.size>=8)cache.delete(cache.keys().next().value!);
+          result=client.sliceAssembly(geometry,cut);
+          cache.set(key,result);
+          const saved=result;
+          void saved.catch(()=>{if(cache.get(key)===saved)cache.delete(key);});
+        }
+        sections.push(await result);
+        if(!active())return undefined;
+      }catch(error){
+        throw new Error(sheet.title+' · '+(error instanceof Error?error.message:String(error)));
+      }
+    }
+    return {...projection,sections};
   }
   const drawingPanel=mountDrawingPanel(shell,session,projectDrawingAssembly,options.onExport);
   const modelSourcePanel=mountModelSourcePanel(shell,status,session,doc=>client.evaluate(doc),(recipe,name)=>createPresetDocument(recipe.preset,name,{recipe}));
@@ -353,7 +379,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
         button('Export drawing set (PDF)',async()=>{
           const current=session.state.document;
           const needsAssembly=sheets.some(sheet=>isAssemblyDrawingSource(sheet.source));
-          const projection=needsAssembly?await projectDrawingAssembly():undefined;
+          const projection=needsAssembly?await projectDrawingAssembly(sheets):undefined;
           if(disposed)return;
           if(needsAssembly&&!projection||session.state.document!==current)throw new Error(t('The design changed while preparing the drawing set. Export again.'));
           await options.onExport!(exportDrawingSetPdf(current,projection));

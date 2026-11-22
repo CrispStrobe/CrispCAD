@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {t} from '@brickwright/cad-core';
-import type {DrawingInputs,SketchPoint,Vec3} from '@brickwright/cad-core';
-import type {BodyMesh,GeometryResult} from '@brickwright/cad-geometry';
+import {featureValue,t} from '@brickwright/cad-core';
+import type {CadDocument,DrawingInputs,DrawingSection,SketchPoint,Vec3} from '@brickwright/cad-core';
+import type {AssemblyCut,AssemblySection,BodyMesh,GeometryResult} from '@brickwright/cad-geometry';
+import {addAssemblySection} from './assembly-section-view.js';
 import {addDrawingFrame,drawingViews} from './drawing-page.js';
 import type {DrawingLayout} from './drawing-page.js';
 
@@ -165,10 +166,16 @@ export function projectAssembly(geometry:GeometryResult){
  }
  const models=bodies.map(topology);
  const views=drawingViews.map(view=>viewLines(models,view,min,max));
- return {views,bodyIds:bodies.map(body=>body.id),sourceKey:geometry.sourceKey};
+ return {views,origin:min,bodyIds:bodies.map(body=>body.id),sourceKey:geometry.sourceKey};
 }
 
-export type AssemblyProjection=ReturnType<typeof projectAssembly>;
+export type AssemblyProjection=ReturnType<typeof projectAssembly>&{sections?:AssemblySection[]};
+
+export function resolveAssemblyCut(doc:CadDocument,section:DrawingSection):AssemblyCut{
+ const position=featureValue(section.position,doc);
+ if(Math.abs(position)>100000)throw new Error(t('Section position is outside the assembly coordinate range.'));
+ return {axis:section.axis==='u'?0:1,position};
+}
 
 const cache=new WeakMap<GeometryResult,AssemblyProjection>();
 
@@ -179,7 +186,7 @@ export function assemblyProjection(input:GeometryResult|AssemblyProjection):Asse
  return projection;
 }
 
-export function layoutAssemblyDrawing(sheet:DrawingInputs,projection:AssemblyProjection):DrawingLayout{
+export function layoutAssemblyDrawing(sheet:DrawingInputs,projection:AssemblyProjection,cut?:AssemblyCut):DrawingLayout{
  const [top,front,right]=projection.views;
  const [num,denom]=sheet.scale.split(':').map(Number),factor=num/denom;
  const x=24,baseline=47,gap=20;
@@ -198,6 +205,11 @@ export function layoutAssemblyDrawing(sheet:DrawingInputs,projection:AssemblyPro
    }
   }
   page.texts.push({x:left,y:bottom+view.height*factor+4,text:t(view.view),size:3.5});
+ }
+ if(cut){
+  const section=projection.sections?.find(item=>item.cut.axis===cut.axis&&item.cut.position===cut.position);
+  if(!section)throw new Error(t('The assembly section needs evaluated cut geometry.'));
+  addAssemblySection(page,projection,section,x,topY,rightX);
  }
  const count=projection.bodyIds.length;
  const subtitle=count===1?t('Assembly · 1 body'):t`Assembly · ${count} bodies`;

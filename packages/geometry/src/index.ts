@@ -7,3 +7,5 @@ export * from './model-library-insert.js';
 export {getBundledFontData} from './font-profile.js';
 
 export {GeometryResourceLimitError} from './limits.js';
+
+export type {AssemblyCut, AssemblySection} from './assembly-section.js';
