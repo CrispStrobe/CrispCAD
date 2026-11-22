@@ -85,7 +85,7 @@ export function mountCommandPalette(parent:HTMLElement,context:()=>PaletteContex
  search.placeholder=t('Search CAD commands');
  search.setAttribute('aria-label',t('Search CAD commands'));
  search.setAttribute('role','combobox');
- search.setAttribute('aria-expanded','true');
+ search.setAttribute('aria-expanded','false');
  search.setAttribute('aria-autocomplete','list');
  const results=document.createElement('ul');
  results.id=newId();
@@ -131,6 +131,7 @@ export function mountCommandPalette(parent:HTMLElement,context:()=>PaletteContex
    option.onclick=()=>choose(index);
    return option;
   }));
+  search.setAttribute('aria-expanded',String(matches.length>0));
   status.textContent=matches.length?'':t('No available commands match');
   select(Math.max(0,matches.findIndex(entry=>entry.command===current)),true);
  }

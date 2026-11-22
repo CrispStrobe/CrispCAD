@@ -165,7 +165,10 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     return {...commandState(),canWrapBody:!patternButton.disabled,canDrop:!dropButton.disabled,
       canEditMirror:node?.kind==='mirror'&&!running,canEditPattern:node?.kind==='pattern'&&!running};
   },command=>run(()=>executeCommand(command)));
-  const paletteButton=button('Command palette',()=>palette.open(),toolbar,'compact-icon');
+  const paletteButton=button('Command palette',()=>{
+    paletteButton.focus({preventScroll:true});
+    palette.open();
+  },toolbar,'compact-icon');
   paletteButton.title=t('Command palette (Ctrl/⌘+Shift+P)');
   paletteButton.setAttribute('aria-keyshortcuts','Control+Shift+P Meta+Shift+P');
   const drawingPanel=mountDrawingPanel(shell,session,options.onExport);
