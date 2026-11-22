@@ -41,3 +41,36 @@ test('sketch help, field errors and a real-size DXF are available in the editor'
  expect(dxf).toContain('10\r\n-21\r\n20\r\n-15');
  expect(dxf).toContain('10\r\n21\r\n20\r\n15');
 });
+
+test('DXF import previews an editable outline and commits it only on Create',async({page})=>{
+ await page.goto('/');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await page.getByRole('button',{name:'Sketch',exact:true}).click();
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await sketch.getByText('Import DXF outline',{exact:true}).click();
+ const text=['0','SECTION','2','HEADER','9','$INSUNITS','70',1,'0','ENDSEC','0','SECTION','2','ENTITIES',
+  '0','LWPOLYLINE','90',4,'70',1,'10',1,'20',1,'10',2,'20',1,'10',2,'20',2,'10',1,'20',2,
+  '0','ENDSEC','0','EOF'].join('\n');
+ const file=sketch.getByLabel('Choose DXF file',{exact:true});
+ await file.setInputFiles({name:'invalid.dxf',mimeType:'application/dxf',buffer:Buffer.from('not a DXF')});
+ await expect(sketch.getByRole('status')).toContainText('not a supported text DXF');
+ await expect(sketch.getByRole('button',{name:'Create extrusion',exact:true})).toBeDisabled();
+ await expect(sketch.getByLabel('Profile',{exact:true})).toHaveValue('rectangle');
+
+ await file.setInputFiles({name:'plate.dxf',mimeType:'application/dxf',buffer:Buffer.from(text)});
+ await expect(sketch.getByLabel('Profile',{exact:true})).toHaveValue('outline');
+ const points=sketch.getByLabel('Outline points X, Y (mm)',{exact:true});
+ await expect(points).toHaveValue('25.4, 25.4\n50.8, 25.4\n50.8, 50.8\n25.4, 50.8');
+ await expect(sketch.getByLabel('Sketch preview',{exact:true})).toContainText('25.4 × 25.4 mm');
+ await points.fill('0, 0\n38, 0\n30, 20\n0, 20');
+ await sketch.getByRole('button',{name:'Create extrusion',exact:true}).click();
+ await expect(sketch).not.toBeVisible();
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
+ if(!await edit.isVisible())await page.getByRole('button',{name:'Properties',exact:true}).click();
+ await edit.click();
+ await expect(points).toHaveValue('0, 0\n38, 0\n30, 20\n0, 20');
+ await sketch.getByRole('button',{name:'Close sketch',exact:true}).click();
+ await page.getByRole('button',{name:'Undo',exact:true}).click();
+ await expect(page.getByTestId('object-name')).toHaveCount(0);
+});

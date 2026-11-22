@@ -45,3 +45,16 @@ STEP starts as supplier-part import with scale, placement, assembly identity
 where available, and explicit tessellation or reference behavior. Editable STEP
 round trips and general modeling-edge fillets belong to the exact-geometry
 roadmap, with stable face/edge references and evaluated backend choices.
+
+### First DXF import workflow
+
+Open **Sketch & Extrude → Import DXF outline** and choose a text DXF with a
+single planar circle or closed, straight lightweight polyline. Declared units
+are converted to millimetres. For unitless files, opt in only if the coordinates
+are millimetres. Preview and edit the circle center/radius or outline points
+before creating the solid. Import remains a draft until Create. Saving and
+reopening retains the editable profile, and DXF export writes it at 1:1 scale.
+
+Open contours, bulges, widths, multiple entities, holes, paper-space objects,
+tilted entities and DWG need separate support. Extend the profile model to
+multiple loops and analytic arcs before accepting them from DXF.

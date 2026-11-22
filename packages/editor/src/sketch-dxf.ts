@@ -27,8 +27,8 @@ export function exportSketchDxf(doc: CadDocument, featureId: string) {
     pair(100, 'AcDbEntity');
     pair(8, '0');
     pair(100, 'AcDbCircle');
-    pair(10, 0);
-    pair(20, 0);
+    pair(10, sketch.profile.center?.[0] ?? 0);
+    pair(20, sketch.profile.center?.[1] ?? 0);
     pair(30, 0);
     pair(40, featureValue(sketch.profile.radius, doc));
   } else {

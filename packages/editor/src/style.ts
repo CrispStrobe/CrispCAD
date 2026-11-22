@@ -114,4 +114,8 @@ export const editorStyle = `
 .sketch-fields [aria-invalid="true"]{outline:2px solid #d85e52;outline-offset:-2px}
 .sketch-fields [hidden]{display:none}
 @media(pointer:coarse){.sketch-dialog>header button{min-width:44px;min-height:44px}}
+
+.sketch-fields textarea{width:100%;min-width:0;max-width:100%;resize:vertical;padding:6px;background:var(--panel);color:inherit;border:1px solid var(--line);border-radius:5px;font:12px ui-monospace,monospace}
+.sketch-expressions input[type=file]{display:block;font-size:11px;padding:4px 0}
+.sketch-expressions>label.sketch-toggle{margin-block:6px}
 `;

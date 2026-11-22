@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
+import {isSketchPoint,sketchOutline} from './sketch-outline.js';
+import type {SketchPoint} from './sketch-outline.js';
 import type {CadDocument, Vec3} from './document.js';
 import {evaluateExpression, evaluateParameters} from './parameters.js';
 import type {Quantity, ParameterUnit} from './parameters.js';
@@ -9,7 +11,8 @@ export type FeatureScalar = number | string;
 export type SketchPlane = 'XY' | 'XZ' | 'YZ';
 export type SketchProfile =
   {kind:'rectangle'; id:string; width:FeatureScalar; depth:FeatureScalar} |
-  {kind:'circle'; id:string; radius:FeatureScalar; segments:number};
+  {kind:'circle'; id:string; radius:FeatureScalar; segments:number; center?:SketchPoint} |
+  {kind:'outline'; id:string; points:SketchPoint[]};
 /** Profiles are analytic design inputs. Rectangle closure/orthogonality and circle
  * closure are enforced by construction; a general constraint solver comes later. */
 export interface PlanarSketch {version:1; id:string; name:string; plane:SketchPlane; profile:SketchProfile}
@@ -35,7 +38,8 @@ export function evaluateSketch(sketch:PlanarSketch,doc:CadDocument):{contour:[nu
     if(!record(sketch)||sketch.version!==1||!idOk(sketch.id)||typeof sketch.name!=='string'||!sketch.name.trim()||sketch.name.length>160||/[\u0000-\u001f]/.test(sketch.name)||!['XY','XZ','YZ'].includes(sketch.plane)||!record(sketch.profile)||!idOk(sketch.profile.id))throw new Error(t('Invalid sketch schema'));
     const p=sketch.profile;
     if(p.kind==='rectangle') {const w=dimension(p.width,doc)/2,d=dimension(p.depth,doc)/2;return {contour:[[-w,-d],[w,-d],[w,d],[-w,d]],edgeIds:['bottom','right','top','left'].map(side=>`${p.id}:${side}`)};}
-    if(p.kind==='circle') {const r=dimension(p.radius,doc);if(!Number.isInteger(p.segments)||p.segments<12||p.segments>256)throw new Error(t('Circle segments must be an integer between 12 and 256'));return {contour:Array.from({length:p.segments},(_,i)=>[r*Math.cos(i*2*Math.PI/p.segments),r*Math.sin(i*2*Math.PI/p.segments)]),edgeIds:[`${p.id}:circumference`]};}
+    if(p.kind==='outline') {const contour=sketchOutline(p.points);return {contour,edgeIds:contour.map((_,i)=>`${p.id}:edge-${i}`)};}
+    if(p.kind==='circle') {const center=p.center??[0,0];if(!isSketchPoint(center))throw new Error(t('Circle center must be within 100000 mm of the sketch origin.'));const r=dimension(p.radius,doc);if(!Number.isInteger(p.segments)||p.segments<12||p.segments>256)throw new Error(t('Circle segments must be an integer between 12 and 256'));return {contour:Array.from({length:p.segments},(_,i)=>[center[0]+r*Math.cos(i*2*Math.PI/p.segments),center[1]+r*Math.sin(i*2*Math.PI/p.segments)]),edgeIds:[`${p.id}:circumference`]};}
     throw new Error(t('Unsupported sketch profile version or kind'));
   } catch(error){throw new FeatureEvaluationError({source:'sketch',id:sketch?.id??'unknown',message:error instanceof Error?error.message:String(error)});}
 }
@@ -52,9 +56,9 @@ export function checkFeatures(doc:CadDocument) {
     for(const [id,sketch] of Object.entries(doc.sketches)){if(!idOk(id)||sketch.id!==id)throw new Error(t('Invalid sketch identity'));evaluateSketch(sketch,doc);}}
   for(const node of Object.values(doc.nodes))if(node.kind==='extrusion'){if(doc.version<3)throw new Error(t('Extrusion features require document version 3'));evaluateExtrusion(node,doc);}
 }
-export function sketchExpressions(sketch:PlanarSketch):string[]{const p=sketch.profile;return (p.kind==='rectangle'?[p.width,p.depth]:[p.radius]).filter((v):v is string=>typeof v==='string');}
+export function sketchExpressions(sketch:PlanarSketch):string[]{const p=sketch.profile;return (p.kind==='rectangle'?[p.width,p.depth]:p.kind==='circle'?[p.radius]:[]).filter((v):v is string=>typeof v==='string');}
 export function rewriteSketchExpressions(sketch:PlanarSketch,rewrite:(s:string)=>string) {
-  const p=sketch.profile;for(const key of p.kind==='rectangle'?['width','depth'] as const:['radius'] as const){const fields=p as unknown as Record<string,FeatureScalar>;if(typeof fields[key]==='string')fields[key]=rewrite(fields[key] as string);}
+  const p=sketch.profile;for(const key of p.kind==='rectangle'?['width','depth'] as const:p.kind==='circle'?['radius'] as const:[]){const fields=p as unknown as Record<string,FeatureScalar>;if(typeof fields[key]==='string')fields[key]=rewrite(fields[key] as string);}
 }
 /** Semantic references deliberately cover only analytic construction here. They
  * are not promises that arbitrary B-rep faces survive a topology change. */

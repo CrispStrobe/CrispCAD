@@ -8,6 +8,7 @@ export * from './generators.js';
 export * from './fragments.js';
 
 export * from './features.js';
+export * from './sketch-outline.js';
 export * from './templates.js';
 export * from './code.js';
 

@@ -1,8 +1,9 @@
+import {maxSketchDxfBytes,readSketchDxf} from './import-sketch-dxf.js';
 import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 import {createCadSession,evaluateExtrusion,featureValue,newId} from '@brickwright/cad-core';
-import type {CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument} from '@brickwright/cad-core';
+import type {SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument} from '@brickwright/cad-core';
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
 const scalar=(source:string):FeatureScalar=>source.trim()!==''&&Number.isFinite(Number(source))?Number(source):source.trim();
 /** Definition editor: complete draft + kernel preflight before the real session changes. */
@@ -31,8 +32,9 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   infoPanel.hidden=true;
   info.setAttribute('aria-controls',infoPanel.id);
   for(const step of [
-   t('Choose a rectangle or circle and the plane it lies on. XY is horizontal; XZ and YZ are upright.'),
-   t('Enter the profile dimensions or drag the profile handle in the preview. The sketch is centered on its origin.'),
+   t('Choose a profile and its plane. XY is horizontal. XZ and YZ are upright.'),
+   t('Type dimensions or drag the preview handles. For an outline, enter one X, Y point per line. The last point connects to the first.'),
+   t('Import DXF loads one circle or one closed straight polyline into the sketch.'),
    t('Extrusion adds thickness perpendicular to the plane. Symmetric divides that thickness equally on both sides.'),
    t('Create builds a solid. To change the sketch later, select the solid and choose Edit sketch & extrusion in Properties.')
   ]) instructions.append(element('li',step));
@@ -42,17 +44,44 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    info.setAttribute('aria-expanded',String(!infoPanel.hidden));
   };
   header.insertBefore(info,close);
-  const kind=choice('Profile',['rectangle','circle'],existing?.profile.kind??'rectangle');kind.disabled=!!existing;
+  const kind=choice('Profile',['rectangle','circle','outline'],existing?.profile.kind??'rectangle');kind.disabled=!!existing;
   const plane=choice('Sketch plane',['XY','XZ','YZ'],existing?.plane??'XY');
   const profile=existing?.profile;
   const width=field('Sketch width (mm)',profile?.kind==='rectangle'?profile.width:40),depth=field('Sketch depth (mm)',profile?.kind==='rectangle'?profile.depth:30),radius=field('Sketch radius (mm)',profile?.kind==='circle'?profile.radius:10);
+  const center=field('Circle center X, Y (mm)',profile?.kind==='circle'&&profile.center?profile.center.join(', '):'0, 0');
+  const pointsLabel=element('label',t('Outline points X, Y (mm)'));
+  const points=element('textarea');
+  points.setAttribute('aria-label',t('Outline points X, Y (mm)'));
+  points.rows=4;
+  points.spellcheck=false;
+  points.value=(profile?.kind==='outline'?profile.points:[[0,0],[40,0],[30,30],[0,30]]).map(point=>point.join(', ')).join('\n');
+  pointsLabel.append(points);
+  form.append(pointsLabel);
   const length=field('Extrusion distance (mm)',node?.kind==='extrusion'?node.distance:10);
   const symmetric=element('input');symmetric.type='checkbox';symmetric.checked=node?.kind==='extrusion'?node.symmetric:false;symmetric.setAttribute('aria-label',t('Symmetric extrusion'));const check=element('label',t('Symmetric extrusion'));check.className='sketch-toggle';check.prepend(symmetric);form.append(check);
   const preview=element('div');preview.className='sketch-preview';preview.setAttribute('aria-label',t('Sketch preview'));
   const status=element('p');status.className='parameter-status';status.setAttribute('role','status');status.setAttribute('aria-label',t('Sketch status'));
   const hint=element('p',t('Drag the white handles or type exact dimensions.'));
   const help=element('p',t('Enter dimensions or expressions such as width / 2. Define named dimensions in Parameters.'));
-  function definition():SketchProfile{return kind.value==='rectangle'?{kind:'rectangle',id:existing?.profile.id??'profile-preview',width:scalar(width.value),depth:scalar(depth.value)}:{kind:'circle',id:existing?.profile.id??'profile-preview',radius:scalar(radius.value),segments:profile?.kind==='circle'?profile.segments:64};}
+  const parsePoint=(text:string):SketchPoint=>{
+   const pair=text.split(',').map(value=>value.trim());
+   if(pair.length!==2||!pair.every(value=>/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(value))){
+    throw new Error(t('Enter coordinates as X, Y in millimetres.'));
+   }
+   return [Number(pair[0]),Number(pair[1])];
+  };
+  function definition():SketchProfile{
+   const id=existing?.profile.id??'profile-preview';
+   if(kind.value==='outline'){
+    const rows=points.value.trim().split(/\r?\n/);
+    if(rows.length>256)throw new Error(t('An outline needs 3–256 finite points within 100000 mm of the sketch origin.'));
+    return {kind:'outline',id,points:rows.map(parsePoint)};
+   }
+   if(kind.value==='rectangle')return {kind:'rectangle',id,width:scalar(width.value),depth:scalar(depth.value)};
+   const location=parsePoint(center.value);
+   return {kind:'circle',id,radius:scalar(radius.value),segments:profile?.kind==='circle'?profile.segments:64,
+    ...(profile?.kind==='circle'&&profile.center||location.some(Boolean)?{center:location}:{})};
+  }
   const readForm=()=>({
    name:name.value.trim(),
    plane:plane.value as SketchPlane,
@@ -86,7 +115,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const compact=(input:HTMLInputElement,icon:string)=>{const label=input.parentElement!;label.firstChild!.textContent='';label.classList.add('sketch-dimension');const picture=toolIcon(icon);if(picture)label.prepend(picture);input.title=input.getAttribute('aria-label')!;label.append(element('small','mm'));const caption=element('span',input.getAttribute('aria-label')!);caption.className='sketch-dimension-name';label.prepend(caption);};
   compact(width,'Sketch width');compact(depth,'Sketch depth');compact(radius,'Sketch radius');compact(length,'Extrude');
   function draw(){
-   width.parentElement!.hidden=depth.parentElement!.hidden=kind.value!=='rectangle';radius.parentElement!.hidden=kind.value!=='circle';preview.replaceChildren();valid=false;
+   width.parentElement!.hidden=depth.parentElement!.hidden=kind.value!=='rectangle';radius.parentElement!.hidden=center.parentElement!.hidden=kind.value!=='circle';pointsLabel.hidden=kind.value!=='outline';preview.replaceChildren();valid=false;
    for(const input of [width,depth,radius,length]){
     input.removeAttribute('aria-invalid');
     if(input.parentElement!.hidden)continue;
@@ -108,8 +137,8 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     const handle=(x:number,y:number,mode:string,enabled:boolean)=>{if(!enabled)return;const hit=document.createElementNS(ns,'circle');hit.setAttribute('cx',String(x));hit.setAttribute('cy',String(y));hit.setAttribute('r',String(span*.065));hit.setAttribute('fill','transparent');hit.dataset.resize=mode;hit.style.cursor=mode==='depth'?'nesw-resize':'nwse-resize';const title=document.createElementNS(ns,'title');title.textContent=t('Drag to change dimensions');hit.append(title);const dot=document.createElementNS(ns,'circle');dot.setAttribute('cx',String(x));dot.setAttribute('cy',String(y));dot.setAttribute('r',String(span*.023));dot.classList.add('sketch-handle');svg.append(dot,hit);};
     const numeric=(s:string)=>s.trim()!==''&&Number.isFinite(Number(s));
     const topOffset=shape.start+d;
-    handle(Math.max(...xs)+topOffset*.45,(kind.value==='circle'?0:-Math.min(...ys))-topOffset*.35,'size',kind.value==='circle'?numeric(radius.value):numeric(width.value)&&numeric(depth.value));
-    const anchor=kind.value==='circle'?shape.contour[shape.contour.length/2|0]:[Math.min(...xs),Math.max(...ys)];
+    handle(Math.max(...xs)+topOffset*.45,(kind.value==='circle'?-(Math.min(...ys)+Math.max(...ys))/2:-Math.min(...ys))-topOffset*.35,'size',kind.value==='circle'?numeric(radius.value):kind.value==='rectangle'&&numeric(width.value)&&numeric(depth.value));
+    const anchor=kind.value==='circle'?shape.contour[Math.floor(shape.contour.length/2)]:kind.value==='outline'?shape.contour[0]:[Math.min(...xs),Math.max(...ys)];
     handle(anchor[0]+topOffset*.45,-anchor[1]-topOffset*.35,'depth',numeric(length.value));
     preview.append(svg,element('output',t`${w.toLocaleString()} × ${h.toLocaleString()} mm · ${shape.distance.toLocaleString()} mm extrusion`));status.textContent='';valid=true;
    }catch(error){status.textContent=error instanceof Error&&'diagnostic' in error?(error as import('@brickwright/cad-core').FeatureEvaluationError).diagnostic.message:error instanceof Error?error.message:String(error);}apply.disabled=busy||!valid;
@@ -119,15 +148,73 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const endDrag=()=>{if(drag&&preview.hasPointerCapture(drag.id))preview.releasePointerCapture(drag.id);drag=undefined;draw();};preview.onpointerup=endDrag;preview.onpointercancel=endDrag;
   form.addEventListener('input',draw);form.addEventListener('change',draw);
   const apply=element('button',t(existing?'Apply sketch changes':'Create extrusion'));apply.className='primary';
-  apply.onclick=async()=>{const ticket=epoch,snapshot=readForm();busy=true;apply.disabled=true;try{
+  apply.onclick=async()=>{const ticket=epoch;busy=true;apply.disabled=true;try{
+   const snapshot=readForm();
    if(session.state.revision!==expected)throw new Error(t('The model changed. Close and reopen this dialog before applying.'));
    const candidate=draft(snapshot);const geometry=await evaluate(candidate.document);const created=geometry.bodies.find(body=>body.id===candidate.id);if(disposed||epoch!==ticket||!dialog.open)return;
    if(session.state.revision!==expected)throw new Error(t('The model changed while checking geometry. Close and reopen this dialog.'));
+   if(!existing&&(!created||created.volume<=0))throw new Error(t('The profile must produce a solid with positive volume.'));
    // One transaction, including sketch and extrusion inputs.
    if(existing&&featureId)session.editExtrusion(featureId,{sketch:{name:snapshot.name,plane:snapshot.plane,profile:snapshot.profile},distance:snapshot.distance,symmetric:snapshot.symmetric});
    else session.addSketchExtrusion({...snapshot.profile,id:newId()},{name:snapshot.name,plane:snapshot.plane,distance:snapshot.distance,symmetric:snapshot.symmetric,position:[0,0,-(created?.bounds.min[2]??0)]});
    dialog.close();await afterApply();
   }catch(error){if(!disposed)status.textContent=error instanceof Error&&'diagnostic' in error?(error as import('@brickwright/cad-core').FeatureEvaluationError).diagnostic.message:error instanceof Error?error.message:String(error);}finally{busy=false;apply.disabled=!valid;}};
+  if(!existing){
+   const importPanel=element('details');
+   importPanel.className='sketch-expressions';
+   const importSummary=element('summary',t('Import DXF outline'));
+   const units=element('label',t('Assume millimetres if the file has no units'));
+   const assumeMm=element('input');
+   assumeMm.type='checkbox';
+   units.className='sketch-toggle';
+   units.prepend(assumeMm);
+   const file=element('input');
+   file.type='file';
+   file.accept='.dxf';
+   file.setAttribute('aria-label',t('Choose DXF file'));
+   const importedSource=element('p');
+   file.onchange=async()=>{
+    const chosen=file.files?.[0];
+    const ticket=epoch;
+    const assume=assumeMm.checked;
+    if(!chosen||busy)return;
+    busy=true;
+    apply.disabled=true;
+    file.disabled=true;
+    let errorMessage='';
+    try{
+     if(chosen.size>maxSketchDxfBytes)throw new Error(t('Choose a DXF file up to 1 MB.'));
+     const imported=readSketchDxf(await chosen.text(),assume);
+     if(epoch!==ticket||disposed||!dialog.open)return;
+     const id='dxf-preview';
+     evaluateExtrusion({kind:'extrusion',featureVersion:1,id,sketchId:id,distance:1,symmetric:false},{
+      ...doc,sketches:{[id]:{version:1,id,name:'DXF',plane:'XY',profile:imported}}
+     });
+     kind.value=imported.kind;
+     if(imported.kind==='outline')points.value=imported.points.map(point=>point.join(', ')).join('\n');
+     if(imported.kind==='circle'){
+      radius.value=String(imported.radius);
+      center.value=imported.center?.join(', ')??'0, 0';
+     }
+     name.value=chosen.name.replace(/\.dxf$/i,'').replace(/[\u0000-\u001f]/g,'').trim().slice(0,160)||t('Sketch');
+     importedSource.textContent=chosen.name;
+    }catch(error){errorMessage=error instanceof Error?error.message:String(error);}
+    finally{
+     busy=false;
+     file.disabled=false;
+     file.value='';
+     if(epoch===ticket&&!disposed&&dialog.open){
+      draw();
+      if(errorMessage){
+       status.textContent=errorMessage;
+       apply.disabled=true;
+      }
+     }
+    }
+   };
+   importPanel.append(importSummary,units,file,importedSource);
+   form.append(importPanel);
+  }
   const footer=element('footer');footer.append(status,apply);const body=element('div');body.className='sketch-body';const expressions=element('details');expressions.className='sketch-expressions';const summary=element('summary',t('Dimension expressions'));summary.title=t('Dimension expressions');summary.setAttribute('aria-label',t('Dimension expressions'));expressions.append(summary,help);form.append(expressions);const drawing=element('div');drawing.append(preview,hint);body.append(drawing,form);dialog.append(header,infoPanel,body,footer);draw();dialog.showModal();
  }
  dialog.addEventListener('keydown',e=>e.stopPropagation());
