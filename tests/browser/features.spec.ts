@@ -187,3 +187,46 @@ test('rounded DXF outlines preserve the editable bulge through export', async ({
  const dxf = await (await import('node:fs/promises')).readFile(path, 'utf8');
  expect(dxf).toContain('10\r\n0\r\n20\r\n0\r\n42\r\n0.5');
 });
+
+test('outline vertex drags are snapped drafts, preserve arcs and reject a crossing', async ({page}) => {
+ await page.goto('/');
+ const ready = () => expect(page.locator('#cad-root')).toHaveAttribute('data-state', 'ready');
+ await ready();
+ await page.getByRole('button', {name: 'Sketch', exact: true}).click();
+ const sketch = page.getByRole('dialog', {name: 'Sketch and extrusion'});
+ await sketch.getByLabel('Profile', {exact: true}).selectOption('outline');
+ const points = sketch.getByLabel('Outline points X, Y (mm)');
+ await points.fill('0, 0\n@40, 0, 0.1\n@-10, 30\n0, 30');
+ const point = sketch.locator('[data-resize="vertex"][data-vertex="1"]');
+ const move = async (dx:number,dy:number) => {
+  const [a,b]=await point.evaluate((el,[dx,dy])=>{
+   const handle=el as SVGCircleElement;
+   const matrix=handle.getScreenCTM()!;
+   const x=handle.cx.baseVal.value,y=handle.cy.baseVal.value;
+   return [[x,y],[x+dx,y-dy]].map(([x,y])=>{
+    const point=new DOMPoint(x,y).matrixTransform(matrix);
+    return {x:point.x,y:point.y};
+   });
+  },[dx,dy]);
+  await page.mouse.move(a.x,a.y);
+  await page.mouse.down();
+  await page.mouse.move(b.x,b.y);
+  await page.mouse.up();
+ };
+ await move(-4,5);
+ const edited = '0, 0\n36, 5, 0.1\n30, 30\n0, 30';
+ await expect(points).toHaveValue(edited);
+ await move(-46,20);
+ await expect(points).toHaveValue(edited);
+ await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('without crossings');
+ await sketch.getByRole('button', {name:'Create extrusion'}).click();
+ await expect(sketch).toBeHidden();
+ await ready();
+ const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
+ if(!await edit.isVisible())await page.getByRole('button',{name:'Properties',exact:true}).click();
+ await edit.click();
+ await expect(points).toHaveValue(edited);
+ await sketch.getByRole('button',{name:'Close sketch',exact:true}).click();
+ await page.getByRole('button',{name:'Undo',exact:true}).click();
+ await expect(page.getByTestId('object-name')).toHaveCount(0);
+});

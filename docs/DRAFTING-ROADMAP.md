@@ -67,9 +67,20 @@ The curve stays analytic in DXF, and the modeling mesh approximates it using
 chords with up to 0.025 mm of sagitta error within the supported detail budget.
 
 The current region workflow rejects touching, crossing, nested and disjoint
-loops. Visual point and curve editing, standalone ARC entities, open contours, widths,
+loops. Standalone ARC entities, open contours, widths,
 layer filtering and styles, paper-space objects, tilted entities,
 DWG and STEP remain open.
+
+## Outline point editing
+
+In Sketch & Extrude, drag a white vertex on a polygon outline or on a polygon
+loop in a region. Dragging uses the workplane snap setting. Hold Shift for
+finer increments. Releasing a vertex at an invalid position restores its
+previous coordinates and shows the validation message. Edits commit when you
+create or apply the extrusion. In the coordinate field, enter an absolute
+first point and prefix subsequent offsets with `@`, for example `@40, 0`.
+A vertex drag converts its loop to absolute coordinates and retains arc bulges.
+Entity snaps, graphical curve editing and constraints remain open.
 
 ## Full-size drilling template
 

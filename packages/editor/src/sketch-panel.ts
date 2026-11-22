@@ -1,3 +1,4 @@
+import {formatSketchPoints as formatPoints, parseSketchOutline as parseOutline, parseSketchPoint as parsePoint} from './sketch-point-entry.js';
 import {maxSketchDxfBytes,readSketchDxf} from './import-sketch-dxf.js';
 import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
@@ -54,11 +55,10 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   points.setAttribute('aria-label',t('Outline points X, Y (mm)'));
   points.rows=4;
   points.spellcheck=false;
-  const formatPoints=(points:SketchPoint[],bulges?:number[])=>points.map(([x,y],i)=>
-   bulges?.[i]?[x,y,bulges[i]].join(', '):[x,y].join(', '));
   points.value=profile?.kind==='outline'?formatPoints(profile.points,profile.bulges).join('\n'):'0, 0\n40, 0\n30, 30\n0, 30';
   pointsLabel.append(points,element('small',t('For an arc, add its bulge as a third value. Use 1 for a semicircle, or -1 to curve in the opposite direction.')));
   form.append(pointsLabel);
+  const relativeHint=element('small',t('Start with X, Y. Use @dX, dY to enter a point relative to the previous one.'));
   const regionLabel=element('label',t('Region loops (mm)'));
   const region=element('textarea');
   region.setAttribute('aria-label',t('Region loops (mm)'));
@@ -72,32 +72,13 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   let regionLoops=profile?.kind==='region'?profile.loops:[];
   region.value=regionLoops.length?formatLoops(regionLoops):'0, 0 | 40, 0 | 40, 30 | 0, 30\nCIRCLE 10, 15, 2';
   regionLabel.append(region,element('small',t('One loop per line. Separate outline points with | and add an optional bulge for arcs. For circles type CIRCLE X, Y, radius. Circle values can use named dimensions.')));
-  form.append(regionLabel);
+  form.append(regionLabel,relativeHint);
   const length=field('Extrusion distance (mm)',node?.kind==='extrusion'?node.distance:10);
   const symmetric=element('input');symmetric.type='checkbox';symmetric.checked=node?.kind==='extrusion'?node.symmetric:false;symmetric.setAttribute('aria-label',t('Symmetric extrusion'));const check=element('label',t('Symmetric extrusion'));check.className='sketch-toggle';check.prepend(symmetric);form.append(check);
   const preview=element('div');preview.className='sketch-preview';preview.setAttribute('aria-label',t('Sketch preview'));
   const status=element('p');status.className='parameter-status';status.setAttribute('role','status');status.setAttribute('aria-label',t('Sketch status'));
   const hint=element('p',t('Drag the white handles or type exact dimensions.'));
   const help=element('p',t('Enter dimensions or expressions such as width / 2. Define named dimensions in Parameters.'));
-  const parsePoint=(text:string):SketchPoint=>{
-   const pair=text.split(',').map(value=>value.trim());
-   if(pair.length!==2||!pair.every(value=>/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(value))){
-    throw new Error(t('Enter coordinates as X, Y in millimetres.'));
-   }
-   return [Number(pair[0]),Number(pair[1])];
-  };
-  const parseOutline=(rows:string[])=>{
-   const points:SketchPoint[]=[],bulges:number[]=[];
-   for(const row of rows){
-    const coordinates=row.split(',');
-    if(coordinates.length>3)throw new Error(t('Enter coordinates as X, Y in millimetres.'));
-    const bulge=coordinates.length===3?coordinates.pop()!.trim():'0';
-    if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(bulge))throw new Error(t('Enter one finite bulge per outline point.'));
-    points.push(parsePoint(coordinates.join(',')));
-    bulges.push(Number(bulge));
-   }
-   return bulges.some(Boolean)?{points,bulges}:{points};
-  };
   function definition():SketchProfile{
    const id=existing?.profile.id??'profile-preview';
    if(kind.value==='region'){
@@ -120,7 +101,6 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    const layer=singleDxfLayer?{dxfLayer:singleDxfLayer}:{};
    if(kind.value==='outline'){
     const rows=points.value.trim().split(/\r?\n/);
-    if(rows.length>256)throw new Error(t('An outline needs 3–256 finite points within 100000 mm of the sketch origin.'));
     return {kind:'outline',id,...parseOutline(rows),...layer};
    }
    if(kind.value==='rectangle')return {kind:'rectangle',id,width:scalar(width.value),depth:scalar(depth.value)};
@@ -147,21 +127,22 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     return {document:trial.state.document,id};
    }finally{trial.dispose();}
   }
-  function previewShape(){
-   const {distance,symmetric,...sketch}=readForm();
+  function previewShape({distance,symmetric,...sketch}:ReturnType<typeof readForm>){
    const id='sketch-preview';
    return evaluateExtrusion(
     {kind:'extrusion',featureVersion:1,id,sketchId:id,distance,symmetric},
     {...doc,sketches:{[id]:{version:1,id,...sketch}}}
    );
   }
-  let drag:{id:number;x:number;y:number;w:number;h:number;r:number;d:number;inverse:DOMMatrix;kind:string;viewBox:string}|undefined;
+  type VertexEdit = {field:HTMLTextAreaElement; original:string; loop:number; index:number; points:SketchPoint[]; bulges?:number[]};
+  let drag:{id:number;x:number;y:number;w:number;h:number;r:number;d:number;inverse:DOMMatrix;kind:string;viewBox:string;vertex?:VertexEdit}|undefined;
+  let dragOutline:ReturnType<typeof definition>|undefined;
   let valid=false;
   const bounded=(value:number)=>Math.min(100000,Math.max(.01,value));
   const compact=(input:HTMLInputElement,icon:string)=>{const label=input.parentElement!;label.firstChild!.textContent='';label.classList.add('sketch-dimension');const picture=toolIcon(icon);if(picture)label.prepend(picture);input.title=input.getAttribute('aria-label')!;label.append(element('small','mm'));const caption=element('span',input.getAttribute('aria-label')!);caption.className='sketch-dimension-name';label.prepend(caption);};
   compact(width,'Sketch width');compact(depth,'Sketch depth');compact(radius,'Sketch radius');compact(length,'Extrude');
   function draw(){
-   width.parentElement!.hidden=depth.parentElement!.hidden=kind.value!=='rectangle';radius.parentElement!.hidden=center.parentElement!.hidden=kind.value!=='circle';pointsLabel.hidden=kind.value!=='outline';regionLabel.hidden=kind.value!=='region';preview.replaceChildren();valid=false;
+   width.parentElement!.hidden=depth.parentElement!.hidden=kind.value!=='rectangle';radius.parentElement!.hidden=center.parentElement!.hidden=kind.value!=='circle';pointsLabel.hidden=kind.value!=='outline';regionLabel.hidden=kind.value!=='region';relativeHint.hidden=pointsLabel.hidden&&regionLabel.hidden;preview.replaceChildren();dragOutline=undefined;valid=false;
    for(const input of [width,depth,radius,length]){
     input.removeAttribute('aria-invalid');
     if(input.parentElement!.hidden)continue;
@@ -175,7 +156,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      return;
     }
    }
-   try{const shape=previewShape(),xs=shape.contour.map(p=>p[0]),ys=shape.contour.map(p=>p[1]),w=Math.max(...xs)-Math.min(...xs),h=Math.max(...ys)-Math.min(...ys),d=shape.distance,ox=d*.45,oy=-d*.35;
+   try{const snapshot=readForm();const shape=previewShape(snapshot),xs=shape.contour.map(p=>p[0]),ys=shape.contour.map(p=>p[1]),w=Math.max(...xs)-Math.min(...xs),h=Math.max(...ys)-Math.min(...ys),d=shape.distance,ox=d*.45,oy=-d*.35;
     const projected=[shape.contour,...(shape.holes??[])].map(loop=>loop.map(([x,y])=>[x+shape.start*.45,-y-shape.start*.35]));
     const raised=projected.map(loop=>loop.map(([x,y])=>[x+ox,y+oy]));
     const [base]=projected,[top]=raised;
@@ -197,18 +178,96 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      }
     }
     face(raised,'sketch-top');
-    const handle=(x:number,y:number,mode:string,enabled:boolean)=>{if(!enabled)return;const hit=document.createElementNS(ns,'circle');hit.setAttribute('cx',String(x));hit.setAttribute('cy',String(y));hit.setAttribute('r',String(span*.065));hit.setAttribute('fill','transparent');hit.dataset.resize=mode;hit.style.cursor=mode==='depth'?'nesw-resize':'nwse-resize';const title=document.createElementNS(ns,'title');title.textContent=t('Drag to change dimensions');hit.append(title);const dot=document.createElementNS(ns,'circle');dot.setAttribute('cx',String(x));dot.setAttribute('cy',String(y));dot.setAttribute('r',String(span*.023));dot.classList.add('sketch-handle');svg.append(dot,hit);};
+    const handle=(x:number,y:number,mode:string,vertex?:{loop:number;index:number})=>{
+     const hit=document.createElementNS(ns,'circle');
+     hit.setAttribute('cx',String(x));hit.setAttribute('cy',String(y));
+     hit.setAttribute('r',String(span*.065));hit.setAttribute('fill','transparent');
+     hit.dataset.resize=mode;
+     hit.style.cursor=mode==='vertex'?'move':mode==='depth'?'nesw-resize':'nwse-resize';
+     if(vertex){hit.dataset.loop=String(vertex.loop);hit.dataset.vertex=String(vertex.index);}
+     const title=document.createElementNS(ns,'title');
+     title.textContent=t(vertex?'Drag outline point':'Drag to change dimensions');hit.append(title);
+     const dot=document.createElementNS(ns,'circle');
+     dot.setAttribute('cx',String(x));dot.setAttribute('cy',String(y));dot.setAttribute('r',String(span*.023));
+     dot.classList.add('sketch-handle');svg.append(dot,hit);
+    };
     const numeric=(s:string)=>s.trim()!==''&&Number.isFinite(Number(s));
     const topOffset=shape.start+d;
-    handle(Math.max(...xs)+topOffset*.45,(kind.value==='circle'?-(Math.min(...ys)+Math.max(...ys))/2:-Math.min(...ys))-topOffset*.35,'size',kind.value==='circle'?numeric(radius.value):kind.value==='rectangle'&&numeric(width.value)&&numeric(depth.value));
-    const anchor=kind.value==='circle'?shape.contour[Math.floor(shape.contour.length/2)]:['outline','region'].includes(kind.value)?shape.contour[0]:[Math.min(...xs),Math.max(...ys)];
-    handle(anchor[0]+topOffset*.45,-anchor[1]-topOffset*.35,'depth',numeric(length.value));
+    const p=snapshot.profile;
+    const outlines=p.kind==='outline'||p.kind==='region';
+    if(p.kind==='circle'?numeric(radius.value):p.kind==='rectangle'&&numeric(width.value)&&numeric(depth.value)){
+     const y=p.kind==='circle'?-(Math.min(...ys)+Math.max(...ys))/2:-Math.min(...ys);
+     handle(Math.max(...xs)+topOffset*.45,y-topOffset*.35,'size');
+    }
+    const anchor=p.kind==='circle'?shape.contour[Math.floor(shape.contour.length/2)]:outlines?shape.contour[0]:[Math.min(...xs),Math.max(...ys)];
+    if(numeric(length.value)){
+     const offset=outlines?shape.start+d/2:topOffset;
+     handle(anchor[0]+offset*.45,-anchor[1]-offset*.35,'depth');
+    }
+    const drawVertices=(vertices:SketchPoint[],loop:number)=>vertices.forEach(([x,y],index)=>
+     handle(x+topOffset*.45,-y-topOffset*.35,'vertex',{loop,index}));
+    if(p.kind==='outline')drawVertices(p.points,0);
+    if(p.kind==='region')p.loops.forEach((loop,i)=>{if(loop.kind==='outline')drawVertices(loop.points,i);});
+    dragOutline=p;
     preview.append(svg,element('output',t`${w.toLocaleString()} × ${h.toLocaleString()} mm · ${shape.distance.toLocaleString()} mm extrusion`));status.textContent='';valid=true;
-   }catch(error){status.textContent=error instanceof Error&&'diagnostic' in error?(error as import('@brickwright/cad-core').FeatureEvaluationError).diagnostic.message:error instanceof Error?error.message:String(error);}apply.disabled=busy||!valid;
+   }catch(error){status.textContent=error instanceof Error&&'diagnostic' in error?(error as import('@brickwright/cad-core').FeatureEvaluationError).diagnostic.message:error instanceof Error?error.message:String(error);}apply.disabled=busy||!valid||!!drag;
   }
-  preview.onpointerdown=event=>{const handle=(event.target as Element).closest<SVGElement>('[data-resize]'),svg=preview.querySelector('svg');if(!handle||!svg||busy||drag||event.button!==0)return;event.preventDefault();const matrix=svg.getScreenCTM();if(!matrix)return;const inverse=matrix.inverse();const start=new DOMPoint(event.clientX,event.clientY).matrixTransform(inverse);drag={id:event.pointerId,x:start.x,y:start.y,w:Number(width.value),h:Number(depth.value),r:Number(radius.value),d:Number(length.value),inverse,kind:handle.dataset.resize!,viewBox:svg.getAttribute('viewBox')!};preview.setPointerCapture(event.pointerId);};
-  preview.onpointermove=event=>{if(!drag||event.pointerId!==drag.id)return;event.preventDefault();const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(drag.inverse),dx=point.x-drag.x,dy=point.y-drag.y,step=snap()/(event.shiftKey?10:1),round=(v:number)=>Number((step>0?Math.round(v/step)*step:v).toFixed(5));if(drag.kind==='depth'){const projectionScale=symmetric.checked ? .5 : 1;const v=round(drag.d+(.45*dx-.35*dy)/(.45**2+.35**2)/projectionScale);length.value=String(bounded(v));}else if(kind.value==='circle')radius.value=String(bounded(round(drag.r+dx)));else{width.value=String(bounded(round(drag.w+2*dx)));depth.value=String(bounded(round(drag.h+2*dy)));}draw();};
-  const endDrag=()=>{if(drag&&preview.hasPointerCapture(drag.id))preview.releasePointerCapture(drag.id);drag=undefined;draw();};preview.onpointerup=endDrag;preview.onpointercancel=endDrag;
+  preview.onpointerdown=event=>{
+   const handle=(event.target as Element).closest<SVGElement>('[data-resize]'),svg=preview.querySelector('svg');
+   if(!handle||!svg||busy||drag||event.button!==0)return;
+   const matrix=svg.getScreenCTM();
+   if(!matrix)return;
+   const inverse=matrix.inverse(),start=new DOMPoint(event.clientX,event.clientY).matrixTransform(inverse);
+   const mode=handle.dataset.resize!;
+   let vertex:VertexEdit|undefined;
+   if(mode==='vertex'){
+    const loop=Number(handle.dataset.loop),index=Number(handle.dataset.vertex);
+    const outline=dragOutline?.kind==='region'?dragOutline.loops[loop]:dragOutline;
+    if(outline?.kind!=='outline'||!outline.points[index])return;
+    const field=dragOutline?.kind==='region'?region:points;
+    vertex={field,original:field.value,loop,index,points:outline.points,bulges:outline.bulges};
+   }
+   event.preventDefault();
+   drag={id:event.pointerId,x:start.x,y:start.y,w:Number(width.value),h:Number(depth.value),r:Number(radius.value),d:Number(length.value),inverse,kind:mode,viewBox:svg.getAttribute('viewBox')!,vertex};
+   preview.setPointerCapture(event.pointerId);
+   apply.disabled=true;
+  };
+  preview.onpointermove=event=>{
+   if(!drag||event.pointerId!==drag.id)return;
+   event.preventDefault();
+   const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(drag.inverse),dx=point.x-drag.x,dy=point.y-drag.y;
+   const step=snap()/(event.shiftKey?10:1),round=(v:number)=>Number((step>0?Math.round(v/step)*step:v).toFixed(5));
+   if(drag.vertex){
+    const edit=drag.vertex,[x,y]=edit.points[edit.index];
+    const moved:SketchPoint=[round(x+dx),round(y-dy)];
+    if(moved[0]===x&&moved[1]===y){edit.field.value=edit.original;}
+    else{
+     const points=edit.points.slice();points[edit.index]=moved;
+     const rows=formatPoints(points,edit.bulges);
+     if(edit.field===region){
+      const loops=edit.original.trim().split(/\r?\n/);loops[edit.loop]=rows.join(' | ');
+      edit.field.value=loops.join('\n');
+     }else edit.field.value=rows.join('\n');
+    }
+   }else if(drag.kind==='depth'){
+    const projectionScale=symmetric.checked ? .5 : 1;
+    length.value=String(bounded(round(drag.d+(.45*dx-.35*dy)/(.45**2+.35**2)/projectionScale)));
+   }else if(kind.value==='circle')radius.value=String(bounded(round(drag.r+dx)));
+   else{width.value=String(bounded(round(drag.w+2*dx)));depth.value=String(bounded(round(drag.h+2*dy)));}
+   draw();
+  };
+  const endDrag=(event:PointerEvent)=>{
+   if(!drag||event.pointerId!==drag.id)return;
+   const {id,vertex}=drag;
+   const restore=vertex&&(event.type!=='pointerup'||!valid);
+   const diagnostic=restore&&event.type==='pointerup'?status.textContent:null;
+   if(restore)vertex.field.value=vertex.original;
+   drag=undefined;
+   if(preview.hasPointerCapture(id))preview.releasePointerCapture(id);
+   draw();
+   if(diagnostic)status.textContent=t('Outline point restored.')+' '+diagnostic;
+  };
+  preview.onpointerup=preview.onpointercancel=preview.onlostpointercapture=endDrag;
   form.addEventListener('input',draw);form.addEventListener('change',draw);
   const apply=element('button',t(existing?'Apply sketch changes':'Create extrusion'));apply.className='primary';
   apply.onclick=async()=>{const ticket=epoch;busy=true;apply.disabled=true;try{
