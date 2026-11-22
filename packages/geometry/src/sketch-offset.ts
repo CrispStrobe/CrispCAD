@@ -28,6 +28,7 @@ export function offsetSketchProfile(module:ManifoldToplevel,sketch:PlanarSketch,
  const profile=sketch.profile;
  let edited:SketchProfile;
  switch(profile.kind){
+  case 'path':throw new Error(t('Close the sketch path before offsetting its profile.'));
   case 'rectangle':edited={...profile,width:shift(profile.width,2*distance),depth:shift(profile.depth,2*distance)};break;
   case 'circle':edited={...profile,radius:shift(profile.radius,distance)};break;
   case 'outline':edited=outline(profile,distance);break;

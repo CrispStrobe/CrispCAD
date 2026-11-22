@@ -71,13 +71,29 @@ export function sketchOutline(points: SketchPoint[], bulges?: number[]): SketchP
       !bulges.every(value => typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= 10000)) {
     throw new Error(t('Enter one finite bulge per outline point.'));
   }
+  return normalizeOutline(tessellatePath(points,bulges,true));
+}
+
+export function sketchPath(points:SketchPoint[],bulges?:number[]):SketchPoint[]{
+  if(!Array.isArray(points)||points.length<2||points.length>maxSketchOutlinePoints||!points.every(isSketchPoint))
+    throw new Error(t('An open path needs 2–256 finite points within 100000 mm of the sketch origin.'));
+  const first=points[0],last=points.at(-1)!;
+  if(Math.hypot(last[0]-first[0],last[1]-first[1])<.00001)throw new Error(t('An open path needs distinct start and end points.'));
+  if(bulges!==undefined&&(!Array.isArray(bulges)||bulges.length!==points.length||bulges.at(-1)!==0||
+      !bulges.every(value=>typeof value==='number'&&Number.isFinite(value)&&Math.abs(value)<=10000)))
+    throw new Error(t('Enter one finite bulge per path edge. The last point has no outgoing edge.'));
+  return tessellatePath(points,bulges??points.map(()=>0),false);
+}
+
+function tessellatePath(points:SketchPoint[],bulges:number[],closed:boolean):SketchPoint[]{
   const contour: SketchPoint[] = [];
+  const edgeCount=closed?points.length:points.length-1;
   const tolerance = .025;
   const invalid = () => new Error(t('Rounded outline exceeds the curve size or detail limit.'));
-  for (let i = 0; i < points.length; i++) {
+  for (let i = 0; i < edgeCount; i++) {
     const a = points[i], b = points[(i+1)%points.length], bulge = bulges[i];
     const dx = b[0]-a[0], dy = b[1]-a[1], chord = Math.hypot(dx,dy);
-    if (chord < .00001) throw new Error(t('Outline edges must form one closed loop without crossings or overlaps.'));
+    if (chord < .00001) throw new Error(t(closed?'Outline edges must form one closed loop without crossings or overlaps.':'Consecutive path points must be distinct.'));
     contour.push(a);
     if (bulge === 0) continue;
     if (chord * Math.abs(bulge) < tolerance * 2 && Math.abs(4 * Math.atan(bulge)) < Math.PI / 32 && points.length > 2) continue;
@@ -94,6 +110,7 @@ export function sketchOutline(points: SketchPoint[], bulges?: number[]): SketchP
       contour.push(point);
     }
   }
-  if (contour.length < 3 || contour.length > maxSketchCurveVertices) throw invalid();
-  return normalizeOutline(contour);
+  if(!closed)contour.push(points.at(-1)!);
+  if (contour.length < (closed?3:2) || contour.length > maxSketchCurveVertices) throw invalid();
+  return contour;
 }

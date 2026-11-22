@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
-import {isSketchPoint,sketchOutline} from './sketch-outline.js';
+import {isSketchPoint,sketchOutline,sketchPath} from './sketch-outline.js';
 import {evaluateSketchRegion,isSketchDxfLayer} from './sketch-region.js';
 import type {SketchLoop} from './sketch-region.js';
 import type {SketchPoint} from './sketch-outline.js';
@@ -16,6 +16,7 @@ export type SketchProfile =
   {kind:'rectangle'; id:string; width:FeatureScalar; depth:FeatureScalar} |
   {kind:'circle'; id:string; radius:FeatureScalar; segments:number; center?:SketchPoint; dxfLayer?:string} |
   {kind:'outline'; id:string; points:SketchPoint[]; bulges?:number[]; dxfLayer?:string} |
+  {kind:'path'; id:string; points:SketchPoint[]; bulges?:number[]} |
   {kind:'region'; id:string; loops:SketchLoop[]};
 /** Profiles are analytic design inputs. Rectangle closure/orthogonality and circle
  * closure are enforced by construction; a general constraint solver comes later. */
@@ -110,6 +111,7 @@ export function evaluateSketch(sketch:PlanarSketch,doc:Pick<CadDocument,'paramet
     if((p.kind==='outline'||p.kind==='circle')&&p.dxfLayer!==undefined&&!isSketchDxfLayer(p.dxfLayer))throw new Error(t('Invalid DXF layer name.'));
     if(p.kind==='region')return evaluateSketchRegion(p.loops, value => featureValue(value, doc));
     if(p.kind==='rectangle') {const w=dimension(p.width,doc)/2,d=dimension(p.depth,doc)/2;return {contour:[[-w,-d],[w,-d],[w,d],[-w,d]],edgeIds:['bottom','right','top','left'].map(side=>`${p.id}:${side}`)};}
+    if(p.kind==='path')return {contour:sketchPath(p.points,p.bulges),edgeIds:p.points.slice(0,-1).map((_,i)=>`${p.id}:edge-${i}`)};
     if(p.kind==='outline') {const contour=sketchOutline(p.points,p.bulges);return {contour,edgeIds:p.points.map((_,i)=>`${p.id}:edge-${i}`)};}
     if(p.kind==='circle') {const center=p.center??[0,0];if(!isSketchPoint(center))throw new Error(t('Circle center must be within 100000 mm of the sketch origin.'));const r=dimension(p.radius,doc);if(!Number.isInteger(p.segments)||p.segments<12||p.segments>256)throw new Error(t('Circle segments must be an integer between 12 and 256'));return {contour:Array.from({length:p.segments},(_,i)=>[center[0]+r*Math.cos(i*2*Math.PI/p.segments),center[1]+r*Math.sin(i*2*Math.PI/p.segments)]),edgeIds:[`${p.id}:circumference`]};}
     throw new Error(t('Unsupported sketch profile version or kind'));
@@ -119,7 +121,9 @@ export function evaluateExtrusion(node:ExtrusionFeature&{id:string},doc:CadDocum
   try {
     if(node.featureVersion!==1)throw new Error(t('Unsupported extrusion definition version'));
     if(typeof node.sketchId!=='string'||!Object.hasOwn(doc.sketches??{},node.sketchId)||typeof node.symmetric!=='boolean')throw new Error(t('Extrusion requires an existing sketch and a symmetric flag'));
-    const sketch=doc.sketches![node.sketchId],profile=evaluateSketch(sketch,doc),distance=dimension(node.distance,doc);
+    const sketch=doc.sketches![node.sketchId];
+    if(sketch.profile.kind==='path')throw new Error(t('Close the sketch path before creating a solid.'));
+    const profile=evaluateSketch(sketch,doc),distance=dimension(node.distance,doc);
     return {...profile,plane:sketch.plane,distance,start:node.symmetric?-distance/2:0};
   } catch(error){if(error instanceof FeatureEvaluationError)throw error;throw new FeatureEvaluationError({source:'feature',id:node.id,message:error instanceof Error?error.message:String(error)});}
 }
@@ -128,7 +132,9 @@ export function evaluateRevolution(node:RevolutionFeature&{id:string},doc:CadDoc
   try {
     if(node.featureVersion!==1||typeof node.sketchId!=='string'||!Object.hasOwn(doc.sketches??{},node.sketchId))
       throw new Error(t('Revolution requires an existing sketch'));
-    const sketch=doc.sketches![node.sketchId],profile=evaluateSketch(sketch,doc);
+    const sketch=doc.sketches![node.sketchId];
+    if(sketch.profile.kind==='path')throw new Error(t('Close the sketch path before creating a solid.'));
+    const profile=evaluateSketch(sketch,doc);
     const angle=featureValue(node.angle,doc,'deg');
     if(Math.abs(angle)<.1||Math.abs(angle)>360)throw new Error(t('Sweep magnitude must be between 0.1° and 360°'));
     const radial=profile.contour.map(point=>point[0]);
@@ -144,7 +150,7 @@ export function evaluateRevolution(node:RevolutionFeature&{id:string},doc:CadDoc
 }
 export function checkFeatures(doc:CadDocument) {
   if(doc.sketches!==undefined){if(doc.version<3||!record(doc.sketches)||Object.keys(doc.sketches).length>256)throw new Error(t('Sketches require document version 3 and at most 256 sketches'));
-    for(const [id,sketch] of Object.entries(doc.sketches)){if(!idOk(id)||sketch.id!==id)throw new Error(t('Invalid sketch identity'));evaluateSketch(sketch,doc);}}
+    for(const [id,sketch] of Object.entries(doc.sketches)){if(!idOk(id)||sketch.id!==id)throw new Error(t('Invalid sketch identity'));if(sketch.profile?.kind==='path'&&doc.version<15)throw new Error(t('Open sketch paths require document version 15'));evaluateSketch(sketch,doc);}}
   for(const node of Object.values(doc.nodes)){
     if(node.kind==='extrusion'){if(doc.version<3)throw new Error(t('Extrusion features require document version 3'));evaluateExtrusion(node,doc);}
     else if(node.kind==='mirror')evaluateMirror(node,doc);

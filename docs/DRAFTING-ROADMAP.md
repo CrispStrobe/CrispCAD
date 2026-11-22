@@ -222,3 +222,17 @@ its center and radius. Existing holes stay in the retained area.
 The current tool supports a cut that crosses the outside twice. A cut that
 splits the profile or crosses or discards a hole leaves the draft intact.
 Open-entity trimming and broader contour topology changes remain open.
+
+## Open sketch paths
+
+Use **Sketch path** to author and save a chain of lines and circular arcs
+without creating a solid. Enter one absolute or relative point per line and an
+optional bulge on each outgoing edge. The final point ends the path. Saved
+paths are editable in **Objects → Sketches** and can serve as snap guides
+without an implied closing edge.
+
+**Trim by line** retains one continuous part of the open path and preserves the
+analytic geometry of cut arcs. A trim that would leave disconnected pieces
+leaves the draft intact. **Close into outline** joins the endpoints with a
+straight edge, validates the outline, and keeps the sketch and profile IDs.
+It can then be extruded or revolved. Undo restores the open path.

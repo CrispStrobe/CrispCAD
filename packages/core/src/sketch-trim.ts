@@ -55,6 +55,11 @@ export function trimSketchProfile(sketch:PlanarSketch,context:Pick<CadDocument,'
   });
  }
 
+ function pointsFrom(remaining:Segment[]){
+  const points=[...remaining.map(piece=>piece.a),remaining.at(-1)!.b];
+  const bulges=[...remaining.map(piece=>piece.bulge),0];
+  return {points,bulges};
+ }
  function cut(outline:Outline):Outline{
   const pieces=outline.points.flatMap((point,i)=>split(point,outline.points[(i+1)%outline.points.length],outline.bulges?.[i]??0));
   const discarded=pieces.findIndex(piece=>!piece.keep);
@@ -62,9 +67,7 @@ export function trimSketchProfile(sketch:PlanarSketch,context:Pick<CadDocument,'
   const ordered=[...pieces.slice(discarded+1),...pieces.slice(0,discarded+1)];
   const runs=ordered.filter((piece,i)=>piece.keep&&(i===0||!ordered[i-1].keep));
   if(runs.length!==1)throw new Error(t('This trim would cross the outside boundary more than twice. Choose a simpler cut.'));
-  const remaining=ordered.filter(piece=>piece.keep);
-  const points=[...remaining.map(piece=>piece.a),remaining.at(-1)!.b];
-  const bulges=[...remaining.map(piece=>piece.bulge),0];
+  const {points,bulges}=pointsFrom(ordered.filter(piece=>piece.keep));
   const result={...outline,points};
   if(bulges.some(Boolean))result.bulges=bulges;
   else delete result.bulges;
@@ -74,7 +77,19 @@ export function trimSketchProfile(sketch:PlanarSketch,context:Pick<CadDocument,'
  const before=evaluateSketch(sketch,context);
  const profile=sketch.profile;
  let result:SketchProfile;
- if(profile.kind==='outline')result=cut(profile);
+ if(profile.kind==='path'){
+  const pieces=profile.points.slice(0,-1).flatMap((point,i)=>split(point,profile.points[i+1],profile.bulges?.[i]??0));
+  const first=pieces.findIndex(piece=>piece.keep);
+  if(first<0||pieces.every(piece=>piece.keep))throw new Error(t('The trim line must cross the open path.'));
+  let last=pieces.length-1;
+  while(!pieces[last].keep)last--;
+  const remaining=pieces.slice(first,last+1);
+  if(remaining.some(piece=>!piece.keep))throw new Error(t('This trim would leave separate paths. Choose a different line or side.'));
+  const {points,bulges}=pointsFrom(remaining);
+  result={...profile,points};
+  if(bulges.some(Boolean))result.bulges=bulges;
+  else delete result.bulges;
+ }else if(profile.kind==='outline')result=cut(profile);
  else if(profile.kind==='region'){
   const outside=before.loopIds![0],boundary=profile.loops.find(loop=>loop.id===outside);
   if(boundary?.kind!=='outline')throw new Error(t('Trim needs a polygon or arc outline as the outside boundary.'));

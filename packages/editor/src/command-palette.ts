@@ -13,6 +13,7 @@ const paletteCommands:readonly CommandEntry[]=[
  {command:'shapes',label:'Find a shape',alias:'shape browser primitives'},
  {command:'model-library',label:'Model library',alias:'parts catalog'},
  {command:'sketch',label:'Sketch & extrude',alias:'profile DXF'},
+ {command:'sketch-path',label:'Sketch path',alias:'open sketch line arc'},
  {command:'revolve',label:'Revolve',alias:'shaft sweep'},
  {command:'mirror',label:'Mirror body',alias:'reflect symmetry',requires:'canWrapBody'},
  {command:'edit-mirror',label:'Edit mirror',requires:'canEditMirror'},

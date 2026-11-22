@@ -37,6 +37,7 @@ import {exportDrawingSetPdf} from './drawing-pdf.js';
 import {mountDrawingPanel} from './drawing-panel.js';
 import {exportSketchPdf} from './sketch-pdf.js';
 import {mountSketchPanel} from './sketch-panel.js';
+import {mountPathPanel} from './path-panel.js';
 import {mountMirrorPanel} from './mirror-panel.js';
 import {mountPatternPanel} from './pattern-panel.js';
 import {mountCommandPalette} from './command-palette.js';
@@ -86,7 +87,7 @@ export interface CadEditorOptions {
   onError?: (error: Error) => void;
 }
 export interface CadCommandState {canUndo:boolean;canRedo:boolean;hasSelection:boolean;canDelete:boolean;canCombine:boolean;canExport:boolean;hasBodies:boolean;ready:boolean}
-export type CadCommand='new'|'open'|'save'|'import'|'export'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'command-palette'|'readout'|'code'|'model-source'|'model-library'|'union'|'subtract'|'intersect';
+export type CadCommand='new'|'open'|'save'|'import'|'export'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'command-palette'|'readout'|'code'|'model-source'|'model-library'|'union'|'subtract'|'intersect';
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag); element.className = className; if (text !== undefined) element.textContent = text; return element;
 }
@@ -143,6 +144,10 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const parametersPanel=mountParametersPanel(shell,session);
   const sketchPanel=mountSketchPanel(shell,session,doc=>client.evaluate(doc),client.offsetSketch,async()=>{await whenIdle();viewport.frame();},()=>grid);
   button('Sketch',()=>sketchPanel.open(),toolbar,'compact-icon').title=t('Create a dimensioned sketch and extrusion');
+  const pathPanel=mountPathPanel(shell,session,()=>{
+    if(getComputedStyle(tree).display==='none')togglePanel(tree,partsToggle);
+  });
+  button('Sketch path',()=>pathPanel.open(),toolbar,'compact-icon').title=t('Create an open line and arc path');
   button('Revolve',()=>sketchPanel.openRevolution(),toolbar,'compact-icon').title=t('Revolve a sketch around an axis');
   const mirrorPanel=mountMirrorPanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();});
   const openMirror=()=>{
@@ -314,7 +319,22 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       }
     };
     doc.roots.forEach(id => append(id, bodies));
-    const sketches=Object.values(doc.sketches??{});if(sketches.length){const group=section('sketches',t`Sketches · ${sketches.length}`,content);for(const sketch of sketches){const feature=Object.values(doc.nodes).find(n=>(n.kind==='extrusion'||n.kind==='revolution')&&n.sketchId===sketch.id);if(feature)button(t`Sketch: ${sketch.name}`,()=>sketchPanel.open(feature.id),group);else button(t`Revolve sketch: ${sketch.name}`,()=>sketchPanel.openRevolution(sketch.id),group);}}
+    const sketches=Object.values(doc.sketches??{});
+    if(sketches.length){
+      const group=section('sketches',t`Sketches · ${sketches.length}`,content,true);
+      for(const sketch of sketches){
+        if(sketch.profile.kind==='path'){
+          button(t`Sketch path: ${sketch.name}`,()=>pathPanel.open(sketch.id),group);
+          continue;
+        }
+        const feature=Object.values(doc.nodes).find(n=>(n.kind==='extrusion'||n.kind==='revolution')&&n.sketchId===sketch.id);
+        if(feature)button(t`Sketch: ${sketch.name}`,()=>sketchPanel.open(feature.id),group);
+        else{
+          button(t`Extrude sketch: ${sketch.name}`,()=>sketchPanel.openExtrusion(sketch.id),group);
+          button(t`Revolve sketch: ${sketch.name}`,()=>sketchPanel.openRevolution(sketch.id),group);
+        }
+      }
+    }
     if(doc.drawings?.length){
       const group=section('drawings',t`Drawings · ${doc.drawings.length}`,content,true);
       if(options.onExport&&doc.drawings.length>1){
@@ -583,7 +603,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'select-all':session.select(session.state.document.roots);break;case 'deselect':session.select([]);break;
       case 'select':setMode('select');break;case 'move':setMode('translate');break;case 'rotate':setMode('rotate');break;case 'scale':setMode('scale');break;
       case 'home':viewport.frame('iso');break;case 'fit':viewport.frame(undefined,true);break;case 'top':case 'front':case 'right':case 'back':case 'left':case 'bottom':viewport.setView(command);break;
-      case 'projection':projectionButton.click();break;case 'workplane':planeButton.click();break;case 'objects':partsToggle.click();break;case 'properties':propertiesToggle.click();break;case 'drop':viewport.dropSelection();break;case 'parameters':parametersPanel.open();break;case 'sketch':sketchPanel.open();break;case 'revolve':sketchPanel.openRevolution();break;case 'mirror':openMirror();break;case 'pattern':openPattern();break;
+      case 'projection':projectionButton.click();break;case 'workplane':planeButton.click();break;case 'objects':partsToggle.click();break;case 'properties':propertiesToggle.click();break;case 'drop':viewport.dropSelection();break;case 'parameters':parametersPanel.open();break;case 'sketch':sketchPanel.open();break;case 'sketch-path':pathPanel.open();break;case 'revolve':sketchPanel.openRevolution();break;case 'mirror':openMirror();break;case 'pattern':openPattern();break;
       case 'edit-mirror':mirrorPanel.open(session.state.selection[0],true);break;
       case 'edit-pattern':patternPanel.open(session.state.selection[0],true);break;
       case 'command-palette':palette.open();break;case 'model-source':modelSourcePanel.toggle();break;case 'model-library':modelLibraryPanel.open();break;case 'code':codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);break;case 'readout':readout.setVisible(!readout.visible);break;
@@ -591,7 +611,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'union':case 'subtract':case 'intersect':session.combine(command);break;
       default:throw new Error(t('Unknown editor command'));
     }
-    if(!['open','import','save','export','parameters','shapes','code','sketch','revolve','mirror','pattern','edit-mirror','edit-pattern','model-library','command-palette'].includes(command))viewport.canvas.focus({preventScroll:true});
+    if(!['open','import','save','export','parameters','shapes','code','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','model-library','command-palette'].includes(command))viewport.canvas.focus({preventScroll:true});
   }
   async function deliver(format: 'bcad' | 'stl' | '3mf', modificationNotes?: string, checkCanceled: () => void = () => {}) {
     if(format==='bcad'&&options.saveProject){await options.saveProject();return;}
@@ -616,7 +636,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { simulation.refresh(); viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); palette.dispose(); drawingPanel.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); palette.dispose(); drawingPanel.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;

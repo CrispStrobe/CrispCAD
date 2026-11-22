@@ -14,14 +14,14 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
  offsetSketch:(sketch:PlanarSketch,context:Pick<CadDocument,'parametric'>,distance:number)=>Promise<SketchProfile>,afterApply:()=>Promise<unknown>,snap:()=>number=()=>1) {
  const dialog=element('dialog');dialog.className='sketch-dialog';dialog.setAttribute('aria-label',t('Sketch and extrusion'));parent.append(dialog);
  let disposed=false,epoch=0;dialog.addEventListener('close',()=>epoch++);
- function open(featureId?:string,request?:{sketchId?:string}){
+ function open(featureId?:string,request?:{sketchId?:string;revolve:boolean}){
   epoch++;let busy=false;const expected=session.state.revision,doc=session.state.document,node=featureId?doc.nodes[featureId]:undefined;
   if(featureId&&node?.kind!=='extrusion'&&node?.kind!=='revolution')throw new Error(t('Select an extrusion feature to edit'));
-  const revolving=!!request||node?.kind==='revolution';
+  const revolving=request?.revolve??(node?.kind==='revolution');
   const linked=request?.sketchId;
   const sketchId=node?.kind==='extrusion'||node?.kind==='revolution'?node.sketchId:linked;
   const existing=sketchId?doc.sketches?.[sketchId]:undefined;
-  const title=revolving?(featureId?'Edit sketch & revolution':'Sketch & revolve'):(existing?'Edit sketch & extrusion':'Sketch & extrude');
+  const title=revolving?(featureId?'Edit sketch & revolution':'Sketch & revolve'):(featureId?'Edit sketch & extrusion':linked?'Extrude sketch':'Sketch & extrude');
   dialog.setAttribute('aria-label',t(revolving?'Sketch and revolution':'Sketch and extrusion'));
   dialog.replaceChildren();
   const close=element('button','×');close.setAttribute('aria-label',t('Close sketch'));close.title=t('Close sketch');close.onclick=()=>dialog.close();const header=element('header');header.append(element('h2',t(title)),close);
@@ -223,7 +223,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     else target.editExtrusion(featureId,{sketch,...extrusion});
     return featureId;
    }
-   if(linked)return target.revolveSketch(linked,revolution);
+   if(linked)return revolving?target.revolveSketch(linked,revolution):target.extrudeSketch(linked,extrusion);
    const newProfile={...sketch.profile,id:newId()};
    const settings={name:sketch.name,plane:sketch.plane,position};
    return revolving?target.addSketchRevolution(newProfile,{...settings,...revolution}):target.addSketchExtrusion(newProfile,{...settings,...extrusion});
@@ -276,8 +276,9 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     const topOffset=previewDepth=shape.start+d;
     const place=([x,y]:SketchPoint)=>[x+topOffset*.45,-y-topOffset*.35];
     const references=referenceGeometry.flatMap(guide=>guide.contours.map(loop=>loop.map(place)));
+    const openReferences=referenceGeometry.flatMap(guide=>guide.openPath?[guide.openPath.map(place)]:[]);
     const axisLine=shape.axisOffset!==undefined?[[shape.axisOffset,-Math.max(...ys)-h*.1],[shape.axisOffset,-Math.min(...ys)+h*.1]]:[];
-    const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),all=[...base,...top,...references.flat(),...axisLine],span=Math.max(w,h,Math.abs(d),1),pad=span*.18,minX=Math.min(...all.map(p=>p[0]))-pad,minY=Math.min(...all.map(p=>p[1]))-pad,vw=Math.max(...all.map(p=>p[0]))-minX+pad,vh=Math.max(...all.map(p=>p[1]))-minY+pad;
+    const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),all=[...base,...top,...references.flat(),...openReferences.flat(),...axisLine],span=Math.max(w,h,Math.abs(d),1),pad=span*.18,minX=Math.min(...all.map(p=>p[0]))-pad,minY=Math.min(...all.map(p=>p[1]))-pad,vw=Math.max(...all.map(p=>p[0]))-minX+pad,vh=Math.max(...all.map(p=>p[1]))-minY+pad;
     svg.setAttribute('viewBox',drag?.viewBox??`${minX} ${minY} ${vw} ${vh}`);svg.setAttribute('aria-hidden','true');
     const face=(loops:number[][][],cls:string)=>{
      const path=document.createElementNS(ns,'path');
@@ -296,6 +297,12 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     }
     face(raised,'sketch-top');
     if(references.length)face(references,'sketch-reference');
+    for(const points of openReferences){
+     const path=document.createElementNS(ns,'polyline');
+     path.setAttribute('points',points.map(point=>point.join(',')).join(' '));
+     path.setAttribute('class','sketch-reference sketch-open-reference');
+     svg.append(path);
+    }
     if(trimPanel.open&&!trimPanel.hidden&&trimStart.value&&trimEnd.value){
      try{
       const [ax,ay]=place(parsePoint(trimStart.value)),[bx,by]=place(parsePoint(trimEnd.value));
@@ -608,5 +615,5 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const footer=element('footer');footer.append(status,apply);const body=element('div');body.className='sketch-body';const expressions=element('details');expressions.className='sketch-expressions';const summary=element('summary',t('Dimension expressions'));summary.title=t('Dimension expressions');summary.setAttribute('aria-label',t('Dimension expressions'));expressions.append(summary,help);form.append(expressions);const drawing=element('div');drawing.append(preview);if(!linked)drawing.append(hint);body.append(drawing,form);dialog.append(header,infoPanel,body,footer);draw();dialog.showModal();
  }
  dialog.addEventListener('keydown',e=>e.stopPropagation());
- return {open,openRevolution(sketchId?:string){open(undefined,{sketchId});},dispose(){disposed=true;dialog.close();dialog.remove();}};
+ return {open,openRevolution(sketchId?:string){open(undefined,{sketchId,revolve:true});},openExtrusion(sketchId:string){open(undefined,{sketchId,revolve:false});},dispose(){disposed=true;dialog.close();dialog.remove();}};
 }

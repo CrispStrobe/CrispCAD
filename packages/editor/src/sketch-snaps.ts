@@ -59,9 +59,10 @@ function intersections(first:Edge,second:Edge) {
 export function sketchSnapReference(sketch:PlanarSketch, doc:CadDocument) {
  const {contour,holes=[]}=evaluateSketch(sketch,doc);
  const points:SketchSnap[]=[], edges:Edge[]=[];
- const addLoop=(vertices:SketchPoint[],bulges?:number[])=>vertices.forEach((a,i)=>{
-  const b=vertices[(i+1)%vertices.length];
+ const addLoop=(vertices:SketchPoint[],bulges?:number[],closed=true)=>vertices.forEach((a,i)=>{
   points.push({kind:'Endpoint',point:a});
+  if(!closed&&i===vertices.length-1)return;
+  const b=vertices[(i+1)%vertices.length];
   const bulge=bulges?.[i]??0,arc=sketchBulgeArc(a,b,bulge);
   points.push({kind:'Midpoint',point:sketchBulgeMidpoint(a,b,bulge)});
   if(arc){
@@ -78,12 +79,13 @@ export function sketchSnapReference(sketch:PlanarSketch, doc:CadDocument) {
  const profile=sketch.profile;
  if(profile.kind==='rectangle')addLoop(contour);
  if(profile.kind==='outline')addLoop(profile.points,profile.bulges);
+ if(profile.kind==='path')addLoop(profile.points,profile.bulges,false);
  if(profile.kind==='circle')addCircle(profile.center??[0,0],featureValue(profile.radius,doc));
  if(profile.kind==='region')for(const loop of profile.loops){
   if(loop.kind==='outline')addLoop(loop.points,loop.bulges);
   else addCircle([featureValue(loop.center[0],doc),featureValue(loop.center[1],doc)],featureValue(loop.radius,doc));
  }
- return {contours:[contour,...holes],points,edges};
+ return {contours:profile.kind==='path'?[]:[contour,...holes],openPath:profile.kind==='path'?contour:undefined,points,edges};
 }
 
 type Reference = ReturnType<typeof sketchSnapReference>;

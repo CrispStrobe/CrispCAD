@@ -13,14 +13,14 @@ import type {CadJoint} from './physics.js';
 import { defaultPartPhysics, allocateMotorPort } from './physics.js';
 import { applyParametricBindings, assertDrivenEdit } from './parameters.js';
 import type {CodeProgram} from './code.js';
-import {isSketchFeature} from './features.js';
+import {evaluateSketch,isSketchFeature} from './features.js';
 import type {PlanarSketch,SketchProfile,FeatureScalar,RevolutionFeature,MirrorFeature,PatternFeature,PatternSettings} from './features.js';
 import type { ParametricDesign } from './parameters.js';
 import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositionExpression} from './fragments.js';
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -226,7 +226,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     },
     addCode(program:CodeProgram,name='Code object',options:{position?:Vec3}={}){const id=newId();commit('Add code object',d=>{d.version=Math.max(d.version,4) as CadDocument['version'];d.nodes[id]={id,kind:'code',program:structuredClone(program),name:uniqueObjectName(name,new Set(d.roots.map(key=>d.nodes[key].name))),color:'#76b7ce',transform:{...identityTransform(),position:options.position??[0,0,0]}};d.roots.push(id);return [id];});return id;},
     updateCode(id:string,program:CodeProgram){commit('Edit code object',d=>{const node=d.nodes[id];if(node?.kind!=='code')throw new Error(t('Select a code object'));guardConstructionEdit(d,id);const next={...node,program:structuredClone(program)};if(next.physics&&!sameModelValue(node.program,program)){next.physics={...next.physics};delete next.physics.collisionAssembly;}d.nodes[id]=next;});},
-    addSketch(profile:SketchProfile,options:{name?:string;plane?:PlanarSketch['plane']}={}) {const id=newId();commit('Add sketch',d=>{d.version=Math.max(d.version,3) as CadDocument['version'];d.sketches??={};d.sketches[id]={version:1,id,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile)};});return id;},
+    addSketch(profile:SketchProfile,options:{name?:string;plane?:PlanarSketch['plane']}={}) {const id=newId();commit('Add sketch',d=>{if(profile.kind==='path')upgradeModelFeatures(d,15);else if(d.version<3)d.version=3;d.sketches??={};d.sketches[id]={version:1,id,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile)};});return id;},
     extrudeSketch(sketchId:string,options:{distance?:FeatureScalar;symmetric?:boolean}={}) {const id=newId();commit('Extrude sketch',d=>{
       d.version=Math.max(d.version,3) as CadDocument['version'];d.nodes[id]={id,kind:'extrusion',featureVersion:1,sketchId,distance:options.distance??10,symmetric:options.symmetric??false,name:uniqueObjectName(t('Extrusion'),new Set(d.roots.map(key=>d.nodes[key].name))),color:'#eea52b',transform:identityTransform()};d.roots.push(id);return [id];});return id;},
     addSketchExtrusion(profile:SketchProfile,options:{name?:string;plane?:PlanarSketch['plane'];distance?:FeatureScalar;symmetric?:boolean;position?:Vec3}={}) {
@@ -257,6 +257,21 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         node.angle=inputs.angle;
         if(inputs.axisOffset===undefined)delete node.axisOffset;
         else node.axisOffset=inputs.axisOffset;
+      });
+    },
+    closeSketchPath(id:string,profile:Extract<SketchProfile,{kind:'path'}>,options:Pick<PlanarSketch,'name'|'plane'>) {
+      commit('Close sketch path',d=>{
+        const sketch=d.sketches?.[id];
+        if(sketch?.profile.kind!=='path'||sketch.profile.id!==profile.id)throw new Error(t('Select an open sketch path'));
+        evaluateSketch({...sketch,...options,profile},d);
+        const outline:SketchProfile={...structuredClone(profile),kind:'outline'};
+        d.sketches![id]={...sketch,name:options.name,plane:options.plane,profile:outline};
+      });
+    },
+    removeSketchPath(id:string){
+      commit('Delete sketch path',d=>{
+        if(d.sketches?.[id]?.profile.kind!=='path')throw new Error(t('Select an open sketch path'));
+        delete d.sketches[id];
       });
     },
     updateSketch(id:string,patch:Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>) {commit('Edit sketch',d=>{editSketch(d,id,patch);});},
