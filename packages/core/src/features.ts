@@ -34,6 +34,45 @@ export interface MirrorFeature {
   plane:SketchPlane;
   offset:FeatureScalar;
 }
+export type PatternSettings<T=FeatureScalar> = {axis:'X'|'Y'|'Z';count:T}&(
+  {mode:'linear';spacing:T}|{mode:'circular';center:[T,T];sweep:T}
+);
+export interface PatternFeature {kind:'pattern';source:string;pattern:PatternSettings}
+export function mapPatternScalars<T,U>(settings:PatternSettings<T>,map:(value:T)=>U):PatternSettings<U>{
+  const common={axis:settings.axis,count:map(settings.count)};
+  return settings.mode==='linear'
+    ?{...common,mode:'linear',spacing:map(settings.spacing)}
+    :{...common,mode:'circular',center:[map(settings.center[0]),map(settings.center[1])],sweep:map(settings.sweep)};
+}
+export function patternExpressions(settings:PatternSettings):string[]{
+  const values=settings.mode==='linear'?[settings.count,settings.spacing]:[settings.count,...settings.center,settings.sweep];
+  return values.filter((value):value is string=>typeof value==='string');
+}
+export function evaluatePattern(node:PatternFeature&{id:string},doc:CadDocument){
+  try{
+    const settings=node.pattern;
+    if(!record(settings)||!['linear','circular'].includes(settings.mode)||!['X','Y','Z'].includes(settings.axis))
+      throw new Error(t('Choose a pattern type and an X, Y or Z axis'));
+    const axis=['X','Y','Z'].indexOf(settings.axis);
+    const count=featureValue(settings.count,doc,'scalar');
+    if(!Number.isInteger(count)||count<2||count>64)throw new Error(t('Pattern count must be a whole number from 2 to 64'));
+    if(settings.mode==='linear'){
+      const spacing=featureValue(settings.spacing,doc);
+      if(Math.abs(spacing)<.01||Math.abs(spacing)*(count-1)>1000000)throw new Error(t('Use a spacing of at least 0.01 mm in either direction and a total span of at most 1000000 mm'));
+      return {mode:settings.mode,axis,count,spacing};
+    }
+    if(!Array.isArray(settings.center)||settings.center.length!==2)throw new Error(t('Enter two coordinates for the pattern center'));
+    const center:Vec3=[0,0,0];
+    const perpendicular=[0,1,2].filter(index=>index!==axis);
+    perpendicular.forEach((index,i)=>{center[index]=featureValue(settings.center[i],doc);});
+    if(center.some(value=>Math.abs(value)>100000))throw new Error(t('Pattern center must be within 100000 mm on each axis'));
+    const sweep=featureValue(settings.sweep,doc,'deg');
+    if(Math.abs(sweep)<.1||Math.abs(sweep)>360)throw new Error(t('Sweep magnitude must be between 0.1° and 360°'));
+    return {mode:settings.mode,axis,count,center,sweep};
+  }catch(error){
+    throw new FeatureEvaluationError({source:'feature',id:node.id,message:error instanceof Error?error.message:String(error)});
+  }
+}
 export function evaluateMirror(node:MirrorFeature&{id:string},doc:CadDocument){
   try{
     const axis=(['YZ','XZ','XY'] as const).indexOf(node.plane);
@@ -109,6 +148,7 @@ export function checkFeatures(doc:CadDocument) {
   for(const node of Object.values(doc.nodes)){
     if(node.kind==='extrusion'){if(doc.version<3)throw new Error(t('Extrusion features require document version 3'));evaluateExtrusion(node,doc);}
     else if(node.kind==='mirror')evaluateMirror(node,doc);
+    else if(node.kind==='pattern')evaluatePattern(node,doc);
     else if(node.kind==='revolution'){if(doc.version<12)throw new Error(t('Revolution features require document version 12'));evaluateRevolution(node,doc);}
   }
 }
@@ -156,6 +196,7 @@ export function designGraph(doc:CadDocument):DesignGraphEntry[] {
   for(const n of Object.values(doc.nodes)){const deps=constructionInputs(n).map(id=>`feature:${id}`);
     if(isSketchFeature(n))deps.push(`sketch:${n.sketchId}`,...sketchFeatureExpressions(n).flatMap(references));
     if(n.kind==='mirror'&&typeof n.offset==='string')deps.push(...references(n.offset));
+    if(n.kind==='pattern')deps.push(...patternExpressions(n.pattern).flatMap(references));
     for(const b of doc.parametric?.bindings??[])if(b.nodeId===n.id)deps.push(...references(b.expression));
     entries.push({key:`feature:${n.id}`,id:n.id,kind:'feature',label:n.name,dependencies:[...new Set(deps)]});}
   const byKey=new Map(entries.map(e=>[e.key,e])),ordered:DesignGraphEntry[]=[],seen=new Set<string>(),visiting=new Set<string>();

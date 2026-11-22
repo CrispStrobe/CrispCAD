@@ -4,7 +4,7 @@ import {t} from './i18n.js';
 import {pruneModelProvenance} from './model-provenance.js';
 import {constructionInputs,validateDocument} from './document.js';
 import type {CadDocument} from './document.js';
-import {isSketchFeature,sketchExpressions,rewriteSketchExpressions,sketchFeatureExpressions} from './features.js';
+import {isSketchFeature,sketchExpressions,rewriteSketchExpressions,sketchFeatureExpressions,mapPatternScalars,patternExpressions} from './features.js';
 import {evaluateExpression,evaluateParameters} from './parameters.js';
 
 export function uniqueObjectName(base:string,used:ReadonlySet<string>,limit=160):string {
@@ -29,6 +29,7 @@ export function selectionFragment(input:CadDocument,selection:readonly string[])
   original.bindings.forEach(binding=>references(binding.expression));for(const s of Object.values(doc.sketches??{}))sketchExpressions(s).forEach(references);for(const n of Object.values(doc.nodes)){
    if(isSketchFeature(n))sketchFeatureExpressions(n).forEach(references);
    if(n.kind==='mirror'&&typeof n.offset==='string')references(n.offset);
+   if(n.kind==='pattern')patternExpressions(n.pattern).forEach(references);
   }const scanned=new Set<string>();
   while([...required].some(name=>!scanned.has(name)))for(const name of [...required])if(!scanned.has(name)){scanned.add(name);references(original.parameters[name].expression);}
   original.parameters=Object.fromEntries(Object.entries(original.parameters).filter(([name])=>required.has(name)));
@@ -51,6 +52,7 @@ export function mergeFragmentParameters(target:CadDocument,source:CadDocument,id
   const pasted=target.nodes[ids.get(n.id)!];
   if(n.kind==='extrusion'&&pasted.kind==='extrusion'&&typeof n.distance==='string')pasted.distance=rewrite(n.distance);
   if(n.kind==='mirror'&&pasted.kind==='mirror'&&typeof n.offset==='string')pasted.offset=rewrite(n.offset);
+  if(n.kind==='pattern'&&pasted.kind==='pattern')pasted.pattern=mapPatternScalars(n.pattern,value=>typeof value==='string'?rewrite(value):value);
   if(n.kind==='revolution'&&pasted.kind==='revolution'){
    if(typeof n.angle==='string')pasted.angle=rewrite(n.angle);
    if(typeof n.axisOffset==='string')pasted.axisOffset=rewrite(n.axisOffset);

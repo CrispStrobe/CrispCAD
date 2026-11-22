@@ -14,13 +14,13 @@ import { defaultPartPhysics, allocateMotorPort } from './physics.js';
 import { applyParametricBindings, assertDrivenEdit } from './parameters.js';
 import type {CodeProgram} from './code.js';
 import {isSketchFeature} from './features.js';
-import type {PlanarSketch,SketchProfile,FeatureScalar,RevolutionFeature,MirrorFeature} from './features.js';
+import type {PlanarSketch,SketchProfile,FeatureScalar,RevolutionFeature,MirrorFeature,PatternFeature,PatternSettings} from './features.js';
 import type { ParametricDesign } from './parameters.js';
 import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositionExpression} from './fragments.js';
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -35,6 +35,43 @@ function appendRevolution(doc:CadDocument,id:string,sketchId:string,inputs:Revol
     color:'#eea52b',transform:{...identityTransform(),position}};
   doc.roots.push(id);
   return [id];
+}
+const operationGuard=(kind:'mirror'|'pattern')=>kind==='mirror'?{
+  selection:t('Select one top-level body to mirror'),
+  joints:t('Detach this body’s joints before mirroring'),
+  tracers:t('Remove this body’s motion tracers before mirroring')
+}:{
+  selection:t('Select one top-level body to pattern'),
+  joints:t('Detach this body’s joints before patterning'),
+  tracers:t('Remove this body’s motion tracers before patterning')
+};
+function appendBodyOperation(doc:CadDocument,id:string,operation:MirrorFeature|PatternFeature){
+  const {kind,source}=operation,body=doc.nodes[source],index=doc.roots.indexOf(source),guard=operationGuard(kind);
+  if(index<0||body.reference)throw new Error(guard.selection);
+  if(doc.joints?.some(j=>j.bodyA===source||j.bodyB===source))throw new Error(guard.joints);
+  if(doc.tracers?.some(trace=>trace.bodyId===source))throw new Error(guard.tracers);
+  upgradeModelFeatures(doc,kind==='mirror'?13:14);
+  const material=body.physics;
+  const name=kind==='mirror'?t`Mirror of ${body.name}`:t`Pattern of ${body.name}`;
+  doc.nodes[id]={...operation,id,name:uniqueObjectName(name,new Set(doc.roots.map(key=>doc.nodes[key].name))),
+    color:body.color,transform:identityTransform(),...(body.role?{role:body.role}:{}),
+    ...(material?{physics:{version:1,motion:material.motion,densityKgM3:material.densityKgM3,
+      friction:material.friction,restitution:material.restitution,intent:'rigid',...(material.material?{material:material.material}:{})}}:{})
+  };
+  doc.roots[index]=id;
+  return [id];
+}
+function guardBodyOperationEdit(doc:CadDocument,id:string,kind:'mirror'|'pattern'){
+  guardConstructionEdit(doc,id);
+  const guard=operationGuard(kind);
+  const contains=(key:string,seen=new Set<string>()):boolean=>{
+    if(key===id)return true;
+    if(seen.has(key))return false;
+    seen.add(key);
+    return constructionInputs(doc.nodes[key]).some(child=>contains(child,seen));
+  };
+  if(doc.joints?.some(j=>contains(j.bodyA)||contains(j.bodyB)))throw new Error(guard.joints);
+  if(doc.tracers?.some(trace=>contains(trace.bodyId)))throw new Error(guard.tracers);
 }
 export interface SessionState { document: CadDocument; selection: readonly string[]; revision: number; canUndo: boolean; canRedo: boolean; label: string }
 const cloneNode = (node: SolidNode): SolidNode => ({ ...node,
@@ -179,7 +216,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         const connected=(key:string,seen=new Set<string>()):boolean=>{if(key===id)return true;if(seen.has(key))return false;seen.add(key);const n=d.nodes[key];return constructionInputs(n).some(child=>connected(child,seen));};
         if(d.joints?.some(j=>connected(j.bodyA)||connected(j.bodyB)))throw new Error(t('Detach joints before regenerating their bodies'));
         const map=new Map(Object.keys(source.nodes).map(key=>[key,key===source.roots[0]?id:newId()]));
-        for(const [key,node] of Object.entries(source.nodes)){const next=cloneNode(node);next.id=map.get(key)!;if(next.kind==='boolean')next.inputs=next.inputs.map(input=>map.get(input)!);if(next.kind==='mirror')next.source=map.get(next.source)!;d.nodes[next.id]=next;}
+        for(const [key,node] of Object.entries(source.nodes)){const next=cloneNode(node);next.id=map.get(key)!;if(next.kind==='boolean')next.inputs=next.inputs.map(input=>map.get(input)!);if(next.kind==='mirror'||next.kind==='pattern')next.source=map.get(next.source)!;d.nodes[next.id]=next;}
         const retained=d.version>=5?[...new Set([...descendants].flatMap(key=>document.nodes[key]?.provenance??[]))]:[];
         if(d.version<5&&Object.hasOwn(previous,'provenance'))d.nodes[id].provenance=structuredClone(previous.provenance);
         const next=d.nodes[id];if(retained.length)next.provenance=retained;next.name=previous.name;next.color=previous.color;if(previous.role)next.role=previous.role;next.transform=structuredClone(previous.transform);if(options.resetScale)next.transform.scale=[1,1,1];
@@ -229,39 +266,29 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     });},
     mirrorBody(source:string,inputs:Pick<MirrorFeature,'plane'|'offset'>) {
       const id=newId();
-      commit('Mirror body',d=>{
-        const body=d.nodes[source],index=d.roots.indexOf(source);
-        if(index<0||body.reference)throw new Error(t('Select one top-level body to mirror'));
-        if(d.joints?.some(j=>j.bodyA===source||j.bodyB===source))throw new Error(t('Detach this body’s joints before mirroring'));
-        if(d.tracers?.some(trace=>trace.bodyId===source))throw new Error(t('Remove this body’s motion tracers before mirroring'));
-        upgradeModelFeatures(d,13);
-        const material=body.physics;
-        d.nodes[id]={id,kind:'mirror',source,plane:inputs.plane,offset:inputs.offset,
-          name:uniqueObjectName(t`Mirror of ${body.name}`,new Set(d.roots.map(key=>d.nodes[key].name))),
-          color:body.color,transform:identityTransform(),...(body.role?{role:body.role}:{}),
-          ...(material?{physics:{version:1,motion:material.motion,densityKgM3:material.densityKgM3,
-            friction:material.friction,restitution:material.restitution,intent:'rigid',...(material.material?{material:material.material}:{})}}:{})
-        };
-        d.roots[index]=id;
-        return [id];
-      });
+      commit('Mirror body',d=>appendBodyOperation(d,id,{kind:'mirror',source,plane:inputs.plane,offset:inputs.offset}));
       return id;
     },
     editMirror(id:string,inputs:Pick<MirrorFeature,'plane'|'offset'>) {
       commit('Edit mirror',d=>{
         const node=d.nodes[id];
         if(node?.kind!=='mirror')throw new Error(t('Select a mirrored body'));
-        guardConstructionEdit(d,id);
-        const contains=(key:string,seen=new Set<string>()):boolean=>{
-          if(key===id)return true;
-          if(seen.has(key))return false;
-          seen.add(key);
-          return constructionInputs(d.nodes[key]).some(child=>contains(child,seen));
-        };
-        if(d.joints?.some(j=>contains(j.bodyA)||contains(j.bodyB)))throw new Error(t('Detach this body’s joints before mirroring'));
-        if(d.tracers?.some(trace=>contains(trace.bodyId)))throw new Error(t('Remove this body’s motion tracers before mirroring'));
+        guardBodyOperationEdit(d,id,node.kind);
         node.plane=inputs.plane;
         node.offset=inputs.offset;
+      });
+    },
+    patternBody(source:string,settings:PatternSettings) {
+      const id=newId();
+      commit('Pattern body',d=>appendBodyOperation(d,id,{kind:'pattern',source,pattern:structuredClone(settings)}));
+      return id;
+    },
+    editPattern(id:string,settings:PatternSettings) {
+      commit('Edit pattern',d=>{
+        const node=d.nodes[id];
+        if(node?.kind!=='pattern')throw new Error(t('Select a patterned body'));
+        guardBodyOperationEdit(d,id,node.kind);
+        node.pattern=structuredClone(settings);
       });
     },
     fragment(ids:readonly string[]=selection){return selectionFragment(document,ids);},
@@ -280,7 +307,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         const sketches=new Map(Object.keys(source.sketches??{}).map(id=>[id,newId()]));
         for(const [id,sketch] of Object.entries(source.sketches??{})){d.sketches??={};const next=structuredClone(sketch);next.id=sketches.get(id)!;next.profile.id=newId();d.sketches[next.id]=next;}
         const names=new Set(d.roots.map(id=>d.nodes[id].name));
-        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version>=5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(isSketchFeature(node))node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if(node.kind==='mirror')node.source=ids.get(node.source)!; if (source.roots.includes(id)) node.transform.position = node.transform.position.map((v, i) => v + offset[i]) as [number, number, number]; d.nodes[node.id] = node; }
+        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version>=5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(isSketchFeature(node))node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if(node.kind==='mirror'||node.kind==='pattern')node.source=ids.get(node.source)!; if (source.roots.includes(id)) node.transform.position = node.transform.position.map((v, i) => v + offset[i]) as [number, number, number]; d.nodes[node.id] = node; }
         const roots = source.roots.map(id => ids.get(id)!); d.roots.push(...roots);
         for(const id of roots){d.nodes[id].name=uniqueObjectName(d.nodes[id].name,names);names.add(d.nodes[id].name);}
         if(options.mergeParameters)mergeFragmentParameters(d,source,ids,offset,sketches);
@@ -342,7 +369,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
           if (map.has(id)) return map.get(id)!;
           const next = newId(); map.set(id, next); const n = cloneNode(d.nodes[id]); n.id = next;
           if (n.kind === 'boolean') n.inputs = n.inputs.map(copy);
-          if(n.kind==='mirror')n.source=copy(n.source);
+          if(n.kind==='mirror'||n.kind==='pattern')n.source=copy(n.source);
           if(isSketchFeature(n)){let sketchId=copiedSketches.get(n.sketchId);if(!sketchId){sketchId=newId();copiedSketches.set(n.sketchId,sketchId);const sketch=structuredClone(d.sketches![n.sketchId]);sketch.id=sketchId;sketch.profile.id=newId();d.sketches![sketchId]=sketch;}n.sketchId=sketchId;}
           d.nodes[next] = n; return next;
         };

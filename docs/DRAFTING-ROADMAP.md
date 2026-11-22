@@ -156,7 +156,7 @@ The axis position and sweep accept named dimensions.
 
 **Edit sketch & revolution** changes the sweep, axis or sketch in one undoable
 operation. Editing a shared sketch updates every feature that uses it. Save
-and reopen the original project to keep these relationships. Patterns and the searchable command palette remain open.
+and reopen the original project to keep these relationships. The searchable command palette remains open.
 
 ## Visual Mirror
 
@@ -169,3 +169,18 @@ second independent body, duplicate the source and place the copy before mirrorin
 Open **Inputs** under the result to edit the retained source. Use **Edit
 mirror** in Properties to change the plane or offset. Mirror and its edits
 participate in Undo and retain their inputs when you save and reopen.
+
+## Visual patterns
+
+Select a body and choose **Pattern**. In **Linear**, enter an axis, the total
+number of instances including the source, and a signed spacing. In **Circular**,
+enter an axis, the center coordinates on the perpendicular plane and a signed
+sweep. For a bolt circle, place a bolt away from the chosen axis first. A full
+circle distributes the instances evenly without repeating the source. A partial
+sweep includes both endpoints.
+
+The pattern produces one body and joins any overlapping copies. Open **Inputs**
+to edit the shared source, or use **Edit pattern** in Properties to change the
+settings. Counts, distances and angles accept named dimensions. The document
+retains these settings along with the stable source and output IDs. Patterns
+allow 2 to 64 instances within the geometry budget.

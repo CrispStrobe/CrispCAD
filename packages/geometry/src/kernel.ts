@@ -5,7 +5,7 @@ import {triangulatePolyhedron} from './polyhedron.js';
 import {textProfileContours} from './font-profile.js';
 import Module from 'manifold-3d';
 import type { Manifold, ManifoldToplevel, CrossSection } from 'manifold-3d';
-import { validateDocument, documentGeometryKey, evaluateExtrusion, evaluateRevolution, evaluateMirror, FeatureEvaluationError, compileCode } from '@brickwright/cad-core';
+import { validateDocument, documentGeometryKey, evaluateExtrusion, evaluateRevolution, evaluateMirror, evaluatePattern, FeatureEvaluationError, compileCode } from '@brickwright/cad-core';
 import type { CadDocument, SolidNode, CodeShape,CodeProfile } from '@brickwright/cad-core';
 import { collisionCSG } from './collision-csg.js';
 import { partitionConvex } from './convex.js';
@@ -148,6 +148,29 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
           position[axis]=2*offset;
           solid=keep(solid.translate(position));
         }
+        break;
+      }
+      case 'pattern': {
+        const pattern=evaluatePattern(node,doc),source=build(node.source);
+        if(source.numTri()*pattern.count>500000)throw new GeometryResourceLimitError(t('Pattern exceeds the 500000 input face limit'));
+        const copies=[source];
+        if(pattern.mode==='linear'){
+          for(let i=1;i<pattern.count;i++){
+            const delta:[number,number,number]=[0,0,0];
+            delta[pattern.axis]=i*pattern.spacing;
+            copies.push(keep(source.translate(delta)));
+          }
+        }else{
+          const step=pattern.sweep/(Math.abs(pattern.sweep)===360?pattern.count:pattern.count-1);
+          const [x,y,z]=pattern.center;
+          const centered=keep(source.translate([-x,-y,-z]));
+          for(let i=1;i<pattern.count;i++){
+            const angles:[number,number,number]=[0,0,0];
+            angles[pattern.axis]=i*step;
+            copies.push(keep(keep(centered.rotate(angles)).translate(pattern.center)));
+          }
+        }
+        solid=keep(module.Manifold.union(copies));
         break;
       }
       case 'mesh': {

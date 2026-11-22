@@ -9,6 +9,7 @@ const paths: Record<string, string> = {
   'Sketch width': 'M2 12h20 M6 8l-4 4 4 4 M18 8l4 4-4 4',
   'Sketch depth': 'M12 2v20 M8 6l4-4 4 4 M8 18l4 4 4-4',
   'Sketch radius': 'M20 6A10 10 0 1 0 22 12 M12 12l8-6 M15 6h5v5',
+  Pattern: 'M3 3h5v5H3Z M16 3h5v5h-5Z M3 16h5v5H3Z M16 16h5v5h-5Z',
   Mirror: 'M12 2v20 M3 18V6l6 8v4H3Z M21 18V6l-6 8v4h6Z',
   Revolve: 'M12 2v20 M12 5h6v14h-6 M4 13c-3 2 1 4 8 4s11-2 8-4 M4 9l-1 4 4-1',
   Extrude: 'M2 10l8-4 8 4-8 4Z M2 10v9l8 4 8-4v-9 M10 14v9 M22 2v11 M19 5l3-3 3 3',
