@@ -114,6 +114,7 @@ export function evaluateSketchRegion(loops: SketchLoop[], resolve = (scalar: Fea
   }
   return {
     contour: boundary.points,
+    loopIds: [boundary,...holes].map(({loop})=>loop.id),
     holes: holes.map(hole => [...hole.points].reverse()),
     edgeIds: [boundary,...holes].flatMap(({loop}) => loop.kind === 'circle'
       ? [loop.id+':circumference']

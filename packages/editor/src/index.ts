@@ -33,6 +33,7 @@ import { createPresetDocument, evaluatedPreview, shapeCatalog } from './shapes.j
 import {mountModelSourcePanel} from './model-source-panel.js';
 import {mountCodePanel} from './code-panel.js';
 import {exportSketchDxf} from './sketch-dxf.js';
+import {mountDrawingPanel} from './drawing-panel.js';
 import {exportSketchPdf} from './sketch-pdf.js';
 import {mountSketchPanel} from './sketch-panel.js';
 import { mountParametersPanel, propertyLabels } from './parameters-panel.js';
@@ -138,6 +139,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const parametersPanel=mountParametersPanel(shell,session);
   const sketchPanel=mountSketchPanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();},()=>grid);
   button('Sketch',()=>sketchPanel.open(),toolbar,'compact-icon').title=t('Create a dimensioned sketch and extrusion');
+  const drawingPanel=mountDrawingPanel(shell,session,options.onExport);
   const modelSourcePanel=mountModelSourcePanel(shell,status,session,doc=>client.evaluate(doc),(recipe,name)=>createPresetDocument(recipe.preset,name,{recipe}));
   const codePanel=mountCodePanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();},options.onExport,()=>run(()=>modelSourcePanel.open()));
   button('Code',()=>codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined),toolbar,'compact-icon').title=t('Code an object');
@@ -281,6 +283,10 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     };
     doc.roots.forEach(id => append(id, bodies));
     const sketches=Object.values(doc.sketches??{});if(sketches.length){const group=section('sketches',t`Sketches · ${sketches.length}`,content);for(const sketch of sketches){const feature=Object.values(doc.nodes).find(n=>n.kind==='extrusion'&&n.sketchId===sketch.id);if(feature)button(t`Sketch: ${sketch.name}`,()=>sketchPanel.open(feature.id),group);else group.append(el('div','browser-value',sketch.name));}}
+    if(doc.drawings?.length){
+      const group=section('drawings',t`Drawings · ${doc.drawings.length}`,content,true);
+      for(const sheet of doc.drawings)button(t`Drawing: ${sheet.title}`,()=>drawingPanel.open({sheetId:sheet.id}),group);
+    }
     const parameters=Object.entries(doc.parametric?.parameters??{});if(parameters.length){const group=section('parameters',t`Parameters · ${parameters.length}`,content);button('Edit model parameters',()=>parametersPanel.open(),group);for(const [name,p] of parameters){const entry=el('div','browser-value');entry.append(el('span','',name),el('span','',p.expression));group.append(entry);}}
 
     if (!doc.roots.length) content.append(el('p', 'hint', t('No objects yet. Start with a box.')));
@@ -363,6 +369,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     if(n.kind==='extrusion'){
       const sketch=session.state.document.sketches![n.sketchId];inspector.append(el('p','hint',t`${sketch.name} · ${t(sketch.profile.kind)} · ${sketch.plane} plane`));
       button('Edit sketch & extrusion',()=>sketchPanel.open(id),inspector);
+      button('Create drawing sheet',()=>drawingPanel.open({featureId:id}),inspector);
       if(options.onExport&&!n.provenance?.length){
         const exportProfile=button('Export sketch as DXF',()=>options.onExport!(exportSketchDxf(session.state.document,id)),inspector);
         exportProfile.title=t('Export the 2D profile at sketch dimensions in millimetres.');
@@ -561,7 +568,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { simulation.refresh(); viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); drawingPanel.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;

@@ -16,6 +16,7 @@ export function offsetPositionExpression(expression:string,design:NonNullable<Ca
 /** A complete, independently valid selection, with only referenced parameters. */
 export function selectionFragment(input:CadDocument,selection:readonly string[]):CadDocument {
  const doc=validateDocument(input),chosen=new Set(selection);doc.roots=doc.roots.filter(id=>chosen.has(id));
+ delete doc.drawings;
  if(!doc.roots.length)throw new Error(t('Select an object to copy'));
  const keep=new Set<string>();const visit=(id:string)=>{if(keep.has(id))return;keep.add(id);const node=doc.nodes[id];if(node.kind==='boolean')node.inputs.forEach(visit);};doc.roots.forEach(visit);
  for(const id of Object.keys(doc.nodes))if(!keep.has(id))delete doc.nodes[id];

@@ -36,7 +36,7 @@ export function featureValue(input:FeatureScalar,doc:CadDocument,unit:ParameterU
   if(Math.abs(q.value)>1e6)throw new Error(t('Expression exceeds the finite design range'));return q.value;
 }
 function dimension(input:FeatureScalar,doc:CadDocument):number {const v=featureValue(input,doc);if(v<.01||v>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));return v;}
-export function evaluateSketch(sketch:PlanarSketch,doc:CadDocument):{contour:SketchPoint[];holes?:SketchPoint[][];edgeIds:string[]} {
+export function evaluateSketch(sketch:PlanarSketch,doc:CadDocument):{contour:SketchPoint[];holes?:SketchPoint[][];loopIds?:string[];edgeIds:string[]} {
   try {
     if(!record(sketch)||sketch.version!==1||!idOk(sketch.id)||typeof sketch.name!=='string'||!sketch.name.trim()||sketch.name.length>160||/[\u0000-\u001f]/.test(sketch.name)||!['XY','XZ','YZ'].includes(sketch.plane)||!record(sketch.profile)||!idOk(sketch.profile.id))throw new Error(t('Invalid sketch schema'));
     const p=sketch.profile;

@@ -1,3 +1,5 @@
+import {resolveDrawingSource} from './drawing-sheet.js';
+import type {DrawingInputs} from './drawing-sheet.js';
 import {upgradeSimulation,jointAtWorldFrame,materialPhysics,simulationTracers} from './simulation.js';
 import type {SimulationSettings} from './simulation.js';
 // SPDX-License-Identifier: BSD-3-Clause
@@ -125,6 +127,24 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       if(result!==undefined)throw new Error('Assembly edits must finish synchronously');
       if(candidate.id!==document.id)throw new Error('Assembly edits must keep the project identity');
       commit(title,d=>{for(const key of Object.keys(d))delete (d as any)[key];Object.assign(d,candidate);});
+    },
+    saveDrawingSheet(inputs:DrawingInputs,sheetId?:string){
+      const id=sheetId??newId();
+      commit(sheetId?'Edit drawing sheet':'Add drawing sheet',d=>{
+        if(!resolveDrawingSource(d,inputs.source))throw new Error(t('Choose an available drawing source.'));
+        const sheets=d.drawings??[];
+        if(sheetId&&!sheets.some(sheet=>sheet.id===id))throw new Error(t('Drawing sheet does not exist.'));
+        const sheet={...structuredClone(inputs),id};
+        d.version=9;
+        d.drawings=sheetId?sheets.map(item=>item.id===id?sheet:item):[...sheets,sheet];
+      });
+      return id;
+    },
+    removeDrawingSheet(id:string){
+      commit('Remove drawing sheet',d=>{
+        if(!d.drawings?.some(sheet=>sheet.id===id))throw new Error(t('Drawing sheet does not exist.'));
+        d.drawings=d.drawings.filter(sheet=>sheet.id!==id);
+      });
     },
     setParametric(design: ParametricDesign) {commit('Edit parameters',d=>{if(d.version===1)d.version=2;d.parametric=structuredClone(design);});},
     detachGenerator(id:string){commit('Detach shape generator',d=>{if(!d.nodes[id]?.generator)throw new Error(t('No generator to detach'));if(isCube(d.nodes[id]))throw new Error(t('Cube edges are linked; use a Box for independent dimensions'));delete d.nodes[id].generator;if(d.nodes[id].physics)d.nodes[id].physics={...d.nodes[id].physics!,sourcePreset:undefined};});},

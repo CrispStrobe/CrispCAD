@@ -108,6 +108,23 @@ in portrait or landscape on A4 at 1:1. Print at actual size and measure the
 cannot fit at 1:1. The linked sheet workspace, orthographic body views,
 dimension annotations and section views remain open.
 
+## Linked drawing sheets
+
+Select a sketch extrusion and choose **Properties → Create drawing sheet**.
+Save the sheet to the **Drawings** section of the Objects browser. The
+landscape A4 sheet follows its source extrusion and sketch parameters.
+It shows top, front and right views, linear dimensions, circular center
+marks and hole diameters. Dashed hidden edges can be toggled. Choose a scale
+from 1:5 through 5:1 and use **Export drawing PDF** to print the vector sheet.
+The 50 mm reference measures actual paper size, independent of the view scale.
+
+The views use the sketch's declared plane and the extrusion distance in
+part coordinates. Assembly placement and transforms are outside this view.
+A removed source leaves a repairable sheet. Choose another source or Undo
+the removal. Whole-project files and model source retain the drawing links.
+Object clipboard copies carry geometry. Section views, custom placed
+annotations, assemblies and multi-sheet PDF export remain open.
+
 ## Completion criteria
 
 Keep each deliverable open until its acceptance workflow passes unit tests and
