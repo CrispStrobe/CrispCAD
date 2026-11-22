@@ -27,8 +27,8 @@ export function assemblyDrawingEdges(projection:AssemblyProjection,placements:re
  return edges;
 }
 
-export function pickAssemblyEdge(edges:AssemblyDrawingEdge[],point:SketchPoint,tolerance:number){
- let picked:AssemblyDrawingEdge|undefined,distance=tolerance;
+export function pickAssemblyEdge<T extends Pick<AssemblyDrawingEdge,'visible'>>(edges:T[],point:SketchPoint,tolerance:number){
+ let picked:T|undefined,distance=tolerance;
  for(const edge of edges){
   const [a,b]=edge.visible,dx=b[0]-a[0],dy=b[1]-a[1];
   const span=dx*dx+dy*dy;

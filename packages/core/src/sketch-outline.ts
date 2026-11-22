@@ -52,6 +52,16 @@ export function sketchBulgeArc(a: SketchPoint, b: SketchPoint, bulge: number) {
   return {center, radius, start: Math.atan2(a[1]-center[1], a[0]-center[0]), sweep: 4*Math.atan(bulge)};
 }
 
+/** Analytic arc and chord count used by the extrusion contour. */
+export function sketchBulgeTessellation(a:SketchPoint,b:SketchPoint,bulge:number,pointCount:number){
+  const tolerance=.025,chord=Math.hypot(b[0]-a[0],b[1]-a[1]);
+  if(!bulge||(chord*Math.abs(bulge)<tolerance*2&&Math.abs(4*Math.atan(bulge))<Math.PI/32&&pointCount>2))return;
+  const arc=sketchBulgeArc(a,b,bulge);
+  if(!arc)throw new Error(t('Rounded outline exceeds the curve size or detail limit.'));
+  const step=Math.min(Math.PI/32,4*Math.asin(Math.sqrt(Math.min(1,tolerance/(2*arc.radius)))));
+  return {...arc,segments:Math.max(2,Math.ceil(Math.abs(arc.sweep)/step))};
+}
+
 /** The halfway point along the signed arc, or the midpoint of a straight edge. */
 export function sketchBulgeMidpoint([ax,ay]:SketchPoint,[bx,by]:SketchPoint,bulge:number):SketchPoint {
   return [(ax+bx+(by-ay)*bulge)/2,(ay+by-(bx-ax)*bulge)/2];
@@ -88,20 +98,15 @@ export function sketchPath(points:SketchPoint[],bulges?:number[]):SketchPoint[]{
 function tessellatePath(points:SketchPoint[],bulges:number[],closed:boolean):SketchPoint[]{
   const contour: SketchPoint[] = [];
   const edgeCount=closed?points.length:points.length-1;
-  const tolerance = .025;
   const invalid = () => new Error(t('Rounded outline exceeds the curve size or detail limit.'));
   for (let i = 0; i < edgeCount; i++) {
     const a = points[i], b = points[(i+1)%points.length], bulge = bulges[i];
     const dx = b[0]-a[0], dy = b[1]-a[1], chord = Math.hypot(dx,dy);
     if (chord < .00001) throw new Error(t(closed?'Outline edges must form one closed loop without crossings or overlaps.':'Consecutive path points must be distinct.'));
     contour.push(a);
-    if (bulge === 0) continue;
-    if (chord * Math.abs(bulge) < tolerance * 2 && Math.abs(4 * Math.atan(bulge)) < Math.PI / 32 && points.length > 2) continue;
-    const arc = sketchBulgeArc(a,b,bulge);
-    if (!arc) throw invalid();
-    const {center:[centerX,centerY],radius,start,sweep} = arc;
-    const step = Math.min(Math.PI/32, 4*Math.asin(Math.sqrt(Math.min(1,tolerance/(2*radius)))));
-    const segments = Math.max(2, Math.ceil(Math.abs(sweep)/step));
+    const arc=sketchBulgeTessellation(a,b,bulge,points.length);
+    if(!arc)continue;
+    const {center:[centerX,centerY],radius,start,sweep,segments}=arc;
     if (contour.length + segments - 1 > maxSketchCurveVertices) throw invalid();
     for (let j = 1; j < segments; j++) {
       const angle = start+sweep*j/segments;

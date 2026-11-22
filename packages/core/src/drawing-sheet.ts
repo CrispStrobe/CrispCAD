@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
 import type {FeatureScalar,SketchProfile} from './features.js';
+import type {SketchPoint} from './sketch-outline.js';
 import type {SketchOutlineProfile} from './sketch-region.js';
 import type {CadDocument,Vec3} from './document.js';
 
@@ -18,8 +19,13 @@ export type DrawingAnnotation = {
 export type AssemblyEdgeDimension={
  id:string; bodyId:string; view:0|1|2; endpoints:[Vec3,Vec3]; at:[number,number];
 };
+export type AssemblyCurveSource='cylinder'|{sketchId:string; profileId:string; anchor:string};
+export type AssemblyCurveDimension={
+ id:string; bodyId:string; view:AssemblyEdgeDimension['view']; at:SketchPoint;
+ kind:'radius'|'diameter'|'arc-length'; source:AssemblyCurveSource;
+};
 export const drawingAnnotationLimit=24;
-export type DrawingInputs = {title:string; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]; partsList?:boolean; edgeDimensions?:AssemblyEdgeDimension[]};
+export type DrawingInputs = {title:string; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]; partsList?:boolean; edgeDimensions?:AssemblyEdgeDimension[]; curveDimensions?:AssemblyCurveDimension[]};
 export type DrawingSheet = DrawingInputs & {id:string};
 
 const record = (value:unknown):value is Record<string,unknown> => !!value && typeof value==='object' && !Array.isArray(value);
@@ -80,6 +86,21 @@ export function checkDrawingSheets(doc:CadDocument) {
     const [a,b]=edge.endpoints;
     if(!edgePoint(a)||!edgePoint(b)||a.every((coordinate,index)=>coordinate===b[index]))throw invalid();
     edgeIds.add(edge.id);
+   }
+  }
+  if(sheet.curveDimensions!==undefined){
+   if(doc.version<27||!isAssemblyDrawingSource(sheet.source)||!Array.isArray(sheet.curveDimensions)||
+      sheet.curveDimensions.length+(sheet.edgeDimensions?.length??0)>drawingAnnotationLimit)throw invalid();
+   const ids=new Set(sheet.edgeDimensions?.map(edge=>edge.id));
+   for(const curve of sheet.curveDimensions){
+    if(!record(curve)||!id(curve.id)||ids.has(curve.id)||!id(curve.bodyId)||(curve.view!==0&&curve.view!==1&&curve.view!==2)||
+       !Array.isArray(curve.at)||curve.at.length!==2||!validDrawingPosition(curve.at[0],curve.at[1]))throw invalid();
+    const source=curve.source;
+    const arc=record(source)&&isDrawingArc(source.anchor);
+    if(source!=='cylinder'&&(!record(source)||!id(source.sketchId)||!id(source.profileId)||
+       typeof source.anchor!=='string'||(!arc&&!isDrawingCircle(source.anchor))))throw invalid();
+    if(curve.kind!=='radius'&&(arc?curve.kind!=='arc-length':curve.kind!=='diameter'))throw invalid();
+    ids.add(curve.id);
    }
   }
   if(sheet.annotations!==undefined){

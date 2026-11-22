@@ -148,6 +148,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     };
    }
    const annotations=structuredClone(saved?.annotations??[]),edgeDimensions=structuredClone(saved?.edgeDimensions??[]);
+   const curveDimensions=structuredClone(saved?.curveDimensions??[]);
    const edgePanel=element('details');edgePanel.className='drawing-dimensions';
    const dimensions=element('details');dimensions.className='drawing-dimensions';
    dimensions.append(element('summary',t('Drawing dimensions')));
@@ -236,7 +237,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     if(assembly){
      if(!drawingAssemblyAvailable(current))throw new Error(t('Add a solid body to draw the assembly.'));
      return {...settings,source:{kind:'assembly'},...cuttingPlane,...(partsList.checked?{partsList:true}:{}),
-      ...(edgeDimensions.length?{edgeDimensions}:{})};
+      ...(edgeDimensions.length?{edgeDimensions}:{}),...(curveDimensions.length?{curveDimensions}:{})};
     }
     const ref=drawingSourceFor(current,source.value);
     if(!ref)throw new Error(t('Drawing source unavailable. Choose another sketch extrusion.'));
@@ -249,7 +250,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     preview.replaceChildren();
     if(page)preview.append(previewDrawing(page,assembly&&index===0));
    };
-   previewPage.onchange=()=>{edgeControls?.reset();showPreview();};
+   previewPage.onchange=()=>{edgeControls?.reset();showPreview();edgeControls?.refresh();};
    let picking=false,editing:string|undefined;
    const setPicking=(active:boolean)=>{
     picking=active;
@@ -438,7 +439,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     catch(error){if(dialog.open)status.textContent=error instanceof Error?error.message:String(error);}
     finally{pdf.disabled=!layout||!!layout.annotationIssues.length;}
    };
-   const edgeControls=assembly?mountAssemblyEdgeControls(edgePanel,preview,status,edgeDimensions,
+   const edgeControls=assembly?mountAssemblyEdgeControls(edgePanel,preview,status,edgeDimensions,curveDimensions,
     ()=>session.state.document,()=>layout,()=>{previewPage.value='0';showPreview();},render):undefined;
    setPicking(false);refresh();dialog.showModal();
   },

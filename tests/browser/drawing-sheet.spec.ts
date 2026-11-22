@@ -416,3 +416,75 @@ test('assembly views use current solid placements and export a linked PDF',async
  await pageSelect.selectOption('1');
  await expect(preview).toContainText('Rear cover');
 });
+
+test('assembly curve dimensions follow a hole and a retained sketch arc',async({page,hasTouch})=>{
+ const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
+ const ready=()=>expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await page.goto('/');
+ await ready();
+ await press(page.getByRole('button',{name:'Sketch',exact:true}));
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await sketch.getByLabel('Profile',{exact:true}).selectOption('region');
+ const points=sketch.getByLabel('Region loops (mm)');
+ const region='0, 0 | 40, 0 | 40, 30, -0.5 | 0, 30\nCIRCLE 10, 8, 3';
+ await points.fill(region);
+ await sketch.getByLabel('Extrusion distance (mm)',{exact:true}).fill('10');
+ await press(sketch.getByRole('button',{name:'Create extrusion'}));
+ await ready();
+ const create=page.getByRole('button',{name:'Create assembly drawing',exact:true});
+ if(!await create.isVisible())await press(page.getByRole('button',{name:'Objects',exact:true}));
+ await press(create);
+ const dialog=page.getByRole('dialog',{name:'Drawing sheet',exact:true});
+ const preview=dialog.getByRole('img',{name:'Drawing preview'});
+ await dialog.getByLabel('Sheet title').fill('Assembly curves');
+ await dialog.getByLabel('Drawing scale').selectOption('1:1');
+ await expect(preview).toContainText('Assembly · 1 body');
+ await press(dialog.getByText('Model edge dimensions',{exact:true}));
+ const type=dialog.getByLabel('Model edge dimension type',{exact:true});
+ const add=dialog.getByRole('button',{name:'Add edge dimension',exact:true});
+ const point=async(x:number,y:number)=>{
+  await preview.scrollIntoViewIfNeeded();
+  const screen=await preview.evaluate((svg,[x,y])=>{
+   const point=new DOMPoint(x,y).matrixTransform((svg as SVGSVGElement).getScreenCTM()!);
+   return {x:point.x,y:point.y};
+  },[x,y]);
+  if(hasTouch)await page.touchscreen.tap(screen.x,screen.y);
+  else await page.mouse.click(screen.x,screen.y);
+ };
+ const measure=async(kind:string,x:number,y:number,labelX:number,labelY:number,text:string)=>{
+  await type.selectOption(kind);
+  await press(add);
+  await point(x,y);
+  await expect(preview.locator('.drawing-model-edge-marker')).toHaveCount(1);
+  await point(labelX,labelY);
+  await expect(preview.getByText(text,{exact:true})).toBeVisible();
+ };
+ await measure('diameter',37,125,87,121,'Ø6 mm');
+ await measure('arc-length',44,113,91,93,'Arc length 46.365 mm');
+ await press(dialog.getByRole('button',{name:'Save drawing sheet',exact:true}));
+ await expect(dialog).toBeHidden();
+
+ const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
+ if(!await edit.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
+ await press(edit);
+ await points.fill(region.replace('-0.5','-0.25').replace('10, 8, 3','10, 8, 4'));
+ await press(sketch.getByRole('button',{name:'Apply sketch changes',exact:true}));
+ await ready();
+ const sheet=page.getByRole('button',{name:'Drawing: Assembly curves',exact:true});
+ if(!await sheet.isVisible())await press(page.getByRole('button',{name:'Objects',exact:true}));
+ await press(sheet);
+ await expect(preview.getByText('Ø8 mm',{exact:true})).toBeVisible();
+ await expect(preview.getByText('Arc length 41.646 mm',{exact:true})).toBeVisible();
+ const [download]=await Promise.all([
+  page.waitForEvent('download'),press(dialog.getByRole('button',{name:'Export drawing PDF',exact:true}))
+ ]);
+ const pdf=await readFile((await download.path())!,'utf8');
+ expect(pdf).toContain('<'+Buffer.from('Arc length 41.646 mm','latin1').toString('hex')+'>');
+ await press(dialog.getByRole('button',{name:'Close drawing',exact:true}));
+ await page.reload();
+ await ready();
+ if(!await sheet.isVisible())await press(page.getByRole('button',{name:'Objects',exact:true}));
+ await press(sheet);
+ await expect(preview.getByText('Ø8 mm',{exact:true})).toBeVisible();
+ await expect(preview.getByText('Arc length 41.646 mm',{exact:true})).toBeVisible();
+});

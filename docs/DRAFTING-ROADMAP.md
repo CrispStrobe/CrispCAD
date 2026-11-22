@@ -215,7 +215,13 @@ coordinates must increase along the displayed world axis, adjacent positions
 must differ, and each leg must cross solid material. The preview and PDF show
 the full stepped path. Older one-jog sheets keep their original format.
 
-Model-edge arc and radius dimensions remain open.
+Under **Model edge dimensions**, choose **Radius**, **Diameter**, or **Arc
+length** and pick the visible curve in a face-on view. The dimensions use the
+authored radius or sweep of a cylinder, a circle in a sketch extrusion, or a
+sketch bulge arc. They follow parameter and placement edits while the curve
+remains visible and projects as a circle or circular arc. Curves in imported
+meshes, boolean results, and oblique or elliptical projections currently use
+projected straight-edge measurements.
 
 ## Completion criteria
 

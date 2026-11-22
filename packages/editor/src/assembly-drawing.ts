@@ -3,6 +3,7 @@ import {featureValue,t} from '@brickwright/cad-core';
 import type {CadDocument,DrawingInputs,DrawingSection,SketchPoint,Vec3} from '@brickwright/cad-core';
 import {assemblyCutJogs} from '@brickwright/cad-geometry';
 import type {AssemblyCut,AssemblySection,BodyMesh,GeometryResult} from '@brickwright/cad-geometry';
+import {addAssemblyCurveDimensions,assemblyDrawingCurves} from './assembly-curve-dimension.js';
 import {addAssemblyEdgeDimensions,assemblyDrawingEdges} from './assembly-edge-dimension.js';
 import {addAssemblySection} from './assembly-section-view.js';
 import {addDrawingFrame,drawingViews} from './drawing-page.js';
@@ -229,6 +230,12 @@ export function layoutAssemblyDrawing(doc:CadDocument,sheet:DrawingInputs,projec
  }
  page.assemblyEdges=assemblyDrawingEdges(projection,placements,factor);
  addAssemblyEdgeDimensions(page,doc,sheet.edgeDimensions??[]);
+ page.assemblyCurves=assemblyDrawingCurves(doc,page.assemblyEdges,(view,point)=>{
+  const {horizontal,vertical}=drawingViews[view],{origin}=projection;
+  const [,left,bottom]=placements[view];
+  return [left+(point[horizontal]-origin[horizontal])*factor,bottom+(point[vertical]-origin[vertical])*factor];
+ });
+ addAssemblyCurveDimensions(page,sheet.curveDimensions??[]);
  const count=projection.bodyIds.length;
  const subtitle=count===1?t('Assembly · 1 body'):t`Assembly · ${count} bodies`;
  addDrawingFrame(page,sheet.title,subtitle,sheet.scale);

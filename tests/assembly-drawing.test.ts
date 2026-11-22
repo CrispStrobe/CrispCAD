@@ -2,7 +2,7 @@
 import {readFileSync} from 'node:fs';
 import {beforeAll,expect,it} from 'vitest';
 import {compileModelSource,createCadSession,drawingSourceFor,identityTransform,parseDocument,validateDocument} from '@brickwright/cad-core';
-import type {DrawingInputs} from '@brickwright/cad-core';
+import type {AssemblyCurveDimension,DrawingInputs} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {projectAssembly,resolveAssemblyCut} from '../packages/editor/src/assembly-drawing.js';
@@ -286,4 +286,59 @@ it('resolves multiple jog expressions and clips each leg to its interval',()=>{
  expect(()=>kernel.sliceAssembly(geometry,{...cut,additionalJogs:[{at:7,position:20}]})).toThrow('Section leg 3 misses');
  expect(()=>layoutDrawing(doc,{...outline,section:{...outline.section!,additionalJogs:[{at:8,position:10}]}},projection))
   .toThrow('needs evaluated cut geometry');
+});
+
+it('links assembly curve dimensions to native circles and authored arcs through edits',()=>{
+ const session=createCadSession();
+ session.setParametric({version:1,parameters:{bore:{expression:'5',unit:'mm'}},bindings:[]});
+ const plate=session.addSketchExtrusion({kind:'region',id:'fixture',loops:[
+  {kind:'outline',id:'plate',points:[[-20,-10],[20,-10],[20,20],[-20,20]],bulges:[1,0,0,0]},
+  {kind:'circle',id:'hole',center:[4,6],radius:'bore',segments:32}
+ ]},{distance:6});
+ const boss=session.add({kind:'cylinder',radius:7,height:8,segments:20},
+  {transform:{...identityTransform(),position:[38,0,4],rotation:[0,0,41]}});
+ const initial=session.state.document;
+ const current=(options:DrawingInputs)=>{
+  const doc=session.state.document;
+  return layoutDrawing(doc,options,kernel.evaluate(doc));
+ };
+ const options={...assembly,hiddenLines:false};
+ const page=current(options);
+ const bySource=(bodyId:string,starts:string)=>page.assemblyCurves!.find(curve=>
+  curve.bodyId===bodyId&&curve.source!=='cylinder'&&curve.source.anchor.startsWith(starts))!;
+ const measurement=(id:string,kind:AssemblyCurveDimension['kind'],curve:NonNullable<typeof page.assemblyCurves>[number]):AssemblyCurveDimension=>{
+  expect(curve.visible.length).toBeGreaterThan(2);
+  return {id,kind,bodyId:curve.bodyId,source:curve.source,view:curve.view,at:[141,112]};
+ };
+ const dimensions=[
+  measurement('arc','arc-length',bySource(plate,'arc:')),
+  measurement('hole','diameter',bySource(plate,'circle:')),
+  measurement('boss','radius',page.assemblyCurves!.find(curve=>curve.bodyId===boss)!)
+ ];
+ session.saveDrawingSheet({...options,curveDimensions:dimensions});
+ const saved=session.state.document,sheet=saved.drawings![0];
+ expect(saved.version).toBe(27);
+ expect(parseDocument(session.serialize()).drawings).toEqual(saved.drawings);
+ expect(validateDocument(compileModelSource(session.modelSource,saved)).drawings).toEqual(saved.drawings);
+ expect(()=>validateDocument({...saved,version:26})).toThrow('drawing sheets');
+ expect(sheet.curveDimensions![0].source).not.toEqual(dimensions[0].source);
+ expect(()=>session.saveDrawingSheet({...options,curveDimensions:[{...dimensions[1],kind:'arc-length'}]})).toThrow('drawing sheets');
+ expect(()=>session.saveDrawingSheet({...options,source:drawingSourceFor(initial,plate)!,curveDimensions:dimensions})).toThrow('drawing sheets');
+
+ const drawn=current(sheet),labels=(page:typeof drawn)=>page.texts.map(text=>text.text);
+ expect(drawn.annotationIssues).toEqual([]);
+ expect(labels(drawn)).toEqual(expect.arrayContaining(['Arc length 62.832 mm','Ø10 mm','R7 mm']));
+ expect(new TextDecoder().decode(exportDrawingPdf(drawn,sheet.title).bytes)).toContain(
+  '<'+Buffer.from('Arc length 62.832 mm','latin1').toString('hex')+'>');
+ session.setParametric({version:1,parameters:{bore:{expression:'7',unit:'mm'}},bindings:[]});
+ session.update(boss,{transform:{...identityTransform(),position:[38,2,4],rotation:[0,0,75],scale:[2,2,1]}});
+ expect(labels(current(sheet))).toEqual(expect.arrayContaining(['Ø14 mm','R14 mm']));
+ session.update(boss,{transform:{...identityTransform(),position:[38,2,4],scale:[2,1,1]}});
+ expect(current(sheet).annotationIssues).toEqual(['boss']);
+ session.undo();
+ const cover=session.add({kind:'box',size:[32,32,4]},
+  {transform:{...identityTransform(),position:[38,2,16]}});
+ expect(current(sheet).annotationIssues).toEqual(['boss']);
+ session.remove([cover]);
+ expect(current(sheet).annotationIssues).toEqual([]);
 });
