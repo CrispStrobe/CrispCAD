@@ -133,7 +133,7 @@ coordinates. Choose the constant X or Y coordinate and enter a millimetre
 value or named dimension. A dashed cut line and direction marks identify the
 plane. The section hatches solid material and leaves cutouts clear. The
 saved cut updates in previews and PDF when the source changes.
-In **Drawing dimensions**, choose horizontal, vertical or diameter and select
+In **Drawing dimensions**, choose horizontal, vertical, aligned or diameter and select
 a profile bound or circle center. Pick the label position on the page, or
 enter paper coordinates, then add the dimension. Dimensions keep their
 placement on the sheet and use current distances and diameters from the
@@ -153,7 +153,14 @@ preview. After saving, the dimension follows a point moved in its row and
 keeps links to unchanged points through contour edits. If an edit removes a
 point or leaves its identity ambiguous, the sheet asks for a replacement.
 
-Multiple jogs, arbitrary edge annotations and assembly views remain open.
+An **Aligned dimension** measures the straight-line distance between two
+anchors and draws the dimension line parallel to them. Choose the endpoints
+of a slanted straight edge to label its true length. On a curved edge the
+same dimension measures the chord. The page scale changes the spacing on
+paper while the label retains the model length.
+
+Multiple jogs, dimensions on model edges outside the sketch, curve length
+and radius dimensions, and assembly views remain open.
 
 ## Completion criteria
 

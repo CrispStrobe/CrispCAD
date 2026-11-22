@@ -8,7 +8,7 @@ export const drawingScales = ['1:5','1:2','1:1','2:1','5:1'] as const;
 export type DrawingScale = typeof drawingScales[number];
 export type DrawingSource = {featureId:string; sketchId:string; profileId:string};
 export type DrawingSection = {axis:'u'|'v'; position:FeatureScalar; jog?:{at:FeatureScalar; position:FeatureScalar}};
-export type DrawingDimensionKind = 'linear-x'|'linear-y'|'diameter';
+export type DrawingDimensionKind = 'linear-x'|'linear-y'|'aligned'|'diameter';
 export type DrawingAnnotation = {
  id:string; sketchId:string; kind:DrawingDimensionKind; from:string; to?:string; at:[number,number];
 };
@@ -55,10 +55,11 @@ export function checkDrawingSheets(doc:CadDocument) {
     if(!record(dimension)||!id(dimension.id)||annotationIds.has(dimension.id)||!id(dimension.sketchId)||
        !anchor(dimension.from)||!Array.isArray(dimension.at)||dimension.at.length!==2||
        !validDrawingPosition(dimension.at[0],dimension.at[1]))throw invalid();
+    if(dimension.kind==='aligned'&&doc.version<19)throw invalid();
     if(doc.version<18&&[dimension.from,dimension.to].some(isDrawingVertex))throw invalid();
     if(dimension.kind==='diameter'){
      if(!dimension.from.startsWith('circle:')||dimension.to!==undefined)throw invalid();
-    }else if(!['linear-x','linear-y'].includes(String(dimension.kind))||!anchor(dimension.to)||dimension.to===dimension.from)throw invalid();
+    }else if(!['linear-x','linear-y','aligned'].includes(String(dimension.kind))||!anchor(dimension.to)||dimension.to===dimension.from)throw invalid();
     annotationIds.add(dimension.id);
    }
   }

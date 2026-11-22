@@ -2,6 +2,7 @@
 import {compileModelSource,createCadSession,drawingSourceFor,parseDocument,resolveDrawingSource,validateDocument} from '@brickwright/cad-core';
 import type {DrawingInputs,SketchPlane} from '@brickwright/cad-core';
 import {expect,it} from 'vitest';
+import {placeDrawingAnnotation} from '../packages/editor/src/drawing-annotation.js';
 import {layoutDrawing} from '../packages/editor/src/drawing-layout.js';
 import {offsetSectionMaterial,sectionMaterial} from '../packages/editor/src/drawing-section.js';
 import {exportDrawingPdf,exportDrawingSetPdf} from '../packages/editor/src/drawing-pdf.js';
@@ -286,4 +287,44 @@ it('lists vertices of polygonal holes and signed-arc endpoints from the authored
  expect(drawing.anchors.filter(item=>item.id.startsWith('vertex:outside:'))).toHaveLength(4);
  expect(drawing.anchors.filter(item=>item.id.startsWith('vertex:hole:'))).toHaveLength(3);
  expect(drawing.anchors.find(item=>item.id==='vertex:hole:p2')?.label).toBe('Outline 2, point 3 (8, 9)');
+});
+
+it('keeps an aligned dimension parallel to its anchors and labels the model distance at any scale',()=>{
+ const kind='aligned' as const;
+ const at:[number,number]=[60,90];
+ const dimension={kind,at,id:'aligned',sketchId:'sketch',from:'a',to:'b'};
+ const anchors=[
+  {id:'a',label:'A',point:[60,80] as [number,number]},
+  {id:'b',label:'B',point:[66,88] as [number,number]}
+ ];
+ const placed=placeDrawingAnnotation(dimension,'sketch',anchors,2)!;
+ expect(placed.text).toBe('5 mm');
+ const [first,second,line]=placed.paths;
+ expect(first[0]).toEqual([60,80]);
+ expect(second[0]).toEqual([66,88]);
+ expect(first[1][0]).toBeCloseTo(55.2);
+ expect(first[1][1]).toBeCloseTo(83.6);
+ expect(second[1][0]-first[1][0]).toBeCloseTo(6);
+ expect(second[1][1]-first[1][1]).toBeCloseTo(8);
+ expect((at[0]-line[0][0])*8-(at[1]-line[0][1])*6).toBeCloseTo(0);
+ expect(placeDrawingAnnotation(dimension,'sketch',[anchors[0],{...anchors[1],point:anchors[0].point}],2)).toBeUndefined();
+ expect(placeDrawingAnnotation(dimension,'sketch',anchors.slice(0,1),2)).toBeUndefined();
+});
+
+it('persists aligned dimensions in a versioned sheet and exports the diagonal at its model length',()=>{
+ const {s,inputs}=fixture();
+ const sheet:DrawingInputs={...inputs,scale:'1:2',annotations:[
+  {id:'diagonal',sketchId:inputs.source.sketchId,kind:'aligned',from:'bounds:sw',to:'bounds:ne',at:[90,120]}
+ ]};
+ const id=s.saveDrawingSheet(sheet);
+ const doc=s.state.document;
+ expect(doc.version).toBe(19);
+ expect(parseDocument(s.serialize()).drawings).toEqual([{...sheet,id}]);
+ expect(validateDocument(compileModelSource(s.modelSource,doc)).drawings).toEqual(doc.drawings);
+ expect(()=>validateDocument({...doc,version:18})).toThrow('drawing sheets');
+ const layout=layoutDrawing(doc,sheet);
+ expect(layout.annotationIssues).toEqual([]);
+ expect(layout.texts.filter(item=>item.text==='50 mm')).toHaveLength(1);
+ const pdf=new TextDecoder().decode(exportDrawingPdf(layout,sheet.title).bytes);
+ expect(pdf).toContain('<'+Buffer.from('50 mm','latin1').toString('hex')+'>');
 });

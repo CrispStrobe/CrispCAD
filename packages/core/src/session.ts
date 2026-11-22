@@ -204,7 +204,8 @@ export function createCadSession(initial: CadDocument = createDocument()) {
             if(annotation.to)annotation.to=links.get(annotation.to)??annotation.to;
           }
         }
-        const version=vertexAnnotations.length?18:sheet.section?.jog!==undefined?17:sheet.annotations!==undefined?11:sheet.section?10:9;
+        const aligned=sheet.annotations?.some(annotation=>annotation.kind==='aligned');
+        const version=aligned?19:vertexAnnotations.length?18:sheet.section?.jog!==undefined?17:sheet.annotations!==undefined?11:sheet.section?10:9;
         if(d.version<version)d.version=version;
         d.drawings=sheetId?sheets.map(item=>item.id===id?sheet:item):[...sheets,sheet];
       });

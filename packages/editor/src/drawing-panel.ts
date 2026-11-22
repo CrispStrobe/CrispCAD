@@ -86,7 +86,8 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
    const dimensions=element('details');dimensions.className='drawing-dimensions';
    dimensions.append(element('summary',t('Drawing dimensions')));
    const labels:Record<DrawingDimensionKind,string>={
-    'linear-x':t('Horizontal dimension'),'linear-y':t('Vertical dimension'),diameter:t('Diameter dimension')
+    'linear-x':t('Horizontal dimension'),'linear-y':t('Vertical dimension'),
+    aligned:t('Aligned dimension'),diameter:t('Diameter dimension')
    };
    const kind=element('select');
    for(const [value,name] of Object.entries(labels))kind.add(new Option(name,value));
@@ -239,7 +240,9 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
      kind:kind.value as DrawingDimensionKind,from:from.value,at,
      ...(kind.value==='diameter'?{}:{to:to.value})};
     if(!placeDrawingAnnotation(next,source.sketchId,layout.anchors,layout.factor)){
-     status.textContent=t('Choose anchors that have a measurable distance along the selected axis.');
+     status.textContent=next.kind==='aligned'
+      ?t('Choose two anchors at different positions.')
+      :t('Choose anchors that have a measurable distance along the selected axis.');
      return;
     }
     if(editing)annotations[annotations.findIndex(item=>item.id===editing)]=next;

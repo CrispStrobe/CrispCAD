@@ -408,6 +408,8 @@ export const messages: Record<string,string> = {
   "Dimension type": "Maßtyp",
   "Diameter dimension": "Durchmessermaß",
   "Vertical dimension": "Vertikales Maß",
+  "Aligned dimension": "Ausgerichtetes Maß",
+  "Choose two anchors at different positions.": "Wähle zwei Bezugspunkte an unterschiedlichen Positionen.",
   "Horizontal dimension": "Horizontales Maß",
   "Invalid outline vertex identities.": "Ungültige Kennungen für Konturpunkte.",
   "Outline {0}, point {1} ({2})": "Kontur {0}, Punkt {1} ({2})",

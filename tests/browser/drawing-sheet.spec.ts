@@ -163,7 +163,7 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  expect(drawingSet).toContain(Buffer.from('Sheet 2 of 2','latin1').toString('hex'));
 });
 
-test('vertex dimensions follow point edits and block PDF export after an anchor is removed',async({page,hasTouch})=>{
+test('aligned dimensions follow point edits and block PDF export after an anchor is removed',async({page,hasTouch})=>{
  const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
  const ready=()=>expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  await page.goto('/');
@@ -182,11 +182,12 @@ test('vertex dimensions follow point edits and block PDF export after an anchor 
  const preview=dialog.getByRole('img',{name:'Drawing preview'});
  await dialog.getByLabel('Sheet title').fill('Vertex dimensions');
  await press(dialog.getByText('Drawing dimensions',{exact:true}));
- await dialog.getByLabel('First dimension anchor').selectOption({label:'Outline point 1 (0, 0)'});
+ await dialog.getByLabel('Dimension type').selectOption('aligned');
+ await dialog.getByLabel('First dimension anchor').selectOption({label:'Outline point 3 (40, 30)'});
  await dialog.getByLabel('Second dimension anchor').selectOption({label:'Outline point 4 (15, 35)'});
  await expect(preview.locator('.drawing-vertex-marker')).toHaveCount(2);
  await press(dialog.getByRole('button',{name:'Add dimension',exact:true}));
- await expect(preview).toContainText('15 mm');
+ await expect(preview).toContainText('25.495 mm');
  await press(dialog.getByRole('button',{name:'Save drawing sheet',exact:true}));
  await expect(dialog).toBeHidden();
 
@@ -202,7 +203,7 @@ test('vertex dimensions follow point edits and block PDF export after an anchor 
  const sheet=page.getByRole('button',{name:'Drawing: Vertex dimensions',exact:true});
  if(!await sheet.isVisible())await press(page.getByRole('button',{name:'Objects',exact:true}));
  await press(sheet);
- await expect(preview).toContainText('22 mm');
+ await expect(preview).toContainText('18.682 mm');
  await press(dialog.getByRole('button',{name:'Close drawing',exact:true}));
  await change('0, 0\n40, 0\n40, 30\n0, 30');
  await press(sheet);
