@@ -1,5 +1,6 @@
 import {expect,test} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
+import {readPortableHistory} from '@brickwright/cad-history';
 
 test('create and re-edit a revolved shaft, validate the axis, undo and reopen',async({page,hasTouch},info)=>{
  const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
@@ -47,15 +48,20 @@ test('create and re-edit a revolved shaft, validate the axis, undo and reopen',a
  await press(page.getByRole('button',{name:'Redo',exact:true}));
  await ready();
 
- const [download]=await Promise.all([page.waitForEvent('download'),press(page.getByRole('button',{name:'Save project',exact:true}))]);
+ const [download]=await Promise.all([page.waitForEvent('download'),press(page.getByRole('button',{name:'Save project file',exact:true}))]);
  const project=info.outputPath('shaft.bcad');
  await download.saveAs(project);
- const saved=JSON.parse(await readFile(project,'utf8'));
- const id=saved.roots[0],sketchId=saved.nodes[id].sketchId;
- expect(saved.nodes[id]).toMatchObject({kind:'revolution',angle:90});
+ const history=await readPortableHistory(await readFile(project));
+ const saved=history.readDocument(history.project.headId);
+ const node=saved.nodes[saved.roots[0]];
+ if(node.kind!=='revolution')throw Error('Expected the saved revolution');
+ const sketchId=node.sketchId;
+ expect(node.angle).toBe(90);
  expect(saved.sketches[sketchId].profile).toMatchObject({width:10,depth:24});
+ await press(page.getByRole('button',{name:'New project',exact:true}));
+ await expect(page.getByTestId('object-name')).toHaveCount(0);
  const chooser=page.waitForEvent('filechooser');
- await press(page.getByRole('button',{name:'Open',exact:true}));
+ await press(page.getByRole('button',{name:'Open project',exact:true}));
  await (await chooser).setFiles(project);
  await ready();
  await press(page.getByTestId('object-name').filter({hasText:'Revolution'}));
