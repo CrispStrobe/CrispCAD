@@ -4,8 +4,8 @@ import {beforeAll, expect, it} from 'vitest';
 import {createCadSession, designGraph, parseDocument} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
-import {readSketchDxf} from '../packages/editor/src/import-sketch-dxf.js';
-import {exportSketchDxf} from '../packages/editor/src/sketch-dxf.js';
+import {readSketchDxf,readSketchPathDxf} from '../packages/editor/src/import-sketch-dxf.js';
+import {exportSketchDxf,exportSketchPathDxf} from '../packages/editor/src/sketch-dxf.js';
 
 const drawing = (entity: string, units = 4) =>
   ['0','SECTION','2','HEADER','9','$INSUNITS','70',units,'0','ENDSEC','0','SECTION','2','ENTITIES',
@@ -225,4 +225,46 @@ it('joins endpoints across serialization roundoff while preserving analytic arc 
  const drifted=dxfLine([4.0000004,0],[4,3]);
  expect(readSketchDxf(drawing([...nativePlate.slice(0,3),drifted].join('\n'))))
   .toMatchObject({kind:'outline',bulges:[0,0,-1,0]});
+});
+
+it('imports open polylines in source order and exports millimetres with signed arcs and layer',()=>{
+ const entity=['0','LWPOLYLINE','8','Guides Ä','90',3,'70',128,
+  '10',2,'20',1,'42',-.5,'10',1,'20',2,'10',0,'20',0,'42',1].join('\n');
+ const imported=readSketchPathDxf(drawing(entity,1));
+ expect(imported).toEqual({kind:'path',id:'dxf-profile',points:[[50.8,25.4],[25.4,50.8],[0,0]],bulges:[-.5,0,0],dxfLayer:'Guides Ä'});
+ expect(()=>readSketchDxf(drawing(entity,1))).toThrow('Use circles');
+ expect(readSketchPathDxf(drawing(entity.replace('\n70\n128',''),1))).toEqual(imported);
+ const session=createCadSession();
+ const id=session.addSketch(imported,{name:'Guide',plane:'XZ'});
+ const doc=parseDocument(session.serialize());
+ const dxf=new TextDecoder().decode(exportSketchPathDxf(doc,doc.sketches![id]).bytes);
+ expect(dxf).toContain('$INSUNITS\r\n70\r\n4');
+ expect(dxf).toContain('90\r\n3\r\n70\r\n0');
+ expect(dxf).toContain('AcDbLayerTableRecord\r\n2\r\nGuides Ä');
+ expect(readSketchPathDxf(dxf)).toEqual(imported);
+ session.closeSketchPath(id,imported,{name:'Guide',plane:'XZ'});
+ expect(session.state.document.sketches?.[id].profile).toMatchObject({kind:'outline',dxfLayer:'Guides Ä'});
+});
+
+const openArc=['0','ARC','8','Guides','10',0,'20',0,'40',1,'50',0,'51',90].join('\n');
+const openLine=dxfLine([0,2],[0,1],'Guides');
+it('orients a native chain from a terminal and reverses arc bulges when walking backward',()=>{
+ const result=readSketchPathDxf(drawing([openLine,openArc].join('\n'),1));
+ expect(result.points).toEqual([[0,50.8],[0,25.4],[25.4,0]]);
+ expect(result.bulges).toEqual([0,-Math.tan(Math.PI/8),0]);
+ expect(result.dxfLayer).toBe('Guides');
+ expect(()=>readSketchPathDxf(drawing(openLine,0))).toThrow('has no units');
+ expect(readSketchPathDxf(drawing(openLine,0),true).points).toEqual([[0,2],[0,1]]);
+});
+
+it('rejects branches, parallel paths, closed cycles, multiple layers and tilted paths',()=>{
+ for(const entities of [
+  [openLine,openArc,dxfLine([0,1],[-1,1],'Guides')],
+  [openLine,openArc,dxfLine([3,3],[3,4],'Guides')],
+  [openLine,...nativePlate],
+  [openLine,openLine],
+ ])expect(()=>readSketchPathDxf(drawing(entities.join('\n')))).toThrow('one open path');
+ expect(()=>readSketchPathDxf(drawing([openLine,openArc.replace('Guides','Other')].join('\n')))).toThrow('same DXF layer');
+ expect(()=>readSketchPathDxf(drawing(openLine+'\n31\n1'))).toThrow('planar');
+ expect(()=>readSketchPathDxf(drawing(square))).toThrow('one open lightweight polyline');
 });

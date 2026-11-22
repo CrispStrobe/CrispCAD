@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {evaluateSketch, featureValue, t} from '@brickwright/cad-core';
-import type {CadDocument, SketchPoint} from '@brickwright/cad-core';
+import type {CadDocument,PlanarSketch,SketchPoint} from '@brickwright/cad-core';
 
 /** Export the authored sketch in its local plane, at its evaluated size in mm. */
 export function exportSketchDxf(doc: CadDocument, featureId: string) {
@@ -8,7 +8,15 @@ export function exportSketchDxf(doc: CadDocument, featureId: string) {
   if (feature?.kind !== 'extrusion' || feature.provenance?.length) {
     throw new Error(t('DXF export requires an original sketch extrusion.'));
   }
-  const sketch = doc.sketches![feature.sketchId];
+  return writeSketchDxf(doc,doc.sketches![feature.sketchId]);
+}
+
+export function exportSketchPathDxf(doc:CadDocument,sketch:PlanarSketch){
+  if(sketch.profile.kind!=='path')throw new Error(t('Select an open sketch path'));
+  return writeSketchDxf(doc,sketch);
+}
+
+function writeSketchDxf(doc:CadDocument,sketch:PlanarSketch){
   const {contour} = evaluateSketch(sketch, doc);
   const profile = sketch.profile;
   const layers = new Map([['0', '0']]);
@@ -19,7 +27,7 @@ export function exportSketchDxf(doc: CadDocument, featureId: string) {
   };
   if (profile.kind === 'region') {
     for (const loop of profile.loops) if (loop.dxfLayer) registerLayer(loop.dxfLayer);
-  } else if ((profile.kind === 'outline' || profile.kind === 'circle') && profile.dxfLayer) {
+  } else if ((profile.kind === 'outline' || profile.kind === 'circle' || profile.kind === 'path') && profile.dxfLayer) {
     registerLayer(profile.dxfLayer);
   }
   const lines: string[] = [];
@@ -60,13 +68,13 @@ export function exportSketchDxf(doc: CadDocument, featureId: string) {
     pair(30, 0);
     pair(40, radius);
   };
-  const polyline = (points: SketchPoint[], layer = '0', bulges?: number[]) => {
+  const polyline = (points: SketchPoint[], layer = '0', bulges?: number[], closed = true) => {
     pair(0, 'LWPOLYLINE');
     pair(100, 'AcDbEntity');
     pair(8, registerLayer(layer));
     pair(100, 'AcDbPolyline');
     pair(90, points.length);
-    pair(70, 1);
+    pair(70, closed ? 1 : 0);
     points.forEach(([x, y], index) => {
       pair(10, x);
       pair(20, y);
@@ -81,6 +89,8 @@ export function exportSketchDxf(doc: CadDocument, featureId: string) {
     }
   } else if (profile.kind === 'circle') {
     circle(profile.center ?? [0,0], featureValue(profile.radius, doc), profile.dxfLayer);
+  } else if (profile.kind === 'path') {
+    polyline(profile.points, profile.dxfLayer, profile.bulges, false);
   } else if (profile.kind === 'outline') {
     polyline(profile.bulges ? profile.points : contour, profile.dxfLayer, profile.bulges);
   } else polyline(contour);

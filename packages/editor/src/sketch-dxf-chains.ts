@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {isSketchPoint,maxSketchOutlinePoints,sketchOutline,t} from '@brickwright/cad-core';
+import {isSketchPoint,maxSketchOutlinePoints,sketchOutline,sketchPath,t} from '@brickwright/cad-core';
 import type {SketchPoint} from '@brickwright/cad-core';
 
 export type DxfEdge = {a:SketchPoint; b:SketchPoint; bulge:number; index:number; dxfLayer?:string};
+type Chain={index:number;points:SketchPoint[];bulges?:number[];dxfLayer?:string};
 const endpointTolerance=1e-6;
 
-export function joinDxfEdges(input:DxfEdge[]) {
- const invalid=()=>new Error(t('DXF lines and arcs must join into closed loops without branches or duplicate edges.'));
+export function joinDxfEdges(input:DxfEdge[],mode:'outline'|'path') {
+ const closed=mode==='outline';
+ const invalid=()=>new Error(closed
+  ?t('DXF lines and arcs must join into closed loops without branches or duplicate edges.')
+  :t('DXF lines and arcs must join into one open path without branches or duplicate edges.'));
  const coordinates:SketchPoint[]=[],adjacent:number[][]=[];
  const buckets=new Map<string,number[]>();
  function vertex(point:SketchPoint){
@@ -32,29 +36,43 @@ export function joinDxfEdges(input:DxfEdge[]) {
   adjacent[start].push(id);adjacent[end].push(id);
   return {...edge,start,end};
  });
- if(adjacent.some(connected=>connected.length!==2))throw invalid();
+ if(adjacent.some(connected=>connected.length>2||closed&&connected.length!==2))throw invalid();
  const used=new Set<number>();
- const loops=[];
- for(const [id,first] of edges.entries()){
-  if(used.has(id))continue;
+
+ function trace(origin:number,firstId:number):Chain{
   const points:SketchPoint[]=[],bulges:number[]=[];
-  const origin=first.start,layer=first.dxfLayer?.toUpperCase();
-  let at=origin,next=id;
-  do{
+  const first=edges[firstId],layer=first.dxfLayer?.toUpperCase();
+  let at=origin,next:number|undefined=firstId;
+  while(next!==undefined){
    if(used.has(next)||points.length>=maxSketchOutlinePoints)throw invalid();
    const edge=edges[next],forward=edge.start===at;
-   if(edge.dxfLayer?.toUpperCase()!==layer)throw new Error(t('Use the same DXF layer for every line and arc in a closed loop.'));
+   if(edge.dxfLayer?.toUpperCase()!==layer)throw new Error(closed
+    ?t('Use the same DXF layer for every line and arc in a closed loop.')
+    :t('Use the same DXF layer for every line and arc in an open path.'));
    used.add(next);
-   points.push(coordinates[at]);bulges.push(forward?edge.bulge:-edge.bulge);
+   points.push(coordinates[at]);
+   bulges.push((forward?edge.bulge:-edge.bulge)||0);
    at=forward?edge.end:edge.start;
-   next=adjacent[at].find(candidate=>candidate!==next)!;
-  }while(at!==origin);
-  const curved=bulges.some(Boolean);
-  if(points.length<(curved?2:3))throw invalid();
-  const outline=sketchOutline(points,curved?bulges:undefined);
-  loops.push({index:first.index,kind:'outline' as const,points:curved?points:outline,
-   ...(curved?{bulges:bulges.map(value=>value===0?0:value)}:{}),
-   ...(first.dxfLayer?{dxfLayer:first.dxfLayer}:{})});
+   if(at===origin)break;
+   next=adjacent[at].find(candidate=>!used.has(candidate));
+  }
+  if(closed&&at!==origin||!closed&&at===origin)throw invalid();
+  if(!closed){points.push(coordinates[at]);bulges.push(0);}
+  const curved=bulges.some(Boolean),curves=curved?bulges:undefined;
+  if(closed&&points.length<(curved?2:3))throw invalid();
+  const normalized=closed?sketchOutline(points,curves):sketchPath(points,curves);
+  return {index:first.index,points:closed&&!curved?normalized:points,
+   ...(curves?{bulges:curves}:{}),...(first.dxfLayer?{dxfLayer:first.dxfLayer}:{})};
  }
+
+ if(!closed){
+  const terminals=adjacent.flatMap((adjacentEdges,i)=>adjacentEdges.length===1?[i]:[]);
+  if(terminals.length!==2)throw invalid();
+  const start=terminals[0],path=trace(start,adjacent[start][0]);
+  if(used.size!==edges.length)throw invalid();
+  return [path];
+ }
+ const loops:Chain[]=[];
+ for(const [id,edge] of edges.entries())if(!used.has(id))loops.push(trace(edge.start,id));
  return loops;
 }

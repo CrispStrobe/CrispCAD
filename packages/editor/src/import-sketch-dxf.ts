@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {evaluateSketchRegion, isSketchDxfLayer, isSketchPoint, maxSketchRegionLoops, maxSketchOutlinePoints, sketchOutline, t} from '@brickwright/cad-core';
+import {evaluateSketchRegion, isSketchDxfLayer, isSketchPoint, maxSketchRegionLoops, maxSketchOutlinePoints, sketchOutline, sketchPath, t} from '@brickwright/cad-core';
 import type {SketchLoop, SketchPoint, SketchProfile} from '@brickwright/cad-core';
 import {joinDxfEdges} from './sketch-dxf-chains.js';
 import type {DxfEdge} from './sketch-dxf-chains.js';
@@ -7,12 +7,26 @@ import type {DxfEdge} from './sketch-dxf-chains.js';
 export const maxSketchDxfBytes = 1024 * 1024;
 type DxfLoop = Omit<Extract<SketchLoop,{kind:'outline'}>,'id'> |
   (Omit<Extract<SketchLoop,{kind:'circle'}>,'id'|'center'> & {center:SketchPoint});
+type DxfPath=Extract<SketchProfile,{kind:'path'}>;
 type Group = {code: number; value: string};
 const mmPerUnit: Record<number, number> = {1: 25.4, 2: 304.8, 4: 1, 5: 10, 6: 1000};
 
-export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
+export function readSketchDxf(source:string,assumeMm=false):SketchProfile{
+ return readDxf(source,assumeMm,'outline');
+}
+
+export function readSketchPathDxf(source:string,assumeMm=false):DxfPath{
+ const profile=readDxf(source,assumeMm,'path');
+ if(profile.kind!=='path')throw new Error(t('Choose a DXF with one open path.'));
+ return profile;
+}
+
+function readDxf(source:string,assumeMm:boolean,mode:'outline'|'path'):SketchProfile{
+  const closed=mode==='outline';
   const invalid = () => new Error(t('This file is not a supported text DXF drawing.'));
-  const unsupported = () => new Error(t('Use circles, closed lightweight polylines, or closed chains of 2D lines and arcs. Remove unsupported entities before importing.'));
+  const unsupported = () => new Error(closed
+    ?t('Use circles, closed lightweight polylines, or closed chains of 2D lines and arcs. Remove unsupported entities before importing.')
+    :t('Use one open lightweight polyline or one connected chain of planar lines and arcs.'));
   if (source.length > maxSketchDxfBytes || source.includes('\0')) throw invalid();
   const lines = source.replace(/^\uFEFF/, '').split(/\r?\n/);
   if (lines.at(-1) === '') lines.pop();
@@ -60,8 +74,9 @@ export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
   if (!entities.length || entities.length > maxSketchRegionLoops * (maxSketchOutlinePoints + 1)) throw unsupported();
   const indexed:({index:number}&DxfLoop)[]=[];
   const edges:DxfEdge[]=[];
+  const paths:DxfPath[]=[];
   for (const [index,[entity,...fields]] of entities.entries()) {
-    if (!['CIRCLE','ARC','LINE','LWPOLYLINE'].includes(entity.value)) throw unsupported();
+    if (!['CIRCLE','ARC','LINE','LWPOLYLINE'].includes(entity.value)||!closed&&entity.value==='CIRCLE') throw unsupported();
     const layer = fields.filter(group => group.code === 8);
     if (layer.length > 1 || (layer.length === 1 && !isSketchDxfLayer(layer[0].value))) {
       throw new Error(t('Invalid DXF layer name.'));
@@ -109,9 +124,9 @@ export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
       continue;
     }
 
-    const flags = read(70);
+    const flags = read(70,closed?undefined:0);
     const count = read(90);
-    if ((flags !== 1 && flags !== 129) || !Number.isInteger(count) || count < 2 || count > maxSketchOutlinePoints) throw unsupported();
+    if (!(closed?[1,129]:[0,128]).includes(flags) || !Number.isInteger(count) || count < 2 || count > maxSketchOutlinePoints) throw unsupported();
     const coordinates = fields.filter(group => [10, 20, 42].includes(group.code));
     const points: SketchPoint[] = [];
     const bulges: number[] = [];
@@ -122,12 +137,25 @@ export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
       bulges.push(coordinates[i]?.code === 42 ? number(coordinates[i++].value) : 0);
     }
     if (points.length !== count) throw invalid();
+    if(!closed){
+      bulges[bulges.length-1]=0; // An open polyline has no segment after its last vertex.
+      const curves=bulges.some(Boolean)?bulges:undefined;
+      sketchPath(points,curves);
+      paths.push({kind:'path',id:'dxf-profile',points,...(curves?{bulges:curves}:{}),...dxfLayer});
+      continue;
+    }
     if (bulges.some(Boolean)) {
       sketchOutline(points, bulges);
       indexed.push({index,kind:'outline',points,bulges,...dxfLayer});
     } else indexed.push({index,kind:'outline',points:sketchOutline(points),...dxfLayer});
   }
-  indexed.push(...joinDxfEdges(edges));
+  if(!closed){
+    if(paths.length===1&&!edges.length)return paths[0];
+    if(paths.length||!edges.length)throw unsupported();
+    const {points,bulges,dxfLayer}=joinDxfEdges(edges,'path')[0];
+    return {kind:'path',id:'dxf-profile',points,...(bulges?{bulges}:{}),...(dxfLayer?{dxfLayer}:{})};
+  }
+  indexed.push(...joinDxfEdges(edges,'outline').map(loop=>({...loop,kind:'outline' as const})));
   const loops=indexed.sort((a,b)=>a.index-b.index).map(({index: _index,...loop},i)=>({...loop,id:'dxf-loop-'+(i+1)}));
   if (loops.length > maxSketchRegionLoops) throw unsupported();
   if (loops.length === 1) return {...loops[0],id:'dxf-profile'};

@@ -16,7 +16,7 @@ export type SketchProfile =
   {kind:'rectangle'; id:string; width:FeatureScalar; depth:FeatureScalar} |
   {kind:'circle'; id:string; radius:FeatureScalar; segments:number; center?:SketchPoint; dxfLayer?:string} |
   {kind:'outline'; id:string; points:SketchPoint[]; bulges?:number[]; dxfLayer?:string} |
-  {kind:'path'; id:string; points:SketchPoint[]; bulges?:number[]} |
+  {kind:'path'; id:string; points:SketchPoint[]; bulges?:number[]; dxfLayer?:string} |
   {kind:'region'; id:string; loops:SketchLoop[]};
 /** Profiles are analytic design inputs. Rectangle closure/orthogonality and circle
  * closure are enforced by construction; a general constraint solver comes later. */
@@ -108,7 +108,7 @@ export function evaluateSketch(sketch:PlanarSketch,doc:Pick<CadDocument,'paramet
   try {
     if(!record(sketch)||sketch.version!==1||!idOk(sketch.id)||typeof sketch.name!=='string'||!sketch.name.trim()||sketch.name.length>160||/[\u0000-\u001f]/.test(sketch.name)||!['XY','XZ','YZ'].includes(sketch.plane)||!record(sketch.profile)||!idOk(sketch.profile.id))throw new Error(t('Invalid sketch schema'));
     const p=sketch.profile;
-    if((p.kind==='outline'||p.kind==='circle')&&p.dxfLayer!==undefined&&!isSketchDxfLayer(p.dxfLayer))throw new Error(t('Invalid DXF layer name.'));
+    if((p.kind==='outline'||p.kind==='circle'||p.kind==='path')&&p.dxfLayer!==undefined&&!isSketchDxfLayer(p.dxfLayer))throw new Error(t('Invalid DXF layer name.'));
     if(p.kind==='region')return evaluateSketchRegion(p.loops, value => featureValue(value, doc));
     if(p.kind==='rectangle') {const w=dimension(p.width,doc)/2,d=dimension(p.depth,doc)/2;return {contour:[[-w,-d],[w,-d],[w,d],[-w,d]],edgeIds:['bottom','right','top','left'].map(side=>`${p.id}:${side}`)};}
     if(p.kind==='path')return {contour:sketchPath(p.points,p.bulges),edgeIds:p.points.slice(0,-1).map((_,i)=>`${p.id}:edge-${i}`)};

@@ -71,7 +71,7 @@ The curve stays analytic in DXF, and the modeling mesh approximates it using
 chords with up to 0.025 mm of sagitta error within the supported detail budget.
 
 The current region workflow rejects touching, crossing, nested and disjoint
-loops. Open contours, widths,
+loops. Widths,
 layer filtering and styles, paper-space objects, tilted entities,
 DWG and STEP remain open.
 
@@ -236,3 +236,13 @@ analytic geometry of cut arcs. A trim that would leave disconnected pieces
 leaves the draft intact. **Close into outline** joins the endpoints with a
 straight edge, validates the outline, and keeps the sketch and profile IDs.
 It can then be extruded or revolved. Undo restores the open path.
+
+### Open-path DXF exchange
+
+Open **DXF path** in the path editor to import one open lightweight polyline
+or one connected chain of planar LINE and ARC entities on a single layer.
+Coordinates convert to millimetres from the declared drawing units. For a
+unitless file, confirm millimetres in the path dialog. The importer retains
+the signed arc bulges and the layer. **Export path as DXF** writes the current
+draft as an open lightweight polyline in millimetres. The path stays editable
+after export and reimport. [Autodesk LWPOLYLINE reference](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-DXF/files/GUID-748FC305-F3F2-4F74-825A-61F04D757A50.htm)

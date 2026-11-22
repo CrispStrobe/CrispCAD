@@ -146,7 +146,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   button('Sketch',()=>sketchPanel.open(),toolbar,'compact-icon').title=t('Create a dimensioned sketch and extrusion');
   const pathPanel=mountPathPanel(shell,session,()=>{
     if(getComputedStyle(tree).display==='none')togglePanel(tree,partsToggle);
-  });
+  },options.onExport);
   button('Sketch path',()=>pathPanel.open(),toolbar,'compact-icon').title=t('Create an open line and arc path');
   button('Revolve',()=>sketchPanel.openRevolution(),toolbar,'compact-icon').title=t('Revolve a sketch around an axis');
   const mirrorPanel=mountMirrorPanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();});

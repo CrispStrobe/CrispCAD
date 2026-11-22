@@ -3,6 +3,8 @@ import {evaluateSketch,newId,t,trimSketchProfile,FeatureEvaluationError} from '@
 import type {CadSession,PlanarSketch,SketchPlane,SketchProfile} from '@brickwright/cad-core';
 import {formatSketchPoints,parseSketchOutline,parseSketchPoint} from './sketch-point-entry.js';
 import {operationField} from './body-operation-panel.js';
+import {maxSketchDxfBytes,readSketchPathDxf} from './import-sketch-dxf.js';
+import {exportSketchPathDxf} from './sketch-dxf.js';
 
 type Path=Extract<SketchProfile,{kind:'path'}>;
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,value?:string)=>{
@@ -12,7 +14,7 @@ const element=<K extends keyof HTMLElementTagNameMap>(tag:K,value?:string)=>{
 };
 const svgNS='http://www.w3.org/2000/svg';
 
-export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects:()=>void){
+export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects:()=>void,onExport?:(file:ReturnType<typeof exportSketchPathDxf>)=>void|Promise<void>){
  const dialog=element('dialog');
  dialog.className='sketch-dialog';
  dialog.setAttribute('aria-label',t('Sketch path'));
@@ -24,6 +26,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   if(id&&existing?.profile.kind!=='path')throw new Error(t('Select an open sketch path'));
   const profile=existing?.profile.kind==='path'?existing.profile:undefined;
   const profileId=profile?.id??newId();
+  let dxfLayer=profile?.dxfLayer,draftRevision=0;
   dialog.replaceChildren();
 
   const header=element('header'),close=element('button','×');
@@ -58,6 +61,18 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
    operationField(t('Keep side'),side).label,trimButton);
   fields.append(trim);
 
+  const dxf=element('details');
+  dxf.className='sketch-expressions';
+  const file=element('input'),assumeMm=element('input'),layer=element('small');
+  file.type='file';file.accept='.dxf';assumeMm.type='checkbox';
+  const units=operationField(t('Assume millimetres if the file has no units'),assumeMm);
+  units.label.className='sketch-toggle';
+  const exportPath=element('button',t('Export path as DXF'));
+  exportPath.type='button';
+  dxf.append(element('summary',t('DXF path')),units.label,operationField(t('Choose DXF file'),file).label,layer);
+  if(onExport)dxf.append(exportPath);
+  fields.append(dxf);
+
   const body=element('div');
   body.className='sketch-body';
   body.append(preview,fields);
@@ -78,7 +93,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
 
   function read():PlanarSketch&{profile:Path}{
    return {version:1,id:id??'preview-path',name:name.value.trim(),plane:plane.value as SketchPlane,
-    profile:{kind:'path',id:profileId,...parseSketchOutline(points.value.trim().split(/\r?\n/))}};
+    profile:{kind:'path',id:profileId,...parseSketchOutline(points.value.trim().split(/\r?\n/)),...(dxfLayer?{dxfLayer}:{})}};
   }
   function report(error:unknown){
    status.textContent=error instanceof FeatureEvaluationError?error.diagnostic.message:error instanceof Error?error.message:String(error);
@@ -86,7 +101,8 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   function draw(){
    preview.replaceChildren();
    status.textContent='';
-   save.disabled=closePath.disabled=trimButton.disabled=true;
+   save.disabled=closePath.disabled=trimButton.disabled=exportPath.disabled=true;
+   layer.textContent=dxfLayer?t`DXF layer: ${dxfLayer}`:'';
    try{
     const {contour}=evaluateSketch(read(),doc),x=contour.map(point=>point[0]),y=contour.map(point=>-point[1]);
     const left=Math.min(...x),top=Math.min(...y),width=Math.max(...x)-left,height=Math.max(...y)-top,margin=Math.max(width,height,1)*.15;
@@ -106,11 +122,40 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
      svg.append(endpoint);
     }
     preview.append(svg);
-    save.disabled=closePath.disabled=trimButton.disabled=false;
+    save.disabled=closePath.disabled=trimButton.disabled=exportPath.disabled=false;
    }catch(error){report(error);}
   }
-  fields.addEventListener('input',draw);
-  fields.addEventListener('change',draw);
+  function changed(event:Event){
+   if(event.target===file)return;
+   draftRevision++;
+   draw();
+  }
+  fields.addEventListener('input',changed);
+  fields.addEventListener('change',changed);
+
+  const active=()=>dialog.open&&dialog.firstChild===header;
+  file.onchange=async()=>{
+   const chosen=file.files?.[0],start=draftRevision;
+   if(!chosen)return;
+   file.disabled=true;
+   try{
+    if(chosen.size>maxSketchDxfBytes)throw new Error(t('Choose a DXF file up to 1 MB.'));
+    const imported=readSketchPathDxf(await chosen.text(),assumeMm.checked);
+    if(!active())return;
+    if(start!==draftRevision||session.state.revision!==revision)throw new Error(t('The path changed while reading DXF. Choose the file again.'));
+    points.value=formatSketchPoints(imported.points,imported.bulges).join('\n');
+    dxfLayer=imported.dxfLayer;
+    if(!existing)name.value=chosen.name.replace(/\.dxf$/i,'').replace(/[\u0000-\u001f]/g,'').trim().slice(0,160)||t('Sketch path');
+    draftRevision++;
+    draw();
+   }catch(error){if(active())report(error);}
+   finally{file.disabled=false;file.value='';}
+  };
+  exportPath.onclick=async()=>{
+   try{await onExport?.(exportSketchPathDxf(doc,read()));}
+   catch(error){if(active())report(error);}
+  };
+
 
   function change(commit:()=>void){
    try{
@@ -135,6 +180,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
     const path=trimSketchProfile(read(),doc,parseSketchPoint(first.value),parseSketchPoint(second.value),side.value==='left'?'left':'right');
     if(path.kind!=='path')return;
     points.value=formatSketchPoints(path.points,path.bulges).join('\n');
+    draftRevision++;
     draw();
    }catch(error){report(error);}
   };
