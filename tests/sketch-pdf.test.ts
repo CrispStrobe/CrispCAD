@@ -21,7 +21,7 @@ it('writes a vector A4 template with a real-size 50 mm reference and valid PDF o
   expect(pdf).not.toContain('/Subtype /Image');
   const xref = Number(pdf.match(/startxref\n(\d+)/)![1]);
   expect(pdf.slice(xref)).toMatch(/^xref\n0 6/);
-  for (const [index, entry] of [...pdf.matchAll(/^(\d{10}) 00000 n /gm)].entries()){
+  for (const [index, entry] of [...pdf.matchAll(/^(\d{10}) 00000 n\r?$/gm)].entries()){
     expect(pdf.slice(Number(entry[1]))).toMatch(new RegExp('^'+(index+1)+' 0 obj'));
   }
   session.dispose();

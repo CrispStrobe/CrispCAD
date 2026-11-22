@@ -24,9 +24,9 @@ function singlePagePdf(width: number, height: number, content: string) {
     '<< /Length ' + content.length + ' >>\nstream\n' + content + 'endstream'
   ];
   let pdf = '%PDF-1.6\n';
-  const offsets = ['0000000000 65535 f \n'];
+  const offsets = ['0000000000 65535 f\r\n'];
   for (const [index, body] of objects.entries()) {
-    offsets.push(String(pdf.length).padStart(10, '0') + ' 00000 n \n');
+    offsets.push(String(pdf.length).padStart(10, '0') + ' 00000 n\r\n');
     pdf += (index + 1) + ' 0 obj\n' + body + '\nendobj\n';
   }
   const xref = pdf.length;
