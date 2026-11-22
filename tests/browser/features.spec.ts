@@ -53,7 +53,7 @@ test('DXF import previews an editable outline and commits it only on Create',asy
   '0','ENDSEC','0','EOF'].join('\n');
  const file=sketch.getByLabel('Choose DXF file',{exact:true});
  await file.setInputFiles({name:'invalid.dxf',mimeType:'application/dxf',buffer:Buffer.from('not a DXF')});
- await expect(sketch.getByRole('status')).toContainText('not a supported text DXF');
+ await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('not a supported text DXF');
  await expect(sketch.getByRole('button',{name:'Create extrusion',exact:true})).toBeDisabled();
  await expect(sketch.getByLabel('Profile',{exact:true})).toHaveValue('rectangle');
 
