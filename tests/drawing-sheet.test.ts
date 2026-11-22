@@ -3,7 +3,7 @@ import {compileModelSource,createCadSession,drawingSourceFor,parseDocument,resol
 import type {DrawingInputs,SketchPlane} from '@brickwright/cad-core';
 import {expect,it} from 'vitest';
 import {layoutDrawing} from '../packages/editor/src/drawing-layout.js';
-import {exportDrawingPdf} from '../packages/editor/src/drawing-pdf.js';
+import {exportDrawingPdf,exportDrawingSetPdf} from '../packages/editor/src/drawing-pdf.js';
 
 function fixture(plane:SketchPlane='XY'){
  const s=createCadSession();
@@ -84,4 +84,19 @@ it.each(['XZ','YZ'] as const)('places circles and exact radii on the proper face
  expect(page.paths.filter(path=>path.stroke==='hidden')).toHaveLength(8);
  const [first,second]=page.circles.map(c=>c.center);
  expect(Math.abs(second[0]-first[0])).toBe(20);
+});
+
+it('exports every saved sheet in order and identifies a broken sheet before exporting',()=>{
+ const {s,id,inputs}=fixture();
+ expect(()=>exportDrawingSetPdf(s.state.document)).toThrow('Save a drawing sheet');
+ s.saveDrawingSheet(inputs);
+ s.saveDrawingSheet({...inputs,title:'Plate overview',scale:'1:2',hiddenLines:false});
+ const content=new TextDecoder().decode(exportDrawingSetPdf(s.state.document).bytes);
+ expect(content).toContain('/Type /Pages /Count 2 /Kids [3 0 R 6 0 R]');
+ expect((content.match(/\/MediaBox /g)??[])).toHaveLength(2);
+ const hex=(text:string)=>Buffer.from(text,'latin1').toString('hex');
+ expect(content.indexOf(hex('Sheet 1 of 2'))).toBeGreaterThan(0);
+ expect(content.indexOf(hex('Sheet 2 of 2'))).toBeGreaterThan(content.indexOf(hex('Sheet 1 of 2')));
+ s.remove([id]);
+ expect(()=>exportDrawingSetPdf(s.state.document)).toThrow('Plate drawing · Drawing source unavailable');
 });

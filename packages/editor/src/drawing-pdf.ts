@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {t} from '@brickwright/cad-core';
+import type {CadDocument} from '@brickwright/cad-core';
+import {layoutDrawing} from './drawing-layout.js';
 import type {DrawingLayout} from './drawing-layout.js';
-import {decimal,pair,pointsPerMillimetre,singlePagePdf,textOperand} from './vector-pdf.js';
+import {decimal,pair,pointsPerMillimetre,singlePagePdf,textOperand,vectorPdf} from './vector-pdf.js';
 
-export function exportDrawingPdf(layout:DrawingLayout,title:string){
+function drawingContent(layout:DrawingLayout){
  const commands=['q',pair(pointsPerMillimetre,0)+' '+pair(0,pointsPerMillimetre)+' 0 0 cm','0 G','0 g'];
  for(const {points,stroke,closed} of layout.paths){
   commands.push(stroke==='hidden'?'[1.4 0.9] 0 d':'[] 0 d');
@@ -22,6 +25,30 @@ export function exportDrawingPdf(layout:DrawingLayout,title:string){
  for(const {x,y,size,text} of layout.texts){
   commands.push('BT /F1 '+decimal(size)+' Tf '+pair(x,y)+' Td '+textOperand(text)+' Tj ET');
  }
+ return commands.join('\n')+'\nQ\n';
+}
+
+const file=(title:string,bytes:Uint8Array)=>{
  const name=title.replace(/[^\p{L}\p{N} ._-]+/gu,'-').trim()||'drawing';
- return {name:name+'.pdf',mime:'application/pdf',bytes:singlePagePdf(layout.width,layout.height,commands.join('\n')+'\nQ\n')};
+ return {name:name+'.pdf',mime:'application/pdf',bytes};
+};
+
+export function exportDrawingPdf(layout:DrawingLayout,title:string){
+ return file(title,singlePagePdf(layout.width,layout.height,drawingContent(layout)));
+}
+
+export function exportDrawingSetPdf(doc:CadDocument){
+ const sheets=doc.drawings??[];
+ if(!sheets.length)throw new Error(t('Save a drawing sheet before exporting a drawing set.'));
+ const pages=sheets.map((sheet,i)=>{
+  let layout:DrawingLayout;
+  try{layout=layoutDrawing(doc,sheet);}
+  catch(error){
+   const message=error instanceof Error?error.message:String(error);
+   throw new Error([sheet.title,message].join(' · '));
+  }
+  layout.texts.push({x:187,y:17,size:3,text:t`Sheet ${i+1} of ${sheets.length}`});
+  return {width:layout.width,height:layout.height,content:drawingContent(layout)};
+ });
+ return file(doc.title+' - '+t('Drawing set'),vectorPdf(pages));
 }

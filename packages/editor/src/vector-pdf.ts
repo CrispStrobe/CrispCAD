@@ -10,16 +10,23 @@ export const textOperand = (value: string) => '<' + [...value].map(character => 
   return (code >= 32 && code < 127 || code >= 160 && code <= 255 ? code : 63).toString(16);
 }).join('') + '>';
 
-export function singlePagePdf(width: number, height: number, content: string) {
+type VectorPage = {width:number; height:number; content:string};
+
+export function vectorPdf(pages:VectorPage[]) {
+  // Keep object 4 as the shared font, with page/content pairs after the first page.
+  const ids=pages.map((_,i)=>i===0?3:4+i*2);
   const objects = [
     '<< /Type /Catalog /Pages 2 0 R /ViewerPreferences << /PrintScaling /None >> >>',
-    '<< /Type /Pages /Count 1 /Kids [3 0 R] >>',
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' +
-      pair(width * pointsPerMillimetre, height * pointsPerMillimetre) +
-      '] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
-    '<< /Length ' + content.length + ' >>\nstream\n' + content + 'endstream'
+    '<< /Type /Pages /Count '+pages.length+' /Kids ['+ids.map(id=>id+' 0 R').join(' ')+'] >>'
   ];
+  for(const [i,{width,height,content}] of pages.entries()){
+    const page=ids[i];
+    objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+
+      pair(width*pointsPerMillimetre,height*pointsPerMillimetre)+
+      '] /Resources << /Font << /F1 4 0 R >> >> /Contents '+(page+(i===0?2:1))+' 0 R >>');
+    if(i===0)objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+    objects.push('<< /Length '+content.length+' >>\nstream\n'+content+'endstream');
+  }
   let pdf = '%PDF-1.6\n';
   const offsets = ['0000000000 65535 f\r\n'];
   for (const [index, body] of objects.entries()) {
@@ -32,3 +39,4 @@ export function singlePagePdf(width: number, height: number, content: string) {
   return new TextEncoder().encode(pdf);
 }
 
+export const singlePagePdf=(width:number,height:number,content:string)=>vectorPdf([{width,height,content}]);

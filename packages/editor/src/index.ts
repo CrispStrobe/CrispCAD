@@ -33,6 +33,7 @@ import { createPresetDocument, evaluatedPreview, shapeCatalog } from './shapes.j
 import {mountModelSourcePanel} from './model-source-panel.js';
 import {mountCodePanel} from './code-panel.js';
 import {exportSketchDxf} from './sketch-dxf.js';
+import {exportDrawingSetPdf} from './drawing-pdf.js';
 import {mountDrawingPanel} from './drawing-panel.js';
 import {exportSketchPdf} from './sketch-pdf.js';
 import {mountSketchPanel} from './sketch-panel.js';
@@ -285,6 +286,9 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     const sketches=Object.values(doc.sketches??{});if(sketches.length){const group=section('sketches',t`Sketches · ${sketches.length}`,content);for(const sketch of sketches){const feature=Object.values(doc.nodes).find(n=>n.kind==='extrusion'&&n.sketchId===sketch.id);if(feature)button(t`Sketch: ${sketch.name}`,()=>sketchPanel.open(feature.id),group);else group.append(el('div','browser-value',sketch.name));}}
     if(doc.drawings?.length){
       const group=section('drawings',t`Drawings · ${doc.drawings.length}`,content,true);
+      if(options.onExport&&doc.drawings.length>1){
+        button('Export drawing set (PDF)',()=>options.onExport!(exportDrawingSetPdf(session.state.document)),group);
+      }
       for(const sheet of doc.drawings)button(t`Drawing: ${sheet.title}`,()=>drawingPanel.open({sheetId:sheet.id}),group);
     }
     const parameters=Object.entries(doc.parametric?.parameters??{});if(parameters.length){const group=section('parameters',t`Parameters · ${parameters.length}`,content);button('Edit model parameters',()=>parametersPanel.open(),group);for(const [name,p] of parameters){const entry=el('div','browser-value');entry.append(el('span','',name),el('span','',p.expression));group.append(entry);}}

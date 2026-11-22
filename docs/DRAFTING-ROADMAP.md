@@ -119,11 +119,13 @@ from 1:5 through 5:1 and use **Export drawing PDF** to print the vector sheet.
 The 50 mm reference measures actual paper size, independent of the view scale.
 
 The views use the sketch's declared plane and the extrusion distance in
-part coordinates. Assembly placement and transforms are outside this view.
+part coordinates, before assembly placement and transforms.
 A removed source leaves a repairable sheet. Choose another source or Undo
 the removal. Whole-project files and model source retain the drawing links.
-Object clipboard copies carry geometry. Section views, custom placed
-annotations, assemblies and multi-sheet PDF export remain open.
+Object clipboard copies carry geometry. With multiple saved sheets, choose
+**Export drawing set (PDF)** to create a numbered PDF in the displayed order.
+If a sheet needs repair or exceeds its paper size, the export identifies it.
+Section views, custom placed annotations and assembly views remain open.
 
 ## Completion criteria
 

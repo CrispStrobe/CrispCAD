@@ -89,4 +89,20 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  await sheet.click();
  await expect(preview).toBeVisible();
  expect(await holeSpacing()).toBe(56);
+ await closeDrawing.click();
+ await page.getByTestId('object-name').click();
+ if(!await create.isVisible())await page.getByRole('button',{name:'Properties',exact:true}).click();
+ await create.click();
+ await title.fill('Motor plate overview');
+ await scale.selectOption('1:2');
+ await save.click();
+ const [set]=await Promise.all([
+  page.waitForEvent('download'),page.getByRole('button',{name:'Export drawing set (PDF)',exact:true}).click()
+ ]);
+ const setPath=await set.path();
+ if(!setPath)throw Error('Expected the drawing set PDF');
+ const drawingSet=await readFile(setPath,'utf8');
+ expect(drawingSet).toContain('/Type /Pages /Count 2');
+ expect(drawingSet).toContain(Buffer.from('Sheet 1 of 2','latin1').toString('hex'));
+ expect(drawingSet).toContain(Buffer.from('Sheet 2 of 2','latin1').toString('hex'));
 });
