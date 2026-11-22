@@ -38,7 +38,7 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  const save=dialog.getByRole('button',{name:'Save drawing sheet',exact:true});
  await title.fill('Motor plate drawing');
  const showSection=dialog.getByRole('checkbox',{name:'Show section A-A'});
- const cut=dialog.getByLabel('Section position (mm)');
+ const cut=dialog.getByLabel('Section position (mm)',{exact:true});
  await showSection.check();
  await expect(cut).toHaveValue('15');
  await expect(preview).toContainText('Section A-A');
@@ -53,7 +53,7 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  const jog=dialog.getByLabel('Jog at (mm)');
  await offset.check();
  await expect(save).toBeDisabled();
- await secondCut.fill('15 + 1 mm');
+ await secondCut.fill('15 mm + 1 mm');
  await jog.fill('41');
  await expect(dialog.getByRole('status',{name:'Drawing status'})).toContainText('Both legs');
  await jog.fill('20');
@@ -126,7 +126,7 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  await expect(showSection).toBeChecked();
  await expect(cut).toHaveValue('15');
  await expect(offset).toBeChecked();
- await expect(secondCut).toHaveValue('15 + 1 mm');
+ await expect(secondCut).toHaveValue('15 mm + 1 mm');
  await expect(jog).toHaveValue('20');
  await expect(preview.locator('.drawing-section')).toHaveCount(3);
  await expect(preview.locator('.drawing-annotation')).toHaveCount(6);
