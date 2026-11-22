@@ -151,3 +151,42 @@ it('retains cuts and hatches only material as parameters and extrusion depth cha
  s.saveDrawingSheet(inputs);
  expect(s.state.document.version).toBe(10);
 });
+
+it('updates placed spacing and diameter dimensions at their saved paper positions',()=>{
+ const {s,id,inputs,design}=fixture();
+ const dimensions={
+  ...inputs,annotations:[
+   {id:'spacing',sketchId:inputs.source.sketchId,kind:'linear-x' as const,from:'circle:first',to:'circle:second',at:[70,125] as [number,number]},
+   {id:'diameter',sketchId:inputs.source.sketchId,kind:'diameter' as const,from:'circle:first',at:[86,141] as [number,number]}
+  ]
+ };
+ s.saveDrawingSheet(dimensions);
+ let layout=layoutDrawing(s.state.document,dimensions);
+ expect(layout.annotationIssues).toEqual([]);
+ expect(layout.texts).toContainEqual({x:71.6,y:126.6,text:'20 mm',size:2.8});
+ expect(layout.texts).toContainEqual({x:87,y:142.5,text:'Ø4 mm',size:2.8});
+ expect(layout.paths.filter(p=>p.stroke==='annotation')).toHaveLength(6);
+ const saved=parseDocument(s.serialize());
+ expect(saved.version).toBe(11);
+ expect(validateDocument(compileModelSource(s.modelSource,saved)).drawings).toEqual(saved.drawings);
+ expect(()=>validateDocument({...saved,version:10})).toThrow('drawing sheets');
+
+ s.setParametric({...design,parameters:{spacing:{expression:'28',unit:'mm'}}});
+ const original=s.state.document.sketches![inputs.source.sketchId].profile;
+ if(original.kind!=='region')throw Error('Expected mounting plate');
+ const loops=original.loops.map(loop=>loop.kind==='circle'&&loop.id==='first'?{...loop,radius:2.5}:loop);
+ s.editExtrusion(id,{distance:6,symmetric:false,sketch:{profile:{...original,loops}}});
+ layout=layoutDrawing(s.state.document,dimensions);
+ expect(layout.texts).toContainEqual({x:71.6,y:126.6,text:'28 mm',size:2.8});
+ expect(layout.texts).toContainEqual({x:87,y:142.5,text:'Ø5 mm',size:2.8});
+ const pdf=new TextDecoder().decode(exportDrawingSetPdf(s.state.document).bytes);
+ expect(pdf).toContain(Buffer.from('28 mm','latin1').toString('hex'));
+ expect(pdf).toContain(Buffer.from('Ø5 mm','latin1').toString('hex'));
+
+ s.editExtrusion(id,{distance:6,symmetric:false,sketch:{profile:{...original,loops:loops.filter(loop=>loop.id!=='first')}}});
+ const orphaned=layoutDrawing(s.state.document,dimensions);
+ expect(orphaned.annotationIssues).toEqual(['spacing','diameter']);
+ expect(()=>exportDrawingSetPdf(s.state.document)).toThrow('Repair or remove unavailable drawing dimensions');
+ s.undo();
+ expect(layoutDrawing(s.state.document,dimensions).annotationIssues).toEqual([]);
+});

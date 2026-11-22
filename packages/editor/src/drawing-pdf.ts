@@ -6,6 +6,7 @@ import type {DrawingLayout} from './drawing-layout.js';
 import {decimal,pair,pointsPerMillimetre,singlePagePdf,textOperand,vectorPdf} from './vector-pdf.js';
 
 function drawingContent(layout:DrawingLayout){
+ if(layout.annotationIssues.length)throw new Error(t('Repair or remove unavailable drawing dimensions before exporting.'));
  const commands=['q',pair(pointsPerMillimetre,0)+' '+pair(0,pointsPerMillimetre)+' 0 0 cm','0 G','0 g'];
  for(const {points,stroke,closed} of layout.paths){
   commands.push(stroke==='hidden'?'[1.4 0.9] 0 d':stroke==='cut'?'[3.5 1 0.7 1] 0 d':'[] 0 d');
@@ -42,7 +43,10 @@ export function exportDrawingSetPdf(doc:CadDocument){
  if(!sheets.length)throw new Error(t('Save a drawing sheet before exporting a drawing set.'));
  const pages=sheets.map((sheet,i)=>{
   let layout:DrawingLayout;
-  try{layout=layoutDrawing(doc,sheet);}
+  try{
+   layout=layoutDrawing(doc,sheet);
+   if(layout.annotationIssues.length)throw new Error(t('Repair or remove unavailable drawing dimensions before exporting.'));
+  }
   catch(error){
    const message=error instanceof Error?error.message:String(error);
    throw new Error([sheet.title,message].join(' · '));

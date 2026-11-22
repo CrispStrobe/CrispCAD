@@ -48,6 +48,28 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  await expect(dialog.getByRole('status',{name:'Drawing status'})).toContainText('misses the part');
  await expect(save).toBeDisabled();
  await cut.fill('15');
+ await dialog.getByText('Drawing dimensions',{exact:true}).click();
+ const from=dialog.getByLabel('First dimension anchor');
+ const to=dialog.getByLabel('Second dimension anchor');
+ await from.selectOption({label:'Hole 1'});
+ await to.selectOption({label:'Hole 2'});
+ await dialog.getByRole('button',{name:'Pick dimension position',exact:true}).click();
+ await preview.scrollIntoViewIfNeeded();
+ const at=await preview.evaluate(svg=>{
+  const point=new DOMPoint(80,85).matrixTransform((svg as SVGSVGElement).getScreenCTM()!);
+  return {x:point.x,y:point.y};
+ });
+ await page.mouse.click(at.x,at.y);
+ await expect(dialog.getByRole('button',{name:'Pick dimension position',exact:true})).toHaveAttribute('aria-pressed','false');
+ await dialog.getByRole('button',{name:'Add dimension',exact:true}).click();
+ await expect(preview.locator('.drawing-annotation')).toHaveCount(5);
+ await expect(preview).toContainText('20 mm');
+ await dialog.getByLabel('Dimension type').selectOption('diameter');
+ await from.selectOption({label:'Hole 1'});
+ await dialog.getByLabel('Paper X (mm)').fill('90');
+ await dialog.getByLabel('Paper Y (mm)').fill('150');
+ await dialog.getByRole('button',{name:'Add dimension',exact:true}).click();
+ await expect(preview.locator('.drawing-annotation')).toHaveCount(6);
  await expect(preview).toContainText('Front view');
  await expect(preview).toContainText('Right view');
  await expect(preview).toContainText('Top view');
@@ -66,6 +88,7 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  await ready();
  await sheet.click();
  expect(await holeSpacing()).toBe(28);
+ await expect(preview).toContainText('28 mm');
  await scale.selectOption('2:1');
  expect(await holeSpacing()).toBe(56);
  await hidden.uncheck();
@@ -78,6 +101,7 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  expect(pdf).toContain('229 14 m 279 14 l');
  expect(pdf).not.toContain('[1.4 0.9] 0 d');
  expect(pdf).toContain('[3.5 1 0.7 1] 0 d');
+ expect(pdf).toContain(Buffer.from('28 mm','latin1').toString('hex'));
  await save.click();
  await expect(dialog).toBeHidden();
 
@@ -89,6 +113,7 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  await expect(showSection).toBeChecked();
  await expect(cut).toHaveValue('15');
  await expect(preview.locator('.drawing-section')).toHaveCount(3);
+ await expect(preview.locator('.drawing-annotation')).toHaveCount(6);
  await expect(hidden).not.toBeChecked();
  expect(await holeSpacing()).toBe(56);
  await closeDrawing.click();

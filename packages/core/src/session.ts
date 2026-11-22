@@ -135,8 +135,8 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         const sheets=d.drawings??[];
         if(sheetId&&!sheets.some(sheet=>sheet.id===id))throw new Error(t('Drawing sheet does not exist.'));
         const sheet={...structuredClone(inputs),id};
-        if(sheet.section)d.version=10;
-        else if(d.version<9)d.version=9;
+        const version=sheet.annotations!==undefined?11:sheet.section?10:9;
+        if(d.version<version)d.version=version;
         d.drawings=sheetId?sheets.map(item=>item.id===id?sheet:item):[...sheets,sheet];
       });
       return id;

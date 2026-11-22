@@ -2,9 +2,11 @@
 import {evaluateExtrusion,featureValue,resolveDrawingSource,sketchBulgeArc,sketchPoint,t} from '@brickwright/cad-core';
 import type {CadDocument,DrawingInputs,SketchPoint,Vec3} from '@brickwright/cad-core';
 
+import {dimensionText,placeDrawingAnnotation} from './drawing-annotation.js';
+import type {DrawingAnchorPoint} from './drawing-annotation.js';
 import {sectionMaterial} from './drawing-section.js';
 
-type Stroke = 'visible'|'hidden'|'center'|'dimension'|'border'|'cut'|'hatch'|'section';
+type Stroke = 'visible'|'hidden'|'center'|'dimension'|'border'|'cut'|'hatch'|'section'|'annotation';
 export type DrawingPath = {points:SketchPoint[]; stroke:Stroke; closed?:boolean};
 type DrawingCircle = {center:SketchPoint; radius:number};
 type DrawingText = {x:number; y:number; size:number; text:string};
@@ -13,7 +15,7 @@ const order = [
  {view:'Front view', horizontal:0, vertical:2, depth:1, near:-1},
  {view:'Right view', horizontal:1, vertical:2, depth:0, near:1}
 ] as const;
-const label=(value:number)=>String(Number(value.toFixed(3)));
+const label=dimensionText;
 
 const border=(a:number,b:number,w:number,h:number):SketchPoint[]=>[[a,b],[a+w,b],[a+w,b+h],[a,b+h]];
 const bounds=(points:SketchPoint[])=>{
@@ -142,6 +144,7 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
   throw new Error(t('This drawing does not fit on A4 at this scale. Choose a smaller scale.'));
  }
  const paths:DrawingPath[]=[],texts:DrawingText[]=[],circles:DrawingCircle[]=[];
+ const anchors:DrawingAnchorPoint[]=[];
  const addPath=(stroke:Stroke,points:SketchPoint[],closed?:boolean)=>paths.push({stroke,points,closed});
  const addText=(x:number,y:number,text:string,size=3)=>texts.push({x,y,text,size});
  for(const [view,x,y] of [[top,minX,topY],[front,minX,baseline],[right,rightX,baseline]] as const){
@@ -150,6 +153,24 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
   for(const circle of view.circles){
    const [a,b]=circle.center;
    circles.push({center:[x+(a-limits.left)*factor,y+(b-limits.bottom)*factor],radius:circle.radius*factor});
+  }
+  if(view.faceOn){
+   anchors.push(
+    {id:'bounds:sw',label:t('Lower-left profile bounds'),point:[x,y]},
+    {id:'bounds:se',label:t('Lower-right profile bounds'),point:[x+w,y]},
+    {id:'bounds:nw',label:t('Upper-left profile bounds'),point:[x,y+h]},
+    {id:'bounds:ne',label:t('Upper-right profile bounds'),point:[x+w,y+h]}
+   );
+   const addCircleAnchor=(id:string,label:string,circle:DrawingCircle)=>{
+    const [u,v]=view.project(world(circle.center,start));
+    anchors.push({id:'circle:'+id,label,radius:circle.radius,point:[x+(u-limits.left)*factor,y+(v-limits.bottom)*factor]});
+   };
+   if(profile.kind==='circle')addCircleAnchor(profile.id,t('Circle center'),circleAt(0)!);
+   let holeIndex=0;
+   for(const [id,circle] of circlesByLoop){
+    const name=id===loopIds[0]?t('Outer circle'):t`Hole ${++holeIndex}`;
+    addCircleAnchor(id,name,circle);
+   }
   }
   if(section&&view.faceOn){
    const axis=section.axis,across=axis===0?1:0;
@@ -218,6 +239,16 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
  for(const [index,[diameter,count]] of [...diameters.entries()].entries()){
   addText(15+54*(index%5),34-Math.floor(index/5)*3.2,t`${count} × Ø${diameter} mm`,2.5);
  }
- return {width:297,height:210,paths,texts,circles};
+ const annotationIssues:string[]=[];
+ for(const annotation of sheet.annotations??[]){
+  const drawing=placeDrawingAnnotation(annotation,sketch.id,anchors,factor);
+  if(!drawing){
+   annotationIssues.push(annotation.id);
+   continue;
+  }
+  for(const points of drawing.paths)addPath('annotation',points);
+  addText(...drawing.position,drawing.text,2.8);
+ }
+ return {width:297,height:210,paths,texts,circles,anchors,annotationIssues,factor};
 }
 export type DrawingLayout = ReturnType<typeof layoutDrawing>;

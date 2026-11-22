@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {drawingScales,drawingSourceFor,evaluateExtrusion,resolveDrawingSource,t} from '@brickwright/cad-core';
-import type {CadSession,DrawingInputs,DrawingScale} from '@brickwright/cad-core';
+import {drawingAnnotationLimit,drawingScales,drawingSourceFor,evaluateExtrusion,newId,resolveDrawingSource,t,validDrawingPosition} from '@brickwright/cad-core';
+import type {CadSession,DrawingAnnotation,DrawingDimensionKind,DrawingInputs,DrawingScale,SketchPoint} from '@brickwright/cad-core';
 import type {CadFile} from './index.js';
 import {layoutDrawing} from './drawing-layout.js';
 import type {DrawingLayout} from './drawing-layout.js';
+import {placeDrawingAnnotation} from './drawing-annotation.js';
 import {exportDrawingPdf} from './drawing-pdf.js';
 
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{
@@ -57,9 +58,9 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
    scale.value=saved?.scale??'1:1';
    const hidden=element('input');hidden.type='checkbox';hidden.checked=saved?.hiddenLines??true;
    const form=element('div');form.className='drawing-form';
-   const label=(text:string,control:HTMLInputElement|HTMLSelectElement)=>{
+   const label=(text:string,control:HTMLInputElement|HTMLSelectElement,parent:HTMLElement=form)=>{
     control.setAttribute('aria-label',t(text));
-    const field=element('label',t(text));field.append(control);form.append(field);
+    const field=element('label',t(text));field.append(control);parent.append(field);
    };
    label('Sheet title',title);label('Drawing source',source);label('Drawing scale',scale);label('Show hidden lines',hidden);
    const section=element('input');section.type='checkbox';section.checked=!!saved?.section;
@@ -70,6 +71,25 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
    position.value=String(saved?.section?.position??'0');
    label('Show section A-A',section);
    label('Section axis',axis);label('Section position (mm)',position);
+   const annotations=structuredClone(saved?.annotations??[]);
+   const dimensions=element('details');dimensions.className='drawing-dimensions';
+   dimensions.append(element('summary',t('Drawing dimensions')));
+   const labels:Record<DrawingDimensionKind,string>={
+    'linear-x':t('Horizontal dimension'),'linear-y':t('Vertical dimension'),diameter:t('Diameter dimension')
+   };
+   const kind=element('select');
+   for(const [value,name] of Object.entries(labels))kind.add(new Option(name,value));
+   const from=element('select'),to=element('select');
+   const paperX=element('input'),paperY=element('input');
+   for(const input of [paperX,paperY]){input.type='number';input.step='.1';}
+   paperX.value='70';paperY.value='120';
+   label('Dimension type',kind,dimensions);
+   label('First dimension anchor',from,dimensions);label('Second dimension anchor',to,dimensions);
+   label('Paper X (mm)',paperX,dimensions);label('Paper Y (mm)',paperY,dimensions);
+   const pick=element('button',t('Pick dimension position'));
+   const add=element('button',t('Add dimension'));
+   const list=element('ul');list.className='drawing-dimension-list';
+   dimensions.append(pick,add,list);form.append(dimensions);
    const heading=element('header');
    const close=element('button','×');close.setAttribute('aria-label',t('Close drawing'));
    close.onclick=()=>dialog.close();heading.append(element('h2',t('Drawing sheet')),close);
@@ -116,9 +136,52 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
     if(section.checked&&!cut)throw new Error(t('Enter a section position in millimetres.'));
     const value=Number(cut);
     return {title:title.value.trim(),source:ref,scale:scale.value as DrawingScale,hiddenLines:hidden.checked,
-     ...(section.checked?{section:{axis:axis.value==='u'?'u':'v',position:Number.isFinite(value)?value:cut}}:{})};
+     ...(section.checked?{section:{axis:axis.value==='u'?'u':'v',position:Number.isFinite(value)?value:cut}}:{}),
+     ...(annotations.length?{annotations}:{})};
    };
    let layout:DrawingLayout|undefined;
+   let picking=false,editing:string|undefined;
+   const setPicking=(active:boolean)=>{
+    picking=active;
+    preview.classList.toggle('picking',active);
+    pick.setAttribute('aria-pressed',String(active));
+   };
+   const refreshDimensions=()=>{
+    const diameter=kind.value==='diameter';
+    const anchors=layout?.anchors??[];
+    const previousFrom=from.value,previousTo=to.value;
+    from.replaceChildren(...anchors.filter(anchor=>!diameter||anchor.radius!==undefined)
+     .map(anchor=>new Option(anchor.label,anchor.id)));
+    to.replaceChildren(...anchors.map(anchor=>new Option(anchor.label,anchor.id)));
+    if([...from.options].some(option=>option.value===previousFrom))from.value=previousFrom;
+    if([...to.options].some(option=>option.value===previousTo))to.value=previousTo;
+    else if(to.options.length>1)to.selectedIndex=1;
+    to.parentElement!.hidden=diameter;
+    add.disabled=!layout||!from.options.length||(!editing&&annotations.length>=drawingAnnotationLimit);
+    add.textContent=t(editing?'Apply dimension':'Add dimension');
+    pick.disabled=!layout;
+    list.replaceChildren();
+    for(const [i,item] of annotations.entries()){
+     const row=element('li');
+     const invalid=layout?.annotationIssues.includes(item.id);
+     const edit=element('button',t`Edit dimension ${i+1}`);
+     edit.title=labels[item.kind];
+     const remove=element('button','×');
+     remove.setAttribute('aria-label',t`Remove dimension ${i+1}`);
+     if(invalid)row.append(element('small',t('Anchor unavailable')));
+     edit.onclick=()=>{
+      editing=item.id;kind.value=item.kind;refreshDimensions();
+      from.value=item.from;to.value=item.to??'';
+      paperX.value=String(item.at[0]);paperY.value=String(item.at[1]);
+     };
+     remove.onclick=()=>{
+      annotations.splice(i,1);
+      if(editing===item.id)editing=undefined;
+      render();
+     };
+     row.append(edit,remove);list.append(row);
+    }
+   };
    const render=()=>{
     axis.parentElement!.hidden=position.parentElement!.hidden=!section.checked;
     preview.replaceChildren();layout=undefined;status.textContent='';
@@ -126,7 +189,48 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
      layout=layoutDrawing(session.state.document,read());
      preview.append(previewDrawing(layout));
     }catch(error){status.textContent=error instanceof Error?error.message:String(error);}
-    save.disabled=pdf.disabled=!layout;
+    save.disabled=!layout;
+    pdf.disabled=!layout||!!layout.annotationIssues.length;
+    if(layout?.annotationIssues.length)status.textContent=t('Repair or remove unavailable drawing dimensions before exporting.');
+    refreshDimensions();
+    if(!layout&&picking)setPicking(false);
+   };
+   kind.onchange=refreshDimensions;
+   add.onclick=()=>{
+    if(!layout)return;
+    const at:SketchPoint=[Number(paperX.value),Number(paperY.value)];
+    if(!validDrawingPosition(...at)){
+     status.textContent=t('Pick a position inside the drawing area.');
+     return;
+    }
+    const source=read().source,next:DrawingAnnotation={id:editing??newId(),sketchId:source.sketchId,
+     kind:kind.value as DrawingDimensionKind,from:from.value,at,
+     ...(kind.value==='diameter'?{}:{to:to.value})};
+    if(!placeDrawingAnnotation(next,source.sketchId,layout.anchors,layout.factor)){
+     status.textContent=t('Choose anchors that have a measurable distance along the selected axis.');
+     return;
+    }
+    if(editing)annotations[annotations.findIndex(item=>item.id===editing)]=next;
+    else annotations.push(next);
+    editing=undefined;
+    setPicking(false);render();
+   };
+   pick.onclick=()=>{
+    setPicking(!picking);
+    if(picking)status.textContent=t('Click or tap the sheet to choose the dimension position.');
+    else render();
+   };
+   preview.onpointerup=event=>{
+    if(!picking||!layout||event.button!==0)return;
+    const matrix=preview.querySelector('svg')?.getScreenCTM();
+    if(!matrix)return;
+    const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());
+    const x=Number(point.x.toFixed(2)),y=Number((layout.height-point.y).toFixed(2));
+    if(!validDrawingPosition(x,y)){
+     status.textContent=t('Pick a position inside the drawing area.');
+     return;
+    }
+    paperX.value=String(x);paperY.value=String(y);setPicking(false);render();
    };
    refresh=()=>{
     const current=session.state;
@@ -148,13 +252,13 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
    };
    remove.onclick=()=>{if(saved){session.removeDrawingSheet(saved.id);if(dialog.open)dialog.close();}};
    pdf.onclick=async()=>{
-    if(!layout||!onExport)return;
+    if(!layout||layout.annotationIssues.length||!onExport)return;
     pdf.disabled=true;
     try{await onExport(exportDrawingPdf(layout,read().title));}
     catch(error){if(dialog.open)status.textContent=error instanceof Error?error.message:String(error);}
-    finally{pdf.disabled=!layout;}
+    finally{pdf.disabled=!layout||!!layout.annotationIssues.length;}
    };
-   refresh();dialog.showModal();
+   setPicking(false);refresh();dialog.showModal();
   },
   dispose(){unsubscribe();dialog.close();dialog.remove();}
  };

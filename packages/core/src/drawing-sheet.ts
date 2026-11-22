@@ -7,11 +7,23 @@ export const drawingScales = ['1:5','1:2','1:1','2:1','5:1'] as const;
 export type DrawingScale = typeof drawingScales[number];
 export type DrawingSource = {featureId:string; sketchId:string; profileId:string};
 export type DrawingSection = {axis:'u'|'v'; position:FeatureScalar};
-export type DrawingInputs = {title:string; source:DrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection};
+export type DrawingDimensionKind = 'linear-x'|'linear-y'|'diameter';
+export type DrawingAnnotation = {
+ id:string; sketchId:string; kind:DrawingDimensionKind; from:string; to?:string; at:[number,number];
+};
+export const drawingAnnotationLimit=24;
+export type DrawingInputs = {title:string; source:DrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]};
 export type DrawingSheet = DrawingInputs & {id:string};
 
 const record = (value:unknown):value is Record<string,unknown> => !!value && typeof value==='object' && !Array.isArray(value);
 const id = (value:unknown):value is string => typeof value==='string' && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,95}$/.test(value) && !['constructor','prototype','__proto__'].includes(value);
+
+const anchor=(value:unknown):value is string=>typeof value==='string'&&
+ (/^bounds:(sw|se|nw|ne)$/.test(value)||(value.startsWith('circle:')&&id(value.slice(7))));
+
+export function validDrawingPosition(x:number,y:number){
+ return Number.isFinite(x)&&Number.isFinite(y)&&x>=10&&x<=265&&y>=28&&y<=176;
+}
 
 export function checkDrawingSheets(doc:CadDocument) {
  if(doc.drawings===undefined)return;
@@ -29,6 +41,19 @@ export function checkDrawingSheets(doc:CadDocument) {
    if(typeof value==='number'){
     if(!Number.isFinite(value)||Math.abs(value)>100000)throw invalid();
    }else if(typeof value!=='string'||!value.trim()||value.length>160||/[\u0000-\u001f]/.test(value))throw invalid();
+  }
+  if(sheet.annotations!==undefined){
+   if(doc.version<11||!Array.isArray(sheet.annotations)||sheet.annotations.length>drawingAnnotationLimit)throw invalid();
+   const annotationIds=new Set<string>();
+   for(const dimension of sheet.annotations){
+    if(!record(dimension)||!id(dimension.id)||annotationIds.has(dimension.id)||!id(dimension.sketchId)||
+       !anchor(dimension.from)||!Array.isArray(dimension.at)||dimension.at.length!==2||
+       !validDrawingPosition(dimension.at[0],dimension.at[1]))throw invalid();
+    if(dimension.kind==='diameter'){
+     if(!dimension.from.startsWith('circle:')||dimension.to!==undefined)throw invalid();
+    }else if(!['linear-x','linear-y'].includes(String(dimension.kind))||!anchor(dimension.to)||dimension.to===dimension.from)throw invalid();
+    annotationIds.add(dimension.id);
+   }
   }
   unique.add(sheet.id);
  }

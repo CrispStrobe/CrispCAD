@@ -130,7 +130,13 @@ coordinates. Choose the constant X or Y coordinate and enter a millimetre
 value or named dimension. A dashed cut line and direction marks identify the
 plane. The section hatches solid material and leaves cutouts clear. The
 saved cut updates in previews and PDF when the source changes.
-Custom placed annotations, offset sections and assembly views remain open.
+In **Drawing dimensions**, choose horizontal, vertical or diameter and select
+a profile bound or circle center. Pick the label position on the page, or
+enter paper coordinates, then add the dimension. Dimensions keep their
+placement on the sheet and use current distances and diameters from the
+source sketch. If an anchor disappears, edit the dimension to pick a new
+anchor or remove it before exporting.
+Offset sections, arbitrary edge annotations and assembly views remain open.
 
 ## Completion criteria
 
