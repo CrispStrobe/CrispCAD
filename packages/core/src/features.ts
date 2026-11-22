@@ -20,6 +20,16 @@ export type SketchProfile =
  * closure are enforced by construction; a general constraint solver comes later. */
 export interface PlanarSketch {version:1; id:string; name:string; plane:SketchPlane; profile:SketchProfile}
 export interface ExtrusionFeature {kind:'extrusion'; featureVersion:1; sketchId:string; distance:FeatureScalar; symmetric:boolean}
+export interface RevolutionFeature {
+  kind:'revolution';
+  featureVersion:1;
+  sketchId:string;
+  angle:FeatureScalar;
+  axisOffset?:FeatureScalar;
+}
+export function isSketchFeature(node:CadDocument['nodes'][string]):node is CadDocument['nodes'][string] & (ExtrusionFeature|RevolutionFeature) {
+  return node.kind==='extrusion'||node.kind==='revolution';
+}
 export interface FeatureDiagnostic {source:'sketch'|'feature'; id:string; message:string; code?:string}
 export class FeatureEvaluationError extends Error {
   readonly code?:string;
@@ -56,10 +66,35 @@ export function evaluateExtrusion(node:ExtrusionFeature&{id:string},doc:CadDocum
     return {...profile,plane:sketch.plane,distance,start:node.symmetric?-distance/2:0};
   } catch(error){if(error instanceof FeatureEvaluationError)throw error;throw new FeatureEvaluationError({source:'feature',id:node.id,message:error instanceof Error?error.message:String(error)});}
 }
+/** The axis is parallel to sketch Y and is positioned along sketch X. */
+export function evaluateRevolution(node:RevolutionFeature&{id:string},doc:CadDocument) {
+  try {
+    if(node.featureVersion!==1||typeof node.sketchId!=='string'||!Object.hasOwn(doc.sketches??{},node.sketchId))
+      throw new Error(t('Revolution requires an existing sketch'));
+    const sketch=doc.sketches![node.sketchId],profile=evaluateSketch(sketch,doc);
+    const angle=featureValue(node.angle,doc,'deg');
+    if(Math.abs(angle)<.1||Math.abs(angle)>360)throw new Error(t('Sweep magnitude must be between 0.1° and 360°'));
+    const radial=profile.contour.map(point=>point[0]);
+    const min=Math.min(...radial),max=Math.max(...radial);
+    const axisOffset=node.axisOffset===undefined?min:featureValue(node.axisOffset,doc);
+    if(Math.abs(axisOffset)>100000)throw new Error(t('Axis must be within 100000 mm of the sketch origin'));
+    if(min<axisOffset-1e-8&&max>axisOffset+1e-8)throw new Error(t('Revolved profiles must stay on one side of the radial axis'));
+    return {...profile,plane:sketch.plane,angle,axisOffset};
+  }catch(error){
+    if(error instanceof FeatureEvaluationError)throw error;
+    throw new FeatureEvaluationError({source:'feature',id:node.id,message:error instanceof Error?error.message:String(error)});
+  }
+}
 export function checkFeatures(doc:CadDocument) {
   if(doc.sketches!==undefined){if(doc.version<3||!record(doc.sketches)||Object.keys(doc.sketches).length>256)throw new Error(t('Sketches require document version 3 and at most 256 sketches'));
     for(const [id,sketch] of Object.entries(doc.sketches)){if(!idOk(id)||sketch.id!==id)throw new Error(t('Invalid sketch identity'));evaluateSketch(sketch,doc);}}
-  for(const node of Object.values(doc.nodes))if(node.kind==='extrusion'){if(doc.version<3)throw new Error(t('Extrusion features require document version 3'));evaluateExtrusion(node,doc);}
+  for(const node of Object.values(doc.nodes)){
+    if(node.kind==='extrusion'){if(doc.version<3)throw new Error(t('Extrusion features require document version 3'));evaluateExtrusion(node,doc);}
+    else if(node.kind==='revolution'){if(doc.version<12)throw new Error(t('Revolution features require document version 12'));evaluateRevolution(node,doc);}
+  }
+}
+export function sketchFeatureExpressions(node:ExtrusionFeature|RevolutionFeature):string[] {
+  return (node.kind==='extrusion'?[node.distance]:[node.angle,node.axisOffset]).filter((value):value is string=>typeof value==='string');
 }
 export function sketchExpressions(sketch:PlanarSketch):string[] {
   const profile=sketch.profile;
@@ -99,7 +134,7 @@ export function designGraph(doc:CadDocument):DesignGraphEntry[] {
   const entries:DesignGraphEntry[]=[];
   for(const [name,p] of Object.entries(doc.parametric?.parameters??{}))entries.push({key:`parameter:${name}`,id:name,kind:'parameter',label:name,dependencies:references(p.expression)});
   for(const s of Object.values(doc.sketches??{}))entries.push({key:`sketch:${s.id}`,id:s.id,kind:'sketch',label:s.name,dependencies:[...new Set(sketchExpressions(s).flatMap(references))]});
-  for(const n of Object.values(doc.nodes)){const deps=n.kind==='boolean'?n.inputs.map(id=>`feature:${id}`):n.kind==='extrusion'?[`sketch:${n.sketchId}`,...(typeof n.distance==='string'?references(n.distance):[])]:[];
+  for(const n of Object.values(doc.nodes)){const deps=n.kind==='boolean'?n.inputs.map(id=>`feature:${id}`):isSketchFeature(n)?[`sketch:${n.sketchId}`,...sketchFeatureExpressions(n).flatMap(references)]:[];
     for(const b of doc.parametric?.bindings??[])if(b.nodeId===n.id)deps.push(...references(b.expression));
     entries.push({key:`feature:${n.id}`,id:n.id,kind:'feature',label:n.name,dependencies:[...new Set(deps)]});}
   const byKey=new Map(entries.map(e=>[e.key,e])),ordered:DesignGraphEntry[]=[],seen=new Set<string>(),visiting=new Set<string>();

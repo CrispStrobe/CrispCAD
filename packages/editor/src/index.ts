@@ -83,7 +83,7 @@ export interface CadEditorOptions {
   onError?: (error: Error) => void;
 }
 export interface CadCommandState {canUndo:boolean;canRedo:boolean;hasSelection:boolean;canDelete:boolean;canCombine:boolean;canExport:boolean;hasBodies:boolean;ready:boolean}
-export type CadCommand='new'|'open'|'save'|'import'|'export'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'readout'|'code'|'model-source'|'model-library'|'union'|'subtract'|'intersect';
+export type CadCommand='new'|'open'|'save'|'import'|'export'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'revolve'|'readout'|'code'|'model-source'|'model-library'|'union'|'subtract'|'intersect';
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag); element.className = className; if (text !== undefined) element.textContent = text; return element;
 }
@@ -140,6 +140,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const parametersPanel=mountParametersPanel(shell,session);
   const sketchPanel=mountSketchPanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();},()=>grid);
   button('Sketch',()=>sketchPanel.open(),toolbar,'compact-icon').title=t('Create a dimensioned sketch and extrusion');
+  button('Revolve',()=>sketchPanel.openRevolution(),toolbar,'compact-icon').title=t('Revolve a sketch around an axis');
   const drawingPanel=mountDrawingPanel(shell,session,options.onExport);
   const modelSourcePanel=mountModelSourcePanel(shell,status,session,doc=>client.evaluate(doc),(recipe,name)=>createPresetDocument(recipe.preset,name,{recipe}));
   const codePanel=mountCodePanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();},options.onExport,()=>run(()=>modelSourcePanel.open()));
@@ -269,7 +270,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       const number=(seenNames.get(n.name)??0)+1;seenNames.set(n.name,number);const displayName=(counts.get(n.name)??0)>1?`${n.name} (${number})`:n.name;
       if (!child) { const check = el('input'); check.type = 'checkbox'; check.checked = selected.includes(id); check.setAttribute('aria-label', t`Select ${displayName}`); check.addEventListener('change', () => {session.select(check.checked ? [...selected, id] : selected.filter(x => x !== id));viewport.canvas.focus({preventScroll:true});}); row.append(check); }
       const select = button(displayName, () => {session.select([id]);viewport.canvas.focus({preventScroll:true});}, row, '', false);
-      const icon=toolIcon(n.kind==='code'?'Code':n.kind==='extrusion'?'Sketch':n.kind==='boolean'?'Union':n.kind==='cylinder'?'Cylinder':n.kind==='sphere'?'Sphere':'Box');if(icon&&!select.querySelector('svg'))select.prepend(icon); select.classList.toggle('selected', selected.includes(id)); select.setAttribute('aria-pressed',String(selected.includes(id)));row.classList.toggle('selected',selected.includes(id));select.title = `${displayName} · ${n.role==='hole'?t('Hole'):t(n.kind)}`;if(n.role==='hole'){const tag=el('small','hole-tag',t('Hole'));row.append(tag);} select.dataset.testid = child?'construction-name':'object-name'; item.append(row);
+      const icon=toolIcon(n.kind==='code'?'Code':n.kind==='extrusion'?'Sketch':n.kind==='revolution'?'Revolve':n.kind==='boolean'?'Union':n.kind==='cylinder'?'Cylinder':n.kind==='sphere'?'Sphere':'Box');if(icon&&!select.querySelector('svg'))select.prepend(icon); select.classList.toggle('selected', selected.includes(id)); select.setAttribute('aria-pressed',String(selected.includes(id)));row.classList.toggle('selected',selected.includes(id));select.title = `${displayName} · ${n.role==='hole'?t('Hole'):t(n.kind)}`;if(n.role==='hole'){const tag=el('small','hole-tag',t('Hole'));row.append(tag);} select.dataset.testid = child?'construction-name':'object-name'; item.append(row);
       parent.append(item);
       // A generated preset is one editable part. Its implementation operands are
       // deliberately hidden; user-authored booleans retain browsable inputs.
@@ -278,12 +279,12 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       }else if(n.kind==='code'){
         const definition=section(`code:${id}`,'Code & parameters',item);button('Edit code definition',()=>codePanel.open(id),definition);
         const compiled=compileCode(n.program);for(const [name,value] of Object.entries(compiled.values)){const entry=el('div','browser-value');entry.append(el('span','',name),el('span','',`${Number(value.value.toFixed(4))} ${compiled.parameters[name].unit==='scalar'?'':compiled.parameters[name].unit}`));definition.append(entry);}
-      }else if(n.kind==='extrusion'){
-        const definition=section(`extrusion:${id}`,'Sketch & extrusion',item);const sketch=doc.sketches?.[n.sketchId];if(sketch)button(t`Edit sketch: ${sketch.name}`,()=>sketchPanel.open(id),definition);
+      }else if(n.kind==='extrusion'||n.kind==='revolution'){
+        const definition=section(`${n.kind}:${id}`,n.kind==='extrusion'?'Sketch & extrusion':'Sketch & revolution',item);const sketch=doc.sketches?.[n.sketchId];if(sketch)button(t`Edit sketch: ${sketch.name}`,()=>sketchPanel.open(id),definition);
       }
     };
     doc.roots.forEach(id => append(id, bodies));
-    const sketches=Object.values(doc.sketches??{});if(sketches.length){const group=section('sketches',t`Sketches · ${sketches.length}`,content);for(const sketch of sketches){const feature=Object.values(doc.nodes).find(n=>n.kind==='extrusion'&&n.sketchId===sketch.id);if(feature)button(t`Sketch: ${sketch.name}`,()=>sketchPanel.open(feature.id),group);else group.append(el('div','browser-value',sketch.name));}}
+    const sketches=Object.values(doc.sketches??{});if(sketches.length){const group=section('sketches',t`Sketches · ${sketches.length}`,content);for(const sketch of sketches){const feature=Object.values(doc.nodes).find(n=>(n.kind==='extrusion'||n.kind==='revolution')&&n.sketchId===sketch.id);if(feature)button(t`Sketch: ${sketch.name}`,()=>sketchPanel.open(feature.id),group);else button(t`Revolve sketch: ${sketch.name}`,()=>sketchPanel.openRevolution(sketch.id),group);}}
     if(doc.drawings?.length){
       const group=section('drawings',t`Drawings · ${doc.drawings.length}`,content,true);
       if(options.onExport&&doc.drawings.length>1){
@@ -370,9 +371,12 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       const apply=button('Apply shape parameters',async()=>{const expected=session.state.revision;apply.disabled=true;try{const fragment=createPresetDocument(draft.preset,'BRICKWRIGHT',{recipe:draft});await client.evaluate(fragment);if(disposed)return;if(session.state.revision!==expected)throw new Error(t('The model changed while generating this shape. Apply again.'));session.replaceGenerated(id,fragment);await whenIdle();}finally{apply.disabled=false;}},form,'primary');if(n.generator){const advanced=el('details');advanced.append(el('summary','',t('Advanced')));button('Detach generator',()=>session.detachGenerator(id),advanced);form.append(advanced);}inspector.append(form);
     }
     if(n.kind==='code')button('Edit code',()=>codePanel.open(id),inspector);
-    if(n.kind==='extrusion'){
+    if(n.kind==='extrusion'||n.kind==='revolution'){
       const sketch=session.state.document.sketches![n.sketchId];inspector.append(el('p','hint',t`${sketch.name} · ${t(sketch.profile.kind)} · ${sketch.plane} plane`));
-      button('Edit sketch & extrusion',()=>sketchPanel.open(id),inspector);
+      button(n.kind==='extrusion'?'Edit sketch & extrusion':'Edit sketch & revolution',()=>sketchPanel.open(id),inspector);
+    }
+    if(n.kind==='extrusion'){
+      button('Revolve this sketch',()=>sketchPanel.openRevolution(n.sketchId),inspector);
       button('Create drawing sheet',()=>drawingPanel.open({featureId:id}),inspector);
       if(options.onExport&&!n.provenance?.length){
         const exportProfile=button('Export sketch as DXF',()=>options.onExport!(exportSketchDxf(session.state.document,id)),inspector);
@@ -542,7 +546,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'select-all':session.select(session.state.document.roots);break;case 'deselect':session.select([]);break;
       case 'select':setMode('select');break;case 'move':setMode('translate');break;case 'rotate':setMode('rotate');break;case 'scale':setMode('scale');break;
       case 'home':viewport.frame('iso');break;case 'fit':viewport.frame(undefined,true);break;case 'top':case 'front':case 'right':case 'back':case 'left':case 'bottom':viewport.setView(command);break;
-      case 'projection':projectionButton.click();break;case 'workplane':planeButton.click();break;case 'objects':partsToggle.click();break;case 'properties':propertiesToggle.click();break;case 'drop':viewport.dropSelection();break;case 'parameters':parametersPanel.open();break;case 'sketch':sketchPanel.open();break;case 'model-source':modelSourcePanel.toggle();break;case 'model-library':modelLibraryPanel.open();break;case 'code':codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);break;case 'readout':readout.setVisible(!readout.visible);break;
+      case 'projection':projectionButton.click();break;case 'workplane':planeButton.click();break;case 'objects':partsToggle.click();break;case 'properties':propertiesToggle.click();break;case 'drop':viewport.dropSelection();break;case 'parameters':parametersPanel.open();break;case 'sketch':sketchPanel.open();break;case 'revolve':sketchPanel.openRevolution();break;case 'model-source':modelSourcePanel.toggle();break;case 'model-library':modelLibraryPanel.open();break;case 'code':codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);break;case 'readout':readout.setVisible(!readout.visible);break;
       case 'shapes':picker.open(true);break;
       case 'union':case 'subtract':case 'intersect':session.combine(command);break;
       default:throw new Error(t('Unknown editor command'));

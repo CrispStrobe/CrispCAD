@@ -4,7 +4,7 @@ import {t} from './i18n.js';
 import {pruneModelProvenance} from './model-provenance.js';
 import {validateDocument} from './document.js';
 import type {CadDocument} from './document.js';
-import {sketchExpressions,rewriteSketchExpressions} from './features.js';
+import {isSketchFeature,sketchExpressions,rewriteSketchExpressions,sketchFeatureExpressions} from './features.js';
 import {evaluateExpression,evaluateParameters} from './parameters.js';
 
 export function uniqueObjectName(base:string,used:ReadonlySet<string>,limit=160):string {
@@ -20,13 +20,13 @@ export function selectionFragment(input:CadDocument,selection:readonly string[])
  if(!doc.roots.length)throw new Error(t('Select an object to copy'));
  const keep=new Set<string>();const visit=(id:string)=>{if(keep.has(id))return;keep.add(id);const node=doc.nodes[id];if(node.kind==='boolean')node.inputs.forEach(visit);};doc.roots.forEach(visit);
  for(const id of Object.keys(doc.nodes))if(!keep.has(id))delete doc.nodes[id];
- const sketches=new Set(Object.values(doc.nodes).flatMap(n=>n.kind==='extrusion'?[n.sketchId]:[]));if(doc.sketches)doc.sketches=Object.fromEntries(Object.entries(doc.sketches).filter(([id])=>sketches.has(id)));
+ const sketches=new Set(Object.values(doc.nodes).flatMap(n=>isSketchFeature(n)?[n.sketchId]:[]));if(doc.sketches)doc.sketches=Object.fromEntries(Object.entries(doc.sketches).filter(([id])=>sketches.has(id)));
  if(doc.version>=8&&doc.tracers)doc.tracers=doc.tracers.filter(trace=>doc.roots.includes(trace.bodyId));
  if(doc.joints)doc.joints=doc.joints.filter(j=>doc.roots.includes(j.bodyA)&&doc.roots.includes(j.bodyB));
  if(doc.parametric){
   const original=doc.parametric,values=evaluateParameters(original);original.bindings=original.bindings.filter(binding=>keep.has(binding.nodeId));
   const required=new Set<string>();const references=(expression:string)=>{const names=new Set<string>();evaluateExpression(expression,name=>values[name],{references:names});for(const name of names)if(Object.hasOwn(original.parameters,name))required.add(name);};
-  original.bindings.forEach(binding=>references(binding.expression));for(const s of Object.values(doc.sketches??{}))sketchExpressions(s).forEach(references);for(const n of Object.values(doc.nodes))if(n.kind==='extrusion'&&typeof n.distance==='string')references(n.distance);const scanned=new Set<string>();
+  original.bindings.forEach(binding=>references(binding.expression));for(const s of Object.values(doc.sketches??{}))sketchExpressions(s).forEach(references);for(const n of Object.values(doc.nodes))if(isSketchFeature(n))sketchFeatureExpressions(n).forEach(references);const scanned=new Set<string>();
   while([...required].some(name=>!scanned.has(name)))for(const name of [...required])if(!scanned.has(name)){scanned.add(name);references(original.parameters[name].expression);}
   original.parameters=Object.fromEntries(Object.entries(original.parameters).filter(([name])=>required.has(name)));
   if(!original.bindings.length&&!required.size)delete doc.parametric;
@@ -44,7 +44,14 @@ export function mergeFragmentParameters(target:CadDocument,source:CadDocument,id
  const rewrite=(expression:string)=>expression.replace(/\b[A-Za-z][A-Za-z0-9_]*\b/g,name=>names.get(name)??name);
  for(const [name,p] of Object.entries(source.parametric.parameters))target.parametric.parameters[names.get(name)!]={...p,expression:rewrite(p.expression)};
  for(const [old,id] of sketches){const sketch=target.sketches?.[id];if(sketch)rewriteSketchExpressions(sketch,rewrite);}
- for(const n of Object.values(source.nodes))if(n.kind==='extrusion'&&typeof n.distance==='string'){const pasted=target.nodes[ids.get(n.id)!];if(pasted.kind==='extrusion')pasted.distance=rewrite(n.distance);}
+ for(const n of Object.values(source.nodes)) {
+  const pasted=target.nodes[ids.get(n.id)!];
+  if(n.kind==='extrusion'&&pasted.kind==='extrusion'&&typeof n.distance==='string')pasted.distance=rewrite(n.distance);
+  if(n.kind==='revolution'&&pasted.kind==='revolution'){
+   if(typeof n.angle==='string')pasted.angle=rewrite(n.angle);
+   if(typeof n.axisOffset==='string')pasted.axisOffset=rewrite(n.axisOffset);
+  }
+ }
  for(const binding of source.parametric.bindings){let expression=rewrite(binding.expression);const axis=['positionX','positionY','positionZ'].indexOf(binding.property);
   if(source.roots.includes(binding.nodeId)&&axis>=0&&offset[axis]){const q=evaluateExpression(binding.expression,name=>values[name]);expression=`(${expression})${q.length===0&&q.angle===0?' * 1 mm':''} + ${offset[axis]} mm`;}
   target.parametric.bindings.push({...binding,nodeId:ids.get(binding.nodeId)!,expression});

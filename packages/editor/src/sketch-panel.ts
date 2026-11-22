@@ -5,7 +5,7 @@ import {maxSketchDxfBytes,readSketchDxf} from './import-sketch-dxf.js';
 import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
-import {createCadSession,evaluateExtrusion,featureValue,maxSketchRegionLoops,newId,sketchBulgeMidpoint} from '@brickwright/cad-core';
+import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchRegionLoops,newId,sketchBulgeMidpoint} from '@brickwright/cad-core';
 import type {SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument} from '@brickwright/cad-core';
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
 const scalar=(source:string):FeatureScalar=>source.trim()!==''&&Number.isFinite(Number(source))?Number(source):source.trim();
@@ -13,12 +13,17 @@ const scalar=(source:string):FeatureScalar=>source.trim()!==''&&Number.isFinite(
 export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:(doc:CadDocument)=>Promise<import('@brickwright/cad-geometry').GeometryResult>,afterApply:()=>Promise<unknown>,snap:()=>number=()=>1) {
  const dialog=element('dialog');dialog.className='sketch-dialog';dialog.setAttribute('aria-label',t('Sketch and extrusion'));parent.append(dialog);
  let disposed=false,epoch=0;dialog.addEventListener('close',()=>epoch++);
- function open(featureId?:string){
+ function open(featureId?:string,request?:{sketchId?:string}){
   epoch++;let busy=false;const expected=session.state.revision,doc=session.state.document,node=featureId?doc.nodes[featureId]:undefined;
-  if(featureId&&node?.kind!=='extrusion')throw new Error(t('Select an extrusion feature to edit'));
-  const existing=node?.kind==='extrusion'?doc.sketches![node.sketchId]:undefined;
+  if(featureId&&node?.kind!=='extrusion'&&node?.kind!=='revolution')throw new Error(t('Select an extrusion feature to edit'));
+  const revolving=!!request||node?.kind==='revolution';
+  const linked=request?.sketchId;
+  const sketchId=node?.kind==='extrusion'||node?.kind==='revolution'?node.sketchId:linked;
+  const existing=sketchId?doc.sketches?.[sketchId]:undefined;
+  const title=revolving?(featureId?'Edit sketch & revolution':'Sketch & revolve'):(existing?'Edit sketch & extrusion':'Sketch & extrude');
+  dialog.setAttribute('aria-label',t(revolving?'Sketch and revolution':'Sketch and extrusion'));
   dialog.replaceChildren();
-  const close=element('button','×');close.setAttribute('aria-label',t('Close sketch'));close.title=t('Close sketch');close.onclick=()=>dialog.close();const header=element('header');header.append(element('h2',t(existing?'Edit sketch & extrusion':'Sketch & extrude')),close);
+  const close=element('button','×');close.setAttribute('aria-label',t('Close sketch'));close.title=t('Close sketch');close.onclick=()=>dialog.close();const header=element('header');header.append(element('h2',t(title)),close);
   const form=element('div');form.className='sketch-fields';
   const field=(label:string,value:string|number)=>{const wrap=element('label',t(label)),input=element('input');input.type='text';input.value=String(value);input.setAttribute('aria-label',t(label));wrap.append(input);form.append(wrap);return input;};
   const choice=(label:string,values:string[],value:string)=>{const wrap=element('label',t(label)),select=element('select');select.setAttribute('aria-label',t(label));for(const v of values){const o=element('option',label==='Sketch plane'?v:t(v));o.value=v;select.append(o);}select.value=value;wrap.append(select);form.append(wrap);return select;};
@@ -26,7 +31,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const info=element('button','ⓘ');
   info.type='button';
   info.className='sketch-info-button';
-  info.setAttribute('aria-label',t('About sketching and extrusion'));
+  info.setAttribute('aria-label',t(revolving?'About sketching and revolution':'About sketching and extrusion'));
   info.setAttribute('aria-expanded','false');
   const instructions=element('ol');
   const infoPanel=element('div');
@@ -38,8 +43,13 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    t('Choose a profile and its plane. XY is horizontal. XZ and YZ are upright.'),
    t('Type dimensions or drag the preview handles. For an outline, enter one X, Y point per line. The last point connects to the first.'),
    t('DXF import accepts closed outlines and circles. Loops inside an outer boundary become holes.'),
-   t('Extrusion adds thickness perpendicular to the plane. Symmetric divides that thickness equally on both sides.'),
-   t('Create builds a solid. To change the sketch later, select the solid and choose Edit sketch & extrusion in Properties.')
+   ...(revolving?[
+    t('Revolve sweeps the profile around an axis parallel to sketch Y. The dashed line marks the axis. Keep the entire profile on one side.'),
+    t('Use 360° for a full turn. A negative angle reverses the sweep.')
+   ]:[
+    t('Extrusion adds thickness perpendicular to the plane. Symmetric divides that thickness equally on both sides.'),
+    t('Create builds a solid. To change the sketch later, select the solid and choose Edit sketch & extrusion in Properties.')
+   ])
   ]) instructions.append(element('li',step));
   infoPanel.append(instructions);
   info.onclick=()=>{
@@ -116,11 +126,19 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   updateGuides();
   const length=field('Extrusion distance (mm)',node?.kind==='extrusion'?node.distance:10);
   const symmetric=element('input');symmetric.type='checkbox';symmetric.checked=node?.kind==='extrusion'?node.symmetric:false;symmetric.setAttribute('aria-label',t('Symmetric extrusion'));const check=element('label',t('Symmetric extrusion'));check.className='sketch-toggle';check.prepend(symmetric);form.append(check);
+  length.parentElement!.hidden=check.hidden=revolving;
+  if(linked)for(const input of form.querySelectorAll<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>('input, select, textarea'))input.disabled=true;
+  const sweep=field('Sweep angle (deg)',node?.kind==='revolution'?node.angle:360);
+  const automatic=element('input');automatic.type='checkbox';automatic.checked=node?.kind!=='revolution'||node.axisOffset===undefined;
+  const axisToggle=element('label',t('Use left edge of profile'));axisToggle.className='sketch-toggle';axisToggle.prepend(automatic);form.append(axisToggle);
+  const axis=field('Axis X in sketch (mm)',node?.kind==='revolution'?node.axisOffset??0:0);
+  sweep.parentElement!.hidden=axisToggle.hidden=!revolving;
   const preview=element('div');preview.className='sketch-preview';preview.setAttribute('aria-label',t('Sketch preview'));
   const status=element('p');status.className='parameter-status';status.setAttribute('role','status');status.setAttribute('aria-label',t('Sketch status'));
   const hint=element('p',t('Drag the white handles or type exact dimensions.'));
   const help=element('p',t('Enter dimensions or expressions such as width / 2. Define named dimensions in Parameters.'));
   function definition():SketchProfile{
+   if(linked&&existing)return existing.profile;
    const id=existing?.profile.id??'profile-preview';
    if(kind.value==='region'){
     const rows=region.value.trim().split(/\r?\n/);
@@ -150,30 +168,36 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     ...(profile?.kind==='circle'&&profile.center||location.some(Boolean)?{center:location}:{})};
   }
   const readForm=()=>({
-   name:name.value.trim(),
-   plane:plane.value as SketchPlane,
-   profile:definition(),
-   distance:scalar(length.value),
-   symmetric:symmetric.checked
+   sketch:{name:name.value.trim(),plane:plane.value as SketchPlane,profile:definition()},
+   extrusion:{distance:scalar(length.value),symmetric:symmetric.checked},
+   revolution:{angle:scalar(sweep.value),axisOffset:automatic.checked?undefined:scalar(axis.value)}
   });
+  function applyDraft(target:CadSession,{sketch,extrusion,revolution}:ReturnType<typeof readForm>,position?:[number,number,number]){
+   if(featureId){
+    if(revolving)target.editRevolution(featureId,{sketch,...revolution});
+    else target.editExtrusion(featureId,{sketch,...extrusion});
+    return featureId;
+   }
+   if(linked)return target.revolveSketch(linked,revolution);
+   const newProfile={...sketch.profile,id:newId()};
+   const settings={name:sketch.name,plane:sketch.plane,position};
+   return revolving?target.addSketchRevolution(newProfile,{...settings,...revolution}):target.addSketchExtrusion(newProfile,{...settings,...extrusion});
+  }
   function draft(snapshot:ReturnType<typeof readForm>){
    const trial=createCadSession(doc);
    try{
-    const {distance,symmetric,...sketch}=snapshot;
-    if(existing&&featureId){
-     trial.editExtrusion(featureId,{sketch,distance,symmetric});
-     return {document:trial.state.document,id:featureId};
-    }
-    const id=trial.addSketchExtrusion({...sketch.profile,id:newId()},{name:sketch.name,plane:sketch.plane,distance,symmetric});
+    const id=applyDraft(trial,snapshot);
     return {document:trial.state.document,id};
    }finally{trial.dispose();}
   }
-  function previewShape({distance,symmetric,...sketch}:ReturnType<typeof readForm>){
-   const id='sketch-preview';
-   return evaluateExtrusion(
-    {kind:'extrusion',featureVersion:1,id,sketchId:id,distance,symmetric},
-    {...doc,sketches:{[id]:{version:1,id,...sketch}}}
-   );
+  function previewShape({sketch,extrusion,revolution}:ReturnType<typeof readForm>){
+   const id='sketch-preview',common={featureVersion:1 as const,id,sketchId:id};
+   const previewDoc:CadDocument={...doc,sketches:{[id]:{version:1,id,...sketch}}};
+   if(revolving){
+    const shape=evaluateRevolution({kind:'revolution',...common,...revolution},previewDoc);
+    return {...shape,distance:0,start:0};
+   }
+   return {...evaluateExtrusion({kind:'extrusion',...common,...extrusion},previewDoc),angle:undefined,axisOffset:undefined};
   }
   type OutlineEdit = {field:HTMLTextAreaElement; original:string; loop:number; index:number; points:SketchPoint[]; bulges?:number[]};
   let drag:{id:number;x:number;y:number;w:number;h:number;r:number;d:number;inverse:DOMMatrix;kind:string;viewBox:string;outlineEdit?:OutlineEdit;target?:SketchSnap}|undefined;
@@ -183,6 +207,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const compact=(input:HTMLInputElement,icon:string)=>{const label=input.parentElement!;label.firstChild!.textContent='';label.classList.add('sketch-dimension');const picture=toolIcon(icon);if(picture)label.prepend(picture);input.title=input.getAttribute('aria-label')!;label.append(element('small','mm'));const caption=element('span',input.getAttribute('aria-label')!);caption.className='sketch-dimension-name';label.prepend(caption);};
   compact(width,'Sketch width');compact(depth,'Sketch depth');compact(radius,'Sketch radius');compact(length,'Extrude');
   function draw(){
+   axis.parentElement!.hidden=!revolving||automatic.checked;
    width.parentElement!.hidden=depth.parentElement!.hidden=kind.value!=='rectangle';radius.parentElement!.hidden=center.parentElement!.hidden=kind.value!=='circle';pointsLabel.hidden=kind.value!=='outline';regionLabel.hidden=kind.value!=='region';relativeHint.hidden=curveToggle.hidden=pointsLabel.hidden&&regionLabel.hidden;curveHint.hidden=curveToggle.hidden||!curveHandles.checked;preview.replaceChildren();dragOutline=undefined;valid=false;
    for(const input of [width,depth,radius,length]){
     input.removeAttribute('aria-invalid');
@@ -204,7 +229,8 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     const topOffset=shape.start+d;
     const place=([x,y]:SketchPoint)=>[x+topOffset*.45,-y-topOffset*.35];
     const references=referenceGeometry.flatMap(guide=>guide.contours.map(loop=>loop.map(place)));
-    const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),all=[...base,...top,...references.flat()],span=Math.max(w,h,Math.abs(d),1),pad=span*.18,minX=Math.min(...all.map(p=>p[0]))-pad,minY=Math.min(...all.map(p=>p[1]))-pad,vw=Math.max(...all.map(p=>p[0]))-minX+pad,vh=Math.max(...all.map(p=>p[1]))-minY+pad;
+    const axisLine=shape.axisOffset!==undefined?[[shape.axisOffset,-Math.max(...ys)-h*.1],[shape.axisOffset,-Math.min(...ys)+h*.1]]:[];
+    const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),all=[...base,...top,...references.flat(),...axisLine],span=Math.max(w,h,Math.abs(d),1),pad=span*.18,minX=Math.min(...all.map(p=>p[0]))-pad,minY=Math.min(...all.map(p=>p[1]))-pad,vw=Math.max(...all.map(p=>p[0]))-minX+pad,vh=Math.max(...all.map(p=>p[1]))-minY+pad;
     svg.setAttribute('viewBox',drag?.viewBox??`${minX} ${minY} ${vw} ${vh}`);svg.setAttribute('aria-hidden','true');
     const face=(loops:number[][][],cls:string)=>{
      const path=document.createElementNS(ns,'path');
@@ -213,8 +239,8 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      path.setAttribute('class',cls);
      svg.append(path);
     };
-    face(projected,'sketch-base');
-    for(let k=0;k<projected.length;k++){
+    if(!revolving)face(projected,'sketch-base');
+    for(let k=0;!revolving&&k<projected.length;k++){
      const lower=projected[k],upper=raised[k];
      for(let i=0;i<lower.length;i++){
       const j=(i+1)%lower.length;
@@ -223,7 +249,15 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     }
     face(raised,'sketch-top');
     if(references.length)face(references,'sketch-reference');
+    if(axisLine.length){
+     const line=document.createElementNS(ns,'line');
+     line.setAttribute('x1',String(axisLine[0][0]));line.setAttribute('x2',String(axisLine[1][0]));
+     line.setAttribute('y1',String(axisLine[0][1]));line.setAttribute('y2',String(axisLine[1][1]));
+     line.setAttribute('class','sketch-reference sketch-revolution-axis');
+     svg.append(line);
+    }
     const handle=(x:number,y:number,mode:string,outlineHandle?:{loop:number;index:number})=>{
+     if(linked)return;
      const hit=document.createElementNS(ns,'circle');
      hit.setAttribute('cx',String(x));hit.setAttribute('cy',String(y));
      hit.setAttribute('r',String(span*.065));hit.setAttribute('fill','transparent');
@@ -240,14 +274,14 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      dot.classList.add('sketch-handle');if(mode==='curve')dot.classList.add('sketch-curve-handle');svg.append(dot,hit);
     };
     const numeric=(s:string)=>s.trim()!==''&&Number.isFinite(Number(s));
-    const p=snapshot.profile;
+    const p=snapshot.sketch.profile;
     const outlines=p.kind==='outline'||p.kind==='region';
     if(p.kind==='circle'?numeric(radius.value):p.kind==='rectangle'&&numeric(width.value)&&numeric(depth.value)){
      const y=p.kind==='circle'?-(Math.min(...ys)+Math.max(...ys))/2:-Math.min(...ys);
      handle(Math.max(...xs)+topOffset*.45,y-topOffset*.35,'size');
     }
     const anchor=p.kind==='circle'?shape.contour[Math.floor(shape.contour.length/2)]:outlines?shape.contour[0]:[Math.min(...xs),Math.max(...ys)];
-    if(numeric(length.value)){
+    if(!revolving&&numeric(length.value)){
      const offset=outlines?shape.start+d/2:topOffset;
      handle(anchor[0]+offset*.45,-anchor[1]-offset*.35,'depth');
     }
@@ -276,7 +310,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      snapLabel.className='sketch-snap-label';preview.append(snapLabel);
     }
     preview.prepend(svg);
-    preview.append(element('output',t`${w.toLocaleString()} × ${h.toLocaleString()} mm · ${shape.distance.toLocaleString()} mm extrusion`));status.textContent='';valid=true;
+    preview.append(element('output',shape.angle!==undefined?t`${w.toLocaleString()} × ${h.toLocaleString()} mm · ${shape.angle.toLocaleString()}° sweep`:t`${w.toLocaleString()} × ${h.toLocaleString()} mm · ${shape.distance.toLocaleString()} mm extrusion`));status.textContent='';valid=true;
    }catch(error){status.textContent=error instanceof Error&&'diagnostic' in error?(error as import('@brickwright/cad-core').FeatureEvaluationError).diagnostic.message:error instanceof Error?error.message:String(error);}apply.disabled=busy||!valid||!!drag;
   }
   preview.onpointerdown=event=>{
@@ -351,16 +385,14 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   };
   preview.onpointerup=preview.onpointercancel=preview.onlostpointercapture=endDrag;
   form.addEventListener('input',draw);form.addEventListener('change',draw);
-  const apply=element('button',t(existing?'Apply sketch changes':'Create extrusion'));apply.className='primary';
+  const apply=element('button',t(featureId?'Apply sketch changes':revolving?'Create revolution':'Create extrusion'));apply.className='primary';
   apply.onclick=async()=>{const ticket=epoch;busy=true;apply.disabled=true;try{
    const snapshot=readForm();
    if(session.state.revision!==expected)throw new Error(t('The model changed. Close and reopen this dialog before applying.'));
    const candidate=draft(snapshot);const geometry=await evaluate(candidate.document);const created=geometry.bodies.find(body=>body.id===candidate.id);if(disposed||epoch!==ticket||!dialog.open)return;
    if(session.state.revision!==expected)throw new Error(t('The model changed while checking geometry. Close and reopen this dialog.'));
-   if(!existing&&(!created||created.volume<=0))throw new Error(t('The profile must produce a solid with positive volume.'));
-   // One transaction, including sketch and extrusion inputs.
-   if(existing&&featureId)session.editExtrusion(featureId,{sketch:{name:snapshot.name,plane:snapshot.plane,profile:snapshot.profile},distance:snapshot.distance,symmetric:snapshot.symmetric});
-   else session.addSketchExtrusion({...snapshot.profile,id:newId()},{name:snapshot.name,plane:snapshot.plane,distance:snapshot.distance,symmetric:snapshot.symmetric,position:[0,0,-(created?.bounds.min[2]??0)]});
+   if(!featureId&&(!created||created.volume<=0))throw new Error(t('The profile must produce a solid with positive volume.'));
+   applyDraft(session,snapshot,[0,0,-(created?.bounds.min[2]??0)]);
    dialog.close();await afterApply();
   }catch(error){if(!disposed)status.textContent=error instanceof Error&&'diagnostic' in error?(error as import('@brickwright/cad-core').FeatureEvaluationError).diagnostic.message:error instanceof Error?error.message:String(error);}finally{busy=false;apply.disabled=!valid;}};
   if(!existing){
@@ -425,8 +457,8 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    importPanel.append(importSummary,units,file,importedSource);
    form.append(importPanel);
   }
-  const footer=element('footer');footer.append(status,apply);const body=element('div');body.className='sketch-body';const expressions=element('details');expressions.className='sketch-expressions';const summary=element('summary',t('Dimension expressions'));summary.title=t('Dimension expressions');summary.setAttribute('aria-label',t('Dimension expressions'));expressions.append(summary,help);form.append(expressions);const drawing=element('div');drawing.append(preview,hint);body.append(drawing,form);dialog.append(header,infoPanel,body,footer);draw();dialog.showModal();
+  const footer=element('footer');footer.append(status,apply);const body=element('div');body.className='sketch-body';const expressions=element('details');expressions.className='sketch-expressions';const summary=element('summary',t('Dimension expressions'));summary.title=t('Dimension expressions');summary.setAttribute('aria-label',t('Dimension expressions'));expressions.append(summary,help);form.append(expressions);const drawing=element('div');drawing.append(preview);if(!linked)drawing.append(hint);body.append(drawing,form);dialog.append(header,infoPanel,body,footer);draw();dialog.showModal();
  }
  dialog.addEventListener('keydown',e=>e.stopPropagation());
- return {open,dispose(){disposed=true;dialog.close();dialog.remove();}};
+ return {open,openRevolution(sketchId?:string){open(undefined,{sketchId});},dispose(){disposed=true;dialog.close();dialog.remove();}};
 }

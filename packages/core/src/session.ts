@@ -13,10 +13,25 @@ import type {CadJoint} from './physics.js';
 import { defaultPartPhysics, allocateMotorPort } from './physics.js';
 import { applyParametricBindings, assertDrivenEdit } from './parameters.js';
 import type {CodeProgram} from './code.js';
-import type {PlanarSketch,SketchProfile,FeatureScalar} from './features.js';
+import {isSketchFeature} from './features.js';
+import type {PlanarSketch,SketchProfile,FeatureScalar,RevolutionFeature} from './features.js';
 import type { ParametricDesign } from './parameters.js';
 import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositionExpression} from './fragments.js';
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}return result;}
+type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
+type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>;
+function appendRevolution(doc:CadDocument,id:string,sketchId:string,inputs:RevolutionInputs,position:Vec3){
+  assertProvenanceUpgrade(doc);
+  if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
+  if(doc.version<8)upgradeSimulation(doc);
+  doc.version=12;
+  doc.nodes[id]={id,kind:'revolution',featureVersion:1,sketchId,angle:inputs.angle,
+    ...(inputs.axisOffset===undefined?{}:{axisOffset:inputs.axisOffset}),
+    name:uniqueObjectName(t('Revolution'),new Set(doc.roots.map(key=>doc.nodes[key].name))),
+    color:'#eea52b',transform:{...identityTransform(),position}};
+  doc.roots.push(id);
+  return [id];
+}
 export interface SessionState { document: CadDocument; selection: readonly string[]; revision: number; canUndo: boolean; canRedo: boolean; label: string }
 const cloneNode = (node: SolidNode): SolidNode => ({ ...node,
   ...(node.provenance!==undefined?{provenance:structuredClone(node.provenance)}:{}),
@@ -37,7 +52,7 @@ function guardConstructionEdit(doc:CadDocument,id:string){
 }
 function editSketch(d:CadDocument,id:string,patch:Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>) {
   const sketch=d.sketches?.[id];if(!sketch)throw new Error(t('Sketch does not exist'));
-  const uses=(key:string):boolean=>{const n=d.nodes[key];return n.kind==='extrusion'?n.sketchId===id:n.kind==='boolean'&&n.inputs.some(uses);};
+  const uses=(key:string):boolean=>{const n=d.nodes[key];return isSketchFeature(n)?n.sketchId===id:n.kind==='boolean'&&n.inputs.some(uses);};
   if(d.joints?.some(j=>uses(j.bodyA)||uses(j.bodyB)))throw new Error(t('Detach joints before editing their sketches'));
   const next={...sketch,...structuredClone(patch)};if(next.profile.id!==sketch.profile.id||next.profile.kind!==sketch.profile.kind)throw new Error(t('Keep sketch profile identity and kind when editing'));d.sketches![id]=next;
 }
@@ -178,6 +193,31 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       commit('Add sketch extrusion',d=>{d.version=Math.max(d.version,3) as CadDocument['version'];d.sketches??={};d.sketches[sketchId]={version:1,id:sketchId,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile)};
         d.nodes[id]={id,kind:'extrusion',featureVersion:1,sketchId,distance:options.distance??10,symmetric:options.symmetric??false,name:uniqueObjectName(t('Extrusion'),new Set(d.roots.map(id=>d.nodes[id].name))),color:'#eea52b',transform:{...identityTransform(),position:options.position??[0,0,0]}};d.roots.push(id);return [id];});return id;
     },
+    revolveSketch(sketchId:string,options:RevolutionInputs&{position?:Vec3}) {
+      const id=newId();
+      commit('Revolve sketch',d=>appendRevolution(d,id,sketchId,options,options.position??[0,0,0]));
+      return id;
+    },
+    addSketchRevolution(profile:SketchProfile,options:RevolutionInputs&{name:string;plane:PlanarSketch['plane'];position?:Vec3}) {
+      const id=newId(),sketchId=newId();
+      commit('Revolve sketch',d=>{
+        d.sketches??={};
+        d.sketches[sketchId]={version:1,id:sketchId,name:options.name,plane:options.plane,profile:structuredClone(profile)};
+        return appendRevolution(d,id,sketchId,options,options.position??[0,0,0]);
+      });
+      return id;
+    },
+    editRevolution(id:string,inputs:RevolutionInputs&{sketch?:SketchPatch}) {
+      commit('Edit sketch revolution',d=>{
+        const node=d.nodes[id];
+        if(node?.kind!=='revolution')throw new Error(t('Object is not a revolution'));
+        guardConstructionEdit(d,id);
+        if(inputs.sketch)editSketch(d,node.sketchId,inputs.sketch);
+        node.angle=inputs.angle;
+        if(inputs.axisOffset===undefined)delete node.axisOffset;
+        else node.axisOffset=inputs.axisOffset;
+      });
+    },
     updateSketch(id:string,patch:Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>) {commit('Edit sketch',d=>{editSketch(d,id,patch);});},
     editExtrusion(id:string,inputs:{sketch?:Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>;distance:FeatureScalar;symmetric:boolean}) {commit('Edit sketch extrusion',d=>{
       const n=d.nodes[id];if(n?.kind!=='extrusion')throw new Error(t('Object is not an extrusion'));guardConstructionEdit(d,id);
@@ -199,7 +239,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         const sketches=new Map(Object.keys(source.sketches??{}).map(id=>[id,newId()]));
         for(const [id,sketch] of Object.entries(source.sketches??{})){d.sketches??={};const next=structuredClone(sketch);next.id=sketches.get(id)!;next.profile.id=newId();d.sketches[next.id]=next;}
         const names=new Set(d.roots.map(id=>d.nodes[id].name));
-        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version>=5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(node.kind==='extrusion')node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if (source.roots.includes(id)) node.transform.position = node.transform.position.map((v, i) => v + offset[i]) as [number, number, number]; d.nodes[node.id] = node; }
+        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version>=5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(isSketchFeature(node))node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if (source.roots.includes(id)) node.transform.position = node.transform.position.map((v, i) => v + offset[i]) as [number, number, number]; d.nodes[node.id] = node; }
         const roots = source.roots.map(id => ids.get(id)!); d.roots.push(...roots);
         for(const id of roots){d.nodes[id].name=uniqueObjectName(d.nodes[id].name,names);names.add(d.nodes[id].name);}
         if(options.mergeParameters)mergeFragmentParameters(d,source,ids,offset,sketches);
@@ -261,7 +301,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
           if (map.has(id)) return map.get(id)!;
           const next = newId(); map.set(id, next); const n = cloneNode(d.nodes[id]); n.id = next;
           if (n.kind === 'boolean') n.inputs = n.inputs.map(copy);
-          if(n.kind==='extrusion'){let sketchId=copiedSketches.get(n.sketchId);if(!sketchId){sketchId=newId();copiedSketches.set(n.sketchId,sketchId);const sketch=structuredClone(d.sketches![n.sketchId]);sketch.id=sketchId;sketch.profile.id=newId();d.sketches![sketchId]=sketch;}n.sketchId=sketchId;}
+          if(isSketchFeature(n)){let sketchId=copiedSketches.get(n.sketchId);if(!sketchId){sketchId=newId();copiedSketches.set(n.sketchId,sketchId);const sketch=structuredClone(d.sketches![n.sketchId]);sketch.id=sketchId;sketch.profile.id=newId();d.sketches![sketchId]=sketch;}n.sketchId=sketchId;}
           d.nodes[next] = n; return next;
         };
         const id = copy(root); const n = d.nodes[id]; n.name=uniqueObjectName(n.name.replace(/(?: copy| Kopie)(?: \d+)?$/,'')+t(' copy'),new Set(d.roots.map(id=>d.nodes[id].name))); n.transform.position[0] += 10; d.roots.push(id); copied.push(id); for(const [old,next] of map)allCopied.set(old,next);

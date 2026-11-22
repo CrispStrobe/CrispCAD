@@ -143,3 +143,18 @@ Offset sections, arbitrary edge annotations and assembly views remain open.
 Keep each deliverable open until its acceptance workflow passes unit tests and
 live editor tests. Exercise the standalone and embedded editors for shared
 changes. Verify touch workflows on a physical iPad before closing the roadmap.
+
+## Visual Revolve
+
+Choose **Revolve** in the toolbar to sketch a new profile, or **Revolve this
+sketch** in extrusion Properties to reuse a sketch. The dashed preview line
+shows the axis, which runs along sketch Y. It starts at the left edge of
+the profile. Turn off **Use left edge of profile** to enter an exact X position.
+The whole profile must be on one side of the axis. Set **Sweep angle (deg)**
+to 360 for a complete shaft or use a signed angle for a partial turn.
+The axis position and sweep accept named dimensions.
+
+**Edit sketch & revolution** changes the sweep, axis or sketch in one undoable
+operation. Editing a shared sketch updates every feature that uses it. Save
+and reopen the original project to keep these relationships. Visual Mirror,
+patterns and the searchable command palette remain open.

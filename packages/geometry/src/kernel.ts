@@ -5,7 +5,7 @@ import {triangulatePolyhedron} from './polyhedron.js';
 import {textProfileContours} from './font-profile.js';
 import Module from 'manifold-3d';
 import type { Manifold, ManifoldToplevel, CrossSection } from 'manifold-3d';
-import { validateDocument, documentGeometryKey, evaluateExtrusion, FeatureEvaluationError, compileCode } from '@brickwright/cad-core';
+import { validateDocument, documentGeometryKey, evaluateExtrusion, evaluateRevolution, FeatureEvaluationError, compileCode } from '@brickwright/cad-core';
 import type { CadDocument, SolidNode, CodeShape,CodeProfile } from '@brickwright/cad-core';
 import { collisionCSG } from './collision-csg.js';
 import { partitionConvex } from './convex.js';
@@ -63,6 +63,17 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
     else{const children=p.profiles.map(buildProfile);result=keepProfile(p.kind==='minkowski'?children.reduce(minkowskiProfile):p.kind==='hull'?module.CrossSection.hull(children):p.kind==='union'?module.CrossSection.union(children):p.kind==='subtract'?module.CrossSection.difference(children):module.CrossSection.intersection(children));}
     if(result.numVert()>16384)throw new GeometryResourceLimitError(t('Evaluated profile exceeds 16384 vertices'));profileCache.set(p,result);return result;
   };
+  const revolve=(profile:CrossSection,sweep:number,segments:number):Manifold=>{
+    const vertices=profile.numVert();
+    if(2*vertices*(segments+1)>200000)throw new GeometryResourceLimitError(t('Evaluated revolution exceeds 200000 faces'));
+    const bounds=profile.bounds(),negative=vertices>0&&bounds.max[0]<=0;
+    if(vertices&&bounds.min[0]<-1e-8&&!negative)throw new Error(t('Revolved profiles must stay on one side of the radial axis'));
+    const input=negative?keepProfile(profile.scale([-1,1])):profile,angle=Math.abs(sweep);
+    let solid=keep(!angle?module.Manifold.union([]):input.revolve(Math.max(1,Math.ceil(segments*angle/360)),angle));
+    if(sweep<0)solid=keep(solid.mirror([0,1,0]));
+    if(negative&&angle!==360)solid=keep(solid.rotate([0,0,180]));
+    return solid;
+  };
   const codeCache=new WeakMap<CodeShape,Manifold>();
   const buildCode=(shape:CodeShape):Manifold=>{
     const previous=codeCache.get(shape);if(previous)return previous;let solid:Manifold;
@@ -72,7 +83,7 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
     else if(shape.kind==='cylinder')solid=keep(module.Manifold.cylinder(shape.height,shape.radius,shape.radius,shape.segments,true));
     else if(shape.kind==='frustum')solid=keep(module.Manifold.cylinder(shape.height,shape.bottom,shape.top,shape.segments,true));
     else if(shape.kind==='profile-extrude'){const profile=buildProfile(shape.profile);if(2*profile.numVert()*(shape.steps+1)>200000)throw new GeometryResourceLimitError(t('Evaluated extrusion exceeds 200000 faces'));solid=keep(profile.extrude(shape.height,shape.steps-1,shape.twist,shape.scaleTop));}
-    else if(shape.kind==='revolve'){const profile=buildProfile(shape.profile);if(2*profile.numVert()*(shape.segments+1)>200000)throw new GeometryResourceLimitError(t('Evaluated revolution exceeds 200000 faces'));const bounds=profile.bounds(),negative=profile.numVert()>0&&bounds.max[0]<=0;if(profile.numVert()&&bounds.min[0]<-1e-8&&!negative)throw new Error(t('Revolved profiles must stay on one side of the radial axis'));const input=negative?keepProfile(profile.scale([-1,1])):profile,angle=Math.abs(shape.angle);solid=keep(!angle?module.Manifold.union([]):input.revolve(Math.max(1,Math.ceil(shape.segments*angle/360)),angle));if(shape.angle<0)solid=keep(solid.mirror([0,1,0]));if(negative&&angle!==360)solid=keep(solid.rotate([0,0,180]));}
+    else if(shape.kind==='revolve')solid=revolve(buildProfile(shape.profile),shape.angle,shape.segments);
     else if(shape.kind==='extrude')solid=keep(module.Manifold.extrude([shape.points],shape.height));
     else if(shape.kind==='sphere')solid=keep(module.Manifold.sphere(shape.radius,shape.segments));
     else if(shape.kind==='affine'){const m=shape.matrix;solid=keep(buildCode(shape.shape).transform([m[0],m[4],m[8],0,m[1],m[5],m[9],0,m[2],m[6],m[10],0,m[3],m[7],m[11],1]));}
@@ -112,6 +123,19 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
         if(profile.start)solid=keep(solid.translate([0,0,profile.start]));
         if(profile.plane==='XZ')solid=keep(solid.rotate([90,0,0]));
         else if(profile.plane==='YZ')solid=keep(solid.rotate([90,0,90]));
+        break;
+      }
+      case 'revolution': {
+        const {contour,holes,plane,angle,axisOffset}=evaluateRevolution(node,doc);
+        const polygons=[contour,...(holes??[])].map(loop=>loop.map(([x,y]):[number,number]=>{
+          const radial=x-axisOffset;
+          return [Math.abs(radial)<1e-8?0:radial,y];
+        }));
+        solid=revolve(keepProfile(new module.CrossSection(polygons,'EvenOdd')),angle,128);
+        if(solid.isEmpty()||solid.volume()<=1e-8)throw new Error(t('Revolution produces no printable solid'));
+        if(plane==='XY')solid=keep(solid.rotate([-90,0,0]));
+        else if(plane==='YZ')solid=keep(solid.rotate([0,0,90]));
+        if(axisOffset)solid=keep(solid.translate(plane==='YZ'?[0,axisOffset,0]:[axisOffset,0,0]));
         break;
       }
       case 'mesh': {
