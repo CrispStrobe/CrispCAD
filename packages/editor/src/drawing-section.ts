@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {t} from '@brickwright/cad-core';
 import type {SketchPoint} from '@brickwright/cad-core';
 
 export type SectionInterval = [number,number];
@@ -65,4 +66,17 @@ export function sectionMaterial(contours:SectionContour[],axis:0|1,cut:number):S
   if(end>left+tolerance)runs.push([left,end]);
   return runs;
  });
+}
+
+/** Project the two parallel legs onto the section view's shared horizontal axis. */
+export function offsetSectionMaterial(contours:SectionContour[],axis:0|1,first:number,second:number,at:number):SectionInterval[]{
+ const left=sectionMaterial(contours,axis,first)
+  .flatMap(([start,end]):SectionInterval[]=>Math.min(end,at)-start>tolerance?[[start,Math.min(end,at)]]:[]);
+ const right=sectionMaterial(contours,axis,second)
+  .flatMap(([start,end]):SectionInterval[]=>end-Math.max(start,at)>tolerance?[[Math.max(start,at),end]]:[]);
+ if(!left.length||!right.length)throw new Error(t('Both legs of the offset section must cross part material.'));
+ // The jog connects the cutting planes without adding an edge to the section view.
+ const last=left.at(-1)!;
+ if(right[0][0]-last[1]<=tolerance)last[1]=right.shift()![1];
+ return [...left,...right];
 }

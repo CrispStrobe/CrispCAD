@@ -4,7 +4,7 @@ import type {CadDocument,DrawingInputs,SketchPoint,Vec3} from '@brickwright/cad-
 
 import {dimensionText,placeDrawingAnnotation} from './drawing-annotation.js';
 import type {DrawingAnchorPoint} from './drawing-annotation.js';
-import {sectionMaterial} from './drawing-section.js';
+import {offsetSectionMaterial,sectionMaterial} from './drawing-section.js';
 
 type Stroke = 'visible'|'hidden'|'center'|'dimension'|'border'|'cut'|'hatch'|'section'|'annotation';
 export type DrawingPath = {points:SketchPoint[]; stroke:Stroke; closed?:boolean};
@@ -66,11 +66,18 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
  };
  const section=sheet.section?(()=>{
   const axis=sheet.section.axis==='u'?0:1;
-  const cut=featureValue(sheet.section.position,doc);
-  if(Math.abs(cut)>100000)throw new Error(t('Section position is outside the sketch coordinate range.'));
-  const material=sectionMaterial(contours.map((points,i)=>({points,circle:circleAt(i)})),axis,cut);
+  const coordinate=(value:NonNullable<DrawingInputs['section']>['position'])=>{
+   const resolved=featureValue(value,doc);
+   if(Math.abs(resolved)>100000)throw new Error(t('Section position is outside the sketch coordinate range.'));
+   return resolved;
+  };
+  const cut=coordinate(sheet.section.position);
+  const jog=sheet.section.jog?{at:coordinate(sheet.section.jog.at),position:coordinate(sheet.section.jog.position)}:undefined;
+  if(jog&&Math.abs(cut-jog.position)<1e-8)throw new Error(t('Choose different positions for the two section legs.'));
+  const sectionContours=contours.map((points,i)=>({points,circle:circleAt(i)}));
+  const material=jog?offsetSectionMaterial(sectionContours,axis,cut,jog.position,jog.at):sectionMaterial(sectionContours,axis,cut);
   if(!material.length)throw new Error(t('The section plane misses the part. Move the section position.'));
-  return {axis,cut,material};
+  return {axis,cut,jog,material};
  })():undefined;
  const outline=profile.kind==='region'?profile.loops.find(loop=>loop.id===loopIds[0]):profile;
  const corners=outline?.kind==='outline'?outlineCorners(outline.points,outline.bulges):[];
@@ -175,17 +182,18 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
   if(section&&view.faceOn){
    const axis=section.axis,across=axis===0?1:0;
    const span=pointsAt(0).map(point=>point[across]);
-   const place=(other:number,offset=0):SketchPoint=>{
-    const cut=section.cut+offset/factor;
+   const place=(other:number,position:number,offset=0):SketchPoint=>{
+    const cut=position+offset/factor;
     const [u,v]=view.project(world(axis===0?[cut,other]:[other,cut],start));
     return [x+(u-limits.left)*factor,y+(v-limits.bottom)*factor];
    };
-   const ends=[Math.min(...span)-3/factor,Math.max(...span)+3/factor];
-   addPath('cut',ends.map(value=>place(value)));
+   const {cut,jog}=section,second=jog?.position??cut;
+   const firstEnd=Math.min(...span)-3/factor,lastEnd=Math.max(...span)+3/factor;
+   addPath('cut',[place(firstEnd,cut),...(jog?[place(jog.at,cut),place(jog.at,second)]:[]),place(lastEnd,second)]);
    const direction=axis===0?-1:1;
-   for(const end of ends){
-    addPath('visible',[place(end-1.1/factor,-direction*2),place(end,direction*2),place(end+1.1/factor,-direction*2)]);
-    const [mx,my]=place(end,-direction*3);
+   for(const [end,position] of [[firstEnd,cut],[lastEnd,second]]){
+    addPath('visible',[place(end-1.1/factor,position,-direction*2),place(end,position,direction*2),place(end+1.1/factor,position,-direction*2)]);
+    const [mx,my]=place(end,position,-direction*3);
     addText(mx+1,my+1,'A',2.8);
    }
   }
@@ -201,7 +209,7 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
   addText(left-9,y+h/2,label(height),2.5);
  }
  if(section){
-  const {material,axis,cut}=section;
+  const {material,axis,cut,jog}=section;
   const left=material[0][0],right=material.at(-1)![1];
   const height=distance*factor,width=(right-left)*factor;
   if(rightX+width>282||topY+height>166){
@@ -215,9 +223,9 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
     if(right-left>1e-6)addPath('hatch',[[left,y+left-intercept],[right,y+right-intercept]]);
    }
   }
-  addText(rightX,topY+height+4,t('Section A-A'),3.5);
+  addText(rightX,topY+height+4,t(jog?'Offset section A-A':'Section A-A'),3.5);
   const coordinate=axis===0?t('Sketch X'):t('Sketch Y');
-  addText(rightX,topY+height+9,coordinate+' = '+label(cut)+' mm',2.8);
+  addText(rightX,topY+height+9,coordinate+' = '+label(cut)+(jog?' / '+label(jog.position):'')+' mm',2.8);
  }
  addPath('border',border(8,8,281,194),true);
  addPath('border',[[8,26],[289,26]]);

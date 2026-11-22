@@ -48,6 +48,18 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  await expect(dialog.getByRole('status',{name:'Drawing status'})).toContainText('misses the part');
  await expect(save).toBeDisabled();
  await cut.fill('15');
+ const offset=dialog.getByRole('checkbox',{name:'Offset section',exact:true});
+ const secondCut=dialog.getByLabel('Second section position (mm)');
+ const jog=dialog.getByLabel('Jog at (mm)');
+ await offset.check();
+ await expect(save).toBeDisabled();
+ await secondCut.fill('15 + 1 mm');
+ await jog.fill('41');
+ await expect(dialog.getByRole('status',{name:'Drawing status'})).toContainText('Both legs');
+ await jog.fill('20');
+ await expect(preview).toContainText('Offset section A-A');
+ await expect(preview.locator('.drawing-cut')).toHaveAttribute('d',/^M (?:[^L]+L ){3}[^L]+$/);
+ await expect(preview.locator('.drawing-section')).toHaveCount(3);
  await dialog.getByText('Drawing dimensions',{exact:true}).click();
  const from=dialog.getByLabel('First dimension anchor');
  const to=dialog.getByLabel('Second dimension anchor');
@@ -101,6 +113,7 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  expect(pdf).toContain('229 14 m 279 14 l');
  expect(pdf).not.toContain('[1.4 0.9] 0 d');
  expect(pdf).toContain('[3.5 1 0.7 1] 0 d');
+ expect(pdf).toContain(Buffer.from('Offset section A-A','latin1').toString('hex'));
  expect(pdf).toContain(Buffer.from('28 mm','latin1').toString('hex'));
  await save.click();
  await expect(dialog).toBeHidden();
@@ -112,6 +125,9 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  await expect(scale).toHaveValue('2:1');
  await expect(showSection).toBeChecked();
  await expect(cut).toHaveValue('15');
+ await expect(offset).toBeChecked();
+ await expect(secondCut).toHaveValue('15 + 1 mm');
+ await expect(jog).toHaveValue('20');
  await expect(preview.locator('.drawing-section')).toHaveCount(3);
  await expect(preview.locator('.drawing-annotation')).toHaveCount(6);
  await expect(hidden).not.toBeChecked();

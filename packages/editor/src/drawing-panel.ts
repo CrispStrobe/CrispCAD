@@ -5,6 +5,7 @@ import type {CadFile} from './index.js';
 import {layoutDrawing} from './drawing-layout.js';
 import type {DrawingLayout} from './drawing-layout.js';
 import {placeDrawingAnnotation} from './drawing-annotation.js';
+import {operationScalar} from './body-operation-panel.js';
 import {exportDrawingPdf} from './drawing-pdf.js';
 
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{
@@ -71,6 +72,16 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
    position.value=String(saved?.section?.position??'0');
    label('Show section A-A',section);
    label('Section axis',axis);label('Section position (mm)',position);
+   const offset=element('input');offset.type='checkbox';offset.checked=!!saved?.section?.jog;
+   const secondPosition=element('input'),jogAt=element('input');
+   secondPosition.maxLength=jogAt.maxLength=160;
+   secondPosition.value=String(saved?.section?.jog?.position??'');
+   jogAt.value=String(saved?.section?.jog?.at??'');
+   label('Offset section',offset);
+   label('Second section position (mm)',secondPosition);
+   label('Jog at (mm)',jogAt);
+   const jogHint=element('small');
+   form.append(jogHint);
    const annotations=structuredClone(saved?.annotations??[]);
    const dimensions=element('details');dimensions.className='drawing-dimensions';
    dimensions.append(element('summary',t('Drawing dimensions')));
@@ -132,11 +143,12 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
     const ref=drawingSourceFor(current,source.value);
     if(!ref)throw new Error(t('Drawing source unavailable. Choose another sketch extrusion.'));
     if(!title.value.trim())throw new Error(t('Enter a drawing sheet title.'));
-    const cut=position.value.trim();
-    if(section.checked&&!cut)throw new Error(t('Enter a section position in millimetres.'));
-    const value=Number(cut);
+    const cut=operationScalar(position),second=operationScalar(secondPosition),at=operationScalar(jogAt);
+    if(section.checked&&cut==='')throw new Error(t('Enter a section position in millimetres.'));
+    const useJog=section.checked&&offset.checked;
+    if(useJog&&(second===''||at===''))throw new Error(t('Enter the second section position and the jog coordinate.'));
     return {title:title.value.trim(),source:ref,scale:scale.value as DrawingScale,hiddenLines:hidden.checked,
-     ...(section.checked?{section:{axis:axis.value==='u'?'u':'v',position:Number.isFinite(value)?value:cut}}:{}),
+     ...(section.checked?{section:{axis:axis.value==='u'?'u':'v',position:cut,...(useJog?{jog:{at,position:second}}:{})}}:{}),
      ...(annotations.length?{annotations}:{})};
    };
    let layout:DrawingLayout|undefined;
@@ -183,7 +195,10 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
     }
    };
    const render=()=>{
-    axis.parentElement!.hidden=position.parentElement!.hidden=!section.checked;
+    axis.parentElement!.hidden=position.parentElement!.hidden=offset.parentElement!.hidden=!section.checked;
+    secondPosition.parentElement!.hidden=jogAt.parentElement!.hidden=jogHint.hidden=!section.checked||!offset.checked;
+    const across=axis.value==='u'?t('Sketch Y'):t('Sketch X');
+    jogHint.textContent=t`The jog switches to the second cut at this coordinate along ${across}.`;
     preview.replaceChildren();layout=undefined;status.textContent='';
     try{
      layout=layoutDrawing(session.state.document,read());
@@ -244,7 +259,8 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
    source.onchange=()=>{choice=source.value;if(centerAutomatically)centerCut();render();};
    axis.onchange=()=>{if(centerAutomatically)centerCut();render();};
    position.oninput=()=>{centerAutomatically=false;render();};
-   section.onchange=render;
+   section.onchange=offset.onchange=render;
+   secondPosition.oninput=jogAt.oninput=render;
    title.oninput=scale.onchange=hidden.onchange=render;
    save.onclick=()=>{
     try{session.saveDrawingSheet(read(),saved?.id);dialog.close();}

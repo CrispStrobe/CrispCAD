@@ -139,7 +139,14 @@ enter paper coordinates, then add the dimension. Dimensions keep their
 placement on the sheet and use current distances and diameters from the
 source sketch. If an anchor disappears, edit the dimension to pick a new
 anchor or remove it before exporting.
-Offset sections, arbitrary edge annotations and assembly views remain open.
+Enable **Offset section** to cut at two parallel positions. Set the second
+section position and the jog coordinate along the perpendicular sketch axis.
+The first cut runs up to the jog and the second continues from it. The cutting
+line shows the step, and the section view projects both legs into one hatched
+view. All three coordinates accept named dimensions. A jog that leaves either
+leg clear of the material blocks export until corrected.
+
+Multiple jogs, arbitrary edge annotations and assembly views remain open.
 
 ## Completion criteria
 

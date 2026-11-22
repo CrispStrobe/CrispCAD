@@ -6,7 +6,7 @@ import type {CadDocument} from './document.js';
 export const drawingScales = ['1:5','1:2','1:1','2:1','5:1'] as const;
 export type DrawingScale = typeof drawingScales[number];
 export type DrawingSource = {featureId:string; sketchId:string; profileId:string};
-export type DrawingSection = {axis:'u'|'v'; position:FeatureScalar};
+export type DrawingSection = {axis:'u'|'v'; position:FeatureScalar; jog?:{at:FeatureScalar; position:FeatureScalar}};
 export type DrawingDimensionKind = 'linear-x'|'linear-y'|'diameter';
 export type DrawingAnnotation = {
  id:string; sketchId:string; kind:DrawingDimensionKind; from:string; to?:string; at:[number,number];
@@ -25,6 +25,10 @@ export function validDrawingPosition(x:number,y:number){
  return Number.isFinite(x)&&Number.isFinite(y)&&x>=10&&x<=265&&y>=28&&y<=176;
 }
 
+const sectionScalar=(value:unknown):value is FeatureScalar=>typeof value==='number'
+ ? Number.isFinite(value)&&Math.abs(value)<=100000
+ : typeof value==='string'&&!!value.trim()&&value.length<=160&&!/[\u0000-\u001f]/.test(value);
+
 export function checkDrawingSheets(doc:CadDocument) {
  if(doc.drawings===undefined)return;
  const unique=new Set<string>();
@@ -37,10 +41,9 @@ export function checkDrawingSheets(doc:CadDocument) {
      !id(sheet.source.featureId)||!id(sheet.source.sketchId)||!id(sheet.source.profileId))throw invalid();
   if(sheet.section!==undefined){
    if(doc.version<10||!record(sheet.section)||!['u','v'].includes(String(sheet.section.axis)))throw invalid();
-   const value=sheet.section.position;
-   if(typeof value==='number'){
-    if(!Number.isFinite(value)||Math.abs(value)>100000)throw invalid();
-   }else if(typeof value!=='string'||!value.trim()||value.length>160||/[\u0000-\u001f]/.test(value))throw invalid();
+   if(!sectionScalar(sheet.section.position))throw invalid();
+   const jog=sheet.section.jog;
+   if(jog!==undefined&&(doc.version<17||!record(jog)||!sectionScalar(jog.at)||!sectionScalar(jog.position)))throw invalid();
   }
   if(sheet.annotations!==undefined){
    if(doc.version<11||!Array.isArray(sheet.annotations)||sheet.annotations.length>drawingAnnotationLimit)throw invalid();

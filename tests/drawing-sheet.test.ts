@@ -3,7 +3,7 @@ import {compileModelSource,createCadSession,drawingSourceFor,parseDocument,resol
 import type {DrawingInputs,SketchPlane} from '@brickwright/cad-core';
 import {expect,it} from 'vitest';
 import {layoutDrawing} from '../packages/editor/src/drawing-layout.js';
-import {sectionMaterial} from '../packages/editor/src/drawing-section.js';
+import {offsetSectionMaterial,sectionMaterial} from '../packages/editor/src/drawing-section.js';
 import {exportDrawingPdf,exportDrawingSetPdf} from '../packages/editor/src/drawing-pdf.js';
 
 function fixture(plane:SketchPlane='XY'){
@@ -189,4 +189,44 @@ it('updates placed spacing and diameter dimensions at their saved paper position
  expect(()=>exportDrawingSetPdf(s.state.document)).toThrow('Repair or remove unavailable drawing dimensions');
  s.undo();
  expect(layoutDrawing(s.state.document,dimensions).annotationIssues).toEqual([]);
+});
+
+it('projects the material from both offset legs onto one section without a jog seam',()=>{
+ const rect={points:[[0,0],[40,0],[40,30],[0,30]] as [number,number][]};
+ const circular=(center:[number,number],radius:number)=>({points:[],circle:{center,radius}});
+ const contours=[rect,circular([10,8],2),circular([30,22],3)];
+ expect(offsetSectionMaterial(contours,1,8,22,20)).toEqual([[0,8],[12,27],[33,40]]);
+ expect(offsetSectionMaterial(contours,0,10,30,15)).toEqual([[0,6],[10,19],[25,30]]);
+ expect(()=>offsetSectionMaterial(contours,1,8,22,41)).toThrow('Both legs');
+ expect(()=>offsetSectionMaterial(contours,1,8,41,20)).toThrow('Both legs');
+});
+
+it('preserves named offset section settings through project and model source and re-evaluates the cut',()=>{
+ const {s,inputs,design}=fixture('XZ');
+ const section={axis:'v' as const,position:15,jog:{at:'spacing',position:'spacing - 4 mm'}};
+ const draft={...inputs,section};
+ const sheetId=s.saveDrawingSheet(draft);
+ const document=s.state.document;
+ expect(document.version).toBe(17);
+ expect(parseDocument(s.serialize()).drawings).toEqual([{...draft,id:sheetId}]);
+ expect(validateDocument(compileModelSource(s.modelSource,document)).drawings).toEqual(document.drawings);
+ expect(()=>validateDocument({...document,version:16})).toThrow('drawing sheets');
+ expect(()=>s.saveDrawingSheet({...draft,section:{...section,jog:{...section.jog,at:''}}},sheetId)).toThrow('drawing sheets');
+ expect(s.state.document).toBe(document);
+ const before=layoutDrawing(document,draft);
+ expect(before.paths.filter(path=>path.stroke==='section')).toHaveLength(3);
+ expect(before.paths.find(path=>path.stroke==='cut')?.points).toHaveLength(4);
+ expect(before.texts.map(item=>item.text)).toContain('Offset section A-A');
+ expect(before.texts.map(item=>item.text)).toContain('Sketch Y = 15 / 16 mm');
+ const pdf=new TextDecoder().decode(exportDrawingPdf(before,draft.title).bytes);
+ expect(pdf).toContain('[3.5 1 0.7 1] 0 d');
+ expect(pdf).toContain(Buffer.from('Offset section A-A','latin1').toString('hex'));
+ s.setParametric({...design,parameters:{spacing:{expression:'22',unit:'mm'}}});
+ const after=layoutDrawing(s.state.document,draft);
+ expect(after.texts.map(item=>item.text)).toContain('Sketch Y = 15 / 18 mm');
+ expect(after.paths.filter(path=>path.stroke==='section')).toHaveLength(2);
+ expect(()=>layoutDrawing(s.state.document,{...draft,section:{...section,jog:{at:20,position:15}}})).toThrow('different positions');
+ s.undo();
+ expect(s.state.document.drawings).toEqual(document.drawings);
+ expect(layoutDrawing(s.state.document,draft)).toEqual(before);
 });
