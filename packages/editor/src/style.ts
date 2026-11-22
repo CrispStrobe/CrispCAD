@@ -103,4 +103,15 @@ export const editorStyle = `
 .inspector .field{min-width:0;overflow-wrap:anywhere}
 .inspector input,.inspector select{min-width:0;max-width:100%}
 .inspector .field[hidden]{display:none}
+
+.sketch-dialog>header{justify-content:flex-start}
+.sketch-dialog>header h2{margin-inline-end:auto;white-space:normal}
+.sketch-dialog>header button{flex:none;min-width:36px;min-height:36px}
+.sketch-dialog>header .sketch-info-button{font-size:18px}
+.sketch-help{max-height:28dvh;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+.sketch-help ol{padding-inline-start:1.5rem;margin:0}
+.sketch-help li+li{margin-block-start:5px}
+.sketch-fields [aria-invalid="true"]{outline:2px solid #d85e52;outline-offset:-2px}
+.sketch-fields [hidden]{display:none}
+@media(pointer:coarse){.sketch-dialog>header button{min-width:44px;min-height:44px}}
 `;

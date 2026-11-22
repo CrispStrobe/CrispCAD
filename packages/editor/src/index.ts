@@ -32,6 +32,7 @@ import { mountShapePicker } from './shape-picker.js';
 import { createPresetDocument, evaluatedPreview, shapeCatalog } from './shapes.js';
 import {mountModelSourcePanel} from './model-source-panel.js';
 import {mountCodePanel} from './code-panel.js';
+import {exportSketchDxf} from './sketch-dxf.js';
 import {mountSketchPanel} from './sketch-panel.js';
 import { mountParametersPanel, propertyLabels } from './parameters-panel.js';
 export interface CadFile { name: string; bytes: Uint8Array; mime: string }
@@ -361,6 +362,10 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     if(n.kind==='extrusion'){
       const sketch=session.state.document.sketches![n.sketchId];inspector.append(el('p','hint',t`${sketch.name} · ${t(sketch.profile.kind)} · ${sketch.plane} plane`));
       button('Edit sketch & extrusion',()=>sketchPanel.open(id),inspector);
+      if(options.onExport&&!n.provenance?.length){
+        const exportProfile=button('Export sketch as DXF',()=>options.onExport!(exportSketchDxf(session.state.document,id)),inspector);
+        exportProfile.title=t('Export the 2D profile at sketch dimensions in millimetres.');
+      }
     }
     const graph=designGraph(session.state.document),entries=new Map(graph.map(e=>[e.key,e])),upstream=new Set<string>();
     const visitInput=(key:string)=>{if(upstream.has(key))return;upstream.add(key);entries.get(key)?.dependencies.forEach(visitInput);};visitInput(`feature:${id}`);

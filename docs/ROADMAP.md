@@ -234,3 +234,7 @@ and preserves undo/history and appearance. Fine/long thread support retains
 legacy defaults and actual-geometry collision gates. See
 [SCREW-REDESIGN.md](SCREW-REDESIGN.md). The catalogue parameter gap remains 13;
 springs and gears are still queued as the next retained mechanical templates.
+
+## Precision drafting and CAD exchange
+
+See [the drafting roadmap](DRAFTING-ROADMAP.md) for the TT motor plate acceptance workflow, linked drawing sheets, DXF and DWG, and the Sketch & Extrude changes.

@@ -11,3 +11,33 @@ test('sketch dimensions, extrusion inputs and formulas remain editable after reo
 test('circle extrusion can be created on a side plane and deleted immediately from Objects',async({page})=>{
  await page.goto('/');const editor=page.locator('#cad-root');await expect(editor).toHaveAttribute('data-state','ready');await page.getByRole('button',{name:'Sketch',exact:true}).click();const sketch=page.getByRole('dialog',{name:'Sketch and extrusion',exact:true});await sketch.getByLabel('Profile',{exact:true}).selectOption('circle');await sketch.getByLabel('Sketch plane',{exact:true}).selectOption('YZ');await sketch.getByLabel('Sketch radius (mm)',{exact:true}).fill('12');await sketch.getByLabel('Symmetric extrusion',{exact:true}).check();await sketch.getByRole('button',{name:'Create extrusion',exact:true}).click();await expect(sketch).not.toBeVisible();await expect(editor).toHaveAttribute('data-state','ready');const objects=page.locator('.tree');if(!await objects.isVisible())await page.getByRole('button',{name:'Objects',exact:true}).click();await page.getByTestId('object-name').click();await page.keyboard.press('Backspace');await expect(page.getByTestId('object-name')).toHaveCount(0);await expect(editor).toHaveAttribute('data-state','ready');await page.getByRole('button',{name:'Undo',exact:true}).click();await expect(page.getByTestId('object-name')).toHaveCount(1);
 });
+
+test('sketch help, field errors and a real-size DXF are available in the editor',async({page},testInfo)=>{
+ await page.goto('/');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await page.getByRole('button',{name:'Sketch',exact:true}).click();
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ const info=sketch.getByRole('button',{name:'About sketching and extrusion'});
+ await info.click();
+ await expect(info).toHaveAttribute('aria-expanded','true');
+ await expect(sketch.getByText('Extrusion adds thickness', {exact:false})).toBeVisible();
+ await info.click();
+ const width=sketch.getByLabel('Sketch width (mm)',{exact:true});
+ await width.fill('0');
+ await expect(width).toHaveAttribute('aria-invalid','true');
+ await expect(sketch.getByRole('status')).toContainText('Sketch width (mm)');
+ await width.fill('42');
+ await sketch.getByRole('button',{name:'Create extrusion',exact:true}).click();
+ await expect(sketch).not.toBeVisible();
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ const exportButton=page.getByRole('button',{name:'Export sketch as DXF',exact:true});
+ if(!await exportButton.isVisible())await page.getByRole('button',{name:'Properties',exact:true}).click();
+ const [download]=await Promise.all([page.waitForEvent('download'),exportButton.click()]);
+ await download.saveAs(testInfo.outputPath('rectangle.dxf'));
+ const {readFile}=await import('node:fs/promises');
+ const dxf=await readFile(testInfo.outputPath('rectangle.dxf'),'utf8');
+ expect(dxf).toContain('$INSUNITS\r\n70\r\n4');
+ expect(dxf).toContain('LWPOLYLINE');
+ expect(dxf).toContain('10\r\n-21\r\n20\r\n-15');
+ expect(dxf).toContain('10\r\n21\r\n20\r\n15');
+});
