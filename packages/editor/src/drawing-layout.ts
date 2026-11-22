@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {evaluateExtrusion,featureValue,resolveDrawingSource,sketchBulgeArc,sketchPoint,t} from '@brickwright/cad-core';
+import {drawingOutlines,drawingVertexId,evaluateExtrusion,featureValue,resolveDrawingSource,sketchBulgeArc,sketchPoint,t} from '@brickwright/cad-core';
 import type {CadDocument,DrawingInputs,SketchPoint,Vec3} from '@brickwright/cad-core';
 
 import {dimensionText,placeDrawingAnnotation} from './drawing-annotation.js';
@@ -173,6 +173,17 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
     anchors.push({id:'circle:'+id,label,radius:circle.radius,point:[x+(u-limits.left)*factor,y+(v-limits.bottom)*factor]});
    };
    if(profile.kind==='circle')addCircleAnchor(profile.id,t('Circle center'),circleAt(0)!);
+   const outlines=drawingOutlines(profile);
+   for(const [loopIndex,outline] of outlines.entries()){
+    for(const [index,point] of outline.points.entries()){
+     const [u,v]=view.project(world(point,start));
+     const coordinates=point.map(dimensionText).join(', ');
+     const name=profile.kind==='region'
+      ? t`Outline ${loopIndex+1}, point ${index+1} (${coordinates})`
+      : t`Outline point ${index+1} (${coordinates})`;
+     anchors.push({id:drawingVertexId(outline,index),label:name,point:[x+(u-limits.left)*factor,y+(v-limits.bottom)*factor]});
+    }
+   }
    let holeIndex=0;
    for(const [id,circle] of circlesByLoop){
     const name=id===loopIds[0]?t('Outer circle'):t`Hole ${++holeIndex}`;

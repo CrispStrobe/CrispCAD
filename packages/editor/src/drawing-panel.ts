@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {drawingAnnotationLimit,drawingScales,drawingSourceFor,evaluateExtrusion,newId,resolveDrawingSource,t,validDrawingPosition} from '@brickwright/cad-core';
+import {drawingAnnotationLimit,drawingScales,drawingSourceFor,evaluateExtrusion,isDrawingVertex,newId,resolveDrawingSource,t,validDrawingPosition} from '@brickwright/cad-core';
 import type {CadSession,DrawingAnnotation,DrawingDimensionKind,DrawingInputs,DrawingScale,SketchPoint} from '@brickwright/cad-core';
 import type {CadFile} from './index.js';
 import {layoutDrawing} from './drawing-layout.js';
@@ -158,6 +158,20 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
     preview.classList.toggle('picking',active);
     pick.setAttribute('aria-pressed',String(active));
    };
+   const highlightVertices=()=>{
+    const svg=preview.querySelector('svg');
+    svg?.querySelectorAll('.drawing-vertex-marker').forEach(marker=>marker.remove());
+    if(!dimensions.open||!svg||!layout)return;
+    const selected=new Set([from.value,kind.value==='diameter'?'':to.value].filter(isDrawingVertex));
+    for(const anchor of layout.anchors){
+     if(!selected.has(anchor.id))continue;
+     const [x,y]=anchor.point,row=layout.height-y;
+     const marker=document.createElementNS(svg.namespaceURI,'path');
+     marker.setAttribute('class','drawing-vertex-marker');
+     marker.setAttribute('d',`M ${x-1.7} ${row} L ${x} ${row-1.7} L ${x+1.7} ${row} L ${x} ${row+1.7} Z`);
+     svg.append(marker);
+    }
+   };
    const refreshDimensions=()=>{
     const diameter=kind.value==='diameter';
     const anchors=layout?.anchors??[];
@@ -185,6 +199,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
       editing=item.id;kind.value=item.kind;refreshDimensions();
       from.value=item.from;to.value=item.to??'';
       paperX.value=String(item.at[0]);paperY.value=String(item.at[1]);
+      highlightVertices();
      };
      remove.onclick=()=>{
       annotations.splice(i,1);
@@ -193,6 +208,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
      };
      row.append(edit,remove);list.append(row);
     }
+    highlightVertices();
    };
    const render=()=>{
     axis.parentElement!.hidden=position.parentElement!.hidden=offset.parentElement!.hidden=!section.checked;
@@ -211,6 +227,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
     if(!layout&&picking)setPicking(false);
    };
    kind.onchange=refreshDimensions;
+   from.onchange=to.onchange=dimensions.ontoggle=highlightVertices;
    add.onclick=()=>{
     if(!layout)return;
     const at:SketchPoint=[Number(paperX.value),Number(paperY.value)];

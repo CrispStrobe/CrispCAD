@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
-import type {FeatureScalar} from './features.js';
+import type {FeatureScalar,SketchProfile} from './features.js';
+import type {SketchOutlineProfile} from './sketch-region.js';
 import type {CadDocument} from './document.js';
 
 export const drawingScales = ['1:5','1:2','1:1','2:1','5:1'] as const;
@@ -18,8 +19,10 @@ export type DrawingSheet = DrawingInputs & {id:string};
 const record = (value:unknown):value is Record<string,unknown> => !!value && typeof value==='object' && !Array.isArray(value);
 const id = (value:unknown):value is string => typeof value==='string' && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,95}$/.test(value) && !['constructor','prototype','__proto__'].includes(value);
 
+export const isDrawingVertex=(value:unknown):value is string=>typeof value==='string'&&/^vertex:[a-zA-Z0-9_-]{1,96}:[a-zA-Z0-9_-]{1,96}$/.test(value)&&value.split(':').slice(1).every(id);
+
 const anchor=(value:unknown):value is string=>typeof value==='string'&&
- (/^bounds:(sw|se|nw|ne)$/.test(value)||(value.startsWith('circle:')&&id(value.slice(7))));
+ (/^bounds:(sw|se|nw|ne)$/.test(value)||(value.startsWith('circle:')&&id(value.slice(7)))||isDrawingVertex(value));
 
 export function validDrawingPosition(x:number,y:number){
  return Number.isFinite(x)&&Number.isFinite(y)&&x>=10&&x<=265&&y>=28&&y<=176;
@@ -52,6 +55,7 @@ export function checkDrawingSheets(doc:CadDocument) {
     if(!record(dimension)||!id(dimension.id)||annotationIds.has(dimension.id)||!id(dimension.sketchId)||
        !anchor(dimension.from)||!Array.isArray(dimension.at)||dimension.at.length!==2||
        !validDrawingPosition(dimension.at[0],dimension.at[1]))throw invalid();
+    if(doc.version<18&&[dimension.from,dimension.to].some(isDrawingVertex))throw invalid();
     if(dimension.kind==='diameter'){
      if(!dimension.from.startsWith('circle:')||dimension.to!==undefined)throw invalid();
     }else if(!['linear-x','linear-y'].includes(String(dimension.kind))||!anchor(dimension.to)||dimension.to===dimension.from)throw invalid();
@@ -74,4 +78,57 @@ export function drawingSourceFor(doc:CadDocument,featureId:string):DrawingSource
  const node=Object.hasOwn(doc.nodes,featureId)?doc.nodes[featureId]:undefined;
  const sketch=node?.kind==='extrusion'?doc.sketches?.[node.sketchId]:undefined;
  return sketch?{featureId,sketchId:sketch.id,profileId:sketch.profile.id}:undefined;
+}
+
+
+export function drawingOutlines(profile:SketchProfile):SketchOutlineProfile[]{
+ return profile.kind==='outline'?[profile]:profile.kind==='region'&&Array.isArray(profile.loops)
+  ? profile.loops.filter((loop):loop is SketchOutlineProfile=>loop?.kind==='outline'):[];
+}
+
+export function drawingVertexId(outline:SketchOutlineProfile,index:number){
+ return `vertex:${outline.id}:${outline.vertexIds?.[index]??`p${index}`}`;
+}
+
+export function checkDrawingVertexIds(profile:SketchProfile,version:CadDocument['version']){
+ for(const {points,vertexIds} of drawingOutlines(profile)){
+  if(vertexIds!==undefined&&(version<18||!Array.isArray(vertexIds)||vertexIds.length!==points.length||
+     !Array.from(vertexIds).every(id)||new Set(vertexIds).size!==vertexIds.length)){
+   throw new Error(t('Invalid outline vertex identities.'));
+  }
+ }
+}
+
+/** Persist the IDs used by the drawing preview when its first vertex dimension is saved. */
+export function initializeDrawingVertexIds(profile:SketchProfile,newId:()=>string){
+ const links=new Map<string,string>();
+ for(const outline of drawingOutlines(profile)){
+  if(outline.vertexIds)continue;
+  const provisional=outline.points.map((_,index)=>drawingVertexId(outline,index));
+  outline.vertexIds=outline.points.map(()=>newId());
+  provisional.forEach((from,index)=>links.set(from,drawingVertexId(outline,index)));
+ }
+ return links;
+}
+
+/** Reuse exact survivors. A single moved row can also be identified by its unchanged position in the outline. */
+export function retainDrawingVertexIds(before:SketchProfile,after:SketchProfile,newId:()=>string){
+ const previous=drawingOutlines(before);
+ for(const outline of drawingOutlines(after)){
+  const original=previous.find(item=>item.id===outline.id&&item.vertexIds);
+  if(!original)continue;
+  if(!Array.isArray(outline.points))continue;
+  const key=(point:readonly number[])=>JSON.stringify(point);
+  const indices=new Map(original.points.map((point,index)=>[key(point),index]));
+  const ids=outline.points.map(point=>{
+   const index=indices.get(key(point));
+   return index===undefined?undefined:original.vertexIds![index];
+  });
+  const unmatched=ids.flatMap((value,index)=>value===undefined?[index]:[]);
+  if(unmatched.length===1&&ids.length===original.points.length){
+   const index=unmatched[0],prior=original.vertexIds![index];
+   if(!ids.includes(prior))ids[index]=prior;
+  }
+  outline.vertexIds=ids.map(value=>value??newId());
+ }
 }

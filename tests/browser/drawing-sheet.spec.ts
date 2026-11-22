@@ -162,3 +162,50 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  expect(drawingSet).toContain(Buffer.from('Sheet 1 of 2','latin1').toString('hex'));
  expect(drawingSet).toContain(Buffer.from('Sheet 2 of 2','latin1').toString('hex'));
 });
+
+test('vertex dimensions follow point edits and block PDF export after an anchor is removed',async({page,hasTouch})=>{
+ const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
+ const ready=()=>expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await page.goto('/');
+ await ready();
+ await press(page.getByRole('button',{name:'Sketch',exact:true}));
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await sketch.getByLabel('Profile',{exact:true}).selectOption('outline');
+ const points=sketch.getByLabel('Outline points X, Y (mm)');
+ await points.fill('0, 0\n40, 0\n40, 30\n15, 35\n0, 30');
+ await press(sketch.getByRole('button',{name:'Create extrusion'}));
+ await ready();
+ const create=page.getByRole('button',{name:'Create drawing sheet',exact:true});
+ if(!await create.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
+ await press(create);
+ const dialog=page.getByRole('dialog',{name:'Drawing sheet',exact:true});
+ const preview=dialog.getByRole('img',{name:'Drawing preview'});
+ await dialog.getByLabel('Sheet title').fill('Vertex dimensions');
+ await press(dialog.getByText('Drawing dimensions',{exact:true}));
+ await dialog.getByLabel('First dimension anchor').selectOption({label:'Outline point 1 (0, 0)'});
+ await dialog.getByLabel('Second dimension anchor').selectOption({label:'Outline point 4 (15, 35)'});
+ await expect(preview.locator('.drawing-vertex-marker')).toHaveCount(2);
+ await press(dialog.getByRole('button',{name:'Add dimension',exact:true}));
+ await expect(preview).toContainText('15 mm');
+ await press(dialog.getByRole('button',{name:'Save drawing sheet',exact:true}));
+ await expect(dialog).toBeHidden();
+
+ const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
+ const change=async(value:string)=>{
+  await press(edit);
+  await points.fill(value);
+  await press(sketch.getByRole('button',{name:'Apply sketch changes',exact:true}));
+  await expect(sketch).toBeHidden();
+  await ready();
+ };
+ await change('0, 0\n40, 0\n40, 30\n22, 35\n0, 30');
+ const sheet=page.getByRole('button',{name:'Drawing: Vertex dimensions',exact:true});
+ if(!await sheet.isVisible())await press(page.getByRole('button',{name:'Objects',exact:true}));
+ await press(sheet);
+ await expect(preview).toContainText('22 mm');
+ await press(dialog.getByRole('button',{name:'Close drawing',exact:true}));
+ await change('0, 0\n40, 0\n40, 30\n0, 30');
+ await press(sheet);
+ await expect(dialog.getByRole('status',{name:'Drawing status'})).toContainText('unavailable drawing dimensions');
+ await expect(dialog.getByRole('button',{name:'Export drawing PDF',exact:true})).toBeDisabled();
+});

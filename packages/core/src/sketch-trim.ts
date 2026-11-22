@@ -2,6 +2,7 @@
 import {evaluateSketch,resolveSketchPath} from './features.js';
 import type {PlanarSketch,SketchProfile} from './features.js';
 import type {SketchLoop} from './sketch-region.js';
+import {retainDrawingVertexIds} from './drawing-sheet.js';
 import {newId} from './document.js';
 import type {CadDocument} from './document.js';
 import {isSketchPoint,sketchBulgeArc} from './sketch-outline.js';
@@ -111,6 +112,7 @@ export function trimSketchProfile(sketch:PlanarSketch,context:Pick<CadDocument,'
   if(boundary?.kind!=='outline')throw new Error(t('Trim needs a polygon or arc outline as the outside boundary.'));
   result={...profile,loops:profile.loops.map(loop=>loop.id===outside?cut(boundary):loop)};
  }else throw new Error(t('Trim needs a polygon or arc outline as the outside boundary.'));
+ retainDrawingVertexIds(profile,result,newId);
  const evaluated=evaluateSketch({...sketch,profile:result},context);
  if(before.loopIds?.[0]!==evaluated.loopIds?.[0])throw new Error(t('This trim changes which loop is the outside boundary.'));
  return result;

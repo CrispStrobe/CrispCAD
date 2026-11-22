@@ -4,8 +4,10 @@ import {isSketchPoint, sketchOutline, sketchSegmentsIntersect} from './sketch-ou
 import type {FeatureScalar} from './features.js';
 import type {SketchPoint} from './sketch-outline.js';
 
+export type SketchOutlineProfile = {kind:'outline'; id:string; points:SketchPoint[]; bulges?:number[]; dxfLayer?:string; vertexIds?:string[]};
+
 export type SketchLoop =
-  | {kind: 'outline'; id: string; points: SketchPoint[]; bulges?: number[]; dxfLayer?: string}
+  | SketchOutlineProfile
   | SketchCircleLoop;
 
 type SketchCircleLoop = {kind: 'circle'; id: string; center: [FeatureScalar, FeatureScalar]; radius: FeatureScalar; segments: number; dxfLayer?: string};

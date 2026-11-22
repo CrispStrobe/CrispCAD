@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import type {ManifoldToplevel} from 'manifold-3d';
 import {offsetCurvedOutline} from './curved-sketch-offset.js';
-import {evaluateSketch,offsetPositionExpression,sketchOutline,t} from '@brickwright/cad-core';
+import {evaluateSketch,newId,offsetPositionExpression,retainDrawingVertexIds,sketchOutline,t} from '@brickwright/cad-core';
 import type {CadDocument,FeatureScalar,PlanarSketch,SketchLoop,SketchProfile} from '@brickwright/cad-core';
 
 export function offsetSketchProfile(module:ManifoldToplevel,sketch:PlanarSketch,context:Pick<CadDocument,'parametric'>,distance:number):SketchProfile{
@@ -41,6 +41,7 @@ export function offsetSketchProfile(module:ManifoldToplevel,sketch:PlanarSketch,
    break;
   }
  }
+ retainDrawingVertexIds(profile,edited,newId);
  const after=evaluateSketch({...sketch,profile:edited},context);
  if(before.loopIds?.[0]!==after.loopIds?.[0])throw new Error(t('This offset changes which loop is the outside boundary. Try a smaller distance.'));
  return edited;

@@ -146,6 +146,13 @@ line shows the step, and the section view projects both legs into one hatched
 view. All three coordinates accept named dimensions. A jog that leaves either
 leg clear of the material blocks export until corrected.
 
+Horizontal and vertical dimensions also accept actual outline points,
+including the endpoints of arcs and points on polygonal holes. The anchor
+picker lists their sketch coordinates and marks the chosen points in the
+preview. After saving, the dimension follows a point moved in its row and
+keeps links to unchanged points through contour edits. If an edit removes a
+point or leaves its identity ambiguous, the sheet asks for a replacement.
+
 Multiple jogs, arbitrary edge annotations and assembly views remain open.
 
 ## Completion criteria

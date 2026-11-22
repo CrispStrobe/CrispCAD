@@ -230,3 +230,60 @@ it('preserves named offset section settings through project and model source and
  expect(s.state.document.drawings).toEqual(document.drawings);
  expect(layoutDrawing(s.state.document,draft)).toEqual(before);
 });
+
+it('links dimensions to authored points and preserves those links through moves and topology changes',()=>{
+ const s=createCadSession();
+ const profile={kind:'outline' as const,id:'outline',points:[[0,0],[40,0],[40,30],[15,35],[0,30]] as [number,number][]};
+ const feature=s.addSketchExtrusion(profile,{plane:'XZ',name:'Bracket section'});
+ const source=drawingSourceFor(s.state.document,feature)!;
+ const draft:DrawingInputs={title:'Bracket section',source,scale:'1:1',hiddenLines:false,
+  annotations:[{id:'span',sketchId:source.sketchId,kind:'linear-x',from:'vertex:outline:p0',to:'vertex:outline:p3',at:[100,115]}]};
+ const position=(sheet:DrawingInputs)=>layoutDrawing(s.state.document,sheet);
+ expect(position(draft).texts.map(item=>item.text)).toContain('15 mm');
+ const id=s.saveDrawingSheet(draft),sheet=s.state.document.drawings![0];
+ expect(s.state.document.version).toBe(18);
+ expect(sheet.annotations![0].from).not.toBe(draft.annotations![0].from);
+ expect(sheet.annotations![0].to).not.toBe(draft.annotations![0].to);
+ expect(parseDocument(s.serialize()).drawings).toEqual([sheet]);
+ expect(validateDocument(compileModelSource(s.modelSource,s.state.document)).sketches).toEqual(s.state.document.sketches);
+ expect(()=>validateDocument({...s.state.document,version:17})).toThrow();
+ const invalid=structuredClone(s.state.document);
+ const invalidProfile=invalid.sketches![source.sketchId].profile;
+ if(invalidProfile.kind!=='outline')throw Error('fixture');
+ invalidProfile.vertexIds![1]=invalidProfile.vertexIds![0];
+ expect(()=>validateDocument(invalid)).toThrow('Invalid outline vertex identities');
+
+ const moved={...profile,points:structuredClone(profile.points)};
+ moved.points[3]=[22,35];
+ s.editExtrusion(feature,{distance:10,symmetric:false,sketch:{profile:moved}});
+ expect(position(sheet).texts.map(item=>item.text)).toContain('22 mm');
+ expect(position(sheet).annotationIssues).toEqual([]);
+ const rotated={...moved,points:[...moved.points.slice(2),...moved.points.slice(0,2)]};
+ s.updateSketch(source.sketchId,{profile:rotated});
+ expect(position(sheet).annotationIssues).toEqual([]);
+ expect(position(sheet).texts.map(item=>item.text)).toContain('22 mm');
+
+ const removed={...rotated,points:rotated.points.filter((_,i)=>i!==1)};
+ s.updateSketch(source.sketchId,{profile:removed});
+ expect(position(sheet).annotationIssues).toEqual(['span']);
+ expect(()=>exportDrawingSetPdf(s.state.document)).toThrow('Repair or remove');
+ s.updateSketch(source.sketchId,{profile:moved});
+ expect(position(sheet).annotationIssues).toEqual(['span']);
+ s.undo();
+ s.undo();
+ expect(position(sheet).annotationIssues).toEqual([]);
+ expect(s.state.document.drawings![0].id).toBe(id);
+});
+
+it('lists vertices of polygonal holes and signed-arc endpoints from the authored sketch',()=>{
+ const s=createCadSession();
+ const feature=s.addSketchExtrusion({kind:'region',id:'profile',loops:[
+  {kind:'outline',id:'outside',points:[[0,0],[40,0],[40,30],[0,30]],bulges:[.5,0,0,0]},
+  {kind:'outline',id:'hole',points:[[5,4],[9,4],[8,9]]}
+ ]},{name:'Curved plate'});
+ const source=drawingSourceFor(s.state.document,feature)!;
+ const drawing=layoutDrawing(s.state.document,{title:'Plate',source,scale:'1:1',hiddenLines:false});
+ expect(drawing.anchors.filter(item=>item.id.startsWith('vertex:outside:'))).toHaveLength(4);
+ expect(drawing.anchors.filter(item=>item.id.startsWith('vertex:hole:'))).toHaveLength(3);
+ expect(drawing.anchors.find(item=>item.id==='vertex:hole:p2')?.label).toBe('Outline 2, point 3 (8, 9)');
+});

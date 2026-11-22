@@ -1,4 +1,4 @@
-import {resolveDrawingSource} from './drawing-sheet.js';
+import {initializeDrawingVertexIds,isDrawingVertex,resolveDrawingSource,retainDrawingVertexIds} from './drawing-sheet.js';
 import type {DrawingInputs} from './drawing-sheet.js';
 import {upgradeSimulation,jointAtWorldFrame,materialPhysics,simulationTracers} from './simulation.js';
 import type {SimulationSettings} from './simulation.js';
@@ -95,7 +95,10 @@ function editSketch(d:CadDocument,id:string,patch:Partial<Pick<PlanarSketch,'nam
   const sketch=d.sketches?.[id];if(!sketch)throw new Error(t('Sketch does not exist'));
   const uses=(key:string):boolean=>{const n=d.nodes[key];return isSketchFeature(n)?n.sketchId===id:constructionInputs(n).some(uses);};
   if(d.joints?.some(j=>uses(j.bodyA)||uses(j.bodyB)))throw new Error(t('Detach joints before editing their sketches'));
-  const next={...sketch,...structuredClone(patch)};if(next.profile.id!==sketch.profile.id||next.profile.kind!==sketch.profile.kind)throw new Error(t('Keep sketch profile identity and kind when editing'));d.sketches![id]=next;
+  const next={...sketch,...structuredClone(patch)};
+  if(next.profile.id!==sketch.profile.id||next.profile.kind!==sketch.profile.kind)throw new Error(t('Keep sketch profile identity and kind when editing'));
+  if(patch.profile)retainDrawingVertexIds(sketch.profile,next.profile,newId);
+  d.sketches![id]=next;
 }
 export function createCadSession(initial: CadDocument = createDocument()) {
   let document = freezeDocument(validateDocument(initial)); let selection: string[] = []; let revision = 0; let label = 'Opened';let liveModelSource=false;
@@ -187,11 +190,21 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     saveDrawingSheet(inputs:DrawingInputs,sheetId?:string){
       const id=sheetId??newId();
       commit(sheetId?'Edit drawing sheet':'Add drawing sheet',d=>{
-        if(!resolveDrawingSource(d,inputs.source))throw new Error(t('Choose an available drawing source.'));
+        const source=resolveDrawingSource(d,inputs.source);
+        if(!source)throw new Error(t('Choose an available drawing source.'));
         const sheets=d.drawings??[];
         if(sheetId&&!sheets.some(sheet=>sheet.id===id))throw new Error(t('Drawing sheet does not exist.'));
         const sheet={...structuredClone(inputs),id};
-        const version=sheet.section?.jog!==undefined?17:sheet.annotations!==undefined?11:sheet.section?10:9;
+        const vertexAnnotations=sheet.annotations?.filter(annotation=>[annotation.from,annotation.to].some(isDrawingVertex))??[];
+        const vertexDimensions=vertexAnnotations.filter(annotation=>annotation.sketchId===source.sketch.id);
+        if(vertexDimensions.length){
+          const links=initializeDrawingVertexIds(source.sketch.profile,newId);
+          for(const annotation of vertexDimensions){
+            annotation.from=links.get(annotation.from)??annotation.from;
+            if(annotation.to)annotation.to=links.get(annotation.to)??annotation.to;
+          }
+        }
+        const version=vertexAnnotations.length?18:sheet.section?.jog!==undefined?17:sheet.annotations!==undefined?11:sheet.section?10:9;
         if(d.version<version)d.version=version;
         d.drawings=sheetId?sheets.map(item=>item.id===id?sheet:item):[...sheets,sheet];
       });

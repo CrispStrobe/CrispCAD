@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
+import {checkDrawingVertexIds} from './drawing-sheet.js';
 import {isSketchPoint,sketchOutline,sketchPath} from './sketch-outline.js';
 import {evaluateSketchRegion,isSketchDxfLayer} from './sketch-region.js';
-import type {SketchLoop} from './sketch-region.js';
+import type {SketchLoop,SketchOutlineProfile} from './sketch-region.js';
 import type {SketchPoint} from './sketch-outline.js';
 import {constructionInputs} from './document.js';
 import type {CadDocument, Vec3} from './document.js';
@@ -20,7 +21,7 @@ export type SketchPathProfile = {
 export type SketchProfile =
   {kind:'rectangle'; id:string; width:FeatureScalar; depth:FeatureScalar} |
   {kind:'circle'; id:string; radius:FeatureScalar; segments:number; center?:SketchPoint; dxfLayer?:string} |
-  {kind:'outline'; id:string; points:SketchPoint[]; bulges?:number[]; dxfLayer?:string} |
+  SketchOutlineProfile |
   SketchPathProfile |
   {kind:'region'; id:string; loops:SketchLoop[]};
 /** Profiles are analytic design inputs. Rectangle closure/orthogonality and circle
@@ -186,7 +187,7 @@ export function checkFeatures(doc:CadDocument) {
     for(const [id,sketch] of Object.entries(doc.sketches)){if(!idOk(id)||sketch.id!==id)throw new Error(t('Invalid sketch identity'));if(sketch.profile?.kind==='path'){
       if(doc.version<15)throw new Error(t('Open sketch paths require document version 15'));
       if(doc.version<16&&(sketch.profile.anchors!==undefined||sketch.profile.vertexIds!==undefined))throw new Error(t('Path point locks require document version 16'));
-    }evaluateSketch(sketch,doc);}}
+    }evaluateSketch(sketch,doc);checkDrawingVertexIds(sketch.profile,doc.version);}}
   for(const node of Object.values(doc.nodes)){
     if(node.kind==='extrusion'){if(doc.version<3)throw new Error(t('Extrusion features require document version 3'));evaluateExtrusion(node,doc);}
     else if(node.kind==='mirror')evaluateMirror(node,doc);
