@@ -5,7 +5,7 @@ import {maxSketchDxfBytes,readSketchDxf} from './import-sketch-dxf.js';
 import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
-import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchRegionLoops,newId,sketchBulgeMidpoint} from '@brickwright/cad-core';
+import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchRegionLoops,newId,sketchBulgeMidpoint,trimSketchProfile} from '@brickwright/cad-core';
 import type {SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument,PlanarSketch} from '@brickwright/cad-core';
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
 const scalar=(source:string):FeatureScalar=>source.trim()!==''&&Number.isFinite(Number(source))?Number(source):source.trim();
@@ -144,6 +144,44 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const status=element('p');status.className='parameter-status';status.setAttribute('role','status');status.setAttribute('aria-label',t('Sketch status'));
   const hint=element('p',t('Drag the white handles or type exact dimensions.'));
   const help=element('p',t('Enter dimensions or expressions such as width / 2. Define named dimensions in Parameters.'));
+  const trimPanel=element('details');
+  trimPanel.className='sketch-expressions';
+  const trimStart=element('input'),trimEnd=element('input');
+  const trimSide=element('select');
+  trimSide.add(new Option(t('Left of line'),'left'));
+  trimSide.add(new Option(t('Right of line'),'right'));
+  for(const [label,input] of [['First trim point X, Y (mm)',trimStart],['Second trim point X, Y (mm)',trimEnd],['Keep side',trimSide]] as const){
+   const field=element('label',t(label));field.append(input);trimPanel.append(field);
+  }
+  const trimPick=element('button',t('Pick trim line'));
+  const trimApply=element('button',t('Trim draft'));
+  trimPick.type=trimApply.type='button';
+  trimPanel.prepend(element('summary',t('Trim by line')),element('p',t('Choose two points and keep the left or right side looking from the first point to the second.')));
+  trimPanel.append(trimPick,trimApply);
+  form.append(trimPanel);
+  let trimPicking=0,previewDepth=0;
+  function setTrimPicking(point:number){
+   trimPicking=point;
+   trimPick.setAttribute('aria-pressed',String(point!==0));
+   trimPick.textContent=t(point===1?'Pick first trim point':point===2?'Pick second trim point':'Pick trim line');
+   preview.classList.toggle('trim-picking',point!==0);
+  }
+  setTrimPicking(0);
+  trimPick.onclick=()=>{
+   if(busy||drag)return;
+   if(trimPicking){setTrimPicking(0);return;}
+   setTrimPicking(1);
+   preview.scrollIntoView({block:'nearest'});
+  };
+  trimPanel.ontoggle=()=>{if(!trimPanel.open)setTrimPicking(0);draw();};
+  function replaceProfileDraft(profile:SketchProfile){
+   switch(profile.kind){
+    case 'rectangle':width.value=String(profile.width);depth.value=String(profile.depth);break;
+    case 'circle':radius.value=String(profile.radius);break;
+    case 'outline':points.value=formatPoints(profile.points,profile.bulges).join('\n');break;
+    case 'region':regionLoops=profile.loops;region.value=formatLoops(regionLoops);break;
+   }
+  }
   function definition():SketchProfile{
    if(linked&&existing)return existing.profile;
    const id=existing?.profile.id??'profile-preview';
@@ -214,6 +252,8 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const compact=(input:HTMLInputElement,icon:string)=>{const label=input.parentElement!;label.firstChild!.textContent='';label.classList.add('sketch-dimension');const picture=toolIcon(icon);if(picture)label.prepend(picture);input.title=input.getAttribute('aria-label')!;label.append(element('small','mm'));const caption=element('span',input.getAttribute('aria-label')!);caption.className='sketch-dimension-name';label.prepend(caption);};
   compact(width,'Sketch width');compact(depth,'Sketch depth');compact(radius,'Sketch radius');compact(length,'Extrude');
   function draw(){
+   trimPanel.hidden=!!linked||!['outline','region'].includes(kind.value);
+   if(trimPanel.hidden&&trimPicking)setTrimPicking(0);
    axis.parentElement!.hidden=!revolving||automatic.checked;
    width.parentElement!.hidden=depth.parentElement!.hidden=kind.value!=='rectangle';radius.parentElement!.hidden=center.parentElement!.hidden=kind.value!=='circle';pointsLabel.hidden=kind.value!=='outline';regionLabel.hidden=kind.value!=='region';relativeHint.hidden=curveToggle.hidden=pointsLabel.hidden&&regionLabel.hidden;curveHint.hidden=curveToggle.hidden||!curveHandles.checked;preview.replaceChildren();dragOutline=undefined;valid=false;
    for(const input of [width,depth,radius,length]){
@@ -233,7 +273,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     const projected=[shape.contour,...(shape.holes??[])].map(loop=>loop.map(([x,y])=>[x+shape.start*.45,-y-shape.start*.35]));
     const raised=projected.map(loop=>loop.map(([x,y])=>[x+ox,y+oy]));
     const [base]=projected,[top]=raised;
-    const topOffset=shape.start+d;
+    const topOffset=previewDepth=shape.start+d;
     const place=([x,y]:SketchPoint)=>[x+topOffset*.45,-y-topOffset*.35];
     const references=referenceGeometry.flatMap(guide=>guide.contours.map(loop=>loop.map(place)));
     const axisLine=shape.axisOffset!==undefined?[[shape.axisOffset,-Math.max(...ys)-h*.1],[shape.axisOffset,-Math.min(...ys)+h*.1]]:[];
@@ -256,6 +296,26 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     }
     face(raised,'sketch-top');
     if(references.length)face(references,'sketch-reference');
+    if(trimPanel.open&&!trimPanel.hidden&&trimStart.value&&trimEnd.value){
+     try{
+      const [ax,ay]=place(parsePoint(trimStart.value)),[bx,by]=place(parsePoint(trimEnd.value));
+      const dx=bx-ax,dy=by-ay,length=Math.hypot(dx,dy);
+      if(length>0){
+       const range=Math.hypot(vw,vh)+Math.hypot(ax-minX,ay-minY)+length;
+       const trim=document.createElementNS(ns,'line');
+       trim.setAttribute('x1',String(ax-dx/length*range));trim.setAttribute('y1',String(ay-dy/length*range));
+       trim.setAttribute('x2',String(ax+dx/length*range));trim.setAttribute('y2',String(ay+dy/length*range));
+       trim.setAttribute('class','sketch-reference sketch-trim-line');svg.append(trim);
+       const side=trimSide.value==='left'?1:-1,unitX=dx/length,unitY=dy/length;
+       const middle=[(ax+bx)/2,(ay+by)/2],tip=[middle[0]+side*unitY*span*.11,middle[1]-side*unitX*span*.11];
+       const back=[middle[0]+side*unitY*span*.065,middle[1]-side*unitX*span*.065];
+       const arrow=document.createElementNS(ns,'path');
+       arrow.setAttribute('d',`M ${middle.join(' ')} L ${tip.join(' ')} M ${back[0]-unitX*span*.025} ${back[1]-unitY*span*.025} L ${tip.join(' ')} L ${back[0]+unitX*span*.025} ${back[1]+unitY*span*.025}`);
+       arrow.setAttribute('class','sketch-reference sketch-trim-side');svg.append(arrow);
+      }
+     }catch{/* Incomplete coordinate fields are validated by Trim draft. */}
+    }
+
     if(axisLine.length){
      const line=document.createElementNS(ns,'line');
      line.setAttribute('x1',String(axisLine[0][0]));line.setAttribute('x2',String(axisLine[1][0]));
@@ -329,10 +389,21 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   }
   preview.onpointerdown=event=>{
    const handle=(event.target as Element).closest<SVGElement>('[data-resize]'),svg=preview.querySelector('svg');
-   if(!handle||!svg||busy||drag||event.button!==0)return;
+   if(!svg||busy||drag||event.button!==0||!svg.contains(event.target as Node))return;
    const matrix=svg.getScreenCTM();
    if(!matrix)return;
    const inverse=matrix.inverse(),start=new DOMPoint(event.clientX,event.clientY).matrixTransform(inverse);
+   if(trimPicking){
+    event.preventDefault();
+    const step=snap()/(event.shiftKey?10:1);
+    const round=(v:number)=>Number((step>0?Math.round(v/step)*step:v).toFixed(5));
+    const coordinate=[round(start.x-previewDepth*.45),round(-start.y-previewDepth*.35)].join(', ');
+    if(trimPicking===1){trimStart.value=coordinate;trimEnd.value='';setTrimPicking(2);}
+    else{trimEnd.value=coordinate;setTrimPicking(0);}
+    refreshDraft();
+    return;
+   }
+   if(!handle)return;
    const mode=handle.dataset.resize!;
    let outlineEdit:OutlineEdit|undefined;
    if(mode==='vertex'||mode==='curve'){
@@ -404,6 +475,21 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   let draftRevision=0;
   const refreshDraft=()=>{draftRevision++;draw();};
   form.addEventListener('input',refreshDraft);form.addEventListener('change',refreshDraft);
+  trimApply.onclick=()=>{
+   if(busy||drag)return;
+   setTrimPicking(0);
+   try{
+    const snapshot=readForm();
+    const profile=trimSketchProfile({version:1,id:'trim-preview',...snapshot.sketch},doc,
+     parsePoint(trimStart.value),parsePoint(trimEnd.value),trimSide.value==='left'?'left':'right');
+    previewShape({...snapshot,sketch:{...snapshot.sketch,profile}});
+    replaceProfileDraft(profile);
+    refreshDraft();
+   }catch(error){
+    status.textContent=error instanceof Error&&'diagnostic' in error?(error as import('@brickwright/cad-core').FeatureEvaluationError).diagnostic.message:error instanceof Error?error.message:String(error);
+   }
+  };
+
   if(!linked){
    const offsetPanel=element('details');
    offsetPanel.className='sketch-expressions';
@@ -433,12 +519,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      if(!active())return;
      if(revision!==draftRevision||expected!==session.state.revision)throw new Error(t('The sketch changed during the offset. Apply the offset again.'));
      previewShape({...snapshot,sketch:{...snapshot.sketch,profile:shifted}});
-     switch(shifted.kind){
-      case 'rectangle':width.value=String(shifted.width);depth.value=String(shifted.depth);break;
-      case 'circle':radius.value=String(shifted.radius);break;
-      case 'outline':points.value=formatPoints(shifted.points).join('\n');break;
-      case 'region':regionLoops=shifted.loops;region.value=formatLoops(regionLoops);break;
-     }
+     replaceProfileDraft(shifted);
      draftRevision++;
     }catch(error){
      message=error instanceof Error&&'diagnostic' in error?(error as import('@brickwright/cad-core').FeatureEvaluationError).diagnostic.message:error instanceof Error?error.message:String(error);

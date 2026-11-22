@@ -49,3 +49,4 @@ export {compileBlocksToCadScript,applyBlocksModel,exportBlocksOpenSCAD,exportBlo
 export type {CadBlocksProgram,BlockStmt,BlockExpr,BlockParam,BlockShapeKind,BlockBinaryOp,BlockMathFn,BlockAxis,CompiledBlocks,CompiledBlocksPart,BlocksModelResult} from './cad-blocks.js';
 
 export * from './drawing-sheet.js';
+export {trimSketchProfile} from './sketch-trim.js';

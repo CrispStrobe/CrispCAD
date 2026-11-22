@@ -209,3 +209,15 @@ polygon corners may be clipped.
 A collapsed or split loop leaves the prior draft in place. Outlines that
 contain arc bulges keep their curves for a future analytic offset tool.
 **Create** or **Apply sketch changes** commits the draft in one Undo step.
+
+## Trim a closed outline by line
+
+Open **Trim by line** in an outline or region sketch. Enter two exact sketch
+points or choose **Pick trim line** and tap both points in the preview. The
+arrow points into the side to keep. **Trim draft** cuts the outside boundary
+and closes it along the line. The remaining part of an intersected arc keeps
+its center and radius. Existing holes stay in the retained area.
+
+The current tool supports a cut that crosses the outside twice. A cut that
+splits the profile or crosses or discards a hole leaves the draft intact.
+Open-entity trimming and broader contour topology changes remain open.
