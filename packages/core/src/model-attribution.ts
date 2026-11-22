@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {serializeDocument, validateDocument} from './document.js';
+import {constructionInputs,serializeDocument, validateDocument} from './document.js';
 import type {CadDocument} from './document.js';
 import {sha256Hex} from './hash.js';
 import type {ModelProvenanceRecord} from './model-provenance.js';
@@ -38,7 +38,7 @@ export function hasModelAttribution(input: CadDocument): boolean {
     if (seen.has(id)) return false;
     seen.add(id);
     const node = document.nodes[id];
-    return !!node.provenance?.length || (node.kind === 'boolean' && node.inputs.some(visit));
+    return !!node.provenance?.length || constructionInputs(node).some(visit);
   };
   return document.roots.filter(id => !document.nodes[id].reference&&document.nodes[id].role!=='hole').some(visit);
 }
@@ -82,7 +82,7 @@ export async function createModelAttributionSidecar(
     const references = [...(node.provenance ?? [])];
     nodes.push({id, provenanceIds: references});
     references.forEach(reference => provenanceIds.add(reference));
-    if (node.kind === 'boolean') node.inputs.forEach(visit);
+    constructionInputs(node).forEach(visit);
   };
   rootIds.forEach(visit);
   const records = (document.provenance?.records ?? []).filter(record => provenanceIds.has(record.id));

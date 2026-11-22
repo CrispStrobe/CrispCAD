@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {formatSCADNumber} from './scad-numbers.js';
 import {t} from './i18n.js';
-import {isCube} from './document.js';
+import {constructionInputs,isCube} from './document.js';
 import type {CadDocument, SolidNode} from './document.js';
 
 export type ParameterUnit = 'mm' | 'deg' | 'scalar';
@@ -213,7 +213,7 @@ function solvedBindings(doc: CadDocument) {
   const values = evaluateParameters(design), used = new Set<string>();
   // Until joint frames have parametric references, require an explicit detach.
   const connected = new Set<string>();
-  function mark(id: string) {if(connected.has(id))return;connected.add(id);const n=doc.nodes[id];if(n?.kind==='boolean')n.inputs.forEach(mark);}
+  function mark(id: string) {if(connected.has(id))return;connected.add(id);const n=doc.nodes[id];constructionInputs(n).forEach(mark);}
   doc.joints?.forEach(j=>{mark(j.bodyA);mark(j.bodyB);});
   return design.bindings.map(binding => {
     if (!record(binding) || typeof binding.nodeId !== 'string' || !Object.hasOwn(doc.nodes,binding.nodeId) || typeof binding.property !== 'string' || typeof binding.expression !== 'string') error(t('invalid binding'));

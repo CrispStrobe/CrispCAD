@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
+import {constructionInputs} from './document.js';
 import type { CadDocument, Vec3 } from './document.js';
 export interface PartPhysics {
   version: 1;
@@ -43,7 +44,7 @@ export function checkPhysics(doc: CadDocument) {
  const vector=(x:unknown):x is Vec3=>Array.isArray(x)&&x.length===3&&x.every(v=>number(v,-1e6,1e6));
  const fail=(why:string):never=>{throw new Error(t`Invalid CAD physics: ${why}`);};
  for(const node of Object.values(doc.nodes)) {
-  if(node.kind==='boolean'&&!node.reference&&node.inputs.some(id=>doc.nodes[id].reference))fail(t('reference helpers cannot become printable operands'));
+  if(!node.reference&&constructionInputs(node).some(id=>doc.nodes[id].reference))fail(t('reference helpers cannot become printable operands'));
   if(node.reference!==undefined&&typeof node.reference!=='boolean')fail(t('bad reference flag'));
   const p=node.physics;if(p===undefined)continue;
   if(!p||p.version!==1||!['dynamic','static'].includes(p.motion)||!number(p.densityKgM3,1,30000)||!number(p.friction,0,2)||!number(p.restitution,0,1)||!['rigid','hinge','spring','snap-fit','thread','gear','belt','face-coupling','sliding-fit'].includes(p.intent))fail(t`bad body properties on ${node.id}`);

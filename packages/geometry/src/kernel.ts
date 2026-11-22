@@ -5,7 +5,7 @@ import {triangulatePolyhedron} from './polyhedron.js';
 import {textProfileContours} from './font-profile.js';
 import Module from 'manifold-3d';
 import type { Manifold, ManifoldToplevel, CrossSection } from 'manifold-3d';
-import { validateDocument, documentGeometryKey, evaluateExtrusion, evaluateRevolution, FeatureEvaluationError, compileCode } from '@brickwright/cad-core';
+import { validateDocument, documentGeometryKey, evaluateExtrusion, evaluateRevolution, evaluateMirror, FeatureEvaluationError, compileCode } from '@brickwright/cad-core';
 import type { CadDocument, SolidNode, CodeShape,CodeProfile } from '@brickwright/cad-core';
 import { collisionCSG } from './collision-csg.js';
 import { partitionConvex } from './convex.js';
@@ -136,6 +136,18 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
         if(plane==='XY')solid=keep(solid.rotate([-90,0,0]));
         else if(plane==='YZ')solid=keep(solid.rotate([0,0,90]));
         if(axisOffset)solid=keep(solid.translate(plane==='YZ'?[0,axisOffset,0]:[axisOffset,0,0]));
+        break;
+      }
+      case 'mirror': {
+        const {axis,offset}=evaluateMirror(node,doc);
+        const normal:[number,number,number]=[0,0,0];
+        normal[axis]=1;
+        solid=keep(build(node.source).mirror(normal));
+        if(offset){
+          const position:[number,number,number]=[0,0,0];
+          position[axis]=2*offset;
+          solid=keep(solid.translate(position));
+        }
         break;
       }
       case 'mesh': {

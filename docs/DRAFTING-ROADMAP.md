@@ -156,5 +156,16 @@ The axis position and sweep accept named dimensions.
 
 **Edit sketch & revolution** changes the sweep, axis or sketch in one undoable
 operation. Editing a shared sketch updates every feature that uses it. Save
-and reopen the original project to keep these relationships. Visual Mirror,
-patterns and the searchable command palette remain open.
+and reopen the original project to keep these relationships. Patterns and the searchable command palette remain open.
+
+## Visual Mirror
+
+Select a body, then choose **Mirror** in the toolbar. Pick a plane and enter
+its position along the perpendicular axis in millimetres. For example, **YZ**
+with an offset of 20 reflects around X = 20 mm. The offset accepts a named
+dimension. The result replaces the selected body in the workspace. To keep a
+second independent body, duplicate the source and place the copy before mirroring.
+
+Open **Inputs** under the result to edit the retained source. Use **Edit
+mirror** in Properties to change the plane or offset. Mirror and its edits
+participate in Undo and retain their inputs when you save and reopen.

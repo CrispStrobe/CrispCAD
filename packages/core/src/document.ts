@@ -11,7 +11,7 @@ import type {ModelSource} from './model-source.js';
 import {compileCode} from './code.js';
 import type {CodeProgram} from './code.js';
 import {checkFeatures} from './features.js';
-import type {PlanarSketch,ExtrusionFeature,RevolutionFeature} from './features.js';
+import type {PlanarSketch,ExtrusionFeature,RevolutionFeature,MirrorFeature} from './features.js';
 import { checkPhysics } from './physics.js';
 import { checkParametricDesign } from './parameters.js';
 import type { ParametricDesign } from './parameters.js';
@@ -21,9 +21,15 @@ import type { PartPhysics, CadJoint } from './physics.js';
 export type Vec3 = [number, number, number];
 export interface Transform { position: Vec3; rotation: Vec3; scale: Vec3 }
 export type Primitive = { kind: 'box'; size: Vec3 } | { kind: 'cylinder'; radius: number; height: number; segments: number } | { kind: 'sphere'; radius: number; segments: number };
-export type Shape = Primitive | ExtrusionFeature | RevolutionFeature | {kind:'code';program:CodeProgram} | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[]; useHoleRoles?:true } | { kind: 'mesh'; positions: number[]; indices: number[] };
+export type Shape = Primitive | ExtrusionFeature | RevolutionFeature | MirrorFeature | {kind:'code';program:CodeProgram} | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[]; useHoleRoles?:true } | { kind: 'mesh'; positions: number[]; indices: number[] };
 export type SolidNode = { id: string; name: string; color: string; transform: Transform; reference?: boolean; role?: 'solid'|'hole'; provenance?: string[]; physics?: PartPhysics; generator?:GeneratorRecipe } & Shape;
-export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch>; provenance?:ModelProvenance; modelSource?:ModelSource; simulation?:SimulationSettings; tracers?:MotionTracer[]; drawings?:DrawingSheet[] }
+const noInputs:readonly string[]=[];
+export function constructionInputs(node:SolidNode|undefined):readonly string[]{
+  if(node?.kind==='boolean')return node.inputs;
+  if(node?.kind==='mirror')return [node.source];
+  return noInputs;
+}
+export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch>; provenance?:ModelProvenance; modelSource?:ModelSource; simulation?:SimulationSettings; tracers?:MotionTracer[]; drawings?:DrawingSheet[] }
 export const isCube=(node:SolidNode)=>node.kind==='box'&&node.generator?.preset==='cube';
 function linkedCubeValue(previous:readonly number[],next:readonly number[]):number{const changed=next.filter((v,i)=>Math.abs(v-previous[i])>1e-10*Math.max(1,Math.abs(v)));if(changed.some(v=>Math.abs(v-changed[0])>1e-10*Math.max(1,Math.abs(v))))throw new Error(translate('Cube edges are linked; use a Box for independent dimensions'));return changed[0]??next[0];}
 export function constrainCubeTransform(node:SolidNode,next:Transform):Transform{if(!isCube(node))return next;if(!vec(next.scale,.001,1000))throw new Error(translate('Cube edges are linked; use a Box for independent dimensions'));const axis=next.scale.map((v,i)=>Math.abs(v/node.transform.scale[i]-1)).reduce((best,v,i,a)=>v>a[best]?i:best,0),scale=next.scale[axis];return {...next,scale:[scale,scale,scale]};}
@@ -51,7 +57,7 @@ const vec = (v: unknown, min = -1e6, max = 1e6): v is Vec3 => Array.isArray(v) &
 
 /** Validate before replacing any live state. Unknown versions are refused, never downgraded. */
 export function checkDocument(value: unknown): CadDocument {
-  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2,3,4,5,6,7,8,9,10,11,12].includes(value.version as number) || value.units !== 'mm') fail(translate('unsupported format, version or units'));
+  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2,3,4,5,6,7,8,9,10,11,12,13].includes(value.version as number) || value.units !== 'mm') fail(translate('unsupported format, version or units'));
   if (!idOk(value.id) || !text(value.title) || !record(value.nodes) || !Array.isArray(value.roots)) fail(translate('missing document identity, nodes or roots'));
   const nodes = value.nodes as Record<string, unknown>;
   const entries = Object.entries(nodes);
@@ -72,6 +78,9 @@ export function checkDocument(value: unknown): CadDocument {
         if (!num(raw.radius, 0.01, 50000) || !Number.isInteger(raw.segments) || !num(raw.segments, 12, 256)) fail(translate`bad sphere on ${id}`); break;
       case 'code': if((value.version as number)<4)fail(translate('code objects require version 4'));compileCode(raw.program as CodeProgram);break;
       case 'extrusion': case 'revolution': break; // Full versioned feature validation follows graph validation.
+      case 'mirror':
+        if((value.version as number)<13||!idOk(raw.source)||!Object.hasOwn(nodes,raw.source))fail(translate`bad mirror source on ${id}`);
+        break;
       case 'boolean':
         if (!['union', 'subtract', 'intersect'].includes(String(raw.operation)) || !Array.isArray(raw.inputs) || raw.inputs.length < 2 || raw.inputs.length > 100 || new Set(raw.inputs).size !== raw.inputs.length || !raw.inputs.every(x => idOk(x) && Object.hasOwn(nodes, x))) fail(translate`bad boolean inputs on ${id}`); break;
       case 'mesh':
@@ -87,14 +96,14 @@ export function checkDocument(value: unknown): CadDocument {
     if (seen.has(id)) { if (depth + heights.get(id)! > 100) fail(translate('operation tree is too deep')); return heights.get(id)!; }
     visiting.add(id);
     const node = nodes[id] as SolidNode;
-    const height: number = node.kind === 'boolean' ? 1 + Math.max(...node.inputs.map(x => visit(x, depth + 1))) : 0;
+    const height: number = Math.max(0,...constructionInputs(node).map(input=>1+visit(input,depth+1)));
     if (height > 100) fail(translate('operation tree is too deep'));
     visiting.delete(id); seen.add(id); heights.set(id, height); return height;
   };
   // Check all nodes, including malformed unreachable graphs, before normalizing.
   entries.forEach(([id]) => visit(id, 0));
   const reachable = new Set<string>();
-  const mark = (id: string) => { if (reachable.has(id)) return; reachable.add(id); const n = nodes[id] as SolidNode; if (n.kind === 'boolean') n.inputs.forEach(mark); };
+  const mark = (id: string) => { if (reachable.has(id)) return; reachable.add(id); const n = nodes[id] as SolidNode; constructionInputs(n).forEach(mark); };
   (value.roots as string[]).forEach(mark);
   if (reachable.size !== entries.length) fail(translate('orphaned nodes'));
   checkModelProvenance(value as unknown as CadDocument);
@@ -124,7 +133,7 @@ export function freezeDocument(document: CadDocument): CadDocument {
 }
 export function pruneDocument(doc: CadDocument) {
   const keep = new Set<string>();
-  const walk = (id: string) => { if (keep.has(id)) return; keep.add(id); const n = doc.nodes[id]; if (n.kind === 'boolean') n.inputs.forEach(walk); };
+  const walk = (id: string) => { if (keep.has(id)) return; keep.add(id); const n = doc.nodes[id]; constructionInputs(n).forEach(walk); };
   doc.roots.forEach(walk);
   Object.keys(doc.nodes).forEach(id => { if (!keep.has(id)) delete doc.nodes[id]; });
   pruneModelProvenance(doc);

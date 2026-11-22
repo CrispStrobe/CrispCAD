@@ -15,7 +15,7 @@ import {PrecisionControls} from './precision-controls.js';
 import {cameraWheelAction,cameraPointerAction} from './camera-input.js';
 import type {NavigationPreset,CameraWheel} from './camera-input.js';
 import {precisionTracker} from './precision.js';
-import {assertDrivenEdit,isCube,constrainCubeTransform,t} from '@brickwright/cad-core';
+import {assertDrivenEdit,constructionInputs,isCube,constrainCubeTransform,t} from '@brickwright/cad-core';
 import type { CadSession, Transform, Vec3 } from '@brickwright/cad-core';
 import type { GeometryResult } from '@brickwright/cad-geometry';
 import { TOUCH_SLOP_PX, createTouchTracker } from './vendor/touch-gestures.js';
@@ -310,7 +310,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     selected = [...ids]; for (const [id, mesh] of meshes) { mesh.material.emissive.set(selected.includes(id) ? '#433317' : '#000000'); mesh.material.emissiveIntensity = selected.includes(id) ? 0.8 : 0; outlines.get(id)?.material && ((outlines.get(id)!.material as THREE.LineBasicMaterial).color.set(selected.includes(id) ? '#ffda82' : '#172a36')); }
     for(const helper of selectionBoxes.values()){scene.remove(helper);helper.geometry.dispose();(helper.material as THREE.Material).dispose();}selectionBoxes.clear();
     const selectedIds=new Set(selected);
-    const containsSelected=(id:string,seen=new Set<string>()):boolean=>{if(selectedIds.has(id))return true;if(seen.has(id))return false;seen.add(id);const node=session.state.document.nodes[id];return node?.kind==='boolean'&&node.inputs.some(child=>containsSelected(child,seen));};
+    const containsSelected=(id:string,seen=new Set<string>()):boolean=>{if(selectedIds.has(id))return true;if(seen.has(id))return false;seen.add(id);const node=session.state.document.nodes[id];return constructionInputs(node).some(child=>containsSelected(child,seen));};
     for(const [id,mesh] of meshes)if(containsSelected(id)){const helper=new THREE.BoxHelper(mesh,0x5de2ff);(helper.material as THREE.LineBasicMaterial).depthTest=false;helper.renderOrder=100;scene.add(helper);selectionBoxes.set(id,helper);}
     canvas.dataset.selected=String(ids.length);placeGizmo(); draw();
   }

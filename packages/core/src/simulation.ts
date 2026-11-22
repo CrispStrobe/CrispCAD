@@ -23,7 +23,7 @@ export const physicsMaterials=Object.freeze([
 ]);
 export function simulationSettings(doc:CadDocument):SimulationSettings{return doc.version>=8&&doc.simulation?doc.simulation:defaultSimulationSettings();}
 export function simulationTracers(doc:CadDocument):readonly MotionTracer[]{return doc.version>=8?doc.tracers??[]:[];}
-export function upgradeSimulation(doc:CadDocument){if(doc.version<8&&(Object.hasOwn(doc,'simulation')||Object.hasOwn(doc,'tracers')))throw new Error(t('Cannot replace legacy opaque simulation fields'));doc.version=8;}
+export function upgradeSimulation(doc:CadDocument){if(doc.version>=8)return;if(Object.hasOwn(doc,'simulation')||Object.hasOwn(doc,'tracers'))throw new Error(t('Cannot replace legacy opaque simulation fields'));doc.version=8;}
 const bounded=(v:unknown,lo:number,hi:number)=>typeof v==='number'&&Number.isFinite(v)&&v>=lo&&v<=hi;
 const vec=(v:unknown,max=1e6):v is Vec3=>Array.isArray(v)&&v.length===3&&v.every(n=>bounded(n,-max,max));
 export function checkSimulation(doc:CadDocument){

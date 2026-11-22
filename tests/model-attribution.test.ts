@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {describe, expect, it} from 'vitest';
 import {createDocument, identityTransform, serializeDocument} from '../packages/core/src/document.js';
 import type {CadDocument} from '../packages/core/src/document.js';
+import {createCadSession} from '../packages/core/src/session.js';
 import {createModelAttributionSidecar} from '../packages/core/src/model-attribution.js';
 import type {ModelAttributionExport} from '../packages/core/src/model-attribution.js';
 import type {ModelProvenanceRecord} from '../packages/core/src/model-provenance.js';
@@ -43,6 +44,13 @@ describe('recorded library attribution sidecars', () => {
     expect(serializeDocument(document)).toBe(before);
     sidecar.records[0].asset.licence.attribution = 'Changed';
     expect(document.provenance!.records[0].asset.licence.attribution).toBe('Example creator, CC-BY-4.0');
+  });
+  it('includes library attribution beneath a retained mirror', async () => {
+    const session=createCadSession(project());
+    const id=session.mirrorBody('cut',{plane:'YZ',offset:10});
+    const sidecar=await createModelAttributionSidecar(session.state.document,{...output(),rootIds:[id]});
+    expect(sidecar.records.map(record=>record.id)).toEqual(['source-a','source-b']);
+    expect(sidecar.nodes.map(node=>node.id)).toEqual([id,'cut','a','b']);
   });
   it('includes only source records reachable from selected printable roots', async () => {
     const document = project(); document.roots = ['a', 'b', 'ruler']; delete document.nodes.cut;
