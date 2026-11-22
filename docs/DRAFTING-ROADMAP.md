@@ -125,7 +125,12 @@ the removal. Whole-project files and model source retain the drawing links.
 Object clipboard copies carry geometry. With multiple saved sheets, choose
 **Export drawing set (PDF)** to create a numbered PDF in the displayed order.
 If a sheet needs repair or exceeds its paper size, the export identifies it.
-Section views, custom placed annotations and assembly views remain open.
+Enable **Show section A-A** to add a cut through the extrusion in sketch
+coordinates. Choose the constant X or Y coordinate and enter a millimetre
+value or named dimension. A dashed cut line and direction marks identify the
+plane. The section hatches solid material and leaves cutouts clear. The
+saved cut updates in previews and PDF when the source changes.
+Custom placed annotations, offset sections and assembly views remain open.
 
 ## Completion criteria
 

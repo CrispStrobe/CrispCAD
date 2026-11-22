@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {drawingScales,drawingSourceFor,resolveDrawingSource,t} from '@brickwright/cad-core';
+import {drawingScales,drawingSourceFor,evaluateExtrusion,resolveDrawingSource,t} from '@brickwright/cad-core';
 import type {CadSession,DrawingInputs,DrawingScale} from '@brickwright/cad-core';
 import type {CadFile} from './index.js';
 import {layoutDrawing} from './drawing-layout.js';
@@ -62,6 +62,14 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
     const field=element('label',t(text));field.append(control);form.append(field);
    };
    label('Sheet title',title);label('Drawing source',source);label('Drawing scale',scale);label('Show hidden lines',hidden);
+   const section=element('input');section.type='checkbox';section.checked=!!saved?.section;
+   const axis=element('select');
+   axis.add(new Option(t('Sketch X'),'u'));axis.add(new Option(t('Sketch Y'),'v'));
+   axis.value=saved?.section?.axis??'v';
+   const position=element('input');position.type='text';position.maxLength=160;
+   position.value=String(saved?.section?.position??'0');
+   label('Show section A-A',section);
+   label('Section axis',axis);label('Section position (mm)',position);
    const heading=element('header');
    const close=element('button','×');close.setAttribute('aria-label',t('Close drawing'));
    close.onclick=()=>dialog.close();heading.append(element('h2',t('Drawing sheet')),close);
@@ -90,15 +98,29 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
      source.add(new Option(t('Unavailable drawing source'),''),0);source.value='';
     }else source.value=choice;
    };
+   let centerAutomatically=!saved?.section;
+   const centerCut=()=>{
+    const current=session.state.document,ref=drawingSourceFor(current,source.value);
+    if(!ref)return;
+    const resolved=resolveDrawingSource(current,ref)!;
+    const coordinate=axis.value==='u'?0:1;
+    const values=evaluateExtrusion(resolved.node,current).contour.map(point=>point[coordinate]);
+    position.value=String(Number(((Math.min(...values)+Math.max(...values))/2).toFixed(6)));
+   };
    const read=():DrawingInputs=>{
     const current=session.state.document;
     const ref=drawingSourceFor(current,source.value);
     if(!ref)throw new Error(t('Drawing source unavailable. Choose another sketch extrusion.'));
     if(!title.value.trim())throw new Error(t('Enter a drawing sheet title.'));
-    return {title:title.value.trim(),source:ref,scale:scale.value as DrawingScale,hiddenLines:hidden.checked};
+    const cut=position.value.trim();
+    if(section.checked&&!cut)throw new Error(t('Enter a section position in millimetres.'));
+    const value=Number(cut);
+    return {title:title.value.trim(),source:ref,scale:scale.value as DrawingScale,hiddenLines:hidden.checked,
+     ...(section.checked?{section:{axis:axis.value==='u'?'u':'v',position:Number.isFinite(value)?value:cut}}:{})};
    };
    let layout:DrawingLayout|undefined;
    const render=()=>{
+    axis.parentElement!.hidden=position.parentElement!.hidden=!section.checked;
     preview.replaceChildren();layout=undefined;status.textContent='';
     try{
      layout=layoutDrawing(session.state.document,read());
@@ -113,9 +135,12 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
     }
     if(current.revision===lastRevision)return;
     lastRevision=current.revision;
-    listSources();render();
+    listSources();if(centerAutomatically)centerCut();render();
    };
-   source.onchange=()=>{choice=source.value;render();};
+   source.onchange=()=>{choice=source.value;if(centerAutomatically)centerCut();render();};
+   axis.onchange=()=>{if(centerAutomatically)centerCut();render();};
+   position.oninput=()=>{centerAutomatically=false;render();};
+   section.onchange=render;
    title.oninput=scale.onchange=hidden.onchange=render;
    save.onclick=()=>{
     try{session.saveDrawingSheet(read(),saved?.id);dialog.close();}

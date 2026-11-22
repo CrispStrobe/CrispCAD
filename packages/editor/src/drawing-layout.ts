@@ -2,7 +2,9 @@
 import {evaluateExtrusion,featureValue,resolveDrawingSource,sketchBulgeArc,sketchPoint,t} from '@brickwright/cad-core';
 import type {CadDocument,DrawingInputs,SketchPoint,Vec3} from '@brickwright/cad-core';
 
-type Stroke = 'visible'|'hidden'|'center'|'dimension'|'border';
+import {sectionMaterial} from './drawing-section.js';
+
+type Stroke = 'visible'|'hidden'|'center'|'dimension'|'border'|'cut'|'hatch'|'section';
 export type DrawingPath = {points:SketchPoint[]; stroke:Stroke; closed?:boolean};
 type DrawingCircle = {center:SketchPoint; radius:number};
 type DrawingText = {x:number; y:number; size:number; text:string};
@@ -60,6 +62,14 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
   const {center:[x,y],radius}=circle;
   return [[x-radius,y],[x+radius,y],[x,y-radius],[x,y+radius]] as SketchPoint[];
  };
+ const section=sheet.section?(()=>{
+  const axis=sheet.section.axis==='u'?0:1;
+  const cut=featureValue(sheet.section.position,doc);
+  if(Math.abs(cut)>100000)throw new Error(t('Section position is outside the sketch coordinate range.'));
+  const material=sectionMaterial(contours.map((points,i)=>({points,circle:circleAt(i)})),axis,cut);
+  if(!material.length)throw new Error(t('The section plane misses the part. Move the section position.'));
+  return {axis,cut,material};
+ })():undefined;
  const outline=profile.kind==='region'?profile.loops.find(loop=>loop.id===loopIds[0]):profile;
  const corners=outline?.kind==='outline'?outlineCorners(outline.points,outline.bulges):[];
  const world=([x,y]:SketchPoint,n:number)=>sketchPoint(sketch.plane,x,y,n);
@@ -122,7 +132,7 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
     else line([[limits.left,value],[limits.right,value]],stroke);
    }
   }
-  return {view,width,height,limits,drawings,circles};
+  return {view,width,height,limits,drawings,circles,faceOn,project};
  });
 
  const [top,front,right]=views;
@@ -141,6 +151,23 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
    const [a,b]=circle.center;
    circles.push({center:[x+(a-limits.left)*factor,y+(b-limits.bottom)*factor],radius:circle.radius*factor});
   }
+  if(section&&view.faceOn){
+   const axis=section.axis,across=axis===0?1:0;
+   const span=pointsAt(0).map(point=>point[across]);
+   const place=(other:number,offset=0):SketchPoint=>{
+    const cut=section.cut+offset/factor;
+    const [u,v]=view.project(world(axis===0?[cut,other]:[other,cut],start));
+    return [x+(u-limits.left)*factor,y+(v-limits.bottom)*factor];
+   };
+   const ends=[Math.min(...span)-3/factor,Math.max(...span)+3/factor];
+   addPath('cut',ends.map(value=>place(value)));
+   const direction=axis===0?-1:1;
+   for(const end of ends){
+    addPath('visible',[place(end-1.1/factor,-direction*2),place(end,direction*2),place(end+1.1/factor,-direction*2)]);
+    const [mx,my]=place(end,-direction*3);
+    addText(mx+1,my+1,'A',2.8);
+   }
+  }
   addText(x,y+h+4,t(view.view),3.5);
   const bottom=y-6,left=x-7;
   addPath('dimension',[[x,y-1],[x,bottom],[x+w,bottom],[x+w,y-1]]);
@@ -151,6 +178,25 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
   addPath('dimension',[[left-1,y-1],[left+1,y+1]]);
   addPath('dimension',[[left-1,y+h-1],[left+1,y+h+1]]);
   addText(left-9,y+h/2,label(height),2.5);
+ }
+ if(section){
+  const {material,axis,cut}=section;
+  const left=material[0][0],right=material.at(-1)![1];
+  const height=distance*factor,width=(right-left)*factor;
+  if(rightX+width>282||topY+height>166){
+   throw new Error(t('This drawing does not fit on A4 at this scale. Choose a smaller scale.'));
+  }
+  for(const [start,end] of material){
+   const x=rightX+(start-left)*factor,y=topY,w=(end-start)*factor;
+   addPath('section',border(x,y,w,height),true);
+   for(let intercept=Math.floor((x-height)/3)*3;intercept<x+w;intercept+=3){
+    const left=Math.max(x,intercept),right=Math.min(x+w,intercept+height);
+    if(right-left>1e-6)addPath('hatch',[[left,y+left-intercept],[right,y+right-intercept]]);
+   }
+  }
+  addText(rightX,topY+height+4,t('Section A-A'),3.5);
+  const coordinate=axis===0?t('Sketch X'):t('Sketch Y');
+  addText(rightX,topY+height+9,coordinate+' = '+label(cut)+' mm',2.8);
  }
  addPath('border',border(8,8,281,194),true);
  addPath('border',[[8,26],[289,26]]);

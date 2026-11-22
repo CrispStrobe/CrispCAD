@@ -37,6 +37,17 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  const closeDrawing=dialog.getByRole('button',{name:'Close drawing',exact:true});
  const save=dialog.getByRole('button',{name:'Save drawing sheet',exact:true});
  await title.fill('Motor plate drawing');
+ const showSection=dialog.getByRole('checkbox',{name:'Show section A-A'});
+ const cut=dialog.getByLabel('Section position (mm)');
+ await showSection.check();
+ await expect(cut).toHaveValue('15');
+ await expect(preview).toContainText('Section A-A');
+ await expect(preview.locator('.drawing-section')).toHaveCount(3);
+ await expect(preview.locator('.drawing-hatch').first()).toBeVisible();
+ await cut.fill('50');
+ await expect(dialog.getByRole('status',{name:'Drawing status'})).toContainText('misses the part');
+ await expect(save).toBeDisabled();
+ await cut.fill('15');
  await expect(preview).toContainText('Front view');
  await expect(preview).toContainText('Right view');
  await expect(preview).toContainText('Top view');
@@ -66,6 +77,7 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  expect(pdf).toContain('/MediaBox [0 0 841.88976 595.27559]');
  expect(pdf).toContain('229 14 m 279 14 l');
  expect(pdf).not.toContain('[1.4 0.9] 0 d');
+ expect(pdf).toContain('[3.5 1 0.7 1] 0 d');
  await save.click();
  await expect(dialog).toBeHidden();
 
@@ -74,6 +86,9 @@ test('a linked sheet follows its sketch and survives reopen, source removal, and
  if(!await sheet.isVisible())await page.getByRole('button',{name:'Objects',exact:true}).click();
  await sheet.click();
  await expect(scale).toHaveValue('2:1');
+ await expect(showSection).toBeChecked();
+ await expect(cut).toHaveValue('15');
+ await expect(preview.locator('.drawing-section')).toHaveCount(3);
  await expect(hidden).not.toBeChecked();
  expect(await holeSpacing()).toBe(56);
  await closeDrawing.click();

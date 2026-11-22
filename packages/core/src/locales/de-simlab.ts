@@ -34,7 +34,7 @@ export const messages:Record<string,string>={
  "Choose light or dark mode":"Hellen oder dunklen Modus wählen",
  "Loading models…":"Modelle werden geladen…",
  "Original source files":"Originale Quelldateien",
- "Model source uses project version 6 through 9": "Modellquelltext verwendet Projektversion 6 bis 9",
+ "Model source uses project version 6 through 10": "Modellquelltext verwendet Projektversion 6 bis 10",
  "Unknown material preset": "Unbekannte Materialvorlage",
  "Initial velocity requires project version 8": "Anfangsgeschwindigkeit erfordert Projektversion 8",
  "Invalid initial body velocity": "Ungültige Anfangsgeschwindigkeit",

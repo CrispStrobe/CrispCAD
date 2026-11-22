@@ -3,6 +3,7 @@ import {compileModelSource,createCadSession,drawingSourceFor,parseDocument,resol
 import type {DrawingInputs,SketchPlane} from '@brickwright/cad-core';
 import {expect,it} from 'vitest';
 import {layoutDrawing} from '../packages/editor/src/drawing-layout.js';
+import {sectionMaterial} from '../packages/editor/src/drawing-section.js';
 import {exportDrawingPdf,exportDrawingSetPdf} from '../packages/editor/src/drawing-pdf.js';
 
 function fixture(plane:SketchPlane='XY'){
@@ -99,4 +100,54 @@ it('exports every saved sheet in order and identifies a broken sheet before expo
  expect(content.indexOf(hex('Sheet 2 of 2'))).toBeGreaterThan(content.indexOf(hex('Sheet 1 of 2')));
  s.remove([id]);
  expect(()=>exportDrawingSetPdf(s.state.document)).toThrow('Plate drawing · Drawing source unavailable');
+});
+
+it('intersects concave outlines, analytic holes, and coincident edges',()=>{
+ const rect={points:[[0,0],[40,0],[40,30],[0,30]] as [number,number][]};
+ const hole={points:[],circle:{center:[10,15] as [number,number],radius:2}};
+ expect(sectionMaterial([rect,hole],1,15)).toEqual([[0,8],[12,40]]);
+ expect(sectionMaterial([rect,hole],0,10)).toEqual([[0,13],[17,30]]);
+ expect(sectionMaterial([rect,hole],1,17)).toEqual([[0,40]]);
+ expect(sectionMaterial([rect,hole],1,31)).toEqual([]);
+ const slot={points:[[16,12],[22,12],[22,18],[16,18]] as [number,number][]};
+ expect(sectionMaterial([rect,slot],1,15)).toEqual([[0,16],[22,40]]);
+ expect(sectionMaterial([rect,slot],1,12)).toEqual([[0,40]]);
+ const openNotch={points:[[0,0],[40,0],[40,30],[30,30],[30,10],[10,10],[10,30],[0,30]] as [number,number][]};
+ expect(sectionMaterial([openNotch],1,15)).toEqual([[0,10],[30,40]]);
+});
+
+it('retains cuts and hatches only material as parameters and extrusion depth change',()=>{
+ const {s,id,inputs,design}=fixture();
+ s.setParametric({...design,parameters:{...design.parameters,cut:{expression:'15',unit:'mm'}}});
+ const section={...inputs,section:{axis:'v' as const,position:'cut'}};
+ const sheetId=s.saveDrawingSheet(section);
+ const before=layoutDrawing(s.state.document,section);
+ const widths=(layout:typeof before)=>layout.paths.filter(p=>p.stroke==='section').map(
+  p=>p.points[1][0]-p.points[0][0]
+ );
+ expect(widths(before)).toEqual([8,15,7]);
+ expect(before.paths.filter(p=>p.stroke==='cut')).toHaveLength(1);
+ const material=before.paths.filter(p=>p.stroke==='section');
+ for(const {points} of before.paths.filter(p=>p.stroke==='hatch')){
+  expect(material.some(rect=>points.every(([x,y])=>
+   x>=rect.points[0][0]&&x<=rect.points[1][0]&&y>=rect.points[0][1]&&y<=rect.points[2][1]
+  ))).toBe(true);
+ }
+ const parsed=parseDocument(s.serialize());
+ expect(parsed.version).toBe(10);
+ expect(parsed.drawings?.[0]).toMatchObject({id:sheetId,section:{axis:'v',position:'cut'}});
+ expect(()=>validateDocument({...parsed,version:9})).toThrow('drawing sheets');
+ expect(validateDocument(compileModelSource(s.modelSource,parsed)).drawings).toEqual(parsed.drawings);
+ s.setParametric({...design,parameters:{spacing:{expression:'28',unit:'mm'},cut:{expression:'15',unit:'mm'}}});
+ s.editExtrusion(id,{distance:10,symmetric:true});
+ const updated=layoutDrawing(s.state.document,section);
+ expect(widths(updated)).toEqual([4,23,3]);
+ const block=updated.paths.find(path=>path.stroke==='section')!;
+ expect(block.points[2][1]-block.points[0][1]).toBe(10);
+ const pdf=new TextDecoder().decode(exportDrawingPdf(updated,'Cut plate').bytes);
+ expect(pdf).toContain('[3.5 1 0.7 1] 0 d');
+ expect(pdf).toContain('0.10 w');
+ expect(()=>layoutDrawing(s.state.document,{...section,section:{axis:'v',position:50}})).toThrow('misses the part');
+ s.saveDrawingSheet(inputs);
+ expect(s.state.document.version).toBe(10);
 });

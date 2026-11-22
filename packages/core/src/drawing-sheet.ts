@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
+import type {FeatureScalar} from './features.js';
 import type {CadDocument} from './document.js';
 
 export const drawingScales = ['1:5','1:2','1:1','2:1','5:1'] as const;
 export type DrawingScale = typeof drawingScales[number];
 export type DrawingSource = {featureId:string; sketchId:string; profileId:string};
-export type DrawingInputs = {title:string; source:DrawingSource; scale:DrawingScale; hiddenLines:boolean};
+export type DrawingSection = {axis:'u'|'v'; position:FeatureScalar};
+export type DrawingInputs = {title:string; source:DrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection};
 export type DrawingSheet = DrawingInputs & {id:string};
 
 const record = (value:unknown):value is Record<string,unknown> => !!value && typeof value==='object' && !Array.isArray(value);
@@ -21,6 +23,13 @@ export function checkDrawingSheets(doc:CadDocument) {
      !sheet.title.trim()||sheet.title.length>80||/[\u0000-\u001f]/.test(sheet.title)||
      !drawingScales.includes(sheet.scale as DrawingScale)||typeof sheet.hiddenLines!=='boolean'||!record(sheet.source)||
      !id(sheet.source.featureId)||!id(sheet.source.sketchId)||!id(sheet.source.profileId))throw invalid();
+  if(sheet.section!==undefined){
+   if(doc.version<10||!record(sheet.section)||!['u','v'].includes(String(sheet.section.axis)))throw invalid();
+   const value=sheet.section.position;
+   if(typeof value==='number'){
+    if(!Number.isFinite(value)||Math.abs(value)>100000)throw invalid();
+   }else if(typeof value!=='string'||!value.trim()||value.length>160||/[\u0000-\u001f]/.test(value))throw invalid();
+  }
   unique.add(sheet.id);
  }
 }

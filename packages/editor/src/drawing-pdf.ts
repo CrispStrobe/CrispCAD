@@ -8,8 +8,8 @@ import {decimal,pair,pointsPerMillimetre,singlePagePdf,textOperand,vectorPdf} fr
 function drawingContent(layout:DrawingLayout){
  const commands=['q',pair(pointsPerMillimetre,0)+' '+pair(0,pointsPerMillimetre)+' 0 0 cm','0 G','0 g'];
  for(const {points,stroke,closed} of layout.paths){
-  commands.push(stroke==='hidden'?'[1.4 0.9] 0 d':'[] 0 d');
-  commands.push(stroke==='visible'?'0.26 w':'0.14 w');
+  commands.push(stroke==='hidden'?'[1.4 0.9] 0 d':stroke==='cut'?'[3.5 1 0.7 1] 0 d':'[] 0 d');
+  commands.push(stroke==='visible'||stroke==='section'?'0.26 w':stroke==='hatch'?'0.10 w':'0.14 w');
   commands.push(points.map(([x,y],i)=>pair(x,y)+(i?' l':' m')).join(' ')+(closed?' h S':' S'));
  }
  for(const {center:[x,y],radius:r} of layout.circles){
