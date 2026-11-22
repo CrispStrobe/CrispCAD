@@ -43,7 +43,7 @@ export type BlockStmt = Located & (
  | {k:'color';color:string;body:Body}
  | {k:'group'|'intersect'|'hull';body:Body}
  | {k:'subtract';body:Body;cutters:Body}
- /** TinkerCAD-style hole: cuts every solid of the enclosing group (or model), through moves, loops and ifs. */
+ /** Hole: cuts every solid of the enclosing group (or model), through moves, loops and ifs. */
  | {k:'hole';body:Body}
  | {k:'repeat';count:BlockExpr;body:Body}
  | {k:'for';var:string;from:BlockExpr;to:BlockExpr;step?:BlockExpr;body:Body}
@@ -468,7 +468,7 @@ function splitHoles(list:Core[]):{solids:Core[];holes:Core[]}{
  return {solids,holes};
 }
 const unit=(list:Core[]):Core[]=>list.length?[{c:'unit',body:list}]:[];
-/** A group applies its holes to its own solids, as TinkerCAD's Group does. */
+/** A group applies its holes to its own solids. */
 function closeGroup(list:Core[]):Core[]{
  const {solids,holes}=splitHoles(list);
  if(!holes.length)return solids.length>1?[{c:'union',body:solids}]:solids;
