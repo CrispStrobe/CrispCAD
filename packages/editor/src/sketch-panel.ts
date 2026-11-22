@@ -131,10 +131,10 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   for(const input of [firstGuide,secondGuide])input.addEventListener('change',refreshGuideGeometry);
   for(const input of [plane,kind])input.addEventListener('change',updateGuides);
   updateGuides();
+  if(linked)for(const input of form.querySelectorAll<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>('input, select, textarea'))input.disabled=true;
   const length=field('Extrusion distance (mm)',node?.kind==='extrusion'?node.distance:10);
   const symmetric=element('input');symmetric.type='checkbox';symmetric.checked=node?.kind==='extrusion'?node.symmetric:false;symmetric.setAttribute('aria-label',t('Symmetric extrusion'));const check=element('label',t('Symmetric extrusion'));check.className='sketch-toggle';check.prepend(symmetric);form.append(check);
   length.parentElement!.hidden=check.hidden=revolving;
-  if(linked)for(const input of form.querySelectorAll<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>('input, select, textarea'))input.disabled=true;
   const sweep=field('Sweep angle (deg)',node?.kind==='revolution'?node.angle:360);
   const automatic=element('input');automatic.type='checkbox';automatic.checked=node?.kind!=='revolution'||node.axisOffset===undefined;
   const axisToggle=element('label',t('Use left edge of profile'));axisToggle.className='sketch-toggle';axisToggle.prepend(automatic);form.append(axisToggle);
