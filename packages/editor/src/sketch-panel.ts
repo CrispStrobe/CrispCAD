@@ -6,11 +6,12 @@ import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchRegionLoops,newId,sketchBulgeMidpoint} from '@brickwright/cad-core';
-import type {SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument} from '@brickwright/cad-core';
+import type {SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument,PlanarSketch} from '@brickwright/cad-core';
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
 const scalar=(source:string):FeatureScalar=>source.trim()!==''&&Number.isFinite(Number(source))?Number(source):source.trim();
 /** Definition editor: complete draft + kernel preflight before the real session changes. */
-export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:(doc:CadDocument)=>Promise<import('@brickwright/cad-geometry').GeometryResult>,afterApply:()=>Promise<unknown>,snap:()=>number=()=>1) {
+export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:(doc:CadDocument)=>Promise<import('@brickwright/cad-geometry').GeometryResult>,
+ offsetSketch:(sketch:PlanarSketch,context:Pick<CadDocument,'parametric'>,distance:number)=>Promise<SketchProfile>,afterApply:()=>Promise<unknown>,snap:()=>number=()=>1) {
  const dialog=element('dialog');dialog.className='sketch-dialog';dialog.setAttribute('aria-label',t('Sketch and extrusion'));parent.append(dialog);
  let disposed=false,epoch=0;dialog.addEventListener('close',()=>epoch++);
  function open(featureId?:string,request?:{sketchId?:string}){
@@ -400,7 +401,57 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    if(diagnostic)status.textContent=t(kind==='curve'?'Edge curve restored.':'Outline point restored.')+' '+diagnostic;
   };
   preview.onpointerup=preview.onpointercancel=preview.onlostpointercapture=endDrag;
-  form.addEventListener('input',draw);form.addEventListener('change',draw);
+  let draftRevision=0;
+  const refreshDraft=()=>{draftRevision++;draw();};
+  form.addEventListener('input',refreshDraft);form.addEventListener('change',refreshDraft);
+  if(!linked){
+   const offsetPanel=element('details');
+   offsetPanel.className='sketch-expressions';
+   const offsetSummary=element('summary',t('Offset profile'));
+   const offsetLabel=element('label',t('Offset distance (mm)'));
+   const offsetInput=element('input');
+   offsetInput.type='text';
+   offsetInput.value='1';
+   offsetLabel.append(offsetInput);
+   const offsetButton=element('button',t('Apply offset to draft'));
+   offsetButton.type='button';
+   offsetPanel.append(offsetSummary,offsetLabel,offsetButton,
+    element('p',t('Positive grows the outside and shrinks holes. Negative shrinks the outside and grows holes.')));
+   form.append(offsetPanel);
+   offsetButton.onclick=async()=>{
+    if(busy||drag)return;
+    const ticket=epoch,revision=draftRevision;
+    const active=()=>!disposed&&ticket===epoch&&dialog.open;
+    busy=true;
+    apply.disabled=offsetButton.disabled=true;
+    status.textContent='';
+    let message='';
+    try{
+     const snapshot=readForm();
+     const shifted=await offsetSketch({version:1,id:'offset-preview',...snapshot.sketch},
+      {parametric:doc.parametric},featureValue(scalar(offsetInput.value),doc));
+     if(!active())return;
+     if(revision!==draftRevision||expected!==session.state.revision)throw new Error(t('The sketch changed during the offset. Apply the offset again.'));
+     previewShape({...snapshot,sketch:{...snapshot.sketch,profile:shifted}});
+     switch(shifted.kind){
+      case 'rectangle':width.value=String(shifted.width);depth.value=String(shifted.depth);break;
+      case 'circle':radius.value=String(shifted.radius);break;
+      case 'outline':points.value=formatPoints(shifted.points).join('\n');break;
+      case 'region':regionLoops=shifted.loops;region.value=formatLoops(regionLoops);break;
+     }
+     draftRevision++;
+    }catch(error){
+     message=error instanceof Error&&'diagnostic' in error?(error as import('@brickwright/cad-core').FeatureEvaluationError).diagnostic.message:error instanceof Error?error.message:String(error);
+    }finally{
+     busy=false;
+     if(active()){
+      offsetButton.disabled=false;
+      draw();
+      if(message)status.textContent=message;
+     }
+    }
+   };
+  }
   const apply=element('button',t(featureId?'Apply sketch changes':revolving?'Create revolution':'Create extrusion'));apply.className='primary';
   apply.onclick=async()=>{const ticket=epoch;busy=true;apply.disabled=true;try{
    const snapshot=readForm();

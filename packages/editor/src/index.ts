@@ -141,7 +141,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const propertiesToggle = button('Properties', () => togglePanel(inspector, propertiesToggle), status, 'panel-toggle properties-toggle');
   const modelLibraryPanel=mountModelLibraryPanel(shell,session,doc=>client.evaluate(doc),options.modelLibrary,async()=>{await whenIdle();viewport.frame();},options.onExport);
   const parametersPanel=mountParametersPanel(shell,session);
-  const sketchPanel=mountSketchPanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();},()=>grid);
+  const sketchPanel=mountSketchPanel(shell,session,doc=>client.evaluate(doc),client.offsetSketch,async()=>{await whenIdle();viewport.frame();},()=>grid);
   button('Sketch',()=>sketchPanel.open(),toolbar,'compact-icon').title=t('Create a dimensioned sketch and extrusion');
   button('Revolve',()=>sketchPanel.openRevolution(),toolbar,'compact-icon').title=t('Revolve a sketch around an axis');
   const mirrorPanel=mountMirrorPanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();});

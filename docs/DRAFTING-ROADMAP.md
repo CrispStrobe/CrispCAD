@@ -195,3 +195,17 @@ CAD. Search by name or task, such as **bolt circle**, and choose a matching
 command. Arrow keys change the active result, Enter runs it, and Escape closes
 the palette. Selection-dependent commands appear when their inputs are
 available. Ctrl/⌘+K still opens shape search.
+
+## Offset sketch profiles
+
+In **Sketch & Extrude** or **Sketch & Revolve**, open **Offset profile** and
+apply a signed distance to the draft. A positive distance grows the outside
+boundary and shrinks holes. A negative distance shrinks the outside and grows
+holes. Rectangles, full circles, straight-edged outlines and regions made from
+those loops remain editable. Existing named dimensions on rectangles and
+circles keep their formulas with the evaluated offset added. Very sharp
+polygon corners may be clipped.
+
+A collapsed or split loop leaves the prior draft in place. Outlines that
+contain arc bulges keep their curves for a future analytic offset tool.
+**Create** or **Apply sketch changes** commits the draft in one Undo step.

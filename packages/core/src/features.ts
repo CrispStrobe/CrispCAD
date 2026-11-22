@@ -94,7 +94,7 @@ export class FeatureEvaluationError extends Error {
 }
 const idOk=(v:unknown):v is string=>typeof v==='string'&&/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,95}$/.test(v)&&!['constructor','prototype','__proto__'].includes(v);
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
-export function featureValue(input:FeatureScalar,doc:CadDocument,unit:ParameterUnit='mm'):number {
+export function featureValue(input:FeatureScalar,doc:Pick<CadDocument,'parametric'>,unit:ParameterUnit='mm'):number {
   if(typeof input==='number'){if(!Number.isFinite(input)||Math.abs(input)>1e6)throw new Error(t('Literal exceeds the finite design range'));return input;}
   const values=doc.parametric?evaluateParameters(doc.parametric):Object.create(null) as Record<string,Quantity>;
   const q=evaluateExpression(input,name=>{if(!Object.hasOwn(values,name))throw new Error(t`Unknown parameter “${name}”`);return values[name];});
@@ -102,8 +102,8 @@ export function featureValue(input:FeatureScalar,doc:CadDocument,unit:ParameterU
   if((q.length!==0||q.angle!==0)&&(q.length!==length||q.angle!==angle))throw new Error(t`Expression must produce ${unit}`);
   if(Math.abs(q.value)>1e6)throw new Error(t('Expression exceeds the finite design range'));return q.value;
 }
-function dimension(input:FeatureScalar,doc:CadDocument):number {const v=featureValue(input,doc);if(v<.01||v>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));return v;}
-export function evaluateSketch(sketch:PlanarSketch,doc:CadDocument):{contour:SketchPoint[];holes?:SketchPoint[][];loopIds?:string[];edgeIds:string[]} {
+function dimension(input:FeatureScalar,doc:Pick<CadDocument,'parametric'>):number {const v=featureValue(input,doc);if(v<.01||v>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));return v;}
+export function evaluateSketch(sketch:PlanarSketch,doc:Pick<CadDocument,'parametric'>):{contour:SketchPoint[];holes?:SketchPoint[][];loopIds?:string[];edgeIds:string[]} {
   try {
     if(!record(sketch)||sketch.version!==1||!idOk(sketch.id)||typeof sketch.name!=='string'||!sketch.name.trim()||sketch.name.length>160||/[\u0000-\u001f]/.test(sketch.name)||!['XY','XZ','YZ'].includes(sketch.plane)||!record(sketch.profile)||!idOk(sketch.profile.id))throw new Error(t('Invalid sketch schema'));
     const p=sketch.profile;

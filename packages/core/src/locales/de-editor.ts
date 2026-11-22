@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "Offset magnitude must be between 0.00001 and 100000 mm.": "Der Betrag des Versatzes muss zwischen 0,00001 und 100000 mm liegen.",
+  "Offset supports straight outlines and full circles. This outline contains arcs.": "Der Versatz unterstützt gerade Umrisse und Vollkreise. Dieser Umriss enthält Bögen.",
+  "This offset collapses or splits an outline. Try a smaller distance.": "Der Versatz lässt einen Umriss verschwinden oder teilt ihn. Verwende einen kleineren Abstand.",
+  "This offset changes which loop is the outside boundary. Try a smaller distance.": "Der Versatz ändert den äußeren Umriss. Verwende einen kleineren Abstand.",
+  "Offset profile": "Profil versetzen",
+  "Offset distance (mm)": "Versatzabstand (mm)",
+  "Apply offset to draft": "Versatz auf Entwurf anwenden",
+  "Positive grows the outside and shrinks holes. Negative shrinks the outside and grows holes.": "Ein positiver Wert erweitert den Außenrand und verkleinert Löcher. Ein negativer Wert verkleinert den Außenrand und erweitert Löcher.",
+  "The sketch changed during the offset. Apply the offset again.": "Die Skizze wurde während des Versatzes geändert. Wende den Versatz erneut an.",
   "linear circular repeat bolt circle": "linear kreisförmig wiederholen Lochkreis Bohrbild",
   "shaft sweep": "Welle Drehwinkel",
   "reflect symmetry": "spiegeln Symmetrie",

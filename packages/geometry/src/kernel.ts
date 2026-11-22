@@ -6,9 +6,10 @@ import {textProfileContours} from './font-profile.js';
 import Module from 'manifold-3d';
 import type { Manifold, ManifoldToplevel, CrossSection } from 'manifold-3d';
 import { validateDocument, documentGeometryKey, evaluateExtrusion, evaluateRevolution, evaluateMirror, evaluatePattern, FeatureEvaluationError, compileCode } from '@brickwright/cad-core';
-import type { CadDocument, SolidNode, CodeShape,CodeProfile } from '@brickwright/cad-core';
+import type { CadDocument, SolidNode, CodeShape,CodeProfile,PlanarSketch } from '@brickwright/cad-core';
 import { collisionCSG } from './collision-csg.js';
 import { partitionConvex } from './convex.js';
+import {offsetSketchProfile} from './sketch-offset.js';
 export interface BodyMesh { id: string; name: string; color: string; reference?: boolean; hole?: boolean; positions: Float32Array; indices: Uint32Array; volume: number; bounds: { min: number[]; max: number[] } }
 export interface GeometryResult { sourceKey?: string; bodies: BodyMesh[]; volume: number; triangles: number }
 export async function createGeometryKernel(options: { wasmURL?: string; wasmBinary?: Uint8Array } = {}) {
@@ -27,6 +28,7 @@ export async function createGeometryKernel(options: { wasmURL?: string; wasmBina
     }, partitionConvex: (mesh: Pick<BodyMesh,'positions'|'indices'>, maxPieces=2048) => partitionConvex(module,mesh.positions,mesh.indices,maxPieces).map(remember),
     isConvexPiece(piece:{positions:Float64Array;indices:Uint32Array}){const snapshot=convexRegistry.get(piece);return !!snapshot&&snapshot.positions.length===piece.positions.length&&snapshot.indices.length===piece.indices.length&&snapshot.positions.every((v,i)=>v===piece.positions[i])&&snapshot.indices.every((v,i)=>v===piece.indices[i]);},
     collisionCSG: collisionCSG(module,remember),
+    offsetSketch(sketch:PlanarSketch,context:Pick<CadDocument,'parametric'>,distance:number){return offsetSketchProfile(module,sketch,context,distance);},
     hullPoints(points: readonly [number,number,number][]) { if(points.length<4||points.length>4096||points.some(p=>p.length!==3||p.some(v=>!Number.isFinite(v)||Math.abs(v)>1e6)))throw new Error(t('Collision hull points exceed the finite geometry budget'));const hull=module.Manifold.hull(points);try{if(hull.isEmpty())throw new Error(t('Collision segment is degenerate'));const mesh=hull.getMesh();return remember({positions:new Float64Array(Array.from({length:mesh.numVert*3},(_,i)=>mesh.vertProperties[Math.floor(i/3)*mesh.numProp+i%3])),indices:new Uint32Array(mesh.triVerts)});}finally{hull.delete();} },
   };
 }
