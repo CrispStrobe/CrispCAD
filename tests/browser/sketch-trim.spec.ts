@@ -38,7 +38,7 @@ test('pick a trim line and shorten an arc without flattening it',async({page,has
  await expect(first).toHaveValue('5, 7');
  await pick(5,-4);
  await expect(second).toHaveValue('5, -4');
- await expect(dialog.locator('.sketch-trim-line')).toBeVisible();
+ await expect(dialog.locator('.sketch-trim-line')).toHaveCSS('stroke-width','2px');
  await expect(dialog.locator('.sketch-trim-side')).toBeVisible();
  await press(trim);
  const [x,y,bulge]=(await points.inputValue()).split('\n')[0].split(',').map(Number);
