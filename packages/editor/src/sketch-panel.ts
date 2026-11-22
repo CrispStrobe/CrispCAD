@@ -1,3 +1,5 @@
+import {collectSketchSnaps,nearestSketchSnap,sketchSnapReference} from './sketch-snaps.js';
+import type {SketchSnap} from './sketch-snaps.js';
 import {formatSketchPoints as formatPoints, parseSketchOutline as parseOutline, parseSketchPoint as parsePoint} from './sketch-point-entry.js';
 import {maxSketchDxfBytes,readSketchDxf} from './import-sketch-dxf.js';
 import {toolIcon} from './icons.js';
@@ -73,6 +75,33 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   region.value=regionLoops.length?formatLoops(regionLoops):'0, 0 | 40, 0 | 40, 30 | 0, 30\nCIRCLE 10, 15, 2';
   regionLabel.append(region,element('small',t('One loop per line. Separate outline points with | and add an optional bulge for arcs. For circles type CIRCLE X, Y, radius. Circle values can use named dimensions.')));
   form.append(regionLabel,relativeHint);
+  const guides=element('details');
+  guides.className='sketch-expressions';
+  guides.append(element('summary',t('Sketch snap references')));
+  const reference=(name:string)=>{
+   const label=element('label',t(name)),input=element('select');
+   label.append(input);guides.append(label);return input;
+  };
+  const firstGuide=reference('Reference sketch'),secondGuide=reference('Second reference sketch');
+  guides.append(element('small',t('Choose sketches on this plane to snap to their original coordinates.')));
+  form.append(guides);
+  let referenceGeometry:ReturnType<typeof sketchSnapReference>[]=[];
+  let snapTargets:SketchSnap[]=[];
+  function updateGuides(){
+   const available=Object.values(doc.sketches??{}).filter(s=>s.id!==existing?.id&&s.plane===plane.value);
+   for(const input of [firstGuide,secondGuide]){
+    const current=input.value;
+    const options=available.map(sketch=>new Option(sketch.name,sketch.id));
+    input.replaceChildren(new Option(t('No reference'),''),...options);
+    if(available.some(s=>s.id===current))input.value=current;
+   }
+   guides.hidden=!available.length||!['outline','region'].includes(kind.value);
+   const selected=new Set(guides.hidden?[]:[firstGuide.value,secondGuide.value].filter(Boolean));
+   referenceGeometry=[...selected].map(id=>sketchSnapReference(doc.sketches![id],doc));
+   snapTargets=collectSketchSnaps(referenceGeometry[0],referenceGeometry[1]);
+  }
+  for(const input of [firstGuide,secondGuide,plane,kind])input.addEventListener('change',updateGuides);
+  updateGuides();
   const length=field('Extrusion distance (mm)',node?.kind==='extrusion'?node.distance:10);
   const symmetric=element('input');symmetric.type='checkbox';symmetric.checked=node?.kind==='extrusion'?node.symmetric:false;symmetric.setAttribute('aria-label',t('Symmetric extrusion'));const check=element('label',t('Symmetric extrusion'));check.className='sketch-toggle';check.prepend(symmetric);form.append(check);
   const preview=element('div');preview.className='sketch-preview';preview.setAttribute('aria-label',t('Sketch preview'));
@@ -135,7 +164,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    );
   }
   type VertexEdit = {field:HTMLTextAreaElement; original:string; loop:number; index:number; points:SketchPoint[]; bulges?:number[]};
-  let drag:{id:number;x:number;y:number;w:number;h:number;r:number;d:number;inverse:DOMMatrix;kind:string;viewBox:string;vertex?:VertexEdit}|undefined;
+  let drag:{id:number;x:number;y:number;w:number;h:number;r:number;d:number;inverse:DOMMatrix;kind:string;viewBox:string;vertex?:VertexEdit;target?:SketchSnap}|undefined;
   let dragOutline:ReturnType<typeof definition>|undefined;
   let valid=false;
   const bounded=(value:number)=>Math.min(100000,Math.max(.01,value));
@@ -160,7 +189,10 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     const projected=[shape.contour,...(shape.holes??[])].map(loop=>loop.map(([x,y])=>[x+shape.start*.45,-y-shape.start*.35]));
     const raised=projected.map(loop=>loop.map(([x,y])=>[x+ox,y+oy]));
     const [base]=projected,[top]=raised;
-    const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),all=[...base,...top],span=Math.max(w,h,Math.abs(d),1),pad=span*.18,minX=Math.min(...all.map(p=>p[0]))-pad,minY=Math.min(...all.map(p=>p[1]))-pad,vw=Math.max(...all.map(p=>p[0]))-minX+pad,vh=Math.max(...all.map(p=>p[1]))-minY+pad;
+    const topOffset=shape.start+d;
+    const place=([x,y]:SketchPoint)=>[x+topOffset*.45,-y-topOffset*.35];
+    const references=referenceGeometry.flatMap(guide=>guide.contours.map(loop=>loop.map(place)));
+    const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),all=[...base,...top,...references.flat()],span=Math.max(w,h,Math.abs(d),1),pad=span*.18,minX=Math.min(...all.map(p=>p[0]))-pad,minY=Math.min(...all.map(p=>p[1]))-pad,vw=Math.max(...all.map(p=>p[0]))-minX+pad,vh=Math.max(...all.map(p=>p[1]))-minY+pad;
     svg.setAttribute('viewBox',drag?.viewBox??`${minX} ${minY} ${vw} ${vh}`);svg.setAttribute('aria-hidden','true');
     const face=(loops:number[][][],cls:string)=>{
      const path=document.createElementNS(ns,'path');
@@ -178,6 +210,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      }
     }
     face(raised,'sketch-top');
+    if(references.length)face(references,'sketch-reference');
     const handle=(x:number,y:number,mode:string,vertex?:{loop:number;index:number})=>{
      const hit=document.createElementNS(ns,'circle');
      hit.setAttribute('cx',String(x));hit.setAttribute('cy',String(y));
@@ -192,7 +225,6 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      dot.classList.add('sketch-handle');svg.append(dot,hit);
     };
     const numeric=(s:string)=>s.trim()!==''&&Number.isFinite(Number(s));
-    const topOffset=shape.start+d;
     const p=snapshot.profile;
     const outlines=p.kind==='outline'||p.kind==='region';
     if(p.kind==='circle'?numeric(radius.value):p.kind==='rectangle'&&numeric(width.value)&&numeric(depth.value)){
@@ -209,7 +241,16 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     if(p.kind==='outline')drawVertices(p.points,0);
     if(p.kind==='region')p.loops.forEach((loop,i)=>{if(loop.kind==='outline')drawVertices(loop.points,i);});
     dragOutline=p;
-    preview.append(svg,element('output',t`${w.toLocaleString()} × ${h.toLocaleString()} mm · ${shape.distance.toLocaleString()} mm extrusion`));status.textContent='';valid=true;
+    if(drag?.target){
+     const [x,y]=place(drag.target.point);
+     const marker=document.createElementNS(ns,'circle');
+     marker.setAttribute('cx',String(x));marker.setAttribute('cy',String(y));marker.setAttribute('r',String(span*.04));
+     marker.setAttribute('class','sketch-snap-marker');svg.append(marker);
+     const snapLabel=element('output',t(drag.target.kind));
+     snapLabel.className='sketch-snap-label';preview.append(snapLabel);
+    }
+    preview.prepend(svg);
+    preview.append(element('output',t`${w.toLocaleString()} × ${h.toLocaleString()} mm · ${shape.distance.toLocaleString()} mm extrusion`));status.textContent='';valid=true;
    }catch(error){status.textContent=error instanceof Error&&'diagnostic' in error?(error as import('@brickwright/cad-core').FeatureEvaluationError).diagnostic.message:error instanceof Error?error.message:String(error);}apply.disabled=busy||!valid||!!drag;
   }
   preview.onpointerdown=event=>{
@@ -239,7 +280,11 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    const step=snap()/(event.shiftKey?10:1),round=(v:number)=>Number((step>0?Math.round(v/step)*step:v).toFixed(5));
    if(drag.vertex){
     const edit=drag.vertex,[x,y]=edit.points[edit.index];
-    const moved:SketchPoint=[round(x+dx),round(y-dy)];
+    const candidate:SketchPoint=[x+dx,y-dy];
+    const radius=event.pointerType==='touch'?16:10;
+    const tolerance=radius*Math.hypot(drag.inverse.a,drag.inverse.b);
+    drag.target=nearestSketchSnap(candidate,snapTargets,tolerance);
+    const moved:SketchPoint=drag.target?.point??[round(candidate[0]),round(candidate[1])];
     if(moved[0]===x&&moved[1]===y){edit.field.value=edit.original;}
     else{
      const points=edit.points.slice();points[edit.index]=moved;
@@ -331,6 +376,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      file.disabled=false;
      file.value='';
      if(epoch===ticket&&!disposed&&dialog.open){
+      updateGuides();
       draw();
       if(errorMessage){
        status.textContent=errorMessage;

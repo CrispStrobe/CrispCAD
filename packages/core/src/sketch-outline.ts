@@ -41,6 +41,17 @@ function normalizeOutline(points: SketchPoint[]): SketchPoint[] {
 }
 
 
+/** Signed DXF bulge (tan(sweep/4)) resolved in the sketch plane. */
+export function sketchBulgeArc(a: SketchPoint, b: SketchPoint, bulge: number) {
+  if (!bulge) return undefined;
+  const dx = b[0] - a[0], dy = b[1] - a[1];
+  const centerOffset = (1 / bulge - bulge) / 4;
+  const center: SketchPoint = [(a[0]+b[0])/2 - dy*centerOffset, (a[1]+b[1])/2 + dx*centerOffset];
+  const radius = Math.hypot(dx,dy) * (Math.abs(bulge) + 1 / Math.abs(bulge)) / 4;
+  if (!Number.isFinite(radius) || !center.every(Number.isFinite)) return undefined;
+  return {center, radius, start: Math.atan2(a[1]-center[1], a[0]-center[0]), sweep: 4*Math.atan(bulge)};
+}
+
 /** Build a simple counter-clockwise contour from native DXF bulges.
  * The authored bulge is tan(signed sweep/4) for the outgoing edge.
  */
@@ -64,13 +75,10 @@ export function sketchOutline(points: SketchPoint[], bulges?: number[]): SketchP
     if (chord < .00001) throw new Error(t('Outline edges must form one closed loop without crossings or overlaps.'));
     contour.push(a);
     if (bulge === 0) continue;
-    const sweep = 4 * Math.atan(bulge);
-    const radius = chord * (Math.abs(bulge) + 1 / Math.abs(bulge)) / 4;
-    if (chord * Math.abs(bulge) < tolerance * 2 && Math.abs(sweep) < Math.PI / 32 && points.length > 2) continue;
-    const centerOffset = (1/bulge - bulge) / 4;
-    const centerX = (a[0]+b[0])/2 - dy*centerOffset;
-    const centerY = (a[1]+b[1])/2 + dx*centerOffset;
-    const start = Math.atan2(a[1]-centerY, a[0]-centerX);
+    if (chord * Math.abs(bulge) < tolerance * 2 && Math.abs(4 * Math.atan(bulge)) < Math.PI / 32 && points.length > 2) continue;
+    const arc = sketchBulgeArc(a,b,bulge);
+    if (!arc) throw invalid();
+    const {center:[centerX,centerY],radius,start,sweep} = arc;
     const step = Math.min(Math.PI/32, 4*Math.asin(Math.sqrt(Math.min(1,tolerance/(2*radius)))));
     const segments = Math.max(2, Math.ceil(Math.abs(sweep)/step));
     if (contour.length + segments - 1 > maxSketchCurveVertices) throw invalid();

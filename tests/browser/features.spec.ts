@@ -230,3 +230,55 @@ test('outline vertex drags are snapped drafts, preserve arcs and reject a crossi
  await page.getByRole('button',{name:'Undo',exact:true}).click();
  await expect(page.getByTestId('object-name')).toHaveCount(0);
 });
+
+test('outline vertices snap to an analytic intersection between reference sketches', async ({page}) => {
+ await page.goto('/');
+ const ready=()=>expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await ready();
+ const open=page.getByRole('button',{name:'Sketch',exact:true});
+ const dialog=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ const name=dialog.getByLabel('Sketch name',{exact:true});
+ const profile=dialog.getByLabel('Profile',{exact:true});
+ const create=dialog.getByRole('button',{name:'Create extrusion'});
+ await open.click();
+ await name.fill('Rectangle guide');
+ await create.click();
+ await ready();
+ await open.click();
+ await name.fill('Circle guide');
+ await profile.selectOption('circle');
+ await dialog.getByLabel('Circle center X, Y (mm)',{exact:true}).fill('17.5, 15');
+ await dialog.getByLabel('Sketch radius (mm)',{exact:true}).fill('5');
+ await create.click();
+ await ready();
+
+ await open.click();
+ await profile.selectOption('outline');
+ await dialog.getByText('Sketch snap references',{exact:true}).click();
+ const first=dialog.getByLabel('Reference sketch',{exact:true});
+ const second=dialog.getByLabel('Second reference sketch',{exact:true});
+ await first.selectOption({label:'Rectangle guide'});
+ await second.selectOption({label:'Circle guide'});
+ await expect(dialog.locator('.sketch-reference')).toBeVisible();
+ const [start,target]=await dialog.locator('[data-resize="vertex"][data-vertex="1"]').evaluate(node=>{
+  const handle=node as SVGCircleElement;
+  const matrix=handle.getScreenCTM()!,x=handle.cx.baseVal.value,y=handle.cy.baseVal.value;
+  return [[x,y],[x-27.2,y-15.2]].map(([x,y])=>{
+   const point=new DOMPoint(x,y).matrixTransform(matrix);
+   return {x:point.x,y:point.y};
+  });
+ });
+ await page.mouse.move(start.x,start.y);
+ await page.mouse.down();
+ await page.mouse.move(target.x,target.y);
+ await expect(dialog.locator('.sketch-snap-marker')).toBeVisible();
+ await expect(dialog.locator('.sketch-snap-label')).toHaveText('Intersection');
+ await page.mouse.up();
+ await expect(dialog.getByLabel('Outline points X, Y (mm)')).toHaveValue('0, 0\n12.5, 15\n30, 30\n0, 30');
+ await expect(page.getByTestId('object-name')).toHaveCount(2);
+ await create.click();
+ await ready();
+ await expect(page.getByTestId('object-name')).toHaveCount(3);
+ await page.getByRole('button',{name:'Undo',exact:true}).click();
+ await expect(page.getByTestId('object-name')).toHaveCount(2);
+});

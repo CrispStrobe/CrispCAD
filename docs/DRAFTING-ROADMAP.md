@@ -80,7 +80,13 @@ previous coordinates and shows the validation message. Edits commit when you
 create or apply the extrusion. In the coordinate field, enter an absolute
 first point and prefix subsequent offsets with `@`, for example `@40, 0`.
 A vertex drag converts its loop to absolute coordinates and retains arc bulges.
-Entity snaps, graphical curve editing and constraints remain open.
+Open **Sketch snap references** to choose one or two other sketches on the same
+plane. The preview draws their original sketch coordinates as dashed outlines.
+Drag near an endpoint, edge midpoint, circle or arc center, or an intersection
+between the two references. The preview highlights the active target. Snapping
+writes the exact coordinates into the draft. The reference choices stay in the
+dialog, and the committed shape stores coordinates. Graphical curve editing,
+persistent constraints, and tangent snaps remain open.
 
 ## Full-size drilling template
 
