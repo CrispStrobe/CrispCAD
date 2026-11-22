@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {evaluateSketchRegion, isSketchPoint, maxSketchRegionLoops, maxSketchOutlinePoints, sketchOutline, t} from '@brickwright/cad-core';
-import type {SketchLoop, SketchPoint, SketchProfile} from '@brickwright/cad-core';
+import {evaluateSketchRegion, isSketchDxfLayer, isSketchPoint, maxSketchRegionLoops, maxSketchOutlinePoints, sketchOutline, t} from '@brickwright/cad-core';
+import type {SketchPoint, SketchProfile} from '@brickwright/cad-core';
 
 export const maxSketchDxfBytes = 1024 * 1024;
 type Group = {code: number; value: string};
@@ -54,9 +54,15 @@ export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
     else throw invalid();
   }
   if (!entities.length || entities.length > maxSketchRegionLoops) throw unsupported();
-  const loops = entities.map(([entity, ...fields], index): SketchLoop => {
+  const loops = entities.map(([entity, ...fields], index) => {
     const id = 'dxf-loop-' + (index + 1);
     if (entity.value !== 'CIRCLE' && entity.value !== 'LWPOLYLINE') throw unsupported();
+    const layer = fields.filter(group => group.code === 8);
+    if (layer.length > 1 || (layer.length === 1 && !isSketchDxfLayer(layer[0].value))) {
+      throw new Error(t('Invalid DXF layer name.'));
+    }
+    const dxfLayer = layer.length && layer[0].value !== '0' ? {dxfLayer: layer[0].value} : {};
+
     const read = (code: number, fallback?: number) => {
       const matches = fields.filter(group => group.code === code);
       if (matches.length > 1) throw invalid();
@@ -72,7 +78,7 @@ export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
       const center: SketchPoint = [read(10) * scale, read(20) * scale];
       if (radius < .01 || radius > 100000) throw new Error(t('Dimension must be between 0.01 and 100000 mm'));
       if (!isSketchPoint(center)) throw new Error(t('Circle center must be within 100000 mm of the sketch origin.'));
-      return {kind: 'circle', id, radius, segments: 64, center};
+      return {kind: 'circle' as const, id, radius, segments: 64, center, ...dxfLayer};
     }
 
     const flags = read(70);
@@ -85,7 +91,7 @@ export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
       if (coordinates[i].code !== 10 || coordinates[i + 1].code !== 20) throw invalid();
       points.push([number(coordinates[i].value) * scale, number(coordinates[i + 1].value) * scale]);
     }
-    return {kind: 'outline', id, points: sketchOutline(points)};
+    return {kind: 'outline' as const, id, points: sketchOutline(points), ...dxfLayer};
   });
   if (loops.length === 1) return {...loops[0], id: 'dxf-profile'};
   evaluateSketchRegion(loops);

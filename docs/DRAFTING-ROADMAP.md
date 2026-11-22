@@ -54,13 +54,18 @@ one exterior loop and up to 15 separate holes. The exterior is identified by
 containment, so the entity order in the file can vary. Declared units are
 converted to millimetres. For unitless files, opt in if the coordinates are
 millimetres. The preview shows the holes, and the loop coordinates and circle
-radii can be edited before creating the solid. Import remains a draft until
+radii can be edited before creating the solid. Region circle centers and radii
+accept named dimensions. For example, starting with a 40 mm-wide plate, set
+\`spacing\` in Parameters and position the two holes at \`20 mm - spacing / 2\`
+and \`20 mm + spacing / 2\`. The same formulas drive the solid and its DXF
+export. Increasing spacing past the plate edge produces an error before
+committing the edit. Import remains a draft until
 Create. Saving and reopening retains the profile, and DXF export writes native
-circles and closed polylines at 1:1 scale.
+circles and closed polylines at 1:1 scale. It retains entity layer names.
 
 The current region workflow rejects touching, crossing, nested and disjoint
-loops. Visual point and curve editing, driving dimensions for holes, open
-contours, arcs, bulges, widths, layers, paper-space objects, tilted entities,
+loops. Visual point and curve editing, open contours, arcs, bulges, widths, layer
+filtering and styles, paper-space objects, tilted entities,
 DWG and STEP remain open.
 
 ## Completion criteria

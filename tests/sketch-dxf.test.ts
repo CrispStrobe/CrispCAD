@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {readFileSync} from 'node:fs';
 import {beforeAll, expect, it} from 'vitest';
-import {createCadSession, parseDocument} from '@brickwright/cad-core';
+import {createCadSession, designGraph, parseDocument} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {readSketchDxf} from '../packages/editor/src/import-sketch-dxf.js';
@@ -91,4 +91,66 @@ it.each([
   {holes: [hole(10, 15, 2), hole(10, 15, 1)]},
 ])('rejects touching, crossing, separate or nested boundaries (%#)', ({holes}) => {
   expect(() => readSketchDxf(drawing([plate, ...holes].join('\n')))).toThrow('separate holes');
+});
+
+it('drives hole center spacing and radius through named dimensions and exports the evaluated circles', () => {
+  const session = createCadSession();
+  const parameters = {version: 1 as const, parameters: {
+    spacing: {expression:'20', unit:'mm' as const}, radius: {expression:'2', unit:'mm' as const},
+    unused: {expression:'5', unit:'mm' as const}
+  }, bindings: []};
+  session.setParametric(parameters);
+  const profile = readSketchDxf(drawing([plate, hole(10, 15, 2), hole(30, 15, 2)].join('\n')));
+  if (profile.kind !== 'region') throw new Error('Expected region');
+  const id = session.addSketchExtrusion({...profile, loops: profile.loops.map((loop, i) => loop.kind === 'circle'
+    ? {...loop, center: [i === 1 ? '20 mm - spacing / 2' : '20 mm + spacing / 2', 15], radius: 'radius'}
+    : loop)}, {distance: 5});
+  const centers = () => {
+    const imported = readSketchDxf(new TextDecoder().decode(exportSketchDxf(session.state.document, id).bytes));
+    if (imported.kind !== 'region') throw new Error('Expected exported region');
+    return imported.loops.flatMap(loop => loop.kind === 'circle' ? [[...loop.center, loop.radius]] : []);
+  };
+  expect(centers()).toEqual([[10, 15, 2], [30, 15, 2]]);
+  const first = session.serialize();
+  const firstVolume = kernel.evaluate(session.state.document).volume;
+  const edited = structuredClone(parameters);
+  edited.parameters.spacing.expression = '28';
+  edited.parameters.radius.expression = '3';
+  session.setParametric(edited);
+  expect(centers()).toEqual([[6, 15, 3], [34, 15, 3]]);
+  expect(kernel.evaluate(session.state.document).volume).toBeLessThan(firstVolume);
+  const saved = session.serialize();
+  expect(designGraph(parseDocument(saved)).find(entry => entry.kind === 'sketch')?.dependencies)
+    .toEqual(['parameter:spacing', 'parameter:radius']);
+  edited.parameters.spacing.expression = '40';
+  expect(() => session.setParametric(edited)).toThrow('separate holes');
+  expect(session.serialize()).toBe(saved);
+  const fragment = session.fragment([id]);
+  expect(Object.keys(fragment.parametric!.parameters).sort()).toEqual(['radius','spacing']);
+  const target = createCadSession();
+  target.setParametric(parameters);
+  target.insert(fragment, [0,0,0], {mergeParameters:true});
+  expect(Object.values(target.state.document.sketches!)[0].profile).toMatchObject({
+    loops: [{kind:'outline'}, {center:['20 mm - spacing_2 / 2',15], radius:'radius_2'}, {center:['20 mm + spacing_2 / 2',15], radius:'radius_2'}]
+  });
+  session.undo();
+  expect(session.serialize()).toBe(first);
+  target.dispose();
+  session.dispose();
+});
+
+it('retains named DXF layers on both mixed regions and single loops', () => {
+  const track = (entity:string, layer:string) => entity.replace(/^(0\n\w+)\n/, '$1\n8\n' + layer + '\n');
+  const entities = [track(plate,'Cut perimeter'), track(hole(10, 15, 2),'Bohrungen Ä')];
+  const session = createCadSession();
+  for (const drawingEntities of [entities, entities.slice(0,1), entities.slice(1)]) {
+    const profile = readSketchDxf(drawing(drawingEntities.join('\n')));
+    const id = session.addSketchExtrusion(profile, {distance:5});
+    const output = new TextDecoder().decode(exportSketchDxf(parseDocument(session.serialize()), id).bytes);
+    expect(readSketchDxf(output)).toEqual(profile);
+    const layer = drawingEntities[0] === entities[0] ? 'Cut perimeter' : 'Bohrungen Ä';
+    expect(output).toContain('0\r\nLAYER\r\n100\r\nAcDbSymbolTableRecord\r\n100\r\nAcDbLayerTableRecord\r\n2\r\n'+layer);
+  }
+  expect(() => readSketchDxf(drawing(track(plate,'Bad/Layer')))).toThrow('Invalid DXF layer name');
+  session.dispose();
 });

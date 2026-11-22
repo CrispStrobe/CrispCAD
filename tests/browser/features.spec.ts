@@ -108,3 +108,44 @@ test('DXF plate previews two open mounting holes and retains their edited dimens
  await page.getByRole('button', {name: 'Undo', exact: true}).click();
  await expect(page.getByTestId('object-name')).toHaveCount(0);
 });
+
+test('DXF export follows the driving spacing of the mounting holes', async ({page}) => {
+ await page.goto('/');
+ const ready = () => expect(page.locator('#cad-root')).toHaveAttribute('data-state', 'ready');
+ await ready();
+ const openParameters = page.getByRole('button', {name: 'Parameters', exact: true});
+ const parameters = page.getByRole('dialog', {name: 'Model parameters'});
+ const applyParameters = parameters.getByRole('button', {name: 'Apply parameters'});
+ const closeParameters = parameters.getByRole('button', {name: 'Close parameters'});
+ await openParameters.click();
+ await parameters.getByRole('button', {name: 'Add parameter'}).click();
+ await parameters.getByLabel('Parameter name', {exact: true}).fill('spacing');
+ await parameters.getByLabel('Parameter expression', {exact: true}).fill('20');
+ await applyParameters.click();
+ await closeParameters.click();
+
+ await page.getByRole('button', {name: 'Sketch', exact: true}).click();
+ const sketch = page.getByRole('dialog', {name: 'Sketch and extrusion'});
+ await sketch.getByLabel('Profile', {exact: true}).selectOption('region');
+ const region = '0, 0 | 40, 0 | 40, 30 | 0, 30\nCIRCLE 20 mm - spacing / 2, 15, 2\nCIRCLE 20 mm + spacing / 2, 15, 2';
+ await sketch.getByLabel('Region loops (mm)').fill(region);
+ await sketch.getByRole('button', {name: 'Create extrusion'}).click();
+ await expect(sketch).toBeHidden();
+ await ready();
+
+ await openParameters.click();
+ await parameters.getByLabel('Parameter expression', {exact: true}).fill('28');
+ await applyParameters.click();
+ await ready();
+ await closeParameters.click();
+ const exportButton = page.getByRole('button', {name: 'Export sketch as DXF'});
+ if (!await exportButton.isVisible()) await page.getByRole('button', {name: 'Properties', exact: true}).click();
+ const [download] = await Promise.all([page.waitForEvent('download'), exportButton.click()]);
+ const path = await download.path();
+ if (!path) throw new Error('Expected a local DXF download');
+ const dxf = await (await import('node:fs/promises')).readFile(path, 'utf8');
+ expect(dxf).toContain('10\r\n6\r\n20\r\n15');
+ expect(dxf).toContain('10\r\n34\r\n20\r\n15');
+ await page.getByRole('button', {name: 'Edit sketch & extrusion'}).click();
+ await expect(sketch.getByLabel('Region loops (mm)')).toHaveValue(region);
+});

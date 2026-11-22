@@ -66,9 +66,10 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const formatLoops=(loops:SketchLoop[])=>loops.map(loop=>loop.kind==='circle'
    ? 'CIRCLE '+[...loop.center,loop.radius].join(', ')
    : loop.points.map(point=>point.join(', ')).join(' | ')).join('\n');
+  let singleDxfLayer=profile?.kind==='outline'||profile?.kind==='circle'?profile.dxfLayer:undefined;
   let regionLoops=profile?.kind==='region'?profile.loops:[];
   region.value=regionLoops.length?formatLoops(regionLoops):'0, 0 | 40, 0 | 40, 30 | 0, 30\nCIRCLE 10, 15, 2';
-  regionLabel.append(region,element('small',t('One loop per line. Use | between outline points. For circles type CIRCLE X, Y, radius.')));
+  regionLabel.append(region,element('small',t('One loop per line. Separate outline points with |. For circles type CIRCLE X, Y, radius. Circle values can use named dimensions.')));
   form.append(regionLabel);
   const length=field('Extrusion distance (mm)',node?.kind==='extrusion'?node.distance:10);
   const symmetric=element('input');symmetric.type='checkbox';symmetric.checked=node?.kind==='extrusion'?node.symmetric:false;symmetric.setAttribute('aria-label',t('Symmetric extrusion'));const check=element('label',t('Symmetric extrusion'));check.className='sketch-toggle';check.prepend(symmetric);form.append(check);
@@ -91,24 +92,26 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     const loops=rows.map((row,i):SketchLoop=>{
      const original=regionLoops[i];
      const id=original?.id??'region-loop-'+(i+1);
+     const layer=original?.dxfLayer?{dxfLayer:original.dxfLayer}:{};
      const circle=/^CIRCLE\s+(.+)$/i.exec(row.trim());
      if(circle){
       const values=circle[1].split(',');
-      if(values.length!==3||!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(values[2].trim()))throw new Error(t('For a circle enter CIRCLE X, Y, radius.'));
-      return {kind:'circle',id,center:parsePoint(values.slice(0,2).join(',')),radius:Number(values[2]),segments:original?.kind==='circle'?original.segments:64};
+      if(values.length!==3||!values.every(value=>value.trim()))throw new Error(t('For a circle enter CIRCLE X, Y, radius.'));
+      return {kind:'circle',id,center:[scalar(values[0]),scalar(values[1])],radius:scalar(values[2]),segments:original?.kind==='circle'?original.segments:64,...layer};
      }
-     return {kind:'outline',id,points:row.split('|').map(parsePoint)};
+     return {kind:'outline',id,points:row.split('|').map(parsePoint),...layer};
     });
     return {kind:'region',id,loops};
    }
+   const layer=singleDxfLayer?{dxfLayer:singleDxfLayer}:{};
    if(kind.value==='outline'){
     const rows=points.value.trim().split(/\r?\n/);
     if(rows.length>256)throw new Error(t('An outline needs 3–256 finite points within 100000 mm of the sketch origin.'));
-    return {kind:'outline',id,points:rows.map(parsePoint)};
+    return {kind:'outline',id,points:rows.map(parsePoint),...layer};
    }
    if(kind.value==='rectangle')return {kind:'rectangle',id,width:scalar(width.value),depth:scalar(depth.value)};
    const location=parsePoint(center.value);
-   return {kind:'circle',id,radius:scalar(radius.value),segments:profile?.kind==='circle'?profile.segments:64,
+   return {kind:'circle',id,radius:scalar(radius.value),segments:profile?.kind==='circle'?profile.segments:64,...layer,
     ...(profile?.kind==='circle'&&profile.center||location.some(Boolean)?{center:location}:{})};
   }
   const readForm=()=>({
@@ -237,6 +240,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
       ...doc,sketches:{[id]:{version:1,id,name:'DXF',plane:'XY',profile:imported}}
      });
      kind.value=imported.kind;
+     singleDxfLayer=imported.kind==='outline'||imported.kind==='circle'?imported.dxfLayer:undefined;
      if(imported.kind==='region'){
       regionLoops=imported.loops;
       region.value=formatLoops(regionLoops);
