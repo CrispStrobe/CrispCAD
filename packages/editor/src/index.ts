@@ -33,6 +33,7 @@ import { createPresetDocument, evaluatedPreview, shapeCatalog } from './shapes.j
 import {mountModelSourcePanel} from './model-source-panel.js';
 import {mountCodePanel} from './code-panel.js';
 import {exportSketchDxf} from './sketch-dxf.js';
+import {exportSketchPdf} from './sketch-pdf.js';
 import {mountSketchPanel} from './sketch-panel.js';
 import { mountParametersPanel, propertyLabels } from './parameters-panel.js';
 export interface CadFile { name: string; bytes: Uint8Array; mime: string }
@@ -365,6 +366,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       if(options.onExport&&!n.provenance?.length){
         const exportProfile=button('Export sketch as DXF',()=>options.onExport!(exportSketchDxf(session.state.document,id)),inspector);
         exportProfile.title=t('Export the 2D profile at sketch dimensions in millimetres.');
+        const exportTemplate=button('Export drilling template (PDF)',()=>options.onExport!(exportSketchPdf(session.state.document,id)),inspector);
+        exportTemplate.title=t('Download an A4 sketch-plane template with hole centers at 1:1 scale.');
       }
     }
     const graph=designGraph(session.state.document),entries=new Map(graph.map(e=>[e.key,e])),upstream=new Set<string>();

@@ -71,6 +71,16 @@ loops. Visual point and curve editing, standalone ARC entities, open contours, w
 layer filtering and styles, paper-space objects, tilted entities,
 DWG and STEP remain open.
 
+## Full-size drilling template
+
+Select an original sketch extrusion and choose **Properties → Export drilling
+template (PDF)**. The file contains vector contours and circular center marks
+in the local sketch plane. It uses the current design parameters and exports
+in portrait or landscape on A4 at 1:1. Print at actual size and measure the
+50 mm reference on the sheet. The exporter reports an error if the sketch
+cannot fit at 1:1. The linked sheet workspace, orthographic body views,
+dimension annotations and section views remain open.
+
 ## Completion criteria
 
 Keep each deliverable open until its acceptance workflow passes unit tests and

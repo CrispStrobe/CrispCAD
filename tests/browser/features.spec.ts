@@ -109,7 +109,7 @@ test('DXF plate previews two open mounting holes and retains their edited dimens
  await expect(page.getByTestId('object-name')).toHaveCount(0);
 });
 
-test('DXF export follows the driving spacing of the mounting holes', async ({page}) => {
+test('DXF and the 1:1 PDF follow the driving spacing of the mounting holes', async ({page}) => {
  await page.goto('/');
  const ready = () => expect(page.locator('#cad-root')).toHaveAttribute('data-state', 'ready');
  await ready();
@@ -148,6 +148,17 @@ test('DXF export follows the driving spacing of the mounting holes', async ({pag
  expect(dxf).toContain('10\r\n34\r\n20\r\n15');
  await page.getByRole('button', {name: 'Edit sketch & extrusion'}).click();
  await expect(sketch.getByLabel('Region loops (mm)')).toHaveValue(region);
+ await sketch.getByRole('button', {name: 'Close sketch'}).click();
+ const [pdfDownload] = await Promise.all([
+  page.waitForEvent('download'), page.getByRole('button', {name: 'Export drilling template (PDF)'}).click()
+ ]);
+ const pdfPath = await pdfDownload.path();
+ if (!pdfPath) throw new Error('Expected a local PDF download');
+ const pdf = await (await import('node:fs/promises')).readFile(pdfPath, 'utf8');
+ expect(pdf).toMatch(/^%PDF-1\.6/);
+ expect(pdf).toContain('15 16 m 65 16 l S');
+ expect(pdf).toContain('91 142.1 m 91 144.9 l S');
+ expect(pdf).toContain('119 142.1 m 119 144.9 l S');
 });
 
 test('rounded DXF outlines preserve the editable bulge through export', async ({page}) => {
