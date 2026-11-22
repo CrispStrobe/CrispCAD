@@ -74,3 +74,37 @@ test('DXF import previews an editable outline and commits it only on Create',asy
  await page.getByRole('button',{name:'Undo',exact:true}).click();
  await expect(page.getByTestId('object-name')).toHaveCount(0);
 });
+
+test('DXF plate previews two open mounting holes and retains their edited dimensions', async ({page}) => {
+ await page.goto('/');
+ const editor = page.locator('#cad-root');
+ await expect(editor).toHaveAttribute('data-state', 'ready');
+ await page.getByRole('button', {name: 'Sketch', exact: true}).click();
+ const sketch = page.getByRole('dialog', {name: 'Sketch and extrusion'});
+ await sketch.getByText('Import DXF outline', {exact: true}).click();
+ const text = ['0','SECTION','2','HEADER','9','$INSUNITS','70',4,'0','ENDSEC','0','SECTION','2','ENTITIES',
+  '0','CIRCLE','10',10,'20',15,'40',2,
+  '0','LWPOLYLINE','90',4,'70',1,'10',0,'20',0,'10',40,'20',0,'10',40,'20',30,'10',0,'20',30,
+  '0','CIRCLE','10',30,'20',15,'40',3,'0','ENDSEC','0','EOF'].join('\n');
+ await sketch.getByLabel('Choose DXF file').setInputFiles({name: 'Motor plate.dxf', mimeType: 'application/dxf', buffer: Buffer.from(text)});
+ const loops = sketch.getByLabel('Region loops (mm)');
+ await expect(loops).toHaveValue(/CIRCLE 10, 15, 2[\s\S]*CIRCLE 30, 15, 3/);
+ await expect(sketch.locator('.sketch-top')).toHaveAttribute('d', /^M .* Z M .* Z M .* Z$/);
+ const initial = await loops.inputValue();
+ const apply = sketch.getByRole('button', {name: 'Create extrusion', exact: true});
+ await loops.fill(initial.replace('CIRCLE 10, 15, 2', 'CIRCLE 0, 15, 4'));
+ await expect(apply).toBeDisabled();
+ await expect(sketch.getByRole('status', {name: 'Sketch status'})).toContainText('separate holes');
+ const edited = initial.replace('CIRCLE 10, 15, 2', 'CIRCLE 10, 15, 4');
+ await loops.fill(edited);
+ await apply.click();
+ await expect(sketch).toBeHidden();
+ await expect(editor).toHaveAttribute('data-state', 'ready');
+ const edit = page.getByRole('button', {name: 'Edit sketch & extrusion', exact: true});
+ if (!await edit.isVisible()) await page.getByRole('button', {name: 'Properties', exact: true}).click();
+ await edit.click();
+ await expect(loops).toHaveValue(edited);
+ await sketch.getByRole('button', {name: 'Close sketch', exact: true}).click();
+ await page.getByRole('button', {name: 'Undo', exact: true}).click();
+ await expect(page.getByTestId('object-name')).toHaveCount(0);
+});

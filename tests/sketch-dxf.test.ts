@@ -53,8 +53,42 @@ it('requires explicit missing-unit consent and rejects unsupported or self-cross
   expect(() => readSketchDxf(drawing(circle, 0))).toThrow('has no units');
   expect(readSketchDxf(drawing(circle, 0), true)).toMatchObject({radius: 1.5});
   for (const entity of [square.replace('\n70\n1\n', '\n70\n0\n'), square + '\n42\n0.5',
-    circle + '\n30\n1', circle + '\n210\n1', circle + '\n' + square]) {
-    expect(() => readSketchDxf(drawing(entity))).toThrow('Use one circle');
+    circle + '\n30\n1', circle + '\n210\n1']) {
+    expect(() => readSketchDxf(drawing(entity))).toThrow('Use circles');
   }
   expect(() => readSketchDxf(drawing(square.replace('\n10\n1\n20\n2\n10\n2\n20\n2', '\n10\n2\n20\n2\n10\n1\n20\n2')))).toThrow('without crossings');
+});
+
+const plate = '0\nLWPOLYLINE\n90\n4\n70\n1\n10\n0\n20\n0\n10\n0\n20\n30\n10\n40\n20\n30\n10\n40\n20\n0';
+const hole = (x: number, y: number, r: number) => `0\nCIRCLE\n10\n${x}\n20\n${y}\n40\n${r}`;
+
+it('retains editable holes with the outer boundary listed after a hole', () => {
+  const profile = readSketchDxf(drawing([hole(10, 15, 2), plate, hole(30, 15, 3)].join('\n')));
+  if (profile.kind !== 'region') throw new Error('Expected a region');
+  const session = createCadSession();
+  const id = session.addSketchExtrusion(profile, {distance: 5});
+  const saved = session.serialize();
+  const doc = parseDocument(saved);
+  const tessellatedAreaFactor = 32 * Math.sin(Math.PI / 32);
+  const [body] = kernel.evaluate(doc).bodies;
+  expect(body.volume).toBeCloseTo((1200 - (2 ** 2 + 3 ** 2) * tessellatedAreaFactor) * 5, 2);
+  expect(readSketchDxf(new TextDecoder().decode(exportSketchDxf(doc, id).bytes))).toEqual(profile);
+  const loops = profile.loops.map(loop => loop.id === 'dxf-loop-1' ? {...loop, radius: 4} : loop);
+  session.editExtrusion(id, {sketch: {profile: {...profile, loops}}, distance: 5, symmetric: false});
+  expect(kernel.evaluate(session.state.document).bodies[0].volume)
+    .toBeCloseTo((1200 - (4 ** 2 + 3 ** 2) * tessellatedAreaFactor) * 5, 2);
+  session.undo();
+  expect(session.serialize()).toBe(saved);
+  session.dispose();
+});
+
+it.each([
+  {holes: [hole(2, 15, 2)]},
+  {holes: [hole(1, 15, 2)]},
+  {holes: [hole(45, 15, 2)]},
+  {holes: [hole(10, 15, 2), hole(14, 15, 2)]},
+  {holes: [hole(10, 15, 2), hole(13, 15, 2)]},
+  {holes: [hole(10, 15, 2), hole(10, 15, 1)]},
+])('rejects touching, crossing, separate or nested boundaries (%#)', ({holes}) => {
+  expect(() => readSketchDxf(drawing([plate, ...holes].join('\n')))).toThrow('separate holes');
 });

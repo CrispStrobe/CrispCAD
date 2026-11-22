@@ -46,15 +46,25 @@ where available, and explicit tessellation or reference behavior. Editable STEP
 round trips and general modeling-edge fillets belong to the exact-geometry
 roadmap, with stable face/edge references and evaluated backend choices.
 
-### First DXF import workflow
+### Editable DXF profiles
 
-Open **Sketch & Extrude → Import DXF outline** and choose a text DXF with a
-single planar circle or closed, straight lightweight polyline. Declared units
-are converted to millimetres. For unitless files, opt in only if the coordinates
-are millimetres. Preview and edit the circle center/radius or outline points
-before creating the solid. Import remains a draft until Create. Saving and
-reopening retains the editable profile, and DXF export writes it at 1:1 scale.
+Open **Sketch & Extrude → Import DXF outline** and choose a text DXF with
+planar circles or closed, straight lightweight polylines. The importer accepts
+one exterior loop and up to 15 separate holes. The exterior is identified by
+containment, so the entity order in the file can vary. Declared units are
+converted to millimetres. For unitless files, opt in if the coordinates are
+millimetres. The preview shows the holes, and the loop coordinates and circle
+radii can be edited before creating the solid. Import remains a draft until
+Create. Saving and reopening retains the profile, and DXF export writes native
+circles and closed polylines at 1:1 scale.
 
-Open contours, bulges, widths, multiple entities, holes, paper-space objects,
-tilted entities and DWG need separate support. Extend the profile model to
-multiple loops and analytic arcs before accepting them from DXF.
+The current region workflow rejects touching, crossing, nested and disjoint
+loops. Visual point and curve editing, driving dimensions for holes, open
+contours, arcs, bulges, widths, layers, paper-space objects, tilted entities,
+DWG and STEP remain open.
+
+## Completion criteria
+
+Keep each deliverable open until its acceptance workflow passes unit tests and
+live editor tests. Exercise the standalone and embedded editors for shared
+changes. Verify touch workflows on a physical iPad before closing the roadmap.

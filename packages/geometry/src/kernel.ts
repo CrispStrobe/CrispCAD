@@ -108,7 +108,7 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
       case 'code': solid=buildCode(compileCode(node.program).shape);if(solid.isEmpty()||solid.volume()<=1e-8)throw new Error(t('Code produces no printable solid'));if(solid.numTri()>200000)throw new GeometryResourceLimitError(t('Evaluated solid exceeds 200000 faces'));break;
       case 'extrusion': {
         const profile=evaluateExtrusion(node,doc);
-        solid=keep(module.Manifold.extrude([profile.contour],profile.distance));
+        solid=keep(module.Manifold.extrude([profile.contour,...(profile.holes??[])],profile.distance));
         if(profile.start)solid=keep(solid.translate([0,0,profile.start]));
         if(profile.plane==='XZ')solid=keep(solid.rotate([90,0,0]));
         else if(profile.plane==='YZ')solid=keep(solid.rotate([90,0,90]));

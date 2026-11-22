@@ -2,8 +2,8 @@ import {maxSketchDxfBytes,readSketchDxf} from './import-sketch-dxf.js';
 import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
-import {createCadSession,evaluateExtrusion,featureValue,newId} from '@brickwright/cad-core';
-import type {SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument} from '@brickwright/cad-core';
+import {createCadSession,evaluateExtrusion,featureValue,maxSketchRegionLoops,newId} from '@brickwright/cad-core';
+import type {SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument} from '@brickwright/cad-core';
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
 const scalar=(source:string):FeatureScalar=>source.trim()!==''&&Number.isFinite(Number(source))?Number(source):source.trim();
 /** Definition editor: complete draft + kernel preflight before the real session changes. */
@@ -34,7 +34,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   for(const step of [
    t('Choose a profile and its plane. XY is horizontal. XZ and YZ are upright.'),
    t('Type dimensions or drag the preview handles. For an outline, enter one X, Y point per line. The last point connects to the first.'),
-   t('Import DXF loads one circle or one closed straight polyline into the sketch.'),
+   t('DXF import accepts closed outlines and circles. Loops inside an outer boundary become holes.'),
    t('Extrusion adds thickness perpendicular to the plane. Symmetric divides that thickness equally on both sides.'),
    t('Create builds a solid. To change the sketch later, select the solid and choose Edit sketch & extrusion in Properties.')
   ]) instructions.append(element('li',step));
@@ -44,7 +44,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    info.setAttribute('aria-expanded',String(!infoPanel.hidden));
   };
   header.insertBefore(info,close);
-  const kind=choice('Profile',['rectangle','circle','outline'],existing?.profile.kind??'rectangle');kind.disabled=!!existing;
+  const kind=choice('Profile',['rectangle','circle','outline','region'],existing?.profile.kind??'rectangle');kind.disabled=!!existing;
   const plane=choice('Sketch plane',['XY','XZ','YZ'],existing?.plane??'XY');
   const profile=existing?.profile;
   const width=field('Sketch width (mm)',profile?.kind==='rectangle'?profile.width:40),depth=field('Sketch depth (mm)',profile?.kind==='rectangle'?profile.depth:30),radius=field('Sketch radius (mm)',profile?.kind==='circle'?profile.radius:10);
@@ -57,6 +57,19 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   points.value=(profile?.kind==='outline'?profile.points:[[0,0],[40,0],[30,30],[0,30]]).map(point=>point.join(', ')).join('\n');
   pointsLabel.append(points);
   form.append(pointsLabel);
+  const regionLabel=element('label',t('Region loops (mm)'));
+  const region=element('textarea');
+  region.setAttribute('aria-label',t('Region loops (mm)'));
+  region.rows=5;
+  region.spellcheck=false;
+  region.maxLength=65536;
+  const formatLoops=(loops:SketchLoop[])=>loops.map(loop=>loop.kind==='circle'
+   ? 'CIRCLE '+[...loop.center,loop.radius].join(', ')
+   : loop.points.map(point=>point.join(', ')).join(' | ')).join('\n');
+  let regionLoops=profile?.kind==='region'?profile.loops:[];
+  region.value=regionLoops.length?formatLoops(regionLoops):'0, 0 | 40, 0 | 40, 30 | 0, 30\nCIRCLE 10, 15, 2';
+  regionLabel.append(region,element('small',t('One loop per line. Use | between outline points. For circles type CIRCLE X, Y, radius.')));
+  form.append(regionLabel);
   const length=field('Extrusion distance (mm)',node?.kind==='extrusion'?node.distance:10);
   const symmetric=element('input');symmetric.type='checkbox';symmetric.checked=node?.kind==='extrusion'?node.symmetric:false;symmetric.setAttribute('aria-label',t('Symmetric extrusion'));const check=element('label',t('Symmetric extrusion'));check.className='sketch-toggle';check.prepend(symmetric);form.append(check);
   const preview=element('div');preview.className='sketch-preview';preview.setAttribute('aria-label',t('Sketch preview'));
@@ -72,6 +85,22 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   };
   function definition():SketchProfile{
    const id=existing?.profile.id??'profile-preview';
+   if(kind.value==='region'){
+    const rows=region.value.trim().split(/\r?\n/);
+    if(rows.length>maxSketchRegionLoops)throw new Error(t('A region supports up to 16 loops.'));
+    const loops=rows.map((row,i):SketchLoop=>{
+     const original=regionLoops[i];
+     const id=original?.id??'region-loop-'+(i+1);
+     const circle=/^CIRCLE\s+(.+)$/i.exec(row.trim());
+     if(circle){
+      const values=circle[1].split(',');
+      if(values.length!==3||!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(values[2].trim()))throw new Error(t('For a circle enter CIRCLE X, Y, radius.'));
+      return {kind:'circle',id,center:parsePoint(values.slice(0,2).join(',')),radius:Number(values[2]),segments:original?.kind==='circle'?original.segments:64};
+     }
+     return {kind:'outline',id,points:row.split('|').map(parsePoint)};
+    });
+    return {kind:'region',id,loops};
+   }
    if(kind.value==='outline'){
     const rows=points.value.trim().split(/\r?\n/);
     if(rows.length>256)throw new Error(t('An outline needs 3–256 finite points within 100000 mm of the sketch origin.'));
@@ -115,7 +144,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const compact=(input:HTMLInputElement,icon:string)=>{const label=input.parentElement!;label.firstChild!.textContent='';label.classList.add('sketch-dimension');const picture=toolIcon(icon);if(picture)label.prepend(picture);input.title=input.getAttribute('aria-label')!;label.append(element('small','mm'));const caption=element('span',input.getAttribute('aria-label')!);caption.className='sketch-dimension-name';label.prepend(caption);};
   compact(width,'Sketch width');compact(depth,'Sketch depth');compact(radius,'Sketch radius');compact(length,'Extrude');
   function draw(){
-   width.parentElement!.hidden=depth.parentElement!.hidden=kind.value!=='rectangle';radius.parentElement!.hidden=center.parentElement!.hidden=kind.value!=='circle';pointsLabel.hidden=kind.value!=='outline';preview.replaceChildren();valid=false;
+   width.parentElement!.hidden=depth.parentElement!.hidden=kind.value!=='rectangle';radius.parentElement!.hidden=center.parentElement!.hidden=kind.value!=='circle';pointsLabel.hidden=kind.value!=='outline';regionLabel.hidden=kind.value!=='region';preview.replaceChildren();valid=false;
    for(const input of [width,depth,radius,length]){
     input.removeAttribute('aria-invalid');
     if(input.parentElement!.hidden)continue;
@@ -130,15 +159,32 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     }
    }
    try{const shape=previewShape(),xs=shape.contour.map(p=>p[0]),ys=shape.contour.map(p=>p[1]),w=Math.max(...xs)-Math.min(...xs),h=Math.max(...ys)-Math.min(...ys),d=shape.distance,ox=d*.45,oy=-d*.35;
-    const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),base=shape.contour.map(([x,y])=>[x+shape.start*.45,-y-shape.start*.35]),top=base.map(([x,y])=>[x+ox,y+oy]),all=[...base,...top],span=Math.max(w,h,Math.abs(d),1),pad=span*.18,minX=Math.min(...all.map(p=>p[0]))-pad,minY=Math.min(...all.map(p=>p[1]))-pad,vw=Math.max(...all.map(p=>p[0]))-minX+pad,vh=Math.max(...all.map(p=>p[1]))-minY+pad;
+    const projected=[shape.contour,...(shape.holes??[])].map(loop=>loop.map(([x,y])=>[x+shape.start*.45,-y-shape.start*.35]));
+    const raised=projected.map(loop=>loop.map(([x,y])=>[x+ox,y+oy]));
+    const [base]=projected,[top]=raised;
+    const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),all=[...base,...top],span=Math.max(w,h,Math.abs(d),1),pad=span*.18,minX=Math.min(...all.map(p=>p[0]))-pad,minY=Math.min(...all.map(p=>p[1]))-pad,vw=Math.max(...all.map(p=>p[0]))-minX+pad,vh=Math.max(...all.map(p=>p[1]))-minY+pad;
     svg.setAttribute('viewBox',drag?.viewBox??`${minX} ${minY} ${vw} ${vh}`);svg.setAttribute('aria-hidden','true');
-    const polygon=(points:number[][],cls:string)=>{const p=document.createElementNS(ns,'polygon');p.setAttribute('points',points.map(p=>p.join(',')).join(' '));p.setAttribute('class',cls);svg.append(p);};polygon(base,'sketch-base');
-    for(let i=0;i<base.length;i++){const j=(i+1)%base.length;polygon([base[i],base[j],top[j],top[i]],'sketch-side');}polygon(top,'sketch-top');
+    const face=(loops:number[][][],cls:string)=>{
+     const path=document.createElementNS(ns,'path');
+     path.setAttribute('d',loops.map(loop=>'M '+loop.map(point=>point.join(' ')).join(' L ')+' Z').join(' '));
+     path.setAttribute('fill-rule','evenodd');
+     path.setAttribute('class',cls);
+     svg.append(path);
+    };
+    face(projected,'sketch-base');
+    for(let k=0;k<projected.length;k++){
+     const lower=projected[k],upper=raised[k];
+     for(let i=0;i<lower.length;i++){
+      const j=(i+1)%lower.length;
+      face([[lower[i],lower[j],upper[j],upper[i]]],'sketch-side');
+     }
+    }
+    face(raised,'sketch-top');
     const handle=(x:number,y:number,mode:string,enabled:boolean)=>{if(!enabled)return;const hit=document.createElementNS(ns,'circle');hit.setAttribute('cx',String(x));hit.setAttribute('cy',String(y));hit.setAttribute('r',String(span*.065));hit.setAttribute('fill','transparent');hit.dataset.resize=mode;hit.style.cursor=mode==='depth'?'nesw-resize':'nwse-resize';const title=document.createElementNS(ns,'title');title.textContent=t('Drag to change dimensions');hit.append(title);const dot=document.createElementNS(ns,'circle');dot.setAttribute('cx',String(x));dot.setAttribute('cy',String(y));dot.setAttribute('r',String(span*.023));dot.classList.add('sketch-handle');svg.append(dot,hit);};
     const numeric=(s:string)=>s.trim()!==''&&Number.isFinite(Number(s));
     const topOffset=shape.start+d;
     handle(Math.max(...xs)+topOffset*.45,(kind.value==='circle'?-(Math.min(...ys)+Math.max(...ys))/2:-Math.min(...ys))-topOffset*.35,'size',kind.value==='circle'?numeric(radius.value):kind.value==='rectangle'&&numeric(width.value)&&numeric(depth.value));
-    const anchor=kind.value==='circle'?shape.contour[Math.floor(shape.contour.length/2)]:kind.value==='outline'?shape.contour[0]:[Math.min(...xs),Math.max(...ys)];
+    const anchor=kind.value==='circle'?shape.contour[Math.floor(shape.contour.length/2)]:['outline','region'].includes(kind.value)?shape.contour[0]:[Math.min(...xs),Math.max(...ys)];
     handle(anchor[0]+topOffset*.45,-anchor[1]-topOffset*.35,'depth',numeric(length.value));
     preview.append(svg,element('output',t`${w.toLocaleString()} × ${h.toLocaleString()} mm · ${shape.distance.toLocaleString()} mm extrusion`));status.textContent='';valid=true;
    }catch(error){status.textContent=error instanceof Error&&'diagnostic' in error?(error as import('@brickwright/cad-core').FeatureEvaluationError).diagnostic.message:error instanceof Error?error.message:String(error);}apply.disabled=busy||!valid;
@@ -191,6 +237,10 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
       ...doc,sketches:{[id]:{version:1,id,name:'DXF',plane:'XY',profile:imported}}
      });
      kind.value=imported.kind;
+     if(imported.kind==='region'){
+      regionLoops=imported.loops;
+      region.value=formatLoops(regionLoops);
+     }
      if(imported.kind==='outline')points.value=imported.points.map(point=>point.join(', ')).join('\n');
      if(imported.kind==='circle'){
       radius.value=String(imported.radius);

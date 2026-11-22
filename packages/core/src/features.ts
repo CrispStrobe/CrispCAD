@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
 import {isSketchPoint,sketchOutline} from './sketch-outline.js';
+import {evaluateSketchRegion} from './sketch-region.js';
+import type {SketchLoop} from './sketch-region.js';
 import type {SketchPoint} from './sketch-outline.js';
 import type {CadDocument, Vec3} from './document.js';
 import {evaluateExpression, evaluateParameters} from './parameters.js';
@@ -12,7 +14,8 @@ export type SketchPlane = 'XY' | 'XZ' | 'YZ';
 export type SketchProfile =
   {kind:'rectangle'; id:string; width:FeatureScalar; depth:FeatureScalar} |
   {kind:'circle'; id:string; radius:FeatureScalar; segments:number; center?:SketchPoint} |
-  {kind:'outline'; id:string; points:SketchPoint[]};
+  {kind:'outline'; id:string; points:SketchPoint[]} |
+  {kind:'region'; id:string; loops:SketchLoop[]};
 /** Profiles are analytic design inputs. Rectangle closure/orthogonality and circle
  * closure are enforced by construction; a general constraint solver comes later. */
 export interface PlanarSketch {version:1; id:string; name:string; plane:SketchPlane; profile:SketchProfile}
@@ -33,10 +36,11 @@ export function featureValue(input:FeatureScalar,doc:CadDocument,unit:ParameterU
   if(Math.abs(q.value)>1e6)throw new Error(t('Expression exceeds the finite design range'));return q.value;
 }
 function dimension(input:FeatureScalar,doc:CadDocument):number {const v=featureValue(input,doc);if(v<.01||v>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));return v;}
-export function evaluateSketch(sketch:PlanarSketch,doc:CadDocument):{contour:[number,number][];edgeIds:string[]} {
+export function evaluateSketch(sketch:PlanarSketch,doc:CadDocument):{contour:SketchPoint[];holes?:SketchPoint[][];edgeIds:string[]} {
   try {
     if(!record(sketch)||sketch.version!==1||!idOk(sketch.id)||typeof sketch.name!=='string'||!sketch.name.trim()||sketch.name.length>160||/[\u0000-\u001f]/.test(sketch.name)||!['XY','XZ','YZ'].includes(sketch.plane)||!record(sketch.profile)||!idOk(sketch.profile.id))throw new Error(t('Invalid sketch schema'));
     const p=sketch.profile;
+    if(p.kind==='region')return evaluateSketchRegion(p.loops);
     if(p.kind==='rectangle') {const w=dimension(p.width,doc)/2,d=dimension(p.depth,doc)/2;return {contour:[[-w,-d],[w,-d],[w,d],[-w,d]],edgeIds:['bottom','right','top','left'].map(side=>`${p.id}:${side}`)};}
     if(p.kind==='outline') {const contour=sketchOutline(p.points);return {contour,edgeIds:contour.map((_,i)=>`${p.id}:edge-${i}`)};}
     if(p.kind==='circle') {const center=p.center??[0,0];if(!isSketchPoint(center))throw new Error(t('Circle center must be within 100000 mm of the sketch origin.'));const r=dimension(p.radius,doc);if(!Number.isInteger(p.segments)||p.segments<12||p.segments>256)throw new Error(t('Circle segments must be an integer between 12 and 256'));return {contour:Array.from({length:p.segments},(_,i)=>[center[0]+r*Math.cos(i*2*Math.PI/p.segments),center[1]+r*Math.sin(i*2*Math.PI/p.segments)]),edgeIds:[`${p.id}:circumference`]};}
