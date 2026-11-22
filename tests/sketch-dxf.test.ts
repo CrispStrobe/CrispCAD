@@ -194,3 +194,35 @@ it('rejects malformed, off-workspace and self-crossing curved polylines', () => 
   expect(() => readSketchDxf(drawing(halfRoundPlate.replace('42\n1','42\n10000')))).toThrow('curve size or detail limit');
   expect(() => readSketchDxf(drawing(halfRoundPlate.replace('42\n1','42\n-2')))).toThrow('without crossings');
 });
+
+const dxfLine=(a:[number,number],b:[number,number],layer='Profile')=>
+ ['0','LINE','8',layer,'10',a[0],'20',a[1],'11',b[0],'21',b[1]].join('\n');
+const nativeArc=['0','ARC','8','Profile','10',2,'20',0,'40',2,'50',180,'51',0].join('\n');
+const nativePlate=[dxfLine([0,3],[4,3]),dxfLine([0,0],[0,3]),nativeArc,dxfLine([4,0],[4,3])];
+
+it('joins unordered native lines and arcs with signed winding and inch dimensions',()=>{
+ const profile=readSketchDxf(drawing(nativePlate.join('\n'),1));
+ expect(profile).toMatchObject({kind:'outline',dxfLayer:'Profile',bulges:[0,0,-1,0]});
+ const session=createCadSession();
+ const id=session.addSketchExtrusion(profile,{distance:3});
+ const [body]=kernel.evaluate(parseDocument(session.serialize())).bodies;
+ expect(Math.abs(body.bounds.min[1]+50.8)).toBeLessThan(.0251);
+ expect(body.bounds.max[0]).toBeCloseTo(101.6);
+ expect(body.volume).toBeCloseTo((12+2*Math.PI)*25.4**2*3,-2);
+ const exported=new TextDecoder().decode(exportSketchDxf(session.state.document,id).bytes);
+ expect(readSketchDxf(exported)).toEqual(profile);
+ session.dispose();
+});
+
+it('reports open branches, tilted lines and layer changes instead of dropping parts of a chain',()=>{
+ expect(()=>readSketchDxf(drawing(nativePlate.slice(0,3).join('\n')))).toThrow('must join into closed loops');
+ expect(()=>readSketchDxf(drawing([...nativePlate,dxfLine([4,0],[5,0])].join('\n')))).toThrow('without branches');
+ expect(()=>readSketchDxf(drawing(nativePlate.join('\n')+'\n31\n1'))).toThrow('Use circles');
+ expect(()=>readSketchDxf(drawing(nativePlate.join('\n').replace('8\nProfile','8\nOutline')))).toThrow('same DXF layer');
+});
+
+it('joins endpoints across serialization roundoff while preserving analytic arc bulges',()=>{
+ const drifted=dxfLine([4.0000004,0],[4,3]);
+ expect(readSketchDxf(drawing([...nativePlate.slice(0,3),drifted].join('\n'))))
+  .toMatchObject({kind:'outline',bulges:[0,0,-1,0]});
+});

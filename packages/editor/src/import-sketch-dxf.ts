@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {evaluateSketchRegion, isSketchDxfLayer, isSketchPoint, maxSketchRegionLoops, maxSketchOutlinePoints, sketchOutline, t} from '@brickwright/cad-core';
-import type {SketchPoint, SketchProfile} from '@brickwright/cad-core';
+import type {SketchLoop, SketchPoint, SketchProfile} from '@brickwright/cad-core';
+import {joinDxfEdges} from './sketch-dxf-chains.js';
+import type {DxfEdge} from './sketch-dxf-chains.js';
 
 export const maxSketchDxfBytes = 1024 * 1024;
+type DxfLoop = Omit<Extract<SketchLoop,{kind:'outline'}>,'id'> |
+  (Omit<Extract<SketchLoop,{kind:'circle'}>,'id'|'center'> & {center:SketchPoint});
 type Group = {code: number; value: string};
 const mmPerUnit: Record<number, number> = {1: 25.4, 2: 304.8, 4: 1, 5: 10, 6: 1000};
 
 export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
   const invalid = () => new Error(t('This file is not a supported text DXF drawing.'));
-  const unsupported = () => new Error(t('Use circles and closed 2D lightweight polylines. Remove unsupported drawing entities before importing.'));
+  const unsupported = () => new Error(t('Use circles, closed lightweight polylines, or closed chains of 2D lines and arcs. Remove unsupported entities before importing.'));
   if (source.length > maxSketchDxfBytes || source.includes('\0')) throw invalid();
   const lines = source.replace(/^\uFEFF/, '').split(/\r?\n/);
   if (lines.at(-1) === '') lines.pop();
@@ -53,10 +57,11 @@ export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
     else if (entities.length) entities.at(-1)!.push(group);
     else throw invalid();
   }
-  if (!entities.length || entities.length > maxSketchRegionLoops) throw unsupported();
-  const loops = entities.map(([entity, ...fields], index) => {
-    const id = 'dxf-loop-' + (index + 1);
-    if (entity.value !== 'CIRCLE' && entity.value !== 'LWPOLYLINE') throw unsupported();
+  if (!entities.length || entities.length > maxSketchRegionLoops * (maxSketchOutlinePoints + 1)) throw unsupported();
+  const indexed:({index:number}&DxfLoop)[]=[];
+  const edges:DxfEdge[]=[];
+  for (const [index,[entity,...fields]] of entities.entries()) {
+    if (!['CIRCLE','ARC','LINE','LWPOLYLINE'].includes(entity.value)) throw unsupported();
     const layer = fields.filter(group => group.code === 8);
     if (layer.length > 1 || (layer.length === 1 && !isSketchDxfLayer(layer[0].value))) {
       throw new Error(t('Invalid DXF layer name.'));
@@ -71,15 +76,37 @@ export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
     if (read(67, 0) !== 0 || (fields.find(group => group.code === 410)?.value ?? 'Model').toUpperCase() !== 'MODEL' ||
         read(210, 0) !== 0 || read(220, 0) !== 0 || read(230, 1) !== 1 ||
         fields.some(group => [30, 38, 39, 40, 41, 42, 43].includes(group.code) &&
-          !(entity.value === 'CIRCLE' && group.code === 40) &&
+          !(['CIRCLE','ARC'].includes(entity.value) && group.code === 40) &&
           !(entity.value === 'LWPOLYLINE' && group.code === 42) && number(group.value) !== 0)) throw unsupported();
 
-    if (entity.value === 'CIRCLE') {
+    if (entity.value === 'LINE') {
+      if (read(31,0) !== 0) throw unsupported();
+      edges.push({index, a:[read(10)*scale,read(20)*scale], b:[read(11)*scale,read(21)*scale],bulge:0,...dxfLayer});
+      continue;
+    }
+    if (entity.value === 'CIRCLE' || entity.value === 'ARC') {
       const radius = read(40) * scale;
       const center: SketchPoint = [read(10) * scale, read(20) * scale];
       if (radius < .01 || radius > 100000) throw new Error(t('Dimension must be between 0.01 and 100000 mm'));
       if (!isSketchPoint(center)) throw new Error(t('Circle center must be within 100000 mm of the sketch origin.'));
-      return {kind: 'circle' as const, id, radius, segments: 64, center, ...dxfLayer};
+      if (entity.value === 'CIRCLE') {
+        indexed.push({index,kind:'circle',radius,segments:64,center,...dxfLayer});
+      } else {
+        const normalize=(degrees:number)=>{
+          const turn=degrees%360;
+          return turn<0?turn+360:turn;
+        };
+        const start=normalize(read(50)),end=normalize(read(51)),sweep=normalize(end-start);
+        const point=(degrees:number):SketchPoint=>{
+          const cardinal=[[1,0],[0,1],[-1,0],[0,-1]][degrees/90];
+          const angle=degrees*Math.PI/180;
+          const [x,y]=cardinal??[Math.cos(angle),Math.sin(angle)];
+          return [center[0]+radius*x,center[1]+radius*y];
+        };
+        if (!sweep) throw unsupported();
+        edges.push({index,a:point(start),b:point(end),bulge:sweep===180?1:Math.tan(sweep*Math.PI/720),...dxfLayer});
+      }
+      continue;
     }
 
     const flags = read(70);
@@ -97,11 +124,13 @@ export function readSketchDxf(source: string, assumeMm = false): SketchProfile {
     if (points.length !== count) throw invalid();
     if (bulges.some(Boolean)) {
       sketchOutline(points, bulges);
-      return {kind: 'outline' as const, id, points, bulges, ...dxfLayer};
-    }
-    return {kind: 'outline' as const, id, points: sketchOutline(points), ...dxfLayer};
-  });
-  if (loops.length === 1) return {...loops[0], id: 'dxf-profile'};
+      indexed.push({index,kind:'outline',points,bulges,...dxfLayer});
+    } else indexed.push({index,kind:'outline',points:sketchOutline(points),...dxfLayer});
+  }
+  indexed.push(...joinDxfEdges(edges));
+  const loops=indexed.sort((a,b)=>a.index-b.index).map(({index: _index,...loop},i)=>({...loop,id:'dxf-loop-'+(i+1)}));
+  if (loops.length > maxSketchRegionLoops) throw unsupported();
+  if (loops.length === 1) return {...loops[0],id:'dxf-profile'};
   evaluateSketchRegion(loops);
   return {kind:'region', id:'dxf-profile', loops};
 }

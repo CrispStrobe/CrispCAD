@@ -319,3 +319,29 @@ test('curves an outline edge by dragging its midpoint and exports the signed bul
  await page.getByRole('button',{name:'Undo',exact:true}).click();
  await expect(page.getByTestId('object-name')).toHaveCount(0);
 });
+
+test('imports a closed DXF chain of native lines and arcs as an editable outline', async ({page}) => {
+ await page.goto('/');
+ const ready=()=>expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await ready();
+ await page.getByRole('button',{name:'Sketch',exact:true}).click();
+ const dialog=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await dialog.getByText('Import DXF outline',{exact:true}).click();
+ const dxf=['0','SECTION','2','HEADER','9','$INSUNITS','70',4,'0','ENDSEC','0','SECTION','2','ENTITIES',
+  '0','ARC','10',20,'20',0,'40',20,'50',180,'51',0,
+  '0','LINE','10',0,'20',30,'11',0,'21',0,
+  '0','LINE','10',0,'20',30,'11',40,'21',30,
+  '0','LINE','10',40,'20',0,'11',40,'21',30,'0','ENDSEC','0','EOF'].join('\n');
+ await dialog.getByLabel('Choose DXF file').setInputFiles({name:'Native arcs.dxf',mimeType:'application/dxf',buffer:Buffer.from(dxf)});
+ await expect(dialog.getByLabel('Outline points X, Y (mm)')).toHaveValue('0, 0, 1\n40, 0\n40, 30\n0, 30');
+ await expect(dialog.getByLabel('Sketch preview')).toContainText('40 × 50 mm');
+ await dialog.getByRole('button',{name:'Create extrusion'}).click();
+ await ready();
+ const exportButton=page.getByRole('button',{name:'Export sketch as DXF'});
+ if(!await exportButton.isVisible())await page.getByRole('button',{name:'Properties',exact:true}).click();
+ const [download]=await Promise.all([page.waitForEvent('download'),exportButton.click()]);
+ const path=await download.path();
+ if(!path)throw Error('Missing export');
+ const output=await (await import('node:fs/promises')).readFile(path,'utf8');
+ expect(output).toContain('10\r\n0\r\n20\r\n0\r\n42\r\n1');
+});

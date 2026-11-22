@@ -49,7 +49,11 @@ roadmap, with stable face/edge references and evaluated backend choices.
 ### Editable DXF profiles
 
 Open **Sketch & Extrude → Import DXF outline** and choose a text DXF with
-planar circles or closed lightweight polylines, including curved segments. The importer accepts
+planar circles, closed lightweight polylines, or closed chains of native 2D
+lines and arcs. The importer joins chain endpoints within 0.000001 mm and
+retains arcs as editable polyline bulges. Each chain uses one DXF layer.
+Disjoint endpoints, branches and duplicate edges trigger validation errors.
+The importer accepts
 one exterior loop and up to 15 separate holes. The exterior is identified by
 containment, so the entity order in the file can vary. Declared units are
 converted to millimetres. For unitless files, opt in if the coordinates are
@@ -67,7 +71,7 @@ The curve stays analytic in DXF, and the modeling mesh approximates it using
 chords with up to 0.025 mm of sagitta error within the supported detail budget.
 
 The current region workflow rejects touching, crossing, nested and disjoint
-loops. Standalone ARC entities, open contours, widths,
+loops. Open contours, widths,
 layer filtering and styles, paper-space objects, tilted entities,
 DWG and STEP remain open.
 
