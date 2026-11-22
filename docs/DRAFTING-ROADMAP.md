@@ -89,8 +89,11 @@ plane. The preview draws their original sketch coordinates as dashed outlines.
 Drag near an endpoint, edge midpoint, circle or arc center, or an intersection
 between the two references. The preview highlights the active target. Snapping
 writes the exact coordinates into the draft. The reference choices stay in the
-dialog, and the committed shape stores coordinates. Persistent constraints and
-tangent snaps remain open.
+dialog, and the committed shape stores coordinates. Enable **Snap straight
+edges tangent to arcs and circles** to include exact contact points for a
+straight edge. Drag its endpoint toward the contact point. A dashed line and
+the **Tangent** label identify the active snap. The other endpoint stays fixed,
+and arcs use only their authored sweep. Persistent constraints remain open.
 
 Enable **Edit edge curves** to reveal a blue handle at the midpoint of each
 outline edge. Drag the handle across its chord to turn a straight edge into

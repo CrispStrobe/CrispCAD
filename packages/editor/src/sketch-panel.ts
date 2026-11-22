@@ -1,4 +1,4 @@
-import {collectSketchSnaps,nearestSketchSnap,sketchSnapReference} from './sketch-snaps.js';
+import {collectSketchSnaps,collectTangentSnaps,nearestSketchSnap,sketchSnapReference} from './sketch-snaps.js';
 import type {SketchSnap} from './sketch-snaps.js';
 import {formatSketchPoints as formatPoints, parseSketchOutline as parseOutline, parseSketchPoint as parsePoint, sketchDraggedBulge} from './sketch-point-entry.js';
 import {maxSketchDxfBytes,readSketchDxf} from './import-sketch-dxf.js';
@@ -101,7 +101,12 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    label.append(input);guides.append(label);return input;
   };
   const firstGuide=reference('Reference sketch'),secondGuide=reference('Second reference sketch');
-  guides.append(element('small',t('Choose sketches on this plane to snap to their original coordinates.')));
+  const tangents=element('input');
+  tangents.type='checkbox';
+  const tangentToggle=element('label',t('Snap straight edges tangent to arcs and circles'));
+  tangentToggle.className='sketch-toggle';
+  tangentToggle.prepend(tangents);
+  guides.append(tangentToggle,element('small',t('Choose sketches on this plane to snap to their original coordinates.')));
   form.append(guides);
   let referenceGeometry:ReturnType<typeof sketchSnapReference>[]=[];
   let snapTargets:SketchSnap[]=[];
@@ -120,6 +125,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    const selected=new Set(guides.hidden?[]:[firstGuide.value,secondGuide.value].filter(Boolean));
    referenceGeometry=[...selected].map(id=>sketchSnapReference(doc.sketches![id],doc));
    snapTargets=collectSketchSnaps(referenceGeometry[0],referenceGeometry[1]);
+   tangents.disabled=!referenceGeometry.some(guide=>guide.edges.some(edge=>edge.kind==='circle'));
   }
   for(const input of [firstGuide,secondGuide])input.addEventListener('change',refreshGuideGeometry);
   for(const input of [plane,kind])input.addEventListener('change',updateGuides);
@@ -199,7 +205,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    }
    return {...evaluateExtrusion({kind:'extrusion',...common,...extrusion},previewDoc),angle:undefined,axisOffset:undefined};
   }
-  type OutlineEdit = {field:HTMLTextAreaElement; original:string; loop:number; index:number; points:SketchPoint[]; bulges?:number[]};
+  type OutlineEdit = {field:HTMLTextAreaElement; original:string; loop:number; index:number; points:SketchPoint[]; bulges?:number[]; targets:SketchSnap[]};
   let drag:{id:number;x:number;y:number;w:number;h:number;r:number;d:number;inverse:DOMMatrix;kind:string;viewBox:string;outlineEdit?:OutlineEdit;target?:SketchSnap}|undefined;
   let dragOutline:ReturnType<typeof definition>|undefined;
   let valid=false;
@@ -303,6 +309,13 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     dragOutline=p;
     if(drag?.target){
      const [x,y]=place(drag.target.point);
+     if(drag.target.kind==='Tangent'){
+      const [ax,ay]=place(drag.target.anchor);
+      const line=document.createElementNS(ns,'line');
+      line.setAttribute('x1',String(ax));line.setAttribute('y1',String(ay));
+      line.setAttribute('x2',String(x));line.setAttribute('y2',String(y));
+      line.setAttribute('class','sketch-reference sketch-tangent-guide');svg.append(line);
+     }
      const marker=document.createElementNS(ns,'circle');
      marker.setAttribute('cx',String(x));marker.setAttribute('cy',String(y));marker.setAttribute('r',String(span*.04));
      marker.setAttribute('class','sketch-snap-marker');svg.append(marker);
@@ -326,7 +339,10 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     const outline=dragOutline?.kind==='region'?dragOutline.loops[loop]:dragOutline;
     if(outline?.kind!=='outline'||!outline.points[index])return;
     const field=dragOutline?.kind==='region'?region:points;
-    outlineEdit={field,original:field.value,loop,index,points:outline.points,bulges:outline.bulges};
+    const targets=mode==='vertex'&&tangents.checked&&!tangents.disabled
+     ?[...snapTargets,...collectTangentSnaps(outline,index,referenceGeometry)].sort((a,b)=>a.point[0]-b.point[0])
+     :snapTargets;
+    outlineEdit={field,original:field.value,loop,index,points:outline.points,bulges:outline.bulges,targets};
    }
    event.preventDefault();
    drag={id:event.pointerId,x:start.x,y:start.y,w:Number(width.value),h:Number(depth.value),r:Number(radius.value),d:Number(length.value),inverse,kind:mode,viewBox:svg.getAttribute('viewBox')!,outlineEdit};
@@ -353,7 +369,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      const candidate:SketchPoint=[source[0]+dx,source[1]-dy];
      const radius=event.pointerType==='touch'?16:10;
      const tolerance=radius*Math.hypot(drag.inverse.a,drag.inverse.b);
-     drag.target=nearestSketchSnap(candidate,snapTargets,tolerance);
+     drag.target=nearestSketchSnap(candidate,edit.targets,tolerance);
      const moved:SketchPoint=drag.target?.point??[round(candidate[0]),round(candidate[1])];
      if(moved[0]!==source[0]||moved[1]!==source[1]){
       const points=edit.points.slice();points[edit.index]=moved;

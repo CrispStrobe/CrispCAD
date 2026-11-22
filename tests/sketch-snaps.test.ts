@@ -2,7 +2,7 @@
 import {createCadSession} from '@brickwright/cad-core';
 import type {PlanarSketch,SketchProfile} from '@brickwright/cad-core';
 import {expect,it} from 'vitest';
-import {collectSketchSnaps,nearestSketchSnap,sketchSnapReference} from '../packages/editor/src/sketch-snaps.js';
+import {collectSketchSnaps,collectTangentSnaps,nearestSketchSnap,sketchSnapReference} from '../packages/editor/src/sketch-snaps.js';
 
 const sketch=(profile:SketchProfile):PlanarSketch=>({version:1,id:'guide',name:'Guide',plane:'XY',profile});
 const document=createCadSession().state.document;
@@ -38,4 +38,35 @@ it('respects the direction of an authored arc when resolving its midpoint and in
  expect(mid?.point[1]).toBeCloseTo(-5);
  expect(nearestSketchSnap([4,-Math.sqrt(24)],targets,.1)?.kind).toBe('Intersection');
  expect(nearestSketchSnap([4,Math.sqrt(24)],targets,.1)).toBeUndefined();
+});
+
+it('finds both exact tangents from a fixed vertex and skips curved incident edges',()=>{
+ const ring=sketch({kind:'circle',id:'ring',center:[10,0],radius:6,segments:12});
+ const reference=sketchSnapReference(ring,document);
+ const outline={points:[[0,0],[9,7],[25,22],[0,22]] as [number,number][],bulges:[0,.2,0,0]};
+ const targets=collectTangentSnaps(outline,1,[reference]);
+ expect(targets).toHaveLength(2);
+ for(const target of targets){
+  expect(target).toMatchObject({kind:'Tangent',anchor:[0,0]});
+  const [x,y]=target.point;
+  expect(x).toBeCloseTo(6.4);
+  expect(Math.abs(y)).toBeCloseTo(4.8);
+  expect(Math.hypot(x-10,y)).toBeCloseTo(6);
+  expect(x*(x-10)+y*y).toBeCloseTo(0);
+ }
+ expect(collectTangentSnaps({...outline,bulges:[.2,.2,0,0]},1,[reference])).toEqual([]);
+});
+
+it('uses only the available arc sweep and skips inside or coincident anchors',()=>{
+ const arc=sketch({kind:'outline',id:'arc',points:[[0,0],[10,0],[10,10],[0,10]],bulges:[1,0,0,0]});
+ const reference=sketchSnapReference(arc,document);
+ const outline={points:[[15,0],[11,-6],[20,-8]] as [number,number][],bulges:[0,.2,0]};
+ const targets=collectTangentSnaps(outline,1,[reference]);
+ expect(targets).toHaveLength(1);
+ expect(targets[0].point[0]).toBeCloseTo(7.5);
+ expect(targets[0].point[1]).toBeCloseTo(-Math.sqrt(18.75));
+ for(const anchor of [[5,-1],[5,-5]] as const){
+  const points:[[number,number],[number,number],[number,number]]=[[...anchor],[11,-6],[20,-8]];
+  expect(collectTangentSnaps({...outline,points},1,[reference])).toEqual([]);
+ }
 });

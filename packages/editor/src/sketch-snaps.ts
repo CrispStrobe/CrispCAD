@@ -5,7 +5,9 @@ import type {CadDocument,PlanarSketch,SketchPoint} from '@brickwright/cad-core';
 type Line = {kind:'line'; a:SketchPoint; b:SketchPoint};
 type Circle = {kind:'circle'; center:SketchPoint; radius:number; start?:number; sweep?:number};
 type Edge = Line | Circle;
-export type SketchSnap = {point:SketchPoint; kind:'Endpoint'|'Midpoint'|'Center'|'Intersection'};
+export type SketchSnap = {point:SketchPoint}&(
+ {kind:'Endpoint'|'Midpoint'|'Center'|'Intersection'}|{kind:'Tangent';anchor:SketchPoint}
+);
 const subtract = ([x,y]:SketchPoint,[a,b]:SketchPoint):SketchPoint => [x-a,y-b];
 const cross = ([x,y]:SketchPoint,[a,b]:SketchPoint) => x*b-y*a;
 const dot = ([x,y]:SketchPoint,[a,b]:SketchPoint) => x*a+y*b;
@@ -95,6 +97,32 @@ export function collectSketchSnaps(first?:Reference,second?:Reference):SketchSna
  return points.filter(({point})=>isSketchPoint(point)).sort((a,b)=>a.point[0]-b.point[0]);
 }
 
+/** Candidates for straight edges that share the dragged vertex. */
+export function collectTangentSnaps(outline:{points:SketchPoint[];bulges?:number[]},index:number,references:readonly Reference[]):SketchSnap[]{
+ const {points,bulges}=outline;
+ const previous=(index+points.length-1)%points.length,next=(index+1)%points.length;
+ const anchors:SketchPoint[]=[];
+ if(!bulges?.[previous])anchors.push(points[previous]);
+ if(!bulges?.[index])anchors.push(points[next]);
+ const targets:SketchSnap[]=[];
+ for(const {edges} of references)for(const edge of edges){
+  if(edge.kind!=='circle')continue;
+  for(const anchor of anchors){
+   const [dx,dy]=subtract(anchor,edge.center),distance=Math.hypot(dx,dy);
+   if(distance<=edge.radius)continue;
+   const unit:SketchPoint=[dx/distance,dy/distance],normal:SketchPoint=[-unit[1],unit[0]];
+   const ratio=edge.radius/distance;
+   const base=advance(edge.center,unit,edge.radius*ratio);
+   const side=edge.radius*Math.sqrt((1-ratio)*(1+ratio));
+   for(const direction of [-1,1]){
+    const point=advance(base,normal,direction*side);
+    if(isSketchPoint(point)&&onSweep(point,edge))targets.push({kind:'Tangent',point,anchor});
+   }
+  }
+ }
+ return targets;
+}
+
 export function nearestSketchSnap(point:SketchPoint, targets:SketchSnap[], tolerance:number) {
  let best:SketchSnap|undefined, distance=tolerance**2;
  // The collector sorts by X so long imported outlines stay cheap to drag.
@@ -106,7 +134,7 @@ export function nearestSketchSnap(point:SketchPoint, targets:SketchSnap[], toler
  for(let i=left;i<targets.length&&targets[i].point[0]<=point[0]+tolerance;i++){
   const target=targets[i];
   const delta=subtract(point,target.point),d=dot(delta,delta);
-  if(d<distance||(d===distance&&best&&target.kind==='Intersection')){best=target;distance=d;}
+  if(d<distance||(d===distance&&best&&(target.kind==='Tangent'||target.kind==='Intersection'&&best.kind!=='Tangent'))){best=target;distance=d;}
  }
  return best;
 }
