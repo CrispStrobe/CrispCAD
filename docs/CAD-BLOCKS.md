@@ -11,8 +11,7 @@ one tree to three **parametric** targets:
 | OpenSCAD | `exportBlocksOpenSCAD(program)` | Customizer variables, real `for`/`if`, centred primitives |
 | JSCAD | `exportBlocksJSCAD(program)` | `getParameterDefinitions()` + `main(params)`, real loops |
 
-Unlike TinkerCAD Codeblocks, which runs once and leaves fixed geometry, the
-compiled model stays a formula: change a parameter and it regenerates. Unlike the
+The compiled model does not run once into fixed geometry; it stays a formula: change a parameter and it regenerates. Unlike the
 existing OpenSCAD/JSCAD exports of arbitrary CAD Script (evaluated snapshots),
 block exports keep parameters, loops and conditions. That keeps the generated code
 readable for teaching.
@@ -42,7 +41,7 @@ Statements carry an optional `id` (the Scratch block id). Errors are
   degrees), `scale` (signed), `mirror`, `group` (union), `intersect`, `hull`,
   `subtract` (`body` minus `cutters`), and `hole`. There is no hidden "current
   selection".
-- **Holes** work like TinkerCAD's solid/hole: shapes inside a `hole` block cut
+- **Holes**: shapes inside a `hole` block cut
   every solid of the enclosing `group` (or of the whole model), including solids
   placed later. Holes pass through `move`/`rotate`/`scale`/`mirror`, loops and
   `if` branches, and stop at `group` boundaries. In `intersect`/`hull` bodies they
@@ -51,7 +50,7 @@ Statements carry an optional `id` (the Scratch block id). Errors are
 - **Colours**: `{"k":"color","color":"#rrggbb","body":[…]}` paints the solids in
   its body; the innermost colour wins. A `group` (also `intersect`, `hull`,
   `subtract`) is one solid of one colour: its own colour block's, else the first
-  colour painted inside it, as TinkerCAD's Group does. See [Colours](#colours).
+  colour painted inside it. See [Colours](#colours).
 - **Control**: `repeat n`, `for var from to [step]` (inclusive, directed),
   `if/else`, `comment`.
 - **Values**: numbers, variables, `+ - * / %`, comparisons, `&& || !`, unary minus,
@@ -68,7 +67,7 @@ Each `set`/`change` creates a new named binding (single assignment), e.g.
 - Inside a loop, unconditional `change by` with a loop-invariant amount is an
   induction variable. It compiles to the closed form `x + k * step` inside the loop
   and `x + count * step` after it, also through nested loops. This covers the usual
-  TinkerCAD pattern "repeat: place, then change x by spacing".
+  block pattern "repeat: place, then change x by spacing".
 - A variable first `set` inside an iteration is local to it.
 - Anything that would carry another kind of value between iterations is refused
   with a block-specific explanation. That covers a change inside an `if` in a loop,

@@ -192,7 +192,7 @@ describe('parameters and variables',()=>{
 
 describe('control flow',()=>{
  const row=(count:BlockExpr):BlockStmt[]=>[{k:'set',name:'x',value:n(0)},{k:'repeat',count,body:[move(v('x'),0,0,box(5,5,5)),{k:'change',name:'x',by:n(10)}]}];
- it('turns a TinkerCAD-style accumulator loop into a closed formula',()=>{
+ it('turns an accumulator loop into a closed formula',()=>{
   const p=program(row(v('n')),[{name:'n',value:4}]);
   const source=compileBlocksToCadScript(p).source;
   expect(source).toContain('forRange(k, 0, round(n) - 1, 1,');expect(source).toContain('const x_2 = x + k * 10;');
@@ -284,7 +284,7 @@ describe('MCP',()=>{
 
 describe('holes',()=>{
  const cyl=(r=2,h=40):BlockStmt=>shape('cylinder',{radius:r,height:h,sides:64});
- it('cuts every solid of the model like TinkerCAD holes, through moves',()=>{
+ it('cuts every solid of the model with holes, through moves',()=>{
   const withHole=program([box(20,20,4),move(5,0,0,{k:'hole',body:[box(4,4,10)]})]);
   agree(withHole,{volume:1600-64,size:[20,20,4]});
  });

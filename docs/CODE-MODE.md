@@ -110,7 +110,7 @@ for exact limits, parameter semantics, provenance and the VPS ingestion interfac
 
 ## Blocks and pseudocode
 
-[Block modelling](CAD-BLOCKS.md) compiles TinkerCAD-style block programs into
+[Block modelling](CAD-BLOCKS.md) compiles nesting block programs into
 this language, with parametric OpenSCAD/JSCAD exports from the same tree.
 
 ## Code alongside manual modeling
