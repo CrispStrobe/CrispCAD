@@ -328,3 +328,55 @@ it('persists aligned dimensions in a versioned sheet and exports the diagonal at
  const pdf=new TextDecoder().decode(exportDrawingPdf(layout,sheet.title).bytes);
  expect(pdf).toContain('<'+Buffer.from('50 mm','latin1').toString('hex')+'>');
 });
+
+it('measures authored circular arcs and keeps both dimensions linked as curvature changes',()=>{
+ const s=createCadSession();
+ const profile={kind:'outline' as const,id:'outline',points:[[0,0],[40,0],[40,30],[0,30]] as [number,number][],bulges:[0,0,-.5,0]};
+ const feature=s.addSketchExtrusion(profile,{plane:'YZ',name:'Curved plate'});
+ const source=drawingSourceFor(s.state.document,feature)!;
+ const arc={sketchId:source.sketchId,from:'arc:outline:p2:p3',at:[68,117] as [number,number]};
+ const draft:DrawingInputs={title:'Curved plate',source,scale:'1:1',hiddenLines:false,annotations:[
+  {...arc,id:'r',kind:'radius'},
+  {...arc,id:'l',kind:'arc-length',at:[85,117]}
+ ]};
+ const layout=layoutDrawing(s.state.document,draft);
+ expect(layout.texts.map(item=>item.text)).toEqual(expect.arrayContaining(['R25 mm','Arc length 46.365 mm']));
+ expect(layout.paths.filter(path=>path.stroke==='annotation').some(path=>path.points.length>20)).toBe(true);
+ expect(layoutDrawing(s.state.document,{...draft,scale:'1:2'}).texts.map(item=>item.text)).toContain('Arc length 46.365 mm');
+ const id=s.saveDrawingSheet(draft),saved=s.state.document.drawings![0],doc=s.state.document;
+ expect(doc.version).toBe(20);
+ expect(saved.annotations![0].from).not.toBe(arc.from);
+ expect(saved.annotations![1].from).toBe(saved.annotations![0].from);
+ expect(parseDocument(s.serialize()).drawings).toEqual([saved]);
+ expect(validateDocument(compileModelSource(s.modelSource,doc)).drawings).toEqual([saved]);
+ expect(()=>validateDocument({...doc,version:19})).toThrow('drawing sheets');
+ const invalid=structuredClone(saved);
+ invalid.annotations![1].from='circle:outside';
+ expect(()=>s.saveDrawingSheet(invalid,id)).toThrow('drawing sheets');
+
+ s.updateSketch(source.sketchId,{profile:{...profile,bulges:[0,0,-.25,0]}});
+ const revised=layoutDrawing(s.state.document,saved);
+ expect(revised.texts.map(item=>item.text)).toEqual(expect.arrayContaining(['R42.5 mm','Arc length 41.646 mm']));
+ expect(new TextDecoder().decode(exportDrawingPdf(revised,saved.title).bytes))
+  .toContain('<'+Buffer.from('Arc length 41.646 mm','latin1').toString('hex')+'>');
+ s.updateSketch(source.sketchId,{profile:{...profile,bulges:undefined}});
+ expect(layoutDrawing(s.state.document,saved).annotationIssues).toEqual(['r','l']);
+ expect(()=>exportDrawingSetPdf(s.state.document)).toThrow('Repair or remove');
+ s.undo();
+ expect(layoutDrawing(s.state.document,saved).annotationIssues).toEqual([]);
+});
+
+it('distinguishes opposite arcs on a two-point outline and measures a circle radius',()=>{
+ const s=createCadSession();
+ const lens=s.addSketchExtrusion({kind:'outline',id:'lens',points:[[0,0],[20,0]],bulges:[2,.25]});
+ const inputs:DrawingInputs={title:'Lens',source:drawingSourceFor(s.state.document,lens)!,scale:'1:1',hiddenLines:false};
+ const arcs=layoutDrawing(s.state.document,inputs).anchors.filter(item=>item.arc);
+ expect(arcs.map(item=>item.id)).toEqual(['arc:lens:p0:p1','arc:lens:p1:p0']);
+ expect(Math.abs(arcs[0].arc!.sweep)).toBeGreaterThan(Math.PI);
+ const circle=s.addSketchExtrusion({kind:'circle',id:'disk',radius:12,segments:32});
+ const source=drawingSourceFor(s.state.document,circle)!;
+ const radius:DrawingInputs={...inputs,source,annotations:[{
+  id:'r',kind:'radius',sketchId:source.sketchId,from:'circle:disk',at:[70,120]
+ }]};
+ expect(layoutDrawing(s.state.document,radius).texts.map(item=>item.text)).toContain('R12 mm');
+});

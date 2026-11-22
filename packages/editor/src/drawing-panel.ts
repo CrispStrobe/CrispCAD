@@ -4,7 +4,7 @@ import type {CadSession,DrawingAnnotation,DrawingDimensionKind,DrawingInputs,Dra
 import type {CadFile} from './index.js';
 import {layoutDrawing} from './drawing-layout.js';
 import type {DrawingLayout} from './drawing-layout.js';
-import {placeDrawingAnnotation} from './drawing-annotation.js';
+import {drawingArcPoints,placeDrawingAnnotation} from './drawing-annotation.js';
 import {operationScalar} from './body-operation-panel.js';
 import {exportDrawingPdf} from './drawing-pdf.js';
 
@@ -87,7 +87,8 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
    dimensions.append(element('summary',t('Drawing dimensions')));
    const labels:Record<DrawingDimensionKind,string>={
     'linear-x':t('Horizontal dimension'),'linear-y':t('Vertical dimension'),
-    aligned:t('Aligned dimension'),diameter:t('Diameter dimension')
+    aligned:t('Aligned dimension'),diameter:t('Diameter dimension'),
+    radius:t('Radius dimension'),'arc-length':t('Arc length dimension')
    };
    const kind=element('select');
    for(const [value,name] of Object.entries(labels))kind.add(new Option(name,value));
@@ -159,13 +160,23 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
     preview.classList.toggle('picking',active);
     pick.setAttribute('aria-pressed',String(active));
    };
-   const highlightVertices=()=>{
+   const singleAnchor=()=>['diameter','radius','arc-length'].includes(kind.value);
+   const highlightAnchors=()=>{
     const svg=preview.querySelector('svg');
-    svg?.querySelectorAll('.drawing-vertex-marker').forEach(marker=>marker.remove());
+    svg?.querySelectorAll('.drawing-vertex-marker,.drawing-arc-marker').forEach(marker=>marker.remove());
     if(!dimensions.open||!svg||!layout)return;
-    const selected=new Set([from.value,kind.value==='diameter'?'':to.value].filter(isDrawingVertex));
+    const selected=new Set([from.value,singleAnchor()?'':to.value]);
     for(const anchor of layout.anchors){
      if(!selected.has(anchor.id))continue;
+     if(anchor.arc&&anchor.radius!==undefined){
+      const arc=drawingArcPoints(anchor.point,anchor.radius*layout.factor,anchor.arc.start,anchor.arc.sweep);
+      const marker=document.createElementNS(svg.namespaceURI,'path');
+      marker.setAttribute('class','drawing-arc-marker');
+      marker.setAttribute('d',arc.map(([x,y],i)=>(i?'L ':'M ')+x+' '+(layout!.height-y)).join(' '));
+      svg.append(marker);
+      continue;
+     }
+     if(!isDrawingVertex(anchor.id))continue;
      const [x,y]=anchor.point,row=layout.height-y;
      const marker=document.createElementNS(svg.namespaceURI,'path');
      marker.setAttribute('class','drawing-vertex-marker');
@@ -174,16 +185,19 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
     }
    };
    const refreshDimensions=()=>{
-    const diameter=kind.value==='diameter';
+    const curved=singleAnchor();
     const anchors=layout?.anchors??[];
     const previousFrom=from.value,previousTo=to.value;
-    from.replaceChildren(...anchors.filter(anchor=>!diameter||anchor.radius!==undefined)
-     .map(anchor=>new Option(anchor.label,anchor.id)));
-    to.replaceChildren(...anchors.map(anchor=>new Option(anchor.label,anchor.id)));
+    const points=anchors.filter(anchor=>!anchor.arc);
+    const eligible=kind.value==='arc-length'?anchors.filter(anchor=>anchor.arc)
+     :kind.value==='radius'?anchors.filter(anchor=>anchor.radius!==undefined)
+     :kind.value==='diameter'?points.filter(anchor=>anchor.radius!==undefined):points;
+    from.replaceChildren(...eligible.map(anchor=>new Option(anchor.label,anchor.id)));
+    to.replaceChildren(...points.map(anchor=>new Option(anchor.label,anchor.id)));
     if([...from.options].some(option=>option.value===previousFrom))from.value=previousFrom;
     if([...to.options].some(option=>option.value===previousTo))to.value=previousTo;
     else if(to.options.length>1)to.selectedIndex=1;
-    to.parentElement!.hidden=diameter;
+    to.parentElement!.hidden=curved;
     add.disabled=!layout||!from.options.length||(!editing&&annotations.length>=drawingAnnotationLimit);
     add.textContent=t(editing?'Apply dimension':'Add dimension');
     pick.disabled=!layout;
@@ -200,7 +214,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
       editing=item.id;kind.value=item.kind;refreshDimensions();
       from.value=item.from;to.value=item.to??'';
       paperX.value=String(item.at[0]);paperY.value=String(item.at[1]);
-      highlightVertices();
+      highlightAnchors();
      };
      remove.onclick=()=>{
       annotations.splice(i,1);
@@ -209,7 +223,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
      };
      row.append(edit,remove);list.append(row);
     }
-    highlightVertices();
+    highlightAnchors();
    };
    const render=()=>{
     axis.parentElement!.hidden=position.parentElement!.hidden=offset.parentElement!.hidden=!section.checked;
@@ -228,7 +242,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
     if(!layout&&picking)setPicking(false);
    };
    kind.onchange=refreshDimensions;
-   from.onchange=to.onchange=dimensions.ontoggle=highlightVertices;
+   from.onchange=to.onchange=dimensions.ontoggle=highlightAnchors;
    add.onclick=()=>{
     if(!layout)return;
     const at:SketchPoint=[Number(paperX.value),Number(paperY.value)];
@@ -238,10 +252,10 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,onExport
     }
     const source=read().source,next:DrawingAnnotation={id:editing??newId(),sketchId:source.sketchId,
      kind:kind.value as DrawingDimensionKind,from:from.value,at,
-     ...(kind.value==='diameter'?{}:{to:to.value})};
+     ...(singleAnchor()?{}:{to:to.value})};
     if(!placeDrawingAnnotation(next,source.sketchId,layout.anchors,layout.factor)){
-     status.textContent=next.kind==='aligned'
-      ?t('Choose two anchors at different positions.')
+     status.textContent=singleAnchor()?t('Choose an available curve.')
+      :next.kind==='aligned'?t('Choose two anchors at different positions.')
       :t('Choose anchors that have a measurable distance along the selected axis.');
      return;
     }

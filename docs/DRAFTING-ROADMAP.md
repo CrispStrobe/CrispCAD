@@ -133,8 +133,8 @@ coordinates. Choose the constant X or Y coordinate and enter a millimetre
 value or named dimension. A dashed cut line and direction marks identify the
 plane. The section hatches solid material and leaves cutouts clear. The
 saved cut updates in previews and PDF when the source changes.
-In **Drawing dimensions**, choose horizontal, vertical, aligned or diameter and select
-a profile bound or circle center. Pick the label position on the page, or
+In **Drawing dimensions**, choose a dimension type and select
+its sketch anchors. Pick the label position on the page, or
 enter paper coordinates, then add the dimension. Dimensions keep their
 placement on the sheet and use current distances and diameters from the
 source sketch. If an anchor disappears, edit the dimension to pick a new
@@ -159,8 +159,15 @@ of a slanted straight edge to label its true length. On a curved edge the
 same dimension measures the chord. The page scale changes the spacing on
 paper while the label retains the model length.
 
-Multiple jogs, dimensions on model edges outside the sketch, curve length
-and radius dimensions, and assembly views remain open.
+Choose **Radius dimension** for a sketch circle or circular arc, or
+**Arc length dimension** for an arc. The picker highlights the selected arc.
+Radius and arc length use the authored circular geometry at any drawing scale.
+Arc links follow the ordered endpoints and update when the curvature changes.
+If the edge is straightened or the directed endpoint pair is removed, repair
+or remove the dimension before exporting.
+
+Multiple jogs, dimensions on model edges outside the sketch, and assembly
+views remain open.
 
 ## Completion criteria
 

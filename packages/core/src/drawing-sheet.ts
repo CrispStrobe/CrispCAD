@@ -8,7 +8,7 @@ export const drawingScales = ['1:5','1:2','1:1','2:1','5:1'] as const;
 export type DrawingScale = typeof drawingScales[number];
 export type DrawingSource = {featureId:string; sketchId:string; profileId:string};
 export type DrawingSection = {axis:'u'|'v'; position:FeatureScalar; jog?:{at:FeatureScalar; position:FeatureScalar}};
-export type DrawingDimensionKind = 'linear-x'|'linear-y'|'aligned'|'diameter';
+export type DrawingDimensionKind = 'linear-x'|'linear-y'|'aligned'|'diameter'|'radius'|'arc-length';
 export type DrawingAnnotation = {
  id:string; sketchId:string; kind:DrawingDimensionKind; from:string; to?:string; at:[number,number];
 };
@@ -21,8 +21,12 @@ const id = (value:unknown):value is string => typeof value==='string' && /^[a-zA
 
 export const isDrawingVertex=(value:unknown):value is string=>typeof value==='string'&&/^vertex:[a-zA-Z0-9_-]{1,96}:[a-zA-Z0-9_-]{1,96}$/.test(value)&&value.split(':').slice(1).every(id);
 
+export const isDrawingArc=(value:unknown):value is string=>typeof value==='string'&&
+ /^arc:[a-zA-Z0-9_-]{1,96}:[a-zA-Z0-9_-]{1,96}:[a-zA-Z0-9_-]{1,96}$/.test(value)&&value.split(':').slice(1).every(id);
+
+const isDrawingCircle=(value:string)=>value.startsWith('circle:')&&id(value.slice(7));
 const anchor=(value:unknown):value is string=>typeof value==='string'&&
- (/^bounds:(sw|se|nw|ne)$/.test(value)||(value.startsWith('circle:')&&id(value.slice(7)))||isDrawingVertex(value));
+ (/^bounds:(sw|se|nw|ne)$/.test(value)||isDrawingCircle(value)||isDrawingVertex(value));
 
 export function validDrawingPosition(x:number,y:number){
  return Number.isFinite(x)&&Number.isFinite(y)&&x>=10&&x<=265&&y>=28&&y<=176;
@@ -53,13 +57,17 @@ export function checkDrawingSheets(doc:CadDocument) {
    const annotationIds=new Set<string>();
    for(const dimension of sheet.annotations){
     if(!record(dimension)||!id(dimension.id)||annotationIds.has(dimension.id)||!id(dimension.sketchId)||
-       !anchor(dimension.from)||!Array.isArray(dimension.at)||dimension.at.length!==2||
+       typeof dimension.from!=='string'||!Array.isArray(dimension.at)||dimension.at.length!==2||
        !validDrawingPosition(dimension.at[0],dimension.at[1]))throw invalid();
     if(dimension.kind==='aligned'&&doc.version<19)throw invalid();
     if(doc.version<18&&[dimension.from,dimension.to].some(isDrawingVertex))throw invalid();
-    if(dimension.kind==='diameter'){
-     if(!dimension.from.startsWith('circle:')||dimension.to!==undefined)throw invalid();
-    }else if(!['linear-x','linear-y','aligned'].includes(String(dimension.kind))||!anchor(dimension.to)||dimension.to===dimension.from)throw invalid();
+    if(dimension.kind==='radius'||dimension.kind==='arc-length'){
+     const validSource=isDrawingArc(dimension.from)||(dimension.kind==='radius'&&isDrawingCircle(dimension.from));
+     if(doc.version<20||!validSource||dimension.to!==undefined)throw invalid();
+    }else if(dimension.kind==='diameter'){
+     if(!isDrawingCircle(dimension.from)||dimension.to!==undefined)throw invalid();
+    }else if(!['linear-x','linear-y','aligned'].includes(String(dimension.kind))||
+      !anchor(dimension.from)||!anchor(dimension.to)||dimension.to===dimension.from)throw invalid();
     annotationIds.add(dimension.id);
    }
   }
@@ -87,8 +95,15 @@ export function drawingOutlines(profile:SketchProfile):SketchOutlineProfile[]{
   ? profile.loops.filter((loop):loop is SketchOutlineProfile=>loop?.kind==='outline'):[];
 }
 
+const outlineVertexId=(outline:SketchOutlineProfile,index:number)=>outline.vertexIds?.[index]??`p${index}`;
+
 export function drawingVertexId(outline:SketchOutlineProfile,index:number){
- return `vertex:${outline.id}:${outline.vertexIds?.[index]??`p${index}`}`;
+ return `vertex:${outline.id}:${outlineVertexId(outline,index)}`;
+}
+
+export function drawingArcId(outline:SketchOutlineProfile,index:number){
+ const next=(index+1)%outline.points.length;
+ return `arc:${outline.id}:${outlineVertexId(outline,index)}:${outlineVertexId(outline,next)}`;
 }
 
 export function checkDrawingVertexIds(profile:SketchProfile,version:CadDocument['version']){
@@ -100,14 +115,16 @@ export function checkDrawingVertexIds(profile:SketchProfile,version:CadDocument[
  }
 }
 
-/** Persist the IDs used by the drawing preview when its first vertex dimension is saved. */
-export function initializeDrawingVertexIds(profile:SketchProfile,newId:()=>string){
+/** Persist the IDs used by the drawing preview when its first outline dimension is saved. */
+export function initializeDrawingOutlineIds(profile:SketchProfile,newId:()=>string){
  const links=new Map<string,string>();
  for(const outline of drawingOutlines(profile)){
   if(outline.vertexIds)continue;
-  const provisional=outline.points.map((_,index)=>drawingVertexId(outline,index));
+  const vertices=outline.points.map((_,index)=>drawingVertexId(outline,index));
+  const arcs=outline.bulges?.map((bulge,index)=>bulge?drawingArcId(outline,index):undefined);
   outline.vertexIds=outline.points.map(()=>newId());
-  provisional.forEach((from,index)=>links.set(from,drawingVertexId(outline,index)));
+  vertices.forEach((from,index)=>links.set(from,drawingVertexId(outline,index)));
+  arcs?.forEach((from,index)=>{if(from)links.set(from,drawingArcId(outline,index));});
  }
  return links;
 }

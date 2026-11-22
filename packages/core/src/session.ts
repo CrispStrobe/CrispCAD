@@ -1,4 +1,4 @@
-import {initializeDrawingVertexIds,isDrawingVertex,resolveDrawingSource,retainDrawingVertexIds} from './drawing-sheet.js';
+import {initializeDrawingOutlineIds,isDrawingArc,isDrawingVertex,resolveDrawingSource,retainDrawingVertexIds} from './drawing-sheet.js';
 import type {DrawingInputs} from './drawing-sheet.js';
 import {upgradeSimulation,jointAtWorldFrame,materialPhysics,simulationTracers} from './simulation.js';
 import type {SimulationSettings} from './simulation.js';
@@ -195,17 +195,19 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         const sheets=d.drawings??[];
         if(sheetId&&!sheets.some(sheet=>sheet.id===id))throw new Error(t('Drawing sheet does not exist.'));
         const sheet={...structuredClone(inputs),id};
-        const vertexAnnotations=sheet.annotations?.filter(annotation=>[annotation.from,annotation.to].some(isDrawingVertex))??[];
-        const vertexDimensions=vertexAnnotations.filter(annotation=>annotation.sketchId===source.sketch.id);
-        if(vertexDimensions.length){
-          const links=initializeDrawingVertexIds(source.sketch.profile,newId);
-          for(const annotation of vertexDimensions){
+        const outlineAnnotations=sheet.annotations?.filter(annotation=>
+          [annotation.from,annotation.to].some(anchor=>isDrawingVertex(anchor)||isDrawingArc(anchor)))??[];
+        const outlineDimensions=outlineAnnotations.filter(annotation=>annotation.sketchId===source.sketch.id);
+        if(outlineDimensions.length){
+          const links=initializeDrawingOutlineIds(source.sketch.profile,newId);
+          for(const annotation of outlineDimensions){
             annotation.from=links.get(annotation.from)??annotation.from;
             if(annotation.to)annotation.to=links.get(annotation.to)??annotation.to;
           }
         }
         const aligned=sheet.annotations?.some(annotation=>annotation.kind==='aligned');
-        const version=aligned?19:vertexAnnotations.length?18:sheet.section?.jog!==undefined?17:sheet.annotations!==undefined?11:sheet.section?10:9;
+        const curved=sheet.annotations?.some(annotation=>annotation.kind==='radius'||annotation.kind==='arc-length');
+        const version=curved?20:aligned?19:outlineAnnotations.length?18:sheet.section?.jog!==undefined?17:sheet.annotations!==undefined?11:sheet.section?10:9;
         if(d.version<version)d.version=version;
         d.drawings=sheetId?sheets.map(item=>item.id===id?sheet:item):[...sheets,sheet];
       });

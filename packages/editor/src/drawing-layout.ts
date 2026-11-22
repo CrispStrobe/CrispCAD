@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {drawingOutlines,drawingVertexId,evaluateExtrusion,featureValue,resolveDrawingSource,sketchBulgeArc,sketchPoint,t} from '@brickwright/cad-core';
+import {drawingArcId,drawingOutlines,drawingVertexId,evaluateExtrusion,featureValue,resolveDrawingSource,sketchBulgeArc,sketchPoint,t} from '@brickwright/cad-core';
 import type {CadDocument,DrawingInputs,SketchPoint,Vec3} from '@brickwright/cad-core';
 
 import {dimensionText,placeDrawingAnnotation} from './drawing-annotation.js';
@@ -168,20 +168,32 @@ export function layoutDrawing(doc:CadDocument, sheet:DrawingInputs) {
     {id:'bounds:nw',label:t('Upper-left profile bounds'),point:[x,y+h]},
     {id:'bounds:ne',label:t('Upper-right profile bounds'),point:[x+w,y+h]}
    );
+   // The face-on view projects the positive sketch axes onto paper X and Y.
+   const paper=(point:SketchPoint):SketchPoint=>{
+    const [u,v]=view.project(world(point,start));
+    return [x+(u-limits.left)*factor,y+(v-limits.bottom)*factor];
+   };
    const addCircleAnchor=(id:string,label:string,circle:DrawingCircle)=>{
-    const [u,v]=view.project(world(circle.center,start));
-    anchors.push({id:'circle:'+id,label,radius:circle.radius,point:[x+(u-limits.left)*factor,y+(v-limits.bottom)*factor]});
+    anchors.push({id:'circle:'+id,label,radius:circle.radius,point:paper(circle.center)});
    };
    if(profile.kind==='circle')addCircleAnchor(profile.id,t('Circle center'),circleAt(0)!);
    const outlines=drawingOutlines(profile);
    for(const [loopIndex,outline] of outlines.entries()){
     for(const [index,point] of outline.points.entries()){
-     const [u,v]=view.project(world(point,start));
      const coordinates=point.map(dimensionText).join(', ');
      const name=profile.kind==='region'
       ? t`Outline ${loopIndex+1}, point ${index+1} (${coordinates})`
       : t`Outline point ${index+1} (${coordinates})`;
-     anchors.push({id:drawingVertexId(outline,index),label:name,point:[x+(u-limits.left)*factor,y+(v-limits.bottom)*factor]});
+     anchors.push({id:drawingVertexId(outline,index),label:name,point:paper(point)});
+     const next=(index+1)%outline.points.length;
+     const arc=sketchBulgeArc(point,outline.points[next],outline.bulges?.[index]??0);
+     if(arc){
+      const label=profile.kind==='region'
+       ?t`Outline ${loopIndex+1}, arc ${index+1}`
+       :t`Arc ${index+1}`;
+      anchors.push({id:drawingArcId(outline,index),label,point:paper(arc.center),radius:arc.radius,
+       arc:{start:arc.start,sweep:arc.sweep}});
+     }
     }
    }
    let holeIndex=0;

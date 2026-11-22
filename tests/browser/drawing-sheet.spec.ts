@@ -210,3 +210,56 @@ test('aligned dimensions follow point edits and block PDF export after an anchor
  await expect(dialog.getByRole('status',{name:'Drawing status'})).toContainText('unavailable drawing dimensions');
  await expect(dialog.getByRole('button',{name:'Export drawing PDF',exact:true})).toBeDisabled();
 });
+
+test('curved dimensions follow the authored arc and survive drawing reopen',async({page,hasTouch})=>{
+ const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
+ const ready=()=>expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await page.goto('/');
+ await ready();
+ await press(page.getByRole('button',{name:'Sketch',exact:true}));
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await sketch.getByLabel('Profile',{exact:true}).selectOption('outline');
+ const points=sketch.getByLabel('Outline points X, Y (mm)');
+ const outline='0, 0\n40, 0\n40, 30, -0.5\n0, 30';
+ await points.fill(outline);
+ await press(sketch.getByRole('button',{name:'Create extrusion'}));
+ await ready();
+ const create=page.getByRole('button',{name:'Create drawing sheet',exact:true});
+ if(!await create.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
+ await press(create);
+ const dialog=page.getByRole('dialog',{name:'Drawing sheet',exact:true});
+ const preview=dialog.getByRole('img',{name:'Drawing preview'});
+ const type=dialog.getByLabel('Dimension type');
+ const from=dialog.getByLabel('First dimension anchor');
+ const add=dialog.getByRole('button',{name:'Add dimension',exact:true});
+ await dialog.getByLabel('Sheet title').fill('Curve dimensions');
+ await press(dialog.getByText('Drawing dimensions',{exact:true}));
+ await type.selectOption('radius');
+ await from.selectOption({label:'Arc 3'});
+ await expect(preview.locator('.drawing-arc-marker')).toHaveCount(1);
+ await expect(dialog.getByLabel('Second dimension anchor')).toBeHidden();
+ await press(add);
+ await expect(preview).toContainText('R25 mm');
+ await type.selectOption('arc-length');
+ await from.selectOption({label:'Arc 3'});
+ await dialog.getByLabel('Paper X (mm)').fill('85');
+ await press(add);
+ await expect(preview).toContainText('Arc length 46.365 mm');
+ await press(dialog.getByRole('button',{name:'Save drawing sheet',exact:true}));
+ await expect(dialog).toBeHidden();
+
+ await press(page.getByRole('button',{name:'Edit sketch & extrusion',exact:true}));
+ await points.fill(outline.replace('-0.5','-0.25'));
+ await press(sketch.getByRole('button',{name:'Apply sketch changes',exact:true}));
+ await ready();
+ const sheet=page.getByRole('button',{name:'Drawing: Curve dimensions',exact:true});
+ if(!await sheet.isVisible())await press(page.getByRole('button',{name:'Objects',exact:true}));
+ await press(sheet);
+ await expect(preview).toContainText('R42.5 mm');
+ await expect(preview).toContainText('Arc length 41.646 mm');
+ const [download]=await Promise.all([
+  page.waitForEvent('download'),press(dialog.getByRole('button',{name:'Export drawing PDF',exact:true}))
+ ]);
+ const pdf=await readFile((await download.path())!,'utf8');
+ expect(pdf).toContain('<'+Buffer.from('Arc length 41.646 mm','latin1').toString('hex')+'>');
+});
