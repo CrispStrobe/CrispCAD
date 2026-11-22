@@ -156,7 +156,7 @@ The axis position and sweep accept named dimensions.
 
 **Edit sketch & revolution** changes the sweep, axis or sketch in one undoable
 operation. Editing a shared sketch updates every feature that uses it. Save
-and reopen the original project to keep these relationships. The searchable command palette remains open.
+and reopen the original project to keep these relationships.
 
 ## Visual Mirror
 
@@ -184,3 +184,11 @@ to edit the shared source, or use **Edit pattern** in Properties to change the
 settings. Counts, distances and angles accept named dimensions. The document
 retains these settings along with the stable source and output IDs. Patterns
 allow 2 to 64 instances within the geometry budget.
+
+## Search CAD commands
+
+Open **Command palette** in the toolbar or press Ctrl/⌘+Shift+P with focus in
+CAD. Search by name or task, such as **bolt circle**, and choose a matching
+command. Arrow keys change the active result, Enter runs it, and Escape closes
+the palette. Selection-dependent commands appear when their inputs are
+available. Ctrl/⌘+K still opens shape search.
