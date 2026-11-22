@@ -18,13 +18,14 @@ export const drawingViews = [
 ] as const;
 export const drawingBorder=(x:number,y:number,w:number,h:number):SketchPoint[]=>[[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
 
-export function addDrawingFrame(page:Pick<DrawingLayout,'paths'|'texts'>,title:string,subtitle:string,scale:DrawingScale){
+export function addDrawingFrame(page:Pick<DrawingLayout,'paths'|'texts'>,title:string,subtitle:string,scale?:DrawingScale){
  const path=(stroke:Stroke,points:SketchPoint[],closed?:boolean)=>page.paths.push({stroke,points,closed});
  const text=(x:number,y:number,size:number,text:string)=>page.texts.push({x,y,size,text});
  path('border',drawingBorder(8,8,281,194),true);
- path('border',[[8,26],[289,26]]);
  text(14,190,5,title);
  text(14,183,3.5,subtitle);
+ if(!scale)return;
+ path('border',[[8,26],[289,26]]);
  text(14,17,3.5,t`Scale ${scale} · mm · A4`);
  text(110,17,3,t('Print at actual size (100%).'));
  path('dimension',[[229,14],[279,14]]);

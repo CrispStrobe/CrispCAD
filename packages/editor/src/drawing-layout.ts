@@ -2,6 +2,7 @@
 import {documentGeometryKey,drawingArcId,drawingOutlines,drawingVertexId,evaluateExtrusion,featureValue,isAssemblyDrawingSource,resolveDrawingSource,sketchBulgeArc,sketchPoint,t} from '@brickwright/cad-core';
 import type {CadDocument,DrawingInputs,SketchPoint,Vec3} from '@brickwright/cad-core';
 import type {GeometryResult} from '@brickwright/cad-geometry';
+import {layoutAssemblyPartsList} from './assembly-parts-list.js';
 import type {AssemblyProjection} from './assembly-drawing.js';
 import {assemblyProjection,layoutAssemblyDrawing} from './assembly-drawing.js';
 import {addDrawingFrame,drawingBorder as border,drawingViews as order} from './drawing-page.js';
@@ -273,4 +274,10 @@ export function layoutDrawing(doc:CadDocument,sheet:DrawingInputs,geometry?:Geom
   addText(...drawing.position,drawing.text,2.8);
  }
  return {width:297,height:210,paths,texts,circles,anchors,annotationIssues,factor};
+}
+
+export function layoutDrawingPages(doc:CadDocument,sheet:DrawingInputs,geometry?:GeometryResult|AssemblyProjection){
+ const primary=layoutDrawing(doc,sheet,geometry);
+ if(!sheet.partsList||!isAssemblyDrawingSource(sheet.source)||!geometry)return [primary];
+ return [primary,...layoutAssemblyPartsList(doc,sheet,assemblyProjection(geometry))];
 }

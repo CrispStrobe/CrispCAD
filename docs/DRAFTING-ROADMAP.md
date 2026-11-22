@@ -179,8 +179,16 @@ The projection uses mesh silhouettes and sharp edges, clips them by depth,
 and omits coplanar triangulation seams. Assembly projection runs in a
 dedicated browser worker, and unchanged geometry shares its projected lines
 across scale, hidden-line, preview and PDF changes. Detailed meshes may
-exceed the projection budget. Assembly view sections, parts lists, and dimensions on
-model edges remain open, along with multiple jogs in sketch sections.
+exceed the projection budget.
+
+Enable **Include parts list** on an assembly sheet to add one entry per
+evaluated solid body in Objects order. Names and item numbers reflect the
+current assembly. Use **Preview page** to inspect the list. Long names wrap,
+and larger lists continue on additional pages in single-sheet and drawing-set
+PDF exports. The SB3 stores the option with the sheet.
+
+Assembly view sections and dimensions on model edges remain open, along
+with multiple jogs in sketch sections.
 
 ## Completion criteria
 

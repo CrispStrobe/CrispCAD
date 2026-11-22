@@ -23,7 +23,7 @@ function mockWorker(){
  };
 }
 const geometry=(sourceKey:string):GeometryResult=>({sourceKey,bodies:[],triangles:0,volume:0});
-const projection=(sourceKey:string):AssemblyProjection=>({sourceKey,views:[],count:0});
+const projection=(sourceKey:string):AssemblyProjection=>({sourceKey,views:[],bodyIds:[]});
 
 it('shares one pending projection and reuses its result for identical geometry',async()=>{
  const {client,workers}=fixture(),source=geometry('same-shape');

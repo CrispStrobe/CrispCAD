@@ -3,7 +3,7 @@ import {drawingAssemblyAvailable,isAssemblyDrawingSource,drawingAnnotationLimit,
 import type {CadSession,DrawingAnnotation,DrawingDimensionKind,DrawingInputs,DrawingScale,SketchPoint} from '@brickwright/cad-core';
 import type {AssemblyProjection} from './assembly-drawing.js';
 import type {CadFile} from './index.js';
-import {layoutDrawing} from './drawing-layout.js';
+import {layoutDrawingPages} from './drawing-layout.js';
 import type {DrawingLayout} from './drawing-layout.js';
 import {drawingArcPoints,placeDrawingAnnotation} from './drawing-annotation.js';
 import {operationScalar} from './body-operation-panel.js';
@@ -78,6 +78,13 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     const field=element('label',t(text));field.append(control);parent.append(field);
    };
    label('Sheet title',title);if(!assembly)label('Drawing source',source);label('Drawing scale',scale);label('Show hidden lines',hidden);
+   const partsList=element('input'),previewPage=element('select');
+   partsList.type='checkbox';partsList.checked=saved?.partsList??false;
+   if(assembly){
+    label('Include parts list',partsList);
+    label('Preview page',previewPage);
+    previewPage.parentElement!.hidden=true;
+   }
    const section=element('input');section.type='checkbox';section.checked=!!saved?.section;
    const axis=element('select');
    axis.add(new Option(t('Sketch X'),'u'));axis.add(new Option(t('Sketch Y'),'v'));
@@ -162,7 +169,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     const settings={title:title.value.trim(),scale:scale.value as DrawingScale,hiddenLines:hidden.checked};
     if(assembly){
      if(!drawingAssemblyAvailable(current))throw new Error(t('Add a solid body to draw the assembly.'));
-     return {...settings,source:{kind:'assembly'}};
+     return {...settings,source:{kind:'assembly'},...(partsList.checked?{partsList:true}:{})};
     }
     const ref=drawingSourceFor(current,source.value);
     if(!ref)throw new Error(t('Drawing source unavailable. Choose another sketch extrusion.'));
@@ -174,7 +181,13 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
      ...(section.checked?{section:{axis:axis.value==='u'?'u':'v',position:cut,...(useJog?{jog:{at,position:second}}:{})}}:{}),
      ...(annotations.length?{annotations}:{})};
    };
-   let layout:DrawingLayout|undefined;
+   let layout:DrawingLayout|undefined,pages:DrawingLayout[]=[];
+   const showPreview=()=>{
+    const index=Number(previewPage.value),page=pages[index];
+    preview.replaceChildren();
+    if(page)preview.append(previewDrawing(page,assembly&&index===0));
+   };
+   previewPage.onchange=showPreview;
    let picking=false,editing:string|undefined;
    const setPicking=(active:boolean)=>{
     picking=active;
@@ -251,12 +264,22 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     secondPosition.parentElement!.hidden=jogAt.parentElement!.hidden=jogHint.hidden=!section.checked||!offset.checked;
     const across=axis.value==='u'?t('Sketch Y'):t('Sketch X');
     jogHint.textContent=t`The jog switches to the second cut at this coordinate along ${across}.`;
-    preview.replaceChildren();layout=undefined;status.textContent='';
+    preview.replaceChildren();layout=undefined;pages=[];status.textContent='';
+    previewPage.disabled=true;
     save.disabled=pdf.disabled=true;
     const ticket=++renderTicket,current=session.state.document;
     const show=(draft:DrawingInputs,projection?:AssemblyProjection)=>{
-     layout=layoutDrawing(current,draft,projection);
-     preview.append(previewDrawing(layout,assembly));
+     pages=layoutDrawingPages(current,draft,projection);
+     layout=pages[0];
+     if(assembly){
+      const selection=Number(previewPage.value);
+      previewPage.replaceChildren(new Option(t('Drawing views'),'0'),
+       ...pages.slice(1).map((_,index)=>new Option(t`Parts list ${index+1} of ${pages.length-1}`,String(index+1))));
+      previewPage.value=String(selection<pages.length?selection:0);
+      previewPage.parentElement!.hidden=pages.length<2;
+      previewPage.disabled=false;
+     }
+     showPreview();
      save.disabled=false;
      pdf.disabled=!!layout.annotationIssues.length;
      status.textContent=layout.annotationIssues.length?t('Repair or remove unavailable drawing dimensions before exporting.'):'';
@@ -329,7 +352,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    position.oninput=()=>{centerAutomatically=false;render();};
    section.onchange=offset.onchange=render;
    secondPosition.oninput=jogAt.oninput=render;
-   title.oninput=scale.onchange=hidden.onchange=render;
+   title.oninput=scale.onchange=hidden.onchange=partsList.onchange=render;
    save.onclick=()=>{
     try{session.saveDrawingSheet(read(),saved?.id);dialog.close();}
     catch(error){status.textContent=error instanceof Error?error.message:String(error);}
@@ -338,7 +361,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    pdf.onclick=async()=>{
     if(!layout||layout.annotationIssues.length||!onExport)return;
     pdf.disabled=true;
-    try{await onExport(exportDrawingPdf(layout,read().title));}
+    try{await onExport(exportDrawingPdf(layout,read().title,pages.slice(1)));}
     catch(error){if(dialog.open)status.textContent=error instanceof Error?error.message:String(error);}
     finally{pdf.disabled=!layout||!!layout.annotationIssues.length;}
    };

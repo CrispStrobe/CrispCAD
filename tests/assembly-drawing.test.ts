@@ -6,8 +6,9 @@ import type {DrawingInputs} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {projectAssembly} from '../packages/editor/src/assembly-drawing.js';
-import {layoutDrawing} from '../packages/editor/src/drawing-layout.js';
-import {exportDrawingSetPdf} from '../packages/editor/src/drawing-pdf.js';
+import {layoutAssemblyPartsList} from '../packages/editor/src/assembly-parts-list.js';
+import {layoutDrawing,layoutDrawingPages} from '../packages/editor/src/drawing-layout.js';
+import {exportDrawingPdf,exportDrawingSetPdf} from '../packages/editor/src/drawing-pdf.js';
 
 const assembly:DrawingInputs={title:'Assembly drawing',source:{kind:'assembly'},scale:'1:1',hiddenLines:true};
 let kernel:GeometryKernel;
@@ -76,4 +77,51 @@ it('projects the bundled Scout rover at a reduced drawing scale',()=>{
  const sheet=layoutDrawing(document,{...assembly,scale:'1:5'},geometry);
  expect(sheet.paths.filter(path=>path.stroke==='visible').length).toBeGreaterThan(30);
  expect(sheet.paths.filter(path=>path.stroke==='hidden').length).toBeGreaterThan(0);
+});
+
+it('stores the parts-list option and exports current solid names with assembly and mixed sheets',()=>{
+ const session=createCadSession();
+ const plate=session.addSketchExtrusion({kind:'rectangle',id:'plate',width:32,depth:18});
+ session.update(plate,{name:'Base plate'});
+ const detail=session.add({kind:'box',size:[8,8,6]},{name:'Filter lid',transform:{...identityTransform(),position:[18,6,3]}});
+ const cutter=session.add({kind:'box',size:[2,2,4]},{name:'Hidden cutter'});
+ session.setRole('hole',[cutter]);
+ const id=session.saveDrawingSheet({...assembly,partsList:true});
+ const source=drawingSourceFor(session.state.document,plate)!;
+ expect(()=>session.saveDrawingSheet({...assembly,source,partsList:true})).toThrow('drawing sheets');
+ session.saveDrawingSheet({...assembly,source,title:'Plate details'});
+ const doc=session.state.document;
+ expect(doc.version).toBe(22);
+ expect(parseDocument(session.serialize()).drawings?.[0]).toMatchObject({id,partsList:true});
+ expect(validateDocument(compileModelSource(session.modelSource,doc)).drawings).toEqual(doc.drawings);
+ expect(()=>validateDocument({...doc,version:21})).toThrow('drawing sheets');
+ session.update(detail,{name:'Replacement lid'});
+ const current=session.state.document,mesh=kernel.evaluate(current);
+ const [views,list]=layoutDrawingPages(current,current.drawings![0],mesh);
+ expect(list.texts.map(text=>text.text)).toEqual(expect.arrayContaining(['Base plate','Replacement lid']));
+ expect(list.texts.map(text=>text.text)).not.toContain('Filter lid');
+ expect(list.texts.map(text=>text.text)).not.toContain('Hidden cutter');
+ expect(list.texts.filter(text=>text.x===17&&/^\d+$/.test(text.text)).map(text=>text.text)).toEqual(['1','2']);
+ const pdf=new TextDecoder().decode(exportDrawingPdf(views,assembly.title,[list]).bytes);
+ expect(pdf).toContain('/Type /Pages /Count 2');
+ expect(pdf).toContain('<'+Buffer.from('Replacement lid','latin1').toString('hex')+'>');
+ const all=new TextDecoder().decode(exportDrawingSetPdf(current,mesh).bytes);
+ expect(all).toContain('/Type /Pages /Count 3');
+ expect(all).toContain('<'+Buffer.from('Sheet 3 of 3','latin1').toString('hex')+'>');
+ expect(layoutDrawingPages(current,{...assembly,partsList:false},mesh)).toHaveLength(1);
+});
+
+it('wraps long names and continues item numbers across parts-list pages',()=>{
+ const session=createCadSession();
+ const longName='W'.repeat(150);
+ const ids=Array.from({length:31},(_,i)=>session.add(
+  {kind:'box',size:[2,2,2]},{name:i===0?longName:`Component ${i+1}`}));
+ const pages=layoutAssemblyPartsList(session.state.document,assembly,{views:[],bodyIds:ids});
+ expect(pages).toHaveLength(2);
+ const rows=pages.flatMap(page=>page.texts.filter(text=>text.x===17&&/^\d+$/.test(text.text)).map(text=>Number(text.text)));
+ expect(rows).toEqual(Array.from({length:31},(_,i)=>i+1));
+ expect(pages[0].texts.filter(text=>/^W+$/.test(text.text)).map(text=>text.text).join('')).toBe(longName);
+ expect(pages[1].texts.map(text=>text.text)).toContain('Component 31');
+ expect(pages[1].texts.map(text=>text.text)).toContain('Parts list 2 of 2');
+ for(const page of pages)expect(page.texts.filter(text=>text.x===38).every(text=>text.y>=30)).toBe(true);
 });

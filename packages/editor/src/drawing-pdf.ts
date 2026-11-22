@@ -3,9 +3,9 @@ import {t} from '@brickwright/cad-core';
 import type {AssemblyProjection} from './assembly-drawing.js';
 import type {GeometryResult} from '@brickwright/cad-geometry';
 import type {CadDocument} from '@brickwright/cad-core';
-import {layoutDrawing} from './drawing-layout.js';
+import {layoutDrawingPages} from './drawing-layout.js';
 import type {DrawingLayout} from './drawing-layout.js';
-import {decimal,pair,pointsPerMillimetre,singlePagePdf,textOperand,vectorPdf} from './vector-pdf.js';
+import {decimal,pair,pointsPerMillimetre,textOperand,vectorPdf} from './vector-pdf.js';
 
 function drawingContent(layout:DrawingLayout){
  if(layout.annotationIssues.length)throw new Error(t('Repair or remove unavailable drawing dimensions before exporting.'));
@@ -36,24 +36,26 @@ const file=(title:string,bytes:Uint8Array)=>{
  return {name:name+'.pdf',mime:'application/pdf',bytes};
 };
 
-export function exportDrawingPdf(layout:DrawingLayout,title:string){
- return file(title,singlePagePdf(layout.width,layout.height,drawingContent(layout)));
+export function exportDrawingPdf(layout:DrawingLayout,title:string,additional:DrawingLayout[]=[]){
+ const pages=[layout,...additional].map(page=>({width:page.width,height:page.height,content:drawingContent(page)}));
+ return file(title,vectorPdf(pages));
 }
 
 export function exportDrawingSetPdf(doc:CadDocument,geometry?:GeometryResult|AssemblyProjection){
  const sheets=doc.drawings??[];
  if(!sheets.length)throw new Error(t('Save a drawing sheet before exporting a drawing set.'));
- const pages=sheets.map((sheet,i)=>{
-  let layout:DrawingLayout;
+ const layouts=sheets.flatMap(sheet=>{
   try{
-   layout=layoutDrawing(doc,sheet,geometry);
-   if(layout.annotationIssues.length)throw new Error(t('Repair or remove unavailable drawing dimensions before exporting.'));
-  }
-  catch(error){
+   const pages=layoutDrawingPages(doc,sheet,geometry);
+   if(pages.some(page=>page.annotationIssues.length))throw new Error(t('Repair or remove unavailable drawing dimensions before exporting.'));
+   return pages;
+  }catch(error){
    const message=error instanceof Error?error.message:String(error);
    throw new Error([sheet.title,message].join(' · '));
   }
-  layout.texts.push({x:187,y:17,size:3,text:t`Sheet ${i+1} of ${sheets.length}`});
+ });
+ const pages=layouts.map((layout,i)=>{
+  layout.texts.push({x:187,y:17,size:3,text:t`Sheet ${i+1} of ${layouts.length}`});
   return {width:layout.width,height:layout.height,content:drawingContent(layout)};
  });
  return file(doc.title+' - '+t('Drawing set'),vectorPdf(pages));

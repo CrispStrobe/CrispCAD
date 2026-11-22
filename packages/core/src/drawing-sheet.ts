@@ -14,7 +14,7 @@ export type DrawingAnnotation = {
  id:string; sketchId:string; kind:DrawingDimensionKind; from:string; to?:string; at:[number,number];
 };
 export const drawingAnnotationLimit=24;
-export type DrawingInputs = {title:string; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]};
+export type DrawingInputs = {title:string; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]; partsList?:boolean};
 export type DrawingSheet = DrawingInputs & {id:string};
 
 const record = (value:unknown):value is Record<string,unknown> => !!value && typeof value==='object' && !Array.isArray(value);
@@ -49,6 +49,7 @@ export function checkDrawingSheets(doc:CadDocument) {
   if(isAssemblyDrawingSource(sheet.source)){
    if(doc.version<21||sheet.section!==undefined||sheet.annotations!==undefined)throw invalid();
   }else if(Object.hasOwn(sheet.source,'kind')||!id(sheet.source.featureId)||!id(sheet.source.sketchId)||!id(sheet.source.profileId))throw invalid();
+  if(sheet.partsList!==undefined&&(doc.version<22||!isAssemblyDrawingSource(sheet.source)||typeof sheet.partsList!=='boolean'))throw invalid();
   if(sheet.section!==undefined){
    if(doc.version<10||!record(sheet.section)||!['u','v'].includes(String(sheet.section.axis)))throw invalid();
    if(!sectionScalar(sheet.section.position))throw invalid();

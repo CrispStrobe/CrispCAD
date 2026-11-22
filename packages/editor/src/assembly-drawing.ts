@@ -165,7 +165,7 @@ export function projectAssembly(geometry:GeometryResult){
  }
  const models=bodies.map(topology);
  const views=drawingViews.map(view=>viewLines(models,view,min,max));
- return {views,count:bodies.length,sourceKey:geometry.sourceKey};
+ return {views,bodyIds:bodies.map(body=>body.id),sourceKey:geometry.sourceKey};
 }
 
 export type AssemblyProjection=ReturnType<typeof projectAssembly>;
@@ -199,7 +199,8 @@ export function layoutAssemblyDrawing(sheet:DrawingInputs,projection:AssemblyPro
   }
   page.texts.push({x:left,y:bottom+view.height*factor+4,text:t(view.view),size:3.5});
  }
- const subtitle=projection.count===1?t('Assembly · 1 body'):t`Assembly · ${projection.count} bodies`;
+ const count=projection.bodyIds.length;
+ const subtitle=count===1?t('Assembly · 1 body'):t`Assembly · ${count} bodies`;
  addDrawingFrame(page,sheet.title,subtitle,sheet.scale);
  return page;
 }

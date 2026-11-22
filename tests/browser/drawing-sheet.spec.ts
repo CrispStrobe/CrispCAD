@@ -302,6 +302,8 @@ test('assembly views use current solid placements and export a linked PDF',async
  await expect(dialog.getByRole('button',{name:'Save drawing sheet',exact:true})).toBeDisabled();
  await dialog.getByLabel('Sheet title').fill('Assembly overview');
  await dialog.getByLabel('Drawing scale').selectOption('1:1');
+ const parts=dialog.getByLabel('Include parts list'),pageSelect=dialog.getByLabel('Preview page');
+ await parts.check();
  await page.waitForFunction(()=>typeof (window as Window&{releaseAssemblyProjection?:()=>void}).releaseAssemblyProjection==='function');
  await page.evaluate(()=>(window as Window&{releaseAssemblyProjection:()=>void}).releaseAssemblyProjection());
  await expect(preview).toContainText('Assembly · 2 bodies');
@@ -313,26 +315,40 @@ test('assembly views use current solid placements and export a linked PDF',async
  const paths=()=>preview.locator('.drawing-visible').evaluateAll(items=>items.map(item=>item.getAttribute('d')));
  const before=await paths();
  expect(workers).toHaveLength(1);
+ await pageSelect.selectOption('1');
+ await expect(preview).toContainText('Parts list 1 of 1');
+ await expect(preview).toContainText('Body name');
  await press(dialog.getByRole('button',{name:'Save drawing sheet',exact:true}));
  await expect(dialog).toBeHidden();
 
  await position.fill('42');
  await position.press('Tab');
  await ready();
+ const bodyName=page.getByLabel('Object name',{exact:true});
+ await bodyName.fill('Rear cover');
+ await bodyName.press('Tab');
+ await ready();
  const sheet=page.getByRole('button',{name:'Drawing: Assembly overview',exact:true});
  await press(sheet);
  await expect(preview).toContainText('Assembly · 2 bodies');
  expect(await paths()).not.toEqual(before);
  expect(workers).toHaveLength(2);
+ await pageSelect.selectOption('1');
+ await expect(preview).toContainText('Rear cover');
  const [download]=await Promise.all([
   page.waitForEvent('download'),press(dialog.getByRole('button',{name:'Export drawing PDF',exact:true}))
  ]);
  const pdf=await readFile((await download.path())!,'utf8');
  expect(pdf).toContain('<'+Buffer.from('Assembly overview','latin1').toString('hex')+'>');
+ expect(pdf).toContain('/Type /Pages /Count 2');
+ expect(pdf).toContain('<'+Buffer.from('Rear cover','latin1').toString('hex')+'>');
  await page.reload();
  await ready();
  if(!await sheet.isVisible())await press(page.getByRole('button',{name:'Objects',exact:true}));
  await press(sheet);
  await expect(preview).toContainText('Assembly · 2 bodies');
  await expect(dialog.getByLabel('Show hidden lines')).not.toBeChecked();
+ await expect(parts).toBeChecked();
+ await pageSelect.selectOption('1');
+ await expect(preview).toContainText('Rear cover');
 });
