@@ -502,7 +502,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    const offsetButton=element('button',t('Apply offset to draft'));
    offsetButton.type='button';
    offsetPanel.append(offsetSummary,offsetLabel,offsetButton,
-    element('p',t('Positive grows the outside and shrinks holes. Negative shrinks the outside and grows holes.')));
+    element('p',t('Positive grows the outside and shrinks holes. Negative does the reverse. Outlines with arcs use rounded corners where edges move apart.')));
    form.append(offsetPanel);
    offsetButton.onclick=async()=>{
     if(busy||drag)return;

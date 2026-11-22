@@ -201,14 +201,15 @@ available. Ctrl/⌘+K still opens shape search.
 In **Sketch & Extrude** or **Sketch & Revolve**, open **Offset profile** and
 apply a signed distance to the draft. A positive distance grows the outside
 boundary and shrinks holes. A negative distance shrinks the outside and grows
-holes. Rectangles, full circles, straight-edged outlines and regions made from
-those loops remain editable. Existing named dimensions on rectangles and
-circles keep their formulas with the evaluated offset added. Very sharp
-polygon corners may be clipped.
+holes. Rectangles, circles, and outlines with straight edges and circular
+arcs remain editable, including mixed regions. Existing named dimensions on
+rectangles and circles keep their formulas with the evaluated offset added.
 
-A collapsed or split loop leaves the prior draft in place. Outlines that
-contain arc bulges keep their curves for a future analytic offset tool.
-**Create** or **Apply sketch changes** commits the draft in one Undo step.
+Offset arcs stay concentric. Inward corners trim to the intersection of the
+offset supports and separating curved-outline corners receive round joins.
+Straight-only outlines keep their mitered corners. A collapsed edge, split
+loop or invalid hole leaves the prior draft in place. **Create** or **Apply
+sketch changes** commits the draft in one Undo step.
 
 ## Trim a closed outline by line
 

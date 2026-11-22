@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import type {ManifoldToplevel} from 'manifold-3d';
+import {offsetCurvedOutline} from './curved-sketch-offset.js';
 import {evaluateSketch,offsetPositionExpression,sketchOutline,t} from '@brickwright/cad-core';
 import type {CadDocument,FeatureScalar,PlanarSketch,SketchLoop,SketchProfile} from '@brickwright/cad-core';
 
@@ -10,7 +11,7 @@ export function offsetSketchProfile(module:ManifoldToplevel,sketch:PlanarSketch,
  const design=context.parametric??{version:1,parameters:{},bindings:[]};
  const shift=(value:FeatureScalar,delta:number)=>typeof value==='number'?value+delta:offsetPositionExpression(value,design,delta);
  const outline=(loop:Extract<SketchLoop,{kind:'outline'}>,delta:number)=>{
-  if(loop.bulges?.some(Boolean))throw new Error(t('Offset supports straight outlines and full circles. This outline contains arcs.'));
+  if(loop.bulges?.some(Boolean))return {...loop,...offsetCurvedOutline(loop.points,loop.bulges,delta)};
   const section=new module.CrossSection([sketchOutline(loop.points)],'EvenOdd');
   try{
    // Bound miter growth at sharp corners. The resulting vertices stay editable.
