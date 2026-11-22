@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from '@brickwright/cad-core';
+import type {AssemblyProjection} from './assembly-drawing.js';
 import type {GeometryResult} from '@brickwright/cad-geometry';
 import type {CadDocument} from '@brickwright/cad-core';
 import {layoutDrawing} from './drawing-layout.js';
@@ -39,7 +40,7 @@ export function exportDrawingPdf(layout:DrawingLayout,title:string){
  return file(title,singlePagePdf(layout.width,layout.height,drawingContent(layout)));
 }
 
-export function exportDrawingSetPdf(doc:CadDocument,geometry?:GeometryResult){
+export function exportDrawingSetPdf(doc:CadDocument,geometry?:GeometryResult|AssemblyProjection){
  const sheets=doc.drawings??[];
  if(!sheets.length)throw new Error(t('Save a drawing sheet before exporting a drawing set.'));
  const pages=sheets.map((sheet,i)=>{

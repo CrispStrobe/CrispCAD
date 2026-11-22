@@ -5,6 +5,7 @@ import {compileModelSource,createCadSession,drawingSourceFor,identityTransform,p
 import type {DrawingInputs} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
+import {projectAssembly} from '../packages/editor/src/assembly-drawing.js';
 import {layoutDrawing} from '../packages/editor/src/drawing-layout.js';
 import {exportDrawingSetPdf} from '../packages/editor/src/drawing-pdf.js';
 
@@ -24,6 +25,9 @@ it('clips partly obscured edges by depth and omits coplanar triangulation',()=>{
  const y=47+rear.max[2]-originZ;
  const x=(value:number)=>24+value-originX;
  const page=layoutDrawing(doc,assembly,geometry);
+ const projected=projectAssembly(geometry);
+ expect(projected.views.every(view=>view.segments instanceof Float64Array&&view.segments.length%5===0)).toBe(true);
+ expect(layoutDrawing(doc,assembly,structuredClone(projected))).toEqual(page);
  const topOfRear=page.paths.filter(path=>path.points.every(point=>Math.abs(point[1]-y)<1e-7));
  const hidden=topOfRear.find(path=>path.stroke==='hidden'&&path.points.map(point=>point[0]).includes(x(rear.min[0])));
  expect(hidden?.points.map(point=>point[0]).sort((a,b)=>a-b)).toEqual([x(rear.min[0]),x(front.max[0])]);

@@ -6,7 +6,6 @@ import {addDrawingFrame,drawingViews} from './drawing-page.js';
 import type {DrawingLayout} from './drawing-page.js';
 
 type View=(typeof drawingViews)[number];
-type Segment={start:SketchPoint; end:SketchPoint; hidden:boolean};
 type Triangle={a:Vec3; b:Vec3; c:Vec3; det:number; box:Box; nearest:number};
 type Edge={a:number; b:number; normals:Vec3[]};
 type Box={left:number; bottom:number; right:number; top:number};
@@ -107,7 +106,7 @@ function viewLines(models:ReturnType<typeof topology>[],view:View,min:Vec3,max:V
    grid(triangle.box,index=>{spend();cells[index].push(triangle);});
   }
  }
- const lines:Segment[]=[];
+ const segments:number[]=[];
  for(const [i,model] of models.entries()){
   for(const edge of model.edges){
    const [n,...neighbors]=edge.normals;
@@ -138,7 +137,7 @@ function viewLines(models:ReturnType<typeof topology>[],view:View,min:Vec3,max:V
    covered.sort((a,b)=>a[0]-b[0]);
    const at=(t:number):SketchPoint=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
    const segment=(start:number,end:number,hidden:boolean)=>{
-    if((end-start)*length>1e-5)lines.push({start:at(start),end:at(end),hidden});
+    if((end-start)*length>1e-5)segments.push(...at(start),...at(end),hidden?1:0);
    };
    let cursor=0;
    for(let k=0;k<covered.length;k++){
@@ -152,10 +151,10 @@ function viewLines(models:ReturnType<typeof topology>[],view:View,min:Vec3,max:V
    segment(cursor,1,false);
   }
  }
- return {view:view.view,width,height,lines};
+ return {view:view.view,width,height,segments:Float64Array.from(segments)};
 }
 
-function projectAssembly(geometry:GeometryResult){
+export function projectAssembly(geometry:GeometryResult){
  const bodies=geometry.bodies.filter(body=>!body.reference&&!body.hole&&body.indices.length>0);
  if(!bodies.length)throw new Error(t('Add a solid body to draw the assembly.'));
  if(bodies.reduce((sum,body)=>sum+body.indices.length/3,0)>maxTriangles)throw projectionError();
@@ -166,14 +165,21 @@ function projectAssembly(geometry:GeometryResult){
  }
  const models=bodies.map(topology);
  const views=drawingViews.map(view=>viewLines(models,view,min,max));
- return {views,count:bodies.length};
+ return {views,count:bodies.length,sourceKey:geometry.sourceKey};
 }
 
-const cache=new WeakMap<GeometryResult,ReturnType<typeof projectAssembly>>();
+export type AssemblyProjection=ReturnType<typeof projectAssembly>;
 
-export function layoutAssemblyDrawing(sheet:DrawingInputs,geometry:GeometryResult):DrawingLayout{
- let projection=cache.get(geometry);
- if(!projection){projection=projectAssembly(geometry);cache.set(geometry,projection);}
+const cache=new WeakMap<GeometryResult,AssemblyProjection>();
+
+export function assemblyProjection(input:GeometryResult|AssemblyProjection):AssemblyProjection{
+ if('views' in input)return input;
+ let projection=cache.get(input);
+ if(!projection){projection=projectAssembly(input);cache.set(input,projection);}
+ return projection;
+}
+
+export function layoutAssemblyDrawing(sheet:DrawingInputs,projection:AssemblyProjection):DrawingLayout{
  const [top,front,right]=projection.views;
  const [num,denom]=sheet.scale.split(':').map(Number),factor=num/denom;
  const x=24,baseline=47,gap=20;
@@ -183,10 +189,12 @@ export function layoutAssemblyDrawing(sheet:DrawingInputs,geometry:GeometryResul
  }
  const page:DrawingLayout={width:297,height:210,paths:[],texts:[],circles:[],anchors:[],annotationIssues:[],factor};
  for(const [view,left,bottom] of [[top,x,topY],[front,x,baseline],[right,rightX,baseline]] as const){
-  const point=([u,v]:SketchPoint):SketchPoint=>[left+u*factor,bottom+v*factor];
-  for(const hidden of sheet.hiddenLines?[true,false]:[false]){
-   for(const line of view.lines){
-    if(line.hidden===hidden)page.paths.push({stroke:hidden?'hidden':'visible',points:[point(line.start),point(line.end)]});
+  const point=(u:number,v:number):SketchPoint=>[left+u*factor,bottom+v*factor];
+  const {segments}=view;
+  for(const hidden of sheet.hiddenLines?[1,0]:[0]){
+   for(let i=0;i<segments.length;i+=5){
+    if(segments[i+4]===hidden)page.paths.push({stroke:hidden?'hidden':'visible',
+     points:[point(segments[i],segments[i+1]),point(segments[i+2],segments[i+3])]});
    }
   }
   page.texts.push({x:left,y:bottom+view.height*factor+4,text:t(view.view),size:3.5});

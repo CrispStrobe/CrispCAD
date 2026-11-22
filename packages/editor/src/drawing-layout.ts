@@ -2,7 +2,8 @@
 import {documentGeometryKey,drawingArcId,drawingOutlines,drawingVertexId,evaluateExtrusion,featureValue,isAssemblyDrawingSource,resolveDrawingSource,sketchBulgeArc,sketchPoint,t} from '@brickwright/cad-core';
 import type {CadDocument,DrawingInputs,SketchPoint,Vec3} from '@brickwright/cad-core';
 import type {GeometryResult} from '@brickwright/cad-geometry';
-import {layoutAssemblyDrawing} from './assembly-drawing.js';
+import type {AssemblyProjection} from './assembly-drawing.js';
+import {assemblyProjection,layoutAssemblyDrawing} from './assembly-drawing.js';
 import {addDrawingFrame,drawingBorder as border,drawingViews as order} from './drawing-page.js';
 import type {DrawingCircle,DrawingLayout,DrawingPath,DrawingText} from './drawing-page.js';
 export type {DrawingLayout} from './drawing-page.js';
@@ -34,11 +35,11 @@ function outlineCorners(points:SketchPoint[],bulges?:number[]){
  });
 }
 
-export function layoutDrawing(doc:CadDocument,sheet:DrawingInputs,geometry?:GeometryResult):DrawingLayout {
+export function layoutDrawing(doc:CadDocument,sheet:DrawingInputs,geometry?:GeometryResult|AssemblyProjection):DrawingLayout {
  if(isAssemblyDrawingSource(sheet.source)){
   if(!geometry)throw new Error(t('The assembly drawing needs evaluated geometry.'));
   if(geometry.sourceKey&&geometry.sourceKey!==documentGeometryKey(doc))throw new Error(t('The assembly geometry changed. Refresh the drawing.'));
-  return layoutAssemblyDrawing(sheet,geometry);
+  return layoutAssemblyDrawing(sheet,assemblyProjection(geometry));
  }
  const source=resolveDrawingSource(doc,sheet.source);
  if(!source)throw new Error(t('Drawing source unavailable. Choose another sketch extrusion.'));

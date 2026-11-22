@@ -176,8 +176,10 @@ edges can be shown as dashed lines. Choose a smaller scale to fit a larger
 assembly on A4. A drawing set can mix assembly and sketch sheets.
 
 The projection uses mesh silhouettes and sharp edges, clips them by depth,
-and omits coplanar triangulation seams. Detailed meshes may exceed the
-projection budget. Assembly view sections, parts lists, and dimensions on
+and omits coplanar triangulation seams. Assembly projection runs in a
+dedicated browser worker, and unchanged geometry shares its projected lines
+across scale, hidden-line, preview and PDF changes. Detailed meshes may
+exceed the projection budget. Assembly view sections, parts lists, and dimensions on
 model edges remain open, along with multiple jogs in sketch sections.
 
 ## Completion criteria

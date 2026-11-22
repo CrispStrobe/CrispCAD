@@ -34,6 +34,7 @@ import {mountModelSourcePanel} from './model-source-panel.js';
 import {mountCodePanel} from './code-panel.js';
 import {exportSketchDxf} from './sketch-dxf.js';
 import {exportDrawingSetPdf} from './drawing-pdf.js';
+import {createAssemblyProjectionClient} from './assembly-projection-client.js';
 import {mountDrawingPanel} from './drawing-panel.js';
 import {exportSketchPdf} from './sketch-pdf.js';
 import {mountSketchPanel} from './sketch-panel.js';
@@ -176,7 +177,15 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   },toolbar,'compact-icon');
   paletteButton.title=t('Command palette (Ctrl/⌘+Shift+P)');
   paletteButton.setAttribute('aria-keyshortcuts','Control+Shift+P Meta+Shift+P');
-  const drawingPanel=mountDrawingPanel(shell,session,whenIdle,options.onExport);
+  const assemblyProjection=createAssemblyProjectionClient();
+  async function projectDrawingAssembly(){
+    const current=session.state.document;
+    const geometry=await whenIdle();
+    if(disposed||session.state.document!==current)return undefined;
+    const projection=await assemblyProjection.project(geometry);
+    return !disposed&&session.state.document===current?projection:undefined;
+  }
+  const drawingPanel=mountDrawingPanel(shell,session,projectDrawingAssembly,options.onExport);
   const modelSourcePanel=mountModelSourcePanel(shell,status,session,doc=>client.evaluate(doc),(recipe,name)=>createPresetDocument(recipe.preset,name,{recipe}));
   const codePanel=mountCodePanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();},options.onExport,()=>run(()=>modelSourcePanel.open()));
   button('Code',()=>codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined),toolbar,'compact-icon').title=t('Code an object');
@@ -343,9 +352,11 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       if(options.onExport&&sheets.length>1){
         button('Export drawing set (PDF)',async()=>{
           const current=session.state.document;
-          const geometry=sheets.some(sheet=>isAssemblyDrawingSource(sheet.source))?await whenIdle():undefined;
-          if(session.state.document!==current)throw new Error(t('The design changed while preparing the drawing set. Export again.'));
-          await options.onExport!(exportDrawingSetPdf(current,geometry));
+          const needsAssembly=sheets.some(sheet=>isAssemblyDrawingSource(sheet.source));
+          const projection=needsAssembly?await projectDrawingAssembly():undefined;
+          if(disposed)return;
+          if(needsAssembly&&!projection||session.state.document!==current)throw new Error(t('The design changed while preparing the drawing set. Export again.'));
+          await options.onExport!(exportDrawingSetPdf(current,projection));
         },group);
       }
       for(const sheet of sheets)button(t`Drawing: ${sheet.title}`,()=>drawingPanel.open({sheetId:sheet.id}),group);
@@ -644,7 +655,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { simulation.refresh(); viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); palette.dispose(); drawingPanel.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;

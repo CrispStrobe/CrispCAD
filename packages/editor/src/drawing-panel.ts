@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {drawingAssemblyAvailable,isAssemblyDrawingSource,drawingAnnotationLimit,drawingScales,drawingSourceFor,evaluateExtrusion,isDrawingVertex,newId,resolveDrawingSource,t,validDrawingPosition} from '@brickwright/cad-core';
 import type {CadSession,DrawingAnnotation,DrawingDimensionKind,DrawingInputs,DrawingScale,SketchPoint} from '@brickwright/cad-core';
-import type {GeometryResult} from '@brickwright/cad-geometry';
+import type {AssemblyProjection} from './assembly-drawing.js';
 import type {CadFile} from './index.js';
 import {layoutDrawing} from './drawing-layout.js';
 import type {DrawingLayout} from './drawing-layout.js';
@@ -50,7 +50,7 @@ function previewDrawing(layout:DrawingLayout,assembly:boolean) {
  return svg;
 }
 
-export function mountDrawingPanel(parent:HTMLElement,session:CadSession,whenIdle:()=>Promise<GeometryResult>,onExport?: (file:CadFile)=>void|Promise<void>){
+export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectAssembly:()=>Promise<AssemblyProjection|undefined>,onExport?: (file:CadFile)=>void|Promise<void>){
  const dialog=element('dialog');dialog.className='sketch-dialog drawing-dialog';
  dialog.setAttribute('aria-label',t('Drawing sheet'));parent.append(dialog);
  dialog.addEventListener('keydown',event=>event.stopPropagation());
@@ -254,8 +254,8 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,whenIdle
     preview.replaceChildren();layout=undefined;status.textContent='';
     save.disabled=pdf.disabled=true;
     const ticket=++renderTicket,current=session.state.document;
-    const show=(draft:DrawingInputs,geometry?:GeometryResult)=>{
-     layout=layoutDrawing(current,draft,geometry);
+    const show=(draft:DrawingInputs,projection?:AssemblyProjection)=>{
+     layout=layoutDrawing(current,draft,projection);
      preview.append(previewDrawing(layout,assembly));
      save.disabled=false;
      pdf.disabled=!!layout.annotationIssues.length;
@@ -267,7 +267,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,whenIdle
      if(assembly){
       status.textContent=t('Projecting assembly…');
       const active=()=>dialog.open&&dialog.firstChild===heading&&ticket===renderTicket&&session.state.document===current;
-      void whenIdle().then(geometry=>{if(active())show(draft,geometry);}).catch(error=>{if(active())report(error);});
+      void projectAssembly().then(projection=>{if(active()&&projection)show(draft,projection);}).catch(error=>{if(active())report(error);});
      }else show(draft);
     }catch(error){report(error);}
     if(!assembly)refreshDimensions();

@@ -268,6 +268,20 @@ test('curved dimensions follow the authored arc and survive drawing reopen',asyn
 test('assembly views use current solid placements and export a linked PDF',async({page,hasTouch})=>{
  const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
  const ready=()=>expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ const workers:string[]=[];
+ page.on('worker',worker=>{if(worker.url().includes('assembly-projection.worker'))workers.push(worker.url());});
+ await page.addInitScript(()=>{
+  const state=window as Window&{releaseAssemblyProjection?:()=>void};
+  const post=Worker.prototype.postMessage;
+  Worker.prototype.postMessage=function(message:unknown){
+   if(typeof message==='object'&&message&&'geometry' in message&&'locale' in message&&!sessionStorage.getItem('assemblyDeferred')){
+    sessionStorage.setItem('assemblyDeferred','1');
+    state.releaseAssemblyProjection=()=>post.call(this,message);
+    return;
+   }
+   return Reflect.apply(post,this,arguments);
+  };
+ });
  await page.goto('/');
  await ready();
  await addShape(page,'Box',hasTouch);
@@ -284,7 +298,12 @@ test('assembly views use current solid placements and export a linked PDF',async
  await press(open);
  const dialog=page.getByRole('dialog',{name:'Drawing sheet',exact:true});
  const preview=dialog.getByRole('img',{name:'Drawing preview'});
+ await expect(dialog.getByRole('status',{name:'Drawing status'})).toHaveText('Projecting assembly…');
+ await expect(dialog.getByRole('button',{name:'Save drawing sheet',exact:true})).toBeDisabled();
  await dialog.getByLabel('Sheet title').fill('Assembly overview');
+ await dialog.getByLabel('Drawing scale').selectOption('1:1');
+ await page.waitForFunction(()=>typeof (window as Window&{releaseAssemblyProjection?:()=>void}).releaseAssemblyProjection==='function');
+ await page.evaluate(()=>(window as Window&{releaseAssemblyProjection:()=>void}).releaseAssemblyProjection());
  await expect(preview).toContainText('Assembly · 2 bodies');
  for(const view of ['Top view','Front view','Right view'])await expect(preview).toContainText(view);
  await expect(preview.locator('.drawing-hidden').first()).toBeVisible();
@@ -293,6 +312,7 @@ test('assembly views use current solid placements and export a linked PDF',async
  await expect(preview.locator('.drawing-visible').first()).toBeVisible();
  const paths=()=>preview.locator('.drawing-visible').evaluateAll(items=>items.map(item=>item.getAttribute('d')));
  const before=await paths();
+ expect(workers).toHaveLength(1);
  await press(dialog.getByRole('button',{name:'Save drawing sheet',exact:true}));
  await expect(dialog).toBeHidden();
 
@@ -303,6 +323,7 @@ test('assembly views use current solid placements and export a linked PDF',async
  await press(sheet);
  await expect(preview).toContainText('Assembly · 2 bodies');
  expect(await paths()).not.toEqual(before);
+ expect(workers).toHaveLength(2);
  const [download]=await Promise.all([
   page.waitForEvent('download'),press(dialog.getByRole('button',{name:'Export drawing PDF',exact:true}))
  ]);
