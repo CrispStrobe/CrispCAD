@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {constructionInputs,createCadSession,evaluateSketch,sketchDxfLayerFields,t} from '@brickwright/cad-core';
-import type {CadDocument,CadSession,PlanarSketch,SketchLoop,SketchPoint,SketchProfile} from '@brickwright/cad-core';
+import type {ArtworkProfileLink,CadDocument,CadSession,PlanarSketch,SketchLoop,SketchPoint,SketchProfile} from '@brickwright/cad-core';
 
 function replacement(before:SketchLoop,incoming:SketchLoop):SketchLoop;
 function replacement(before:SketchProfile,incoming:SketchProfile):SketchProfile;
@@ -43,15 +43,16 @@ function sketchBounds(contours:SketchPoint[][]){
  return {min,max,size:[max[0]-min[0],max[1]-min[1]] as SketchPoint};
 }
 
-export function artworkSketchTargets(document:CadDocument,kind:SketchProfile['kind']){
- return Object.values(document.sketches??{}).filter(sketch=>sketch.profile.kind===kind).map(sketch=>({
-  id:sketch.id,name:sketch.name,plane:sketch.plane,artworkSourceId:sketch.artworkSourceId,...sketchBounds(contours(document,sketch)),
+export function artworkSketchTargets(document:CadDocument,kind?:SketchProfile['kind']){
+ return Object.values(document.sketches??{}).filter(sketch=>!kind||sketch.profile.kind===kind).map(sketch=>({
+  id:sketch.id,name:sketch.name,plane:sketch.plane,kind:sketch.profile.kind,artworkSourceId:sketch.artworkSourceId,
+  artworkProfile:sketch.artworkProfile,...sketchBounds(contours(document,sketch)),
  }));
 }
 
 /** Evaluate the copy before publishing anything. The returned confirmation is bound to this revision. */
 export async function prepareArtworkSketchRefresh(session:CadSession,evaluate:(draft:CadDocument)=>Promise<unknown>,
- id:string,incoming:SketchProfile,isOpen:()=>boolean=()=>true,artwork:{sourceId?:string;link?:boolean}={}){
+ id:string,incoming:SketchProfile,isOpen:()=>boolean=()=>true,artwork:{sourceId?:string;link?:boolean;profile?:ArtworkProfileLink}={}){
  const {document,revision}=session.state;
  const before=document.sketches?.[id];
  if(!before)throw new Error(t('Sketch does not exist'));
@@ -67,7 +68,9 @@ export async function prepareArtworkSketchRefresh(session:CadSession,evaluate:(d
       used.has(note.bodyId)||typeof note.source==='object'&&note.source.sketchId===id)))
   throw new Error(t('This sketch has drawing dimensions. Add the artwork as a new sketch.'));
  const profile=replacement(before.profile,incoming);
- const patch={profile,...(artwork.link&&artwork.sourceId?{artworkSourceId:artwork.sourceId}:{})};
+ const sourceId=before.artworkSourceId??(artwork.link?artwork.sourceId:undefined);
+ const patch={profile,...(sourceId?{artworkSourceId:sourceId}:{}),
+  ...(sourceId&&artwork.profile?{artworkProfile:artwork.profile}:{})};
  const trial=createCadSession(document);
  try{
   trial.updateSketch(id,patch);

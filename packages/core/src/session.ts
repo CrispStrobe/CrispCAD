@@ -24,7 +24,7 @@ import type { ParametricDesign } from './parameters.js';
 import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositionExpression} from './fragments.js';
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
-type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'|'artworkSourceId'>>;
+type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'|'artworkSourceId'|'artworkProfile'>>;
 function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
@@ -122,7 +122,8 @@ function editSketch(d:CadDocument,id:string,patch:SketchPatch) {
     upgradeSketchProfile(d,next.profile);
     retainDrawingVertexIds(sketch.profile,next.profile,newId);
   }
-  if(next.artworkSourceId!==undefined&&d.version<39)d.version=39;
+  if(next.artworkProfile!==undefined&&d.version<40)d.version=40;
+  else if(next.artworkSourceId!==undefined&&d.version<39)d.version=39;
   d.sketches![id]=next;
 }
 function positionSketchRegions(d:CadDocument){
@@ -398,13 +399,15 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     },
     addCode(program:CodeProgram,name='Code object',options:{position?:Vec3}={}){const id=newId();commit('Add code object',d=>{d.version=Math.max(d.version,4) as CadDocument['version'];d.nodes[id]={id,kind:'code',program:structuredClone(program),name:uniqueObjectName(name,new Set(d.roots.map(key=>d.nodes[key].name))),color:'#76b7ce',transform:{...identityTransform(),position:options.position??[0,0,0]}};d.roots.push(id);return [id];});return id;},
     updateCode(id:string,program:CodeProgram){commit('Edit code object',d=>{const node=d.nodes[id];if(node?.kind!=='code')throw new Error(t('Select a code object'));guardConstructionEdit(d,id);const next={...node,program:structuredClone(program)};if(next.physics&&!sameModelValue(node.program,program)){next.physics={...next.physics};delete next.physics.collisionAssembly;}d.nodes[id]=next;});},
-    addSketch(profile:SketchProfile,options:{name?:string;plane?:PlanarSketch['plane'];artworkSourceId?:string}={}) {
+    addSketch(profile:SketchProfile,options:Pick<SketchPatch,'name'|'plane'|'artworkSourceId'|'artworkProfile'>={}) {
       const id=newId();
       commit('Add sketch',d=>{
         upgradeSketchProfile(d,profile);d.sketches??={};
         const artwork=options.artworkSourceId===undefined?{}:{artworkSourceId:options.artworkSourceId};
-        if(options.artworkSourceId!==undefined&&d.version<39)d.version=39;
-        d.sketches[id]={version:1,id,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile),...artwork};
+        if(options.artworkProfile!==undefined&&d.version<40)d.version=40;
+        else if(options.artworkSourceId!==undefined&&d.version<39)d.version=39;
+        d.sketches[id]={version:1,id,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile),...artwork,
+          ...(options.artworkProfile===undefined?{}:{artworkProfile:structuredClone(options.artworkProfile)})};
       });
       return id;
     },
@@ -504,7 +507,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         const provenanceIds=new Map((source.version>=5?source.provenance?.records??[]:[]).map(r=>[r.id,newId()]));
         if(source.version>=5&&source.provenance)d.provenance={version:1,records:[...(d.provenance?.records??[]),...source.provenance.records.map(r=>({...structuredClone(r),id:provenanceIds.get(r.id)!}))]};
         const sketches=new Map(Object.keys(source.sketches??{}).map(id=>[id,newId()]));
-        for(const [id,sketch] of Object.entries(source.sketches??{})){d.sketches??={};const next=structuredClone(sketch);next.id=sketches.get(id)!;next.profile.id=newId();delete next.artworkSourceId;d.sketches[next.id]=next;}
+        for(const [id,sketch] of Object.entries(source.sketches??{})){d.sketches??={};const next=structuredClone(sketch);next.id=sketches.get(id)!;next.profile.id=newId();delete next.artworkSourceId;delete next.artworkProfile;d.sketches[next.id]=next;}
         const names=new Set(d.roots.map(id=>d.nodes[id].name));
         for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version>=5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(isSketchFeature(node))node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if(node.kind==='mirror'||node.kind==='pattern')node.source=ids.get(node.source)!; if (source.roots.includes(id)) node.transform.position = node.transform.position.map((v, i) => v + offset[i]) as [number, number, number]; d.nodes[node.id] = node; }
         const roots = source.roots.map(id => ids.get(id)!); d.roots.push(...roots);
@@ -569,7 +572,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
           const next = newId(); map.set(id, next); const n = cloneNode(d.nodes[id]); n.id = next;
           if (n.kind === 'boolean') n.inputs = n.inputs.map(copy);
           if(n.kind==='mirror'||n.kind==='pattern')n.source=copy(n.source);
-          if(isSketchFeature(n)){let sketchId=copiedSketches.get(n.sketchId);if(!sketchId){sketchId=newId();copiedSketches.set(n.sketchId,sketchId);const sketch=structuredClone(d.sketches![n.sketchId]);sketch.id=sketchId;sketch.profile.id=newId();delete sketch.artworkSourceId;d.sketches![sketchId]=sketch;}n.sketchId=sketchId;}
+          if(isSketchFeature(n)){let sketchId=copiedSketches.get(n.sketchId);if(!sketchId){sketchId=newId();copiedSketches.set(n.sketchId,sketchId);const sketch=structuredClone(d.sketches![n.sketchId]);sketch.id=sketchId;sketch.profile.id=newId();delete sketch.artworkSourceId;delete sketch.artworkProfile;d.sketches![sketchId]=sketch;}n.sketchId=sketchId;}
           d.nodes[next] = n; return next;
         };
         const id = copy(root); const n = d.nodes[id]; n.name=uniqueObjectName(n.name.replace(/(?: copy| Kopie)(?: \d+)?$/,'')+t(' copy'),new Set(d.roots.map(id=>d.nodes[id].name))); n.transform.position[0] += 10; d.roots.push(id); copied.push(id); for(const [old,next] of map)allCopied.set(old,next);

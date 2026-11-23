@@ -771,8 +771,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   buildTree(); buildInspector(); lastRevision = session.state.revision; lastSelection = JSON.stringify(session.state.selection); viewport.setSelection(session.state.selection); void buildLatest(); refreshButtons();
   return {
     setColorMode(mode:CadColorMode){if(!['light','dark'].includes(mode))throw new Error(t('Choose light or dark mode'));host.dataset.cadColorMode=mode;if(!customAppearance)viewport.setAppearance(mode==='light'?{background:'#e7eef7',baseplate:'#cdd9e8'}:{background:'#111e29',baseplate:'#233644'});},get colorMode(){return host.dataset.cadColorMode as CadColorMode;},simulation,session, whenIdle, openFile,setRightPane,get rightPane(){return {...rightPane};},importFile,executeCommand,setSurfaceSnap,get surfaceSnap(){return viewport.surfaceSnap;},setNavigation:viewport.setNavigation,setCameraGestures:viewport.setCameraGestures,setResizeControls:viewport.setResizeControls,setGridDisplay:viewport.setGridDisplay,get gridDisplay(){return viewport.gridDisplay;},get resizeControls(){return viewport.resizeControls;},setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance(value:{background:string;baseplate:string}){viewport.setAppearance(value);customAppearance=true;},get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
-    artworkSketchTargets(kind:SketchProfile['kind']){return artworkSketchTargets(session.state.document,kind);},
-    previewArtworkSketchRefresh(id:string,profile:SketchProfile,artwork?:{sourceId?:string;link?:boolean}){
+    artworkSketchTargets(kind?:SketchProfile['kind']){return artworkSketchTargets(session.state.document,kind);},
+    previewArtworkSketchRefresh(id:string,profile:SketchProfile,artwork?:Parameters<typeof prepareArtworkSketchRefresh>[5]){
       return prepareArtworkSketchRefresh(session,doc=>client.evaluate(doc),id,profile,()=>!disposed,artwork);
     },
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
@@ -785,4 +785,4 @@ export type CadEditor = ReturnType<typeof mountCadEditor>;
 export { createCadSession } from '@brickwright/cad-core';
 export { shapeCatalog, createPresetDocument } from './shapes.js';
 
-export {readCostumeProfiles,costumeSketchProfile,costumeProfileBounds} from './costume-profiles.js';
+export {readCostumeProfiles,costumeSketchProfile,costumeProfileBounds,matchCostumeProfile} from './costume-profiles.js';

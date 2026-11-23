@@ -12,4 +12,4 @@ export {createDocument,createCadSession,parseDocument,serializeDocument,setLocal
 // Block/pseudocode modelling: hosts compile their block workspaces through the same core.
 export {compileBlocksToCadScript,applyBlocksModel,exportBlocksOpenSCAD,exportBlocksJSCAD,validateBlocksProgram,CadBlocksError,BLOCK_SHAPES} from '@brickwright/cad-core';
 
-export {readCostumeProfiles,costumeSketchProfile,costumeProfileBounds} from '@brickwright/cad-editor';
+export {readCostumeProfiles,costumeSketchProfile,costumeProfileBounds,matchCostumeProfile} from '@brickwright/cad-editor';

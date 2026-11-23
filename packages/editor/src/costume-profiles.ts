@@ -2,8 +2,8 @@
 import {CubicBezierCurve,EllipseCurve,LineCurve,QuadraticBezierCurve} from 'three';
 import type {Curve,Path,Vector2} from 'three';
 import {SVGLoader} from 'three/addons/loaders/SVGLoader.js';
-import {evaluateSketchRegion,isSketchPoint,maxSketchRegionLoops,maxSketchOutlinePoints,newId,sketchOutline,sketchPath,sketchSegmentsIntersect,t} from '@brickwright/cad-core';
-import type {SketchPoint,SketchProfile} from '@brickwright/cad-core';
+import {artworkProfileKeyPattern,geometrySignature,evaluateSketchRegion,isSketchPoint,maxSketchRegionLoops,maxSketchOutlinePoints,newId,sketchOutline,sketchPath,sketchSegmentsIntersect,t} from '@brickwright/cad-core';
+import type {ArtworkProfileLink,SketchPoint,SketchProfile} from '@brickwright/cad-core';
 import {localSvg} from './svg-icon.js';
 import {expandCostumeStroke} from './costume-stroke.js';
 import type {CostumeStroke} from './costume-stroke.js';
@@ -16,6 +16,8 @@ export type CostumeRegion = {
  approximated?: boolean;
  centerline?: {points:SketchPoint[];bulges?:number[];d:string};
  gapRepair?: {edges:ClosingEdge[];limitMm:number};
+ artworkProfile?: ArtworkProfileLink;
+ ambiguousSourceKey?: boolean;
 };
 export type CostumePlacement = {anchor:'lower-left'|'center';position:SketchPoint};
 type ClosingEdge = readonly [SketchPoint,SketchPoint];
@@ -272,10 +274,32 @@ function centerlineRegion(path:Path,options:CostumeImportOptions,fromPrecisionAr
  return result;
 }
 
-function isPrecisionArc(node:Element):boolean {
+function paperData(node:Element){
  const data=node.getAttribute('data-paper-data');
- if(!data)return false;
- try{return JSON.parse(data)?.bwPrecisionArc===true;}catch{return false;}
+ if(!data)return undefined;
+ try{return JSON.parse(data);}catch{return undefined;}
+}
+
+function profileSourceKey(node:Element):string|undefined {
+ const precisionId=paperData(node)?.bwPrecisionShapeId;
+ if(typeof precisionId==='string'&&/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(precisionId))
+  return `paper:${precisionId}`;
+ const id=node.getAttribute('id');
+ const key=id&&`svg:${id}`;
+ return key&&artworkProfileKeyPattern.test(key)?key:undefined;
+}
+
+/** Prefer the source identity. An absent or duplicated key needs an explicit choice. */
+export function matchCostumeProfile(profiles:readonly CostumeRegion[],saved:ArtworkProfileLink):number|undefined {
+ const matches=profiles.flatMap((profile,index)=>{
+  const candidate=profile.artworkProfile;
+  if(!candidate||candidate.mode!==saved.mode)return [];
+  const matched=saved.sourceKey?candidate.sourceKey===saved.sourceKey:candidate.signature===saved.signature;
+  return matched?[index]:[];
+ });
+ if(matches.length!==1)return undefined;
+ const index=matches[0];
+ return saved.sourceKey&&profiles[index].ambiguousSourceKey?undefined:index;
 }
 
 export function readCostumeProfiles(source:string,options?:CostumeImportOptions){
@@ -305,7 +329,23 @@ export function readCostumeProfiles(source:string,options?:CostumeImportOptions)
  let strokes=false,centerlines=false;
  const paths=new SVGLoader().parse(new XMLSerializer().serializeToString(xml)).paths;
  if(paths.length>100)throw new Error(t('This artwork contains too many paths.'));
- for(const path of paths){
+ const mode=options?.centerlineOnly?'centerline':options?.strokeOnly?'stroke':'fill';
+ const keys=paths.map(path=>path.userData?.node&&profileSourceKey(path.userData.node));
+ const keyCounts=new Map<string,number>();
+ for(const key of keys)if(key)keyCounts.set(key,(keyCounts.get(key)??0)+1);
+ for(const [pathIndex,path] of paths.entries()){
+  const sourceKey=path.subPaths.length===1?keys[pathIndex]:undefined;
+  const collect=(profile:CostumeRegion)=>{
+   const centerline=profile.centerline;
+   const coordinates=centerline?[centerline.points,centerline.bulges]:profile.loops;
+   const signature=geometrySignature(JSON.stringify(coordinates,(_key,value)=>
+    typeof value==='number'?Number(value.toPrecision(12)):value));
+   profile.artworkProfile={mode,signature,...(sourceKey?{sourceKey}:{}),
+    ...(options?.toleranceMm===undefined?{}:{toleranceMm:options.toleranceMm}),
+    ...(mode!=='fill'||options?.maxGapMm===undefined?{}:{maxGapMm:options.maxGapMm})};
+   if(sourceKey&&(keyCounts.get(sourceKey)??0)>1)profile.ambiguousSourceKey=true;
+   profiles.push(profile);
+  };
   const data=path.userData,style=data?.style;
   const visibleStroke=style?.stroke&&!['none','transparent'].includes(style.stroke)&&
    Number(style.strokeOpacity)>0&&Number(style.strokeWidth)>0;
@@ -318,9 +358,9 @@ export function readCostumeProfiles(source:string,options?:CostumeImportOptions)
    if(path.subPaths.length>maxSketchRegionLoops)throw new Error(t('A region supports up to 16 loops.'));
    if(options?.centerlineOnly){
     if(!data||!openPaths.length)continue;
-    const authoredArc=isPrecisionArc(data.node);
+    const authoredArc=paperData(data.node)?.bwPrecisionArc===true;
     for(const subpath of openPaths){
-     try{profiles.push(centerlineRegion(subpath,options,authoredArc));}catch(error){recordIssue(error);}
+     try{collect(centerlineRegion(subpath,options,authoredArc));}catch(error){recordIssue(error);}
     }
     continue;
    }
@@ -331,7 +371,7 @@ export function readCostumeProfiles(source:string,options?:CostumeImportOptions)
      throw new Error(t('This stroke cap, join, or miter limit is unsupported.'));
     const width=Number(style.strokeWidth)*strokeScale(data.node);
     for(const subpath of path.subPaths){
-     try{profiles.push(strokeRegion(subpath,{width,cap,join,miterLimit},options));}
+     try{collect(strokeRegion(subpath,{width,cap,join,miterLimit},options));}
      catch(error){recordIssue(error);}
     }
     continue;
@@ -339,7 +379,7 @@ export function readCostumeProfiles(source:string,options?:CostumeImportOptions)
    if(!visibleFill)continue;
    if(style?.fillRule&&!['evenodd','nonzero'].includes(style.fillRule))throw new Error(t('The SVG uses an unsupported fill rule.'));
    const boundaries=path.subPaths.map(subpath=>boundary(subpath,options));
-   profiles.push(...filledRegions(boundaries,style?.fillRule==='evenodd',options?.widthMm??40,options?.maxGapMm));
+   filledRegions(boundaries,style?.fillRule==='evenodd',options?.widthMm??40,options?.maxGapMm).forEach(collect);
   } catch(error) {recordIssue(error);}
  }
  return {profiles,issues:[...issues],strokes,centerlines};

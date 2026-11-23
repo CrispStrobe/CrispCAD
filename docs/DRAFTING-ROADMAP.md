@@ -553,9 +553,12 @@ project sketch. The preview overlays old and new geometry and lists the solids
 that depend on it. Declining the review leaves the model untouched. Applying it
 updates the same sketch in one Undo step. An optional source link remembers which costume or backdrop
 owns a sketch across rename, reorder, and SB3 reopen. A single linked
-compatible sketch is selected when the user opens the update list. The user
-still chooses the artwork region and confirms every geometry update. Direct
-drawing constraints and automatic region matching remain open.
+linked sketch is selected when the user opens the update list. It restores
+the source mode and conversion settings, then matches the region by a unique
+precision shape ID or SVG element ID. Anonymous geometry can match if its
+profile is unchanged and unique. Changed anonymous, duplicate, and older
+links ask for a region before preview. Every geometry update still needs
+confirmation. Direct drawing constraints remain open.
 
 The initial handoff offers **Send to CAD** for vector costumes and
 backdrops when Precision design is enabled. Select a region, set its width

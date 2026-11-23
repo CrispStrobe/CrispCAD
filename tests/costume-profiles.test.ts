@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {expect,it} from 'vitest';
 import {CubicBezierCurve,EllipseCurve,LineCurve,QuadraticBezierCurve,Vector2} from 'three';
-import {costumeCurveSteps,costumeProfileBounds,costumeSketchProfile} from '../packages/editor/src/costume-profiles.js';
+import {costumeCurveSteps,costumeProfileBounds,costumeSketchProfile,matchCostumeProfile} from '../packages/editor/src/costume-profiles.js';
 import type {CostumeRegion} from '../packages/editor/src/costume-profiles.js';
 import {evaluateSketchRegion} from '@brickwright/cad-core';
 import {costumeArcSweep,costumeCenterlinePreview} from '../packages/editor/src/costume-centerline.js';
@@ -100,4 +100,25 @@ it('recovers a rounded authored circular cubic and keeps general artwork curves 
  expect(costumeArcSweep(arc,true)).toBeUndefined();
  expect(costumeArcSweep(new EllipseCurve(0,0,20,20,0,Math.PI/2,true),false)).toBeCloseTo(-3*Math.PI/2,10);
  expect(costumeArcSweep(new EllipseCurve(0,0,20,10,0,Math.PI/2),false)).toBeUndefined();
+});
+
+
+it('matches a named artwork region after reordering or changing its geometry',()=>{
+ const saved={mode:'fill',signature:'25:10:20',sourceKey:'svg:target'} as const;
+ const changed={...ring,artworkProfile:{...saved,signature:'38:11:22'}};
+ const other={...ring,artworkProfile:{...saved,sourceKey:'svg:other'}};
+ expect(matchCostumeProfile([other,changed],saved)).toBe(1);
+ expect(matchCostumeProfile([other],saved)).toBeUndefined();
+ expect(matchCostumeProfile([changed,changed],saved)).toBeUndefined();
+ expect(matchCostumeProfile([{...changed,ambiguousSourceKey:true}],saved)).toBeUndefined();
+});
+
+it('requires unique exact geometry and the same source mode for an anonymous region',()=>{
+ const saved={mode:'fill',signature:'25:10:20'} as const;
+ const exact={...ring,artworkProfile:saved};
+ const changed={...ring,artworkProfile:{...saved,signature:'38:11:22'}};
+ const stroke={...ring,artworkProfile:{...saved,mode:'stroke' as const}};
+ expect(matchCostumeProfile([changed,stroke,exact],saved)).toBe(2);
+ expect(matchCostumeProfile([changed,stroke],saved)).toBeUndefined();
+ expect(matchCostumeProfile([changed,exact,exact],saved)).toBeUndefined();
 });

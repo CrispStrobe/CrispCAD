@@ -68,3 +68,30 @@ it('binds a sketch in the same Undo step and refuses refreshes from a different 
  session.undo();
  expect(session.state.document.sketches![id].artworkSourceId).toBeUndefined();
 });
+
+
+it('serializes a per-region link, preserves it on ordinary edits, and updates it only on Apply',async()=>{
+ const session=createCadSession();
+ const sourceId='12345678-1234-4234-8234-123456789abc';
+ const artworkProfile={mode:'fill',signature:'25:10:20',sourceKey:'svg:panel',toleranceMm:.2} as const;
+ const id=session.addSketch(outline(20),{artworkSourceId:sourceId,artworkProfile});
+ expect(session.state.document.version).toBe(40);
+ const reopened=createCadSession(JSON.parse(session.serialize()));
+ reopened.updateSketch(id,{name:'Renamed'});
+ expect(artworkSketchTargets(reopened.state.document)[0]).toMatchObject({id,kind:'outline',artworkProfile});
+ const changed={...artworkProfile,signature:'38:11:22'};
+ const review=await prepareArtworkSketchRefresh(reopened,async draft=>{
+  expect(draft.sketches![id].artworkProfile).toEqual(changed);
+ },id,outline(30),undefined,{sourceId,profile:changed});
+ expect(reopened.state.document.sketches![id].artworkProfile).toEqual(artworkProfile);
+ review.apply();
+ expect(reopened.state.document.sketches![id].artworkProfile).toEqual(changed);
+ reopened.undo();
+ expect(reopened.state.document.sketches![id].artworkProfile).toEqual(artworkProfile);
+ const missingOwner=JSON.parse(reopened.serialize());
+ delete missingOwner.sketches[id].artworkSourceId;
+ expect(()=>createCadSession(missingOwner)).toThrow(/Invalid sketch artwork link/);
+ const oldVersion=JSON.parse(reopened.serialize());
+ oldVersion.version=39;
+ expect(()=>createCadSession(oldVersion)).toThrow(/Invalid sketch artwork link/);
+});

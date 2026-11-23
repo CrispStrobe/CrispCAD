@@ -34,7 +34,11 @@ export type SketchProfile =
   SketchRegionProfile;
 /** Profiles are analytic design inputs. Rectangle closure/orthogonality and circle
  * closure are enforced by construction; a general constraint solver comes later. */
-export interface PlanarSketch {version:1; id:string; name:string; plane:SketchPlane; profile:SketchProfile; artworkSourceId?:string}
+export interface ArtworkProfileLink {
+ mode:'fill'|'stroke'|'centerline'; signature:string; sourceKey?:string; toleranceMm?:number; maxGapMm?:number;
+}
+export const artworkProfileKeyPattern=/^(paper|svg):[A-Za-z0-9_-][A-Za-z0-9_.:-]{0,119}$/;
+export interface PlanarSketch {version:1; id:string; name:string; plane:SketchPlane; profile:SketchProfile; artworkSourceId?:string; artworkProfile?:ArtworkProfileLink}
 export interface ExtrusionFeature {kind:'extrusion'; featureVersion:1; sketchId:string; distance:FeatureScalar; symmetric:boolean}
 export interface RevolutionFeature {
   kind:'revolution';
@@ -222,6 +226,16 @@ export function checkFeatures(doc:CadDocument) {
       if(!idOk(id)||sketch.id!==id)throw new Error(t('Invalid sketch identity'));
       if(sketch.artworkSourceId!==undefined&&(doc.version<39||typeof sketch.artworkSourceId!=='string'||
          !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(sketch.artworkSourceId)))
+        throw new Error(t('Invalid sketch artwork link'));
+      const source=sketch.artworkProfile;
+      const validTolerance=(value:unknown)=>value===undefined||typeof value==='number'&&value>=.01&&value<=10;
+      if(source!==undefined&&(doc.version<40||!sketch.artworkSourceId||!record(source)||
+         !['fill','stroke','centerline'].includes(source.mode)||
+         (source.mode==='centerline')!==(sketch.profile?.kind==='path')||
+         typeof source.signature!=='string'||!/^\d{1,8}:\d{1,10}:\d{1,10}$/.test(source.signature)||
+         source.sourceKey!==undefined&&(typeof source.sourceKey!=='string'||!artworkProfileKeyPattern.test(source.sourceKey))||
+         !validTolerance(source.toleranceMm)||!validTolerance(source.maxGapMm)||
+         source.mode!=='fill'&&source.maxGapMm!==undefined))
         throw new Error(t('Invalid sketch artwork link'));
       if(sketch.profile?.kind==='path'){
       if(doc.version<15)throw new Error(t('Open sketch paths require document version 15'));
