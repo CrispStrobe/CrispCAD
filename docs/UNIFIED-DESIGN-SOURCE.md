@@ -82,4 +82,5 @@ accepts source up to 65,536 characters and retains its tighter headless model an
 transport limits. The browser worker solves constraints on single closed
 outlines, including driving radii and tangency to an adjoining line or arc.
 Region boundaries and cutouts can each retain their own outline constraints.
-Relations between separate loops remain roadmap work.
+Retained X/Y offsets position one outline relative to another within the
+same region. General edge relations between separate loops remain open.

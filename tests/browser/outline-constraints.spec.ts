@@ -321,3 +321,44 @@ test('edits and retains independent constraints on a region boundary and a cutou
  await press(sketch.getByRole('button',{name:'Edit constraint 1',exact:true}));
  await expect(sketch.getByRole('textbox',{name:'Segment length (mm)',exact:true})).toHaveValue('15');
 });
+
+test('positions a cutout from the first vertex of its reference loop and rolls back a collision',async({page,hasTouch})=>{
+ const press=async(control:ReturnType<typeof page.getByRole>)=>{
+  if(hasTouch){await control.scrollIntoViewIfNeeded();await control.tap();}
+  else await control.click();
+ };
+ const fill=async(control:ReturnType<typeof page.getByLabel>,value:string)=>{
+  await control.fill(value);
+  await control.blur();
+ };
+ await page.goto('/');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await press(page.getByRole('button',{name:'Sketch',exact:true}));
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await sketch.getByLabel('Profile',{exact:true}).selectOption('region');
+ const rows=sketch.getByLabel('Region loops (mm)');
+ await fill(rows,'0, 0 | 60, 0 | 60, 40 | 0, 40\n10, 10 | 18, 10 | 18, 18 | 10, 18');
+ await press(sketch.getByText('Region loop positions',{exact:true}));
+ await sketch.getByLabel('Reference loop',{exact:true}).selectOption({label:'Outline loop 1'});
+ await sketch.getByLabel('Positioned loop',{exact:true}).selectOption({label:'Outline loop 2'});
+ const offset=sketch.getByLabel('X offset (mm)',{exact:true});
+ await fill(offset,'25');
+ await press(sketch.getByRole('button',{name:'Add loop position',exact:true}));
+ const positioned='0, 0 | 60, 0 | 60, 40 | 0, 40\n25, 10 | 33, 10 | 33, 18 | 25, 18';
+ await expect(rows).toHaveValue(positioned);
+ const editPosition=sketch.getByRole('button',{name:'Edit loop position 1',exact:true});
+ await press(editPosition);
+ await fill(offset,'55');
+ await press(sketch.getByRole('button',{name:'Update loop position',exact:true}));
+ await expect(sketch.getByRole('status',{name:'Region position status'})).toContainText('separate holes');
+ await expect(rows).toHaveValue(positioned);
+ await press(sketch.getByRole('button',{name:'Create extrusion',exact:true}));
+ await expect(sketch).toBeHidden();
+ const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
+ if(!await edit.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
+ await press(edit);
+ await expect(rows).toHaveValue(positioned);
+ await press(editPosition);
+ await expect(offset).toHaveValue('25');
+ await expect(sketch.getByLabel('Y offset (mm)',{exact:true})).toHaveValue('10');
+});

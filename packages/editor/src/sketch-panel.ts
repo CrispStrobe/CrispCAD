@@ -4,11 +4,12 @@ import {formatSketchPoints as formatPoints, parseSketchOutline as parseOutline, 
 import {mountDxfImportControls} from './dxf-import-controls.js';
 import {mountOutlineConstraintControls} from './outline-constraint-controls.js';
 import {mountRegionConstraintControls} from './region-constraint-controls.js';
+import {mountRegionPositionControls} from './region-position-controls.js';
 import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
-import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchRegionLoops,newId,sketchBulgeMidpoint,sketchDxfLayerFields,trimSketchProfile} from '@brickwright/cad-core';
-import type {DxfSegmentWidth,SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument,PlanarSketch} from '@brickwright/cad-core';
+import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchRegionLoops,newId,positionRegionLoops,sketchBulgeMidpoint,sketchDxfLayerFields,trimSketchProfile} from '@brickwright/cad-core';
+import type {DxfSegmentWidth,RegionLoopPlacement,SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument,PlanarSketch} from '@brickwright/cad-core';
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
 const scalar=(source:string):FeatureScalar=>source.trim()!==''&&Number.isFinite(Number(source))?Number(source):source.trim();
 /** Definition editor: complete draft + kernel preflight before the real session changes. */
@@ -216,12 +217,17 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    return {kind:'circle',id,radius:scalar(radius.value),segments:profile?.kind==='circle'?profile.segments:64,...singleDxfLayer,
     ...(profile?.kind==='circle'&&profile.center||location.some(Boolean)?{center:location}:{})};
   }
-  const readForm=(retain=false)=>{
+  const readForm=(retain=false,positions?:RegionLoopPlacement[])=>{
    const profile=definition();
    let retained=profile;
-   if(retain&&!linked){
-    if(profile.kind==='outline')retained={...profile,...outlineConstraints.forSave(profile)};
-    if(profile.kind==='region')retained={...profile,loops:regionConstraints.forSave(profile.loops)};
+   if(!linked){
+    if(retain&&profile.kind==='outline')retained={...profile,...outlineConstraints.forSave(profile)};
+    if(profile.kind==='region'){
+     const placementFields=positions===undefined?regionPositions.forSave(profile.loops):{placements:positions.length?positions:undefined};
+     retained=positionRegionLoops({...profile,...placementFields,
+      loops:retain?regionConstraints.forSave(profile.loops):profile.loops
+     },value=>featureValue(value,doc));
+    }
    }
    return {
    sketch:{name:name.value.trim(),plane:plane.value as SketchPlane,profile:retained},
@@ -266,6 +272,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   function draw(){
    outlineConstraints.refresh();
    regionConstraints.refresh();
+   regionPositions.refresh();
    widthHint.hidden=true;
    trimPanel.hidden=!!linked||!['outline','region'].includes(kind.value);
    if(trimPanel.hidden&&trimPicking)setTrimPicking(0);
@@ -379,7 +386,9 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     }
     const drawOutline=(outline:Extract<SketchProfile|SketchLoop,{kind:'outline'}>,loop:number)=>{
      const {points,bulges}=outline;
+     const positioned=p.kind==='region'&&p.placements?.some(placement=>placement.target===outline.id);
      points.forEach((point,index)=>{
+      if(index===0&&positioned)return;
       const [x,y]=place(point);
       handle(x,y,'vertex',{loop,index});
      });
@@ -549,7 +558,24 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     refreshDraft();
    }
   });
-  const hasDraftConstraints=(profile:SketchProfile)=>profile.kind==='outline'?outlineConstraints.hasConstraints:profile.kind==='region'&&regionConstraints.hasConstraints;
+  const regionPositions=mountRegionPositionControls(form,{
+   initial:profile?.kind==='region'?profile.placements??[]:[],
+   initialLoops:regionLoops,
+   visible:()=>!linked&&kind.value==='region',
+   available:()=>available()&&!constraintPending(),
+   scalar,changed:refreshDraft,
+   read:()=>{
+    const profile=definition();
+    return profile.kind==='region'?profile.loops:[];
+   },
+   apply:positions=>{
+    const snapshot=readForm(false,positions);
+    previewShape(snapshot);
+    replaceProfileDraft(snapshot.sketch.profile);
+   }
+  });
+  const hasDraftConstraints=(profile:SketchProfile)=>profile.kind==='outline'?outlineConstraints.hasConstraints
+   :profile.kind==='region'&&(regionConstraints.hasConstraints||regionPositions.hasConstraints);
   form.addEventListener('input',refreshDraft);form.addEventListener('change',refreshDraft);
   trimApply.onclick=()=>{
    if(busy||drag||constraintPending())return;
@@ -639,7 +665,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     },
     read:(drawing,assumeMm,layers)=>drawing.outline(assumeMm,layers),
     imported:(imported,fileName)=>{
-     if(outlineConstraints.hasConstraints||regionConstraints.hasConstraints)throw new Error(t('Clear outline constraints before importing another profile.'));
+     if(outlineConstraints.hasConstraints||regionConstraints.hasConstraints||regionPositions.hasConstraints)throw new Error(t('Clear outline constraints before importing another profile.'));
      const id='dxf-preview';
      evaluateExtrusion({kind:'extrusion',featureVersion:1,id,sketchId:id,distance:1,symmetric:false},{
       ...doc,sketches:{[id]:{version:1,id,name:'DXF',plane:'XY',profile:imported}}

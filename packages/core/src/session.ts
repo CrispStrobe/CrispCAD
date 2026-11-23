@@ -18,13 +18,13 @@ import type {PlanarSketch,SketchProfile,FeatureScalar,RevolutionFeature,MirrorFe
 import {isOutlineCurveRule,outlineBulgesForCurves,outlineCurvesSatisfied,outlineRelationsForSolve,outlineSatisfiesRelations} from './outline-relations.js';
 import type {OutlineSolveRequest} from './outline-relations.js';
 import type {SketchPoint} from './sketch-outline.js';
-import {hasOutlineRelations,sketchOutlineProfiles} from './sketch-region.js';
+import {hasOutlineRelations,positionRegionLoops,sketchOutlineProfiles} from './sketch-region.js';
 import type { ParametricDesign } from './parameters.js';
 import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositionExpression} from './fragments.js';
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -32,7 +32,8 @@ function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33
   doc.version=version;
 }
 function upgradeSketchProfile(doc:CadDocument,profile:SketchProfile){
-  if(profile.kind==='region'&&hasOutlineRelations(profile))upgradeModelFeatures(doc,35);
+  if(profile.kind==='region'&&profile.placements!==undefined)upgradeModelFeatures(doc,36);
+  else if(profile.kind==='region'&&hasOutlineRelations(profile))upgradeModelFeatures(doc,35);
   else if(profile.kind==='outline'&&profile.relations!==undefined){
     const kinds=new Set(profile.relations.map(rule=>rule.kind));
     upgradeModelFeatures(doc,kinds.has('arc-tangent')?34:kinds.has('tangent')?33:kinds.has('radius')?32:31);
@@ -119,6 +120,17 @@ function editSketch(d:CadDocument,id:string,patch:Partial<Pick<PlanarSketch,'nam
   }
   d.sketches![id]=next;
 }
+function positionSketchRegions(d:CadDocument){
+  const changed:string[]=[];
+  for(const [id,sketch] of Object.entries(d.sketches??{})){
+    if(sketch.profile?.kind!=='region'||sketch.profile.placements===undefined)continue;
+    const profile=positionRegionLoops(sketch.profile,value=>featureValue(value,d));
+    if(profile===sketch.profile)continue;
+    d.sketches![id]={...sketch,profile};
+    changed.push(id);
+  }
+  return changed;
+}
 type OutlineSolver=(request:OutlineSolveRequest,signal:AbortSignal)=>Promise<SketchPoint[]>;
 function affectedOutlines(document:CadDocument,next:CadDocument){
   return Object.values(next.sketches??{}).flatMap(sketch=>sketchOutlineProfiles(sketch.profile).flatMap(profile=>{
@@ -145,9 +157,11 @@ export function createCadSession(initial: CadDocument = createDocument()) {
   function commit(title: string, edit: (draft: CadDocument) => string[] | void) {
     const draft = { ...document, ...(document.version>=8&&document.tracers?{tracers:structuredClone(document.tracers)}:{}), roots: [...document.roots], ...(document.joints ? {joints: structuredClone(document.joints)} : {}), ...(document.parametric ? {parametric:structuredClone(document.parametric)} : {}), ...(document.sketches?{sketches:structuredClone(document.sketches)}:{}), nodes: Object.fromEntries(Object.entries(document.nodes).map(([id, node]) => [id, cloneNode(node)])) };
     const nextSelection = edit(draft);
+    const positioned=positionSketchRegions(draft);
     applyParametricBindings(draft);
     if(liveModelSource||draft.version>=6&&draft.modelSource){assertProvenanceUpgrade(draft);draft.version=Math.max(6,draft.version) as CadDocument['version'];draft.modelSource={version:1,language:'brickwright-design',source:updateModelSource(draft.modelSource?.source,draft)};}
     checkDocument(draft);
+    for(const id of positioned)assertSketchJointsEditable(draft,id);
     for (const [id, node] of Object.entries(draft.nodes)) {
       const previous = document.nodes[id];
       if (previous && equivalent(node, previous)) draft.nodes[id] = previous;
@@ -231,8 +245,12 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     return prepared;
   }
   function prepareModelSource(source:string,options:SourceOptions={}):PreparedSource{
-    const expected=revision,previous=document,candidate=checkDocument(compileSourceCandidate(source,options));
+    const expected=revision,previous=document,candidate=compileSourceCandidate(source,options);
+    checkSketchCollection(candidate);
     if(affectedOutlines(previous,candidate).length)throw new Error(t('This source edit requires solving its outline constraints.'));
+    const positioned=positionSketchRegions(candidate);
+    checkDocument(candidate);
+    for(const id of positioned)assertSketchJointsEditable(candidate,id);
     return prepareSourceCandidate(source,candidate,expected);
   }
   const session = {
@@ -250,8 +268,9 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       const profiles=await solveAffectedOutlines(previous,candidate,solve,signal,expected);
       checkOutlineSolve(expected,signal);
       for(const [id,profile] of profiles)candidate.sketches![id]={...candidate.sketches![id],profile};
+      const positioned=positionSketchRegions(candidate);
       checkDocument(candidate);
-      for(const id of profiles.keys())assertSketchJointsEditable(candidate,id);
+      for(const id of new Set([...profiles.keys(),...positioned]))assertSketchJointsEditable(candidate,id);
       return prepareSourceCandidate(source,candidate,expected);
     },
     applyPreparedModelSource(prepared:PreparedSource){

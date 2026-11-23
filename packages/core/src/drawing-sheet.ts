@@ -206,6 +206,11 @@ export function retainDrawingVertexIds(before:SketchProfile,after:SketchProfile,
   const original=previous.find(item=>item.id===outline.id&&item.vertexIds);
   if(!original)continue;
   if(!Array.isArray(outline.points))continue;
+  if(after.kind==='region'&&after.placements?.some(item=>item.target===outline.id||item.reference===outline.id)&&
+    outline.points.length===original.points.length){
+   outline.vertexIds=original.vertexIds!.slice();
+   continue;
+  }
   const key=(point:readonly number[])=>JSON.stringify(point);
   const indices=new Map(original.points.map((point,index)=>[key(point),index]));
   const ids=outline.points.map(point=>{

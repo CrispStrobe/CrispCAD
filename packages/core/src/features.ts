@@ -3,12 +3,12 @@ import {t} from './i18n.js';
 import {outlineRelationsForSolve} from './outline-relations.js';
 import {checkDrawingVertexIds} from './drawing-sheet.js';
 import {isSketchPoint,sketchOutline,sketchPath} from './sketch-outline.js';
-import {evaluateSketchRegion,sketchOutlineProfiles} from './sketch-region.js';
+import {evaluateSketchRegion,positionRegionLoops,sketchOutlineProfiles} from './sketch-region.js';
 import {checkSketchDxfLayer,sketchDxfLayerFields} from './sketch-dxf-layer.js';
 import type {SketchDxfLayer} from './sketch-dxf-layer.js';
 import {checkSketchDxfWidths} from './sketch-dxf-width.js';
 import type {SketchDxfWidths} from './sketch-dxf-width.js';
-import type {SketchLoop,SketchOutlineProfile} from './sketch-region.js';
+import type {SketchOutlineProfile,SketchRegionProfile} from './sketch-region.js';
 import type {SketchPoint} from './sketch-outline.js';
 import {constructionInputs} from './document.js';
 import type {CadDocument, Vec3} from './document.js';
@@ -30,7 +30,7 @@ export type SketchProfile =
   ({kind:'circle'; id:string; radius:FeatureScalar; segments:number; center?:SketchPoint}&SketchDxfLayer) |
   SketchOutlineProfile |
   SketchPathProfile |
-  {kind:'region'; id:string; loops:SketchLoop[]};
+  SketchRegionProfile;
 /** Profiles are analytic design inputs. Rectangle closure/orthogonality and circle
  * closure are enforced by construction; a general constraint solver comes later. */
 export interface PlanarSketch {version:1; id:string; name:string; plane:SketchPlane; profile:SketchProfile}
@@ -223,6 +223,11 @@ export function checkFeatures(doc:CadDocument) {
       if(doc.version<16&&(sketch.profile.anchors!==undefined||sketch.profile.vertexIds!==undefined))throw new Error(t('Path point locks require document version 16'));
     }
     evaluateSketch(sketch,doc);checkDrawingVertexIds(sketch.profile,doc.version);
+    if(sketch.profile.kind==='region'&&sketch.profile.placements!==undefined){
+      if(doc.version<36)throw new Error(t('Region loop positions require document version 36'));
+      if(positionRegionLoops(sketch.profile,value=>featureValue(value,doc))!==sketch.profile)
+        throw new Error(t('Region loop positions do not match the saved geometry.'));
+    }
     for(const outline of sketchOutlineProfiles(sketch.profile)){
       if(outline.relations===undefined)continue;
       if(sketch.profile.kind==='region'&&doc.version<35)throw new Error(t('Region outline constraints require document version 35'));
@@ -252,7 +257,8 @@ export function sketchExpressions(sketch:PlanarSketch):string[] {
     profile.kind==='path'?[...(profile.anchors??[]).flatMap(anchor=>[anchor.x,anchor.y]),
       ...(profile.segmentConstraints??[]).flatMap(constraint=>[constraint.distance,constraint.direction])]:
     profile.kind==='outline'?outlineValues(profile):
-    profile.kind==='region'?profile.loops.flatMap(loop=>loop.kind==='circle'?[...loop.center,loop.radius]:outlineValues(loop)):[];
+    profile.kind==='region'?[...profile.loops.flatMap(loop=>loop.kind==='circle'?[...loop.center,loop.radius]:outlineValues(loop)),
+      ...(profile.placements??[]).flatMap(placement=>placement.offset)]:[];
   return values.filter((value):value is string=>typeof value==='string');
 }
 export function rewriteSketchExpressions(sketch:PlanarSketch,rewrite:(s:string)=>string) {
@@ -280,6 +286,7 @@ export function rewriteSketchExpressions(sketch:PlanarSketch,rewrite:(s:string)=
     }
   }
   if(profile.kind==='region'){
+    for(const placement of profile.placements??[])placement.offset=[transform(placement.offset[0]),transform(placement.offset[1])];
     for(const loop of profile.loops){
       if(loop.kind!=='circle')continue;
       loop.center=[transform(loop.center[0]),transform(loop.center[1])];

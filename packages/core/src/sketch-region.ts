@@ -4,7 +4,7 @@ import {checkSketchDxfLayer} from './sketch-dxf-layer.js';
 import type {SketchDxfLayer} from './sketch-dxf-layer.js';
 import {checkSketchDxfWidths} from './sketch-dxf-width.js';
 import type {SketchDxfWidths} from './sketch-dxf-width.js';
-import {isSketchPoint, sketchOutline, sketchSegmentsIntersect} from './sketch-outline.js';
+import {isSketchPoint,maxSketchOutlinePoints,sketchOutline,sketchSegmentsIntersect} from './sketch-outline.js';
 import type {OutlineRelation} from './outline-relations.js';
 import type {FeatureScalar,SketchProfile} from './features.js';
 import type {SketchPoint} from './sketch-outline.js';
@@ -14,6 +14,9 @@ export type SketchOutlineProfile = {kind:'outline'; id:string; points:SketchPoin
 export type SketchLoop =
   | SketchOutlineProfile
   | SketchCircleLoop;
+
+export type RegionLoopPlacement={target:string;reference:string;offset:[FeatureScalar,FeatureScalar]};
+export type SketchRegionProfile={kind:'region';id:string;loops:SketchLoop[];placements?:RegionLoopPlacement[]};
 
 type SketchCircleLoop = {kind: 'circle'; id: string; center: [FeatureScalar, FeatureScalar]; radius: FeatureScalar; segments: number}&SketchDxfLayer;
 type ResolvedCircle = Omit<SketchCircleLoop, 'center' | 'radius'> & {center: SketchPoint; radius: number};
@@ -26,6 +29,58 @@ export function sketchOutlineProfiles(profile:SketchProfile):SketchOutlineProfil
 }
 export function hasOutlineRelations(profile:SketchProfile):boolean{
   return sketchOutlineProfiles(profile).some(outline=>outline.relations!==undefined);
+}
+export function hasSketchConstraints(profile:SketchProfile):boolean{
+  return hasOutlineRelations(profile)||(profile.kind==='region'&&profile.placements!==undefined);
+}
+
+/** Translate each target so its first vertex follows the first vertex of its reference loop. */
+export function positionRegionLoops(profile:SketchRegionProfile,resolve:(value:FeatureScalar)=>number):SketchRegionProfile{
+  if(profile.placements===undefined)return profile;
+  const invalidPlacement=()=>new Error(t('Invalid region loop position. Choose two distinct outline loops.'));
+  const outlines=new Map(sketchOutlineProfiles(profile).map(loop=>[loop.id,loop]));
+  if(!Array.isArray(profile.placements)||!profile.placements.length||profile.placements.length>=maxSketchRegionLoops||
+     outlines.size<2)throw invalidPlacement();
+  const positions=new Map<string,RegionLoopPlacement>();
+  for(const placement of profile.placements){
+    if(!placement||typeof placement.target!=='string'||typeof placement.reference!=='string'||
+      placement.target===placement.reference||
+      !outlines.has(placement.target)||!outlines.has(placement.reference)||
+      !Array.isArray(placement.offset)||placement.offset.length!==2||
+      !placement.offset.every(value=>typeof value==='number'||typeof value==='string'&&value.trim()&&value.length<=160))
+      throw invalidPlacement();
+    if(positions.has(placement.target))throw new Error(t('A loop can have only one position reference.'));
+    positions.set(placement.target,placement);
+  }
+  const visiting=new Set<string>();
+  const moved=new Map<string,SketchOutlineProfile>();
+  function position(id:string):SketchOutlineProfile{
+    const cached=moved.get(id);
+    if(cached)return cached;
+    const loop=outlines.get(id)!,placement=positions.get(id);
+    if(!placement)return loop;
+    if(visiting.has(id))throw new Error(t('Region loop positions cannot contain a cycle.'));
+    visiting.add(id);
+    const anchor=position(placement.reference).points?.[0],origin=loop.points?.[0];
+    if(!isSketchPoint(anchor)||!isSketchPoint(origin)||loop.points.length>maxSketchOutlinePoints||!loop.points.every(isSketchPoint))throw invalidPlacement();
+    const x=anchor[0]+resolve(placement.offset[0]),y=anchor[1]+resolve(placement.offset[1]);
+    if(!isSketchPoint([x,y]))throw new Error(t('The positioned loop is outside the sketch coordinate range.'));
+    const [dx,dy]=[x-origin[0],y-origin[1]];
+    if(Math.abs(dx)<=1e-9&&Math.abs(dy)<=1e-9){
+      visiting.delete(id);
+      moved.set(id,loop);
+      return loop;
+    }
+    const points=loop.points.map(([px,py]):SketchPoint=>[px+dx,py+dy]);
+    if(!points.every(isSketchPoint))throw new Error(t('The positioned loop is outside the sketch coordinate range.'));
+    const placed={...loop,points};
+    moved.set(id,placed);
+    visiting.delete(id);
+    return placed;
+  }
+  for(const id of positions.keys())position(id);
+  if([...moved].every(([id,loop])=>loop===outlines.get(id)))return profile;
+  return {...profile,loops:profile.loops.map(loop=>moved.get(loop.id)??loop)};
 }
 const maxRegionVertices = 1024;
 const invalid = () => new Error(t('A region needs one outside boundary and separate holes that do not touch or cross.'));

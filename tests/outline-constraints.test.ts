@@ -360,3 +360,43 @@ it('preflights the solved source region when a growing circular cutout needs a w
  await expect(session.prepareModelSourceWithOutlineSolve(collision,{},solve,signal())).rejects.toThrow('separate holes');
  expect(session.state.document).toBe(before);
 });
+
+it('positions chained cutouts atomically, round-trips the dimensions, and preserves vertex identities',async()=>{
+ const session=createCadSession();
+ const design=(length:string)=>({version:1 as const,parameters:{pitch:{unit:'mm' as const,expression:length}},bindings:[]});
+ session.setParametric(design('10'));
+ const rectangle=(id:string,x:number,y:number,w:number,h:number):SketchOutlineProfile=>({
+  kind:'outline',id,points:[[x,y],[x+w,y],[x+w,y+h],[x,y+h]],vertexIds:['a','b','c','d']
+ });
+ const profile:Extract<SketchProfile,{kind:'region'}>={kind:'region',id:'plate',
+  loops:[rectangle('outer',0,0,70,40),rectangle('first',10,10,8,8),rectangle('second',30,10,8,8)],
+  placements:[{target:'second',reference:'first',offset:[20,0]},{target:'first',reference:'outer',offset:['pitch',10]}]
+ };
+ const body=session.addSketchExtrusion(profile),before=session.state.document,node=before.nodes[body];
+ if(node.kind!=='extrusion')throw Error('fixture');
+ const id=node.sketchId;
+ expect(before.version).toBe(36);
+ expect(parseDocument(session.serialize())).toEqual(before);
+ expect(()=>validateDocument({...before,version:35})).toThrow('version 36');
+ expect(designGraph(before).find(entry=>entry.key===`sketch:${id}`)?.dependencies).toEqual(['parameter:pitch']);
+ const copy=structuredClone(before.sketches![id]);
+ rewriteSketchExpressions(copy,name=>name==='pitch'?'copiedPitch':name);
+ expect(copy.profile).toMatchObject({placements:[profile.placements![0],{...profile.placements![1],offset:['copiedPitch',10]}]});
+ expect(()=>trimSketchProfile(before.sketches![id],before,[5,0],[5,20],'left')).toThrow('Clear outline constraints');
+ session.setParametric(design('25'));
+ const after=session.state.document,moved=after.sketches![id].profile as typeof profile;
+ expect(moved.loops).toEqual([profile.loops[0],rectangle('first',25,10,8,8),rectangle('second',45,10,8,8)]);
+ expect(()=>session.setParametric(design('55'))).toThrow('separate holes');
+ expect(session.state.document).toBe(after);
+ session.undo();
+ expect(session.state.document).toBe(before);
+ const source=session.modelSource.replace('expression: "10"','expression: "35"');
+ const prepared=await session.prepareModelSourceWithOutlineSolve(source,{},async()=>{throw Error('position requires no chord worker');},signal());
+ expect(prepared.document.sketches![id].profile).toMatchObject({loops:[
+  profile.loops[0],rectangle('first',35,10,8,8),rectangle('second',55,10,8,8)
+ ]});
+ const cycle={...profile,placements:[...profile.placements!,{target:'outer',reference:'second',offset:[0,10] as [number,number]}]};
+ expect(()=>session.updateSketch(id,{profile:cycle})).toThrow('cannot contain a cycle');
+ const duplicate={...profile,placements:[...profile.placements!,profile.placements![0]]};
+ expect(()=>session.updateSketch(id,{profile:duplicate})).toThrow('only one position reference');
+});

@@ -49,7 +49,17 @@ loop by its row in the region editor, then add or edit that loop's relations.
 Each outlined cutout and boundary has its own point IDs and constraints.
 Parameter and model-source updates solve the affected loops and validate the
 complete region before committing. Keep the loop rows in place while
-constraints are attached. Relations between different loops remain open.
+constraints are attached.
+
+Document version 36 adds **Region loop positions**. Select a reference
+outline and the outline to move, then enter X and Y offsets from the
+reference's first vertex to the target's first vertex. Each offset can use
+a named dimension. The target translates as a whole and keeps any local
+shape constraints. Edit the offsets to move its first vertex. A loop accepts
+one position reference. Chains are supported, and cycles or invalid hole
+layouts are rejected before saving.
+Distance and tangent relations between arbitrary edges on separate loops
+remain open.
 
 The worker loads the checked-in JavaScript built from
 `tools/sketch-constraints/solver.dart` with Dart 3.12.2. Run
