@@ -547,8 +547,14 @@ preview shows the straight segments that will be stored in the sketch.
 Full circles retain their circle profile. **Close small gaps** adds a straight
 edge between the endpoints of the same subpath, up to the chosen distance at
 the final sketch scale. The preview highlights each added edge. Contours with
-crossings are still rejected. The precision drawing toolbar, stroke expansion,
-and updates from source remain open.
+crossings are still rejected. **Profile source → Strokes** expands a solid
+SVG stroke into an editable filled outline using its width, caps, and joins.
+It preserves holes in closed strokes and circle profiles in circular strokes.
+Use uniform scale and an absolute stroke width. Curved centerlines require the
+curve approximation opt-in, and rounded caps and joins are sampled at up to
+22.5° per segment. Each subpath becomes a separate profile. Stroke union,
+nonuniform scaling, dashed strokes, precision drawing tools, and updates from
+source remain open.
 
 #### SVG conversion and dependency choice
 
