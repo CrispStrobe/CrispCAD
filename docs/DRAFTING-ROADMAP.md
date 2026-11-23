@@ -565,6 +565,13 @@ profile is unchanged and unique. Changed anonymous, duplicate, and older
 links ask for a region before preview. Every geometry update still needs
 confirmation. Direct drawing constraints remain open.
 
+The transfer shows the original artwork beside the selected CAD profile.
+Local linear and radial gradient paint keeps its SVG shape geometry. CAD
+uses the contour, and the original artwork keeps its colors. An initial
+filled preview tries the default curve tolerance of 0.2 mm when curves
+need sampling. The user can adjust the tolerance, turn approximation off,
+or choose another region. Transfer adds the selected profile.
+
 The initial handoff offers **Send to CAD** for vector costumes and
 backdrops when Precision design is enabled. Select a region, set its width
 and plane, and add an editable sketch. Use **Placement** to set the lower-left

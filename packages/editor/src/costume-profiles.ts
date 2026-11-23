@@ -22,6 +22,7 @@ export type CostumeRegion = {
 export type CostumePlacement = {anchor:'lower-left'|'center';position:SketchPoint};
 type ClosingEdge = readonly [SketchPoint,SketchPoint];
 type CostumeLoop = {kind:'circle';center:SketchPoint;radius:number} | {kind:'outline';points:SketchPoint[]};
+class CurveApproximationRequired extends Error {}
 const tags = new Set(['svg','g','path','rect','circle','ellipse','polygon','polyline','line','defs','title','desc']);
 const styles = new Set(['fill','fill-rule','fill-opacity','stroke','stroke-opacity','stroke-width','stroke-linejoin','stroke-linecap','stroke-miterlimit','stroke-dasharray','vector-effect','opacity','display','visibility']);
 const near = (a:Vector2,b:Vector2) => a.distanceTo(b) < 1e-7;
@@ -61,7 +62,7 @@ function samplePath(path:Path,options?:CostumeImportOptions,strokeWidth=0){
   throw new Error(t('The outline contains disconnected edges.'));
  const end=last.getPoint(1);
  const approximated=curves.some(curve=>!(curve instanceof LineCurve));
- if(approximated&&options?.toleranceMm===undefined)throw new Error(strokeWidth?t('Enable curve approximation to preview curved strokes.'):t('Enable curve approximation to preview filled curves.'));
+ if(approximated&&options?.toleranceMm===undefined)throw new CurveApproximationRequired(strokeWidth?t('Enable curve approximation to preview curved strokes.'):t('Enable curve approximation to preview filled curves.'));
  let tolerance=1;
  if(approximated&&options?.toleranceMm!==undefined){
   // These sample positions also occur in the final polygon. Their span is a
@@ -250,7 +251,7 @@ function centerlineRegion(path:Path,options:CostumeImportOptions,fromPrecisionAr
  const sweeps=curves.map(curve=>costumeArcSweep(curve,fromPrecisionArc));
  const needsApproximation=curves.some((curve,index)=>!(curve instanceof LineCurve)&&sweeps[index]===undefined);
  if(needsApproximation&&options.toleranceMm===undefined)
-  throw new Error(t('Enable curve approximation to preview Bézier and elliptical centerlines.'));
+  throw new CurveApproximationRequired(t('Enable curve approximation to preview Bézier and elliptical centerlines.'));
  const sampleBounds=bounds(curves.flatMap(curve=>[0,.25,.5,.75,1].map(fraction=>point(curve.getPoint(fraction)))));
  const tolerance=Math.max(...sampleBounds.size)*(options.toleranceMm??1)/options.widthMm;
  const points:SketchPoint[]=[],bulges:number[]=[];
@@ -308,7 +309,7 @@ export function readCostumeProfiles(source:string,options?:CostumeImportOptions)
  const invalidTolerance=(value:number|undefined)=>value!==undefined&&(!Number.isFinite(value)||value<.01||value>10);
  if(invalidTolerance(options?.toleranceMm))throw new Error(t('Enter a curve tolerance from 0.01 to 10 mm.'));
  if(invalidTolerance(options?.maxGapMm))throw new Error(t('Enter a maximum gap from 0.01 to 10 mm.'));
- const xml=localSvg(source,tags);
+ const xml=localSvg(source,tags,true);
  for(const node of xml.querySelectorAll('*')){
   if(node.hasAttribute('class')||node.hasAttribute('clip-path')||node.hasAttribute('mask')||node.hasAttribute('filter')||
      node.localName==='svg'&&node!==xml.documentElement)throw new Error(t('Remove styles, clipping, masks, or nested SVG before importing.'));
@@ -320,13 +321,16 @@ export function readCostumeProfiles(source:string,options?:CostumeImportOptions)
   const values=new Map(declarations.map(([name,value])=>[name,value]));
   const style=(name:string)=>values.get(name)??node.getAttribute(name);
   if(style('visibility')==='hidden'||style('display')==='none'||style('opacity')==='0'){
-   if(node===xml.documentElement)return {profiles:[],issues:[],strokes:false,centerlines:false};
+   if(node===xml.documentElement)return {profiles:[],issues:[],strokes:false,centerlines:false,needsCurveApproximation:false};
    node.remove();
   }
  }
  const profiles:CostumeRegion[]=[],issues=new Set<string>();
- const recordIssue=(error:unknown)=>issues.add(error instanceof Error?error.message:String(error));
- let strokes=false,centerlines=false;
+ let strokes=false,centerlines=false,needsCurveApproximation=false;
+ const recordIssue=(error:unknown)=>{
+  if(error instanceof CurveApproximationRequired)needsCurveApproximation=true;
+  issues.add(error instanceof Error?error.message:String(error));
+ };
  const paths=new SVGLoader().parse(new XMLSerializer().serializeToString(xml)).paths;
  if(paths.length>100)throw new Error(t('This artwork contains too many paths.'));
  const mode=options?.centerlineOnly?'centerline':options?.strokeOnly?'stroke':'fill';
@@ -382,5 +386,5 @@ export function readCostumeProfiles(source:string,options?:CostumeImportOptions)
    filledRegions(boundaries,style?.fillRule==='evenodd',options?.widthMm??40,options?.maxGapMm).forEach(collect);
   } catch(error) {recordIssue(error);}
  }
- return {profiles,issues:[...issues],strokes,centerlines};
+ return {profiles,issues:[...issues],strokes,centerlines,needsCurveApproximation};
 }
