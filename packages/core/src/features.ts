@@ -225,6 +225,9 @@ export function checkFeatures(doc:CadDocument) {
     evaluateSketch(sketch,doc);checkDrawingVertexIds(sketch.profile,doc.version);
     if(sketch.profile.kind==='region'&&sketch.profile.placements!==undefined){
       if(doc.version<36)throw new Error(t('Region loop positions require document version 36'));
+      if(doc.version<37&&Array.isArray(sketch.profile.placements)&&sketch.profile.placements.some(
+        placement=>placement?.referenceEdge!==undefined||placement?.targetEdge!==undefined))
+        throw new Error(t('Region edge anchors require document version 37'));
       if(positionRegionLoops(sketch.profile,value=>featureValue(value,doc))!==sketch.profile)
         throw new Error(t('Region loop positions do not match the saved geometry.'));
     }

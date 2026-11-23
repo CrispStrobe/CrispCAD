@@ -58,8 +58,12 @@ a named dimension. The target translates as a whole and keeps any local
 shape constraints. Edit the offsets to move its first vertex. A loop accepts
 one position reference. Chains are supported, and cycles or invalid hole
 layouts are rejected before saving.
-Distance and tangent relations between arbitrary edges on separate loops
-remain open.
+
+Document version 37 extends each position anchor to a selected edge
+midpoint. Curved edges use the midpoint of the actual arc. The position
+follows the saved pair of vertex IDs as the edge changes. Restore the
+edge or remove its position if a topology edit deletes that pair.
+General dimensions and tangent relations between separate loops remain open.
 
 The worker loads the checked-in JavaScript built from
 `tools/sketch-constraints/solver.dart` with Dart 3.12.2. Run

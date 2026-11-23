@@ -4,7 +4,7 @@ import {checkSketchDxfLayer} from './sketch-dxf-layer.js';
 import type {SketchDxfLayer} from './sketch-dxf-layer.js';
 import {checkSketchDxfWidths} from './sketch-dxf-width.js';
 import type {SketchDxfWidths} from './sketch-dxf-width.js';
-import {isSketchPoint,maxSketchOutlinePoints,sketchOutline,sketchSegmentsIntersect} from './sketch-outline.js';
+import {isSketchPoint,maxSketchOutlinePoints,sketchBulgeMidpoint,sketchOutline,sketchSegmentsIntersect} from './sketch-outline.js';
 import type {OutlineRelation} from './outline-relations.js';
 import type {FeatureScalar,SketchProfile} from './features.js';
 import type {SketchPoint} from './sketch-outline.js';
@@ -15,7 +15,11 @@ export type SketchLoop =
   | SketchOutlineProfile
   | SketchCircleLoop;
 
-export type RegionLoopPlacement={target:string;reference:string;offset:[FeatureScalar,FeatureScalar]};
+export type RegionPlacementEdge=[string,string];
+export type RegionLoopPlacement={
+  target:string;reference:string;offset:[FeatureScalar,FeatureScalar];
+  targetEdge?:RegionPlacementEdge;referenceEdge?:RegionPlacementEdge;
+};
 export type SketchRegionProfile={kind:'region';id:string;loops:SketchLoop[];placements?:RegionLoopPlacement[]};
 
 type SketchCircleLoop = {kind: 'circle'; id: string; center: [FeatureScalar, FeatureScalar]; radius: FeatureScalar; segments: number}&SketchDxfLayer;
@@ -34,7 +38,18 @@ export function hasSketchConstraints(profile:SketchProfile):boolean{
   return hasOutlineRelations(profile)||(profile.kind==='region'&&profile.placements!==undefined);
 }
 
-/** Translate each target so its first vertex follows the first vertex of its reference loop. */
+export function regionLoopAnchor(loop:SketchOutlineProfile,edge?:RegionPlacementEdge):SketchPoint{
+  if(edge===undefined&&isSketchPoint(loop.points?.[0]))return loop.points[0];
+  if(Array.isArray(edge)&&edge.length===2&&edge.every(id=>typeof id==='string')&&
+    Array.isArray(loop.vertexIds)&&Array.isArray(loop.points)){
+    const start=loop.vertexIds.indexOf(edge[0]),end=(start+1)%loop.points.length;
+    if(start>=0&&loop.vertexIds[end]===edge[1]&&isSketchPoint(loop.points[start])&&isSketchPoint(loop.points[end]))
+      return sketchBulgeMidpoint(loop.points[start],loop.points[end],loop.bulges?.[start]??0);
+  }
+  throw new Error(t('A region position refers to a missing edge. Restore the edge or remove its position.'));
+}
+
+/** Translate each target so its anchor follows the reference anchor. */
 export function positionRegionLoops(profile:SketchRegionProfile,resolve:(value:FeatureScalar)=>number):SketchRegionProfile{
   if(profile.placements===undefined)return profile;
   const invalidPlacement=()=>new Error(t('Invalid region loop position. Choose two distinct outline loops.'));
@@ -61,7 +76,8 @@ export function positionRegionLoops(profile:SketchRegionProfile,resolve:(value:F
     if(!placement)return loop;
     if(visiting.has(id))throw new Error(t('Region loop positions cannot contain a cycle.'));
     visiting.add(id);
-    const anchor=position(placement.reference).points?.[0],origin=loop.points?.[0];
+    const anchor=regionLoopAnchor(position(placement.reference),placement.referenceEdge);
+    const origin=regionLoopAnchor(loop,placement.targetEdge);
     if(!isSketchPoint(anchor)||!isSketchPoint(origin)||loop.points.length>maxSketchOutlinePoints||!loop.points.every(isSketchPoint))throw invalidPlacement();
     const x=anchor[0]+resolve(placement.offset[0]),y=anchor[1]+resolve(placement.offset[1]);
     if(!isSketchPoint([x,y]))throw new Error(t('The positioned loop is outside the sketch coordinate range.'));

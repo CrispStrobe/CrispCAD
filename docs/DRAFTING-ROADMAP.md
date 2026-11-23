@@ -199,8 +199,8 @@ segment. **Arc tangent to arc** keeps adjoining arcs smooth through the
 shared endpoint as the reference arc changes. In a region, choose
 **Region loop constraints** and select the boundary or cutout outline to
 edit. **Region loop positions** sets a dimensioned X/Y offset between
-the first vertices of two outlines. Relations between arbitrary edges on
-different loops remain open.
+the first vertices or selected edge midpoints of two outlines. General
+dimensions and tangent relations across loops remain open.
 
 Enable **Edit edge curves** to reveal a blue handle at the midpoint of each
 outline edge. Drag the handle across its chord to turn a straight edge into
@@ -471,4 +471,5 @@ Parameter editor and inspector changes re-solve retained outline relations.
 Document version 32 retains driving arc radii. Version 33 retains arc-to-line
 tangency. Version 34 retains arc-to-arc tangency. Version 35 retains
 constraints on individual region loops. Version 36 retains relative loop
-positions. General edge relations across loops remain open.
+positions. Version 37 retains edge-midpoint position anchors. General
+edge relations across loops remain open.

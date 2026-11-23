@@ -42,8 +42,9 @@ export function mountRegionConstraintControls(form:HTMLElement,dialog:HTMLDialog
   if(entries.has(id))return;
   const holder=document.createElement('div');
   host.append(holder);
+  const loop=current.find(loop=>loop.id===id);
   const controls=mountOutlineConstraintControls(holder,dialog,{
-   ...options,initial:initial.get(id),
+   ...options,initial:initial.get(id)?.vertexIds?initial.get(id):loop?.kind==='outline'?loop:undefined,
    visible:()=>options.visible()&&picker.value===id,
    available:()=>options.available()&&!changedTopology,
    pending:solving=>{picker.disabled=clear.disabled=solving;options.pending(solving);},

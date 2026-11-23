@@ -8,7 +8,7 @@ import {mountRegionPositionControls} from './region-position-controls.js';
 import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
-import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchRegionLoops,newId,positionRegionLoops,sketchBulgeMidpoint,sketchDxfLayerFields,trimSketchProfile} from '@brickwright/cad-core';
+import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchOutlinePoints,maxSketchRegionLoops,newId,positionRegionLoops,sketchBulgeMidpoint,sketchDxfLayerFields,trimSketchProfile} from '@brickwright/cad-core';
 import type {DxfSegmentWidth,RegionLoopPlacement,SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument,PlanarSketch} from '@brickwright/cad-core';
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
 const scalar=(source:string):FeatureScalar=>source.trim()!==''&&Number.isFinite(Number(source))?Number(source):source.trim();
@@ -86,6 +86,17 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    : formatPoints(loop.points,loop.bulges,loop.dxfWidths).join(' | ')).join('\n');
   let singleDxfLayer=sketchDxfLayerFields(profile?.kind==='outline'||profile?.kind==='circle'?profile:undefined);
   let regionLoops=profile?.kind==='region'?profile.loops:[];
+  const regionVertexIds=new Map<string,string[]>();
+  const vertexIdsFor=(id:string,count:number,original?:string[])=>{
+   if(count>maxSketchOutlinePoints)return undefined;
+   const key=`${id}:${count}`;
+   let ids=regionVertexIds.get(key);
+   if(!ids){
+    ids=original?.length===count?original:Array.from({length:count},newId);
+    regionVertexIds.set(key,ids);
+   }
+   return ids;
+  };
   region.value=regionLoops.length?formatLoops(regionLoops):'0, 0 | 40, 0 | 40, 30 | 0, 30\nCIRCLE 10, 15, 2';
   regionLabel.append(region,element('small',t('One loop per line. Separate outline points with | and add an optional bulge for arcs. For circles type CIRCLE X, Y, radius. Circle values can use named dimensions.')));
   form.append(regionLabel,relativeHint);
@@ -204,7 +215,8 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
       if(values.length!==3||!values.every(value=>value.trim()))throw new Error(t('For a circle enter CIRCLE X, Y, radius.'));
       return {kind:'circle',id,center:[scalar(values[0]),scalar(values[1])],radius:scalar(values[2]),segments:original?.kind==='circle'?original.segments:64,...layer};
      }
-     return {kind:'outline',id,...parseOutline(row.split('|')),...layer};
+     const outline=parseOutline(row.split('|'));
+     return {kind:'outline',id,...outline,...layer,vertexIds:vertexIdsFor(id,outline.points.length,original?.kind==='outline'?original.vertexIds:undefined)};
     });
     return {kind:'region',id,loops};
    }
@@ -224,8 +236,14 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     if(retain&&profile.kind==='outline')retained={...profile,...outlineConstraints.forSave(profile)};
     if(profile.kind==='region'){
      const placementFields=positions===undefined?regionPositions.forSave(profile.loops):{placements:positions.length?positions:undefined};
+     const loops=retain?regionConstraints.forSave(profile.loops).map(loop=>{
+      if(loop.kind!=='outline'||loop.relations||placementFields.placements?.some(placement=>
+       (placement.target===loop.id&&placement.targetEdge)||(placement.reference===loop.id&&placement.referenceEdge)))return loop;
+      const {vertexIds,...withoutIds}=loop;
+      return withoutIds;
+     }):profile.loops;
      retained=positionRegionLoops({...profile,...placementFields,
-      loops:retain?regionConstraints.forSave(profile.loops):profile.loops
+      loops
      },value=>featureValue(value,doc));
     }
    }
@@ -386,7 +404,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     }
     const drawOutline=(outline:Extract<SketchProfile|SketchLoop,{kind:'outline'}>,loop:number)=>{
      const {points,bulges}=outline;
-     const positioned=p.kind==='region'&&p.placements?.some(placement=>placement.target===outline.id);
+     const positioned=p.kind==='region'&&p.placements?.some(placement=>placement.target===outline.id&&!placement.targetEdge);
      points.forEach((point,index)=>{
       if(index===0&&positioned)return;
       const [x,y]=place(point);
@@ -673,6 +691,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      kind.value=imported.kind;
      singleDxfLayer=sketchDxfLayerFields(imported.kind==='outline'||imported.kind==='circle'?imported:undefined);
      if(imported.kind==='region'){
+      regionVertexIds.clear();
       regionLoops=imported.loops;
       region.value=formatLoops(regionLoops);
      }

@@ -362,3 +362,43 @@ test('positions a cutout from the first vertex of its reference loop and rolls b
  await expect(offset).toHaveValue('25');
  await expect(sketch.getByLabel('Y offset (mm)',{exact:true})).toHaveValue('10');
 });
+
+test('positions both loops by selected edge midpoints and reopens the same references',async({page,hasTouch})=>{
+ const press=async(control:ReturnType<typeof page.getByRole>)=>{
+  if(hasTouch){await control.scrollIntoViewIfNeeded();await control.tap();}
+  else await control.click();
+ };
+ const fill=async(control:ReturnType<typeof page.getByLabel>,value:string)=>{
+  await control.fill(value);
+  await control.blur();
+ };
+ await page.goto('/');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await press(page.getByRole('button',{name:'Sketch',exact:true}));
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await sketch.getByLabel('Profile',{exact:true}).selectOption('region');
+ const rows=sketch.getByLabel('Region loops (mm)');
+ await fill(rows,'0, 0 | 60, 0 | 60, 40 | 0, 40\n10, 10 | 18, 10 | 18, 18 | 10, 18');
+ await press(sketch.getByText('Region loop positions',{exact:true}));
+ await sketch.getByLabel('Reference loop',{exact:true}).selectOption({label:'Outline loop 1'});
+ await sketch.getByLabel('Positioned loop',{exact:true}).selectOption({label:'Outline loop 2'});
+ const reference=sketch.getByLabel('Reference anchor',{exact:true}),target=sketch.getByLabel('Positioned anchor',{exact:true});
+ await reference.selectOption({label:'Edge 1 midpoint'});
+ await target.selectOption({label:'Edge 4 midpoint'});
+ await fill(sketch.getByLabel('X offset (mm)',{exact:true}),'-5');
+ await press(sketch.getByRole('button',{name:'Add loop position',exact:true}));
+ const positioned='0, 0 | 60, 0 | 60, 40 | 0, 40\n25, 10 | 33, 10 | 33, 18 | 25, 18';
+ await expect(rows).toHaveValue(positioned);
+ await fill(rows,positioned.replace('25, 18','25, 18 | 24, 14'));
+ await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('missing edge');
+ await fill(rows,positioned);
+ await press(sketch.getByRole('button',{name:'Create extrusion',exact:true}));
+ await expect(sketch).toBeHidden();
+ const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
+ if(!await edit.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
+ await press(edit);
+ await press(sketch.getByRole('button',{name:'Edit loop position 1',exact:true}));
+ await expect(reference.locator('option:checked')).toHaveText('Edge 1 midpoint');
+ await expect(target.locator('option:checked')).toHaveText('Edge 4 midpoint');
+ await expect(rows).toHaveValue(positioned);
+});

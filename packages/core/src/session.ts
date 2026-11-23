@@ -24,7 +24,7 @@ import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositio
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -32,7 +32,9 @@ function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33
   doc.version=version;
 }
 function upgradeSketchProfile(doc:CadDocument,profile:SketchProfile){
-  if(profile.kind==='region'&&profile.placements!==undefined)upgradeModelFeatures(doc,36);
+  if(profile.kind==='region'&&profile.placements!==undefined)
+    upgradeModelFeatures(doc,Array.isArray(profile.placements)&&profile.placements.some(
+      placement=>placement?.referenceEdge!==undefined||placement?.targetEdge!==undefined)?37:36);
   else if(profile.kind==='region'&&hasOutlineRelations(profile))upgradeModelFeatures(doc,35);
   else if(profile.kind==='outline'&&profile.relations!==undefined){
     const kinds=new Set(profile.relations.map(rule=>rule.kind));

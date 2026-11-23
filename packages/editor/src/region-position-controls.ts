@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {t} from '@brickwright/cad-core';
-import type {FeatureScalar,RegionLoopPlacement,SketchLoop} from '@brickwright/cad-core';
+import {regionLoopAnchor,t} from '@brickwright/cad-core';
+import type {FeatureScalar,RegionLoopPlacement,RegionPlacementEdge,SketchLoop} from '@brickwright/cad-core';
 
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{
  const node=document.createElement(tag);
@@ -20,10 +20,12 @@ export function mountRegionPositionControls(form:HTMLElement,options:{
 }){
  const panel=element('details');panel.className='sketch-expressions';
  panel.append(element('summary',t('Region loop positions')),
-  element('p',t('Set X and Y offsets between the first vertices of two outline loops.')));
- const reference=element('select'),target=element('select'),x=element('input'),y=element('input');
+  element('p',t('Set X and Y offsets between a first vertex or edge midpoint on each loop.')));
+ const reference=element('select'),target=element('select');
+ const referenceAnchor=element('select'),targetAnchor=element('select'),x=element('input'),y=element('input');
  for(const [label,field] of [
-  ['Reference loop',reference],['Positioned loop',target],['X offset (mm)',x],['Y offset (mm)',y]
+  ['Reference loop',reference],['Reference anchor',referenceAnchor],['Positioned loop',target],
+  ['Positioned anchor',targetAnchor],['X offset (mm)',x],['Y offset (mm)',y]
  ] as const){
   const wrapper=element('label',t(label));
   field.setAttribute('aria-label',t(label));
@@ -43,10 +45,28 @@ export function mountRegionPositionControls(form:HTMLElement,options:{
  const topologyMessage=t('Restore the original region loops or remove their positions.');
  const labelFor=(id:string)=>t`Outline loop ${loops.findIndex(loop=>loop.id===id)+1}`;
  const changedTopology=()=>locked!==undefined&&topology(loops)!==locked;
+ const selectedEdge=(input:HTMLSelectElement):RegionPlacementEdge|undefined=>input.value?JSON.parse(input.value):undefined;
+ const outline=(id:string)=>loops.find(loop=>loop.id===id&&loop.kind==='outline');
+ function updateAnchors(picker:HTMLSelectElement,selector:HTMLSelectElement){
+  const loop=outline(picker.value);
+  const ids=loop?.kind==='outline'?loop.vertexIds??[]:[];
+  const key=JSON.stringify([picker.value,ids]);
+  if(selector.dataset.loopKey===key)return;
+  const value=selector.value;
+  selector.replaceChildren(new Option(t('First vertex'),''),...ids.map((id,i)=>
+   new Option(t`Edge ${i+1} midpoint`,JSON.stringify([id,ids[(i+1)%ids.length]]))));
+  if(Array.from(selector.options).some(option=>option.value===value))selector.value=value;
+  selector.dataset.loopKey=key;
+ }
+ function updateAnchorOptions(){
+  updateAnchors(reference,referenceAnchor);
+  updateAnchors(target,targetAnchor);
+ }
  function refill(){
-  const a=loops.find(loop=>loop.id===reference.value),b=loops.find(loop=>loop.id===target.value);
+  const a=outline(reference.value),b=outline(target.value);
   if(a?.kind!=='outline'||b?.kind!=='outline'||!a.points.length||!b.points.length)return;
-  x.value=String(b.points[0][0]-a.points[0][0]);y.value=String(b.points[0][1]-a.points[0][1]);
+  const start=regionLoopAnchor(a,selectedEdge(referenceAnchor)),end=regionLoopAnchor(b,selectedEdge(targetAnchor));
+  x.value=String(end[0]-start[0]);y.value=String(end[1]-start[1]);
  }
  function render(){
   add.textContent=t(editing===undefined?'Add loop position':'Update loop position');
@@ -60,6 +80,9 @@ export function mountRegionPositionControls(form:HTMLElement,options:{
    row.append(element('span',`${labelFor(placement.target)} ← ${labelFor(placement.reference)} · ${placement.offset.join(', ')}`),edit,remove);
    edit.onclick=()=>{
     editing=index;reference.value=placement.reference;target.value=placement.target;
+    updateAnchorOptions();
+    referenceAnchor.value=placement.referenceEdge?JSON.stringify(placement.referenceEdge):'';
+    targetAnchor.value=placement.targetEdge?JSON.stringify(placement.targetEdge):'';
     [x.value,y.value]=placement.offset.map(String);render();
    };
    remove.onclick=()=>{
@@ -77,7 +100,8 @@ export function mountRegionPositionControls(form:HTMLElement,options:{
   if(panel.hidden)return;
   try{loops=options.read();}catch{loops=[];}
   const key=topology(loops);
-  if(key!==optionsKey){
+  const updateLoops=key!==optionsKey;
+  if(updateLoops){
    const outlines=loops.filter(loop=>loop.kind==='outline');
    for(const picker of [reference,target]){
     const current=picker.value;
@@ -85,21 +109,26 @@ export function mountRegionPositionControls(form:HTMLElement,options:{
     if(outlines.some(loop=>loop.id===current))picker.value=current;
     else if(picker===target&&outlines[1])picker.value=outlines[1].id;
    }
+   if(target.value===reference.value&&outlines.length>1)target.value=outlines.find(loop=>loop.id!==reference.value)!.id;
    optionsKey=key;
-   if(editing===undefined)refill();
   }
+  updateAnchorOptions();
+  if(updateLoops&&editing===undefined)refill();
   panel.hidden=reference.options.length<2&&!placements.length;
   if(changedTopology())status.textContent=topologyMessage;
   else if(status.textContent===topologyMessage)status.textContent='';
   render();
  }
- reference.onchange=target.onchange=()=>{if(editing===undefined)refill();};
+ reference.onchange=target.onchange=()=>{updateAnchorOptions();if(editing===undefined)refill();};
+ referenceAnchor.onchange=targetAnchor.onchange=()=>{if(editing===undefined)refill();};
  cancel.onclick=()=>{editing=undefined;refill();render();};
  add.onclick=()=>{
   if(!options.available()||changedTopology())return;
   try{
    const next=placements.slice();
-   next[editing??next.length]={reference:reference.value,target:target.value,offset:[options.scalar(x.value),options.scalar(y.value)]};
+   const referenceEdge=selectedEdge(referenceAnchor),targetEdge=selectedEdge(targetAnchor);
+   next[editing??next.length]={reference:reference.value,target:target.value,offset:[options.scalar(x.value),options.scalar(y.value)],
+    ...(referenceEdge?{referenceEdge}:{}),...(targetEdge?{targetEdge}:{})};
    options.apply(next);
    placements=next;locked=topology(loops);editing=undefined;status.textContent='';options.changed();
   }catch(error){status.textContent=error instanceof Error?error.message:String(error);}

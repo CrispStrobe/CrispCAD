@@ -400,3 +400,29 @@ it('positions chained cutouts atomically, round-trips the dimensions, and preser
  const duplicate={...profile,placements:[...profile.placements!,profile.placements![0]]};
  expect(()=>session.updateSketch(id,{profile:duplicate})).toThrow('only one position reference');
 });
+
+it('drives a cutout from an analytic arc midpoint to a closing-edge midpoint',async()=>{
+ const session=createCadSession();
+ session.setParametric({version:1,parameters:{pitch:{unit:'mm',expression:'5'}},bindings:[]});
+ const profile:Extract<SketchProfile,{kind:'region'}>={kind:'region',id:'plate',loops:[
+  {kind:'outline',id:'outer',points:[[0,0],[60,0],[60,40],[0,40]],bulges:[.2,0,0,0],vertexIds:['a','b','c','d']},
+  {kind:'outline',id:'hole',points:[[10,10],[18,10],[18,18],[10,18]],vertexIds:['e','f','g','h']}
+ ],placements:[{reference:'outer',referenceEdge:['a','b'],target:'hole',targetEdge:['h','e'],offset:['pitch',22]}]};
+ const body=session.addSketchExtrusion(profile),before=session.state.document,node=before.nodes[body];
+ if(node.kind!=='extrusion')throw Error('fixture');
+ const id=node.sketchId;
+ expect(before.version).toBe(37);
+ const saved=before.sketches![id].profile as typeof profile;
+ expect(saved.loops[1]).toMatchObject({points:[[35,12],[43,12],[43,20],[35,20]],vertexIds:['e','f','g','h']});
+ expect(parseDocument(session.serialize())).toEqual(before);
+ expect(()=>validateDocument({...before,version:36})).toThrow('version 37');
+ const draft=session.modelSource.replace('bulges: [0.2,','bulges: [0.4,');
+ const solved=await session.prepareModelSourceWithOutlineSolve(draft,{},async()=>{throw Error('placement is analytic');},signal());
+ const moved=solved.document.sketches![id].profile as typeof profile;
+ expect(moved.loops[1]).toMatchObject({points:[[35,6],[43,6],[43,14],[35,14]],vertexIds:['e','f','g','h']});
+ expect(moved.placements).toEqual(saved.placements);
+ const missing=structuredClone(saved);
+ missing.placements![0].targetEdge=['h','f'];
+ expect(()=>session.updateSketch(id,{profile:missing})).toThrow('missing edge');
+ expect(session.state.document).toBe(before);
+});

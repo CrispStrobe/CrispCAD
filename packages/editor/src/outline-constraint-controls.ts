@@ -10,7 +10,7 @@ const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{
 };
 type OutlineConstraintKind=OutlineRelation['kind'];
 type DraftConstraint={kind:OutlineConstraintKind; edge:number; other:number; expression:string; sweep?:OutlineArcSweep};
-type OutlineGeometry=Pick<SketchOutlineProfile,'points'|'bulges'>;
+type OutlineGeometry=Pick<SketchOutlineProfile,'points'|'bulges'|'vertexIds'>;
 const pairKinds=new Set(['parallel','perpendicular','equal','tangent','arc-tangent']);
 const labels=()=>{
  return {horizontal:t('Horizontal'),vertical:t('Vertical'),length:t('Length'),radius:t('Arc radius'),
@@ -215,7 +215,9 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
    }
    catch(error){status.textContent=error instanceof Error?error.message:String(error);return;}
   }
-  if(!constraints.length&&vertexIds?.length!==count)vertexIds=Array.from({length:count},newId);
+  if(!constraints.length&&vertexIds?.length!==count){
+   vertexIds=options.read().vertexIds?.slice()??Array.from({length:count},newId);
+  }
   if(editIndex===undefined)constraints.push(row);
   else constraints[editIndex]=row;
   editIndex=undefined;

@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "A region position refers to a missing edge. Restore the edge or remove its position.": "Eine Regionsposition verweist auf eine fehlende Kante. Stelle die Kante wieder her oder entferne ihre Position.",
+  "Region edge anchors require document version 37": "Regionskantenanker erfordern Dokumentversion 37",
+  "Set X and Y offsets between a first vertex or edge midpoint on each loop.": "Lege den X- und Y-Abstand zwischen dem ersten Eckpunkt oder einer Kantenmitte jeder Kontur fest.",
+  "Reference anchor": "Referenzanker",
+  "Positioned anchor": "Positionierter Anker",
+  "First vertex": "Erster Eckpunkt",
+  "Edge {0} midpoint": "Mitte von Kante {0}",
   "Region loop positions require document version 36": "Regionskonturpositionen erfordern Dokumentversion 36",
   "Region loop positions do not match the saved geometry.": "Die Regionskonturpositionen stimmen nicht mit der gespeicherten Geometrie überein.",
   "Invalid region loop position. Choose two distinct outline loops.": "Ungültige Regionskonturposition. Wähle zwei unterschiedliche Konturen.",
@@ -7,7 +14,6 @@ export const messages: Record<string,string> = {
   "Region loop positions cannot contain a cycle.": "Regionskonturpositionen dürfen keine zyklischen Abhängigkeiten enthalten.",
   "The positioned loop is outside the sketch coordinate range.": "Die positionierte Kontur liegt außerhalb des Skizzenkoordinatenbereichs.",
   "Region loop positions": "Regionskonturen positionieren",
-  "Set X and Y offsets between the first vertices of two outline loops.": "Lege den X- und Y-Abstand zwischen den ersten Eckpunkten zweier Konturen fest.",
   "Reference loop": "Referenzkontur",
   "Positioned loop": "Positionierte Kontur",
   "X offset (mm)": "X-Abstand (mm)",
