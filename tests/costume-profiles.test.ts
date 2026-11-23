@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {expect,it} from 'vitest';
 import {CubicBezierCurve,EllipseCurve,LineCurve,QuadraticBezierCurve,Vector2} from 'three';
-import {costumeCurveSteps,costumeSketchProfile} from '../packages/editor/src/costume-profiles.js';
+import {costumeCurveSteps,costumeProfileBounds,costumeSketchProfile} from '../packages/editor/src/costume-profiles.js';
 import type {CostumeRegion} from '../packages/editor/src/costume-profiles.js';
 import {evaluateSketchRegion} from '@brickwright/cad-core';
 
@@ -55,4 +55,21 @@ it('checks a closing edge at the final model scale, including the exact limit',(
  const source:CostumeRegion={...ring,gapRepair:{edges:[[[10,-80],[10,-79.5]]],limitMm:1}};
  expect(costumeSketchProfile(source,40).kind).toBe('region');
  expect(()=>costumeSketchProfile(source,41)).toThrow(/gap exceeds/);
+});
+
+
+it('places a region and its circular hole together using its center or lower-left anchor',()=>{
+ const placement={anchor:'center' as const,position:[-12,15] as [number,number]};
+ expect(costumeProfileBounds(ring,40,placement)).toEqual({min:[-32,-45],max:[8,75]});
+ expect(costumeSketchProfile(ring,40,placement)).toMatchObject({kind:'region',loops:[
+  {kind:'outline',points:[[-32,-45],[8,-45],[8,75],[-32,75]]},
+  {kind:'circle',center:[-12,15],radius:8},
+ ]});
+ expect(costumeProfileBounds(ring,40,{anchor:'lower-left',position:[10,-8]})).toEqual({min:[10,-8],max:[50,112]});
+});
+
+it('rejects invalid placement and profiles outside the supported sketch coordinates',()=>{
+ expect(()=>costumeSketchProfile(ring,40,{anchor:'center',position:[Infinity,0]})).toThrow(/Enter sketch coordinates/);
+ expect(()=>costumeSketchProfile(ring,40,{anchor:'lower-left',position:[99961,0]})).toThrow(/coordinate limits/);
+ expect(costumeProfileBounds(ring,40,{anchor:'lower-left',position:[99960,0]}).max[0]).toBe(100000);
 });

@@ -779,4 +779,4 @@ export type CadEditor = ReturnType<typeof mountCadEditor>;
 export { createCadSession } from '@brickwright/cad-core';
 export { shapeCatalog, createPresetDocument } from './shapes.js';
 
-export {readCostumeProfiles,costumeSketchProfile} from './costume-profiles.js';
+export {readCostumeProfiles,costumeSketchProfile,costumeProfileBounds} from './costume-profiles.js';

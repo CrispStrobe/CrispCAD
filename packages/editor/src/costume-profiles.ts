@@ -2,7 +2,7 @@
 import {CubicBezierCurve,EllipseCurve,LineCurve,QuadraticBezierCurve} from 'three';
 import type {Curve,Path,Vector2} from 'three';
 import {SVGLoader} from 'three/addons/loaders/SVGLoader.js';
-import {evaluateSketchRegion,maxSketchRegionLoops,maxSketchOutlinePoints,newId,sketchOutline,sketchSegmentsIntersect,t} from '@brickwright/cad-core';
+import {evaluateSketchRegion,isSketchPoint,maxSketchRegionLoops,maxSketchOutlinePoints,newId,sketchOutline,sketchSegmentsIntersect,t} from '@brickwright/cad-core';
 import type {SketchPoint,SketchProfile} from '@brickwright/cad-core';
 import {localSvg} from './svg-icon.js';
 import {expandCostumeStroke} from './costume-stroke.js';
@@ -15,6 +15,7 @@ export type CostumeRegion = {
  approximated?: boolean;
  gapRepair?: {edges:ClosingEdge[];limitMm:number};
 };
+export type CostumePlacement = {anchor:'lower-left'|'center';position:SketchPoint};
 type ClosingEdge = readonly [SketchPoint,SketchPoint];
 type CostumeLoop = {kind:'circle';center:SketchPoint;radius:number} | {kind:'outline';points:SketchPoint[]};
 const tags = new Set(['svg','g','path','rect','circle','ellipse','polygon','polyline','line','defs','title','desc']);
@@ -114,13 +115,26 @@ function region(loops:CostumeLoop[]):CostumeRegion {
  return {loops,size,origin};
 }
 
-export function costumeSketchProfile(source:CostumeRegion,width:number):SketchProfile {
+export function costumeProfileBounds(source:CostumeRegion,width:number,placement?:CostumePlacement):{min:SketchPoint;max:SketchPoint} {
  if(!Number.isFinite(width)||width<.01||width>100000)throw new Error(t('Enter a width from 0.01 to 100000 mm.'));
+ const {anchor,position}=placement??{anchor:'lower-left',position:[0,0]};
+ if(!isSketchPoint(position)||!['lower-left','center'].includes(anchor))
+  throw new Error(t('Enter sketch coordinates from −100000 to 100000 mm.'));
+ const height=width*(source.size[1]/source.size[0]);
+ const min:SketchPoint=anchor==='center'?[position[0]-width/2,position[1]-height/2]:position;
+ const max:SketchPoint=[min[0]+width,min[1]+height];
+ if(!isSketchPoint(min)||!isSketchPoint(max))throw new Error(t('The placed profile extends beyond the sketch coordinate limits.'));
+ return {min,max};
+}
+
+export function costumeSketchProfile(source:CostumeRegion,width:number,placement?:CostumePlacement):SketchProfile {
+ const {min}=costumeProfileBounds(source,width,placement);
  const scale=width/source.size[0];
  const repair=source.gapRepair;
  if(repair?.edges.some(([[ax,ay],[bx,by]])=>Math.hypot(bx-ax,by-ay)*scale>repair.limitMm))
   throw new Error(t('This outline gap exceeds the maximum at the selected width.'));
- const convert=([x,y]:SketchPoint):SketchPoint=>[(x-source.origin[0])*scale,(y-source.origin[1])*scale];
+ const convert=([x,y]:SketchPoint):SketchPoint=>[min[0]+(x-source.origin[0])/source.size[0]*width,
+  min[1]+(y-source.origin[1])/source.size[0]*width];
  const loops=source.loops.map(loop=>loop.kind==='outline'?
   {kind:'outline' as const,id:newId(),points:sketchOutline(loop.points.map(convert))}:
   {kind:'circle' as const,id:newId(),center:convert(loop.center),radius:loop.radius*scale,segments:64});

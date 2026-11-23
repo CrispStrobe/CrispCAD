@@ -539,7 +539,10 @@ session. [Fusion sketch profiles](https://help.autodesk.com/view/fusion360/ENU/?
 
 The initial handoff offers **Send to CAD** for vector costumes and
 backdrops when Precision design is enabled. Select a region, set its width
-and plane, and add a sketch at the plane origin. It retains straight closed
+and plane, and add an editable sketch. Use **Placement** to set the lower-left
+corner or center to precise coordinates on that plane. The default keeps the
+lower-left corner at the origin. Placement shifts all outlines and holes by
+the same amount and persists in standard sketch coordinates. It retains straight closed
 edges, full circles, and supported nested holes. Strokes are excluded from
 the geometry. Users can opt into **Approximate curves** and choose a
 0.01–10 mm chord tolerance for closed Bézier and elliptical contours. The
