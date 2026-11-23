@@ -237,7 +237,9 @@ export function readCostumeProfiles(source:string,options?:CostumeImportOptions)
   if(node.hasAttribute('class')||node.hasAttribute('clip-path')||node.hasAttribute('mask')||node.hasAttribute('filter')||
      node.localName==='svg'&&node!==xml.documentElement)throw new Error(t('Remove styles, clipping, masks, or nested SVG before importing.'));
   const declarations=(node.getAttribute('style')||'').split(';').filter(part=>part.trim()).map(part=>part.split(':').map(value=>value.trim()));
-  if(declarations.some(([name,value])=>!styles.has(name)||!value||value.includes('!important')))
+  // Paper exports this neutral blend mode on its painting layer.
+  if(declarations.some(([name,value])=>name==='mix-blend-mode'?value!=='normal':
+     !styles.has(name)||!value||value.includes('!important')))
    throw new Error(t('The SVG uses unsupported styling.'));
   const values=new Map(declarations.map(([name,value])=>[name,value]));
   const style=(name:string)=>values.get(name)??node.getAttribute(name);

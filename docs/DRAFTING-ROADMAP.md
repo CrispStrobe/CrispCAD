@@ -537,6 +537,14 @@ editing context and lets users select a closed region for extrusion. Adopt
 these interactions with the existing Brickwright drawing tools and CAD
 session. [Fusion sketch profiles](https://help.autodesk.com/view/fusion360/ENU/?contextId=SKT-3D-SKETCH) · [Fusion SVG placement](https://help.autodesk.com/cloudhelp/ENU/Fusion-Model/files/SLD-INS-SVG.htm) · [Shapr3D constraints](https://support.shapr3d.com/hc/en-us/articles/7407627891100-Adding-and-removing-constraints) · [Shapr3D extrude](https://support.shapr3d.com/hc/en-us/articles/7874453786908-Tools-menu-Extrude-tool)
 
+The Costumes Properties panel now offers **Precision drawing** under the
+opt-in setting. Enter the center and size of a rectangle or circle. It adds
+an editable path to the existing vector canvas and records a normal Undo
+entry. The same coordinates appear in Transform. A precision circle stays
+analytic through the SVG handoff as long as the path still describes a circle.
+Line and arc construction, direct constraints, and linked source updates are
+open.
+
 The initial handoff offers **Send to CAD** for vector costumes and
 backdrops when Precision design is enabled. Select a region, set its width
 and plane, and add an editable sketch. Use **Placement** to set the lower-left
