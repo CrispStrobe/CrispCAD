@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {readFileSync} from 'node:fs';
 import {beforeAll, expect, it} from 'vitest';
-import {compileModelSource, createCadSession, designGraph, parseDocument, validateDocument} from '@brickwright/cad-core';
+import {compileModelSource, createCadSession, designGraph, parseDocument, trimSketchProfile, validateDocument} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {prepareSketchDxf,readSketchDxf,readSketchPathDxf} from '../packages/editor/src/import-sketch-dxf.js';
@@ -52,7 +52,7 @@ it('keeps a translated analytic circle through export and reimport', () => {
 it('requires explicit missing-unit consent and rejects unsupported or self-crossing geometry', () => {
   expect(() => readSketchDxf(drawing(circle, 0))).toThrow('has no units');
   expect(readSketchDxf(drawing(circle, 0), true)).toMatchObject({radius: 1.5});
-  for (const entity of [square.replace('\n70\n1\n', '\n70\n0\n'), square + '\n43\n0.5',
+  for (const entity of [square.replace('\n70\n1\n', '\n70\n0\n'), square + '\n39\n0.5',
     circle + '\n39\n1']) {
     expect(() => readSketchDxf(drawing(entity))).toThrow('Use circles');
   }
@@ -450,4 +450,49 @@ it('fits a plane to tilted WCS line chains while rejecting nonplanar selections'
  expect(()=>readSketchDxf(drawing([wcsLine(a,b),wcsLine(b,c),wcsLine(c,out),wcsLine(out,a)].join('\n'))))
   .toThrow('not coplanar');
  expect(readSketchPathDxf(drawing(wcsLine([0,0,5],[0,0,15]))).points[1].map(Math.abs)).toContain(15);
+});
+
+it('keeps constant widths in drawing units while extruding the clockwise centerline',()=>{
+ const profile=readSketchDxf(drawing(square+'\n43\n0.5',1));
+ if(profile.kind!=='outline')throw Error('Expected an outline');
+ expect(profile.points).toEqual([[25.4,25.4],[25.4,50.8],[50.8,50.8],[50.8,25.4]]);
+ expect(profile.dxfWidths).toEqual(Array.from({length:4},()=>[12.7,12.7]));
+ const session=createCadSession();
+ const id=session.addSketchExtrusion(profile,{distance:2});
+ const doc=parseDocument(session.serialize());
+ expect(kernel.evaluate(doc).volume).toBeCloseTo(25.4**2*2,3);
+ const exported=new TextDecoder().decode(exportSketchDxf(doc,id).bytes);
+ expect(exported).toContain('43\r\n12.7');
+ expect(readSketchDxf(exported)).toEqual(profile);
+ const sketch=Object.values(doc.sketches!)[0];
+ const offset=kernel.offsetSketch(sketch,doc,1);
+ expect(offset).toMatchObject({kind:'outline',dxfWidths:profile.dxfWidths});
+});
+
+it('retains tapered widths through trim, path closure, and DXF round trips',()=>{
+ const raw=[
+  '0','LWPOLYLINE','8','Guides','90',3,'70',0,
+  '10',0,'20',0,'41',4,'40',2,'10',20,'20',0,'40',4,'41',6,
+  '10',20,'20',20,'40',8,'41',9
+ ].join('\n');
+ const profile=readSketchPathDxf(drawing(raw));
+ expect(profile.dxfWidths).toEqual([[2,4],[4,6],[0,0]]);
+ const session=createCadSession();
+ const id=session.addSketch(profile);
+ const doc=parseDocument(session.serialize());
+ const sketch=doc.sketches![id];
+ const trimmed=trimSketchProfile(sketch,doc,[10,30],[10,-10],'left');
+ if(trimmed.kind!=='path')throw Error('Expected a path');
+ expect(trimmed.points).toEqual([[10,0],[20,0],[20,20]]);
+ expect(trimmed.dxfWidths).toEqual([[3,4],[4,6],[0,0]]);
+ const exported=new TextDecoder().decode(exportSketchPathDxf(doc,{...sketch,profile:trimmed}).bytes);
+ expect(exported).toContain('40\r\n3\r\n41\r\n4');
+ expect(readSketchPathDxf(exported).dxfWidths).toEqual(trimmed.dxfWidths);
+ session.closeSketchPath(id,trimmed,{name:'Closed guide',plane:'XY'});
+ const closed=session.state.document.sketches![id];
+ expect(closed.profile).toMatchObject({kind:'outline',dxfWidths:[[3,4],[4,6],[0,0]]});
+ expect(()=>kernel.offsetSketch(closed,session.state.document,1)).toThrow('uniform DXF width');
+ expect(()=>readSketchPathDxf(drawing(raw+'\n43\n1'))).toThrow('either a constant DXF width');
+ expect(()=>readSketchPathDxf(drawing(raw.replace('40\n2','40\n-2')))).toThrow('supported text DXF');
+ expect(()=>session.addSketch({...profile,dxfWidths:[[1,2],[3,4],[1,1]]})).toThrow('final point');
 });

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {evaluateSketch,resolveSketchPath} from './features.js';
 import type {PlanarSketch,SketchProfile} from './features.js';
+import type {DxfSegmentWidth} from './sketch-dxf-width.js';
 import type {SketchLoop} from './sketch-region.js';
 import {retainDrawingVertexIds} from './drawing-sheet.js';
 import {newId} from './document.js';
@@ -10,7 +11,7 @@ import type {SketchPoint} from './sketch-outline.js';
 import {t} from './i18n.js';
 
 type Outline=Extract<SketchLoop,{kind:'outline'}>;
-type Segment={a:SketchPoint;b:SketchPoint;bulge:number;keep:boolean};
+type Segment={a:SketchPoint;b:SketchPoint;bulge:number;keep:boolean;width?:DxfSegmentWidth};
 const epsilon=1e-8;
 const tau=2*Math.PI;
 
@@ -21,7 +22,7 @@ export function trimSketchProfile(sketch:PlanarSketch,context:Pick<CadDocument,'
  const signed=([x,y]:SketchPoint)=>-uy*(x-a[0])+ux*(y-a[1]);
  const retained=(point:SketchPoint)=>(keep==='left'?1:-1)*signed(point)>=-epsilon;
 
- function split(start:SketchPoint,end:SketchPoint,bulge:number):Segment[]{
+ function split(start:SketchPoint,end:SketchPoint,bulge:number,width?:DxfSegmentWidth):Segment[]{
   const arc=sketchBulgeArc(start,end,bulge);
   let candidates:number[],at:(u:number)=>SketchPoint;
   if(arc){
@@ -39,38 +40,42 @@ export function trimSketchProfile(sketch:PlanarSketch,context:Pick<CadDocument,'
    }
    at=u=>u===0?start:u===1?end:[center[0]+radius*Math.cos(angle+sweep*u),center[1]+radius*Math.sin(angle+sweep*u)];
    const cutArc=(u:number,v:number)=>Math.tan(sweep*(v-u)/4);
-   const trimmed=segments(candidates,at,cutArc);
-   if(trimmed.every(piece=>piece.keep===trimmed[0].keep))return [{a:start,b:end,bulge,keep:trimmed[0].keep}];
+   const trimmed=segments(candidates,at,cutArc,width);
+   if(trimmed.every(piece=>piece.keep===trimmed[0].keep))return [{a:start,b:end,bulge,keep:trimmed[0].keep,width}];
    return trimmed;
   }
   const first=signed(start),last=signed(end);
   candidates=first===last?[]:[first/(first-last)];
   at=u=>u===0?start:u===1?end:[start[0]+(end[0]-start[0])*u,start[1]+(end[1]-start[1])*u];
-  return segments(candidates,at,()=>0);
+  return segments(candidates,at,()=>0,width);
  }
 
- function segments(candidates:number[],at:(u:number)=>SketchPoint,bulge:(u:number,v:number)=>number){
+ function segments(candidates:number[],at:(u:number)=>SketchPoint,bulge:(u:number,v:number)=>number,width?:DxfSegmentWidth){
   const stops=[0,...candidates.filter(u=>u>epsilon&&u<1-epsilon).sort((u,v)=>u-v).filter((u,i,ordered)=>!i||u-ordered[i-1]>epsilon),1];
   return stops.slice(0,-1).map((u,i)=>{
    const v=stops[i+1];
-   return {a:at(u),b:at(v),bulge:bulge(u,v),keep:retained(at((u+v)/2))};
+   const atWidth=(fraction:number)=>width![0]+(width![1]-width![0])*fraction;
+   const retainedWidth:DxfSegmentWidth|undefined=width?[atWidth(u),atWidth(v)]:undefined;
+   return {a:at(u),b:at(v),bulge:bulge(u,v),keep:retained(at((u+v)/2)),width:retainedWidth};
   });
  }
 
  function pointsFrom(remaining:Segment[]){
   const points=[...remaining.map(piece=>piece.a),remaining.at(-1)!.b];
   const bulges=[...remaining.map(piece=>piece.bulge),0];
-  return {points,bulges};
+  const dxfWidths:DxfSegmentWidth[]|undefined=remaining.some(piece=>piece.width)?
+   [...remaining.map(piece=>piece.width??[0,0] as DxfSegmentWidth),[0,0]]:undefined;
+  return {points,bulges,dxfWidths};
  }
  function cut(outline:Outline):Outline{
-  const pieces=outline.points.flatMap((point,i)=>split(point,outline.points[(i+1)%outline.points.length],outline.bulges?.[i]??0));
+  const pieces=outline.points.flatMap((point,i)=>split(point,outline.points[(i+1)%outline.points.length],outline.bulges?.[i]??0,outline.dxfWidths?.[i]));
   const discarded=pieces.findIndex(piece=>!piece.keep);
   if(discarded<0||!pieces.some(piece=>piece.keep))throw new Error(t('The trim line must cross the outside boundary.'));
   const ordered=[...pieces.slice(discarded+1),...pieces.slice(0,discarded+1)];
   const runs=ordered.filter((piece,i)=>piece.keep&&(i===0||!ordered[i-1].keep));
   if(runs.length!==1)throw new Error(t('This trim would cross the outside boundary more than twice. Choose a simpler cut.'));
-  const {points,bulges}=pointsFrom(ordered.filter(piece=>piece.keep));
-  const result={...outline,points};
+  const {points,bulges,dxfWidths}=pointsFrom(ordered.filter(piece=>piece.keep));
+  const result={...outline,points,...(dxfWidths?{dxfWidths}:{})};
   if(bulges.some(Boolean))result.bulges=bulges;
   else delete result.bulges;
   return result;
@@ -82,15 +87,15 @@ export function trimSketchProfile(sketch:PlanarSketch,context:Pick<CadDocument,'
  if(profile.kind==='path'){
   const vertices=resolveSketchPath(profile,context);
   const sourceIndices=new Map(vertices.map((point,index)=>[point,index]));
-  const pieces=vertices.slice(0,-1).flatMap((point,i)=>split(point,vertices[i+1],profile.bulges?.[i]??0));
+  const pieces=vertices.slice(0,-1).flatMap((point,i)=>split(point,vertices[i+1],profile.bulges?.[i]??0,profile.dxfWidths?.[i]));
   const first=pieces.findIndex(piece=>piece.keep);
   if(first<0||pieces.every(piece=>piece.keep))throw new Error(t('The trim line must cross the open path.'));
   let last=pieces.length-1;
   while(!pieces[last].keep)last--;
   const remaining=pieces.slice(first,last+1);
   if(remaining.some(piece=>!piece.keep))throw new Error(t('This trim would leave separate paths. Choose a different line or side.'));
-  const {points,bulges}=pointsFrom(remaining);
-  result={...profile,points};
+  const {points,bulges,dxfWidths}=pointsFrom(remaining);
+  result={...profile,points,...(dxfWidths?{dxfWidths}:{})};
   if(profile.vertexIds&&profile.anchors){
    const {vertexIds}=profile;
    const retainedIds=points.map(point=>vertexIds[sourceIndices.get(point)??-1]??newId());

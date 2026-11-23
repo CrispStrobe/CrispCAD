@@ -6,7 +6,7 @@ import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchRegionLoops,newId,sketchBulgeMidpoint,sketchDxfLayerFields,trimSketchProfile} from '@brickwright/cad-core';
-import type {SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument,PlanarSketch} from '@brickwright/cad-core';
+import type {DxfSegmentWidth,SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument,PlanarSketch} from '@brickwright/cad-core';
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
 const scalar=(source:string):FeatureScalar=>source.trim()!==''&&Number.isFinite(Number(source))?Number(source):source.trim();
 /** Definition editor: complete draft + kernel preflight before the real session changes. */
@@ -68,7 +68,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   points.setAttribute('aria-label',t('Outline points X, Y (mm)'));
   points.rows=4;
   points.spellcheck=false;
-  points.value=profile?.kind==='outline'?formatPoints(profile.points,profile.bulges).join('\n'):'0, 0\n40, 0\n30, 30\n0, 30';
+  points.value=profile?.kind==='outline'?formatPoints(profile.points,profile.bulges,profile.dxfWidths).join('\n'):'0, 0\n40, 0\n30, 30\n0, 30';
   pointsLabel.append(points,element('small',t('For an arc, add its bulge as a third value. Use 1 for a semicircle, or -1 to curve in the opposite direction.')));
   form.append(pointsLabel);
   const relativeHint=element('small',t('Start with X, Y. Use @dX, dY to enter a point relative to the previous one.'));
@@ -80,12 +80,15 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   region.maxLength=65536;
   const formatLoops=(loops:SketchLoop[])=>loops.map(loop=>loop.kind==='circle'
    ? 'CIRCLE '+[...loop.center,loop.radius].join(', ')
-   : formatPoints(loop.points,loop.bulges).join(' | ')).join('\n');
+   : formatPoints(loop.points,loop.bulges,loop.dxfWidths).join(' | ')).join('\n');
   let singleDxfLayer=sketchDxfLayerFields(profile?.kind==='outline'||profile?.kind==='circle'?profile:undefined);
   let regionLoops=profile?.kind==='region'?profile.loops:[];
   region.value=regionLoops.length?formatLoops(regionLoops):'0, 0 | 40, 0 | 40, 30 | 0, 30\nCIRCLE 10, 15, 2';
   regionLabel.append(region,element('small',t('One loop per line. Separate outline points with | and add an optional bulge for arcs. For circles type CIRCLE X, Y, radius. Circle values can use named dimensions.')));
   form.append(regionLabel,relativeHint);
+  const widthHint=element('small',t('DXF widths use X, Y, bulge, start width, end width. The solid follows the centerline.'));
+  widthHint.hidden=true;
+  form.append(widthHint);
   const curveHandles=element('input');
   curveHandles.type='checkbox';
   const curveToggle=element('label',t('Edit edge curves'));
@@ -178,7 +181,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    switch(profile.kind){
     case 'rectangle':width.value=String(profile.width);depth.value=String(profile.depth);break;
     case 'circle':radius.value=String(profile.radius);break;
-    case 'outline':points.value=formatPoints(profile.points,profile.bulges).join('\n');break;
+    case 'outline':points.value=formatPoints(profile.points,profile.bulges,profile.dxfWidths).join('\n');break;
     case 'region':regionLoops=profile.loops;region.value=formatLoops(regionLoops);break;
    }
   }
@@ -243,7 +246,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    }
    return {...evaluateExtrusion({kind:'extrusion',...common,...extrusion},previewDoc),angle:undefined,axisOffset:undefined};
   }
-  type OutlineEdit = {field:HTMLTextAreaElement; original:string; loop:number; index:number; points:SketchPoint[]; bulges?:number[]; targets:SketchSnap[]};
+  type OutlineEdit = {field:HTMLTextAreaElement; original:string; loop:number; index:number; points:SketchPoint[]; bulges?:number[]; dxfWidths?:DxfSegmentWidth[]; targets:SketchSnap[]};
   let drag:{id:number;x:number;y:number;w:number;h:number;r:number;d:number;inverse:DOMMatrix;kind:string;viewBox:string;outlineEdit?:OutlineEdit;target?:SketchSnap}|undefined;
   let dragOutline:ReturnType<typeof definition>|undefined;
   let valid=false;
@@ -251,6 +254,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const compact=(input:HTMLInputElement,icon:string)=>{const label=input.parentElement!;label.firstChild!.textContent='';label.classList.add('sketch-dimension');const picture=toolIcon(icon);if(picture)label.prepend(picture);input.title=input.getAttribute('aria-label')!;label.append(element('small','mm'));const caption=element('span',input.getAttribute('aria-label')!);caption.className='sketch-dimension-name';label.prepend(caption);};
   compact(width,'Sketch width');compact(depth,'Sketch depth');compact(radius,'Sketch radius');compact(length,'Extrude');
   function draw(){
+   widthHint.hidden=true;
    trimPanel.hidden=!!linked||!['outline','region'].includes(kind.value);
    if(trimPanel.hidden&&trimPicking)setTrimPicking(0);
    axis.parentElement!.hidden=!revolving||automatic.checked;
@@ -268,7 +272,10 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      return;
     }
    }
-   try{const snapshot=readForm();const shape=previewShape(snapshot),xs=shape.contour.map(p=>p[0]),ys=shape.contour.map(p=>p[1]),w=Math.max(...xs)-Math.min(...xs),h=Math.max(...ys)-Math.min(...ys),d=shape.distance,ox=d*.45,oy=-d*.35;
+   try{const snapshot=readForm(),draftProfile=snapshot.sketch.profile;
+    widthHint.hidden=!(draftProfile.kind==='outline'?draftProfile.dxfWidths:
+     draftProfile.kind==='region'&&draftProfile.loops.some(loop=>loop.kind==='outline'&&loop.dxfWidths));
+    const shape=previewShape(snapshot),xs=shape.contour.map(p=>p[0]),ys=shape.contour.map(p=>p[1]),w=Math.max(...xs)-Math.min(...xs),h=Math.max(...ys)-Math.min(...ys),d=shape.distance,ox=d*.45,oy=-d*.35;
     const projected=[shape.contour,...(shape.holes??[])].map(loop=>loop.map(([x,y])=>[x+shape.start*.45,-y-shape.start*.35]));
     const raised=projected.map(loop=>loop.map(([x,y])=>[x+ox,y+oy]));
     const [base]=projected,[top]=raised;
@@ -420,7 +427,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     const targets=mode==='vertex'&&tangents.checked&&!tangents.disabled
      ?[...snapTargets,...collectTangentSnaps(outline,index,referenceGeometry)].sort((a,b)=>a.point[0]-b.point[0])
      :snapTargets;
-    outlineEdit={field,original:field.value,loop,index,points:outline.points,bulges:outline.bulges,targets};
+    outlineEdit={field,original:field.value,loop,index,points:outline.points,bulges:outline.bulges,dxfWidths:outline.dxfWidths,targets};
    }
    event.preventDefault();
    drag={id:event.pointerId,x:start.x,y:start.y,w:Number(width.value),h:Number(depth.value),r:Number(radius.value),d:Number(length.value),inverse,kind:mode,viewBox:svg.getAttribute('viewBox')!,outlineEdit};
@@ -441,7 +448,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      const next=sketchDraggedBulge(source,edit.points[(edit.index+1)%edit.points.length],current,[dx,-dy],step);
      if(next!==current){
       bulges[edit.index]=next;
-      rows=formatPoints(edit.points,bulges);
+      rows=formatPoints(edit.points,bulges,edit.dxfWidths);
      }
     }else{
      const candidate:SketchPoint=[source[0]+dx,source[1]-dy];
@@ -451,7 +458,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      const moved:SketchPoint=drag.target?.point??[round(candidate[0]),round(candidate[1])];
      if(moved[0]!==source[0]||moved[1]!==source[1]){
       const points=edit.points.slice();points[edit.index]=moved;
-      rows=formatPoints(points,edit.bulges);
+      rows=formatPoints(points,edit.bulges,edit.dxfWidths);
      }
     }
     if(!rows)edit.field.value=edit.original;
@@ -577,7 +584,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
       regionLoops=imported.loops;
       region.value=formatLoops(regionLoops);
      }
-     if(imported.kind==='outline')points.value=formatPoints(imported.points,imported.bulges).join('\n');
+     if(imported.kind==='outline')points.value=formatPoints(imported.points,imported.bulges,imported.dxfWidths).join('\n');
      if(imported.kind==='circle'){
       radius.value=String(imported.radius);
       center.value=imported.center?.join(', ')??'0, 0';

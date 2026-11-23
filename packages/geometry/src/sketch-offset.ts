@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import type {ManifoldToplevel} from 'manifold-3d';
 import {offsetCurvedOutline} from './curved-sketch-offset.js';
-import {evaluateSketch,newId,offsetPositionExpression,retainDrawingVertexIds,sketchOutline,t} from '@brickwright/cad-core';
+import {constantDxfWidth,evaluateSketch,newId,offsetPositionExpression,retainDrawingVertexIds,sketchOutline,t} from '@brickwright/cad-core';
 import type {CadDocument,FeatureScalar,PlanarSketch,SketchLoop,SketchProfile} from '@brickwright/cad-core';
 
 export function offsetSketchProfile(module:ManifoldToplevel,sketch:PlanarSketch,context:Pick<CadDocument,'parametric'>,distance:number):SketchProfile{
@@ -10,7 +10,7 @@ export function offsetSketchProfile(module:ManifoldToplevel,sketch:PlanarSketch,
  const before=evaluateSketch(sketch,context);
  const design=context.parametric??{version:1,parameters:{},bindings:[]};
  const shift=(value:FeatureScalar,delta:number)=>typeof value==='number'?value+delta:offsetPositionExpression(value,design,delta);
- const outline=(loop:Extract<SketchLoop,{kind:'outline'}>,delta:number)=>{
+ const offsetOutline=(loop:Extract<SketchLoop,{kind:'outline'}>,delta:number)=>{
   if(loop.bulges?.some(Boolean))return {...loop,...offsetCurvedOutline(loop.points,loop.bulges,delta)};
   const section=new module.CrossSection([sketchOutline(loop.points)],'EvenOdd');
   try{
@@ -24,6 +24,15 @@ export function offsetSketchProfile(module:ManifoldToplevel,sketch:PlanarSketch,
     return edited;
    }finally{offset.delete();}
   }finally{section.delete();}
+ };
+ const outline=(loop:Extract<SketchLoop,{kind:'outline'}>,delta:number)=>{
+  const constant=loop.dxfWidths?constantDxfWidth(loop.dxfWidths,true):undefined;
+  if(!constant&&loop.dxfWidths?.some(pair=>pair.some(Boolean)))
+   throw new Error(t('Use a uniform DXF width or clear the widths before offsetting this outline.'));
+  const edited=offsetOutline(loop,delta);
+  if(constant)edited.dxfWidths=edited.points.map(()=>[constant,constant]);
+  else delete edited.dxfWidths;
+  return edited;
  };
  const profile=sketch.profile;
  let edited:SketchProfile;

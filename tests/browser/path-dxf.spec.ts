@@ -8,7 +8,7 @@ const payload=(units:number)=>Buffer.from([
  '0','LTYPE','2','Guide dash','73',2,'49',.5,'74',0,'49',-.25,'74',0,'0','ENDTAB',
  '0','TABLE','2','LAYER','0','LAYER','2','Guides','62',-5,'6','Guide dash','370',25,'290',0,'0','ENDTAB','0','ENDSEC',
  '0','SECTION','2','ENTITIES',
- '0','LWPOLYLINE','8','Guides','90',3,'70',0,'10',0,'20',0,'10',1,'20',0,'42',-.5,'10',1,'20',2,'38',7,'210',0,'220',.6,'230',.8,
+ '0','LWPOLYLINE','8','Guides','90',3,'70',0,'10',0,'20',0,'40',.1,'41',.2,'10',1,'20',0,'42',-.5,'40',.2,'41',.1,'10',1,'20',2,'38',7,'210',0,'220',.6,'230',.8,
  '0','LINE','8','Construction','10',3,'20',5,'11',6,'21',7,
  '0','LINE','8','Guides','67',1,'10',12,'20',18,'11',22,'21',24,
  '0','ENDSEC','0','EOF'
@@ -35,14 +35,17 @@ test('import an inch DXF as an open guide, export mm and reimport the signed arc
  await expect(points).toHaveValue(before);
  await press(path.getByRole('checkbox',{name:'Assume millimetres if the file has no units',exact:true}));
  await press(importLayers);
- await expect(points).toHaveValue('0, 0\n1, 0, -0.5\n1, 2');
+ await expect(points).toHaveValue('0, 0, 0, 0.1, 0.2\n1, 0, -0.5, 0.2, 0.1\n1, 2');
 
  await file.setInputFiles({name:'inch guide.dxf',mimeType:'application/dxf',buffer:payload(1)});
  await expect(layers.getByRole('checkbox',{name:'Construction',exact:true})).toBeChecked();
  await press(layers.getByRole('checkbox',{name:'Construction',exact:true}));
  await press(importLayers);
- const scaled='0, 0\n25.4, 0, -0.5\n25.4, 50.8';
+ const scaled='0, 0, 0, 2.54, 5.08\n25.4, 0, -0.5, 5.08, 2.54\n25.4, 50.8';
  await expect(points).toHaveValue(scaled);
+ await expect(path.getByText('DXF widths use X, Y, bulge, start width, end width. The path preview follows the centerline.')).toBeVisible();
+ const edited=scaled.replace('0, 0, 0, 2.54, 5.08','0, 0, 0, 3, 5.08');
+ await points.fill(edited);
  await expect(path.getByText('The source plane was unfolded into the selected sketch plane at actual size.',{exact:true})).toBeVisible();
  await expect(path.getByText('DXF layer: Guides',{exact:true})).toBeVisible();
  const [download]=await Promise.all([
@@ -54,17 +57,19 @@ test('import an inch DXF as an open guide, export mm and reimport the signed arc
  expect(text).toContain('$INSUNITS\r\n70\r\n4');
  expect(text).toContain('90\r\n3\r\n70\r\n0');
  expect(text).toContain('42\r\n-0.5');
+ expect(text).toContain('40\r\n3\r\n41\r\n5.08');
  expect(text).toContain('62\r\n-5\r\n6\r\nGuide dash\r\n290\r\n0\r\n370\r\n25');
  expect(text).toContain('49\r\n12.7\r\n74\r\n0\r\n49\r\n-6.35');
  expect(text).not.toContain('Construction');
  await file.setInputFiles({name:'round trip.dxf',mimeType:'application/dxf',buffer:Buffer.from(text)});
  await expect(path.getByLabel('Sketch name')).toHaveValue('round trip');
  await expect(path.getByText('The source plane was unfolded into the selected sketch plane at actual size.',{exact:true})).toBeHidden();
- await expect(points).toHaveValue(scaled);
+ await expect(points).toHaveValue(edited);
  await press(path.getByRole('button',{name:'Save path',exact:true}));
  await expect(path).toBeHidden();
  await expect(page.getByTestId('object-name')).toHaveCount(0);
  await press(page.getByRole('button',{name:'Sketch path: round trip',exact:true}));
  await press(path.getByText('DXF path',{exact:true}));
  await expect(path.getByText('DXF layer: Guides',{exact:true})).toBeVisible();
+ await expect(points).toHaveValue(edited);
 });

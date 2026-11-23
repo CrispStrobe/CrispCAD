@@ -102,7 +102,13 @@ The curve stays analytic in DXF, and the modeling mesh approximates it using
 chords with up to 0.025 mm of sagitta error within the supported detail budget.
 
 The current region workflow rejects touching, crossing, nested and disjoint
-loops. DXF polyline widths, DWG and STEP remain open.
+loops. DXF lightweight polylines retain constant and tapered widths at
+actual size. Edit a vertex as **X, Y, bulge, start width, end width** to
+change the width of its outgoing edge. The sketch and solid use the
+centerline. DXF export writes the widths back as drawing properties. Trim
+interpolates widths at new endpoints, and a closing edge starts at zero
+width. Offset supports uniform-width outlines. DWG and STEP remain open.
+[Autodesk DXF lightweight polylines](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-DXF/files/GUID-748FC305-F3F2-4F74-825A-61F04D757A50.htm)
 
 ## Outline point editing
 

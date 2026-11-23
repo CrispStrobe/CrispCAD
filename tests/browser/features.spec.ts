@@ -94,7 +94,7 @@ test('DXF plate previews two open mounting holes and retains their edited dimens
   '0','LAYER','2','Bores','70',0,'62',1,'290',0,
   '0','ENDTAB','0','ENDSEC','0','SECTION','2','ENTITIES',
   '0','CIRCLE','8','Bores','10',10,'20',15,'40',2,'30',10,'210',0,'220',.6,'230',.8,
-  '0','LWPOLYLINE','8','Outline','90',4,'70',1,'10',0,'20',0,'10',40,'20',0,'10',40,'20',30,'10',0,'20',30,'38',10,'210',0,'220',.6,'230',.8,
+  '0','LWPOLYLINE','8','Outline','90',4,'70',1,'43',1.5,'10',0,'20',0,'10',40,'20',0,'10',40,'20',30,'10',0,'20',30,'38',10,'210',0,'220',.6,'230',.8,
   '0','CIRCLE','8','Bores','10',30,'20',15,'40',3,'30',10,'210',0,'220',.6,'230',.8,
   '0','TEXT','8','Notes','1','Fixture labels',
   '0','CIRCLE','8','Bores','67',1,'10',100,'20',120,'40',15,
@@ -119,6 +119,7 @@ test('DXF plate previews two open mounting holes and retains their edited dimens
  await expect(loops).toHaveValue(/CIRCLE 10, 15, 2[\s\S]*CIRCLE 30, 15, 3/);
  await expect(sketch.locator('.sketch-top')).toHaveAttribute('d', /^M .* Z M .* Z M .* Z$/);
  const initial = await loops.inputValue();
+ expect(initial).toContain('40, 30, 0, 1.5, 1.5');
  const apply = sketch.getByRole('button', {name: 'Create extrusion', exact: true});
  await loops.fill(initial.replace('CIRCLE 10, 15, 2', 'CIRCLE 0, 15, 4'));
  await expect(apply).toBeDisabled();

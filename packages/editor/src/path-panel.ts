@@ -46,10 +46,14 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   points.rows=6;
   points.maxLength=65536;
   points.spellcheck=false;
-  points.value=profile?formatSketchPoints(profile.points,profile.bulges).join('\n'):'0, 0\n30, 0\n30, 20';
+  points.value=profile?formatSketchPoints(profile.points,profile.bulges,profile.dxfWidths).join('\n'):'0, 0\n30, 0\n30, 20';
   fields.append(operationField(t('Sketch name'),name).label,operationField(t('Sketch plane'),plane).label,
    operationField(t('Path points X, Y (mm)'),points).label,
    element('small',t('Enter one point per line. Use @dX, dY for a relative point. Add a third value for an arc bulge on the outgoing edge.')));
+
+  const widthHint=element('small',t('DXF widths use X, Y, bulge, start width, end width. The path preview follows the centerline.'));
+  widthHint.hidden=true;
+  fields.append(widthHint);
 
   const locks=element('details');
   locks.className='sketch-expressions';
@@ -106,7 +110,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
    status.textContent=error instanceof FeatureEvaluationError?error.diagnostic.message:error instanceof Error?error.message:String(error);
   }
   function writePath(next:SketchPathProfile){
-   points.value=formatSketchPoints(next.points,next.bulges).join('\n');
+   points.value=formatSketchPoints(next.points,next.bulges,next.dxfWidths).join('\n');
    vertexIds=next.vertexIds;
    anchors=next.anchors;
   }
@@ -129,6 +133,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
    }catch{/* The preview reports invalid geometry. */}
   }
   function draw(){
+   widthHint.hidden=true;
    closureHint.hidden=!anchors?.length;
    preview.replaceChildren();
    status.textContent='';
@@ -145,6 +150,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
    updateLockFields();
    try{
     const draft=read();
+    widthHint.hidden=!draft.profile.dxfWidths;
     if(vertexIds&&vertexIds.length!==draft.profile.points.length)throw new Error(t('Restore the original point count or unlock the points.'));
     const {contour}=evaluateSketch(draft,doc),x=contour.map(point=>point[0]),y=contour.map(point=>-point[1]);
     const left=Math.min(...x),top=Math.min(...y),width=Math.max(...x)-left,height=Math.max(...y)-top,margin=Math.max(width,height,1)*.15;
@@ -203,7 +209,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
     const {profile:draft}=read();
     if(draft.points.length===vertexIds?.length){
      draft.points[index]=resolveSketchPath(draft,doc)[index];
-     points.value=formatSketchPoints(draft.points,draft.bulges).join('\n');
+     points.value=formatSketchPoints(draft.points,draft.bulges,draft.dxfWidths).join('\n');
     }
    }catch{/* Keep unfinished point entries editable when the lock is removed. */}
    anchors=remaining?.length?remaining:undefined;

@@ -2,11 +2,13 @@
 import {t} from './i18n.js';
 import {checkSketchDxfLayer} from './sketch-dxf-layer.js';
 import type {SketchDxfLayer} from './sketch-dxf-layer.js';
+import {checkSketchDxfWidths} from './sketch-dxf-width.js';
+import type {SketchDxfWidths} from './sketch-dxf-width.js';
 import {isSketchPoint, sketchOutline, sketchSegmentsIntersect} from './sketch-outline.js';
 import type {FeatureScalar} from './features.js';
 import type {SketchPoint} from './sketch-outline.js';
 
-export type SketchOutlineProfile = {kind:'outline'; id:string; points:SketchPoint[]; bulges?:number[]; vertexIds?:string[]}&SketchDxfLayer;
+export type SketchOutlineProfile = {kind:'outline'; id:string; points:SketchPoint[]; bulges?:number[]; vertexIds?:string[]}&SketchDxfLayer&SketchDxfWidths;
 
 export type SketchLoop =
   | SketchOutlineProfile
@@ -85,6 +87,7 @@ export function evaluateSketchRegion(loops: SketchLoop[], resolve = (scalar: Fea
       });
       area = Math.PI * radius ** 2;
     } else if (loop.kind === 'outline') {
+      checkSketchDxfWidths(loop,true);
       points = sketchOutline(loop.points, loop.bulges);
       resolvedLoop = loop;
       const [x,y] = points[0];

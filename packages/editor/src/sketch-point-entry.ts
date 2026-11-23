@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {maxSketchOutlinePoints,t} from '@brickwright/cad-core';
-import type {SketchPoint} from '@brickwright/cad-core';
+import {isDxfSegmentWidth,maxSketchOutlinePoints,t} from '@brickwright/cad-core';
+import type {DxfSegmentWidth,SketchPoint} from '@brickwright/cad-core';
 
 const decimal = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;
 
@@ -16,9 +16,14 @@ export function parseSketchOutline(rows: string[]) {
   if (rows.length > maxSketchOutlinePoints) {
     throw new Error(t('An outline needs 3–256 finite points within 100000 mm of the sketch origin.'));
   }
-  const points: SketchPoint[] = [], bulges: number[] = [];
+  const points:SketchPoint[]=[],bulges:number[]=[],widths:DxfSegmentWidth[]=[];
   for (const row of rows) {
     const coordinates = row.trim().split(',');
+    const widthFields=coordinates.length===5?coordinates.splice(3,2).map(value=>value.trim()):['0','0'];
+    const width=widthFields.map(Number);
+    if(!widthFields.every(value=>decimal.test(value))||!isDxfSegmentWidth(width))
+      throw new Error(t('Enter start and end widths between 0 and 100000 mm.'));
+    widths.push(width);
     const bulge = coordinates.length === 3 ? coordinates.pop()!.trim() : '0';
     if (!decimal.test(bulge) || !Number.isFinite(Number(bulge))) {
       throw new Error(t('Enter one finite bulge per outline point.'));
@@ -31,11 +36,15 @@ export function parseSketchOutline(rows: string[]) {
     points.push(relative && previous ? [previous[0] + x, previous[1] + y] : [x,y]);
     bulges.push(Number(bulge));
   }
-  return bulges.some(Boolean) ? {points, bulges} : {points};
+  return {points,...(bulges.some(Boolean)?{bulges}:{}),...(widths.some(pair=>pair.some(Boolean))?{dxfWidths:widths}:{})};
 }
 
-export function formatSketchPoints(points: SketchPoint[], bulges?: number[]) {
-  return points.map(([x, y], i) => bulges?.[i] ? [x,y,bulges[i]].join(', ') : [x,y].join(', '));
+export function formatSketchPoints(points:SketchPoint[],bulges?:number[],widths?:DxfSegmentWidth[]){
+  return points.map(([x,y],i)=>{
+    const width=widths?.[i],bulge=bulges?.[i]??0;
+    if(width?.some(Boolean))return [x,y,bulge,...width].join(', ');
+    return (bulge?[x,y,bulge]:[x,y]).join(', ');
+  });
 }
 
 /** Move the arc's midpoint perpendicular to its chord while keeping its endpoints fixed. */

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {evaluateSketch, featureValue, resolveSketchPath, t} from '@brickwright/cad-core';
-import type {CadDocument,PlanarSketch,SketchDxfLayer,SketchDxfLayerStyle,SketchDxfLinetype,SketchPoint} from '@brickwright/cad-core';
+import {constantDxfWidth,evaluateSketch, featureValue, resolveSketchPath, t} from '@brickwright/cad-core';
+import type {CadDocument,DxfSegmentWidth,PlanarSketch,SketchDxfLayer,SketchDxfLayerStyle,SketchDxfLinetype,SketchPoint} from '@brickwright/cad-core';
 
 /** Export the authored sketch in its local plane, at its evaluated size in mm. */
 export function exportSketchDxf(doc: CadDocument, featureId: string) {
@@ -87,16 +87,23 @@ function writeSketchDxf(doc:CadDocument,sketch:PlanarSketch){
     pair(30, 0);
     pair(40, radius);
   };
-  const polyline = (points: SketchPoint[], layer = '0', bulges?: number[], closed = true) => {
+  const polyline = (points: SketchPoint[], layer = '0', bulges?: number[], closed = true, widths?:DxfSegmentWidth[]) => {
     pair(0, 'LWPOLYLINE');
     pair(100, 'AcDbEntity');
     pair(8, layerName(layer));
     pair(100, 'AcDbPolyline');
     pair(90, points.length);
     pair(70, closed ? 1 : 0);
+    const constant=widths?constantDxfWidth(widths,closed):undefined;
+    if(constant)pair(43,constant);
     points.forEach(([x, y], index) => {
       pair(10, x);
       pair(20, y);
+      if(widths&&!constant){
+        const [start,end]=widths[index];
+        if(start)pair(40,start);
+        if(end)pair(41,end);
+      }
       const bulge = bulges?.[index];
       if (bulge) pair(42, bulge);
     });
@@ -104,14 +111,14 @@ function writeSketchDxf(doc:CadDocument,sketch:PlanarSketch){
   if (profile.kind === 'region') {
     for (const loop of profile.loops) {
       if (loop.kind === 'circle') circle([featureValue(loop.center[0], doc), featureValue(loop.center[1], doc)], featureValue(loop.radius, doc), loop.dxfLayer);
-      else polyline(loop.points, loop.dxfLayer, loop.bulges);
+      else polyline(loop.points,loop.dxfLayer,loop.bulges,true,loop.dxfWidths);
     }
   } else if (profile.kind === 'circle') {
     circle(profile.center ?? [0,0], featureValue(profile.radius, doc), profile.dxfLayer);
   } else if (profile.kind === 'path') {
-    polyline(resolveSketchPath(profile,doc), profile.dxfLayer, profile.bulges, false);
+    polyline(resolveSketchPath(profile,doc),profile.dxfLayer,profile.bulges,false,profile.dxfWidths);
   } else if (profile.kind === 'outline') {
-    polyline(profile.bulges ? profile.points : contour, profile.dxfLayer, profile.bulges);
+    polyline(profile.bulges||profile.dxfWidths?profile.points:contour,profile.dxfLayer,profile.bulges,true,profile.dxfWidths);
   } else polyline(contour);
 
   pair(0, 'ENDSEC');

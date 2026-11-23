@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {evaluateSketchRegion, isSketchDxfLayer, isSketchPoint, maxSketchRegionLoops, maxSketchOutlinePoints, sketchOutline, sketchPath, t} from '@brickwright/cad-core';
-import type {SketchLoop, SketchPoint, SketchProfile, Vec3} from '@brickwright/cad-core';
+import {evaluateSketchRegion, isDxfSegmentWidth, isSketchDxfLayer, isSketchPoint, maxSketchRegionLoops, maxSketchOutlinePoints, sketchOutline, sketchPath, t} from '@brickwright/cad-core';
+import type {DxfSegmentWidth, SketchLoop, SketchPoint, SketchProfile, Vec3} from '@brickwright/cad-core';
 import {dxfRecords,readDxfLayerStyles} from './dxf-layer-tables.js';
 import type {DxfGroup as Group} from './dxf-layer-tables.js';
 import {dxfEntityFields,dxfPaperSpaceOwners,isDxfPaperSpace} from './dxf-model-space.js';
@@ -129,7 +129,7 @@ function readDxf(entities:DxfEntity[],tables:Group[],units:number,assumeMm:boole
     };
     if(read(67,0)!==0||fields.some(group=>{
       if(group.code===39)return number(group.value)!==0;
-      if(kind==='LWPOLYLINE')return [30,40,41,43].includes(group.code)&&number(group.value)!==0;
+      if(kind==='LWPOLYLINE')return group.code===30&&number(group.value)!==0;
       return [38,41,42,43].includes(group.code)&&number(group.value)!==0;
     }))throw unsupported();
     if(kind==='LINE'){
@@ -177,27 +177,43 @@ function readDxf(entities:DxfEntity[],tables:Group[],units:number,assumeMm:boole
     const flags = read(70,closed?undefined:0);
     const count = read(90);
     if (!(closed?[1,129]:[0,128]).includes(flags) || !Number.isInteger(count) || count < 2 || count > maxSketchOutlinePoints) throw unsupported();
-    const coordinates = fields.filter(group => [10, 20, 42].includes(group.code));
+    const coordinates=fields.filter(group=>[10,20,40,41,42].includes(group.code));
+    const constant=read(43,0)*scale;
+    if(!isDxfSegmentWidth([constant,constant]))throw invalid();
     const points: SketchPoint[] = [];
-    const bulges: number[] = [];
+    const bulges:number[]=[],widths:DxfSegmentWidth[]=[];
     for (let i = 0; i < coordinates.length;) {
       const x = coordinates[i++], y = coordinates[i++];
       if (x.code !== 10 || y?.code !== 20) throw invalid();
       points.push(project([number(x.value)*scale,number(y.value)*scale]));
-      bulges.push(coordinates[i]?.code===42?(number(coordinates[i++].value)*handedness||0):0);
+      const attributes=new Map<number,number>();
+      while(i<coordinates.length&&coordinates[i].code!==10){
+        const {code,value}=coordinates[i++];
+        if(![40,41,42].includes(code)||attributes.has(code))throw invalid();
+        attributes.set(code,number(value));
+      }
+      bulges.push((attributes.get(42)??0)*handedness||0);
+      const width:DxfSegmentWidth=[(attributes.get(40)??0)*scale,(attributes.get(41)??0)*scale];
+      if(!isDxfSegmentWidth(width))throw invalid();
+      widths.push(width);
     }
     if (points.length !== count) throw invalid();
+    if(!closed)widths[widths.length-1]=[0,0];
+    const varying=widths.some(pair=>pair.some(Boolean));
+    if(constant&&varying)throw new Error(t('Use either a constant DXF width or per-segment widths in the same polyline.'));
+    const activeWidths=constant?widths.map((pair,i):DxfSegmentWidth=>closed||i<widths.length-1?[constant,constant]:pair):widths;
+    const widthFields=constant||varying?{dxfWidths:activeWidths}:{};
     if(!closed){
       bulges[bulges.length-1]=0; // An open polyline has no segment after its last vertex.
       const curves=bulges.some(Boolean)?bulges:undefined;
       sketchPath(points,curves);
-      paths.push({kind:'path',id:'dxf-profile',points,...(curves?{bulges:curves}:{}),...binding});
+      paths.push({kind:'path',id:'dxf-profile',points,...(curves?{bulges:curves}:{}),...widthFields,...binding});
       continue;
     }
-    if (bulges.some(Boolean)) {
-      sketchOutline(points, bulges);
-      indexed.push({index,kind:'outline',points,bulges,...binding});
-    } else indexed.push({index,kind:'outline',points:sketchOutline(points),...binding});
+    const curves=bulges.some(Boolean)?bulges:undefined;
+    const contour=sketchOutline(points,curves);
+    indexed.push({index,kind:'outline',points:curves||constant||varying?points:contour,
+     ...(curves?{bulges:curves}:{}),...widthFields,...binding});
   }
   if(!closed){
     if(paths.length===1&&!edges.length)return result(paths[0]);

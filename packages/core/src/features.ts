@@ -5,6 +5,8 @@ import {isSketchPoint,sketchOutline,sketchPath} from './sketch-outline.js';
 import {evaluateSketchRegion} from './sketch-region.js';
 import {checkSketchDxfLayer,sketchDxfLayerFields} from './sketch-dxf-layer.js';
 import type {SketchDxfLayer} from './sketch-dxf-layer.js';
+import {checkSketchDxfWidths} from './sketch-dxf-width.js';
+import type {SketchDxfWidths} from './sketch-dxf-width.js';
 import type {SketchLoop,SketchOutlineProfile} from './sketch-region.js';
 import type {SketchPoint} from './sketch-outline.js';
 import {constructionInputs} from './document.js';
@@ -19,7 +21,7 @@ export type SketchPathAnchor = {vertexId:string; x:FeatureScalar; y:FeatureScala
 export type SketchPathProfile = {
   kind:'path'; id:string; points:SketchPoint[]; bulges?:number[];
   vertexIds?:string[]; anchors?:SketchPathAnchor[];
-}&SketchDxfLayer;
+}&SketchDxfLayer&SketchDxfWidths;
 export type SketchProfile =
   {kind:'rectangle'; id:string; width:FeatureScalar; depth:FeatureScalar} |
   ({kind:'circle'; id:string; radius:FeatureScalar; segments:number; center?:SketchPoint}&SketchDxfLayer) |
@@ -136,7 +138,7 @@ export function resolveSketchPath(profile:SketchPathProfile,doc:Pick<CadDocument
 
 export function closePathProfile(profile:SketchPathProfile,doc:Pick<CadDocument,'parametric'>):Extract<SketchProfile,{kind:'outline'}> {
   const outline=structuredClone({kind:'outline' as const,id:profile.id,points:resolveSketchPath(profile,doc)});
-  return {...outline,...(profile.bulges?{bulges:[...profile.bulges]}:{}),...sketchDxfLayerFields(profile)};
+  return {...outline,...(profile.bulges?{bulges:[...profile.bulges]}:{}),...sketchDxfLayerFields(profile),...(profile.dxfWidths?{dxfWidths:structuredClone(profile.dxfWidths)}:{})};
 }
 
 function dimension(input:FeatureScalar,doc:Pick<CadDocument,'parametric'>):number {const v=featureValue(input,doc);if(v<.01||v>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));return v;}
@@ -147,6 +149,7 @@ export function evaluateSketch(sketch:PlanarSketch,doc:Pick<CadDocument,'paramet
     if(p.kind==='outline'||p.kind==='circle'||p.kind==='path')checkSketchDxfLayer(p);
     if(p.kind==='region')return evaluateSketchRegion(p.loops, value => featureValue(value, doc));
     if(p.kind==='rectangle') {const w=dimension(p.width,doc)/2,d=dimension(p.depth,doc)/2;return {contour:[[-w,-d],[w,-d],[w,d],[-w,d]],edgeIds:['bottom','right','top','left'].map(side=>`${p.id}:${side}`)};}
+    if(p.kind==='outline'||p.kind==='path')checkSketchDxfWidths(p,p.kind==='outline');
     if(p.kind==='path')return {contour:sketchPath(resolveSketchPath(p,doc),p.bulges),edgeIds:p.points.slice(0,-1).map((_,i)=>`${p.id}:edge-${i}`)};
     if(p.kind==='outline') {const contour=sketchOutline(p.points,p.bulges);return {contour,edgeIds:p.points.map((_,i)=>`${p.id}:edge-${i}`)};}
     if(p.kind==='circle') {const center=p.center??[0,0];if(!isSketchPoint(center))throw new Error(t('Circle center must be within 100000 mm of the sketch origin.'));const r=dimension(p.radius,doc);if(!Number.isInteger(p.segments)||p.segments<12||p.segments>256)throw new Error(t('Circle segments must be an integer between 12 and 256'));return {contour:Array.from({length:p.segments},(_,i)=>[center[0]+r*Math.cos(i*2*Math.PI/p.segments),center[1]+r*Math.sin(i*2*Math.PI/p.segments)]),edgeIds:[`${p.id}:circumference`]};}
