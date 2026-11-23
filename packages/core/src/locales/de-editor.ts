@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "Region outline constraints require document version 35": "Konturbedingungen in Regionen erfordern Dokumentversion 35",
+  "Region loop constraints": "Bedingungen für Regionskonturen",
+  "Constrained loop": "Kontur mit Bedingungen",
+  "Region constraint status": "Status der Regionsbedingungen",
+  "Clear region constraints": "Regionsbedingungen löschen",
+  "Restore the original region loops or clear their constraints.": "Stelle die ursprünglichen Regionskonturen wieder her oder lösche ihre Bedingungen.",
+  "Outline loop {0}": "Kontur {0}",
   "Arc-to-arc tangency requires document version 34": "Tangentiale Bogenübergänge erfordern Dokumentversion 34",
   "Arc tangency cannot contain a cycle. Keep one arc as the reference.": "Bogenabhängigkeiten dürfen keinen Kreis bilden. Behalte einen Bogen als Referenz.",
   "Choose an adjoining arc as the tangent reference.": "Wähle einen angrenzenden Bogen als Tangentenreferenz.",
@@ -28,7 +35,6 @@ export const messages: Record<string,string> = {
   "Applying parameters…": "Parameter werden übernommen…",
   "Solve the outline to use the current dimensions.": "Löse die Kontur, um die aktuellen Maße zu übernehmen.",
   "Invalid outline constraint definitions.": "Ungültige Konturbedingungen.",
-  "Outline constraints are available on single outlines.": "Konturbedingungen sind für einzelne Konturen verfügbar.",
   "Outline constraints require document version 31": "Konturbedingungen erfordern Dokumentversion 31",
   "Point 1 stays fixed. Lengths measure from vertex to vertex. Save keeps the constraints and solved points.": "Punkt 1 bleibt fest. Längen werden zwischen Eckpunkten gemessen. Beim Speichern bleiben die Bedingungen und gelösten Punkte erhalten.",
   "Cancel constraint edit": "Bearbeitung der Bedingung abbrechen",

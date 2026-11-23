@@ -18,12 +18,13 @@ import type {PlanarSketch,SketchProfile,FeatureScalar,RevolutionFeature,MirrorFe
 import {isOutlineCurveRule,outlineBulgesForCurves,outlineCurvesSatisfied,outlineRelationsForSolve,outlineSatisfiesRelations} from './outline-relations.js';
 import type {OutlineSolveRequest} from './outline-relations.js';
 import type {SketchPoint} from './sketch-outline.js';
+import {hasOutlineRelations,sketchOutlineProfiles} from './sketch-region.js';
 import type { ParametricDesign } from './parameters.js';
 import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositionExpression} from './fragments.js';
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -31,7 +32,8 @@ function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33
   doc.version=version;
 }
 function upgradeSketchProfile(doc:CadDocument,profile:SketchProfile){
-  if(profile.kind==='outline'&&profile.relations!==undefined){
+  if(profile.kind==='region'&&hasOutlineRelations(profile))upgradeModelFeatures(doc,35);
+  else if(profile.kind==='outline'&&profile.relations!==undefined){
     const kinds=new Set(profile.relations.map(rule=>rule.kind));
     upgradeModelFeatures(doc,kinds.has('arc-tangent')?34:kinds.has('tangent')?33:kinds.has('radius')?32:31);
   }
@@ -110,16 +112,16 @@ function editSketch(d:CadDocument,id:string,patch:Partial<Pick<PlanarSketch,'nam
   if(next.profile.id!==sketch.profile.id||next.profile.kind!==sketch.profile.kind)throw new Error(t('Keep sketch profile identity and kind when editing'));
   if(patch.profile){
     upgradeSketchProfile(d,next.profile);
-    if(next.profile.kind!=='outline'||next.profile.relations===undefined)retainDrawingVertexIds(sketch.profile,next.profile,newId);
+    retainDrawingVertexIds(sketch.profile,next.profile,newId);
   }
   d.sketches![id]=next;
 }
 type OutlineSolver=(request:OutlineSolveRequest,signal:AbortSignal)=>Promise<SketchPoint[]>;
 function affectedOutlines(document:CadDocument,next:CadDocument){
-  return Object.values(next.sketches??{}).flatMap(sketch=>{
-    const {profile}=sketch;
-    if(profile.kind!=='outline'||!profile.relations?.length)return [];
-    const before=document.sketches?.[sketch.id]?.profile;
+  return Object.values(next.sketches??{}).flatMap(sketch=>sketchOutlineProfiles(sketch.profile).flatMap(profile=>{
+    if(!profile.relations?.length)return [];
+    const previous=document.sketches?.[sketch.id]?.profile;
+    const before=previous&&sketchOutlineProfiles(previous).find(loop=>loop.id===profile.id);
     const unchanged=profile===before||sameModelValue(profile,before);
     if(unchanged&&next.parametric===document.parametric)return [];
     const rules=outlineRelationsForSolve(profile,value=>featureValue(value,next));
@@ -128,7 +130,7 @@ function affectedOutlines(document:CadDocument,next:CadDocument){
     const curves=rules.filter(isOutlineCurveRule);
     const chordsSatisfied=outlineSatisfiesRelations(request,profile.points);
     return chordsSatisfied&&outlineCurvesSatisfied(profile.points,profile.bulges,curves)?[]:[{sketch,profile,request,curves,chordsSatisfied}];
-  });
+  }));
 }
 export function createCadSession(initial: CadDocument = createDocument()) {
   let document = freezeDocument(validateDocument(initial)); let selection: string[] = []; let revision = 0; let label = 'Opened';let liveModelSource=false;
@@ -173,7 +175,11 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         checkOutlineSolve(expected,signal);
         if(!outlineSatisfiesRelations(request,points))throw new Error(t('The solved outline did not meet every constraint.'));
         const bulges=outlineBulgesForCurves(points,profile.bulges,curves);
-        profiles.set(sketch.id,{...profile,points:structuredClone(points),...(bulges?{bulges}:{})});
+        const solved={...profile,points:structuredClone(points),...(bulges?{bulges}:{})};
+        const updated=profiles.get(sketch.id)??sketch.profile;
+        profiles.set(sketch.id,updated.kind==='region'
+          ?{...updated,loops:updated.loops.map(loop=>loop.id===profile.id?solved:loop)}
+          :solved);
       }catch(error){
         checkOutlineSolve(expected,signal);
         const message=error instanceof Error?error.message:String(error);

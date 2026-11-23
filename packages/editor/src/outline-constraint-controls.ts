@@ -28,6 +28,7 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
  readLength:(value:FeatureScalar)=>number;
  apply:(geometry:OutlineGeometry)=>void;
  pending:(solving:boolean)=>void;
+ changed?:()=>void;
 }){
  const panel=element('details');
  panel.className='sketch-expressions';
@@ -115,6 +116,7 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
     status.textContent='';
     refresh();
     redrawList();
+    options.changed?.();
    };
    return entry;
   }));
@@ -154,6 +156,7 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   status.textContent='';
   refresh();
   redrawList();
+  options.changed?.();
  };
  function retainedRelations():Pick<SketchOutlineProfile,'vertexIds'|'relations'>{
   const ids=vertexIds!;
@@ -218,6 +221,7 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   editIndex=undefined;
   status.textContent='';
   redrawList();
+  options.changed?.();
  };
  solve.onclick=async()=>{
   if(!options.available()||solving)return;

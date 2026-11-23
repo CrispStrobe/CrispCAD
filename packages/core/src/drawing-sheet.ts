@@ -202,6 +202,7 @@ export function initializeDrawingOutlineIds(profile:SketchProfile,newId:()=>stri
 export function retainDrawingVertexIds(before:SketchProfile,after:SketchProfile,newId:()=>string){
  const previous=drawingOutlines(before);
  for(const outline of drawingOutlines(after)){
+  if(outline.relations!==undefined)continue;
   const original=previous.find(item=>item.id===outline.id&&item.vertexIds);
   if(!original)continue;
   if(!Array.isArray(outline.points))continue;

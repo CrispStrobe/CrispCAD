@@ -6,7 +6,7 @@ import {checkSketchDxfWidths} from './sketch-dxf-width.js';
 import type {SketchDxfWidths} from './sketch-dxf-width.js';
 import {isSketchPoint, sketchOutline, sketchSegmentsIntersect} from './sketch-outline.js';
 import type {OutlineRelation} from './outline-relations.js';
-import type {FeatureScalar} from './features.js';
+import type {FeatureScalar,SketchProfile} from './features.js';
 import type {SketchPoint} from './sketch-outline.js';
 
 export type SketchOutlineProfile = {kind:'outline'; id:string; points:SketchPoint[]; bulges?:number[]; vertexIds?:string[]; relations?:OutlineRelation[]}&SketchDxfLayer&SketchDxfWidths;
@@ -19,6 +19,13 @@ type SketchCircleLoop = {kind: 'circle'; id: string; center: [FeatureScalar, Fea
 type ResolvedCircle = Omit<SketchCircleLoop, 'center' | 'radius'> & {center: SketchPoint; radius: number};
 
 export const maxSketchRegionLoops = 16;
+export function sketchOutlineProfiles(profile:SketchProfile):SketchOutlineProfile[]{
+  if(profile.kind==='outline')return [profile];
+  return profile.kind==='region'?profile.loops.filter(loop=>loop.kind==='outline'):[];
+}
+export function hasOutlineRelations(profile:SketchProfile):boolean{
+  return sketchOutlineProfiles(profile).some(outline=>outline.relations!==undefined);
+}
 const maxRegionVertices = 1024;
 const invalid = () => new Error(t('A region needs one outside boundary and separate holes that do not touch or cross.'));
 const edges = (points: SketchPoint[]) => points.map((point, i) => [point, points[(i + 1) % points.length]] as const);
@@ -88,7 +95,6 @@ export function evaluateSketchRegion(loops: SketchLoop[], resolve = (scalar: Fea
       });
       area = Math.PI * radius ** 2;
     } else if (loop.kind === 'outline') {
-      if(loop.relations!==undefined)throw new Error(t('Outline constraints are available on single outlines.'));
       checkSketchDxfWidths(loop,true);
       points = sketchOutline(loop.points, loop.bulges);
       resolvedLoop = loop;

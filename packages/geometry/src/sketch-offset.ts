@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import type {ManifoldToplevel} from 'manifold-3d';
 import {offsetCurvedOutline} from './curved-sketch-offset.js';
-import {constantDxfWidth,evaluateSketch,newId,offsetPositionExpression,retainDrawingVertexIds,sketchOutline,t} from '@brickwright/cad-core';
+import {constantDxfWidth,evaluateSketch,hasOutlineRelations,newId,offsetPositionExpression,retainDrawingVertexIds,sketchOutline,t} from '@brickwright/cad-core';
 import type {CadDocument,FeatureScalar,PlanarSketch,SketchLoop,SketchProfile} from '@brickwright/cad-core';
 
 export function offsetSketchProfile(module:ManifoldToplevel,sketch:PlanarSketch,context:Pick<CadDocument,'parametric'>,distance:number):SketchProfile{
- if(sketch.profile.kind==='outline'&&sketch.profile.relations!==undefined)throw new Error(t('Clear outline constraints before trimming or offsetting.'));
+ if(hasOutlineRelations(sketch.profile))throw new Error(t('Clear outline constraints before trimming or offsetting.'));
 
  if(!Number.isFinite(distance)||Math.abs(distance)<.00001||Math.abs(distance)>100000)
   throw new Error(t('Offset magnitude must be between 0.00001 and 100000 mm.'));

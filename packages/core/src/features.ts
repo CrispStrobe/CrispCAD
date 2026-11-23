@@ -3,7 +3,7 @@ import {t} from './i18n.js';
 import {outlineRelationsForSolve} from './outline-relations.js';
 import {checkDrawingVertexIds} from './drawing-sheet.js';
 import {isSketchPoint,sketchOutline,sketchPath} from './sketch-outline.js';
-import {evaluateSketchRegion} from './sketch-region.js';
+import {evaluateSketchRegion,sketchOutlineProfiles} from './sketch-region.js';
 import {checkSketchDxfLayer,sketchDxfLayerFields} from './sketch-dxf-layer.js';
 import type {SketchDxfLayer} from './sketch-dxf-layer.js';
 import {checkSketchDxfWidths} from './sketch-dxf-width.js';
@@ -218,9 +218,11 @@ export function checkFeatures(doc:CadDocument) {
       if(doc.version<16&&(sketch.profile.anchors!==undefined||sketch.profile.vertexIds!==undefined))throw new Error(t('Path point locks require document version 16'));
     }
     evaluateSketch(sketch,doc);checkDrawingVertexIds(sketch.profile,doc.version);
-    if(sketch.profile.kind==='outline'&&sketch.profile.relations!==undefined){
+    for(const outline of sketchOutlineProfiles(sketch.profile)){
+      if(outline.relations===undefined)continue;
+      if(sketch.profile.kind==='region'&&doc.version<35)throw new Error(t('Region outline constraints require document version 35'));
       if(doc.version<31)throw new Error(t('Outline constraints require document version 31'));
-      const relations=outlineRelationsForSolve(sketch.profile,length=>featureValue(length,doc));
+      const relations=outlineRelationsForSolve(outline,length=>featureValue(length,doc));
       if(doc.version<32&&relations.some(relation=>relation.kind==='radius'))throw new Error(t('Driving arc radii require document version 32'));
       if(doc.version<33&&relations.some(relation=>relation.kind==='tangent'))throw new Error(t('Arc tangency requires document version 33'));
       if(doc.version<34&&relations.some(relation=>relation.kind==='arc-tangent'))throw new Error(t('Arc-to-arc tangency requires document version 34'));
@@ -238,12 +240,14 @@ export function sketchFeatureExpressions(node:ExtrusionFeature|RevolutionFeature
 }
 export function sketchExpressions(sketch:PlanarSketch):string[] {
   const profile=sketch.profile;
+  const outlineValues=(outline:SketchOutlineProfile)=>(outline.relations??[]).flatMap(relation=>
+    relation.kind==='length'?[relation.length]:relation.kind==='radius'?[relation.radius]:[]);
   const values=profile.kind==='rectangle'?[profile.width,profile.depth]:
     profile.kind==='circle'?[profile.radius]:
     profile.kind==='path'?[...(profile.anchors??[]).flatMap(anchor=>[anchor.x,anchor.y]),
       ...(profile.segmentConstraints??[]).flatMap(constraint=>[constraint.distance,constraint.direction])]:
-    profile.kind==='outline'?(profile.relations??[]).flatMap(relation=>relation.kind==='length'?[relation.length]:relation.kind==='radius'?[relation.radius]:[]):
-    profile.kind==='region'?profile.loops.flatMap(loop=>loop.kind==='circle'?[...loop.center,loop.radius]:[]):[];
+    profile.kind==='outline'?outlineValues(profile):
+    profile.kind==='region'?profile.loops.flatMap(loop=>loop.kind==='circle'?[...loop.center,loop.radius]:outlineValues(loop)):[];
   return values.filter((value):value is string=>typeof value==='string');
 }
 export function rewriteSketchExpressions(sketch:PlanarSketch,rewrite:(s:string)=>string) {
@@ -263,12 +267,14 @@ export function rewriteSketchExpressions(sketch:PlanarSketch,rewrite:(s:string)=
       constraint.distance=transform(constraint.distance);
       constraint.direction=transform(constraint.direction);
     }
-  }else if(profile.kind==='outline'){
-    for(const relation of profile.relations??[]){
+  }
+  for(const outline of sketchOutlineProfiles(profile)){
+    for(const relation of outline.relations??[]){
       if(relation.kind==='length')relation.length=transform(relation.length);
       if(relation.kind==='radius')relation.radius=transform(relation.radius);
     }
-  }else if(profile.kind==='region'){
+  }
+  if(profile.kind==='region'){
     for(const loop of profile.loops){
       if(loop.kind!=='circle')continue;
       loop.center=[transform(loop.center[0]),transform(loop.center[1])];

@@ -81,4 +81,5 @@ archives 64 MiB, with AST/record bounds. Archives are never pruned to fit. MCP
 accepts source up to 65,536 characters and retains its tighter headless model and
 transport limits. The browser worker solves constraints on single closed
 outlines, including driving radii and tangency to an adjoining line or arc.
-Region constraints remain roadmap work.
+Region boundaries and cutouts can each retain their own outline constraints.
+Relations between separate loops remain roadmap work.

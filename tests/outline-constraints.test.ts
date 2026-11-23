@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {createContext,runInContext} from 'node:vm';
 import {describe,expect,it} from 'vitest';
 import {compileModelSource,createCadSession,designGraph,generateModelSource,outlineBulgesForCurves,outlineBulgesForRadii,parseDocument,rewriteSketchExpressions,sketchBulgeArc,trimSketchProfile,validateDocument} from '@brickwright/cad-core';
-import type {SketchOutlineProfile} from '@brickwright/cad-core';
+import type {SketchOutlineProfile,SketchProfile} from '@brickwright/cad-core';
 import {verifyOutlineSolve} from '../packages/editor/src/outline-constraint-solve.js';
 import type {OutlineSolveRequest} from '../packages/editor/src/outline-constraint-solve.js';
 
@@ -294,4 +294,45 @@ it('updates a dependent arc when its reference radius changes and preserves the 
  expect(saved.points).toEqual(points);
  session.undo();
  expect(session.state.document).toBe(before);
+});
+
+it('retains independent boundary and cutout constraints and solves the entire region atomically',async()=>{
+ const session=createCadSession();
+ const design=(outer:string,hole:string)=>({version:1 as const,parameters:{
+  outer:{unit:'mm' as const,expression:outer},hole:{unit:'mm' as const,expression:hole}
+ },bindings:[]});
+ const rectangle=(id:string,x:number,y:number,width:number,height:number):SketchOutlineProfile=>({
+  kind:'outline',id,points:[[x,y],[x+width,y],[x+width,y+height],[x,y+height]],vertexIds:['a','b','c','d'],
+  relations:[
+   {kind:'horizontal',edge:['a','b']},{kind:'vertical',edge:['b','c']},
+   {kind:'parallel',edge:['a','b'],other:['c','d']},{kind:'perpendicular',edge:['c','d'],other:['d','a']},
+   {kind:'length',edge:['a','b'],length:id},{kind:'equal',edge:['a','b'],other:['c','d']},
+   {kind:'length',edge:['b','c'],length:height}
+  ]
+ });
+ const profile:Extract<SketchProfile,{kind:'region'}>={kind:'region',id:'plate',loops:[rectangle('outer',0,0,50,40),rectangle('hole',10,10,10,10)]};
+ session.setParametric(design('50','10'));
+ const body=session.addSketchExtrusion(profile),before=session.state.document,node=before.nodes[body];
+ if(node.kind!=='extrusion')throw Error('fixture');
+ const id=node.sketchId;
+ expect(before.version).toBe(35);
+ expect(()=>validateDocument({...before,version:34})).toThrow('version 35');
+ expect(parseDocument(session.serialize())).toEqual(before);
+ expect(designGraph(before).find(entry=>entry.key===`sketch:${id}`)?.dependencies.sort()).toEqual(['parameter:hole','parameter:outer']);
+ const copied=structuredClone(before.sketches![id]);
+ rewriteSketchExpressions(copied,expression=>expression==='hole'?'copiedHole':expression);
+ expect(copied.profile).toMatchObject({loops:[profile.loops[0],{relations:expect.arrayContaining([{kind:'length',edge:['a','b'],length:'copiedHole'}])}]});
+ expect(()=>trimSketchProfile(before.sketches![id],before,[5,0],[5,20],'left')).toThrow('Clear outline constraints');
+ await session.setParametricWithOutlineSolve(design('60','15'),solve,signal());
+ const after=session.state.document,updated=after.sketches![id].profile as typeof profile;
+ expect(updated.loops.map(loop=>loop.kind==='outline'&&loop.points[1][0])).toEqual([60,25]);
+ expect(updated.loops.map(loop=>loop.kind==='outline'&&loop.vertexIds)).toEqual([['a','b','c','d'],['a','b','c','d']]);
+ await expect(session.setParametricWithOutlineSolve(design('65','90'),solve,signal())).rejects.toThrow('separate holes');
+ expect(session.state.document).toBe(after);
+ session.undo();
+ expect(session.state.document).toBe(before);
+ const draft=session.modelSource.replace('expression: "50"','expression: "65"').replace('expression: "10"','expression: "18"');
+ const candidate=await session.prepareModelSourceWithOutlineSolve(draft,{},solve,signal());
+ const fromSource=candidate.document.sketches![id].profile as typeof profile;
+ expect(fromSource.loops.map(loop=>loop.kind==='outline'&&loop.points[1][0])).toEqual([65,28]);
 });

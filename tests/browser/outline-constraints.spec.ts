@@ -271,3 +271,53 @@ test('retains a directed tangent join between adjoining arcs',async({page,hasTou
  await expect(sketch.getByLabel('Constraint',{exact:true})).toHaveValue('arc-tangent');
  await expect(other).toHaveValue('1');
 });
+
+test('edits and retains independent constraints on a region boundary and a cutout',async({page,hasTouch})=>{
+ const press=async(control:ReturnType<typeof page.getByRole>)=>{
+  if(hasTouch){await control.scrollIntoViewIfNeeded();await control.tap();}
+  else await control.click();
+ };
+ const fill=async(control:ReturnType<typeof page.getByLabel>,value:string)=>{
+  await control.fill(value);
+  await control.blur();
+ };
+ await page.goto('/');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await press(page.getByRole('button',{name:'Sketch',exact:true}));
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await sketch.getByLabel('Profile',{exact:true}).selectOption('region');
+ const rows=sketch.getByLabel('Region loops (mm)');
+ await fill(rows,'0, 0 | 50, 0 | 50, 40 | 0, 40\n10, 10 | 20, 10 | 20, 20 | 10, 20');
+ await press(sketch.getByText('Region loop constraints',{exact:true}));
+ const picker=sketch.getByLabel('Constrained loop',{exact:true});
+ const addLength=async(expression:string)=>{
+  await press(sketch.locator('summary:visible').filter({hasText:/^Outline constraints$/}));
+  await sketch.getByRole('combobox',{name:'Constraint',exact:true}).selectOption('length');
+  await fill(sketch.getByRole('textbox',{name:'Segment length (mm)',exact:true}),expression);
+  await press(sketch.getByRole('button',{name:'Add constraint',exact:true}));
+  await press(sketch.getByRole('button',{name:'Solve outline',exact:true}));
+  await expect(sketch.getByRole('status',{name:'Outline constraint status'})).toContainText('Outline solved');
+ };
+ await addLength('50');
+ await picker.selectOption({label:'Outline loop 2'});
+ await addLength('15');
+ const solved=await rows.inputValue();
+ expect(Number(solved.split('\n')[1].split('|')[1].split(',')[0])).toBeCloseTo(25,5);
+ await fill(rows,solved+'\nCIRCLE 35, 20, 2');
+ await expect(sketch.getByRole('status',{name:'Region constraint status'})).toContainText('Restore the original region loops');
+ const create=sketch.getByRole('button',{name:'Create extrusion',exact:true});
+ await press(create);
+ await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('Restore the original region loops');
+ await fill(rows,solved);
+ await press(create);
+ await expect(sketch).toBeHidden();
+ const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
+ if(!await edit.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
+ await press(edit);
+ await expect(rows).toHaveValue(solved);
+ await press(sketch.getByRole('button',{name:'Edit constraint 1',exact:true}));
+ await expect(sketch.getByRole('textbox',{name:'Segment length (mm)',exact:true})).toHaveValue('50');
+ await picker.selectOption({label:'Outline loop 2'});
+ await press(sketch.getByRole('button',{name:'Edit constraint 1',exact:true}));
+ await expect(sketch.getByRole('textbox',{name:'Segment length (mm)',exact:true})).toHaveValue('15');
+});
