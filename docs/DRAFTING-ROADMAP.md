@@ -544,8 +544,11 @@ edges, full circles, and supported nested holes. Strokes are excluded from
 the geometry. Users can opt into **Approximate curves** and choose a
 0.01–10 mm chord tolerance for closed Bézier and elliptical contours. The
 preview shows the straight segments that will be stored in the sketch.
-Full circles retain their circle profile. The precision drawing toolbar,
-stroke expansion, gap repair, and updates from source remain open.
+Full circles retain their circle profile. **Close small gaps** adds a straight
+edge between the endpoints of the same subpath, up to the chosen distance at
+the final sketch scale. The preview highlights each added edge. Contours with
+crossings are still rejected. The precision drawing toolbar, stroke expansion,
+and updates from source remain open.
 
 #### SVG conversion and dependency choice
 

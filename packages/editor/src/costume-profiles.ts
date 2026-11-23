@@ -11,14 +11,16 @@ export type CostumeRegion = {
  size: SketchPoint;
  origin: SketchPoint;
  approximated?: boolean;
+ gapRepair?: {edges:ClosingEdge[];limitMm:number};
 };
+type ClosingEdge = readonly [SketchPoint,SketchPoint];
 type CostumeLoop = {kind:'circle';center:SketchPoint;radius:number} | {kind:'outline';points:SketchPoint[]};
 const tags = new Set(['svg','g','path','rect','circle','ellipse','polygon','polyline','line','defs','title','desc']);
 const styles = new Set(['fill','fill-rule','fill-opacity','stroke','stroke-opacity','stroke-width','stroke-linejoin','stroke-linecap','stroke-miterlimit','opacity','display','visibility']);
 const near = (a:Vector2,b:Vector2) => a.distanceTo(b) < 1e-7;
 const point = ({x,y}:Vector2):SketchPoint => [x,-y];
 
-type CurveApproximation = {widthMm:number;toleranceMm:number};
+type CostumeImportOptions = {widthMm:number;toleranceMm?:number;maxGapMm?:number};
 
 function secondDerivativeBound(curve:Curve<Vector2>):number {
  const secondDifference=(a:Vector2,b:Vector2,c:Vector2)=>a.clone().add(c).addScaledVector(b,-2).length();
@@ -44,12 +46,13 @@ export function costumeCurveSteps(curve:Curve<Vector2>,tolerance:number):number 
  return steps;
 }
 
-function boundary(path:Path,approximation?:CurveApproximation) {
+function boundary(path:Path,options?:CostumeImportOptions) {
  const curves=path.curves,[first]=curves,last=curves.at(-1);
  if(!first||!last)throw new Error(t('The artwork has no usable area.'));
  if(curves.length>maxSketchOutlinePoints)throw new Error(t('This outline has too many vertices.'));
- if(!path.autoClose&&!near(first.getPoint(0),last.getPoint(1)))
-  throw new Error(t('Close the path in Costumes before importing it.'));
+ const start=first.getPoint(0),end=last.getPoint(1);
+ const open=!path.autoClose&&!near(start,end);
+ if(open&&options?.maxGapMm===undefined)throw new Error(t('Close the path in Costumes before importing it.'));
  if(curves.some((curve,index)=>index>0&&!near(curves[index-1].getPoint(1),curve.getPoint(0))))
   throw new Error(t('The outline contains disconnected edges.'));
  if(curves.length===1 && first instanceof EllipseCurve && first.xRadius>0 &&
@@ -59,13 +62,13 @@ function boundary(path:Path,approximation?:CurveApproximation) {
   return {loop,area:first.xRadius**2*Math.PI*(first.aClockwise?1:-1),approximated:false};
  }
  const approximated=curves.some(curve=>!(curve instanceof LineCurve));
- if(approximated&&!approximation)throw new Error(t('Enable curve approximation to preview filled curves.'));
+ if(approximated&&options?.toleranceMm===undefined)throw new Error(t('Enable curve approximation to preview filled curves.'));
  let tolerance=1;
- if(approximated&&approximation){
+ if(approximated&&options?.toleranceMm!==undefined){
   // These sample positions also occur in the final polygon. Their span is a
   // lower bound on the source width used when converting the result to mm.
   const xs=curves.flatMap(curve=>[0,.25,.5,.75,1].map(value=>curve.getPoint(value).x));
-  tolerance=(Math.max(...xs)-Math.min(...xs))*approximation.toleranceMm/approximation.widthMm;
+  tolerance=(Math.max(...xs)-Math.min(...xs))*options.toleranceMm/options.widthMm;
  }
  const vertices:Vector2[]=[];
  for(const curve of curves){
@@ -74,13 +77,12 @@ function boundary(path:Path,approximation?:CurveApproximation) {
    throw new Error(t('Increase the curve tolerance to stay within 256 vertices per outline.'));
   for(let i=0;i<steps;i++)vertices.push(curve.getPoint(i/steps));
  }
- const end=last.getPoint(1);
  if(!near(vertices[0],end))vertices.push(end);
  if(vertices.length>maxSketchOutlinePoints)throw new Error(t('This outline has too many vertices.'));
  const points=vertices.map(point),[x,y]=points[0];
  const area=edges(points).reduce((sum,[[ax,ay],[bx,by]])=>sum+(ax-x)*(by-y)-(ay-y)*(bx-x),0)/2;
  const loop:CostumeLoop={kind:'outline',points};
- return {loop,area,approximated};
+ return {loop,area,approximated,closingEdge:open?[point(end),point(start)] as const:undefined};
 }
 
 const displayPoints = (loop:CostumeLoop):SketchPoint[] => loop.kind==='outline'?loop.points:
@@ -100,6 +102,9 @@ function region(loops:CostumeLoop[]):CostumeRegion {
 export function costumeSketchProfile(source:CostumeRegion,width:number):SketchProfile {
  if(!Number.isFinite(width)||width<.01||width>100000)throw new Error(t('Enter a width from 0.01 to 100000 mm.'));
  const scale=width/source.size[0];
+ const repair=source.gapRepair;
+ if(repair?.edges.some(([[ax,ay],[bx,by]])=>Math.hypot(bx-ax,by-ay)*scale>repair.limitMm))
+  throw new Error(t('This outline gap exceeds the maximum at the selected width.'));
  const convert=([x,y]:SketchPoint):SketchPoint=>[(x-source.origin[0])*scale,(y-source.origin[1])*scale];
  const loops=source.loops.map(loop=>loop.kind==='outline'?
   {kind:'outline' as const,id:newId(),points:sketchOutline(loop.points.map(convert))}:
@@ -119,7 +124,7 @@ function containsPoint(points:SketchPoint[],[x,y]:SketchPoint):boolean {
  return inside;
 }
 
-function filledRegions(boundaries:ReturnType<typeof boundary>[],evenOdd:boolean,width:number):CostumeRegion[] {
+function filledRegions(boundaries:ReturnType<typeof boundary>[],evenOdd:boolean,width:number,maxGapMm?:number):CostumeRegion[] {
  const contours=boundaries.map((contour,index)=>({...contour,index,points:displayPoints(contour.loop)}))
   .sort((a,b)=>Math.abs(b.area)-Math.abs(a.area));
  if(contours.reduce((count,contour)=>count+contour.points.length,0)>1024)
@@ -142,16 +147,19 @@ function filledRegions(boundaries:ReturnType<typeof boundary>[],evenOdd:boolean,
  }
  return regions.sort((a,b)=>a[0].index-b[0].index).map(contours=>{
   const result=region(contours.map(contour=>contour.loop));
+  const gaps=contours.flatMap(contour=>contour.closingEdge?[contour.closingEdge]:[]);
+  if(gaps.length&&maxGapMm!==undefined)result.gapRepair={edges:gaps,limitMm:maxGapMm};
   costumeSketchProfile(result,width);
   return {...result,approximated:contours.some(contour=>contour.approximated)};
  });
 }
 
-export function readCostumeProfiles(source:string,approximation?:CurveApproximation){
- if(approximation&&(!Number.isFinite(approximation.widthMm)||approximation.widthMm<.01||approximation.widthMm>100000))
+export function readCostumeProfiles(source:string,options?:CostumeImportOptions){
+ if(options&&(!Number.isFinite(options.widthMm)||options.widthMm<.01||options.widthMm>100000))
   throw new Error(t('Enter a width from 0.01 to 100000 mm.'));
- if(approximation&&(!Number.isFinite(approximation.toleranceMm)||approximation.toleranceMm<.01||approximation.toleranceMm>10))
-  throw new Error(t('Enter a curve tolerance from 0.01 to 10 mm.'));
+ const invalidTolerance=(value:number|undefined)=>value!==undefined&&(!Number.isFinite(value)||value<.01||value>10);
+ if(invalidTolerance(options?.toleranceMm))throw new Error(t('Enter a curve tolerance from 0.01 to 10 mm.'));
+ if(invalidTolerance(options?.maxGapMm))throw new Error(t('Enter a maximum gap from 0.01 to 10 mm.'));
  const xml=localSvg(source,tags);
  for(const node of xml.querySelectorAll('*')){
   if(node.hasAttribute('class')||node.hasAttribute('clip-path')||node.hasAttribute('mask')||node.hasAttribute('filter')||
@@ -177,8 +185,8 @@ export function readCostumeProfiles(source:string,approximation?:CurveApproximat
   try {
    if(style?.fillRule&&!['evenodd','nonzero'].includes(style.fillRule))throw new Error(t('The SVG uses an unsupported fill rule.'));
    if(path.subPaths.length>maxSketchRegionLoops)throw new Error(t('A region supports up to 16 loops.'));
-   const boundaries=path.subPaths.map(subpath=>boundary(subpath,approximation));
-   profiles.push(...filledRegions(boundaries,style?.fillRule==='evenodd',approximation?.widthMm??40));
+   const boundaries=path.subPaths.map(subpath=>boundary(subpath,options));
+   profiles.push(...filledRegions(boundaries,style?.fillRule==='evenodd',options?.widthMm??40,options?.maxGapMm));
   } catch(error) {issues.add(error instanceof Error?error.message:String(error));}
  }
  return {profiles,issues:[...issues],strokes};

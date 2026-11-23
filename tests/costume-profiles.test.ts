@@ -49,3 +49,10 @@ it('leaves lines alone and rejects a curve that exceeds the outline vertex budge
  expect(costumeCurveSteps(new LineCurve(vector(0,0),vector(100,0)),.01)).toBe(1);
  expect(()=>costumeCurveSteps(new EllipseCurve(0,0,500,250,0,2*Math.PI),.001)).toThrow(/256 vertices/);
 });
+
+
+it('checks a closing edge at the final model scale, including the exact limit',()=>{
+ const source:CostumeRegion={...ring,gapRepair:{edges:[[[10,-80],[10,-79.5]]],limitMm:1}};
+ expect(costumeSketchProfile(source,40).kind).toBe('region');
+ expect(()=>costumeSketchProfile(source,41)).toThrow(/gap exceeds/);
+});
