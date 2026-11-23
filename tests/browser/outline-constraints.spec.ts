@@ -231,3 +231,43 @@ test('retains a smooth join from an outline arc to an adjoining straight segment
  await expect(coordinates).toHaveValue(solved);
  await expect(sketch.getByRole('button',{name:'Edit constraint 1',exact:true})).toBeVisible();
 });
+
+test('retains a directed tangent join between adjoining arcs',async({page,hasTouch})=>{
+ const press=async(control:ReturnType<typeof page.getByRole>)=>{
+  if(hasTouch){await control.scrollIntoViewIfNeeded();await control.tap();}
+  else await control.click();
+ };
+ await page.goto('/');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await press(page.getByRole('button',{name:'Sketch',exact:true}));
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await sketch.getByLabel('Profile',{exact:true}).selectOption('outline');
+ const coordinates=sketch.getByLabel('Outline points X, Y (mm)');
+ await coordinates.fill('0, 0\n10, 0, 0.16\n16, 2, 0.15\n20, 10\n20, 20\n0, 20');
+ await coordinates.blur();
+ await press(sketch.getByText('Outline constraints',{exact:true}));
+ await sketch.getByLabel('Constraint',{exact:true}).selectOption('arc-tangent');
+ await sketch.getByLabel('Constrained segment').selectOption('2');
+ const other=sketch.getByLabel('Second segment'),status=sketch.getByRole('status',{name:'Outline constraint status'});
+ const add=sketch.getByRole('button',{name:'Add constraint',exact:true});
+ await other.selectOption('3');
+ await press(add);
+ await expect(status).toContainText('adjoining arc');
+ await other.selectOption('1');
+ await press(add);
+ await press(sketch.getByRole('button',{name:'Solve outline',exact:true}));
+ await expect(status).toContainText('Outline solved');
+ const solved=await coordinates.inputValue(),rows=solved.split('\n').map(row=>row.split(',').map(Number));
+ expect(rows[1][2]).toEqual(.16);
+ const a=sketchBulgeArc([10,0],[16,2],rows[1][2])!,b=sketchBulgeArc([16,2],[20,10],rows[2][2])!;
+ expect(a.start+a.sweep).toBeCloseTo(b.start,10);
+ await press(sketch.getByRole('button',{name:'Create extrusion',exact:true}));
+ await expect(sketch).toBeHidden();
+ const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
+ if(!await edit.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
+ await press(edit);
+ await expect(coordinates).toHaveValue(solved);
+ await press(sketch.getByRole('button',{name:'Edit constraint 1',exact:true}));
+ await expect(sketch.getByLabel('Constraint',{exact:true})).toHaveValue('arc-tangent');
+ await expect(other).toHaveValue('1');
+});

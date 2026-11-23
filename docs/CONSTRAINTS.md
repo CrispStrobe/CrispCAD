@@ -39,7 +39,12 @@ an adjoining straight segment on either side, then solve. Chord constraints
 set the vertices first. The arc then follows the direction of the straight
 segment at their shared endpoint. A radius or second tangent on that arc
 must agree with the resulting curve. Conflicts leave the sketch intact.
-Arc-to-arc tangency and constraints between region loops remain open.
+
+Document version 34 adds **Arc tangent to arc**. Choose the arc to change
+first, then its adjoining reference arc. A reference whose radius or tangent
+is driven solves first, and the dependent arc follows it without moving the
+vertices. Keep at least one independent reference in each chain of arcs.
+Constraints between region loops remain open.
 
 The worker loads the checked-in JavaScript built from
 `tools/sketch-constraints/solver.dart` with Dart 3.12.2. Run

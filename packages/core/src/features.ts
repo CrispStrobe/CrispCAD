@@ -223,6 +223,7 @@ export function checkFeatures(doc:CadDocument) {
       const relations=outlineRelationsForSolve(sketch.profile,length=>featureValue(length,doc));
       if(doc.version<32&&relations.some(relation=>relation.kind==='radius'))throw new Error(t('Driving arc radii require document version 32'));
       if(doc.version<33&&relations.some(relation=>relation.kind==='tangent'))throw new Error(t('Arc tangency requires document version 33'));
+      if(doc.version<34&&relations.some(relation=>relation.kind==='arc-tangent'))throw new Error(t('Arc-to-arc tangency requires document version 34'));
     }
    }}
   for(const node of Object.values(doc.nodes)){

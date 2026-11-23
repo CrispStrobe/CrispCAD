@@ -195,7 +195,9 @@ undoable edit. Conflicts leave the previous parameters and shapes intact.
 **Arc radius** drives the radius of an existing curved segment from a value
 or named dimension, preserving the side and sweep through the endpoints.
 **Arc tangent to line** keeps an existing arc tangent to an adjoining straight
-segment. Arc-to-arc tangency and constraints across region loops remain open.
+segment. **Arc tangent to arc** keeps adjoining arcs smooth through the
+shared endpoint as the reference arc changes. Constraints across region
+loops remain open.
 
 Enable **Edit edge curves** to reveal a blue handle at the midpoint of each
 outline edge. Drag the handle across its chord to turn a straight edge into
@@ -464,4 +466,4 @@ Document version 28 retains open-path relationships and their expressions.
 Document version 31 retains coupled segment constraints on closed outlines.
 Parameter editor and inspector changes re-solve retained outline relations.
 Document version 32 retains driving arc radii. Version 33 retains arc-to-line
-tangency. Arc-to-arc tangency and region constraints remain open.
+tangency. Version 34 retains arc-to-arc tangency. Region constraints remain open.

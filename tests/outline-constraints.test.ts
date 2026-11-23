@@ -253,3 +253,45 @@ it('keeps compatible arc tangency through source edits, reload and Undo',async()
  session.undo();
  expect(session.state.document).toBe(before);
 });
+
+it('solves arc tangency from either side and resolves reference chains independently of order',()=>{
+ const points:OutlineSolveRequest['points']=[[0,0],[10,0],[16,2],[20,10],[20,20],[0,20]];
+ const seed=[0,.1,.1,0,0,0];
+ const first={kind:'tangent' as const,edge:1,other:0},second={kind:'arc-tangent' as const,edge:2,other:1};
+ const solved=outlineBulgesForCurves(points,seed,[second,first])!;
+ expect(solved).toEqual(outlineBulgesForCurves(points,seed,[first,second]));
+ const a=sketchBulgeArc(points[1],points[2],solved[1])!,b=sketchBulgeArc(points[2],points[3],solved[2])!;
+ expect(a.radius).toBeCloseTo(10,10);
+ expect(b.radius).toBeCloseTo(10,10);
+ expect(a.start+a.sweep).toBeCloseTo(b.start,10);
+ const reverse=outlineBulgesForCurves(points,solved,[{...second,edge:1,other:2}])!;
+ expect(reverse[1]).toBeCloseTo(solved[1],12);
+ expect(()=>outlineBulgesForCurves(points,seed,[second,{...second,edge:1,other:2}])).toThrow('cannot contain a cycle');
+ expect(()=>outlineBulgesForCurves(points,[0,0,.1,0,0,0],[second])).toThrow('adjoining arc');
+});
+
+it('updates a dependent arc when its reference radius changes and preserves the relation through serialization and Undo',async()=>{
+ const session=createCadSession();
+ session.setParametric(dimensions('10'));
+ const points:OutlineSolveRequest['points']=[[0,0],[10,0],[16,2],[20,10],[20,20],[0,20]];
+ const rules=[{kind:'radius' as const,edge:1,radius:10,sweep:'ccw-minor' as const},{kind:'arc-tangent' as const,edge:2,other:1}];
+ session.addSketchExtrusion({kind:'outline',id:'compound',points,vertexIds:['a','b','c','d','e','f'],
+  bulges:outlineBulgesForCurves(points,undefined,rules),relations:[
+   {kind:'radius',edge:['b','c'],radius:'span',sweep:'ccw-minor'},
+   {kind:'arc-tangent',edge:['c','d'],other:['b','c']}
+  ]});
+ const before=session.state.document;
+ expect(before.version).toBe(34);
+ expect(parseDocument(session.serialize())).toEqual(before);
+ expect(()=>validateDocument({...before,version:33})).toThrow('version 34');
+ const unexpected=async()=>{throw Error('curve constraints do not require a chord worker');};
+ await session.setParametricWithOutlineSolve(dimensions('12'),unexpected,signal());
+ const saved=Object.values(session.state.document.sketches!)[0].profile as SketchOutlineProfile;
+ const a=sketchBulgeArc(points[1],points[2],saved.bulges![1])!,b=sketchBulgeArc(points[2],points[3],saved.bulges![2])!;
+ expect(a.radius).toBeCloseTo(12,10);
+ expect(b.radius).not.toBeCloseTo(10);
+ expect(a.start+a.sweep).toBeCloseTo(b.start,10);
+ expect(saved.points).toEqual(points);
+ session.undo();
+ expect(session.state.document).toBe(before);
+});

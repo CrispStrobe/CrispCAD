@@ -23,7 +23,7 @@ import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositio
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -33,7 +33,7 @@ function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33
 function upgradeSketchProfile(doc:CadDocument,profile:SketchProfile){
   if(profile.kind==='outline'&&profile.relations!==undefined){
     const kinds=new Set(profile.relations.map(rule=>rule.kind));
-    upgradeModelFeatures(doc,kinds.has('tangent')?33:kinds.has('radius')?32:31);
+    upgradeModelFeatures(doc,kinds.has('arc-tangent')?34:kinds.has('tangent')?33:kinds.has('radius')?32:31);
   }
   else if(profile.kind==='path')upgradeModelFeatures(doc,profile.segmentConstraints!==undefined?28:profile.anchors!==undefined||profile.vertexIds!==undefined?16:15);
   else if(doc.version<3)doc.version=3;

@@ -13,7 +13,7 @@ export type OutlineRule<Edge,Length> =
 const arcSweeps=['ccw-minor','cw-minor','ccw-major','cw-major'] as const;
 export type OutlineArcSweep=(typeof arcSweeps)[number];
 type ArcRadius<Edge,Dimension>={kind:'radius';edge:Edge;radius:Dimension;sweep:OutlineArcSweep};
-type ArcTangent<Edge>={kind:'tangent';edge:Edge;other:Edge};
+type ArcTangent<Edge>={kind:'tangent'|'arc-tangent';edge:Edge;other:Edge};
 type CurveRule<Edge,Dimension>=ArcRadius<Edge,Dimension>|ArcTangent<Edge>;
 type ResolvedArcRadius=ArcRadius<number,number>;
 type ResolvedCurveRule=CurveRule<number,number>;
@@ -49,31 +49,46 @@ export function outlineSegmentsAdjoin(first:number,second:number,count:number):b
 export function outlineBulgesForCurves(points:SketchPoint[],bulges:number[]|undefined,curves:readonly ResolvedCurveRule[]):number[]|undefined{
  const radii=curves.filter(rule=>rule.kind==='radius');
  const withRadii=outlineBulgesForRadii(points,bulges,radii);
- const tangencies=curves.filter(rule=>rule.kind==='tangent');
+ const tangencies=curves.filter(rule=>rule.kind!=='radius');
  if(!tangencies.length)return withRadii;
  const result=withRadii?.slice()??points.map(()=>0);
- const count=points.length,driven=new Set<number>(),radiusByEdge=new Map(radii.map(rule=>[rule.edge,rule]));
+ const count=points.length,radiusByEdge=new Map(radii.map(rule=>[rule.edge,rule]));
+ const pending=new Map<number,ArcTangent<number>[]>();
+ for(const rule of tangencies){
+  const group=pending.get(rule.edge);
+  if(group)group.push(rule);
+  else pending.set(rule.edge,[rule]);
+ }
+ const visiting=new Set<number>();
  const curved=new Set(curves.map(rule=>rule.edge));
  const direction=(index:number)=>{
   const a=points[index],b=points[(index+1)%count];
-  return [b[0]-a[0],b[1]-a[1]] as const;
+  return Math.atan2(b[1]-a[1],b[0]-a[0]);
  };
- for(const {edge,other} of tangencies){
-  if(!outlineSegmentsAdjoin(edge,other,count)||bulges?.[other]||curved.has(other))
-   throw new Error(t('Choose an adjoining straight segment for tangency.'));
-  const atEnd=(edge+1)%count===other;
-  // At the arc start rotate the line direction to its chord. At the end use the reverse order.
-  const [ax,ay]=direction(atEnd?edge:other),[bx,by]=direction(atEnd?other:edge);
-  const turn=Math.atan2(ax*by-ay*bx,ax*bx+ay*by);
-  const bulge=Math.tan(turn/2);
-  if(!(Math.abs(bulge)>1e-10&&Math.abs(bulge)<=10000))
-   throw new Error(t('This join cannot form a curved tangent arc. Adjust the adjoining segments.'));
-  const incompatible=()=>new Error(t('The arc radius or the other tangent conflicts with this tangent.'));
-  if(driven.has(edge)){
-   if(Math.abs(Math.atan(result[edge])-Math.atan(bulge))>1e-8)throw incompatible();
-   continue;
+ const incompatible=()=>new Error(t('The arc radius or the other tangent conflicts with this tangent.'));
+ function solveEdge(edge:number):number{
+  const rules=pending.get(edge);
+  if(!rules)return result[edge];
+  if(visiting.has(edge))throw new Error(t('Arc tangency cannot contain a cycle. Keep one arc as the reference.'));
+  visiting.add(edge);
+  let solved:number|undefined;
+  for(const {kind,other} of rules){
+   if(kind==='tangent'&&(!outlineSegmentsAdjoin(edge,other,count)||bulges?.[other]||curved.has(other)))
+    throw new Error(t('Choose an adjoining straight segment for tangency.'));
+   const referenceBulge=kind==='arc-tangent'?solveEdge(other):0;
+   if(kind==='arc-tangent'&&(!outlineSegmentsAdjoin(edge,other,count)||!referenceBulge))
+    throw new Error(t('Choose an adjoining arc as the tangent reference.'));
+   const atEnd=(edge+1)%count===other;
+   // The tangent at the reference start or end is its chord direction minus or plus half its sweep.
+   const reference=direction(other)+(atEnd?-2:2)*Math.atan(referenceBulge);
+   const delta=atEnd?reference-direction(edge):direction(edge)-reference;
+   const bulge=Math.tan(Math.atan2(Math.sin(delta),Math.cos(delta))/2);
+   if(!(Math.abs(bulge)>1e-10&&Math.abs(bulge)<=10000))
+    throw new Error(t('This join cannot form a curved tangent arc. Adjust the adjoining segments.'));
+   if(solved!==undefined&&Math.abs(Math.atan(solved)-Math.atan(bulge))>1e-8)throw incompatible();
+   solved??=bulge;
   }
-  const radius=radiusByEdge.get(edge);
+  const bulge=solved!,radius=radiusByEdge.get(edge);
   if(radius){
    const arc=sketchBulgeArc(points[edge],points[(edge+1)%count],bulge);
    if(!arc||Math.abs(arc.radius-radius.radius)>1e-6+radius.radius*1e-12||
@@ -81,8 +96,11 @@ export function outlineBulgesForCurves(points:SketchPoint[],bulges:number[]|unde
     (Math.abs(Math.abs(bulge)-1)>1e-8&&outlineArcSweep(bulge)!==radius.sweep))throw incompatible();
   }
   result[edge]=bulge;
-  driven.add(edge);
+  pending.delete(edge);
+  visiting.delete(edge);
+  return bulge;
  }
+ for(const edge of pending.keys())solveEdge(edge);
  return result;
 }
 
@@ -95,7 +113,7 @@ export function outlineCurvesSatisfied(points:SketchPoint[],bulges:number[]|unde
 }
 
 export function isOutlineCurveRule<Edge,Dimension>(rule:OutlineRule<Edge,Dimension>|CurveRule<Edge,Dimension>):rule is CurveRule<Edge,Dimension>{
- return rule.kind==='radius'||rule.kind==='tangent';
+ return rule.kind==='radius'||rule.kind==='tangent'||rule.kind==='arc-tangent';
 }
 
 export function outlineSatisfiesRelations(request:OutlineSolveRequest,points:SketchPoint[]):boolean{
@@ -161,9 +179,11 @@ export function outlineRelationsForSolve(
     radiusEdges.add(edge);
     return {kind:relation.kind,edge,radius:dimension(relation.radius),sweep:relation.sweep};
    }
-   case 'tangent':{
+   case 'tangent':
+   case 'arc-tangent':{
     const other=indexOf(relation.other),key=`${edge}:${other}`;
-    if(!outlineSegmentsAdjoin(edge,other,points.length))throw new Error(t('Choose an adjoining straight segment for tangency.'));
+    if(!outlineSegmentsAdjoin(edge,other,points.length))
+     throw new Error(t(relation.kind==='tangent'?'Choose an adjoining straight segment for tangency.':'Choose an adjoining arc as the tangent reference.'));
     if(tangentPairs.has(key))throw new Error(t('This tangent is already defined.'));
     tangentPairs.add(key);
     return {kind:relation.kind,edge,other};
