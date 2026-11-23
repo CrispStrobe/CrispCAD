@@ -19,12 +19,14 @@ export function mountDxfImportControls<P>(parent:HTMLElement,options:{
  const assumeMm=element('input'),file=element('input'),filename=element('p');
  assumeMm.type='checkbox';units.className='sketch-toggle';units.prepend(assumeMm);
  file.type='file';file.accept='.dxf';file.setAttribute('aria-label',t('Choose DXF file'));
+ const layoutNotice=element('small',t('Paper-space layout entities were skipped.'));
+ layoutNotice.setAttribute('aria-live','polite');layoutNotice.hidden=true;
  const layers=element('fieldset'),list=element('div'),toggleAll=element('button'),apply=element('button',t('Import selected layers'));
  layers.className='dxf-layer-picker';list.className='dxf-layer-list';
  toggleAll.type=apply.type='button';
  layers.append(element('legend',t('DXF layers')),toggleAll,list);
  layers.hidden=apply.hidden=true;
- parent.append(units,file,filename,layers,apply);
+ parent.append(units,file,filename,layoutNotice,layers,apply);
  // Selecting a file or a layer never changes the enclosing sketch draft.
  for(const event of ['input','change'])parent.addEventListener(event,input=>input.stopPropagation());
 
@@ -59,7 +61,7 @@ export function mountDxfImportControls<P>(parent:HTMLElement,options:{
   const chosen=file.files?.[0],revision=options.revision();
   if(!chosen||reading||options.available?.()===false){file.value='';return;}
   prepared=undefined;choices=[];name='';
-  list.replaceChildren();filename.textContent='';layers.hidden=apply.hidden=true;
+  list.replaceChildren();filename.textContent='';layers.hidden=apply.hidden=layoutNotice.hidden=true;
   reading=file.disabled=true;
   options.readState?.(true);
   try{
@@ -71,6 +73,7 @@ export function mountDxfImportControls<P>(parent:HTMLElement,options:{
    prepared=prepareSketchDxf(text);
    name=chosen.name.replace(/\.dxf$/i,'').replace(/[\u0000-\u001f]/g,'').trim().slice(0,160);
    filename.textContent=chosen.name;
+   layoutNotice.hidden=!prepared.skippedPaperSpace;
    if(prepared.layers.length>1){
     choices=prepared.layers.map(name=>{
      const label=element('label',name),input=element('input');

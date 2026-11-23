@@ -361,3 +361,36 @@ it('preserves a line and arc guide layer style through export and closure',()=>{
  expect(()=>session.addSketch({...guide,dxfLayerStyle:{...guide.dxfLayerStyle,linetype:{name:'Broken\n0',pattern:[1,0]}}}))
   .toThrow('Invalid DXF layer style');
 });
+
+it('excludes paper-space entities on shared layers before selecting sketch geometry',()=>{
+ const tables=[
+  '0','SECTION','2','TABLES','0','TABLE','2','BLOCK_RECORD',
+  '0','BLOCK_RECORD','5','A1','2','*Paper_Space0',
+  '0','BLOCK_RECORD','5','A2','2','*Model_Space','0','ENDTAB','0','ENDSEC'
+ ].join('\n');
+ const model=plate.replace('LWPOLYLINE','LWPOLYLINE\n330\nA2\n102\n{ACAD_REACTORS\n330\nA1\n102\n}\n410\nmOdEl');
+ const layoutCircle=hole(100,100,50).replace('CIRCLE','CIRCLE\n67\n1\n410\nModel');
+ const layoutText='0\nTEXT\n8\nTitle block\n410\nFabrication sheet\n1\nMaterial notes';
+ const layoutOwner=hole(80,80,2).replace('CIRCLE','CIRCLE\n330\na1');
+ const paperCompound='0\nPOLYLINE\n67\n1\n8\nSheet border\n0\nVERTEX\n10\n1\n20\n1\n0\nSEQEND';
+ const input=(entities:string[])=>drawing(entities.join('\n'))
+  .replace('0\nSECTION\n2\nENTITIES',tables+'\n0\nSECTION\n2\nENTITIES');
+ const prepared=prepareSketchDxf(input([model,layoutCircle,layoutText,layoutOwner,paperCompound]));
+ expect(prepared.layers).toEqual(['0']);
+ expect(prepared.skippedPaperSpace).toBe(true);
+ expect(prepared.outline()).toEqual(readSketchDxf(drawing(plate)));
+ expect(()=>prepared.outline(false,['Title block'])).toThrow('unavailable');
+ const paperOnly=prepareSketchDxf(input([layoutCircle,layoutText,layoutOwner,paperCompound]));
+ expect(paperOnly.layers).toEqual([]);
+ expect(()=>paperOnly.outline()).toThrow('no model-space entities');
+ expect(()=>paperOnly.path()).toThrow('no model-space entities');
+ expect(()=>readSketchDxf(drawing(plate.replace('LWPOLYLINE','LWPOLYLINE\n67\n2')))).toThrow('Use circles');
+});
+
+it('joins only model-space segments when a paper-space copy uses the same guide layer',()=>{
+ const paper=openLine.replace('LINE','LINE\n410\nSheet 1');
+ const prepared=prepareSketchDxf(drawing([openLine,openArc,paper].join('\n'),1));
+ expect(prepared.layers).toEqual(['Guides']);
+ expect(prepared.skippedPaperSpace).toBe(true);
+ expect(prepared.path()).toEqual(readSketchPathDxf(drawing([openLine,openArc].join('\n'),1)));
+});

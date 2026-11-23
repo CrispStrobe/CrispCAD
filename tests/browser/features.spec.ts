@@ -57,6 +57,11 @@ test('DXF import previews an editable outline and commits it only on Create',asy
  await expect(sketch.getByRole('button',{name:'Create extrusion',exact:true})).toBeDisabled();
  await expect(sketch.getByLabel('Profile',{exact:true})).toHaveValue('rectangle');
 
+ const paperOnly=text.replace('0\nLWPOLYLINE\n','0\nLWPOLYLINE\n67\n1\n');
+ await file.setInputFiles({name:'paper-only.dxf',mimeType:'application/dxf',buffer:Buffer.from(paperOnly)});
+ await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('no model-space entities');
+ await expect(sketch.getByLabel('Profile',{exact:true})).toHaveValue('rectangle');
+
  await file.setInputFiles({name:'plate.dxf',mimeType:'application/dxf',buffer:Buffer.from(text)});
  await expect(sketch.getByLabel('Profile',{exact:true})).toHaveValue('outline');
  const points=sketch.getByLabel('Outline points X, Y (mm)',{exact:true});
@@ -91,11 +96,16 @@ test('DXF plate previews two open mounting holes and retains their edited dimens
   '0','CIRCLE','8','Bores','10',10,'20',15,'40',2,
   '0','LWPOLYLINE','8','Outline','90',4,'70',1,'10',0,'20',0,'10',40,'20',0,'10',40,'20',30,'10',0,'20',30,
   '0','CIRCLE','8','Bores','10',30,'20',15,'40',3,
-  '0','TEXT','8','Notes','1','Fixture labels','0','ENDSEC','0','EOF'].join('\n');
+  '0','TEXT','8','Notes','1','Fixture labels',
+  '0','CIRCLE','8','Bores','67',1,'10',100,'20',120,'40',15,
+  '0','TEXT','8','Paper details','410','Sheet 1','1','Sheet notes',
+  '0','ENDSEC','0','EOF'].join('\n');
  await sketch.getByLabel('Choose DXF file').setInputFiles({name: 'Motor plate.dxf', mimeType: 'application/dxf', buffer: Buffer.from(text)});
  const layers=sketch.getByRole('group',{name:'DXF layers',exact:true});
  const importLayers=sketch.getByRole('button',{name:'Import selected layers',exact:true});
  await expect(layers).toBeVisible();
+ await expect(sketch.getByText('Paper-space layout entities were skipped.',{exact:true})).toBeVisible();
+ await expect(layers.getByRole('checkbox',{name:'Paper details',exact:true})).toHaveCount(0);
  await expect(sketch.getByLabel('Profile',{exact:true})).toHaveValue('rectangle');
  await press(importLayers);
  await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('Exclude layers');

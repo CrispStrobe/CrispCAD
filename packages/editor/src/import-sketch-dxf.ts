@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {evaluateSketchRegion, isSketchDxfLayer, isSketchPoint, maxSketchRegionLoops, maxSketchOutlinePoints, sketchOutline, sketchPath, t} from '@brickwright/cad-core';
 import type {SketchLoop, SketchPoint, SketchProfile} from '@brickwright/cad-core';
-import {readDxfLayerStyles} from './dxf-layer-tables.js';
+import {dxfRecords,readDxfLayerStyles} from './dxf-layer-tables.js';
 import type {DxfGroup as Group} from './dxf-layer-tables.js';
+import {dxfEntityFields,dxfPaperSpaceOwners,isDxfPaperSpace} from './dxf-model-space.js';
 import {joinDxfEdges} from './sketch-dxf-chains.js';
 import type {DxfEdge} from './sketch-dxf-chains.js';
 
@@ -30,7 +31,7 @@ const number=(value:string|undefined)=>{
  return result;
 };
 
-/** Read the text and layer catalog once. Geometry validation runs only for the layers the user selects. */
+/** Catalog model-space layers before validating the geometry in the selected layers. */
 export function prepareSketchDxf(source:string){
   if (source.length > maxSketchDxfBytes || source.includes('\0')) throw invalid();
   const lines = source.replace(/^\uFEFF/, '').split(/\r?\n/);
@@ -59,29 +60,28 @@ export function prepareSketchDxf(source:string){
   const unitsIndex = header.findIndex(group => group.code === 9 && group.value === '$INSUNITS');
   if (unitsIndex !== -1 && header[unitsIndex + 1]?.code !== 70) throw invalid();
   const units = unitsIndex === -1 ? 0 : number(header[unitsIndex + 1].value);
-  const records:Group[][]=[];
-  for(const group of sections.get('ENTITIES')??[]){
-    if(group.code===0)records.push([group]);
-    else if(records.length)records.at(-1)!.push(group);
-    else throw invalid();
-  }
+  const tables=sections.get('TABLES')??[],paperOwners=dxfPaperSpaceOwners(tables);
+  const entityGroups=sections.get('ENTITIES')??[];
+  if(entityGroups.length&&entityGroups[0].code!==0)throw invalid();
+  const records=dxfRecords(entityGroups);
   const entities:DxfEntity[]=[],names=new Map<string,string>();
+  let skippedPaperSpace=false;
   for(let i=0;i<records.length;i++){
-    const [entity,...fields]=records[i],kind=entity.value;
-    const layerFields=fields.filter(group=>group.code===8);
-    const layer=layerFields[0]?.value??'0';
-    if(layerFields.length>1||!layer||layer.length>255)throw new Error(t('Invalid DXF layer name.'));
-    entities.push({kind,fields,layer});
-    if(!names.has(layer.toUpperCase()))names.set(layer.toUpperCase(),layer);
+    const [entity,...groups]=records[i],kind=entity.value,fields=dxfEntityFields(groups);
 
-    // Subentities belong to their parent. An excluded legacy polyline or block
-    // insert must not leave stray VERTEX, ATTRIB or SEQEND records on layer 0.
+    // Subentities belong to their parent, even if their own layer is different.
     const child=kind==='POLYLINE'?'VERTEX':kind==='INSERT'&&fields.some(group=>group.code===66&&group.value==='1')?'ATTRIB':undefined;
     if(child){
       while(records[i+1]?.[0].value===child)i++;
       if(records[i+1]?.[0].value!=='SEQEND')throw invalid();
       i++;
     }
+    if(isDxfPaperSpace(fields,paperOwners)){skippedPaperSpace=true;continue;}
+    const layerFields=fields.filter(group=>group.code===8);
+    const layer=layerFields[0]?.value??'0';
+    if(layerFields.length>1||!layer||layer.length>255)throw new Error(t('Invalid DXF layer name.'));
+    entities.push({kind,fields,layer});
+    if(!names.has(layer.toUpperCase()))names.set(layer.toUpperCase(),layer);
   }
   const pick=(selected?:readonly string[])=>{
     if(!selected)return entities;
@@ -90,8 +90,8 @@ export function prepareSketchDxf(source:string){
     if([...keys].some(key=>!names.has(key)))throw new Error(t('Selected DXF layers are unavailable in this file.'));
     return entities.filter(entity=>keys.has(entity.layer.toUpperCase()));
   };
-  const tables=sections.get('TABLES')??[];
   return {
+    skippedPaperSpace,
     layers:[...names.values()] as readonly string[],
     outline:(assumeMm=false,selected?:readonly string[])=>readDxf(pick(selected),tables,units,assumeMm,'outline'),
     path:(assumeMm=false,selected?:readonly string[])=>readDxf(pick(selected),tables,units,assumeMm,'path')
@@ -105,11 +105,12 @@ function readDxf(entities:DxfEntity[],tables:Group[],units:number,assumeMm:boole
   const unsupported=()=>new Error(closed
     ?t('Use circles, closed lightweight polylines, or closed chains of 2D lines and arcs. Exclude layers with unsupported entities or remove those entities before importing.')
     :t('Use one open lightweight polyline or one connected chain of planar lines and arcs.'));
+  if(!entities.length)throw new Error(t('This DXF has no model-space entities to import.'));
   const scale=units===0&&assumeMm?1:mmPerUnit[units];
   if(!scale)throw new Error(units===0
     ?t('This DXF has no units. If the coordinates are in millimetres, enable the missing-units option and import again.')
     :t('DXF import supports millimetres, centimetres, metres, inches and feet.'));
-  if(!entities.length||entities.length>maxSketchRegionLoops*(maxSketchOutlinePoints+1))throw unsupported();
+  if(entities.length>maxSketchRegionLoops*(maxSketchOutlinePoints+1))throw unsupported();
   const styles=readDxfLayerStyles(tables,scale);
   const indexed:({index:number}&DxfLoop)[]=[];
   const edges:DxfEdge[]=[];
@@ -125,8 +126,7 @@ function readDxf(entities:DxfEntity[],tables:Group[],units:number,assumeMm:boole
       if (matches.length > 1) throw invalid();
       return matches.length === 0 && fallback !== undefined ? fallback : number(matches[0]?.value);
     };
-    if (read(67, 0) !== 0 || (fields.find(group => group.code === 410)?.value ?? 'Model').toUpperCase() !== 'MODEL' ||
-        read(210, 0) !== 0 || read(220, 0) !== 0 || read(230, 1) !== 1 ||
+    if (read(67, 0) !== 0 || read(210, 0) !== 0 || read(220, 0) !== 0 || read(230, 1) !== 1 ||
         fields.some(group => [30, 38, 39, 40, 41, 42, 43].includes(group.code) &&
           !(['CIRCLE','ARC'].includes(kind) && group.code === 40) &&
           !(kind === 'LWPOLYLINE' && group.code === 42) && number(group.value) !== 0)) throw unsupported();

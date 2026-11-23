@@ -10,6 +10,7 @@ const payload=(units:number)=>Buffer.from([
  '0','SECTION','2','ENTITIES',
  '0','LWPOLYLINE','8','Guides','90',3,'70',0,'10',0,'20',0,'10',1,'20',0,'42',-.5,'10',1,'20',2,
  '0','LINE','8','Construction','10',3,'20',5,'11',6,'21',7,
+ '0','LINE','8','Guides','67',1,'10',12,'20',18,'11',22,'21',24,
  '0','ENDSEC','0','EOF'
 ].join('\n'));
 
@@ -28,6 +29,7 @@ test('import an inch DXF as an open guide, export mm and reimport the signed arc
  const layers=path.getByRole('group',{name:'DXF layers',exact:true});
  const importLayers=path.getByRole('button',{name:'Import selected layers',exact:true});
  await press(layers.getByRole('checkbox',{name:'Construction',exact:true}));
+ await expect(path.getByText('Paper-space layout entities were skipped.',{exact:true})).toBeVisible();
  await press(importLayers);
  await expect(path.getByRole('status',{name:'Sketch status'})).toContainText('has no units');
  await expect(points).toHaveValue(before);

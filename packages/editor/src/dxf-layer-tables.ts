@@ -4,7 +4,7 @@ import type {SketchDxfLayerStyle,SketchDxfLinetype} from '@brickwright/cad-core'
 
 export type DxfGroup={code:number;value:string};
 
-function tableRecordFields(groups:readonly DxfGroup[]){
+export function dxfRecords(groups:readonly DxfGroup[]){
  const records:DxfGroup[][]=[];
  for(const group of groups){
   if(group.code===0)records.push([group]);
@@ -19,7 +19,7 @@ function dxfNumber(value:string|undefined){
 
 export function readDxfLayerStyles(groups:readonly DxfGroup[],scale:number){
  const styles=new Map<string,SketchDxfLayerStyle>(),types=new Map<string,SketchDxfLinetype>();
- const records=tableRecordFields(groups);
+ const records=dxfRecords(groups);
  for(const [record,...fields] of records){
   if(record.value!=='LTYPE')continue;
   const name=fields.find(group=>group.code===2)?.value;

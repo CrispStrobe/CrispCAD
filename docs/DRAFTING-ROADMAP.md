@@ -67,6 +67,13 @@ polyline vertices and block attributes with their parent entities.
 [Autodesk DXF entity groups](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-DXF/files/GUID-3610039E-27D1-4E23-B6D3-7E60B22BB5BD.htm)
 [Autodesk DXF sequence endings](https://help.autodesk.com/cloudhelp/2016/ENU/AutoCAD-DXF/files/GUID-FD4FAA74-1F6D-45F6-B132-BF0C4BE6CC3B.htm)
 
+Sketch and path import use model-space coordinates. The importer skips
+paper-space objects before listing layers, including title blocks, viewports,
+and paper geometry that shares a layer with a model profile. The dialog
+reports when it skipped layout objects from the entity list. Layout tabs,
+viewport transforms and paper-only geometry are outside the sketch workflow.
+[Autodesk DXF model and paper space](https://help.autodesk.com/cloudhelp/2021/ENU/AutoCAD-DXF/files/GUID-66D32572-005A-4E23-8B8B-8726E8C14302.htm)
+
 Region circle centers and radii
 accept named dimensions. For example, starting with a 40 mm-wide plate, set
 \`spacing\` in Parameters and position the two holes at \`20 mm - spacing / 2\`
@@ -88,7 +95,7 @@ chords with up to 0.025 mm of sagitta error within the supported detail budget.
 
 The current region workflow rejects touching, crossing, nested and disjoint
 loops. Widths,
-paper-space entities on selected layers, tilted entities,
+tilted entities,
 DWG and STEP remain open.
 
 ## Outline point editing
