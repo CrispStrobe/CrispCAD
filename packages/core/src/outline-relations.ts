@@ -18,6 +18,7 @@ type CurveRule<Edge,Dimension>=ArcRadius<Edge,Dimension>|ArcTangent<Edge>;
 type ResolvedArcRadius=ArcRadius<number,number>;
 type ResolvedCurveRule=CurveRule<number,number>;
 export type OutlineRelation=OutlineRule<[string,string],FeatureScalar>|CurveRule<[string,string],FeatureScalar>;
+export type OutlineDragTarget={index:number;point:SketchPoint};
 export type OutlineSolveRequest={points:SketchPoint[];constraints:OutlineRule<number,number>[]};
 export const maxConstrainedOutlinePoints=32;
 export const maxOutlineRelations=48;

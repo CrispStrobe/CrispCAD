@@ -203,8 +203,10 @@ shared endpoint as the reference arc changes. In a region, choose
 edit. **Region loop positions** sets a dimensioned X/Y offset between
 the first vertices or selected edge midpoints of two outlines. **Region
 edge matches** drives a straight edge from the length of a reference
-edge on another loop. Other cross-loop dimensions and tangent relations
-remain open.
+edge on another loop. Drag a free vertex on a constrained boundary or cutout
+to update the region. The solve rechecks the full outline and holes, keeps
+incoming constraints, and propagates changes to dependent loops. Other
+cross-loop dimensions and tangent relations remain open.
 
 Enable **Edit edge curves** to reveal a blue handle at the midpoint of each
 outline edge. Drag the handle across its chord to turn a straight edge into

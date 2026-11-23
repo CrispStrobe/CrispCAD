@@ -29,8 +29,11 @@ be repaired by reopening and solving them. In a single closed outline,
 drag a free vertex to mark the desired position and release to solve toward it.
 The worker treats the position as a preference and preserves hard relations.
 Point 1 stays fixed. A cancelled, stale or invalid move keeps the prior draft.
-The draft enters history only through Create or Apply. Continuous solving
-and constrained dragging across region loops remain open.
+The draft enters history only through Create or Apply. The same workflow
+works on region boundaries and cutouts. A dragged loop respects incoming
+edge matches and drives outgoing matches in dependency order. The complete
+region is positioned and validated before any coordinates change. Continuous
+solving during the gesture remains open.
 
 Document version 32 adds **Arc radius** for an existing curved segment in a
 single closed outline. Give the radius a value or a named expression. The

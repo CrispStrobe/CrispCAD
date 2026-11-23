@@ -4,7 +4,7 @@ import type {SketchLoop,SketchOutlineProfile} from '@brickwright/cad-core';
 import {mountOutlineConstraintControls} from './outline-constraint-controls.js';
 
 type OutlineOptions=Parameters<typeof mountOutlineConstraintControls>[2];
-type LoopOptions=Omit<OutlineOptions,'initial'|'read'|'apply'|'changed'> & {
+type LoopOptions=Omit<OutlineOptions,'initial'|'read'|'apply'> & {
   initial:SketchLoop[];
   read:()=>SketchLoop[];
   apply:(id:string,geometry:Pick<SketchOutlineProfile,'points'|'bulges'>)=>void;
@@ -48,7 +48,7 @@ export function mountRegionConstraintControls(form:HTMLElement,dialog:HTMLDialog
    visible:()=>options.visible()&&picker.value===id,
    available:()=>options.available()&&!changedTopology,
    pending:solving=>{picker.disabled=clear.disabled=solving;options.pending(solving);},
-   changed:()=>{locked=hasConstraints()?(locked??signature(current)):undefined;},
+   changed:()=>{locked=hasConstraints()?(locked??signature(current)):undefined;options.changed?.();},
    read:()=>{
     const loop=options.read().find(loop=>loop.id===id);
     if(loop?.kind!=='outline')throw new Error(topologyMessage);
@@ -94,10 +94,12 @@ export function mountRegionConstraintControls(form:HTMLElement,dialog:HTMLDialog
   host.replaceChildren();
   locked=undefined;
   refresh();
+  options.changed?.();
  };
  for(const event of ['input','change'])panel.addEventListener(event,event=>event.stopPropagation());
  return {
   refresh,
+  hasLoopConstraints:(id:string)=>Boolean(entries.get(id)?.controls.hasConstraints),
   forSave(loops:SketchLoop[]){
    if(locked!==undefined&&locked!==signature(loops))throw new Error(topologyMessage);
    return loops.map(loop=>loop.kind==='outline'?{...loop,...entries.get(loop.id)?.controls.forSave(loop)}:loop);

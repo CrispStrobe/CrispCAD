@@ -2,16 +2,16 @@
 import {readFileSync} from 'node:fs';
 import {createContext,runInContext} from 'node:vm';
 import {describe,expect,it} from 'vitest';
-import {compileModelSource,createCadSession,designGraph,generateModelSource,outlineBulgesForCurves,outlineBulgesForRadii,parseDocument,rewriteSketchExpressions,sketchBulgeArc,trimSketchProfile,validateDocument} from '@brickwright/cad-core';
+import {compileModelSource,createCadSession,designGraph,generateModelSource,outlineBulgesForCurves,outlineBulgesForRadii,parseDocument,rewriteSketchExpressions,sketchBulgeArc,solveRegionEdgeLengths,trimSketchProfile,validateDocument} from '@brickwright/cad-core';
 import type {SketchOutlineProfile,SketchProfile} from '@brickwright/cad-core';
 import {verifyOutlineSolve} from '../packages/editor/src/outline-constraint-solve.js';
-import type {OutlineSolveRequest} from '../packages/editor/src/outline-constraint-solve.js';
+import type {OutlineDragTarget,OutlineSolveRequest} from '../packages/editor/src/outline-constraint-solve.js';
 
 const sandbox=createContext({});
 sandbox.self=sandbox;
 runInContext(readFileSync('packages/editor/assets/sketch-constraints.dart.js','utf8'),sandbox);
-const run=(request:OutlineSolveRequest)=>JSON.parse(sandbox.solveBrickwrightOutline(JSON.stringify(request)));
-const solve=async(request:OutlineSolveRequest)=>verifyOutlineSolve(request,run(request)).points;
+const run=(request:OutlineSolveRequest,target?:OutlineDragTarget)=>JSON.parse(sandbox.solveBrickwrightOutline(JSON.stringify({...request,target})));
+const solve=async(request:OutlineSolveRequest,_signal?:AbortSignal,target?:OutlineDragTarget)=>verifyOutlineSolve(request,run(request,target)).points;
 const dimensions=(width:string,unrelated='2')=>({version:1 as const,parameters:{
  width:{unit:'mm' as const,expression:width},span:{unit:'mm' as const,expression:'width'},unrelated:{unit:'scalar' as const,expression:unrelated}
 },bindings:[]});
@@ -472,4 +472,27 @@ it('solves chained region edge matches from a parameter and rolls back an invali
  const target=curved.loops[2] as SketchOutlineProfile;
  target.bulges=[.1,0,0,0];
  expect(()=>session.updateSketch(id,{profile:curved})).toThrow('straight edges');
+});
+
+
+it('keeps incoming region dimensions while propagating changes from the dragged loop',async()=>{
+ const rect=(id:string,x:number):SketchOutlineProfile=>({
+  kind:'outline',id,points:[[x,10],[x+10,10],[x+10,20],[x,20]],vertexIds:['a','b','c','d']
+ });
+ const [upstream,middle,downstream]=[rect('upstream',10),rect('middle',40),rect('downstream',70)];
+ const profile:Extract<SketchProfile,{kind:'region'}>={kind:'region',id:'plate',loops:[upstream,middle,downstream],edgeMatches:[
+  {reference:'middle',referenceEdge:['b','c'],target:'downstream',targetEdge:['a','b']},
+  {reference:'upstream',referenceEdge:['a','b'],target:'middle',targetEdge:['a','b']},
+ ]};
+ const solved=await solveRegionEdgeLengths(profile,Number,solve,signal(),{loopId:'middle',index:2,point:[50,26]});
+ const changed=solved.loops[1] as SketchOutlineProfile,driven=solved.loops[2] as SketchOutlineProfile;
+ const length=(loop:SketchOutlineProfile,index:number)=>Math.hypot(...loop.points[index+1].map((n,axis)=>n-loop.points[index][axis]));
+ expect(solved.loops[0]).toBe(upstream);
+ expect(changed.points[2][1]).toBeCloseTo(26,4);
+ expect(length(changed,0)).toBeCloseTo(10,6);
+ expect(length(driven,0)).toBeCloseTo(length(changed,1),6);
+ expect(middle.points[2]).toEqual([50,20]);
+ expect(downstream.points[1]).toEqual([80,10]);
+ await expect(solveRegionEdgeLengths(profile,Number,solve,signal(),{loopId:'middle',index:0,point:[40,14]}))
+  .rejects.toThrow('drag target');
 });

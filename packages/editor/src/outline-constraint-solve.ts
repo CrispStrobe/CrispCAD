@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {isSketchPoint,outlineSatisfiesRelations,t} from '@brickwright/cad-core';
-import type {OutlineRule,OutlineSolveRequest,SketchPoint} from '@brickwright/cad-core';
-export type {OutlineSolveRequest} from '@brickwright/cad-core';
+import type {OutlineDragTarget,OutlineRule,OutlineSolveRequest,SketchPoint} from '@brickwright/cad-core';
+export type {OutlineDragTarget,OutlineSolveRequest} from '@brickwright/cad-core';
 
 export type OutlineConstraint=OutlineRule<number,number>;
-export type OutlineDragTarget={index:number;point:SketchPoint};
 export type OutlineSolveResult={points:SketchPoint[];degrees:number|null};
 
 export function verifyOutlineSolve(request:OutlineSolveRequest,response:unknown):OutlineSolveResult{
@@ -50,6 +49,6 @@ export function solveOutline(request:OutlineSolveRequest,signal:AbortSignal,targ
  });
 }
 
-export async function solveOutlinePoints(request:OutlineSolveRequest,signal:AbortSignal):Promise<SketchPoint[]>{
- return (await solveOutline(request,signal)).points;
+export async function solveOutlinePoints(request:OutlineSolveRequest,signal:AbortSignal,target?:OutlineDragTarget):Promise<SketchPoint[]>{
+ return (await solveOutline(request,signal,target)).points;
 }

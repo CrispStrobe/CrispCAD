@@ -4,13 +4,13 @@ import {regionLoopEdgeIndex,sketchOutlineProfiles} from './sketch-region.js';
 import {isOutlineCurveRule,maxConstrainedOutlinePoints,maxOutlineRelations,outlineBulgesForCurves,outlineRelationsForSolve,outlineSatisfiesRelations} from './outline-relations.js';
 import type {FeatureScalar} from './features.js';
 import type {RegionPlacementEdge,SketchOutlineProfile,SketchRegionProfile} from './sketch-region.js';
-import type {OutlineSolveRequest} from './outline-relations.js';
+import type {OutlineDragTarget,OutlineSolveRequest} from './outline-relations.js';
 import {isSketchPoint} from './sketch-outline.js';
 import type {SketchPoint} from './sketch-outline.js';
 
 export type RegionEdgeMatch={reference:string;referenceEdge:RegionPlacementEdge;target:string;targetEdge:RegionPlacementEdge};
 type Match={reference:string;referenceIndex:number;targetIndex:number};
-type Solve=(request:OutlineSolveRequest,signal:AbortSignal)=>Promise<SketchPoint[]>;
+type Solve=(request:OutlineSolveRequest,signal:AbortSignal,target?:OutlineDragTarget)=>Promise<SketchPoint[]>;
 
 function straightEdge(loop:SketchOutlineProfile,edge:RegionPlacementEdge):number{
  const index=regionLoopEdgeIndex(loop,edge);
@@ -68,19 +68,30 @@ export function regionEdgeLengthsMatch(profile:SketchRegionProfile):boolean{
 }
 
 /** Solve reference loops in dependency order before driving their dependent edges. */
-export async function solveRegionEdgeLengths(profile:SketchRegionProfile,resolve:(value:FeatureScalar)=>number,solve:Solve,signal:AbortSignal):Promise<SketchRegionProfile>{
- if(profile.edgeMatches===undefined)return profile;
+export async function solveRegionEdgeLengths(
+ profile:SketchRegionProfile,resolve:(value:FeatureScalar)=>number,solve:Solve,signal:AbortSignal,
+ drag?:OutlineDragTarget&{loopId:string},
+):Promise<SketchRegionProfile>{
+ if(profile.edgeMatches===undefined&&!drag)return profile;
  const {loops,matches,order}=matchPlan(profile);
+ if(drag){
+  const loop=loops.get(drag.loopId);
+  if(!loop||!Number.isInteger(drag.index)||drag.index<1||drag.index>=loop.points.length||!isSketchPoint(drag.point))
+   throw new Error(t('The drag target is outside the sketch coordinate limits.'));
+  if(!matches.has(drag.loopId))order.unshift(drag.loopId);
+ }
  let changed=false;
  for(const id of order){
   signal.throwIfAborted();
   const loop=loops.get(id)!;
-  const driven=matches.get(id)!.map(match=>({kind:'length' as const,edge:match.targetIndex,length:edgeLength(loops.get(match.reference)!,match.referenceIndex)}));
-  if(driven.every(rule=>Math.abs(edgeLength(loop,rule.edge)-rule.length)<=1e-6))continue;
+  const target=drag?.loopId===id?{index:drag.index,point:drag.point}:undefined;
+  const driven=(matches.get(id)??[]).map(match=>({kind:'length' as const,edge:match.targetIndex,length:edgeLength(loops.get(match.reference)!,match.referenceIndex)}));
+  if(!target&&driven.every(rule=>Math.abs(edgeLength(loop,rule.edge)-rule.length)<=1e-6))continue;
   const rules=outlineRelationsForSolve(loop,resolve);
   const request:OutlineSolveRequest={points:loop.points,constraints:[...rules.filter(rule=>!isOutlineCurveRule(rule)),...driven]};
   if(request.constraints.length>maxOutlineRelations)throw new Error(t('Too many outline constraints to solve this region match.'));
-  const points=await solve(structuredClone(request),signal);
+  const points=request.constraints.length?await solve(structuredClone(request),signal,target):
+   loop.points.map((point,index)=>target?.index===index?target.point:point);
   signal.throwIfAborted();
   if(!outlineSatisfiesRelations(request,points))throw new Error(t('The solved outline did not meet every constraint.'));
   const bulges=outlineBulgesForCurves(points,loop.bulges,rules.filter(isOutlineCurveRule));

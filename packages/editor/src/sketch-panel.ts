@@ -12,7 +12,7 @@ import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchOutlinePoints,maxSketchRegionLoops,newId,positionRegionLoops,regionEdgeLengthsMatch,sketchBulgeMidpoint,sketchDxfLayerFields,solveRegionEdgeLengths,trimSketchProfile} from '@brickwright/cad-core';
-import type {DxfSegmentWidth,RegionEdgeMatch,RegionLoopPlacement,SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument,PlanarSketch} from '@brickwright/cad-core';
+import type {DxfSegmentWidth,OutlineDragTarget,RegionEdgeMatch,RegionLoopPlacement,SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument,PlanarSketch} from '@brickwright/cad-core';
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
 const scalar=(source:string):FeatureScalar=>source.trim()!==''&&Number.isFinite(Number(source))?Number(source):source.trim();
 /** Definition editor: complete draft + kernel preflight before the real session changes. */
@@ -285,10 +285,14 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    }
    return {...evaluateExtrusion({kind:'extrusion',...common,...extrusion},previewDoc),angle:undefined,axisOffset:undefined};
   }
-  type ConstrainedDrag = {marker:SVGCircleElement; revision:number; point?:SketchPoint};
+  type ConstrainedDrag = {marker:SVGCircleElement; revision:number; loopId?:string; point?:SketchPoint};
   type OutlineEdit = {field:HTMLTextAreaElement; original:string; loop:number; index:number; points:SketchPoint[]; bulges?:number[]; dxfWidths?:DxfSegmentWidth[]; targets:SketchSnap[]};
   let drag:{id:number;x:number;y:number;w:number;h:number;r:number;d:number;inverse:DOMMatrix;kind:string;viewBox:string;outlineEdit?:OutlineEdit;target?:SketchSnap;constrained?:ConstrainedDrag}|undefined;
-  let dragOutline:ReturnType<typeof definition>|undefined;
+  let dragOutline:ReturnType<typeof definition>|undefined,regionDragSolve:AbortController|undefined;
+  const constrainsVertexDrag=(outlineId:string,model:SketchProfile)=>model.kind==='outline'?outlineConstraints.hasConstraints:
+   model.kind==='region'&&(regionConstraints.hasLoopConstraints(outlineId)||
+    model.placements?.some(item=>item.target===outlineId||item.reference===outlineId)||
+    model.edgeMatches?.some(item=>item.target===outlineId||item.reference===outlineId));
   let valid=false;
   const bounded=(value:number)=>Math.min(100000,Math.max(.01,value));
   const compact=(input:HTMLInputElement,icon:string)=>{const label=input.parentElement!;label.firstChild!.textContent='';label.classList.add('sketch-dimension');const picture=toolIcon(icon);if(picture)label.prepend(picture);input.title=input.getAttribute('aria-label')!;label.append(element('small','mm'));const caption=element('span',input.getAttribute('aria-label')!);caption.className='sketch-dimension-name';label.prepend(caption);};
@@ -411,11 +415,10 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     }
     const drawOutline=(outline:Extract<SketchProfile|SketchLoop,{kind:'outline'}>,loop:number)=>{
      const {points,bulges}=outline;
-     const positioned=p.kind==='region'&&p.placements?.some(placement=>placement.target===outline.id&&!placement.targetEdge);
+     const pinned=constrainsVertexDrag(outline.id,p);
      points.forEach((point,index)=>{
-      if(index===0&&positioned)return;
       const [x,y]=place(point);
-      if(index===0&&p.kind==='outline'&&outlineConstraints.hasConstraints){
+      if(index===0&&pinned){
        const pin=document.createElementNS(ns,'circle');
        pin.setAttribute('cx',String(x));pin.setAttribute('cy',String(y));pin.setAttribute('r',String(span*.023));
        pin.setAttribute('class','sketch-handle sketch-path-locked');svg.append(pin);
@@ -479,12 +482,12 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     const targets=mode==='vertex'&&tangents.checked&&!tangents.disabled
      ?[...snapTargets,...collectTangentSnaps(outline,index,referenceGeometry)].sort((a,b)=>a.point[0]-b.point[0])
      :snapTargets;
-    if(mode==='vertex'&&dragOutline?.kind==='outline'&&outlineConstraints.hasConstraints){
+    if(mode==='vertex'&&dragOutline&&constrainsVertexDrag(outline.id,dragOutline)){
      const marker=document.createElementNS('http://www.w3.org/2000/svg','circle');
      marker.setAttribute('r',String(Number(handle.getAttribute('r'))*.6));
      marker.setAttribute('class','sketch-snap-marker');
      marker.setAttribute('pointer-events','none');
-     constrained={marker,revision:draftRevision};
+     constrained={marker,revision:draftRevision,loopId:dragOutline.kind==='region'?outline.id:undefined};
     }
     outlineEdit={field,original:field.value,loop,index,points:outline.points,bulges:outline.bulges,dxfWidths:outline.dxfWidths,targets};
    }
@@ -547,12 +550,14 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     drag=undefined;
     constrained.marker.remove();
     if(preview.hasPointerCapture(id))preview.releasePointerCapture(id);
-    const {point,revision}=constrained;
+    const {point,revision,loopId}=constrained;
     const index=outlineEdit.index,source=outlineEdit.points[index];
     draw();
     if(event.type==='pointerup'&&revision===draftRevision&&point&&
-       (point[0]!==source[0]||point[1]!==source[1]))
-     void outlineConstraints.moveVertex({index,point},message=>{status.textContent=message;});
+       (point[0]!==source[0]||point[1]!==source[1])){
+     if(loopId)void moveRegionVertex({loopId,index,point});
+     else void outlineConstraints.moveVertex({index,point},message=>{status.textContent=message;});
+    }
     return;
    }
    draftRevision++;
@@ -567,10 +572,10 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   preview.onpointerup=preview.onpointercancel=preview.onlostpointercapture=endDrag;
   let draftRevision=0;
   const refreshDraft=()=>{draftRevision++;draw();};
-  const constraintPending=()=>outlineConstraints.pending||regionConstraints.pending||regionEdges.pending;
+  const constraintPending=()=>Boolean(regionDragSolve)||outlineConstraints.pending||regionConstraints.pending||regionEdges.pending;
   const active=()=>!disposed&&dialog.open&&dialog.firstChild===header;
   const availableBase=()=>!busy&&!drag&&session.state.revision===expected;
-  const available=()=>availableBase()&&!regionEdges.pending;
+  const available=()=>availableBase()&&!regionEdges.pending&&!regionDragSolve;
   const readLength=(value:FeatureScalar)=>{
    const length=featureValue(typeof value==='string'?scalar(value):value,doc);
    if(length<.01||length>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));
@@ -602,6 +607,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   });
   const regionConstraints=mountRegionConstraintControls(form,dialog,{
    initial:regionLoops,
+   changed:refreshDraft,
    visible:()=>!linked&&kind.value==='region',
    active,available,pending,readLength,
    revision:()=>draftRevision,
@@ -637,23 +643,46 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const regionEdges=mountRegionEdgeControls(form,dialog,{
    initial:profile?.kind==='region'?profile.edgeMatches??[]:[],
    visible:()=>!linked&&kind.value==='region',
-   available:()=>availableBase()&&!outlineConstraints.pending&&!regionConstraints.pending,
+   available:()=>availableBase()&&!regionDragSolve&&!outlineConstraints.pending&&!regionConstraints.pending,
    active,pending,changed:refreshDraft,
    read:()=>{
     const profile=definition();
     return profile.kind==='region'?profile.loops:[];
    },
-   solve:async(matches,signal)=>{
-    const revision=draftRevision,snapshot=readForm(false,undefined,matches),{profile}=snapshot.sketch;
-    if(profile.kind!=='region')return;
-    const solved=await solveRegionEdgeLengths({...profile,loops:regionConstraints.forSave(profile.loops)},readLength,solveOutlinePoints,signal);
-    if(!active())return;
-    if(revision!==draftRevision||!availableBase())throw new Error(t('The sketch changed during the solve. Solve the outline again.'));
-    const positioned=positionRegionLoops(solved,value=>featureValue(value,doc));
-    previewShape({...snapshot,sketch:{...snapshot.sketch,profile:positioned}});
-    replaceProfileDraft(positioned);
-   }
+   solve:solveRegionDraft
   });
+  async function solveRegionDraft(matches:RegionEdgeMatch[]|undefined,signal:AbortSignal,
+   target?:OutlineDragTarget&{loopId:string}){
+   const revision=draftRevision,snapshot=readForm(false,undefined,matches),{profile}=snapshot.sketch;
+   if(profile.kind!=='region')return;
+   const retained={...profile,loops:regionConstraints.forSave(profile.loops)};
+   const solved=await solveRegionEdgeLengths(retained,readLength,solveOutlinePoints,signal,target);
+   if(!active())return;
+   if(revision!==draftRevision||!availableBase())throw new Error(t('The sketch changed during the solve. Solve the outline again.'));
+   const positioned=positionRegionLoops(solved,value=>featureValue(value,doc));
+   previewShape({...snapshot,sketch:{...snapshot.sketch,profile:positioned}});
+   replaceProfileDraft(positioned);
+  }
+  async function moveRegionVertex(target:OutlineDragTarget&{loopId:string}){
+   if(!availableBase()||constraintPending())return;
+   const controller=new AbortController();
+   regionDragSolve=controller;
+   const close=()=>{if(!active())controller.abort();};
+   dialog.addEventListener('close',close);
+   pending(true);
+   status.textContent=t('Solving outline…');
+   let message:string;
+   try{
+    await solveRegionDraft(regionEdges.edgeMatches,controller.signal,target);
+    message=t('Outline solved.');
+   }catch(error){
+    message=error instanceof Error?error.message:String(error);
+   }finally{
+    dialog.removeEventListener('close',close);
+    regionDragSolve=undefined;
+   }
+   if(active()){refreshDraft();status.textContent=message;}
+  }
   const hasDraftConstraints=(profile:SketchProfile)=>profile.kind==='outline'?outlineConstraints.hasConstraints
    :profile.kind==='region'&&(regionConstraints.hasConstraints||regionPositions.hasConstraints||!!regionEdges.edgeMatches);
   form.addEventListener('input',refreshDraft);form.addEventListener('change',refreshDraft);

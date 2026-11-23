@@ -1,6 +1,21 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {expect,test} from '@playwright/test';
+import {expect,test,type Locator,type Page} from '@playwright/test';
 import {sketchBulgeArc} from '@brickwright/cad-core';
+
+async function startDrag(page:Page,vertex:Locator,dx:number,dy:number){
+ await vertex.scrollIntoViewIfNeeded();
+ const [start,end]=await vertex.evaluate((node,{dx,dy})=>{
+  const circle=node as unknown as SVGCircleElement,matrix=circle.getScreenCTM()!;
+  const x=circle.cx.baseVal.value,y=circle.cy.baseVal.value;
+  return [new DOMPoint(x,y),new DOMPoint(x+dx,y-dy)].map(point=>{
+   const screen=point.matrixTransform(matrix);
+   return {x:screen.x,y:screen.y};
+  });
+ },{dx,dy});
+ await page.mouse.move(start.x,start.y);
+ await page.mouse.down();
+ await page.mouse.move(end.x,end.y,{steps:4});
+}
 
 test('solves retained outline relations when parameters change and undoes each edit',async({page,hasTouch})=>{
  const press=async(control:ReturnType<typeof page.getByRole>)=>{
@@ -430,7 +445,25 @@ test('matches edges on separate region loops and re-solves when the reference ch
   return Math.hypot(b[0]-a[0],b[1]-a[1]);
  };
  expect(await measured()).toBeCloseTo(12);
- await fill(rows,(await rows.inputValue()).replace('22, 10','26, 10'));
+ const handle=(loop:number)=>sketch.locator(`[data-resize="vertex"][data-loop="${loop}"][data-vertex="1"]`);
+ const sketchStatus=sketch.getByRole('status',{name:'Sketch status'});
+ const beforeDrag=await rows.inputValue();
+ await startDrag(page,handle(1),2,0);
+ await expect(rows).toHaveValue(beforeDrag);
+ await page.mouse.up();
+ await expect(sketchStatus).toContainText('Outline solved');
+ expect(await measured()).toBeCloseTo(14);
+ const solvedDrag=await rows.inputValue();
+ await startDrag(page,handle(1),0,-12);
+ await page.mouse.up();
+ await expect(sketchStatus).toContainText('A region needs one outside boundary');
+ await expect(rows).toHaveValue(solvedDrag);
+ await startDrag(page,handle(2),0,3);
+ await page.mouse.up();
+ await expect(sketchStatus).toContainText('Outline solved');
+ expect(await measured()).toBeCloseTo(14);
+ expect((await rows.inputValue()).split('\n')[1]).toBe(solvedDrag.split('\n')[1]);
+ await fill(rows,(await rows.inputValue()).replace('24, 10','26, 10'));
  const create=sketch.getByRole('button',{name:'Create extrusion',exact:true});
  await press(create);
  await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('Solve region edge matches before saving');
@@ -473,25 +506,11 @@ test('drags a constrained outline vertex in the draft and keeps dimensions on Ap
  const first=sketch.locator('[data-resize="vertex"][data-vertex="0"]');
  const vertex=sketch.locator('[data-resize="vertex"][data-vertex="2"]');
  await expect(first).toHaveCount(0);
- const startDrag=async(dx:number,dy:number)=>{
-  await vertex.scrollIntoViewIfNeeded();
-  const [start,end]=await vertex.evaluate((node,{dx,dy})=>{
-   const circle=node as unknown as SVGCircleElement,matrix=circle.getScreenCTM()!;
-   const x=circle.cx.baseVal.value,y=circle.cy.baseVal.value;
-   return [new DOMPoint(x,y),new DOMPoint(x+dx,y-dy)].map(point=>{
-    const screen=point.matrixTransform(matrix);
-    return {x:screen.x,y:screen.y};
-   });
-  },{dx,dy});
-  await page.mouse.move(start.x,start.y);
-  await page.mouse.down();
-  await page.mouse.move(end.x,end.y,{steps:4});
- };
  const preview=sketch.locator('.sketch-preview');
  await preview.evaluate(node=>node.addEventListener('pointerdown',event=>{
   (node as HTMLElement).dataset.testPointerId=String((event as PointerEvent).pointerId);
  },{once:true}));
- await startDrag(8,6);
+ await startDrag(page,vertex,8,6);
  await expect(coordinates).toHaveValue(initial);
  await expect(sketch.locator('.sketch-snap-marker')).toHaveCount(1);
  await preview.dispatchEvent('pointercancel',{pointerId:Number(await preview.getAttribute('data-test-pointer-id'))});
@@ -499,7 +518,7 @@ test('drags a constrained outline vertex in the draft and keeps dimensions on Ap
  await expect(sketch.locator('.sketch-snap-marker')).toHaveCount(0);
  await expect(coordinates).toHaveValue(initial);
 
- await startDrag(8,6);
+ await startDrag(page,vertex,8,6);
  await page.mouse.up();
  await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('Outline solved');
  const solved=(await coordinates.inputValue()).split('\n').map(row=>row.split(',').map(Number));
