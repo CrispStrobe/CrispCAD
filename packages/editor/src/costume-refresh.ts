@@ -45,16 +45,18 @@ function sketchBounds(contours:SketchPoint[][]){
 
 export function artworkSketchTargets(document:CadDocument,kind:SketchProfile['kind']){
  return Object.values(document.sketches??{}).filter(sketch=>sketch.profile.kind===kind).map(sketch=>({
-  id:sketch.id,name:sketch.name,plane:sketch.plane,...sketchBounds(contours(document,sketch)),
+  id:sketch.id,name:sketch.name,plane:sketch.plane,artworkSourceId:sketch.artworkSourceId,...sketchBounds(contours(document,sketch)),
  }));
 }
 
 /** Evaluate the copy before publishing anything. The returned confirmation is bound to this revision. */
 export async function prepareArtworkSketchRefresh(session:CadSession,evaluate:(draft:CadDocument)=>Promise<unknown>,
- id:string,incoming:SketchProfile,isOpen:()=>boolean=()=>true){
+ id:string,incoming:SketchProfile,isOpen:()=>boolean=()=>true,artwork:{sourceId?:string;link?:boolean}={}){
  const {document,revision}=session.state;
  const before=document.sketches?.[id];
  if(!before)throw new Error(t('Sketch does not exist'));
+ if(before.artworkSourceId!==undefined&&before.artworkSourceId!==artwork.sourceId)
+  throw new Error(t('This sketch is linked to different artwork.'));
  const verifyCurrent=()=>{
   if(!isOpen()||session.state.document!==document||session.state.revision!==revision)
    throw new Error(t('The CAD design changed. Preview the sketch update again.'));
@@ -65,9 +67,10 @@ export async function prepareArtworkSketchRefresh(session:CadSession,evaluate:(d
       used.has(note.bodyId)||typeof note.source==='object'&&note.source.sketchId===id)))
   throw new Error(t('This sketch has drawing dimensions. Add the artwork as a new sketch.'));
  const profile=replacement(before.profile,incoming);
+ const patch={profile,...(artwork.link&&artwork.sourceId?{artworkSourceId:artwork.sourceId}:{})};
  const trial=createCadSession(document);
  try{
-  trial.updateSketch(id,{profile});
+  trial.updateSketch(id,patch);
   await evaluate(trial.state.document);
   verifyCurrent();
   const after=trial.state.document.sketches![id];
@@ -79,6 +82,6 @@ export async function prepareArtworkSketchRefresh(session:CadSession,evaluate:(d
   return {affectedBodies:document.roots.filter(root=>used.has(root)).map(root=>document.nodes[root].name),
    before:path(prior),after:path(next),
    viewBox:`${min[0]-padding} ${-max[1]-padding} ${size[0]+2*padding} ${size[1]+2*padding}`,
-   apply(){verifyCurrent();session.updateSketch(id,{profile});}};
+   apply(){verifyCurrent();session.updateSketch(id,patch);}};
  }finally{trial.dispose();}
 }

@@ -34,7 +34,7 @@ export type SketchProfile =
   SketchRegionProfile;
 /** Profiles are analytic design inputs. Rectangle closure/orthogonality and circle
  * closure are enforced by construction; a general constraint solver comes later. */
-export interface PlanarSketch {version:1; id:string; name:string; plane:SketchPlane; profile:SketchProfile}
+export interface PlanarSketch {version:1; id:string; name:string; plane:SketchPlane; profile:SketchProfile; artworkSourceId?:string}
 export interface ExtrusionFeature {kind:'extrusion'; featureVersion:1; sketchId:string; distance:FeatureScalar; symmetric:boolean}
 export interface RevolutionFeature {
   kind:'revolution';
@@ -218,7 +218,12 @@ export function checkSketchCollection(doc:CadDocument){
 export function checkFeatures(doc:CadDocument) {
   checkSketchCollection(doc);
   if(doc.sketches!==undefined){
-    for(const [id,sketch] of Object.entries(doc.sketches)){if(!idOk(id)||sketch.id!==id)throw new Error(t('Invalid sketch identity'));if(sketch.profile?.kind==='path'){
+    for(const [id,sketch] of Object.entries(doc.sketches)){
+      if(!idOk(id)||sketch.id!==id)throw new Error(t('Invalid sketch identity'));
+      if(sketch.artworkSourceId!==undefined&&(doc.version<39||typeof sketch.artworkSourceId!=='string'||
+         !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(sketch.artworkSourceId)))
+        throw new Error(t('Invalid sketch artwork link'));
+      if(sketch.profile?.kind==='path'){
       if(doc.version<15)throw new Error(t('Open sketch paths require document version 15'));
       if(doc.version<28&&sketch.profile.segmentConstraints!==undefined)throw new Error(t('Path segment constraints require document version 28'));
       if(doc.version<16&&(sketch.profile.anchors!==undefined||sketch.profile.vertexIds!==undefined))throw new Error(t('Path point locks require document version 16'));

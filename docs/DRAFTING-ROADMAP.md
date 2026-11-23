@@ -551,8 +551,11 @@ Span controls the larger of the width and height, including vertical paths.
 From **Send to CAD**, choose **Update an existing sketch** to select a compatible
 project sketch. The preview overlays old and new geometry and lists the solids
 that depend on it. Declining the review leaves the model untouched. Applying it
-updates the same sketch in one Undo step. Persistent source identities and
-direct drawing constraints remain open.
+updates the same sketch in one Undo step. An optional source link remembers which costume or backdrop
+owns a sketch across rename, reorder, and SB3 reopen. A single linked
+compatible sketch is selected when the user opens the update list. The user
+still chooses the artwork region and confirms every geometry update. Direct
+drawing constraints and automatic region matching remain open.
 
 The initial handoff offers **Send to CAD** for vector costumes and
 backdrops when Precision design is enabled. Select a region, set its width

@@ -50,3 +50,21 @@ it('refuses to overwrite a constrained path or to switch its profile kind',async
   .rejects.toThrow(/has constraints/);
  await expect(prepareArtworkSketchRefresh(session,async()=>{},id,outline(40))).rejects.toThrow(/same sketch type/);
 });
+
+it('binds a sketch in the same Undo step and refuses refreshes from a different source',async()=>{
+ const {session,id}=fixture();
+ const sourceId='12345678-1234-4234-8234-123456789abc';
+ const before=session.state.document;
+ const review=await prepareArtworkSketchRefresh(session,async()=>{},id,outline(30),undefined,{sourceId,link:true});
+ expect(session.state.document).toBe(before);
+ review.apply();
+ expect(session.state.document.version).toBe(39);
+ expect(session.state.document.sketches![id].artworkSourceId).toBe(sourceId);
+ const reopened=createCadSession(JSON.parse(session.serialize()));
+ expect(artworkSketchTargets(reopened.state.document,'outline')[0].artworkSourceId).toBe(sourceId);
+ await expect(prepareArtworkSketchRefresh(reopened,async()=>{},id,outline(40))).rejects.toThrow(/different artwork/);
+ (await prepareArtworkSketchRefresh(reopened,async()=>{},id,outline(40),undefined,{sourceId})).apply();
+ expect(reopened.state.document.sketches![id].artworkSourceId).toBe(sourceId);
+ session.undo();
+ expect(session.state.document.sketches![id].artworkSourceId).toBeUndefined();
+});
