@@ -548,7 +548,11 @@ imports the centerline as an editable CAD sketch path instead. It preserves
 straight segments, circular SVG arcs, and supported precision arcs drawn in
 Costumes. Other curves can be approximated using the existing tolerance.
 Span controls the larger of the width and height, including vertical paths.
-Direct drawing constraints and linked source updates remain open.
+From **Send to CAD**, choose **Update an existing sketch** to select a compatible
+project sketch. The preview overlays old and new geometry and lists the solids
+that depend on it. Declining the review leaves the model untouched. Applying it
+updates the same sketch in one Undo step. Persistent source identities and
+direct drawing constraints remain open.
 
 The initial handoff offers **Send to CAD** for vector costumes and
 backdrops when Precision design is enabled. Select a region, set its width
