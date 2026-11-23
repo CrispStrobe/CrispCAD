@@ -25,6 +25,8 @@ export function mountDxfImportControls<P>(parent:HTMLElement,options:{
  layers.append(element('legend',t('DXF layers')),toggleAll,list);
  layers.hidden=apply.hidden=true;
  parent.append(units,file,filename,layers,apply);
+ // Selecting a file or a layer never changes the enclosing sketch draft.
+ for(const event of ['input','change'])parent.addEventListener(event,input=>input.stopPropagation());
 
  let prepared:PreparedDxf|undefined,choices:{name:string;input:HTMLInputElement}[]=[];
  let name='',reading=false;

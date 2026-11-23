@@ -171,7 +171,6 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
    }catch(error){report(error);}
   }
   function changed(event:Event){
-   if(event.target instanceof Node&&dxf.contains(event.target))return;
    draftRevision++;
    if(event.target instanceof Node&&locks.contains(event.target)){
     if(event.target===vertex)updateLockFields();
