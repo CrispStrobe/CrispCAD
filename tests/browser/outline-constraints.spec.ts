@@ -2,7 +2,16 @@
 import {expect,test} from '@playwright/test';
 
 test('solves, retains and edits outline relations with Undo',async({page,hasTouch})=>{
- const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
+ const press=async(control:ReturnType<typeof page.getByRole>)=>{
+  if(hasTouch){
+   await control.scrollIntoViewIfNeeded();
+   await control.tap();
+  }else await control.click();
+ };
+ const fill=async(control:ReturnType<typeof page.getByLabel>,value:string)=>{
+  await control.fill(value);
+  await control.blur();
+ };
  const workers:string[]=[];
  page.on('worker',worker=>workers.push(worker.url()));
  await page.goto('/');
@@ -14,32 +23,35 @@ test('solves, retains and edits outline relations with Undo',async({page,hasTouc
  const closeParameters=parameters.getByRole('button',{name:'Close parameters',exact:true});
  await press(openParameters);
  await press(parameters.getByRole('button',{name:'Add parameter',exact:true}));
- await parameters.getByLabel('Parameter name',{exact:true}).fill('reach');
- await expression.fill('40');
+ await fill(parameters.getByLabel('Parameter name',{exact:true}),'reach');
+ await fill(expression,'40');
  await press(applyParameters);
  await press(closeParameters);
  await press(page.getByRole('button',{name:'Sketch',exact:true}));
  const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
  await sketch.getByLabel('Profile',{exact:true}).selectOption('outline');
  const coordinates=sketch.getByLabel('Outline points X, Y (mm)');
- await coordinates.fill('0, 0\n38, 3\n35, 22\n2, 20');
+ await fill(coordinates,'0, 0\n38, 3\n35, 22\n2, 20');
  await press(sketch.getByText('Outline constraints',{exact:true}));
  const kind=sketch.getByLabel('Constraint',{exact:true}),edge=sketch.getByLabel('Constrained segment');
  const other=sketch.getByLabel('Second segment'),length=sketch.getByLabel('Segment length (mm)');
  const add=sketch.getByRole('button',{name:'Add constraint',exact:true});
  const solve=sketch.getByRole('button',{name:'Solve outline',exact:true});
  const status=sketch.getByRole('status',{name:'Outline constraint status'});
+ let constraintCount=0;
  const append=async(type:string,first:number,argument?:string|number)=>{
   await kind.selectOption(type);
   await edge.selectOption(String(first));
-  if(type==='length')await length.fill(String(argument));
+  if(type==='length')await fill(length,String(argument));
   else if(argument!==undefined)await other.selectOption(String(argument));
   await press(add);
+  const newest=sketch.getByRole('button',{name:`Remove constraint ${++constraintCount}`,exact:true});
+  await expect(newest).toBeVisible();
  };
  await append('horizontal',0);
  await press(solve);
  await expect(status).toContainText('Degrees of freedom: 5');
- await coordinates.fill('0, 0\n38, 3\n35, 22\n2, 20');
+ await fill(coordinates,'0, 0\n38, 3\n35, 22\n2, 20');
  await append('vertical',1);
  await append('parallel',0,2);
  await append('perpendicular',2,3);
@@ -63,7 +75,7 @@ test('solves, retains and edits outline relations with Undo',async({page,hasTouc
  await expect(sketch).toBeHidden();
  await expect(page.getByTestId('object-name')).toHaveCount(1);
  await press(openParameters);
- await expression.fill('60');
+ await fill(expression,'60');
  await press(applyParameters);
  await press(closeParameters);
  const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
@@ -74,14 +86,14 @@ test('solves, retains and edits outline relations with Undo',async({page,hasTouc
  const apply=sketch.getByRole('button',{name:'Apply sketch changes',exact:true});
  await press(apply);
  await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('Solve the outline before saving');
- await coordinates.fill(shape+'\n-10, 10');
+ await fill(coordinates,shape+'\n-10, 10');
  await expect(solve).toBeDisabled();
  await expect(status).toContainText('Restore the original point count');
  await expect(sketch.getByRole('button',{name:'Edit constraint 5',exact:true})).toBeVisible();
- await coordinates.fill(shape);
+ await fill(coordinates,shape);
  await press(sketch.getByRole('button',{name:'Edit constraint 7',exact:true}));
  await expect(length).toHaveValue('20');
- await length.fill('25');
+ await fill(length,'25');
  await press(sketch.getByRole('button',{name:'Update constraint',exact:true}));
  await press(solve);
  await expect(status).toContainText('Fully constrained');
