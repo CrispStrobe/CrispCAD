@@ -47,9 +47,9 @@ vertices. Keep at least one independent reference in each chain of arcs.
 Document version 35 adds **Region loop constraints**. Select an outline
 loop by its row in the region editor, then add or edit that loop's relations.
 Each outlined cutout and boundary has its own point IDs and constraints.
-Parameter updates solve the affected loops and validate the complete region
-before committing. Keep the loop rows in place while constraints are
-attached. Relations between different loops remain open.
+Parameter and model-source updates solve the affected loops and validate the
+complete region before committing. Keep the loop rows in place while
+constraints are attached. Relations between different loops remain open.
 
 The worker loads the checked-in JavaScript built from
 `tools/sketch-constraints/solver.dart` with Dart 3.12.2. Run

@@ -210,8 +210,13 @@ export function evaluateRevolution(node:RevolutionFeature&{id:string},doc:CadDoc
     throw new FeatureEvaluationError({source:'feature',id:node.id,message:error instanceof Error?error.message:String(error)});
   }
 }
+export function checkSketchCollection(doc:CadDocument){
+  if(doc.sketches!==undefined&&(doc.version<3||!record(doc.sketches)||Object.keys(doc.sketches).length>256))
+    throw new Error(t('Sketches require document version 3 and at most 256 sketches'));
+}
 export function checkFeatures(doc:CadDocument) {
-  if(doc.sketches!==undefined){if(doc.version<3||!record(doc.sketches)||Object.keys(doc.sketches).length>256)throw new Error(t('Sketches require document version 3 and at most 256 sketches'));
+  checkSketchCollection(doc);
+  if(doc.sketches!==undefined){
     for(const [id,sketch] of Object.entries(doc.sketches)){if(!idOk(id)||sketch.id!==id)throw new Error(t('Invalid sketch identity'));if(sketch.profile?.kind==='path'){
       if(doc.version<15)throw new Error(t('Open sketch paths require document version 15'));
       if(doc.version<28&&sketch.profile.segmentConstraints!==undefined)throw new Error(t('Path segment constraints require document version 28'));

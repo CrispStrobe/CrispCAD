@@ -336,3 +336,27 @@ it('retains independent boundary and cutout constraints and solves the entire re
  const fromSource=candidate.document.sketches![id].profile as typeof profile;
  expect(fromSource.loops.map(loop=>loop.kind==='outline'&&loop.points[1][0])).toEqual([65,28]);
 });
+
+it('preflights the solved source region when a growing circular cutout needs a wider boundary',async()=>{
+ const session=createCadSession();
+ const design=dimensions('50','5');
+ session.setParametric(design);
+ const body=session.addSketchExtrusion({kind:'region',id:'plate',loops:[
+  {...outline,id:'outside',points:[[0,0],[50,0],[50,40],[0,40]]},
+  {kind:'circle',id:'hole',center:[42,20],radius:'unrelated',segments:64}
+ ]});
+ const before=session.state.document,node=before.nodes[body];
+ if(node.kind!=='extrusion')throw Error('fixture');
+ const source=session.modelSource;
+ const wider=source.replace('expression: "50"','expression: "60"').replace('expression: "5"','expression: "9"');
+ const solved=await session.prepareModelSourceWithOutlineSolve(wider,{},solve,signal());
+ expect(session.state.document).toBe(before);
+ const after=solved.document.sketches![node.sketchId].profile;
+ expect(after.kind).toBe('region');
+ if(after.kind!=='region'||after.loops[0].kind!=='outline')throw Error('fixture');
+ expect(after.loops[0].points[1][0]).toBeCloseTo(60);
+ expect(solved.document.parametric?.parameters.unrelated.expression).toBe('9');
+ const collision=wider.replace('expression: "9"','expression: "30"');
+ await expect(session.prepareModelSourceWithOutlineSolve(collision,{},solve,signal())).rejects.toThrow('separate holes');
+ expect(session.state.document).toBe(before);
+});

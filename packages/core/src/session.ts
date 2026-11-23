@@ -13,7 +13,7 @@ import type {CadJoint} from './physics.js';
 import { defaultPartPhysics, allocateMotorPort } from './physics.js';
 import { applyParametricBindings, assertDrivenEdit } from './parameters.js';
 import type {CodeProgram} from './code.js';
-import {closePathProfile,evaluateSketch,featureValue,isSketchFeature} from './features.js';
+import {checkSketchCollection,closePathProfile,evaluateSketch,featureValue,isSketchFeature} from './features.js';
 import type {PlanarSketch,SketchProfile,FeatureScalar,RevolutionFeature,MirrorFeature,PatternFeature,PatternSettings} from './features.js';
 import {isOutlineCurveRule,outlineBulgesForCurves,outlineCurvesSatisfied,outlineRelationsForSolve,outlineSatisfiesRelations} from './outline-relations.js';
 import type {OutlineSolveRequest} from './outline-relations.js';
@@ -104,10 +104,13 @@ type Snapshot = { document: CadDocument; selection: string[]; label: string };
 function guardConstructionEdit(doc:CadDocument,id:string){
   for(const root of Object.values(doc.nodes)){if(!root.generator||root.id===id)continue;const visited=new Set<string>();const contains=(key:string):boolean=>{if(key===id)return true;if(visited.has(key))return false;visited.add(key);const n=doc.nodes[key];return constructionInputs(n).some(contains);};if(contains(root.id))throw new Error(t`Edit ${root.name} through its shape parameters, or detach its generator first`);}
 }
-function editSketch(d:CadDocument,id:string,patch:Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>) {
-  const sketch=d.sketches?.[id];if(!sketch)throw new Error(t('Sketch does not exist'));
+function assertSketchJointsEditable(d:CadDocument,id:string){
   const uses=(key:string):boolean=>{const n=d.nodes[key];return isSketchFeature(n)?n.sketchId===id:constructionInputs(n).some(uses);};
   if(d.joints?.some(j=>uses(j.bodyA)||uses(j.bodyB)))throw new Error(t('Detach joints before editing their sketches'));
+}
+function editSketch(d:CadDocument,id:string,patch:Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>) {
+  const sketch=d.sketches?.[id];if(!sketch)throw new Error(t('Sketch does not exist'));
+  assertSketchJointsEditable(d,id);
   const next={...sketch,...structuredClone(patch)};
   if(next.profile.id!==sketch.profile.id||next.profile.kind!==sketch.profile.kind)throw new Error(t('Keep sketch profile identity and kind when editing'));
   if(patch.profile){
@@ -218,7 +221,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       try{for(const id of changedRecipes)trial.replaceGenerated(id,options.regenerate(candidate.nodes[id].generator!,candidate.nodes[id].name));candidate=structuredClone(trial.state.document);}finally{trial.dispose();}
     }
     delete candidate.modelSource;
-    return checkDocument(candidate);
+    return candidate;
   }
   function prepareSourceCandidate(source:string,candidate:CadDocument,expected:number):PreparedSource{
     if(disposed||revision!==expected)throw new Error(t('The design changed while editing source. Reload or merge your draft.'));
@@ -228,7 +231,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     return prepared;
   }
   function prepareModelSource(source:string,options:SourceOptions={}):PreparedSource{
-    const expected=revision,previous=document,candidate=compileSourceCandidate(source,options);
+    const expected=revision,previous=document,candidate=checkDocument(compileSourceCandidate(source,options));
     if(affectedOutlines(previous,candidate).length)throw new Error(t('This source edit requires solving its outline constraints.'));
     return prepareSourceCandidate(source,candidate,expected);
   }
@@ -243,9 +246,12 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       const expected=revision,previous=document;
       checkOutlineSolve(expected,signal);
       const candidate=compileSourceCandidate(source,options);
+      checkSketchCollection(candidate);
       const profiles=await solveAffectedOutlines(previous,candidate,solve,signal,expected);
       checkOutlineSolve(expected,signal);
-      for(const [id,profile] of profiles)editSketch(candidate,id,{profile});
+      for(const [id,profile] of profiles)candidate.sketches![id]={...candidate.sketches![id],profile};
+      checkDocument(candidate);
+      for(const id of profiles.keys())assertSketchJointsEditable(candidate,id);
       return prepareSourceCandidate(source,candidate,expected);
     },
     applyPreparedModelSource(prepared:PreparedSource){

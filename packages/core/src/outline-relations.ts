@@ -149,7 +149,8 @@ export function outlineRelationsForSolve(
  const {points,vertexIds,relations}=profile;
  if(relations===undefined)return [];
  const invalid=()=>new Error(t('Invalid outline constraint definitions.'));
- if(points.length<3||points.length>maxConstrainedOutlinePoints||!Array.isArray(vertexIds)||vertexIds.length!==points.length||
+ if(!Array.isArray(points)||points.length<3||points.length>maxConstrainedOutlinePoints||!points.every(isSketchPoint)||
+  !Array.isArray(vertexIds)||vertexIds.length!==points.length||
   !Array.isArray(relations)||!relations.length||relations.length>maxOutlineRelations)throw invalid();
  const indexById=new Map(vertexIds.map((id,index)=>[id,index]));
  const radiusEdges=new Set<number>();

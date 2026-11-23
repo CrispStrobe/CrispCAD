@@ -20,8 +20,9 @@ type ResolvedCircle = Omit<SketchCircleLoop, 'center' | 'radius'> & {center: Ske
 
 export const maxSketchRegionLoops = 16;
 export function sketchOutlineProfiles(profile:SketchProfile):SketchOutlineProfile[]{
-  if(profile.kind==='outline')return [profile];
-  return profile.kind==='region'?profile.loops.filter(loop=>loop.kind==='outline'):[];
+  if(profile?.kind==='outline')return [profile];
+  if(profile?.kind!=='region'||!Array.isArray(profile.loops)||profile.loops.length>maxSketchRegionLoops)return [];
+  return profile.loops.filter(loop=>loop?.kind==='outline');
 }
 export function hasOutlineRelations(profile:SketchProfile):boolean{
   return sketchOutlineProfiles(profile).some(outline=>outline.relations!==undefined);
