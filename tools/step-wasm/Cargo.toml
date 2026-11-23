@@ -1,0 +1,17 @@
+[package]
+name = "brickwright_step"
+version = "0.1.0"
+edition = "2024"
+license = "BSD-3-Clause"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+oxideav-step = {version = "=0.0.1", default-features = false}
+
+[profile.release]
+lto = true
+panic = "abort"
+strip = true

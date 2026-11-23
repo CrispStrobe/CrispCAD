@@ -5,7 +5,7 @@ test('hinge motor preview runs, pauses and resets without changing saved design'
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  const doc=structuredClone(createPresetDocument('hinge'));for(const id of doc.roots)doc.nodes[id].transform.position[2]=70;
- await page.getByLabel('Open CAD project or STL',{exact:true}).setInputFiles({name:'hinge.bcad',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(doc))});
+ await page.getByLabel('Open CAD project or geometry',{exact:true}).setInputFiles({name:'hinge.bcad',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(doc))});
  await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')||'{}').title)).toBe('Hinge');
  const before=await page.evaluate(()=>localStorage.getItem('brickwright-cad:standalone:v1'));

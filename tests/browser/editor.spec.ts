@@ -17,14 +17,14 @@ test('edit dimensions, retain a boolean, export project and STL, reopen after re
   const file = await fileEvent; expect(file.suggestedFilename()).toMatch(/\.bcad$/); const filePath = await file.path();
   const stlEvent = page.waitForEvent('download'); await clickTool(page,'STL'); expect((await stlEvent).suggestedFilename()).toMatch(/\.stl$/);
   await page.reload(); await ready(page); await expect(page.locator('[data-testid="object-name"]')).toHaveCount(1);
-  await page.getByLabel('Open CAD project or STL',{exact:true}).setInputFiles(filePath!); await ready(page); await expect(page.locator('[data-testid="object-name"]')).toHaveCount(1);
+  await page.getByLabel('Open CAD project or geometry',{exact:true}).setInputFiles(filePath!); await ready(page); await expect(page.locator('[data-testid="object-name"]')).toHaveCount(1);
   expect(errors).toEqual([]); await page.screenshot({ path: 'test-results/standalone.png', fullPage: true });
 });
 test('undo restores a transformed object and invalid import preserves the live project', async ({ page }) => {
   await page.goto('/'); await ready(page); await addShape(page,'Box'); await ready(page);
   await page.getByLabel('Position X', { exact: true }).fill('25'); await page.getByLabel('Position X', { exact: true }).press('Tab'); await ready(page);
   await page.getByRole('button', { name: 'Undo', exact: true }).click(); await ready(page); await expect(page.getByLabel('Position X', { exact: true })).toHaveValue('0');
-  await page.getByLabel('Open CAD project or STL',{exact:true}).setInputFiles({ name: 'future.bcad', mimeType: 'application/json', buffer: Buffer.from('{"format":"brickwright-cad","version":99}') });
+  await page.getByLabel('Open CAD project or geometry',{exact:true}).setInputFiles({ name: 'future.bcad', mimeType: 'application/json', buffer: Buffer.from('{"format":"brickwright-cad","version":99}') });
   await expect(page.locator('#cad-root').getByRole('status',{name:'Editor status'})).toContainText('unsupported'); await expect(page.locator('[data-testid="object-name"]')).toHaveCount(1);
 });
 test('host instances isolate history and preserve project data through embedding and remount', async ({ page }) => {

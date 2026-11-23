@@ -62,7 +62,7 @@
 "Save" = "Speichern";
 "Clipboard selection exceeds 16 MiB" = "Zwischenablageauswahl überschreitet 16 MiB";
 "The clipboard could not be written; the model was kept" = "Die Zwischenablage konnte nicht beschrieben werden; das Modell wurde beibehalten";
-"Import STL Geometry" = "STL-Geometrie importieren";
+"Import STL or STEP Geometry" = "STL- oder STEP-Geometrie importieren";
 "Open CAD Project" = "CAD-Projekt öffnen";
 "File exceeds the import limit" = "Datei überschreitet die Importgrenze";
 "Use as library" = "Als Bibliothek verwenden";
@@ -80,7 +80,7 @@
 "Invalid language" = "Ungültige Sprache";
 "Cannot start the local asset server on port %d. Close other CAD copies and retry. %@" = "Der lokale Ressourcenserver auf Port %d konnte nicht gestartet werden. Schließen Sie andere CAD-Instanzen und versuchen Sie es erneut. %@";
 
-"Import STL…" = "STL importieren…";
+"Import STL or STEP…" = "STL oder STEP importieren…";
 
 "Model Source" = "Modellquelltext";
 

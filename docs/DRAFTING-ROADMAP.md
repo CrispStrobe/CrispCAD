@@ -46,6 +46,27 @@ where available, and explicit tessellation or reference behavior. Editable STEP
 round trips and general modeling-edge fillets belong to the exact-geometry
 roadmap, with stable face/edge references and evaluated backend choices.
 
+### STEP supplier-part references
+
+Choose **File → Import STL or STEP…** and select a text `.step` or `.stp`
+file. Brickwright tessellates AP203, AP214 and AP242 in a local WebAssembly
+worker. It converts the source coordinates to millimetres, resolves assembly
+placements, and names the resulting references from the STEP parts and
+occurrences. The import places the assembly on the workplane as a set of
+individually selectable references. Part colors are retained where supplied.
+The geometry saves with the project and the entire import is one Undo step.
+
+These reference meshes are for visual placement and clearance checks.
+Printing, solid operations and physics use solid bodies. Exact B-rep editing,
+per-face styles and STEP export remain open. Files are limited to 16 MiB and
+150,000 triangles including expanded assembly instances. Unsupported geometry
+reported by the reader stops the import before the project changes.
+
+The shipped Wasm is produced from the locked MIT `oxideav-step 0.0.1` and
+`oxideav-ifc 0.0.4` crates. Use `sh tools/step-wasm/build.sh` with Rust 1.100.0
+and its `wasm32-unknown-unknown` target to regenerate it.
+[STEP reader](https://docs.rs/oxideav-step/0.0.1/oxideav_step/) · [NIST AP242 reference](https://www.nist.gov/services-resources/software/step-file-analyzer-and-viewer)
+
 ### Editable 2D DWG exchange
 
 Open **Sketch & Extrude → Import DXF or DWG outline** or **Sketch path →
@@ -136,7 +157,7 @@ actual size. Edit a vertex as **X, Y, bulge, start width, end width** to
 change the width of its outgoing edge. The sketch and solid use the
 centerline. DXF export writes the widths back as drawing properties. Trim
 interpolates widths at new endpoints, and a closing edge starts at zero
-width. Offset supports uniform-width outlines. STEP import remains open.
+width. Offset supports uniform-width outlines.
 [Autodesk DXF lightweight polylines](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-DXF/files/GUID-748FC305-F3F2-4F74-825A-61F04D757A50.htm)
 
 ## Outline point editing

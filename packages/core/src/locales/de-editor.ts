@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "Surface meshes require a reference body and document version 30": "Oberflächennetze erfordern einen Referenzkörper und Dokumentversion 30.",
+  "Open CAD project or geometry": "CAD-Projekt oder Geometrie öffnen",
+  "Import STL or STEP geometry": "STL- oder STEP-Geometrie importieren",
+  "Import STL or STEP…": "STL oder STEP importieren…",
+  "Geometry file exceeds 16 MiB": "Die Geometriedatei überschreitet 16 MiB",
+  "STEP exceeds 16 MiB": "STEP überschreitet 16 MiB",
+  "STEP import took too long. Try a smaller part or assembly.": "Der STEP-Import hat zu lange gedauert. Versuche es mit einem kleineren Teil oder einer kleineren Baugruppe.",
+  "Could not read STEP geometry.": "STEP-Geometrie konnte nicht gelesen werden.",
+  "Could not read STEP geometry: {0}": "STEP-Geometrie konnte nicht gelesen werden: {0}",
+  "Geometry import accepts STL and STEP files.": "Der Geometrieimport unterstützt STL- und STEP-Dateien.",
+  "Reading STEP geometry…": "STEP-Geometrie wird gelesen…",
   "DWG export requires an original sketch extrusion.": "Für den DWG-Export ist eine ursprüngliche Skizzenextrusion erforderlich.",
   "Could not export the sketch as DWG.": "Die Skizze konnte nicht als DWG exportiert werden.",
   "DWG export took too long. Try a simpler sketch.": "Der DWG-Export hat zu lange gedauert. Versuche es mit einer einfacheren Skizze.",

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {t} from '@brickwright/cad-core';
+import {localToWorldPoint,t} from '@brickwright/cad-core';
 import {GeometryResourceLimitError} from './limits.js';
 import {triangulatePolyhedron} from './polyhedron.js';
 import {textProfileContours} from './font-profile.js';
 import Module from 'manifold-3d';
 import type { Manifold, ManifoldToplevel, CrossSection } from 'manifold-3d';
 import { validateDocument, documentGeometryKey, evaluateExtrusion, evaluateRevolution, evaluateMirror, evaluatePattern, FeatureEvaluationError, compileCode } from '@brickwright/cad-core';
-import type { CadDocument, SolidNode, CodeShape,CodeProfile,PlanarSketch } from '@brickwright/cad-core';
+import type { CadDocument, SolidNode, CodeShape,CodeProfile,PlanarSketch,Vec3 } from '@brickwright/cad-core';
 import { collisionCSG } from './collision-csg.js';
 import { partitionConvex } from './convex.js';
 import {sliceAssemblyGeometry} from './assembly-section.js';
@@ -44,6 +44,23 @@ function hasCollapsedVertices(mesh:BodyMesh):boolean {
   for(let i=0;i<mesh.positions.length;i+=3){const key=`${mesh.positions[i]},${mesh.positions[i+1]},${mesh.positions[i+2]}`;if(seen.has(key))return true;seen.add(key);}
   return false;
 }
+function referenceMesh(node:Extract<SolidNode,{kind:'mesh'}>):BodyMesh{
+  const origin=node.transform.position;
+  const axes:Vec3[]=[[1,0,0],[0,1,0],[0,0,1]];
+  const [u,v,w]=axes.map(axis=>localToWorldPoint(axis,node.transform).map((value,i)=>value-origin[i]));
+  const positions=new Float32Array(node.positions.length),min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];
+  for(let i=0;i<positions.length;i+=3){
+    const x=node.positions[i],y=node.positions[i+1],z=node.positions[i+2];
+    for(let j=0;j<3;j++){
+      const value=positions[i+j]=origin[j]+x*u[j]+y*v[j]+z*w[j];
+      min[j]=Math.min(min[j],value);
+      max[j]=Math.max(max[j],value);
+    }
+  }
+  return {id:node.id,name:node.name,color:node.color,reference:true,positions,
+    indices:new Uint32Array(node.indices),volume:0,bounds:{min,max}};
+}
+
 function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCylinderOrigins=false, retry?:{value:boolean}): GeometryResult {
   let hasOriginCylinder=false;
   const doc = validateDocument(input); const cache = new Map<string, Manifold>(); const owned = new Set<Manifold>();
@@ -179,6 +196,7 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
         break;
       }
       case 'mesh': {
+        if(node.surface)throw new Error(t('Reference helpers cannot be combined into printable solids'));
         const mesh = new module.Mesh({ numProp: 3, vertProperties: new Float32Array(node.positions), triVerts: new Uint32Array(node.indices) });
         mesh.merge(); solid = keep(new module.Manifold(mesh)); break;
       }
@@ -200,13 +218,15 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
   };
   try {
     const bodies = doc.roots.map(id => {
-      const solid = build(id); const node: SolidNode = doc.nodes[id]; const mesh = solid.getMesh();
+      const node=doc.nodes[id];
+      if(node.kind==='mesh'&&node.surface)return referenceMesh(node);
+      const solid=build(id),mesh=solid.getMesh();
       const positions = new Float32Array(mesh.numVert * 3);
       for (let i = 0; i < mesh.numVert; i++) for (let j = 0; j < 3; j++) positions[i * 3 + j] = mesh.vertProperties[i * mesh.numProp + j];
       const bounds = solid.boundingBox();
       return { id, name: node.name, color: node.color, reference: node.reference,...(node.role==='hole'?{hole:true}:{}), positions, indices: new Uint32Array(mesh.triVerts), volume: solid.volume(), bounds };
     });
-    if(retry&&hasOriginCylinder)retry.value=bodies.some(hasCollapsedVertices);
+    if(retry&&hasOriginCylinder)retry.value=bodies.some(body=>!body.reference&&hasCollapsedVertices(body));
     return { sourceKey:documentGeometryKey(doc), bodies, volume: bodies.filter(b=>!b.reference&&!b.hole).reduce((s, b) => s + b.volume, 0), triangles: bodies.filter(b=>!b.reference&&!b.hole).reduce((s, b) => s + b.indices.length / 3, 0) };
   } finally { for (const solid of [...owned].reverse()) solid.delete();for(const profile of [...profiles].reverse())profile.delete(); }
 }

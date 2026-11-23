@@ -12,6 +12,9 @@ No Layerling code/assets/translations are included.
 
 Runtime dependencies:
 
+- oxideav-step 0.0.1 and oxideav-ifc 0.0.4, MIT, bundled in the lazy STEP
+  tessellation WebAssembly module. Complete licenses are in the CAD editor notice.
+
 - acad-ts 3.9.0, MIT, copyright Jochen Kühner and Albert Domenech. The
   JavaScript DWG codec runs on demand in a browser worker and declares no
   runtime package dependencies. See https://github.com/node-projects/acad-ts.

@@ -129,7 +129,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         func section(_ title:String)->NSMenu {let item=NSMenuItem(title:title,action:nil,keyEquivalent:"");menu.addItem(item);let submenu=NSMenu(title:title);item.submenu=submenu;return submenu}
         let file=section("File")
         addCommand(file,"New Project","new","n");addCommand(file,"Open Project…","open","o");addCommand(file,"Project Library…","projects","o",[.command,.shift]);file.addItem(.separator())
-        addCommand(file,"Model Library…","model-library");file.addItem(.separator());addCommand(file,"Save Project…","save","s");file.addItem(.separator());addCommand(file,"Import STL…","import","i");addCommand(file,"Export…","export","e",[.command,.shift])
+        addCommand(file,"Model Library…","model-library");file.addItem(.separator());addCommand(file,"Save Project…","save","s");file.addItem(.separator());addCommand(file,"Import STL or STEP…","import","i");addCommand(file,"Export…","export","e",[.command,.shift])
         let edit=section("Edit")
         addCommand(edit,"Undo","undo","z");addCommand(edit,"Redo","redo","z",[.command,.shift]);edit.addItem(.separator())
         addCommand(edit,"Cut","cut","x");addCommand(edit,"Copy","copy","c");addCommand(edit,"Paste","paste","v");addCommand(edit,"Duplicate","duplicate","d");addCommand(edit,"Delete","delete","\u{7f}",[]);edit.addItem(.separator());addCommand(edit,"Select All","select-all","a");addCommand(edit,"Deselect All","deselect")
@@ -314,8 +314,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             let item=NSPasteboardItem();item.setString(text,forType:clipboardType);item.setString(text,forType:.string);pasteboard.clearContents();guard pasteboard.writeObjects([item]) else{reply(nil,L("The clipboard could not be written; the model was kept"));return};reply(true,nil)
         case "open":
             let panel=NSOpenPanel();panel.canChooseDirectories=false;panel.allowsMultipleSelection=false
-            let geometry=body["mode"] == "geometry";panel.title=geometry ? L("Import STL Geometry") : L("Open CAD Project")
-            panel.allowedContentTypes=geometry ? [UTType(filenameExtension:"stl") ?? .data] : [.json,UTType(filenameExtension:"bcad") ?? .data,UTType(filenameExtension:"bcadhistory") ?? .data]
+            let geometry=body["mode"] == "geometry";panel.title=geometry ? L("Import STL or STEP Geometry") : L("Open CAD Project")
+            panel.allowedContentTypes=geometry ? ["stl","step","stp"].compactMap { UTType(filenameExtension:$0) } : [.json,UTType(filenameExtension:"bcad") ?? .data,UTType(filenameExtension:"bcadhistory") ?? .data]
             panel.beginSheetModal(for:window){result in guard result == .OK,let url=panel.url else{reply(NSNull(),nil);return};do{let size=try url.resourceValues(forKeys:[.fileSizeKey]).fileSize ?? 0;guard size<=(geometry ? 16:64)*1024*1024 else{reply(nil,self.L("File exceeds the import limit"));return};reply(["name":url.lastPathComponent,"data":try Data(contentsOf:url).base64EncodedString()],nil)}catch{reply(nil,error.localizedDescription)}}
         default:reply(nil,L("Unknown host request"))
         }
