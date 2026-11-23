@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "Driving arc radii require document version 32": "Festgelegte Bogenradien erfordern Dokumentversion 32",
+  "The arc radius must be at least half its chord length.": "Der Bogenradius muss mindestens halb so groß wie die Sehnenlänge sein.",
+  "An arc can have only one driving radius.": "Ein Bogen kann nur einen festgelegten Radius haben.",
+  "Arc radius": "Bogenradius",
+  "Arc radius (mm)": "Bogenradius (mm)",
+  "Choose an existing arc. Solving keeps the side and sweep branch of that arc.": "Wähle einen vorhandenen Bogen. Beim Lösen bleiben Seite und Bogenart erhalten.",
+  "Curve the segment before adding a driving radius.": "Krümme das Segment, bevor du einen Radius festlegst.",
   "This source edit requires solving its outline constraints.": "Für diese Quelltextänderung müssen die Konturbedingungen gelöst werden.",
   "Checking model source…": "Modellquelltext wird geprüft…",
   "This parameter edit requires solving its outline constraints.": "Für diese Parameteränderung müssen die Konturbedingungen gelöst werden.",

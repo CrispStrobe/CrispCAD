@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {maxConstrainedOutlinePoints,maxOutlineRelations,newId,outlineRelationsForSolve,t} from '@brickwright/cad-core';
-import type {FeatureScalar,OutlineRelation,SketchOutlineProfile,SketchPoint} from '@brickwright/cad-core';
-import {solveOutline,verifyOutlineSolve} from './outline-constraint-solve.js';
+import {maxConstrainedOutlinePoints,maxOutlineRelations,newId,outlineArcSweep,outlineBulgesForRadii,outlineRadiiSatisfied,outlineRelationsForSolve,outlineSatisfiesRelations,t} from '@brickwright/cad-core';
+import type {FeatureScalar,OutlineArcSweep,OutlineRelation,SketchOutlineProfile} from '@brickwright/cad-core';
+import {solveOutline} from './outline-constraint-solve.js';
 
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{
  const node=document.createElement(tag);
@@ -9,10 +9,11 @@ const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{
  return node;
 };
 type OutlineConstraintKind=OutlineRelation['kind'];
-type DraftConstraint={kind:OutlineConstraintKind; edge:number; other:number; expression:string};
+type DraftConstraint={kind:OutlineConstraintKind; edge:number; other:number; expression:string; sweep?:OutlineArcSweep};
+type OutlineGeometry=Pick<SketchOutlineProfile,'points'|'bulges'>;
 const pairKinds=new Set(['parallel','perpendicular','equal']);
 const labels=()=>{
- return {horizontal:t('Horizontal'),vertical:t('Vertical'),length:t('Length'),
+ return {horizontal:t('Horizontal'),vertical:t('Vertical'),length:t('Length'),radius:t('Arc radius'),
   parallel:t('Parallel'),perpendicular:t('Perpendicular'),equal:t('Equal lengths')};
 };
 
@@ -22,14 +23,14 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
  active:()=>boolean;
  available:()=>boolean;
  revision:()=>number;
- read:()=>SketchPoint[];
+ read:()=>OutlineGeometry;
  readLength:(value:FeatureScalar)=>number;
- apply:(points:SketchPoint[])=>void;
+ apply:(geometry:OutlineGeometry)=>void;
  pending:(solving:boolean)=>void;
 }){
  const panel=element('details');
  panel.className='sketch-expressions';
- const constraint=element('select'),edge=element('select'),other=element('select'),length=element('input');
+ const constraint=element('select'),edge=element('select'),other=element('select'),length=element('input'),radius=element('input');
  const field=(label:string,control:HTMLElement)=>{
   const wrapper=element('label',label);
   control.setAttribute('aria-label',label);
@@ -44,7 +45,9 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
  field(t('Constrained segment'),edge);
  const otherLabel=field(t('Second segment'),other);
  const lengthLabel=field(t('Segment length (mm)'),length);
- length.maxLength=160;
+ const radiusLabel=field(t('Arc radius (mm)'),radius);
+ radiusLabel.append(element('small',t('Choose an existing arc. Solving keeps the side and sweep branch of that arc.')));
+ length.maxLength=radius.maxLength=160;
  const add=element('button',t('Add constraint')),solve=element('button',t('Solve outline'));
  const cancel=element('button',t('Cancel constraint edit')),clear=element('button',t('Clear constraints'));
  add.type=solve.type=cancel.type=clear.type='button';
@@ -62,7 +65,8 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   outlineRelationsForSolve(initial,()=>1).map((rule,index)=>{
    const saved=initial.relations![index];
    return {kind:rule.kind,edge:rule.edge,other:'other' in rule?rule.other:0,
-    expression:saved.kind==='length'?String(saved.length):''};
+    expression:saved.kind==='length'?String(saved.length):saved.kind==='radius'?String(saved.radius):'',
+    sweep:saved.kind==='radius'?saved.sweep:undefined};
   }):[];
  if(constraints.length)panel.open=true;
 
@@ -70,6 +74,7 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
  const refreshButtons=()=>{
   otherLabel.hidden=!pairKinds.has(constraint.value);
   lengthLabel.hidden=constraint.value!=='length';
+  radiusLabel.hidden=constraint.value!=='radius';
   const ready=count>=3&&count<=maxConstrainedOutlinePoints&&!wrongCount;
   add.textContent=t(editIndex===undefined?'Add constraint':'Update constraint');
   add.disabled=solving||!ready||editIndex===undefined&&constraints.length>=maxOutlineRelations;
@@ -77,14 +82,14 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   cancel.hidden=editIndex===undefined;
   cancel.disabled=clear.disabled=solving;
   clear.hidden=!constraints.length;
-  for(const input of [constraint,edge,other,length])input.disabled=solving;
+  for(const input of [constraint,edge,other,length,radius])input.disabled=solving;
   for(const button of list.querySelectorAll('button'))button.disabled=solving;
  };
  function redrawList(){
   list.replaceChildren(...constraints.map((row,index)=>{
    const entry=element('li'),edit=element('button',t('Edit')),remove=element('button',t('Remove'));
    const label=labels()[row.kind],segment=segmentLabel(row.edge);
-   const detail=row.kind==='length'?row.expression:pairKinds.has(row.kind)?segmentLabel(row.other):'';
+   const detail=row.kind==='length'||row.kind==='radius'?row.expression:pairKinds.has(row.kind)?segmentLabel(row.other):'';
    entry.append(element('span',[label,segment,detail].filter(Boolean).join(' · ')),edit,remove);
    edit.type=remove.type='button';
    edit.setAttribute('aria-label',t`Edit constraint ${index+1}`);
@@ -94,7 +99,7 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
     constraint.value=row.kind;
     edge.value=String(row.edge);
     other.value=String(row.other);
-    length.value=row.expression;
+    length.value=radius.value=row.expression;
     refreshButtons();
     constraint.focus();
    };
@@ -113,7 +118,7 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   panel.hidden=!options.visible();
   if(panel.hidden)return;
   let size:number;
-  try{size=options.read().length;}catch{size=0;}
+  try{size=options.read().points.length;}catch{size=0;}
   wrongCount=constraints.length>0&&size!==vertexIds?.length;
   if(wrongCount)status.textContent=topologyMessage;
   else if(status.textContent===topologyMessage)status.textContent='';
@@ -131,7 +136,7 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   }
   if(!checkedInitial&&initial?.relations){
    checkedInitial=true;
-   try{forSave(initial.points);}
+   try{forSave(initial);}
    catch{status.textContent=t('Solve the outline to use the current dimensions.');}
   }
   refreshButtons();
@@ -147,34 +152,48 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
  function retainedRelations():Pick<SketchOutlineProfile,'vertexIds'|'relations'>{
   const ids=vertexIds!;
   const segment=(index:number):[string,string]=>[ids[index],ids[(index+1)%ids.length]];
-  const relations=constraints.map(({kind,edge,other,expression}):OutlineRelation=>{
+  const relations=constraints.map(({kind,edge,other,expression,sweep}):OutlineRelation=>{
    if(kind==='length')return {kind,edge:segment(edge),length:expression};
+   if(kind==='radius')return {kind,edge:segment(edge),radius:expression,sweep:sweep!};
    if(kind==='horizontal'||kind==='vertical')return {kind,edge:segment(edge)};
    return {kind,edge:segment(edge),other:segment(other)};
   });
   return {vertexIds:ids,relations};
  }
- function request(points:SketchPoint[]){
+ function plan({points}:OutlineGeometry){
   if(points.length!==vertexIds?.length)throw new Error(topologyMessage);
-  return {points,constraints:outlineRelationsForSolve({points,...retainedRelations()},options.readLength)};
+  const rules=outlineRelationsForSolve({points,...retainedRelations()},options.readLength);
+  return {request:{points,constraints:rules.filter(rule=>rule.kind!=='radius')},radii:rules.filter(rule=>rule.kind==='radius')};
  }
- function forSave(points:SketchPoint[]){
+ function forSave(geometry:OutlineGeometry){
   if(!constraints.length)return {};
-  const input=request(points);
-  try{verifyOutlineSolve(input,{status:'solved',points,degrees:null});}
-  catch{throw new Error(t('Solve the outline before saving its constraints.'));}
+  const {request,radii}=plan(geometry);
+  if(!outlineSatisfiesRelations(request,geometry.points)||!outlineRadiiSatisfied(geometry.points,geometry.bulges,radii))
+   throw new Error(t('Solve the outline before saving its constraints.'));
   return retainedRelations();
  }
  for(const event of ['input','change'])panel.addEventListener(event,event=>event.stopPropagation());
  constraint.onchange=refreshButtons;
  add.onclick=()=>{
-  const kind=constraint.value as OutlineConstraintKind,row={kind,edge:Number(edge.value),other:Number(other.value),expression:length.value.trim()};
+  const kind=constraint.value as OutlineConstraintKind;
+  const row:DraftConstraint={kind,edge:Number(edge.value),other:Number(other.value),expression:(kind==='radius'?radius:length).value.trim()};
   if(pairKinds.has(kind)&&row.edge===row.other){
    status.textContent=t('Choose two different segments.');
    return;
   }
-  if(kind==='length'){
-   try{options.readLength(row.expression);}
+  if(kind==='length'||kind==='radius'){
+   try{
+    options.readLength(row.expression);
+    if(kind==='radius'){
+     if(constraints.some((entry,index)=>index!==editIndex&&entry.kind==='radius'&&entry.edge===row.edge))
+      throw new Error(t('An arc can have only one driving radius.'));
+     const previous=editIndex===undefined?undefined:constraints[editIndex];
+     const bulge=options.read().bulges?.[row.edge];
+     if(previous?.kind==='radius'&&previous.edge===row.edge)row.sweep=previous.sweep;
+     else if(bulge)row.sweep=outlineArcSweep(bulge);
+     else throw new Error(t('Curve the segment before adding a driving radius.'));
+    }
+   }
    catch(error){status.textContent=error instanceof Error?error.message:String(error);return;}
   }
   if(!constraints.length&&vertexIds?.length!==count)vertexIds=Array.from({length:count},newId);
@@ -194,12 +213,14 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   refreshButtons();
   status.textContent=t('Solving outline…');
   try{
-   const result=await solveOutline(request(options.read()),controller.signal);
+   const geometry=options.read();
+   const {request,radii}=plan(geometry);
+   const result=request.constraints.length?await solveOutline(request,controller.signal):{points:geometry.points,degrees:null};
    if(!options.active())return;
    if(revision!==options.revision()||!options.available()){
     throw new Error(t('The sketch changed during the solve. Solve the outline again.'));
    }
-   options.apply(result.points);
+   options.apply({points:result.points,bulges:outlineBulgesForRadii(result.points,geometry.bulges,radii)});
    status.textContent=result.degrees===null?t('Outline solved.'):
     result.degrees===0?t('Outline solved. Fully constrained.'):
      t`Outline solved. Degrees of freedom: ${result.degrees}.`;

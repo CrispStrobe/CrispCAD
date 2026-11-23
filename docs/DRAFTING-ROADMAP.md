@@ -192,7 +192,9 @@ or clear the constraints before changing the topology. Trimming and
 offsetting require clearing the constraints. **Parameters**, **Design
 inputs**, and **Model source** re-solve affected outlines as part of the same
 undoable edit. Conflicts leave the previous parameters and shapes intact.
-Constraints on curves and regions remain open.
+**Arc radius** drives the radius of an existing curved segment from a value
+or named dimension, preserving the side and sweep through the endpoints.
+Arc tangency and constraints across region loops remain open.
 
 Enable **Edit edge curves** to reveal a blue handle at the midpoint of each
 outline edge. Drag the handle across its chord to turn a straight edge into
@@ -460,4 +462,5 @@ Closing the path uses the evaluated geometry.
 Document version 28 retains open-path relationships and their expressions.
 Document version 31 retains coupled segment constraints on closed outlines.
 Parameter editor and inspector changes re-solve retained outline relations.
-Constrained curves and region constraints remain open.
+Document version 32 retains driving arc radii. Arc tangency and region
+constraints remain open.

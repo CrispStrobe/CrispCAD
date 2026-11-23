@@ -217,7 +217,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   }
   const readForm=(retain=false)=>{
    const profile=definition();
-   const retained=retain&&!linked&&profile.kind==='outline'?{...profile,...outlineConstraints.forSave(profile.points)}:profile;
+   const retained=retain&&!linked&&profile.kind==='outline'?{...profile,...outlineConstraints.forSave(profile)}:profile;
    return {
    sketch:{name:name.value.trim(),plane:plane.value as SketchPlane,profile:retained},
    extrusion:{distance:scalar(length.value),symmetric:symmetric.checked},
@@ -504,17 +504,17 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    read:()=>{
     const profile=definition();
     if(profile.kind!=='outline')throw new Error(t('Select an outline first.'));
-    return profile.points;
+    return profile;
    },
    readLength:value=>{
     const length=featureValue(typeof value==='string'?scalar(value):value,doc);
     if(length<.01||length>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));
     return length;
    },
-   apply:points=>{
+   apply:geometry=>{
     const snapshot=readForm(),{profile}=snapshot.sketch;
     if(profile.kind!=='outline')throw new Error(t('Select an outline first.'));
-    const solved={...profile,points};
+    const solved={...profile,...geometry};
     previewShape({...snapshot,sketch:{...snapshot.sketch,profile:solved}});
     replaceProfileDraft(solved);
     refreshDraft();

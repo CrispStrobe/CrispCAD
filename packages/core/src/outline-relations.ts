@@ -10,10 +10,42 @@ export type OutlineRule<Edge,Length> =
  {kind:'length';edge:Edge;length:Length} |
  {kind:'parallel'|'perpendicular'|'equal';edge:Edge;other:Edge};
 
-export type OutlineRelation=OutlineRule<[string,string],FeatureScalar>;
+const arcSweeps=['ccw-minor','cw-minor','ccw-major','cw-major'] as const;
+export type OutlineArcSweep=(typeof arcSweeps)[number];
+type ArcRadius<Edge,Dimension>={kind:'radius';edge:Edge;radius:Dimension;sweep:OutlineArcSweep};
+type ResolvedArcRadius=ArcRadius<number,number>;
+export type OutlineRelation=OutlineRule<[string,string],FeatureScalar>|ArcRadius<[string,string],FeatureScalar>;
 export type OutlineSolveRequest={points:SketchPoint[];constraints:OutlineRule<number,number>[]};
 export const maxConstrainedOutlinePoints=32;
 export const maxOutlineRelations=48;
+
+export function outlineArcSweep(bulge:number):OutlineArcSweep{
+ return bulge>0?(bulge>1?'ccw-major':'ccw-minor'):(bulge< -1?'cw-major':'cw-minor');
+}
+
+export function outlineBulgesForRadii(points:SketchPoint[],bulges:number[]|undefined,radii:readonly ResolvedArcRadius[]):number[]|undefined{
+ if(!radii.length)return bulges;
+ const result=bulges?.slice()??points.map(()=>0);
+ for(const {edge,radius,sweep} of radii){
+  const a=points[edge],b=points[(edge+1)%points.length];
+  const halfChord=Math.hypot(b[0]-a[0],b[1]-a[1])/2;
+  if(halfChord-radius>1e-8+radius*1e-12)throw new Error(t('The arc radius must be at least half its chord length.'));
+  const ratio=Math.min(1,halfChord/radius);
+  const minor=ratio/(1+Math.sqrt((1-ratio)*(1+ratio)));
+  const magnitude=sweep.endsWith('major')?1/minor:minor;
+  if(!(magnitude>0&&magnitude<=10000))throw new Error(t('Rounded outline exceeds the curve size or detail limit.'));
+  result[edge]=sweep.startsWith('cw-')?-magnitude:magnitude;
+ }
+ return result;
+}
+
+export function outlineRadiiSatisfied(points:SketchPoint[],bulges:number[]|undefined,radii:readonly ResolvedArcRadius[]):boolean{
+ if(!radii.length)return true;
+ try{
+  const expected=outlineBulgesForRadii(points,bulges,radii)!;
+  return radii.every(({edge})=>Math.abs((bulges?.[edge]??0)-expected[edge])<=Math.abs(expected[edge])*1e-9);
+ }catch{return false;}
+}
 
 export function outlineSatisfiesRelations(request:OutlineSolveRequest,points:SketchPoint[]):boolean{
  if(!Array.isArray(points)||points.length!==request.points.length||!points.every(isSketchPoint)||
@@ -44,13 +76,20 @@ export function outlineSatisfiesRelations(request:OutlineSolveRequest,points:Ske
 export function outlineRelationsForSolve(
  profile:Pick<SketchOutlineProfile,'points'|'vertexIds'|'relations'>,
  resolveLength:(length:FeatureScalar)=>number
-):OutlineRule<number,number>[]{
+):(OutlineRule<number,number>|ResolvedArcRadius)[]{
  const {points,vertexIds,relations}=profile;
  if(relations===undefined)return [];
  const invalid=()=>new Error(t('Invalid outline constraint definitions.'));
  if(points.length<3||points.length>maxConstrainedOutlinePoints||!Array.isArray(vertexIds)||vertexIds.length!==points.length||
   !Array.isArray(relations)||!relations.length||relations.length>maxOutlineRelations)throw invalid();
  const indexById=new Map(vertexIds.map((id,index)=>[id,index]));
+ const radiusEdges=new Set<number>();
+ const dimension=(value:FeatureScalar)=>{
+  if(typeof value!=='number'&&(typeof value!=='string'||!value.trim()||value.length>160))throw invalid();
+  const length=resolveLength(value);
+  if(!Number.isFinite(length)||length<.01||length>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));
+  return length;
+ };
  const indexOf=(edge:unknown)=>{
   if(!Array.isArray(edge)||edge.length!==2||edge.some(id=>typeof id!=='string'))throw invalid();
   const index=indexById.get(edge[0]);
@@ -63,11 +102,12 @@ export function outlineRelationsForSolve(
   switch(relation.kind){
    case 'horizontal':
    case 'vertical':return {kind:relation.kind,edge};
-   case 'length':{
-    if(typeof relation.length!=='number'&&(typeof relation.length!=='string'||!relation.length.trim()||relation.length.length>160))throw invalid();
-    const length=resolveLength(relation.length);
-    if(!Number.isFinite(length)||length<.01||length>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));
-    return {kind:relation.kind,edge,length};
+   case 'length':return {kind:relation.kind,edge,length:dimension(relation.length)};
+   case 'radius':{
+    if(!arcSweeps.includes(relation.sweep))throw invalid();
+    if(radiusEdges.has(edge))throw new Error(t('An arc can have only one driving radius.'));
+    radiusEdges.add(edge);
+    return {kind:relation.kind,edge,radius:dimension(relation.radius),sweep:relation.sweep};
    }
    case 'parallel':
    case 'perpendicular':

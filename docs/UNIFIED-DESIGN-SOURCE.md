@@ -80,4 +80,5 @@ Limits remain explicit: GUI source 8 MiB, documents 16 MiB and portable history
 archives 64 MiB, with AST/record bounds. Archives are never pruned to fit. MCP
 accepts source up to 65,536 characters and retains its tighter headless model and
 transport limits. The browser worker solves constraints on single closed
-outlines. Curve and region constraints remain roadmap work.
+outlines, including driving arc radii. Arc tangency and region constraints
+remain roadmap work.

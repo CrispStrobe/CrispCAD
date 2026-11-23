@@ -2,7 +2,7 @@
 import {readFileSync} from 'node:fs';
 import {createContext,runInContext} from 'node:vm';
 import {describe,expect,it} from 'vitest';
-import {compileModelSource,createCadSession,designGraph,generateModelSource,parseDocument,rewriteSketchExpressions,trimSketchProfile,validateDocument} from '@brickwright/cad-core';
+import {compileModelSource,createCadSession,designGraph,generateModelSource,outlineBulgesForRadii,parseDocument,rewriteSketchExpressions,sketchBulgeArc,trimSketchProfile,validateDocument} from '@brickwright/cad-core';
 import type {SketchOutlineProfile} from '@brickwright/cad-core';
 import {verifyOutlineSolve} from '../packages/editor/src/outline-constraint-solve.js';
 import type {OutlineSolveRequest} from '../packages/editor/src/outline-constraint-solve.js';
@@ -161,4 +161,53 @@ it('rejects conflicting or obsolete source candidates and keeps explicitly valid
  session.rename('Another edit');
  expect(()=>session.applyPreparedModelSource(prepared)).toThrow('changed while editing');
  expect(session.state.document.sketches).toEqual(before.document.sketches);
+});
+
+it('preserves signed minor and major arcs through the semicircle limit',()=>{
+ for(const sweep of ['cw-minor','ccw-minor','cw-major','ccw-major'] as const){
+  const radius={kind:'radius' as const,edge:0,radius:30,sweep};
+  const [bulge]=outlineBulgesForRadii(outline.points,undefined,[radius])!;
+  expect(bulge<0).toBe(sweep.startsWith('cw-'));
+  expect(Math.abs(bulge)>1).toBe(sweep.endsWith('major'));
+  expect(sketchBulgeArc(outline.points[0],outline.points[1],bulge)?.radius).toBeCloseTo(30,10);
+  const [halfCircle]=outlineBulgesForRadii(outline.points,[bulge,0,0,0],[{...radius,radius:20}])!;
+  expect(Math.abs(halfCircle)).toBe(1);
+ }
+});
+
+it('drives a retained arc radius from parameters and model source with fixed endpoints and atomic rejection',async()=>{
+ const session=createCadSession();
+ session.setParametric(dimensions('60'));
+ const radius={kind:'radius' as const,edge:['a','b'] as [string,string],radius:'span',sweep:'ccw-major' as const};
+ const seeded=outlineBulgesForRadii(outline.points,undefined,[{kind:'radius',edge:0,radius:60,sweep:radius.sweep}]);
+ const body=session.addSketchExtrusion({...outline,bulges:seeded,relations:[radius]});
+ session.enableModelSource();
+ const original=session.state.document,node=original.nodes[body];
+ if(node.kind!=='extrusion')throw Error('fixture');
+ const id=node.sketchId;
+ const current=()=>session.state.document.sketches![id].profile as SketchOutlineProfile;
+ const curve=(profile=current())=>sketchBulgeArc(profile.points[0],profile.points[1],profile.bulges![0])!;
+ expect(original.version).toBe(32);
+ expect(parseDocument(session.serialize())).toEqual(original);
+ expect(()=>validateDocument({...original,version:31})).toThrow('version 32');
+ expect(designGraph(original).find(entry=>entry.key===`sketch:${id}`)?.dependencies).toEqual(['parameter:span']);
+ const copy=structuredClone(original.sketches![id]);
+ rewriteSketchExpressions(copy,expression=>expression==='span'?'newSpan':expression);
+ expect(copy.profile).toMatchObject({relations:[{...radius,radius:'newSpan'}]});
+ expect(()=>session.updateSketch(id,{profile:{...current(),relations:[radius,radius]}})).toThrow('only one driving radius');
+ const unexpected=async()=>{throw Error('radius-only solve should not start the chord worker');};
+ await session.setParametricWithOutlineSolve(dimensions('20'),unexpected,signal());
+ expect(current().points).toEqual(outline.points);
+ expect(current().bulges?.[0]).toBe(1);
+ const half=session.state.document;
+ await expect(session.setParametricWithOutlineSolve(dimensions('19'),unexpected,signal())).rejects.toThrow('half its chord length');
+ expect(session.state.document).toBe(half);
+ const prepared=await session.prepareModelSourceWithOutlineSolve(session.modelSource.replace('expression: "20"','expression: "35"'),{},unexpected,signal());
+ expect(compileModelSource(prepared.document.modelSource!.source,half).sketches).toEqual(prepared.document.sketches);
+ expect(session.applyPreparedModelSource(prepared)).toBe(true);
+ expect(curve().radius).toBeCloseTo(35,10);
+ expect(curve().sweep).toBeGreaterThan(Math.PI);
+ expect(current().points).toEqual(outline.points);
+ session.undo();
+ expect(session.state.document).toBe(half);
 });

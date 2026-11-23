@@ -27,6 +27,14 @@ and source in one Undo step. Any conflicting outline keeps the previous
 parameters and geometry. Existing sketches with stale coordinates can still
 be repaired by reopening and solving them. Solving while dragging remains open.
 
+Document version 32 adds **Arc radius** for an existing curved segment in a
+single closed outline. Give the radius a value or a named expression. The
+solver applies chord constraints first, then computes the arc through its two
+endpoints. It keeps the original side and major or minor sweep, including
+when a parameter passes through a semicircle. A radius below half the solved
+chord is rejected. To use a smaller radius, shorten the chord first. Arc
+tangency and constraints between different region loops remain open.
+
 The worker loads the checked-in JavaScript built from
 `tools/sketch-constraints/solver.dart` with Dart 3.12.2. Run
 `sh tools/sketch-constraints/build.sh` to rebuild the pinned artifact.

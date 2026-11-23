@@ -220,7 +220,8 @@ export function checkFeatures(doc:CadDocument) {
     evaluateSketch(sketch,doc);checkDrawingVertexIds(sketch.profile,doc.version);
     if(sketch.profile.kind==='outline'&&sketch.profile.relations!==undefined){
       if(doc.version<31)throw new Error(t('Outline constraints require document version 31'));
-      outlineRelationsForSolve(sketch.profile,length=>featureValue(length,doc));
+      const relations=outlineRelationsForSolve(sketch.profile,length=>featureValue(length,doc));
+      if(doc.version<32&&relations.some(relation=>relation.kind==='radius'))throw new Error(t('Driving arc radii require document version 32'));
     }
    }}
   for(const node of Object.values(doc.nodes)){
@@ -239,7 +240,7 @@ export function sketchExpressions(sketch:PlanarSketch):string[] {
     profile.kind==='circle'?[profile.radius]:
     profile.kind==='path'?[...(profile.anchors??[]).flatMap(anchor=>[anchor.x,anchor.y]),
       ...(profile.segmentConstraints??[]).flatMap(constraint=>[constraint.distance,constraint.direction])]:
-    profile.kind==='outline'?(profile.relations??[]).flatMap(relation=>relation.kind==='length'?[relation.length]:[]):
+    profile.kind==='outline'?(profile.relations??[]).flatMap(relation=>relation.kind==='length'?[relation.length]:relation.kind==='radius'?[relation.radius]:[]):
     profile.kind==='region'?profile.loops.flatMap(loop=>loop.kind==='circle'?[...loop.center,loop.radius]:[]):[];
   return values.filter((value):value is string=>typeof value==='string');
 }
@@ -261,7 +262,10 @@ export function rewriteSketchExpressions(sketch:PlanarSketch,rewrite:(s:string)=
       constraint.direction=transform(constraint.direction);
     }
   }else if(profile.kind==='outline'){
-    for(const relation of profile.relations??[])if(relation.kind==='length')relation.length=transform(relation.length);
+    for(const relation of profile.relations??[]){
+      if(relation.kind==='length')relation.length=transform(relation.length);
+      if(relation.kind==='radius')relation.radius=transform(relation.radius);
+    }
   }else if(profile.kind==='region'){
     for(const loop of profile.loops){
       if(loop.kind!=='circle')continue;

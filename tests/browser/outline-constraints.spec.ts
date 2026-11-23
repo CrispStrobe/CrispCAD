@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {expect,test} from '@playwright/test';
+import {sketchBulgeArc} from '@brickwright/cad-core';
 
 test('solves retained outline relations when parameters change and undoes each edit',async({page,hasTouch})=>{
  const press=async(control:ReturnType<typeof page.getByRole>)=>{
@@ -125,4 +126,71 @@ test('solves retained outline relations when parameters change and undoes each e
  await press(closeSketch);
  await press(undo);
  await expect(page.getByTestId('object-name')).toHaveCount(0);
+});
+
+test('drives the radius of a closed outline arc and rejects a radius below half its chord',async({page,hasTouch})=>{
+ const press=async(control:ReturnType<typeof page.getByRole>)=>{
+  if(hasTouch){await control.scrollIntoViewIfNeeded();await control.tap();}
+  else await control.click();
+ };
+ const fill=async(control:ReturnType<typeof page.getByLabel>,value:string)=>{
+  await control.fill(value);
+  await control.blur();
+ };
+ await page.goto('/');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ const parametersButton=page.getByRole('button',{name:'Parameters',exact:true});
+ const parameters=page.getByRole('dialog',{name:'Model parameters'});
+ const applyParameters=parameters.getByRole('button',{name:'Apply parameters',exact:true});
+ const closeParameters=parameters.getByRole('button',{name:'Close parameters',exact:true});
+ const parameterStatus=parameters.getByRole('status',{name:'Parameter status'});
+ const expression=parameters.getByLabel('Parameter expression',{exact:true});
+ await press(parametersButton);
+ await press(parameters.getByRole('button',{name:'Add parameter',exact:true}));
+ await fill(parameters.getByLabel('Parameter name',{exact:true}),'rim');
+ await fill(expression,'50');
+ await press(applyParameters);
+ await expect(parameterStatus).toContainText('Parameters applied');
+ await press(closeParameters);
+ await press(page.getByRole('button',{name:'Sketch',exact:true}));
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await sketch.getByLabel('Profile',{exact:true}).selectOption('outline');
+ const coordinates=sketch.getByLabel('Outline points X, Y (mm)');
+ await fill(coordinates,'0, 0, 0.25\n40, 0\n40, 40\n0, 40');
+ await press(sketch.getByText('Outline constraints',{exact:true}));
+ await sketch.getByLabel('Constraint',{exact:true}).selectOption('radius');
+ await fill(sketch.getByLabel('Arc radius (mm)',{exact:true}),'rim');
+ const edge=sketch.getByLabel('Constrained segment'),add=sketch.getByRole('button',{name:'Add constraint',exact:true});
+ const status=sketch.getByRole('status',{name:'Outline constraint status'});
+ await edge.selectOption('1');
+ await press(add);
+ await expect(status).toContainText('Curve the segment');
+ await edge.selectOption('0');
+ await press(add);
+ await press(sketch.getByRole('button',{name:'Solve outline',exact:true}));
+ await expect(status).toContainText('Outline solved');
+ const radius=async()=>{
+  const rows=(await coordinates.inputValue()).split('\n').map(row=>row.split(',').map(Number));
+  expect(rows.map(row=>row.slice(0,2))).toEqual([[0,0],[40,0],[40,40],[0,40]]);
+  return sketchBulgeArc([0,0],[40,0],rows[0][2])!.radius;
+ };
+ expect(await radius()).toBeCloseTo(50);
+ await press(sketch.getByRole('button',{name:'Create extrusion',exact:true}));
+ await expect(sketch).toBeHidden();
+ await press(parametersButton);
+ await fill(expression,'19');
+ await press(applyParameters);
+ await expect(parameterStatus).toContainText('half its chord length');
+ await fill(expression,'25');
+ await press(applyParameters);
+ await expect(parameterStatus).toContainText('Parameters applied');
+ await press(closeParameters);
+ const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
+ if(!await edit.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
+ await press(edit);
+ expect(await radius()).toBeCloseTo(25);
+ await press(sketch.getByRole('button',{name:'Close sketch',exact:true}));
+ await press(page.getByRole('button',{name:'Undo',exact:true}));
+ await press(edit);
+ expect(await radius()).toBeCloseTo(50);
 });
