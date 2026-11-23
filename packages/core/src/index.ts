@@ -52,3 +52,5 @@ export type {CadBlocksProgram,BlockStmt,BlockExpr,BlockParam,BlockShapeKind,Bloc
 
 export * from './drawing-sheet.js';
 export {trimSketchProfile} from './sketch-trim.js';
+
+export * from './outline-relations.js';

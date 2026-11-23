@@ -5,10 +5,11 @@ import type {SketchDxfLayer} from './sketch-dxf-layer.js';
 import {checkSketchDxfWidths} from './sketch-dxf-width.js';
 import type {SketchDxfWidths} from './sketch-dxf-width.js';
 import {isSketchPoint, sketchOutline, sketchSegmentsIntersect} from './sketch-outline.js';
+import type {OutlineRelation} from './outline-relations.js';
 import type {FeatureScalar} from './features.js';
 import type {SketchPoint} from './sketch-outline.js';
 
-export type SketchOutlineProfile = {kind:'outline'; id:string; points:SketchPoint[]; bulges?:number[]; vertexIds?:string[]}&SketchDxfLayer&SketchDxfWidths;
+export type SketchOutlineProfile = {kind:'outline'; id:string; points:SketchPoint[]; bulges?:number[]; vertexIds?:string[]; relations?:OutlineRelation[]}&SketchDxfLayer&SketchDxfWidths;
 
 export type SketchLoop =
   | SketchOutlineProfile
@@ -87,6 +88,7 @@ export function evaluateSketchRegion(loops: SketchLoop[], resolve = (scalar: Fea
       });
       area = Math.PI * radius ** 2;
     } else if (loop.kind === 'outline') {
+      if(loop.relations!==undefined)throw new Error(t('Outline constraints are available on single outlines.'));
       checkSketchDxfWidths(loop,true);
       points = sketchOutline(loop.points, loop.bulges);
       resolvedLoop = loop;

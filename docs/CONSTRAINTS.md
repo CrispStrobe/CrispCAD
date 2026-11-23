@@ -17,8 +17,11 @@ The editor independently checks the numeric solution and validates the
 resulting outline before it replaces the draft. The user can continue to edit
 the sketch and use the usual Create or Apply action to commit one project
 revision. Rejected and stale solves keep the current geometry. The saved
-sketch records the solved coordinates. Retaining the coupled definitions,
-re-solving when parameters change, and drag-based solving remain open.
+sketch stores both the solved coordinates and the coupled definitions.
+Document version 31 links each segment to its two vertex IDs. Edit or remove a
+relation after reopening the sketch. If a named dimension changes, reopen the
+outline, solve it with the current values, and apply the result. Automatic
+re-solving from the parameter editor and drag-based solving remain open.
 
 The worker loads the checked-in JavaScript built from
 `tools/sketch-constraints/solver.dart` with Dart 3.12.2. Run

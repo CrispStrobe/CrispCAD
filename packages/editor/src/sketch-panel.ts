@@ -215,11 +215,15 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    return {kind:'circle',id,radius:scalar(radius.value),segments:profile?.kind==='circle'?profile.segments:64,...singleDxfLayer,
     ...(profile?.kind==='circle'&&profile.center||location.some(Boolean)?{center:location}:{})};
   }
-  const readForm=()=>({
-   sketch:{name:name.value.trim(),plane:plane.value as SketchPlane,profile:definition()},
+  const readForm=(retain=false)=>{
+   const profile=definition();
+   const retained=retain&&!linked&&profile.kind==='outline'?{...profile,...outlineConstraints.forSave(profile.points)}:profile;
+   return {
+   sketch:{name:name.value.trim(),plane:plane.value as SketchPlane,profile:retained},
    extrusion:{distance:scalar(length.value),symmetric:symmetric.checked},
    revolution:{angle:scalar(sweep.value),axisOffset:automatic.checked?undefined:scalar(axis.value)}
-  });
+   };
+  };
   function applyDraft(target:CadSession,{sketch,extrusion,revolution}:ReturnType<typeof readForm>,position?:[number,number,number]){
    if(featureId){
     if(revolving)target.editRevolution(featureId,{sketch,...revolution});
@@ -491,6 +495,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   let draftRevision=0;
   const refreshDraft=()=>{draftRevision++;draw();};
   const outlineConstraints=mountOutlineConstraintControls(form,dialog,{
+   initial:profile?.kind==='outline'?profile:undefined,
    visible:()=>!linked&&kind.value==='outline',
    active:()=>!disposed&&dialog.open&&dialog.firstChild===header,
    available:()=>!busy&&!drag&&session.state.revision===expected,
@@ -502,7 +507,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     return profile.points;
    },
    readLength:value=>{
-    const length=featureValue(scalar(value),doc);
+    const length=featureValue(typeof value==='string'?scalar(value):value,doc);
     if(length<.01||length>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));
     return length;
    },
@@ -521,6 +526,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    setTrimPicking(0);
    try{
     const snapshot=readForm();
+    if(snapshot.sketch.profile.kind==='outline'&&outlineConstraints.hasConstraints)throw new Error(t('Clear outline constraints before trimming or offsetting.'));
     const profile=trimSketchProfile({version:1,id:'trim-preview',...snapshot.sketch},doc,
      parsePoint(trimStart.value),parsePoint(trimEnd.value),trimSide.value==='left'?'left':'right');
     previewShape({...snapshot,sketch:{...snapshot.sketch,profile}});
@@ -555,6 +561,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     let message='';
     try{
      const snapshot=readForm();
+     if(snapshot.sketch.profile.kind==='outline'&&outlineConstraints.hasConstraints)throw new Error(t('Clear outline constraints before trimming or offsetting.'));
      const shifted=await offsetSketch({version:1,id:'offset-preview',...snapshot.sketch},
       {parametric:doc.parametric},featureValue(scalar(offsetInput.value),doc));
      if(!active())return;
@@ -576,7 +583,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   }
   const apply=element('button',t(featureId?'Apply sketch changes':revolving?'Create revolution':'Create extrusion'));apply.className='primary';
   apply.onclick=async()=>{if(busy||outlineConstraints.pending)return;const ticket=epoch;busy=true;apply.disabled=true;try{
-   const snapshot=readForm();
+   const snapshot=readForm(true);
    if(session.state.revision!==expected)throw new Error(t('The model changed. Close and reopen this dialog before applying.'));
    const candidate=draft(snapshot);const geometry=await evaluate(candidate.document);const created=geometry.bodies.find(body=>body.id===candidate.id);if(disposed||epoch!==ticket||!dialog.open)return;
    if(session.state.revision!==expected)throw new Error(t('The model changed while checking geometry. Close and reopen this dialog.'));
@@ -602,6 +609,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     },
     read:(drawing,assumeMm,layers)=>drawing.outline(assumeMm,layers),
     imported:(imported,fileName)=>{
+     if(outlineConstraints.hasConstraints)throw new Error(t('Clear outline constraints before importing another profile.'));
      const id='dxf-preview';
      evaluateExtrusion({kind:'extrusion',featureVersion:1,id,sketchId:id,distance:1,symmetric:false},{
       ...doc,sketches:{[id]:{version:1,id,name:'DXF',plane:'XY',profile:imported}}

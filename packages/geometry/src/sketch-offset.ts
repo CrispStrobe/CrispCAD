@@ -5,6 +5,8 @@ import {constantDxfWidth,evaluateSketch,newId,offsetPositionExpression,retainDra
 import type {CadDocument,FeatureScalar,PlanarSketch,SketchLoop,SketchProfile} from '@brickwright/cad-core';
 
 export function offsetSketchProfile(module:ManifoldToplevel,sketch:PlanarSketch,context:Pick<CadDocument,'parametric'>,distance:number):SketchProfile{
+ if(sketch.profile.kind==='outline'&&sketch.profile.relations!==undefined)throw new Error(t('Clear outline constraints before trimming or offsetting.'));
+
  if(!Number.isFinite(distance)||Math.abs(distance)<.00001||Math.abs(distance)>100000)
   throw new Error(t('Offset magnitude must be between 0.00001 and 100000 mm.'));
  const before=evaluateSketch(sketch,context);

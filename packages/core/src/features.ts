@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
+import {outlineRelationsForSolve} from './outline-relations.js';
 import {checkDrawingVertexIds} from './drawing-sheet.js';
 import {isSketchPoint,sketchOutline,sketchPath} from './sketch-outline.js';
 import {evaluateSketchRegion} from './sketch-region.js';
@@ -215,7 +216,13 @@ export function checkFeatures(doc:CadDocument) {
       if(doc.version<15)throw new Error(t('Open sketch paths require document version 15'));
       if(doc.version<28&&sketch.profile.segmentConstraints!==undefined)throw new Error(t('Path segment constraints require document version 28'));
       if(doc.version<16&&(sketch.profile.anchors!==undefined||sketch.profile.vertexIds!==undefined))throw new Error(t('Path point locks require document version 16'));
-    }evaluateSketch(sketch,doc);checkDrawingVertexIds(sketch.profile,doc.version);}}
+    }
+    evaluateSketch(sketch,doc);checkDrawingVertexIds(sketch.profile,doc.version);
+    if(sketch.profile.kind==='outline'&&sketch.profile.relations!==undefined){
+      if(doc.version<31)throw new Error(t('Outline constraints require document version 31'));
+      outlineRelationsForSolve(sketch.profile,length=>featureValue(length,doc));
+    }
+   }}
   for(const node of Object.values(doc.nodes)){
     if(node.kind==='extrusion'){if(doc.version<3)throw new Error(t('Extrusion features require document version 3'));evaluateExtrusion(node,doc);}
     else if(node.kind==='mirror')evaluateMirror(node,doc);
@@ -232,6 +239,7 @@ export function sketchExpressions(sketch:PlanarSketch):string[] {
     profile.kind==='circle'?[profile.radius]:
     profile.kind==='path'?[...(profile.anchors??[]).flatMap(anchor=>[anchor.x,anchor.y]),
       ...(profile.segmentConstraints??[]).flatMap(constraint=>[constraint.distance,constraint.direction])]:
+    profile.kind==='outline'?(profile.relations??[]).flatMap(relation=>relation.kind==='length'?[relation.length]:[]):
     profile.kind==='region'?profile.loops.flatMap(loop=>loop.kind==='circle'?[...loop.center,loop.radius]:[]):[];
   return values.filter((value):value is string=>typeof value==='string');
 }
@@ -252,6 +260,8 @@ export function rewriteSketchExpressions(sketch:PlanarSketch,rewrite:(s:string)=
       constraint.distance=transform(constraint.distance);
       constraint.direction=transform(constraint.direction);
     }
+  }else if(profile.kind==='outline'){
+    for(const relation of profile.relations??[])if(relation.kind==='length')relation.length=transform(relation.length);
   }else if(profile.kind==='region'){
     for(const loop of profile.loops){
       if(loop.kind!=='circle')continue;

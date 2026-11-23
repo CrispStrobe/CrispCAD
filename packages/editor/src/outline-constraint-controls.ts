@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {t} from '@brickwright/cad-core';
-import type {SketchPoint} from '@brickwright/cad-core';
-import {solveOutline} from './outline-constraint-solve.js';
-import type {OutlineConstraint} from './outline-constraint-solve.js';
+import {maxConstrainedOutlinePoints,maxOutlineRelations,newId,outlineRelationsForSolve,t} from '@brickwright/cad-core';
+import type {FeatureScalar,OutlineRelation,SketchOutlineProfile,SketchPoint} from '@brickwright/cad-core';
+import {solveOutline,verifyOutlineSolve} from './outline-constraint-solve.js';
 
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{
  const node=document.createElement(tag);
  if(text!==undefined)node.textContent=text;
  return node;
 };
-type OutlineConstraintKind=OutlineConstraint['kind'];
+type OutlineConstraintKind=OutlineRelation['kind'];
 type DraftConstraint={kind:OutlineConstraintKind; edge:number; other:number; expression:string};
 const pairKinds=new Set(['parallel','perpendicular','equal']);
 const labels=()=>{
@@ -18,12 +17,13 @@ const labels=()=>{
 };
 
 export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialogElement,options:{
+ initial?:SketchOutlineProfile;
  visible:()=>boolean;
  active:()=>boolean;
  available:()=>boolean;
  revision:()=>number;
  read:()=>SketchPoint[];
- readLength:(value:string)=>number;
+ readLength:(value:FeatureScalar)=>number;
  apply:(points:SketchPoint[])=>void;
  pending:(solving:boolean)=>void;
 }){
@@ -38,7 +38,7 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   return wrapper;
  };
  panel.append(element('summary',t('Outline constraints')),
-  element('p',t('Point 1 stays fixed. Solve updates the draft points. Save the sketch to keep the resulting shape.')));
+  element('p',t('Point 1 stays fixed. Lengths measure from vertex to vertex. Save keeps the constraints and solved points.')));
  for(const [value,label] of Object.entries(labels()))constraint.add(new Option(label,value));
  field(t('Constraint'),constraint);
  field(t('Constrained segment'),edge);
@@ -46,34 +46,65 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
  const lengthLabel=field(t('Segment length (mm)'),length);
  length.maxLength=160;
  const add=element('button',t('Add constraint')),solve=element('button',t('Solve outline'));
- add.type=solve.type='button';
+ const cancel=element('button',t('Cancel constraint edit')),clear=element('button',t('Clear constraints'));
+ add.type=solve.type=cancel.type=clear.type='button';
  const list=element('ul');
  list.className='drawing-dimension-list';
  const status=element('p');
  status.setAttribute('role','status');
  status.setAttribute('aria-label',t('Outline constraint status'));
- panel.append(add,list,solve,status);
+ panel.append(add,cancel,list,solve,clear,status);
  form.append(panel);
- let count=0,solving=false;
- const constraints:DraftConstraint[]=[];
+ const initial=options.initial;
+ let vertexIds=initial?.vertexIds?.slice(),count=0,solving=false,wrongCount=false,checkedInitial=false,editIndex:number|undefined;
+ const topologyMessage=t('Restore the original point count or clear the outline constraints.');
+ const constraints:DraftConstraint[]=initial?.relations?.length?
+  outlineRelationsForSolve(initial,()=>1).map((rule,index)=>{
+   const saved=initial.relations![index];
+   return {kind:rule.kind,edge:rule.edge,other:'other' in rule?rule.other:0,
+    expression:saved.kind==='length'?String(saved.length):''};
+  }):[];
+ if(constraints.length)panel.open=true;
+
  const segmentLabel=(index:number)=>t`Segment ${index+1}–${(index+1)%count+1}`;
  const refreshButtons=()=>{
   otherLabel.hidden=!pairKinds.has(constraint.value);
   lengthLabel.hidden=constraint.value!=='length';
-  add.disabled=solving||count<3||count>32||constraints.length>=48;
-  solve.disabled=solving||count<3||count>32||!constraints.length;
+  const ready=count>=3&&count<=maxConstrainedOutlinePoints&&!wrongCount;
+  add.textContent=t(editIndex===undefined?'Add constraint':'Update constraint');
+  add.disabled=solving||!ready||editIndex===undefined&&constraints.length>=maxOutlineRelations;
+  solve.disabled=solving||!ready||!constraints.length;
+  cancel.hidden=editIndex===undefined;
+  cancel.disabled=clear.disabled=solving;
+  clear.hidden=!constraints.length;
   for(const input of [constraint,edge,other,length])input.disabled=solving;
-  for(const remove of list.querySelectorAll('button'))remove.disabled=solving;
+  for(const button of list.querySelectorAll('button'))button.disabled=solving;
  };
  function redrawList(){
   list.replaceChildren(...constraints.map((row,index)=>{
-   const entry=element('li'),remove=element('button',t('Remove'));
+   const entry=element('li'),edit=element('button',t('Edit')),remove=element('button',t('Remove'));
    const label=labels()[row.kind],segment=segmentLabel(row.edge);
    const detail=row.kind==='length'?row.expression:pairKinds.has(row.kind)?segmentLabel(row.other):'';
-   entry.append(element('span',[label,segment,detail].filter(Boolean).join(' · ')),remove);
-   remove.type='button';
+   entry.append(element('span',[label,segment,detail].filter(Boolean).join(' · ')),edit,remove);
+   edit.type=remove.type='button';
+   edit.setAttribute('aria-label',t`Edit constraint ${index+1}`);
    remove.setAttribute('aria-label',t`Remove constraint ${index+1}`);
-   remove.onclick=()=>{constraints.splice(index,1);status.textContent='';redrawList();};
+   edit.onclick=()=>{
+    editIndex=index;
+    constraint.value=row.kind;
+    edge.value=String(row.edge);
+    other.value=String(row.other);
+    length.value=row.expression;
+    refreshButtons();
+    constraint.focus();
+   };
+   remove.onclick=()=>{
+    constraints.splice(index,1);
+    editIndex=undefined;
+    status.textContent='';
+    refresh();
+    redrawList();
+   };
    return entry;
   }));
   refreshButtons();
@@ -83,22 +114,56 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   if(panel.hidden)return;
   let size:number;
   try{size=options.read().length;}catch{size=0;}
-  if(size!==count){
-   const old=count,previousEdge=edge.value,previousOther=other.value;
-   count=size;
+  wrongCount=constraints.length>0&&size!==vertexIds?.length;
+  if(wrongCount)status.textContent=topologyMessage;
+  else if(status.textContent===topologyMessage)status.textContent='';
+  const next=constraints.length?vertexIds!.length:size;
+  if(next!==count){
+   const previousEdge=edge.value,previousOther=other.value;
+   count=next;
    for(const select of [edge,other]){
     select.replaceChildren(...Array.from({length:count},(_,index)=>new Option(segmentLabel(index),String(index))));
    }
    if(Number(previousEdge)<count&&previousEdge)edge.value=previousEdge;
    if(Number(previousOther)<count&&previousOther)other.value=previousOther;
    else if(count>1)other.value='1';
-   if(old&&constraints.length){
-    constraints.length=0;
-    status.textContent=t('The number of points changed. Add the outline constraints again.');
-   }
    redrawList();
   }
+  if(!checkedInitial&&initial?.relations){
+   checkedInitial=true;
+   try{forSave(initial.points);}
+   catch{status.textContent=t('Solve the outline to use the current dimensions.');}
+  }
   refreshButtons();
+ }
+ cancel.onclick=()=>{editIndex=undefined;refreshButtons();};
+ clear.onclick=()=>{
+  constraints.length=0;
+  editIndex=undefined;
+  status.textContent='';
+  refresh();
+  redrawList();
+ };
+ function retainedRelations():Pick<SketchOutlineProfile,'vertexIds'|'relations'>{
+  const ids=vertexIds!;
+  const segment=(index:number):[string,string]=>[ids[index],ids[(index+1)%ids.length]];
+  const relations=constraints.map(({kind,edge,other,expression}):OutlineRelation=>{
+   if(kind==='length')return {kind,edge:segment(edge),length:expression};
+   if(kind==='horizontal'||kind==='vertical')return {kind,edge:segment(edge)};
+   return {kind,edge:segment(edge),other:segment(other)};
+  });
+  return {vertexIds:ids,relations};
+ }
+ function request(points:SketchPoint[]){
+  if(points.length!==vertexIds?.length)throw new Error(topologyMessage);
+  return {points,constraints:outlineRelationsForSolve({points,...retainedRelations()},options.readLength)};
+ }
+ function forSave(points:SketchPoint[]){
+  if(!constraints.length)return {};
+  const input=request(points);
+  try{verifyOutlineSolve(input,{status:'solved',points,degrees:null});}
+  catch{throw new Error(t('Solve the outline before saving its constraints.'));}
+  return retainedRelations();
  }
  for(const event of ['input','change'])panel.addEventListener(event,event=>event.stopPropagation());
  constraint.onchange=refreshButtons;
@@ -112,7 +177,10 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
    try{options.readLength(row.expression);}
    catch(error){status.textContent=error instanceof Error?error.message:String(error);return;}
   }
-  constraints.push(row);
+  if(!constraints.length&&vertexIds?.length!==count)vertexIds=Array.from({length:count},newId);
+  if(editIndex===undefined)constraints.push(row);
+  else constraints[editIndex]=row;
+  editIndex=undefined;
   status.textContent='';
   redrawList();
  };
@@ -126,13 +194,7 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   refreshButtons();
   status.textContent=t('Solving outline…');
   try{
-   const points=options.read();
-   const relations=constraints.map(({kind,edge,other,expression}):OutlineConstraint=>{
-    if(kind==='length')return {kind,edge,length:options.readLength(expression)};
-    if(kind==='horizontal'||kind==='vertical')return {kind,edge};
-    return {kind,edge,other};
-   });
-   const result=await solveOutline({points,constraints:relations},controller.signal);
+   const result=await solveOutline(request(options.read()),controller.signal);
    if(!options.active())return;
    if(revision!==options.revision()||!options.available()){
     throw new Error(t('The sketch changed during the solve. Solve the outline again.'));
@@ -149,5 +211,5 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
    if(options.active()){options.pending(false);refreshButtons();}
   }
  };
- return {refresh,get pending(){return solving;}};
+ return {refresh,forSave,get pending(){return solving;},get hasConstraints(){return constraints.length>0;}};
 }

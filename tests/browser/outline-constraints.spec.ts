@@ -1,12 +1,23 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {expect,test} from '@playwright/test';
 
-test('solves an outline draft, rejects a conflict, and commits one undoable shape',async({page,hasTouch})=>{
+test('solves, retains and edits outline relations with Undo',async({page,hasTouch})=>{
  const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
  const workers:string[]=[];
  page.on('worker',worker=>workers.push(worker.url()));
  await page.goto('/');
  await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ const openParameters=page.getByRole('button',{name:'Parameters',exact:true});
+ const parameters=page.getByRole('dialog',{name:'Model parameters'});
+ const expression=parameters.getByLabel('Parameter expression',{exact:true});
+ const applyParameters=parameters.getByRole('button',{name:'Apply parameters',exact:true});
+ const closeParameters=parameters.getByRole('button',{name:'Close parameters',exact:true});
+ await press(openParameters);
+ await press(parameters.getByRole('button',{name:'Add parameter',exact:true}));
+ await parameters.getByLabel('Parameter name',{exact:true}).fill('reach');
+ await expression.fill('40');
+ await press(applyParameters);
+ await press(closeParameters);
  await press(page.getByRole('button',{name:'Sketch',exact:true}));
  const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
  await sketch.getByLabel('Profile',{exact:true}).selectOption('outline');
@@ -32,13 +43,14 @@ test('solves an outline draft, rejects a conflict, and commits one undoable shap
  await append('vertical',1);
  await append('parallel',0,2);
  await append('perpendicular',2,3);
- await append('length',0,'80 mm / 2');
+ await append('length',0,'reach');
  await append('equal',0,2);
  await append('length',1,'20');
  await press(solve);
  await expect(status).toContainText('Fully constrained');
- const shape='0, 0\n40, 0\n40, 20\n0, 20';
- await expect(coordinates).toHaveValue(shape);
+ const shape=await coordinates.inputValue();
+ const rounded=(value:string)=>value.split('\n').map(row=>row.split(',').map(value=>Math.round(Number(value)*1e6)/1e6+0));
+ expect(rounded(shape)).toEqual([[0,0],[40,0],[40,20],[0,20]]);
  expect(workers.some(url=>url.includes('outline-constraints.worker'))).toBe(true);
 
  await append('length',0,'45');
@@ -50,11 +62,40 @@ test('solves an outline draft, rejects a conflict, and commits one undoable shap
  await press(sketch.getByRole('button',{name:'Create extrusion',exact:true}));
  await expect(sketch).toBeHidden();
  await expect(page.getByTestId('object-name')).toHaveCount(1);
+ await press(openParameters);
+ await expression.fill('60');
+ await press(applyParameters);
+ await press(closeParameters);
  const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
  if(!await edit.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
  await press(edit);
  await expect(coordinates).toHaveValue(shape);
+ await expect(status).toContainText('Solve the outline to use the current dimensions');
+ const apply=sketch.getByRole('button',{name:'Apply sketch changes',exact:true});
+ await press(apply);
+ await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('Solve the outline before saving');
+ await coordinates.fill(shape+'\n-10, 10');
+ await expect(solve).toBeDisabled();
+ await expect(status).toContainText('Restore the original point count');
+ await expect(sketch.getByRole('button',{name:'Edit constraint 5',exact:true})).toBeVisible();
+ await coordinates.fill(shape);
+ await press(sketch.getByRole('button',{name:'Edit constraint 7',exact:true}));
+ await expect(length).toHaveValue('20');
+ await length.fill('25');
+ await press(sketch.getByRole('button',{name:'Update constraint',exact:true}));
+ await press(solve);
+ await expect(status).toContainText('Fully constrained');
+ expect(rounded(await coordinates.inputValue())).toEqual([[0,0],[60,0],[60,25],[0,25]]);
+ await press(apply);
+ await expect(sketch).toBeHidden();
+ const undo=page.getByRole('button',{name:'Undo',exact:true});
+ await press(undo);
+ await press(edit);
+ await expect(coordinates).toHaveValue(shape);
+ await press(sketch.getByRole('button',{name:'Edit constraint 7',exact:true}));
+ await expect(length).toHaveValue('20');
  await press(sketch.getByRole('button',{name:'Close sketch',exact:true}));
- await press(page.getByRole('button',{name:'Undo',exact:true}));
+ await press(undo);
+ await press(undo);
  await expect(page.getByTestId('object-name')).toHaveCount(0);
 });

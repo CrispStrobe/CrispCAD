@@ -1,5 +1,18 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "Solve the outline to use the current dimensions.": "Löse die Kontur, um die aktuellen Maße zu übernehmen.",
+  "Invalid outline constraint definitions.": "Ungültige Konturbedingungen.",
+  "Outline constraints are available on single outlines.": "Konturbedingungen sind für einzelne Konturen verfügbar.",
+  "Outline constraints require document version 31": "Konturbedingungen erfordern Dokumentversion 31",
+  "Point 1 stays fixed. Lengths measure from vertex to vertex. Save keeps the constraints and solved points.": "Punkt 1 bleibt fest. Längen werden zwischen Eckpunkten gemessen. Beim Speichern bleiben die Bedingungen und gelösten Punkte erhalten.",
+  "Cancel constraint edit": "Bearbeitung der Bedingung abbrechen",
+  "Clear constraints": "Bedingungen löschen",
+  "Restore the original point count or clear the outline constraints.": "Stelle die ursprüngliche Punktzahl wieder her oder lösche die Konturbedingungen.",
+  "Edit constraint {0}": "Bedingung {0} bearbeiten",
+  "Update constraint": "Bedingung aktualisieren",
+  "Solve the outline before saving its constraints.": "Löse die Kontur, bevor du ihre Bedingungen speicherst.",
+  "Clear outline constraints before trimming or offsetting.": "Lösche die Konturbedingungen vor dem Trimmen oder Versetzen.",
+  "Clear outline constraints before importing another profile.": "Lösche die Konturbedingungen, bevor du ein anderes Profil importierst.",
   "Outline constraints": "Konturbedingungen",
   "Point 1 stays fixed. Solve updates the draft points. Save the sketch to keep the resulting shape.": "Punkt 1 bleibt fest. Das Lösen aktualisiert die Entwurfspunkte. Speichere die Skizze, um die Form zu übernehmen.",
   "Constrained segment": "Segment für Bedingung",

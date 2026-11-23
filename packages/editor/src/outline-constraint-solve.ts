@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {isSketchPoint,t} from '@brickwright/cad-core';
-import type {SketchPoint} from '@brickwright/cad-core';
+import type {OutlineRule,SketchPoint} from '@brickwright/cad-core';
 
-export type OutlineConstraint={kind:'horizontal'|'vertical';edge:number}|
- {kind:'length';edge:number;length:number}|
- {kind:'parallel'|'perpendicular'|'equal';edge:number;other:number};
+export type OutlineConstraint=OutlineRule<number,number>;
 export type OutlineSolveRequest={points:SketchPoint[];constraints:OutlineConstraint[]};
 export type OutlineSolveResult={points:SketchPoint[];degrees:number|null};
 

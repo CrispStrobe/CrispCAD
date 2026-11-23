@@ -16,6 +16,8 @@ const epsilon=1e-8;
 const tau=2*Math.PI;
 
 export function trimSketchProfile(sketch:PlanarSketch,context:Pick<CadDocument,'parametric'>,a:SketchPoint,b:SketchPoint,keep:'left'|'right'):SketchProfile{
+ if(sketch.profile.kind==='outline'&&sketch.profile.relations!==undefined)throw new Error(t('Clear outline constraints before trimming or offsetting.'));
+
  const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
  if(!isSketchPoint(a)||!isSketchPoint(b)||length<.00001)throw new Error(t('Choose two distinct trim points in the sketch.'));
  const ux=dx/length,uy=dy/length;
