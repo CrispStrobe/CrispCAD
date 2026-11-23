@@ -18,6 +18,7 @@ test('import an inch DXF as an open guide, export mm and reimport the signed arc
  const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
  await page.goto('/');
  await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await press(page.locator('summary[aria-label="More sketch tools"]'));
  const open=page.getByRole('button',{name:'Sketch path',exact:true});
  await press(open);
  const path=page.getByRole('dialog',{name:'Sketch path',exact:true});

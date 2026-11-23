@@ -10,7 +10,11 @@ test('mirror an editable bracket, handle invalid input, and reopen the retained 
  const ready=()=>expect(root).toHaveAttribute('data-state','ready');
  const mirror=page.getByRole('button',{name:'Mirror',exact:true});
  await ready();
+ const editMenu=page.locator('summary[aria-label="Edit menu"]');
+ await expect(mirror).toBeHidden();
+ await press(editMenu);
  await expect(mirror).toBeDisabled();
+ await press(editMenu);
  await press(page.getByRole('button',{name:'Sketch',exact:true}));
  const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
  await sketch.getByLabel('Sketch name').fill('Bracket section');
@@ -19,6 +23,7 @@ test('mirror an editable bracket, handle invalid input, and reopen the retained 
  await press(sketch.getByRole('button',{name:'Create extrusion'}));
  await expect(sketch).toBeHidden();
  await ready();
+ await press(editMenu);
  await press(mirror);
  const dialog=page.getByRole('dialog',{name:'Mirror body'});
  const offset=dialog.getByLabel('Plane offset (mm)');

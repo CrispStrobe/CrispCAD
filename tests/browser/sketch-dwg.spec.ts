@@ -55,6 +55,7 @@ test('opens a unitless guide after confirmation and exports it in millimetres',a
  const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
  await page.goto('/');
  await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await press(page.locator('summary[aria-label="More sketch tools"]'));
  await press(page.getByRole('button',{name:'Sketch path',exact:true}));
  const sketch=page.getByRole('dialog',{name:'Sketch path',exact:true});
  await press(sketch.getByText('DXF or DWG path',{exact:true}));

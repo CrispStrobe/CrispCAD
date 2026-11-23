@@ -120,4 +120,6 @@ export const editorStyle = `
 .sketch-fields textarea{width:100%;min-width:0;max-width:100%;resize:vertical;padding:6px;background:var(--panel);color:inherit;border:1px solid var(--line);border-radius:5px;font:12px ui-monospace,monospace}
 .sketch-expressions input[type=file]{display:block;font-size:11px;padding:4px 0}
 .sketch-expressions>label.sketch-toggle{margin-block:6px}
+.sketch-tools>summary{display:grid;place-items:center;width:26px;height:34px;padding:4px;font-size:15px}
+@media(pointer:coarse){.sketch-tools>summary{width:34px;height:40px}}
 `;

@@ -8,6 +8,7 @@ test('create and re-edit a revolved shaft, validate the axis, undo and reopen',a
  const root=page.locator('#cad-root');
  const ready=()=>expect(root).toHaveAttribute('data-state','ready');
  await ready();
+ await press(page.locator('summary[aria-label="More sketch tools"]'));
  await press(page.getByRole('button',{name:'Revolve',exact:true}));
  const dialog=page.getByRole('dialog',{name:'Sketch and revolution'});
  await press(dialog.getByRole('button',{name:'About sketching and revolution'}));

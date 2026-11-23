@@ -6,6 +6,7 @@ test('persist point lock expressions, export their geometry, and unlock without 
  const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
  await page.goto('/');
  await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await press(page.locator('summary[aria-label="More sketch tools"]'));
  await press(page.getByRole('button',{name:'Sketch path',exact:true}));
  const path=page.getByRole('dialog',{name:'Sketch path',exact:true});
  await path.getByLabel('Sketch name').fill('Locked guide');
@@ -61,6 +62,7 @@ test('chain segment constraints through a parameter, DXF export, and Undo',async
  const save=path.getByRole('button',{name:'Save path',exact:true});
  const constrain=(length:string,angle:string)=>distance.fill(length).then(()=>direction.fill(angle))
   .then(()=>press(path.getByRole('button',{name:'Constrain segment',exact:true})));
+ await press(page.locator('summary[aria-label="More sketch tools"]'));
  await press(page.getByRole('button',{name:'Sketch path',exact:true}));
  await path.getByLabel('Sketch name').fill('Driven guide');
  await press(path.getByText('Segment constraints',{exact:true}));

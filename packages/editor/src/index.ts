@@ -129,8 +129,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   let toolParent: HTMLElement = toolbar;
   const menus:HTMLDetailsElement[]=[];
   function toolGroup(label: string, className = '') {
-    if(['File','Edit','Combine'].includes(label)){
-      const group=el('details',`command-menu ${className}`);const trigger=el('summary','',`${t(label)} ▾`);trigger.setAttribute('aria-label',t`${t(label)} menu`);if(label!=='File'){trigger.textContent='';const icon=toolIcon(label==='Combine'?'Union':'Edit');if(icon)trigger.append(icon);trigger.title=t(label);}
+    if(['File','Edit','Combine','More sketch tools'].includes(label)){
+      const group=el('details',`command-menu ${className}`);const trigger=el('summary','',`${t(label)} ▾`);trigger.setAttribute('aria-label',label==='More sketch tools'?t(label):t`${t(label)} menu`);if(label!=='File'){trigger.textContent='';if(label==='More sketch tools')trigger.append(el('span','','▾'));else{const icon=toolIcon(label==='Combine'?'Union':'Edit');if(icon)trigger.append(icon);}trigger.title=t(label);}
       const tools=el('div','command-popup');group.append(trigger,tools);toolbar.append(group);group.hidden=label==='File'&&(options.nativeMenus===true||options.embedded===true);toolParent=tools;menus.push(group);
       group.addEventListener('toggle',()=>{if(group.open)menus.forEach(menu=>{if(menu!==group)menu.open=false;});});
       tools.addEventListener('click',event=>{if((event.target as Element).closest('button:not(:disabled)'))group.open=false;});return;
@@ -151,27 +151,24 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const parametersPanel=mountParametersPanel(shell,session);
   const sketchPanel=mountSketchPanel(shell,session,doc=>client.evaluate(doc),client.offsetSketch,async()=>{await whenIdle();viewport.frame();},()=>grid);
   button('Sketch',()=>sketchPanel.open(),toolbar,'compact-icon').title=t('Create a dimensioned sketch and extrusion');
+  toolGroup('More sketch tools','sketch-tools');
   const pathPanel=mountPathPanel(shell,session,()=>{
     if(getComputedStyle(tree).display==='none')togglePanel(tree,partsToggle);
   },options.onExport);
-  button('Sketch path',()=>pathPanel.open(),toolbar,'compact-icon').title=t('Create an open line and arc path');
-  button('Revolve',()=>sketchPanel.openRevolution(),toolbar,'compact-icon').title=t('Revolve a sketch around an axis');
+  button('Sketch path',()=>pathPanel.open()).title=t('Create an open line and arc path');
+  button('Revolve',()=>sketchPanel.openRevolution()).title=t('Revolve a sketch around an axis');
   const mirrorPanel=mountMirrorPanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();});
   const openMirror=()=>{
     const [id]=session.state.selection;
     if(session.state.selection.length!==1)throw new Error(t('Select one top-level body to mirror'));
     mirrorPanel.open(id);
   };
-  const mirrorButton=button('Mirror',openMirror,toolbar,'compact-icon');
-  mirrorButton.title=t('Mirror a selected body across a plane');
   const patternPanel=mountPatternPanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();});
   const openPattern=()=>{
     const [id]=session.state.selection;
     if(session.state.selection.length!==1)throw new Error(t('Select one top-level body to pattern'));
     patternPanel.open(id);
   };
-  const patternButton=button('Pattern',openPattern,toolbar,'compact-icon');
-  patternButton.title=t('Repeat a selected body in a line or circle');
   const palette=mountCommandPalette(shell,()=>{
     const selection=session.state.selection,node=selection.length===1?session.state.document.nodes[selection[0]]:undefined;
     return {...commandState(),canWrapBody:!patternButton.disabled,canDrop:!dropButton.disabled,
@@ -265,6 +262,10 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   gridSelect.addEventListener('change', () => { grid = Number(gridSelect.value); viewport.setGrid(grid); }); gridLabel.append(gridSelect); const fineLabel=el('label','numbers-toggle',t('Fine')),fineToggle=el('input');fineToggle.type='checkbox';fineToggle.setAttribute('aria-label',t('Fine adjustments'));fineLabel.title=t('Fine adjustments: Shift for move/rotate; Ctrl/⌘ for resize. Shift resizes proportionally; Alt resizes about the center.');fineToggle.onchange=()=>viewport.setFine(fineToggle.checked);fineLabel.prepend(fineToggle);planeBar.append(numbersLabel,fineLabel,gridLabel); viewHost.append(planeBar);
   const undoButton = button('Undo', () => session.undo(),toolbar,'compact-icon'); const redoButton = button('Redo', () => session.redo(),toolbar,'compact-icon');
   toolGroup('Edit');
+  const mirrorButton=button('Mirror',openMirror);
+  mirrorButton.title=t('Mirror a selected body across a plane');
+  const patternButton=button('Pattern',openPattern);
+  patternButton.title=t('Repeat a selected body in a line or circle');
   const cutButton=button('Cut',()=>copySelection(true));const copyButton=button('Copy',()=>copySelection());const pasteButton=button('Paste',()=>pasteSelection());
   const duplicateButton = button('Duplicate', () => executeCommand('duplicate')); const deleteButton = button('Delete', () => executeCommand('delete'));
   const contextActions=el('div','context-actions');contextActions.setAttribute('role','group');contextActions.setAttribute('aria-label',t('Selection actions'));toolbar.append(contextActions);for(const [label,command] of [['Copy','copy'],['Duplicate','duplicate'],['Delete','delete']] as const)button(label,()=>executeCommand(command),contextActions,'compact-icon');
@@ -616,7 +617,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     else if (command && key === 'v') action=()=>pasteSelection();
     else if ((command && key === 'k') || (!command && event.shiftKey && key === 'a')) action = () => picker.open(true);
     else if (key === 'delete' || key === 'backspace') action = () => session.remove();
-    else if (key === 'escape') action = () => {const cancelled=viewport.interacting;cancelShapePlacement(); viewport.cancelTransform();menus.forEach(menu=>menu.open=false);if(cancelled)return;if(mode!=='select')setMode('select');else session.select([]); };
+    else if (key === 'escape') action = () => {const openMenu=menus.find(menu=>menu.open);if(openMenu){openMenu.open=false;openMenu.querySelector('summary')?.focus();return;}const cancelled=viewport.interacting;cancelShapePlacement(); viewport.cancelTransform();menus.forEach(menu=>menu.open=false);if(cancelled)return;if(mode!=='select')setMode('select');else session.select([]); };
     else if (key === 'v') action = () => setMode('select');
     else if (!command&&key === 'f') action = () => viewport.frame(undefined,!event.shiftKey);
     else if (!command&&key==='o')action=()=>projectionButton.click();

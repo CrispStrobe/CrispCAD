@@ -6,6 +6,7 @@ test('retain and trim an open path, snap to it, then close it and extrude',async
  await page.goto('/');
  const ready=()=>expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  await ready();
+ await press(page.locator('summary[aria-label="More sketch tools"]'));
  await press(page.getByRole('button',{name:'Sketch path',exact:true}));
  const path=page.getByRole('dialog',{name:'Sketch path',exact:true});
  await path.getByLabel('Sketch name').fill('Arc guide');

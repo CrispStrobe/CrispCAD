@@ -9,7 +9,11 @@ test('pattern a sketch into a row and bolt circle, then Undo and reopen',async({
  const ready=()=>expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  await ready();
  const pattern=page.getByRole('button',{name:'Pattern',exact:true});
+ const editMenu=page.locator('summary[aria-label="Edit menu"]');
+ await expect(pattern).toBeHidden();
+ await press(editMenu);
  await expect(pattern).toBeDisabled();
+ await press(editMenu);
  await press(page.getByRole('button',{name:'Sketch',exact:true}));
  const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
  await sketch.getByLabel('Profile',{exact:true}).selectOption('circle');
@@ -19,6 +23,7 @@ test('pattern a sketch into a row and bolt circle, then Undo and reopen',async({
  await expect(sketch).toBeHidden();
  await ready();
 
+ await press(editMenu);
  await press(pattern);
  const create=page.getByRole('dialog',{name:'Pattern body'});
  await create.getByLabel('Total instances').fill('2.5');
