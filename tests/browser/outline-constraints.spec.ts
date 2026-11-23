@@ -1,0 +1,60 @@
+// SPDX-License-Identifier: BSD-3-Clause
+import {expect,test} from '@playwright/test';
+
+test('solves an outline draft, rejects a conflict, and commits one undoable shape',async({page,hasTouch})=>{
+ const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
+ const workers:string[]=[];
+ page.on('worker',worker=>workers.push(worker.url()));
+ await page.goto('/');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await press(page.getByRole('button',{name:'Sketch',exact:true}));
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await sketch.getByLabel('Profile',{exact:true}).selectOption('outline');
+ const coordinates=sketch.getByLabel('Outline points X, Y (mm)');
+ await coordinates.fill('0, 0\n38, 3\n35, 22\n2, 20');
+ await press(sketch.getByText('Outline constraints',{exact:true}));
+ const kind=sketch.getByLabel('Constraint',{exact:true}),edge=sketch.getByLabel('Constrained segment');
+ const other=sketch.getByLabel('Second segment'),length=sketch.getByLabel('Segment length (mm)');
+ const add=sketch.getByRole('button',{name:'Add constraint',exact:true});
+ const solve=sketch.getByRole('button',{name:'Solve outline',exact:true});
+ const status=sketch.getByRole('status',{name:'Outline constraint status'});
+ const append=async(type:string,first:number,argument?:string|number)=>{
+  await kind.selectOption(type);
+  await edge.selectOption(String(first));
+  if(type==='length')await length.fill(String(argument));
+  else if(argument!==undefined)await other.selectOption(String(argument));
+  await press(add);
+ };
+ await append('horizontal',0);
+ await press(solve);
+ await expect(status).toContainText('Degrees of freedom: 5');
+ await coordinates.fill('0, 0\n38, 3\n35, 22\n2, 20');
+ await append('vertical',1);
+ await append('parallel',0,2);
+ await append('perpendicular',2,3);
+ await append('length',0,'80 mm / 2');
+ await append('equal',0,2);
+ await append('length',1,'20');
+ await press(solve);
+ await expect(status).toContainText('Fully constrained');
+ const shape='0, 0\n40, 0\n40, 20\n0, 20';
+ await expect(coordinates).toHaveValue(shape);
+ expect(workers.some(url=>url.includes('outline-constraints.worker'))).toBe(true);
+
+ await append('length',0,'45');
+ await press(solve);
+ await expect(status).toContainText('Could not solve');
+ await expect(coordinates).toHaveValue(shape);
+ await press(sketch.getByRole('button',{name:'Remove constraint 8',exact:true}));
+ await expect(page.getByTestId('object-name')).toHaveCount(0);
+ await press(sketch.getByRole('button',{name:'Create extrusion',exact:true}));
+ await expect(sketch).toBeHidden();
+ await expect(page.getByTestId('object-name')).toHaveCount(1);
+ const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
+ if(!await edit.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
+ await press(edit);
+ await expect(coordinates).toHaveValue(shape);
+ await press(sketch.getByRole('button',{name:'Close sketch',exact:true}));
+ await press(page.getByRole('button',{name:'Undo',exact:true}));
+ await expect(page.getByTestId('object-name')).toHaveCount(0);
+});

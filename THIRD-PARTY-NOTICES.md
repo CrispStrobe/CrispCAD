@@ -12,6 +12,10 @@ No Layerling code/assets/translations are included.
 
 Runtime dependencies:
 
+- dart_csp 2.4.0 (MIT) and the compiled Dart SDK runtime (BSD-3-Clause)
+  run in the outline constraint worker. Complete notices are in the CAD
+  editor package notice.
+
 - oxideav-step 0.0.1 and oxideav-ifc 0.0.4, MIT, bundled in the lazy STEP
   tessellation WebAssembly module. Complete licenses are in the CAD editor notice.
 

@@ -2,6 +2,7 @@ import {collectSketchSnaps,collectTangentSnaps,nearestSketchSnap,sketchSnapRefer
 import type {SketchSnap} from './sketch-snaps.js';
 import {formatSketchPoints as formatPoints, parseSketchOutline as parseOutline, parseSketchPoint as parsePoint, sketchDraggedBulge} from './sketch-point-entry.js';
 import {mountDxfImportControls} from './dxf-import-controls.js';
+import {mountOutlineConstraintControls} from './outline-constraint-controls.js';
 import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
@@ -254,6 +255,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const compact=(input:HTMLInputElement,icon:string)=>{const label=input.parentElement!;label.firstChild!.textContent='';label.classList.add('sketch-dimension');const picture=toolIcon(icon);if(picture)label.prepend(picture);input.title=input.getAttribute('aria-label')!;label.append(element('small','mm'));const caption=element('span',input.getAttribute('aria-label')!);caption.className='sketch-dimension-name';label.prepend(caption);};
   compact(width,'Sketch width');compact(depth,'Sketch depth');compact(radius,'Sketch radius');compact(length,'Extrude');
   function draw(){
+   outlineConstraints.refresh();
    widthHint.hidden=true;
    trimPanel.hidden=!!linked||!['outline','region'].includes(kind.value);
    if(trimPanel.hidden&&trimPicking)setTrimPicking(0);
@@ -398,7 +400,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     }
     preview.prepend(svg);
     preview.append(element('output',shape.angle!==undefined?t`${w.toLocaleString()} × ${h.toLocaleString()} mm · ${shape.angle.toLocaleString()}° sweep`:t`${w.toLocaleString()} × ${h.toLocaleString()} mm · ${shape.distance.toLocaleString()} mm extrusion`));status.textContent='';valid=true;
-   }catch(error){status.textContent=error instanceof Error&&'diagnostic' in error?(error as import('@brickwright/cad-core').FeatureEvaluationError).diagnostic.message:error instanceof Error?error.message:String(error);}apply.disabled=busy||!valid||!!drag;
+   }catch(error){status.textContent=error instanceof Error&&'diagnostic' in error?(error as import('@brickwright/cad-core').FeatureEvaluationError).diagnostic.message:error instanceof Error?error.message:String(error);}apply.disabled=busy||!valid||!!drag||outlineConstraints.pending;
   }
   preview.onpointerdown=event=>{
    const handle=(event.target as Element).closest<SVGElement>('[data-resize]'),svg=preview.querySelector('svg');
@@ -475,6 +477,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   };
   const endDrag=(event:PointerEvent)=>{
    if(!drag||event.pointerId!==drag.id)return;
+   draftRevision++;
    const {id,outlineEdit,kind}=drag;
    const restore=outlineEdit&&(event.type!=='pointerup'||!valid);
    const diagnostic=restore&&event.type==='pointerup'?status.textContent:null;
@@ -487,6 +490,31 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   preview.onpointerup=preview.onpointercancel=preview.onlostpointercapture=endDrag;
   let draftRevision=0;
   const refreshDraft=()=>{draftRevision++;draw();};
+  const outlineConstraints=mountOutlineConstraintControls(form,dialog,{
+   visible:()=>!linked&&kind.value==='outline',
+   active:()=>!disposed&&dialog.open&&dialog.firstChild===header,
+   available:()=>!busy&&!drag&&session.state.revision===expected,
+   revision:()=>draftRevision,
+   pending:solving=>{apply.disabled=solving||busy||!valid||!!drag;},
+   read:()=>{
+    const profile=definition();
+    if(profile.kind!=='outline')throw new Error(t('Select an outline first.'));
+    return profile.points;
+   },
+   readLength:value=>{
+    const length=featureValue(scalar(value),doc);
+    if(length<.01||length>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));
+    return length;
+   },
+   apply:points=>{
+    const snapshot=readForm(),{profile}=snapshot.sketch;
+    if(profile.kind!=='outline')throw new Error(t('Select an outline first.'));
+    const solved={...profile,points};
+    previewShape({...snapshot,sketch:{...snapshot.sketch,profile:solved}});
+    replaceProfileDraft(solved);
+    refreshDraft();
+   }
+  });
   form.addEventListener('input',refreshDraft);form.addEventListener('change',refreshDraft);
   trimApply.onclick=()=>{
    if(busy||drag)return;
@@ -518,7 +546,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     element('p',t('Positive grows the outside and shrinks holes. Negative does the reverse. Outlines with arcs use rounded corners where edges move apart.')));
    form.append(offsetPanel);
    offsetButton.onclick=async()=>{
-    if(busy||drag)return;
+    if(busy||drag||outlineConstraints.pending)return;
     const ticket=epoch,revision=draftRevision;
     const active=()=>!disposed&&ticket===epoch&&dialog.open;
     busy=true;
@@ -547,7 +575,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    };
   }
   const apply=element('button',t(featureId?'Apply sketch changes':revolving?'Create revolution':'Create extrusion'));apply.className='primary';
-  apply.onclick=async()=>{const ticket=epoch;busy=true;apply.disabled=true;try{
+  apply.onclick=async()=>{if(busy||outlineConstraints.pending)return;const ticket=epoch;busy=true;apply.disabled=true;try{
    const snapshot=readForm();
    if(session.state.revision!==expected)throw new Error(t('The model changed. Close and reopen this dialog before applying.'));
    const candidate=draft(snapshot);const geometry=await evaluate(candidate.document);const created=geometry.bodies.find(body=>body.id===candidate.id);if(disposed||epoch!==ticket||!dialog.open)return;
@@ -563,7 +591,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    const active=()=>!disposed&&dialog.open&&dialog.firstChild===header;
    let blockedBeforeRead=false;
    mountDxfImportControls(importPanel,{
-    active,available:()=>!busy&&!drag,revision:()=>draftRevision,
+    active,available:()=>!busy&&!drag&&!outlineConstraints.pending,revision:()=>draftRevision,
     checkCurrent:()=>{
      if(session.state.revision!==expected)throw new Error(t('The model changed. Close and reopen this dialog before applying.'));
     },

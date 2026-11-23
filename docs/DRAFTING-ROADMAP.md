@@ -178,7 +178,16 @@ dialog, and the committed shape stores coordinates. Enable **Snap straight
 edges tangent to arcs and circles** to include exact contact points for a
 straight edge. Drag its endpoint toward the contact point. A dashed line and
 the **Tangent** label identify the active snap. The other endpoint stays fixed,
-and arcs use only their authored sweep. Persistent constraints remain open.
+and arcs use only their authored sweep.
+
+For coupled segment relations on a closed polygon, open **Outline
+constraints** in Sketch & Extrude. Add horizontal, vertical, length,
+parallel, perpendicular, or equal-length constraints and choose **Solve
+outline**. The solver anchors point 1 and reports remaining degrees of
+freedom. A successful solve updates the preview and coordinate rows. Create
+or Apply saves the resulting geometry in one Undo step. The constraint
+list belongs to the current draft. Persistent re-solving and constraints
+on curves and regions remain open.
 
 Enable **Edit edge curves** to reveal a blue handle at the midpoint of each
 outline edge. Drag the handle across its chord to turn a straight edge into

@@ -14,7 +14,7 @@ for(const file of await readdir('packages/core/src/locales')){
  }ts.forEachChild(n,visit);}visit(source);
 }
 const missing=[];let references=0;
-async function walk(dir){for(const entry of await readdir(dir,{withFileTypes:true})){if(['dist','build','node_modules','public','locales'].includes(entry.name))continue;const file=join(dir,entry.name);if(entry.isDirectory())await walk(file);else if(/\.[mt]?[jt]sx?$/.test(file)){
+async function walk(dir){for(const entry of await readdir(dir,{withFileTypes:true})){if(['dist','build','node_modules','public','locales'].includes(entry.name))continue;const file=join(dir,entry.name);if(entry.isDirectory())await walk(file);else if(/\.[mt]?[jt]sx?$/.test(file)&&file!=='packages/editor/assets/sketch-constraints.dart.js'){
  const source=ts.createSourceFile(file,await readFile(file,'utf8'),ts.ScriptTarget.Latest,true);
  function visit(n){let key;
   if(ts.isCallExpression(n)&&ts.isIdentifier(n.expression)&&['t','translate'].includes(n.expression.text)&&n.arguments.length===1&&ts.isStringLiteralLike(n.arguments[0]))key=n.arguments[0].text;

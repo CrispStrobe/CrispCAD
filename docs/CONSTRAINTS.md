@@ -7,9 +7,22 @@ parameter expressions. Each lock refers to a persistent vertex ID. The editor
 resolves the coordinates directly and validates the resulting geometry in the
 current session transaction. An open path can also retain a directed distance
 and angle from one vertex to the next. Each driven vertex has one source, so
-the editor can resolve a chain in order as parameter values change. General
-geometric constraints, degrees of freedom, and constraints on closed profiles
-remain part of the worker design below.
+the editor can resolve a chain in order as parameter values change. Closed polygon drafts now use the reviewed `dart_csp` solver in a browser
+worker. The user can combine horizontal, vertical, length, parallel,
+perpendicular and equal-length segment constraints. Point 1 is anchored,
+lengths use millimetres and may be entered as expressions, and the worker
+reports the remaining degrees of freedom when available.
+
+The editor independently checks the numeric solution and validates the
+resulting outline before it replaces the draft. The user can continue to edit
+the sketch and use the usual Create or Apply action to commit one project
+revision. Rejected and stale solves keep the current geometry. The saved
+sketch records the solved coordinates. Retaining the coupled definitions,
+re-solving when parameters change, and drag-based solving remain open.
+
+The worker loads the checked-in JavaScript built from
+`tools/sketch-constraints/solver.dart` with Dart 3.12.2. Run
+`sh tools/sketch-constraints/build.sh` to rebuild the pinned artifact.
 
 ## Follow-up review — 2026-11-14
 
@@ -31,14 +44,13 @@ sketches, placement/mesh changes in browsers, or a physical iPad. The committed
 experiment manifest still pins the earlier baseline; the follow-up used a separate
 checkout and harness outside the app.
 
-First product use: constrained points/segments and dimensions in entity-based
+The planned first product use was constrained points/segments and dimensions in entity-based
 sketches, through the existing model-source/session history transaction. Follow
 with circles and assembly mates. Keep solver caches and drag targets transient;
 validate a candidate solve and its downstream geometry before accepting one edit.
 The app remains the authoritative design graph, Manifold its mesh-solid backend,
 and Jolt its dynamic simulation engine. The CSP reference extrusion kernel remains
-a limited fixture backend, not a replacement CAD kernel. Production integration
-is still pending.
+a limited fixture backend, not a replacement CAD kernel. Persistent coupled sketch definitions and assembly mates remain open.
 
 ## Updated assessment — 2026-11-13
 
@@ -58,8 +70,7 @@ The upstream geometric-edit, parametric-bracket, articulated-linkage and coupled
 [geometric probe](../experiments/constraints/geometric/README.md) also runs in
 native Dart, JavaScript and Wasm browser workers. It checks coordinates, hard
 residuals and freedom counts on 10/100/500 independent points and a soft circle drag.
-See [measurements and limits](CONSTRAINT-PERFORMANCE.md). No solver is integrated
-into the production app yet; the evidence supports building that adapter next.
+See [measurements and limits](CONSTRAINT-PERFORMANCE.md). At that review, the solver had only been qualified in the probe.
 
 Keep the backend-neutral entity/constraint model and history transaction boundary
 described below. Reuse existing app IDs/feature dependencies through an adapter;
