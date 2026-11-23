@@ -13,8 +13,11 @@ import type {CadJoint} from './physics.js';
 import { defaultPartPhysics, allocateMotorPort } from './physics.js';
 import { applyParametricBindings, assertDrivenEdit } from './parameters.js';
 import type {CodeProgram} from './code.js';
-import {closePathProfile,evaluateSketch,isSketchFeature} from './features.js';
+import {closePathProfile,evaluateSketch,featureValue,isSketchFeature} from './features.js';
 import type {PlanarSketch,SketchProfile,FeatureScalar,RevolutionFeature,MirrorFeature,PatternFeature,PatternSettings} from './features.js';
+import {outlineRelationsForSolve,outlineSatisfiesRelations} from './outline-relations.js';
+import type {OutlineSolveRequest} from './outline-relations.js';
+import type {SketchPoint} from './sketch-outline.js';
 import type { ParametricDesign } from './parameters.js';
 import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositionExpression} from './fragments.js';
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}return result;}
@@ -108,8 +111,24 @@ function editSketch(d:CadDocument,id:string,patch:Partial<Pick<PlanarSketch,'nam
   }
   d.sketches![id]=next;
 }
+function affectedOutlines(document:CadDocument,parametric:ParametricDesign){
+  return Object.values(document.sketches??{}).flatMap(sketch=>{
+    const {profile}=sketch;
+    if(profile.kind!=='outline'||!profile.relations?.some(relation=>relation.kind==='length'&&typeof relation.length==='string'))return [];
+    const constraints=outlineRelationsForSolve(profile,value=>featureValue(value,{parametric}));
+    const previous=outlineRelationsForSolve(profile,value=>featureValue(value,document));
+    const changed=constraints.some((rule,index)=>{
+      const before=previous[index];
+      return rule.kind==='length'&&before.kind==='length'&&rule.length!==before.length;
+    });
+    if(!changed)return [];
+    const request={points:profile.points,constraints};
+    return outlineSatisfiesRelations(request,profile.points)?[]:[{sketch,profile,request}];
+  });
+}
 export function createCadSession(initial: CadDocument = createDocument()) {
   let document = freezeDocument(validateDocument(initial)); let selection: string[] = []; let revision = 0; let label = 'Opened';let liveModelSource=false;
+  let disposed=false;
   const undo: Snapshot[] = []; const redo: Snapshot[] = []; const listeners = new Set<(state: SessionState) => void>();
   const state = (): SessionState => ({ document, selection: Object.freeze([...selection]), revision, canUndo: !!undo.length, canRedo: !!redo.length, label });
   const emit = () => { for (const listener of [...listeners]) listener(state()); };
@@ -129,6 +148,13 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     const validated = freezeDocument(draft);
     undo.push(snapshot()); if (undo.length > 100) undo.shift(); redo.length = 0;
     document = validated; selection = nextSelection ?? selection.filter(id => !!document.nodes[id]); label = title; revision++; emit();
+  }
+  function editParameters(design:ParametricDesign,profiles:ReadonlyMap<string,SketchProfile>=new Map()){
+    commit('Edit parameters',draft=>{
+      if(draft.version===1)draft.version=2;
+      draft.parametric=structuredClone(design);
+      for(const [id,profile] of profiles)editSketch(draft,id,{profile});
+    });
   }
   type SourceOptions={expectedRevision?:number;regenerate?:(recipe:NonNullable<SolidNode['generator']>,name:string)=>CadDocument};
   type PreparedSource={readonly document:CadDocument;readonly revision:number};
@@ -241,7 +267,32 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         d.drawings=d.drawings.filter(sheet=>sheet.id!==id);
       });
     },
-    setParametric(design: ParametricDesign) {commit('Edit parameters',d=>{if(d.version===1)d.version=2;d.parametric=structuredClone(design);});},
+    setParametric(design: ParametricDesign) {
+      if(affectedOutlines(document,design).length)throw new Error(t('This parameter edit requires solving its outline constraints.'));
+      editParameters(design);
+    },
+    async setParametricWithOutlineSolve(design:ParametricDesign,solve:(request:OutlineSolveRequest,signal:AbortSignal)=>Promise<SketchPoint[]>,signal:AbortSignal){
+      const expected=revision,next=structuredClone(design),profiles=new Map<string,SketchProfile>();
+      const checkCurrent=()=>{
+        signal.throwIfAborted();
+        if(disposed||revision!==expected)throw new Error(t('The model changed while solving outline constraints. Apply again.'));
+      };
+      checkCurrent();
+      for(const {sketch,profile,request} of affectedOutlines(document,next)){
+        let points:SketchPoint[];
+        try{
+          points=await solve(structuredClone(request),signal);
+          if(!outlineSatisfiesRelations(request,points))throw new Error(t('The solved outline did not meet every constraint.'));
+        }catch(error){
+          checkCurrent();
+          const message=error instanceof Error?error.message:String(error);
+          throw new Error(t`Outline “${sketch.name}”: ${message}`);
+        }
+        checkCurrent();
+        profiles.set(sketch.id,{...profile,points:structuredClone(points)});
+      }
+      editParameters(next,profiles);
+    },
     detachGenerator(id:string){commit('Detach shape generator',d=>{if(!d.nodes[id]?.generator)throw new Error(t('No generator to detach'));if(isCube(d.nodes[id]))throw new Error(t('Cube edges are linked; use a Box for independent dimensions'));delete d.nodes[id].generator;if(d.nodes[id].physics)d.nodes[id].physics={...d.nodes[id].physics!,sourcePreset:undefined};});},
     replaceGenerated(id:string,fragment:CadDocument,options:{resetScale?:boolean;label?:string}={}){
       const source=validateDocument(fragment);if(source.roots.length!==1||source.joints?.length||source.parametric||source.sketches||(source.version>=5&&source.provenance))throw new Error(t('Expected one generated body'));
@@ -458,7 +509,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       document = validated;liveModelSource=false; selection = []; undo.length = 0; redo.length = 0; label = 'Opened'; revision++; emit();
     },
     serialize() { return serializeDocument(document); },
-    dispose() { listeners.clear(); undo.length = 0; redo.length = 0; },
+    dispose() { disposed=true; listeners.clear(); undo.length = 0; redo.length = 0; },
   };
   return session;
 }

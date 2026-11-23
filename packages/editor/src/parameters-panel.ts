@@ -2,6 +2,7 @@ import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
 import {drivenProperties, evaluateParameters, designGraph} from '@brickwright/cad-core';
 import type {CadSession, DrivenProperty, NamedParameter, ParameterUnit, ParametricDesign} from '@brickwright/cad-core';
+import {solveOutlinePoints} from './outline-constraint-solve.js';
 
 export const propertyLabels: Record<DrivenProperty,string> = {
   width:'Width (mm)',depth:'Depth (mm)',height:'Height (mm)',radius:'Radius (mm)',
@@ -18,12 +19,19 @@ function button(label:string, action:()=>void){const b=element('button',t(label)
 /** Scoped optional modeling layer; applying a draft is one atomic undoable edit. */
 export function mountParametersPanel(parent:HTMLElement, session:CadSession) {
   const dialog=element('dialog');dialog.className='parameters-dialog';dialog.setAttribute('aria-label',t('Model parameters'));
-  parent.append(dialog);let expectedRevision=0;
+  parent.append(dialog);
+  let lifetime:AbortController|undefined;
+  const close=()=>{lifetime?.abort();dialog.close();};
+  dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
   function open() {
-    expectedRevision=session.state.revision;
+    if(dialog.open)return;
+    const controller=new AbortController();
+    lifetime=controller;
+    let expectedRevision=session.state.revision;
     dialog.replaceChildren();
     const doc=session.state.document, design=doc.parametric;
-    const heading=element('header');heading.append(element('h2',t('Model parameters')),button('Close parameters',()=>dialog.close()));
+    const closeButton=button('Close parameters',close);
+    const heading=element('header');heading.append(element('h2',t('Model parameters')),closeButton);
     const help=element('p',t('Optional: name dimensions, derive values with + − × / and parentheses, then drive object properties. Use explicit units in sums, e.g. width + 5 mm. cm, m, in, deg and rad are supported.'));
     const parameterList=element('div');parameterList.className='parameter-list';
     const bindingList=element('div');bindingList.className='binding-list';
@@ -51,7 +59,10 @@ export function mountParametersPanel(parent:HTMLElement, session:CadSession) {
     for(const [name,p] of Object.entries(design?.parameters??{}))addParameter(name,p);
     for(const b of design?.bindings??[])addBinding(b.nodeId,b.property,b.expression);
     const addBindingButton=button('Drive a property',()=>addBinding());addBindingButton.disabled=!doc.roots.length;
-    const actions=element('footer');const apply=button('Apply parameters',()=>{
+    const cancel=button('Cancel',close);
+    const actions=element('footer');const apply=button('Apply parameters',async()=>{
+      const controls=Array.from(dialog.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled)'))
+        .filter(control=>control!==closeButton&&control!==cancel);
       try {
         if(session.state.revision!==expectedRevision)throw new Error(t('The model changed while this panel was open. Close and reopen it before applying.'));
         const next:ParametricDesign={version:1,parameters:Object.create(null),bindings:[]};
@@ -62,12 +73,20 @@ export function mountParametersPanel(parent:HTMLElement, session:CadSession) {
           next.parameters[name]={expression:fields[1].value.trim(),unit:unit.value as ParameterUnit};
         }
         for(const row of bindingList.children){const fields=row.querySelectorAll('select');next.bindings.push({nodeId:fields[0].value,property:fields[1].value as DrivenProperty,expression:row.querySelector('input')!.value.trim()});}
-        session.setParametric(next);expectedRevision=session.state.revision;
+        controls.forEach(control=>control.setAttribute('disabled',''));
+        status.textContent=t('Applying parameters…');
+        await session.setParametricWithOutlineSolve(next,solveOutlinePoints,controller.signal);
+        if(controller.signal.aborted)return;
+        expectedRevision=session.state.revision;
         status.textContent=t('Parameters applied. Geometry is recomputing; this edit is saved in model history.');
         updateGraph();const values=evaluateParameters(next);
         for(const row of parameterList.children){const name=row.querySelector('input')!.value.trim(),unit=next.parameters[name].unit;row.querySelector('output')!.textContent=`${values[name].value.toLocaleString(undefined,{maximumFractionDigits:5})} ${unit==='scalar'?'':unit}`;}
-      } catch(error) {status.textContent=error instanceof Error?error.message:String(error);}
-    });apply.className='primary';actions.append(button('Cancel',()=>dialog.close()),apply);
+      } catch(error) {
+        if(!controller.signal.aborted)status.textContent=error instanceof Error?error.message:String(error);
+      } finally {
+        controls.forEach(control=>control.removeAttribute('disabled'));
+      }
+    });apply.className='primary';actions.append(cancel,apply);
     const graph=element('details');graph.className='design-dependencies';
     function updateGraph(){graph.replaceChildren(element('summary',t('Feature dependencies')));const dependencies=designGraph(session.state.document);for(const entry of dependencies){const row=element('p',`${t(entry.kind)}: ${entry.label}${entry.dependencies.length?' ← '+entry.dependencies.map(key=>dependencies.find(e=>e.key===key)?.label??key).join(', '):''}`);row.title=entry.key;graph.append(row);}}
     updateGraph();
@@ -76,5 +95,5 @@ export function mountParametersPanel(parent:HTMLElement, session:CadSession) {
   }
   // Keep editor shortcuts from acting on the model behind this modal.
   dialog.addEventListener('keydown',e=>e.stopPropagation());
-  return {open,dispose(){dialog.close();dialog.remove();}};
+  return {open,dispose(){close();dialog.remove();}};
 }

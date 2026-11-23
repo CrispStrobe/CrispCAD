@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {expect,test} from '@playwright/test';
 
-test('solves, retains and edits outline relations with Undo',async({page,hasTouch})=>{
+test('solves retained outline relations when parameters change and undoes each edit',async({page,hasTouch})=>{
  const press=async(control:ReturnType<typeof page.getByRole>)=>{
   if(hasTouch){
    await control.scrollIntoViewIfNeeded();
@@ -21,11 +21,13 @@ test('solves, retains and edits outline relations with Undo',async({page,hasTouc
  const expression=parameters.getByLabel('Parameter expression',{exact:true});
  const applyParameters=parameters.getByRole('button',{name:'Apply parameters',exact:true});
  const closeParameters=parameters.getByRole('button',{name:'Close parameters',exact:true});
+ const parameterStatus=parameters.getByRole('status',{name:'Parameter status'});
  await press(openParameters);
  await press(parameters.getByRole('button',{name:'Add parameter',exact:true}));
  await fill(parameters.getByLabel('Parameter name',{exact:true}),'reach');
  await fill(expression,'40');
  await press(applyParameters);
+ await expect(parameterStatus).toContainText('Parameters applied');
  await press(closeParameters);
  await press(page.getByRole('button',{name:'Sketch',exact:true}));
  const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
@@ -75,26 +77,30 @@ test('solves, retains and edits outline relations with Undo',async({page,hasTouc
  await expect(sketch).toBeHidden();
  await expect(page.getByTestId('object-name')).toHaveCount(1);
  await press(openParameters);
+ await fill(expression,'-10');
+ await press(applyParameters);
+ await expect(parameterStatus).toContainText('Dimension must be between');
  await fill(expression,'60');
  await press(applyParameters);
+ await expect(parameterStatus).toContainText('Parameters applied');
  await press(closeParameters);
  const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
  if(!await edit.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
  await press(edit);
- await expect(coordinates).toHaveValue(shape);
- await expect(status).toContainText('Solve the outline to use the current dimensions');
+ const expanded=await coordinates.inputValue();
+ expect(rounded(expanded)).toEqual([[0,0],[60,0],[60,20],[0,20]]);
  const apply=sketch.getByRole('button',{name:'Apply sketch changes',exact:true});
- await press(apply);
- await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('Solve the outline before saving');
- await fill(coordinates,shape+'\n-10, 10');
+ await fill(coordinates,expanded+'\n-10, 10');
  await expect(solve).toBeDisabled();
  await expect(status).toContainText('Restore the original point count');
  await expect(sketch.getByRole('button',{name:'Edit constraint 5',exact:true})).toBeVisible();
- await fill(coordinates,shape);
+ await fill(coordinates,expanded);
  await press(sketch.getByRole('button',{name:'Edit constraint 7',exact:true}));
  await expect(length).toHaveValue('20');
  await fill(length,'25');
  await press(sketch.getByRole('button',{name:'Update constraint',exact:true}));
+ await press(apply);
+ await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('Solve the outline before saving');
  await press(solve);
  await expect(status).toContainText('Fully constrained');
  expect(rounded(await coordinates.inputValue())).toEqual([[0,0],[60,0],[60,25],[0,25]]);
@@ -103,11 +109,20 @@ test('solves, retains and edits outline relations with Undo',async({page,hasTouc
  const undo=page.getByRole('button',{name:'Undo',exact:true});
  await press(undo);
  await press(edit);
- await expect(coordinates).toHaveValue(shape);
+ await expect(coordinates).toHaveValue(expanded);
  await press(sketch.getByRole('button',{name:'Edit constraint 7',exact:true}));
  await expect(length).toHaveValue('20');
- await press(sketch.getByRole('button',{name:'Close sketch',exact:true}));
+ const closeSketch=sketch.getByRole('button',{name:'Close sketch',exact:true});
+ await press(closeSketch);
+ const inline=page.getByLabel('Parameter reach (mm)',{exact:true});
+ await fill(inline,'70');
+ await expect(page.getByLabel('Size X (mm)',{exact:true})).toHaveValue('70');
  await press(undo);
+ await expect(inline).toHaveValue('60');
+ await press(undo);
+ await press(edit);
+ await expect(coordinates).toHaveValue(shape);
+ await press(closeSketch);
  await press(undo);
  await expect(page.getByTestId('object-name')).toHaveCount(0);
 });

@@ -2,6 +2,8 @@
 import {t} from './i18n.js';
 import type {FeatureScalar} from './features.js';
 import type {SketchOutlineProfile} from './sketch-region.js';
+import {isSketchPoint} from './sketch-outline.js';
+import type {SketchPoint} from './sketch-outline.js';
 
 export type OutlineRule<Edge,Length> =
  {kind:'horizontal'|'vertical';edge:Edge} |
@@ -9,8 +11,35 @@ export type OutlineRule<Edge,Length> =
  {kind:'parallel'|'perpendicular'|'equal';edge:Edge;other:Edge};
 
 export type OutlineRelation=OutlineRule<[string,string],FeatureScalar>;
+export type OutlineSolveRequest={points:SketchPoint[];constraints:OutlineRule<number,number>[]};
 export const maxConstrainedOutlinePoints=32;
 export const maxOutlineRelations=48;
+
+export function outlineSatisfiesRelations(request:OutlineSolveRequest,points:SketchPoint[]):boolean{
+ if(!Array.isArray(points)||points.length!==request.points.length||!points.every(isSketchPoint)||
+   points[0].some((value,axis)=>value!==request.points[0][axis]))return false;
+ const tolerance=1e-6;
+ const edges=points.map(([x,y],index)=>{
+  const next=points[(index+1)%points.length],dx=next[0]-x,dy=next[1]-y;
+  return {dx,dy,length:Math.hypot(dx,dy)};
+ });
+ return request.constraints.every(constraint=>{
+  const a=edges[constraint.edge];
+  switch(constraint.kind){
+   case 'horizontal':return Math.abs(a.dy)<=tolerance;
+   case 'vertical':return Math.abs(a.dx)<=tolerance;
+   case 'length':return Math.abs(a.length-constraint.length)<=tolerance;
+   default:{
+    const b=edges[constraint.other];
+    if(constraint.kind==='equal')return Math.abs(a.length-b.length)<=tolerance;
+    const norm=a.length*b.length;
+    if(norm<=tolerance*tolerance)return false;
+    const residual=constraint.kind==='parallel'?a.dx*b.dy-a.dy*b.dx:a.dx*b.dx+a.dy*b.dy;
+    return Math.abs(residual/norm)<=tolerance;
+   }
+  }
+ });
+}
 
 export function outlineRelationsForSolve(
  profile:Pick<SketchOutlineProfile,'points'|'vertexIds'|'relations'>,

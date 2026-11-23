@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "This parameter edit requires solving its outline constraints.": "Für diese Parameteränderung müssen die Konturbedingungen gelöst werden.",
+  "The model changed while solving outline constraints. Apply again.": "Das Modell wurde beim Lösen der Konturbedingungen geändert. Wende die Änderung erneut an.",
+  "Outline “{0}”: {1}": "Kontur „{0}“: {1}",
+  "Applying parameters…": "Parameter werden übernommen…",
   "Solve the outline to use the current dimensions.": "Löse die Kontur, um die aktuellen Maße zu übernehmen.",
   "Invalid outline constraint definitions.": "Ungültige Konturbedingungen.",
   "Outline constraints are available on single outlines.": "Konturbedingungen sind für einzelne Konturen verfügbar.",

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {isSketchPoint,t} from '@brickwright/cad-core';
-import type {OutlineRule,SketchPoint} from '@brickwright/cad-core';
+import {isSketchPoint,outlineSatisfiesRelations,t} from '@brickwright/cad-core';
+import type {OutlineRule,OutlineSolveRequest,SketchPoint} from '@brickwright/cad-core';
+export type {OutlineSolveRequest} from '@brickwright/cad-core';
 
 export type OutlineConstraint=OutlineRule<number,number>;
-export type OutlineSolveRequest={points:SketchPoint[];constraints:OutlineConstraint[]};
 export type OutlineSolveResult={points:SketchPoint[];degrees:number|null};
 
 export function verifyOutlineSolve(request:OutlineSolveRequest,response:unknown):OutlineSolveResult{
@@ -18,29 +18,7 @@ export function verifyOutlineSolve(request:OutlineSolveRequest,response:unknown)
   throw new Error(t('The solver returned invalid outline points.'));
  }
  const points=raw.map(([x,y],index):SketchPoint=>index===0?[x,y]:[Number(x.toFixed(9))||0,Number(y.toFixed(9))||0]);
- const edge=(index:number)=>{
-  const start=points[index],end=points[(index+1)%count];
-  const x=end[0]-start[0],y=end[1]-start[1];
-  return {x,y,length:Math.hypot(x,y)};
- };
- // Verify the completed draft independently of the numeric solver.
- const satisfied=(constraint:OutlineConstraint)=>{
-  const a=edge(constraint.edge),tol=1e-6;
-  switch(constraint.kind){
-   case 'horizontal':return Math.abs(a.y)<=tol;
-   case 'vertical':return Math.abs(a.x)<=tol;
-   case 'length':return Math.abs(a.length-constraint.length)<=tol;
-   default:{
-    const b=edge(constraint.other);
-    if(constraint.kind==='equal')return Math.abs(a.length-b.length)<=tol;
-    const norm=a.length*b.length;
-    if(norm<=tol*tol)return false;
-    const residual=constraint.kind==='parallel'?a.x*b.y-a.y*b.x:a.x*b.x+a.y*b.y;
-    return Math.abs(residual/norm)<=tol;
-   }
-  }
- };
- if(!request.constraints.every(satisfied))throw new Error(t('The solved outline did not meet every constraint.'));
+ if(!outlineSatisfiesRelations(request,points))throw new Error(t('The solved outline did not meet every constraint.'));
  return {points,degrees};
 }
 
@@ -69,4 +47,8 @@ export function solveOutline(request:OutlineSolveRequest,signal:AbortSignal):Pro
   try{worker.postMessage(request);}
   catch(error){finish();reject(error);}
  });
+}
+
+export async function solveOutlinePoints(request:OutlineSolveRequest,signal:AbortSignal):Promise<SketchPoint[]>{
+ return (await solveOutline(request,signal)).points;
 }

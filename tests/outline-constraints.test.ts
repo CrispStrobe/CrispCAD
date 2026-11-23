@@ -2,7 +2,7 @@
 import {readFileSync} from 'node:fs';
 import {createContext,runInContext} from 'node:vm';
 import {describe,expect,it} from 'vitest';
-import {compileModelSource,createCadSession,designGraph,featureValue,generateModelSource,outlineRelationsForSolve,parseDocument,rewriteSketchExpressions,trimSketchProfile,validateDocument} from '@brickwright/cad-core';
+import {compileModelSource,createCadSession,designGraph,generateModelSource,parseDocument,rewriteSketchExpressions,trimSketchProfile,validateDocument} from '@brickwright/cad-core';
 import type {SketchOutlineProfile} from '@brickwright/cad-core';
 import {verifyOutlineSolve} from '../packages/editor/src/outline-constraint-solve.js';
 import type {OutlineSolveRequest} from '../packages/editor/src/outline-constraint-solve.js';
@@ -11,6 +11,16 @@ const sandbox=createContext({});
 sandbox.self=sandbox;
 runInContext(readFileSync('packages/editor/assets/sketch-constraints.dart.js','utf8'),sandbox);
 const run=(request:OutlineSolveRequest)=>JSON.parse(sandbox.solveBrickwrightOutline(JSON.stringify(request)));
+const solve=async(request:OutlineSolveRequest)=>verifyOutlineSolve(request,run(request)).points;
+const dimensions=(width:string,unrelated='2')=>({version:1 as const,parameters:{
+ width:{unit:'mm' as const,expression:width},span:{unit:'mm' as const,expression:'width'},unrelated:{unit:'scalar' as const,expression:unrelated}
+},bindings:[]});
+const outline:SketchOutlineProfile={kind:'outline',id:'outline',points:[[0,0],[40,0],[40,20],[0,20]],
+ vertexIds:['a','b','c','d'],relations:[
+  {kind:'horizontal',edge:['a','b']},{kind:'length',edge:['a','b'],length:'span'},
+  {kind:'parallel',edge:['a','b'],other:['c','d']}
+ ]};
+const signal=()=>new AbortController().signal;
 const draft:OutlineSolveRequest={
  points:[[0,0],[38,3],[35,22],[2,20]],
  constraints:[
@@ -35,39 +45,37 @@ describe('dart_csp outline worker artifact',()=>{
  });
 });
 
-it('round-trips retained outline constraints and stable vertex IDs through project and model source',()=>{
+it('round-trips retained outline constraints and updates an indirect dimension with one Undo',async()=>{
  const session=createCadSession();
- session.setParametric({version:1,parameters:{width:{unit:'mm',expression:'40'}},bindings:[]});
- const profile:SketchOutlineProfile={kind:'outline',id:'outline',points:[[0,0],[40,0],[40,20],[0,20]],
-  vertexIds:['a','b','c','d'],relations:[
-   {kind:'horizontal',edge:['a','b']},{kind:'length',edge:['a','b'],length:'width'},
-   {kind:'parallel',edge:['a','b'],other:['c','d']}
-  ]};
- const body=session.addSketchExtrusion(profile);
+ session.setParametric(dimensions('40'));
+ const profile=outline,body=session.addSketchExtrusion(profile);
  const first=session.state.document,node=first.nodes[body];
  if(node.kind!=='extrusion')throw Error('fixture');
  const id=node.sketchId;
  expect(first.version).toBe(31);
  expect(parseDocument(session.serialize())).toEqual(first);
  expect(compileModelSource(generateModelSource(first),first).sketches?.[id].profile).toEqual(profile);
- expect(designGraph(first).find(entry=>entry.key===`sketch:${id}`)?.dependencies).toEqual(['parameter:width']);
+ expect(designGraph(first).find(entry=>entry.key===`sketch:${id}`)?.dependencies).toEqual(['parameter:span']);
  expect(()=>validateDocument({...first,version:30})).toThrow('version 31');
  const transplant=structuredClone(first.sketches![id]);
- rewriteSketchExpressions(transplant,value=>value==='width'?'newWidth':value);
+ rewriteSketchExpressions(transplant,value=>value==='span'?'newWidth':value);
  expect(transplant.profile).toMatchObject({relations:[profile.relations![0],
   {kind:'length',edge:['a','b'],length:'newWidth'},profile.relations![2]]});
  expect(()=>trimSketchProfile(first.sketches![id],first,[5,0],[5,20],'left')).toThrow('Clear outline constraints');
 
- session.setParametric({version:1,parameters:{width:{unit:'mm',expression:'60'}},bindings:[]});
+ expect(()=>session.setParametric(dimensions('60'))).toThrow('requires solving');
+ const before=session.state.revision;
+ await session.setParametricWithOutlineSolve(dimensions('60'),solve,signal());
  const changed=session.state.document;
- expect(changed.sketches![id].profile).toEqual(profile);
- const request={points:profile.points,constraints:outlineRelationsForSolve(profile,value=>featureValue(value,changed))};
- const {points}=verifyOutlineSolve(request,run(request));
- session.editExtrusion(body,{distance:10,symmetric:false,sketch:{profile:{...profile,points}}});
- expect(session.state.document.sketches![id].profile).toMatchObject({vertexIds:profile.vertexIds,relations:profile.relations});
- expect(points[1][0]).toBeCloseTo(60);
+ const updated=changed.sketches![id].profile as SketchOutlineProfile;
+ expect(updated).toMatchObject({vertexIds:profile.vertexIds,relations:profile.relations});
+ expect(updated.points[1][0]).toBeCloseTo(60);
+ expect(session.state.revision).toBe(before+1);
+ expect(changed.parametric?.parameters.width.expression).toBe('60');
  session.undo();
- expect(session.state.document).toEqual(changed);
+ expect(session.state.document).toBe(first);
+ session.redo();
+ expect(session.state.document).toBe(changed);
 
  for(const relation of [
   {kind:'horizontal' as const,edge:['a','c'] as [string,string]},
@@ -77,4 +85,41 @@ it('round-trips retained outline constraints and stable vertex IDs through proje
   expect(()=>session.updateSketch(id,{profile:{...profile,relations:[relation]}})).toThrow();
   expect(session.state.document).toBe(changed);
  }
+});
+
+it('rejects the whole parameter edit when a second dependent outline conflicts',async()=>{
+ const session=createCadSession();
+ session.setParametric(dimensions('40'));
+ session.addSketchExtrusion(outline,{name:'First plate'});
+ session.addSketchExtrusion({...outline,relations:[...outline.relations!,{kind:'length',edge:['a','b'],length:40}]},{name:'Locked plate'});
+ const before=session.state;
+ const visited:number[]=[];
+ await expect(session.setParametricWithOutlineSolve(dimensions('60'),async request=>{
+  visited.push(request.constraints.length);
+  return solve(request);
+ },signal())).rejects.toThrow(/Locked plate.*Could not solve/);
+ expect(visited).toEqual([3,4]);
+ expect(session.state).toEqual(before);
+});
+
+it('skips the worker when evaluated lengths are unchanged and rejects stale or cancelled solves',async()=>{
+ const session=createCadSession();
+ session.setParametric(dimensions('40'));
+ session.addSketchExtrusion(outline);
+ const unexpected=async()=>{throw Error('unexpected solve');};
+ await session.setParametricWithOutlineSolve(dimensions('20 * 2','8'),unexpected,signal());
+ const before=session.state.document;
+ const abort=new AbortController();
+ await expect(session.setParametricWithOutlineSolve(dimensions('60'),async request=>{
+  abort.abort();
+  return solve(request);
+ },abort.signal)).rejects.toThrow();
+ expect(session.state.document).toBe(before);
+ await expect(session.setParametricWithOutlineSolve(dimensions('60'),async request=>{
+  session.rename('Renamed while solving');
+  return solve(request);
+ },signal())).rejects.toThrow('The model changed');
+ expect(session.state.document.title).toBe('Renamed while solving');
+ expect(session.state.document.sketches).toEqual(before.sketches);
+ expect(session.state.document.parametric).toEqual(before.parametric);
 });

@@ -46,6 +46,7 @@ import {mountMirrorPanel} from './mirror-panel.js';
 import {mountPatternPanel} from './pattern-panel.js';
 import {mountCommandPalette} from './command-palette.js';
 import { mountParametersPanel, propertyLabels } from './parameters-panel.js';
+import {solveOutlinePoints} from './outline-constraint-solve.js';
 export interface CadFile { name: string; bytes: Uint8Array; mime: string }
 export interface CadEditorOptions {
   headerContent?: HTMLElement;
@@ -500,7 +501,22 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     const dimensions=graph.filter(e=>e.kind==='parameter'&&upstream.has(e.key));
     if(dimensions.length&&session.state.document.parametric){
       const design=el('details','design-inputs');design.open=true;design.append(el('summary','',t('Design inputs')));const values=evaluateParameters(session.state.document.parametric);
-      for(const parameter of dimensions){const p=session.state.document.parametric.parameters[parameter.id];const input=field(design,t`Parameter ${parameter.label} (${p.unit})`,p.expression,expression=>{const next=structuredClone(session.state.document.parametric!);next.parameters[parameter.id].expression=expression;session.setParametric(next);},'text');input.parentElement?.append(el('small','',`${Number(values[parameter.id].value.toFixed(5))} ${p.unit==='scalar'?'':p.unit}`));}inspector.append(design);
+      for(const parameter of dimensions){
+        const p=session.state.document.parametric.parameters[parameter.id];
+        const input=field(design,t`Parameter ${parameter.label} (${p.unit})`,p.expression,async expression=>{
+          const next=structuredClone(session.state.document.parametric!);
+          next.parameters[parameter.id].expression=expression;
+          input.disabled=true;
+          try{await session.setParametricWithOutlineSolve(next,solveOutlinePoints,fileLifetime.signal);}
+          catch(error){
+            if(disposed)return;
+            input.value=p.expression;
+            throw error;
+          }finally{input.disabled=false;}
+        },'text');
+        input.parentElement?.append(el('small','',`${Number(values[parameter.id].value.toFixed(5))} ${p.unit==='scalar'?'':p.unit}`));
+      }
+      inspector.append(design);
     }
     const primitiveFields=el('div','primitive-parameters');inspector.append(primitiveFields);
     if(isCube(n)&&n.kind==='box'){field(primitiveFields,'Edge length (mm)',n.size[0]*n.transform.scale[0],value=>{const edge=Number(value)/n.transform.scale[0];session.update(id,{size:[edge,edge,edge]});},'number','0.1');}
