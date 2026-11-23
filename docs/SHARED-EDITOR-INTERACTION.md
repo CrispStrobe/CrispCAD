@@ -49,3 +49,5 @@ gesture without a model/undo write. Its EN/DE top Help describes the shortcut.
 The same sync/check covers the retained touch tracker and transform arithmetic.
 The touch tracker resets its pinch baseline when a third finger replaces a lifted
 member of the active pair, preventing a discontinuous camera movement.
+
+The Brickwright host also passes its shared 3D navigation preferences to the embedded CAD editor with `cameraGestures` and updates them with `setCameraGestures`. Build in Robots and embedded CAD use two-finger slide to pan, pinch to zoom and secondary-button drag to orbit by default. Shift alternates pan and orbit. Both use the same wheel classifier and pointer mapping for browser and macOS bridge events. The CAD standalone navigation presets still use their own mappings.

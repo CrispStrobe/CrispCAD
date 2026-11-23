@@ -17,8 +17,8 @@ import { createGeometryClient } from './geometry-client.js';
 import {mountTransformReadout} from './transform-readout.js';
 import type {GridDisplay} from './workplane-grid.js';
 export type {GridDisplay} from './workplane-grid.js';
-import type {NavigationPreset} from './camera-input.js';
-export type {NavigationPreset} from './camera-input.js';
+import type {CameraGestures,NavigationPreset} from './camera-input.js';
+export type {CameraGestures,NavigationPreset} from './camera-input.js';
 import { mountViewport } from './viewport.js';
 import { editorStyle } from './style.js';
 import {themedEditorStyle} from './color-mode.js';
@@ -63,6 +63,7 @@ export interface CadEditorOptions {
   modelLibrary?: ModelLibraryOptions;
   colorMode?:CadColorMode;
   navigationPreset?:NavigationPreset;
+  cameraGestures?:CameraGestures;
   resizeControls?:'dimensions'|'gizmo';
   gridDisplay?:GridDisplay;
   surfaceSnap?:boolean;
@@ -121,7 +122,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const run = (fn: () => unknown) => { try { const result = fn(); if (result instanceof Promise) result.catch(report); } catch (e) { report(e); } };
   const client = createGeometryClient(new URL(options.wasmURL, document.baseURI).href, options.createWorker);
   let viewport: ReturnType<typeof mountViewport>;let customAppearance=!!options.appearance;
-  try { viewport = mountViewport(viewHost, session, report,options.appearance);if(!options.appearance&&options.colorMode==='light')viewport.setAppearance({background:'#e7eef7',baseplate:'#cdd9e8'});viewport.setNavigation(options.navigationPreset??'tinkercad');viewport.setResizeControls(options.resizeControls??'dimensions');viewport.setGridDisplay(options.gridDisplay??'snap');viewport.setSurfaceSnap(options.surfaceSnap??true); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
+  try { viewport = mountViewport(viewHost, session, report,options.appearance);if(!options.appearance&&options.colorMode==='light')viewport.setAppearance({background:'#e7eef7',baseplate:'#cdd9e8'});viewport.setNavigation(options.navigationPreset??'tinkercad');if(options.cameraGestures)viewport.setCameraGestures(options.cameraGestures);viewport.setResizeControls(options.resizeControls??'dimensions');viewport.setGridDisplay(options.gridDisplay??'snap');viewport.setSurfaceSnap(options.surfaceSnap??true); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
   const empty = el('div', 'empty'); empty.append(el('strong', '', t('Your next idea starts here.')), document.createTextNode(t('Pick a shape above. Set its dimensions in Properties. Drag to orbit; pinch to zoom.'))); viewHost.append(empty);
   const busy = el('div', 'busy', t('Building solid…')); busy.hidden = true; viewHost.append(busy);
   const errorPanel = el('div', 'error'); errorPanel.hidden = true; errorPanel.setAttribute('role', 'alert'); viewHost.append(errorPanel);
@@ -730,7 +731,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   buildTree(); buildInspector(); lastRevision = session.state.revision; lastSelection = JSON.stringify(session.state.selection); viewport.setSelection(session.state.selection); void buildLatest(); refreshButtons();
   return {
-    setColorMode(mode:CadColorMode){if(!['light','dark'].includes(mode))throw new Error(t('Choose light or dark mode'));host.dataset.cadColorMode=mode;if(!customAppearance)viewport.setAppearance(mode==='light'?{background:'#e7eef7',baseplate:'#cdd9e8'}:{background:'#111e29',baseplate:'#233644'});},get colorMode(){return host.dataset.cadColorMode as CadColorMode;},simulation,session, whenIdle, openFile,setRightPane,get rightPane(){return {...rightPane};},importFile,executeCommand,setSurfaceSnap,get surfaceSnap(){return viewport.surfaceSnap;},setNavigation:viewport.setNavigation,setResizeControls:viewport.setResizeControls,setGridDisplay:viewport.setGridDisplay,get gridDisplay(){return viewport.gridDisplay;},get resizeControls(){return viewport.resizeControls;},setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance(value:{background:string;baseplate:string}){viewport.setAppearance(value);customAppearance=true;},get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
+    setColorMode(mode:CadColorMode){if(!['light','dark'].includes(mode))throw new Error(t('Choose light or dark mode'));host.dataset.cadColorMode=mode;if(!customAppearance)viewport.setAppearance(mode==='light'?{background:'#e7eef7',baseplate:'#cdd9e8'}:{background:'#111e29',baseplate:'#233644'});},get colorMode(){return host.dataset.cadColorMode as CadColorMode;},simulation,session, whenIdle, openFile,setRightPane,get rightPane(){return {...rightPane};},importFile,executeCommand,setSurfaceSnap,get surfaceSnap(){return viewport.surfaceSnap;},setNavigation:viewport.setNavigation,setCameraGestures:viewport.setCameraGestures,setResizeControls:viewport.setResizeControls,setGridDisplay:viewport.setGridDisplay,get gridDisplay(){return viewport.gridDisplay;},get resizeControls(){return viewport.resizeControls;},setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance(value:{background:string;baseplate:string}){viewport.setAppearance(value);customAppearance=true;},get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { simulation.refresh(); viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },

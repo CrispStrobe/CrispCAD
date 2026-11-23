@@ -13,7 +13,7 @@ import {createSurfacePlacement} from './surface-placement.js';
 import type {PlacementPointer} from './surface-placement.js';
 import {PrecisionControls} from './precision-controls.js';
 import {cameraWheelAction,cameraPointerAction} from './camera-input.js';
-import type {NavigationPreset,CameraWheel} from './camera-input.js';
+import type {CameraGestures,NavigationPreset} from './camera-input.js';
 import {precisionTracker} from './precision.js';
 import {assertDrivenEdit,constructionInputs,isCube,constrainCubeTransform,t} from '@brickwright/cad-core';
 import type { CadSession, Transform, Vec3 } from '@brickwright/cad-core';
@@ -64,7 +64,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   label('X · mm', 224, -200, '#f38f88'); label('Y · mm', -200, 218, '#8fcea1');
   const pivot = new THREE.Object3D(); scene.add(pivot);
   const gizmo = new PrecisionControls(camera, canvas); gizmo.setSize(0.85); gizmo.setSpace('world'); scene.add(gizmo.getHelper());
-  let navigationPreset:NavigationPreset='tinkercad',spaceHeld=false;let cameraDrag:{id:number;x:number;y:number;kind:'pan'|'orbit';gizmoEnabled:boolean}|undefined;
+  let navigationPreset:NavigationPreset='tinkercad',spaceHeld=false;let cameraGestures:CameraGestures|undefined;let cameraDrag:{id:number;x:number;y:number;kind:'pan'|'orbit';gizmoEnabled:boolean}|undefined;
   let fineEnabled=false,shiftHeld=false;gizmo.isFine=()=>fineEnabled||shiftHeld;
   gizmo.setTranslationSnap(1); gizmo.setRotationSnap(15 * RAD); gizmo.setScaleSnap(null);
   let simulating=false;let presentedPoses=new Map<string,SimulationPose>();
@@ -240,14 +240,14 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   // Camera drags disable OrbitControls, including its context-menu handler.
   // Always consume secondary-click menus on the workplane independently.
   const contextMenu=(event:MouseEvent)=>{event.preventDefault();event.stopImmediatePropagation();};canvas.addEventListener('contextmenu',contextMenu,true);
-  const wheel=(event:WheelEvent)=>{event.preventDefault();event.stopImmediatePropagation();if(drag||directDrag?.moved||cameraDrag)return;const action=cameraWheelAction(event,navigationPreset,canvas.clientHeight);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);};canvas.addEventListener('wheel',wheel,{capture:true,passive:false});
+  const wheel=(event:WheelEvent)=>{event.preventDefault();event.stopImmediatePropagation();if(drag||directDrag?.moved||cameraDrag)return;const action=cameraWheelAction(event,navigationPreset,canvas.clientHeight,cameraGestures);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);};canvas.addEventListener('wheel',wheel,{capture:true,passive:false});
   let gestureScale=1;const gesture=(event:Event)=>{event.preventDefault();const scale=(event as Event&{scale:number}).scale;if(event.type==='gesturestart'){gestureScale=1;return;}if(event.type==='gestureend'){gestureScale=1;return;}if(scale>0&&Number.isFinite(scale)){if(!drag&&!directDrag?.moved)zoomCamera(scale/gestureScale);gestureScale=scale;}};for(const name of ['gesturestart','gesturechange','gestureend'])canvas.addEventListener(name,gesture,{passive:false});
-  const nativeGesture=(event:Event)=>{const data=(event as CustomEvent).detail;if(!data||!Number.isFinite(data.x)||!Number.isFinite(data.y))return;let hit:Element|null=document.elementFromPoint(data.x,data.y);while(hit?.shadowRoot)hit=hit.shadowRoot.elementFromPoint(data.x,data.y);if(hit!==canvas)return;data.handled=true;if(drag||directDrag?.moved||cameraDrag)return;if(data.kind==='zoom')zoomCamera(data.factor);else if(data.kind==='wheel'){const action=cameraWheelAction(data,navigationPreset,canvas.clientHeight);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);}};window.addEventListener('brickwright-camera-input',nativeGesture);
+  const nativeGesture=(event:Event)=>{const data=(event as CustomEvent).detail;if(!data||!Number.isFinite(data.x)||!Number.isFinite(data.y))return;let hit:Element|null=document.elementFromPoint(data.x,data.y);while(hit?.shadowRoot)hit=hit.shadowRoot.elementFromPoint(data.x,data.y);if(hit!==canvas)return;data.handled=true;if(drag||directDrag?.moved||cameraDrag)return;if(data.kind==='zoom')zoomCamera(data.factor);else if(data.kind==='wheel'){const action=cameraWheelAction(data,navigationPreset,canvas.clientHeight,cameraGestures);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);}};window.addEventListener('brickwright-camera-input',nativeGesture);
   const cameraKey=(event:KeyboardEvent)=>{if(event.key==='Escape'&&pointPick){event.preventDefault();event.stopImmediatePropagation();cancelPointPick();return;}if(event.code==='Space'){spaceHeld=true;event.preventDefault();}};canvas.addEventListener('keydown',cameraKey);
   const resetCameraKeys=()=>{endGrab();cancelPointPick();if(surfacePlacement.active)endPlacement();endBox();spaceHeld=false;shiftHeld=false;if(cameraDrag){gizmo.enabled=cameraDrag.gizmoEnabled;cameraDrag=undefined;orbit.enabled=true;}};window.addEventListener('blur',resetCameraKeys);
   const onDown = (e: PointerEvent) => {shiftHeld=e.shiftKey;canvas.dataset.fine=String(gizmo.isFine());
     canvas.focus({ preventScroll: true });
-    const cameraAction=e.pointerType==='touch'?undefined:cameraPointerAction(e.button,e.shiftKey,e.altKey,e.ctrlKey,spaceHeld,navigationPreset);if(cameraAction&&!drag&&!directDrag){cameraDrag={id:e.pointerId,x:e.clientX,y:e.clientY,kind:cameraAction,gizmoEnabled:gizmo.enabled};orbit.enabled=false;gizmo.enabled=false;canvas.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();return;}
+    const cameraAction=e.pointerType==='touch'?undefined:cameraPointerAction(e.button,e.shiftKey,e.altKey,e.ctrlKey,spaceHeld,navigationPreset,cameraGestures);if(cameraAction&&!drag&&!directDrag){cameraDrag={id:e.pointerId,x:e.clientX,y:e.clientY,kind:cameraAction,gizmoEnabled:gizmo.enabled};orbit.enabled=false;gizmo.enabled=false;canvas.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();return;}
     if(pointPick&&e.button===0){pointerRay(e);const hit=ray.intersectObjects([...meshes.values()],false)[0];if(hit){const previous=pointPick;pointPick=undefined;gizmo.enabled=previous.gizmo;canvas.style.cursor=previous.cursor;const bodyId=[...meshes].find(([,mesh])=>mesh===hit.object)?.[0];if(bodyId)previous.done({bodyId,point:hit.point.toArray() as Vec3,normal:hit.face!.normal.clone().transformDirection(hit.object.matrixWorld).toArray() as Vec3});else previous.done(null);}e.preventDefault();e.stopImmediatePropagation();return;}
     if(simulating){if(grabEnabled&&simulationDrag&&e.button===0){if(grab){endGrab();return;}pointerRay(e);scene.updateMatrixWorld(true);const hit=ray.intersectObjects([...meshes.values(),...previewBalls.values()],false)[0];if(hit){const bodyId=hit.object.userData.id as string;if(session.state.document.nodes[bodyId]?.physics?.motion==='static')return;const point=hit.point.toArray() as Vec3;grab={pointerId:e.pointerId,bodyId,point,target:point,plane:new THREE.Plane().setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),hit.point),orbit:orbit.enabled};orbit.enabled=false;canvas.setPointerCapture(e.pointerId);simulationDrag({bodyId,point,target:point});e.preventDefault();e.stopImmediatePropagation();}}return;}
     if (e.pointerType === 'touch') { touches.down({ id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp }); if (touches.count > 1) suppressTap = true; }
@@ -365,6 +365,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     setTransformPreviewListener(listener:(preview:TransformPreview)=>void){previewListener=listener;draw();},
     setViewListener(listener: (view: ViewDirection) => void) { viewListener = listener; draw(); },
     setMultiSelect(enabled: boolean) { multiSelect = enabled; },
+    setCameraGestures:(gestures:CameraGestures)=>{cameraGestures={...gestures};},
     zoom:zoomCamera,pan:(dx:number,dy:number)=>navigate('pan',dx,dy),orbit:(dx:number,dy:number)=>navigate('orbit',dx,dy),setNavigation:(preset:NavigationPreset)=>{navigationPreset=preset;draw();},
     setProjection(orthographic: boolean) {
       cancelTransform(); if (orthographic === (camera instanceof THREE.OrthographicCamera)) return;

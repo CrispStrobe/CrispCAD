@@ -12,8 +12,8 @@
     {
       "file": "packages/editor/src/vendor/camera-pointer.js",
       "source": "overlay/scratch-gui/src/lib/editor-interaction/camera-pointer.js",
-      "commit": "7132ee8a72bf98158209d10b5fd4c138ce6de967",
-      "sha256": "7cd4ae6e00945d8646726f95b4ff7874818cf1689c9a8c82d0e2d26dab6af7d8"
+      "commit": "727e69ce946e84c1b87ec30b5787b7de1cb15ad5",
+      "sha256": "529d3b665d4b415b154980d7ff43a82966e54834636d3505bbd135f5be745c52"
     },
     {
       "file": "packages/editor/src/vendor/touch-gestures.js",
