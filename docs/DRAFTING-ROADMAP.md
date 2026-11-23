@@ -495,15 +495,44 @@ Cota documents a prompt-driven command line with history, completion, and
 absolute, relative and polar coordinates. Use those workflows to evaluate
 discoverability and keyboard efficiency. [Cota documentation](https://mxchristian17.github.io/cota/docs/)
 
-### Costumes and the 2D drafting workspace
+### Optional precision design in Costumes
 
-Use Brickwright's Costumes vector editor as the reference for drawing tools,
-selection handles, zoom, and touch behavior. Costumes edits SVG artwork
-through Scratch Paint and Paper. CAD must retain millimetres, editable
-profiles, snaps and constraints in the CAD document.
+Keep the existing Scratch Paint canvas, selection, brush, fill, and artwork
+editing as the default Costumes experience. Add an opt-in **Precision design**
+switch in Settings → Workspace. Show its contextual controls only while
+Precision is active on a vector costume or backdrop. Keep the switch local
+to the user. Turning it off hides the tools and preserves the artwork and
+CAD geometry. Basic drawing must start normally even if CAD is disabled.
 
-Add a reviewed handoff for selected vector artwork to a CAD sketch. Convert
-closed filled paths and holes with an explicit scale and origin preview.
-Report unsupported strokes, open paths or curves before committing geometry.
-Evaluate reuse of tool interactions and vector conversion separately from
-the Costumes editor's React and document integration.
+1. **Choose geometry.** Reuse the Costumes selection and path handles. Add
+   a precision grid, units, origin, snaps, coordinate entry, and dimensions
+   around the selected shapes. Use the existing CAD sketch representation
+   and constraint solver for exact geometry. Advance lines, rectangles,
+   circles, and arcs first. Add splines and more constraints after the
+   underlying editable geometry supports them.
+2. **Preview profiles.** Show a separate highlight on each closed region
+   eligible for solid extrusion. Preserve nested holes and let users choose
+   individual regions. Point to gaps, self-intersections, unsupported
+   shapes, and ambiguous overlaps. Converting strokes to outlines,
+   closing a gap, and approximating a curve require an explicit preview
+   and tolerance. Keep artwork fills, gradients, and painted shadows
+   independent of the profile highlight.
+3. **Send to CAD.** After choosing a region, show its target plane, origin,
+   size in millimetres, and scale. Create an editable CAD sketch on Apply.
+   Keep the costume intact. Start with an explicit snapshot, then support
+   a deliberate update from source with a change preview. A saved sketch
+   can drive Extrude later. Once the handoff is stable, add a shortcut that
+   opens the extrusion preview with the new sketch selected.
+4. **Qualify both modes.** Verify the original child-facing drawing flow
+   with Precision off and no CAD code loaded. Test mouse and pencil or
+   touch selection, legacy SVGs, units, nested holes, multiple islands,
+   close-gap review, imports that contain bitmap or gradient artwork,
+   Undo, and SB3 save and reopen. Editing a linked source after an
+   extrusion exists must preserve that extrusion until the user accepts
+   an update.
+
+Fusion makes closed profiles visible through shading and requires a plane
+and scale for SVG placement. Shapr3D puts applicable constraints next to the
+editing context and lets users select a closed region for extrusion. Adopt
+these interactions with the existing Brickwright drawing tools and CAD
+session. [Fusion sketch profiles](https://help.autodesk.com/view/fusion360/ENU/?contextId=SKT-3D-SKETCH) · [Fusion SVG placement](https://help.autodesk.com/cloudhelp/ENU/Fusion-Model/files/SLD-INS-SVG.htm) · [Shapr3D constraints](https://support.shapr3d.com/hc/en-us/articles/7407627891100-Adding-and-removing-constraints) · [Shapr3D extrude](https://support.shapr3d.com/hc/en-us/articles/7874453786908-Tools-menu-Extrude-tool)
