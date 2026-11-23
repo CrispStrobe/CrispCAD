@@ -3,7 +3,7 @@ import {expect,test} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
 import {sketchDwgFixture} from '../sketch-dwg-fixture.js';
 
-test('imports DWG through the worker and keeps selected model geometry editable',async({page,hasTouch})=>{
+test('round-trips an editable DWG outline through the worker',async({page,hasTouch},testInfo)=>{
  const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
  const workers:string[]=[];
  page.on('worker',worker=>workers.push(worker.url()));
@@ -36,9 +36,22 @@ test('imports DWG through the worker and keeps selected model geometry editable'
  const dxf=await readFile((await download.path())!,'utf8');
  expect(dxf).toContain('$INSUNITS\r\n70\r\n4');
  expect(dxf).toContain('10\r\n50.8\r\n20\r\n25.4');
+ const bodyDwg=page.getByRole('button',{name:'Export sketch as DWG',exact:true});
+ const [binary]=await Promise.all([page.waitForEvent('download'),press(bodyDwg)]);
+ expect(binary.suggestedFilename()).toBe('Inch plate.dwg');
+ const bytes=await readFile((await binary.path())!);
+ expect(bytes.subarray(0,6).toString()).toBe('AC1032');
+ await binary.saveAs(testInfo.outputPath('plate.dwg'));
+ await expect(page.getByTestId('object-name')).toHaveCount(1);
+ await press(page.getByRole('button',{name:'Sketch',exact:true}));
+ await press(sketch.getByText('Import DXF or DWG outline',{exact:true}));
+ await file.setInputFiles({name:'Round trip.dwg',mimeType:'image/vnd.dwg',buffer:bytes});
+ await expect(sketch.getByLabel('Outline points X, Y (mm)')).toHaveValue(/50\.8, 25\.4/);
+ await expect(sketch.getByLabel('Outline points X, Y (mm)')).toHaveValue(/0, 0, 0\.25, 2\.54, 5\.08/);
+ await expect(page.getByTestId('object-name')).toHaveCount(1);
 });
 
-test('opens a unitless DWG guide after explicit confirmation',async({page,hasTouch})=>{
+test('opens a unitless guide after confirmation and exports it in millimetres',async({page,hasTouch},testInfo)=>{
  const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
  await page.goto('/');
  await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
@@ -51,9 +64,19 @@ test('opens a unitless DWG guide after explicit confirmation',async({page,hasTou
  await press(sketch.getByRole('checkbox',{name:'Assume millimetres if the file has no units'}));
  await press(sketch.getByRole('button',{name:'Import selected layers',exact:true}));
  await expect(sketch.getByLabel('Path points X, Y (mm)')).toHaveValue(/2, 1$/);
+ const dwg=sketch.getByRole('button',{name:'Export path as DWG',exact:true});
+ const [download]=await Promise.all([page.waitForEvent('download'),press(dwg)]);
+ const bytes=await readFile((await download.path())!);
+ await download.saveAs(testInfo.outputPath('guide.dwg'));
+ expect(bytes.subarray(0,6).toString()).toBe('AC1032');
+ await press(sketch.getByRole('checkbox',{name:'Assume millimetres if the file has no units'}));
+ await sketch.getByLabel('Choose DWG file',{exact:true}).setInputFiles({name:'Reimported guide.dwg',mimeType:'image/vnd.dwg',buffer:bytes});
+ await expect(sketch.getByLabel('Sketch name')).toHaveValue('Reimported guide');
+ await expect(sketch.getByLabel('Choose DWG file',{exact:true})).toBeEnabled();
+ await expect(sketch.getByLabel('Path points X, Y (mm)')).toHaveValue(/2, 1$/);
  await press(sketch.getByRole('button',{name:'Save path',exact:true}));
  await expect(sketch).toBeHidden();
- const saved=page.getByRole('button',{name:'Sketch path: Guide',exact:true});
+ const saved=page.getByRole('button',{name:'Sketch path: Reimported guide',exact:true});
  await press(saved);
  await expect(sketch.getByLabel('Path points X, Y (mm)')).toHaveValue(/2, 1$/);
 });

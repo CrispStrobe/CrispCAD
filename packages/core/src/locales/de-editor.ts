@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "DWG export requires an original sketch extrusion.": "Für den DWG-Export ist eine ursprüngliche Skizzenextrusion erforderlich.",
+  "Could not export the sketch as DWG.": "Die Skizze konnte nicht als DWG exportiert werden.",
+  "DWG export took too long. Try a simpler sketch.": "Der DWG-Export hat zu lange gedauert. Versuche es mit einer einfacheren Skizze.",
+  "Export sketch as DWG": "Skizze als DWG exportieren",
+  "Export path as DWG": "Pfad als DWG exportieren",
   "Choose DWG file": "DWG-Datei auswählen",
   "Choose a DWG file up to 1 MB.": "Wähle eine DWG-Datei bis 1 MB.",
   "DWG layers": "DWG-Ebenen",

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from '@brickwright/cad-core';
 import {prepareSketchDxf} from './import-sketch-dxf.js';
-import {readSketchDwg} from './read-sketch-dwg.js';
+import {readSketchDwg} from './sketch-dwg-client.js';
 import {maxSketchExchangeBytes} from './sketch-exchange-limits.js';
 
 import type {DxfSketchImport} from './import-sketch-dxf.js';

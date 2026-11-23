@@ -33,6 +33,7 @@ import { createPresetDocument, evaluatedPreview, shapeCatalog } from './shapes.j
 import {mountModelSourcePanel} from './model-source-panel.js';
 import {mountCodePanel} from './code-panel.js';
 import {exportSketchDxf} from './sketch-dxf.js';
+import {exportSketchDwg} from './sketch-dwg-client.js';
 import {exportDrawingSetPdf} from './drawing-pdf.js';
 import {assemblyCutKey,resolveAssemblyCut} from './assembly-drawing.js';
 import {createAssemblyProjectionClient} from './assembly-projection-client.js';
@@ -110,6 +111,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const titleInput = el('input'); titleInput.setAttribute('aria-label', 'Design title'); titleInput.addEventListener('keydown',event=>{if(event.key==='Enter')titleInput.blur();else if(event.key==='Escape'){titleInput.value=session.state.document.title;titleInput.blur();}}); titleInput.addEventListener('change', () => run(() => session.rename(titleInput.value))); designBar.append(titleInput, el('span', 'units-label', t('mm · Z up')));
   if(options.showDocumentTitle===false){titleInput.hidden=true;designBar.style.gridTemplateColumns='minmax(0,1fr) auto';}
   main.append(tree, viewHost, inspector); designBar.append(toolbar);shell.append(designBar, main, status); shadow.append(style, shell);
+  const dwgLifetime=new AbortController();
   let disposed = false; let builtRevision = -1; let built: GeometryResult | null = null; let running = false; let lastRevision = -1; let lastSelection = ''; let geometryError = ''; let mode: 'select' | 'translate' | 'rotate' | 'scale' = 'select'; let grid = 1;
   const waiters = new Set<{ resolve: (r: GeometryResult) => void; reject: (e: Error) => void }>();
   let operationError = '';
@@ -478,6 +480,16 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       if(options.onExport&&!n.provenance?.length){
         const exportProfile=button('Export sketch as DXF',()=>options.onExport!(exportSketchDxf(session.state.document,id)),inspector);
         exportProfile.title=t('Export the 2D profile at sketch dimensions in millimetres.');
+        const exportDwg=button('Export sketch as DWG',async()=>{
+         const doc=session.state.document;
+         exportDwg.disabled=true;
+         try{
+          const file=await exportSketchDwg(doc,id,dwgLifetime.signal);
+          if(!disposed&&session.state.document.id===doc.id)await options.onExport!(file);
+         }catch(error){if(!disposed&&session.state.document.id===doc.id)throw error;}
+         finally{exportDwg.disabled=false;}
+        },inspector);
+        exportDwg.title=exportProfile.title;
         const exportTemplate=button('Export drilling template (PDF)',()=>options.onExport!(exportSketchPdf(session.state.document,id)),inspector);
         exportTemplate.title=t('Download an A4 sketch-plane template with hole centers at 1:1 scale.');
       }
@@ -681,7 +693,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { simulation.refresh(); viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; dwgLifetime.abort(); toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;

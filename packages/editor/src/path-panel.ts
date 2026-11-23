@@ -5,6 +5,7 @@ import {formatSketchPoints,parseSketchOutline,parseSketchPoint} from './sketch-p
 import {operationField} from './body-operation-panel.js';
 import {mountDxfImportControls} from './dxf-import-controls.js';
 import {exportSketchPathDxf} from './sketch-dxf.js';
+import {exportSketchPathDwg} from './sketch-dwg-client.js';
 
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,value?:string)=>{
  const node=document.createElement(tag);
@@ -90,7 +91,9 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   const dxf=element('details');
   dxf.className='sketch-expressions';
   const layer=element('small'),exportPath=element('button',t('Export path as DXF'));
-  exportPath.type='button';
+  const exportDwg=element('button',t('Export path as DWG'));
+  exportPath.type=exportDwg.type='button';
+  let writingDwg=false,validPath=false;
   dxf.append(element('summary',t('DXF or DWG path')));
   fields.append(dxf);
 
@@ -168,7 +171,8 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
    closureHint.hidden=!anchors?.length&&!segmentConstraints?.length;
    preview.replaceChildren();
    status.textContent='';
-   save.disabled=closePath.disabled=trimButton.disabled=exportPath.disabled=true;
+   validPath=false;
+   save.disabled=closePath.disabled=trimButton.disabled=exportPath.disabled=exportDwg.disabled=true;
    layer.textContent=dxfLayer.dxfLayer?t`DXF layer: ${dxfLayer.dxfLayer}`:'';
    const selected=vertex.selectedIndex;
    let count=vertexIds?.length??0;
@@ -213,7 +217,9 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
      svg.append(endpoint);
     }
     preview.append(svg);
+    validPath=true;
     save.disabled=closePath.disabled=trimButton.disabled=exportPath.disabled=false;
+    exportDwg.disabled=writingDwg;
    }catch(error){report(error);}
   }
   function changed(event:Event){
@@ -304,10 +310,25 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
    error:report
   });
   dxf.append(layer);
-  if(onExport)dxf.append(exportPath);
+  if(onExport)dxf.append(exportPath,exportDwg);
   exportPath.onclick=async()=>{
    try{await onExport?.(exportSketchPathDxf(doc,read()));}
    catch(error){if(active())report(error);}
+  };
+  exportDwg.onclick=async()=>{
+   const controller=new AbortController();
+   const close=()=>{if(!active())controller.abort();};
+   dialog.addEventListener('close',close);
+   writingDwg=exportDwg.disabled=true;
+   try{
+    const file=await exportSketchPathDwg(doc,read(),controller.signal);
+    if(active()&&session.state.document.id===doc.id)await onExport?.(file);
+   }catch(error){if(active())report(error);}
+   finally{
+    dialog.removeEventListener('close',close);
+    writingDwg=false;
+    exportDwg.disabled=!validPath;
+   }
   };
 
 

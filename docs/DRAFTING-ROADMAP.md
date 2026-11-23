@@ -46,7 +46,7 @@ where available, and explicit tessellation or reference behavior. Editable STEP
 round trips and general modeling-edge fillets belong to the exact-geometry
 roadmap, with stable face/edge references and evaluated backend choices.
 
-### Editable 2D DWG import
+### Editable 2D DWG exchange
 
 Open **Sketch & Extrude → Import DXF or DWG outline** or **Sketch path →
 DXF or DWG path**, then use **Choose DWG file**. The file is decoded locally
@@ -61,9 +61,18 @@ The selected geometry must fit the shared sketch workflow. Blocks, text,
 hatches, layouts and 3D solids are outside that workflow. Exclude layers
 with unsupported entities when importing. Files and decoded drawings are
 limited to 1 MiB, and a stalled worker is stopped. The qualified versions
-are AutoCAD 2000 and 2018. Produce a DXF from the imported sketch using
-the existing export control. DWG export and broader interoperability
-qualification remain open.
+include AutoCAD 2000 and 2018.
+
+Choose **Export sketch as DWG** in extrusion Properties or **Export path
+as DWG** in the path editor. The worker writes AutoCAD 2018 DWG at 1:1
+in millimetres in the local sketch plane. Circles and polylines remain native
+entities. The exported geometry uses current parameter values. Layer names,
+colors, linetypes, lineweights, plot and lock state are written for the supported
+sketch layers. A true-color layer exports its RGB color and on/off state.
+Separate DXF indexed fallback colors and independent new-viewport frozen
+state may change on DWG round trips through the codec. DXF export remains
+available. Full drawings and assemblies, older DWG output versions and broader
+interoperability qualification remain open.
 [acad-ts DWG documentation](https://github.com/node-projects/acad-ts/blob/master/docs/CadReaderDocs.md)
 
 ### Editable DXF profiles
@@ -127,7 +136,7 @@ actual size. Edit a vertex as **X, Y, bulge, start width, end width** to
 change the width of its outgoing edge. The sketch and solid use the
 centerline. DXF export writes the widths back as drawing properties. Trim
 interpolates widths at new endpoints, and a closing edge starts at zero
-width. Offset supports uniform-width outlines. DWG export and STEP import remain open.
+width. Offset supports uniform-width outlines. STEP import remains open.
 [Autodesk DXF lightweight polylines](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-DXF/files/GUID-748FC305-F3F2-4F74-825A-61F04D757A50.htm)
 
 ## Outline point editing
