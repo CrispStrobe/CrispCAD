@@ -18,9 +18,11 @@ import type {Quantity, ParameterUnit} from './parameters.js';
 export type FeatureScalar = number | string;
 export type SketchPlane = 'XY' | 'XZ' | 'YZ';
 export type SketchPathAnchor = {vertexId:string; x:FeatureScalar; y:FeatureScalar};
+/** The endpoint of one segment is driven from the preceding point in sketch coordinates. */
+export type SketchPathSegmentConstraint={from:string; to:string; distance:FeatureScalar; direction:FeatureScalar};
 export type SketchPathProfile = {
   kind:'path'; id:string; points:SketchPoint[]; bulges?:number[];
-  vertexIds?:string[]; anchors?:SketchPathAnchor[];
+  vertexIds?:string[]; anchors?:SketchPathAnchor[]; segmentConstraints?:SketchPathSegmentConstraint[];
 }&SketchDxfLayer&SketchDxfWidths;
 export type SketchProfile =
   {kind:'rectangle'; id:string; width:FeatureScalar; depth:FeatureScalar} |
@@ -113,25 +115,45 @@ export function featureValue(input:FeatureScalar,doc:Pick<CadDocument,'parametri
   if((q.length!==0||q.angle!==0)&&(q.length!==length||q.angle!==angle))throw new Error(t`Expression must produce ${unit}`);
   if(Math.abs(q.value)>1e6)throw new Error(t('Expression exceeds the finite design range'));return q.value;
 }
-/** Resolve exact point locks in the local sketch plane, without tessellating the edges. */
+/** Resolve point locks and directed segment dimensions in authoring order. */
 export function resolveSketchPath(profile:SketchPathProfile,doc:Pick<CadDocument,'parametric'>):SketchPoint[] {
-  const {points,vertexIds,anchors}=profile;
-  if(vertexIds===undefined&&anchors===undefined)return points;
+  const {points,vertexIds,anchors,segmentConstraints}=profile;
+  if(vertexIds===undefined&&anchors===undefined&&segmentConstraints===undefined)return points;
+  const invalidLocks=()=>new Error(t('Invalid path point locks.'));
+  const invalidSegments=()=>new Error(t('Invalid path segment constraints. Each constraint must link consecutive points.'));
   if(!Array.isArray(points)||points.length>256||!Array.from(points).every(isSketchPoint)||!Array.isArray(vertexIds)||vertexIds.length!==points.length||
-    !Array.from(vertexIds).every(idOk)||new Set(vertexIds).size!==vertexIds.length||
-    !Array.isArray(anchors)||anchors.length<1||anchors.length>points.length){
-    throw new Error(t('Invalid path point locks.'));
-  }
+    !Array.from(vertexIds).every(idOk)||new Set(vertexIds).size!==vertexIds.length)throw segmentConstraints===undefined?invalidLocks():invalidSegments();
+  if(anchors!==undefined&&(!Array.isArray(anchors)||!anchors.length||anchors.length>points.length))throw invalidLocks();
+  if(segmentConstraints!==undefined&&(!Array.isArray(segmentConstraints)||!segmentConstraints.length||segmentConstraints.length>=points.length))throw invalidSegments();
+  if(anchors===undefined&&segmentConstraints===undefined)throw invalidLocks();
   const indices=new Map(vertexIds.map((id,index)=>[id,index]));
   const resolved=points.slice();
-  const applied=new Set<string>();
-  for(const anchor of anchors){
-    if(!record(anchor)||!indices.has(anchor.vertexId)||applied.has(anchor.vertexId)||
-      ![anchor.x,anchor.y].every(value=>typeof value==='number'||typeof value==='string')){
-      throw new Error(t('Invalid path point locks.'));
-    }
-    applied.add(anchor.vertexId);
+  const locked=new Set<string>();
+  const scalar=(value:unknown)=>typeof value==='number'||typeof value==='string';
+  for(const anchor of anchors??[]){
+    if(!record(anchor)||!indices.has(anchor.vertexId)||locked.has(anchor.vertexId)||![anchor.x,anchor.y].every(scalar))throw invalidLocks();
+    locked.add(anchor.vertexId);
     resolved[indices.get(anchor.vertexId)!]=[featureValue(anchor.x,doc),featureValue(anchor.y,doc)];
+  }
+  const drivers=new Map<number,SketchPathSegmentConstraint>();
+  for(const constraint of segmentConstraints??[]){
+    if(!record(constraint)||![constraint.distance,constraint.direction].every(scalar))throw invalidSegments();
+    const from=indices.get(constraint.from),to=indices.get(constraint.to);
+    if(from===undefined||to!==from+1)throw invalidSegments();
+    if(locked.has(constraint.to)||drivers.has(to))throw new Error(t('A point can have only one driver. Remove its lock or its other segment constraint.'));
+    drivers.set(to,constraint);
+  }
+  for(let to=1;to<resolved.length;to++){
+    const driver=drivers.get(to);
+    if(!driver)continue;
+    const length=dimension(driver.distance,doc),degrees=featureValue(driver.direction,doc,'deg')%360;
+    const quarter=((degrees%360+360)%360)/90;
+    const radians=degrees*Math.PI/180;
+    const [u,v]=Number.isInteger(quarter)?[[1,0],[0,1],[-1,0],[0,-1]][quarter]:[Math.cos(radians),Math.sin(radians)];
+    const [x,y]=resolved[to-1];
+    const point:SketchPoint=[x+u*length,y+v*length];
+    if(!isSketchPoint(point))throw new Error(t('The driven point lies outside the sketch coordinate range.'));
+    resolved[to]=point;
   }
   return resolved;
 }
@@ -191,6 +213,7 @@ export function checkFeatures(doc:CadDocument) {
   if(doc.sketches!==undefined){if(doc.version<3||!record(doc.sketches)||Object.keys(doc.sketches).length>256)throw new Error(t('Sketches require document version 3 and at most 256 sketches'));
     for(const [id,sketch] of Object.entries(doc.sketches)){if(!idOk(id)||sketch.id!==id)throw new Error(t('Invalid sketch identity'));if(sketch.profile?.kind==='path'){
       if(doc.version<15)throw new Error(t('Open sketch paths require document version 15'));
+      if(doc.version<28&&sketch.profile.segmentConstraints!==undefined)throw new Error(t('Path segment constraints require document version 28'));
       if(doc.version<16&&(sketch.profile.anchors!==undefined||sketch.profile.vertexIds!==undefined))throw new Error(t('Path point locks require document version 16'));
     }evaluateSketch(sketch,doc);checkDrawingVertexIds(sketch.profile,doc.version);}}
   for(const node of Object.values(doc.nodes)){
@@ -207,7 +230,8 @@ export function sketchExpressions(sketch:PlanarSketch):string[] {
   const profile=sketch.profile;
   const values=profile.kind==='rectangle'?[profile.width,profile.depth]:
     profile.kind==='circle'?[profile.radius]:
-    profile.kind==='path'?profile.anchors?.flatMap(anchor=>[anchor.x,anchor.y])??[]:
+    profile.kind==='path'?[...(profile.anchors??[]).flatMap(anchor=>[anchor.x,anchor.y]),
+      ...(profile.segmentConstraints??[]).flatMap(constraint=>[constraint.distance,constraint.direction])]:
     profile.kind==='region'?profile.loops.flatMap(loop=>loop.kind==='circle'?[...loop.center,loop.radius]:[]):[];
   return values.filter((value):value is string=>typeof value==='string');
 }
@@ -223,6 +247,10 @@ export function rewriteSketchExpressions(sketch:PlanarSketch,rewrite:(s:string)=
     for(const anchor of profile.anchors??[]){
       anchor.x=transform(anchor.x);
       anchor.y=transform(anchor.y);
+    }
+    for(const constraint of profile.segmentConstraints??[]){
+      constraint.distance=transform(constraint.distance);
+      constraint.direction=transform(constraint.direction);
     }
   }else if(profile.kind==='region'){
     for(const loop of profile.loops){

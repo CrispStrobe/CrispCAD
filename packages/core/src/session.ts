@@ -20,7 +20,7 @@ import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositio
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -256,7 +256,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     },
     addCode(program:CodeProgram,name='Code object',options:{position?:Vec3}={}){const id=newId();commit('Add code object',d=>{d.version=Math.max(d.version,4) as CadDocument['version'];d.nodes[id]={id,kind:'code',program:structuredClone(program),name:uniqueObjectName(name,new Set(d.roots.map(key=>d.nodes[key].name))),color:'#76b7ce',transform:{...identityTransform(),position:options.position??[0,0,0]}};d.roots.push(id);return [id];});return id;},
     updateCode(id:string,program:CodeProgram){commit('Edit code object',d=>{const node=d.nodes[id];if(node?.kind!=='code')throw new Error(t('Select a code object'));guardConstructionEdit(d,id);const next={...node,program:structuredClone(program)};if(next.physics&&!sameModelValue(node.program,program)){next.physics={...next.physics};delete next.physics.collisionAssembly;}d.nodes[id]=next;});},
-    addSketch(profile:SketchProfile,options:{name?:string;plane?:PlanarSketch['plane']}={}) {const id=newId();commit('Add sketch',d=>{if(profile.kind==='path')upgradeModelFeatures(d,profile.anchors!==undefined||profile.vertexIds!==undefined?16:15);else if(d.version<3)d.version=3;d.sketches??={};d.sketches[id]={version:1,id,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile)};});return id;},
+    addSketch(profile:SketchProfile,options:{name?:string;plane?:PlanarSketch['plane']}={}) {const id=newId();commit('Add sketch',d=>{if(profile.kind==='path')upgradeModelFeatures(d,profile.segmentConstraints!==undefined?28:profile.anchors!==undefined||profile.vertexIds!==undefined?16:15);else if(d.version<3)d.version=3;d.sketches??={};d.sketches[id]={version:1,id,name:options.name??'Sketch',plane:options.plane??'XY',profile:structuredClone(profile)};});return id;},
     extrudeSketch(sketchId:string,options:{distance?:FeatureScalar;symmetric?:boolean}={}) {const id=newId();commit('Extrude sketch',d=>{
       d.version=Math.max(d.version,3) as CadDocument['version'];d.nodes[id]={id,kind:'extrusion',featureVersion:1,sketchId,distance:options.distance??10,symmetric:options.symmetric??false,name:uniqueObjectName(t('Extrusion'),new Set(d.roots.map(key=>d.nodes[key].name))),color:'#eea52b',transform:identityTransform()};d.roots.push(id);return [id];});return id;},
     addSketchExtrusion(profile:SketchProfile,options:{name?:string;plane?:PlanarSketch['plane'];distance?:FeatureScalar;symmetric?:boolean;position?:Vec3}={}) {
@@ -305,7 +305,11 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       });
     },
     updateSketch(id:string,patch:Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>) {commit('Edit sketch',d=>{
-      if(patch.profile?.kind==='path'&&(patch.profile.anchors!==undefined||patch.profile.vertexIds!==undefined))upgradeModelFeatures(d,16);
+      if(patch.profile?.kind==='path'){
+        const path=patch.profile;
+        if(path.segmentConstraints!==undefined)upgradeModelFeatures(d,28);
+        else if(path.anchors!==undefined||path.vertexIds!==undefined)upgradeModelFeatures(d,16);
+      }
       editSketch(d,id,patch);
     });},
     editExtrusion(id:string,inputs:{sketch?:Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>;distance:FeatureScalar;symmetric:boolean}) {commit('Edit sketch extrusion',d=>{

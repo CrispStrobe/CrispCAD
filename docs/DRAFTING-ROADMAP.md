@@ -374,5 +374,19 @@ parameter edits, and trimming keeps the locks on surviving points. DXF export
 and closure into an outline use the current coordinates. Unlocking a point
 keeps its current position when the point rows are valid.
 
-Document version 16 stores the vertex identities and locks. Coupled constraints,
-degrees of freedom, and constraints on closed profiles remain open.
+Document version 16 stores the vertex identities and locks.
+
+### Directed segment constraints on open paths
+
+Open **Segment constraints**, choose a segment, and set its endpoint distance
+and direction. Direction is measured counterclockwise from +X in the sketch
+plane. Both values accept project parameter expressions. The first point drives
+the next point, and adjoining constraints propagate in path order. A driven
+endpoint cannot also have a point lock. The preview, snap guides, and DXF export
+use the evaluated path. Removing a constraint keeps the current endpoint.
+Trimming keeps a relation when both vertices survive on the same segment.
+Closing the path uses the evaluated geometry.
+
+Document version 28 retains the relationships and their expressions. General
+coupled constraints, degrees of freedom, and constraints on closed profiles
+remain open.

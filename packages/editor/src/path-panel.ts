@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {closePathProfile,evaluateSketch,newId,resolveSketchPath,sketchDxfLayerFields,t,trimSketchProfile,FeatureEvaluationError} from '@brickwright/cad-core';
-import type {CadSession,PlanarSketch,SketchPathProfile,SketchPlane} from '@brickwright/cad-core';
+import type {CadSession,FeatureScalar,PlanarSketch,SketchPathProfile,SketchPathSegmentConstraint,SketchPlane} from '@brickwright/cad-core';
 import {formatSketchPoints,parseSketchOutline,parseSketchPoint} from './sketch-point-entry.js';
 import {operationField} from './body-operation-panel.js';
 import {mountDxfImportControls} from './dxf-import-controls.js';
@@ -11,6 +11,7 @@ const element=<K extends keyof HTMLElementTagNameMap>(tag:K,value?:string)=>{
  if(value!==undefined)node.textContent=value;
  return node;
 };
+const scalar=(value:string):FeatureScalar=>Number.isFinite(Number(value))?Number(value):value;
 const svgNS='http://www.w3.org/2000/svg';
 
 export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects:()=>void,onExport?:(file:ReturnType<typeof exportSketchPathDxf>)=>void|Promise<void>){
@@ -26,7 +27,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   const profile=existing?.profile.kind==='path'?existing.profile:undefined;
   const profileId=profile?.id??newId();
   let dxfLayer=sketchDxfLayerFields(profile),draftRevision=0;
-  let vertexIds=profile?.vertexIds,anchors=profile?.anchors;
+  let vertexIds=profile?.vertexIds,anchors=profile?.anchors,segmentConstraints=profile?.segmentConstraints;
   dialog.replaceChildren();
 
   const header=element('header'),close=element('button','×');
@@ -63,9 +64,18 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
    element('p',t('Fix a point with millimetres or a project parameter, such as width / 2. Unlock points before inserting, removing, or reordering rows.')),
    operationField(t('Path point'),vertex).label,operationField(t('Locked X (mm)'),lockX).label,
    operationField(t('Locked Y (mm)'),lockY).label,applyLock,removeLock);
-  const closureHint=element('small',t('Closing uses the current positions of locked points. The outline has no point locks.'));
-  locks.append(closureHint);
+  const closureHint=element('small',t('Closing uses the current path geometry and clears its path constraints.'));
   fields.append(locks);
+
+  const constraints=element('details');
+  constraints.className='sketch-expressions';
+  const segment=element('select'),distance=element('input'),direction=element('input');
+  const applyConstraint=element('button',t('Constrain segment')),removeConstraint=element('button',t('Remove segment constraint'));
+  constraints.append(element('summary',t('Segment constraints')),
+   element('p',t('The first point drives the next. Set endpoint distance and direction from sketch +X, counterclockwise. Both fields accept parameters. Remove the constraints before inserting, removing, or reordering point rows.')),
+   operationField(t('Path segment'),segment).label,operationField(t('Endpoint distance (mm)'),distance).label,
+   operationField(t('Direction (deg)'),direction).label,applyConstraint,removeConstraint);
+  fields.append(constraints,closureHint);
 
   const trim=element('details');
   trim.className='sketch-expressions';
@@ -104,7 +114,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
 
   function read():PlanarSketch&{profile:SketchPathProfile}{
    return {version:1,id:id??'preview-path',name:name.value.trim(),plane:plane.value as SketchPlane,
-    profile:{kind:'path',id:profileId,...parseSketchOutline(points.value.trim().split(/\r?\n/)),...dxfLayer,...(anchors?{anchors,vertexIds}:{})}};
+    profile:{kind:'path',id:profileId,...parseSketchOutline(points.value.trim().split(/\r?\n/)),...dxfLayer,...(vertexIds?{vertexIds}:{}),...(anchors?{anchors}:{}),...(segmentConstraints?{segmentConstraints}:{})}};
   }
   function report(error:unknown){
    status.textContent=error instanceof FeatureEvaluationError?error.diagnostic.message:error instanceof Error?error.message:String(error);
@@ -112,7 +122,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   function writePath(next:SketchPathProfile){
    points.value=formatSketchPoints(next.points,next.bulges,next.dxfWidths).join('\n');
    vertexIds=next.vertexIds;
-   anchors=next.anchors;
+   anchors=next.anchors;segmentConstraints=next.segmentConstraints;
   }
   function updateLockFields(){
    const index=vertex.selectedIndex,anchor=anchors?.find(item=>item.vertexId===vertexIds?.[index]);
@@ -125,16 +135,37 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
     const draft=read();
     if(index<0||vertexIds&&vertexIds.length!==draft.profile.points.length)return;
     const point=resolveSketchPath(draft.profile,doc)[index];
-    if(!point)return;
+    if(!point||segmentConstraints?.some(constraint=>constraint.to===vertexIds?.[index]))return;
     applyLock.disabled=false;
     if(anchor)return;
     lockX.value=String(point[0]);
     lockY.value=String(point[1]);
    }catch{/* The preview reports invalid geometry. */}
   }
+  const selectedConstraint=()=>segmentConstraints?.find(constraint=>constraint.to===vertexIds?.[segment.selectedIndex+1]);
+  function updateConstraintFields(){
+   const index=segment.selectedIndex,current=selectedConstraint();
+   removeConstraint.disabled=!current;
+   applyConstraint.textContent=t(current?'Update segment constraint':'Constrain segment');
+   applyConstraint.disabled=true;
+   distance.value=current===undefined?'':String(current.distance);
+   direction.value=current===undefined?'':String(current.direction);
+   if(index<0)return;
+   try{
+    const resolved=resolveSketchPath(read().profile,doc);
+    const a=resolved[index],b=resolved[index+1];
+    if(!a||!b||anchors?.some(anchor=>anchor.vertexId===vertexIds?.[index+1]))return;
+    applyConstraint.disabled=false;
+    if(current)return;
+    const dx=b[0]-a[0],dy=b[1]-a[1];
+    distance.value=String(Number(Math.hypot(dx,dy).toFixed(8)));
+    direction.value=String(Number((Math.atan2(dy,dx)*180/Math.PI).toFixed(8)));
+   }catch{/* The sketch status reports the geometry error. */}
+  }
+
   function draw(){
    widthHint.hidden=true;
-   closureHint.hidden=!anchors?.length;
+   closureHint.hidden=!anchors?.length&&!segmentConstraints?.length;
    preview.replaceChildren();
    status.textContent='';
    save.disabled=closePath.disabled=trimButton.disabled=exportPath.disabled=true;
@@ -148,10 +179,17 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
    }));
    vertex.selectedIndex=Math.max(0,Math.min(selected,count-1));
    updateLockFields();
+   const currentSegment=segment.selectedIndex;
+   segment.replaceChildren(...Array.from({length:Math.max(0,count-1)},(_,i)=>{
+    const constrained=segmentConstraints?.some(item=>item.to===vertexIds?.[i+1]);
+    return new Option(constrained?t`Segment ${i+1}–${i+2} (constrained)`:t`Segment ${i+1}–${i+2}`,String(i));
+   }));
+   segment.selectedIndex=count>1?Math.max(0,Math.min(currentSegment,count-2)):-1;
+   updateConstraintFields();
    try{
     const draft=read();
     widthHint.hidden=!draft.profile.dxfWidths;
-    if(vertexIds&&vertexIds.length!==draft.profile.points.length)throw new Error(t('Restore the original point count or unlock the points.'));
+    if(vertexIds&&vertexIds.length!==draft.profile.points.length)throw new Error(t('Restore the original point count or remove the point locks and segment constraints.'));
     const {contour}=evaluateSketch(draft,doc),x=contour.map(point=>point[0]),y=contour.map(point=>-point[1]);
     const left=Math.min(...x),top=Math.min(...y),width=Math.max(...x)-left,height=Math.max(...y)-top,margin=Math.max(width,height,1)*.15;
     const svg=document.createElementNS(svgNS,'svg');
@@ -164,12 +202,14 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
     const vertices=resolveSketchPath(draft.profile,doc);
     for(const [index,point] of vertices.entries()){
      const locked=anchors?.some(anchor=>anchor.vertexId===vertexIds?.[index]);
-     if(!locked&&index!==0&&index!==vertices.length-1)continue;
+     const driven=segmentConstraints?.some(item=>item.to===vertexIds?.[index]);
+     if(!locked&&!driven&&index!==0&&index!==vertices.length-1)continue;
      const endpoint=document.createElementNS(svgNS,'circle');
      endpoint.setAttribute('cx',String(point[0]));
      endpoint.setAttribute('cy',String(-point[1]));
      endpoint.setAttribute('r',String(margin*.15));
      endpoint.setAttribute('class',locked?'sketch-handle sketch-path-locked':'sketch-handle');
+     if(driven)endpoint.setAttribute('data-driven','true');
      svg.append(endpoint);
     }
     preview.append(svg);
@@ -182,6 +222,10 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
     if(event.target===vertex)updateLockFields();
     return;
    }
+   if(event.target instanceof Node&&constraints.contains(event.target)){
+    if(event.target===segment)updateConstraintFields();
+    return;
+   }
    draw();
   }
   fields.addEventListener('input',changed);
@@ -192,7 +236,6 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
     const draft=read(),index=vertex.selectedIndex;
     const ids=vertexIds??draft.profile.points.map(()=>newId());
     const vertexId=ids[index],x=lockX.value.trim(),y=lockY.value.trim();
-    const scalar=(value:string)=>Number.isFinite(Number(value))?Number(value):value;
     if(!x||!y||!vertexId)throw new Error(t('Enter both locked coordinates.'));
     const next=[...(anchors??[]).filter(anchor=>anchor.vertexId!==vertexId),{vertexId,x:scalar(x),y:scalar(y)}];
     evaluateSketch({...draft,profile:{...draft.profile,vertexIds:ids,anchors:next}},doc);
@@ -213,9 +256,36 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
     }
    }catch{/* Keep unfinished point entries editable when the lock is removed. */}
    anchors=remaining?.length?remaining:undefined;
-   if(!anchors)vertexIds=undefined;
+   if(!anchors&&!segmentConstraints)vertexIds=undefined;
    draftRevision++;
    draw();
+  };
+
+  applyConstraint.onclick=()=>{
+   try{
+    const draft=read(),index=segment.selectedIndex;
+    const ids=vertexIds??draft.profile.points.map(()=>newId());
+    const from=ids[index],to=ids[index+1],length=distance.value.trim(),angle=direction.value.trim();
+    if(!from||!to||!length||!angle)throw new Error(t('Enter both endpoint distance and direction.'));
+    const next:SketchPathSegmentConstraint[]=[...(segmentConstraints??[]).filter(item=>item.to!==to),
+     {from,to,distance:scalar(length),direction:scalar(angle)}];
+    evaluateSketch({...draft,profile:{...draft.profile,vertexIds:ids,segmentConstraints:next}},doc);
+    vertexIds=ids;segmentConstraints=next;
+    draftRevision++;draw();
+   }catch(error){report(error);}
+  };
+  removeConstraint.onclick=()=>{
+   const current=selectedConstraint();
+   if(!current)return;
+   try{
+    const {profile:draft}=read(),index=segment.selectedIndex+1;
+    draft.points[index]=resolveSketchPath(draft,doc)[index];
+    points.value=formatSketchPoints(draft.points,draft.bulges,draft.dxfWidths).join('\n');
+   }catch{/* Removing a constraint can repair an unfinished draft. */}
+   const next=segmentConstraints!.filter(item=>item!==current);
+   segmentConstraints=next.length?next:undefined;
+   if(!anchors&&!segmentConstraints)vertexIds=undefined;
+   draftRevision++;draw();
   };
 
   const active=()=>dialog.open&&dialog.firstChild===header;

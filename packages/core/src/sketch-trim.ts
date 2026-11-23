@@ -96,18 +96,23 @@ export function trimSketchProfile(sketch:PlanarSketch,context:Pick<CadDocument,'
   if(remaining.some(piece=>!piece.keep))throw new Error(t('This trim would leave separate paths. Choose a different line or side.'));
   const {points,bulges,dxfWidths}=pointsFrom(remaining);
   result={...profile,points,...(dxfWidths?{dxfWidths}:{})};
-  if(profile.vertexIds&&profile.anchors){
+  if(profile.vertexIds){
    const {vertexIds}=profile;
    const retainedIds=points.map(point=>vertexIds[sourceIndices.get(point)??-1]??newId());
-   const anchors=profile.anchors.filter(anchor=>retainedIds.includes(anchor.vertexId));
-   if(anchors.length){
+   const indices=new Map(retainedIds.map((id,index)=>[id,index]));
+   const anchors=profile.anchors?.filter(anchor=>indices.has(anchor.vertexId))??[];
+   const segmentConstraints=profile.segmentConstraints?.filter(({from,to})=>
+    indices.has(from)&&indices.get(to)===indices.get(from)!+1)??[];
+   if(anchors.length)result.anchors=anchors;
+   else delete result.anchors;
+   if(segmentConstraints.length)result.segmentConstraints=segmentConstraints;
+   else delete result.segmentConstraints;
+   if(anchors.length||segmentConstraints.length){
     result.vertexIds=retainedIds;
-    result.anchors=anchors;
-    result.points=points.map(point=>profile.points[sourceIndices.get(point)??-1]??point);
-   }else{
-    delete result.vertexIds;
-    delete result.anchors;
-   }
+    const driven=new Set([...anchors.map(anchor=>anchor.vertexId),...segmentConstraints.map(edge=>edge.to)]);
+    result.points=points.map((point,index)=>driven.has(retainedIds[index])?
+     profile.points[sourceIndices.get(point)!]:point);
+   }else delete result.vertexIds;
   }
   if(bulges.some(Boolean))result.bulges=bulges;
   else delete result.bulges;

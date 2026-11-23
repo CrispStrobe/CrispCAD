@@ -107,3 +107,65 @@ it('retains surviving locks across trim and drops locks on removed vertices',()=
  expect(second).not.toHaveProperty('anchors');
  expect(second).not.toHaveProperty('vertexIds');
 });
+
+it('evaluates chained endpoint constraints in path order and retains their expressions',()=>{
+ const session=createCadSession();
+ session.setParametric({version:1,parameters:{reach:{expression:'10',unit:'mm'},heading:{expression:'90',unit:'deg'}},bindings:[]});
+ const constrained:typeof profile={kind:'path',id:'profile',points:[[0,0],[7,2],[15,4],[20,18]],
+  vertexIds:['a','b','c','d'],anchors:[{vertexId:'a',x:2,y:1}],segmentConstraints:[
+   {from:'b',to:'c',distance:8,direction:'heading'},
+   {from:'a',to:'b',distance:'reach',direction:0}
+  ]};
+ const id=session.addSketch(constrained,{name:'Driven guide'});
+ const saved=session.state.document;
+ expect(saved.version).toBe(28);
+ expect(resolveSketchPath(constrained,saved)).toEqual([[2,1],[12,1],[12,9],[20,18]]);
+ expect(parseDocument(session.serialize())).toEqual(saved);
+ expect(compileModelSource(generateModelSource(saved),saved).sketches[id].profile).toEqual(constrained);
+ expect(designGraph(saved).find(entry=>entry.key===`sketch:${id}`)?.dependencies.slice().sort())
+  .toEqual(['parameter:heading','parameter:reach']);
+ expect(()=>validateDocument({...saved,version:27})).toThrow('version 28');
+
+ const parametric=structuredClone(saved.parametric!);
+ parametric.parameters.reach.expression='14';
+ parametric.parameters.heading.expression='-90';
+ session.setParametric(parametric);
+ const current=session.state.document,driven=current.sketches![id];
+ expect(sketchSnapReference(driven,current).points).toContainEqual({kind:'Endpoint',point:[16,-7]});
+ expect(readSketchPathDxf(new TextDecoder().decode(exportSketchPathDxf(current,driven).bytes)).points[2]).toEqual([16,-7]);
+ session.undo();
+ expect(session.state.document).toEqual(saved);
+ session.closeSketchPath(id,constrained,{name:'Closed guide',plane:'XY'});
+ expect(session.state.document.sketches![id].profile).toMatchObject({kind:'outline',points:[[2,1],[12,1],[12,9],[20,18]]});
+ expect(session.state.document.sketches![id].profile).not.toHaveProperty('segmentConstraints');
+ session.undo();
+ expect(session.state.document.sketches![id].profile).toEqual(constrained);
+
+ for(const constraint of [
+  {from:'a',to:'c',distance:8,direction:90},
+  {from:'a',to:'b',distance:8,direction:90},
+  {from:'c',to:'d',distance:0,direction:90},
+  {from:'c',to:'d',distance:8,direction:'12 mm'}
+ ]){
+  expect(()=>session.updateSketch(id,{profile:{...constrained,segmentConstraints:[...constrained.segmentConstraints!,constraint]}})).toThrow();
+ }
+ expect(()=>session.updateSketch(id,{profile:{...constrained,anchors:[{vertexId:'c',x:12,y:9}]}})).toThrow();
+ expect(session.state.document).toEqual(saved);
+});
+
+it('retains complete relations after trimming and bakes endpoints released by a cut',()=>{
+ const constrained:typeof profile={kind:'path',id:'profile',points:[[0,0],[20,1],[20,15],[28,15]],
+  vertexIds:['a','b','c','d'],segmentConstraints:[
+   {from:'a',to:'b',distance:20,direction:0},
+   {from:'b',to:'c',distance:10,direction:90}
+  ]};
+ const trimmed=trimSketchProfile({...sketch,profile:constrained},{},[10,20],[10,-10],'left');
+ if(trimmed.kind!=='path')throw Error('fixture');
+ expect(trimmed.segmentConstraints).toEqual([constrained.segmentConstraints![1]]);
+ expect(trimmed.points[1]).toEqual([20,0]);
+ expect(resolveSketchPath(trimmed,{})).toEqual([[10,0],[20,0],[20,10],[28,15]]);
+ const cut=trimSketchProfile({...sketch,profile:trimmed},{},[0,5],[30,5],'left');
+ expect(cut).toMatchObject({kind:'path',points:[[20,5],[20,10],[28,15]]});
+ expect(cut).not.toHaveProperty('segmentConstraints');
+ expect(cut).not.toHaveProperty('vertexIds');
+});

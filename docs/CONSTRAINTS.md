@@ -5,8 +5,11 @@
 Retained open paths support fixed X and Y coordinates, including dimensioned
 parameter expressions. Each lock refers to a persistent vertex ID. The editor
 resolves the coordinates directly and validates the resulting geometry in the
-current session transaction. This covers exact point locks. Coupled segment and
-profile constraints still require the geometric worker described below.
+current session transaction. An open path can also retain a directed distance
+and angle from one vertex to the next. Each driven vertex has one source, so
+the editor can resolve a chain in order as parameter values change. General
+geometric constraints, degrees of freedom, and constraints on closed profiles
+remain part of the worker design below.
 
 ## Follow-up review — 2026-11-14
 
