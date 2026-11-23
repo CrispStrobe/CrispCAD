@@ -25,7 +25,12 @@ change. Model-source drafts can also change the outline or its relations.
 Preview checks the solved candidate. Apply saves the parameters, coordinates,
 and source in one Undo step. Any conflicting outline keeps the previous
 parameters and geometry. Existing sketches with stale coordinates can still
-be repaired by reopening and solving them. Solving while dragging remains open.
+be repaired by reopening and solving them. In a single closed outline,
+drag a free vertex to mark the desired position and release to solve toward it.
+The worker treats the position as a preference and preserves hard relations.
+Point 1 stays fixed. A cancelled, stale or invalid move keeps the prior draft.
+The draft enters history only through Create or Apply. Continuous solving
+and constrained dragging across region loops remain open.
 
 Document version 32 adds **Arc radius** for an existing curved segment in a
 single closed outline. Give the radius a value or a named expression. The

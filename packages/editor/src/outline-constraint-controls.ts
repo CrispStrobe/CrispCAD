@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {isOutlineCurveRule,maxConstrainedOutlinePoints,maxOutlineRelations,newId,outlineArcSweep,outlineBulgesForCurves,outlineCurvesSatisfied,outlineRelationsForSolve,outlineSatisfiesRelations,outlineSegmentsAdjoin,t} from '@brickwright/cad-core';
+import {isSketchPoint,isOutlineCurveRule,maxConstrainedOutlinePoints,maxOutlineRelations,newId,outlineArcSweep,outlineBulgesForCurves,outlineCurvesSatisfied,outlineRelationsForSolve,outlineSatisfiesRelations,outlineSegmentsAdjoin,t} from '@brickwright/cad-core';
 import type {FeatureScalar,OutlineArcSweep,OutlineRelation,SketchOutlineProfile} from '@brickwright/cad-core';
 import {solveOutline} from './outline-constraint-solve.js';
+import type {OutlineDragTarget} from './outline-constraint-solve.js';
 
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{
  const node=document.createElement(tag);
@@ -225,7 +226,7 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   redrawList();
   options.changed?.();
  };
- solve.onclick=async()=>{
+ async function solveDraft(target?:OutlineDragTarget,report?:(message:string)=>void){
   if(!options.available()||solving)return;
   const controller=new AbortController(),revision=options.revision();
   const close=()=>{if(!options.active())controller.abort();};
@@ -233,26 +234,30 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   solving=true;
   options.pending(true);
   refreshButtons();
-  status.textContent=t('Solving outline…');
+  const updateStatus=(message:string)=>{status.textContent=message;report?.(message);};
+  updateStatus(t('Solving outline…'));
   try{
    const geometry=options.read();
    const {request,curves}=plan(geometry);
-   const result=request.constraints.length?await solveOutline(request,controller.signal):{points:geometry.points,degrees:null};
+   if(target&&!isSketchPoint(target.point))throw new Error(t('The drag target is outside the sketch coordinate limits.'));
+   const points=target?geometry.points.map((point,index)=>index===target.index?target.point:point):geometry.points;
+   const result=request.constraints.length?await solveOutline(request,controller.signal,target):{points,degrees:null};
    if(!options.active())return;
    if(revision!==options.revision()||!options.available()){
     throw new Error(t('The sketch changed during the solve. Solve the outline again.'));
    }
    options.apply({points:result.points,bulges:outlineBulgesForCurves(result.points,geometry.bulges,curves)});
-   status.textContent=result.degrees===null?t('Outline solved.'):
+   updateStatus(result.degrees===null?t('Outline solved.'):
     result.degrees===0?t('Outline solved. Fully constrained.'):
-     t`Outline solved. Degrees of freedom: ${result.degrees}.`;
+     t`Outline solved. Degrees of freedom: ${result.degrees}.`);
   }catch(error){
-   if(options.active())status.textContent=error instanceof Error?error.message:String(error);
+   if(options.active())updateStatus(error instanceof Error?error.message:String(error));
   }finally{
    dialog.removeEventListener('close',close);
    solving=false;
    if(options.active()){options.pending(false);refreshButtons();}
   }
- };
- return {refresh,forSave,get pending(){return solving;},get hasConstraints(){return constraints.length>0;}};
+ }
+ solve.onclick=()=>void solveDraft();
+ return {refresh,forSave,moveVertex:solveDraft,get pending(){return solving;},get hasConstraints(){return constraints.length>0;}};
 }

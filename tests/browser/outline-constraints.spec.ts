@@ -445,3 +445,73 @@ test('matches edges on separate region loops and re-solves when the reference ch
  await expect(sketch.getByRole('button',{name:'Remove edge match 1',exact:true})).toBeVisible();
  expect(await measured()).toBeCloseTo(16);
 });
+
+test('drags a constrained outline vertex in the draft and keeps dimensions on Apply',async({page})=>{
+ await page.goto('/');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await page.getByRole('button',{name:'Sketch',exact:true}).click();
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await sketch.getByLabel('Profile',{exact:true}).selectOption('outline');
+ const coordinates=sketch.getByLabel('Outline points X, Y (mm)');
+ const initial='0, 0\n40, 0\n40, 20\n0, 20';
+ await coordinates.fill(initial);
+ await sketch.getByText('Outline constraints',{exact:true}).click();
+ const kind=sketch.getByLabel('Constraint',{exact:true}),edge=sketch.getByLabel('Constrained segment');
+ const add=sketch.getByRole('button',{name:'Add constraint',exact:true});
+ await kind.selectOption('horizontal');
+ await edge.selectOption('0');
+ await add.click();
+ await kind.selectOption('length');
+ await edge.selectOption('0');
+ await sketch.getByLabel('Segment length (mm)').fill('40');
+ await add.click();
+ await kind.selectOption('vertical');
+ await edge.selectOption('1');
+ await add.click();
+ await sketch.getByText('Outline constraints',{exact:true}).click();
+
+ const first=sketch.locator('[data-resize="vertex"][data-vertex="0"]');
+ const vertex=sketch.locator('[data-resize="vertex"][data-vertex="2"]');
+ await expect(first).toHaveCount(0);
+ const startDrag=async(dx:number,dy:number)=>{
+  await vertex.scrollIntoViewIfNeeded();
+  const [start,end]=await vertex.evaluate((node,{dx,dy})=>{
+   const circle=node as unknown as SVGCircleElement,matrix=circle.getScreenCTM()!;
+   const x=circle.cx.baseVal.value,y=circle.cy.baseVal.value;
+   return [new DOMPoint(x,y),new DOMPoint(x+dx,y-dy)].map(point=>{
+    const screen=point.matrixTransform(matrix);
+    return {x:screen.x,y:screen.y};
+   });
+  },{dx,dy});
+  await page.mouse.move(start.x,start.y);
+  await page.mouse.down();
+  await page.mouse.move(end.x,end.y,{steps:4});
+ };
+ const preview=sketch.locator('.sketch-preview');
+ await preview.evaluate(node=>node.addEventListener('pointerdown',event=>{
+  (node as HTMLElement).dataset.testPointerId=String((event as PointerEvent).pointerId);
+ },{once:true}));
+ await startDrag(8,6);
+ await expect(coordinates).toHaveValue(initial);
+ await expect(sketch.locator('.sketch-snap-marker')).toHaveCount(1);
+ await preview.dispatchEvent('pointercancel',{pointerId:Number(await preview.getAttribute('data-test-pointer-id'))});
+ await page.mouse.up();
+ await expect(sketch.locator('.sketch-snap-marker')).toHaveCount(0);
+ await expect(coordinates).toHaveValue(initial);
+
+ await startDrag(8,6);
+ await page.mouse.up();
+ await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('Outline solved');
+ const solved=(await coordinates.inputValue()).split('\n').map(row=>row.split(',').map(Number));
+ expect(solved[0]).toEqual([0,0]);
+ expect(solved[1][0]).toBeCloseTo(40,6);
+ expect(solved[1][1]).toBeCloseTo(0,6);
+ expect(solved[2][0]).toBeCloseTo(40,6);
+ expect(solved[2][1]).toBeCloseTo(26,0);
+ await expect(page.getByTestId('object-name')).toHaveCount(0);
+ await sketch.getByRole('button',{name:'Create extrusion',exact:true}).click();
+ await expect(sketch).toBeHidden();
+ await expect(page.getByTestId('object-name')).toHaveCount(1);
+ await page.getByRole('button',{name:'Undo',exact:true}).click();
+ await expect(page.getByTestId('object-name')).toHaveCount(0);
+});

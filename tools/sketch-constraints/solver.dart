@@ -11,6 +11,7 @@ String solve(String data) {
     final request = jsonDecode(data) as Map<String, dynamic>;
     final seeds = request['points'] as List;
     final constraints = request['constraints'] as List;
+    final target = request['target'] as Map<String, dynamic>?;
     if (seeds.length < 3 ||
         seeds.length > 32 ||
         constraints.isEmpty ||
@@ -60,7 +61,25 @@ String solve(String data) {
           throw const FormatException();
       }
     }
-    final result = builder.compile().createSession().solve();
+    final preferences = <GeometryParameterTarget>[];
+    if (target != null) {
+      final index = target['index'] as int;
+      final position = target['point'] as List;
+      if (index < 1 || index >= points.length || position.length != 2) {
+        throw const FormatException();
+      }
+      preferences.add(GeometryParameterTarget(
+        parameterId: points[index].id,
+        values: [
+          (position[0] as num).toDouble(),
+          (position[1] as num).toDouble(),
+          0,
+        ],
+      ));
+    }
+    final result = builder.compile().createSession().solve(
+          preferences: preferences,
+        );
     if (!result.isSuccess) return jsonEncode({'status': 'unsolved'});
     return jsonEncode({
       'status': 'solved',

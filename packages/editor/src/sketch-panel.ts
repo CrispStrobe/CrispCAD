@@ -285,8 +285,9 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    }
    return {...evaluateExtrusion({kind:'extrusion',...common,...extrusion},previewDoc),angle:undefined,axisOffset:undefined};
   }
+  type ConstrainedDrag = {marker:SVGCircleElement; revision:number; point?:SketchPoint};
   type OutlineEdit = {field:HTMLTextAreaElement; original:string; loop:number; index:number; points:SketchPoint[]; bulges?:number[]; dxfWidths?:DxfSegmentWidth[]; targets:SketchSnap[]};
-  let drag:{id:number;x:number;y:number;w:number;h:number;r:number;d:number;inverse:DOMMatrix;kind:string;viewBox:string;outlineEdit?:OutlineEdit;target?:SketchSnap}|undefined;
+  let drag:{id:number;x:number;y:number;w:number;h:number;r:number;d:number;inverse:DOMMatrix;kind:string;viewBox:string;outlineEdit?:OutlineEdit;target?:SketchSnap;constrained?:ConstrainedDrag}|undefined;
   let dragOutline:ReturnType<typeof definition>|undefined;
   let valid=false;
   const bounded=(value:number)=>Math.min(100000,Math.max(.01,value));
@@ -414,6 +415,12 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      points.forEach((point,index)=>{
       if(index===0&&positioned)return;
       const [x,y]=place(point);
+      if(index===0&&p.kind==='outline'&&outlineConstraints.hasConstraints){
+       const pin=document.createElementNS(ns,'circle');
+       pin.setAttribute('cx',String(x));pin.setAttribute('cy',String(y));pin.setAttribute('r',String(span*.023));
+       pin.setAttribute('class','sketch-handle sketch-path-locked');svg.append(pin);
+       return;
+      }
       handle(x,y,'vertex',{loop,index});
      });
      if(!curveHandles.checked)return;
@@ -447,7 +454,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   }
   preview.onpointerdown=event=>{
    const handle=(event.target as Element).closest<SVGElement>('[data-resize]'),svg=preview.querySelector('svg');
-   if(!svg||busy||drag||event.button!==0||!svg.contains(event.target as Node))return;
+   if(!svg||busy||drag||constraintPending()||event.button!==0||!svg.contains(event.target as Node))return;
    const matrix=svg.getScreenCTM();
    if(!matrix)return;
    const inverse=matrix.inverse(),start=new DOMPoint(event.clientX,event.clientY).matrixTransform(inverse);
@@ -463,7 +470,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    }
    if(!handle)return;
    const mode=handle.dataset.resize!;
-   let outlineEdit:OutlineEdit|undefined;
+   let outlineEdit:OutlineEdit|undefined,constrained:ConstrainedDrag|undefined;
    if(mode==='vertex'||mode==='curve'){
     const loop=Number(handle.dataset.loop),index=Number(mode==='curve'?handle.dataset.edge:handle.dataset.vertex);
     const outline=dragOutline?.kind==='region'?dragOutline.loops[loop]:dragOutline;
@@ -472,10 +479,17 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     const targets=mode==='vertex'&&tangents.checked&&!tangents.disabled
      ?[...snapTargets,...collectTangentSnaps(outline,index,referenceGeometry)].sort((a,b)=>a.point[0]-b.point[0])
      :snapTargets;
+    if(mode==='vertex'&&dragOutline?.kind==='outline'&&outlineConstraints.hasConstraints){
+     const marker=document.createElementNS('http://www.w3.org/2000/svg','circle');
+     marker.setAttribute('r',String(Number(handle.getAttribute('r'))*.6));
+     marker.setAttribute('class','sketch-snap-marker');
+     marker.setAttribute('pointer-events','none');
+     constrained={marker,revision:draftRevision};
+    }
     outlineEdit={field,original:field.value,loop,index,points:outline.points,bulges:outline.bulges,dxfWidths:outline.dxfWidths,targets};
    }
    event.preventDefault();
-   drag={id:event.pointerId,x:start.x,y:start.y,w:Number(width.value),h:Number(depth.value),r:Number(radius.value),d:Number(length.value),inverse,kind:mode,viewBox:svg.getAttribute('viewBox')!,outlineEdit};
+   drag={id:event.pointerId,x:start.x,y:start.y,w:Number(width.value),h:Number(depth.value),r:Number(radius.value),d:Number(length.value),inverse,kind:mode,viewBox:svg.getAttribute('viewBox')!,outlineEdit,constrained};
    preview.setPointerCapture(event.pointerId);
    apply.disabled=true;
   };
@@ -501,6 +515,14 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
      const tolerance=radius*Math.hypot(drag.inverse.a,drag.inverse.b);
      drag.target=nearestSketchSnap(candidate,edit.targets,tolerance);
      const moved:SketchPoint=drag.target?.point??[round(candidate[0]),round(candidate[1])];
+     if(drag.constrained){
+      const {marker}=drag.constrained;
+      drag.constrained.point=moved;
+      marker.setAttribute('cx',String(moved[0]+previewDepth*.45));
+      marker.setAttribute('cy',String(-moved[1]-previewDepth*.35));
+      if(!marker.isConnected)preview.querySelector('svg')?.append(marker);
+      return;
+     }
      if(moved[0]!==source[0]||moved[1]!==source[1]){
       const points=edit.points.slice();points[edit.index]=moved;
       rows=formatPoints(points,edit.bulges,edit.dxfWidths);
@@ -520,8 +542,20 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   };
   const endDrag=(event:PointerEvent)=>{
    if(!drag||event.pointerId!==drag.id)return;
+   const {id,outlineEdit,kind,constrained}=drag;
+   if(constrained&&outlineEdit){
+    drag=undefined;
+    constrained.marker.remove();
+    if(preview.hasPointerCapture(id))preview.releasePointerCapture(id);
+    const {point,revision}=constrained;
+    const index=outlineEdit.index,source=outlineEdit.points[index];
+    draw();
+    if(event.type==='pointerup'&&revision===draftRevision&&point&&
+       (point[0]!==source[0]||point[1]!==source[1]))
+     void outlineConstraints.moveVertex({index,point},message=>{status.textContent=message;});
+    return;
+   }
    draftRevision++;
-   const {id,outlineEdit,kind}=drag;
    const restore=outlineEdit&&(event.type!=='pointerup'||!valid);
    const diagnostic=restore&&event.type==='pointerup'?status.textContent:null;
    if(restore)outlineEdit.field.value=outlineEdit.original;
@@ -545,6 +579,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const pending=(solving:boolean)=>{apply.disabled=solving||busy||!valid||!!drag;};
   const outlineConstraints=mountOutlineConstraintControls(form,dialog,{
    initial:profile?.kind==='outline'?profile:undefined,
+   changed:refreshDraft,
    visible:()=>!linked&&kind.value==='outline',
    active,
    available,
@@ -683,7 +718,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    };
   }
   const apply=element('button',t(featureId?'Apply sketch changes':revolving?'Create revolution':'Create extrusion'));apply.className='primary';
-  apply.onclick=async()=>{if(busy||constraintPending())return;const ticket=epoch;busy=true;apply.disabled=true;try{
+  apply.onclick=async()=>{if(busy||drag||constraintPending())return;const ticket=epoch;busy=true;apply.disabled=true;try{
    const snapshot=readForm(true);
    if(session.state.revision!==expected)throw new Error(t('The model changed. Close and reopen this dialog before applying.'));
    const candidate=draft(snapshot);const geometry=await evaluate(candidate.document);const created=geometry.bodies.find(body=>body.id===candidate.id);if(disposed||epoch!==ticket||!dialog.open)return;
@@ -744,7 +779,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   if(!linked&&!featureId&&!revolving){
    const save=element('button',t('Save sketch'));save.type='button';
    save.onclick=()=>{
-    if(busy||constraintPending())return;
+    if(busy||drag||constraintPending())return;
     try{
      if(session.state.revision!==expected)throw new Error(t('The model changed. Close and reopen this dialog before applying.'));
      const {sketch}=readForm(true);previewShape(readForm());

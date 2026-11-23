@@ -4,6 +4,7 @@ import type {OutlineRule,OutlineSolveRequest,SketchPoint} from '@brickwright/cad
 export type {OutlineSolveRequest} from '@brickwright/cad-core';
 
 export type OutlineConstraint=OutlineRule<number,number>;
+export type OutlineDragTarget={index:number;point:SketchPoint};
 export type OutlineSolveResult={points:SketchPoint[];degrees:number|null};
 
 export function verifyOutlineSolve(request:OutlineSolveRequest,response:unknown):OutlineSolveResult{
@@ -22,7 +23,7 @@ export function verifyOutlineSolve(request:OutlineSolveRequest,response:unknown)
  return {points,degrees};
 }
 
-export function solveOutline(request:OutlineSolveRequest,signal:AbortSignal):Promise<OutlineSolveResult>{
+export function solveOutline(request:OutlineSolveRequest,signal:AbortSignal,target?:OutlineDragTarget):Promise<OutlineSolveResult>{
  return new Promise((resolve,reject)=>{
   if(signal.aborted){reject(signal.reason);return;}
   const worker=new Worker(new URL('./outline-constraints.worker.js',import.meta.url),{type:'module'});
@@ -44,7 +45,7 @@ export function solveOutline(request:OutlineSolveRequest,signal:AbortSignal):Pro
    try{resolve(verifyOutlineSolve(request,data));}
    catch(error){reject(error);}
   };
-  try{worker.postMessage(request);}
+  try{worker.postMessage(target?{...request,target}:request);}
   catch(error){finish();reject(error);}
  });
 }

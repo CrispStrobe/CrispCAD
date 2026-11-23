@@ -184,8 +184,10 @@ For coupled segment relations on a closed polygon, open **Outline
 constraints** in Sketch & Extrude. Add horizontal, vertical, length,
 parallel, perpendicular, or equal-length constraints and choose **Solve
 outline**. The solver anchors point 1 and reports remaining degrees of
-freedom. A successful solve updates the preview and coordinate rows. Create
-or Apply saves the geometry and constraint list in one Undo step. Open a
+freedom. Drag a free vertex in a single closed outline and release to solve
+toward the marked position while keeping the existing dimensions. An invalid
+move leaves the draft intact. A successful solve updates the preview and
+coordinate rows. Create or Apply saves them in one Undo step. Open a
 saved outline to edit its constraints and solve with current parameter
 values. Points keep their identities by row. Restore the saved point count
 or clear the constraints before changing the topology. Trimming and
@@ -554,7 +556,7 @@ project sketch. The preview overlays old and new geometry and lists the solids
 that depend on it. Declining the review leaves the model untouched. Applying it
 updates the same sketch in one Undo step. An optional source link remembers which costume or backdrop
 owns a sketch across rename, reorder, and SB3 reopen. A single linked
-linked sketch is selected when the user opens the update list. It restores
+sketch is selected when the user opens the update list. It restores
 the source mode and conversion settings, then matches the region by a unique
 precision shape ID or SVG element ID. Anonymous geometry can match if its
 profile is unchanged and unique. Changed anonymous, duplicate, and older
