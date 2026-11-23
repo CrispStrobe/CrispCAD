@@ -163,6 +163,12 @@ the removal. Whole-project files and model source retain the drawing links.
 Object clipboard copies carry geometry. With multiple saved sheets, choose
 **Export drawing set (PDF)** to create a numbered PDF in the displayed order.
 If a sheet needs repair or exceeds its paper size, the export identifies it.
+
+Open **Title block** to add a drawing number, revision, and drafter to a
+part or assembly sheet. The preview and vector PDF show the identifiers in the
+footer and keep the 50 mm scale check. The same fields appear on assembly
+parts-list pages. Values are optional. Clearing all three restores the standard
+footer. Document version 29 stores the fields with the sheet.
 Enable **Show section A-A** to add a cut through the extrusion in sketch
 coordinates. Choose the constant X or Y coordinate and enter a millimetre
 value or named dimension. A dashed cut line and direction marks identify the

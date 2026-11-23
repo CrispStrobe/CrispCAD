@@ -48,14 +48,14 @@ export function exportDrawingSetPdf(doc:CadDocument,geometry?:GeometryResult|Ass
   try{
    const pages=layoutDrawingPages(doc,sheet,geometry);
    if(pages.some(page=>page.annotationIssues.length))throw new Error(t('Repair or remove unavailable drawing dimensions before exporting.'));
-   return pages;
+   return pages.map(layout=>({layout,hasTitleBlock:!!sheet.titleBlock}));
   }catch(error){
    const message=error instanceof Error?error.message:String(error);
    throw new Error([sheet.title,message].join(' · '));
   }
  });
- const pages=layouts.map((layout,i)=>{
-  layout.texts.push({x:187,y:17,size:3,text:t`Sheet ${i+1} of ${layouts.length}`});
+ const pages=layouts.map(({layout,hasTitleBlock},i)=>{
+  layout.texts.push({x:hasTitleBlock?229:187,y:hasTitleBlock?22:17,size:3,text:t`Sheet ${i+1} of ${layouts.length}`});
   return {width:layout.width,height:layout.height,content:drawingContent(layout)};
  });
  return file(doc.title+' - '+t('Drawing set'),vectorPdf(pages));

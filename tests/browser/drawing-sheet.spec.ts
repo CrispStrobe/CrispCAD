@@ -488,3 +488,52 @@ test('assembly curve dimensions follow a hole and a retained sketch arc',async({
  await expect(preview.getByText('Ø8 mm',{exact:true})).toBeVisible();
  await expect(preview.getByText('Arc length 41.646 mm',{exact:true})).toBeVisible();
 });
+
+test('drawing title block saves, reopens, and prints without displacing the scale check',async({page,hasTouch})=>{
+ const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
+ await page.goto('/');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await addShape(page,'Box',hasTouch);
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ const create=page.getByRole('button',{name:'Create assembly drawing',exact:true});
+ if(!await create.isVisible())await press(page.getByRole('button',{name:'Objects',exact:true}));
+ await press(create);
+ const dialog=page.getByRole('dialog',{name:'Drawing sheet',exact:true});
+ const preview=dialog.getByRole('img',{name:'Drawing preview'});
+ const save=dialog.getByRole('button',{name:'Save drawing sheet',exact:true});
+ const number=dialog.getByLabel('Drawing number'),revision=dialog.getByLabel('Revision',{exact:true}),author=dialog.getByLabel('Drawn by');
+ await dialog.getByLabel('Sheet title').fill('Title block test');
+ await press(dialog.getByText('Title block',{exact:true}));
+ await number.fill('BW-020');
+ await revision.fill('B.2');
+ await author.fill('A. Müller');
+ await expect(preview).toContainText('50 mm scale check');
+ await expect(preview).toContainText('BW-020');
+ await dialog.getByLabel('Include parts list').check();
+ await dialog.getByLabel('Preview page').selectOption('1');
+ await expect(preview).toContainText('Parts list 1 of 1');
+ await expect(preview).toContainText('A. Müller');
+
+ const [download]=await Promise.all([
+  page.waitForEvent('download'),press(dialog.getByRole('button',{name:'Export drawing PDF',exact:true}))
+ ]);
+ const pdf=await readFile((await download.path())!,'utf8');
+ expect(pdf).toContain('229 14 m 279 14 l');
+ expect(pdf.match(/<412e204dfc6c6c6572>/g)).toHaveLength(2);
+ await press(save);
+ await expect(dialog).toBeHidden();
+ const open=page.getByRole('button',{name:'Drawing: Title block test',exact:true});
+ await press(open);
+ await press(dialog.getByText('Title block',{exact:true}));
+ await expect(number).toHaveValue('BW-020');
+ await expect(revision).toHaveValue('B.2');
+ await expect(author).toHaveValue('A. Müller');
+ await number.fill('');
+ await revision.fill('');
+ await author.fill('');
+ await expect(preview).not.toContainText('Drawing number');
+ await press(save);
+ await press(page.getByRole('button',{name:'Undo',exact:true}));
+ await press(open);
+ await expect(preview).toContainText('BW-020');
+});

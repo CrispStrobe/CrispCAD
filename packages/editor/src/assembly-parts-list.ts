@@ -25,7 +25,6 @@ export function layoutAssemblyPartsList(doc:CadDocument,sheet:DrawingInputs,proj
  const pages:DrawingLayout[]=[];
  const newPage=():DrawingLayout=>{
   const page:DrawingLayout={width:297,height:210,paths:[],texts:[],circles:[],anchors:[],annotationIssues:[],factor:1};
-  addDrawingFrame(page,sheet.title,t('Parts list'));
   page.texts.push({x:17,y:169,text:t('Item'),size:3.4},{x:38,y:169,text:t('Body name'),size:3.4});
   page.paths.push({points:[[14,166],[283,166]],stroke:'border'});
   pages.push(page);
@@ -40,8 +39,7 @@ export function layoutAssemblyPartsList(doc:CadDocument,sheet:DrawingInputs,proj
   y-=lines.length*lineHeight;
  }
  for(const [i,page] of pages.entries()){
-  page.paths.push({points:[[8,26],[289,26]],stroke:'border'});
-  page.texts.push({x:14,y:17,size:3,text:t`Parts list ${i+1} of ${pages.length}`});
+  addDrawingFrame(page,sheet.title,t('Parts list'),{titleBlock:sheet.titleBlock,continuation:t`Parts list ${i+1} of ${pages.length}`});
  }
  return pages;
 }

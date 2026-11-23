@@ -122,7 +122,7 @@ function parseRecords(source:string):SourceRecord[]{
 export function compileModelSource(source:string,context:CadDocument,options:{regenerate?:(recipe:GeneratorRecipe,name:string)=>CadDocument}={}):CadDocument{
  const records=parseRecords(source),fail=(detail:string,record?:SourceRecord):never=>{throw new CadCodeError(detail,record?.node.start??0,source);};
  const project=records.find(r=>r.key==='project')!;if(project.args.length!==1||!project.args[0]||typeof project.args[0]!=='object'||Array.isArray(project.args[0]))fail(t('Invalid project declaration'),project);
- if(![6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28].includes(project.args[0].version))fail(t('Model source uses project version 6 through 28'),project);
+ if(![6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29].includes(project.args[0].version))fail(t('Model source uses project version 6 through 29'),project);
  const doc:any={...project.args[0],nodes:Object.create(null),roots:[],modelSource:{version:1,language:'brickwright-design',source}};
  if(doc.id!==context.id)fail(t('Keep the current project identity in model source'),project);
  delete doc.provenance;delete doc.sketches;delete doc.joints;

@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "Drawn by": "Gezeichnet von",
+  "Revision": "Revision",
+  "Drawing number": "Zeichnungsnummer",
+  "Title block": "Schriftfeld",
   "Point locks": "Fixierte Punkte",
   "Invalid path segment constraints. Each constraint must link consecutive points.": "Ungültige Pfadabschnittsbedingungen. Jede Bedingung muss aufeinanderfolgende Punkte verbinden.",
   "A point can have only one driver. Remove its lock or its other segment constraint.": "Ein Punkt kann nur von einer Bedingung gesteuert werden. Löse die Fixierung oder die andere Abschnittsbedingung.",

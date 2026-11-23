@@ -380,3 +380,37 @@ it('distinguishes opposite arcs on a two-point outline and measures a circle rad
  }]};
  expect(layoutDrawing(s.state.document,radius).texts.map(item=>item.text)).toContain('R12 mm');
 });
+
+it('retains an optional title block with the sheet and places it clear of the scale bar',()=>{
+ const {s,id,inputs}=fixture();
+ const titleBlock={number:'PL-0042',revision:'B.1',drawnBy:'A. Müller'};
+ const sheetId=s.saveDrawingSheet(inputs);
+ const before=s.state.document,legacy=layoutDrawing(before,inputs);
+ expect(before.version).toBe(9);
+ expect(legacy.texts.some(label=>label.text==='Drawing number')).toBe(false);
+ s.saveDrawingSheet({...inputs,titleBlock},sheetId);
+ const updated=s.state.document;
+ expect(updated.version).toBe(29);
+ expect(updated.nodes[id]).toBe(before.nodes[id]);
+ const restored=parseDocument(s.serialize());
+ expect(restored.drawings?.[0].titleBlock).toEqual(titleBlock);
+ expect(compileModelSource(s.modelSource,restored).drawings).toEqual(restored.drawings);
+ expect(()=>validateDocument({...restored,version:28})).toThrow('drawing sheets');
+ for(const invalid of [{},{number:' '},{revision:'a\nb'},{drawnBy:'w'.repeat(17)},{unrecognized:'value'}]){
+  expect(()=>s.saveDrawingSheet({...inputs,titleBlock:invalid},sheetId)).toThrow('drawing sheets');
+ }
+ expect(s.state.document).toBe(updated);
+
+ const page=layoutDrawing(restored,restored.drawings![0]);
+ expect(page.texts.filter(label=>label.y===10.5).map(label=>label.text)).toEqual(Object.values(titleBlock));
+ expect(page.paths).toContainEqual(expect.objectContaining({points:[[229,14],[279,14]]}));
+ const pdf=new TextDecoder().decode(exportDrawingSetPdf(restored).bytes);
+ for(const value of Object.values(titleBlock))expect(pdf).toContain('<'+Buffer.from(value,'latin1').toString('hex')+'>');
+ expect(pdf).toContain('229 22 Td');
+ s.saveDrawingSheet(inputs,sheetId);
+ expect(s.state.document.drawings?.[0].titleBlock).toBeUndefined();
+ s.undo();
+ expect(s.state.document.drawings?.[0].titleBlock).toEqual(titleBlock);
+ s.undo();
+ expect(s.state.document).toEqual(before);
+});

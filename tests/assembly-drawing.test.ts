@@ -342,3 +342,23 @@ it('links assembly curve dimensions to native circles and authored arcs through 
  session.remove([cover]);
  expect(current(sheet).annotationIssues).toEqual([]);
 });
+
+it('includes the assembly title block on its drawing and continuing parts-list pages',()=>{
+ const session=createCadSession();
+ for(let i=0;i<30;i++)session.add({kind:'box',size:[4,4,4]},{
+  name:'M3 spacer',
+  transform:{...identityTransform(),position:[(i%10)*5,Math.floor(i/10)*5,0]}
+ });
+ const titleBlock={number:'ASM-21',revision:'04',drawnBy:'CA'};
+ session.saveDrawingSheet({...assembly,partsList:true,titleBlock});
+ const doc=parseDocument(session.serialize()),geometry=kernel.evaluate(doc);
+ const pages=layoutDrawingPages(doc,doc.drawings![0],geometry);
+ expect(pages).toHaveLength(3);
+ for(const page of pages){
+  expect(page.texts.filter(label=>label.y===10.5).map(label=>label.text)).toEqual(Object.values(titleBlock));
+ }
+ expect(pages[2].texts.map(label=>label.text)).toContain('Parts list 2 of 2');
+ const pdf=new TextDecoder().decode(exportDrawingSetPdf(doc,geometry).bytes);
+ expect(pdf).toContain('/Type /Pages /Count 3');
+ expect(pdf.match(/<41534d2d3231>/g)).toHaveLength(3);
+});

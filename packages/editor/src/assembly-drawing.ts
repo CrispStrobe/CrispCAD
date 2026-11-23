@@ -238,6 +238,6 @@ export function layoutAssemblyDrawing(doc:CadDocument,sheet:DrawingInputs,projec
  addAssemblyCurveDimensions(page,sheet.curveDimensions??[]);
  const count=projection.bodyIds.length;
  const subtitle=count===1?t('Assembly · 1 body'):t`Assembly · ${count} bodies`;
- addDrawingFrame(page,sheet.title,subtitle,sheet.scale);
+ addDrawingFrame(page,sheet.title,subtitle,{scale:sheet.scale,titleBlock:sheet.titleBlock});
  return page;
 }

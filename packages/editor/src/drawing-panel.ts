@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {assemblySectionJogLimit,drawingAssemblyAvailable,isAssemblyDrawingSource,drawingAnnotationLimit,drawingScales,drawingSourceFor,evaluateExtrusion,isDrawingVertex,newId,resolveDrawingSource,t,validDrawingPosition} from '@brickwright/cad-core';
-import type {CadSession,DrawingAnnotation,DrawingDimensionKind,DrawingInputs,DrawingScale,DrawingSectionJog,SketchPoint} from '@brickwright/cad-core';
+import {assemblySectionJogLimit,drawingAssemblyAvailable,isAssemblyDrawingSource,drawingAnnotationLimit,drawingScales,drawingTitleBlockLimits,drawingSourceFor,evaluateExtrusion,isDrawingVertex,newId,resolveDrawingSource,t,validDrawingPosition} from '@brickwright/cad-core';
+import type {CadSession,DrawingAnnotation,DrawingDimensionKind,DrawingInputs,DrawingScale,DrawingSectionJog,DrawingTitleBlock,SketchPoint} from '@brickwright/cad-core';
 import type {AssemblyProjection} from './assembly-drawing.js';
 import type {CadFile} from './index.js';
 import {mountAssemblyEdgeControls} from './assembly-edge-controls.js';
@@ -79,6 +79,21 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     const field=element('label',t(text));field.append(control);parent.append(field);
    };
    label('Sheet title',title);if(!assembly)label('Drawing source',source);label('Drawing scale',scale);label('Show hidden lines',hidden);
+   const titleBlockForm=element('details');
+   titleBlockForm.className='drawing-dimensions';
+   titleBlockForm.append(element('summary',t('Title block')));
+   const titleBlockInputs={
+    number:element('input'),revision:element('input'),drawnBy:element('input')
+   };
+   const titleBlockLabels={number:'Drawing number',revision:'Revision',drawnBy:'Drawn by'};
+   const titleBlockKeys=Object.keys(titleBlockInputs) as (keyof DrawingTitleBlock)[];
+   for(const key of titleBlockKeys){
+    const input=titleBlockInputs[key];
+    input.maxLength=drawingTitleBlockLimits[key];
+    input.value=saved?.titleBlock?.[key]??'';
+    label(titleBlockLabels[key],input,titleBlockForm);
+   }
+   form.append(titleBlockForm);
    const partsList=element('input'),previewPage=element('select');
    partsList.type='checkbox';partsList.checked=saved?.partsList??false;
    if(assembly){
@@ -220,7 +235,13 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    const read=():DrawingInputs=>{
     const current=session.state.document;
     if(!title.value.trim())throw new Error(t('Enter a drawing sheet title.'));
-    const settings={title:title.value.trim(),scale:scale.value as DrawingScale,hiddenLines:hidden.checked};
+    const titleBlock:DrawingTitleBlock={};
+    for(const key of titleBlockKeys){
+     const value=titleBlockInputs[key].value.trim();
+     if(value)titleBlock[key]=value;
+    }
+    const settings={title:title.value.trim(),scale:scale.value as DrawingScale,hiddenLines:hidden.checked,
+     ...(Object.keys(titleBlock).length?{titleBlock}:{})};
     const cut=operationScalar(position),second=operationScalar(secondPosition),at=operationScalar(jogAt);
     if(section.checked&&cut==='')throw new Error(t('Enter a section position in millimetres.'));
     const useJog=section.checked&&offset.checked;
@@ -427,6 +448,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    section.onchange=offset.onchange=render;
    secondPosition.oninput=jogAt.oninput=render;
    title.oninput=scale.onchange=hidden.onchange=partsList.onchange=render;
+   for(const input of Object.values(titleBlockInputs))input.oninput=render;
    save.onclick=()=>{
     try{session.saveDrawingSheet(read(),saved?.id);dialog.close();}
     catch(error){status.textContent=error instanceof Error?error.message:String(error);}

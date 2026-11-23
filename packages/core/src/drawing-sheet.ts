@@ -25,7 +25,9 @@ export type AssemblyCurveDimension={
  kind:'radius'|'diameter'|'arc-length'; source:AssemblyCurveSource;
 };
 export const drawingAnnotationLimit=24;
-export type DrawingInputs = {title:string; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]; partsList?:boolean; edgeDimensions?:AssemblyEdgeDimension[]; curveDimensions?:AssemblyCurveDimension[]};
+export const drawingTitleBlockLimits={number:24,revision:12,drawnBy:16} as const;
+export type DrawingTitleBlock=Partial<Record<keyof typeof drawingTitleBlockLimits,string>>;
+export type DrawingInputs = {title:string; titleBlock?:DrawingTitleBlock; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]; partsList?:boolean; edgeDimensions?:AssemblyEdgeDimension[]; curveDimensions?:AssemblyCurveDimension[]};
 export type DrawingSheet = DrawingInputs & {id:string};
 
 const record = (value:unknown):value is Record<string,unknown> => !!value && typeof value==='object' && !Array.isArray(value);
@@ -62,6 +64,14 @@ export function checkDrawingSheets(doc:CadDocument) {
   if(!record(sheet)||!id(sheet.id)||unique.has(sheet.id)||typeof sheet.title!=='string'||
      !sheet.title.trim()||sheet.title.length>80||/[\u0000-\u001f]/.test(sheet.title)||
      !drawingScales.includes(sheet.scale as DrawingScale)||typeof sheet.hiddenLines!=='boolean'||!record(sheet.source))throw invalid();
+  if(sheet.titleBlock!==undefined){
+   if(doc.version<29||!record(sheet.titleBlock))throw invalid();
+   const fields=Object.entries(sheet.titleBlock);
+   if(!fields.length||fields.some(([key,value])=>{
+    if(!Object.hasOwn(drawingTitleBlockLimits,key)||typeof value!=='string')return true;
+    return !value.trim()||value.length>drawingTitleBlockLimits[key as keyof DrawingTitleBlock]||/[\u0000-\u001f\u007f-\u009f]/.test(value);
+   }))throw invalid();
+  }
   if(isAssemblyDrawingSource(sheet.source)){
    if(doc.version<21||sheet.annotations!==undefined)throw invalid();
    if(sheet.section!==undefined&&(doc.version<23||!record(sheet.section)||(sheet.section.jog!==undefined&&doc.version<24)))throw invalid();

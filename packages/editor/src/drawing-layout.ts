@@ -251,7 +251,7 @@ export function layoutDrawing(doc:CadDocument,sheet:DrawingInputs,geometry?:Geom
   const coordinate=axis===0?t('Sketch X'):t('Sketch Y');
   addText(rightX,topY+height+9,coordinate+' = '+label(cut)+(jog?' / '+label(jog.position):'')+' mm',2.8);
  }
- addDrawingFrame({paths,texts},sheet.title,t`Sketch extrusion · ${sketch.name}`,sheet.scale);
+ addDrawingFrame({paths,texts},sheet.title,t`Sketch extrusion · ${sketch.name}`,{scale:sheet.scale,titleBlock:sheet.titleBlock});
  const diameters=new Map<string,number>();
  for(const id of loopIds.slice(1)){
   const circle=circlesByLoop.get(id);
