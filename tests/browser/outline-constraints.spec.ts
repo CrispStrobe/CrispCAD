@@ -449,6 +449,9 @@ test('matches edges on separate region loops and re-solves when the reference ch
  const sketchStatus=sketch.getByRole('status',{name:'Sketch status'});
  const beforeDrag=await rows.inputValue();
  await startDrag(page,handle(1),2,0);
+ const live=sketch.locator('.sketch-live-outline');
+ await expect(live).toHaveCount(1);
+ expect((await live.getAttribute('d'))?.split('M ').length).toBe(4);
  await expect(rows).toHaveValue(beforeDrag);
  await page.mouse.up();
  await expect(sketchStatus).toContainText('Outline solved');
@@ -457,6 +460,7 @@ test('matches edges on separate region loops and re-solves when the reference ch
  await startDrag(page,handle(1),0,-12);
  await page.mouse.up();
  await expect(sketchStatus).toContainText('A region needs one outside boundary');
+ await expect(live).toHaveCount(0);
  await expect(rows).toHaveValue(solvedDrag);
  await startDrag(page,handle(2),0,3);
  await page.mouse.up();
@@ -513,9 +517,15 @@ test('drags a constrained outline vertex in the draft and keeps dimensions on Ap
  await startDrag(page,vertex,8,6);
  await expect(coordinates).toHaveValue(initial);
  await expect(sketch.locator('.sketch-snap-marker')).toHaveCount(1);
+ const live=sketch.locator('.sketch-live-outline');
+ await expect(live).toHaveCount(1);
+ const livePoints=async()=>(await live.getAttribute('d'))!.match(/-?\d+(?:\.\d+)?/g)!.map(Number);
+ await expect.poll(async()=>(await livePoints())[5]).toBeCloseTo(-29.5,1);
+ expect((await livePoints())[4]).toBeCloseTo(44.5,6);
  await preview.dispatchEvent('pointercancel',{pointerId:Number(await preview.getAttribute('data-test-pointer-id'))});
  await page.mouse.up();
  await expect(sketch.locator('.sketch-snap-marker')).toHaveCount(0);
+ await expect(live).toHaveCount(0);
  await expect(coordinates).toHaveValue(initial);
 
  await startDrag(page,vertex,8,6);

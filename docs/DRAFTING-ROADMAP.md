@@ -184,10 +184,10 @@ For coupled segment relations on a closed polygon, open **Outline
 constraints** in Sketch & Extrude. Add horizontal, vertical, length,
 parallel, perpendicular, or equal-length constraints and choose **Solve
 outline**. The solver anchors point 1 and reports remaining degrees of
-freedom. Drag a free vertex in a single closed outline and release to solve
-toward the marked position while keeping the existing dimensions. An invalid
-move leaves the draft intact. A successful solve updates the preview and
-coordinate rows. Create or Apply saves them in one Undo step. Open a
+freedom. Drag a free vertex to see the solved outline in blue while the
+existing dimensions hold. Release validates the drop and updates the
+coordinate rows. An invalid move leaves the draft intact. Create or Apply
+saves it in one Undo step. Open a
 saved outline to edit its constraints and solve with current parameter
 values. Points keep their identities by row. Restore the saved point count
 or clear the constraints before changing the topology. Trimming and

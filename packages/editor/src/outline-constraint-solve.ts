@@ -22,31 +22,53 @@ export function verifyOutlineSolve(request:OutlineSolveRequest,response:unknown)
  return {points,degrees};
 }
 
-export function solveOutline(request:OutlineSolveRequest,signal:AbortSignal,target?:OutlineDragTarget):Promise<OutlineSolveResult>{
- return new Promise((resolve,reject)=>{
-  if(signal.aborted){reject(signal.reason);return;}
-  const worker=new Worker(new URL('./outline-constraints.worker.js',import.meta.url),{type:'module'});
-  const finish=()=>{
-   clearTimeout(timer);
-   signal.removeEventListener('abort',abort);
-   worker.terminate();
-  };
-  const abort=()=>{finish();reject(signal.reason);};
-  const timer=setTimeout(()=>{
-   finish();reject(new Error(t('The outline solve took too long. Try fewer constraints.')));
-  },10000);
-  signal.addEventListener('abort',abort,{once:true});
-  worker.onerror=worker.onmessageerror=()=>{
-   finish();reject(new Error(t('Could not load the outline constraint solver.')));
-  };
-  worker.onmessage=({data}:MessageEvent<unknown>)=>{
-   finish();
-   try{resolve(verifyOutlineSolve(request,data));}
-   catch(error){reject(error);}
-  };
-  try{worker.postMessage(target?{...request,target}:request);}
-  catch(error){finish();reject(error);}
- });
+/** A gesture reuses one worker. Calls are sequential, including dependent region loops. */
+export function openOutlineSolver(signal:AbortSignal){
+ signal.throwIfAborted();
+ const worker=new Worker(new URL('./outline-constraints.worker.js',import.meta.url),{type:'module'});
+ let closed=false;
+ let pending:{timer:ReturnType<typeof setTimeout>; request:OutlineSolveRequest;
+  resolve:(result:OutlineSolveResult)=>void; reject:(reason:unknown)=>void}|undefined;
+ const take=()=>{
+  const result=pending;
+  pending=undefined;
+  if(result)clearTimeout(result.timer);
+  return result;
+ };
+ const close=(reason:unknown=new DOMException('Solver closed','AbortError'))=>{
+  if(closed)return;
+  closed=true;
+  signal.removeEventListener('abort',abort);
+  worker.terminate();
+  take()?.reject(reason);
+ };
+ const abort=()=>close(signal.reason);
+ signal.addEventListener('abort',abort,{once:true});
+ worker.onerror=worker.onmessageerror=()=>close(new Error(t('Could not load the outline constraint solver.')));
+ worker.onmessage=({data}:MessageEvent<unknown>)=>{
+  const call=take();
+  if(!call)return;
+  try{call.resolve(verifyOutlineSolve(call.request,data));}
+  catch(error){call.reject(error);}
+ };
+ return {
+  close,
+  solve(request:OutlineSolveRequest,target?:OutlineDragTarget):Promise<OutlineSolveResult>{
+   return new Promise((resolve,reject)=>{
+    if(closed||pending){reject(new Error(t('Could not load the outline constraint solver.')));return;}
+    const timer=setTimeout(()=>close(new Error(t('The outline solve took too long. Try fewer constraints.'))),10000);
+    pending={timer,request,resolve,reject};
+    try{worker.postMessage(target?{...request,target}:request);}
+    catch(error){close(error);}
+   });
+  }
+ };
+}
+
+export async function solveOutline(request:OutlineSolveRequest,signal:AbortSignal,target?:OutlineDragTarget):Promise<OutlineSolveResult>{
+ const solver=openOutlineSolver(signal);
+ try{return await solver.solve(request,target);}
+ finally{solver.close();}
 }
 
 export async function solveOutlinePoints(request:OutlineSolveRequest,signal:AbortSignal,target?:OutlineDragTarget):Promise<SketchPoint[]>{

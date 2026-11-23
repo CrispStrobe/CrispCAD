@@ -26,14 +26,14 @@ Preview checks the solved candidate. Apply saves the parameters, coordinates,
 and source in one Undo step. Any conflicting outline keeps the previous
 parameters and geometry. Existing sketches with stale coordinates can still
 be repaired by reopening and solving them. In a single closed outline,
-drag a free vertex to mark the desired position and release to solve toward it.
-The worker treats the position as a preference and preserves hard relations.
-Point 1 stays fixed. A cancelled, stale or invalid move keeps the prior draft.
-The draft enters history only through Create or Apply. The same workflow
-works on region boundaries and cutouts. A dragged loop respects incoming
-edge matches and drives outgoing matches in dependency order. The complete
-region is positioned and validated before any coordinates change. Continuous
-solving during the gesture remains open.
+drag a free vertex to preview the solved outline in blue. The worker treats
+the pointer as a preference, preserves hard relations and anchors point 1.
+During a gesture, one worker handles at most about 30 preview requests per second and
+coalesces movement while a request is running. A cancelled, stale or invalid
+move keeps the prior draft. Release validates the exact drop before updating
+the draft. Create or Apply commits it to history. The same workflow works on
+region boundaries and cutouts. A dragged loop respects incoming edge matches
+and drives outgoing matches in dependency order.
 
 Document version 32 adds **Arc radius** for an existing curved segment in a
 single closed outline. Give the radius a value or a named expression. The

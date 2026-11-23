@@ -226,6 +226,14 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   redrawList();
   options.changed?.();
  };
+ async function solveGeometry(signal:AbortSignal,target?:OutlineDragTarget,solve:typeof solveOutline=solveOutline){
+  const geometry=options.read();
+  const {request,curves}=plan(geometry);
+  if(target&&!isSketchPoint(target.point))throw new Error(t('The drag target is outside the sketch coordinate limits.'));
+  const points=target?geometry.points.map((point,index)=>index===target.index?target.point:point):geometry.points;
+  const result=request.constraints.length?await solve(request,signal,target):{points,degrees:null};
+  return {points:result.points,bulges:outlineBulgesForCurves(result.points,geometry.bulges,curves),degrees:result.degrees};
+ }
  async function solveDraft(target?:OutlineDragTarget,report?:(message:string)=>void){
   if(!options.available()||solving)return;
   const controller=new AbortController(),revision=options.revision();
@@ -237,19 +245,15 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   const updateStatus=(message:string)=>{status.textContent=message;report?.(message);};
   updateStatus(t('Solving outline…'));
   try{
-   const geometry=options.read();
-   const {request,curves}=plan(geometry);
-   if(target&&!isSketchPoint(target.point))throw new Error(t('The drag target is outside the sketch coordinate limits.'));
-   const points=target?geometry.points.map((point,index)=>index===target.index?target.point:point):geometry.points;
-   const result=request.constraints.length?await solveOutline(request,controller.signal,target):{points,degrees:null};
+   const {points,bulges,degrees}=await solveGeometry(controller.signal,target);
    if(!options.active())return;
    if(revision!==options.revision()||!options.available()){
     throw new Error(t('The sketch changed during the solve. Solve the outline again.'));
    }
-   options.apply({points:result.points,bulges:outlineBulgesForCurves(result.points,geometry.bulges,curves)});
-   updateStatus(result.degrees===null?t('Outline solved.'):
-    result.degrees===0?t('Outline solved. Fully constrained.'):
-     t`Outline solved. Degrees of freedom: ${result.degrees}.`);
+   options.apply({points,bulges});
+   updateStatus(degrees===null?t('Outline solved.'):
+    degrees===0?t('Outline solved. Fully constrained.'):
+     t`Outline solved. Degrees of freedom: ${degrees}.`);
   }catch(error){
    if(options.active())updateStatus(error instanceof Error?error.message:String(error));
   }finally{
@@ -259,5 +263,5 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   }
  }
  solve.onclick=()=>void solveDraft();
- return {refresh,forSave,moveVertex:solveDraft,get pending(){return solving;},get hasConstraints(){return constraints.length>0;}};
+ return {refresh,forSave,solveGeometry,moveVertex:solveDraft,get pending(){return solving;},get hasConstraints(){return constraints.length>0;}};
 }
