@@ -11,3 +11,5 @@ export function mountCadEditor(host:HTMLElement,options:CadEditorOptions){return
 export {createDocument,createCadSession,parseDocument,serializeDocument,setLocale} from '@brickwright/cad-core';
 // Block/pseudocode modelling: hosts compile their block workspaces through the same core.
 export {compileBlocksToCadScript,applyBlocksModel,exportBlocksOpenSCAD,exportBlocksJSCAD,validateBlocksProgram,CadBlocksError,BLOCK_SHAPES} from '@brickwright/cad-core';
+
+export {readCostumeProfiles,costumeSketchProfile} from '@brickwright/cad-editor';

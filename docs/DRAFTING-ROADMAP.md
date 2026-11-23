@@ -537,6 +537,14 @@ editing context and lets users select a closed region for extrusion. Adopt
 these interactions with the existing Brickwright drawing tools and CAD
 session. [Fusion sketch profiles](https://help.autodesk.com/view/fusion360/ENU/?contextId=SKT-3D-SKETCH) · [Fusion SVG placement](https://help.autodesk.com/cloudhelp/ENU/Fusion-Model/files/SLD-INS-SVG.htm) · [Shapr3D constraints](https://support.shapr3d.com/hc/en-us/articles/7407627891100-Adding-and-removing-constraints) · [Shapr3D extrude](https://support.shapr3d.com/hc/en-us/articles/7874453786908-Tools-menu-Extrude-tool)
 
+The initial handoff offers **Send to CAD** for vector costumes and
+backdrops when Precision design is enabled. Select a region, set its width
+and plane, and add a sketch at the plane origin. It retains straight closed
+edges, full circles, and supported nested holes. Strokes are excluded from
+the geometry. Curves other than full circles and other unsupported SVG
+elements require cleanup before import. The full precision drawing toolbar,
+tolerance-controlled curve conversion, and updates from source remain open.
+
 #### SVG conversion and dependency choice
 
 Use the existing Costumes vector editor and Brickwright CAD geometry stack.
