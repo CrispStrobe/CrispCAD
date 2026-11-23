@@ -203,6 +203,8 @@ export function retainDrawingVertexIds(before:SketchProfile,after:SketchProfile,
  const previous=drawingOutlines(before);
  for(const outline of drawingOutlines(after)){
   if(outline.relations!==undefined)continue;
+  if(after.kind==='region'&&Array.isArray(after.edgeMatches)&&after.edgeMatches.some(item=>
+    item?.target===outline.id||item?.reference===outline.id))continue;
   if(after.kind==='region'&&Array.isArray(after.placements)&&after.placements.some(item=>
     (item?.target===outline.id&&item.targetEdge)||(item?.reference===outline.id&&item.referenceEdge)))continue;
   const original=previous.find(item=>item.id===outline.id&&item.vertexIds);

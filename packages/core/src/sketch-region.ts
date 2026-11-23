@@ -6,6 +6,7 @@ import {checkSketchDxfWidths} from './sketch-dxf-width.js';
 import type {SketchDxfWidths} from './sketch-dxf-width.js';
 import {isSketchPoint,maxSketchOutlinePoints,sketchBulgeMidpoint,sketchOutline,sketchSegmentsIntersect} from './sketch-outline.js';
 import type {OutlineRelation} from './outline-relations.js';
+import type {RegionEdgeMatch} from './region-edge-lengths.js';
 import type {FeatureScalar,SketchProfile} from './features.js';
 import type {SketchPoint} from './sketch-outline.js';
 
@@ -20,7 +21,7 @@ export type RegionLoopPlacement={
   target:string;reference:string;offset:[FeatureScalar,FeatureScalar];
   targetEdge?:RegionPlacementEdge;referenceEdge?:RegionPlacementEdge;
 };
-export type SketchRegionProfile={kind:'region';id:string;loops:SketchLoop[];placements?:RegionLoopPlacement[]};
+export type SketchRegionProfile={kind:'region';id:string;loops:SketchLoop[];placements?:RegionLoopPlacement[];edgeMatches?:RegionEdgeMatch[]};
 
 type SketchCircleLoop = {kind: 'circle'; id: string; center: [FeatureScalar, FeatureScalar]; radius: FeatureScalar; segments: number}&SketchDxfLayer;
 type ResolvedCircle = Omit<SketchCircleLoop, 'center' | 'radius'> & {center: SketchPoint; radius: number};
@@ -35,16 +36,21 @@ export function hasOutlineRelations(profile:SketchProfile):boolean{
   return sketchOutlineProfiles(profile).some(outline=>outline.relations!==undefined);
 }
 export function hasSketchConstraints(profile:SketchProfile):boolean{
-  return hasOutlineRelations(profile)||(profile.kind==='region'&&profile.placements!==undefined);
+  return hasOutlineRelations(profile)||(profile.kind==='region'&&(profile.placements!==undefined||profile.edgeMatches!==undefined));
+}
+
+export function regionLoopEdgeIndex(loop:SketchOutlineProfile,edge:RegionPlacementEdge):number{
+  if(!Array.isArray(edge)||edge.length!==2||!edge.every(id=>typeof id==='string')||
+    !Array.isArray(loop.vertexIds)||!Array.isArray(loop.points)||loop.points.length!==loop.vertexIds.length)return -1;
+  const start=loop.vertexIds.indexOf(edge[0]),end=(start+1)%loop.points.length;
+  return start>=0&&loop.vertexIds[end]===edge[1]&&isSketchPoint(loop.points[start])&&isSketchPoint(loop.points[end])?start:-1;
 }
 
 export function regionLoopAnchor(loop:SketchOutlineProfile,edge?:RegionPlacementEdge):SketchPoint{
   if(edge===undefined&&isSketchPoint(loop.points?.[0]))return loop.points[0];
-  if(Array.isArray(edge)&&edge.length===2&&edge.every(id=>typeof id==='string')&&
-    Array.isArray(loop.vertexIds)&&Array.isArray(loop.points)){
-    const start=loop.vertexIds.indexOf(edge[0]),end=(start+1)%loop.points.length;
-    if(start>=0&&loop.vertexIds[end]===edge[1]&&isSketchPoint(loop.points[start])&&isSketchPoint(loop.points[end]))
-      return sketchBulgeMidpoint(loop.points[start],loop.points[end],loop.bulges?.[start]??0);
+  if(edge!==undefined){
+    const start=regionLoopEdgeIndex(loop,edge);
+    if(start>=0)return sketchBulgeMidpoint(loop.points[start],loop.points[(start+1)%loop.points.length],loop.bulges?.[start]??0);
   }
   throw new Error(t('A region position refers to a missing edge. Restore the edge or remove its position.'));
 }

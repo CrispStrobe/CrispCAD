@@ -5,11 +5,13 @@ import {mountDxfImportControls} from './dxf-import-controls.js';
 import {mountOutlineConstraintControls} from './outline-constraint-controls.js';
 import {mountRegionConstraintControls} from './region-constraint-controls.js';
 import {mountRegionPositionControls} from './region-position-controls.js';
+import {mountRegionEdgeControls} from './region-edge-controls.js';
+import {solveOutlinePoints} from './outline-constraint-solve.js';
 import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
-import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchOutlinePoints,maxSketchRegionLoops,newId,positionRegionLoops,sketchBulgeMidpoint,sketchDxfLayerFields,trimSketchProfile} from '@brickwright/cad-core';
-import type {DxfSegmentWidth,RegionLoopPlacement,SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument,PlanarSketch} from '@brickwright/cad-core';
+import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchOutlinePoints,maxSketchRegionLoops,newId,positionRegionLoops,regionEdgeLengthsMatch,sketchBulgeMidpoint,sketchDxfLayerFields,solveRegionEdgeLengths,trimSketchProfile} from '@brickwright/cad-core';
+import type {DxfSegmentWidth,RegionEdgeMatch,RegionLoopPlacement,SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument,PlanarSketch} from '@brickwright/cad-core';
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
 const scalar=(source:string):FeatureScalar=>source.trim()!==''&&Number.isFinite(Number(source))?Number(source):source.trim();
 /** Definition editor: complete draft + kernel preflight before the real session changes. */
@@ -229,7 +231,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    return {kind:'circle',id,radius:scalar(radius.value),segments:profile?.kind==='circle'?profile.segments:64,...singleDxfLayer,
     ...(profile?.kind==='circle'&&profile.center||location.some(Boolean)?{center:location}:{})};
   }
-  const readForm=(retain=false,positions?:RegionLoopPlacement[])=>{
+  const readForm=(retain=false,positions?:RegionLoopPlacement[],matches:RegionEdgeMatch[]|undefined=regionEdges.edgeMatches)=>{
    const profile=definition();
    let retained=profile;
    if(!linked){
@@ -237,14 +239,15 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     if(profile.kind==='region'){
      const placementFields=positions===undefined?regionPositions.forSave(profile.loops):{placements:positions.length?positions:undefined};
      const loops=retain?regionConstraints.forSave(profile.loops).map(loop=>{
-      if(loop.kind!=='outline'||loop.relations||placementFields.placements?.some(placement=>
+      if(loop.kind!=='outline'||loop.relations||matches?.some(match=>match.target===loop.id||match.reference===loop.id)||
+       placementFields.placements?.some(placement=>
        (placement.target===loop.id&&placement.targetEdge)||(placement.reference===loop.id&&placement.referenceEdge)))return loop;
       const {vertexIds,...withoutIds}=loop;
       return withoutIds;
      }):profile.loops;
-     retained=positionRegionLoops({...profile,...placementFields,
-      loops
-     },value=>featureValue(value,doc));
+     const region=positionRegionLoops({...profile,...placementFields,loops,...(matches?.length?{edgeMatches:matches}:{})},value=>featureValue(value,doc));
+     if(retain&&!regionEdgeLengthsMatch(region))throw new Error(t('Solve region edge matches before saving.'));
+     retained=region;
     }
    }
    return {
@@ -291,6 +294,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    outlineConstraints.refresh();
    regionConstraints.refresh();
    regionPositions.refresh();
+   regionEdges.refresh();
    widthHint.hidden=true;
    trimPanel.hidden=!!linked||!['outline','region'].includes(kind.value);
    if(trimPanel.hidden&&trimPicking)setTrimPicking(0);
@@ -527,9 +531,10 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   preview.onpointerup=preview.onpointercancel=preview.onlostpointercapture=endDrag;
   let draftRevision=0;
   const refreshDraft=()=>{draftRevision++;draw();};
-  const constraintPending=()=>outlineConstraints.pending||regionConstraints.pending;
+  const constraintPending=()=>outlineConstraints.pending||regionConstraints.pending||regionEdges.pending;
   const active=()=>!disposed&&dialog.open&&dialog.firstChild===header;
-  const available=()=>!busy&&!drag&&session.state.revision===expected;
+  const availableBase=()=>!busy&&!drag&&session.state.revision===expected;
+  const available=()=>availableBase()&&!regionEdges.pending;
   const readLength=(value:FeatureScalar)=>{
    const length=featureValue(typeof value==='string'?scalar(value):value,doc);
    if(length<.01||length>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));
@@ -592,8 +597,28 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     replaceProfileDraft(snapshot.sketch.profile);
    }
   });
+  const regionEdges=mountRegionEdgeControls(form,dialog,{
+   initial:profile?.kind==='region'?profile.edgeMatches??[]:[],
+   visible:()=>!linked&&kind.value==='region',
+   available:()=>availableBase()&&!outlineConstraints.pending&&!regionConstraints.pending,
+   active,pending,changed:refreshDraft,
+   read:()=>{
+    const profile=definition();
+    return profile.kind==='region'?profile.loops:[];
+   },
+   solve:async(matches,signal)=>{
+    const revision=draftRevision,snapshot=readForm(false,undefined,matches),{profile}=snapshot.sketch;
+    if(profile.kind!=='region')return;
+    const solved=await solveRegionEdgeLengths({...profile,loops:regionConstraints.forSave(profile.loops)},readLength,solveOutlinePoints,signal);
+    if(!active())return;
+    if(revision!==draftRevision||!availableBase())throw new Error(t('The sketch changed during the solve. Solve the outline again.'));
+    const positioned=positionRegionLoops(solved,value=>featureValue(value,doc));
+    previewShape({...snapshot,sketch:{...snapshot.sketch,profile:positioned}});
+    replaceProfileDraft(positioned);
+   }
+  });
   const hasDraftConstraints=(profile:SketchProfile)=>profile.kind==='outline'?outlineConstraints.hasConstraints
-   :profile.kind==='region'&&(regionConstraints.hasConstraints||regionPositions.hasConstraints);
+   :profile.kind==='region'&&(regionConstraints.hasConstraints||regionPositions.hasConstraints||!!regionEdges.edgeMatches);
   form.addEventListener('input',refreshDraft);form.addEventListener('change',refreshDraft);
   trimApply.onclick=()=>{
    if(busy||drag||constraintPending())return;
@@ -683,7 +708,8 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     },
     read:(drawing,assumeMm,layers)=>drawing.outline(assumeMm,layers),
     imported:(imported,fileName)=>{
-     if(outlineConstraints.hasConstraints||regionConstraints.hasConstraints||regionPositions.hasConstraints)throw new Error(t('Clear outline constraints before importing another profile.'));
+     if(outlineConstraints.hasConstraints||regionConstraints.hasConstraints||regionPositions.hasConstraints||regionEdges.edgeMatches)
+      throw new Error(t('Clear outline constraints before importing another profile.'));
      const id='dxf-preview';
      evaluateExtrusion({kind:'extrusion',featureVersion:1,id,sketchId:id,distance:1,symmetric:false},{
       ...doc,sketches:{[id]:{version:1,id,name:'DXF',plane:'XY',profile:imported}}

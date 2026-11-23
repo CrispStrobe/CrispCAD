@@ -63,7 +63,15 @@ Document version 37 extends each position anchor to a selected edge
 midpoint. Curved edges use the midpoint of the actual arc. The position
 follows the saved pair of vertex IDs as the edge changes. Restore the
 edge or remove its position if a topology edit deletes that pair.
-General dimensions and tangent relations between separate loops remain open.
+
+Document version 38 adds **Region edge matches**. Choose a straight
+reference edge and a straight edge to drive in another outline loop.
+**Add edge length match** solves the target with its existing constraints.
+Use **Solve region edge matches** after editing loop coordinates. Parameter and
+Model Source changes follow references automatically and commit the complete
+region together. A driven outline supports 3–32 points. Conflicting matches,
+cycles and invalid hole layouts are rejected. Other cross-loop dimensions
+and tangent relations remain open.
 
 The worker loads the checked-in JavaScript built from
 `tools/sketch-constraints/solver.dart` with Dart 3.12.2. Run

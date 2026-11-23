@@ -84,4 +84,6 @@ outlines, including driving radii and tangency to an adjoining line or arc.
 Region boundaries and cutouts can each retain their own outline constraints.
 Retained X/Y offsets position one outline relative to another within the
 same region. An edge-midpoint anchor stores the two vertex IDs of the edge.
-General edge relations between separate loops remain open.
+Region edge matches store the reference and target loop IDs and both pairs
+of vertex IDs. Model Source solves reference loops before their dependent
+edges. Other edge relations between separate loops remain open.

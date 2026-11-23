@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
 import {outlineRelationsForSolve} from './outline-relations.js';
+import {regionEdgeLengthsMatch} from './region-edge-lengths.js';
 import {checkDrawingVertexIds} from './drawing-sheet.js';
 import {isSketchPoint,sketchOutline,sketchPath} from './sketch-outline.js';
 import {evaluateSketchRegion,positionRegionLoops,sketchOutlineProfiles} from './sketch-region.js';
@@ -223,6 +224,10 @@ export function checkFeatures(doc:CadDocument) {
       if(doc.version<16&&(sketch.profile.anchors!==undefined||sketch.profile.vertexIds!==undefined))throw new Error(t('Path point locks require document version 16'));
     }
     evaluateSketch(sketch,doc);checkDrawingVertexIds(sketch.profile,doc.version);
+    if(sketch.profile.kind==='region'&&sketch.profile.edgeMatches!==undefined){
+      if(doc.version<38)throw new Error(t('Region edge length matches require document version 38'));
+      if(!regionEdgeLengthsMatch(sketch.profile))throw new Error(t('Solve region edge matches before saving.'));
+    }
     if(sketch.profile.kind==='region'&&sketch.profile.placements!==undefined){
       if(doc.version<36)throw new Error(t('Region loop positions require document version 36'));
       if(doc.version<37&&Array.isArray(sketch.profile.placements)&&sketch.profile.placements.some(

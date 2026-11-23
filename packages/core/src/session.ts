@@ -19,12 +19,13 @@ import {isOutlineCurveRule,outlineBulgesForCurves,outlineCurvesSatisfied,outline
 import type {OutlineSolveRequest} from './outline-relations.js';
 import type {SketchPoint} from './sketch-outline.js';
 import {hasOutlineRelations,positionRegionLoops,sketchOutlineProfiles} from './sketch-region.js';
+import {solveRegionEdgeLengths} from './region-edge-lengths.js';
 import type { ParametricDesign } from './parameters.js';
 import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositionExpression} from './fragments.js';
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -32,7 +33,8 @@ function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33
   doc.version=version;
 }
 function upgradeSketchProfile(doc:CadDocument,profile:SketchProfile){
-  if(profile.kind==='region'&&profile.placements!==undefined)
+  if(profile.kind==='region'&&profile.edgeMatches!==undefined)upgradeModelFeatures(doc,38);
+  else if(profile.kind==='region'&&profile.placements!==undefined)
     upgradeModelFeatures(doc,Array.isArray(profile.placements)&&profile.placements.some(
       placement=>placement?.referenceEdge!==undefined||placement?.targetEdge!==undefined)?37:36);
   else if(profile.kind==='region'&&hasOutlineRelations(profile))upgradeModelFeatures(doc,35);
@@ -199,6 +201,22 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         profiles.set(sketch.id,updated.kind==='region'
           ?{...updated,loops:updated.loops.map(loop=>loop.id===profile.id?solved:loop)}
           :solved);
+      }catch(error){
+        checkOutlineSolve(expected,signal);
+        const message=error instanceof Error?error.message:String(error);
+        throw new Error(t`Outline “${sketch.name}”: ${message}`);
+      }
+    }
+    for(const sketch of Object.values(next.sketches??{})){
+      const profile=profiles.get(sketch.id)??sketch.profile;
+      if(profile?.kind!=='region'||profile.edgeMatches===undefined)continue;
+      try{
+        const solved=await solveRegionEdgeLengths(profile,value=>featureValue(value,next),async(request,signal)=>{
+          checkOutlineSolve(expected,signal);
+          return solve(request,signal);
+        },signal);
+        checkOutlineSolve(expected,signal);
+        if(solved!==profile)profiles.set(sketch.id,solved);
       }catch(error){
         checkOutlineSolve(expected,signal);
         const message=error instanceof Error?error.message:String(error);

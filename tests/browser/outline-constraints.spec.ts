@@ -402,3 +402,46 @@ test('positions both loops by selected edge midpoints and reopens the same refer
  await expect(target.locator('option:checked')).toHaveText('Edge 4 midpoint');
  await expect(rows).toHaveValue(positioned);
 });
+
+test('matches edges on separate region loops and re-solves when the reference changes',async({page,hasTouch})=>{
+ const press=async(control:ReturnType<typeof page.getByRole>)=>{
+  if(hasTouch){await control.scrollIntoViewIfNeeded();await control.tap();}
+  else await control.click();
+ };
+ const fill=async(control:ReturnType<typeof page.getByLabel>,value:string)=>{
+  await control.fill(value);
+  await control.blur();
+ };
+ await page.goto('/');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await press(page.getByRole('button',{name:'Sketch',exact:true}));
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await sketch.getByLabel('Profile',{exact:true}).selectOption('region');
+ const rows=sketch.getByLabel('Region loops (mm)');
+ await fill(rows,'0, 0 | 75, 0 | 75, 40 | 0, 40\n10, 10 | 22, 10 | 22, 20 | 10, 20\n40, 10 | 48, 10 | 48, 20 | 40, 20');
+ await press(sketch.getByText('Region edge matches',{exact:true}));
+ await sketch.getByLabel('Edge reference loop',{exact:true}).selectOption({label:'Outline loop 2'});
+ await sketch.getByLabel('Edge target loop',{exact:true}).selectOption({label:'Outline loop 3'});
+ await press(sketch.getByRole('button',{name:'Add edge length match',exact:true}));
+ const status=sketch.getByRole('status',{name:'Region edge match status'});
+ await expect(status).toContainText('Region edge matches solved');
+ const measured=async()=>{
+  const [a,b]=(await rows.inputValue()).split('\n')[2].split('|').map(row=>row.split(',').map(Number));
+  return Math.hypot(b[0]-a[0],b[1]-a[1]);
+ };
+ expect(await measured()).toBeCloseTo(12);
+ await fill(rows,(await rows.inputValue()).replace('22, 10','26, 10'));
+ const create=sketch.getByRole('button',{name:'Create extrusion',exact:true});
+ await press(create);
+ await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('Solve region edge matches before saving');
+ await press(sketch.getByRole('button',{name:'Solve region edge matches',exact:true}));
+ await expect(status).toContainText('Region edge matches solved');
+ expect(await measured()).toBeCloseTo(16);
+ await press(create);
+ await expect(sketch).toBeHidden();
+ const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
+ if(!await edit.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
+ await press(edit);
+ await expect(sketch.getByRole('button',{name:'Remove edge match 1',exact:true})).toBeVisible();
+ expect(await measured()).toBeCloseTo(16);
+});

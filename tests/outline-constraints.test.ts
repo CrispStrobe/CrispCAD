@@ -426,3 +426,50 @@ it('drives a cutout from an analytic arc midpoint to a closing-edge midpoint',as
  expect(()=>session.updateSketch(id,{profile:missing})).toThrow('missing edge');
  expect(session.state.document).toBe(before);
 });
+
+it('solves chained region edge matches from a parameter and rolls back an invalid result',async()=>{
+ const session=createCadSession();
+ const design=(width:string)=>({version:1 as const,parameters:{width:{unit:'mm' as const,expression:width}},bindings:[]});
+ session.setParametric(design('10'));
+ const rect=(id:string,x:number,y:number,w:number,h:number):SketchOutlineProfile=>({
+  kind:'outline',id,points:[[x,y],[x+w,y],[x+w,y+h],[x,y+h]],vertexIds:['a','b','c','d']
+ });
+ const edge:['a','b']=['a','b'];
+ const profile:Extract<SketchProfile,{kind:'region'}>={kind:'region',id:'plate',loops:[
+  rect('boundary',0,0,100,60),
+  {...rect('guide',10,10,10,10),relations:[{kind:'horizontal',edge},{kind:'length',edge,length:'width'}]},
+  rect('middle',40,10,10,10),rect('last',70,10,10,10)
+ ],edgeMatches:[
+  {reference:'middle',referenceEdge:edge,target:'last',targetEdge:edge},
+  {reference:'guide',referenceEdge:edge,target:'middle',targetEdge:edge}
+ ]};
+ const body=session.addSketchExtrusion(profile),before=session.state.document,node=before.nodes[body];
+ if(node.kind!=='extrusion')throw Error('fixture');
+ const id=node.sketchId;
+ expect(before.version).toBe(38);
+ expect(parseDocument(session.serialize())).toEqual(before);
+ expect(()=>validateDocument({...before,version:37})).toThrow('version 38');
+ expect(()=>trimSketchProfile(before.sketches![id],before,[5,0],[5,20],'left')).toThrow('Clear outline constraints');
+ const lengths=(doc:typeof before)=>(doc.sketches![id].profile as typeof profile).loops.slice(1).map(loop=>{
+  if(loop.kind!=='outline')throw Error('fixture');
+  const [a,b]=loop.points;
+  return Math.hypot(b[0]-a[0],b[1]-a[1]);
+ });
+ await session.setParametricWithOutlineSolve(design('15'),solve,signal());
+ const after=session.state.document;
+ lengths(after).forEach(length=>expect(length).toBeCloseTo(15,5));
+ expect((after.sketches![id].profile as typeof profile).loops.slice(1).map(loop=>loop.kind==='outline'&&loop.vertexIds))
+  .toEqual([['a','b','c','d'],['a','b','c','d'],['a','b','c','d']]);
+ await expect(session.setParametricWithOutlineSolve(design('45'),solve,signal())).rejects.toThrow('separate holes');
+ expect(session.state.document).toBe(after);
+ session.undo();
+ expect(session.state.document).toBe(before);
+ const prepared=await session.prepareModelSourceWithOutlineSolve(session.modelSource.replace('expression: "10"','expression: "18"'),{},solve,signal());
+ lengths(prepared.document).forEach(length=>expect(length).toBeCloseTo(18,5));
+ const cyclic={...profile,edgeMatches:[...profile.edgeMatches!,{reference:'last',referenceEdge:edge,target:'guide',targetEdge:edge}]};
+ expect(()=>session.updateSketch(id,{profile:cyclic})).toThrow('cannot contain a cycle');
+ const curved=structuredClone(profile);
+ const target=curved.loops[2] as SketchOutlineProfile;
+ target.bulges=[.1,0,0,0];
+ expect(()=>session.updateSketch(id,{profile:curved})).toThrow('straight edges');
+});
