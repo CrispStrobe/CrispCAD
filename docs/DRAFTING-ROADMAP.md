@@ -536,3 +536,29 @@ and scale for SVG placement. Shapr3D puts applicable constraints next to the
 editing context and lets users select a closed region for extrusion. Adopt
 these interactions with the existing Brickwright drawing tools and CAD
 session. [Fusion sketch profiles](https://help.autodesk.com/view/fusion360/ENU/?contextId=SKT-3D-SKETCH) · [Fusion SVG placement](https://help.autodesk.com/cloudhelp/ENU/Fusion-Model/files/SLD-INS-SVG.htm) · [Shapr3D constraints](https://support.shapr3d.com/hc/en-us/articles/7407627891100-Adding-and-removing-constraints) · [Shapr3D extrude](https://support.shapr3d.com/hc/en-us/articles/7874453786908-Tools-menu-Extrude-tool)
+
+#### SVG conversion and dependency choice
+
+Use the existing Costumes vector editor and Brickwright CAD geometry stack.
+The existing icon-tag importer already parses a restricted, local SVG subset
+with Three.js and extrudes a decorative mesh. It scales the icon to a fixed
+size. The precision handoff should reuse its input checks and path-reading
+approach, with explicit scale and an editable CAD sketch as the result.
+
+| Approach | Fit for Brickwright |
+| --- | --- |
+| Three.js SVGLoader, ExtrudeGeometry, STLExporter | Good for a quick visual preview or a standalone STL converter. Exporting multiple meshes through the same STL writer does not perform a Boolean union. |
+| JSCAD SVG Deserializer and STL Serializer | A useful reference for a batch converter and for fixtures with known units. Brickwright already uses JSCAD modeling. Evaluate the import and export packages only if they improve a measured gap in the existing paths. |
+| Brickwright sketch and Manifold | Use as the production path. Retain the sketch and extrusion feature in the project. Evaluate and validate the resulting solid with the existing kernel and use the current STL or 3MF export. |
+| build123d and Open CASCADE | Useful for comparing analytic B-rep and STEP behavior. The Open CASCADE LGPL license and exception are outside Brickwright's current permissive-only distribution requirement. |
+
+Interpret nested contours according to their SVG fill rules after applying
+transforms. Preserve circles and supported arcs as editable geometry. Offer
+a visible tolerance for approximating other curves and an explicit choice
+for expanding strokes. Present issues such as zero-area regions, unresolved
+crossings and unsupported elements before conversion. Verify closed
+topology, orientation, positive volume, and physical dimensions after
+extrusion. STL carries triangles and no unit metadata, so retain the
+dimensioned geometry and source mapping in the project.
+
+[Three.js SVGLoader](https://threejs.org/docs/pages/SVGLoader.html) · [Three.js STLExporter](https://threejs.org/docs/pages/STLExporter.html) · [JSCAD SVG Deserializer](https://jscad.app/docs/module-io_svg-deserializer.html) · [Manifold license](https://github.com/elalish/manifold/blob/master/LICENSE) · [Open CASCADE license and exception](https://github.com/Open-Cascade-SAS/OCCT#license)
