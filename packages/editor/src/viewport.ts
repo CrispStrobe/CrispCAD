@@ -125,10 +125,13 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     { name:'right',normal:[1,0,0],corners:[[1,-1,-1],[1,1,-1],[1,1,1],[1,-1,1]] },
     { name:'left',normal:[-1,0,0],corners:[[-1,1,-1],[-1,-1,-1],[-1,-1,1],[-1,1,1]] },
   ];
+  const labelMeasure = document.createElement('canvas').getContext('2d');
+  if (labelMeasure) labelMeasure.font = '600 9px system-ui';
   const faces = faceSpecs.map(spec => {
     const group = document.createElementNS(ns, 'g'); group.setAttribute('role', 'button'); group.setAttribute('aria-label', t(spec.name[0].toUpperCase() + spec.name.slice(1))); group.setAttribute('tabindex', '0');
     const polygon = document.createElementNS(ns, 'polygon'); const text = document.createElementNS(ns, 'text'); text.textContent = t(spec.name.toUpperCase()); text.setAttribute('text-anchor', 'middle'); text.setAttribute('dy', '.35em'); group.append(polygon, text); svg.append(group);
-    group.addEventListener('click', () => setView(spec.name)); group.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setView(spec.name); } }); return { ...spec, group, polygon, text };
+    group.addEventListener('click', () => setView(spec.name)); group.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setView(spec.name); } }); const labelWidth = labelMeasure?.measureText(text.textContent).width ?? text.textContent.length * 6;
+    return { ...spec, group, polygon, text, labelWidth };
   });
   function updateCube() {
     camera.updateMatrixWorld(); const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1), toward = camera.position.clone().sub(orbit.target).normalize();
@@ -136,7 +139,18 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       const visible = new THREE.Vector3(...face.normal as [number,number,number]).dot(toward) > 0.001;
       face.group.style.display = visible ? '' : 'none'; face.group.setAttribute('tabindex', visible ? '0' : '-1');
       const points = face.corners.map(p => { const v = new THREE.Vector3(...p as [number,number,number]); return [66 + v.dot(right) * 31, 63 - v.dot(up) * 31]; });
-      face.polygon.setAttribute('points', points.map(p => p.join(',')).join(' ')); face.text.setAttribute('x', String(points.reduce((s,p) => s+p[0],0)/4)); face.text.setAttribute('y', String(points.reduce((s,p) => s+p[1],0)/4));
+      face.polygon.setAttribute('points', points.map(p => p.join(',')).join(' '));
+      const x = points.reduce((sum, point) => sum + point[0], 0) / 4;
+      const y = points.reduce((sum, point) => sum + point[1], 0) / 4;
+      const halfWidth = face.labelWidth / 2 + (face.text.textContent?.length ?? 0) * .15 + 2;
+      // The horizontal label fits only if its padded rectangle lies inside every projected edge.
+      const fits = visible && points.every(([ax, ay], index) => {
+        const [bx, by] = points[(index + 1) % points.length], dx = bx - ax, dy = by - ay;
+        return Math.abs(dx * (y - ay) - dy * (x - ax)) >= Math.abs(dx) * 7 + Math.abs(dy) * halfWidth;
+      });
+      face.text.style.display = fits ? '' : 'none';
+      face.text.setAttribute('x', String(x));
+      face.text.setAttribute('y', String(y));
     }
     const exact = Object.entries(directions).find(([name, d]) => name !== 'iso' && new THREE.Vector3(...d).normalize().dot(toward) > 0.99999)?.[0];
     const view = (exact ?? 'iso') as ViewDirection; canvas.dataset.view = view; viewListener?.(view); canvas.dataset.projection = camera instanceof THREE.OrthographicCamera ? 'orthographic' : 'perspective';

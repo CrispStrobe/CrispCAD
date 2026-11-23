@@ -2,6 +2,7 @@ import {collectSketchSnaps,collectTangentSnaps,nearestSketchSnap,sketchSnapRefer
 import type {SketchSnap} from './sketch-snaps.js';
 import {formatSketchPoints as formatPoints, parseSketchOutline as parseOutline, parseSketchPoint as parsePoint, sketchDraggedBulge} from './sketch-point-entry.js';
 import {mountDxfImportControls} from './dxf-import-controls.js';
+import {mountSketchOutlineDrawing} from './sketch-outline-drawing.js';
 import {mountOutlineConstraintControls} from './outline-constraint-controls.js';
 import {mountRegionConstraintControls} from './region-constraint-controls.js';
 import {mountRegionPositionControls} from './region-position-controls.js';
@@ -19,14 +20,15 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
  offsetSketch:(sketch:PlanarSketch,context:Pick<CadDocument,'parametric'>,distance:number)=>Promise<SketchProfile>,afterApply:()=>Promise<unknown>,snap:()=>number=()=>1) {
  const dialog=element('dialog');dialog.className='sketch-dialog';dialog.setAttribute('aria-label',t('Sketch and extrusion'));parent.append(dialog);
  let disposed=false,epoch=0;dialog.addEventListener('close',()=>epoch++);
- function open(featureId?:string,request?:{sketchId?:string;revolve:boolean}){
+ function open(featureId?:string,request?:{sketchId?:string;revolve:boolean;editOnly?:boolean}){
   epoch++;let busy=false;const expected=session.state.revision,doc=session.state.document,node=featureId?doc.nodes[featureId]:undefined;
   if(featureId&&node?.kind!=='extrusion'&&node?.kind!=='revolution')throw new Error(t('Select an extrusion feature to edit'));
   const revolving=request?.revolve??(node?.kind==='revolution');
-  const linked=request?.sketchId;
-  const sketchId=node?.kind==='extrusion'||node?.kind==='revolution'?node.sketchId:linked;
+  const editingSketch=request?.editOnly?request.sketchId:undefined;
+  const linked=request?.editOnly?undefined:request?.sketchId;
+  const sketchId=node?.kind==='extrusion'||node?.kind==='revolution'?node.sketchId:linked??editingSketch;
   const existing=sketchId?doc.sketches?.[sketchId]:undefined;
-  const title=revolving?(featureId?'Edit sketch & revolution':'Sketch & revolve'):(featureId?'Edit sketch & extrusion':linked?'Extrude sketch':'Sketch & extrude');
+  const title=revolving?(featureId?'Edit sketch & revolution':'Sketch & revolve'):(featureId?'Edit sketch & extrusion':linked?'Extrude sketch':'Sketch');
   dialog.setAttribute('aria-label',t(revolving?'Sketch and revolution':'Sketch and extrusion'));
   dialog.replaceChildren();
   const close=element('button','×');close.setAttribute('aria-label',t('Close sketch'));close.title=t('Close sketch');close.onclick=()=>dialog.close();const header=element('header');header.append(element('h2',t(title)),close);
@@ -738,8 +740,47 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
    });
    form.append(importPanel);
   }
-  const footer=element('footer');footer.append(status,apply);const body=element('div');body.className='sketch-body';const expressions=element('details');expressions.className='sketch-expressions';const summary=element('summary',t('Dimension expressions'));summary.title=t('Dimension expressions');summary.setAttribute('aria-label',t('Dimension expressions'));expressions.append(summary,help);form.append(expressions);const drawing=element('div');drawing.append(preview);if(!linked)drawing.append(hint);body.append(drawing,form);dialog.append(header,infoPanel,body,footer);draw();dialog.showModal();
+  const footer=element('footer');footer.append(status);
+  if(!linked&&!featureId&&!revolving){
+   const save=element('button',t('Save sketch'));save.type='button';
+   save.onclick=()=>{
+    if(busy||constraintPending())return;
+    try{
+     if(session.state.revision!==expected)throw new Error(t('The model changed. Close and reopen this dialog before applying.'));
+     const {sketch}=readForm(true);previewShape(readForm());
+     if(editingSketch)session.updateSketch(editingSketch,sketch);
+     else session.addSketch(sketch.profile,{name:sketch.name,plane:sketch.plane});
+     dialog.close();
+    }catch(error){status.textContent=error instanceof Error?error.message:String(error);}
+   };
+   footer.append(save);
+  }
+  if(!editingSketch)footer.append(apply);
+  const body=element('div');body.className='sketch-body';
+  const expressions=element('details');expressions.className='sketch-expressions';
+  const summary=element('summary',t('Dimension expressions'));summary.title=t('Dimension expressions');summary.setAttribute('aria-label',t('Dimension expressions'));
+  expressions.append(summary,help);form.append(expressions);
+  const drawing=element('div');
+  if(!existing&&!revolving){
+   const drawOutline=element('button',t('Draw outline in 2D'));drawOutline.type='button';drawOutline.className='sketch-start-outline';
+   const showDrawing=(active:boolean)=>{
+    if(active)outlineDrawing.open();else outlineDrawing.close();
+    form.hidden=preview.hidden=hint.hidden=footer.hidden=drawOutline.hidden=active;
+   };
+   const outlineDrawing=mountSketchOutlineDrawing(points2d=>{
+    kind.value='outline';points.value=formatPoints(points2d).join('\n');
+    showDrawing(false);refreshDraft();drawOutline.focus();
+   },()=>{showDrawing(false);drawOutline.focus();},snap);
+   drawOutline.onclick=()=>{
+    if(busy||drag)return;
+    if(outlineConstraints.hasConstraints||regionConstraints.hasConstraints||regionPositions.hasConstraints||regionEdges.edgeMatches?.length){status.textContent=t('Clear outline constraints before drawing a new outline.');return;}
+    showDrawing(true);
+   };
+   drawing.append(drawOutline,outlineDrawing.layout);
+  }
+  drawing.append(preview);if(!linked)drawing.append(hint);body.append(drawing,form);
+  dialog.append(header,infoPanel,body,footer);draw();dialog.showModal();
  }
  dialog.addEventListener('keydown',e=>e.stopPropagation());
- return {open,openRevolution(sketchId?:string){open(undefined,{sketchId,revolve:true});},openExtrusion(sketchId:string){open(undefined,{sketchId,revolve:false});},dispose(){disposed=true;dialog.close();dialog.remove();}};
+ return {open,openSavedSketch(sketchId:string){open(undefined,{sketchId,revolve:false,editOnly:true});},openRevolution(sketchId?:string){open(undefined,{sketchId,revolve:true});},openExtrusion(sketchId:string){open(undefined,{sketchId,revolve:false});},dispose(){disposed=true;dialog.close();dialog.remove();}};
 }

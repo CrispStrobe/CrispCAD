@@ -55,3 +55,13 @@ The Brickwright host also passes its shared 3D navigation preferences to the emb
 Sketch still opens the extrusion workflow directly. The adjacent More sketch tools
 menu opens Sketch path and Revolve. Mirror and Pattern are available under Edit
 for a selected top-level body. The command palette also lists these operations.
+
+When the embedded CAD ribbon runs out of room, project simulation actions
+show icons and tooltips before the ribbon scrolls horizontally. Model Library
+offers CAD-only models and complete robot projects with model, code, circuit,
+and Widgets. It prompts before replacing the open project.
+
+In Sketch, choose Draw outline in 2D and place corners on the grid. Shift
+keeps new edges horizontal or vertical. Close the outline at its first point
+and use Save sketch to keep the profile in Objects. An independent sketch
+can be reopened and edited, then extruded or revolved from Objects.

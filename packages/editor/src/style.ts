@@ -122,4 +122,17 @@ export const editorStyle = `
 .sketch-expressions>label.sketch-toggle{margin-block:6px}
 .sketch-tools>summary{display:grid;place-items:center;width:26px;height:34px;padding:4px;font-size:15px}
 @media(pointer:coarse){.sketch-tools>summary{width:34px;height:40px}}
+.sketch-start-outline{margin-bottom:8px}
+.sketch-body:has(.sketch-outline-drawing:not([hidden])){grid-template-columns:minmax(0,1fr)}
+.sketch-dialog [hidden]{display:none!important}
+.sketch-outline-drawing svg{display:block;width:100%;height:min(48vh,420px);min-height:180px;border:1px solid var(--line);border-radius:6px;cursor:crosshair;touch-action:none}
+.sketch-outline-drawing svg>*{pointer-events:none}
+.sketch-drawing-controls{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sketch-outline-drawing p{margin:8px 0 0}
+.sketch-outline-drawing path,.sketch-outline-drawing polyline,.sketch-outline-drawing line{fill:none;vector-effect:non-scaling-stroke}
+.sketch-drawing-gridline{stroke:#7792a266;stroke-width:.65px}
+.sketch-drawing-axis{stroke:#7792a2;stroke-width:1px}
+.sketch-drawing-line,.sketch-drawing-hover{stroke:#3189e0;stroke-width:2px}
+.sketch-drawing-hover{stroke-dasharray:5 4}
+.sketch-drawing-start{fill:#28a36d}.sketch-drawing-point{fill:#3189e0}
 `;

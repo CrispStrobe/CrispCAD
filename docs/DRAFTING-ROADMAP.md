@@ -475,3 +475,35 @@ tangency. Version 34 retains arc-to-arc tangency. Version 35 retains
 constraints on individual region loops. Version 36 retains relative loop
 positions. Version 37 retains edge-midpoint position anchors. Version 38
 retains shared edge lengths across loops. Other edge relations remain open.
+
+## Command line and code workspace
+
+Keep sketching and object editing available through the pointer and keyboard.
+Add a dockable CAD command line with prompts, completion, aliases and
+history. Start by routing existing CAD commands through the same editor
+actions as buttons and the command palette. Accept picked geometry or typed
+coordinates where a command needs input. Support Escape to cancel a pending
+command and group a completed command into one Undo step.
+
+Let users open CAD Script from that surface in a persistent editor with a
+live preview, source diagnostics, parameter completion and an explicit
+Apply action. Keep model source editable on reopen. Develop coordinates,
+snapping and constrained 2D drawing against the same CAD session so typed
+commands and on-canvas tools lead to the same model.
+
+Cota documents a prompt-driven command line with history, completion, and
+absolute, relative and polar coordinates. Use those workflows to evaluate
+discoverability and keyboard efficiency. [Cota documentation](https://mxchristian17.github.io/cota/docs/)
+
+### Costumes and the 2D drafting workspace
+
+Use Brickwright's Costumes vector editor as the reference for drawing tools,
+selection handles, zoom, and touch behavior. Costumes edits SVG artwork
+through Scratch Paint and Paper. CAD must retain millimetres, editable
+profiles, snaps and constraints in the CAD document.
+
+Add a reviewed handoff for selected vector artwork to a CAD sketch. Convert
+closed filled paths and holes with an explicit scale and origin preview.
+Report unsupported strokes, open paths or curves before committing geometry.
+Evaluate reuse of tool interactions and vector conversion separately from
+the Costumes editor's React and document integration.

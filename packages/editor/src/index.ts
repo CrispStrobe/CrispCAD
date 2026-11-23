@@ -4,7 +4,7 @@ import {mountSimulationPanel} from './simulation-panel.js';
 import {mountScrewRedesign} from './screw-redesign.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import {prepareMeshExport} from './export-policy.js';
-import {mountModelLibraryPanel, type ModelLibraryOptions} from './model-library-panel.js';
+import {mountModelLibraryPanel, type ModelLibraryOptions, type ModelLibraryProject} from './model-library-panel.js';
 export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
 import { t } from '@brickwright/cad-core';
@@ -30,7 +30,7 @@ import type {PlacementPointer} from './surface-placement.js';
 import type {ShapeBrowserLayout} from './shape-picker.js';
 import type {ShapePreset} from './shapes.js';
 import { mountShapePicker } from './shape-picker.js';
-import { createPresetDocument, evaluatedPreview, shapeCatalog } from './shapes.js';
+import { createPresetDocument, evaluatedPreview, presetPreview, shapeCatalog } from './shapes.js';
 import {mountModelSourcePanel} from './model-source-panel.js';
 import {mountCodePanel} from './code-panel.js';
 import {exportSketchDxf} from './sketch-dxf.js';
@@ -57,7 +57,7 @@ export interface CadEditorOptions {
   /** A host may own the sole project title. */
   showDocumentTitle?:boolean;
   /** Optional whole-project choices supplied by an embedding application. */
-  presetProjects?:{ids:readonly string[];open:(presetId:string)=>Promise<void>};
+  presetProjects?:{items:readonly ModelLibraryProject[];open:(presetId:string)=>Promise<boolean|void>};
   /** Desktop hosts provide the sole File menu through their native menu bar. */
   nativeMenus?:boolean;
   modelLibrary?: ModelLibraryOptions;
@@ -93,7 +93,7 @@ export interface CadEditorOptions {
   onError?: (error: Error) => void;
 }
 export interface CadCommandState {canUndo:boolean;canRedo:boolean;hasSelection:boolean;canDelete:boolean;canCombine:boolean;canExport:boolean;hasBodies:boolean;ready:boolean}
-export type CadCommand='new'|'open'|'save'|'import'|'export'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'command-palette'|'readout'|'code'|'model-source'|'model-library'|'union'|'subtract'|'intersect';
+export type CadCommand='new'|'open'|'save'|'import'|'export'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'command-palette'|'readout'|'code'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect';
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag); element.className = className; if (text !== undefined) element.textContent = text; return element;
 }
@@ -132,11 +132,31 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     if(['File','Edit','Combine','More sketch tools'].includes(label)){
       const group=el('details',`command-menu ${className}`);const trigger=el('summary','',`${t(label)} ▾`);trigger.setAttribute('aria-label',label==='More sketch tools'?t(label):t`${t(label)} menu`);if(label!=='File'){trigger.textContent='';if(label==='More sketch tools')trigger.append(el('span','','▾'));else{const icon=toolIcon(label==='Combine'?'Union':'Edit');if(icon)trigger.append(icon);}trigger.title=t(label);}
       const tools=el('div','command-popup');group.append(trigger,tools);toolbar.append(group);group.hidden=label==='File'&&(options.nativeMenus===true||options.embedded===true);toolParent=tools;menus.push(group);
-      group.addEventListener('toggle',()=>{if(group.open)menus.forEach(menu=>{if(menu!==group)menu.open=false;});});
+      group.addEventListener('toggle',()=>{
+        if(!group.open)return;
+        menus.forEach(menu=>{if(menu!==group)menu.open=false;});
+        positionMenu(group);
+      });
       tools.addEventListener('click',event=>{if((event.target as Element).closest('button:not(:disabled)'))group.open=false;});return;
     }
     const group = el('div', `tool-group ${className}`); group.setAttribute('role', 'group'); group.setAttribute('aria-label', t(label)); const tools = el('div', 'group-tools'); group.append(tools); toolbar.append(group); toolParent = tools;
   }
+  function positionMenu(menu:HTMLDetailsElement){
+    const anchor=menu.querySelector('summary')!.getBoundingClientRect();
+    const popup=menu.querySelector<HTMLElement>('.command-popup')!;
+    // Measure the fixed containing block before positioning below the trigger.
+    Object.assign(popup.style,{left:'0px',right:'auto',top:'0px'});
+    const box=popup.getBoundingClientRect();
+    const left=Math.max(8,Math.min(anchor.left,document.documentElement.clientWidth-box.width-8));
+    const below=anchor.bottom+4;
+    const available=document.documentElement.clientHeight;
+    const top=below+box.height>available-8&&anchor.top-box.height-4>=8?anchor.top-box.height-4:below;
+    popup.style.left=`${left-box.left}px`;
+    popup.style.top=`${top-box.top}px`;
+    popup.style.maxHeight=`${Math.max(40,available-top-8)}px`;
+    popup.style.overflowY='auto';
+  }
+  toolbar.addEventListener('scroll',()=>menus.forEach(menu=>{if(menu.open)positionMenu(menu);}),{passive:true});
   function button(label: string, action: () => unknown, parent: HTMLElement = toolParent, className = '', translate = true) {
     const b = el('button', className); const icon = toolIcon(label); if (icon) b.append(icon); const display = translate ? t(label) : label; b.append(el('span', '', display)); b.type = 'button'; b.title = display; b.setAttribute('aria-label', display); b.addEventListener('click', () => run(action)); parent.append(b); return b;
   }
@@ -147,7 +167,13 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const partsToggle = button('Objects', () => togglePanel(tree, partsToggle), status, 'panel-toggle objects-toggle');
   partsToggle.title = t('Show objects');
   const propertiesToggle = button('Properties', () => togglePanel(inspector, propertiesToggle), status, 'panel-toggle properties-toggle');
-  const modelLibraryPanel=mountModelLibraryPanel(shell,session,doc=>client.evaluate(doc),options.modelLibrary,async()=>{await whenIdle();viewport.frame();},options.onExport);
+  const modelLibraryPanel=mountModelLibraryPanel(shell,session,doc=>client.evaluate(doc),options.modelLibrary,async()=>{await whenIdle();viewport.frame();},options.onExport,options.presetProjects&&{
+    open:options.presetProjects.open,
+    items:options.presetProjects.items.map(item=>{
+      const preset=shapeCatalog.find(shape=>shape.id===item.id);
+      return {...item,preview:item.preview??(preset?()=>presetPreview(preset):undefined)};
+    })
+  });
   const parametersPanel=mountParametersPanel(shell,session);
   const sketchPanel=mountSketchPanel(shell,session,doc=>client.evaluate(doc),client.offsetSketch,async()=>{await whenIdle();viewport.frame();},()=>grid);
   button('Sketch',()=>sketchPanel.open(),toolbar,'compact-icon').title=t('Create a dimensioned sketch and extrusion');
@@ -230,11 +256,10 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   async function dropShapePlacement(point:PlacementPointer):Promise<boolean>{const active=placing;if(!active||active.dropping)return false;active.dropping=true;active.point=point;try{const built=await active.ready;if(disposed||placing!==active)return false;if(session.state.document.id!==active.projectId||session.state.revision!==active.revision){cancelShapePlacement();return false;}const pose=viewport.movePlacement(point);if(!pose){cancelShapePlacement();return false;}const fragment=placeFragment(built.document,pose);if(active.role==='hole'){fragment.version=7;for(const id of fragment.roots)fragment.nodes[id].role='hole';}await client.evaluate(fragment);if(disposed||placing!==active)return false;if(session.state.document.id!==active.projectId||session.state.revision!==active.revision){cancelShapePlacement();return false;}placing=undefined;viewport.cancelPlacement();session.insert(fragment,[0,0,0],{mergeParameters:true,label:'Place shape'});await whenIdle();picker.placed(active.name);viewport.canvas.focus({preventScroll:true});return true;}catch(error){if(placing===active)cancelShapePlacement();throw error;}}
   viewport.setPlacementHandlers(point=>{void dropShapePlacement(point).catch(report);},cancelShapePlacement);
   const picker = mountShapePicker(main, shapesButton, async (preset, text, svg,font) => {
-    if(options.presetProjects?.ids.includes(preset.id)){await options.presetProjects.open(preset.id);return;}
     const projectId=session.state.document.id,wasEmpty=!session.state.document.roots.length;const {document:doc,geometry:result}=await buildPreset(preset,text,svg,font);
     if(disposed)return;if(session.state.document.id!==projectId)throw new Error(t('Shape insertion was canceled because a different model was opened'));
     const minZ=Math.min(...result.bodies.map(body=>body.bounds.min[2]));session.insert(doc,[session.state.document.roots.length*12,0,-minZ],{mergeParameters:true});await whenIdle();if(wasEmpty)viewport.frame();
-  },report,preset=>{let preview=previewCache.get(preset.id);if(!preview){preview=buildPreset(preset,'ABC').then(built=>evaluatedPreview(built.geometry.bodies));previewCache.set(preset.id,preview);}return preview;},{projectPresetIds:options.presetProjects?.ids,layout:options.shapeBrowserLayout,onLayoutChange:options.onShapeBrowserLayoutChange,placement:{begin:beginShapePlacement,move:moveShapePlacement,drop:dropShapePlacement,cancel:cancelShapePlacement}});
+  },report,preset=>{let preview=previewCache.get(preset.id);if(!preview){preview=buildPreset(preset,'ABC').then(built=>evaluatedPreview(built.geometry.bodies));previewCache.set(preset.id,preview);}return preview;},{excludedIds:options.presetProjects?.items.map(item=>item.id),layout:options.shapeBrowserLayout,onLayoutChange:options.onShapeBrowserLayoutChange,placement:{begin:beginShapePlacement,move:moveShapePlacement,drop:dropShapePlacement,cancel:cancelShapePlacement}});
 
   const add = (shape: Primitive) => {
     const transform = identityTransform(); const height = shape.kind === 'box' ? shape.size[2] : shape.kind === 'cylinder' ? shape.height : shape.radius * 2;
@@ -270,7 +295,17 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const duplicateButton = button('Duplicate', () => executeCommand('duplicate')); const deleteButton = button('Delete', () => executeCommand('delete'));
   const contextActions=el('div','context-actions');contextActions.setAttribute('role','group');contextActions.setAttribute('aria-label',t('Selection actions'));toolbar.append(contextActions);for(const [label,command] of [['Copy','copy'],['Duplicate','duplicate'],['Delete','delete']] as const)button(label,()=>executeCommand(command),contextActions,'compact-icon');
   const fitSelectionActions=()=>{const other=[...toolbar.children].filter(child=>child!==contextActions).reduce((sum,child)=>sum+(child as HTMLElement).getBoundingClientRect().width,0);const gap=parseFloat(getComputedStyle(toolbar).gap)||0;contextActions.dataset.room=String(toolbar.clientWidth>=other+112+gap*toolbar.children.length);};
-  const toolbarResize=new ResizeObserver(fitSelectionActions);toolbarResize.observe(toolbar);
+  const updateToolbarLayout=()=>{
+    const ribbon=options.toolbarContent;
+    if(ribbon){
+      ribbon.removeAttribute('data-cad-ribbon-compact');
+      ribbon.toggleAttribute('data-cad-ribbon-compact',toolbar.scrollWidth>toolbar.clientWidth+1);
+    }
+    fitSelectionActions();
+    menus.forEach(menu=>{if(menu.open)positionMenu(menu);});
+  };
+  const toolbarResize=new ResizeObserver(updateToolbarLayout);toolbarResize.observe(toolbar);
+  if(options.toolbarContent)toolbarResize.observe(options.toolbarContent);
   toolGroup('File', 'file-tools');
   button('Model library',()=>modelLibraryPanel.open());
   if(options.embedded)button('Model library',()=>modelLibraryPanel.open(),toolbar,'compact-icon').style.order='-1';
@@ -371,6 +406,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
         const feature=Object.values(doc.nodes).find(n=>(n.kind==='extrusion'||n.kind==='revolution')&&n.sketchId===sketch.id);
         if(feature)button(t`Sketch: ${sketch.name}`,()=>sketchPanel.open(feature.id),group);
         else{
+          button(t`Edit sketch: ${sketch.name}`,()=>sketchPanel.openSavedSketch(sketch.id),group);
           button(t`Extrude sketch: ${sketch.name}`,()=>sketchPanel.openExtrusion(sketch.id),group);
           button(t`Revolve sketch: ${sketch.name}`,()=>sketchPanel.openRevolution(sketch.id),group);
         }
@@ -706,12 +742,12 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'projection':projectionButton.click();break;case 'workplane':planeButton.click();break;case 'objects':partsToggle.click();break;case 'properties':propertiesToggle.click();break;case 'drop':viewport.dropSelection();break;case 'parameters':parametersPanel.open();break;case 'sketch':sketchPanel.open();break;case 'sketch-path':pathPanel.open();break;case 'revolve':sketchPanel.openRevolution();break;case 'mirror':openMirror();break;case 'pattern':openPattern();break;
       case 'edit-mirror':mirrorPanel.open(session.state.selection[0],true);break;
       case 'edit-pattern':patternPanel.open(session.state.selection[0],true);break;
-      case 'command-palette':palette.open();break;case 'model-source':modelSourcePanel.toggle();break;case 'model-library':modelLibraryPanel.open();break;case 'code':codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);break;case 'readout':readout.setVisible(!readout.visible);break;
+      case 'command-palette':palette.open();break;case 'model-source':modelSourcePanel.toggle();break;case 'model-library':modelLibraryPanel.open();break;case 'robot-projects':modelLibraryPanel.open('projects');break;case 'code':codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);break;case 'readout':readout.setVisible(!readout.visible);break;
       case 'shapes':picker.open(true);break;
       case 'union':case 'subtract':case 'intersect':session.combine(command);break;
       default:throw new Error(t('Unknown editor command'));
     }
-    if(!['open','import','save','export','parameters','shapes','code','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','model-library','command-palette'].includes(command))viewport.canvas.focus({preventScroll:true});
+    if(!['open','import','save','export','parameters','shapes','code','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','model-library','robot-projects','command-palette'].includes(command))viewport.canvas.focus({preventScroll:true});
   }
   async function deliver(format: 'bcad' | 'stl' | '3mf', modificationNotes?: string, checkCanceled: () => void = () => {}) {
     if(format==='bcad'&&options.saveProject){await options.saveProject();return;}

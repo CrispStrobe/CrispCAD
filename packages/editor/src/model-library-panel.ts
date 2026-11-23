@@ -6,6 +6,12 @@ import type {GeometryResult} from '@brickwright/cad-geometry';
 import {fetchArchiveFile,createArchiveBrowserCache,screenArchiveSTL} from './model-library-archive.js';
 import {adafruitArchive} from './adafruit-archive-data.js';
 import type {ModelLibraryArchive} from './model-library-archive.js';
+export interface ModelLibraryProject {
+ id:string;
+ title:string;
+ preview?:string|(()=>string);
+ note?:string;
+}
 export interface ModelLibraryOptions {
  catalogue?:ModelLibraryCatalogue;
  localFiles?:ReadonlyMap<string,Uint8Array>;
@@ -22,7 +28,7 @@ const el=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const n=d
 const noCache:ModelLibraryFileCache={async read(){return undefined;},async write(){throw new Error('Storage unavailable');},async remove(){}};
 const fold=(text:string)=>text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase();
 /** Browse thumbnails without fetching model bytes or changing the active design. */
-export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,evaluate:(document:CadDocument)=>Promise<GeometryResult>,options:ModelLibraryOptions|undefined,inserted:()=>Promise<void>,deliver?:(file:{name:string;bytes:Uint8Array;mime:string})=>void|Promise<void>){
+export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,evaluate:(document:CadDocument)=>Promise<GeometryResult>,options:ModelLibraryOptions|undefined,inserted:()=>Promise<void>,deliver?:(file:{name:string;bytes:Uint8Array;mime:string})=>void|Promise<void>,projects?:{items:readonly ModelLibraryProject[];open:(id:string)=>Promise<boolean|void>}){
  let catalogue:ModelLibraryCatalogue={format:'brickwright-model-library',version:1,assets:[]},initialError='';
  if(options?.catalogue){const checked=validateModelLibraryCatalogue(options.catalogue);if(checked.valid)catalogue=checked.catalogue;else initialError=checked.errors.join(' ');}
  const archive=adafruitArchive,archiveCache=options?.cache??createArchiveBrowserCache();
@@ -31,12 +37,12 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
  const loadArchivePreviews=()=>archivePreviewLoading??=(import('./adafruit-preview-data.json').then(({default:data})=>{if(data.upstreamCommit!==archive.upstreamCommit||data.archiveCommit!==archive.commit)throw new Error('Adafruit preview source revision mismatch');if(disposed)return;archivePreviews=data.previews;applyArchivePreviews();}).finally(()=>{archivePreviewLoading=undefined;}));
  let loading:Promise<void>|undefined,loaded=!options?.load;
  const localFiles=new Map([...options?.localFiles??[]].map(([path,bytes])=>[path,bytes.slice()]));
- let disposed=false,working=false,selected:ModelLibraryAsset|undefined,archiveSelection:ModelLibraryArchive['folders'][number]|undefined,controller:AbortController|undefined;
+ let disposed=false,working=false,selected:ModelLibraryAsset|undefined,archiveSelection:ModelLibraryArchive['folders'][number]|undefined,controller:AbortController|undefined,selectedProject:ModelLibraryProject|undefined;
  const dialog=el('dialog');dialog.className='model-library-dialog';dialog.setAttribute('aria-label',t('Model library'));
  const heading=el('header'),title=el('h2',t('Model library')),close=el('button','×');close.type='button';close.className='library-close';close.setAttribute('aria-label',t('Close model library'));close.title=t('Close model library');close.onclick=()=>{controller?.abort();dialog.close();};heading.append(title,close);
  const tools=el('div');tools.className='model-library-tools';
  const search=el('input');search.type='search';search.setAttribute('aria-label',t('Search models'));search.placeholder=t('Search models');
- const filter=el('select');filter.setAttribute('aria-label',t('Model type'));for(const [value,label] of [['','All models'],['source','Editable source'],['mesh','Mesh']]){const option=el('option',t(label));option.value=value;filter.append(option);}
+ const filter=el('select');filter.setAttribute('aria-label',t('Model type'));for(const [value,label] of [['','All models'],...(projects?.items.length?[['models','CAD models only'],['projects','Robot projects']]:[]),['source','Editable source'],['mesh','Mesh']]){const option=el('option',t(label));option.value=value;filter.append(option);}
  const load=el('button','…');load.type='button';load.setAttribute('aria-label',t('Open catalogue JSON'));load.title=t('Open catalogue JSON');
  const file=el('input');file.type='file';file.accept='.json,application/json';file.hidden=true;file.setAttribute('aria-label',t('Catalogue file'));load.onclick=()=>file.click();
  tools.append(search,filter,load,file);
@@ -50,10 +56,20 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
  function image(asset:ModelLibraryAsset){const url=options?.previews?.get(asset.original.sha256);if(url){const img=el('img');img.src=url;img.alt=asset.title;img.draggable=false;return img;}const placeholder=el('span','◇');placeholder.className='preview-unavailable';placeholder.title=t('Preview unavailable');placeholder.setAttribute('aria-label',t('Preview unavailable'));return placeholder;}
  function archiveImage(folder:ModelLibraryArchive['folders'][number]){if(folder.name==='Adafruit archive files'){const label=el('span','≡');label.className='preview-unavailable';label.title=t('Original source files');return label;}const image=el('img');image.alt=folder.name;image.loading='lazy';image.draggable=false;image.dataset.adafruitPreview=folder.name;const url=archivePreviews?.[folder.name];if(url)image.src=url;return image;}
  function renderList(){
-  const scroll=list.scrollTop;list.replaceChildren();const terms=fold(search.value).trim().split(/\s+/).filter(Boolean),matches=catalogue.assets.filter(a=>terms.every(term=>fold(`${a.title} ${a.author} ${a.licence.spdx}`).includes(term))&&(!filter.value||(filter.value==='source')===!!sourceFor(a)));
-  const archiveMatches=filter.value==='source'?[]:archive.folders.filter(folder=>(!filter.value||folder.files.some(f=>f.format==='stl'))&&terms.every(term=>fold(`${folder.name} Adafruit ${folder.files.map(f=>f.path).join(' ')}`).includes(term)));
-  if(!matches.length&&!archiveMatches.length)list.append(el('p',(catalogue.assets.length||archive.folders.length)?t('No matching models.'):t('No published catalogue is bundled. Open a reviewed remote catalogue JSON to browse models.')));
-  for(const asset of matches){const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;card.setAttribute('aria-label',`${asset.title} · ${asset.licence.spdx}`);card.setAttribute('aria-pressed',String(selected?.id===asset.id));const name=el('strong',asset.title),meta=el('span');meta.className='model-card-meta';meta.append(badge(asset),el('small',sourceFor(asset)?t('Editable source'):t('Mesh')));card.append(image(asset),name,meta);card.onclick=()=>{selected=asset;archiveSelection=undefined;renderList();renderDetails();};list.append(card);}for(const folder of archiveMatches){const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;card.setAttribute('aria-pressed',String(archiveSelection===folder));card.dataset.archiveFolder=folder.name;card.append(archiveImage(folder),el('strong',folder.name),el('small',t('Adafruit · Original files')));card.onclick=()=>{selected=undefined;archiveSelection=folder;renderList();renderDetails();if(folder.name!=='Adafruit archive files'&&!archivePreviews)void loadArchivePreviews().catch(error=>{if(!disposed)report(error);});};list.append(card);}list.scrollTop=scroll;
+  const scroll=list.scrollTop;clearPreviews(list);list.replaceChildren();
+  const terms=fold(search.value).trim().split(/\s+/).filter(Boolean);
+  const matches=filter.value==='projects'?[]:catalogue.assets.filter(a=>terms.every(term=>fold(`${a.title} ${a.author} ${a.licence.spdx}`).includes(term))
+   &&(!filter.value||filter.value==='models'||(filter.value==='source')===!!sourceFor(a)));
+  const archiveMatches=['source','projects'].includes(filter.value)?[]:archive.folders.filter(folder=>(filter.value!=='mesh'||folder.files.some(f=>f.format==='stl'))&&terms.every(term=>fold(`${folder.name} Adafruit ${folder.files.map(f=>f.path).join(' ')}`).includes(term)));
+  const projectMatches=!filter.value||filter.value==='projects'?(projects?.items??[]).filter(project=>terms.every(term=>fold(project.title+' '+(project.note??'')).includes(term))):[];
+  if(!matches.length&&!archiveMatches.length&&!projectMatches.length)list.append(el('p',(catalogue.assets.length||archive.folders.length||projects?.items.length)?t('No matching models.'):t('No published catalogue is bundled. Open a reviewed remote catalogue JSON to browse models.')));
+  for(const project of projectMatches){
+   const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;card.setAttribute('aria-pressed',String(selectedProject===project));
+   card.append(projectImage(project),el('strong',project.title),el('small',t('Robot project · Includes code')));
+   card.onclick=()=>{selectedProject=project;selected=undefined;archiveSelection=undefined;renderList();renderDetails();};
+   list.append(card);
+  }
+  for(const asset of matches){const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;card.setAttribute('aria-label',`${asset.title} · ${asset.licence.spdx}`);card.setAttribute('aria-pressed',String(selected?.id===asset.id));const name=el('strong',asset.title),meta=el('span');meta.className='model-card-meta';meta.append(badge(asset),el('small',sourceFor(asset)?t('Editable source'):t('Mesh')));card.append(image(asset),name,meta);card.onclick=()=>{selectedProject=undefined;selected=asset;archiveSelection=undefined;renderList();renderDetails();};list.append(card);}for(const folder of archiveMatches){const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;card.setAttribute('aria-pressed',String(archiveSelection===folder));card.dataset.archiveFolder=folder.name;card.append(archiveImage(folder),el('strong',folder.name),el('small',t('Adafruit · Original files')));card.onclick=()=>{selectedProject=undefined;selected=undefined;archiveSelection=folder;renderList();renderDetails();if(folder.name!=='Adafruit archive files'&&!archivePreviews)void loadArchivePreviews().catch(error=>{if(!disposed)report(error);});};list.append(card);}list.scrollTop=scroll;
  }
  function appendInfo(asset:ModelLibraryAsset,technical:HTMLElement){
   const licence=el('section');licence.className='model-library-licence';licence.append(el('h4',t('Licence & attribution')));
@@ -62,8 +78,41 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
   const advanced=el('details');advanced.className='model-library-technical';advanced.append(el('summary',t('Technical details')),technical);details.append(advanced);
  }
  function optionalNotes(){const label=el('label',t('Notes (optional)')),notes=el('input');notes.type='text';notes.maxLength=3500;notes.setAttribute('aria-label',t('Incorporation modification notes'));notes.placeholder=t('Notes (optional)');label.className='library-notes';label.append(notes);return {label,notes};}
+ const pendingProjectPreviews=new WeakMap<Element,()=>string>();
+ const previewObserver=new IntersectionObserver(entries=>{
+  for(const entry of entries){
+   if(!entry.isIntersecting)continue;
+   previewObserver.unobserve(entry.target);
+   const image=entry.target as HTMLImageElement,loadPreview=pendingProjectPreviews.get(image);
+   pendingProjectPreviews.delete(image);
+   if(loadPreview&&image.isConnected){try{image.src=loadPreview();}catch{image.alt=t('Preview unavailable');}}
+  }
+ });
+ function clearPreviews(container:HTMLElement){
+  for(const image of container.querySelectorAll('img[data-project-preview]'))previewObserver.unobserve(image);
+ }
+ function projectImage(project:ModelLibraryProject){
+  if(!project.preview){const placeholder=el('span','◇');placeholder.className='preview-unavailable';return placeholder;}
+  const image=el('img');image.alt='';image.loading='lazy';image.draggable=false;
+  if(typeof project.preview==='string')image.src=project.preview;
+  else{image.dataset.projectPreview='';pendingProjectPreviews.set(image,project.preview);previewObserver.observe(image);}
+  return image;
+ }
+ function renderProject(project:ModelLibraryProject){
+  const preview=el('div');preview.className='model-library-preview';preview.append(projectImage(project));
+  const launch=el('button',t`Open ${project.title} project`);launch.type='button';launch.className='primary';launch.disabled=working;
+  launch.onclick=async()=>{
+   working=true;renderList();launch.disabled=true;status.textContent=t('Opening robot project…');
+   try{const opened=await projects!.open(project.id);if(!disposed&&dialog.open){if(opened===false)status.textContent='';else dialog.close();}}
+   catch(error){if(!disposed)report(error);}
+   finally{working=false;if(!disposed){renderList();launch.disabled=false;}}
+  };
+  details.append(preview,el('h3',project.title),el('p',t('Opens a complete project with its 3D model, program, circuit, and Widgets.')));
+  if(project.note)details.append(el('p',project.note));
+  details.append(launch);
+ }
  function renderDetails(){
-  details.replaceChildren();if(archiveSelection){renderArchive(archive,archiveSelection);return;}const asset=selected;if(!asset){details.append(el('p',t('Select a model to insert.')));return;}
+  clearPreviews(details);details.replaceChildren();if(selectedProject){renderProject(selectedProject);return;}if(archiveSelection){renderArchive(archive,archiveSelection);return;}const asset=selected;if(!asset){details.append(el('p',t('Select a model to insert.')));return;}
   const preview=el('div');preview.className='model-library-preview';preview.append(image(asset));const meta=el('div');meta.className='model-library-meta';meta.append(el('h3',asset.title),badge(asset));details.append(preview,meta,el('small',asset.author));
   const technical=el('div');technical.append(el('p',asset.modificationNotes),el('p',asset.conversion.unitAssumption));
   const source=sourceFor(asset);if(source){renderSource(asset,source,technical);appendInfo(asset,technical);return;}
@@ -139,7 +188,8 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
       el('pre',JSON.stringify(report,null,2)));
     container.append(expanded);
   }
- search.oninput=filter.onchange=renderList;
- file.onchange=async()=>{const chosen=file.files?.[0];file.value='';if(!chosen||working)return;try{if(chosen.size>4*1024*1024)throw new Error(t('Catalogue exceeds 4 MiB'));const parsed=parseModelLibraryCatalogue(await chosen.text());if(disposed||working)return;if(!parsed.valid)throw new Error(parsed.errors.join(' '));catalogue=parsed.catalogue;selected=undefined;archiveSelection=undefined;search.value=filter.value='';status.textContent='';renderList();renderDetails();}catch(error){report(error);}};
- return {open(){if(!disposed&&!dialog.open){renderList();if(!working)renderDetails();dialog.showModal();search.focus();if(!loaded){status.textContent=t('Loading models…');loading??=options!.load!().then(data=>{if(disposed)return;const checked=validateModelLibraryCatalogue(data.catalogue);if(!checked.valid)throw new Error(checked.errors.join(' '));catalogue=checked.catalogue;options={...options,...data};localFiles.clear();for(const [path,bytes]of data.localFiles??[])localFiles.set(path,bytes.slice());loaded=true;status.textContent='';renderList();renderDetails();}).catch(error=>{if(!disposed)report(error);}).finally(()=>{loading=undefined;});}}},dispose(){disposed=true;controller?.abort();dialog.remove();}};
+ search.oninput=renderList;
+ filter.onchange=()=>{selectedProject=undefined;selected=undefined;archiveSelection=undefined;renderList();renderDetails();};
+ file.onchange=async()=>{const chosen=file.files?.[0];file.value='';if(!chosen||working)return;try{if(chosen.size>4*1024*1024)throw new Error(t('Catalogue exceeds 4 MiB'));const parsed=parseModelLibraryCatalogue(await chosen.text());if(disposed||working)return;if(!parsed.valid)throw new Error(parsed.errors.join(' '));catalogue=parsed.catalogue;selectedProject=undefined;selected=undefined;archiveSelection=undefined;search.value=filter.value='';status.textContent='';renderList();renderDetails();}catch(error){report(error);}};
+ return {open(filterMode?:'projects'){if(!disposed&&!dialog.open){if(filterMode){filter.value=filterMode;search.value='';selectedProject=undefined;selected=undefined;archiveSelection=undefined;}renderList();if(!working)renderDetails();dialog.showModal();search.focus();if(!loaded){status.textContent=t('Loading models…');loading??=options!.load!().then(data=>{if(disposed)return;const checked=validateModelLibraryCatalogue(data.catalogue);if(!checked.valid)throw new Error(checked.errors.join(' '));catalogue=checked.catalogue;options={...options,...data};localFiles.clear();for(const [path,bytes]of data.localFiles??[])localFiles.set(path,bytes.slice());loaded=true;status.textContent='';renderList();renderDetails();}).catch(error=>{if(!disposed)report(error);}).finally(()=>{loading=undefined;});}}},dispose(){disposed=true;controller?.abort();previewObserver.disconnect();dialog.remove();}};
 }
