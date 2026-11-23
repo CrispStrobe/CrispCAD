@@ -2,17 +2,19 @@
 import {CubicBezierCurve,EllipseCurve,LineCurve,QuadraticBezierCurve} from 'three';
 import type {Curve,Path,Vector2} from 'three';
 import {SVGLoader} from 'three/addons/loaders/SVGLoader.js';
-import {evaluateSketchRegion,isSketchPoint,maxSketchRegionLoops,maxSketchOutlinePoints,newId,sketchOutline,sketchSegmentsIntersect,t} from '@brickwright/cad-core';
+import {evaluateSketchRegion,isSketchPoint,maxSketchRegionLoops,maxSketchOutlinePoints,newId,sketchOutline,sketchPath,sketchSegmentsIntersect,t} from '@brickwright/cad-core';
 import type {SketchPoint,SketchProfile} from '@brickwright/cad-core';
 import {localSvg} from './svg-icon.js';
 import {expandCostumeStroke} from './costume-stroke.js';
 import type {CostumeStroke} from './costume-stroke.js';
+import {costumeArcSweep,costumeCenterlinePreview,ellipseSweep} from './costume-centerline.js';
 
 export type CostumeRegion = {
  loops: CostumeLoop[];
  size: SketchPoint;
  origin: SketchPoint;
  approximated?: boolean;
+ centerline?: {points:SketchPoint[];bulges?:number[];d:string};
  gapRepair?: {edges:ClosingEdge[];limitMm:number};
 };
 export type CostumePlacement = {anchor:'lower-left'|'center';position:SketchPoint};
@@ -23,20 +25,14 @@ const styles = new Set(['fill','fill-rule','fill-opacity','stroke','stroke-opaci
 const near = (a:Vector2,b:Vector2) => a.distanceTo(b) < 1e-7;
 const point = ({x,y}:Vector2):SketchPoint => [x,-y];
 
-type CostumeImportOptions = {widthMm:number;toleranceMm?:number;maxGapMm?:number;strokeOnly?:boolean};
+type CostumeImportOptions = {widthMm:number;toleranceMm?:number;maxGapMm?:number;strokeOnly?:boolean;centerlineOnly?:boolean};
 
 function secondDerivativeBound(curve:Curve<Vector2>):number {
  const secondDifference=(a:Vector2,b:Vector2,c:Vector2)=>a.clone().add(c).addScaledVector(b,-2).length();
  if(curve instanceof QuadraticBezierCurve)return 2*secondDifference(curve.v0,curve.v1,curve.v2);
  if(curve instanceof CubicBezierCurve)return 6*Math.max(
   secondDifference(curve.v0,curve.v1,curve.v2),secondDifference(curve.v1,curve.v2,curve.v3));
- if(curve instanceof EllipseCurve){
-  const turn=2*Math.PI,delta=curve.aEndAngle-curve.aStartAngle;
-  if(Math.abs(delta)<Number.EPSILON)return 0;
-  const forward=((delta%turn)+turn)%turn;
-  const sweep=forward<Number.EPSILON?turn:curve.aClockwise?turn-forward:forward;
-  return Math.max(curve.xRadius,curve.yRadius)*sweep**2;
- }
+ if(curve instanceof EllipseCurve)return Math.max(curve.xRadius,curve.yRadius)*ellipseSweep(curve)**2;
  throw new Error(t('This SVG curve cannot be approximated.'));
 }
 
@@ -107,34 +103,47 @@ const displayPoints = (loop:CostumeLoop):SketchPoint[] => loop.kind==='outline'?
   return [loop.center[0]+Math.cos(theta)*loop.radius,loop.center[1]+Math.sin(theta)*loop.radius];
  });
 const edges=(points:SketchPoint[])=>points.map((point,index)=>[point,points[(index+1)%points.length]] as const);
-function region(loops:CostumeLoop[]):CostumeRegion {
- const points=loops.flatMap(displayPoints),xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
+function bounds(points:SketchPoint[]){
+ const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
  const origin:SketchPoint=[Math.min(...xs),Math.min(...ys)];
  const size:SketchPoint=[Math.max(...xs)-origin[0],Math.max(...ys)-origin[1]];
- if(size.some(value=>!Number.isFinite(value)||value<=0))throw new Error(t('The artwork has no usable area.'));
- return {loops,size,origin};
+ return {origin,size};
+}
+function region(loops:CostumeLoop[]):CostumeRegion {
+ const polygonBounds=bounds(loops.flatMap(displayPoints));
+ if(polygonBounds.size.some(value=>!Number.isFinite(value)||value<=0))throw new Error(t('The artwork has no usable area.'));
+ return {loops,...polygonBounds};
 }
 
+const scaleSpan=(source:CostumeRegion)=>source.centerline?Math.max(...source.size):source.size[0];
+
 export function costumeProfileBounds(source:CostumeRegion,width:number,placement?:CostumePlacement):{min:SketchPoint;max:SketchPoint} {
- if(!Number.isFinite(width)||width<.01||width>100000)throw new Error(t('Enter a width from 0.01 to 100000 mm.'));
+ if(!Number.isFinite(width)||width<.01||width>100000)throw new Error(source.centerline?
+  t('Enter a span from 0.01 to 100000 mm.'):t('Enter a width from 0.01 to 100000 mm.'));
  const {anchor,position}=placement??{anchor:'lower-left',position:[0,0]};
  if(!isSketchPoint(position)||!['lower-left','center'].includes(anchor))
   throw new Error(t('Enter sketch coordinates from −100000 to 100000 mm.'));
- const height=width*(source.size[1]/source.size[0]);
- const min:SketchPoint=anchor==='center'?[position[0]-width/2,position[1]-height/2]:position;
- const max:SketchPoint=[min[0]+width,min[1]+height];
+ const span=scaleSpan(source);
+ const [scaledWidth,height]=source.size.map(value=>value/span*width);
+ const min:SketchPoint=anchor==='center'?[position[0]-scaledWidth/2,position[1]-height/2]:position;
+ const max:SketchPoint=[min[0]+scaledWidth,min[1]+height];
  if(!isSketchPoint(min)||!isSketchPoint(max))throw new Error(t('The placed profile extends beyond the sketch coordinate limits.'));
  return {min,max};
 }
 
 export function costumeSketchProfile(source:CostumeRegion,width:number,placement?:CostumePlacement):SketchProfile {
  const {min}=costumeProfileBounds(source,width,placement);
- const scale=width/source.size[0];
+ const span=scaleSpan(source),scale=width/span;
  const repair=source.gapRepair;
  if(repair?.edges.some(([[ax,ay],[bx,by]])=>Math.hypot(bx-ax,by-ay)*scale>repair.limitMm))
   throw new Error(t('This outline gap exceeds the maximum at the selected width.'));
- const convert=([x,y]:SketchPoint):SketchPoint=>[min[0]+(x-source.origin[0])/source.size[0]*width,
-  min[1]+(y-source.origin[1])/source.size[0]*width];
+ const convert=([x,y]:SketchPoint):SketchPoint=>[min[0]+(x-source.origin[0])/span*width,
+  min[1]+(y-source.origin[1])/span*width];
+ if(source.centerline){
+  const points=source.centerline.points.map(convert),bulges=source.centerline.bulges;
+  sketchPath(points,bulges);
+  return {kind:'path',id:newId(),points,...(bulges?{bulges:[...bulges]}:{})};
+ }
  const loops=source.loops.map(loop=>loop.kind==='outline'?
   {kind:'outline' as const,id:newId(),points:sketchOutline(loop.points.map(convert))}:
   {kind:'circle' as const,id:newId(),center:convert(loop.center),radius:loop.radius*scale,segments:64});
@@ -226,9 +235,52 @@ function strokeRegion(path:Path,stroke:CostumeStroke,options:CostumeImportOption
  return result;
 }
 
+const isOpenPath=(path:Path)=>{
+ const first=path.curves[0],last=path.curves.at(-1);
+ return Boolean(first&&last&&!path.autoClose&&!near(first.getPoint(0),last.getPoint(1)));
+};
+
+function centerlineRegion(path:Path,options:CostumeImportOptions,fromPrecisionArc:boolean):CostumeRegion{
+ const {curves}=path;
+ if(curves.length>=maxSketchOutlinePoints)throw new Error(t('This outline has too many vertices.'));
+ if(curves.some((curve,index)=>index>0&&!near(curves[index-1].getPoint(1),curve.getPoint(0))))
+  throw new Error(t('The outline contains disconnected edges.'));
+ const sweeps=curves.map(curve=>costumeArcSweep(curve,fromPrecisionArc));
+ const needsApproximation=curves.some((curve,index)=>!(curve instanceof LineCurve)&&sweeps[index]===undefined);
+ if(needsApproximation&&options.toleranceMm===undefined)
+  throw new Error(t('Enable curve approximation to preview Bézier and elliptical centerlines.'));
+ const sampleBounds=bounds(curves.flatMap(curve=>[0,.25,.5,.75,1].map(fraction=>point(curve.getPoint(fraction)))));
+ const tolerance=Math.max(...sampleBounds.size)*(options.toleranceMm??1)/options.widthMm;
+ const points:SketchPoint[]=[],bulges:number[]=[];
+ for(const [index,curve] of curves.entries()){
+  const sweep=sweeps[index];
+  const steps=sweep===undefined?costumeCurveSteps(curve,tolerance):Math.ceil(Math.abs(sweep)/Math.PI);
+  if(points.length+steps>=maxSketchOutlinePoints)throw new Error(t('Increase the curve tolerance to stay within 256 vertices per outline.'));
+  for(let i=0;i<steps;i++){
+   points.push(point(curve.getPoint(i/steps)));
+   bulges.push(sweep===undefined?0:Math.tan(-sweep/(4*steps)));
+  }
+ }
+ points.push(point(curves.at(-1)!.getPoint(1)));bulges.push(0);
+ const authoredBulges=bulges.some(value=>value!==0)?bulges:undefined;
+ const {extrema,d}=costumeCenterlinePreview(points,authoredBulges);
+ const profileBounds=bounds(extrema);
+ if(!Number.isFinite(Math.max(...profileBounds.size))||Math.max(...profileBounds.size)<=0)
+  throw new Error(t('The artwork has no usable area.'));
+ const result:CostumeRegion={...profileBounds,loops:[],approximated:needsApproximation,centerline:{points,bulges:authoredBulges,d}};
+ costumeSketchProfile(result,options.widthMm);
+ return result;
+}
+
+function isPrecisionArc(node:Element):boolean {
+ const data=node.getAttribute('data-paper-data');
+ if(!data)return false;
+ try{return JSON.parse(data)?.bwPrecisionArc===true;}catch{return false;}
+}
+
 export function readCostumeProfiles(source:string,options?:CostumeImportOptions){
  if(options&&(!Number.isFinite(options.widthMm)||options.widthMm<.01||options.widthMm>100000))
-  throw new Error(t('Enter a width from 0.01 to 100000 mm.'));
+  throw new Error(options.centerlineOnly?t('Enter a span from 0.01 to 100000 mm.'):t('Enter a width from 0.01 to 100000 mm.'));
  const invalidTolerance=(value:number|undefined)=>value!==undefined&&(!Number.isFinite(value)||value<.01||value>10);
  if(invalidTolerance(options?.toleranceMm))throw new Error(t('Enter a curve tolerance from 0.01 to 10 mm.'));
  if(invalidTolerance(options?.maxGapMm))throw new Error(t('Enter a maximum gap from 0.01 to 10 mm.'));
@@ -244,23 +296,34 @@ export function readCostumeProfiles(source:string,options?:CostumeImportOptions)
   const values=new Map(declarations.map(([name,value])=>[name,value]));
   const style=(name:string)=>values.get(name)??node.getAttribute(name);
   if(style('visibility')==='hidden'||style('display')==='none'||style('opacity')==='0'){
-   if(node===xml.documentElement)return {profiles:[],issues:[],strokes:false};
+   if(node===xml.documentElement)return {profiles:[],issues:[],strokes:false,centerlines:false};
    node.remove();
   }
  }
  const profiles:CostumeRegion[]=[],issues=new Set<string>();
  const recordIssue=(error:unknown)=>issues.add(error instanceof Error?error.message:String(error));
- let strokes=false;
+ let strokes=false,centerlines=false;
  const paths=new SVGLoader().parse(new XMLSerializer().serializeToString(xml)).paths;
  if(paths.length>100)throw new Error(t('This artwork contains too many paths.'));
  for(const path of paths){
   const data=path.userData,style=data?.style;
   const visibleStroke=style?.stroke&&!['none','transparent'].includes(style.stroke)&&
    Number(style.strokeOpacity)>0&&Number(style.strokeWidth)>0;
-  if(visibleStroke)strokes=true;
   if(style?.visibility==='hidden')continue;
+  if(visibleStroke)strokes=true;
+  const visibleFill=Number(style?.fillOpacity)!==0&&!['none','transparent'].includes(style?.fill);
+  const openPaths=(visibleStroke||visibleFill)?path.subPaths.filter(isOpenPath):[];
+  if(openPaths.length)centerlines=true;
   try {
    if(path.subPaths.length>maxSketchRegionLoops)throw new Error(t('A region supports up to 16 loops.'));
+   if(options?.centerlineOnly){
+    if(!data||!openPaths.length)continue;
+    const authoredArc=isPrecisionArc(data.node);
+    for(const subpath of openPaths){
+     try{profiles.push(centerlineRegion(subpath,options,authoredArc));}catch(error){recordIssue(error);}
+    }
+    continue;
+   }
    if(options?.strokeOnly){
     if(!data||!visibleStroke)continue;
     const cap=style.strokeLineCap,join=style.strokeLineJoin,miterLimit=Number(style.strokeMiterLimit);
@@ -273,11 +336,11 @@ export function readCostumeProfiles(source:string,options?:CostumeImportOptions)
     }
     continue;
    }
-   if(Number(style?.fillOpacity)===0||['none','transparent'].includes(style?.fill))continue;
+   if(!visibleFill)continue;
    if(style?.fillRule&&!['evenodd','nonzero'].includes(style.fillRule))throw new Error(t('The SVG uses an unsupported fill rule.'));
    const boundaries=path.subPaths.map(subpath=>boundary(subpath,options));
    profiles.push(...filledRegions(boundaries,style?.fillRule==='evenodd',options?.widthMm??40,options?.maxGapMm));
   } catch(error) {recordIssue(error);}
  }
- return {profiles,issues:[...issues],strokes};
+ return {profiles,issues:[...issues],strokes,centerlines};
 }

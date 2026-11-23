@@ -543,8 +543,12 @@ endpoints of a line, or the center, radius, and signed sweep of a circular arc.
 The result is an editable path on the existing vector canvas with one Undo
 entry. A precision circle stays analytic through the SVG handoff as long as
 the path still describes a circle. Open lines and arcs use a dimensioned
-stroke and can transfer through the stroke outline preview. Direct constraints,
-open centerline import into CAD, and linked source updates remain open.
+stroke and can transfer through the stroke outline preview. **Open paths**
+imports the centerline as an editable CAD sketch path instead. It preserves
+straight segments, circular SVG arcs, and supported precision arcs drawn in
+Costumes. Other curves can be approximated using the existing tolerance.
+Span controls the larger of the width and height, including vertical paths.
+Direct drawing constraints and linked source updates remain open.
 
 The initial handoff offers **Send to CAD** for vector costumes and
 backdrops when Precision design is enabled. Select a region, set its width

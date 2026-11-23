@@ -4,6 +4,7 @@ import {CubicBezierCurve,EllipseCurve,LineCurve,QuadraticBezierCurve,Vector2} fr
 import {costumeCurveSteps,costumeProfileBounds,costumeSketchProfile} from '../packages/editor/src/costume-profiles.js';
 import type {CostumeRegion} from '../packages/editor/src/costume-profiles.js';
 import {evaluateSketchRegion} from '@brickwright/cad-core';
+import {costumeArcSweep,costumeCenterlinePreview} from '../packages/editor/src/costume-centerline.js';
 
 const ring:CostumeRegion={
  origin:[10,-80],size:[20,60],
@@ -72,4 +73,31 @@ it('rejects invalid placement and profiles outside the supported sketch coordina
  expect(()=>costumeSketchProfile(ring,40,{anchor:'center',position:[Infinity,0]})).toThrow(/Enter sketch coordinates/);
  expect(()=>costumeSketchProfile(ring,40,{anchor:'lower-left',position:[99961,0]})).toThrow(/coordinate limits/);
  expect(costumeProfileBounds(ring,40,{anchor:'lower-left',position:[99960,0]}).max[0]).toBe(100000);
+});
+
+
+it('scales and places a vertical open path by its longer span',()=>{
+ const source:CostumeRegion={origin:[2,1],size:[0,8],loops:[],centerline:{points:[[2,1],[2,9]],d:''}};
+ const placement={anchor:'center' as const,position:[10,5] as [number,number]};
+ expect(costumeProfileBounds(source,40,placement)).toEqual({min:[10,-15],max:[10,25]});
+ expect(costumeSketchProfile(source,40,placement)).toMatchObject({kind:'path',points:[[10,-15],[10,25]]});
+});
+
+it('preserves signed arc bulges and measures the curve past its endpoints',()=>{
+ const points:[[number,number],[number,number]]=[[0,0],[20,0]];
+ const {d,extrema}=costumeCenterlinePreview(points,[1,0]);
+ expect(d).toBe('M 0 0 A 10 10 0 0 0 20 0');
+ expect(Math.min(...extrema.map(point=>point[1]))).toBe(-10);
+ expect(costumeSketchProfile({origin:[0,-10],size:[20,10],loops:[],centerline:{points,bulges:[1,0],d}},40))
+  .toMatchObject({kind:'path',points:[[0,20],[40,20]],bulges:[1,0]});
+});
+
+it('recovers a rounded authored circular cubic and keeps general artwork curves separate',()=>{
+ const arc=new CubicBezierCurve(vector(20,0),vector(20,11.04569),vector(11.04569,20),vector(0,20));
+ expect(costumeArcSweep(arc,true)).toBeCloseTo(Math.PI/2,10);
+ expect(costumeArcSweep(arc,false)).toBeUndefined();
+ arc.v1.y += .2;
+ expect(costumeArcSweep(arc,true)).toBeUndefined();
+ expect(costumeArcSweep(new EllipseCurve(0,0,20,20,0,Math.PI/2,true),false)).toBeCloseTo(-3*Math.PI/2,10);
+ expect(costumeArcSweep(new EllipseCurve(0,0,20,10,0,Math.PI/2),false)).toBeUndefined();
 });
