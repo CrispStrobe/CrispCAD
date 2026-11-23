@@ -93,9 +93,9 @@ test('DXF plate previews two open mounting holes and retains their edited dimens
   '0','LAYER','2','Outline','70',4,'62',5,'420',16711935,'370',35,
   '0','LAYER','2','Bores','70',0,'62',1,'290',0,
   '0','ENDTAB','0','ENDSEC','0','SECTION','2','ENTITIES',
-  '0','CIRCLE','8','Bores','10',10,'20',15,'40',2,
-  '0','LWPOLYLINE','8','Outline','90',4,'70',1,'10',0,'20',0,'10',40,'20',0,'10',40,'20',30,'10',0,'20',30,
-  '0','CIRCLE','8','Bores','10',30,'20',15,'40',3,
+  '0','CIRCLE','8','Bores','10',10,'20',15,'40',2,'30',10,'210',0,'220',.6,'230',.8,
+  '0','LWPOLYLINE','8','Outline','90',4,'70',1,'10',0,'20',0,'10',40,'20',0,'10',40,'20',30,'10',0,'20',30,'38',10,'210',0,'220',.6,'230',.8,
+  '0','CIRCLE','8','Bores','10',30,'20',15,'40',3,'30',10,'210',0,'220',.6,'230',.8,
   '0','TEXT','8','Notes','1','Fixture labels',
   '0','CIRCLE','8','Bores','67',1,'10',100,'20',120,'40',15,
   '0','TEXT','8','Paper details','410','Sheet 1','1','Sheet notes',
@@ -114,6 +114,7 @@ test('DXF plate previews two open mounting holes and retains their edited dimens
  await press(layers.getByRole('checkbox',{name:'Bores',exact:true}));
  await press(layers.getByRole('checkbox',{name:'Outline',exact:true}));
  await press(importLayers);
+ await expect(sketch.getByText('The source plane was unfolded into the selected sketch plane at actual size.',{exact:true})).toBeVisible();
  const loops = sketch.getByLabel('Region loops (mm)');
  await expect(loops).toHaveValue(/CIRCLE 10, 15, 2[\s\S]*CIRCLE 30, 15, 3/);
  await expect(sketch.locator('.sketch-top')).toHaveAttribute('d', /^M .* Z M .* Z M .* Z$/);

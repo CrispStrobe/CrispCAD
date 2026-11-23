@@ -53,7 +53,7 @@ it('requires explicit missing-unit consent and rejects unsupported or self-cross
   expect(() => readSketchDxf(drawing(circle, 0))).toThrow('has no units');
   expect(readSketchDxf(drawing(circle, 0), true)).toMatchObject({radius: 1.5});
   for (const entity of [square.replace('\n70\n1\n', '\n70\n0\n'), square + '\n43\n0.5',
-    circle + '\n30\n1', circle + '\n210\n1']) {
+    circle + '\n39\n1']) {
     expect(() => readSketchDxf(drawing(entity))).toThrow('Use circles');
   }
   expect(() => readSketchDxf(drawing(square.replace('\n10\n1\n20\n2\n10\n2\n20\n2', '\n10\n2\n20\n2\n10\n1\n20\n2')))).toThrow('without crossings');
@@ -217,7 +217,7 @@ it('joins unordered native lines and arcs with signed winding and inch dimension
 it('reports open branches, tilted lines and layer changes instead of dropping parts of a chain',()=>{
  expect(()=>readSketchDxf(drawing(nativePlate.slice(0,3).join('\n')))).toThrow('must join into closed loops');
  expect(()=>readSketchDxf(drawing([...nativePlate,dxfLine([4,0],[5,0])].join('\n')))).toThrow('without branches');
- expect(()=>readSketchDxf(drawing(nativePlate.join('\n')+'\n31\n1'))).toThrow('Use circles');
+ expect(()=>readSketchDxf(drawing(nativePlate.join('\n')+'\n31\n1'))).toThrow('not coplanar');
  expect(()=>readSketchDxf(drawing(nativePlate.join('\n').replace('8\nProfile','8\nOutline')))).toThrow('same DXF layer');
 });
 
@@ -257,7 +257,7 @@ it('orients a native chain from a terminal and reverses arc bulges when walking 
  expect(readSketchPathDxf(drawing(openLine,0),true).points).toEqual([[0,2],[0,1]]);
 });
 
-it('rejects branches, parallel paths, closed cycles, multiple layers and tilted paths',()=>{
+it('rejects branches, parallel paths, closed cycles, multiple layers and nonplanar paths',()=>{
  for(const entities of [
   [openLine,openArc,dxfLine([0,1],[-1,1],'Guides')],
   [openLine,openArc,dxfLine([3,3],[3,4],'Guides')],
@@ -265,7 +265,7 @@ it('rejects branches, parallel paths, closed cycles, multiple layers and tilted 
   [openLine,openLine],
  ])expect(()=>readSketchPathDxf(drawing(entities.join('\n')))).toThrow('one open path');
  expect(()=>readSketchPathDxf(drawing([openLine,openArc.replace('Guides','Other')].join('\n')))).toThrow('same DXF layer');
- expect(()=>readSketchPathDxf(drawing(openLine+'\n31\n1'))).toThrow('planar');
+ expect(()=>readSketchPathDxf(drawing([openArc,openLine+'\n31\n1'].join('\n')))).toThrow('not coplanar');
  expect(()=>readSketchPathDxf(drawing(square))).toThrow('one open lightweight polyline');
 });
 
@@ -285,11 +285,11 @@ it('filters a mixed drawing before validating geometry and preserves the selecte
  expect(()=>prepared.outline(false,['Xref|Guides'])).toThrow('Invalid DXF layer name');
  expect(()=>prepared.outline(false,[])).toThrow('Select at least one');
  expect(()=>prepared.outline(false,['missing','0'])).toThrow('unavailable');
- const imported=prepared.outline(false,['0','bohrungen ä']);
+ const {profile:imported}=prepared.outline(false,['0','bohrungen ä']);
  if(imported.kind!=='region')throw Error('Expected the boundary and two holes');
  expect(imported.loops.map(loop=>loop.dxfLayer)).toEqual(['Bohrungen Ä',undefined,'BOHRUNGEN Ä']);
  expect(imported.loops[0]).toMatchObject({center:[254,381],radius:50.8});
- expect(prepared.outline(false,['0'])).toMatchObject({kind:'outline',points:[[1016,0],[1016,762],[0,762],[0,0]]});
+ expect(prepared.outline(false,['0']).profile).toMatchObject({kind:'outline',points:[[1016,0],[1016,762],[0,762],[0,0]]});
  const session=createCadSession();
  const id=session.addSketchExtrusion(imported,{distance:5});
  const exported=new TextDecoder().decode(exportSketchDxf(parseDocument(session.serialize()),id).bytes);
@@ -305,7 +305,7 @@ it('selects a single open guide from unrelated geometry and can retry missing un
  expect(prepared.layers).toEqual(['Guides','Construction']);
  expect(()=>prepared.path(false,['Guides'])).toThrow('has no units');
  expect(()=>prepared.path(true,['Guides','Construction'])).toThrow('one open path');
- expect(prepared.path(true,['guides'])).toEqual(readSketchPathDxf(drawing([openArc,openLine].join('\n'))));
+ expect(prepared.path(true,['guides']).profile).toEqual(readSketchPathDxf(drawing([openArc,openLine].join('\n'))));
 });
 
 const layerTables=[
@@ -325,7 +325,7 @@ it('round-trips selected layer styles, including layer zero and inch-based dash 
  const cut=hole(10,15,2).replace('CIRCLE','CIRCLE\n8\nholes');
  const extra=hole(70,15,1).replace('CIRCLE','CIRCLE\n8\nExtra');
  const prepared=prepareSketchDxf(styledDrawing([plate,cut,extra],1));
- const profile=prepared.outline(false,['0','Holes']);
+ const {profile}=prepared.outline(false,['0','Holes']);
  if(profile.kind!=='region')throw Error('Expected the plate with a hole');
  expect(profile.loops[0]).toMatchObject({dxfLayerStyle:{color:2,plot:false}});
  expect(profile.loops[0].dxfLayer).toBeUndefined();
@@ -333,8 +333,8 @@ it('round-trips selected layer styles, including layer zero and inch-based dash 
   color:-3,trueColor:0x1fcf90,flags:5,plot:false,lineweight:35,
   linetype:{name:'Fixture dash',pattern:[25.4,-12.7,0]}
  }});
- expect(prepared.outline(false,['Extra'])).toMatchObject({dxfLayerStyle:{color:3}});
- expect(prepared.outline(false,['Extra'])).not.toHaveProperty('dxfLayerStyle.linetype');
+ expect(prepared.outline(false,['Extra']).profile).toMatchObject({dxfLayerStyle:{color:3}});
+ expect(prepared.outline(false,['Extra']).profile).not.toHaveProperty('dxfLayerStyle.linetype');
  const session=createCadSession();
  const id=session.addSketchExtrusion(profile,{distance:5});
  const saved=parseDocument(session.serialize());
@@ -378,7 +378,7 @@ it('excludes paper-space entities on shared layers before selecting sketch geome
  const prepared=prepareSketchDxf(input([model,layoutCircle,layoutText,layoutOwner,paperCompound]));
  expect(prepared.layers).toEqual(['0']);
  expect(prepared.skippedPaperSpace).toBe(true);
- expect(prepared.outline()).toEqual(readSketchDxf(drawing(plate)));
+ expect(prepared.outline().profile).toEqual(readSketchDxf(drawing(plate)));
  expect(()=>prepared.outline(false,['Title block'])).toThrow('unavailable');
  const paperOnly=prepareSketchDxf(input([layoutCircle,layoutText,layoutOwner,paperCompound]));
  expect(paperOnly.layers).toEqual([]);
@@ -392,5 +392,62 @@ it('joins only model-space segments when a paper-space copy uses the same guide 
  const prepared=prepareSketchDxf(drawing([openLine,openArc,paper].join('\n'),1));
  expect(prepared.layers).toEqual(['Guides']);
  expect(prepared.skippedPaperSpace).toBe(true);
- expect(prepared.path()).toEqual(readSketchPathDxf(drawing([openLine,openArc].join('\n'),1)));
+ expect(prepared.path().profile).toEqual(readSketchPathDxf(drawing([openLine,openArc].join('\n'),1)));
+});
+
+const tilt='\n210\n0\n220\n0.6\n230\n0.8';
+const oppositeTilt='\n210\n0\n220\n-0.6\n230\n-0.8';
+const wcsLine=(a:number[],b:number[])=>[
+ '0','LINE','10',a[0],'20',a[1],'30',a[2],'11',b[0],'21',b[1],'31',b[2]
+].join('\n');
+
+it('unfolds tilted outlines and opposite-facing holes at actual size',()=>{
+ const tiltedPlate=plate+'\n38\n10'+tilt;
+ const tiltedHole=hole(-10,15,2)+'\n30\n-10'+oppositeTilt;
+ const input=drawing([tiltedPlate,tiltedHole].join('\n'),1);
+ const {profile,unfolded}=prepareSketchDxf(input).outline();
+ expect(unfolded).toBe(true);
+ if(profile.kind!=='region')throw Error('Expected region');
+ expect(profile.loops[1]).toMatchObject({kind:'circle',radius:50.8});
+ const center=profile.loops[1].kind==='circle'?profile.loops[1].center:[];
+ expect(center[0]).toBeCloseTo(254,9);
+ expect(center[1]).toBeCloseTo(381,9);
+ const session=createCadSession();
+ const id=session.addSketchExtrusion(profile,{plane:'XZ',distance:6});
+ const exported=new TextDecoder().decode(exportSketchDxf(session.state.document,id).bytes);
+ expect(prepareSketchDxf(exported).outline()).toEqual({profile,unfolded:false});
+ expect(()=>readSketchDxf(drawing([tiltedPlate,tiltedHole.replace('30\n-10','30\n-11')].join('\n'))))
+  .toThrow('not coplanar');
+ expect(()=>readSketchDxf(drawing(hole(1,2,3)+'\n230\n0'))).toThrow('nonzero');
+});
+
+it('joins a tilted arc to WCS line endpoints and keeps signed bulges on reversed normals',()=>{
+ const arc=['0','ARC','10',0,'20',0,'30',10,'40',5,'50',0,'51',180].join('\n')+tilt;
+ const chord=wcsLine([-5,6,8],[5,6,8]);
+ const profile=readSketchDxf(drawing([arc,chord].join('\n')));
+ expect(profile).toMatchObject({kind:'outline',points:[[5,0],[-5,0]],bulges:[1,0]});
+ const first=['0','ARC','10',0,'20',0,'30',10,'40',5,'50',0,'51',90].join('\n')+tilt;
+ const second=['0','ARC','10',0,'20',0,'30',-10,'40',5,'50',0,'51',90].join('\n')+oppositeTilt;
+ const guide=readSketchPathDxf(drawing([first,second].join('\n')));
+ expect(guide.points[0]).toEqual([5,0]);
+ expect(guide.points[1]).toEqual([0,5]);
+ expect(guide.points[2]).toEqual([-5,0]);
+ expect(guide.bulges?.slice(0,2)).toEqual([Math.tan(Math.PI/8),Math.tan(Math.PI/8)]);
+});
+
+it('fits a plane to tilted WCS line chains while rejecting nonplanar selections',()=>{
+ const a=[0,0,0],b=[6,0,0],c=[0,4,3],out=[2,1,4];
+ const {profile,unfolded}=prepareSketchDxf(drawing([wcsLine(a,b),wcsLine(b,c),wcsLine(c,a)].join('\n'))).outline();
+ expect(unfolded).toBe(true);
+ if(profile.kind!=='outline')throw Error('Expected outline');
+ const edges=profile.points.map(([x,y],i)=>{
+  const [u,v]=profile.points[(i+1)%profile.points.length];
+  return Math.hypot(u-x,v-y);
+ }).sort((a,b)=>a-b);
+ expect(edges[0]).toBeCloseTo(5,9);
+ expect(edges[1]).toBeCloseTo(6,9);
+ expect(edges[2]).toBeCloseTo(Math.sqrt(61),9);
+ expect(()=>readSketchDxf(drawing([wcsLine(a,b),wcsLine(b,c),wcsLine(c,out),wcsLine(out,a)].join('\n'))))
+  .toThrow('not coplanar');
+ expect(readSketchPathDxf(drawing(wcsLine([0,0,5],[0,0,15]))).points[1].map(Math.abs)).toContain(15);
 });

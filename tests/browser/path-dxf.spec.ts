@@ -8,7 +8,7 @@ const payload=(units:number)=>Buffer.from([
  '0','LTYPE','2','Guide dash','73',2,'49',.5,'74',0,'49',-.25,'74',0,'0','ENDTAB',
  '0','TABLE','2','LAYER','0','LAYER','2','Guides','62',-5,'6','Guide dash','370',25,'290',0,'0','ENDTAB','0','ENDSEC',
  '0','SECTION','2','ENTITIES',
- '0','LWPOLYLINE','8','Guides','90',3,'70',0,'10',0,'20',0,'10',1,'20',0,'42',-.5,'10',1,'20',2,
+ '0','LWPOLYLINE','8','Guides','90',3,'70',0,'10',0,'20',0,'10',1,'20',0,'42',-.5,'10',1,'20',2,'38',7,'210',0,'220',.6,'230',.8,
  '0','LINE','8','Construction','10',3,'20',5,'11',6,'21',7,
  '0','LINE','8','Guides','67',1,'10',12,'20',18,'11',22,'21',24,
  '0','ENDSEC','0','EOF'
@@ -43,6 +43,7 @@ test('import an inch DXF as an open guide, export mm and reimport the signed arc
  await press(importLayers);
  const scaled='0, 0\n25.4, 0, -0.5\n25.4, 50.8';
  await expect(points).toHaveValue(scaled);
+ await expect(path.getByText('The source plane was unfolded into the selected sketch plane at actual size.',{exact:true})).toBeVisible();
  await expect(path.getByText('DXF layer: Guides',{exact:true})).toBeVisible();
  const [download]=await Promise.all([
   page.waitForEvent('download'),press(path.getByRole('button',{name:'Export path as DXF'}))
@@ -58,6 +59,7 @@ test('import an inch DXF as an open guide, export mm and reimport the signed arc
  expect(text).not.toContain('Construction');
  await file.setInputFiles({name:'round trip.dxf',mimeType:'application/dxf',buffer:Buffer.from(text)});
  await expect(path.getByLabel('Sketch name')).toHaveValue('round trip');
+ await expect(path.getByText('The source plane was unfolded into the selected sketch plane at actual size.',{exact:true})).toBeHidden();
  await expect(points).toHaveValue(scaled);
  await press(path.getByRole('button',{name:'Save path',exact:true}));
  await expect(path).toBeHidden();

@@ -74,6 +74,14 @@ reports when it skipped layout objects from the entity list. Layout tabs,
 viewport transforms and paper-only geometry are outside the sketch workflow.
 [Autodesk DXF model and paper space](https://help.autodesk.com/cloudhelp/2021/ENU/AutoCAD-DXF/files/GUID-66D32572-005A-4E23-8B8B-8726E8C14302.htm)
 
+Tilted or elevated coplanar geometry unfolds into the sketch plane you
+select, at actual size. The importer combines object-coordinate arcs,
+circles and polylines with world-coordinate lines, preserves circle radii
+and signed bulges, and rejects selections that span multiple planes.
+The DXF export uses the resulting sketch coordinates. Original world
+placement and general 3D curves remain separate from this sketch workflow.
+[Autodesk DXF object coordinate systems](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-DXF/files/GUID-D99F1509-E4E4-47A3-8691-92EA07DC88F5.htm) · [Autodesk arbitrary axis algorithm](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-DXF/files/GUID-E19E5B42-0CC7-4EBA-B29F-5E1D595149EE.htm)
+
 Region circle centers and radii
 accept named dimensions. For example, starting with a 40 mm-wide plate, set
 \`spacing\` in Parameters and position the two holes at \`20 mm - spacing / 2\`
@@ -94,9 +102,7 @@ The curve stays analytic in DXF, and the modeling mesh approximates it using
 chords with up to 0.025 mm of sagitta error within the supported detail budget.
 
 The current region workflow rejects touching, crossing, nested and disjoint
-loops. Widths,
-tilted entities,
-DWG and STEP remain open.
+loops. DXF polyline widths, DWG and STEP remain open.
 
 ## Outline point editing
 
