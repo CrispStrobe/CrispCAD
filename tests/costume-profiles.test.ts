@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {expect,it} from 'vitest';
-import {costumeSketchProfile} from '../packages/editor/src/costume-profiles.js';
+import {CubicBezierCurve,EllipseCurve,LineCurve,QuadraticBezierCurve,Vector2} from 'three';
+import {costumeCurveSteps,costumeSketchProfile} from '../packages/editor/src/costume-profiles.js';
 import type {CostumeRegion} from '../packages/editor/src/costume-profiles.js';
 import {evaluateSketchRegion} from '@brickwright/cad-core';
 
@@ -25,4 +26,26 @@ it('keeps a full circle analytic and rejects invalid scaling or a hole outside t
  },50)).toMatchObject({kind:'circle',center:[25,25],radius:25});
  expect(()=>costumeSketchProfile(ring,0)).toThrow();
  expect(()=>costumeSketchProfile({...ring,loops:[ring.loops[0],{kind:'circle',center:[40,-50],radius:4}]},40)).toThrow();
+});
+
+const vector=(x:number,y:number)=>new Vector2(x,y);
+it.each([
+ new QuadraticBezierCurve(vector(0,0),vector(15,35),vector(40,10)),
+ new CubicBezierCurve(vector(0,0),vector(-15,25),vector(60,45),vector(40,10)),
+ new EllipseCurve(20,10,40,12,.7,5.3,true,.4),
+])('keeps sampled curves within their chord error and adds detail at smaller tolerances',curve=>{
+ const tolerance=.05;
+ const steps=costumeCurveSteps(curve,tolerance);
+ expect(steps).toBeGreaterThan(costumeCurveSteps(curve,1));
+ for(let segment=0;segment<steps;segment++){
+  const start=curve.getPoint(segment/steps),end=curve.getPoint((segment+1)/steps);
+  for(const frac of [.1,.25,.5,.75,.9]){
+   expect(curve.getPoint((segment+frac)/steps).distanceTo(start.clone().lerp(end,frac))).toBeLessThanOrEqual(tolerance);
+  }
+ }
+});
+
+it('leaves lines alone and rejects a curve that exceeds the outline vertex budget',()=>{
+ expect(costumeCurveSteps(new LineCurve(vector(0,0),vector(100,0)),.01)).toBe(1);
+ expect(()=>costumeCurveSteps(new EllipseCurve(0,0,500,250,0,2*Math.PI),.001)).toThrow(/256 vertices/);
 });

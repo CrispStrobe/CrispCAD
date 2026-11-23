@@ -541,9 +541,11 @@ The initial handoff offers **Send to CAD** for vector costumes and
 backdrops when Precision design is enabled. Select a region, set its width
 and plane, and add a sketch at the plane origin. It retains straight closed
 edges, full circles, and supported nested holes. Strokes are excluded from
-the geometry. Curves other than full circles and other unsupported SVG
-elements require cleanup before import. The full precision drawing toolbar,
-tolerance-controlled curve conversion, and updates from source remain open.
+the geometry. Users can opt into **Approximate curves** and choose a
+0.01–10 mm chord tolerance for closed Bézier and elliptical contours. The
+preview shows the straight segments that will be stored in the sketch.
+Full circles retain their circle profile. The precision drawing toolbar,
+stroke expansion, gap repair, and updates from source remain open.
 
 #### SVG conversion and dependency choice
 
