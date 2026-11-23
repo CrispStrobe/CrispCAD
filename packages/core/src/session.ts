@@ -111,17 +111,17 @@ function editSketch(d:CadDocument,id:string,patch:Partial<Pick<PlanarSketch,'nam
   }
   d.sketches![id]=next;
 }
-function affectedOutlines(document:CadDocument,parametric:ParametricDesign){
-  return Object.values(document.sketches??{}).flatMap(sketch=>{
+type OutlineSolver=(request:OutlineSolveRequest,signal:AbortSignal)=>Promise<SketchPoint[]>;
+function affectedOutlines(document:CadDocument,next:CadDocument){
+  return Object.values(next.sketches??{}).flatMap(sketch=>{
     const {profile}=sketch;
-    if(profile.kind!=='outline'||!profile.relations?.some(relation=>relation.kind==='length'&&typeof relation.length==='string'))return [];
-    const constraints=outlineRelationsForSolve(profile,value=>featureValue(value,{parametric}));
-    const previous=outlineRelationsForSolve(profile,value=>featureValue(value,document));
-    const changed=constraints.some((rule,index)=>{
-      const before=previous[index];
-      return rule.kind==='length'&&before.kind==='length'&&rule.length!==before.length;
-    });
-    if(!changed)return [];
+    if(profile.kind!=='outline'||!profile.relations?.length)return [];
+    const before=document.sketches?.[sketch.id]?.profile;
+    const unchanged=profile===before||sameModelValue(profile,before);
+    if(unchanged&&next.parametric===document.parametric)return [];
+    if(unchanged&&profile.relations.every(rule=>rule.kind!=='length'||typeof rule.length!=='string'))return [];
+    const constraints=outlineRelationsForSolve(profile,value=>featureValue(value,next));
+    if(unchanged&&sameModelValue(constraints,outlineRelationsForSolve(profile,value=>featureValue(value,document))))return [];
     const request={points:profile.points,constraints};
     return outlineSatisfiesRelations(request,profile.points)?[]:[{sketch,profile,request}];
   });
@@ -156,11 +156,33 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       for(const [id,profile] of profiles)editSketch(draft,id,{profile});
     });
   }
+  function checkOutlineSolve(expected:number,signal:AbortSignal){
+    signal.throwIfAborted();
+    if(disposed||revision!==expected)throw new Error(t('The model changed while solving outline constraints. Apply again.'));
+  }
+  async function solveAffectedOutlines(previous:CadDocument,next:CadDocument,solve:OutlineSolver,signal:AbortSignal,expected:number){
+    checkOutlineSolve(expected,signal);
+    const profiles=new Map<string,SketchProfile>();
+    for(const {sketch,profile,request} of affectedOutlines(previous,next)){
+      let points:SketchPoint[];
+      try{
+        points=await solve(structuredClone(request),signal);
+        if(!outlineSatisfiesRelations(request,points))throw new Error(t('The solved outline did not meet every constraint.'));
+      }catch(error){
+        checkOutlineSolve(expected,signal);
+        const message=error instanceof Error?error.message:String(error);
+        throw new Error(t`Outline “${sketch.name}”: ${message}`);
+      }
+      checkOutlineSolve(expected,signal);
+      profiles.set(sketch.id,{...profile,points:structuredClone(points)});
+    }
+    return profiles;
+  }
   type SourceOptions={expectedRevision?:number;regenerate?:(recipe:NonNullable<SolidNode['generator']>,name:string)=>CadDocument};
   type PreparedSource={readonly document:CadDocument;readonly revision:number};
   const preparedSources=new WeakSet<PreparedSource>();
   const sourceReady=()=>{if(document.version<6&&Object.hasOwn(document,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));assertProvenanceUpgrade(document);};
-  function prepareModelSource(source:string,options:SourceOptions={}):PreparedSource{
+  function compileSourceCandidate(source:string,options:SourceOptions):CadDocument{
     sourceReady();if(options.expectedRevision!==undefined&&options.expectedRevision!==revision)throw new Error(t('The design changed while editing source. Reload or merge your draft.'));
     let candidate=compileModelSource(source,document,{regenerate:options.regenerate});
     for(const [id,before] of Object.entries(document.nodes)){
@@ -185,8 +207,20 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       const withoutSource={...candidate};delete withoutSource.modelSource;const trial=createCadSession(withoutSource);
       try{for(const id of changedRecipes)trial.replaceGenerated(id,options.regenerate(candidate.nodes[id].generator!,candidate.nodes[id].name));candidate=structuredClone(trial.state.document);}finally{trial.dispose();}
     }
+    delete candidate.modelSource;
+    return checkDocument(candidate);
+  }
+  function prepareSourceCandidate(source:string,candidate:CadDocument,expected:number):PreparedSource{
+    if(disposed||revision!==expected)throw new Error(t('The design changed while editing source. Reload or merge your draft.'));
     candidate.modelSource={version:1,language:'brickwright-design',source:updateModelSource(source,candidate)};
-    const prepared=Object.freeze({document:freezeDocument(validateDocument(candidate)),revision});preparedSources.add(prepared);return prepared;
+    const prepared=Object.freeze({document:freezeDocument(validateDocument(candidate)),revision:expected});
+    preparedSources.add(prepared);
+    return prepared;
+  }
+  function prepareModelSource(source:string,options:SourceOptions={}):PreparedSource{
+    const expected=revision,previous=document,candidate=compileSourceCandidate(source,options);
+    if(affectedOutlines(previous,candidate).length)throw new Error(t('This source edit requires solving its outline constraints.'));
+    return prepareSourceCandidate(source,candidate,expected);
   }
   const session = {
     get state() { return state(); },
@@ -195,8 +229,17 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     get modelSource(){return document.version>=6&&document.modelSource?document.modelSource.source:generateModelSource(document);},
     enableModelSource(){sourceReady();liveModelSource=true;},
     prepareModelSource,
+    async prepareModelSourceWithOutlineSolve(source:string,options:SourceOptions,solve:OutlineSolver,signal:AbortSignal){
+      const expected=revision,previous=document;
+      checkOutlineSolve(expected,signal);
+      const candidate=compileSourceCandidate(source,options);
+      const profiles=await solveAffectedOutlines(previous,candidate,solve,signal,expected);
+      checkOutlineSolve(expected,signal);
+      for(const [id,profile] of profiles)editSketch(candidate,id,{profile});
+      return prepareSourceCandidate(source,candidate,expected);
+    },
     applyPreparedModelSource(prepared:PreparedSource){
-      if(!preparedSources.has(prepared)||prepared.revision!==revision)throw new Error(t('The design changed while editing source. Reload or merge your draft.'));
+      if(disposed||!preparedSources.has(prepared)||prepared.revision!==revision)throw new Error(t('The design changed while editing source. Reload or merge your draft.'));
       const before=revision;commit('Edit model source',d=>{for(const key of Object.keys(d))delete (d as any)[key];Object.assign(d,structuredClone(prepared.document));return selection.filter(id=>!!d.nodes[id]);});preparedSources.delete(prepared);return revision!==before;
     },
     applyModelSource(source:string,options:SourceOptions={}){return session.applyPreparedModelSource(prepareModelSource(source,options));},
@@ -268,29 +311,13 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       });
     },
     setParametric(design: ParametricDesign) {
-      if(affectedOutlines(document,design).length)throw new Error(t('This parameter edit requires solving its outline constraints.'));
+      if(affectedOutlines(document,{...document,parametric:design}).length)throw new Error(t('This parameter edit requires solving its outline constraints.'));
       editParameters(design);
     },
-    async setParametricWithOutlineSolve(design:ParametricDesign,solve:(request:OutlineSolveRequest,signal:AbortSignal)=>Promise<SketchPoint[]>,signal:AbortSignal){
-      const expected=revision,next=structuredClone(design),profiles=new Map<string,SketchProfile>();
-      const checkCurrent=()=>{
-        signal.throwIfAborted();
-        if(disposed||revision!==expected)throw new Error(t('The model changed while solving outline constraints. Apply again.'));
-      };
-      checkCurrent();
-      for(const {sketch,profile,request} of affectedOutlines(document,next)){
-        let points:SketchPoint[];
-        try{
-          points=await solve(structuredClone(request),signal);
-          if(!outlineSatisfiesRelations(request,points))throw new Error(t('The solved outline did not meet every constraint.'));
-        }catch(error){
-          checkCurrent();
-          const message=error instanceof Error?error.message:String(error);
-          throw new Error(t`Outline “${sketch.name}”: ${message}`);
-        }
-        checkCurrent();
-        profiles.set(sketch.id,{...profile,points:structuredClone(points)});
-      }
+    async setParametricWithOutlineSolve(design:ParametricDesign,solve:OutlineSolver,signal:AbortSignal){
+      const expected=revision,next=structuredClone(design);
+      const profiles=await solveAffectedOutlines(document,{...document,parametric:next},solve,signal,expected);
+      checkOutlineSolve(expected,signal);
       editParameters(next,profiles);
     },
     detachGenerator(id:string){commit('Detach shape generator',d=>{if(!d.nodes[id]?.generator)throw new Error(t('No generator to detach'));if(isCube(d.nodes[id]))throw new Error(t('Cube edges are linked; use a Box for independent dimensions'));delete d.nodes[id].generator;if(d.nodes[id].physics)d.nodes[id].physics={...d.nodes[id].physics!,sourcePreset:undefined};});},

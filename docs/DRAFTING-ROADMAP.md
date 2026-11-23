@@ -189,10 +189,10 @@ or Apply saves the geometry and constraint list in one Undo step. Open a
 saved outline to edit its constraints and solve with current parameter
 values. Points keep their identities by row. Restore the saved point count
 or clear the constraints before changing the topology. Trimming and
-offsetting require clearing the constraints. **Parameters** and **Design
-inputs** re-solve affected outlines as part of the same undoable edit.
-Conflicts leave the previous parameters and shapes intact. Constraints on
-curves and regions and re-solving direct model-source edits remain open.
+offsetting require clearing the constraints. **Parameters**, **Design
+inputs**, and **Model source** re-solve affected outlines as part of the same
+undoable edit. Conflicts leave the previous parameters and shapes intact.
+Constraints on curves and regions remain open.
 
 Enable **Edit edge curves** to reveal a blue handle at the midpoint of each
 outline edge. Drag the handle across its chord to turn a straight edge into

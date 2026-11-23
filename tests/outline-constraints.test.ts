@@ -123,3 +123,42 @@ it('skips the worker when evaluated lengths are unchanged and rejects stale or c
  expect(session.state.document.sketches).toEqual(before.sketches);
  expect(session.state.document.parametric).toEqual(before.parametric);
 });
+
+it('prepares a source parameter edit without touching history and patches only solved coordinates on apply',async()=>{
+ const session=createCadSession();
+ session.setParametric(dimensions('40'));
+ session.addSketchExtrusion(outline,{name:'Source plate'});
+ session.enableModelSource();
+ const before=session.state,source=session.modelSource;
+ const changed=source.replace('expression: "40"','expression: "65"')+'// keep my plate note\n';
+ expect(()=>session.prepareModelSource(changed)).toThrow('requires solving');
+ const prepared=await session.prepareModelSourceWithOutlineSolve(changed,{expectedRevision:before.revision},solve,signal());
+ expect(session.state).toEqual(before);
+ const profile=Object.values(prepared.document.sketches!)[0].profile as SketchOutlineProfile;
+ expect(profile.points[1][0]).toBeCloseTo(65);
+ expect(profile).toMatchObject({vertexIds:outline.vertexIds,relations:outline.relations});
+ expect(prepared.document.modelSource?.source).toContain('// keep my plate note');
+ expect(compileModelSource(prepared.document.modelSource!.source,before.document).sketches).toEqual(prepared.document.sketches);
+ expect(session.applyPreparedModelSource(prepared)).toBe(true);
+ expect(session.state.revision).toBe(before.revision+1);
+ session.undo();
+ expect(session.state.document).toBe(before.document);
+});
+
+it('rejects conflicting or obsolete source candidates and keeps explicitly valid points',async()=>{
+ const session=createCadSession();
+ session.setParametric(dimensions('40'));
+ session.addSketchExtrusion({...outline,relations:[...outline.relations!,{kind:'length',edge:['a','b'],length:40}]});
+ session.enableModelSource();
+ const before=session.state,source=session.modelSource;
+ const changed=source.replace('expression: "40"','expression: "60"');
+ await expect(session.prepareModelSourceWithOutlineSolve(changed,{},solve,signal())).rejects.toThrow('Could not solve');
+ expect(session.state).toEqual(before);
+ const explicit=changed.replace('length: 40','length: 60').replace('[40, 0], [40, 20]','[60, 0], [60, 20]');
+ const unexpected=async()=>{throw Error('unexpected solve');};
+ const prepared=await session.prepareModelSourceWithOutlineSolve(explicit,{},unexpected,signal());
+ expect(Object.values(prepared.document.sketches!)[0].profile).toMatchObject({points:[[0,0],[60,0],[60,20],[0,20]]});
+ session.rename('Another edit');
+ expect(()=>session.applyPreparedModelSource(prepared)).toThrow('changed while editing');
+ expect(session.state.document.sketches).toEqual(before.document.sketches);
+});

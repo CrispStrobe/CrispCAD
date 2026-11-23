@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "This source edit requires solving its outline constraints.": "Für diese Quelltextänderung müssen die Konturbedingungen gelöst werden.",
+  "Checking model source…": "Modellquelltext wird geprüft…",
   "This parameter edit requires solving its outline constraints.": "Für diese Parameteränderung müssen die Konturbedingungen gelöst werden.",
   "The model changed while solving outline constraints. Apply again.": "Das Modell wurde beim Lösen der Konturbedingungen geändert. Wende die Änderung erneut an.",
   "Outline “{0}”: {1}": "Kontur „{0}“: {1}",

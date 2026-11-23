@@ -15,6 +15,11 @@ transaction, one undo step and one saved iteration. Preview, typing and opening 
 dock create no iterations. GUI drags still commit on release. Source, parameters,
 geometry and comments travel together in the history-inclusive `.bcad` file.
 
+Changing a parameter referenced by a retained outline relation solves the
+affected outline during Preview and Apply. A conflicting solve leaves the
+draft available for correction and keeps the saved model intact. On Apply,
+the source dock updates the coordinates and preserves nearby comments.
+
 ## Retained design language
 
 This original, bounded declarative language uses MIT Acorn for parsing. It does
@@ -64,13 +69,15 @@ validate to the same graph before loading or committing.
 
 The core SDK exposes `modelSource`, `enableModelSource`, `prepareModelSource` and
 `applyPreparedModelSource` on a session, plus `applyModelSource` for synchronous
-hosts. Geometry hosts should evaluate a prepared candidate before applying its
-revision-bound token. Preparation never changes the session. MCP exposes
+hosts. Use `prepareModelSourceWithOutlineSolve` with a solver callback and abort
+signal when the candidate needs new outline coordinates. Geometry hosts should
+evaluate the prepared candidate before applying its revision-bound token.
+Preparation leaves the session intact. MCP exposes
 `cad_get_model_source` and `cad_apply_model_source`; see [MCP](MCP.md). That server
 operates its own headless project session, not a live GUI connection.
 
 Limits remain explicit: GUI source 8 MiB, documents 16 MiB and portable history
 archives 64 MiB, with AST/record bounds. Archives are never pruned to fit. MCP
 accepts source up to 65,536 characters and retains its tighter headless model and
-transport limits. Full constrained sketch solving and a production CSP worker
-adapter remain roadmap work; this shared graph/source interface is their base.
+transport limits. The browser worker solves constraints on single closed
+outlines. Curve and region constraints remain roadmap work.

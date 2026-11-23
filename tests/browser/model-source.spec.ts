@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {expect,test} from '@playwright/test';
+import {createCadSession} from '@brickwright/cad-core';
 import {addShape} from './ui.js';
 const key='brickwright-cad:standalone:v1';
 const ready=async(page:any)=>expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
@@ -26,4 +27,45 @@ test('dirty source is kept when the GUI changes and invalid drafts never replace
 test('Code an object can create once and continue in synchronized model source',async({page})=>{
  await page.goto('/');await ready(page);await page.getByRole('button',{name:'Code',exact:true}).click();await page.getByRole('button',{name:'Create & show model source',exact:true}).click();await ready(page);
  const field=page.getByLabel('Design source',{exact:true});await expect(field).toBeVisible();await expect(field).toHaveValue(/cad`/);expect((await model(page)).roots.length).toBe(1);
+});
+test('source preview solves dependent outlines and Apply saves the geometry with the source',async({page,hasTouch})=>{
+ const session=createCadSession();
+ session.setParametric({version:1,parameters:{width:{expression:'40',unit:'mm'},limit:{expression:'40',unit:'mm'}},bindings:[]});
+ session.addSketchExtrusion({kind:'outline',id:'outline',points:[[0,0],[40,0],[40,20],[0,20]],vertexIds:['a','b','c','d'],relations:[
+  {kind:'horizontal',edge:['a','b']},{kind:'length',edge:['a','b'],length:'width'},{kind:'length',edge:['a','b'],length:'limit'}
+ ]},{name:'Source plate'});
+ await page.addInitScript(raw=>localStorage.setItem('brickwright-cad:standalone:v1',raw),session.serialize());
+ session.dispose();
+ await page.goto('/');
+ await ready(page);
+ const before=await model(page);
+ const press=async(name:string)=>{const button=page.getByRole('button',{name,exact:true});if(hasTouch)await button.tap();else await button.click();};
+ const file=page.getByLabel('File menu',{exact:true});
+ if(hasTouch)await file.tap();else await file.click();
+ await press('Model source');
+ const input=page.getByLabel('Design source',{exact:true}),status=page.getByRole('status',{name:'Model source status'});
+ const draft=(await input.inputValue()).replace('expression: "40"','expression: "60"')+'\n// plate source note\n';
+ await input.fill(draft);
+ await input.blur();
+ await press('Apply model source');
+ await expect(status).toContainText('Could not solve');
+ expect(await model(page)).toEqual(before);
+ await expect(input).toHaveValue(draft);
+ const valid=draft.replace('expression: "40"','expression: "60"');
+ await input.fill(valid);
+ await input.blur();
+ await press('Preview model source');
+ await expect(status).toContainText('No history entry');
+ expect(await model(page)).toEqual(before);
+ await press('Apply model source');
+ await expect(status).toContainText('one history step');
+ await expect.poll(async()=> (await model(page)).parametric.parameters.width.expression).toBe('60');
+ const saved=await model(page);
+ const sketchId=before.nodes[before.roots[0]].sketchId;
+ expect(saved.sketches[sketchId].profile.points[1][0]).toBeCloseTo(60);
+ expect(saved.sketches[sketchId].profile.vertexIds).toEqual(['a','b','c','d']);
+ expect(saved.modelSource.source).toContain('// plate source note');
+ await expect(input).toHaveValue(saved.modelSource.source);
+ await press('Undo');
+ await expect.poll(async()=>model(page)).toEqual(before);
 });

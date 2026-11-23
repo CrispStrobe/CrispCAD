@@ -19,12 +19,13 @@ the sketch and use the usual Create or Apply action to commit one project
 revision. Rejected and stale solves keep the current geometry. The saved
 sketch stores both the solved coordinates and the coupled definitions.
 Document version 31 links each segment to its two vertex IDs. Edit or remove a
-relation after reopening the sketch. Changes in **Parameters** or **Design
-inputs** solve the outlines whose evaluated segment lengths change. The new
-parameter values and coordinates share one Undo step. Any conflicting outline
-keeps the previous parameters and geometry. Existing sketches with stale
-coordinates can still be repaired by reopening and solving them. Solving
-while dragging and re-solving edits made directly in model source remain open.
+relation after reopening the sketch. Changes in **Parameters**, **Design
+inputs**, or **Model source** solve the outlines whose evaluated segment lengths
+change. Model-source drafts can also change the outline or its relations.
+Preview checks the solved candidate. Apply saves the parameters, coordinates,
+and source in one Undo step. Any conflicting outline keeps the previous
+parameters and geometry. Existing sketches with stale coordinates can still
+be repaired by reopening and solving them. Solving while dragging remains open.
 
 The worker loads the checked-in JavaScript built from
 `tools/sketch-constraints/solver.dart` with Dart 3.12.2. Run
