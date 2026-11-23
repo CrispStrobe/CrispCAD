@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "Arc tangency requires document version 33": "Bogentangentialität erfordert Dokumentversion 33",
+  "Choose an adjoining straight segment for tangency.": "Wähle ein angrenzendes gerades Segment für die Tangente.",
+  "This join cannot form a curved tangent arc. Adjust the adjoining segments.": "An diesem Übergang kann kein Tangentialbogen entstehen. Passe die angrenzenden Segmente an.",
+  "The arc radius or the other tangent conflicts with this tangent.": "Der Bogenradius oder die andere Tangente widerspricht dieser Tangente.",
+  "This tangent is already defined.": "Diese Tangente ist bereits festgelegt.",
+  "Arc tangent to line": "Bogen tangential zur Geraden",
+  "Choose the arc first, then an adjoining straight segment.": "Wähle zuerst den Bogen und dann ein angrenzendes gerades Segment.",
+  "Curve the first segment before adding tangency.": "Krümme das erste Segment, bevor du eine Tangente hinzufügst.",
   "Driving arc radii require document version 32": "Festgelegte Bogenradien erfordern Dokumentversion 32",
   "The arc radius must be at least half its chord length.": "Der Bogenradius muss mindestens halb so groß wie die Sehnenlänge sein.",
   "An arc can have only one driving radius.": "Ein Bogen kann nur einen festgelegten Radius haben.",

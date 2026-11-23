@@ -194,3 +194,40 @@ test('drives the radius of a closed outline arc and rejects a radius below half 
  await press(edit);
  expect(await radius()).toBeCloseTo(50);
 });
+
+test('retains a smooth join from an outline arc to an adjoining straight segment',async({page,hasTouch})=>{
+ const press=async(control:ReturnType<typeof page.getByRole>)=>{
+  if(hasTouch){await control.scrollIntoViewIfNeeded();await control.tap();}
+  else await control.click();
+ };
+ await page.goto('/');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await press(page.getByRole('button',{name:'Sketch',exact:true}));
+ const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
+ await sketch.getByLabel('Profile',{exact:true}).selectOption('outline');
+ const coordinates=sketch.getByLabel('Outline points X, Y (mm)');
+ await coordinates.fill('0, 0\n10, 0, 0.2\n20, 10\n20, 20\n0, 20');
+ await coordinates.blur();
+ await press(sketch.getByText('Outline constraints',{exact:true}));
+ await sketch.getByLabel('Constraint',{exact:true}).selectOption('tangent');
+ await sketch.getByLabel('Constrained segment').selectOption('1');
+ const other=sketch.getByLabel('Second segment'),status=sketch.getByRole('status',{name:'Outline constraint status'});
+ const add=sketch.getByRole('button',{name:'Add constraint',exact:true});
+ await other.selectOption('3');
+ await press(add);
+ await expect(status).toContainText('adjoining straight segment');
+ await other.selectOption('0');
+ await press(add);
+ await press(sketch.getByRole('button',{name:'Solve outline',exact:true}));
+ await expect(status).toContainText('Outline solved');
+ const solved=await coordinates.inputValue();
+ const bulge=Number(solved.split('\n')[1].split(',')[2]);
+ expect(sketchBulgeArc([10,0],[20,10],bulge)?.radius).toBeCloseTo(10,9);
+ await press(sketch.getByRole('button',{name:'Create extrusion',exact:true}));
+ await expect(sketch).toBeHidden();
+ const edit=page.getByRole('button',{name:'Edit sketch & extrusion',exact:true});
+ if(!await edit.isVisible())await press(page.getByRole('button',{name:'Properties',exact:true}));
+ await press(edit);
+ await expect(coordinates).toHaveValue(solved);
+ await expect(sketch.getByRole('button',{name:'Edit constraint 1',exact:true})).toBeVisible();
+});

@@ -2,7 +2,7 @@
 import {readFileSync} from 'node:fs';
 import {createContext,runInContext} from 'node:vm';
 import {describe,expect,it} from 'vitest';
-import {compileModelSource,createCadSession,designGraph,generateModelSource,outlineBulgesForRadii,parseDocument,rewriteSketchExpressions,sketchBulgeArc,trimSketchProfile,validateDocument} from '@brickwright/cad-core';
+import {compileModelSource,createCadSession,designGraph,generateModelSource,outlineBulgesForCurves,outlineBulgesForRadii,parseDocument,rewriteSketchExpressions,sketchBulgeArc,trimSketchProfile,validateDocument} from '@brickwright/cad-core';
 import type {SketchOutlineProfile} from '@brickwright/cad-core';
 import {verifyOutlineSolve} from '../packages/editor/src/outline-constraint-solve.js';
 import type {OutlineSolveRequest} from '../packages/editor/src/outline-constraint-solve.js';
@@ -210,4 +210,46 @@ it('drives a retained arc radius from parameters and model source with fixed end
  expect(current().points).toEqual(outline.points);
  session.undo();
  expect(session.state.document).toBe(half);
+});
+
+it('solves directed arc tangency at either endpoint including a join across the closing vertex',()=>{
+ const points:OutlineSolveRequest['points']=[[10,0],[20,10],[20,20],[0,20],[0,0]];
+ const a={kind:'tangent' as const,edge:0,other:4},b={...a,other:1};
+ const left=outlineBulgesForCurves(points,[.2,0,0,0,0],[a,b])!;
+ expect(left[0]).toBeCloseTo(Math.tan(Math.PI/8),12);
+ const arc=sketchBulgeArc(points[0],points[1],left[0])!;
+ expect(arc.center[0]).toBeCloseTo(10);
+ expect(arc.center[1]).toBeCloseTo(10);
+ expect(arc.radius).toBeCloseTo(10);
+ expect(()=>outlineBulgesForCurves(points,left,[a,{...b,other:2}])).toThrow('adjoining straight');
+ expect(()=>outlineBulgesForCurves(points,[.2,.1,0,0,0],[b])).toThrow('adjoining straight');
+ expect(()=>outlineBulgesForCurves(points,left,[b,{kind:'radius',edge:0,radius:20,sweep:'ccw-minor'}])).toThrow('conflicts');
+ const reversed=points.slice().reverse();
+ const right=outlineBulgesForCurves(reversed,undefined,[{kind:'tangent',edge:3,other:4}])!;
+ expect(right[3]).toBeCloseTo(-left[0],12);
+});
+
+it('keeps compatible arc tangency through source edits, reload and Undo',async()=>{
+ const session=createCadSession();
+ const points:OutlineSolveRequest['points']=[[0,0],[10,0],[20,10],[20,20],[0,20]];
+ const profile:SketchOutlineProfile={kind:'outline',id:'fillet',points,vertexIds:['a','b','c','d','e'],
+  bulges:outlineBulgesForCurves(points,undefined,[{kind:'tangent',edge:1,other:0}]),
+  relations:[{kind:'tangent',edge:['b','c'],other:['a','b']}]};
+ const body=session.addSketchExtrusion(profile);
+ session.enableModelSource();
+ const before=session.state.document,node=before.nodes[body];
+ if(node.kind!=='extrusion')throw Error('fixture');
+ expect(before.version).toBe(33);
+ expect(parseDocument(session.serialize())).toEqual(before);
+ expect(()=>validateDocument({...before,version:32})).toThrow('version 33');
+ const source=session.modelSource.replace('points: [[0, 0]','points: [[0, 2]');
+ const unexpected=async()=>{throw Error('tangency alone does not require a chord worker');};
+ const candidate=await session.prepareModelSourceWithOutlineSolve(source,{},unexpected,signal());
+ const solved=candidate.document.sketches![node.sketchId].profile as SketchOutlineProfile;
+ expect(solved.points[0]).toEqual([0,2]);
+ expect(solved.bulges![1]).toBeCloseTo(Math.tan((Math.PI/4+Math.atan(.2))/2),12);
+ expect(solved.relations).toEqual(profile.relations);
+ session.applyPreparedModelSource(candidate);
+ session.undo();
+ expect(session.state.document).toBe(before);
 });

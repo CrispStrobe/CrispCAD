@@ -15,7 +15,7 @@ import { applyParametricBindings, assertDrivenEdit } from './parameters.js';
 import type {CodeProgram} from './code.js';
 import {closePathProfile,evaluateSketch,featureValue,isSketchFeature} from './features.js';
 import type {PlanarSketch,SketchProfile,FeatureScalar,RevolutionFeature,MirrorFeature,PatternFeature,PatternSettings} from './features.js';
-import {outlineBulgesForRadii,outlineRadiiSatisfied,outlineRelationsForSolve,outlineSatisfiesRelations} from './outline-relations.js';
+import {isOutlineCurveRule,outlineBulgesForCurves,outlineCurvesSatisfied,outlineRelationsForSolve,outlineSatisfiesRelations} from './outline-relations.js';
 import type {OutlineSolveRequest} from './outline-relations.js';
 import type {SketchPoint} from './sketch-outline.js';
 import type { ParametricDesign } from './parameters.js';
@@ -23,7 +23,7 @@ import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositio
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -31,7 +31,10 @@ function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32){
   doc.version=version;
 }
 function upgradeSketchProfile(doc:CadDocument,profile:SketchProfile){
-  if(profile.kind==='outline'&&profile.relations!==undefined)upgradeModelFeatures(doc,profile.relations.some(rule=>rule.kind==='radius')?32:31);
+  if(profile.kind==='outline'&&profile.relations!==undefined){
+    const kinds=new Set(profile.relations.map(rule=>rule.kind));
+    upgradeModelFeatures(doc,kinds.has('tangent')?33:kinds.has('radius')?32:31);
+  }
   else if(profile.kind==='path')upgradeModelFeatures(doc,profile.segmentConstraints!==undefined?28:profile.anchors!==undefined||profile.vertexIds!==undefined?16:15);
   else if(doc.version<3)doc.version=3;
 }
@@ -121,10 +124,10 @@ function affectedOutlines(document:CadDocument,next:CadDocument){
     if(unchanged&&next.parametric===document.parametric)return [];
     const rules=outlineRelationsForSolve(profile,value=>featureValue(value,next));
     if(unchanged&&sameModelValue(rules,outlineRelationsForSolve(profile,value=>featureValue(value,document))))return [];
-    const request={points:profile.points,constraints:rules.filter(rule=>rule.kind!=='radius')};
-    const radii=rules.filter(rule=>rule.kind==='radius');
+    const request={points:profile.points,constraints:rules.filter(rule=>!isOutlineCurveRule(rule))};
+    const curves=rules.filter(isOutlineCurveRule);
     const chordsSatisfied=outlineSatisfiesRelations(request,profile.points);
-    return chordsSatisfied&&outlineRadiiSatisfied(profile.points,profile.bulges,radii)?[]:[{sketch,profile,request,radii,chordsSatisfied}];
+    return chordsSatisfied&&outlineCurvesSatisfied(profile.points,profile.bulges,curves)?[]:[{sketch,profile,request,curves,chordsSatisfied}];
   });
 }
 export function createCadSession(initial: CadDocument = createDocument()) {
@@ -164,12 +167,12 @@ export function createCadSession(initial: CadDocument = createDocument()) {
   async function solveAffectedOutlines(previous:CadDocument,next:CadDocument,solve:OutlineSolver,signal:AbortSignal,expected:number){
     checkOutlineSolve(expected,signal);
     const profiles=new Map<string,SketchProfile>();
-    for(const {sketch,profile,request,radii,chordsSatisfied} of affectedOutlines(previous,next)){
+    for(const {sketch,profile,request,curves,chordsSatisfied} of affectedOutlines(previous,next)){
       try{
         const points=chordsSatisfied?profile.points:await solve(structuredClone(request),signal);
         checkOutlineSolve(expected,signal);
         if(!outlineSatisfiesRelations(request,points))throw new Error(t('The solved outline did not meet every constraint.'));
-        const bulges=outlineBulgesForRadii(points,profile.bulges,radii);
+        const bulges=outlineBulgesForCurves(points,profile.bulges,curves);
         profiles.set(sketch.id,{...profile,points:structuredClone(points),...(bulges?{bulges}:{})});
       }catch(error){
         checkOutlineSolve(expected,signal);

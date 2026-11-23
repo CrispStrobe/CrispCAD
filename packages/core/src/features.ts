@@ -222,6 +222,7 @@ export function checkFeatures(doc:CadDocument) {
       if(doc.version<31)throw new Error(t('Outline constraints require document version 31'));
       const relations=outlineRelationsForSolve(sketch.profile,length=>featureValue(length,doc));
       if(doc.version<32&&relations.some(relation=>relation.kind==='radius'))throw new Error(t('Driving arc radii require document version 32'));
+      if(doc.version<33&&relations.some(relation=>relation.kind==='tangent'))throw new Error(t('Arc tangency requires document version 33'));
     }
    }}
   for(const node of Object.values(doc.nodes)){

@@ -2,7 +2,7 @@
 import {t} from './i18n.js';
 import type {FeatureScalar} from './features.js';
 import type {SketchOutlineProfile} from './sketch-region.js';
-import {isSketchPoint} from './sketch-outline.js';
+import {isSketchPoint,sketchBulgeArc} from './sketch-outline.js';
 import type {SketchPoint} from './sketch-outline.js';
 
 export type OutlineRule<Edge,Length> =
@@ -13,8 +13,11 @@ export type OutlineRule<Edge,Length> =
 const arcSweeps=['ccw-minor','cw-minor','ccw-major','cw-major'] as const;
 export type OutlineArcSweep=(typeof arcSweeps)[number];
 type ArcRadius<Edge,Dimension>={kind:'radius';edge:Edge;radius:Dimension;sweep:OutlineArcSweep};
+type ArcTangent<Edge>={kind:'tangent';edge:Edge;other:Edge};
+type CurveRule<Edge,Dimension>=ArcRadius<Edge,Dimension>|ArcTangent<Edge>;
 type ResolvedArcRadius=ArcRadius<number,number>;
-export type OutlineRelation=OutlineRule<[string,string],FeatureScalar>|ArcRadius<[string,string],FeatureScalar>;
+type ResolvedCurveRule=CurveRule<number,number>;
+export type OutlineRelation=OutlineRule<[string,string],FeatureScalar>|CurveRule<[string,string],FeatureScalar>;
 export type OutlineSolveRequest={points:SketchPoint[];constraints:OutlineRule<number,number>[]};
 export const maxConstrainedOutlinePoints=32;
 export const maxOutlineRelations=48;
@@ -39,12 +42,60 @@ export function outlineBulgesForRadii(points:SketchPoint[],bulges:number[]|undef
  return result;
 }
 
-export function outlineRadiiSatisfied(points:SketchPoint[],bulges:number[]|undefined,radii:readonly ResolvedArcRadius[]):boolean{
- if(!radii.length)return true;
+export function outlineSegmentsAdjoin(first:number,second:number,count:number):boolean{
+ return (first+1)%count===second||(second+1)%count===first;
+}
+
+export function outlineBulgesForCurves(points:SketchPoint[],bulges:number[]|undefined,curves:readonly ResolvedCurveRule[]):number[]|undefined{
+ const radii=curves.filter(rule=>rule.kind==='radius');
+ const withRadii=outlineBulgesForRadii(points,bulges,radii);
+ const tangencies=curves.filter(rule=>rule.kind==='tangent');
+ if(!tangencies.length)return withRadii;
+ const result=withRadii?.slice()??points.map(()=>0);
+ const count=points.length,driven=new Set<number>(),radiusByEdge=new Map(radii.map(rule=>[rule.edge,rule]));
+ const curved=new Set(curves.map(rule=>rule.edge));
+ const direction=(index:number)=>{
+  const a=points[index],b=points[(index+1)%count];
+  return [b[0]-a[0],b[1]-a[1]] as const;
+ };
+ for(const {edge,other} of tangencies){
+  if(!outlineSegmentsAdjoin(edge,other,count)||bulges?.[other]||curved.has(other))
+   throw new Error(t('Choose an adjoining straight segment for tangency.'));
+  const atEnd=(edge+1)%count===other;
+  // At the arc start rotate the line direction to its chord. At the end use the reverse order.
+  const [ax,ay]=direction(atEnd?edge:other),[bx,by]=direction(atEnd?other:edge);
+  const turn=Math.atan2(ax*by-ay*bx,ax*bx+ay*by);
+  const bulge=Math.tan(turn/2);
+  if(!(Math.abs(bulge)>1e-10&&Math.abs(bulge)<=10000))
+   throw new Error(t('This join cannot form a curved tangent arc. Adjust the adjoining segments.'));
+  const incompatible=()=>new Error(t('The arc radius or the other tangent conflicts with this tangent.'));
+  if(driven.has(edge)){
+   if(Math.abs(Math.atan(result[edge])-Math.atan(bulge))>1e-8)throw incompatible();
+   continue;
+  }
+  const radius=radiusByEdge.get(edge);
+  if(radius){
+   const arc=sketchBulgeArc(points[edge],points[(edge+1)%count],bulge);
+   if(!arc||Math.abs(arc.radius-radius.radius)>1e-6+radius.radius*1e-12||
+    (bulge<0)!==radius.sweep.startsWith('cw-')||
+    (Math.abs(Math.abs(bulge)-1)>1e-8&&outlineArcSweep(bulge)!==radius.sweep))throw incompatible();
+  }
+  result[edge]=bulge;
+  driven.add(edge);
+ }
+ return result;
+}
+
+export function outlineCurvesSatisfied(points:SketchPoint[],bulges:number[]|undefined,curves:readonly ResolvedCurveRule[]):boolean{
+ if(!curves.length)return true;
  try{
-  const expected=outlineBulgesForRadii(points,bulges,radii)!;
-  return radii.every(({edge})=>Math.abs((bulges?.[edge]??0)-expected[edge])<=Math.abs(expected[edge])*1e-9);
+  const expected=outlineBulgesForCurves(points,bulges,curves)!;
+  return curves.every(({edge})=>Math.abs((bulges?.[edge]??0)-expected[edge])<=Math.abs(expected[edge])*1e-9);
  }catch{return false;}
+}
+
+export function isOutlineCurveRule<Edge,Dimension>(rule:OutlineRule<Edge,Dimension>|CurveRule<Edge,Dimension>):rule is CurveRule<Edge,Dimension>{
+ return rule.kind==='radius'||rule.kind==='tangent';
 }
 
 export function outlineSatisfiesRelations(request:OutlineSolveRequest,points:SketchPoint[]):boolean{
@@ -76,7 +127,7 @@ export function outlineSatisfiesRelations(request:OutlineSolveRequest,points:Ske
 export function outlineRelationsForSolve(
  profile:Pick<SketchOutlineProfile,'points'|'vertexIds'|'relations'>,
  resolveLength:(length:FeatureScalar)=>number
-):(OutlineRule<number,number>|ResolvedArcRadius)[]{
+):(OutlineRule<number,number>|ResolvedCurveRule)[]{
  const {points,vertexIds,relations}=profile;
  if(relations===undefined)return [];
  const invalid=()=>new Error(t('Invalid outline constraint definitions.'));
@@ -84,6 +135,7 @@ export function outlineRelationsForSolve(
   !Array.isArray(relations)||!relations.length||relations.length>maxOutlineRelations)throw invalid();
  const indexById=new Map(vertexIds.map((id,index)=>[id,index]));
  const radiusEdges=new Set<number>();
+ const tangentPairs=new Set<string>();
  const dimension=(value:FeatureScalar)=>{
   if(typeof value!=='number'&&(typeof value!=='string'||!value.trim()||value.length>160))throw invalid();
   const length=resolveLength(value);
@@ -108,6 +160,13 @@ export function outlineRelationsForSolve(
     if(radiusEdges.has(edge))throw new Error(t('An arc can have only one driving radius.'));
     radiusEdges.add(edge);
     return {kind:relation.kind,edge,radius:dimension(relation.radius),sweep:relation.sweep};
+   }
+   case 'tangent':{
+    const other=indexOf(relation.other),key=`${edge}:${other}`;
+    if(!outlineSegmentsAdjoin(edge,other,points.length))throw new Error(t('Choose an adjoining straight segment for tangency.'));
+    if(tangentPairs.has(key))throw new Error(t('This tangent is already defined.'));
+    tangentPairs.add(key);
+    return {kind:relation.kind,edge,other};
    }
    case 'parallel':
    case 'perpendicular':

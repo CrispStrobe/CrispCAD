@@ -32,8 +32,14 @@ single closed outline. Give the radius a value or a named expression. The
 solver applies chord constraints first, then computes the arc through its two
 endpoints. It keeps the original side and major or minor sweep, including
 when a parameter passes through a semicircle. A radius below half the solved
-chord is rejected. To use a smaller radius, shorten the chord first. Arc
-tangency and constraints between different region loops remain open.
+chord is rejected. To use a smaller radius, shorten the chord first.
+
+Document version 33 adds **Arc tangent to line**. Select an existing arc and
+an adjoining straight segment on either side, then solve. Chord constraints
+set the vertices first. The arc then follows the direction of the straight
+segment at their shared endpoint. A radius or second tangent on that arc
+must agree with the resulting curve. Conflicts leave the sketch intact.
+Arc-to-arc tangency and constraints between region loops remain open.
 
 The worker loads the checked-in JavaScript built from
 `tools/sketch-constraints/solver.dart` with Dart 3.12.2. Run

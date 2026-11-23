@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {maxConstrainedOutlinePoints,maxOutlineRelations,newId,outlineArcSweep,outlineBulgesForRadii,outlineRadiiSatisfied,outlineRelationsForSolve,outlineSatisfiesRelations,t} from '@brickwright/cad-core';
+import {isOutlineCurveRule,maxConstrainedOutlinePoints,maxOutlineRelations,newId,outlineArcSweep,outlineBulgesForCurves,outlineCurvesSatisfied,outlineRelationsForSolve,outlineSatisfiesRelations,outlineSegmentsAdjoin,t} from '@brickwright/cad-core';
 import type {FeatureScalar,OutlineArcSweep,OutlineRelation,SketchOutlineProfile} from '@brickwright/cad-core';
 import {solveOutline} from './outline-constraint-solve.js';
 
@@ -11,10 +11,10 @@ const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{
 type OutlineConstraintKind=OutlineRelation['kind'];
 type DraftConstraint={kind:OutlineConstraintKind; edge:number; other:number; expression:string; sweep?:OutlineArcSweep};
 type OutlineGeometry=Pick<SketchOutlineProfile,'points'|'bulges'>;
-const pairKinds=new Set(['parallel','perpendicular','equal']);
+const pairKinds=new Set(['parallel','perpendicular','equal','tangent']);
 const labels=()=>{
  return {horizontal:t('Horizontal'),vertical:t('Vertical'),length:t('Length'),radius:t('Arc radius'),
-  parallel:t('Parallel'),perpendicular:t('Perpendicular'),equal:t('Equal lengths')};
+  parallel:t('Parallel'),perpendicular:t('Perpendicular'),equal:t('Equal lengths'),tangent:t('Arc tangent to line')};
 };
 
 export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialogElement,options:{
@@ -44,6 +44,8 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
  field(t('Constraint'),constraint);
  field(t('Constrained segment'),edge);
  const otherLabel=field(t('Second segment'),other);
+ const tangentHint=element('small',t('Choose the arc first, then an adjoining straight segment.'));
+ otherLabel.append(tangentHint);
  const lengthLabel=field(t('Segment length (mm)'),length);
  const radiusLabel=field(t('Arc radius (mm)'),radius);
  radiusLabel.append(element('small',t('Choose an existing arc. Solving keeps the side and sweep branch of that arc.')));
@@ -73,6 +75,7 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
  const segmentLabel=(index:number)=>t`Segment ${index+1}–${(index+1)%count+1}`;
  const refreshButtons=()=>{
   otherLabel.hidden=!pairKinds.has(constraint.value);
+  tangentHint.hidden=constraint.value!=='tangent';
   lengthLabel.hidden=constraint.value!=='length';
   radiusLabel.hidden=constraint.value!=='radius';
   const ready=count>=3&&count<=maxConstrainedOutlinePoints&&!wrongCount;
@@ -163,12 +166,12 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
  function plan({points}:OutlineGeometry){
   if(points.length!==vertexIds?.length)throw new Error(topologyMessage);
   const rules=outlineRelationsForSolve({points,...retainedRelations()},options.readLength);
-  return {request:{points,constraints:rules.filter(rule=>rule.kind!=='radius')},radii:rules.filter(rule=>rule.kind==='radius')};
+  return {request:{points,constraints:rules.filter(rule=>!isOutlineCurveRule(rule))},curves:rules.filter(isOutlineCurveRule)};
  }
  function forSave(geometry:OutlineGeometry){
   if(!constraints.length)return {};
-  const {request,radii}=plan(geometry);
-  if(!outlineSatisfiesRelations(request,geometry.points)||!outlineRadiiSatisfied(geometry.points,geometry.bulges,radii))
+  const {request,curves}=plan(geometry);
+  if(!outlineSatisfiesRelations(request,geometry.points)||!outlineCurvesSatisfied(geometry.points,geometry.bulges,curves))
    throw new Error(t('Solve the outline before saving its constraints.'));
   return retainedRelations();
  }
@@ -180,6 +183,16 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   if(pairKinds.has(kind)&&row.edge===row.other){
    status.textContent=t('Choose two different segments.');
    return;
+  }
+  if(kind==='tangent'){
+   try{
+    const {points,bulges}=options.read();
+    if(!bulges?.[row.edge])throw new Error(t('Curve the first segment before adding tangency.'));
+    if(!outlineSegmentsAdjoin(row.edge,row.other,points.length)||bulges[row.other])
+     throw new Error(t('Choose an adjoining straight segment for tangency.'));
+    if(constraints.some((entry,index)=>index!==editIndex&&entry.kind==='tangent'&&entry.edge===row.edge&&entry.other===row.other))
+     throw new Error(t('This tangent is already defined.'));
+   }catch(error){status.textContent=error instanceof Error?error.message:String(error);return;}
   }
   if(kind==='length'||kind==='radius'){
    try{
@@ -214,13 +227,13 @@ export function mountOutlineConstraintControls(form:HTMLElement,dialog:HTMLDialo
   status.textContent=t('Solving outline…');
   try{
    const geometry=options.read();
-   const {request,radii}=plan(geometry);
+   const {request,curves}=plan(geometry);
    const result=request.constraints.length?await solveOutline(request,controller.signal):{points:geometry.points,degrees:null};
    if(!options.active())return;
    if(revision!==options.revision()||!options.available()){
     throw new Error(t('The sketch changed during the solve. Solve the outline again.'));
    }
-   options.apply({points:result.points,bulges:outlineBulgesForRadii(result.points,geometry.bulges,radii)});
+   options.apply({points:result.points,bulges:outlineBulgesForCurves(result.points,geometry.bulges,curves)});
    status.textContent=result.degrees===null?t('Outline solved.'):
     result.degrees===0?t('Outline solved. Fully constrained.'):
      t`Outline solved. Degrees of freedom: ${result.degrees}.`;
