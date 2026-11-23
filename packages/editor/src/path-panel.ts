@@ -3,7 +3,7 @@ import {closePathProfile,evaluateSketch,newId,resolveSketchPath,t,trimSketchProf
 import type {CadSession,PlanarSketch,SketchPathProfile,SketchPlane} from '@brickwright/cad-core';
 import {formatSketchPoints,parseSketchOutline,parseSketchPoint} from './sketch-point-entry.js';
 import {operationField} from './body-operation-panel.js';
-import {maxSketchDxfBytes,readSketchPathDxf} from './import-sketch-dxf.js';
+import {mountDxfImportControls} from './dxf-import-controls.js';
 import {exportSketchPathDxf} from './sketch-dxf.js';
 
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,value?:string)=>{
@@ -75,14 +75,9 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
 
   const dxf=element('details');
   dxf.className='sketch-expressions';
-  const file=element('input'),assumeMm=element('input'),layer=element('small');
-  file.type='file';file.accept='.dxf';assumeMm.type='checkbox';
-  const units=operationField(t('Assume millimetres if the file has no units'),assumeMm);
-  units.label.className='sketch-toggle';
-  const exportPath=element('button',t('Export path as DXF'));
+  const layer=element('small'),exportPath=element('button',t('Export path as DXF'));
   exportPath.type='button';
-  dxf.append(element('summary',t('DXF path')),units.label,operationField(t('Choose DXF file'),file).label,layer);
-  if(onExport)dxf.append(exportPath);
+  dxf.append(element('summary',t('DXF path')));
   fields.append(dxf);
 
   const body=element('div');
@@ -219,23 +214,22 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   };
 
   const active=()=>dialog.open&&dialog.firstChild===header;
-  file.onchange=async()=>{
-   const chosen=file.files?.[0],start=draftRevision;
-   if(!chosen)return;
-   file.disabled=true;
-   try{
-    if(chosen.size>maxSketchDxfBytes)throw new Error(t('Choose a DXF file up to 1 MB.'));
-    const imported=readSketchPathDxf(await chosen.text(),assumeMm.checked);
-    if(!active())return;
-    if(start!==draftRevision||session.state.revision!==revision)throw new Error(t('The path changed while reading DXF. Choose the file again.'));
+  mountDxfImportControls(dxf,{
+   active,revision:()=>draftRevision,
+   checkCurrent:()=>{
+    if(session.state.revision!==revision)throw new Error(t('The model changed. Close and reopen this dialog before applying.'));
+   },
+   read:(drawing,assumeMm,layers)=>drawing.path(assumeMm,layers),
+   imported:(imported,fileName)=>{
     writePath(imported);
     dxfLayer=imported.dxfLayer;
-    if(!existing)name.value=chosen.name.replace(/\.dxf$/i,'').replace(/[\u0000-\u001f]/g,'').trim().slice(0,160)||t('Sketch path');
-    draftRevision++;
-    draw();
-   }catch(error){if(active())report(error);}
-   finally{file.disabled=false;file.value='';}
-  };
+    if(!existing)name.value=fileName||t('Sketch path');
+    draftRevision++;draw();
+   },
+   error:report
+  });
+  dxf.append(layer);
+  if(onExport)dxf.append(exportPath);
   exportPath.onclick=async()=>{
    try{await onExport?.(exportSketchPathDxf(doc,read()));}
    catch(error){if(active())report(error);}

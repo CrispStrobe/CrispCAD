@@ -4,7 +4,7 @@ import {beforeAll, expect, it} from 'vitest';
 import {createCadSession, designGraph, parseDocument} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
-import {readSketchDxf,readSketchPathDxf} from '../packages/editor/src/import-sketch-dxf.js';
+import {prepareSketchDxf,readSketchDxf,readSketchPathDxf} from '../packages/editor/src/import-sketch-dxf.js';
 import {exportSketchDxf,exportSketchPathDxf} from '../packages/editor/src/sketch-dxf.js';
 
 const drawing = (entity: string, units = 4) =>
@@ -267,4 +267,43 @@ it('rejects branches, parallel paths, closed cycles, multiple layers and tilted 
  expect(()=>readSketchPathDxf(drawing([openLine,openArc.replace('Guides','Other')].join('\n')))).toThrow('same DXF layer');
  expect(()=>readSketchPathDxf(drawing(openLine+'\n31\n1'))).toThrow('planar');
  expect(()=>readSketchPathDxf(drawing(square))).toThrow('one open lightweight polyline');
+});
+
+it('filters a mixed drawing before validating geometry and preserves the selected layer names',()=>{
+ const layered=(entity:string,layer:string)=>entity.replace(/^(0\n[^\n]+)/,'$1\n8\n'+layer);
+ const source=drawing([
+  layered(hole(10,15,2),'Bohrungen Ä'),plate,layered(hole(30,15,3),'BOHRUNGEN Ä'),
+  '0\nTEXT\n8\nNotes\n1\nFabrication notes',
+  '0\nPOLYLINE\n8\nLegacy\n70\n0\n0\nVERTEX\n10\n0\n20\n0\n0\nSEQEND',
+  '0\nINSERT\n8\nLegacy\n66\n1\n2\nTitle\n0\nATTRIB\n1\nDrawing text\n0\nSEQEND',
+  '0\nLINE\n8\nXref|Guides\n10\n0\n20\n0\n11\n2\n21\n2\n31\n1'
+ ].join('\n'),1);
+ const prepared=prepareSketchDxf(source);
+ expect(prepared.layers).toEqual(['Bohrungen Ä','0','Notes','Legacy','Xref|Guides']);
+ expect(()=>prepared.outline()).toThrow('Exclude layers');
+ expect(()=>prepared.outline(false,['Legacy','0'])).toThrow('Exclude layers');
+ expect(()=>prepared.outline(false,['Xref|Guides'])).toThrow('Invalid DXF layer name');
+ expect(()=>prepared.outline(false,[])).toThrow('Select at least one');
+ expect(()=>prepared.outline(false,['missing','0'])).toThrow('unavailable');
+ const imported=prepared.outline(false,['0','bohrungen ä']);
+ if(imported.kind!=='region')throw Error('Expected the boundary and two holes');
+ expect(imported.loops.map(loop=>loop.dxfLayer)).toEqual(['Bohrungen Ä',undefined,'BOHRUNGEN Ä']);
+ expect(imported.loops[0]).toMatchObject({center:[254,381],radius:50.8});
+ expect(prepared.outline(false,['0'])).toMatchObject({kind:'outline',points:[[1016,0],[1016,762],[0,762],[0,0]]});
+ const session=createCadSession();
+ const id=session.addSketchExtrusion(imported,{distance:5});
+ const exported=new TextDecoder().decode(exportSketchDxf(parseDocument(session.serialize()),id).bytes);
+ expect(exported).toContain('8\r\nBohrungen Ä');
+ for(const name of ['Notes','Legacy','Xref|Guides'])expect(exported).not.toContain(name);
+ expect(readSketchDxf(exported)).toEqual({...imported,loops:imported.loops.map(loop=>
+  loop.dxfLayer?{...loop,dxfLayer:'Bohrungen Ä'}:loop)});
+});
+
+it('selects a single open guide from unrelated geometry and can retry missing units',()=>{
+ const decoration=dxfLine([5,5],[6,6],'Construction');
+ const prepared=prepareSketchDxf(drawing([openArc,openLine,decoration].join('\n'),0));
+ expect(prepared.layers).toEqual(['Guides','Construction']);
+ expect(()=>prepared.path(false,['Guides'])).toThrow('has no units');
+ expect(()=>prepared.path(true,['Guides','Construction'])).toThrow('one open path');
+ expect(prepared.path(true,['guides'])).toEqual(readSketchPathDxf(drawing([openArc,openLine].join('\n'))));
 });

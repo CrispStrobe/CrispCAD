@@ -1,7 +1,7 @@
 import {collectSketchSnaps,collectTangentSnaps,nearestSketchSnap,sketchSnapReference} from './sketch-snaps.js';
 import type {SketchSnap} from './sketch-snaps.js';
 import {formatSketchPoints as formatPoints, parseSketchOutline as parseOutline, parseSketchPoint as parsePoint, sketchDraggedBulge} from './sketch-point-entry.js';
-import {maxSketchDxfBytes,readSketchDxf} from './import-sketch-dxf.js';
+import {mountDxfImportControls} from './dxf-import-controls.js';
 import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
@@ -553,30 +553,21 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   if(!existing){
    const importPanel=element('details');
    importPanel.className='sketch-expressions';
-   const importSummary=element('summary',t('Import DXF outline'));
-   const units=element('label',t('Assume millimetres if the file has no units'));
-   const assumeMm=element('input');
-   assumeMm.type='checkbox';
-   units.className='sketch-toggle';
-   units.prepend(assumeMm);
-   const file=element('input');
-   file.type='file';
-   file.accept='.dxf';
-   file.setAttribute('aria-label',t('Choose DXF file'));
-   const importedSource=element('p');
-   file.onchange=async()=>{
-    const chosen=file.files?.[0];
-    const ticket=epoch;
-    const assume=assumeMm.checked;
-    if(!chosen||busy)return;
-    busy=true;
-    apply.disabled=true;
-    file.disabled=true;
-    let errorMessage='';
-    try{
-     if(chosen.size>maxSketchDxfBytes)throw new Error(t('Choose a DXF file up to 1 MB.'));
-     const imported=readSketchDxf(await chosen.text(),assume);
-     if(epoch!==ticket||disposed||!dialog.open)return;
+   importPanel.append(element('summary',t('Import DXF outline')));
+   const active=()=>!disposed&&dialog.open&&dialog.firstChild===header;
+   let blockedBeforeRead=false;
+   mountDxfImportControls(importPanel,{
+    active,available:()=>!busy&&!drag,revision:()=>draftRevision,
+    checkCurrent:()=>{
+     if(session.state.revision!==expected)throw new Error(t('The model changed. Close and reopen this dialog before applying.'));
+    },
+    readState:reading=>{
+     if(reading)blockedBeforeRead=apply.disabled;
+     busy=reading;
+     if(active())apply.disabled=reading||blockedBeforeRead||!valid;
+    },
+    read:(drawing,assumeMm,layers)=>drawing.outline(assumeMm,layers),
+    imported:(imported,fileName)=>{
      const id='dxf-preview';
      evaluateExtrusion({kind:'extrusion',featureVersion:1,id,sketchId:id,distance:1,symmetric:false},{
       ...doc,sketches:{[id]:{version:1,id,name:'DXF',plane:'XY',profile:imported}}
@@ -592,24 +583,16 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
       radius.value=String(imported.radius);
       center.value=imported.center?.join(', ')??'0, 0';
      }
-     name.value=chosen.name.replace(/\.dxf$/i,'').replace(/[\u0000-\u001f]/g,'').trim().slice(0,160)||t('Sketch');
-     importedSource.textContent=chosen.name;
-    }catch(error){errorMessage=error instanceof Error?error.message:String(error);}
-    finally{
-     busy=false;
-     file.disabled=false;
-     file.value='';
-     if(epoch===ticket&&!disposed&&dialog.open){
-      updateGuides();
-      draw();
-      if(errorMessage){
-       status.textContent=errorMessage;
-       apply.disabled=true;
-      }
-     }
+     name.value=fileName||t('Sketch');
+     draftRevision++;
+     updateGuides();draw();
+    },
+    error:error=>{
+     blockedBeforeRead=true;
+     status.textContent=error instanceof Error?error.message:String(error);
+     apply.disabled=true;
     }
-   };
-   importPanel.append(importSummary,units,file,importedSource);
+   });
    form.append(importPanel);
   }
   const footer=element('footer');footer.append(status,apply);const body=element('div');body.className='sketch-body';const expressions=element('details');expressions.className='sketch-expressions';const summary=element('summary',t('Dimension expressions'));summary.title=t('Dimension expressions');summary.setAttribute('aria-label',t('Dimension expressions'));expressions.append(summary,help);form.append(expressions);const drawing=element('div');drawing.append(preview);if(!linked)drawing.append(hint);body.append(drawing,form);dialog.append(header,infoPanel,body,footer);draw();dialog.showModal();

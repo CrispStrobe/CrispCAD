@@ -75,7 +75,8 @@ test('DXF import previews an editable outline and commits it only on Create',asy
  await expect(page.getByTestId('object-name')).toHaveCount(0);
 });
 
-test('DXF plate previews two open mounting holes and retains their edited dimensions', async ({page}) => {
+test('DXF plate previews two open mounting holes and retains their edited dimensions', async ({page,hasTouch}) => {
+ const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
  await page.goto('/');
  const editor = page.locator('#cad-root');
  await expect(editor).toHaveAttribute('data-state', 'ready');
@@ -83,10 +84,22 @@ test('DXF plate previews two open mounting holes and retains their edited dimens
  const sketch = page.getByRole('dialog', {name: 'Sketch and extrusion'});
  await sketch.getByText('Import DXF outline', {exact: true}).click();
  const text = ['0','SECTION','2','HEADER','9','$INSUNITS','70',4,'0','ENDSEC','0','SECTION','2','ENTITIES',
-  '0','CIRCLE','10',10,'20',15,'40',2,
-  '0','LWPOLYLINE','90',4,'70',1,'10',0,'20',0,'10',40,'20',0,'10',40,'20',30,'10',0,'20',30,
-  '0','CIRCLE','10',30,'20',15,'40',3,'0','ENDSEC','0','EOF'].join('\n');
+  '0','CIRCLE','8','Bores','10',10,'20',15,'40',2,
+  '0','LWPOLYLINE','8','Outline','90',4,'70',1,'10',0,'20',0,'10',40,'20',0,'10',40,'20',30,'10',0,'20',30,
+  '0','CIRCLE','8','Bores','10',30,'20',15,'40',3,
+  '0','TEXT','8','Notes','1','Fixture labels','0','ENDSEC','0','EOF'].join('\n');
  await sketch.getByLabel('Choose DXF file').setInputFiles({name: 'Motor plate.dxf', mimeType: 'application/dxf', buffer: Buffer.from(text)});
+ const layers=sketch.getByRole('group',{name:'DXF layers',exact:true});
+ const importLayers=sketch.getByRole('button',{name:'Import selected layers',exact:true});
+ await expect(layers).toBeVisible();
+ await expect(sketch.getByLabel('Profile',{exact:true})).toHaveValue('rectangle');
+ await press(importLayers);
+ await expect(sketch.getByRole('status',{name:'Sketch status'})).toContainText('Exclude layers');
+ await press(layers.getByRole('button',{name:'Deselect all layers',exact:true}));
+ await expect(importLayers).toBeDisabled();
+ await press(layers.getByRole('checkbox',{name:'Bores',exact:true}));
+ await press(layers.getByRole('checkbox',{name:'Outline',exact:true}));
+ await press(importLayers);
  const loops = sketch.getByLabel('Region loops (mm)');
  await expect(loops).toHaveValue(/CIRCLE 10, 15, 2[\s\S]*CIRCLE 30, 15, 3/);
  await expect(sketch.locator('.sketch-top')).toHaveAttribute('d', /^M .* Z M .* Z M .* Z$/);

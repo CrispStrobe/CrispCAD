@@ -58,7 +58,16 @@ one exterior loop and up to 15 separate holes. The exterior is identified by
 containment, so the entity order in the file can vary. Declared units are
 converted to millimetres. For unitless files, opt in if the coordinates are
 millimetres. The preview shows the holes, and the loop coordinates and circle
-radii can be edited before creating the solid. Region circle centers and radii
+radii can be edited before creating the solid. When the drawing contains
+multiple layers, keep the outline and hole layers checked, clear unrelated
+layers, and choose **Import selected layers**. Only entities on the selected
+layers are validated as sketch geometry. Single-layer files open directly in
+the draft. The layer picker reads entity layer names and keeps legacy
+polyline vertices and block attributes with their parent entities.
+[Autodesk DXF entity groups](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-DXF/files/GUID-3610039E-27D1-4E23-B6D3-7E60B22BB5BD.htm)
+[Autodesk DXF sequence endings](https://help.autodesk.com/cloudhelp/2016/ENU/AutoCAD-DXF/files/GUID-FD4FAA74-1F6D-45F6-B132-BF0C4BE6CC3B.htm)
+
+Region circle centers and radii
 accept named dimensions. For example, starting with a 40 mm-wide plate, set
 \`spacing\` in Parameters and position the two holes at \`20 mm - spacing / 2\`
 and \`20 mm + spacing / 2\`. The same formulas drive the solid and its DXF
@@ -72,7 +81,7 @@ chords with up to 0.025 mm of sagitta error within the supported detail budget.
 
 The current region workflow rejects touching, crossing, nested and disjoint
 loops. Widths,
-layer filtering and styles, paper-space objects, tilted entities,
+layer styles, paper-space entities on selected layers, tilted entities,
 DWG and STEP remain open.
 
 ## Outline point editing
@@ -325,7 +334,8 @@ Open **DXF path** in the path editor to import one open lightweight polyline
 or one connected chain of planar LINE and ARC entities on a single layer.
 Coordinates convert to millimetres from the declared drawing units. For a
 unitless file, confirm millimetres in the path dialog. The importer retains
-the signed arc bulges and the layer. **Export path as DXF** writes the current
+the signed arc bulges and the layer. For multilayer drawings, keep the layer
+containing the guide and choose **Import selected layers**. **Export path as DXF** writes the current
 draft as an open lightweight polyline in millimetres. The path stays editable
 after export and reimport. [Autodesk LWPOLYLINE reference](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-DXF/files/GUID-748FC305-F3F2-4F74-825A-61F04D757A50.htm)
 

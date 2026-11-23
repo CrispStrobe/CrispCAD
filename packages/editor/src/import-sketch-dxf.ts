@@ -11,22 +11,26 @@ type DxfPath=Extract<SketchProfile,{kind:'path'}>;
 type Group = {code: number; value: string};
 const mmPerUnit: Record<number, number> = {1: 25.4, 2: 304.8, 4: 1, 5: 10, 6: 1000};
 
+type DxfEntity={kind:string;fields:Group[];layer:string};
+
 export function readSketchDxf(source:string,assumeMm=false):SketchProfile{
- return readDxf(source,assumeMm,'outline');
+ return prepareSketchDxf(source).outline(assumeMm);
 }
 
 export function readSketchPathDxf(source:string,assumeMm=false):DxfPath{
- const profile=readDxf(source,assumeMm,'path');
- if(profile.kind!=='path')throw new Error(t('Choose a DXF with one open path.'));
- return profile;
+ return prepareSketchDxf(source).path(assumeMm);
 }
 
-function readDxf(source:string,assumeMm:boolean,mode:'outline'|'path'):SketchProfile{
-  const closed=mode==='outline';
-  const invalid = () => new Error(t('This file is not a supported text DXF drawing.'));
-  const unsupported = () => new Error(closed
-    ?t('Use circles, closed lightweight polylines, or closed chains of 2D lines and arcs. Remove unsupported entities before importing.')
-    :t('Use one open lightweight polyline or one connected chain of planar lines and arcs.'));
+const invalid=()=>new Error(t('This file is not a supported text DXF drawing.'));
+const number=(value:string|undefined)=>{
+ if(!value||!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(value))throw invalid();
+ const result=Number(value);
+ if(!Number.isFinite(result))throw invalid();
+ return result;
+};
+
+/** Read the text and layer catalog once. Geometry validation runs only for the layers the user selects. */
+export function prepareSketchDxf(source:string){
   if (source.length > maxSketchDxfBytes || source.includes('\0')) throw invalid();
   const lines = source.replace(/^\uFEFF/, '').split(/\r?\n/);
   if (lines.at(-1) === '') lines.pop();
@@ -37,12 +41,6 @@ function readDxf(source:string,assumeMm:boolean,mode:'outline'|'path'):SketchPro
     if (!/^\d{1,4}$/.test(code)) throw invalid();
     if (Number(code) !== 999) groups.push({code: Number(code), value: lines[i + 1].trim()});
   }
-  const number = (value: string | undefined) => {
-    if (!value || !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(value)) throw invalid();
-    const result = Number(value);
-    if (!Number.isFinite(result)) throw invalid();
-    return result;
-  };
   const sections = new Map<string, Group[]>();
   for (let i = 0; i < groups.length;) {
     const group = groups[i++];
@@ -60,28 +58,63 @@ function readDxf(source:string,assumeMm:boolean,mode:'outline'|'path'):SketchPro
   const unitsIndex = header.findIndex(group => group.code === 9 && group.value === '$INSUNITS');
   if (unitsIndex !== -1 && header[unitsIndex + 1]?.code !== 70) throw invalid();
   const units = unitsIndex === -1 ? 0 : number(header[unitsIndex + 1].value);
-  const scale = units === 0 && assumeMm ? 1 : mmPerUnit[units];
-  if (!scale) throw new Error(units === 0
-    ? t('This DXF has no units. If the coordinates are in millimetres, enable the missing-units option and import again.')
-    : t('DXF import supports millimetres, centimetres, metres, inches and feet.'));
-
-  const entities: Group[][] = [];
-  for (const group of sections.get('ENTITIES') ?? []) {
-    if (group.code === 0) entities.push([group]);
-    else if (entities.length) entities.at(-1)!.push(group);
+  const records:Group[][]=[];
+  for(const group of sections.get('ENTITIES')??[]){
+    if(group.code===0)records.push([group]);
+    else if(records.length)records.at(-1)!.push(group);
     else throw invalid();
   }
-  if (!entities.length || entities.length > maxSketchRegionLoops * (maxSketchOutlinePoints + 1)) throw unsupported();
+  const entities:DxfEntity[]=[],names=new Map<string,string>();
+  for(let i=0;i<records.length;i++){
+    const [entity,...fields]=records[i],kind=entity.value;
+    const layerFields=fields.filter(group=>group.code===8);
+    const layer=layerFields[0]?.value??'0';
+    if(layerFields.length>1||!layer||layer.length>255)throw new Error(t('Invalid DXF layer name.'));
+    entities.push({kind,fields,layer});
+    if(!names.has(layer.toUpperCase()))names.set(layer.toUpperCase(),layer);
+
+    // Subentities belong to their parent. An excluded legacy polyline or block
+    // insert must not leave stray VERTEX, ATTRIB or SEQEND records on layer 0.
+    const child=kind==='POLYLINE'?'VERTEX':kind==='INSERT'&&fields.some(group=>group.code===66&&group.value==='1')?'ATTRIB':undefined;
+    if(child){
+      while(records[i+1]?.[0].value===child)i++;
+      if(records[i+1]?.[0].value!=='SEQEND')throw invalid();
+      i++;
+    }
+  }
+  const pick=(selected?:readonly string[])=>{
+    if(!selected)return entities;
+    const keys=new Set(selected.map(layer=>layer.toUpperCase()));
+    if(!keys.size)throw new Error(t('Select at least one DXF layer.'));
+    if([...keys].some(key=>!names.has(key)))throw new Error(t('Selected DXF layers are unavailable in this file.'));
+    return entities.filter(entity=>keys.has(entity.layer.toUpperCase()));
+  };
+  return {
+    layers:[...names.values()] as readonly string[],
+    outline:(assumeMm=false,selected?:readonly string[])=>readDxf(pick(selected),units,assumeMm,'outline'),
+    path:(assumeMm=false,selected?:readonly string[])=>readDxf(pick(selected),units,assumeMm,'path')
+  };
+}
+
+function readDxf(entities:DxfEntity[],units:number,assumeMm:boolean,mode:'path'):DxfPath;
+function readDxf(entities:DxfEntity[],units:number,assumeMm:boolean,mode:'outline'):SketchProfile;
+function readDxf(entities:DxfEntity[],units:number,assumeMm:boolean,mode:'outline'|'path'):SketchProfile{
+  const closed=mode==='outline';
+  const unsupported=()=>new Error(closed
+    ?t('Use circles, closed lightweight polylines, or closed chains of 2D lines and arcs. Exclude layers with unsupported entities or remove those entities before importing.')
+    :t('Use one open lightweight polyline or one connected chain of planar lines and arcs.'));
+  const scale=units===0&&assumeMm?1:mmPerUnit[units];
+  if(!scale)throw new Error(units===0
+    ?t('This DXF has no units. If the coordinates are in millimetres, enable the missing-units option and import again.')
+    :t('DXF import supports millimetres, centimetres, metres, inches and feet.'));
+  if(!entities.length||entities.length>maxSketchRegionLoops*(maxSketchOutlinePoints+1))throw unsupported();
   const indexed:({index:number}&DxfLoop)[]=[];
   const edges:DxfEdge[]=[];
   const paths:DxfPath[]=[];
-  for (const [index,[entity,...fields]] of entities.entries()) {
-    if (!['CIRCLE','ARC','LINE','LWPOLYLINE'].includes(entity.value)||!closed&&entity.value==='CIRCLE') throw unsupported();
-    const layer = fields.filter(group => group.code === 8);
-    if (layer.length > 1 || (layer.length === 1 && !isSketchDxfLayer(layer[0].value))) {
-      throw new Error(t('Invalid DXF layer name.'));
-    }
-    const dxfLayer = layer.length && layer[0].value !== '0' ? {dxfLayer: layer[0].value} : {};
+  for(const [index,{kind,fields,layer}] of entities.entries()){
+    if(!['CIRCLE','ARC','LINE','LWPOLYLINE'].includes(kind)||!closed&&kind==='CIRCLE')throw unsupported();
+    if(!isSketchDxfLayer(layer))throw new Error(t('Invalid DXF layer name.'));
+    const dxfLayer=layer==='0'?{}:{dxfLayer:layer};
 
     const read = (code: number, fallback?: number) => {
       const matches = fields.filter(group => group.code === code);
@@ -91,20 +124,20 @@ function readDxf(source:string,assumeMm:boolean,mode:'outline'|'path'):SketchPro
     if (read(67, 0) !== 0 || (fields.find(group => group.code === 410)?.value ?? 'Model').toUpperCase() !== 'MODEL' ||
         read(210, 0) !== 0 || read(220, 0) !== 0 || read(230, 1) !== 1 ||
         fields.some(group => [30, 38, 39, 40, 41, 42, 43].includes(group.code) &&
-          !(['CIRCLE','ARC'].includes(entity.value) && group.code === 40) &&
-          !(entity.value === 'LWPOLYLINE' && group.code === 42) && number(group.value) !== 0)) throw unsupported();
+          !(['CIRCLE','ARC'].includes(kind) && group.code === 40) &&
+          !(kind === 'LWPOLYLINE' && group.code === 42) && number(group.value) !== 0)) throw unsupported();
 
-    if (entity.value === 'LINE') {
+    if (kind === 'LINE') {
       if (read(31,0) !== 0) throw unsupported();
       edges.push({index, a:[read(10)*scale,read(20)*scale], b:[read(11)*scale,read(21)*scale],bulge:0,...dxfLayer});
       continue;
     }
-    if (entity.value === 'CIRCLE' || entity.value === 'ARC') {
+    if (kind === 'CIRCLE' || kind === 'ARC') {
       const radius = read(40) * scale;
       const center: SketchPoint = [read(10) * scale, read(20) * scale];
       if (radius < .01 || radius > 100000) throw new Error(t('Dimension must be between 0.01 and 100000 mm'));
       if (!isSketchPoint(center)) throw new Error(t('Circle center must be within 100000 mm of the sketch origin.'));
-      if (entity.value === 'CIRCLE') {
+      if (kind === 'CIRCLE') {
         indexed.push({index,kind:'circle',radius,segments:64,center,...dxfLayer});
       } else {
         const normalize=(degrees:number)=>{
