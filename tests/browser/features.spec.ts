@@ -47,7 +47,7 @@ test('DXF import previews an editable outline and commits it only on Create',asy
  await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  await page.getByRole('button',{name:'Sketch',exact:true}).click();
  const sketch=page.getByRole('dialog',{name:'Sketch and extrusion'});
- await sketch.getByText('Import DXF outline',{exact:true}).click();
+ await sketch.getByText('Import DXF or DWG outline',{exact:true}).click();
  const text=['0','SECTION','2','HEADER','9','$INSUNITS','70',1,'0','ENDSEC','0','SECTION','2','ENTITIES',
   '0','LWPOLYLINE','90',4,'70',1,'10',1,'20',1,'10',2,'20',1,'10',2,'20',2,'10',1,'20',2,
   '0','ENDSEC','0','EOF'].join('\n');
@@ -87,7 +87,7 @@ test('DXF plate previews two open mounting holes and retains their edited dimens
  await expect(editor).toHaveAttribute('data-state', 'ready');
  await page.getByRole('button', {name: 'Sketch', exact: true}).click();
  const sketch = page.getByRole('dialog', {name: 'Sketch and extrusion'});
- await sketch.getByText('Import DXF outline', {exact: true}).click();
+ await sketch.getByText('Import DXF or DWG outline', {exact: true}).click();
  const text = ['0','SECTION','2','HEADER','9','$INSUNITS','70',4,'0','ENDSEC',
   '0','SECTION','2','TABLES','0','TABLE','2','LAYER',
   '0','LAYER','2','Outline','70',4,'62',5,'420',16711935,'370',35,
@@ -196,7 +196,7 @@ test('rounded DXF outlines preserve the editable bulge through export', async ({
  await expect(editor).toHaveAttribute('data-state', 'ready');
  await page.getByRole('button', {name: 'Sketch', exact: true}).click();
  const sketch = page.getByRole('dialog', {name: 'Sketch and extrusion'});
- await sketch.getByText('Import DXF outline', {exact: true}).click();
+ await sketch.getByText('Import DXF or DWG outline', {exact: true}).click();
  const text = ['0','SECTION','2','HEADER','9','$INSUNITS','70',4,'0','ENDSEC','0','SECTION','2','ENTITIES',
   '0','LWPOLYLINE','90',4,'70',1,'10',0,'20',0,'42',1,'10',40,'20',0,'10',40,'20',30,'10',0,'20',30,
   '0','ENDSEC','0','EOF'].join('\n');
@@ -355,7 +355,7 @@ test('imports a closed DXF chain of native lines and arcs as an editable outline
  await ready();
  await page.getByRole('button',{name:'Sketch',exact:true}).click();
  const dialog=page.getByRole('dialog',{name:'Sketch and extrusion'});
- await dialog.getByText('Import DXF outline',{exact:true}).click();
+ await dialog.getByText('Import DXF or DWG outline',{exact:true}).click();
  const dxf=['0','SECTION','2','HEADER','9','$INSUNITS','70',4,'0','ENDSEC','0','SECTION','2','ENTITIES',
   '0','ARC','10',20,'20',0,'40',20,'50',180,'51',0,
   '0','LINE','10',0,'20',30,'11',0,'21',0,

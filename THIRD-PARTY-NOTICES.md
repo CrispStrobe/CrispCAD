@@ -11,6 +11,10 @@ The new solid model, worker, integration adapter and UI are independent code.
 No Layerling code/assets/translations are included.
 
 Runtime dependencies:
+
+- acad-ts 3.9.0, MIT, copyright Jochen Kühner and Albert Domenech. The
+  JavaScript DWG codec runs on demand in a browser worker and declares no
+  runtime package dependencies. See https://github.com/node-projects/acad-ts.
 - Three.js 0.184.0, MIT, copyright Three.js authors. OrbitControls and
   TransformControls are from the same distribution/license.
 - Manifold 3.5.4, Apache-2.0, copyright Manifold contributors. Its compiled WASM

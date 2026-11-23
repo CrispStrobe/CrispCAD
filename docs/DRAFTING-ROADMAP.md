@@ -46,9 +46,29 @@ where available, and explicit tessellation or reference behavior. Editable STEP
 round trips and general modeling-edge fillets belong to the exact-geometry
 roadmap, with stable face/edge references and evaluated backend choices.
 
+### Editable 2D DWG import
+
+Open **Sketch & Extrude → Import DXF or DWG outline** or **Sketch path →
+DXF or DWG path**, then use **Choose DWG file**. The file is decoded locally
+by the on-demand browser worker using the pinned MIT acad-ts 3.9.0 codec.
+The sketch importer applies the DXF geometry rules to the decoded model
+space, including scale, layer selection, coplanarity, signed arc bulges
+and polyline widths. Unitless inputs require an explicit millimetre
+assumption. The sketch remains a draft until the user creates the extrusion
+or saves the path. The project stores the editable geometry.
+
+The selected geometry must fit the shared sketch workflow. Blocks, text,
+hatches, layouts and 3D solids are outside that workflow. Exclude layers
+with unsupported entities when importing. Files and decoded drawings are
+limited to 1 MiB, and a stalled worker is stopped. The qualified versions
+are AutoCAD 2000 and 2018. Produce a DXF from the imported sketch using
+the existing export control. DWG export and broader interoperability
+qualification remain open.
+[acad-ts DWG documentation](https://github.com/node-projects/acad-ts/blob/master/docs/CadReaderDocs.md)
+
 ### Editable DXF profiles
 
-Open **Sketch & Extrude → Import DXF outline** and choose a text DXF with
+Open **Sketch & Extrude → Import DXF or DWG outline** and choose a text DXF with
 planar circles, closed lightweight polylines, or closed chains of native 2D
 lines and arcs. The importer joins chain endpoints within 0.000001 mm and
 retains arcs as editable polyline bulges. Each chain uses one DXF layer.
@@ -107,7 +127,7 @@ actual size. Edit a vertex as **X, Y, bulge, start width, end width** to
 change the width of its outgoing edge. The sketch and solid use the
 centerline. DXF export writes the widths back as drawing properties. Trim
 interpolates widths at new endpoints, and a closing edge starts at zero
-width. Offset supports uniform-width outlines. DWG and STEP remain open.
+width. Offset supports uniform-width outlines. DWG export and STEP import remain open.
 [Autodesk DXF lightweight polylines](https://help.autodesk.com/cloudhelp/2024/ENU/AutoCAD-DXF/files/GUID-748FC305-F3F2-4F74-825A-61F04D757A50.htm)
 
 ## Outline point editing

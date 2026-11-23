@@ -91,7 +91,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   dxf.className='sketch-expressions';
   const layer=element('small'),exportPath=element('button',t('Export path as DXF'));
   exportPath.type='button';
-  dxf.append(element('summary',t('DXF path')));
+  dxf.append(element('summary',t('DXF or DWG path')));
   fields.append(dxf);
 
   const body=element('div');

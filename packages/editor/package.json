@@ -18,8 +18,9 @@
   "dependencies": {
     "@brickwright/cad-core": "0.1.0",
     "@brickwright/cad-geometry": "0.1.0",
+    "@brickwright/cad-physics": "0.1.0",
+    "@node-projects/acad-ts": "3.9.0",
     "qrcode-generator": "2.0.4",
-    "three": "0.184.0",
-    "@brickwright/cad-physics": "0.1.0"
+    "three": "0.184.0"
   }
 }

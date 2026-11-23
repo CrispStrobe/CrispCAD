@@ -43,7 +43,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   for(const step of [
    t('Choose a profile and its plane. XY is horizontal. XZ and YZ are upright.'),
    t('Type dimensions or drag the preview handles. For an outline, enter one X, Y point per line. The last point connects to the first.'),
-   t('DXF import accepts closed outlines and circles. Loops inside an outer boundary become holes.'),
+   t('DXF and DWG import accept closed outlines and circles. Loops inside an outer boundary become holes.'),
    ...(revolving?[
     t('Revolve sweeps the profile around an axis parallel to sketch Y. The dashed line marks the axis. Keep the entire profile on one side.'),
     t('Use 360° for a full turn. A negative angle reverses the sweep.')
@@ -559,7 +559,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   if(!existing){
    const importPanel=element('details');
    importPanel.className='sketch-expressions';
-   importPanel.append(element('summary',t('Import DXF outline')));
+   importPanel.append(element('summary',t('Import DXF or DWG outline')));
    const active=()=>!disposed&&dialog.open&&dialog.firstChild===header;
    let blockedBeforeRead=false;
    mountDxfImportControls(importPanel,{

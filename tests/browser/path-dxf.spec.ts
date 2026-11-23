@@ -23,7 +23,7 @@ test('import an inch DXF as an open guide, export mm and reimport the signed arc
  const path=page.getByRole('dialog',{name:'Sketch path',exact:true});
  const points=path.getByLabel('Path points X, Y (mm)');
  const before=await points.inputValue();
- await press(path.getByText('DXF path',{exact:true}));
+ await press(path.getByText('DXF or DWG path',{exact:true}));
  const file=path.getByLabel('Choose DXF file');
  await file.setInputFiles({name:'unitless guide.dxf',mimeType:'application/dxf',buffer:payload(0)});
  const layers=path.getByRole('group',{name:'DXF layers',exact:true});
@@ -69,7 +69,7 @@ test('import an inch DXF as an open guide, export mm and reimport the signed arc
  await expect(path).toBeHidden();
  await expect(page.getByTestId('object-name')).toHaveCount(0);
  await press(page.getByRole('button',{name:'Sketch path: round trip',exact:true}));
- await press(path.getByText('DXF path',{exact:true}));
+ await press(path.getByText('DXF or DWG path',{exact:true}));
  await expect(path.getByText('DXF layer: Guides',{exact:true})).toBeVisible();
  await expect(points).toHaveValue(edited);
 });

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from '@brickwright/cad-core';
-import {maxSketchDxfBytes,prepareSketchDxf} from './import-sketch-dxf.js';
+import {prepareSketchDxf} from './import-sketch-dxf.js';
+import {readSketchDwg} from './read-sketch-dwg.js';
+import {maxSketchExchangeBytes} from './sketch-exchange-limits.js';
 
 import type {DxfSketchImport} from './import-sketch-dxf.js';
 
@@ -18,9 +20,16 @@ export function mountDxfImportControls<P>(parent:HTMLElement,options:{
  imported:(profile:P,name:string)=>void; error:(error:unknown)=>void;
 }){
  const units=element('label',t('Assume millimetres if the file has no units'));
- const assumeMm=element('input'),file=element('input'),filename=element('p');
+ const assumeMm=element('input'),dxf=element('input'),dwg=element('input'),filename=element('p');
  assumeMm.type='checkbox';units.className='sketch-toggle';units.prepend(assumeMm);
- file.type='file';file.accept='.dxf';file.setAttribute('aria-label',t('Choose DXF file'));
+ function fileField(input:HTMLInputElement,extension:string,label:string){
+  input.type='file';input.accept=extension;input.setAttribute('aria-label',label);
+  const field=element('label',label);
+  field.append(input);
+  return field;
+ }
+ const dxfField=fileField(dxf,'.dxf',t('Choose DXF file'));
+ const dwgField=fileField(dwg,'.dwg',t('Choose DWG file'));
  const layoutNotice=element('small',t('Paper-space layout entities were skipped.'));
  layoutNotice.setAttribute('aria-live','polite');layoutNotice.hidden=true;
  const planeNotice=element('small',t('The source plane was unfolded into the selected sketch plane at actual size.'));
@@ -28,14 +37,19 @@ export function mountDxfImportControls<P>(parent:HTMLElement,options:{
  const layers=element('fieldset'),list=element('div'),toggleAll=element('button'),apply=element('button',t('Import selected layers'));
  layers.className='dxf-layer-picker';list.className='dxf-layer-list';
  toggleAll.type=apply.type='button';
- layers.append(element('legend',t('DXF layers')),toggleAll,list);
+ const layerLabel=element('legend',t('DXF layers'));
+ layers.append(layerLabel,toggleAll,list);
  layers.hidden=apply.hidden=true;
- parent.append(units,file,filename,layoutNotice,layers,apply,planeNotice);
+ parent.append(units,dxfField,dwgField,filename,layoutNotice,layers,apply,planeNotice);
  // Selecting a file or a layer never changes the enclosing sketch draft.
  for(const event of ['input','change'])parent.addEventListener(event,input=>input.stopPropagation());
 
  let prepared:PreparedDxf|undefined,choices:{name:string;input:HTMLInputElement}[]=[];
  let name='',reading=false;
+ function setReading(value:boolean){
+  reading=dxf.disabled=dwg.disabled=value;
+  options.readState?.(value);
+ }
 
  function refresh(){
   const checked=choices.filter(choice=>choice.input.checked).length;
@@ -63,22 +77,28 @@ export function mountDxfImportControls<P>(parent:HTMLElement,options:{
  }
  apply.onclick=applyImport;
 
- file.onchange=async()=>{
+ async function choose(file:HTMLInputElement,isDwg:boolean){
   const chosen=file.files?.[0],revision=options.revision();
   if(!chosen||reading||options.available?.()===false){file.value='';return;}
   prepared=undefined;choices=[];name='';
   list.replaceChildren();filename.textContent='';layers.hidden=apply.hidden=layoutNotice.hidden=planeNotice.hidden=true;
-  reading=file.disabled=true;
-  options.readState?.(true);
+  setReading(true);
+  const controller=new AbortController();
+  const dialog=parent.closest('dialog');
+  const close=()=>{if(!options.active())controller.abort();};
+  dialog?.addEventListener('close',close);
   try{
-   if(chosen.size>maxSketchDxfBytes)throw new Error(t('Choose a DXF file up to 1 MB.'));
-   const text=await chosen.text();
+   if(chosen.size>maxSketchExchangeBytes)throw new Error(isDwg?t('Choose a DWG file up to 1 MB.'):t('Choose a DXF file up to 1 MB.'));
+   const bytes=isDwg?await chosen.arrayBuffer():undefined;
+   if(!options.active())return;
+   const text=bytes?await readSketchDwg(bytes,controller.signal):await chosen.text();
    if(!options.active())return;
    options.checkCurrent();
-   if(revision!==options.revision())throw new Error(t('The sketch changed while reading DXF. Choose the file again.'));
+   if(revision!==options.revision())throw new Error(isDwg?t('The sketch changed while reading DWG. Choose the file again.'):t('The sketch changed while reading DXF. Choose the file again.'));
    prepared=prepareSketchDxf(text);
-   name=chosen.name.replace(/\.dxf$/i,'').replace(/[\u0000-\u001f]/g,'').trim().slice(0,160);
+   name=chosen.name.replace(/\.(dxf|dwg)$/i,'').replace(/[\u0000-\u001f]/g,'').trim().slice(0,160);
    filename.textContent=chosen.name;
+   layerLabel.textContent=isDwg?t('DWG layers'):t('DXF layers');
    layoutNotice.hidden=!prepared.skippedPaperSpace;
    if(prepared.layers.length>1){
     choices=prepared.layers.map(name=>{
@@ -92,11 +112,14 @@ export function mountDxfImportControls<P>(parent:HTMLElement,options:{
   }catch(error){
    if(options.active())options.error(error);
   }finally{
-   reading=file.disabled=false;
+   controller.abort();
+   dialog?.removeEventListener('close',close);
+   setReading(false);
    file.value='';
-   options.readState?.(false);
    refresh();
   }
   if(prepared&&!choices.length)applyImport();
- };
+ }
+ dxf.onchange=()=>choose(dxf,false);
+ dwg.onchange=()=>choose(dwg,true);
 }

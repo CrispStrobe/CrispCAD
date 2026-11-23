@@ -26,7 +26,7 @@ test('persist point lock expressions, export their geometry, and unlock without 
  await path.getByRole('combobox',{name:/^Path point/}).selectOption('1');
  await expect(x).toHaveValue('40 / 2');
  await expect(y).toHaveValue('5');
- await press(path.getByText('DXF path',{exact:true}));
+ await press(path.getByText('DXF or DWG path',{exact:true}));
  const [download]=await Promise.all([
   page.waitForEvent('download'),press(path.getByRole('button',{name:'Export path as DXF'}))
  ]);
@@ -86,7 +86,7 @@ test('chain segment constraints through a parameter, DXF export, and Undo',async
  await press(path.getByText('Segment constraints',{exact:true}));
  await expect(distance).toHaveValue('reach');
  await expect(markers.last()).toHaveAttribute('cx','50');
- await press(path.getByText('DXF path',{exact:true}));
+ await press(path.getByText('DXF or DWG path',{exact:true}));
  const [download]=await Promise.all([
   page.waitForEvent('download'),press(path.getByRole('button',{name:'Export path as DXF'}))
  ]);

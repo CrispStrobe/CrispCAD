@@ -8,7 +8,7 @@ import {dxfObjectPlane,dxfSketchPlane} from './dxf-sketch-plane.js';
 import {joinDxfEdges} from './sketch-dxf-chains.js';
 import type {DxfEdge} from './sketch-dxf-chains.js';
 
-export const maxSketchDxfBytes = 1024 * 1024;
+import {maxSketchExchangeBytes} from './sketch-exchange-limits.js';
 type DxfLoop = Omit<Extract<SketchLoop,{kind:'outline'}>,'id'> |
   (Omit<Extract<SketchLoop,{kind:'circle'}>,'id'|'center'> & {center:SketchPoint});
 type DxfPath=Extract<SketchProfile,{kind:'path'}>;
@@ -35,7 +35,7 @@ const number=(value:string|undefined)=>{
 
 /** Catalog model-space layers before validating the geometry in the selected layers. */
 export function prepareSketchDxf(source:string){
-  if (source.length > maxSketchDxfBytes || source.includes('\0')) throw invalid();
+  if (source.length > maxSketchExchangeBytes || source.includes('\0')) throw invalid();
   const lines = source.replace(/^\uFEFF/, '').split(/\r?\n/);
   if (lines.at(-1) === '') lines.pop();
   if (lines.length % 2 !== 0) throw invalid();
