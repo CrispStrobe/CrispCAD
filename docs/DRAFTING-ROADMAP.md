@@ -520,9 +520,10 @@ CAD geometry. Basic drawing must start normally even if CAD is disabled.
 3. **Send to CAD.** After choosing a region, show its target plane, origin,
    size in millimetres, and scale. Create an editable CAD sketch on Apply.
    Keep the costume intact. Start with an explicit snapshot, then support
-   a deliberate update from source with a change preview. A saved sketch
-   can drive Extrude later. Once the handoff is stable, add a shortcut that
-   opens the extrusion preview with the new sketch selected.
+   a deliberate update from source with a change preview. After saving a
+   closed sketch, **Preview extrusion** opens the CAD preview for that
+   sketch. Cancel leaves the sketch in place. **Create extrusion** adds
+   the solid in its own Undo step.
 4. **Qualify both modes.** Verify the original child-facing drawing flow
    with Precision off and no CAD code loaded. Test mouse and pencil or
    touch selection, legacy SVGs, units, nested holes, multiple islands,
@@ -579,8 +580,7 @@ It preserves holes in closed strokes and circle profiles in circular strokes.
 Use uniform scale and an absolute stroke width. Curved centerlines require the
 curve approximation opt-in, and rounded caps and joins are sampled at up to
 22.5° per segment. Each subpath becomes a separate profile. Stroke union,
-nonuniform scaling, dashed strokes, precision drawing tools, and updates from
-source remain open.
+nonuniform scaling, and dashed strokes remain open.
 
 #### SVG conversion and dependency choice
 
