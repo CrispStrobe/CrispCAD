@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {closePathProfile,evaluateSketch,newId,resolveSketchPath,t,trimSketchProfile,FeatureEvaluationError} from '@brickwright/cad-core';
+import {closePathProfile,evaluateSketch,newId,resolveSketchPath,sketchDxfLayerFields,t,trimSketchProfile,FeatureEvaluationError} from '@brickwright/cad-core';
 import type {CadSession,PlanarSketch,SketchPathProfile,SketchPlane} from '@brickwright/cad-core';
 import {formatSketchPoints,parseSketchOutline,parseSketchPoint} from './sketch-point-entry.js';
 import {operationField} from './body-operation-panel.js';
@@ -25,7 +25,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
   if(id&&existing?.profile.kind!=='path')throw new Error(t('Select an open sketch path'));
   const profile=existing?.profile.kind==='path'?existing.profile:undefined;
   const profileId=profile?.id??newId();
-  let dxfLayer=profile?.dxfLayer,draftRevision=0;
+  let dxfLayer=sketchDxfLayerFields(profile),draftRevision=0;
   let vertexIds=profile?.vertexIds,anchors=profile?.anchors;
   dialog.replaceChildren();
 
@@ -100,7 +100,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
 
   function read():PlanarSketch&{profile:SketchPathProfile}{
    return {version:1,id:id??'preview-path',name:name.value.trim(),plane:plane.value as SketchPlane,
-    profile:{kind:'path',id:profileId,...parseSketchOutline(points.value.trim().split(/\r?\n/)),...(dxfLayer?{dxfLayer}:{}),...(anchors?{anchors,vertexIds}:{})}};
+    profile:{kind:'path',id:profileId,...parseSketchOutline(points.value.trim().split(/\r?\n/)),...dxfLayer,...(anchors?{anchors,vertexIds}:{})}};
   }
   function report(error:unknown){
    status.textContent=error instanceof FeatureEvaluationError?error.diagnostic.message:error instanceof Error?error.message:String(error);
@@ -133,7 +133,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
    preview.replaceChildren();
    status.textContent='';
    save.disabled=closePath.disabled=trimButton.disabled=exportPath.disabled=true;
-   layer.textContent=dxfLayer?t`DXF layer: ${dxfLayer}`:'';
+   layer.textContent=dxfLayer.dxfLayer?t`DXF layer: ${dxfLayer.dxfLayer}`:'';
    const selected=vertex.selectedIndex;
    let count=vertexIds?.length??0;
    try{count=vertexIds?.length??read().profile.points.length;}catch{/* Locks can still be removed. */}
@@ -221,7 +221,7 @@ export function mountPathPanel(parent:HTMLElement,session:CadSession,showObjects
    read:(drawing,assumeMm,layers)=>drawing.path(assumeMm,layers),
    imported:(imported,fileName)=>{
     writePath(imported);
-    dxfLayer=imported.dxfLayer;
+    dxfLayer=sketchDxfLayerFields(imported);
     if(!existing)name.value=fileName||t('Sketch path');
     draftRevision++;draw();
    },

@@ -1,22 +1,19 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from './i18n.js';
+import {checkSketchDxfLayer} from './sketch-dxf-layer.js';
+import type {SketchDxfLayer} from './sketch-dxf-layer.js';
 import {isSketchPoint, sketchOutline, sketchSegmentsIntersect} from './sketch-outline.js';
 import type {FeatureScalar} from './features.js';
 import type {SketchPoint} from './sketch-outline.js';
 
-export type SketchOutlineProfile = {kind:'outline'; id:string; points:SketchPoint[]; bulges?:number[]; dxfLayer?:string; vertexIds?:string[]};
+export type SketchOutlineProfile = {kind:'outline'; id:string; points:SketchPoint[]; bulges?:number[]; vertexIds?:string[]}&SketchDxfLayer;
 
 export type SketchLoop =
   | SketchOutlineProfile
   | SketchCircleLoop;
 
-type SketchCircleLoop = {kind: 'circle'; id: string; center: [FeatureScalar, FeatureScalar]; radius: FeatureScalar; segments: number; dxfLayer?: string};
+type SketchCircleLoop = {kind: 'circle'; id: string; center: [FeatureScalar, FeatureScalar]; radius: FeatureScalar; segments: number}&SketchDxfLayer;
 type ResolvedCircle = Omit<SketchCircleLoop, 'center' | 'radius'> & {center: SketchPoint; radius: number};
-
-export function isSketchDxfLayer(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0 && value.length <= 255 &&
-    value === value.trim() && !/[\u0000-\u001f\u007f<>/\\":;?*|=]/.test(value);
-}
 
 export const maxSketchRegionLoops = 16;
 const maxRegionVertices = 1024;
@@ -70,7 +67,7 @@ export function evaluateSketchRegion(loops: SketchLoop[], resolve = (scalar: Fea
   let vertices = 0;
   const resolved: ResolvedLoop[] = loops.map(loop => {
     if (!loop || typeof loop.id !== 'string' || !/^[a-zA-Z0-9_-]{1,96}$/.test(loop.id) || ids.has(loop.id)) throw invalid();
-    if (loop.dxfLayer !== undefined && !isSketchDxfLayer(loop.dxfLayer)) throw new Error(t('Invalid DXF layer name.'));
+    checkSketchDxfLayer(loop);
     ids.add(loop.id);
     let points: SketchPoint[], area: number, resolvedLoop: ResolvedLoop['loop'];
     if (loop.kind === 'circle') {

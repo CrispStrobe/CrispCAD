@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {readFileSync} from 'node:fs';
 import {beforeAll, expect, it} from 'vitest';
-import {createCadSession, designGraph, parseDocument} from '@brickwright/cad-core';
+import {compileModelSource, createCadSession, designGraph, parseDocument, validateDocument} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {prepareSketchDxf,readSketchDxf,readSketchPathDxf} from '../packages/editor/src/import-sketch-dxf.js';
@@ -306,4 +306,58 @@ it('selects a single open guide from unrelated geometry and can retry missing un
  expect(()=>prepared.path(false,['Guides'])).toThrow('has no units');
  expect(()=>prepared.path(true,['Guides','Construction'])).toThrow('one open path');
  expect(prepared.path(true,['guides'])).toEqual(readSketchPathDxf(drawing([openArc,openLine].join('\n'))));
+});
+
+const layerTables=[
+ '0','SECTION','2','TABLES','0','TABLE','2','LTYPE',
+ '0','LTYPE','2','Fixture dash','73',3,'40',1.5,'49',1,'74',0,'49',-.5,'74',0,'49',0,'74',0,
+ '0','LTYPE','2','With text','73',1,'40',1,'49',1,'74',2,'9','label','0','ENDTAB',
+ '0','TABLE','2','LAYER',
+ '0','LAYER','2','0','70',0,'62',2,'290',0,'6','CONTINUOUS',
+ '0','LAYER','2','Holes','70',21,'62',-3,'420',0x1fcf90,'290',0,'370',35,'6','Fixture dash',
+ '0','LAYER','2','Guides','70',2,'62',6,'370',18,'6','Fixture dash',
+ '0','LAYER','2','Extra','62',3,'6','With text','0','ENDTAB','0','ENDSEC'
+].join('\n');
+const styledDrawing=(entities:string[],units=4)=>drawing(entities.join('\n'),units)
+ .replace('0\nSECTION\n2\nENTITIES',layerTables+'\n0\nSECTION\n2\nENTITIES');
+
+it('round-trips selected layer styles, including layer zero and inch-based dash lengths',()=>{
+ const cut=hole(10,15,2).replace('CIRCLE','CIRCLE\n8\nholes');
+ const extra=hole(70,15,1).replace('CIRCLE','CIRCLE\n8\nExtra');
+ const prepared=prepareSketchDxf(styledDrawing([plate,cut,extra],1));
+ const profile=prepared.outline(false,['0','Holes']);
+ if(profile.kind!=='region')throw Error('Expected the plate with a hole');
+ expect(profile.loops[0]).toMatchObject({dxfLayerStyle:{color:2,plot:false}});
+ expect(profile.loops[0].dxfLayer).toBeUndefined();
+ expect(profile.loops[1]).toMatchObject({dxfLayer:'holes',dxfLayerStyle:{
+  color:-3,trueColor:0x1fcf90,flags:5,plot:false,lineweight:35,
+  linetype:{name:'Fixture dash',pattern:[25.4,-12.7,0]}
+ }});
+ expect(prepared.outline(false,['Extra'])).toMatchObject({dxfLayerStyle:{color:3}});
+ expect(prepared.outline(false,['Extra'])).not.toHaveProperty('dxfLayerStyle.linetype');
+ const session=createCadSession();
+ const id=session.addSketchExtrusion(profile,{distance:5});
+ const saved=parseDocument(session.serialize());
+ expect(validateDocument(compileModelSource(session.modelSource,saved)).sketches).toEqual(saved.sketches);
+ const exported=new TextDecoder().decode(exportSketchDxf(saved,id).bytes);
+ expect(exported).toContain('2\r\nFixture dash\r\n70\r\n0');
+ expect(exported).toContain('49\r\n25.4\r\n74\r\n0\r\n49\r\n-12.7');
+ expect(exported).not.toContain('With text');
+ expect(exported).not.toContain('Extra');
+ expect(readSketchDxf(exported)).toEqual(profile);
+});
+
+it('preserves a line and arc guide layer style through export and closure',()=>{
+ const guide=readSketchPathDxf(styledDrawing([openArc,openLine,dxfLine([0,2],[2,2],'Guides')]));
+ expect(guide.dxfLayerStyle).toEqual({color:6,flags:2,lineweight:18,
+  linetype:{name:'Fixture dash',pattern:[1,-.5,0]}});
+ const session=createCadSession();
+ const sketchId=session.addSketch(guide,{name:'Styled guide'});
+ const doc=parseDocument(session.serialize());
+ const exported=new TextDecoder().decode(exportSketchPathDxf(doc,doc.sketches![sketchId]).bytes);
+ expect(readSketchPathDxf(exported)).toEqual(guide);
+ session.closeSketchPath(sketchId,guide,{name:'Styled outline',plane:'XY'});
+ expect(session.state.document.sketches![sketchId].profile).toMatchObject({kind:'outline',dxfLayerStyle:guide.dxfLayerStyle});
+ expect(()=>session.addSketch({...guide,dxfLayerStyle:{...guide.dxfLayerStyle,linetype:{name:'Broken\n0',pattern:[1,0]}}}))
+  .toThrow('Invalid DXF layer style');
 });

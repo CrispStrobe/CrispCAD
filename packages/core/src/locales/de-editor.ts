@@ -356,6 +356,7 @@ export const messages: Record<string,string> = {
   "DXF import accepts closed outlines and circles. Loops inside an outer boundary become holes.": "Der DXF-Import akzeptiert geschlossene Umrisse und Kreise. Geschlossene Konturen innerhalb des Außenumrisses werden zu Löchern.",
   "A region needs one outside boundary and separate holes that do not touch or cross.": "Ein Flächenprofil benötigt einen Außenumriss und getrennte Löcher ohne Berührung oder Überschneidung.",
   "region": "Flächenprofil",
+  "Invalid DXF layer style.": "Ungültiger DXF-Ebenenstil.",
   "Invalid DXF layer name.": "Ungültiger DXF-Ebenenname.",
   "Enter one finite bulge per outline point.": "Gib pro Konturpunkt einen endlichen Wölbungswert ein.",
   "Rounded outline exceeds the curve size or detail limit.": "Die gerundete Kontur überschreitet die Größen- oder Detailgrenze.",

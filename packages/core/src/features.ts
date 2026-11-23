@@ -2,7 +2,9 @@
 import {t} from './i18n.js';
 import {checkDrawingVertexIds} from './drawing-sheet.js';
 import {isSketchPoint,sketchOutline,sketchPath} from './sketch-outline.js';
-import {evaluateSketchRegion,isSketchDxfLayer} from './sketch-region.js';
+import {evaluateSketchRegion} from './sketch-region.js';
+import {checkSketchDxfLayer,sketchDxfLayerFields} from './sketch-dxf-layer.js';
+import type {SketchDxfLayer} from './sketch-dxf-layer.js';
 import type {SketchLoop,SketchOutlineProfile} from './sketch-region.js';
 import type {SketchPoint} from './sketch-outline.js';
 import {constructionInputs} from './document.js';
@@ -15,12 +17,12 @@ export type FeatureScalar = number | string;
 export type SketchPlane = 'XY' | 'XZ' | 'YZ';
 export type SketchPathAnchor = {vertexId:string; x:FeatureScalar; y:FeatureScalar};
 export type SketchPathProfile = {
-  kind:'path'; id:string; points:SketchPoint[]; bulges?:number[]; dxfLayer?:string;
+  kind:'path'; id:string; points:SketchPoint[]; bulges?:number[];
   vertexIds?:string[]; anchors?:SketchPathAnchor[];
-};
+}&SketchDxfLayer;
 export type SketchProfile =
   {kind:'rectangle'; id:string; width:FeatureScalar; depth:FeatureScalar} |
-  {kind:'circle'; id:string; radius:FeatureScalar; segments:number; center?:SketchPoint; dxfLayer?:string} |
+  ({kind:'circle'; id:string; radius:FeatureScalar; segments:number; center?:SketchPoint}&SketchDxfLayer) |
   SketchOutlineProfile |
   SketchPathProfile |
   {kind:'region'; id:string; loops:SketchLoop[]};
@@ -134,7 +136,7 @@ export function resolveSketchPath(profile:SketchPathProfile,doc:Pick<CadDocument
 
 export function closePathProfile(profile:SketchPathProfile,doc:Pick<CadDocument,'parametric'>):Extract<SketchProfile,{kind:'outline'}> {
   const outline=structuredClone({kind:'outline' as const,id:profile.id,points:resolveSketchPath(profile,doc)});
-  return {...outline,...(profile.bulges?{bulges:[...profile.bulges]}:{}),...(profile.dxfLayer?{dxfLayer:profile.dxfLayer}:{})};
+  return {...outline,...(profile.bulges?{bulges:[...profile.bulges]}:{}),...sketchDxfLayerFields(profile)};
 }
 
 function dimension(input:FeatureScalar,doc:Pick<CadDocument,'parametric'>):number {const v=featureValue(input,doc);if(v<.01||v>100000)throw new Error(t('Dimension must be between 0.01 and 100000 mm'));return v;}
@@ -142,7 +144,7 @@ export function evaluateSketch(sketch:PlanarSketch,doc:Pick<CadDocument,'paramet
   try {
     if(!record(sketch)||sketch.version!==1||!idOk(sketch.id)||typeof sketch.name!=='string'||!sketch.name.trim()||sketch.name.length>160||/[\u0000-\u001f]/.test(sketch.name)||!['XY','XZ','YZ'].includes(sketch.plane)||!record(sketch.profile)||!idOk(sketch.profile.id))throw new Error(t('Invalid sketch schema'));
     const p=sketch.profile;
-    if((p.kind==='outline'||p.kind==='circle'||p.kind==='path')&&p.dxfLayer!==undefined&&!isSketchDxfLayer(p.dxfLayer))throw new Error(t('Invalid DXF layer name.'));
+    if(p.kind==='outline'||p.kind==='circle'||p.kind==='path')checkSketchDxfLayer(p);
     if(p.kind==='region')return evaluateSketchRegion(p.loops, value => featureValue(value, doc));
     if(p.kind==='rectangle') {const w=dimension(p.width,doc)/2,d=dimension(p.depth,doc)/2;return {contour:[[-w,-d],[w,-d],[w,d],[-w,d]],edgeIds:['bottom','right','top','left'].map(side=>`${p.id}:${side}`)};}
     if(p.kind==='path')return {contour:sketchPath(resolveSketchPath(p,doc),p.bulges),edgeIds:p.points.slice(0,-1).map((_,i)=>`${p.id}:edge-${i}`)};

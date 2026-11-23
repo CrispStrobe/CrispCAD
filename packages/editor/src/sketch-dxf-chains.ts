@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {isSketchPoint,maxSketchOutlinePoints,sketchOutline,sketchPath,t} from '@brickwright/cad-core';
-import type {SketchPoint} from '@brickwright/cad-core';
+import {isSketchPoint,maxSketchOutlinePoints,sketchDxfLayerFields,sketchOutline,sketchPath,t} from '@brickwright/cad-core';
+import type {SketchDxfLayer,SketchPoint} from '@brickwright/cad-core';
 
-export type DxfEdge = {a:SketchPoint; b:SketchPoint; bulge:number; index:number; dxfLayer?:string};
-type Chain={index:number;points:SketchPoint[];bulges?:number[];dxfLayer?:string};
+export type DxfEdge = {a:SketchPoint; b:SketchPoint; bulge:number; index:number}&SketchDxfLayer;
+type Chain={index:number;points:SketchPoint[];bulges?:number[]}&SketchDxfLayer;
 const endpointTolerance=1e-6;
 
 export function joinDxfEdges(input:DxfEdge[],mode:'outline'|'path') {
@@ -62,7 +62,7 @@ export function joinDxfEdges(input:DxfEdge[],mode:'outline'|'path') {
   if(closed&&points.length<(curved?2:3))throw invalid();
   const normalized=closed?sketchOutline(points,curves):sketchPath(points,curves);
   return {index:first.index,points:closed&&!curved?normalized:points,
-   ...(curves?{bulges:curves}:{}),...(first.dxfLayer?{dxfLayer:first.dxfLayer}:{})};
+   ...(curves?{bulges:curves}:{}),...sketchDxfLayerFields(first)};
  }
 
  if(!closed){

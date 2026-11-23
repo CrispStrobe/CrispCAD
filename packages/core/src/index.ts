@@ -10,6 +10,7 @@ export * from './fragments.js';
 export * from './features.js';
 export * from './sketch-outline.js';
 export * from './sketch-region.js';
+export * from './sketch-dxf-layer.js';
 export * from './templates.js';
 export * from './code.js';
 

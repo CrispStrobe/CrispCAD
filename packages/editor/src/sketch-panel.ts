@@ -5,7 +5,7 @@ import {mountDxfImportControls} from './dxf-import-controls.js';
 import {toolIcon} from './icons.js';
 import { t } from '@brickwright/cad-core';
 // SPDX-License-Identifier: BSD-3-Clause
-import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchRegionLoops,newId,sketchBulgeMidpoint,trimSketchProfile} from '@brickwright/cad-core';
+import {createCadSession,evaluateExtrusion,evaluateRevolution,featureValue,maxSketchRegionLoops,newId,sketchBulgeMidpoint,sketchDxfLayerFields,trimSketchProfile} from '@brickwright/cad-core';
 import type {SketchLoop,SketchPoint,CadSession,FeatureScalar,SketchPlane,SketchProfile,CadDocument,PlanarSketch} from '@brickwright/cad-core';
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
 const scalar=(source:string):FeatureScalar=>source.trim()!==''&&Number.isFinite(Number(source))?Number(source):source.trim();
@@ -81,7 +81,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
   const formatLoops=(loops:SketchLoop[])=>loops.map(loop=>loop.kind==='circle'
    ? 'CIRCLE '+[...loop.center,loop.radius].join(', ')
    : formatPoints(loop.points,loop.bulges).join(' | ')).join('\n');
-  let singleDxfLayer=profile?.kind==='outline'||profile?.kind==='circle'?profile.dxfLayer:undefined;
+  let singleDxfLayer=sketchDxfLayerFields(profile?.kind==='outline'||profile?.kind==='circle'?profile:undefined);
   let regionLoops=profile?.kind==='region'?profile.loops:[];
   region.value=regionLoops.length?formatLoops(regionLoops):'0, 0 | 40, 0 | 40, 30 | 0, 30\nCIRCLE 10, 15, 2';
   regionLabel.append(region,element('small',t('One loop per line. Separate outline points with | and add an optional bulge for arcs. For circles type CIRCLE X, Y, radius. Circle values can use named dimensions.')));
@@ -191,7 +191,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     const loops=rows.map((row,i):SketchLoop=>{
      const original=regionLoops[i];
      const id=original?.id??'region-loop-'+(i+1);
-     const layer=original?.dxfLayer?{dxfLayer:original.dxfLayer}:{};
+     const layer=sketchDxfLayerFields(original);
      const circle=/^CIRCLE\s+(.+)$/i.exec(row.trim());
      if(circle){
       const values=circle[1].split(',');
@@ -202,14 +202,13 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
     });
     return {kind:'region',id,loops};
    }
-   const layer=singleDxfLayer?{dxfLayer:singleDxfLayer}:{};
    if(kind.value==='outline'){
     const rows=points.value.trim().split(/\r?\n/);
-    return {kind:'outline',id,...parseOutline(rows),...layer};
+    return {kind:'outline',id,...parseOutline(rows),...singleDxfLayer};
    }
    if(kind.value==='rectangle')return {kind:'rectangle',id,width:scalar(width.value),depth:scalar(depth.value)};
    const location=parsePoint(center.value);
-   return {kind:'circle',id,radius:scalar(radius.value),segments:profile?.kind==='circle'?profile.segments:64,...layer,
+   return {kind:'circle',id,radius:scalar(radius.value),segments:profile?.kind==='circle'?profile.segments:64,...singleDxfLayer,
     ...(profile?.kind==='circle'&&profile.center||location.some(Boolean)?{center:location}:{})};
   }
   const readForm=()=>({
@@ -573,7 +572,7 @@ export function mountSketchPanel(parent:HTMLElement,session:CadSession,evaluate:
       ...doc,sketches:{[id]:{version:1,id,name:'DXF',plane:'XY',profile:imported}}
      });
      kind.value=imported.kind;
-     singleDxfLayer=imported.kind==='outline'||imported.kind==='circle'?imported.dxfLayer:undefined;
+     singleDxfLayer=sketchDxfLayerFields(imported.kind==='outline'||imported.kind==='circle'?imported:undefined);
      if(imported.kind==='region'){
       regionLoops=imported.loops;
       region.value=formatLoops(regionLoops);

@@ -75,13 +75,20 @@ export. Increasing spacing past the plate edge produces an error before
 committing the edit. Import remains a draft until
 Create. Saving and reopening retains the profile, and DXF export writes native
 circles and closed polylines at 1:1 scale. It retains entity layer names and
-polyline bulges. Add the signed bulge as a third vertex value to edit a curve.
+polyline bulges. For selected layers, DXF exchange retains indexed and RGB
+colors, on/off and freeze/lock flags, the plotting flag, lineweight and simple
+dash, gap and dot patterns. Dash lengths convert with the drawing units.
+These properties travel with the sketch and do not change its solid geometry.
+Complex text and shape linetypes, entity-level overrides and plot styles remain
+outside the layer round trip. [Autodesk DXF layer records](https://help.autodesk.com/cloudhelp/2021/ENU/AutoCAD-DXF/files/GUID-D94802B0-8BE8-4AC9-8054-17197688AFDB.htm) · [Autodesk DXF linetype records](https://help.autodesk.com/cloudhelp/2020/ENU/AutoCAD-DXF/files/GUID-F57A316C-94A2-416C-8280-191E34B182AC.htm)
+
+Add the signed bulge as a third vertex value to edit a curve.
 The curve stays analytic in DXF, and the modeling mesh approximates it using
 chords with up to 0.025 mm of sagitta error within the supported detail budget.
 
 The current region workflow rejects touching, crossing, nested and disjoint
 loops. Widths,
-layer styles, paper-space entities on selected layers, tilted entities,
+paper-space entities on selected layers, tilted entities,
 DWG and STEP remain open.
 
 ## Outline point editing

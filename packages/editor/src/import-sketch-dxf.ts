@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {evaluateSketchRegion, isSketchDxfLayer, isSketchPoint, maxSketchRegionLoops, maxSketchOutlinePoints, sketchOutline, sketchPath, t} from '@brickwright/cad-core';
 import type {SketchLoop, SketchPoint, SketchProfile} from '@brickwright/cad-core';
+import {readDxfLayerStyles} from './dxf-layer-tables.js';
+import type {DxfGroup as Group} from './dxf-layer-tables.js';
 import {joinDxfEdges} from './sketch-dxf-chains.js';
 import type {DxfEdge} from './sketch-dxf-chains.js';
 
@@ -8,7 +10,6 @@ export const maxSketchDxfBytes = 1024 * 1024;
 type DxfLoop = Omit<Extract<SketchLoop,{kind:'outline'}>,'id'> |
   (Omit<Extract<SketchLoop,{kind:'circle'}>,'id'|'center'> & {center:SketchPoint});
 type DxfPath=Extract<SketchProfile,{kind:'path'}>;
-type Group = {code: number; value: string};
 const mmPerUnit: Record<number, number> = {1: 25.4, 2: 304.8, 4: 1, 5: 10, 6: 1000};
 
 type DxfEntity={kind:string;fields:Group[];layer:string};
@@ -89,16 +90,17 @@ export function prepareSketchDxf(source:string){
     if([...keys].some(key=>!names.has(key)))throw new Error(t('Selected DXF layers are unavailable in this file.'));
     return entities.filter(entity=>keys.has(entity.layer.toUpperCase()));
   };
+  const tables=sections.get('TABLES')??[];
   return {
     layers:[...names.values()] as readonly string[],
-    outline:(assumeMm=false,selected?:readonly string[])=>readDxf(pick(selected),units,assumeMm,'outline'),
-    path:(assumeMm=false,selected?:readonly string[])=>readDxf(pick(selected),units,assumeMm,'path')
+    outline:(assumeMm=false,selected?:readonly string[])=>readDxf(pick(selected),tables,units,assumeMm,'outline'),
+    path:(assumeMm=false,selected?:readonly string[])=>readDxf(pick(selected),tables,units,assumeMm,'path')
   };
 }
 
-function readDxf(entities:DxfEntity[],units:number,assumeMm:boolean,mode:'path'):DxfPath;
-function readDxf(entities:DxfEntity[],units:number,assumeMm:boolean,mode:'outline'):SketchProfile;
-function readDxf(entities:DxfEntity[],units:number,assumeMm:boolean,mode:'outline'|'path'):SketchProfile{
+function readDxf(entities:DxfEntity[],tables:Group[],units:number,assumeMm:boolean,mode:'path'):DxfPath;
+function readDxf(entities:DxfEntity[],tables:Group[],units:number,assumeMm:boolean,mode:'outline'):SketchProfile;
+function readDxf(entities:DxfEntity[],tables:Group[],units:number,assumeMm:boolean,mode:'outline'|'path'):SketchProfile{
   const closed=mode==='outline';
   const unsupported=()=>new Error(closed
     ?t('Use circles, closed lightweight polylines, or closed chains of 2D lines and arcs. Exclude layers with unsupported entities or remove those entities before importing.')
@@ -108,13 +110,15 @@ function readDxf(entities:DxfEntity[],units:number,assumeMm:boolean,mode:'outlin
     ?t('This DXF has no units. If the coordinates are in millimetres, enable the missing-units option and import again.')
     :t('DXF import supports millimetres, centimetres, metres, inches and feet.'));
   if(!entities.length||entities.length>maxSketchRegionLoops*(maxSketchOutlinePoints+1))throw unsupported();
+  const styles=readDxfLayerStyles(tables,scale);
   const indexed:({index:number}&DxfLoop)[]=[];
   const edges:DxfEdge[]=[];
   const paths:DxfPath[]=[];
   for(const [index,{kind,fields,layer}] of entities.entries()){
     if(!['CIRCLE','ARC','LINE','LWPOLYLINE'].includes(kind)||!closed&&kind==='CIRCLE')throw unsupported();
     if(!isSketchDxfLayer(layer))throw new Error(t('Invalid DXF layer name.'));
-    const dxfLayer=layer==='0'?{}:{dxfLayer:layer};
+    const style=styles.get(layer.toUpperCase());
+    const dxfLayer={...(layer==='0'?{}:{dxfLayer:layer}),...(style?{dxfLayerStyle:style}:{})};
 
     const read = (code: number, fallback?: number) => {
       const matches = fields.filter(group => group.code === code);
@@ -185,8 +189,8 @@ function readDxf(entities:DxfEntity[],units:number,assumeMm:boolean,mode:'outlin
   if(!closed){
     if(paths.length===1&&!edges.length)return paths[0];
     if(paths.length||!edges.length)throw unsupported();
-    const {points,bulges,dxfLayer}=joinDxfEdges(edges,'path')[0];
-    return {kind:'path',id:'dxf-profile',points,...(bulges?{bulges}:{}),...(dxfLayer?{dxfLayer}:{})};
+    const {points,bulges,dxfLayer,dxfLayerStyle}=joinDxfEdges(edges,'path')[0];
+    return {kind:'path',id:'dxf-profile',points,...(bulges?{bulges}:{}),...(dxfLayer?{dxfLayer}:{}),...(dxfLayerStyle?{dxfLayerStyle}:{})};
   }
   indexed.push(...joinDxfEdges(edges,'outline').map(loop=>({...loop,kind:'outline' as const})));
   const loops=indexed.sort((a,b)=>a.index-b.index).map(({index: _index,...loop},i)=>({...loop,id:'dxf-loop-'+(i+1)}));

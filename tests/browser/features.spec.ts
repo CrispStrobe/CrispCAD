@@ -83,7 +83,11 @@ test('DXF plate previews two open mounting holes and retains their edited dimens
  await page.getByRole('button', {name: 'Sketch', exact: true}).click();
  const sketch = page.getByRole('dialog', {name: 'Sketch and extrusion'});
  await sketch.getByText('Import DXF outline', {exact: true}).click();
- const text = ['0','SECTION','2','HEADER','9','$INSUNITS','70',4,'0','ENDSEC','0','SECTION','2','ENTITIES',
+ const text = ['0','SECTION','2','HEADER','9','$INSUNITS','70',4,'0','ENDSEC',
+  '0','SECTION','2','TABLES','0','TABLE','2','LAYER',
+  '0','LAYER','2','Outline','70',4,'62',5,'420',16711935,'370',35,
+  '0','LAYER','2','Bores','70',0,'62',1,'290',0,
+  '0','ENDTAB','0','ENDSEC','0','SECTION','2','ENTITIES',
   '0','CIRCLE','8','Bores','10',10,'20',15,'40',2,
   '0','LWPOLYLINE','8','Outline','90',4,'70',1,'10',0,'20',0,'10',40,'20',0,'10',40,'20',30,'10',0,'20',30,
   '0','CIRCLE','8','Bores','10',30,'20',15,'40',3,
