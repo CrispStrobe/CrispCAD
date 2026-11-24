@@ -15,6 +15,8 @@ export interface ModelLibraryProject {
 export interface ModelLibraryOptions {
  catalogue?:ModelLibraryCatalogue;
  localFiles?:ReadonlyMap<string,Uint8Array>;
+ /** Bundled files can be materialized on insertion. Availability checks do not read bytes. */
+ bundledFiles?:Pick<ReadonlyMap<string,Uint8Array>,'get'|'has'>;
  /** Host-reviewed thumbnails keyed by the exact original source SHA-256. */
  previews?:ReadonlyMap<string,string>;
  /** Asset ID takes precedence over a generic SPDX notice (copyright holders differ). */
@@ -40,6 +42,8 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
  }).finally(()=>{archivePreviewLoading=undefined;}));
  let loading:Promise<void>|undefined,loaded=!options?.load;
  const localFiles=new Map([...options?.localFiles??[]].map(([path,bytes])=>[path,bytes.slice()]));
+ const hasLocalFile=(path:string)=>localFiles.has(path)||options?.bundledFiles?.has(path)===true;
+ const readLocalFile=(path:string)=>localFiles.get(path)??options?.bundledFiles?.get(path);
  let disposed=false,working=false,selected:ModelLibraryAsset|undefined,archiveSelection:ModelLibraryArchive['folders'][number]|undefined,controller:AbortController|undefined,selectedProject:ModelLibraryProject|undefined;
  const dialog=el('dialog');dialog.className='model-library-dialog';dialog.setAttribute('aria-label',t('Model library'));
  const heading=el('header'),title=el('h2',t('Model library')),close=el('button','×');close.type='button';close.className='library-close';close.setAttribute('aria-label',t('Close model library'));close.title=t('Close model library');close.onclick=()=>{controller?.abort();dialog.close();};heading.append(title,close);
@@ -249,14 +253,14 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
   const {label,notes}=optionalNotes(),offlineLabel=el('label',t('Use cached files only')),offline=el('input');offline.type='checkbox';offlineLabel.prepend(offline);technical.append(offlineLabel);
   const identity=el('pre'),conversion=el('div'),collision=el('section');collision.setAttribute('aria-label',t('Recorded collision evidence'));technical.append(identity,conversion,collision);
   const insert=el('button',t('Insert selected STL'));insert.type='button';insert.className='primary library-insert';const eligibility=el('p');eligibility.className='library-eligibility';
-  function refresh(){const chosen=choices[Number(files.value)],q=asset!.quality,admitted=!!chosen&&(!chosen.file.path||localFiles.has(chosen.file.path))&&chosen.file.bytes<=MODEL_LIBRARY_MESH_MAX_BYTES&&!!q?.screeningPolicy&&chosen.file.bytes<=q.screeningPolicy.maxAnalysisBytes&&q.fileSha256===chosen.file.sha256&&q.parseable&&q.closedPositiveVolume&&q.withinSizeLimits&&q.withinTriangleLimits;
+  function refresh(){const chosen=choices[Number(files.value)],q=asset!.quality,admitted=!!chosen&&(!chosen.file.path||hasLocalFile(chosen.file.path))&&chosen.file.bytes<=MODEL_LIBRARY_MESH_MAX_BYTES&&!!q?.screeningPolicy&&chosen.file.bytes<=q.screeningPolicy.maxAnalysisBytes&&q.fileSha256===chosen.file.sha256&&q.parseable&&q.closedPositiveVolume&&q.withinSizeLimits&&q.withinTriangleLimits;
    insert.disabled=working||!admitted;identity.textContent=chosen?`${chosen.file.sha256}\n${chosen.file.url??chosen.file.path}`:'';conversion.replaceChildren();
    if(chosen&&q?.fileSha256===chosen.file.sha256&&q.screeningPolicy){const policy=q.screeningPolicy;conversion.append(el('h4',t('Selected STL conversion to millimetres, Z up')),el('pre',Array.from({length:4},(_,row)=>Array.from({length:4},(_,column)=>String(policy.toMillimetresZUp[column*4+row])).join('  ')).join('\n')),el('p',t`Curated limits: ${policy.maxTriangles} triangles; ${policy.maxExtentMm} mm span per axis; ${policy.maxAnalysisBytes} analysis bytes. Translation is preserved; no centering or repair.`));}
    eligibility.textContent=admitted?'':t('Insertion unavailable: select an STL with passing quality, a recorded conversion and at most 16 MiB.');}
   files.onchange=()=>{renderCollisionReport(collision,asset,choices[Number(files.value)]?.file);refresh();};
   insert.onclick=async()=>{if(insert.disabled)return;const chosen=choices[Number(files.value)],initial=session.state,modificationNotes=notes.value.trim()||'Inserted without manual changes; recorded millimetres/Z-up conversion applied.',offlineOnly=offline.checked;
    working=true;controller=new AbortController();file.disabled=search.disabled=filter.disabled=files.disabled=notes.disabled=offline.disabled=true;refresh();refreshCards();status.textContent=t('Verifying selected model…');
-   try{const local=chosen.file.path?localFiles.get(chosen.file.path):undefined;
+   try{const local=chosen.file.path?readLocalFile(chosen.file.path):undefined;
     const fetched=local?{bytes:local.slice(),cached:true}:await fetchModelLibraryFile(catalogue,chosen.selection,{cache:options?.cache??noCache,fetch:options?.fetch,offline:offlineOnly,signal:controller.signal,maxBytes:MODEL_LIBRARY_MESH_MAX_BYTES});if(disposed)throw new Error(t('Editor was disposed'));if(session.state.document!==initial.document||session.state.revision!==initial.revision)throw new Error(t('The model changed while loading this library file. Retry insertion.'));
     await insertModelLibrarySTL(session,catalogue,chosen.selection,fetched.bytes,{evaluate:async doc=>{const result=await evaluate(doc);if(disposed)throw new Error(t('Editor was disposed'));return result;},toMillimetresZUp:asset.quality!.screeningPolicy!.toMillimetresZUp,checkedOn:new Date().toISOString().slice(0,10),modificationNotes,signal:controller.signal});
     status.textContent=fetched.cached?t('Inserted with provenance. Verified file is cached for offline reuse.'):t('Inserted with provenance. File could not be cached for offline reuse.');try{await inserted();}catch{if(!disposed)status.textContent=t('Model inserted with provenance; viewport refresh failed. Close this panel to inspect the editor status.');}
@@ -277,14 +281,16 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
   const originals=el('details'),summary=el('summary',t('Original source files'));originals.append(summary,upstream,download,identity);details.append(select,offlineLabel,unitLabel,axisLabel,insert,eligibility,originals);refresh();
  }
  function renderSource(asset:ModelLibraryAsset,source:ModelLibraryFile,technical:HTMLElement){
-  const bytes=source.path?localFiles.get(source.path):undefined,collision=el('section');collision.setAttribute('aria-label',t('Recorded collision evidence'));renderCollisionReport(collision,asset,source);technical.append(collision,el('p',`${source.format} · ${source.bytes} B · ${source.path}`),el('pre',source.sha256));
+  const sourcePath=source.path,available=!!sourcePath&&hasLocalFile(sourcePath);
+  const collision=el('section');collision.setAttribute('aria-label',t('Recorded collision evidence'));renderCollisionReport(collision,asset,source);technical.append(collision,el('p',`${source.format} · ${source.bytes} B · ${source.path}`),el('pre',source.sha256));
   if(source.format==='openscad')technical.append(el('p',t('OpenSCAD source is converted to editable CAD Script using the supported subset. The original artifact hash is retained.')));
   if(source.format==='jscad')technical.append(el('p',t('JSCAD is converted with default parameters to an editable CAD Script snapshot. Original JavaScript parameters and face colours are not retained; unsupported features are refused.')));
-  const dependenciesAvailable=asset.sourceBundle?.dependencies.every(dependency=>localFiles.has(dependency.file.path!))??true;
-  const {label,notes}=optionalNotes(),insert=el('button',t('Insert editable source'));insert.type='button';insert.className='primary library-insert';const refresh=()=>{insert.disabled=working||!bytes||!dependenciesAvailable;};
-  if(!bytes||!dependenciesAvailable)details.append(el('p',t('Editable source is not bundled in this host.')));
-  insert.onclick=async()=>{if(insert.disabled||!bytes)return;working=true;controller=new AbortController();file.disabled=search.disabled=filter.disabled=notes.disabled=true;refresh();refreshCards();status.textContent=t('Verifying selected model…');
-   try{await insertModelLibrarySource(session,catalogue,{assetId:asset.id,file:source===asset.original?'original':'editableSource'},bytes,{signal:controller.signal,sourceFiles:localFiles,modificationNotes:notes.value.trim()||'Inserted with default parameters; no manual changes.',evaluate:async doc=>{const result=await evaluate(doc);if(disposed)throw new Error(t('Editor was disposed'));return result;}});status.textContent=t('Editable source inserted with provenance. Available offline.');try{await inserted();}catch{if(!disposed)status.textContent=t('Model inserted with provenance; viewport refresh failed. Close this panel to inspect the editor status.');}
+  const dependenciesAvailable=asset.sourceBundle?.dependencies.every(dependency=>hasLocalFile(dependency.file.path!))??true;
+  const {label,notes}=optionalNotes(),insert=el('button',t('Insert editable source'));insert.type='button';insert.className='primary library-insert';const refresh=()=>{insert.disabled=working||!available||!dependenciesAvailable;};
+  if(!available||!dependenciesAvailable)details.append(el('p',t('Editable source is not bundled in this host.')));
+  insert.onclick=async()=>{if(insert.disabled||!sourcePath)return;working=true;controller=new AbortController();file.disabled=search.disabled=filter.disabled=notes.disabled=true;refresh();refreshCards();status.textContent=t('Verifying selected model…');
+   try{const bytes=readLocalFile(sourcePath);if(!bytes)throw new Error(t('Editable source is not bundled in this host.'));
+    await insertModelLibrarySource(session,catalogue,{assetId:asset.id,file:source===asset.original?'original':'editableSource'},bytes,{signal:controller.signal,sourceFiles:{get:readLocalFile},modificationNotes:notes.value.trim()||'Inserted with default parameters; no manual changes.',evaluate:async doc=>{const result=await evaluate(doc);if(disposed)throw new Error(t('Editor was disposed'));return result;}});status.textContent=t('Editable source inserted with provenance. Available offline.');try{await inserted();}catch{if(!disposed)status.textContent=t('Model inserted with provenance; viewport refresh failed. Close this panel to inspect the editor status.');}
    }catch(error){if(!disposed)report(error);}finally{working=false;controller=undefined;file.disabled=search.disabled=filter.disabled=notes.disabled=false;refresh();refreshCards();}
   };details.append(label,insert);refresh();
  }

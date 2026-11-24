@@ -1,12 +1,30 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import type {ModelLibraryAsset} from '@brickwright/cad-core';
-export function bundledSourceFiles(sources:Record<string,string>):Map<string,Uint8Array>{
- const files=new Map<string,Uint8Array>();
+export function bundledLibraryFiles(sources:Record<string,string>,meshes:Record<string,string>){
+ const readers=new Map<string,()=>Uint8Array>();
+ const encoder=new TextEncoder();
  for(const [path,text] of Object.entries(sources)){
   const index=path.indexOf('/sources/');if(index<0)throw new Error('Unexpected bundled source path');
-  files.set(path.slice(index+1),new TextEncoder().encode(text));
+  readers.set(path.slice(index+1),()=>encoder.encode(text));
  }
- return files;
+ for(const [path,dataUrl] of Object.entries(meshes)){
+  const index=path.indexOf('/meshes/');if(index<0)throw new Error('Unexpected bundled mesh path');
+  readers.set(path.slice(index+1),()=>{
+   const encoded=/^data:[^,]*;base64,(.*)$/.exec(dataUrl)?.[1];
+   if(!encoded)throw new Error('Expected an inline bundled library mesh.');
+   const binary=atob(encoded),bytes=new Uint8Array(binary.length);
+   for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+   return bytes;
+  });
+ }
+ return {
+  has:(path:string)=>readers.has(path),
+  get:(path:string)=>readers.get(path)?.(),
+  materialize:()=>new Map([...readers].map(([path,read])=>[path,read()] as const)),
+ };
+}
+export function bundledSourceFiles(sources:Record<string,string>):Map<string,Uint8Array>{
+ return bundledLibraryFiles(sources,{}).materialize();
 }
 export function bundledAssetLicenceTexts(assets:readonly ModelLibraryAsset[],documents:Record<string,string>):Map<string,string>{
  const notices=new Map<string,string>();

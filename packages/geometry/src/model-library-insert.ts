@@ -82,7 +82,7 @@ export interface ModelLibrarySourceInsertOptions {
   signal?: AbortSignal;
   modificationNotes: string;
   /** Exact local dependency bytes; every declared identity is verified before conversion. */
-  sourceFiles?: ReadonlyMap<string, Uint8Array>;
+  sourceFiles?: Pick<ReadonlyMap<string, Uint8Array>, 'get'>;
 }
 /** Verify and compile an original local source, evaluate its complete candidate,
  * then retain CAD Script as an editable code node with provenance in one edit.

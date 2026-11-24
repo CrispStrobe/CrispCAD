@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 /// <reference path="../../packages/editor/src/library-preview-assets.d.ts" />
-import {bundledSourceFiles,bundledAssetLicenceTexts} from './model-library-files.js';
+import {bundledLibraryFiles,bundledAssetLicenceTexts} from './model-library-files.js';
 import {createLocalModelLibraryCatalogue, parseModelLibraryCatalogue, validateModelLibraryCatalogue} from '@brickwright/cad-core';
 import manifestText from '../../library/examples-manifest.json?raw';
 import supportedText from '../../library/supported-models-manifest.json?raw';
@@ -21,13 +21,8 @@ import mitNotice from '../../library/evidence/jscad-LICENSE.txt?raw';
 const sources = import.meta.glob(['../../library/sources/**/*.cad','../../library/sources/**/*.scad','../../library/sources/**/*.js','../../library/sources/**/*.dat'], {query:'?raw',import:'default',eager:true}) as Record<string,string>;
 const licenceDocuments = import.meta.glob(['../../library/evidence/*.txt','../../library/evidence/*.md'], {query:'?raw',import:'default',eager:true}) as Record<string,string>;
 const meshData = import.meta.glob('../../library/meshes/ldraw/*.stl', {query: '?url&inline', import: 'default', eager: true}) as Record<string, string>;
-export function createBundledModelLibrary() {
-  const localFiles = bundledSourceFiles(sources);
-  for (const [path, dataUrl] of Object.entries(meshData)) {
-    const encoded = /^data:[^,]*;base64,(.*)$/.exec(dataUrl)?.[1];
-    if (!encoded) throw new Error('Expected an inline bundled library mesh.');
-    localFiles.set(path.slice(path.indexOf('/meshes/') + 1), Uint8Array.from(atob(encoded), character => character.charCodeAt(0)));
-  }
+export function createBundledModelLibraryOptions() {
+  const bundledFiles = bundledLibraryFiles(sources,meshData);
   const examples = createLocalModelLibraryCatalogue(JSON.parse(manifestText));
   const fixtures = createLocalModelLibraryCatalogue(JSON.parse(fixtureText));
   const corpus = createLocalModelLibraryCatalogue(JSON.parse(corpusText));
@@ -49,5 +44,10 @@ export function createBundledModelLibrary() {
   if (!checked.valid) throw new Error(checked.errors.join(' '));
   const previews=new Map<string,string>(Object.entries(previewData.previews));
   for(const asset of checked.catalogue.assets)if(!previews.has(asset.original.sha256))throw new Error('Missing bundled model preview: '+asset.id);
-  return {catalogue:checked.catalogue,localFiles,previews,licenceTexts:new Map([['BSD-3-Clause',bsdNotice],['CC0-1.0',cc0Notice],['MIT',mitNotice],...bundledAssetLicenceTexts([manifestText,fixtureText,supportedText,corpusText,a2dText,sconText,jscadText,ldrawText,ldrawBatchText,seedText].flatMap(text=>JSON.parse(text).assets),licenceDocuments)])};
+  return {catalogue:checked.catalogue,bundledFiles,previews,licenceTexts:new Map([['BSD-3-Clause',bsdNotice],['CC0-1.0',cc0Notice],['MIT',mitNotice],...bundledAssetLicenceTexts([manifestText,fixtureText,supportedText,corpusText,a2dText,sconText,jscadText,ldrawText,ldrawBatchText,seedText].flatMap(text=>JSON.parse(text).assets),licenceDocuments)])};
+}
+
+export function createBundledModelLibrary() {
+  const {bundledFiles,...options}=createBundledModelLibraryOptions();
+  return {...options,localFiles:bundledFiles.materialize()};
 }
