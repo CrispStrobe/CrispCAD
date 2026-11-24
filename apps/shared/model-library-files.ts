@@ -33,6 +33,7 @@ export function bundledAssetLicenceTexts(assets:readonly ModelLibraryAsset[],doc
   notices.set(path.slice(index+1),text);
  }
  const byAsset=new Map<string,string>();
+ const encoder=new TextEncoder(),lengths=new Map<string,number>();
  for(const asset of assets){
   const declared=(asset.licence as unknown as {localEvidence?:unknown}).localEvidence;
   const references=Array.isArray(declared)?declared:declared&&typeof declared==='object'?[declared]:[];
@@ -40,7 +41,12 @@ export function bundledAssetLicenceTexts(assets:readonly ModelLibraryAsset[],doc
   const texts=references.map(reference=>{
    if(!reference||typeof reference!=='object'||typeof reference.path!=='string')throw new Error('Invalid bundled licence reference: '+asset.id);
    const text=notices.get(reference.path);
-   if(text===undefined||typeof reference.bytes==='number'&&new TextEncoder().encode(text).length!==reference.bytes)throw new Error('Missing or changed bundled licence evidence: '+asset.id);
+   if(text===undefined)throw new Error('Missing or changed bundled licence evidence: '+asset.id);
+   if(typeof reference.bytes==='number'){
+    let length=lengths.get(reference.path);
+    if(length===undefined){length=encoder.encode(text).length;lengths.set(reference.path,length);}
+    if(length!==reference.bytes)throw new Error('Missing or changed bundled licence evidence: '+asset.id);
+   }
    return text;
   });
   byAsset.set(asset.id,texts.join('\n\n'));

@@ -31,6 +31,18 @@ it('refuses missing or substituted declared notices instead of falling back to a
  const wrong=documentMap();delete wrong['../../library/'+asset.licence.localEvidence[0].path];expect(()=>bundledAssetLicenceTexts([asset],wrong)).toThrow('Missing or changed bundled licence evidence');
  wrong['../../library/'+asset.licence.localEvidence[0].path]=read(mit.licence.localEvidence[0].path).toString();expect(()=>bundledAssetLicenceTexts([asset],wrong)).toThrow('Missing or changed bundled licence evidence');
 });
+it('measures a shared notice once and checks every asset against its declared length',()=>{
+ const documentMapForAsset=Object.fromEntries(asset.licence.localEvidence.map((e:any)=>['../../library/'+e.path,read(e.path).toString()]));
+ const encode=vi.spyOn(TextEncoder.prototype,'encode');
+ try{
+  const copied={...asset,id:'same-notice'};
+  const checked=bundledAssetLicenceTexts([asset,copied],documentMapForAsset);
+  expect(checked.get(copied.id)).toBe(checked.get(asset.id));
+  expect(encode).toHaveBeenCalledTimes(asset.licence.localEvidence.length);
+  const wrong={...copied,licence:{...copied.licence,localEvidence:copied.licence.localEvidence.map((e:any)=>({...e,bytes:e.bytes+1}))}};
+  expect(()=>bundledAssetLicenceTexts([asset,wrong],documentMapForAsset)).toThrow('Missing or changed bundled licence evidence');
+ }finally{encode.mockRestore();}
+});
 it('keeps tampered bundled source refusal before evaluation, preserving the document and redo history',async()=>{
  const files=bundledSourceFiles({['../../library/'+asset.original.path]:read(asset.original.path).toString()}),bad=files.get(asset.original.path)!.slice();bad[0]^=1;const session=createCadSession();session.rename('Retained redo');const renamed=session.serialize();session.undo();const before=session.serialize();let calls=0;
  try{await expect(insertModelLibrarySource(session,createLocalModelLibraryCatalogue(manifest),{assetId:asset.id,file:'original'},bad,{evaluate:async()=>{calls++;throw new Error('Must not evaluate');},modificationNotes:'Tamper refusal'})).rejects.toThrow('SHA-256 mismatch');expect(calls).toBe(0);expect(session.serialize()).toBe(before);session.redo();expect(session.serialize()).toBe(renamed);}finally{session.dispose();}

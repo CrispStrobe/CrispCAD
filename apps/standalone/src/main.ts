@@ -21,6 +21,7 @@ const STORAGE_KEY = 'brickwright-cad:standalone:v1';
 const root = document.querySelector<HTMLElement>('#cad-root')!; const badge = document.querySelector<HTMLElement>('#save-state')!;
 const hostActions=document.querySelector<HTMLElement>('#host-actions')!;
 let editor:CadEditor|undefined;let saveToken=0;let lastSave:Promise<void>=Promise.resolve();let restoring:ModelRevision|undefined;
+let bundledModelLibrary:ReturnType<typeof createBundledModelLibraryOptions>|undefined;
 const historyUI=mountHistoryUI(()=>editor,async revision=>{
  const current=editor;if(!current)return;const expectedRevision=current.session.state.revision;const store=await historyStore;
  await store.append(current.session.state.document,'Before restoring an iteration');
@@ -74,7 +75,7 @@ function start(doc?: CadDocument) {
   try {
     editor = mountCadEditor(root, {
       colorMode,
-      modelLibrary:{cache:createModelLibraryBrowserCache(),load:async()=>createBundledModelLibraryOptions()},
+      modelLibrary:{cache:createModelLibraryBrowserCache(),load:async()=>bundledModelLibrary??=createBundledModelLibraryOptions()},
       document: doc, wasmURL: new URL('../cad-assets/manifold.wasm', import.meta.url).href,
       headerContent:hostActions,surfaceSnap,onSurfaceSnapChange:saveSurfaceSnap,navigationPreset,resizeControls,gridDisplay,rightPane,shapeBrowserLayout,onShapeBrowserLayoutChange:saveShapeBrowser,nativeMenus:desktop.available,
       showTransformReadout:showReadout,onTransformReadoutChange:saveReadout,appearance,
