@@ -176,7 +176,8 @@ Product entry additionally needs:
 
 1. Commands such as `fillet`, `shell` and `export step` check whether the exact
    backend can handle the request and route to it. Otherwise they fail with a
-   clear diagnostic. *Open: waits for the licence decision below.*
+   clear diagnostic. *Open: follows Phase 2b (kernel as a lab package, then
+   product entry).*
 2. Recorded commands carry the kernel that built them. Replay rejects a kernel
    change. *Open: depends on step 1.*
 3. One registry in `packages/core`, used by four front ends: the terminal, the
