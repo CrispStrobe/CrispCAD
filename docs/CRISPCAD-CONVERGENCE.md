@@ -176,16 +176,35 @@ Product entry additionally needs:
 
 1. Commands such as `fillet`, `shell` and `export step` check whether the exact
    backend can handle the request and route to it. Otherwise they fail with a
-   clear diagnostic.
+   clear diagnostic. *Open: follows Phase 2b (kernel as a lab package, then
+   product entry).*
 2. Recorded commands carry the kernel that built them. Replay rejects a kernel
-   change.
+   change. *Open: depends on step 1.*
 3. One registry in `packages/core`, used by four front ends: the terminal, the
    MCP server (`cad_inspect`, `cad_check_interference`, `cad_render`,
    `cad_check_printability`), a headless CLI, and the command palette. The lab's
    CLI verbs (`evaluate`, `export`, `dfm`, `interference`) are the reference for
-   the CLI.
+   the CLI. **Done 2026-11-24** (branch `feat/command-registry`):
+   - `packages/core/src/command-registry.ts`: names, aliases, i18n descriptions,
+     typed arguments, `editsModel`, `headless`, palette label/availability;
+     shared prompts and executors (`prepareCommand`) and a headless runner
+     (`createCommandRunner`). The coordinate parser moved to
+     `command-arguments.ts`.
+   - Terminal: execution, help and completion come from the registry, with no
+     change in behaviour, aliases or Undo.
+   - Command palette: labels, order, keywords and availability come from it.
+   - MCP: `cad_list_commands` and `cad_run_commands` (a script commits as one
+     validated history step).
+   - CLI: `apps/cli/crispcad.mjs` with `commands`, `run`, `inspect`,
+     `interference`, `printability`, on top of the MCP host.
+   - View/camera commands stay editor-side but are described in the registry.
 4. Durable journal export as CAD Script, the language of the code workspace.
    This closes the "portable multi-command scripts" item from #78.
+   **Done 2026-11-24**: `journal export [cadscript|replay]` in the terminal and
+   `createCommandJournal` / `exportCommandJournal` in core. Plain primitives
+   and their later edits become CAD Script programs; everything else stays as
+   marked non-portable replay text. The journal is outside document history.
+   Next: portable export of sketches and extrusions.
 
 ### Phase 4: cross-checking with the catalog
 

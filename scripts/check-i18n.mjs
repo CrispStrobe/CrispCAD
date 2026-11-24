@@ -24,7 +24,7 @@ async function walk(dir){for(const entry of await readdir(dir,{withFileTypes:tru
   if(key!==undefined){references++;if(!catalog.has(key))missing.push(`${file}:${source.getLineAndCharacterOfPosition(n.getStart()).line+1}: ${JSON.stringify(key)}`);}ts.forEachChild(n,visit);
  }visit(source);
 }}}
-await walk('packages');await walk('apps/standalone/src');await walk('apps/mcp');
+await walk('packages');await walk('apps/standalone/src');await walk('apps/mcp');await walk('apps/cli');
 if(conflicts.length)console.error('Conflicting translations:\n'+conflicts.join('\n'));
 if(missing.length)console.error('Missing translations:\n'+missing.join('\n'));
 if(conflicts.length||missing.length)process.exitCode=1;else console.log(`PASS: ${catalog.size} German messages, ${references} literal/template references; placeholders and duplicate values agree. Dynamic labels need separate UI coverage.`);
