@@ -70,9 +70,11 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
   const axes=positionAxes.filter(j=>servoComponent(j.bodyA)===component).length,iterations=Math.min(320,80*axes);
   for(const joint of doc.joints??[])if(servoComponent(joint.bodyA)===component)constraints.get(joint.id)?.SetNumVelocityStepsOverride(iterations);
  };
+ const useLinkedPartCollisions=sceneSettings.selfCollisions!==false;
  const originalExcluded=new Set((doc.joints??[]).map(j=>pairKey(j.bodyA,j.bodyB))),separatedHingePairs=new Set<string>();
  const separatedFrames=new Map<string,{bodyA:string;bodyB:string;anchorA:Vec3;anchorB:Vec3;axisA:Vec3;axisB:Vec3;radiusB:number}>();
- for(const joint of doc.joints??[]){if(joint.kind!=='hinge'||joint.collideConnected===false)continue;const a=fixedRoot(joint.bodyA),b=fixedRoot(joint.bodyB),key=pairKey(a,b);if(a===b||separatedHingePairs.has(key))continue;const tr=doc.nodes[joint.bodyA].transform,tb=doc.nodes[joint.bodyB].transform,anchor=rotate(joint.anchorA.map((v,i)=>v*tr.scale[i]),tr.rotation).map((v,i)=>v+tr.position[i]) as Vec3,axis=rotate(joint.axisA,tr.rotation) as Vec3,otherAnchor=rotate(joint.anchorB.map((v,i)=>v*tb.scale[i]),tb.rotation).map((v,i)=>v+tb.position[i]),otherAxis=rotate(joint.axisB,tb.rotation),members=(root:string)=>assemblies.get(root)!.map(mesh=>({id:mesh.id,hulls:prepared.get(mesh.id)!.hulls}));
+ // Authored self-collision exclusions already cover every hinge pair.
+ for(const joint of useLinkedPartCollisions?doc.joints??[]:[]){if(joint.kind!=='hinge'||joint.collideConnected===false)continue;const a=fixedRoot(joint.bodyA),b=fixedRoot(joint.bodyB),key=pairKey(a,b);if(a===b||separatedHingePairs.has(key))continue;const tr=doc.nodes[joint.bodyA].transform,tb=doc.nodes[joint.bodyB].transform,anchor=rotate(joint.anchorA.map((v,i)=>v*tr.scale[i]),tr.rotation).map((v,i)=>v+tr.position[i]) as Vec3,axis=rotate(joint.axisA,tr.rotation) as Vec3,otherAnchor=rotate(joint.anchorB.map((v,i)=>v*tb.scale[i]),tb.rotation).map((v,i)=>v+tb.position[i]),otherAxis=rotate(joint.axisB,tb.rotation),members=(root:string)=>assemblies.get(root)!.map(mesh=>({id:mesh.id,hulls:prepared.get(mesh.id)!.hulls}));
   // The ordinary mate tolerance is intentionally looser than this proof: even
   // a small axis skew can move a distant feature beyond its clearance margin.
   const left=members(a),right=members(b);if(left.length===1&&right.length===1)continue;const margin=hingeFrameSeparationMargin([...left,...right].flatMap(m=>m.hulls),anchor,axis,otherAnchor as Vec3,otherAxis as Vec3);if(margin===undefined)continue;
@@ -109,8 +111,10 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
   if(assemblies.size<meshes.length){
    // Filter original mate pairs before narrow-phase and CCD work. A late
    // contact rejection still performs expensive shaft/bore collision queries.
-   partFilter=new J.PartPairSimShapeFilter();for(const mesh of meshes){const token=meshIndex.get(mesh.id)!+1;partFilter.SetColliderPart(byId.get(mesh.id).GetID(),token,token);}const paired=new Set<string>();
-   for(const joint of doc.joints??[]){const a=fixedRoot(joint.bodyA),b=fixedRoot(joint.bodyB);if(a===b)continue;const key=pairKey(a,b),bodyA=byId.get(a).GetID(),bodyB=byId.get(b).GetID();if(!paired.has(key)){partFilter.AddBodyPair(bodyA,bodyB,false);paired.add(key);}partFilter.AddPartPair(bodyA,bodyB,meshIndex.get(joint.bodyA)!+1,meshIndex.get(joint.bodyB)!+1);}system.SetSimShapeFilter(partFilter);
+   if(useLinkedPartCollisions){
+    partFilter=new J.PartPairSimShapeFilter();for(const mesh of meshes){const token=meshIndex.get(mesh.id)!+1;partFilter.SetColliderPart(byId.get(mesh.id).GetID(),token,token);}const paired=new Set<string>();
+    for(const joint of doc.joints??[]){const a=fixedRoot(joint.bodyA),b=fixedRoot(joint.bodyB);if(a===b)continue;const key=pairKey(a,b),bodyA=byId.get(a).GetID(),bodyB=byId.get(b).GetID();if(!paired.has(key)){partFilter.AddBodyPair(bodyA,bodyB,false);paired.add(key);}partFilter.AddPartPair(bodyA,bodyB,meshIndex.get(joint.bodyA)!+1,meshIndex.get(joint.bodyB)!+1);}system.SetSimShapeFilter(partFilter);
+   }
    const member=(body:any,subShape:any)=>meshes[body.GetShape().GetSubShapeUserData(subShape)-1];
    contactListener=new J.ContactListenerJS();
    contactListener.OnContactValidate=()=>J.ValidateResult_AcceptAllContactsForThisBodyPair;

@@ -71,8 +71,10 @@ it('supports explicit adjacent-link exclusion while retaining other-body contact
 });
 
 it('robot self-collision mode retains loose-object contacts and ground, and serializes the explicit choice',async()=>{
- const d=fixture();d.nodes.left.physics!.motion='static';d.simulation!.selfCollisions=false;d.nodes.rotor={...structuredClone(d.nodes.right),id:'rotor',name:'rotor',transform:{...identityTransform(),position:[20,0,23]}};d.roots.push('rotor');const hinge=jointAtWorldFrame(d,'hinge','left','rotor',[-20,0,20],[0,1,0]);d.joints!.push(hinge);const world=await worldFor(d);
+ const d=fixture();d.nodes.left.physics!.motion='static';d.simulation!.selfCollisions=false;d.nodes.rotor={...structuredClone(d.nodes.right),id:'rotor',name:'rotor',transform:{...identityTransform(),position:[20,0,23]}};d.roots.push('rotor');const hinge=jointAtWorldFrame(d,'hinge','left','rotor',[-20,0,20],[0,1,0]);d.joints!.push(hinge);
+ const noLinkedFilter={...J,PartPairSimShapeFilter:function(){throw new Error('Linked parts are already excluded by the body filter');}};
+ const world=await worldFor(d,noLinkedFilter);
  try{world.step(.1);expect(Math.abs(world.hingeAngle(hinge.id))).toBeLessThan(1e-5);}finally{world.dispose();}
- d.nodes.probe={...structuredClone(d.nodes.left),id:'probe',name:'probe',transform:{...identityTransform(),position:[20,0,30]}};d.roots.push('probe');const contact=await worldFor(d);try{contact.step(.1);expect(Math.abs(contact.hingeAngle(hinge.id))).toBeGreaterThan(.005);}finally{contact.dispose();}
- const falling=fixture();falling.simulation={...defaultSimulationSettings(),selfCollisions:false};const ground=await worldFor(falling);try{for(let i=0;i<300;i++)ground.step(.005);expect(ground.boundsMm('left').min[2]).toBeGreaterThan(-.1);}finally{ground.dispose();}
+ d.nodes.probe={...structuredClone(d.nodes.left),id:'probe',name:'probe',transform:{...identityTransform(),position:[20,0,30]}};d.roots.push('probe');const contact=await worldFor(d,noLinkedFilter);try{contact.step(.1);expect(Math.abs(contact.hingeAngle(hinge.id))).toBeGreaterThan(.005);}finally{contact.dispose();}
+ const falling=fixture();falling.simulation={...defaultSimulationSettings(),selfCollisions:false};const ground=await worldFor(falling,noLinkedFilter);try{for(let i=0;i<300;i++)ground.step(.005);expect(ground.boundsMm('left').min[2]).toBeGreaterThan(-.1);}finally{ground.dispose();}
 });
