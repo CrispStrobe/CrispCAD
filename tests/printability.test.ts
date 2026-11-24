@@ -60,3 +60,15 @@ describe('printability screening', () => {
     } finally { await host.dispose(); }
   }, 60000);
 });
+
+describe('editor printability summary', () => {
+  it('turns a report into pass/warn/fail rows', async () => {
+    const { summarizePrintability } = await import('../packages/editor/src/printability-panel.js');
+    const [body] = summarizePrintability(checkPrintability(bodies('return union(box(10, 10, 30), move([15, 0, 14], box(20, 10, 0.5)));')));
+    const row = (label: string) => body.rows.find(r => r.label === label)!;
+    expect(row('Watertight mesh').status).toBe('pass');
+    expect(row('Minimum wall thickness')).toMatchObject({ status: 'fail', detail: '0.5 mm (limit 0.8 mm)' });
+    expect(row('Unsupported overhang as modelled').status).toBe('warn');
+    expect(row('Suggested print orientation').detail).toMatch(/^[+-]y up: rotate 90° about X; 0 mm² unsupported$/);
+  });
+});

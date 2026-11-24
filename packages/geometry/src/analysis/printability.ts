@@ -2,6 +2,7 @@
 // Brickwright adapter over the ported kernelCAD mesh DFM checks. Screening
 // only: the results are sampled, tessellation-bounded estimates, not a
 // guarantee that a slicer or printer will succeed.
+import { t } from '@brickwright/cad-core';
 import type { BodyMesh } from '../kernel.js';
 import { checkMinWall, type WallViolationCluster } from './minWall.js';
 import { prepareFdmMesh, rankOrientations, type FdmAxisLabel, type FdmOrientationResult, type OverhangStatus } from './fdmOrientation.js';
@@ -128,7 +129,7 @@ function validSettings(input: Partial<PrintabilitySettings>): PrintabilitySettin
   const s: PrintabilitySettings = { ...DEFAULT_PRINTABILITY_SETTINGS, ...input, bedSizeMm: { ...DEFAULT_PRINTABILITY_SETTINGS.bedSizeMm, ...input.bedSizeMm } };
   const positive = [s.nozzleMm, s.maxBridgeMm, s.minWallMm, s.bedSizeMm.x, s.bedSizeMm.y, s.bedSizeMm.z];
   if (positive.some(v => !Number.isFinite(v) || v <= 0 || v > 1e5) || !Number.isFinite(s.maxOverhangDeg) || s.maxOverhangDeg <= 0 || s.maxOverhangDeg >= 90)
-    throw new RangeError('Printability settings must be finite positive millimetres and an overhang angle between 0 and 90 degrees');
+    throw new RangeError(t('Printability settings must be finite positive millimetres and an overhang angle between 0 and 90 degrees'));
   return s;
 }
 
@@ -138,7 +139,7 @@ export function checkPrintability(bodies: readonly BodyMesh[], options: Partial<
   const settings = validSettings(options);
   const solids = bodies.filter(b => !b.reference && !b.hole && b.indices.length > 0);
   const total = solids.reduce((n, b) => n + b.indices.length / 3, 0);
-  if (total > MAX_TRIANGLES) throw new RangeError(`Printability check is limited to ${MAX_TRIANGLES} triangles; the design has ${total}`);
+  if (total > MAX_TRIANGLES) throw new RangeError(t`Printability check is limited to ${MAX_TRIANGLES} triangles; the design has ${total}`);
   const issues: string[] = [];
   const reports = solids.map((body): BodyPrintability => {
     const mesh = weld(body), topology = checkMeshTopology(mesh);
