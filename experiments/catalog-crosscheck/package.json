@@ -1,0 +1,15 @@
+{
+  "name": "catalog-crosscheck-experiment",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "BSD-3-Clause",
+  "description": "Phase 4 catalog cross-check: kernelCAD catalog -> CAD Script, built with Manifold and the SMLib exact kernel. Not shipped.",
+  "scripts": {
+    "catalog": "rm -rf .catalog && mkdir -p .catalog && git -C \"${LAB:?set LAB to the kernel lab clone}\" archive \"${LAB_REV:-HEAD}\" catalog/kits | tar -x -C .catalog --exclude '*.png' && git -C \"$LAB\" rev-parse \"${LAB_REV:-HEAD}\" > .catalog/COMMIT",
+    "sample": "node run.ts --catalog .catalog/catalog/kits --sample 300 --lab-commit $(cat .catalog/COMMIT)",
+    "full": "node run.ts --catalog .catalog/catalog/kits --all --lab-commit $(cat .catalog/COMMIT)",
+    "summarize": "node summarize.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}
