@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {newId,t} from '@brickwright/cad-core';
+import {newId,paletteCommandSpecs,t} from '@brickwright/cad-core';
 import type {CadCommand,CadCommandState} from './index.js';
 
 interface PaletteContext extends CadCommandState {
@@ -9,53 +9,8 @@ interface PaletteContext extends CadCommandState {
  canEditPattern:boolean;
 }
 type CommandEntry={command:CadCommand;label:string;alias?:string;requires?:keyof PaletteContext};
-export const paletteCommands:readonly CommandEntry[]=[
- {command:'shapes',label:'Find a shape',alias:'shape browser primitives'},
- {command:'model-library',label:'Model library',alias:'parts catalog'},
- {command:'sketch',label:'Sketch & extrude',alias:'profile DXF'},
- {command:'sketch-path',label:'Sketch path',alias:'open sketch line arc'},
- {command:'revolve',label:'Revolve',alias:'shaft sweep'},
- {command:'mirror',label:'Mirror body',alias:'reflect symmetry',requires:'canWrapBody'},
- {command:'edit-mirror',label:'Edit mirror',requires:'canEditMirror'},
- {command:'pattern',label:'Pattern body',alias:'linear circular repeat bolt circle',requires:'canWrapBody'},
- {command:'edit-pattern',label:'Edit pattern',requires:'canEditPattern'},
- {command:'parameters',label:'Parameters',alias:'named dimensions formulas'},
- {command:'code',label:'Code an object',alias:'CAD Script'},
- {command:'terminal',label:'CAD terminal',alias:'command line console'},
- {command:'code-workspace',label:'Code workspace',alias:'persistent CAD Script editor'},
- {command:'model-source',label:'Model source'},
- {command:'union',label:'Union',alias:'combine join',requires:'canCombine'},
- {command:'subtract',label:'Subtract',alias:'boolean cut difference',requires:'canCombine'},
- {command:'intersect',label:'Intersect',alias:'boolean overlap',requires:'canCombine'},
- {command:'drop',label:'Drop to workplane',alias:'ground',requires:'canDrop'},
- {command:'move',label:'Move',alias:'translate'},
- {command:'rotate',label:'Rotate'},
- {command:'scale',label:'Scale',alias:'resize'},
- {command:'select',label:'Select'},
- {command:'select-all',label:'Select all',requires:'hasBodies'},
- {command:'deselect',label:'Deselect',alias:'clear selection',requires:'hasSelection'},
- {command:'undo',label:'Undo',requires:'canUndo'},
- {command:'redo',label:'Redo',requires:'canRedo'},
- {command:'copy',label:'Copy',requires:'canDelete'},
- {command:'cut',label:'Cut',requires:'canDelete'},
- {command:'paste',label:'Paste'},
- {command:'duplicate',label:'Duplicate',requires:'canDelete'},
- {command:'delete',label:'Delete',requires:'canDelete'},
- {command:'fit',label:'Fit',alias:'frame selection'},
- {command:'home',label:'Home',alias:'isometric reset camera'},
- {command:'top',label:'Top view'},
- {command:'front',label:'Front view'},
- {command:'right',label:'Right view'},
- {command:'back',label:'Back view'},
- {command:'left',label:'Left view'},
- {command:'bottom',label:'Bottom view'},
- {command:'projection',label:'Toggle projection',alias:'perspective orthographic'},
- {command:'workplane',label:'Show workplane'},
- {command:'objects',label:'Objects'},
- {command:'properties',label:'Properties'},
- {command:'readout',label:'Show on-canvas parameters',alias:'transform values XYZ'},
- {command:'export',label:'Export geometry',alias:'STL 3MF',requires:'canExport'}
-];
+/** Labels, search keywords and availability come from the shared command registry. */
+export const paletteCommands:readonly CommandEntry[]=paletteCommandSpecs().map(({name,palette})=>({command:name as CadCommand,label:palette!.label,...(palette!.keywords?{alias:palette!.keywords}:{}),...(palette!.requires?{requires:palette!.requires}:{})}));
 const normalize=(value:string)=>value.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase().trim();
 
 export function findPaletteCommands<T extends {label:string;alias?:string}>(items:readonly T[],query:string):T[]{

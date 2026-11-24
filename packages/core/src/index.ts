@@ -64,3 +64,10 @@ export {externalCenterDistanceMm,externalSpeedRatio,meshAlignDeg,pitchRadiusMm,t
 export {importKernelCAD,KCAD_IMPORT_LIMITS,KCAD_ACCEPTED_LICENSES} from './kcad-import.js';
 export type {KernelCADImport,KernelCADPart} from './kcad-import.js';
 
+
+export {commandNumber,parseCommandPoint,commandTokens,commandArguments} from './command-arguments.js';
+export type {CommandToken} from './command-arguments.js';
+export {commandRegistry,findCommandSpec,paletteCommandSpecs,prepareCommand,interactiveCommandNames,commandHelp,listModel,createCommandRunner,COMMAND_LINE_LIMIT} from './command-registry.js';
+export type {CommandSpec,CommandArgumentSpec,CommandArgumentKind,CommandCategory,CommandAvailability,CommandPaletteSpec,CommandStep,CommandValue,PreparedCommand,CommandContext,CommandRunResult,CommandRunnerOptions,CommandRunner} from './command-registry.js';
+export {createCommandJournal,exportCommandJournal,primitiveCadScript,portableJournalObjects,JOURNAL_LIMITS,JOURNAL_FORMAT} from './command-journal.js';
+export type {CommandJournal,CommandJournalEntry,JournalExportFormat,JournalExportOptions} from './command-journal.js';

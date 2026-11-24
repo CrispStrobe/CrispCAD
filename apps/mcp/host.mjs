@@ -2,7 +2,7 @@
 import {Worker} from 'node:worker_threads';
 import {readFile,writeFile,open,rename,unlink,stat,lstat,mkdir} from 'node:fs/promises';
 import {dirname,resolve} from 'node:path';
-import {compileBlocksToCadScript,exportBlocksOpenSCAD,exportBlocksJSCAD,createCadSession,createDocument,compileCode,defaultCodeProgram,codeExamples,importOpenSCAD,getOpenSCADImportWarnings,importJSCAD,exportOpenSCAD,exportJSCAD,exportCodeSource,newId,serializeDocument,CODE_LIMITS,basicGeneratorPresets,enclosureGeneratorPresets,curvedGeneratorPresets,transitionGeneratorPresets,defaultGenerator,screwVariant,redesignScrew,t,getLocale,hasModelAttribution,createModelAttributionSidecar,validateDocument} from '@brickwright/cad-core';
+import {compileBlocksToCadScript,exportBlocksOpenSCAD,exportBlocksJSCAD,createCadSession,createDocument,compileCode,defaultCodeProgram,codeExamples,importOpenSCAD,getOpenSCADImportWarnings,importJSCAD,exportOpenSCAD,exportJSCAD,exportCodeSource,newId,serializeDocument,CODE_LIMITS,basicGeneratorPresets,enclosureGeneratorPresets,curvedGeneratorPresets,transitionGeneratorPresets,defaultGenerator,screwVariant,redesignScrew,t,getLocale,hasModelAttribution,createModelAttributionSidecar,validateDocument,commandRegistry,createCommandRunner,createCommandJournal} from '@brickwright/cad-core';
 import {appendPortableRevision,readPortableHistory} from '@brickwright/cad-history';
 import {createPresetDocument} from '@brickwright/cad-editor';
 import {exportSTL} from '@brickwright/cad-geometry';
@@ -28,6 +28,8 @@ export const toolDefinitions=[
  spec('cad_inspect','Measure the current model: per body volume, surface area, bounds, size, centroid, triangle count and closed-mesh topology, plus each object\'s kind, name, placement and code parameters. Optionally limit to objectIds.',{objectIds:{type:'array',maxItems:64,items:{type:'string'}}}),
  spec('cad_check_interference','Find solid bodies of the current model that overlap (common volume above minVolumeMm3, default 0.001) and, with clearanceMm, pairs closer than that gap. Bounding boxes prefilter the pairs.',{minVolumeMm3:{type:'number',exclusiveMinimum:0,maximum:1e9},clearanceMm:{type:'number',minimum:0,maximum:100}}),
  spec('cad_render','Render the current model headlessly to PNG images from canonical views (iso, top, front, right, back, left, bottom). Orthographic, flat-shaded in body colours; for visual review, not measurement.',{views:{type:'array',maxItems:4,items:{type:'string'}},size:{type:'integer',minimum:64,maximum:1024}}),
+ spec('cad_list_commands','List the shared CAD command vocabulary (terminal, palette, CLI): names, aliases, usage, typed arguments, whether a command edits the model and whether it runs headlessly in cad_run_commands.',{headlessOnly:{type:'boolean'}}),
+ spec('cad_run_commands','Run CAD terminal commands headlessly, one per line (at most 64; // comments allowed), against a copy of the current model. The script starts with an empty selection; select bodies before move/rotate/scale. All edits are validated and saved as one history step; preview saves nothing. Returns command outputs and a journal export. View and panel commands are refused.',{commands:{type:'string',minLength:1,maxLength:65536},expectedRevision:revision,preview:{type:'boolean'}},['commands','expectedRevision'],false),
  spec('cad_export_project','Return a complete history-inclusive .bcad archive as base64; large projects use the configured project file instead.'),
  spec('cad_export_stl','Return printable binary STL as base64. Recorded library sources automatically include a paired attribution JSON file; supply accurate modificationNotes describing changes since insertion (including when unchanged) and distribute both files together.',{modificationNotes:{type:'string',minLength:1,maxLength:4096}})
 ];
@@ -75,6 +77,7 @@ export async function createCodeHost(options={}){
   if(name==='cad_compile_blocks'){let parsed;try{parsed=JSON.parse(args.program);}catch{throw new Error(t('The block program is not valid JSON'));}
    if(args.outputFormat==='cadcode'){const compiled=compileBlocksToCadScript(parsed),checked=compileCode(compiled.program);return {format:'cadcode',source:compiled.source,parameters:checked.parameters,...(compiled.parts.length>1?{parts:compiled.parts.map(part=>({color:part.color??null,source:part.source}))}:{})};}
    return {format:args.outputFormat,source:args.outputFormat==='openscad'?exportBlocksOpenSCAD(parsed):exportBlocksJSCAD(parsed)};}
+  if(name==='cad_list_commands')return {commands:commandRegistry.filter(c=>!args.headlessOnly||c.headless).map(c=>({name:c.name,aliases:c.aliases,description:t(c.description),usage:c.usage,category:c.category,editsModel:c.editsModel,headless:c.headless,arguments:c.arguments}))};
   if(name==='cad_code_help')return localizedHelp;if(name==='cad_get_model')return info();
   if(name==='cad_get_model_source')return {revision:metadata.project.serial,projectId:session.state.document.id,language:'brickwright-design',source:session.modelSource,maxEditableSourceCharacters:65536};
   if(name==='cad_get_code_object'){const n=session.state.document.nodes[args.objectId];if(n?.kind!=='code')throw new Error(t('Code object not found'));const compiled=compileCode(n.program);return {revision:metadata.project.serial,id:n.id,name:n.name,program:n.program,parameters:compiled.parameters,values:compiled.values,transform:n.transform};}
@@ -107,6 +110,19 @@ export async function createCodeHost(options={}){
    const expected=metadata.project.serial,n=session.state.document.nodes[args.objectId];if(n?.generator?.preset!=='screw')throw new Error(t('Select a screw with retained parameters'));
    const request=Object.fromEntries(['diameter','length','pitch','turnsPerStart'].filter(key=>args[key]!==undefined).map(key=>[key,args[key]])),recipe=redesignScrew(n.generator,n.transform.scale,request),trial=createCadSession(session.state.document);
    try{trial.replaceGenerated(n.id,createPresetDocument('screw',n.name,{recipe}),{resetScale:true,label:'Redesign thread'});const result=await geometry.evaluate(trial.state.document,signal);cancelled(signal);if(expected!==metadata.project.serial)throw new Error(t`Stale model revision. Current revision is ${metadata.project.serial}; read the model and retry.`);if(args.preview)return {revision:expected,objectId:n.id,committed:false,recipe,geometry:summary(result)};await accept(trial.state.document,'Redesign thread',signal);return {...info(),objectId:n.id,committed:true,recipe,source:session.modelSource,geometry:summary(result)};}finally{trial.dispose();}
+  }
+  if(name==='cad_run_commands'){
+   // The registry runs data-only commands on a private trial session: no JavaScript, files or view state.
+   const expected=metadata.project.serial,trial=createCadSession(session.state.document),journal=createCommandJournal(trial);
+   try{
+    const results=createCommandRunner(trial,{journal}).runScript(args.commands,{maxLines:64}).map(r=>({command:r.command,invocation:r.invocation,edited:r.edited,...(r.output!==undefined?{output:r.output}:{})}));
+    const exported=journal.export();cancelled(signal);
+    if(serializeDocument(trial.state.document)===serializeDocument(session.state.document))return {revision:expected,committed:false,results,journal:exported};
+    const result=await geometry.evaluate(validateDocument(trial.state.document),signal);cancelled(signal);
+    if(expected!==metadata.project.serial)throw new Error(t`Stale model revision. Current revision is ${metadata.project.serial}; read the model and retry.`);
+    if(args.preview)return {revision:expected,committed:false,results,journal:exported,geometry:summary(result)};
+    await accept(trial.state.document,'Run commands',signal);return {...info(),committed:true,results,journal:exported,geometry:summary(result)};
+   }finally{journal.dispose();trial.dispose();}
   }
   if(name==='cad_apply_model_source'){
    const expected=metadata.project.serial,trial=createCadSession(session.state.document);

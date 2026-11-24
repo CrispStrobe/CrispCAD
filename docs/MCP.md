@@ -51,6 +51,8 @@ history. Use a dedicated file: this process is its writer until closed.
 | `cad_render` | Read-only PNG views (iso/top/front/right/back/left/bottom) returned as MCP image content |
 | `cad_check_printability` | Read-only FDM screening of the current model: watertightness, sampled minimum wall, overhangs/bridges, bed fit, six ranked axis orientations |
 | `cad_export_stl` | Base64 printable mesh; automatic paired attribution for recorded library sources |
+| `cad_list_commands` | Read-only list of the shared command vocabulary with typed arguments |
+| `cad_run_commands` | Run terminal commands headlessly; all edits become one history step |
 
 Read `cad_get_model`, then send its `revision` as `expectedRevision` for every
 mutation. Creation needs `source`; optional `name` and `parameters` supply its
@@ -144,3 +146,49 @@ Manifold; `clearanceMm` adds Manifold's minimum-gap search for pairs that do not
 overlap. `cad_render` is an original headless software rasterizer (orthographic,
 z-buffered, flat-shaded in body colours, PNG via fflate's zlib), up to four views
 of 64–1024 px; the images arrive as MCP `image` content beside a short JSON summary.
+
+## Shared command vocabulary
+
+`cad_list_commands` returns the same registry that drives the terminal, the
+command palette and the CLI: canonical name, aliases, localized description,
+usage, category, typed arguments, `editsModel` and `headless`. Pass
+`headlessOnly: true` to list only the commands `cad_run_commands` accepts.
+
+`cad_run_commands` takes `commands` (one command per line, at most 64 lines and
+65,536 characters; blank lines and `//` comments are skipped), `expectedRevision`
+and optional `preview`. It runs on a private copy of the current model with the
+headless command runner from `packages/core`:
+
+- Same syntax, aliases, coordinate parsing and limits as the terminal. A missing
+  argument takes the default an empty Enter would give, or fails.
+- The script starts with an empty selection. Use `select` before
+  `move`/`rotate`/`scale`. `undo` and `redo` act within the script.
+- `apply …` and `select [...]` replay canonical journal records (data only).
+- View, panel and clipboard commands are refused. Nothing evaluates JavaScript;
+  there are no file paths or shell commands.
+- The first failing line stops the script, nothing is saved, and the error
+  carries `line`.
+- When the model changed, the result is evaluated in the geometry worker
+  (30-second watchdog), checked against the 1 MiB editable-model cap, and
+  appended as one history iteration labelled "Run commands". `preview: true`
+  evaluates without saving. Scripts that only read (`list`, `help`) save nothing.
+
+The result lists each command's canonical invocation and output, plus
+`journal`: the [journal export](TERMINAL-WORKSPACE.md#journal-export) of the
+script, in which plain primitives appear as CAD Script.
+
+### Headless CLI
+
+The CLI reuses the MCP host, so it has the same writer lock, validation and
+atomic history append. It prints JSON on stdout; errors go to stderr with exit
+code 1. A project that does not exist yet is created.
+
+```sh
+npm run build:packages
+node apps/cli/crispcad.mjs commands
+node apps/cli/crispcad.mjs run design.bcad "box 40,30,4" "select all" "move 0,0,0 @0,0,2"
+node apps/cli/crispcad.mjs run design.bcad "sphere 5" --dry-run
+node apps/cli/crispcad.mjs inspect design.bcad        # also: interference, printability
+```
+
+`--locale de` gives German descriptions and diagnostics.
