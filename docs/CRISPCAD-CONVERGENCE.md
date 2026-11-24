@@ -5,17 +5,39 @@ Started 2026-11-24. This plan brings together two lines of work:
 1. **One command layer** in this repository. The terminal, the code workspace and
    replayable session commands landed in PR #78
    (see [TERMINAL-WORKSPACE.md](TERMINAL-WORKSPACE.md)).
-2. **An exact kernel without OpenCASCADE.** The CrispCAD kernel lab, a fork of
-   kernelCAD-web at `CrispStrobe/kernelCAD-web`, built a native SMLib kernel
+2. **An exact kernel without OpenCASCADE.** The CrispCAD kernel lab
+   ([`CrispStrobe/crispcad-kernel-lab`](https://github.com/CrispStrobe/crispcad-kernel-lab),
+   a fork of kernelCAD-web; renamed from `kernelCAD-web` on 2026-11-24) built a native SMLib kernel
    (`smlib-native`, via `@classcad/smlibwasm`). It builds 2,344 of 2,402 catalog
    models with OpenCASCADE blocked (see its `docs/kernels.md`).
 
 The product is **CrispCAD**: this repository, renamed from Brickwright CAD on
 2026-11-24. The kernelCAD fork stays a separate MIT repository, used as the
 **kernel lab** where kernel coverage is measured against its 2,402-model
-catalog. We take over its backend code, not its application. This keeps the
+catalog. CrispCAD consumes its kernel package, not its application. This keeps the
 decision in [KERNELCAD-REVIEW.md](KERNELCAD-REVIEW.md#fork-recommendation-defer)
 and step 4 of [PARAMETRIC-CAD-STRATEGY.md](PARAMETRIC-CAD-STRATEGY.md#delivery-order-and-acceptance).
+
+## Dependency chain
+
+```
+crispcad-kernel-lab ──(exact-kernel package, MIT + Apache-2.0 only)──▶ CrispCAD
+CrispCAD ──(packaged CAD SDK, @brickwright/cad-*)──▶ BrickWright (brickwright-lite)
+```
+
+- **The lab owns the exact kernel.** The OpenCASCADE-free SMLib kernel and its
+  `ExactKernel` interface live in the lab as a standalone package. The lab qualifies
+  it against its catalog and its own OpenCASCADE reference path. The package's
+  dependency closure is only `@classcad/smlibwasm`, prebundled with the OFL Lato
+  font aliased to an empty module, so every shipped file is MIT or Apache-2.0.
+  A licence test in the lab enforces this.
+- **CrispCAD pins a released build.** It depends on a release tarball attached to
+  a tagged lab release, pinned by version and lockfile integrity. It never
+  depends on the lab's application or on `replicad-opencascadejs`.
+- **BrickWright consumes CrispCAD's SDK as before**
+  (`npm run build:brickwright-sdk`, `scripts/sync-cad-sdk.mjs`; see
+  [INTEGRATION.md](INTEGRATION.md#keeping-standalone-and-brickwright-synchronized)).
+  The exact kernel reaches BrickWright only through CrispCAD, once CrispCAD ships it.
 
 ## Architecture
 
@@ -109,7 +131,6 @@ Remaining work for this phase:
 
 Original scope of the phase:
 
-
 Lives in `experiments/exact-kernel/` with its own `package.json`. It is not a
 runtime dependency.
 
@@ -134,7 +155,22 @@ Product entry additionally needs:
 
 - iPad WebKit memory and latency measurements;
 - running in the geometry worker;
-- the licence decision below.
+- consuming the kernel as the lab's package instead of the experiment's copy
+  (Phase 2b).
+
+### Phase 2b: move the exact kernel into the lab as a package
+
+1. In the lab, create an OpenCASCADE-free workspace package from the
+   experiment's `ExactKernel` interface and SMLib implementation (MIT, owner's
+   code), merged with the lab's `nativeLowerer` logic.
+2. Prebundle `@classcad/smlibwasm` with the font alias. Add a licence test that
+   fails if any shipped file is not MIT or Apache-2.0.
+3. Tag a release with the tarball, and replace the copy in
+   `experiments/exact-kernel` with that pinned dependency. The CAD Script
+   lowering stays in CrispCAD, because it depends on our compiler.
+4. Then product entry: the geometry worker, iPad WebKit measurements,
+   cancellation, and routing `fillet`, `shell` and `export step` to the exact
+   kernel (Phase 3, steps 1 and 2).
 
 ### Phase 3: one command vocabulary
 
@@ -178,16 +214,15 @@ Product entry additionally needs:
 4. Record the results next to
    [CODE-CONVERTERS.md](CODE-CONVERTERS.md#kernelcad-kcadts-models-2026-11-24).
 
-## Owner decisions
+## Owner decisions (2026-11-24)
 
-- **Licence of the exact backend.** `@classcad/smlibwasm` is
-  `MIT AND Apache-2.0 AND OFL-1.1`. The only OFL items are the Lato font
-  (`dist/_fonts.js`, `dist/_fonts.d.ts`) and `fonts/OFL.txt`. The audit showed
-  the font can be dropped: with a build alias to an empty module, modeling and
-  STEP still work, and only `Text()` fails cleanly. Tree-shaking alone does not
-  remove it. Recommendation: ship with the alias, so the dependency is
-  MIT + Apache-2.0 only. Until this is decided, the backend stays in
-  `experiments/`.
-- **Name of the kernel lab.** The fork also calls itself "CrispCAD". Renaming the
-  fork repository, for example to `crispcad-kernel-lab`, would avoid two things
-  with the same name.
+- **Licence of the exact kernel: MIT + Apache-2.0 only.** `@classcad/smlibwasm`
+  is `MIT AND Apache-2.0 AND OFL-1.1`, and its only OFL items are the Lato font
+  (`dist/_fonts.js`, `dist/_fonts.d.ts`) and `fonts/OFL.txt`. The kernel package
+  aliases the font to an empty module. Modeling and STEP are unaffected, and
+  `Text()` without a font fails cleanly. Tree-shaking alone does not remove the
+  font, so the alias is required.
+- **Kernel lab name.** The fork is `CrispStrobe/crispcad-kernel-lab`. Product
+  branding inside the lab moves from "CrispCAD" to "CrispCAD kernel lab".
+- **Downstream direction.** The chain is crispcad-kernel-lab → CrispCAD →
+  BrickWright (see [Dependency chain](#dependency-chain)).
