@@ -212,6 +212,7 @@ no Macad3D code or interface has been transplanted.
    candidates; kernelCAD's reference-part scorecard is a suitable gate. See
    [the kernelCAD review](KERNELCAD-REVIEW.md) for what was adopted (MIT gear
    and mesh-printability code) and why a kernelCAD fork is deferred.
+   SMLib (`@classcad/smlibwasm`) standalone qualification: [experiments/exact-kernel](../experiments/exact-kernel/README.md).
 5. **Components, configurations and assembly.** Explicit linked versus independent
    instances, parameter variants, stable mate frames and qualified Jolt actuators.
    Share the same headless command layer with Brickwright and CrispMesh.

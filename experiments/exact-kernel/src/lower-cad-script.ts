@@ -251,7 +251,10 @@ export function lowerCodeShape(k: ExactKernel, shape: CodeShape): ExactSolid | n
       return k.polyhedron(shape.points, shape.faces);
     }
     case 'union': case 'subtract': case 'intersect': {
-      const parts = shape.shapes.map(child);
+      // a - (b ∪ c) = a - b - c: one n-ary cut is faster in SMLib than fusing the cutters first.
+      const flatten = (s: CodeShape): CodeShape[] => (s.kind === 'union' ? s.shapes.flatMap(flatten) : [s]);
+      const operands = shape.kind === 'subtract' ? [shape.shapes[0], ...shape.shapes.slice(1).flatMap(flatten)] : shape.shapes;
+      const parts = operands.map(child);
       const present = parts.filter((p): p is ExactSolid => p !== null);
       if (shape.kind === 'union') return present.length ? k.union(present[0], ...present.slice(1)) : null;
       if (shape.kind === 'intersect') return parts.some(p => p === null) || !present.length ? null : k.intersect(present[0], ...present.slice(1));
@@ -280,7 +283,7 @@ export function lowerCodeShape(k: ExactKernel, shape: CodeShape): ExactSolid | n
       return k.scale(s, resizeFactors(shape.vector, shape.auto, b.min, b.max) as unknown as Vec3);
     }
     case 'repeat': {
-      const s = child(shape.shape);
+      const s = shape.count >= 1 ? child(shape.shape) : null;
       if (!s) return null;
       const copies = Array.from({ length: shape.count }, (_, i) => (i === 0 ? s : k.translate(s, shape.step.map(v => v * i) as unknown as Vec3)));
       return copies.length > 1 ? k.union(copies[0], ...copies.slice(1)) : copies[0];

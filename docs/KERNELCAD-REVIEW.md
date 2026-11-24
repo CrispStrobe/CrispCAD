@@ -64,6 +64,7 @@ Recommended order instead:
 2. Qualify an exact B-rep candidate (SMLib WASM, WASMLib, Solidcore) **standalone**
    behind a narrow interface in `experiments/`: primitives, booleans, fillet,
    tessellation, STEP out; licence audit of every shipped WASM binary.
+   SMLib: [experiments/exact-kernel](../experiments/exact-kernel/README.md).
 3. Use the full scorecard as the acceptance gate for that backend.
 4. Revisit a fork only if the candidate passes and kernelCAD's agent/DFM layers
    are still worth inheriting wholesale.
