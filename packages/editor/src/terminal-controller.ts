@@ -4,6 +4,8 @@ import type {CadSession,Vec3,SessionCommandRecord} from '@brickwright/cad-core';
 import type {CadCommand} from './index.js';
 import {paletteCommands} from './command-palette.js';
 import {parseTerminalPoint,terminalArguments,terminalNumber,terminalTokens} from './terminal-coordinates.js';
+import {createTerminalAliases} from './terminal-aliases.js';
+import type {TerminalAlias} from './terminal-aliases.js';
 
 export interface TerminalStorage {getItem(key:string):string|null;setItem(key:string,value:string):void}
 export interface TerminalEntry {id:number;kind:'input'|'action'|'output'|'error';summary:string;text?:string}
@@ -19,6 +21,8 @@ const drafting:readonly Definition[]=[
  {name:'help',aliases:['?'],description:'Command help',usage:'help [command]'},
  {name:'list',aliases:['ls'],description:'List objects and sketches',usage:'list'},
  {name:'clear',aliases:['cls'],description:'Clear the terminal transcript',usage:'clear'},
+ {name:'alias',aliases:[],description:'List, inspect or define a custom command alias',usage:'alias [name [command]]'},
+ {name:'unalias',aliases:[],description:'Remove a custom command alias',usage:'unalias <name>'},
  {name:'box',aliases:['b'],description:'Create a box',usage:'box [width,depth,height] [center]'},
  {name:'sphere',aliases:['sp'],description:'Create a sphere',usage:'sphere [radius] [center]'},
  {name:'cylinder',aliases:['cyl'],description:'Create a cylinder',usage:'cylinder [radius] [height] [center]'},
@@ -36,9 +40,9 @@ const drafting:readonly Definition[]=[
 const aliases:Partial<Record<CadCommand,string[]>>={undo:['u'],redo:['re'],delete:['erase','del'],duplicate:['dup'],fit:['zoom'],union:['join']};
 export const terminalCommands:readonly Definition[]=[...drafting,...paletteCommands.filter(entry=>!drafting.some(d=>d.name===entry.command)&&!['terminal','code-workspace'].includes(entry.command)).map(entry=>({name:entry.command,aliases:aliases[entry.command]??[],description:entry.label,usage:entry.command}))];
 
-export function completeTerminalCommand(text:string):string[] {
+export function completeTerminalCommand(text:string,customAliases:readonly TerminalAlias[]=[]):string[] {
  const query=text.toLowerCase().trim();if(/\s/.test(query))return [];
- return terminalCommands.filter(entry=>entry.name.startsWith(query)||entry.aliases.some(alias=>alias.startsWith(query)))
+ return terminalCommands.filter(entry=>entry.name.startsWith(query)||entry.aliases.some(alias=>alias.startsWith(query))||customAliases.some(alias=>alias.command===entry.name&&alias.name.startsWith(query)))
   .sort((a,b)=>Number(!a.name.startsWith(query))-Number(!b.name.startsWith(query))||a.name.localeCompare(b.name)).map(entry=>entry.name);
 }
 
@@ -49,6 +53,8 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
  let entries:TerminalEntry[]=[],history:string[]=[],serial=0,pending:Pending|undefined,busy=false,disposed=false,executing=false;
  let projectId=session.state.document.id,lastPoint:Vec3|undefined;
  const listeners=new Set<(state:TerminalState)=>void>();
+ const customAliases=createTerminalAliases(terminalCommands,options.storage);
+ const resolveCommand=(token:string)=>findCommand(customAliases.resolve(token)??token);
  const historyKey=()=>`brickwright-cad:terminal-history:v1:${projectId}`;
  function loadHistory(){history=[];try{const value=JSON.parse(options.storage?.getItem(historyKey())??'[]');if(Array.isArray(value))history=value.filter(item=>typeof item==='string'&&item.length<=4096).slice(-100);}catch{}}
  loadHistory();
@@ -88,18 +94,22 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
   const prior=current?before.slice(0,-1):before,start=current?.start??caret;
   const end=terminalTokens(text,true).find(token=>token.start===start)?.end??caret;
   const prefix=current?.value??'',query=prefix.toLowerCase();
-  let kind:'commands'|'bodies'|'sketches'|undefined,argumentsBefore=prior;
+  let kind:'commands'|'aliases'|'bodies'|'sketches'|undefined,argumentsBefore=prior;
   if(pending){kind=pending.steps[pending.values.length].completion;}
   else if(!prior.length){kind='commands';}
   else{
-   const name=findCommand(prior[0].value)?.name;argumentsBefore=prior.slice(1);
+   const name=resolveCommand(prior[0].value)?.name;argumentsBefore=prior.slice(1);
    if(name==='help'&&!argumentsBefore.length)kind='commands';
+   else if((name==='alias'||name==='unalias')&&!argumentsBefore.length)kind='aliases';
+   else if(name==='alias'&&argumentsBefore.length===1)kind='commands';
    else if(name==='extrude'&&!argumentsBefore.length)kind='sketches';
    else if(name==='select'&&!/^\s*\[/.test(text.slice(prior[0].end)))kind='bodies';
   }
   const choices:{value:string;label:string;description:string}[]=[];
   if(kind==='commands'){
-   for(const name of completeTerminalCommand(prefix)){const command=findCommand(name)!;choices.push({value:name,label:name,description:t(command.description)});}
+   for(const name of completeTerminalCommand(prefix,customAliases.list())){const command=findCommand(name)!;choices.push({value:name,label:name,description:t(command.description)});}
+  }else if(kind==='aliases'){
+   for(const alias of customAliases.list())if(alias.name.startsWith(query))choices.push({value:alias.name,label:alias.name,description:alias.command});
   }else if(kind){
    if(kind==='sketches'&&argumentsBefore.length)return [];
    if(kind==='bodies'&&argumentsBefore.some(token=>!token.quoted&&['all','none'].includes(token.value.toLowerCase())))return [];
@@ -197,19 +207,32 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
    if(pending){append('input',text||'↵');answer(text);return;}
    const match=/^(\S+)(?:\s+([\s\S]*))?$/.exec(text)!;
    const token=match[1].toLowerCase(),tail=match[2]??'';
-   const definition=findCommand(token);
+   const definition=resolveCommand(token);
    if(!definition)throw new Error(t`Unknown command: ${token}. Type help.`);
    const name=definition.name;
-   append('input',text.length>240?text.slice(0,237)+'…':text);remember(text);
+   append('input',text.length>240?text.slice(0,237)+'…':text);if(name!=='apply')remember(text);
    if(name==='apply'||name==='select'&&tail.trim().startsWith('[')){session.executeCommand(name+' '+tail);return;}
    const args=name==='select'?(tail.trim()?[tail]:[]):terminalArguments(tail);
    // A sketch name can itself begin with a quote. Keep its original quoting until the prompt parses it.
    if(name==='extrude'&&args.length){const first=terminalTokens(tail)[0];args[0]=tail.slice(first.start,first.end);}
    if(name==='help'){
     if(args.length>1)throw new Error(t('Too many arguments. Use help for command syntax.'));
-    const entry=args.length?terminalCommands.find(entry=>entry.name===args[0].toLowerCase()||entry.aliases.includes(args[0].toLowerCase())):undefined;
+    const entry=args.length?resolveCommand(args[0]):undefined;
     if(args.length&&!entry)throw new Error(t('Unknown editor command'));
-    append('output',entry?`${entry.usage}\n${t(entry.description)}${entry.aliases.length?'\n'+t('Aliases')+': '+entry.aliases.join(', '):''}`:terminalCommands.map(entry=>`${entry.usage} — ${t(entry.description)}`).join('\n'));return;
+    const names=entry?[...entry.aliases,...customAliases.list().filter(alias=>alias.command===entry.name).map(alias=>alias.name)]:[];
+    append('output',entry?`${entry.usage}\n${t(entry.description)}${names.length?'\n'+t('Aliases')+': '+names.join(', '):''}`:terminalCommands.map(entry=>`${entry.usage} — ${t(entry.description)}`).join('\n'));return;
+   }
+   if(name==='alias'){
+    if(args.length>2)throw new Error(t('Usage: alias [name [command]].'));
+    if(args.length===0){const saved=customAliases.list();append('output',saved.length?saved.map(alias=>`${alias.name} → ${alias.command}`).join('\n'):t('No custom aliases. Use alias <name> <command> to add one.'));return;}
+    if(args.length===1){const alias=customAliases.get(args[0]);append('output',`${alias.name} → ${alias.command}`);return;}
+    const result=customAliases.set(args[0],args[1]);append('output',`${result.alias.name} → ${result.alias.command}`);
+    if(!result.saved)append('error',t('Aliases are available for this session, but could not be saved.'));return;
+   }
+   if(name==='unalias'){
+    if(args.length!==1)throw new Error(t('Usage: unalias <name>.'));
+    const result=customAliases.remove(args[0]);append('output',t('Alias removed.')+' '+result.name);
+    if(!result.saved)append('error',t('Aliases are available for this session, but could not be saved.'));return;
    }
    if(name==='list'){
     if(args.length)throw new Error(t('Too many arguments. Use help for command syntax.'));

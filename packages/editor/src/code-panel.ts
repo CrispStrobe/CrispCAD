@@ -35,7 +35,7 @@ export function mountCodePanel(parent:HTMLElement,session:CadSession,evaluate:(d
   const original=node?.kind==='code'?node.program:defaultCodeProgram(),restored=workspace?drafts.load(projectId,id):undefined;
   let baseline=restored?restored.baseline:(node?.kind==='code'?structuredClone(node.program):undefined);
   let stale=!!restored&&!!id&&!sameProgram(restored.baseline,node?.kind==='code'?node.program:undefined);
-  let overrides=structuredClone(restored?.program.parameters??original.parameters),busy=false,applying=false,inputVersion=0,previewTimer:ReturnType<typeof setTimeout>|undefined;
+  let overrides=structuredClone(restored?.program.parameters??original.parameters),busy=false,applying=false,inputVersion=0,importVersion=0,previewTimer:ReturnType<typeof setTimeout>|undefined;
   activeTarget=id;activeProject=projectId;
   dialog.classList.toggle('code-workspace',workspace);dialog.setAttribute('aria-label',t(workspace?'CAD code workspace':'Code object'));
   dialog.replaceChildren();
@@ -74,13 +74,16 @@ export function mountCodePanel(parent:HTMLElement,session:CadSession,evaluate:(d
   const interchange=el('div'),importButton=el('button',t('Import source…')),file=el('input'),format=el('select'),exportButton=el('button',t('Export source…'));interchange.className='code-interchange';file.type='file';file.accept='.cadcode,.scad,.jscad,.js';file.hidden=true;file.setAttribute('aria-label',t('Import CAD source'));format.setAttribute('aria-label',t('Source export format'));
   for(const [value,title] of [['cadcode','CAD Script (editable)'],['scad','OpenSCAD (evaluated snapshot)'],['jscad','JSCAD (evaluated snapshot)']]){const option=el('option',t(title));option.value=value;format.append(option);}importButton.onclick=()=>file.click();exportButton.disabled=!onExport;
   file.onchange=async()=>{
-   const selected=file.files?.[0],startedAt=inputVersion;file.value='';if(!selected)return;
+   const selected=file.files?.[0],startedAt=inputVersion,request=++importVersion;file.value='';if(!selected)return;
    try{
     if(selected.size>32768)throw Error(t('Source exceeds 32 KiB'));
-    const text=await selected.text(),jscad=/\.(?:jscad|js)$/i.test(selected.name)?importJSCAD(text):undefined,converted=jscad?.program??(/\.scad$/i.test(selected.name)?importOpenSCAD(text):{version:1 as const,language:'brickwright-cad-script' as const,source:text,parameters:{}});compileCode(converted);
-    if(!active()||startedAt!==inputVersion)return;
+    const text=await selected.text();
+    // Only the most recently selected file may replace this draft or report an
+    // error. A newer import can start before either file has finished reading.
+    if(!active()||startedAt!==inputVersion||request!==importVersion)return;
+    const jscad=/\.(?:jscad|js)$/i.test(selected.name)?importJSCAD(text):undefined,converted=jscad?.program??(/\.scad$/i.test(selected.name)?importOpenSCAD(text):{version:1 as const,language:'brickwright-cad-script' as const,source:text,parameters:{}});compileCode(converted);
     source.value=converted.source;showNotes(jscad?.warnings??getOpenSCADImportWarnings(converted));overrides={};parameterFields();changed();status.textContent=jscad?jscad.warnings[0]??t('Source loaded. Preview or apply to check its geometry.'):/\.scad$/i.test(selected.name)?t('Source converted. Preview before creating.'):t('Source loaded. Preview or apply to check its geometry.');
-   }catch(error){if(active())reportError(error,false);}
+   }catch(error){if(active()&&startedAt===inputVersion&&request===importVersion)reportError(error,false);}
   };
   exportButton.onclick=async()=>{try{const p=program(),extension=format.value,text=extension==='scad'?exportOpenSCAD(p):extension==='jscad'?exportJSCAD(p):exportCodeSource(p);await onExport?.({name:`${(name.value||'object').replace(/[^A-Za-z0-9_-]+/g,'_')}.${extension}`,bytes:new TextEncoder().encode(text),mime:'text/plain'});if(active())status.textContent=t('Source exported. The model and its history are unchanged.');}catch(error){if(active())reportError(error,false);}};interchange.append(importButton,file,format,exportButton);
   const fields=el('div');fields.className='code-parameters';const image=el('img');image.alt=t('Preview of the coded solid');image.hidden=true;const measures=el('p',t('Preview the code to check the solid.'));

@@ -26,7 +26,7 @@ The standalone app remembers visibility locally; the default is closed.
 - **help** lists syntax, and **help move** gives help for one command.
 - **list** shows current body and sketch identifiers and names.
 
-Command names and fixed aliases are case-insensitive. Object names use exact
+Command names and fixed or custom aliases are case-insensitive. Object names use exact
 matching; quote names with spaces. Unknown, ambiguous, extra or invalid input
 reports an error. Invalid prompt input leaves that prompt available for correction.
 Completion inserts quotes and escapes automatically. Duplicate names are offered
@@ -102,6 +102,42 @@ Existing commands such as `undo`, `redo`, `duplicate`, `delete`, `union`,
 Commands that require their existing editor panel open that panel. Common aliases
 include `u`, `re`, `dup`, `erase`/`del`, `join`, and `zoom`.
 
+### Custom aliases
+
+Define a shortcut with `alias <name> <command>`, inspect it with `alias <name>`,
+list all custom shortcuts with `alias`, and remove one with `unalias <name>`:
+
+```text
+alias makeplate b
+alias pick sel
+makeplate 40,30,10 0,0,5
+pick "Box"
+help makeplate
+alias
+unalias makeplate
+```
+
+Targets can be command names, fixed aliases, or existing custom aliases. The
+mapping stores the resolved canonical command immediately: `makeplate` above
+maps to `box`. Removing or redefining another alias cannot break it. Aliases do
+not expand arguments or run multiple commands. Built-in names and fixed aliases
+cannot be replaced. Names start with an ASCII letter and use 1–32 letters,
+digits, hyphens or underscores; up to 64 custom aliases are supported.
+
+Execution, help and argument completion resolve the same mapping. Tab expands
+a matching custom alias to its canonical command, just as it does for fixed
+aliases. `alias` and `unalias` also complete saved alias names, while the target
+argument to `alias` completes commands.
+
+Aliases are preferences shared across projects in a host's storage adapter;
+they never add model Undo steps. Standalone retains them on this device. Without
+an adapter they last for the mounted editor. Sequential saves merge unrelated
+aliases from other editor instances. If storage cannot be read or written, local
+changes remain usable, report that saving failed, and retry on the next change.
+An unreadable collection is never overwritten. Malformed stored data can be
+repaired by a valid save. Simultaneous cross-tab writes still require a future
+transaction protocol.
+
 ### Coordinates and picking
 
 Coordinates are world millimetres with Z up. Commas separate components even in
@@ -162,8 +198,18 @@ patterns. Attaching or reconnecting a joint before replay makes the edit stale,
 even when its written sketch coordinates are unchanged. Unrelated names, colors
 and joints remain untouched. Accepted assembly edits that change a sketch and
 its joints together still replay as one transaction. Older version-1 records
-without this context keep their original structural checks. Capturing the read
-dependencies of every other editing policy remains follow-up work.
+without this context keep their original structural checks.
+
+Changed mirror and pattern definitions also capture optional
+`context.bodyOperations` preconditions. These retain the operation's ID and kind
+plus joint and motion-tracer relationships on it or an enclosing construction
+body. Attaching or reconnecting a dependent joint or tracer makes an older
+record stale, matching the corresponding GUI edit guard. Unrelated bodies and
+connections, joint settings, and tracer positions/colors remain untouched.
+Accepted atomic assembly edits can still change an operation and its connections
+together in one Undo step. Capturing the read dependencies of every other
+editing policy remains follow-up work; older records cannot gain context they
+never recorded.
 
 Every successfully completed modeling operation enters the existing Undo stack
 once. There is no terminal Undo stack and no saved-document schema migration.
@@ -218,6 +264,9 @@ flight; accepting the refreshed draft still requires a new explicit Apply.
 If the target was removed, restore it with Undo or begin a new
 draft. Late previews and file imports from a closed/replaced workspace cannot
 overwrite the active editor or commit old input.
+When several source files are selected while earlier reads are pending, only
+the latest selection can replace the draft or report an import error. Editing
+the source, closing, or replacing the workspace invalidates older file reads.
 The linked **Apply & show model source** action also checks that the same view,
 draft and model are still current after its asynchronous rebuild. Closing or
 replacing the workspace suppresses that old navigation callback.
@@ -280,7 +329,7 @@ or executable source.
 ## Validation and next work
 
 Unit coverage verifies prompt atomicity/cancellation, absolute/relative/polar
-points, aliases/completion, selected-body transforms, sketch/extrusion identity,
+points, configurable aliases/completion, selected-body transforms, sketch/extrusion identity,
 GUI-to-text-to-replay roundtrips, stale and invalid rejection, source/draft
 persistence, and compatibility with existing model history.
 
@@ -297,23 +346,30 @@ cancellation, quoted entity completion, one-step Apply, parameter keyboard
 navigation, and stale asynchronous callbacks. Geometry evaluation, preview
 rendering and pointer hit testing are stubbed; these checks do not qualify
 WebGL, layout or touch. The pinned MIT `happy-dom` package is a test-only dependency.
+The focused command now also includes alias persistence/failure recovery and
+asynchronous source-import regressions.
 
 Browser scenarios in `tests/browser/terminal.spec.ts` and
 `tests/browser/code-workspace.spec.ts` cover mixed pointer/typed input, focus,
 history recall, GUI replay, draft reload, live preview, explicit Apply and stale
-source review, including argument completion and linked-Apply lifecycle changes.
+source review, including argument completion, custom-alias persistence and
+linked-Apply lifecycle changes.
 Run them on a machine with Chromium/WebKit installed:
 
 ```sh
 npx playwright test tests/browser/terminal.spec.ts tests/browser/code-workspace.spec.ts
 ```
 
-Browser qualification remains open. The initial implementation environment
-denied browser IPC; this follow-up environment could not install the browsers
-because the Playwright download host returned HTTP 403. Test discovery and DOM
-interaction checks are not a substitute for those browser runs.
+Browser qualification remains open. The current environment built the production
+app and ran the unit/DOM suites, but installed Chromium exited before opening
+any test page: `process_singleton_posix.cc` reported `socket() failed: Operation
+not permitted`. Earlier environments also blocked browser installation or IPC.
+The ten browser scenarios are discoverable for both Chromium and iPad WebKit;
+they still need successful browser execution, including standalone and embedded
+review and physical iPad qualification. Discovery and DOM checks do not replace
+those runs.
 
-Next milestones are configurable aliases; completion for further command arguments;
+Next milestones are completion for further command arguments;
 active sketch planes and advanced snaps; continuous paths/arcs and constraint
 prompts; more readable action serializers; transaction-based command scripts;
 durable journal export and cross-project replay; complete view-command capture;

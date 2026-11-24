@@ -14,6 +14,20 @@ function applyRecord(records:SessionCommandRecord[]):SessionCommandRecord&{comma
   if(!record||record.command.kind!=='apply')throw new Error('Expected a recorded model command');
   return record as SessionCommandRecord&{command:ApplySessionCommand};
 }
+function bodyOperationFixture(kind:'mirror'|'pattern',nested=false){
+  const session=createCadSession(),source=session.add(box());
+  const body=kind==='mirror'?session.mirrorBody(source,{plane:'YZ',offset:0})
+    :session.patternBody(source,{mode:'linear',axis:'X',count:2,spacing:20});
+  const dependent=nested?session.combine('union',[body,session.add(box())]):body;
+  const other=session.add(box());
+  const edit=()=>kind==='mirror'?session.editMirror(body,{plane:'YZ',offset:5})
+    :session.editPattern(body,{mode:'linear',axis:'X',count:3,spacing:20});
+  return {session,body,dependent,other,edit};
+}
+const operationCases=[
+  {kind:'mirror' as const,nested:false},{kind:'pattern' as const,nested:false},
+  {kind:'mirror' as const,nested:true},{kind:'pattern' as const,nested:true},
+];
 
 describe('replayable session commands',()=>{
   it('records a GUI edit, then undoes and replays its canonical command as exactly one step',()=>{
@@ -170,7 +184,7 @@ describe('replayable session commands',()=>{
     });
     const expected=session.serialize(),record=applyRecord(records);
     expect(record.command.context).toEqual({sketchJoints:[{sketchId:sketch,joints:[{id:joint,bodyA:body,bodyB:other}]}]});
-    expect(Object.isFrozen(record.command.context!.sketchJoints[0].joints)).toBe(true);
+    expect(Object.isFrozen(record.command.context!.sketchJoints![0].joints)).toBe(true);
     session.undo();const history=session.history.past.length;
     expect(session.executeCommand(record.text)).toBe(true);expect(session.serialize()).toBe(expected);
     expect(session.history.past).toHaveLength(history+1);
@@ -193,6 +207,147 @@ describe('replayable session commands',()=>{
       {sketchJoints:[{sketchId:sketch,joints:[{id:'joint',bodyA:'same',bodyB:'same'}]}]},
     ])expect(()=>session.executeCommand({...valid,context} as ApplySessionCommand)).toThrow(/Invalid session command/);
     expect(session.serialize()).toBe(before);expect(session.history).toEqual(history);
+  });
+
+  it.each(operationCases)('rejects a recorded $kind edit after attaching a joint (nested: $nested)',({kind,nested})=>{
+    const {session,body,dependent,other,edit}=bodyOperationFixture(kind,nested),{records}=observe(session);
+    edit();const record=applyRecord(records);
+    expect(record.command.context).toEqual({bodyOperations:[{bodyId:body,kind,joints:[],tracers:[]}]});
+    session.undo();session.addJoint('fixed',dependent,other,[0,0,0],[0,0,1]);
+    const before=session.serialize(),history=session.history,revision=session.state.revision,count=records.length;
+    expect(edit).toThrow(/Detach .* joints/);
+    expect(()=>session.executeCommand(record.text)).toThrow(/stale: joint or tracer relationships/);
+    expect(session.serialize()).toBe(before);expect(session.history).toEqual(history);
+    expect(session.state.revision).toBe(revision);expect(records).toHaveLength(count);
+  });
+
+  it.each(operationCases)('rejects a recorded $kind edit after attaching a tracer (nested: $nested)',({kind,nested})=>{
+    const {session,dependent,edit}=bodyOperationFixture(kind,nested),{records}=observe(session);
+    edit();const record=applyRecord(records);session.undo();session.addTracer(dependent,[0,0,0]);
+    const before=session.serialize(),history=session.history,revision=session.state.revision,count=records.length;
+    expect(edit).toThrow(/Remove .* motion tracers/);
+    expect(()=>session.executeCommand(record.text)).toThrow(/stale: joint or tracer relationships/);
+    expect(session.serialize()).toBe(before);expect(session.history).toEqual(history);
+    expect(session.state.revision).toBe(revision);expect(records).toHaveLength(count);
+  });
+
+  it.each(['mirror','pattern'] as const)('preserves unrelated edits while replaying a %s operation',kind=>{
+    const {session,body,other,edit}=bodyOperationFixture(kind),third=session.add(box()),{records}=observe(session);
+    edit();const record=applyRecord(records);session.undo();
+    session.update(body,{name:'Retained name',color:'#123456'});
+    const joint=session.addJoint('fixed',other,third,[0,0,0],[0,0,1]);
+    const tracer=session.addTracer(other,[1,2,3]);
+    expect(session.executeCommand(record.text)).toBe(true);
+    expect(session.state.document.nodes[body]).toMatchObject({name:'Retained name',color:'#123456',
+      ...(kind==='mirror'?{offset:5}:{pattern:{count:3}})});
+    expect(session.state.document.joints!.map(entry=>entry.id)).toEqual([joint]);
+    expect(session.state.document.tracers!.map(entry=>entry.id)).toEqual([tracer]);
+    session.undo();
+    expect(session.state.document.nodes[body]).toMatchObject({name:'Retained name',color:'#123456',
+      ...(kind==='mirror'?{offset:0}:{pattern:{count:2}})});
+    expect(session.state.document.joints!.map(entry=>entry.id)).toEqual([joint]);
+    expect(session.state.document.tracers!.map(entry=>entry.id)).toEqual([tracer]);
+  });
+
+  it.each(['joint','tracer'] as const)('detects an existing %s reconnected to the edited operation',relationship=>{
+    const {session,body,other,edit}=bodyOperationFixture('mirror',true),third=session.add(box());
+    session.addJoint('fixed',other,third,[0,0,0],[0,0,1]);session.addTracer(other,[0,0,0]);
+    const {records}=observe(session);edit();const record=applyRecord(records);session.undo();
+    session.editAssembly('Reconnect dependency',draft=>{
+      const dependent=draft.roots.find(id=>draft.nodes[id].kind==='boolean')!;
+      if(relationship==='joint')draft.joints![0].bodyA=dependent;
+      else draft.tracers![0].bodyId=dependent;
+    });
+    const before=session.serialize(),history=session.history;
+    expect(()=>session.executeCommand(record.text)).toThrow(/stale: joint or tracer relationships/);
+    expect(session.serialize()).toBe(before);expect(session.history).toEqual(history);
+    expect(session.state.document.nodes[body]).toMatchObject({offset:0});
+  });
+
+  it('preserves connection settings when replaying an accepted operation-only assembly edit',()=>{
+    const {session,body,other}=bodyOperationFixture('mirror');
+    session.addJoint('fixed',body,other,[0,0,0],[0,0,1]);session.addTracer(body,[0,0,0]);
+    const {records}=observe(session);
+    session.editAssembly('Adjust connected mirror',draft=>{const node=draft.nodes[body];if(node.kind==='mirror')node.offset=5;});
+    const record=applyRecord(records);session.undo();
+    session.updateJoint(session.state.document.joints![0].id,{collideConnected:true});
+    session.editAssembly('Move tracer',draft=>{draft.tracers![0].point=[1,2,3];draft.tracers![0].color='#123456';});
+    expect(session.executeCommand(record.text)).toBe(true);
+    expect(session.state.document.nodes[body]).toMatchObject({offset:5});
+    expect(session.state.document.joints![0].collideConnected).toBe(true);
+    expect(session.state.document.tracers![0]).toMatchObject({point:[1,2,3],color:'#123456'});
+    session.undo();expect(session.state.document.nodes[body]).toMatchObject({offset:0});
+    expect(session.state.document.joints![0].collideConnected).toBe(true);
+    expect(session.state.document.tracers![0]).toMatchObject({point:[1,2,3],color:'#123456'});
+  });
+
+  it.each(['mirror','pattern'] as const)('replays an atomic %s and connection edit with version-1 compatibility',kind=>{
+    const {session,body,other}=bodyOperationFixture(kind);
+    const joint=session.addJoint('fixed',body,other,[0,0,0],[0,0,1]),tracer=session.addTracer(body,[0,0,0]),{records}=observe(session);
+    session.editAssembly('Adjust connected operation',draft=>{
+      const node=draft.nodes[body];
+      if(node.kind==='mirror')node.offset=5;else if(node.kind==='pattern')node.pattern.count=3;
+      draft.joints![0].anchorA=[5,0,0];draft.tracers![0].point=[5,0,0];
+    });
+    const expected=session.serialize(),record=applyRecord(records);
+    expect(record.command.context).toEqual({bodyOperations:[{bodyId:body,kind,
+      joints:[{id:joint,bodyA:body,bodyB:other}],tracers:[{id:tracer,bodyId:body}]}]});
+    expect(Object.isFrozen(record.command.context!.bodyOperations![0].tracers)).toBe(true);
+    expect(parseSessionCommand(serializeSessionCommand(record.command))).toEqual(record.command);
+    expect(record.command.version).toBe(1);
+    session.undo();const history=session.history.past.length;
+    expect(session.executeCommand(record.text)).toBe(true);expect(session.serialize()).toBe(expected);
+    expect(session.history.past).toHaveLength(history+1);
+    const legacy=structuredClone(record.command);delete legacy.context;session.undo();
+    expect(session.executeCommand(serializeSessionCommand(legacy))).toBe(true);
+    expect(session.serialize()).toBe(expected);
+  });
+
+  it('combines sketch and body-operation read dependencies in one atomic record',()=>{
+    const session=createCadSession(),sketch=session.addSketch({kind:'rectangle',id:'profile',width:20,depth:30});
+    const extrusion=session.extrudeSketch(sketch,{distance:8}),body=session.mirrorBody(extrusion,{plane:'YZ',offset:0}),{records}=observe(session);
+    session.editAssembly('Adjust sketch and mirror',draft=>{
+      const profile=draft.sketches![sketch].profile;if(profile.kind==='rectangle')profile.width=25;
+      const node=draft.nodes[body];if(node.kind==='mirror')node.offset=5;
+    });
+    const record=applyRecord(records),expected=session.serialize();
+    expect(record.command.context).toEqual({sketchJoints:[{sketchId:sketch,joints:[]}],
+      bodyOperations:[{bodyId:body,kind:'mirror',joints:[],tracers:[]}]});
+    session.undo();expect(session.executeCommand(serializeSessionCommand(record.command))).toBe(true);
+    expect(session.serialize()).toBe(expected);
+    const legacy=structuredClone(record.command);delete legacy.context!.bodyOperations;session.undo();
+    expect(session.executeCommand(serializeSessionCommand(legacy))).toBe(true);
+    expect(session.serialize()).toBe(expected);
+  });
+
+  it('rejects malformed body-operation read context without changing state or history',()=>{
+    const {session,body,edit}=bodyOperationFixture('mirror'),{records}=observe(session);edit();
+    const valid=structuredClone(applyRecord(records).command);session.undo();
+    const entry={bodyId:body,kind:'mirror',joints:[],tracers:[]};
+    const before=session.serialize(),history=session.history,revision=session.state.revision,count=records.length;
+    for(const context of [
+      {bodyOperations:null},{bodyOperations:[]},{bodyOperations:Array(1)},
+      {bodyOperations:[entry,entry]},{bodyOperations:[{...entry,extra:true}]},
+      {bodyOperations:[{...entry,bodyId:'missing space'}]},{bodyOperations:[{...entry,kind:'box'}]},
+      {bodyOperations:[{bodyId:body,kind:'mirror',tracers:[]}]},
+      {bodyOperations:[{...entry,joints:Array(1)}]},
+      {bodyOperations:[{...entry,joints:[{id:'joint',bodyA:body,bodyB:body}]}]},
+      {bodyOperations:[{...entry,joints:[{id:'joint',bodyA:body,bodyB:'other',extra:true}]}]},
+      {bodyOperations:[{...entry,joints:Array(2).fill({id:'joint',bodyA:body,bodyB:'other'})}]},
+      {bodyOperations:[{bodyId:body,kind:'mirror',joints:[]}]},
+      {bodyOperations:[{...entry,tracers:Array(1)}]},
+      {bodyOperations:[{...entry,tracers:[{id:'bad id',bodyId:body}]}]},
+      {bodyOperations:[{...entry,tracers:[{id:'tracer',bodyId:'missing space'}]}]},
+      {bodyOperations:[{...entry,tracers:[{id:'tracer',bodyId:body,extra:true}]}]},
+      {bodyOperations:[{...entry,tracers:Array(2).fill({id:'tracer',bodyId:body})}]},
+      {bodyOperations:[{...entry,tracers:Array.from({length:33},(_,i)=>({id:`tracer${i}`,bodyId:body}))}]},
+      {sketchJoints:[],bodyOperations:[entry]},
+    ]){
+      expect(()=>serializeSessionCommand({...valid,context} as ApplySessionCommand)).toThrow(/Invalid session command/);
+      expect(()=>session.executeCommand({...valid,context} as ApplySessionCommand)).toThrow(/Invalid session command/);
+    }
+    expect(session.serialize()).toBe(before);expect(session.history).toEqual(history);
+    expect(session.state.revision).toBe(revision);expect(records).toHaveLength(count);
   });
 
   it('shares existing selection and undo/redo behavior without adding modeling history',()=>{

@@ -2,7 +2,7 @@ export {constructionInputs,isCube,constrainCubeTransform, MAX_DOCUMENT_BYTES, do
 export type { Vec3, Transform, Primitive, Shape, SolidNode, CadDocument } from './document.js';
 export * from './session.js';
 export {parseSessionCommand,serializeSessionCommand} from './session-commands.js';
-export type {SessionCommand,ApplySessionCommand,SessionCommandRecord,SessionValueChange,SessionCommandValue,SessionJsonValue} from './session-commands.js';
+export type {SessionCommand,ApplySessionCommand,SessionCommandRecord,SessionValueChange,SessionCommandValue,SessionJsonValue,SessionSketchJointContext,SessionBodyOperationContext} from './session-commands.js';
 export * from './physics.js';
 export {sha256Hex,geometrySignature} from './hash.js';
 export * from './parameters.js';

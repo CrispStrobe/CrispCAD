@@ -484,7 +484,7 @@ retains shared edge lengths across loops. Other edge relations remain open.
 
 The first implementation adds an optional bottom **Terminal** dock, also
 available from the command palette or Ctrl/Command+backtick. It has interactive
-prompts, fixed aliases, Tab command and entity completion, Up/Down input history, and
+prompts, fixed and configurable aliases, Tab command and entity completion, Up/Down input history, and
 Escape cancellation. Basic solids, XY line/rectangle/circle sketches,
 extrusion, selection and transforms use the existing CAD session. Point
 prompts accept typed absolute, relative and polar coordinates or viewport
@@ -493,6 +493,11 @@ not change the model. A conflicting model edit cancels the pending command.
 Completion offers body names/IDs for selection, closed sketches for extrusion,
 and commands for help, both inline and at prompts. It quotes names, preserves
 arguments after the caret, and supports backward cycling with Shift+Tab.
+`alias` and `unalias` manage up to 64 per-device shortcuts without replacing
+built-in names. Targets resolve to canonical commands, so execution, help and
+completion agree. Optional host storage persists them across projects; failed
+reads cannot overwrite another editor's aliases, and failed writes remain
+available in the current session for retry.
 
 Accepted session edits now emit versioned, replayable commands at the shared
 commit boundary. This includes GUI inspector edits, imports, sketch and code
@@ -500,8 +505,11 @@ changes, and arbitrary assembly edits. The terminal shows their action labels
 with **Use command** to insert the exact replay text. Replay checks project
 identity and the prior values of touched properties, then uses the same
 validation and Undo machinery. New sketch-edit records also check dependent
-joint relationships, so attaching or reconnecting a joint invalidates an older
-edit. Older records without that optional context retain their structural
+joint relationships. Mirror/pattern edits check joint and motion-tracer
+relationships on the operation and enclosing construction bodies. Attaching
+or reconnecting a dependent relationship invalidates an older edit while
+unrelated edits and accepted atomic assembly changes still replay. Older records
+without that optional context retain their structural
 checks. Selection and Undo/Redo also have canonical
 commands. This journal is transient and does not alter saved document schemas
 or history revisions. Camera gestures and other view-only interactions are
@@ -517,16 +525,20 @@ Parameter suggestions support arrows, Enter/Tab and Escape; Shift+Tab leaves the
 source field. Draft saves merge the latest readable storage collection to retain
 unrelated drafts from sequential editor instances. Late linked-Apply callbacks
 cannot close a replacement workspace or navigate after dismissal.
+Source imports track the latest file selection separately from source changes;
+older successful or failed reads cannot replace a newer draft or its diagnostics.
 
 See [Terminal and code workspace](TERMINAL-WORKSPACE.md) for syntax, host APIs,
 validation and limits. `npm run test:terminal` runs the focused core and DOM
-interaction regressions. Follow-up work: configurable aliases, further argument
+interaction regressions. Follow-up work: further argument
 completion, arbitrary sketch workplanes and richer snapping, continuous
 polyline/arc/constraint prompts, readable serializers for more modeling actions,
 portable multi-command scripts, durable action-journal export, broader replay
 read dependencies, cross-tab draft transactions, and complete view-command
-capture. Browser qualification is still required for this first
-slice; new Chromium/WebKit scenarios are included with the implementation.
+capture. Browser qualification is still required: the production build and
+focused unit/DOM checks pass, but this environment denies Chromium's process
+socket before a page opens. Ten Chromium/WebKit scenarios are included with
+the implementation; embedded and physical iPad workflows also need qualification.
 
 Cota documents a prompt-driven command line with history, completion, and
 absolute, relative and polar coordinates. Use those workflows to evaluate

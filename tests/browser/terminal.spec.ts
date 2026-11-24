@@ -2,6 +2,23 @@
 import {expect,test} from '@playwright/test';
 import type {Page} from '@playwright/test';
 
+test('custom aliases share commands, argument completion and device persistence without model edits',async({page})=>{
+ await page.goto('/');const root=page.locator('#cad-root');await expect(root).toHaveAttribute('data-state','ready');
+ const terminal=await openTerminal(page),input=terminal.getByRole('combobox',{name:'CAD command'}),before=await model(page);
+ for(const command of ['alias makeplate b','alias pick sel']){await input.fill(command);await input.press('Enter');}
+ expect(await model(page)).toEqual(before);
+ await input.fill('makep');await input.press('Tab');await expect(input).toHaveValue('box ');
+ await input.fill('MAKEPLATE 20,10,5 0,0,2.5');await input.press('Enter');await expect.poll(async()=>(await model(page)).roots.length).toBe(1);
+ await input.fill('pick bo');await input.press('Tab');await expect(input).toHaveValue('pick "Box" ');await input.press('Enter');
+ await input.fill('help makeplate');await input.press('Enter');await expect(terminal.locator('.terminal-entry.output').last()).toContainText('box [width,depth,height]');
+ await page.reload();await expect(root).toHaveAttribute('data-state','ready');await expect(terminal).toBeVisible();
+ await input.fill('alias makeplate');await input.press('Enter');await expect(terminal.locator('.terminal-entry.output').last()).toContainText('makeplate');
+ await input.fill('makeplate 4,4,4 20,0,2');await input.press('Enter');await expect.poll(async()=>(await model(page)).roots.length).toBe(2);
+ await input.fill('undo');await input.press('Enter');await expect.poll(async()=>(await model(page)).roots.length).toBe(1);
+ const after=await model(page);await input.fill('unalias makeplate');await input.press('Enter');await input.fill('makeplate');await input.press('Enter');
+ await expect(terminal.locator('.terminal-entry.error').last()).toContainText('Unknown command');expect(await model(page)).toEqual(after);
+});
+
 const model=(page:Page)=>page.evaluate(()=>JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!));
 async function openTerminal(page:Page){
  await page.getByRole('button',{name:'Terminal',exact:true}).click();

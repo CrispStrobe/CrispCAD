@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {constructionInputs} from './document.js';
-import type {CadDocument} from './document.js';
+import type {CadDocument,SolidNode} from './document.js';
 
 /** Data only: recorded commands never evaluate JavaScript or contain callbacks. */
 export type SessionJsonValue = null | boolean | number | string | SessionJsonValue[] | {[key:string]:SessionJsonValue};
@@ -16,6 +16,13 @@ export interface SessionSketchJointContext {
   /** Only relationships affect the sketch-edit guard; joint settings may vary. */
   joints:{id:string;bodyA:string;bodyB:string}[];
 }
+export interface SessionBodyOperationContext {
+  bodyId:string;
+  kind:'mirror'|'pattern';
+  /** Connections to this operation or an enclosing construction body. */
+  joints:SessionSketchJointContext['joints'];
+  tracers:{id:string;bodyId:string}[];
+}
 export interface ApplySessionCommand {
   version:1;
   kind:'apply';
@@ -24,7 +31,7 @@ export interface ApplySessionCommand {
   changes:SessionValueChange[];
   selection:string[];
   /** Optional read dependencies. Older version-1 records contain only writes. */
-  context?:{sketchJoints:SessionSketchJointContext[]};
+  context?:{sketchJoints?:SessionSketchJointContext[];bodyOperations?:SessionBodyOperationContext[]};
 }
 export type SessionCommand = ApplySessionCommand
   | {version:1;kind:'select';ids:string[]}
@@ -72,25 +79,49 @@ function checkValue(value:unknown):asserts value is SessionCommandValue{
   onlyKeys(value,value.present?['present','value']:['present']);
   if(value.present){if(!Object.hasOwn(value,'value'))fail('missing value');checkJson(value.value);}
 }
+// Joint and tracer IDs follow the physics schema, which permits _ or - first.
+const validRelationshipId=(value:unknown):value is string=>typeof value==='string'&&/^[a-zA-Z0-9_-]{1,96}$/.test(value);
+function checkJointRelationships(value:unknown):asserts value is SessionSketchJointContext['joints']{
+  if(!Array.isArray(value)||value.length>2000)fail('expected joint relationships');
+  const joints=new Set<string>();
+  for(const joint of value){
+    if(!object(joint))fail('expected joint relationship');
+    onlyKeys(joint,['id','bodyA','bodyB']);
+    if(!validRelationshipId(joint.id)||joints.has(joint.id)
+      ||!validId(joint.bodyA)||!validId(joint.bodyB)||joint.bodyA===joint.bodyB)fail('invalid joint relationship');
+    joints.add(joint.id);
+  }
+}
 function checkContext(value:unknown):asserts value is NonNullable<ApplySessionCommand['context']>{
   if(!object(value))fail('expected command context');
-  onlyKeys(value,['sketchJoints']);
-  if(!Array.isArray(value.sketchJoints)||!value.sketchJoints.length||value.sketchJoints.length>256)fail('expected sketch joint context');
-  const sketches=new Set<string>();
-  for(const entry of value.sketchJoints){
-    if(!object(entry))fail('expected sketch joint context');
-    onlyKeys(entry,['sketchId','joints']);
-    if(!validId(entry.sketchId)||sketches.has(entry.sketchId))fail('expected distinct sketch identifiers');
-    sketches.add(entry.sketchId);
-    if(!Array.isArray(entry.joints)||entry.joints.length>2000)fail('expected joint relationships');
-    const joints=new Set<string>();
-    for(const joint of entry.joints){
-      if(!object(joint))fail('expected joint relationship');
-      onlyKeys(joint,['id','bodyA','bodyB']);
-      // Joint IDs follow the existing physics schema, which permits _ or - first.
-      if(typeof joint.id!=='string'||!/^[a-zA-Z0-9_-]{1,96}$/.test(joint.id)||joints.has(joint.id)
-        ||!validId(joint.bodyA)||!validId(joint.bodyB)||joint.bodyA===joint.bodyB)fail('invalid joint relationship');
-      joints.add(joint.id);
+  onlyKeys(value,['sketchJoints','bodyOperations']);
+  if(value.sketchJoints===undefined&&value.bodyOperations===undefined)fail('expected command read dependencies');
+  if(value.sketchJoints!==undefined){
+    if(!Array.isArray(value.sketchJoints)||!value.sketchJoints.length||value.sketchJoints.length>256)fail('expected sketch joint context');
+    const sketches=new Set<string>();
+    for(const entry of value.sketchJoints){
+      if(!object(entry))fail('expected sketch joint context');
+      onlyKeys(entry,['sketchId','joints']);
+      if(!validId(entry.sketchId)||sketches.has(entry.sketchId))fail('expected distinct sketch identifiers');
+      sketches.add(entry.sketchId);checkJointRelationships(entry.joints);
+    }
+  }
+  if(value.bodyOperations!==undefined){
+    if(!Array.isArray(value.bodyOperations)||!value.bodyOperations.length||value.bodyOperations.length>2000)fail('expected body operation context');
+    const bodies=new Set<string>();
+    for(const entry of value.bodyOperations){
+      if(!object(entry))fail('expected body operation context');
+      onlyKeys(entry,['bodyId','kind','joints','tracers']);
+      if(!validId(entry.bodyId)||bodies.has(entry.bodyId)||entry.kind!=='mirror'&&entry.kind!=='pattern')fail('expected distinct body operation identifiers');
+      bodies.add(entry.bodyId);checkJointRelationships(entry.joints);
+      if(!Array.isArray(entry.tracers)||entry.tracers.length>32)fail('expected tracer relationships');
+      const tracers=new Set<string>();
+      for(const tracer of entry.tracers){
+        if(!object(tracer))fail('expected tracer relationship');
+        onlyKeys(tracer,['id','bodyId']);
+        if(!validRelationshipId(tracer.id)||tracers.has(tracer.id)||!validId(tracer.bodyId))fail('invalid tracer relationship');
+        tracers.add(tracer.id);
+      }
     }
   }
 }
@@ -193,6 +224,27 @@ function sketchJointRelationships(document:CadDocument,sketchId:string):SessionS
     .map(({id,bodyA,bodyB})=>({id,bodyA,bodyB})).sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
 }
 
+function bodyOperationRelationships(document:CadDocument,bodyId:string):Pick<SessionBodyOperationContext,'joints'|'tracers'>{
+  const related=new Map<string,boolean>();
+  function uses(id:string):boolean{
+    if(related.has(id))return related.get(id)!;
+    const result=id===bodyId||constructionInputs(document.nodes[id]).some(uses);
+    related.set(id,result);return result;
+  }
+  const byId=(a:{id:string},b:{id:string})=>a.id<b.id?-1:a.id>b.id?1:0;
+  return {
+    joints:(document.joints??[]).filter(joint=>uses(joint.bodyA)||uses(joint.bodyB))
+      .map(({id,bodyA,bodyB})=>({id,bodyA,bodyB})).sort(byId),
+    tracers:(document.tracers??[]).filter(tracer=>uses(tracer.bodyId))
+      .map(({id,bodyId})=>({id,bodyId})).sort(byId),
+  };
+}
+function bodyOperationInputs(node:SolidNode|undefined){
+  if(node?.kind==='mirror')return {kind:node.kind,source:node.source,plane:node.plane,offset:node.offset};
+  if(node?.kind==='pattern')return {kind:node.kind,source:node.source,pattern:node.pattern};
+  return undefined;
+}
+
 /** @internal Capture the accepted result, including derived parameter/source edits. */
 export function createDocumentCommand(before:CadDocument,after:CadDocument,label:string,selection:readonly string[]):ApplySessionCommand{
   if(before.id!==after.id)fail('commands must preserve the project identity');
@@ -212,8 +264,15 @@ export function createDocumentCommand(before:CadDocument,after:CadDocument,label
   const sketchJoints=Object.entries(before.sketches??{})
     .filter(([id,sketch])=>!sameSessionValue(sketch,after.sketches?.[id]))
     .map(([sketchId])=>({sketchId,joints:sketchJointRelationships(before,sketchId)}));
+  // Editing an existing mirror/pattern reads connections to the operation and
+  // its enclosing bodies. Capture the prior relationships, not joint settings
+  // or tracer points, so unrelated changes and atomic assembly edits still work.
+  const bodyOperations:SessionBodyOperationContext[]=Object.values(before.nodes).flatMap(node=>{
+    if(node.kind!=='mirror'&&node.kind!=='pattern'||sameSessionValue(bodyOperationInputs(node),bodyOperationInputs(after.nodes[node.id])))return [];
+    return [{bodyId:node.id,kind:node.kind,...bodyOperationRelationships(before,node.id)}];
+  });
   return {version:1,kind:'apply',projectId:before.id,label,changes,selection:[...selection],
-    ...(sketchJoints.length?{context:{sketchJoints}}:{})};
+    ...(sketchJoints.length||bodyOperations.length?{context:{...(sketchJoints.length?{sketchJoints}:{}),...(bodyOperations.length?{bodyOperations}:{})}}:{})};
 }
 
 function location(document:CadDocument,path:readonly string[]):{parent:Record<string,unknown>;key:string}{
@@ -233,6 +292,11 @@ export function applyDocumentCommand(document:CadDocument,command:ApplySessionCo
     if(!document.sketches||!Object.hasOwn(document.sketches,entry.sketchId)
       ||!sameSessionValue(sketchJointRelationships(document,entry.sketchId),entry.joints))
       throw new Error(`Recorded command is stale: joint relationships changed for sketch ${entry.sketchId}`);
+  }
+  for(const entry of command.context?.bodyOperations??[]){
+    if(document.nodes[entry.bodyId]?.kind!==entry.kind
+      ||!sameSessionValue(bodyOperationRelationships(document,entry.bodyId),{joints:entry.joints,tracers:entry.tracers}))
+      throw new Error(`Recorded command is stale: joint or tracer relationships changed for ${entry.kind} ${entry.bodyId}`);
   }
   for(const change of command.changes){
     const {parent,key}=location(document,change.path),current=Object.hasOwn(parent,key)?parent[key]:undefined;

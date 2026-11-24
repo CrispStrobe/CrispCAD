@@ -25,7 +25,7 @@
     "build": "npm run build:packages && tsc -p apps/standalone/tsconfig.json && npm run assets && vite build && node scripts/build-sw.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
-    "test:terminal": "npm run build:packages && vitest run tests/session-commands.test.ts tests/terminal.test.ts tests/code-workspace-state.test.ts tests/editor-panels.test.ts",
+    "test:terminal": "npm run build:packages && vitest run tests/session-commands.test.ts tests/terminal.test.ts tests/terminal-aliases.test.ts tests/code-workspace-state.test.ts tests/code-workspace-regression.test.ts tests/editor-panels.test.ts",
     "test:e2e": "playwright test",
     "check": "npm run build && npm run check:i18n && npm test && npm run test:e2e",
     "verify:packages": "node scripts/verify-packages.mjs",
