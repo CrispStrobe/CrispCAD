@@ -69,21 +69,95 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
   image.dataset.adafruitPreview=folder.name;
   return image;
  }
- function renderList(){
-  const scroll=list.scrollTop;clearPreviews(list);list.replaceChildren();
-  const terms=fold(search.value).trim().split(/\s+/).filter(Boolean);
-  const matches=filter.value==='projects'?[]:catalogue.assets.filter(a=>terms.every(term=>fold(`${a.title} ${a.author} ${a.licence.spdx}`).includes(term))
-   &&(!filter.value||filter.value==='models'||(filter.value==='source')===!!sourceFor(a)));
-  const archiveMatches=['source','projects'].includes(filter.value)?[]:archive.folders.filter(folder=>(filter.value!=='mesh'||folder.files.some(f=>f.format==='stl'))&&terms.every(term=>fold(`${folder.name} Adafruit ${folder.files.map(f=>f.path).join(' ')}`).includes(term)));
-  const projectMatches=!filter.value||filter.value==='projects'?(projects?.items??[]).filter(project=>terms.every(term=>fold(project.title+' '+(project.note??'')).includes(term))):[];
-  if(!matches.length&&!archiveMatches.length&&!projectMatches.length)list.append(el('p',(catalogue.assets.length||archive.folders.length||projects?.items.length)?t('No matching models.'):t('No published catalogue is bundled. Open a reviewed remote catalogue JSON to browse models.')));
-  for(const project of projectMatches){
-   const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;card.setAttribute('aria-pressed',String(selectedProject===project));
-   card.append(projectImage(project),el('strong',project.title),el('small',t('Robot project · Includes code')));
-   card.onclick=()=>{selectedProject=project;selected=undefined;archiveSelection=undefined;renderList();renderDetails();};
-   list.append(card);
+ type LibraryItem=ModelLibraryProject|ModelLibraryAsset|ModelLibraryArchive['folders'][number];
+ let cards=new Map<LibraryItem,HTMLButtonElement>();
+ let pressedCard:HTMLButtonElement|undefined;
+ let cardsDisabled=false,cardPreviews=options?.previews;
+ const emptyList=el('p');
+ const searchText=new WeakMap<LibraryItem,string>();
+ function matchesSearch<Item extends LibraryItem>(item:Item,terms:string[],describe:(item:Item)=>string){
+  if(!terms.length)return true;
+  let text=searchText.get(item);
+  if(text===undefined){text=fold(describe(item));searchText.set(item,text);}
+  return terms.every(term=>text.includes(term));
+ }
+ const describeAsset=(asset:ModelLibraryAsset)=>`${asset.title} ${asset.author} ${asset.licence.spdx}`;
+ const describeFolder=(folder:ModelLibraryArchive['folders'][number])=>`${folder.name} Adafruit ${folder.files.map(file=>file.path).join(' ')}`;
+ const describeProject=(project:ModelLibraryProject)=>`${project.title} ${project.note??''}`;
+ function refreshCards(){
+  const selection=selectedProject??selected??archiveSelection;
+  const next=selection?cards.get(selection):undefined;
+  if(pressedCard!==next){
+   pressedCard?.setAttribute('aria-pressed','false');
+   next?.setAttribute('aria-pressed','true');
+   pressedCard=next;
   }
-  for(const asset of matches){const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;card.setAttribute('aria-label',`${asset.title} · ${asset.licence.spdx}`);card.setAttribute('aria-pressed',String(selected?.id===asset.id));const name=el('strong',asset.title),meta=el('span');meta.className='model-card-meta';meta.append(badge(asset),el('small',sourceFor(asset)?t('Editable source'):t('Mesh')));card.append(image(asset),name,meta);card.onclick=()=>{selectedProject=undefined;selected=asset;archiveSelection=undefined;renderList();renderDetails();};list.append(card);}for(const folder of archiveMatches){const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;card.setAttribute('aria-pressed',String(archiveSelection===folder));card.dataset.archiveFolder=folder.name;card.append(archiveImage(folder),el('strong',folder.name),el('small',t('Adafruit · Original files')));card.onclick=()=>{selectedProject=undefined;selected=undefined;archiveSelection=folder;renderList();renderDetails();};list.append(card);}list.scrollTop=scroll;
+  if(cardsDisabled!==working){
+   for(const card of cards.values())card.disabled=working;
+   cardsDisabled=working;
+  }
+ }
+ function createCard(onSelect:()=>void){
+  const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;
+  card.setAttribute('aria-pressed','false');
+  card.onclick=()=>{if(working)return;onSelect();refreshCards();renderDetails();};
+  return card;
+ }
+ function renderList(){
+  const scroll=list.scrollTop,mode=filter.value;
+  const terms=fold(search.value).trim().split(/\s+/).filter(Boolean);
+  const matches=mode==='projects'?[]:catalogue.assets.filter(asset=>
+   (!mode||mode==='models'||(mode==='source')===!!sourceFor(asset))&&matchesSearch(asset,terms,describeAsset));
+  const archiveMatches=['source','projects'].includes(mode)?[]:archive.folders.filter(folder=>
+   (mode!=='mesh'||folder.files.some(file=>file.format==='stl'))&&matchesSearch(folder,terms,describeFolder));
+  const projectMatches=!mode||mode==='projects'?(projects?.items??[]).filter(project=>matchesSearch(project,terms,describeProject)):[];
+  const next=new Map<LibraryItem,HTMLButtonElement>();
+  for(const project of projectMatches){
+   let card=cards.get(project);
+   if(!card){
+    card=createCard(()=>{selectedProject=project;selected=undefined;archiveSelection=undefined;});
+    card.append(projectImage(project),el('strong',project.title),el('small',t('Robot project · Includes code')));
+   }
+   next.set(project,card);
+  }
+  for(const asset of matches){
+   let card=cardPreviews===options?.previews?cards.get(asset):undefined;
+   if(!card){
+    card=createCard(()=>{selectedProject=undefined;selected=asset;archiveSelection=undefined;});
+    card.setAttribute('aria-label',`${asset.title} · ${asset.licence.spdx}`);
+    const meta=el('span');meta.className='model-card-meta';
+    meta.append(badge(asset),el('small',sourceFor(asset)?t('Editable source'):t('Mesh')));
+    card.append(image(asset),el('strong',asset.title),meta);
+   }
+   next.set(asset,card);
+  }
+  for(const folder of archiveMatches){
+   let card=cards.get(folder);
+   if(!card){
+    card=createCard(()=>{selectedProject=undefined;selected=undefined;archiveSelection=folder;});
+    card.dataset.archiveFolder=folder.name;
+    card.append(archiveImage(folder),el('strong',folder.name),el('small',t('Adafruit · Original files')));
+   }
+   next.set(folder,card);
+  }
+  for(const [item,card] of cards){
+   if(next.get(item)===card)continue;
+   clearPreviews(card);card.remove();
+  }
+  cards=next;cardPreviews=options?.previews;
+  if(cards.size){
+   emptyList.remove();
+   let cursor=list.firstChild;
+   for(const card of cards.values()){
+    if(card!==cursor)list.insertBefore(card,cursor);
+    cursor=card.nextSibling;
+   }
+  }else{
+   emptyList.textContent=(catalogue.assets.length||archive.folders.length||projects?.items.length)?t('No matching models.'):t('No published catalogue is bundled. Open a reviewed remote catalogue JSON to browse models.');
+   if(emptyList.parentNode!==list)list.append(emptyList);
+  }
+  refreshCards();
+  list.scrollTop=scroll;
  }
  function appendInfo(asset:ModelLibraryAsset,technical:HTMLElement){
   const licence=el('section');licence.className='model-library-licence';licence.append(el('h4',t('Licence & attribution')));
@@ -130,10 +204,10 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
   const preview=el('div');preview.className='model-library-preview';preview.append(projectImage(project));
   const launch=el('button',t`Open ${project.title} project`);launch.type='button';launch.className='primary';launch.disabled=working;
   launch.onclick=async()=>{
-   working=true;renderList();launch.disabled=true;status.textContent=t('Opening robot project…');
+   working=true;refreshCards();launch.disabled=true;status.textContent=t('Opening robot project…');
    try{const opened=await projects!.open(project.id);if(!disposed&&dialog.open){if(opened===false)status.textContent='';else dialog.close();}}
    catch(error){if(!disposed)report(error);}
-   finally{working=false;if(!disposed){renderList();launch.disabled=false;}}
+   finally{working=false;if(!disposed){refreshCards();launch.disabled=false;}}
   };
   details.append(preview,el('h3',project.title),el('p',t('Opens a complete project with its 3D model, program, circuit, and Widgets.')));
   if(project.note)details.append(el('p',project.note));
@@ -155,12 +229,12 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
    eligibility.textContent=admitted?'':t('Insertion unavailable: select an STL with passing quality, a recorded conversion and at most 16 MiB.');}
   files.onchange=()=>{renderCollisionReport(collision,asset,choices[Number(files.value)]?.file);refresh();};
   insert.onclick=async()=>{if(insert.disabled)return;const chosen=choices[Number(files.value)],initial=session.state,modificationNotes=notes.value.trim()||'Inserted without manual changes; recorded millimetres/Z-up conversion applied.',offlineOnly=offline.checked;
-   working=true;controller=new AbortController();file.disabled=search.disabled=filter.disabled=files.disabled=notes.disabled=offline.disabled=true;refresh();renderList();status.textContent=t('Verifying selected model…');
+   working=true;controller=new AbortController();file.disabled=search.disabled=filter.disabled=files.disabled=notes.disabled=offline.disabled=true;refresh();refreshCards();status.textContent=t('Verifying selected model…');
    try{const local=chosen.file.path?localFiles.get(chosen.file.path):undefined;
     const fetched=local?{bytes:local.slice(),cached:true}:await fetchModelLibraryFile(catalogue,chosen.selection,{cache:options?.cache??noCache,fetch:options?.fetch,offline:offlineOnly,signal:controller.signal,maxBytes:MODEL_LIBRARY_MESH_MAX_BYTES});if(disposed)throw new Error(t('Editor was disposed'));if(session.state.document!==initial.document||session.state.revision!==initial.revision)throw new Error(t('The model changed while loading this library file. Retry insertion.'));
     await insertModelLibrarySTL(session,catalogue,chosen.selection,fetched.bytes,{evaluate:async doc=>{const result=await evaluate(doc);if(disposed)throw new Error(t('Editor was disposed'));return result;},toMillimetresZUp:asset.quality!.screeningPolicy!.toMillimetresZUp,checkedOn:new Date().toISOString().slice(0,10),modificationNotes,signal:controller.signal});
     status.textContent=fetched.cached?t('Inserted with provenance. Verified file is cached for offline reuse.'):t('Inserted with provenance. File could not be cached for offline reuse.');try{await inserted();}catch{if(!disposed)status.textContent=t('Model inserted with provenance; viewport refresh failed. Close this panel to inspect the editor status.');}
-   }catch(error){if(!disposed)report(error);}finally{working=false;controller=undefined;file.disabled=search.disabled=filter.disabled=files.disabled=notes.disabled=offline.disabled=false;refresh();renderList();}
+   }catch(error){if(!disposed)report(error);}finally{working=false;controller=undefined;file.disabled=search.disabled=filter.disabled=files.disabled=notes.disabled=offline.disabled=false;refresh();refreshCards();}
   };
   details.append(label,insert,eligibility);appendInfo(asset,technical);renderCollisionReport(collision,asset,choices[Number(files.value)]?.file);refresh();
  }
@@ -172,8 +246,8 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
   const firstSTL=folder.files.findIndex(f=>f.format==='stl');if(firstSTL>=0)select.value=String(firstSTL);
   const upstream=link(t('Upstream original'),`https://github.com/adafruit/Adafruit_CAD_Parts/blob/${archive.upstreamCommit}/`);const identity=el('pre'),offlineLabel=el('label',t('Use cached files only')),offline=el('input');offline.type='checkbox';offlineLabel.prepend(offline);const unitLabel=el('label',t('STL source units')),units=el('select');units.setAttribute('aria-label',t('STL source units'));for(const [value,label] of [['',t('Choose units')],['mm',t('Millimetres')],['in',t('Inches')]]){const option=el('option',label);option.value=value;units.append(option);}unitLabel.append(units);const axisLabel=el('label',t('STL source up axis')),axis=el('select');axis.setAttribute('aria-label',t('STL source up axis'));for(const [value,label] of [['',t('Choose up axis')],['Z',t('Z up')],['Y',t('Y up')]]){const option=el('option',label);option.value=value;axis.append(option);}axisLabel.append(axis);const insert=el('button',t('Screen and insert STL'));insert.type='button';insert.className='primary library-insert';const eligibility=el('p');eligibility.className='library-eligibility';const download=el('button',t('Download verified original'));download.type='button';download.className='library-download';
   const refresh=()=>{const f=folder.files[Number(select.value)];identity.textContent=`Format from filename: ${f.format}\nUnits: ${f.units}\nSHA-256: ${f.sha256}\nUpstream commit: ${archive.upstreamCommit}\nMirror commit: ${archive.commit}`;upstream.href=`https://github.com/adafruit/Adafruit_CAD_Parts/blob/${archive.upstreamCommit}/${f.path.split('/').map(encodeURIComponent).join('/')}`;download.disabled=working;const isSTL=f.path.toLowerCase().endsWith('.stl');unitLabel.hidden=axisLabel.hidden=insert.hidden=!isSTL;insert.disabled=working||!isSTL||!units.value||!axis.value||f.bytes>MODEL_LIBRARY_MESH_MAX_BYTES;eligibility.textContent=!isSTL?'':f.bytes>MODEL_LIBRARY_MESH_MAX_BYTES?t('STL exceeds the 16 MiB screening limit; original download remains available.'):!units.value||!axis.value?t('Choose source units and up axis to screen this STL.'):t('Insertion requires a passing geometry screen and does not qualify collisions.');};select.onchange=()=>{units.value=axis.value='';refresh();};units.onchange=axis.onchange=refresh;
-  download.onclick=async()=>{const chosen=folder.files[Number(select.value)];working=true;controller=new AbortController();select.disabled=offline.disabled=true;refresh();renderList();status.textContent=t('Verifying original file…');try{const bytes=await fetchArchiveFile(archive,chosen,archiveCache,options?.fetch,offline.checked,controller.signal);if(disposed)return;const name=chosen.path.split('/').pop()??'original';if(deliver)await deliver({name,bytes,mime:'application/octet-stream'});else{const url=URL.createObjectURL(new Blob([bytes.slice().buffer as ArrayBuffer]));const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}if(!disposed)status.textContent=t('Verified original downloaded.');}catch(error){if(!disposed)report(error);}finally{working=false;controller=undefined;select.disabled=offline.disabled=false;refresh();renderList();}};
-  insert.onclick=async()=>{const chosen=folder.files[Number(select.value)],initial=session.state,sourceUnits=units.value as 'mm'|'in',sourceAxis=axis.value as 'Y'|'Z';working=true;controller=new AbortController();select.disabled=offline.disabled=units.disabled=axis.disabled=true;refresh();renderList();status.textContent=t('Verifying and screening STL…');try{const bytes=await fetchArchiveFile(archive,chosen,archiveCache,options?.fetch,offline.checked,controller.signal);const checkedOn=new Date().toISOString().slice(0,10),screen=await screenArchiveSTL(archive,folder,chosen,bytes,sourceUnits,sourceAxis,checkedOn);if(disposed)throw new Error(t('Editor was disposed'));if(session.state.document!==initial.document||session.state.revision!==initial.revision)throw new Error(t('The model changed while loading. Retry insertion.'));await insertModelLibrarySTL(session,screen.catalogue,{assetId:screen.id,file:'original'},bytes,{evaluate,toMillimetresZUp:screen.matrix,checkedOn,modificationNotes:screen.assumption,signal:controller.signal});status.textContent=t('STL inserted with provenance and selected conversion.');try{await inserted();}catch{if(!disposed)status.textContent=t('STL inserted with provenance; viewport refresh failed.');}}catch(error){if(!disposed)report(error);}finally{working=false;controller=undefined;select.disabled=offline.disabled=units.disabled=axis.disabled=false;refresh();renderList();}};
+  download.onclick=async()=>{const chosen=folder.files[Number(select.value)];working=true;controller=new AbortController();select.disabled=offline.disabled=true;refresh();refreshCards();status.textContent=t('Verifying original file…');try{const bytes=await fetchArchiveFile(archive,chosen,archiveCache,options?.fetch,offline.checked,controller.signal);if(disposed)return;const name=chosen.path.split('/').pop()??'original';if(deliver)await deliver({name,bytes,mime:'application/octet-stream'});else{const url=URL.createObjectURL(new Blob([bytes.slice().buffer as ArrayBuffer]));const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}if(!disposed)status.textContent=t('Verified original downloaded.');}catch(error){if(!disposed)report(error);}finally{working=false;controller=undefined;select.disabled=offline.disabled=false;refresh();refreshCards();}};
+  insert.onclick=async()=>{const chosen=folder.files[Number(select.value)],initial=session.state,sourceUnits=units.value as 'mm'|'in',sourceAxis=axis.value as 'Y'|'Z';working=true;controller=new AbortController();select.disabled=offline.disabled=units.disabled=axis.disabled=true;refresh();refreshCards();status.textContent=t('Verifying and screening STL…');try{const bytes=await fetchArchiveFile(archive,chosen,archiveCache,options?.fetch,offline.checked,controller.signal);const checkedOn=new Date().toISOString().slice(0,10),screen=await screenArchiveSTL(archive,folder,chosen,bytes,sourceUnits,sourceAxis,checkedOn);if(disposed)throw new Error(t('Editor was disposed'));if(session.state.document!==initial.document||session.state.revision!==initial.revision)throw new Error(t('The model changed while loading. Retry insertion.'));await insertModelLibrarySTL(session,screen.catalogue,{assetId:screen.id,file:'original'},bytes,{evaluate,toMillimetresZUp:screen.matrix,checkedOn,modificationNotes:screen.assumption,signal:controller.signal});status.textContent=t('STL inserted with provenance and selected conversion.');try{await inserted();}catch{if(!disposed)status.textContent=t('STL inserted with provenance; viewport refresh failed.');}}catch(error){if(!disposed)report(error);}finally{working=false;controller=undefined;select.disabled=offline.disabled=units.disabled=axis.disabled=false;refresh();refreshCards();}};
   const originals=el('details'),summary=el('summary',t('Original source files'));originals.append(summary,upstream,download,identity);details.append(select,offlineLabel,unitLabel,axisLabel,insert,eligibility,originals);refresh();
  }
  function renderSource(asset:ModelLibraryAsset,source:ModelLibraryFile,technical:HTMLElement){
@@ -183,9 +257,9 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
   const dependenciesAvailable=asset.sourceBundle?.dependencies.every(dependency=>localFiles.has(dependency.file.path!))??true;
   const {label,notes}=optionalNotes(),insert=el('button',t('Insert editable source'));insert.type='button';insert.className='primary library-insert';const refresh=()=>{insert.disabled=working||!bytes||!dependenciesAvailable;};
   if(!bytes||!dependenciesAvailable)details.append(el('p',t('Editable source is not bundled in this host.')));
-  insert.onclick=async()=>{if(insert.disabled||!bytes)return;working=true;controller=new AbortController();file.disabled=search.disabled=filter.disabled=notes.disabled=true;refresh();renderList();status.textContent=t('Verifying selected model…');
+  insert.onclick=async()=>{if(insert.disabled||!bytes)return;working=true;controller=new AbortController();file.disabled=search.disabled=filter.disabled=notes.disabled=true;refresh();refreshCards();status.textContent=t('Verifying selected model…');
    try{await insertModelLibrarySource(session,catalogue,{assetId:asset.id,file:source===asset.original?'original':'editableSource'},bytes,{signal:controller.signal,sourceFiles:localFiles,modificationNotes:notes.value.trim()||'Inserted with default parameters; no manual changes.',evaluate:async doc=>{const result=await evaluate(doc);if(disposed)throw new Error(t('Editor was disposed'));return result;}});status.textContent=t('Editable source inserted with provenance. Available offline.');try{await inserted();}catch{if(!disposed)status.textContent=t('Model inserted with provenance; viewport refresh failed. Close this panel to inspect the editor status.');}
-   }catch(error){if(!disposed)report(error);}finally{working=false;controller=undefined;file.disabled=search.disabled=filter.disabled=notes.disabled=false;refresh();renderList();}
+   }catch(error){if(!disposed)report(error);}finally{working=false;controller=undefined;file.disabled=search.disabled=filter.disabled=notes.disabled=false;refresh();refreshCards();}
   };details.append(label,insert);refresh();
  }
   function renderCollisionReport(container:HTMLElement,asset:ModelLibraryAsset,selectedFile:ModelLibraryFile|undefined){
