@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {expect,test} from '@playwright/test';
 import type {Page} from '@playwright/test';
+import {clickTool} from './ui.js';
 
 test('custom aliases share commands, argument completion and device persistence without model edits',async({page})=>{
  await page.goto('/');const root=page.locator('#cad-root');await expect(root).toHaveAttribute('data-state','ready');
@@ -32,7 +33,7 @@ test('prompts, cancels, completes and replays GUI edits using the same Undo',asy
  await input.press('Escape');expect((await model(page)).roots).toHaveLength(0);
  await input.fill('box 20,30,10 0,0,5');await input.press('Enter');await expect(root).toHaveAttribute('data-state','ready');
  await expect.poll(async()=>(await model(page)).roots.length).toBe(1);const first=await model(page);
- await page.getByRole('button',{name:'Duplicate',exact:true}).first().click();await expect.poll(async()=>(await model(page)).roots.length).toBe(2);
+ await clickTool(page,'Duplicate');await expect.poll(async()=>(await model(page)).roots.length).toBe(2);
  const replayRow=terminal.locator('.terminal-entry.action').filter({has:page.getByText('Duplicate',{exact:true})});
  await expect(replayRow).toHaveCount(1);await replayRow.getByRole('button',{name:'Use command'}).click();
  const replay=await input.inputValue();expect(replay).toMatch(/^apply /);

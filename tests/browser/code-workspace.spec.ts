@@ -78,5 +78,5 @@ test('an old linked Apply completion does not close a reopened workspace',async(
  await page.evaluate(()=>{(window as unknown as {workspaceBuildGate:{release:()=>void}}).workspaceBuildGate.release();});
  await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  await expect(workspace).toBeVisible();await expect(workspace.getByLabel('CAD code source',{exact:true})).toHaveValue(draft);
- await expect(page.getByLabel('Model source',{exact:true})).toBeHidden();
+ await expect(page.locator('section.model-source-pane')).toBeHidden();
 });
