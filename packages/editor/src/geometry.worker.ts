@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {FeatureEvaluationError,setLocale} from '@brickwright/cad-core';
-import { checkPrintability, createGeometryKernel } from '@brickwright/cad-geometry';
+import { createGeometryKernel } from '@brickwright/cad-geometry';
 import type { GeometryKernel } from '@brickwright/cad-geometry';
 import type {GeometryRequest} from './geometry-client.js';
 let kernel: Promise<GeometryKernel> | null = null;
@@ -21,6 +21,7 @@ self.onmessage = async (event: MessageEvent<GeometryRequest>) => {
     }
     const result=ready.evaluate(event.data.document);
     if(event.data.printability){
+      const {checkPrintability}=await import('@brickwright/cad-geometry/printability');
       self.postMessage({request,result:checkPrintability(result.bodies,event.data.printability)});
       return;
     }
