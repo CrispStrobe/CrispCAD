@@ -1,0 +1,9 @@
+name: brickwright_sketch_compare
+publish_to: none
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+dependencies:
+  dart_csp:
+    git:
+      url: https://github.com/CrispStrobe/dart_csp.git
+      ref: 894a11d74dae312ca99578532b27cca0b51fd34f

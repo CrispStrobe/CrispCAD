@@ -1,0 +1,257 @@
+{
+ "date": "2026-11-24",
+ "machine": {
+  "os": "linux x64 (cloud container)",
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.30GHz"
+ },
+ "fixture": {
+  "comment": "Ladder of N rectangular bays: bottom points b0..bN, top points t0..tN. b0 fixed at the origin; bottom and top rails horizontal; rungs vertical; bay i width = 10 + (i % 3); rung 0 height 8; all rungs equal by construction of horizontal rails. Initial guess: exact solution perturbed deterministically by up to ±1.5 mm. Edit: bay 0 width 10 -> 12 (alternating). Expected: b_i = (sum widths, 0), t_i = (sum widths, 8).",
+  "sizes": [
+   4,
+   16,
+   64
+  ],
+  "samples": 7,
+  "warmups": 2
+ },
+ "pins": {
+  "dart_csp": "894a11d74dae312ca99578532b27cca0b51fd34f",
+  "kernelCAD": "964fa6cfe94ecf16c2c44b94770846ae23665d82",
+  "kernelCADSolverSha256": "ae1d0aab4350edfc06932b607b33bd3872ade4c5779e7b2ee7b7553f73347b96"
+ },
+ "kernelCAD": {
+  "shipped": {
+   "runtime": "node v22.23.5",
+   "results": [
+    {
+     "solver": "kernelCAD relaxation",
+     "iterationCap": 100,
+     "bays": 4,
+     "coordinates": 20,
+     "constraints": 18,
+     "cold": {
+      "ms": 0.7371259999999893,
+      "converged": true,
+      "reportedResidual": 0,
+      "iterations": 68,
+      "maxCoordinateErrorMm": 0.0022363070466724366
+     },
+     "medianEditMs": 0.5256370000000175,
+     "maxEditCoordinateErrorMm": 0.0023773231429302655,
+     "editsReportedConverged": 7,
+     "edits": 7
+    },
+    {
+     "solver": "kernelCAD relaxation",
+     "iterationCap": 100,
+     "bays": 16,
+     "coordinates": 68,
+     "constraints": 66,
+     "cold": {
+      "ms": 0.5291780000000017,
+      "converged": true,
+      "reportedResidual": 0.3020209582018074,
+      "iterations": 100,
+      "maxCoordinateErrorMm": 0.05483368132252053
+     },
+     "medianEditMs": 0.440337999999997,
+     "maxEditCoordinateErrorMm": 1.1263195257056395,
+     "editsReportedConverged": 0,
+     "edits": 7
+    },
+    {
+     "solver": "kernelCAD relaxation",
+     "iterationCap": 100,
+     "bays": 64,
+     "coordinates": 260,
+     "constraints": 258,
+     "cold": {
+      "ms": 3.7941529999999943,
+      "converged": true,
+      "reportedResidual": 0.25232152195011015,
+      "iterations": 100,
+      "maxCoordinateErrorMm": 0.05587392373381306
+     },
+     "medianEditMs": 0.6813000000000216,
+     "maxEditCoordinateErrorMm": 2.0179018717433337,
+     "editsReportedConverged": 0,
+     "edits": 7
+    }
+   ]
+  },
+  "cap1000": {
+   "runtime": "node v22.23.5",
+   "results": [
+    {
+     "solver": "kernelCAD relaxation",
+     "iterationCap": 1000,
+     "bays": 4,
+     "coordinates": 20,
+     "constraints": 18,
+     "cold": {
+      "ms": 0.6971319999999537,
+      "converged": true,
+      "reportedResidual": 0,
+      "iterations": 68,
+      "maxCoordinateErrorMm": 0.0022363070466724366
+     },
+     "medianEditMs": 0.5149860000000217,
+     "maxEditCoordinateErrorMm": 0.0023773231429302655,
+     "editsReportedConverged": 7,
+     "edits": 7
+    },
+    {
+     "solver": "kernelCAD relaxation",
+     "iterationCap": 1000,
+     "bays": 16,
+     "coordinates": 68,
+     "constraints": 66,
+     "cold": {
+      "ms": 2.5660519999999565,
+      "converged": true,
+      "reportedResidual": 0,
+      "iterations": 506,
+      "maxCoordinateErrorMm": 0.010820531569947889
+     },
+     "medianEditMs": 1.5652650000000108,
+     "maxEditCoordinateErrorMm": 0.019912038633179918,
+     "editsReportedConverged": 7,
+     "edits": 7
+    },
+    {
+     "solver": "kernelCAD relaxation",
+     "iterationCap": 1000,
+     "bays": 64,
+     "coordinates": 260,
+     "constraints": 258,
+     "cold": {
+      "ms": 8.395824000000005,
+      "converged": true,
+      "reportedResidual": 0.05112964382967932,
+      "iterations": 1000,
+      "maxCoordinateErrorMm": 0.026780705839883012
+     },
+     "medianEditMs": 7.036503999999979,
+     "maxEditCoordinateErrorMm": 1.4542879283793582,
+     "editsReportedConverged": 0,
+     "edits": 7
+    }
+   ]
+  },
+  "cap10000": {
+   "runtime": "node v22.23.5",
+   "results": [
+    {
+     "solver": "kernelCAD relaxation",
+     "iterationCap": 10000,
+     "bays": 4,
+     "coordinates": 20,
+     "constraints": 18,
+     "cold": {
+      "ms": 0.7967090000000212,
+      "converged": true,
+      "reportedResidual": 0,
+      "iterations": 68,
+      "maxCoordinateErrorMm": 0.0022363070466724366
+     },
+     "medianEditMs": 0.5097599999999716,
+     "maxEditCoordinateErrorMm": 0.0023773231429302655,
+     "editsReportedConverged": 7,
+     "edits": 7
+    },
+    {
+     "solver": "kernelCAD relaxation",
+     "iterationCap": 10000,
+     "bays": 16,
+     "coordinates": 68,
+     "constraints": 66,
+     "cold": {
+      "ms": 2.8236550000000307,
+      "converged": true,
+      "reportedResidual": 0,
+      "iterations": 506,
+      "maxCoordinateErrorMm": 0.010820531569947889
+     },
+     "medianEditMs": 1.9800730000000044,
+     "maxEditCoordinateErrorMm": 0.011107095982481496,
+     "editsReportedConverged": 7,
+     "edits": 7
+    },
+    {
+     "solver": "kernelCAD relaxation",
+     "iterationCap": 10000,
+     "bays": 64,
+     "coordinates": 260,
+     "constraints": 258,
+     "cold": {
+      "ms": 24.94589000000002,
+      "converged": true,
+      "reportedResidual": 0,
+      "iterations": 3125,
+      "maxCoordinateErrorMm": 0.026780705839883012
+     },
+     "medianEditMs": 78.75759899999991,
+     "maxEditCoordinateErrorMm": 0.11965508335754294,
+     "editsReportedConverged": 7,
+     "edits": 7
+    }
+   ]
+  }
+ },
+ "dartCsp": {
+  "runtime": "dart 3.12.2 (JIT)",
+  "results": [
+   {
+    "solver": "dart_csp geometric",
+    "bays": 4,
+    "coordinates": 20,
+    "compileMs": 4.044,
+    "cold": {
+     "ms": 53.713,
+     "success": true,
+     "status": "GeometrySolveStatus.satisfied",
+     "localDegreesOfFreedom": 0,
+     "maxCoordinateErrorMm": 3.6069547348915876e-10
+    },
+    "medianEditMs": 3.823,
+    "maxEditCoordinateErrorMm": 1.4764085065621657e-8,
+    "editsSucceeded": 7,
+    "edits": 7
+   },
+   {
+    "solver": "dart_csp geometric",
+    "bays": 16,
+    "coordinates": 68,
+    "compileMs": 0.681,
+    "cold": {
+     "ms": 31.401,
+     "success": true,
+     "status": "GeometrySolveStatus.satisfied",
+     "localDegreesOfFreedom": null,
+     "maxCoordinateErrorMm": 3.2258842010567246e-9
+    },
+    "medianEditMs": 4.671,
+    "maxEditCoordinateErrorMm": 5.847505590850233e-8,
+    "editsSucceeded": 7,
+    "edits": 7
+   },
+   {
+    "solver": "dart_csp geometric",
+    "bays": 64,
+    "coordinates": 260,
+    "compileMs": 1.975,
+    "cold": {
+     "ms": 45.89,
+     "success": true,
+     "status": "GeometrySolveStatus.satisfied",
+     "localDegreesOfFreedom": null,
+     "maxCoordinateErrorMm": 2.351390607040126e-8
+    },
+    "medianEditMs": 29.095,
+    "maxEditCoordinateErrorMm": 2.138990251068091e-7,
+    "editsSucceeded": 7,
+    "edits": 7
+   }
+  ]
+ }
+}

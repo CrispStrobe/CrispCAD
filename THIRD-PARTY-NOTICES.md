@@ -15,6 +15,10 @@ Adapted kernelCAD source (MIT):
 - packages/geometry/src/analysis/meshBvh.ts, meshClosestPoint.ts, minWall.ts and
   fdmOrientation.ts
 - tests/kernelcad-mesh-bvh.test.ts and kernelcad-mesh-bvh-closest.test.ts
+- experiments/constraints/sketch-compare/kcad/solver.ts and types.ts (benchmark only,
+  unmodified, not part of any package or app bundle)
+- tests/fixtures/kcad/*.kcad.ts are catalog models whose meta() declares CC0-1.0
+  (see tests/fixtures/kcad/PROVENANCE.md)
 are copied from w1ne/kernelCAD-web commit 964fa6cfe94ecf16c2c44b94770846ae23665d82
 with their SPDX/copyright headers retained; each file states what was modified
 (import paths, local types and, for spurGear.ts, a local error renderer). They do
