@@ -99,6 +99,29 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
  const describeAsset=(asset:ModelLibraryAsset)=>`${asset.title} ${asset.author} ${asset.licence.spdx}`;
  const describeFolder=(folder:ModelLibraryArchive['folders'][number])=>`${folder.name} Adafruit ${folder.files.map(file=>file.path).join(' ')}`;
  const describeProject=(project:ModelLibraryProject)=>`${project.title} ${project.note??''}`;
+ function modelsOfType(mode:string){
+  return {
+   assets:mode==='projects'?[]:catalogue.assets.filter(asset=>!mode||mode==='models'||(mode==='source')===!!sourceFor(asset)),
+   folders:['source','projects'].includes(mode)?[]:archive.folders.filter(folder=>mode!=='mesh'||folder.files.some(file=>file.format==='stl')),
+   projects:!mode||mode==='projects'?(projects?.items??[]):[],
+  };
+ }
+ let searchResult:{catalogue:ModelLibraryCatalogue;mode:string;query:string;terms:string[];models:ReturnType<typeof modelsOfType>}|undefined;
+ function matchingModels(){
+  const mode=filter.value,terms=fold(search.value).trim().split(/\s+/).filter(Boolean),query=terms.join(' ');
+  const prior=searchResult?.catalogue===catalogue&&searchResult.mode===mode?searchResult:undefined;
+  if(prior?.query===query)return prior.models;
+  // If each old term is contained in a new term, no previously excluded card can match.
+  const narrows=prior?.terms.every(term=>terms.some(next=>next.includes(term)));
+  const candidates=narrows&&prior?prior.models:modelsOfType(mode);
+  const models=terms.length?{
+   assets:candidates.assets.filter(asset=>matchesSearch(asset,terms,describeAsset)),
+   folders:candidates.folders.filter(folder=>matchesSearch(folder,terms,describeFolder)),
+   projects:candidates.projects.filter(project=>matchesSearch(project,terms,describeProject)),
+  }:candidates;
+  searchResult={catalogue,mode,query,terms,models};
+  return models;
+ }
  function refreshCards(){
   const selection=selectedProject??selected??archiveSelection;
   const next=selection?cards.get(selection):undefined;
@@ -146,13 +169,8 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
  function renderList(){
   const reuseRecent=cardCatalogue===catalogue&&cardPreviews===options?.previews;
   if(!reuseRecent)recentCards.clear();
-  const scroll=list.scrollTop,mode=filter.value;
-  const terms=fold(search.value).trim().split(/\s+/).filter(Boolean);
-  const matches=mode==='projects'?[]:catalogue.assets.filter(asset=>
-   (!mode||mode==='models'||(mode==='source')===!!sourceFor(asset))&&matchesSearch(asset,terms,describeAsset));
-  const archiveMatches=['source','projects'].includes(mode)?[]:archive.folders.filter(folder=>
-   (mode!=='mesh'||folder.files.some(file=>file.format==='stl'))&&matchesSearch(folder,terms,describeFolder));
-  const projectMatches=!mode||mode==='projects'?(projects?.items??[]).filter(project=>matchesSearch(project,terms,describeProject)):[];
+  const scroll=list.scrollTop;
+  const {assets:matches,folders:archiveMatches,projects:projectMatches}=matchingModels();
   const total=projectMatches.length+matches.length+archiveMatches.length;
   pageCount=Math.max(1,Math.ceil(total/MODELS_PER_PAGE));
   page=Math.min(page,pageCount-1);
