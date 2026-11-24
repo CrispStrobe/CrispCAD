@@ -723,3 +723,38 @@ visible; no research source or generated research model is shipped.
 865 full-suite passes (one optional skip), 19 overlapping final localization
 checks, 32 desktop/iPad browser checks, offline SDK execution, the nine original
 OpenSCAD grammar probes, and the independent angular-tessellation matrix.
+
+## kernelCAD `.kcad.ts` models (2026-11-24)
+
+`importKernelCAD(javascript, overrides)` in `@brickwright/cad-core` is an original
+bounded interpreter (Acorn parse, nothing executed) for a subset of the
+[kernelCAD](https://github.com/w1ne/kernelCAD-web) model API. It returns an
+evaluated snapshot: one CAD Script program per assembly part, with the part's
+colour. `scripts/convert-kcad.mjs <file|dir> [--out dir] [--report r.json]
+[--evaluate]` strips TypeScript annotations with the TypeScript compiler (a
+development dependency) and converts files or whole catalog folders.
+
+Licence gate: only models whose `meta()` declares `CC0-1.0` or `MIT` are converted;
+kernelCAD's implicit default (CC-BY-4.0) and every other licence are refused. The
+generated `.cad` files record the source path, SHA-256 and licence.
+
+Supported: `box` (corner-anchored unless centred), `cylinder` (base at z = 0),
+`sphere`, `torus`, `extrudePolygon/Rect/Circle/RoundedRect`, `filletPolygon`,
+`path()` with `moveTo/lineTo/threePointsArc/circle/close`, sketch
+`extrude/revolve/loft` (XY planes, `spacing`, `ruled`), shape
+`translate/rotate/rotateX/Y/Z/alongAxis/scale/mirror/color/union/subtract/intersect`,
+`assembly().part()/model()`, `param/params/presets/meta`, and the JavaScript used by
+helper functions (closures, loops, `switch`, template strings, array/Map methods,
+`Object.entries`, regular-expression `.test`). kernelCAD's `mirror` keeps the source
+and its reflection, as upstream does. `mate`/`place` are reported and skipped.
+Exact-B-rep operations (fillet, chamfer, shell, holes, sweeps, connectors) are
+refused with their names.
+
+Measured on all 2,402 catalog models at kernelCAD `964fa6c` (all declare CC0-1.0):
+2,230 converted completely and 19 partially (a part over CAD Script limits or an
+empty result); 104 use unsupported features (top: `extrudeRoundedRect` axis option,
+assembly connectors, mismatched loft sections) and 49 fail (mostly TypeScript the
+transpiler cannot strip to plain JS, or invalid dimensions at default parameters).
+All 63,281 converted parts were evaluated with Manifold; 3 produced no solid. Curved
+primitives use 48 segments, so converted reference parts match their analytic
+volumes to about 3e-3 and planar parts exactly (`tests/kcad-import.test.ts`).

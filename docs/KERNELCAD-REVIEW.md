@@ -15,6 +15,7 @@ OpenCASCADE (LGPL-2.1 with exception), which remains outside our dependency poli
 | 27-part reference scorecard | `tests/reference-parts.test.ts` | All 27 parts rebuilt in CAD Script against the analytic volume, surface area and bbox. Planar parts match to 1e-6 (most exactly). Curved parts use 1024 segments and match within the inscribed-polygon error, 6.3e-6 relative; sphere, torus and the hull-of-spheres all-edge fillet are within 1.5e-4. The open-top shell (box minus box) and the top chamfer (hull of two boxes) are exact. |
 | Editor "Check printability…" | File menu, macOS menu, `printability` host command | Runs in the geometry worker; settings are transient and add no history. Each body is screened as a separate part. |
 | Gear meshes in Jolt and the Gear pair shape | `CadJoint.gearMesh`, `packages/physics/src/world.ts`, `packages/editor/src/gear-pair.ts` | Uses the fork's `GearMeshConstraint`; tooth contact alone was measured to be unreliable (see [PHYSICS.md](PHYSICS.md#gear-meshes)). The library Gear now uses the ported involute profile. |
+| `.kcad.ts` → CAD Script converter | `packages/core/src/kcad-import.ts`, `scripts/convert-kcad.mjs` | Original bounded interpreter with a CC0/MIT licence gate; 93.6 % of the 2,402 catalog models convert (see [CODE-CONVERTERS.md](CODE-CONVERTERS.md#kernelcad-kcadts-models-2026-11-24)). Illustrative catalog geometry is not dimensionally verified hardware. |
 | Two OCCT-free upstream BVH tests | `tests/kernelcad-mesh-bvh*.test.ts` | Most upstream DFM tests build fixtures through OCCT and were not reusable; equivalent fixtures are generated with Manifold in `tests/printability.test.ts`. |
 
 Headers and the MIT licence text are retained (THIRD-PARTY-NOTICES.md and the
@@ -68,8 +69,6 @@ Recommended order instead:
 ## Remaining backlog from the plan
 
 - Planetary/ring-gear mechanism preset (the planetary showcase is a reasonable fixture).
-- Bounded `.kcad.ts` → CAD Script conversion for CC0 catalog parts, with per-file
-  licence and provenance records.
 - `cad_inspect` / `cad_render` / interference review tools.
 - Sketch solver benchmark against the `dart_csp` integration in
   [CONSTRAINTS.md](CONSTRAINTS.md).
