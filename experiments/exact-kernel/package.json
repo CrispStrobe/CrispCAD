@@ -1,0 +1,15 @@
+{
+  "name": "exact-kernel-experiment",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "BSD-3-Clause",
+  "description": "Standalone qualification of SMLib (@classcad/smlibwasm) as an exact B-rep backend. Not a shipped dependency.",
+  "scripts": {
+    "test": "vitest run",
+    "bench": "node --expose-gc --experimental-strip-types bench.ts"
+  },
+  "devDependencies": {
+    "@classcad/smlibwasm": "0.6.2"
+  }
+}
