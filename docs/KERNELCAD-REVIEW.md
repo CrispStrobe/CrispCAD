@@ -12,6 +12,7 @@ OpenCASCADE (LGPL-2.1 with exception), which remains outside our dependency poli
 | --- | --- | --- |
 | Involute spur gears (`spurGear.ts`, `spurGearPairMath.ts`) | `packages/core/src/gears/` | Exposed as CAD Script `spurGear2d` and `internalSpurGear2d`; see [CODE-MODE.md](CODE-MODE.md). Tests prove an aligned 12/20 pair with 0.1 mm backlash has no overlap at `m(z1+z2)/2`, and that the same pair turned by half a tooth collides. |
 | Mesh DFM (`meshBvh.ts`, `meshClosestPoint.ts`, `minWall.ts`, `fdmOrientation.ts`) | `packages/geometry/src/analysis/` | Wrapped by our own `checkPrintability` (welding, edge-manifold topology, settings, report) and the read-only MCP tool `cad_check_printability`; see [MCP.md](MCP.md). |
+| 27-part reference scorecard | `tests/reference-parts.test.ts` | All 27 parts rebuilt in CAD Script against the analytic volume, surface area and bbox. Planar parts match to 1e-6 (most exactly). Curved parts use 1024 segments and match within the inscribed-polygon error, 6.3e-6 relative; sphere, torus and the hull-of-spheres all-edge fillet are within 1.5e-4. The open-top shell (box minus box) and the top chamfer (hull of two boxes) are exact. |
 | Two OCCT-free upstream BVH tests | `tests/kernelcad-mesh-bvh*.test.ts` | Most upstream DFM tests build fixtures through OCCT and were not reusable; equivalent fixtures are generated with Manifold in `tests/printability.test.ts`. |
 
 Headers and the MIT licence text are retained (THIRD-PARTY-NOTICES.md and the
@@ -36,9 +37,8 @@ Corrections:
   own face, so face references are absent from the report.
 - The 27 reference parts are analytic volume/area/bbox expectations with
   kernelCAD-API sources at 1e-6 relative tolerance. Only three use fillet, chamfer
-  or shell; the rest (boxes, holes, patterns, revolve, loft, sweep, booleans) can be
-  rebuilt in CAD Script, but every source needs translation, and curved parts need
-  a faceting tolerance (about 1e-3 relative) with Manifold. The SolidCraft case
+  or shell, and all three have exact or faceted CSG equivalents, so all 27 now run
+  against Manifold (curved parts with a faceting tolerance). The SolidCraft case
   files are separate Apache-2.0 data; Solidcraft's UI and look remain excluded.
 - The WASMLib/DadCAD timings are third-party claims, not reproduced here.
 - Images and charts in the original plan were illustrative, not measurements.
@@ -54,8 +54,8 @@ from this repository's tooling and needs an owner decision.
 
 Recommended order instead:
 
-1. Translate the 24 Manifold-reachable reference parts into CAD Script tests now;
-   keep the three fillet/chamfer/shell parts for the exact backend.
+1. Done: the reference parts run as CAD Script tests (see above). An exact
+   backend should meet upstream's 1e-6 on the curved parts too.
 2. Qualify an exact B-rep candidate (SMLib WASM, WASMLib, Solidcore) **standalone**
    behind a narrow interface in `experiments/`: primitives, booleans, fillet,
    tessellation, STEP out; licence audit of every shipped WASM binary.
