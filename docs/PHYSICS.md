@@ -187,3 +187,24 @@ same archive SHA-512 in both lockfiles. Existing library collision reports from
 Neither historical nor current serialized evidence bypasses native shape and
 geometry revalidation before simulation. Use `verify:brickwright-sync` to detect
 engine or SDK drift across checkouts.
+
+## Gear meshes
+
+A hinge may carry `gearMesh: {joint, ratio}` (project version 8): its gear meshes
+with the gear of the partner hinge, and angular rates relative to each hinge frame
+satisfy `ω(partner) = ratio · ω(this)`; an external spur pair uses `−z1/z2`. The
+gear is the hinge body not shared with the partner hinge. The world builds the
+qualified fork's `GearMeshConstraint` (tooth contact at the pitch point, reaction on
+both axles) and disables collision between the two gears, which the constraint
+replaces. Bodies with `gear` intent qualify for mechanism simulation once meshed.
+`session.meshGears(first, second, ratio)` and `unmeshGears` edit the link; copying
+remaps it to the copied partner, and removing either hinge removes it. The **Gear
+pair** shape (Motion parts) creates two parametric CAD Script gears on a fixed
+plate with hinge A driving the meshed pair.
+
+Contact-only gears are not qualified: a test of two hinged, unmeshed involute
+gears driven by tooth contact alone gave ratios between 0.06 and 1.0 instead of
+0.5. The gears' axles stay fixed until the teeth touch, and then drift by several
+millimetres, so tooth contact through convex-decomposed hulls (certified to
+0.2 mm) does not hold a mesh. With `gearMesh` the measured ratio matches `−z1/z2`
+to 1e-3 and the axles drift less than 0.05 mm (`tests/gear-train-physics.test.ts`).

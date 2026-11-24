@@ -35,6 +35,10 @@ export interface CadJoint {
   coneAngle?:number; // pivot cone half-angle, radians
   /** Stable program address, independent of joint order and body display names. */
   control?: {port:string};
+  /** Hinge only (project version 8): this hinge's gear meshes with the gear of
+   * hinge `joint`. Angular rates relative to each hinge frame satisfy
+   * ω(joint) = ratio · ω(this); an external spur pair uses −z1/z2. */
+  gearMesh?: {joint:string; ratio:number};
 }
 export function allocateMotorPort(joints:readonly CadJoint[]):string{const used=new Set(joints.flatMap(j=>j.control?[j.control.port]:[]));for(let i=0;i<2001;i++){const port=i<26?String.fromCharCode(65+i):`M${i+1}`;if(!used.has(port))return port;}throw new Error(t('No free CAD motor port'));}
 export const defaultPartPhysics = (): PartPhysics => ({version:1,motion:'dynamic',densityKgM3:1050,friction:.4,restitution:.05,intent:'rigid'});
@@ -61,4 +65,8 @@ export function checkPhysics(doc: CadDocument) {
  if(doc.joints===undefined)return;
  if(!Array.isArray(doc.joints)||doc.joints.length>2000)fail(t('bad joint list'));const ids=new Set<string>(),ports=new Set<string>();
  for(const j of doc.joints){if(!j||typeof j.id!=='string'||!/^[a-zA-Z0-9_-]{1,96}$/.test(j.id)||ids.has(j.id)||!['hinge','fixed','slider','pivot'].includes(j.kind)||(['slider','pivot'].includes(j.kind)&&doc.version<8)||j.bodyA===j.bodyB||![j.bodyA,j.bodyB].every(id=>doc.roots.includes(id)&&!doc.nodes[id].reference&&doc.nodes[id].role!=='hole')||![j.anchorA,j.anchorB,j.axisA,j.axisB].every(vector)||Math.abs(Math.hypot(...j.axisA)-1)>1e-5||Math.abs(Math.hypot(...j.axisB)-1)>1e-5||j.limits!==undefined&&(!Array.isArray(j.limits)||j.limits.length!==2||!['hinge','slider'].includes(j.kind)||!j.limits.every(v=>number(v,j.kind==='slider'?-100000:-Math.PI*2,j.kind==='slider'?100000:Math.PI*2))||j.limits[0]>j.limits[1]))fail(t('bad joint'));if(j.collideConnected!==undefined&&typeof j.collideConnected!=='boolean')fail(t('Invalid connected-link collision setting'));if(j.coneAngle!==undefined&&(j.kind!=='pivot'||!number(j.coneAngle,0,Math.PI)))fail(t('Invalid pivot cone angle'));ids.add(j.id);if(j.control!==undefined){if(!['hinge','slider'].includes(j.kind)||!j.control||typeof j.control.port!=='string'||!/^[A-Z][A-Z0-9_-]{0,15}$/.test(j.control.port)||ports.has(j.control.port))fail(t('Invalid or duplicate CAD motor port'));ports.add(j.control.port);}}
+ for(const j of doc.joints){if(j.gearMesh===undefined)continue;const g=j.gearMesh,other=doc.joints.find(o=>o.id===g?.joint);
+  if(doc.version<8||j.kind!=='hinge'||!g||typeof g!=='object'||Object.keys(g).some(k=>k!=='joint'&&k!=='ratio')||other?.kind!=='hinge'||other.id===j.id||!number(Math.abs(g.ratio),1e-3,1e3))fail(t('Invalid gear mesh'));}
 }
+/** Remove gear-mesh links whose partner hinge no longer exists. */
+export function pruneGearMeshes(joints:CadJoint[]):CadJoint[]{const ids=new Set(joints.map(j=>j.id));for(const j of joints)if(j.gearMesh&&!ids.has(j.gearMesh.joint))delete j.gearMesh;return joints;}

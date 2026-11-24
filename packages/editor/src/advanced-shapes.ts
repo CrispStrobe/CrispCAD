@@ -10,7 +10,7 @@ import {fontLettering,roundedPlate} from './lettering.js';
 import {iconGeometry} from './svg-icon.js';
 import qrcode from 'qrcode-generator';
 import {screwGeometry} from './screw-geometry.js';
-import { createDocument, identityTransform, newId, defaultPartPhysics,defaultGenerator,checkGenerator } from '@brickwright/cad-core';
+import { createDocument, identityTransform, newId, defaultPartPhysics,defaultGenerator,checkGenerator, spurGearPolygon } from '@brickwright/cad-core';
 import type {GeneratorRecipe} from '@brickwright/cad-core';
 import type { CadDocument, SolidNode, Vec3 } from '@brickwright/cad-core';
 export const advancedCatalog = [
@@ -54,10 +54,8 @@ const ring=(outer:number,inner:number,h:number)=>lathe([[inner,0],[outer,0],[out
 function annulus(outer:number,inner:number){const s=new T.Shape();s.absarc(0,0,outer,0,Math.PI*2,false);const hole=new T.Path();hole.absarc(0,0,inner,0,Math.PI*2,true);s.holes.push(hole);return s;}
 function star(){return XY(Array.from({length:10},(_,i)=>{const a=i*Math.PI/5+Math.PI/2,r=i%2?7:16;return [r*Math.cos(a),r*Math.sin(a)];}));}
 function gear(){
- const teeth=20,module=1.5,pressure=20*Math.PI/180, pitch=module*teeth/2,base=pitch*Math.cos(pressure),root=pitch-1.25*module,tip=pitch+module;
- const inv=(r:number)=>{const t=Math.sqrt(Math.max(0,(r/base)**2-1));return t-Math.atan(t);}; const half=Math.PI/(2*teeth)+inv(pitch),points:number[][]=[];
- for(let i=0;i<teeth;i++){const a=i*2*Math.PI/teeth;const add=(r:number,t:number)=>points.push([r*Math.cos(t),r*Math.sin(t)]);add(root,a-half);add(base,a-half);for(let j=1;j<=8;j++){const r=base+(tip-base)*j/8;add(r,a-half+inv(r));}for(let j=8;j>=0;j--){const r=base+(tip-base)*j/8;add(r,a+half-inv(r));}add(root,a+half);add(root,a+Math.PI/teeth);}
- const s=XY(points);const hole=new T.Path();hole.absarc(0,0,3,0,Math.PI*2,true);s.holes.push(hole);return extrude(s,6);
+ // Ported involute generator (rack-generated flanks, root fillets, undercut).
+ const s=XY(spurGearPolygon({module:1.5,teeth:20,pressureAngleDeg:20,backlash:0}));const hole=new T.Path();hole.absarc(0,0,3,0,Math.PI*2,true);s.holes.push(hole);return extrude(s,6);
 }
 class Helix extends T.Curve<T.Vector3>{constructor(readonly radius:number,readonly height:number,readonly turns:number,readonly start=0){super();}getPoint(t:number,target=new T.Vector3()){const a=t*this.turns*Math.PI*2+this.start;return target.set(this.radius*Math.cos(a),this.radius*Math.sin(a),this.height*t);}}
 function closedTube(curve:T.Curve<T.Vector3>,segments:number,radius:number,sides:number){

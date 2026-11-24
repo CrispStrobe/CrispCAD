@@ -14,6 +14,7 @@ OpenCASCADE (LGPL-2.1 with exception), which remains outside our dependency poli
 | Mesh DFM (`meshBvh.ts`, `meshClosestPoint.ts`, `minWall.ts`, `fdmOrientation.ts`) | `packages/geometry/src/analysis/` | Wrapped by our own `checkPrintability` (welding, edge-manifold topology, settings, report) and the read-only MCP tool `cad_check_printability`; see [MCP.md](MCP.md). |
 | 27-part reference scorecard | `tests/reference-parts.test.ts` | All 27 parts rebuilt in CAD Script against the analytic volume, surface area and bbox. Planar parts match to 1e-6 (most exactly). Curved parts use 1024 segments and match within the inscribed-polygon error, 6.3e-6 relative; sphere, torus and the hull-of-spheres all-edge fillet are within 1.5e-4. The open-top shell (box minus box) and the top chamfer (hull of two boxes) are exact. |
 | Editor "Check printability…" | File menu, macOS menu, `printability` host command | Runs in the geometry worker; settings are transient and add no history. Each body is screened as a separate part. |
+| Gear meshes in Jolt and the Gear pair shape | `CadJoint.gearMesh`, `packages/physics/src/world.ts`, `packages/editor/src/gear-pair.ts` | Uses the fork's `GearMeshConstraint`; tooth contact alone was measured to be unreliable (see [PHYSICS.md](PHYSICS.md#gear-meshes)). The library Gear now uses the ported involute profile. |
 | Two OCCT-free upstream BVH tests | `tests/kernelcad-mesh-bvh*.test.ts` | Most upstream DFM tests build fixtures through OCCT and were not reusable; equivalent fixtures are generated with Manifold in `tests/printability.test.ts`. |
 
 Headers and the MIT licence text are retained (THIRD-PARTY-NOTICES.md and the
@@ -66,8 +67,7 @@ Recommended order instead:
 
 ## Remaining backlog from the plan
 
-- Gear presets and pair/planetary helpers in the generator UI; Jolt qualification
-  of a gear train (the planetary showcase is a reasonable fixture).
+- Planetary/ring-gear mechanism preset (the planetary showcase is a reasonable fixture).
 - Bounded `.kcad.ts` → CAD Script conversion for CC0 catalog parts, with per-file
   licence and provenance records.
 - `cad_inspect` / `cad_render` / interference review tools.

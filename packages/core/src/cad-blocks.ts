@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {pruneGearMeshes} from './physics.js';
 // Block/pseudocode modelling programs. One JSON syntax tree, compiled to three
 // parametric targets: native CAD Script (the retained definition), OpenSCAD and
 // JSCAD. Scratch hosts and MCP build the tree; nothing here executes user code.
@@ -712,7 +713,7 @@ export function applyBlocksModel(session:CadSession,name:string,compiled:Compile
    }
   });
   const stale=[...byName.values()].filter(n=>!wanted.has(n.name)).map(n=>n.id);
-  if(stale.length){d.roots=d.roots.filter(id=>!stale.includes(id));if(d.joints)d.joints=d.joints.filter(j=>d.roots.includes(j.bodyA)&&d.roots.includes(j.bodyB));pruneDocument(d);}
+  if(stale.length){d.roots=d.roots.filter(id=>!stale.includes(id));if(d.joints)d.joints=pruneGearMeshes(d.joints.filter(j=>d.roots.includes(j.bodyA)&&d.roots.includes(j.bodyB)));pruneDocument(d);}
  });
  return {status:session.state.revision===revision?'unchanged':found.length?'updated':'built',ids};
 }
