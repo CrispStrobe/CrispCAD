@@ -47,7 +47,7 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
     preparedCache={key,geometry,collisions};
    }
    const {geometry,collisions}=preparedCache;
-   driven.clear();previewBalls.clear();distances={};world=await createPhysicsWorld(document,geometry,collisions,{mode:command.rigidPreview?'rigid-preview':'mechanism'});
+   driven.clear();previewBalls.clear();distances={};world=await createPhysicsWorld(document,geometry,collisions,{mode:command.rigidPreview?'rigid-preview':'mechanism',preferSimd:true});
    for(const map of [angles,lastAngles,speeds,linearPositions,linearSpeeds])for(const key of Object.keys(map))delete map[key];measure();measureSliders();
   }else{
    if(!world)throw new Error(t('Start simulation first'));

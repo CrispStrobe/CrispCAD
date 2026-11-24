@@ -9,10 +9,20 @@ import { geometryHash, isQualifiedCollision } from './collision.js';
 import type { PreparedCollision } from './collision.js';
 import {hingeMembersSeparated,hingeFrameSeparationMargin,hingeFrameDriftBound} from './hinge-clearance.js';
 let modulePromise:ReturnType<typeof initJolt>|undefined;
+let simdPromise:ReturnType<typeof initJolt>|undefined;
+const loadScalarJolt=()=>(modulePromise??=import('jolt-physics/wasm-compat').then(module=>module.default()));
+function loadJolt(preferSimd:boolean){
+ if(!preferSimd)return loadScalarJolt();
+ // Empty function containing i32.const, i8x16.splat and drop.
+ const simdProbe=new Uint8Array([0,97,115,109,1,0,0,0,1,4,1,96,0,0,3,2,1,0,10,9,1,7,0,65,0,253,15,26,11]);
+ return simdPromise??=(WebAssembly.validate(simdProbe)
+  ?import('jolt-physics/wasm-simd-compat').then(module=>module.default()).catch(loadScalarJolt)
+  :loadScalarJolt());
+}
 const rotate=(point:number[],rotation:Vec3)=>{let [x,y,z]=point;for(let i=0;i<3;i++){const a=rotation[i]*Math.PI/180,c=Math.cos(a),s=Math.sin(a);if(i===0)[y,z]=[c*y-s*z,s*y+c*z];if(i===1)[x,z]=[c*x+s*z,-s*x+c*z];if(i===2)[x,y]=[c*x-s*y,s*x+c*y];}return [x,y,z];};
 /** Evaluated geometry is baked in world-space mm; body poses are deltas to that
  * geometry. SI conversion happens once, at this boundary. Fixed 200 Hz steps. */
-export async function createPhysicsWorld(document:CadDocument,result:GeometryResult,prepared:ReadonlyMap<string,PreparedCollision>,options:{J?:any;ground?:boolean;mode?:'mechanism'|'rigid-preview'}={}){
+export async function createPhysicsWorld(document:CadDocument,result:GeometryResult,prepared:ReadonlyMap<string,PreparedCollision>,options:{J?:any;ground?:boolean;preferSimd?:boolean;mode?:'mechanism'|'rigid-preview'}={}){
  const doc=validateDocument(document),sceneSettings=simulationSettings(doc);if(result.sourceKey!==documentGeometryKey(doc))throw new Error(t('Geometry is stale for this document'));const meshes=result.bodies.filter(b=>!b.reference&&!b.hole);if(!meshes.length)throw new Error(t('There are no physical solids to simulate'));if(meshes.length>256)throw new Error(t('Simulation budget is 256 bodies'));
  for(const mesh of meshes){const p=prepared.get(mesh.id);if(!p||!await isQualifiedCollision(p)||p.certificate.sourceSHA256!==await geometryHash(mesh)||p.certificate.relativeError>p.certificate.tolerance.volumeFraction||p.certificate.boundsErrorMm>p.certificate.tolerance.boundsMm||!p.hulls.length||p.hulls.length>2048)throw new Error(t`${mesh.name}: qualified collision geometry is missing or stale`);}
  const gearBody=(j:CadJoint,partner:CadJoint)=>{const shared=[partner.bodyA,partner.bodyB];return shared.includes(j.bodyB)&&!shared.includes(j.bodyA)?j.bodyA:j.bodyB;};
@@ -20,7 +30,7 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
  const meshedGears=new Set<string>();for(const joint of doc.joints??[]){const other=joint.gearMesh&&doc.joints!.find(j=>j.id===joint.gearMesh!.joint);if(other){meshedGears.add(gearBody(joint,other));meshedGears.add(gearBody(other,joint));}}
  if(options.mode!=='rigid-preview')for(const mesh of meshes){const intent=doc.nodes[mesh.id]?.physics?.intent??'rigid';if(intent!=='rigid'&&!(intent==='hinge'&&doc.joints?.some(j=>j.bodyA===mesh.id||j.bodyB===mesh.id))&&!(intent==='gear'&&meshedGears.has(mesh.id)))throw new Error(t`${mesh.name}: ${intent} needs a qualified mechanical model and mates. Choose rigid-preview explicitly to simulate only its rigid geometry.`);}
  if([...prepared.values()].reduce((sum,p)=>sum+p.hulls.length,0)>4096)throw new Error(t('Simulation scene exceeds the 4096-convex-piece budget'));
- const J=options.J??await(modulePromise??=import('jolt-physics/wasm-compat').then(module=>module.default()));
+ const J=options.J??await loadJolt(options.preferSimd??false);
  const settings=new J.JoltSettings();settings.mMaxBodies=512;settings.mMaxBodyPairs=Math.max(1024,meshes.length*meshes.length);settings.mMaxContactConstraints=8192;
  const pairs=new J.ObjectLayerPairFilterTable(2);pairs.EnableCollision(0,1);pairs.EnableCollision(1,1);
  const broad=new J.BroadPhaseLayerInterfaceTable(2,2);const staticLayer=new J.BroadPhaseLayer(0),dynamicLayer=new J.BroadPhaseLayer(1);broad.MapObjectToBroadPhaseLayer(0,staticLayer);broad.MapObjectToBroadPhaseLayer(1,dynamicLayer);J.destroy(staticLayer);J.destroy(dynamicLayer);
