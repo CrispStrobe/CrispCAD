@@ -7,7 +7,8 @@
   "description": "Standalone qualification of SMLib (@classcad/smlibwasm) as an exact B-rep backend. Not a shipped dependency.",
   "scripts": {
     "test": "vitest run",
-    "bench": "node --expose-gc --experimental-strip-types bench.ts"
+    "bench": "node --expose-gc bench.ts",
+    "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {
     "@classcad/smlibwasm": "0.6.2"

@@ -13,7 +13,7 @@
 import {
   ExactKernelError,
   type BoundingBox, type EdgeSelector, type ExactKernel, type ExactProfile, type ExactProfileOps,
-  type ExactSolid, type KernelMemory, type TriangleMesh, type Vec3,
+  type ExactSolid, type KernelMemory, type TriangleMesh, type Vec2, type Vec3,
 } from './exact-kernel.ts';
 
 type Smlib = typeof import('@classcad/smlibwasm');
@@ -99,7 +99,7 @@ export async function createSmlibKernel(): Promise<ExactKernel> {
       }
       return call('Polygon', () => {
         // Even-odd fill: the symmetric difference of the contour regions.
-        const regions = contours.map(c => sm.Polygon(c.map(p => [p[0], p[1]] as [number, number])));
+        const regions = contours.map(c => sm.Polygon(c.map((p: Vec2) => [p[0], p[1]] as [number, number])));
         return profileOf(regions.length === 1 ? regions[0] : sm.xor(regions[0], ...regions.slice(1)));
       });
     },
@@ -157,7 +157,7 @@ export async function createSmlibKernel(): Promise<ExactKernel> {
       for (const f of faces) if (!Array.isArray(f) || f.length < 3 || f.some(i => !Number.isInteger(i) || i < 0 || i >= points.length)) throw new ExactKernelError('invalid-input', 'Polyhedron faces must index at least three existing points.');
       return call('stitch (polyhedron)', () => sm.scope(() => {
         const faceSketches = faces.map(f => {
-          const loop = f.map(i => vec(points[i]));
+          const loop = f.map((i: number) => vec(points[i]));
           return sm.makeFace(sm.Polyline(...loop, loop[0]));
         });
         const body = sm.stitch(...faceSketches);
@@ -236,6 +236,11 @@ export async function createSmlibKernel(): Promise<ExactKernel> {
       if (typeof text !== 'string' || !text.length) throw new ExactKernelError('invalid-input', 'STEP input must be non-empty text.');
       return call('fromStep', () => {
         const result: unknown = sm.fromStep(text);
+        // A file of several bodies comes back as a list; join them into one (disjoint) part.
+        if (Array.isArray(result) && result.length && result.every(r => r instanceof sm.Part)) {
+          const parts = result as Part[];
+          return solid('fromStep', parts.length === 1 ? parts[0] : sm.fuse(parts[0], ...parts.slice(1)));
+        }
         return solid('fromStep', result);
       });
     },
