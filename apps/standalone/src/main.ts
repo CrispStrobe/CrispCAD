@@ -2,7 +2,7 @@ import {t,setLocale,getLocale} from '@brickwright/cad-core';
 import {localizeHost} from './host-i18n.js';
 import './app.css';
 import { Capacitor } from '@capacitor/core';
-import { mountCadEditor } from '@brickwright/cad-editor';
+import { mountCadEditor,browserCodeWorkspaceStorage } from '@brickwright/cad-editor';
 import { parseDocument, serializeDocument } from '@brickwright/cad-core';
 import type { CadDocument } from '@brickwright/cad-core';
 import { download } from './files.js';
@@ -74,6 +74,7 @@ function start(doc?: CadDocument) {
   root.replaceChildren();
   try {
     editor = mountCadEditor(root, {
+      workspaceStorage:browserCodeWorkspaceStorage(),
       colorMode,
       modelLibrary:{cache:createModelLibraryBrowserCache(),load:async()=>{
         const {createBundledModelLibraryOptions}=await import('../../shared/model-library-local.js');
