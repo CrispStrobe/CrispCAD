@@ -151,18 +151,24 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
   card.onclick=()=>{if(working)return;onSelect();refreshCards();renderDetails();};
   return card;
  }
+ function canReusePreview(card:HTMLButtonElement){
+  const preview=card.querySelector<HTMLImageElement>('img[data-library-preview]');
+  // Keep live requests on their existing images. Unseen and failed previews
+  // receive a new viewport observation if the card is visited again.
+  return !preview||preview.hasAttribute('src')&&(!preview.complete||preview.naturalWidth>0);
+ }
  function takeCard(item:LibraryItem){
   const mounted=cards.get(item);
   if(mounted)return mounted;
   const recent=recentCards.get(item);
-  if(recent){recentCards.delete(item);recent.disabled=working;}
+  if(!recent)return;
+  recentCards.delete(item);
+  if(!canReusePreview(recent))return;
+  recent.disabled=working;
   return recent;
  }
  function rememberCard(item:LibraryItem,card:HTMLButtonElement){
-  const preview=card.querySelector<HTMLImageElement>('img[data-library-preview]');
-  // Retain cards that need no preview work while detached. Unseen and
-  // unfinished previews get a fresh viewport observation on the next visit.
-  if(preview&&(!preview.complete||!preview.naturalWidth))return;
+  if(!canReusePreview(card))return;
   recentCards.set(item,card);
   if(recentCards.size>MODELS_PER_PAGE){
    const oldest=recentCards.keys().next();
