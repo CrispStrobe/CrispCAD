@@ -36,6 +36,8 @@ import { mountShapePicker } from './shape-picker.js';
 import { createPresetDocument, evaluatedPreview, presetPreview, shapeCatalog } from './shapes.js';
 import {mountModelSourcePanel} from './model-source-panel.js';
 import {mountCodePanel} from './code-panel.js';
+import type {CodeWorkspaceStorage} from './code-workspace-state.js';
+import {mountTerminalPanel,terminalStyle} from './terminal-panel.js';
 import {exportSketchDxf} from './sketch-dxf.js';
 import {exportSketchDwg} from './sketch-dwg-client.js';
 import {exportDrawingSetPdf} from './drawing-pdf.js';
@@ -75,6 +77,8 @@ export interface CadEditorOptions {
   shapeBrowserLayout?:ShapeBrowserLayout;
   onShapeBrowserLayoutChange?:(layout:ShapeBrowserLayout)=>void;
   showTransformReadout?:boolean;
+  /** Host-owned local draft/history storage. Omit for an in-memory workspace. */
+  workspaceStorage?:CodeWorkspaceStorage;
   appearance?:{background:string;baseplate:string};
   onTransformReadoutChange?:(visible:boolean)=>void;
   saveProject?: () => Promise<void>;
@@ -96,7 +100,7 @@ export interface CadEditorOptions {
   onError?: (error: Error) => void;
 }
 export interface CadCommandState {canUndo:boolean;canRedo:boolean;hasSelection:boolean;canDelete:boolean;canCombine:boolean;canExport:boolean;hasBodies:boolean;ready:boolean}
-export type CadCommand='new'|'open'|'save'|'import'|'export'|'printability'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'command-palette'|'readout'|'code'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect';
+export type CadCommand='new'|'open'|'save'|'import'|'export'|'printability'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'command-palette'|'readout'|'code'|'code-workspace'|'terminal'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect';
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag); element.className = className; if (text !== undefined) element.textContent = text; return element;
 }
@@ -105,7 +109,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const session = options.session ?? createCadSession(options.document); const ownsSession = !options.session;
   const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
   if (shadow.childElementCount) throw new Error(t('Mount target is already in use'));
-  const style = el('style'); style.textContent = themedEditorStyle(editorStyle);host.dataset.cadColorMode=options.colorMode??'dark'; const shell = el('section', 'editor'); shell.setAttribute('aria-label', 'CAD editor');
+  const style = el('style'); style.textContent = themedEditorStyle(editorStyle+terminalStyle);host.dataset.cadColorMode=options.colorMode??'dark'; const shell = el('section', 'editor'); shell.setAttribute('aria-label', 'CAD editor');
   const toolbar = el('div', 'toolbar'); toolbar.setAttribute('role', 'toolbar'); toolbar.setAttribute('aria-label', 'Model tools');
   if(options.embedded){shell.classList.add('embedded');style.textContent+='\n.editor.embedded .design-bar{grid-template-columns:minmax(76px,130px) minmax(0,1fr) auto}.editor.embedded .project-actions,.editor.embedded .units-label{display:none}.editor.embedded .toolbar{max-width:calc(100vw - 24px);overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}.editor.embedded .toolbar>slot{order:-2}';}
   if(options.toolbarContent){const slot=document.createElement('slot');slot.name='host-toolbar-controls';slot.style.display='inline-flex';slot.style.flexShrink='0';options.toolbarContent.slot=slot.name;host.append(options.toolbarContent);toolbar.append(slot);}
@@ -253,7 +257,11 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   const drawingPanel=mountDrawingPanel(shell,session,projectDrawingAssembly,options.onExport);
   const modelSourcePanel=mountModelSourcePanel(shell,status,session,doc=>client.evaluate(doc),(recipe,name)=>createPresetDocument(recipe.preset,name,{recipe}));
-  const codePanel=mountCodePanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();},options.onExport,()=>run(()=>modelSourcePanel.open()));
+  const codePanel=mountCodePanel(shell,session,doc=>client.evaluate(doc),async()=>{await whenIdle();viewport.frame();},options.onExport,()=>run(()=>modelSourcePanel.open()),{workspaceStorage:options.workspaceStorage});
+  const openCodeWorkspace=()=>codePanel.openWorkspace(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);
+  const terminalToggle=button('Terminal',()=>terminal.toggle(),status,'panel-toggle');
+  terminalToggle.title=t('CAD terminal (Ctrl/⌘+`)');terminalToggle.setAttribute('aria-keyshortcuts','Control+Backquote Meta+Backquote');
+  const terminal=mountTerminalPanel(shell,session,{executeEditorCommand:executeCommand,openCodeWorkspace,storage:options.workspaceStorage,pickPoint:(done,plane)=>viewport.pickDraftPoint(done,plane),focusCanvas:()=>viewport.canvas.focus({preventScroll:true}),onVisibilityChange:visible=>terminalToggle.setAttribute('aria-pressed',String(visible))});
   button('Code',()=>codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined),toolbar,'compact-icon').title=t('Code an object');
   const parametersButton=button('Parameters',()=>parametersPanel.open(),toolbar,'compact-icon');parametersButton.title=t('Model parameters and formulas');
   if(options.headerContent){options.headerContent.classList.add('host-actions');designBar.append(options.headerContent);}
@@ -646,6 +654,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const keyboard = (event: KeyboardEvent) => {
     const editable = event.composedPath().some(x => x instanceof HTMLInputElement || x instanceof HTMLTextAreaElement || x instanceof HTMLSelectElement);
     const command = event.ctrlKey || event.metaKey; const key = event.key.toLowerCase(); let action: (() => unknown) | undefined;
+    if(command&&event.code==='Backquote'&&!event.altKey){event.preventDefault();event.stopPropagation();terminal.toggle();return;}
+    if(!editable&&key==='enter'&&terminal.controller.state.prompt?.command==='select'){event.preventDefault();event.stopPropagation();void terminal.controller.submit('').then(()=>terminal.focus());return;}
     if(command&&event.shiftKey&&key==='p'&&!event.altKey){
       event.preventDefault();event.stopPropagation();palette.open();return;
     }
@@ -668,7 +678,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     else if (command && key === 'v') action=()=>pasteSelection();
     else if ((command && key === 'k') || (!command && event.shiftKey && key === 'a')) action = () => picker.open(true);
     else if (key === 'delete' || key === 'backspace') action = () => session.remove();
-    else if (key === 'escape') action = () => {const openMenu=menus.find(menu=>menu.open);if(openMenu){openMenu.open=false;openMenu.querySelector('summary')?.focus();return;}const cancelled=viewport.interacting;cancelShapePlacement(); viewport.cancelTransform();menus.forEach(menu=>menu.open=false);if(cancelled)return;if(mode!=='select')setMode('select');else session.select([]); };
+    else if (key === 'escape') action = () => {if(terminal.controller.state.prompt){terminal.controller.cancel();return;}const openMenu=menus.find(menu=>menu.open);if(openMenu){openMenu.open=false;openMenu.querySelector('summary')?.focus();return;}const cancelled=viewport.interacting;cancelShapePlacement(); viewport.cancelTransform();menus.forEach(menu=>menu.open=false);if(cancelled)return;if(mode!=='select')setMode('select');else session.select([]); };
     else if (key === 'v') action = () => setMode('select');
     else if (!command&&key === 'f') action = () => viewport.frame(undefined,!event.shiftKey);
     else if (!command&&key==='o')action=()=>projectionButton.click();
@@ -749,6 +759,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   async function executeCommand(command:CadCommand){
     switch(command){
+      case 'terminal':terminal.toggle();break;case 'code-workspace':openCodeWorkspace();break;
       case 'new':await newProject();break;case 'open':await chooseOpen();break;case 'save':await deliver('bcad');break;case 'import':await chooseImport();break;case 'export':if(exportButton.disabled)throw new Error(t('Build a solid before exporting'));showExport();break;case 'printability':if(printabilityButton.disabled)throw new Error(t('Build a solid before checking printability'));printabilityPanel.open();break;
       case 'undo':session.undo();break;case 'redo':session.redo();break;case 'cut':await copySelection(true);break;case 'copy':await copySelection();break;case 'paste':await pasteSelection();break;case 'duplicate':session.duplicate();break;case 'delete':session.remove();break;
       case 'select-all':session.select(session.state.document.roots);break;case 'deselect':session.select([]);break;
@@ -762,7 +773,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'union':case 'subtract':case 'intersect':session.combine(command);break;
       default:throw new Error(t('Unknown editor command'));
     }
-    if(!['open','import','save','export','parameters','shapes','code','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','model-library','robot-projects','command-palette'].includes(command))viewport.canvas.focus({preventScroll:true});
+    if(!['open','import','save','export','parameters','shapes','code','code-workspace','terminal','model-source','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','model-library','robot-projects','command-palette'].includes(command))viewport.canvas.focus({preventScroll:true});
   }
   async function deliver(format: 'bcad' | 'stl' | '3mf', modificationNotes?: string, checkCanceled: () => void = () => {}) {
     if(format==='bcad'&&options.saveProject){await options.saveProject();return;}
@@ -783,6 +794,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   buildTree(); buildInspector(); lastRevision = session.state.revision; lastSelection = JSON.stringify(session.state.selection); viewport.setSelection(session.state.selection); void buildLatest(); refreshButtons();
   return {
+    setTerminalVisible(visible:boolean){terminal.setVisible(visible);},get terminalVisible(){return terminal.visible;},
+    openCodeWorkspace,
     setColorMode(mode:CadColorMode){if(!['light','dark'].includes(mode))throw new Error(t('Choose light or dark mode'));host.dataset.cadColorMode=mode;if(!customAppearance)viewport.setAppearance(mode==='light'?{background:'#e7eef7',baseplate:'#cdd9e8'}:{background:'#111e29',baseplate:'#233644'});},get colorMode(){return host.dataset.cadColorMode as CadColorMode;},simulation,session, whenIdle, openFile,setRightPane,get rightPane(){return {...rightPane};},importFile,executeCommand,setSurfaceSnap,get surfaceSnap(){return viewport.surfaceSnap;},setNavigation:viewport.setNavigation,setCameraGestures:viewport.setCameraGestures,setResizeControls:viewport.setResizeControls,setGridDisplay:viewport.setGridDisplay,get gridDisplay(){return viewport.gridDisplay;},get resizeControls(){return viewport.resizeControls;},setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance(value:{background:string;baseplate:string}){viewport.setAppearance(value);customAppearance=true;},get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
     openSketchExtrusion(id:string){
       if(disposed)throw new Error(t('Editor was disposed'));
@@ -798,11 +811,14 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { simulation.refresh(); viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; fileLifetime.abort(); toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel?.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); printabilityPanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; fileLifetime.abort(); toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel?.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); terminal.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); printabilityPanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;
 export { createCadSession } from '@brickwright/cad-core';
+export {browserCodeWorkspaceStorage} from './code-workspace-state.js';
+export type {CodeWorkspaceStorage} from './code-workspace-state.js';
 export { shapeCatalog, createPresetDocument } from './shapes.js';
 
 export {readCostumeProfiles,costumeSketchProfile,costumeProfileBounds,matchCostumeProfile} from './costume-profiles.js';
+

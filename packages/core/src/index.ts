@@ -1,6 +1,8 @@
 export {constructionInputs,isCube,constrainCubeTransform, MAX_DOCUMENT_BYTES, documentGeometryKey, identityTransform, newId, createDocument, validateDocument, parseDocument, serializeDocument, freezeDocument, pruneDocument } from './document.js';
 export type { Vec3, Transform, Primitive, Shape, SolidNode, CadDocument } from './document.js';
 export * from './session.js';
+export {parseSessionCommand,serializeSessionCommand} from './session-commands.js';
+export type {SessionCommand,ApplySessionCommand,SessionCommandRecord,SessionValueChange,SessionCommandValue,SessionJsonValue} from './session-commands.js';
 export * from './physics.js';
 export {sha256Hex,geometrySignature} from './hash.js';
 export * from './parameters.js';
@@ -61,3 +63,4 @@ export type {SpurGearProfileOptions,SpurGearOutline,SpurGearRadii} from './gears
 export {externalCenterDistanceMm,externalSpeedRatio,meshAlignDeg,pitchRadiusMm,tipRadiusMm} from './gears/spurGearPairMath.js';
 export {importKernelCAD,KCAD_IMPORT_LIMITS,KCAD_ACCEPTED_LICENSES} from './kcad-import.js';
 export type {KernelCADImport,KernelCADPart} from './kcad-import.js';
+

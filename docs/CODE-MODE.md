@@ -7,6 +7,18 @@ model and saves one undoable edit. Errors preserve the draft and last valid soli
 Select the object and choose Code again, or expand its **Code & parameters** in
 the browser, to reopen the definition. Code operands remain editable after booleans.
 
+For a persistent editor, choose **Code workspace** in the command palette or
+enter `code` in the optional **Terminal** dock. The workspace stays beside the
+canvas, previews after a short typing pause, and keeps its draft on close.
+Standalone saves drafts on the device, scoped to the project and code object.
+Ctrl/Command+Space completes parameter names. Create/Apply is still explicit and
+uses the same Undo history; preview and typing do not create model revisions.
+If the model changes while editing, **Use current model** keeps the draft and
+explicitly refreshes its baseline before another preview or Apply. **New code
+draft** starts another object while retaining the previous draft. See the
+[workspace guide](TERMINAL-WORKSPACE.md#persistent-code-workspace) for storage
+limits and embedding options.
+
 ```text
 param width: mm = 60;
 param depth: mm = 30;
@@ -339,3 +351,4 @@ but actual conversion refuses unsupported `parent_module(2)` at
 this correction adds no admitted model. See
 `docs/evidence/package-namespace-and-wall01-trace-2026-11-15.json` for the exact
 source hashes, safety tests and independent Wall01 source-to-output contact trace.
+

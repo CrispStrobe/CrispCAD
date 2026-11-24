@@ -482,18 +482,39 @@ retains shared edge lengths across loops. Other edge relations remain open.
 
 ## Command line and code workspace
 
-Keep sketching and object editing available through the pointer and keyboard.
-Add a dockable CAD command line with prompts, completion, aliases and
-history. Start by routing existing CAD commands through the same editor
-actions as buttons and the command palette. Accept picked geometry or typed
-coordinates where a command needs input. Support Escape to cancel a pending
-command and group a completed command into one Undo step.
+The first implementation adds an optional bottom **Terminal** dock, also
+available from the command palette or Ctrl/Command+backtick. It has interactive
+prompts, fixed aliases, Tab command completion, Up/Down input history, and
+Escape cancellation. Basic solids, XY line/rectangle/circle sketches,
+extrusion, selection and transforms use the existing CAD session. Point
+prompts accept typed absolute, relative and polar coordinates or viewport
+picks. Completed modeling commands make one Undo step; partial input does
+not change the model. A conflicting model edit cancels the pending command.
 
-Let users open CAD Script from that surface in a persistent editor with a
-live preview, source diagnostics, parameter completion and an explicit
-Apply action. Keep model source editable on reopen. Develop coordinates,
-snapping and constrained 2D drawing against the same CAD session so typed
-commands and on-canvas tools lead to the same model.
+Accepted session edits now emit versioned, replayable commands at the shared
+commit boundary. This includes GUI inspector edits, imports, sketch and code
+changes, and arbitrary assembly edits. The terminal shows their action labels
+with **Use command** to insert the exact replay text. Replay checks project
+identity and the prior values of touched properties, then uses the same
+validation and Undo machinery. Selection and Undo/Redo also have canonical
+commands. This journal is transient and does not alter saved document schemas
+or history revisions. Camera gestures and other view-only interactions are
+not yet a complete replayable command stream.
+
+The terminal's `code` command opens a nonmodal **Code workspace**. It retains
+per-project/object drafts, debounces live preview, reports compiler diagnostics,
+completes parameter names with Ctrl/Command+Space, and applies only on an explicit
+Create/Apply action. Standalone hosts save bounded drafts and command history
+locally; embedded hosts can supply a storage adapter. The original Code modal
+remains available. Saved code objects keep editable source and their identity.
+
+See [Terminal and code workspace](TERMINAL-WORKSPACE.md) for syntax, host APIs,
+validation and limits. Follow-up work: configurable aliases, argument/entity
+completion, arbitrary sketch workplanes and richer snapping, continuous
+polyline/arc/constraint prompts, readable serializers for more modeling actions,
+portable multi-command scripts, durable action-journal export, and complete
+view-command capture. Browser qualification is still required for this first
+slice; new Chromium/WebKit scenarios are included with the implementation.
 
 Cota documents a prompt-driven command line with history, completion, and
 absolute, relative and polar coordinates. Use those workflows to evaluate
@@ -618,3 +639,4 @@ extrusion. STL carries triangles and no unit metadata, so retain the
 dimensioned geometry and source mapping in the project.
 
 [Three.js SVGLoader](https://threejs.org/docs/pages/SVGLoader.html) · [Three.js STLExporter](https://threejs.org/docs/pages/STLExporter.html) · [JSCAD SVG Deserializer](https://jscad.app/docs/module-io_svg-deserializer.html) · [Manifold license](https://github.com/elalish/manifold/blob/master/LICENSE) · [Open CASCADE license and exception](https://github.com/Open-Cascade-SAS/OCCT#license)
+

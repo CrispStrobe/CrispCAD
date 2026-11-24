@@ -1,0 +1,262 @@
+// SPDX-License-Identifier: BSD-3-Clause
+import {describe,expect,it} from 'vitest';
+import {createCadSession,createDocument,defaultCodeProgram,defaultSimulationSettings,identityTransform,parseSessionCommand,serializeSessionCommand} from '@brickwright/cad-core';
+import type {ApplySessionCommand,CadSession,SessionCommandRecord} from '@brickwright/cad-core';
+
+const box=()=>({kind:'box' as const,size:[10,20,30] as [number,number,number]});
+function observe(session:CadSession){
+  const records:SessionCommandRecord[]=[];
+  const unsubscribe=session.subscribeCommands(record=>records.push(record));
+  return {records,unsubscribe};
+}
+function applyRecord(records:SessionCommandRecord[]):SessionCommandRecord&{command:ApplySessionCommand}{
+  const record=records.filter(record=>record.command.kind==='apply').at(-1);
+  if(!record||record.command.kind!=='apply')throw new Error('Expected a recorded model command');
+  return record as SessionCommandRecord&{command:ApplySessionCommand};
+}
+
+describe('replayable session commands',()=>{
+  it('records a GUI edit, then undoes and replays its canonical command as exactly one step',()=>{
+    const session=createCadSession(),{records}=observe(session),id=session.add(box());
+    const expected=session.serialize(),record=applyRecord(records);
+    expect(record.text).toMatch(/^apply /);
+    expect(record.summary).toBe(session.state.label);
+    expect(parseSessionCommand(record.text)).toEqual(record.command);
+    session.undo();
+    expect(session.executeCommand(record.text)).toBe(true);
+    expect(session.serialize()).toBe(expected);
+    expect(session.state.selection).toEqual([id]);
+    expect(session.history.past).toHaveLength(1);
+    expect(session.state.canRedo).toBe(false);
+    expect(records.map(record=>record.command.kind)).toEqual(['apply','undo','apply']);
+    session.undo();
+    expect(session.state.document.roots).toEqual([]);
+    expect(session.state.canUndo).toBe(false);
+  });
+
+  it('replays graph creation, booleans, copying and deletion with their original identities',()=>{
+    const initial=createDocument(),source=createCadSession(initial),{records}=observe(source);
+    const a=source.add(box()),b=source.add(box()),operation=source.combine('subtract',[a,b]);
+    source.duplicate([operation]);source.remove([operation]);
+    const target=createCadSession(initial);
+    for(const record of records)target.executeCommand(record.text);
+    expect(target.state.document).toEqual(source.state.document);
+    expect(target.state.selection).toEqual(source.state.selection);
+    expect(target.history.past).toEqual(source.history.past);
+    target.undo();source.undo();
+    expect(target.state.document).toEqual(source.state.document);
+  });
+
+  it('captures arbitrary atomic assembly edits, including settings and several object fields',()=>{
+    const session=createCadSession(),id=session.add(box()),before=session.serialize(),{records}=observe(session);
+    session.editAssembly('Configure assembly',draft=>{
+      draft.title='Mechanism';draft.version=8;draft.simulation={...defaultSimulationSettings(),gravity:[0,0,0]};
+      draft.nodes[id].name='Base';draft.nodes[id].color='#123456';draft.nodes[id].transform.rotation=[0,0,30];
+    });
+    const expected=session.serialize(),record=applyRecord(records);
+    expect(record.command.changes.map(change=>change.path)).toEqual(expect.arrayContaining([
+      ['title'],['version'],['simulation'],['nodes',id,'name'],['nodes',id,'color'],['nodes',id,'transform','rotation'],
+    ]));
+    session.undo();expect(session.serialize()).toBe(before);
+    session.executeCommand(record.text);expect(session.serialize()).toBe(expected);
+    expect(session.history.past.at(-1)).toBe('Configure assembly');
+  });
+
+  it('captures retained sketches, code programs and their edits without losing source',()=>{
+    const initial=createDocument(),session=createCadSession(initial),{records}=observe(session);
+    const sketch=session.addSketch({kind:'rectangle',id:'profile',width:20,depth:30},{plane:'XZ'});
+    session.extrudeSketch(sketch,{distance:8});
+    session.updateSketch(sketch,{name:'Side profile',profile:{kind:'rectangle',id:'profile',width:40,depth:30}});
+    const code=session.addCode(defaultCodeProgram(),'Scripted plate');
+    const program=defaultCodeProgram();program.parameters.width='80';session.updateCode(code,program);
+    const replay=createCadSession(initial);
+    for(const record of records)replay.executeCommand(serializeSessionCommand(record.command));
+    expect(replay.state.document).toEqual(session.state.document);
+    expect(replay.state.document.nodes[code]).toMatchObject({program:{parameters:{width:'80'}}});
+    expect(replay.state.document.sketches![sketch]).toMatchObject({name:'Side profile',plane:'XZ',profile:{width:40}});
+    expect(replay.history.past).toHaveLength(5);
+  });
+
+  it('records derived parameter values and the live model source in the same command',()=>{
+    const session=createCadSession(),id=session.add(box()),{records}=observe(session);
+    session.enableModelSource();
+    session.setParametric({version:1,parameters:{width:{expression:'45 mm',unit:'mm'}},bindings:[{nodeId:id,property:'width',expression:'width'}]});
+    const expected=session.serialize(),record=applyRecord(records);
+    expect(record.command.changes.some(change=>change.path[0]==='modelSource')).toBe(true);
+    expect(record.command.changes.some(change=>change.path.join('.')===`nodes.${id}.size`)).toBe(true);
+    session.undo();session.executeCommand(record.text);
+    expect(session.serialize()).toBe(expected);
+    expect(records.filter(record=>record.command.kind==='apply')).toHaveLength(2);
+  });
+
+  it('rejects stale values, wrong projects and invalid geometry without changing model or either history stack',()=>{
+    const session=createCadSession(),id=session.add(box()),{records}=observe(session);
+    session.update(id,{size:[25,20,30]});const record=applyRecord(records);
+    session.undo();session.update(id,{size:[40,20,30]});
+    const before=session.state,history=session.history,count=records.length;
+    expect(()=>session.executeCommand(record.text)).toThrow(/stale/);
+    expect(session.state.document).toBe(before.document);expect(session.state.revision).toBe(before.revision);
+    expect(session.history).toEqual(history);expect(records).toHaveLength(count);
+    expect(()=>createCadSession().executeCommand(record.text)).toThrow(/different project/);
+    session.undo();
+    const invalid=parseSessionCommand(record.text) as ApplySessionCommand;
+    invalid.changes.find(change=>change.path.at(-1)==='size')!.after={present:true,value:[-1,20,30]};
+    const validBefore=session.serialize(),validHistory=session.history,validRevision=session.state.revision;
+    expect(()=>session.executeCommand(invalid)).toThrow(/dimensions/);
+    expect(session.serialize()).toBe(validBefore);expect(session.history).toEqual(validHistory);
+    expect(session.state.revision).toBe(validRevision);
+    expect(session.state.canRedo).toBe(true);
+  });
+
+  it('preserves unrelated edits while checking every property written by a replay',()=>{
+    const session=createCadSession(),id=session.add(box()),{records}=observe(session);
+    session.update(id,{color:'#123456'});const record=applyRecord(records);
+    session.undo();session.rename('Unrelated title');session.executeCommand(record.text);
+    expect(session.state.document.title).toBe('Unrelated title');
+    expect(session.state.document.nodes[id].color).toBe('#123456');
+    session.undo();expect(session.state.document.title).toBe('Unrelated title');
+    expect(session.state.document.nodes[id].color).not.toBe('#123456');
+  });
+
+  it('shares existing selection and undo/redo behavior without adding modeling history',()=>{
+    const session=createCadSession(),id=session.add(box()),{records}=observe(session),revision=session.state.revision;
+    expect(session.executeCommand('select []')).toBe(true);
+    expect(session.executeCommand(`select ${JSON.stringify([id])}`)).toBe(true);
+    expect(session.executeCommand({version:1,kind:'select',ids:[id]})).toBe(false);
+    expect(session.state.revision).toBe(revision);expect(session.history.past).toHaveLength(1);
+    expect(records.map(record=>record.command.kind)).toEqual(['select','select']);
+    expect(()=>session.executeCommand('select ["missing"]')).toThrow(/existing/);
+    expect(session.executeCommand('undo')).toBe(true);expect(session.state.document.roots).toEqual([]);
+    expect(session.executeCommand('undo')).toBe(false);
+    expect(session.executeCommand('redo')).toBe(true);expect(session.state.document.roots).toEqual([id]);
+    expect(session.executeCommand('redo')).toBe(false);
+    expect(records.map(record=>record.text)).toEqual(['select []',`select ${JSON.stringify([id])}`,'undo','redo']);
+  });
+
+  it('excludes no-ops, rejected edits and project loads from the action journal',()=>{
+    const session=createCadSession(),id=session.add(box()),{records,unsubscribe}=observe(session),revision=session.state.revision;
+    session.update(id,{color:session.state.document.nodes[id].color});session.select([id,id,'missing']);
+    session.editAssembly('Reorder keys',draft=>{const title=draft.title;delete (draft as Partial<typeof draft>).title;draft.title=title;});
+    expect(()=>session.update(id,{size:[0,20,30]})).toThrow();
+    expect(records).toEqual([]);expect(session.state.revision).toBe(revision);
+    session.load(createDocument('Other project'));expect(records).toEqual([]);
+    unsubscribe();session.rename('Not observed');expect(records).toEqual([]);
+  });
+
+  it('detaches and freezes observations and never retains mutable replay input',()=>{
+    const session=createCadSession(),{records}=observe(session),id=session.add(box()),record=applyRecord(records);
+    expect(Object.isFrozen(record)).toBe(true);expect(Object.isFrozen(record.command)).toBe(true);
+    expect(Object.isFrozen(record.command.changes)).toBe(true);
+    expect(()=>record.command.changes.push(record.command.changes[0])).toThrow();
+    const replayInput=parseSessionCommand(record.text) as ApplySessionCommand;
+    session.undo();session.executeCommand(replayInput);
+    replayInput.selection.length=0;replayInput.changes.length=0;
+    expect(session.state.selection).toEqual([id]);expect(session.state.document.nodes[id]).toBeDefined();
+    expect(record.text).toBe(serializeSessionCommand(record.command));
+    expect(JSON.stringify(session.state.document)).not.toContain('changes');
+  });
+
+  it('records a mesh transform without duplicating mesh buffers',()=>{
+    const session=createCadSession(),id=session.add({kind:'mesh',id:'mesh',name:'Tetra',color:'#ffffff',transform:identityTransform(),positions:[0,0,0,1,0,0,0,1,0,0,0,1],indices:[0,2,1,0,1,3,0,3,2,1,2,3]});
+    const {records}=observe(session);
+    session.transform([{id,transform:{...identityTransform(),position:[15,25,35]}}]);
+    const record=applyRecord(records);
+    expect(record.command.changes).toEqual([{path:['nodes',id,'transform','position'],before:{present:true,value:[0,0,0]},after:{present:true,value:[15,25,35]}}]);
+    expect(record.text).not.toContain('positions');expect(record.text).not.toContain('indices');
+    session.undo();session.executeCommand(record.text);
+    expect(session.state.document.nodes[id].transform.position).toEqual([15,25,35]);
+  });
+
+  it('rejects malformed, unsupported, overlapping, non-JSON and prototype-changing commands',()=>{
+    const session=createCadSession(),{records}=observe(session);session.add(box());
+    const valid=structuredClone(applyRecord(records).command);
+    for(const text of ['','undo extra','redo extra','apply {','select {}','eval alert(1)'])expect(()=>parseSessionCommand(text),text).toThrow();
+    for(const value of [
+      {...valid,version:2},
+      {...valid,changes:[...valid.changes,valid.changes[0]]},
+      {...valid,changes:[{path:['id'],before:{present:true,value:session.state.document.id},after:{present:true,value:'other'}}]},
+      {...valid,changes:[{path:['__proto__','polluted'],before:{present:false},after:{present:true,value:true}}]},
+      {...valid,changes:[{path:['title'],before:{present:true,value:session.state.document.title},after:{present:true,value:()=>1}}]},
+      {...valid,changes:[{path:['nodes'],before:{present:true,value:{}},after:{present:true,value:{}}},{path:['nodes','child'],before:{present:false},after:{present:true,value:{}}}]},
+    ])expect(()=>session.executeCommand(value as ApplySessionCommand)).toThrow();
+    expect(({} as {polluted?:boolean}).polluted).toBeUndefined();
+    expect(session.history.past).toHaveLength(1);
+  });
+
+  it('isolates observer failures and clears command subscriptions on disposal',()=>{
+    const session=createCadSession();session.subscribeCommands(()=>{throw new Error('Presentation failed');});
+    const {records}=observe(session);
+    expect(()=>session.add(box())).not.toThrow();expect(records).toHaveLength(1);
+    session.dispose();session.rename('No listeners');expect(records).toHaveLength(1);
+  });
+
+  it('preserves opaque legacy own properties without following inherited prototype paths',()=>{
+    const initial=createDocument() as ReturnType<typeof createDocument>&{opaque:Record<string,unknown>};
+    initial.opaque=JSON.parse('{"constructor":"old","prototype":{"value":1},"__proto__":{"own":true},"":"empty-key"}');
+    Object.defineProperty(initial,'__proto__',{value:{saved:'top-level legacy data'},enumerable:true,writable:true,configurable:true});
+    const session=createCadSession(initial),{records}=observe(session);
+    // Ordinary model edits must remain available with opaque legacy metadata.
+    session.rename('Legacy project');
+    const rename=applyRecord(records);session.undo();session.executeCommand(rename.text);
+    expect(Object.getPrototypeOf(session.state.document)).toBe(Object.prototype);
+    expect(Object.hasOwn(session.state.document,'__proto__')).toBe(true);
+    expect((session.state.document as unknown as Record<string,unknown>).__proto__).toEqual({saved:'top-level legacy data'});
+    // Editing existing opaque names must not interpret them as object prototypes.
+    session.editAssembly('Legacy properties',draft=>{
+      const opaque=(draft as unknown as {opaque:Record<string,unknown>}).opaque;
+      opaque.constructor='new';opaque.prototype={value:2};opaque.__proto__={own:'updated'};opaque['']='changed';
+      (draft as unknown as {__proto__:{saved:string}}).__proto__.saved='updated top-level legacy data';
+    });
+    const expected=session.serialize(),record=applyRecord(records);
+    session.undo();session.executeCommand(record.text);expect(session.serialize()).toBe(expected);
+    expect(Object.getPrototypeOf(session.state.document)).toBe(Object.prototype);
+    expect(Object.getPrototypeOf((session.state.document as unknown as {opaque:object}).opaque)).toBe(Object.prototype);
+    const unsafe={...structuredClone(record.command),changes:[{path:['missing','__proto__','polluted'],before:{present:false as const},after:{present:true as const,value:true}}]};
+    expect(()=>session.executeCommand(unsafe)).toThrow(/stale/);
+    expect(({} as {polluted?:boolean}).polluted).toBeUndefined();
+  });
+
+  it('compares opaque arrays using saved JSON slots and keeps their replayable before-values',()=>{
+    const initial=createDocument() as ReturnType<typeof createDocument>&{opaque:{items:unknown[];optional?:unknown}};
+    initial.opaque={items:Array(1),optional:undefined};
+    const session=createCadSession(initial),{records}=observe(session),before=session.serialize();
+    session.editAssembly('Clear opaque slots',draft=>{(draft as unknown as typeof initial).opaque.items=[];});
+    const record=applyRecord(records);
+    expect(record.command.changes).toEqual([{path:['opaque','items'],before:{present:true,value:[null]},after:{present:true,value:[]}}]);
+    session.undo();expect(session.serialize()).toBe(before);session.executeCommand(record.text);
+    expect((session.state.document as unknown as typeof initial).opaque.items).toEqual([]);
+    const revision=session.state.revision;
+    session.editAssembly('Remove omitted metadata',draft=>{delete (draft as unknown as typeof initial).opaque.optional;});
+    expect(session.state.revision).toBe(revision);
+  });
+
+  it('rejects sparse command identifiers and paths before touching live state',()=>{
+    const session=createCadSession(),{records}=observe(session);session.add(box());
+    const valid=structuredClone(applyRecord(records).command),revision=session.state.revision,history=session.history;
+    const sparse=Array(1) as string[];
+    for(const command of [
+      {version:1 as const,kind:'select' as const,ids:sparse},
+      {...valid,selection:sparse},
+      {...valid,changes:[{path:sparse,before:{present:false as const},after:{present:true as const,value:'x'}}]},
+    ]){
+      expect(()=>serializeSessionCommand(command)).toThrow();
+      expect(()=>session.executeCommand(command)).toThrow();
+    }
+    expect(session.state.revision).toBe(revision);expect(session.history).toEqual(history);
+  });
+
+  it('records deeply nested but valid saved extension fields without imposing a document depth limit',()=>{
+    const initial=createDocument() as ReturnType<typeof createDocument>&{opaque:Record<string,unknown>};
+    initial.opaque={};let cursor=initial.opaque;
+    for(let i=0;i<160;i++){const child={};cursor.child=child;cursor=child;}cursor.value='before';
+    const session=createCadSession(initial),{records}=observe(session);
+    session.editAssembly('Deep metadata',draft=>{
+      let cursor=(draft as unknown as typeof initial).opaque;
+      for(let i=0;i<160;i++)cursor=cursor.child as Record<string,unknown>;
+      cursor.value='after';
+    });
+    const expected=session.serialize(),record=applyRecord(records);
+    expect(record.command.changes[0].path).toHaveLength(128);
+    session.undo();session.executeCommand(record.text);expect(session.serialize()).toBe(expected);
+  });
+});
