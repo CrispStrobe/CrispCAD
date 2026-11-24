@@ -26,7 +26,8 @@ function triangulate(profile:number[][]):number[][] {
  * final qualification. Nothing bypasses the current source-mesh CSG gate. */
 export async function prepareDocumentCollisions(input:CadDocument,result:GeometryResult,kernel:GeometryKernel):Promise<Map<string,PreparedCollision>>{
  const doc=validateDocument(input);if(result.sourceKey!==documentGeometryKey(doc))throw new Error(t('Geometry is stale for collision preparation'));const prepared=new Map<string,PreparedCollision>();
- const localCache=new Map<string,import('@brickwright/cad-geometry').BodyMesh>();
+ // Root meshes were already evaluated and checked against this document's geometry key.
+ const localCache=new Map(result.bodies.map(body=>[body.id,body]));
  const worldPoint=(p:Vec3,transforms:Transform[])=>transforms.reduceRight((value,t)=>point(value,t),p);
  function worldMesh(id:string,parents:Transform[]){let body=localCache.get(id);if(!body){const nodes:CadDocument['nodes']={};const visit=(key:string)=>{if(nodes[key])return;const n=doc.nodes[key];nodes[key]=n;if(n.kind==='boolean')n.inputs.forEach(visit);};visit(id);const fragment:CadDocument={...doc,nodes,roots:[id],joints:undefined,parametric:doc.parametric?{...doc.parametric,bindings:doc.parametric.bindings.filter(b=>Object.hasOwn(nodes,b.nodeId))}:undefined};
    // Construction evaluation is a private subset. Retain only source records

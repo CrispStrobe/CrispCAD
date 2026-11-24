@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import type {GeometryResult} from '@brickwright/cad-geometry';
 import {t} from '@brickwright/cad-core';
 import type {CadSession,Vec3} from '@brickwright/cad-core';
 import {createSimulationController} from './simulation-controller.js';
@@ -8,7 +9,7 @@ import type {SimulationPoint} from './simulation-authoring.js';
 import type {TracePath} from './motion-traces.js';
 import type {SimulationPose} from './simulation-protocol.js';
 export interface SimulationViewOptions {connectorHandles?:(visible:boolean)=>void;dragEnabled?:(enabled:boolean)=>void;pickPoint?:(done:(point:SimulationPoint|null)=>void)=>()=>void;traces?:(paths:TracePath[])=>void;onInterrupt?:()=>void;onExport?:(file:{name:string;bytes:Uint8Array;mime:string})=>unknown;canvas?:HTMLCanvasElement}
-export function mountSimulationPanel(parent:HTMLElement,session:CadSession,wasmURL:string,ready:()=>Promise<unknown>,poses:(value:SimulationPose[]|null)=>void,view:SimulationViewOptions={}){
+export function mountSimulationPanel(parent:HTMLElement,session:CadSession,wasmURL:string,ready:()=>Promise<GeometryResult|void>,poses:(value:SimulationPose[]|null)=>void,view:SimulationViewOptions={}){
  const panel=document.createElement('section');panel.hidden=true;panel.className='simulation-panel';panel.setAttribute('aria-label',t('Assembly simulation'));
  Object.assign(panel.style,{position:'absolute',right:'12px',bottom:'48px',zIndex:'12',background:'var(--cad-panel)',color:'var(--cad-text)',border:'1px solid var(--cad-border)',borderRadius:'8px',padding:'12px',maxHeight:'65%',overflow:'auto',width:'360px',maxWidth:'calc(100% - 48px)',boxShadow:'0 4px 16px #0003'});parent.append(panel);
  const style=document.createElement('style');style.textContent='.simulation-panel[hidden],.simulation-panel [hidden]{display:none!important}.simulation-panel fieldset{min-width:0;border:1px solid #c5cdd5;margin:8px 0;display:flex;flex-direction:column;gap:6px}.simulation-panel label{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}.simulation-panel select{min-width:0;max-width:100%}.simulation-panel details{margin:8px 0}.simulation-panel output{display:block;font-variant-numeric:tabular-nums}.simulation-panel button{margin:2px}.simulation-panel small{display:block}';panel.append(style);

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import type {GeometryResult} from '@brickwright/cad-geometry';
 import type {CadDocument} from '@brickwright/cad-core';
 export interface SimulationPose {id:string;positionMm:number[];quaternion:number[];previewRadiusMm?:number;previewShape?:'sphere'|'box'}
 export interface SimulationServo {id:string;angleRad:number;torqueNm:number;enabled:boolean}
@@ -7,7 +8,7 @@ export interface SimulationTelemetry {time:number;angles:Record<string,number>;s
 export interface SimulationFrame extends SimulationTelemetry {poses:SimulationPose[]}
 export interface SimulationActuatorStep {op:'actuator-step';impulses:{id:string;impulse:number}[];rays?:SimulationRay[];servos?:SimulationServo[];telemetryOnly?:boolean}
 export type SimulationCommand =
- |{op:'start';document:CadDocument;wasmURL:string;fixBase:boolean;locale:string;rigidPreview?:boolean}
+ |{op:'start';document:CadDocument;geometry?:GeometryResult;wasmURL:string;fixBase:boolean;locale:string;rigidPreview?:boolean}
  |{op:'step';seconds:number}
  |SimulationActuatorStep
  |{op:'sense';rays:SimulationRay[]}

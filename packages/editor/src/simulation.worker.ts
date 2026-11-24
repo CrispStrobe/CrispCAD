@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import {createPhysicsWorld,prepareDocumentCollisions} from '@brickwright/cad-physics';
-import {defaultPartPhysics,setLocale,t} from '@brickwright/cad-core';
+import {defaultPartPhysics,documentGeometryKey,setLocale,t} from '@brickwright/cad-core';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import type {CadDocument} from '@brickwright/cad-core';
 import type {SimulationCommand,SimulationFrame,SimulationRay,SimulationTelemetry} from './simulation-protocol.js';
@@ -20,11 +20,13 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
  try{
   if(command.op==='start'){
    world?.dispose();world=undefined;setLocale(command.locale);
-   document=structuredClone(command.document);
+   // postMessage already gave this worker an independent copy of the design.
+   document=command.document;
    const first=document.roots.find(id=>!document!.nodes[id].reference&&document!.nodes[id].role!=='hole');
    if(command.fixBase&&first)document.nodes[first].physics={...(document.nodes[first].physics??defaultPartPhysics()),motion:'static'};
    const ready=await(kernel??=createGeometryKernel({wasmURL:command.wasmURL}));
-   const geometry=ready.evaluate(document),prepared=await prepareDocumentCollisions(document,geometry,ready);
+   const geometry=command.geometry?.sourceKey===documentGeometryKey(document)?command.geometry:ready.evaluate(document);
+   const prepared=await prepareDocumentCollisions(document,geometry,ready);
    driven.clear();previewBalls.clear();distances={};world=await createPhysicsWorld(document,geometry,prepared,{mode:command.rigidPreview?'rigid-preview':'mechanism'});
    for(const map of [angles,lastAngles,speeds,linearPositions,linearSpeeds])for(const key of Object.keys(map))delete map[key];measure();measureSliders();
   }else{

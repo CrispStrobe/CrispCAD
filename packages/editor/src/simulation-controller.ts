@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import type {GeometryResult} from '@brickwright/cad-geometry';
 import {getLocale,t,newId,simulationSettings} from '@brickwright/cad-core';
 import type {CadSession,Vec3} from '@brickwright/cad-core';
 import {createSimulationClient} from './simulation-client.js';
@@ -10,7 +11,7 @@ type Drive='hinge'|'slider';
 type Travel={kind:Drive;target:number;speed:number;deadline:number;lastSpeed:number;resolve:(value:string)=>void;reject:(error:Error)=>void};
 const emptyFrame=():SimulationFrame=>({time:0,poses:[],angles:{},speeds:{},linearPositions:{},linearSpeeds:{}});
 /** One clock for manual controls and program execution. Preview never edits the design. */
-export function createSimulationController(session:CadSession,wasmURL:string,ready:()=>Promise<unknown>,changed:()=>void,frameChanged:(frame:SimulationFrame|null)=>void,interruptProgram?:()=>void){
+export function createSimulationController(session:CadSession,wasmURL:string,ready:()=>Promise<GeometryResult|void>,changed:()=>void,frameChanged:(frame:SimulationFrame|null)=>void,interruptProgram?:()=>void){
  let client:ReturnType<typeof createSimulationClient>|undefined,preparing:Promise<void>|undefined,epoch=0,commandEpoch=0,playing=false,program=false,disposed=false,fixBaseOverride:boolean|undefined,rigidPreview=false,timeScale=1,timer:ReturnType<typeof setTimeout>|undefined,lastTime=0,accumulator=0;
  let externalOwner:symbol|undefined;
  let frame=emptyFrame(),error='',replayTime:number|undefined,replayPlaying=false,replayTimer:ReturnType<typeof setTimeout>|undefined;const replay=createSimulationReplay();
@@ -32,7 +33,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
   if(disposed)throw new Error(t('Editor was disposed'));if(client&&!preparing)return;if(preparing)return preparing;
   replay.clear();traces.clear();replayTime=undefined;
   const expected=epoch;error='';
-  const pending=(async()=>{await ready();if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));client=createSimulationClient();const first=await client.send({op:'start',document:structuredClone(session.state.document),wasmURL:new URL(wasmURL,document.baseURI).href,fixBase:fixBase(),rigidPreview,locale:getLocale()});if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));frame=first;present(frame);})();
+  const pending=(async()=>{const geometry=await ready();if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));client=createSimulationClient();const first=await client.send({op:'start',document:session.state.document,geometry:geometry||undefined,wasmURL:new URL(wasmURL,document.baseURI).href,fixBase:fixBase(),rigidPreview,locale:getLocale()});if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));frame=first;present(frame);})();
   preparing=pending;notify();
   try{await pending;}catch(e){if(expected===epoch)fail(e);throw e;}finally{if(preparing===pending)preparing=undefined;notify();}
  }
