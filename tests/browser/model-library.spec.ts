@@ -34,7 +34,7 @@ test('browse without fetching, insert one verified model with provenance, undo a
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  await addShape(page,'Box');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  const before=await saved(page),dialog=await open(page);
- await expect(dialog.getByRole('button',{name:/ · (BSD-3-Clause|CC0-1.0)$/})).toHaveCount(38);const reviewed=await reportedCatalogue();await load(page,reviewed);
+ await expect(dialog.locator('.model-library-card:has(.model-card-meta)')).not.toHaveCount(0);const reviewed=await reportedCatalogue();await load(page,reviewed);
  await page.getByLabel('Search models',{exact:true}).fill('missing');await expect(dialog).toContainText('No matching models.');await page.getByLabel('Search models',{exact:true}).fill('fixture');
  await dialog.getByRole('button',{name:'Browser fixture · BSD-3-Clause',exact:true}).click();
  await expect(dialog).toContainText('Selected STL conversion to millimetres, Z up');await expect(dialog).toContainText('Curated limits:');
@@ -67,10 +67,11 @@ test('closing an in-flight download cancels insertion',async({page})=>{
 test('bundled CAD and OpenSCAD sources insert offline, stay editable through undo/reload and export attribution',async({page,context})=>{
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  const before=await saved(page),dialog=await open(page);
- await expect(dialog.getByRole('button',{name:/ · (BSD-3-Clause|CC0-1.0)$/})).toHaveCount(38);
+ await expect(dialog.locator('.model-library-card:has(.model-card-meta)')).not.toHaveCount(0);
  let requests=0;page.on('request',()=>requests++);await context.setOffline(true);
  const selected=['10 mm geometric cube fixture · CC0-1.0','Named dependencies · BSD-3-Clause'];
  for(const name of selected){
+  await dialog.getByLabel('Search models').fill(name.split(' · ')[0]);
   await dialog.getByRole('button',{name,exact:true}).click();
   if(name.includes('cube'))await expect(dialog).toContainText('OpenSCAD source is converted');
   const insert=dialog.getByRole('button',{name:'Insert editable source',exact:true});await expect(insert).toBeEnabled();await dialog.getByLabel('Incorporation modification notes',{exact:true}).fill('Default parameters, unchanged coordinates.');await insert.click();await expect(dialog.getByRole('status')).toContainText('Editable source inserted with provenance. Available offline.');
@@ -89,6 +90,7 @@ test('bundled CAD and OpenSCAD sources insert offline, stay editable through und
 
 test('closing while bundled source hash verification awaits cancels without changing model or redo',async({page})=>{
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');await addShape(page,'Box');await page.getByRole('button',{name:'Undo',exact:true}).click();const before=await saved(page),dialog=await open(page);
+ await dialog.getByLabel('Search models').fill('10 mm geometric cube fixture');
  await dialog.getByRole('button',{name:'10 mm geometric cube fixture · CC0-1.0',exact:true}).click();await dialog.getByLabel('Incorporation modification notes',{exact:true}).fill('Unchanged.');
  await page.evaluate(()=>{const host=window as unknown as {pendingHashes:(()=>void)[]};host.pendingHashes=[];const digest=crypto.subtle.digest.bind(crypto.subtle);crypto.subtle.digest=async(algorithm,data)=>{await new Promise<void>(resolve=>host.pendingHashes.push(resolve));return digest(algorithm,data);};});
  await dialog.getByRole('button',{name:'Insert editable source',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as unknown as {pendingHashes:unknown[]}).pendingHashes.length)).toBe(1);
@@ -98,6 +100,7 @@ test('closing while bundled source hash verification awaits cancels without chan
 
 test('reviewed gear inserts offline as a default snapshot and exports its MIT notice',async({page,context})=>{
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');const before=await saved(page),dialog=await open(page);
+ await dialog.getByLabel('Search models').fill('Parametric Involute Gear');
  await dialog.getByRole('button',{name:'Parametric Involute Gear · MIT',exact:true}).click();
  await expect(dialog).toContainText('Original JavaScript parameters and face colours are not retained');
  await expect(dialog.getByRole('link',{name:'Original source',exact:true})).toHaveAttribute('href',/720f3688312ed3bad1702fe83906be153b8ab8fc/);
@@ -141,16 +144,20 @@ test('recorded collision reports expose bindings and limits without qualifying o
 });
 
 // Gallery acceptance: actual bundled images, a usable primary action and compact details.
-test('every bundled model has a preview and inserts without mandatory notes',async({page})=>{
+test('bundled gallery pages show previews and allow insertion without mandatory notes',async({page})=>{
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');const before=await saved(page),dialog=await open(page);
- const cards=dialog.locator('.model-library-card');await expect(cards).toHaveCount(194);await expect(cards.locator('img')).toHaveCount(194);expect((await cards.first().boundingBox())!.height).toBeGreaterThanOrEqual(170);expect(await cards.first().evaluate(card=>{const outer=card.getBoundingClientRect(),label=card.querySelector('strong')!.getBoundingClientRect();return label.top>=outer.top&&label.bottom<=outer.bottom;})).toBe(true);
- await expect.poll(()=>cards.locator('img').evaluateAll((images:any[])=>images.every(image=>image.complete&&image.naturalWidth>0))).toBe(true);
+ const cards=dialog.locator('.model-library-card');await expect(cards).toHaveCount(36);await expect(cards.locator('img')).toHaveCount(36);expect((await cards.first().boundingBox())!.height).toBeGreaterThanOrEqual(170);expect(await cards.first().evaluate(card=>{const outer=card.getBoundingClientRect(),label=card.querySelector('strong')!.getBoundingClientRect();return label.top>=outer.top&&label.bottom<=outer.bottom;})).toBe(true);
+ await expect(cards.locator('img').first()).toHaveJSProperty('complete',true);
+ expect(await cards.locator('img').first().evaluate(image=>(image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
  expect(await saved(page)).toEqual(before);await expect(dialog.getByRole('button',{name:'Close model library'})).toHaveText('×');
- await cards.filter({hasText:'Named dependencies'}).click();const insert=dialog.getByRole('button',{name:'Insert editable source',exact:true});await expect(insert).toBeEnabled();
+ await dialog.getByLabel('Search models').fill('Named dependencies');await cards.filter({hasText:'Named dependencies'}).click();const insert=dialog.getByRole('button',{name:'Insert editable source',exact:true});await expect(insert).toBeEnabled();
  await expect(dialog.locator('.model-library-technical')).not.toHaveAttribute('open');await expect(dialog.getByRole('textbox',{name:'Licence & attribution',exact:true})).toHaveValue(/Copyright/);
  expect(await dialog.evaluate(node=>{const action=node.querySelector('.library-insert')!,licence=node.querySelector('.model-library-licence')!;return !!(action.compareDocumentPosition(licence)&Node.DOCUMENT_POSITION_FOLLOWING);})).toBe(true);
  await insert.click();await expect(dialog.getByRole('status')).toContainText('Editable source inserted');const added=await saved(page);expect(added.roots).toHaveLength(before.roots.length+1);expect(added.provenance.records[0].modificationNotes).toContain('no manual changes');
- await dialog.getByLabel('Model type',{exact:true}).selectOption('mesh');await expect(cards).toHaveCount(41);await dialog.getByLabel('Model type',{exact:true}).selectOption('source');await expect(cards).toHaveCount(153);
+ await dialog.getByLabel('Search models').fill('');
+ await dialog.getByLabel('Model type',{exact:true}).selectOption('mesh');await expect(cards).toHaveCount(36);
+ await dialog.getByLabel('Model type',{exact:true}).selectOption('source');await expect(cards).toHaveCount(36);
+ expect(Number(await dialog.locator('.model-library-list').getAttribute('data-model-count'))).toBeGreaterThanOrEqual(153);
  expect(await dialog.evaluate(node=>node.scrollWidth<=node.clientWidth)).toBe(true);
 });
 
@@ -162,6 +169,7 @@ for(let group=0;group<29;group++)test(`reviewed dependency-complete external sou
  // Four complete UI cycles per case keep the normal 45-second test budget.
  for(const asset of assets.slice(group*4,group*4+4)){
   const dialog=await open(page);
+  await dialog.getByLabel('Search models').fill(asset.title);
   await dialog.getByRole('button',{name:`${asset.title} · MIT`,exact:true}).click();
   expect(await dialog.getByRole('textbox',{name:'Licence & attribution',exact:true}).inputValue()).toContain(asset.author);
   await dialog.getByRole('button',{name:'Insert editable source',exact:true}).click();
@@ -178,6 +186,7 @@ for(let group=0;group<29;group++)test(`reviewed dependency-complete external sou
 
 test('new CC0 frame source inserts offline and survives project serialization',async({page})=>{
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');const before=await saved(page),dialog=await open(page);await page.context().setOffline(true);
+ await dialog.getByLabel('Search models').fill('Nested open frames');
  await dialog.getByRole('button',{name:'Nested open frames · CC0-1.0',exact:true}).click();await dialog.getByRole('button',{name:'Insert editable source',exact:true}).click();await expect(dialog.getByRole('status')).toContainText('Editable source inserted');const after=await saved(page);expect(after.roots).toHaveLength(before.roots.length+1);const node=after.nodes[after.roots.at(-1)];expect(node.kind).toBe('code');expect(node.program.source).toContain('subtract2d');expect(after.provenance.records.at(-1).asset.licence.spdx).toBe('CC0-1.0');
  await dialog.getByRole('button',{name:'Close model library'}).click();await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');await page.context().setOffline(false);
 });

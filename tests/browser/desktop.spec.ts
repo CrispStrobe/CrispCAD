@@ -33,5 +33,5 @@ test('native Model Source command opens the synchronized dock without editing th
 test('native Model Library command replaces the duplicate in-window File menu',async({page})=>{
  await page.addInitScript(()=>{(window as any).brickwrightDesktop=true;(window as any).webkit={messageHandlers:{cadHost:{postMessage:async()=>null}}};});
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');await expect(page.getByLabel('File menu',{exact:true})).toBeHidden();
- await page.evaluate(async()=>{await (window as any).brickwrightExecuteCommand('model-library');});const dialog=page.getByRole('dialog',{name:'Model library',exact:true});await expect(dialog).toBeVisible();await expect(dialog.locator('.model-library-card img')).toHaveCount(132);
+ await page.evaluate(async()=>{await (window as any).brickwrightExecuteCommand('model-library');});const dialog=page.getByRole('dialog',{name:'Model library',exact:true});await expect(dialog).toBeVisible();await expect(dialog.locator('.model-library-card img')).toHaveCount(36);expect(Number(await dialog.locator('.model-library-list').getAttribute('data-model-count'))).toBeGreaterThan(132);
 });

@@ -27,6 +27,7 @@ export interface ModelLibraryOptions {
 const el=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
 const noCache:ModelLibraryFileCache={async read(){return undefined;},async write(){throw new Error('Storage unavailable');},async remove(){}};
 const fold=(text:string)=>text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase();
+const MODELS_PER_PAGE=36;
 /** Browse thumbnails without fetching model bytes or changing the active design. */
 export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,evaluate:(document:CadDocument)=>Promise<GeometryResult>,options:ModelLibraryOptions|undefined,inserted:()=>Promise<void>,deliver?:(file:{name:string;bytes:Uint8Array;mime:string})=>void|Promise<void>,projects?:{items:readonly ModelLibraryProject[];open:(id:string)=>Promise<boolean|void>}){
  let catalogue:ModelLibraryCatalogue={format:'brickwright-model-library',version:1,assets:[]},initialError='';
@@ -49,7 +50,16 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
  const file=el('input');file.type='file';file.accept='.json,application/json';file.hidden=true;file.setAttribute('aria-label',t('Catalogue file'));load.onclick=()=>file.click();
  tools.append(search,filter,load,file);
  const layout=el('div');layout.className='model-library-layout';const list=el('div');list.className='model-library-list';list.setAttribute('aria-label',t('Catalogue models'));const details=el('section');details.className='model-library-details';layout.append(list,details);
- const status=el('p');status.className='model-library-status';status.setAttribute('role','status');status.setAttribute('aria-label',t('Model library status'));status.textContent=initialError;dialog.append(heading,tools,layout,status);parent.append(dialog);
+ const pages=el('div'),previous=el('button','‹'),nextPage=el('button','›'),modelRange=el('span');
+ let page=0,pageCount=1;
+ pages.className='model-library-pages';pages.setAttribute('role','group');pages.setAttribute('aria-label',t('Model pages'));
+ previous.type=nextPage.type='button';
+ previous.setAttribute('aria-label',t('Previous page'));previous.title=t('Previous page');
+ nextPage.setAttribute('aria-label',t('Next page'));nextPage.title=t('Next page');
+ modelRange.setAttribute('aria-live','polite');
+ previous.onclick=()=>goToPage(page-1);nextPage.onclick=()=>goToPage(page+1);
+ pages.append(previous,modelRange,nextPage);
+ const status=el('p');status.className='model-library-status';status.setAttribute('role','status');status.setAttribute('aria-label',t('Model library status'));status.textContent=initialError;dialog.append(heading,tools,layout,pages,status);parent.append(dialog);
  dialog.addEventListener('keydown',event=>event.stopPropagation());dialog.addEventListener('cancel',()=>controller?.abort());
  const report=(error:unknown)=>{status.textContent=error instanceof Error?error.message:String(error);};
  const link=(label:string,url:string)=>{const a=el('a',label);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;};
@@ -96,7 +106,14 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
    for(const card of cards.values())card.disabled=working;
    cardsDisabled=working;
   }
+  previous.disabled=working||page===0;
+  nextPage.disabled=working||page+1>=pageCount;
  }
+ function goToPage(index:number){
+  if(working||index<0||index>=pageCount)return;
+  page=index;list.scrollTop=0;renderList();
+ }
+ function resetPage(){page=0;list.scrollTop=0;}
  function createCard(onSelect:()=>void){
   const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;
   card.setAttribute('aria-pressed','false');
@@ -111,8 +128,17 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
   const archiveMatches=['source','projects'].includes(mode)?[]:archive.folders.filter(folder=>
    (mode!=='mesh'||folder.files.some(file=>file.format==='stl'))&&matchesSearch(folder,terms,describeFolder));
   const projectMatches=!mode||mode==='projects'?(projects?.items??[]).filter(project=>matchesSearch(project,terms,describeProject)):[];
+  const total=projectMatches.length+matches.length+archiveMatches.length;
+  pageCount=Math.max(1,Math.ceil(total/MODELS_PER_PAGE));
+  page=Math.min(page,pageCount-1);
+  const start=page*MODELS_PER_PAGE,end=start+MODELS_PER_PAGE;
+  const pageSlice=<Item,>(items:readonly Item[],offset:number)=>items.slice(Math.max(0,start-offset),Math.max(0,end-offset));
+  list.dataset.modelCount=String(total);
+  pages.hidden=total===0;
+  previous.hidden=nextPage.hidden=pageCount===1;
+  if(total)modelRange.textContent=t`${start+1}–${Math.min(total,end)} of ${total} models`;
   const next=new Map<LibraryItem,HTMLButtonElement>();
-  for(const project of projectMatches){
+  for(const project of pageSlice(projectMatches,0)){
    let card=cards.get(project);
    if(!card){
     card=createCard(()=>{selectedProject=project;selected=undefined;archiveSelection=undefined;});
@@ -120,7 +146,7 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
    }
    next.set(project,card);
   }
-  for(const asset of matches){
+  for(const asset of pageSlice(matches,projectMatches.length)){
    let card=cardPreviews===options?.previews?cards.get(asset):undefined;
    if(!card){
     card=createCard(()=>{selectedProject=undefined;selected=asset;archiveSelection=undefined;});
@@ -131,7 +157,7 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
    }
    next.set(asset,card);
   }
-  for(const folder of archiveMatches){
+  for(const folder of pageSlice(archiveMatches,projectMatches.length+matches.length)){
    let card=cards.get(folder);
    if(!card){
     card=createCard(()=>{selectedProject=undefined;selected=undefined;archiveSelection=folder;});
@@ -290,8 +316,8 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
       el('pre',JSON.stringify(report,null,2)));
     container.append(expanded);
   }
- search.oninput=renderList;
- filter.onchange=()=>{selectedProject=undefined;selected=undefined;archiveSelection=undefined;renderList();renderDetails();};
- file.onchange=async()=>{const chosen=file.files?.[0];file.value='';if(!chosen||working)return;try{if(chosen.size>4*1024*1024)throw new Error(t('Catalogue exceeds 4 MiB'));const parsed=parseModelLibraryCatalogue(await chosen.text());if(disposed||working)return;if(!parsed.valid)throw new Error(parsed.errors.join(' '));catalogue=parsed.catalogue;selectedProject=undefined;selected=undefined;archiveSelection=undefined;search.value=filter.value='';status.textContent='';renderList();renderDetails();}catch(error){report(error);}};
- return {open(filterMode?:'projects'){if(!disposed&&!dialog.open){if(filterMode){filter.value=filterMode;search.value='';selectedProject=undefined;selected=undefined;archiveSelection=undefined;}renderList();if(!working)renderDetails();dialog.showModal();search.focus();if(!loaded){status.textContent=t('Loading models…');loading??=options!.load!().then(data=>{if(disposed)return;const checked=validateModelLibraryCatalogue(data.catalogue);if(!checked.valid)throw new Error(checked.errors.join(' '));catalogue=checked.catalogue;options={...options,...data};localFiles.clear();for(const [path,bytes]of data.localFiles??[])localFiles.set(path,bytes.slice());loaded=true;status.textContent='';renderList();renderDetails();}).catch(error=>{if(!disposed)report(error);}).finally(()=>{loading=undefined;});}}},dispose(){disposed=true;controller?.abort();previewObserver?.disconnect();dialog.remove();}};
+ search.oninput=()=>{resetPage();renderList();};
+ filter.onchange=()=>{resetPage();selectedProject=undefined;selected=undefined;archiveSelection=undefined;renderList();renderDetails();};
+ file.onchange=async()=>{const chosen=file.files?.[0];file.value='';if(!chosen||working)return;try{if(chosen.size>4*1024*1024)throw new Error(t('Catalogue exceeds 4 MiB'));const parsed=parseModelLibraryCatalogue(await chosen.text());if(disposed||working)return;if(!parsed.valid)throw new Error(parsed.errors.join(' '));catalogue=parsed.catalogue;resetPage();selectedProject=undefined;selected=undefined;archiveSelection=undefined;search.value=filter.value='';status.textContent='';renderList();renderDetails();}catch(error){report(error);}};
+ return {open(filterMode?:'projects'){if(!disposed&&!dialog.open){if(filterMode){resetPage();filter.value=filterMode;search.value='';selectedProject=undefined;selected=undefined;archiveSelection=undefined;}renderList();if(!working)renderDetails();dialog.showModal();search.focus();if(!loaded){status.textContent=t('Loading models…');loading??=options!.load!().then(data=>{if(disposed)return;const checked=validateModelLibraryCatalogue(data.catalogue);if(!checked.valid)throw new Error(checked.errors.join(' '));catalogue=checked.catalogue;options={...options,...data};localFiles.clear();for(const [path,bytes]of data.localFiles??[])localFiles.set(path,bytes.slice());loaded=true;status.textContent='';renderList();renderDetails();}).catch(error=>{if(!disposed)report(error);}).finally(()=>{loading=undefined;});}}},dispose(){disposed=true;controller?.abort();previewObserver?.disconnect();dialog.remove();}};
 }

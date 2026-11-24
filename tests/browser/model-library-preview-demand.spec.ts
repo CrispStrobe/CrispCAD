@@ -18,8 +18,13 @@ test('model and Adafruit previews load near the viewport and work offline after 
  const dialog=page.getByRole('dialog',{name:'Model library',exact:true});
  const modelImage=dialog.locator('.model-library-list img').first();
  await expect(modelImage).toHaveJSProperty('naturalWidth',220);
+ const cards=dialog.locator('.model-library-card'),first=await cards.first().textContent();
+ await expect(cards).toHaveCount(36);
  expect(previewRequests.length).toBeLessThan(40);
- const folder=adafruitArchive.folders.find(f=>f.name!=='Adafruit archive files')!;
+ await dialog.getByRole('button',{name:'Next page',exact:true}).click();
+ await expect(cards.first()).not.toHaveText(first!);
+ await expect(cards).toHaveCount(36);
+ const folder=adafruitArchive.folders.filter(f=>f.name!=='Adafruit archive files').at(-1)!;
  const chooseFolder=async()=>{
   await dialog.getByLabel('Search models').fill(folder.name);
   await dialog.locator('[data-archive-folder]').filter({has:page.getByText(folder.name,{exact:true})}).click();
