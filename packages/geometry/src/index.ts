@@ -7,3 +7,7 @@ export * from './model-library-insert.js';
 export {getBundledFontData} from './font-profile.js';
 
 export {GeometryResourceLimitError} from './limits.js';
+export {checkPrintability,checkMeshTopology,DEFAULT_PRINTABILITY_SETTINGS,PRINTABILITY_CHECK_VERSION} from './analysis/printability.js';
+export type {PrintabilityReport,PrintabilitySettings,BodyPrintability,PrintOrientationSummary,MeshTopologyCheck} from './analysis/printability.js';
+export {TriangleBvh} from './analysis/meshBvh.js';
+export {checkMinWall} from './analysis/minWall.js';

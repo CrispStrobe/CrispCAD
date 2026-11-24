@@ -208,7 +208,10 @@ no Macad3D code or interface has been transplanted.
 4. **Exact-backend qualification in parallel.** Evaluate Solidcore behind a narrow
    adapter with independent fixtures and WASM memory/latency measurements. STEP,
    fillet, chamfer and shell enter the product only after their capabilities and
-   failure handling pass those tests.
+   failure handling pass those tests. SMLib WASM and WASMLib are further
+   candidates; kernelCAD's reference-part scorecard is a suitable gate. See
+   [the kernelCAD review](KERNELCAD-REVIEW.md) for what was adopted (MIT gear
+   and mesh-printability code) and why a kernelCAD fork is deferred.
 5. **Components, configurations and assembly.** Explicit linked versus independent
    instances, parameter variants, stable mate frames and qualified Jolt actuators.
    Share the same headless command layer with Brickwright and CrispMesh.

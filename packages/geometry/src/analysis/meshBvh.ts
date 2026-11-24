@@ -1,0 +1,766 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Andrii Shylenko and kernelCAD contributors
+// Modified for Brickwright CAD (BSD-3-Clause project) from kernelCAD-web commit
+// 964fa6cfe94ecf16c2c44b94770846ae23665d82: import paths and local types only.
+// src/modeling/runtime/dfm/meshBvh.ts
+//
+// Plain-TypeScript triangle BVH for the DFM gates (min-wall ray sampler,
+// voxel void analysis). Deliberately no third-party BVH dependency: the
+// modeling layer must not import three.js-coupled helpers.
+//
+// Implementation notes:
+//   - Möller–Trumbore ray/triangle intersection with a 1e-12 determinant
+//     epsilon; barycentric bounds are inclusive within 1e-9 so rays that
+//     pierce a shared edge or vertex still register on every incident
+//     triangle (pointInside dedups those by t).
+//   - Nodes are stored in flat Float64Array/Int32Array buffers — no
+//     per-node objects — so 500k-triangle meshes stay in budget. Layout:
+//     the left child immediately follows its parent (DFS order), only the
+//     right-child index is stored; `count > 0` marks a leaf.
+//   - Median split on triangle centroids along the widest centroid axis
+//     (Hoare quickselect, O(n) per level), leaf size 8, stack-based
+//     traversal (no recursion at query time).
+//   - Degenerate triangles (area < 1e-12) are skipped at build and excluded
+//     from `triangleCount`.
+//
+// The DfmMesh field names match `meshShapeForExport` in
+// src/kernel/backends/occt/occtBackend.ts exactly
+// (`{ vertices, triangles }`), so its welded watertight output can be fed
+// in directly.
+
+import type { Vec3 } from './vec3.js';
+import { closestPointOnTriangle, distanceSquared } from './meshClosestPoint.js';
+
+export interface BvhClosestPoint {
+  point: Vec3;
+  distance: number;
+  /** Index in the original mesh, including skipped degenerate triangles. */
+  triIndex: number;
+}
+
+export interface BvhClosestPair {
+  pointA: Vec3;
+  pointB: Vec3;
+  distance: number;
+  triIndexA: number;
+  triIndexB: number;
+}
+
+/** Indexed triangle soup, same shape as `meshShapeForExport`'s return:
+ *  `vertices` is a flat xyz array, `triangles` holds vertex indices in
+ *  groups of three. */
+export interface DfmMesh {
+  vertices: readonly number[];
+  triangles: readonly number[];
+}
+
+/** Mesh input accepted by the BVH, including typed arrays. */
+export interface DfmMeshInput {
+  vertices: ArrayLike<number>;
+  triangles: ArrayLike<number>;
+}
+
+function closestSegmentPair(p1: Vec3, q1: Vec3, p2: Vec3, q2: Vec3): [Vec3, Vec3] {
+  const d1: Vec3 = [q1[0]-p1[0], q1[1]-p1[1], q1[2]-p1[2]];
+  const d2: Vec3 = [q2[0]-p2[0], q2[1]-p2[1], q2[2]-p2[2]];
+  const r: Vec3 = [p1[0]-p2[0], p1[1]-p2[1], p1[2]-p2[2]];
+  const a = d1[0]**2+d1[1]**2+d1[2]**2;
+  const e = d2[0]**2+d2[1]**2+d2[2]**2;
+  const f = d2[0]*r[0]+d2[1]*r[1]+d2[2]*r[2];
+  let s = 0, t = 0;
+  if (a <= 1e-30 && e <= 1e-30) return [p1, p2];
+  if (a <= 1e-30) t = Math.max(0, Math.min(1, f/e));
+  else {
+    const c = d1[0]*r[0]+d1[1]*r[1]+d1[2]*r[2];
+    if (e <= 1e-30) s = Math.max(0, Math.min(1, -c/a));
+    else {
+      const b = d1[0]*d2[0]+d1[1]*d2[1]+d1[2]*d2[2];
+      const denom = a*e-b*b;
+      if (denom !== 0) s = Math.max(0, Math.min(1, (b*f-c*e)/denom));
+      t = (b*s+f)/e;
+      if (t < 0) { t = 0; s = Math.max(0, Math.min(1, -c/a)); }
+      else if (t > 1) { t = 1; s = Math.max(0, Math.min(1, (b-c)/a)); }
+    }
+  }
+  return [
+    [p1[0]+d1[0]*s, p1[1]+d1[1]*s, p1[2]+d1[2]*s],
+    [p2[0]+d2[0]*t, p2[1]+d2[1]*t, p2[2]+d2[2]*t],
+  ];
+}
+
+function segmentTriangleIntersection(p: Vec3, q: Vec3, a: Vec3, b: Vec3, c: Vec3): Vec3 | null {
+  const d: Vec3 = [q[0]-p[0], q[1]-p[1], q[2]-p[2]];
+  const e1: Vec3 = [b[0]-a[0], b[1]-a[1], b[2]-a[2]];
+  const e2: Vec3 = [c[0]-a[0], c[1]-a[1], c[2]-a[2]];
+  const h: Vec3 = [d[1]*e2[2]-d[2]*e2[1], d[2]*e2[0]-d[0]*e2[2], d[0]*e2[1]-d[1]*e2[0]];
+  const det = e1[0]*h[0]+e1[1]*h[1]+e1[2]*h[2];
+  const e1Length = Math.hypot(...e1), e2Length = Math.hypot(...e2), segmentLength = Math.hypot(...d);
+  if (Math.abs(det) <= Number.EPSILON * 16 * e1Length * e2Length * segmentLength) return null;
+  const inv = 1/det;
+  const s: Vec3 = [p[0]-a[0], p[1]-a[1], p[2]-a[2]];
+  const u = (s[0]*h[0]+s[1]*h[1]+s[2]*h[2])*inv;
+  if (u < 0 || u > 1) return null;
+  const r: Vec3 = [s[1]*e1[2]-s[2]*e1[1], s[2]*e1[0]-s[0]*e1[2], s[0]*e1[1]-s[1]*e1[0]];
+  const v = (d[0]*r[0]+d[1]*r[1]+d[2]*r[2])*inv;
+  const t = (e2[0]*r[0]+e2[1]*r[1]+e2[2]*r[2])*inv;
+  if (v < 0 || u+v > 1 || t < 0 || t > 1) return null;
+  return [p[0]+t*d[0], p[1]+t*d[1], p[2]+t*d[2]];
+}
+
+export interface BvhHit {
+  /** Ray parameter: hit point = origin + t * dir (dir need not be unit). */
+  t: number;
+  /** Triangle index into the ORIGINAL `mesh.triangles` (triangle i spans
+   *  `triangles[3i..3i+2]`), so callers can map hits back to source faces
+   *  even when degenerate triangles were skipped at build. */
+  triIndex: number;
+}
+
+const DET_EPS = 1e-12;
+const AREA_EPS = 1e-12;
+const BARY_EPS = 1e-9;
+const PARITY_T_EPS = 1e-9;
+// A forward hit this close (barycentric) to a triangle edge is a graze: the
+// ray may pierce the surface there or only touch it, so parity cannot tell.
+const GRAZE_EPS = 1e-7;
+// Parity rays for the retry after a graze. The components have irrational
+// ratios, so a retry ray does not lie in a face plane of axis-aligned or
+// rationally tilted CAD geometry.
+const PARITY_RETRY_DIRS: readonly Vec3[] = [
+  [1, Math.SQRT2 - 1, (Math.sqrt(5) - 1) / 2],
+  [(Math.sqrt(5) - 1) / 2, 1, Math.sqrt(3) - 1],
+  [Math.SQRT2 - 1, Math.sqrt(3) - 1, 1],
+];
+const LEAF_SIZE = 8;
+
+/** Widest centroid axis: 0 = x, 1 = y, 2 = z (ties prefer the lower axis). */
+function splitAxis(ex: number, ey: number, ez: number): number {
+  return ex >= ey ? (ex >= ez ? 0 : 2) : ey >= ez ? 1 : 2;
+}
+
+export class TriangleBvh {
+  /** Number of non-degenerate triangles indexed by the BVH. */
+  readonly triangleCount: number;
+
+  // Packed triangle vertices: 9 doubles per valid triangle (v0 v1 v2),
+  // ordered by build slot. Cache-friendly at intersection time.
+  private readonly triVerts: Float64Array;
+  // Build slot -> original triangle index in mesh.triangles.
+  private readonly srcIndex: Int32Array;
+  // Permutation of build slots; leaves reference contiguous ranges of it.
+  private readonly triOrder: Int32Array;
+
+  // Flat node storage. Node n: bounds[6n..6n+5] = minX minY minZ maxX maxY
+  // maxZ; count[n] > 0 marks a leaf holding triOrder[start[n] ..
+  // start[n]+count[n]); internal nodes have count 0, left child at n+1,
+  // right child at rightChild[n].
+  private readonly bounds: Float64Array;
+  private readonly start: Int32Array;
+  private readonly count: Int32Array;
+  private readonly rightChild: Int32Array;
+  private nodeCount = 0;
+
+  // Reusable traversal stack shared by raycast/allHits. Queries are
+  // synchronous and non-reentrant (pointInside -> allHits is sequential,
+  // never nested), so a single per-instance buffer is safe and avoids a
+  // fresh Int32Array allocation per query. Depth 128 covers any tree this
+  // layout can produce (worst-case depth ~ 2*log2(n) << 128).
+  private readonly traversalStack = new Int32Array(128);
+  // Set by intersectTri when a forward hit lies on a triangle edge or vertex.
+  private grazed = false;
+  // Parallel stack of node ENTRY t (raycast only): lets a popped node be
+  // discarded with one comparison when bestT shrank below its entry after
+  // it was pushed.
+  private readonly traversalTStack = new Float64Array(128);
+
+  private readonly consumeBuildWork: (amount?: number) => void;
+
+  constructor(mesh: DfmMeshInput, consumeWork?: (amount?: number) => void) {
+    this.consumeBuildWork = consumeWork ?? ((): void => {});
+    const { vertices, triangles } = mesh;
+    const numTris = (triangles.length / 3) | 0;
+    // Packing, centroid generation and the initial ordering are linear.
+    consumeWork?.(numTris * 3);
+
+    // Pack non-degenerate triangles.
+    const triVerts = new Float64Array(numTris * 9);
+    const srcIndex = new Int32Array(numTris);
+    let valid = 0;
+    for (let i = 0; i < numTris; i++) {
+      const i0 = triangles[3 * i] * 3;
+      const i1 = triangles[3 * i + 1] * 3;
+      const i2 = triangles[3 * i + 2] * 3;
+      const ax = vertices[i0], ay = vertices[i0 + 1], az = vertices[i0 + 2];
+      const bx = vertices[i1], by = vertices[i1 + 1], bz = vertices[i1 + 2];
+      const cx = vertices[i2], cy = vertices[i2 + 1], cz = vertices[i2 + 2];
+      const e1x = bx - ax, e1y = by - ay, e1z = bz - az;
+      const e2x = cx - ax, e2y = cy - ay, e2z = cz - az;
+      const nx = e1y * e2z - e1z * e2y;
+      const ny = e1z * e2x - e1x * e2z;
+      const nz = e1x * e2y - e1y * e2x;
+      const area = 0.5 * Math.sqrt(nx * nx + ny * ny + nz * nz);
+      if (!(area >= AREA_EPS)) continue; // skip degenerate (or NaN) triangles
+      const o = valid * 9;
+      triVerts[o] = ax; triVerts[o + 1] = ay; triVerts[o + 2] = az;
+      triVerts[o + 3] = bx; triVerts[o + 4] = by; triVerts[o + 5] = bz;
+      triVerts[o + 6] = cx; triVerts[o + 7] = cy; triVerts[o + 8] = cz;
+      srcIndex[valid] = i;
+      valid++;
+    }
+    this.triangleCount = valid;
+    this.triVerts = triVerts.subarray(0, valid * 9) as Float64Array;
+    this.srcIndex = srcIndex.subarray(0, valid) as Int32Array;
+
+    // Centroids for the median split (build-time only).
+    const centroids = new Float64Array(valid * 3);
+    for (let s = 0; s < valid; s++) {
+      const o = s * 9;
+      centroids[3 * s] = (triVerts[o] + triVerts[o + 3] + triVerts[o + 6]) / 3;
+      centroids[3 * s + 1] = (triVerts[o + 1] + triVerts[o + 4] + triVerts[o + 7]) / 3;
+      centroids[3 * s + 2] = (triVerts[o + 2] + triVerts[o + 5] + triVerts[o + 8]) / 3;
+    }
+
+    const triOrder = new Int32Array(valid);
+    for (let s = 0; s < valid; s++) triOrder[s] = s;
+    this.triOrder = triOrder;
+
+    const maxNodes = Math.max(1, 2 * valid);
+    this.bounds = new Float64Array(maxNodes * 6);
+    this.start = new Int32Array(maxNodes);
+    this.count = new Int32Array(maxNodes);
+    this.rightChild = new Int32Array(maxNodes);
+
+    if (valid > 0) this.buildNode(0, valid, centroids);
+    else {
+      // Empty tree: a placeholder root that must NEVER be traversed.
+      // Invariant: every public query early-returns on triangleCount === 0
+      // before touching node storage. The inverted bounds do NOT reject
+      // rays (the slab near/far swap turns [+Inf, -Inf] into an infinite
+      // box), and count[0] === 0 marks this node internal with
+      // rightChild 0, so an unguarded traversal would self-loop forever.
+      // Any new public query MUST keep the triangleCount === 0 guard.
+      this.nodeCount = 1;
+      this.bounds.set([Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity], 0);
+      this.count[0] = 0;
+    }
+  }
+
+  /** Vertex bounds and centroid bounds over triOrder[lo, hi). */
+  private computeNodeBounds(lo: number, hi: number, centroids: Float64Array): {
+    minX: number; minY: number; minZ: number;
+    maxX: number; maxY: number; maxZ: number;
+    cMinX: number; cMinY: number; cMinZ: number;
+    cMaxX: number; cMaxY: number; cMaxZ: number;
+  } {
+    // Node bounds from triangle vertices in range.
+    let minX = Infinity, minY = Infinity, minZ = Infinity;
+    let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+    // Centroid bounds for axis selection.
+    let cMinX = Infinity, cMinY = Infinity, cMinZ = Infinity;
+    let cMaxX = -Infinity, cMaxY = -Infinity, cMaxZ = -Infinity;
+    for (let k = lo; k < hi; k++) {
+      this.consumeBuildWork();
+      const s = this.triOrder[k];
+      const o = s * 9;
+      for (let v = 0; v < 9; v += 3) {
+        const x = this.triVerts[o + v], y = this.triVerts[o + v + 1], z = this.triVerts[o + v + 2];
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+        if (z < minZ) minZ = z; if (z > maxZ) maxZ = z;
+      }
+      const cx = centroids[3 * s], cy = centroids[3 * s + 1], cz = centroids[3 * s + 2];
+      if (cx < cMinX) cMinX = cx; if (cx > cMaxX) cMaxX = cx;
+      if (cy < cMinY) cMinY = cy; if (cy > cMaxY) cMaxY = cy;
+      if (cz < cMinZ) cMinZ = cz; if (cz > cMaxZ) cMaxZ = cz;
+    }
+    return { minX, minY, minZ, maxX, maxY, maxZ, cMinX, cMinY, cMinZ, cMaxX, cMaxY, cMaxZ };
+  }
+
+  /** Allocate and fill the subtree over triOrder[lo, hi). Returns the node
+   *  index. Recursive at build time only (depth ~ log2(n / leafSize)). */
+  private buildNode(lo: number, hi: number, centroids: Float64Array): number {
+    this.consumeBuildWork();
+    const node = this.nodeCount++;
+    const b = this.bounds;
+    const bo = node * 6;
+    const bounds = this.computeNodeBounds(lo, hi, centroids);
+    b[bo] = bounds.minX; b[bo + 1] = bounds.minY; b[bo + 2] = bounds.minZ;
+    b[bo + 3] = bounds.maxX; b[bo + 4] = bounds.maxY; b[bo + 5] = bounds.maxZ;
+
+    const n = hi - lo;
+    const ex = bounds.cMaxX - bounds.cMinX, ey = bounds.cMaxY - bounds.cMinY, ez = bounds.cMaxZ - bounds.cMinZ;
+    if (n <= LEAF_SIZE || (ex <= 0 && ey <= 0 && ez <= 0)) {
+      // Leaf — also when all centroids coincide (split would not progress).
+      this.start[node] = lo;
+      this.count[node] = n;
+      return node;
+    }
+
+    const axis = splitAxis(ex, ey, ez);
+    const mid = lo + (n >> 1);
+    this.selectNth(lo, hi, mid, axis, centroids);
+
+    this.count[node] = 0;
+    this.buildNode(lo, mid, centroids); // left child = node + 1 (DFS order)
+    this.rightChild[node] = this.buildNode(mid, hi, centroids);
+    return node;
+  }
+
+  /** Hoare quickselect: partition triOrder[lo, hi) so the element at `nth`
+   *  is in sorted position by centroid[axis]. O(n) expected per call. */
+  private selectNth(lo: number, hi: number, nth: number, axis: number, centroids: Float64Array): void {
+    const order = this.triOrder;
+    const key = (k: number): number => {
+      this.consumeBuildWork();
+      return centroids[3 * order[k] + axis];
+    };
+    let left = lo;
+    let right = hi - 1;
+    while (left < right) {
+      // Median-of-three pivot to dodge sorted-input pathologies.
+      const midIdx = (left + right) >> 1;
+      const a = key(left), m = key(midIdx), z = key(right);
+      const pivot = a < m ? (m < z ? m : a < z ? z : a) : (a < z ? a : m < z ? z : m);
+      let i = left;
+      let j = right;
+      while (i <= j) {
+        while (key(i) < pivot) i++;
+        while (key(j) > pivot) j--;
+        if (i <= j) {
+          const tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+          i++; j--;
+        }
+      }
+      if (nth <= j) right = j;
+      else if (nth >= i) left = i;
+      else break;
+    }
+  }
+
+  /** Möller–Trumbore against the packed triangle at build slot `s`.
+   *  Returns t, or NaN on miss. Inclusive barycentric bounds (±1e-9) so
+   *  exact edge/vertex piercings register. */
+  private intersectTri(
+    s: number,
+    ox: number, oy: number, oz: number,
+    dx: number, dy: number, dz: number,
+  ): number {
+    const tv = this.triVerts;
+    const o = s * 9;
+    const ax = tv[o], ay = tv[o + 1], az = tv[o + 2];
+    const e1x = tv[o + 3] - ax, e1y = tv[o + 4] - ay, e1z = tv[o + 5] - az;
+    const e2x = tv[o + 6] - ax, e2y = tv[o + 7] - ay, e2z = tv[o + 8] - az;
+    const hx = dy * e2z - dz * e2y;
+    const hy = dz * e2x - dx * e2z;
+    const hz = dx * e2y - dy * e2x;
+    const det = e1x * hx + e1y * hy + e1z * hz;
+    if (det > -DET_EPS && det < DET_EPS) return NaN; // parallel / degenerate
+    const inv = 1 / det;
+    const sx = ox - ax, sy = oy - ay, sz = oz - az;
+    const u = (sx * hx + sy * hy + sz * hz) * inv;
+    if (u < -BARY_EPS || u > 1 + BARY_EPS) return NaN;
+    const qx = sy * e1z - sz * e1y;
+    const qy = sz * e1x - sx * e1z;
+    const qz = sx * e1y - sy * e1x;
+    const v = (dx * qx + dy * qy + dz * qz) * inv;
+    if (v < -BARY_EPS || u + v > 1 + BARY_EPS) return NaN;
+    const t = (e2x * qx + e2y * qy + e2z * qz) * inv;
+    if (t > 0 && (u < GRAZE_EPS || v < GRAZE_EPS || u + v > 1 - GRAZE_EPS)) this.grazed = true;
+    return t;
+  }
+
+  /** Ray/AABB slab test for node `node` over the t interval [tMin, tMax].
+   *  Returns the clipped ENTRY t (>= tMin) on overlap, Infinity on miss.
+   *  NaN lanes (origin exactly on a slab plane with zero direction) drop
+   *  out of the comparisons, which is conservative-correct. */
+  private nodeEnterT(
+    node: number,
+    ox: number, oy: number, oz: number,
+    ix: number, iy: number, iz: number,
+    tMin: number, tMax: number,
+  ): number {
+    const b = this.bounds;
+    const o = node * 6;
+    let t0 = tMin;
+    let t1 = tMax;
+
+    let tn = (b[o] - ox) * ix;
+    let tf = (b[o + 3] - ox) * ix;
+    if (tn > tf) { const tmp = tn; tn = tf; tf = tmp; }
+    if (tn > t0) t0 = tn;
+    if (tf < t1) t1 = tf;
+    if (t0 > t1) return Infinity;
+
+    tn = (b[o + 1] - oy) * iy;
+    tf = (b[o + 4] - oy) * iy;
+    if (tn > tf) { const tmp = tn; tn = tf; tf = tmp; }
+    if (tn > t0) t0 = tn;
+    if (tf < t1) t1 = tf;
+    if (t0 > t1) return Infinity;
+
+    tn = (b[o + 2] - oz) * iz;
+    tf = (b[o + 5] - oz) * iz;
+    if (tn > tf) { const tmp = tn; tn = tf; tf = tmp; }
+    if (tn > t0) t0 = tn;
+    if (tf < t1) t1 = tf;
+    return t0 <= t1 ? t0 : Infinity;
+  }
+
+  /** Tighten (bestT, bestTri) over the triangles of leaf `node`. */
+  private scanLeaf(
+    node: number,
+    ox: number, oy: number, oz: number,
+    dx: number, dy: number, dz: number,
+    tMin: number, bestT: number, bestTri: number, skipTri: number,
+  ): { bestT: number; bestTri: number } {
+    const lo = this.start[node];
+    const cnt = this.count[node];
+    for (let k = lo; k < lo + cnt; k++) {
+      const s = this.triOrder[k];
+      if (this.srcIndex[s] === skipTri) continue;
+      const t = this.intersectTri(s, ox, oy, oz, dx, dy, dz);
+      if (t > tMin && t < bestT) {
+        bestT = t;
+        bestTri = this.srcIndex[s];
+      }
+    }
+    return { bestT, bestTri };
+  }
+
+  /** Push the two children of internal `node` with the FARTHER child first
+   *  (so it is popped last) and return the updated stack pointer. */
+  private pushNodeChildren(
+    node: number,
+    ox: number, oy: number, oz: number,
+    ix: number, iy: number, iz: number,
+    tMin: number, bestT: number, sp: number,
+  ): number {
+    const stack = this.traversalStack;
+    const tStack = this.traversalTStack;
+    let nearNode = node + 1;
+    let farNode = this.rightChild[node];
+    let nearT = this.nodeEnterT(nearNode, ox, oy, oz, ix, iy, iz, tMin, bestT);
+    let farT = this.nodeEnterT(farNode, ox, oy, oz, ix, iy, iz, tMin, bestT);
+    if (farT < nearT) {
+      const n = nearNode; nearNode = farNode; farNode = n;
+      const t = nearT; nearT = farT; farT = t;
+    }
+    if (farT < Infinity) { // farther child first => popped last
+      stack[sp] = farNode;
+      tStack[sp] = farT;
+      sp++;
+    }
+    if (nearT < Infinity) {
+      stack[sp] = nearNode;
+      tStack[sp] = nearT;
+      sp++;
+    }
+    return sp;
+  }
+
+  /** Nearest hit with t > tMin (default 0), optionally skipping one source
+   *  triangle (original-mesh index, e.g. the triangle a sample ray was
+   *  launched from). Direction need not be normalized; t is in units of
+   *  |dir|.
+   *
+   *  Traversal is near-child-first: at each internal node both children's
+   *  entry t is computed and the FARTHER child is pushed first, so the
+   *  nearer subtree is explored before the farther one and bestT shrinks as
+   *  early as possible. Each stack slot carries its node's entry t; a
+   *  popped node whose entry is already >= bestT is discarded with one
+   *  comparison. */
+  raycast(origin: Vec3, dir: Vec3, opts?: { tMin?: number; skipTri?: number }): BvhHit | null {
+    if (this.triangleCount === 0) return null;
+    const tMin = opts?.tMin ?? 0;
+    const skipTri = opts?.skipTri ?? -1;
+    const [ox, oy, oz] = origin;
+    const [dx, dy, dz] = dir;
+    const ix = 1 / dx, iy = 1 / dy, iz = 1 / dz;
+
+    let bestT = Infinity;
+    let bestTri = -1;
+    const stack = this.traversalStack;
+    const tStack = this.traversalTStack;
+    let sp = 0;
+    const rootT = this.nodeEnterT(0, ox, oy, oz, ix, iy, iz, tMin, Infinity);
+    if (rootT < Infinity) {
+      stack[0] = 0;
+      tStack[0] = rootT;
+      sp = 1;
+    }
+    while (sp > 0) {
+      sp--;
+      if (tStack[sp] >= bestT) continue; // bestT shrank since this was pushed
+      const node = stack[sp];
+      if (this.count[node] > 0) {
+        const scanned = this.scanLeaf(node, ox, oy, oz, dx, dy, dz, tMin, bestT, bestTri, skipTri);
+        bestT = scanned.bestT;
+        bestTri = scanned.bestTri;
+      } else {
+        sp = this.pushNodeChildren(node, ox, oy, oz, ix, iy, iz, tMin, bestT, sp);
+      }
+    }
+    return bestTri >= 0 ? { t: bestT, triIndex: bestTri } : null;
+  }
+
+  /** Every hit along the ray with t > tMin, ascending t. Slab traversal
+   *  with no early-out — every intersected leaf is visited. */
+  allHits(origin: Vec3, dir: Vec3, tMin = 0): BvhHit[] {
+    if (this.triangleCount === 0) return [];
+    const [ox, oy, oz] = origin;
+    const [dx, dy, dz] = dir;
+    const ix = 1 / dx, iy = 1 / dy, iz = 1 / dz;
+
+    const hits: BvhHit[] = [];
+    const stack = this.traversalStack;
+    let sp = 0;
+    stack[sp++] = 0;
+    while (sp > 0) {
+      const node = stack[--sp];
+      if (this.nodeEnterT(node, ox, oy, oz, ix, iy, iz, tMin, Infinity) === Infinity) continue;
+      const cnt = this.count[node];
+      if (cnt > 0) {
+        const lo = this.start[node];
+        for (let k = lo; k < lo + cnt; k++) {
+          const s = this.triOrder[k];
+          const t = this.intersectTri(s, ox, oy, oz, dx, dy, dz);
+          if (t > tMin) hits.push({ t, triIndex: this.srcIndex[s] });
+        }
+      } else {
+        stack[sp++] = node + 1;
+        stack[sp++] = this.rightChild[node];
+      }
+    }
+    hits.sort((a, b) => a.t - b.t);
+    return hits;
+  }
+
+  /** Visit triangles intersecting an AABB, using the existing spatial tree.
+   * Charge every visited node and leaf triangle, including rejected bounds.
+   * Yield lazily so a collision caller can stop at its first blocker. */
+  *overlappingTriangles(
+    query: { min: Vec3; max: Vec3 }, consumeWork: () => void,
+  ): Generator<number> {
+    if (this.triangleCount === 0) return;
+    const stack = [0];
+    while (stack.length) {
+      consumeWork();
+      const node = stack.pop()!, offset = node * 6;
+      let overlaps = true;
+      for (let axis = 0; axis < 3; axis++) {
+        if (this.bounds[offset + axis] > query.max[axis] || this.bounds[offset + axis + 3] < query.min[axis]) overlaps = false;
+      }
+      if (!overlaps) continue;
+      if (this.count[node] === 0) {
+        stack.push(node + 1, this.rightChild[node]);
+        continue;
+      }
+      for (let k = this.start[node]; k < this.start[node] + this.count[node]; k++) {
+        consumeWork();
+        const slot = this.triOrder[k], base = slot * 9;
+        let intersects = true;
+        for (let axis = 0; axis < 3; axis++) {
+          const a = this.triVerts[base + axis], b = this.triVerts[base + 3 + axis], c = this.triVerts[base + 6 + axis];
+          if (Math.min(a,b,c) > query.max[axis] || Math.max(a,b,c) < query.min[axis]) intersects = false;
+        }
+        if (intersects) yield this.srcIndex[slot];
+      }
+    }
+  }
+
+  /** Nearest point on any indexed triangle, pruned by point/AABB distance.
+   * Empty/degenerate trees have no closest point. Ties use original index. */
+  closestPoint(point: Vec3): BvhClosestPoint | null {
+    if (!point.every(Number.isFinite)) throw new Error('Closest-point query must be finite.');
+    if (this.triangleCount === 0) return null;
+    let best2 = Infinity;
+    let best: BvhClosestPoint | null = null;
+    const stack = this.traversalStack;
+    let sp = 0;
+    stack[sp++] = 0;
+    while (sp > 0) {
+      const node = stack[--sp];
+      if (this.nodeDistanceSquared(node, point) > best2) continue;
+      if (this.count[node] > 0) {
+        const end = this.start[node] + this.count[node];
+        for (let k = this.start[node]; k < end; k++) {
+          const s = this.triOrder[k], o = s * 9, v = this.triVerts;
+          const closest = closestPointOnTriangle(point,
+            [v[o],v[o+1],v[o+2]], [v[o+3],v[o+4],v[o+5]], [v[o+6],v[o+7],v[o+8]]);
+          const d2 = distanceSquared(point, closest);
+          if (d2 < best2 || (d2 === best2 && this.srcIndex[s] < best!.triIndex)) {
+            best2 = d2;
+            best = { point: closest, distance: Math.sqrt(d2), triIndex: this.srcIndex[s] };
+          }
+        }
+      } else {
+        const left = node + 1, right = this.rightChild[node];
+        const dl = this.nodeDistanceSquared(left, point), dr = this.nodeDistanceSquared(right, point);
+        const near = dl <= dr ? left : right, far = dl <= dr ? right : left;
+        if (Math.max(dl, dr) <= best2) stack[sp++] = far;
+        if (Math.min(dl, dr) <= best2) stack[sp++] = near;
+      }
+    }
+    return best;
+  }
+
+  /** Closest surface points between two meshes, using node-pair AABB
+   *  distance to prune triangle-pair work. */
+  closestPoints(other: TriangleBvh): BvhClosestPair | null {
+    if (this.triangleCount === 0 || other.triangleCount === 0) return null;
+    const state: { best2: number; best: BvhClosestPair | null } = { best2: Infinity, best: null };
+    const stack: Array<[number, number]> = [[0, 0]];
+    while (stack.length) {
+      const [nodeA, nodeB] = stack.pop()!;
+      if (this.nodePairDistanceSquared(nodeA, other, nodeB) > state.best2) continue;
+      const leafA = this.count[nodeA] > 0, leafB = other.count[nodeB] > 0;
+      if (leafA && leafB) {
+        if (this.refineClosestFromLeaves(other, nodeA, nodeB, state)) return state.best;
+      } else if (!leafA && (leafB || this.nodeExtentSquared(nodeA) >= other.nodeExtentSquared(nodeB))) {
+        stack.push([nodeA + 1, nodeB], [this.rightChild[nodeA], nodeB]);
+      } else {
+        stack.push([nodeA, nodeB + 1], [nodeA, other.rightChild[nodeB]]);
+      }
+    }
+    return state.best;
+  }
+
+  private refineClosestFromLeaves(
+    other: TriangleBvh,
+    nodeA: number,
+    nodeB: number,
+    state: { best2: number; best: BvhClosestPair | null },
+  ): boolean {
+    const endA = this.start[nodeA] + this.count[nodeA];
+    const endB = other.start[nodeB] + other.count[nodeB];
+    for (let ka = this.start[nodeA]; ka < endA; ka++) {
+      const sa = this.triOrder[ka], oa = sa * 9;
+      const av: Vec3[] = [
+        [this.triVerts[oa], this.triVerts[oa+1], this.triVerts[oa+2]],
+        [this.triVerts[oa+3], this.triVerts[oa+4], this.triVerts[oa+5]],
+        [this.triVerts[oa+6], this.triVerts[oa+7], this.triVerts[oa+8]],
+      ];
+      for (let kb = other.start[nodeB]; kb < endB; kb++) {
+        const sb = other.triOrder[kb], ob = sb * 9;
+        const bv: Vec3[] = [
+          [other.triVerts[ob], other.triVerts[ob+1], other.triVerts[ob+2]],
+          [other.triVerts[ob+3], other.triVerts[ob+4], other.triVerts[ob+5]],
+          [other.triVerts[ob+6], other.triVerts[ob+7], other.triVerts[ob+8]],
+        ];
+        if (this.considerClosestTrianglePair(other, av, bv, sa, sb, state)) return true;
+      }
+    }
+    return false;
+  }
+
+  private considerClosestTrianglePair(
+    other: TriangleBvh,
+    av: Vec3[],
+    bv: Vec3[],
+    sa: number,
+    sb: number,
+    state: { best2: number; best: BvhClosestPair | null },
+  ): boolean {
+    const consider = (pa: Vec3, pb: Vec3): void => {
+      const d2 = distanceSquared(pa, pb);
+      if (d2 < state.best2) {
+        state.best2 = d2;
+        state.best = { pointA: pa, pointB: pb, distance: Math.sqrt(d2),
+          triIndexA: this.srcIndex[sa], triIndexB: other.srcIndex[sb] };
+      }
+    };
+    for (const p of av) consider(p, closestPointOnTriangle(p, bv[0], bv[1], bv[2]));
+    if (state.best2 === 0) return true;
+    for (const p of bv) consider(closestPointOnTriangle(p, av[0], av[1], av[2]), p);
+    if (state.best2 === 0) return true;
+    for (let ea = 0; ea < 3; ea++) for (let eb = 0; eb < 3; eb++) {
+      const pair = closestSegmentPair(av[ea], av[(ea+1)%3], bv[eb], bv[(eb+1)%3]);
+      consider(pair[0], pair[1]);
+      if (state.best2 === 0) return true;
+    }
+    for (let edge = 0; edge < 3; edge++) {
+      const hitB = segmentTriangleIntersection(av[edge], av[(edge+1)%3], bv[0], bv[1], bv[2]);
+      if (hitB) consider(hitB, hitB);
+      if (state.best2 === 0) return true;
+      const hitA = segmentTriangleIntersection(bv[edge], bv[(edge+1)%3], av[0], av[1], av[2]);
+      if (hitA) consider(hitA, hitA);
+      if (state.best2 === 0) return true;
+    }
+    return false;
+  }
+
+  private nodePairDistanceSquared(node: number, other: TriangleBvh, otherNode: number): number {
+    let d2 = 0;
+    for (let axis = 0; axis < 3; axis++) {
+      const delta = Math.max(this.bounds[6*node+axis] - other.bounds[6*otherNode+axis+3], 0,
+        other.bounds[6*otherNode+axis] - this.bounds[6*node+axis+3]);
+      d2 += delta * delta;
+    }
+    return d2;
+  }
+
+  private nodeExtentSquared(node: number): number {
+    const o = node * 6;
+    const x = this.bounds[o+3]-this.bounds[o], y = this.bounds[o+4]-this.bounds[o+1], z = this.bounds[o+5]-this.bounds[o+2];
+    return x*x+y*y+z*z;
+  }
+
+  private nodeDistanceSquared(node: number, point: Vec3): number {
+    let d2 = 0;
+    for (let axis = 0; axis < 3; axis++) {
+      const delta = Math.max(this.bounds[6*node+axis] - point[axis], 0, point[axis] - this.bounds[6*node+axis+3]);
+      d2 += delta * delta;
+    }
+    return d2;
+  }
+
+  /** Ray-parity inside test: odd number of surface crossings along the
+   *  parity axis ⇒ inside. Welded watertight input (meshShapeForExport)
+   *  makes parity reliable; grazing hits through shared edges/vertices are
+   *  deduplicated by t (within 1e-9) before counting, since every incident
+   *  triangle reports the same crossing.
+   *
+   *  The parity ray runs along the root-bounds axis with the SMALLEST
+   *  extent (ties prefer x, then y): the infinite ray then pierces the
+   *  fewest tree cells — a thin slab is probed through its thickness in a
+   *  point-location-style descent instead of swept across its span. Axis
+   *  choice is per-mesh deterministic, and parity is axis-invariant on
+   *  watertight input.
+   *
+   *  A ray that meets a triangle on an edge or vertex gives no reliable
+   *  parity: a ray in a face plane touches the neighbour faces on their
+   *  shared edges and counts them as crossings. Such a query is repeated
+   *  along the tilted PARITY_RETRY_DIRS and the first ray with no graze
+   *  decides. If every ray grazes, the majority decides and a tie keeps the
+   *  axis-ray answer. */
+  pointInside(p: Vec3): boolean {
+    if (this.triangleCount === 0) return false; // empty tree: placeholder root bounds must not be read
+    const b = this.bounds;
+    const ex = b[3] - b[0], ey = b[4] - b[1], ez = b[5] - b[2];
+    const dir: Vec3 =
+      ex <= ey ? (ex <= ez ? [1, 0, 0] : [0, 0, 1]) : ey <= ez ? [0, 1, 0] : [0, 0, 1];
+    const axisInside = this.rayParityInside(p, dir);
+    if (!this.grazed) return axisInside;
+    let votes = axisInside ? 1 : -1;
+    for (const retryDir of PARITY_RETRY_DIRS) {
+      const inside = this.rayParityInside(p, retryDir);
+      if (!this.grazed) return inside;
+      votes += inside ? 1 : -1;
+    }
+    return votes === 0 ? axisInside : votes > 0;
+  }
+
+  /** Odd number of distinct forward crossings along `dir`. Leaves
+   *  `this.grazed` set when a crossing lies on a triangle edge or vertex. */
+  private rayParityInside(p: Vec3, dir: Vec3): boolean {
+    this.grazed = false;
+    const hits = this.allHits(p, dir, 0);
+    let crossings = 0;
+    let lastT = -Infinity;
+    for (const h of hits) {
+      if (h.t - lastT > PARITY_T_EPS) crossings++;
+      lastT = h.t;
+    }
+    return (crossings & 1) === 1;
+  }
+}

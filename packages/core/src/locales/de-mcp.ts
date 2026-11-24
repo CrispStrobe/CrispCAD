@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "Screen the current model for FDM printing: watertight mesh, sampled minimum wall thickness, overhangs/bridges, bed fit and the best of six axis orientations. Sampled screening only, not a print guarantee.": "Prüft das aktuelle Modell für den FDM-Druck: geschlossenes Netz, stichprobenartige Mindestwandstärke, Überhänge/Brücken, Druckbettgröße und die beste von sechs Achsausrichtungen. Nur eine stichprobenartige Vorprüfung, keine Druckgarantie.",
   "Recorded library sources require STL with attribution. 3MF attribution export is not supported.": "Aufgezeichnete Bibliotheksquellen erfordern STL mit Quellenangaben. Ein 3MF-Export mit Quellenangaben wird nicht unterstützt.",
   "STL and attribution exceed 64 MiB; no export was delivered.": "STL und Quellenangaben überschreiten 64 MiB; es wurde kein Export ausgegeben.",
   "Describe changes since insertion accurately, including when unchanged.": "Beschreiben Sie Änderungen seit dem Einfügen zutreffend, auch bei unverändertem Modell.",

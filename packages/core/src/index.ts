@@ -45,3 +45,7 @@ export * from './simulation.js';
 export * from './screw-redesign.js';
 export {compileBlocksToCadScript,applyBlocksModel,exportBlocksOpenSCAD,exportBlocksJSCAD,validateBlocksProgram,CadBlocksError,BLOCK_SHAPES,BLOCK_LIMITS} from './cad-blocks.js';
 export type {CadBlocksProgram,BlockStmt,BlockExpr,BlockParam,BlockShapeKind,BlockBinaryOp,BlockMathFn,BlockAxis,CompiledBlocks,CompiledBlocksPart,BlocksModelResult} from './cad-blocks.js';
+export {spurGearPolygon,internalSpurGearPolygon,SPUR_GEAR_MAX_TEETH} from './gears/profile.js';
+export {spurGearOutline,internalSpurGearBoreOutline,spurGearRadii,assertPlanetaryToothCompatibility,SpurGearProfileError} from './gears/spurGear.js';
+export type {SpurGearProfileOptions,SpurGearOutline,SpurGearRadii} from './gears/spurGear.js';
+export {externalCenterDistanceMm,externalSpeedRatio,meshAlignDeg,pitchRadiusMm,tipRadiusMm} from './gears/spurGearPairMath.js';
