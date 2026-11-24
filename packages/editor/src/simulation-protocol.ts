@@ -9,6 +9,7 @@ export interface SimulationFrame extends SimulationTelemetry {poses:SimulationPo
 export interface SimulationActuatorStep {op:'actuator-step';impulses:{id:string;impulse:number}[];rays?:SimulationRay[];servos?:SimulationServo[];telemetryOnly?:boolean}
 export type SimulationCommand =
  |{op:'start';document:CadDocument;geometry?:GeometryResult;wasmURL:string;fixBase:boolean;locale:string;rigidPreview?:boolean}
+ |{op:'park'}
  |{op:'step';seconds:number}
  |SimulationActuatorStep
  |{op:'sense';rays:SimulationRay[]}

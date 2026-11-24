@@ -4,7 +4,7 @@ import {createCadSession} from '@brickwright/cad-core';
 import {createSimulationController} from '../packages/editor/src/simulation-controller.js';
 import type {SimulationFrame,SimulationTelemetry} from '../packages/editor/src/simulation-protocol.js';
 
-const client=vi.hoisted(()=>({send:vi.fn(),dispose:vi.fn()}));
+const client=vi.hoisted(()=>({available:true,send:vi.fn(),dispose:vi.fn()}));
 vi.mock('../packages/editor/src/simulation-client.js',()=>({createSimulationClient:()=>client}));
 const fullFrame=(time=0):SimulationFrame=>({time,poses:[{id:'body',positionMm:[time*1000,0,0],quaternion:[0,0,0,1]}],angles:{hinge:time*180},speeds:{hinge:180},linearPositions:{slider:time*10},linearSpeeds:{slider:10},distances:{range:100-time}});
 const telemetry=(time=.005):SimulationTelemetry=>{const {poses,...sample}=fullFrame(time);return sample;};
@@ -126,7 +126,7 @@ it('returns to the editable design when a circuit releases its clock, retaining 
   lease.release();
   expect(f.controller.state.state).toBe('idle');
   expect(f.frameChanged).toHaveBeenLastCalledWith(null);
-  expect(client.dispose).toHaveBeenCalled();
+  expect(client.send).toHaveBeenLastCalledWith({op:'park'});
   expect(f.controller.replayRange()).toEqual(recording);
   expect(f.session.serialize()).toBe(source);
   f.controller.previousFrame();
@@ -161,5 +161,21 @@ it('inspects the end of a stopped recording and returns from replay to the edita
   expect(f.frameChanged).toHaveBeenLastCalledWith(null);
   expect(f.controller.state.state).toBe('idle');
   expect(f.controller.snapshot().time).toBe(.1);
+ }finally{f.dispose();}
+});
+
+it('keeps a completed worker warm through Stop and invalidates it on an edit',async()=>{
+ const f=fixture();
+ try{
+  await f.controller.prepare();
+  await f.controller.stop();
+  expect(client.send).toHaveBeenLastCalledWith({op:'park'});
+  expect(client.dispose).not.toHaveBeenCalled();
+  expect(f.controller.state.state).toBe('idle');
+  await f.controller.prepare();
+  expect(client.send).toHaveBeenLastCalledWith(expect.objectContaining({op:'start'}));
+  await f.controller.stop();
+  f.session.add({kind:'box',size:[3,3,3]});
+  expect(client.dispose).toHaveBeenCalledOnce();
  }finally{f.dispose();}
 });

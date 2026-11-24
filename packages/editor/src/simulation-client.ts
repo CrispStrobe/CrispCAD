@@ -18,6 +18,7 @@ export function createSimulationClient(){
  }
  return {
   send,
+  get available(){return !disposed;},
   dispose(){if(!disposed)fail(new Error(t('Simulation was stopped')));}
  };
 }

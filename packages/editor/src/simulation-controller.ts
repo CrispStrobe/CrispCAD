@@ -14,6 +14,7 @@ const emptyFrame=():SimulationFrame=>({time:0,poses:[],angles:{},speeds:{},linea
 export function createSimulationController(session:CadSession,wasmURL:string,ready:()=>Promise<GeometryResult|void>,changed:()=>void,frameChanged:(frame:SimulationFrame|null)=>void,interruptProgram?:()=>void){
  let client:ReturnType<typeof createSimulationClient>|undefined,preparing:Promise<void>|undefined,epoch=0,commandEpoch=0,playing=false,program=false,disposed=false,fixBaseOverride:boolean|undefined,rigidPreview=false,timeScale=1,timer:ReturnType<typeof setTimeout>|undefined,lastTime=0,accumulator=0;
  let externalOwner:symbol|undefined;
+ let standby:ReturnType<typeof createSimulationClient>|undefined;
  let frame=emptyFrame(),error='',replayTime:number|undefined,replayPlaying=false,replayTimer:ReturnType<typeof setTimeout>|undefined;const replay=createSimulationReplay();
  const traces=createMotionTraces(),tickets=new Map<string,number>(),settings=new Map<string,{speed:number;limit:number;enabled:boolean}>(),waits=new Map<string,Travel>();
  const fixBase=()=>fixBaseOverride??simulationSettings(session.state.document).fixBase??!!session.state.document.joints?.length;
@@ -27,13 +28,28 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
  function stopReplay(){replayPlaying=false;clearTimeout(replayTimer);replayTimer=undefined;}
  function showReplay(time:number){const saved=replay.at(time);if(saved){replayTime=saved.time;frameChanged(saved);}}
  function pause(){externalOwner=undefined;stopReplay();if(client&&!preparing)void client.send({op:'release-grab'}).catch(()=>{});commandEpoch++;playing=false;program=false;clearTimeout(timer);timer=undefined;lastTime=0;accumulator=0;cancel(t('Simulation was stopped'));notify();}
- function reset(){epoch++;pause();client?.dispose();client=undefined;preparing=undefined;frame=emptyFrame();error='';replay.clear();replayTime=undefined;present(null);notify();}
- function fail(value:unknown){if(disposed)return;reset();error=value instanceof Error?value.message:String(value);notify();}
+ function releaseClient(discard=false){
+  if(discard){standby?.dispose();standby=undefined;}
+  if(client){
+   const active=client;
+   if(discard||preparing||!active.available)active.dispose();
+   else{
+    standby=active;
+    void active.send({op:'park'}).catch(()=>{
+     if(standby===active)standby=undefined;
+     active.dispose();
+    });
+   }
+  }
+  client=undefined;preparing=undefined;
+ }
+ function reset(discard=false){epoch++;pause();releaseClient(discard);frame=emptyFrame();error='';replay.clear();replayTime=undefined;present(null);notify();}
+ function fail(value:unknown){if(disposed)return;reset(true);error=value instanceof Error?value.message:String(value);notify();}
  async function prepare(){
   if(disposed)throw new Error(t('Editor was disposed'));if(client&&!preparing)return;if(preparing)return preparing;
   replay.clear();traces.clear();replayTime=undefined;
   const expected=epoch;error='';
-  const pending=(async()=>{const geometry=await ready();if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));client=createSimulationClient();const first=await client.send({op:'start',document:session.state.document,geometry:geometry||undefined,wasmURL:new URL(wasmURL,document.baseURI).href,fixBase:fixBase(),rigidPreview,locale:getLocale()});if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));frame=first;present(frame);})();
+  const pending=(async()=>{const geometry=await ready();if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));client=standby?.available?standby:createSimulationClient();standby=undefined;const first=await client.send({op:'start',document:session.state.document,geometry:geometry||undefined,wasmURL:new URL(wasmURL,document.baseURI).href,fixBase:fixBase(),rigidPreview,locale:getLocale()});if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));frame=first;present(frame);})();
   preparing=pending;notify();
   try{await pending;}catch(e){if(expected===epoch)fail(e);throw e;}finally{if(preparing===pending)preparing=undefined;notify();}
  }
@@ -65,7 +81,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
  async function stop(){
   // Stop returns the viewport to the design. Keep the previous recording for
   // replay/export; a new preparation starts a fresh recording.
-  epoch++;pause();client?.dispose();client=undefined;preparing=undefined;
+  epoch++;pause();releaseClient();
   for(const [id,value]of settings)settings.set(id,{...value,speed:0});
   replayTime=undefined;frameChanged(null);notify();
  }
@@ -80,7 +96,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
  const hidden=()=>{if(document.hidden){if(program)interruptProgram?.();void stop().catch(fail);}};
  const blur=()=>{if(!program&&!externalOwner){if(preparing)reset();else pause();}};
  document.addEventListener('visibilitychange',hidden);window.addEventListener('blur',blur);
- let revision=session.state.revision,documentId=session.state.document.id;const unsubscribe=session.subscribe(state=>{if(state.revision!==revision){revision=state.revision;if(state.document.id!==documentId){documentId=state.document.id;fixBaseOverride=undefined;}if(program)interruptProgram?.();settings.clear();reset();}});
+ let revision=session.state.revision,documentId=session.state.document.id;const unsubscribe=session.subscribe(state=>{if(state.revision!==revision){revision=state.revision;if(state.document.id!==documentId){documentId=state.document.id;fixBaseOverride=undefined;}if(program)interruptProgram?.();settings.clear();reset(true);}});
  async function acquireExternalClock(){
   if(externalOwner||playing||program||preparing)throw new Error(t('Stop the current simulation before connecting a circuit'));
   const owner=Symbol('external mechanical clock');externalOwner=owner;
@@ -106,7 +122,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
    release(){if(externalOwner===owner)void stop();}
   };
  }
- return {motors,sliders,prepare,start,pause,reset,stop,stopMotors,acquireExternalClock,
+ return {motors,sliders,prepare,start,pause,reset:()=>reset(),stop,stopMotors,acquireExternalClock,
   setMotor:(ref:string,speed:number,torque=.02,asProgram=true)=>setDrive(ref,'hinge',speed,torque,asProgram),
   setSlider:(ref:string,speed:number,force=10,asProgram=true)=>setDrive(ref,'slider',speed,force,asProgram),
   stopMotor:(ref:string,action:'brake'|'coast'='brake')=>stopDrive(ref,'hinge',action),stopSlider:(ref:string,action:'brake'|'coast'='brake')=>stopDrive(ref,'slider',action),
@@ -132,6 +148,6 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
   live(){stopReplay();replayTime=undefined;frameChanged(client?frame:null);notify();},
   snapshot:()=>structuredClone(frame),
   get state(){return {state:preparing?'preparing':playing||externalOwner?'running':client||replayTime!==undefined?'paused':'idle',program,error,time:frame.time};},
-  dispose(){if(disposed)return;if(program){program=false;interruptProgram?.();}reset();disposed=true;unsubscribe();document.removeEventListener('visibilitychange',hidden);window.removeEventListener('blur',blur);}
+  dispose(){if(disposed)return;if(program){program=false;interruptProgram?.();}reset(true);disposed=true;unsubscribe();document.removeEventListener('visibilitychange',hidden);window.removeEventListener('blur',blur);}
  };
 }

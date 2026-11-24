@@ -18,10 +18,11 @@ const mock=vi.hoisted(()=>{
   step:vi.fn((seconds:number)=>{state.time+=seconds;state.angle+=state.speed*seconds;state.linear+=state.linearSpeed*seconds;state.servo+=(state.target-state.servo)*.25;})
  };
  const create=vi.fn(async()=>{for(const key of Object.keys(state) as (keyof typeof state)[])state[key]=0;return world;});
- return {world,create};
+ const prepare=vi.fn(async()=>new Map());
+ return {world,create,prepare};
 });
 vi.mock('@brickwright/cad-geometry',()=>({createGeometryKernel:async()=>({evaluate:()=>({})})}));
-vi.mock('@brickwright/cad-physics',()=>({createPhysicsWorld:mock.create,prepareDocumentCollisions:async()=>({})}));
+vi.mock('@brickwright/cad-physics',()=>({createPhysicsWorld:mock.create,prepareDocumentCollisions:mock.prepare}));
 let scope:{onmessage:(event:MessageEvent)=>Promise<void>;postMessage:ReturnType<typeof vi.fn>},sequence=0;
 beforeEach(async()=>{
  vi.resetModules();vi.clearAllMocks();sequence=0;
@@ -76,4 +77,22 @@ it('applies the same actuator validation before a compact step can advance the c
  }
  const servo=await send({...actuation(),servos:[{id:'servo',angleRad:NaN,torqueNm:.01,enabled:true}],telemetryOnly:true});expect(servo.error).toMatch(/Invalid position servo/);expect(mock.world.time).toBe(0);
  const valid=await send({...actuation(),telemetryOnly:true});expect(valid.error).toBeUndefined();expect(valid.frame.time).toBe(.005);expect(valid.frame).not.toHaveProperty('poses');
+});
+
+it('parks the world and reuses qualified contacts only for the same construction',async()=>{
+ const document=scene(2);
+ await start(document);
+ await send(actuation());
+ await send({op:'park'});
+ expect(mock.world.dispose).toHaveBeenCalledTimes(1);
+ expect((await send(actuation())).error).toMatch(/Start simulation first/);
+ const fresh=await start(document);
+ expect(fresh.frame.time).toBe(0);
+ expect(mock.create).toHaveBeenCalledTimes(2);
+ expect(mock.prepare).toHaveBeenCalledTimes(1);
+
+ const changed=structuredClone(document);
+ changed.nodes['body-0'].physics={sourcePreset:'new-collision-construction'} as CadDocument['nodes'][string]['physics'];
+ await start(changed);
+ expect(mock.prepare).toHaveBeenCalledTimes(2);
 });
