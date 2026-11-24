@@ -40,6 +40,17 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
  const bodyMass=new Map<string,number>();let grab:{id:string;local:number[];target:Vec3}|undefined;
  const quaternionPoint=(p:number[],q:number[])=>{const [x,y,z,w]=q,[a,b,c]=p,u=2*(y*c-z*b),v=2*(z*a-x*c),t=2*(x*b-y*a);return [a+w*u+y*t-z*v,b+w*v+z*u-x*t,c+w*t+x*v-y*u];};
  const ownedBodies:any[]=[],byId=new Map<string,any>(),constraints=new Map<string,any>();let disposed=false,elapsed=0,contactListener:any,partFilter:any;
+ const actuatorFrames=new Map<string,{joint:CadJoint;a:any;b:any;axis:number[];anchorM?:number[]}>();
+ let impulseVector:any,impulsePoint:any;
+ function actuatorFrame(id:string){
+  const known=actuatorFrames.get(id);if(known)return known;
+  const joint=doc.joints?.find(j=>j.id===id);if(!joint||!['hinge','slider'].includes(joint.kind))throw new Error(t('Choose a hinge or slider actuator'));
+  const a=byId.get(joint.bodyA),b=byId.get(joint.bodyB);if(a===b)throw new Error(t('Actuator bodies belong to the same rigid assembly'));
+  const authored=doc.nodes[joint.bodyA].transform,axis=rotate(joint.axisA,authored.rotation);
+  const anchorM=joint.kind==='slider'?rotate(joint.anchorA.map((v,i)=>v*authored.scale[i]),authored.rotation).map((v,i)=>(v+authored.position[i])*.001):undefined;
+  const result={joint,a,b,axis,anchorM};actuatorFrames.set(id,result);return result;
+ }
+
  // Fixed mates describe one rigid body, not a stiff chain of tiny solver
  // bodies. Keep every source ID as an alias of the common world-space pose.
  const fixedParent=new Map(meshes.map(m=>[m.id,m.id]));const fixedRoot=(id:string):string=>{const parent=fixedParent.get(id)!;if(parent===id)return id;const root=fixedRoot(parent);fixedParent.set(id,root);return root;};
@@ -95,7 +106,7 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
   }
   try{const body=bodies.CreateBody(bc);if(!body)throw new Error(t('Jolt body allocation failed'));bodies.AddBody(body.GetID(),motion==='static'?J.EActivation_DontActivate:J.EActivation_Activate);ownedBodies.push(body);byId.set(id,body);if(mass)bodyMass.set(id,mass.massKg);}finally{J.destroy(bc);}
  };
- function dispose(){if(disposed)return;disposed=true;for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
+ function dispose(){if(disposed)return;disposed=true;for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
  try {
   if(options.ground??sceneSettings.ground){const ext=new J.Vec3(2,2,.005),shape=new J.BoxShape(ext,.0001);J.destroy(ext);add(shape,'ground','static',{friction:sceneSettings.groundFriction,restitution:sceneSettings.groundRestitution});const p=new J.RVec3(0,0,-.005);bodies.SetPosition(byId.get('ground').GetID(),p,J.EActivation_DontActivate);J.destroy(p);}
   for(const [id,members]of assemblies){const properties=doc.nodes[members[0].id].physics??defaultPartPhysics(),motion=members.some(m=>doc.nodes[m.id].physics?.motion==='static')?'static':'dynamic',mass=assemblyMass.get(id)!,compound=new J.StaticCompoundShapeSettings();
@@ -208,13 +219,24 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
   /** Internal actuator impulse: equal and opposite reactions, with the axis carried by body A. */
   applyJointImpulse(id:string,impulse:number){
    if(disposed||!Number.isFinite(impulse)||Math.abs(impulse)>1)throw new Error(t('Invalid actuator impulse'));
-   const joint=doc.joints?.find(j=>j.id===id);if(!joint||!['hinge','slider'].includes(joint.kind))throw new Error(t('Choose a hinge or slider actuator'));
-   const a=byId.get(joint.bodyA),b=byId.get(joint.bodyB);if(a===b)throw new Error(t('Actuator bodies belong to the same rigid assembly'));
-   const rotation=a.GetRotation(),q=[rotation.GetX(),rotation.GetY(),rotation.GetZ(),rotation.GetW()],axis=quaternionPoint(rotate(joint.axisA,doc.nodes[joint.bodyA].transform.rotation),q);
-   if(joint.kind==='hinge'){const hinge=J.castObject(constraints.get(id),J.HingeConstraint);hinge.SetMotorState(J.EMotorState_Off);hinge.SetNumVelocityStepsOverride(40);hinge.SetNumPositionStepsOverride(80);}
-   else J.castObject(constraints.get(id),J.SliderConstraint).SetMotorState(J.EMotorState_Off);
-   const authored=doc.nodes[joint.bodyA].transform,origin=a.GetPosition(),local=rotate(joint.anchorA.map((v,i)=>v*authored.scale[i]),authored.rotation).map((v,i)=>(v+authored.position[i])*.001),offset=quaternionPoint(local,q),at=new J.RVec3(...offset.map((v,i)=>v+[origin.GetX(),origin.GetY(),origin.GetZ()][i]));
-   for(const [body,sign]of [[a,-1],[b,1]] as const){if(body.IsStatic())continue;const value=new J.Vec3(...axis.map(v=>v*impulse*sign));if(joint.kind==='hinge')body.AddAngularImpulse(value);else body.AddImpulse(value,at);bodies.ActivateBody(body.GetID());J.destroy(value);}J.destroy(at);
+   const {joint,a,b,axis:authoredAxis,anchorM}=actuatorFrame(id);
+   const rotation=a.GetRotation(),q=[rotation.GetX(),rotation.GetY(),rotation.GetZ(),rotation.GetW()];
+   const [x,y,z]=quaternionPoint(authoredAxis,q).map(v=>v*impulse);
+   impulseVector??=new J.Vec3(0,0,0);
+   if(joint.kind==='hinge'){
+    const hinge=J.castObject(constraints.get(id),J.HingeConstraint);hinge.SetMotorState(J.EMotorState_Off);hinge.SetNumVelocityStepsOverride(40);hinge.SetNumPositionStepsOverride(80);
+   }else{
+    J.castObject(constraints.get(id),J.SliderConstraint).SetMotorState(J.EMotorState_Off);
+    const origin=a.GetPosition(),offset=quaternionPoint(anchorM!,q);
+    impulsePoint??=new J.RVec3(0,0,0);
+    impulsePoint.Set(offset[0]+origin.GetX(),offset[1]+origin.GetY(),offset[2]+origin.GetZ());
+   }
+   for(const [body,sign]of [[a,-1],[b,1]] as const){
+    if(body.IsStatic())continue;
+    impulseVector.Set(x*sign,y*sign,z*sign);
+    if(joint.kind==='hinge')body.AddAngularImpulse(impulseVector);else body.AddImpulse(impulseVector,impulsePoint);
+    bodies.ActivateBody(body.GetID());
+   }
   },
   /** Ideal torque-limited position servo, solved implicitly with both-body reaction. */
   setHingeServo(id:string,angleRad:number,maxTorqueNm:number){
