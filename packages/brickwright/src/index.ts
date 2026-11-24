@@ -45,7 +45,7 @@ export function toBrickwrightPart(body: BodyMesh) {
   const vertices = Array.from({ length: body.positions.length / 3 }, (_, i) => cadToLdrawPoint([body.positions[i * 3] - center[0], body.positions[i * 3 + 1] - center[1], body.positions[i * 3 + 2] - center[2]]));
   const fileName = `cad-${body.id.replace(/[^a-zA-Z0-9_-]/g, '')}.dat`;
   const name = body.name.replace(/[\r\n\u0000-\u001f]/g, ' ');
-  const lines = [`0 ${name}`, `0 Name: ${fileName}`, '0 Author: Brickwright CAD user', '0 BFC CERTIFY CCW'];
+  const lines = [`0 ${name}`, `0 Name: ${fileName}`, '0 Author: CrispCAD user', '0 BFC CERTIFY CCW'];
   for (let t = 0; t < body.indices.length; t += 3) lines.push(`3 16 ${[0, 1, 2].flatMap(i => vertices[body.indices[t + i]]).join(' ')}`);
   return {
     format: 'brickwright-cad-part' as const, version: 1 as const,

@@ -1,4 +1,4 @@
-# Brickwright CAD: first delivery scope
+# CrispCAD: first delivery scope
 
 Build one BSD-3-Clause CAD editor that works independently and can be mounted
 inside Brickwright without forking the editor or replacing its storage system.

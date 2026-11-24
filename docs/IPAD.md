@@ -26,7 +26,7 @@ keychain. `BW_CAD_SIGNING_KEYCHAIN` overrides its location.
 - Bundle ID: com.crispstrobe.brickwrightcad
 - Team: N9XSJ4M3GT
 - Ad hoc profile: Brickwright CAD iPad AdHoc
-- Archive: apps/ipad/build/BrickwrightCAD.xcarchive
+- Archive: apps/ipad/build/CrispCAD.xcarchive
 - Signed IPA: apps/ipad/build/adhoc/App.ipa
 
 The profile must already be installed on the build Mac and include the target

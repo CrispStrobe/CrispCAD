@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: BSD-3-Clause
-// Convert kernelCAD `.kcad.ts` model scripts to Brickwright CAD Script.
+// Convert kernelCAD `.kcad.ts` model scripts to CrispCAD Script.
 //   node scripts/convert-kcad.mjs <file.kcad.ts|directory> [--out dir] [--report report.json] [--evaluate]
 // TypeScript annotations are stripped with the TypeScript compiler (a development
 // dependency); the bounded interpreter then evaluates the script without running it.

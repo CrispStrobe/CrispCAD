@@ -1,6 +1,6 @@
 # Contributing
 
-Brickwright CAD is an independent BSD-3-Clause project. New implementation code
+CrispCAD is an independent BSD-3-Clause project. New implementation code
 must be original or use dependencies compatible with the project's permissive
 license requirement. Do not copy Layerling, FreeCAD or other copyleft source,
 icons, fonts or translations into these packages. Public product behavior and

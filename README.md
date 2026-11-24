@@ -1,13 +1,21 @@
-# Brickwright CAD
+# CrispCAD
 
 A local 3D solid editor for designing parts, editing dimensions and building
 models with code. Run it in a browser or as a native macOS/iPad app, or embed the
 same editor and document model in another application.
 
-**Status:** an early working CAD workbench. Geometry uses a mesh-solid kernel;
-full constrained sketches and an exact surface/solid backend remain roadmap work.
+**Status:** an early working CAD workbench. Geometry uses a mesh-solid kernel
+(Manifold); an exact B-rep backend (SMLib) is in qualification and full
+constrained sketches remain roadmap work. See the
+[convergence roadmap](docs/CRISPCAD-CONVERGENCE.md).
 
-![Brickwright CAD workbench](docs/images/workbench.png)
+CrispCAD was called **Brickwright CAD** until 2026-11-24. The rename covers the
+product, app names and repository; saved projects, history archives, file
+formats, bundle identifiers and the `@brickwright/cad-*` packages that the
+[BrickWright](docs/INTEGRATION.md) programming app embeds keep their identifiers,
+so nothing existing has to be migrated.
+
+![CrispCAD workbench](docs/images/workbench.png)
 
 ## Modeling
 
@@ -190,7 +198,7 @@ npm run mac:build
 npm run mac:run
 ```
 
-The installer gracefully refreshes `~/Applications/Brickwright CAD.app` and retains
+The installer gracefully refreshes `~/Applications/CrispCAD.app` and retains
 project data. See [macOS](docs/MACOS.md) and [iPad](docs/IPAD.md) for native build,
 verification, pairing and signing instructions.
 
@@ -221,8 +229,8 @@ npm run verify:packages
 ```
 
 Browser tests use Playwright Chromium and WebKit (`npx playwright install chromium webkit`).
-Verification runs locally. GitHub Actions remains disabled while this repository
-is private; see [local checks](docs/CI.md).
+Verification runs locally; GitHub Actions stays disabled until the owner
+enables it. See [local checks](docs/CI.md).
 
 ## Licensing and data
 

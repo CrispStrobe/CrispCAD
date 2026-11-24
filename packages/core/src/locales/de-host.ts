@@ -8,7 +8,7 @@ export const messages: Record<string,string> = {
   "{0} (build {1})": "{0} (Build {1})",
   "Language preference could not be saved": "Die Spracheinstellung konnte nicht gespeichert werden",
   "Close": "Schließen",
-  "About Brickwright CAD": "Über Brickwright CAD",
+  "About CrispCAD": "Über CrispCAD",
   "Source repository": "Quellcode-Repository",
   "Built with": "Erstellt mit",
   "3D rendering and geometry utilities": "3D-Darstellung und Geometriewerkzeuge",

@@ -8,7 +8,7 @@ in [PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md).
 
 ## What to learn from the established workflows
 
-| Reference | Documented approach | Decision for Brickwright CAD |
+| Reference | Documented approach | Decision for CrispCAD |
 | --- | --- | --- |
 | [Fusion: modeling modes](https://help.autodesk.com/cloudhelp/ENU/Fusion-Designs/files/ASM-DESIGN-MODELING-MODES.htm) and [parameters](https://help.autodesk.com/cloudhelp/ENU/Fusion-Model/files/SLD-MODIFY-PARAMETERS.htm) | Retained feature timeline and dimensions that recompute downstream operations; a distinct direct mode | Keep editable inputs and a dependency graph. Direct interaction must update an input or create a deliberate feature, without silently removing a formula. |
 | [Onshape: feature lists](https://cad.onshape.com/help/Content/PartStudio/features_and_parts_lists.htm) and [variables](https://cad.onshape.com/help/Content/PartStudio/variable.htm) | Features, sketches and variables participate in the Part Studio workflow | A construction view should expose dependencies, editing and suppression. Our current global parameter DAG allows forward references; do not accidentally import ordered-variable semantics into it. |

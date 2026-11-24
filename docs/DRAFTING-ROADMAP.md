@@ -535,10 +535,10 @@ completion, arbitrary sketch workplanes and richer snapping, continuous
 polyline/arc/constraint prompts, readable serializers for more modeling actions,
 portable multi-command scripts, durable action-journal export, broader replay
 read dependencies, cross-tab draft transactions, and complete view-command
-capture. Browser qualification is still required: the production build and
-focused unit/DOM checks pass, but this environment denies Chromium's process
-socket before a page opens. Ten Chromium/WebKit scenarios are included with
-the implementation; embedded and physical iPad workflows also need qualification.
+capture. Browser qualification: all ten Chromium/iPad-WebKit scenarios (20
+cases) pass locally after the merge (2026-11-24). Embedded-host and physical
+iPad qualification are still open. The shared command registry and routing to
+the exact kernel are planned in [CrispCAD convergence](CRISPCAD-CONVERGENCE.md).
 
 Cota documents a prompt-driven command line with history, completion, and
 absolute, relative and polar coordinates. Use those workflows to evaluate
@@ -640,7 +640,7 @@ nonuniform scaling, and dashed strokes remain open.
 
 #### SVG conversion and dependency choice
 
-Use the existing Costumes vector editor and Brickwright CAD geometry stack.
+Use the existing Costumes vector editor and CrispCAD geometry stack.
 The existing icon-tag importer already parses a restricted, local SVG subset
 with Three.js and extrudes a decorative mesh. It scales the icon to a fixed
 size. The precision handoff should reuse its input checks and path-reading

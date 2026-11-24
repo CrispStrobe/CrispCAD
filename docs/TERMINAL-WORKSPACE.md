@@ -360,19 +360,40 @@ Run them on a machine with Chromium/WebKit installed:
 npx playwright test tests/browser/terminal.spec.ts tests/browser/code-workspace.spec.ts
 ```
 
-Browser qualification remains open. The current environment built the production
-app and ran the unit/DOM suites, but installed Chromium exited before opening
-any test page: `process_singleton_posix.cc` reported `socket() failed: Operation
-not permitted`. Earlier environments also blocked browser installation or IPC.
-The ten browser scenarios are discoverable for both Chromium and iPad WebKit;
-they still need successful browser execution, including standalone and embedded
-review and physical iPad qualification. Discovery and DOM checks do not replace
-those runs.
+Browser qualification, 2026-11-24: all 20 cases (10 scenarios, each in
+Chromium and in iPad WebKit emulation) pass locally on macOS after merging into
+`main`. Two test-only fixes were needed:
+
+- The replay scenario now reaches Duplicate through the shared `clickTool`
+  helper, because at iPad width the button is in the Edit menu.
+- The workspace scenario now targets the Model source panel, not the
+  identically labelled toolbar button.
+
+Embedded-host review and qualification on a physical iPad are still open.
 
 Next milestones are completion for further command arguments;
 active sketch planes and advanced snaps; continuous paths/arcs and constraint
 prompts; more readable action serializers; transaction-based command scripts;
 durable journal export and cross-project replay; complete view-command capture;
 and qualified mouse, touch and narrow-layout behavior.
+
+## Design notes from PR #79
+
+PR #79 was a parallel, smaller terminal implementation. It was closed in favour
+of this one. These of its decisions still apply:
+
+- The terminal is an application command surface. It is not a shell or a
+  JavaScript interpreter, and recorded edits are never evaluated as code.
+- Readable, lossless encoders for common actions (add, transform, sketch,
+  feature, inspector property edits) should replace generic `apply` records
+  where feasible. The generic record remains the fallback for extension actions
+  and unusual data.
+- Repeat and multi-line scripts need atomic grouping: one Undo step per script,
+  with diagnostics that point at the failing line.
+- Model Source (the GUI-synchronised source dock) and the CAD Script workspace
+  are different languages with different jobs. Do not merge them.
+
+Convergence with the exact kernel and the shared command registry is planned in
+[CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md).
 
 Reference: [Cota command-line documentation](https://mxchristian17.github.io/cota/docs/).

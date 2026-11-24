@@ -9,6 +9,7 @@ export function exportSTL(bodies: readonly BodyMesh[]): Uint8Array {
   const triangles = bodies.reduce((s, b) => s + b.indices.length / 3, 0);
   if (!triangles) throw new Error(t('The design has no solid triangles to export'));
   const bytes = new Uint8Array(84 + triangles * 50); const view = new DataView(bytes.buffer);
+  // Pre-rename header kept on purpose: library and example STLs are hash-verified byte for byte.
   bytes.set(new TextEncoder().encode('Brickwright CAD | millimetres')); view.setUint32(80, triangles, true);
   let offset = 84;
   for (const b of bodies) for (let t = 0; t < b.indices.length; t += 3) {

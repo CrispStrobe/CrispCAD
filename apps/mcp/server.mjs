@@ -4,7 +4,7 @@ import {t,setLocale} from '@brickwright/cad-core';
 import {createCodeHost} from './host.mjs';
 const args=process.argv.slice(2);let project;
 const localeIndex=args.indexOf('--locale');if(localeIndex>=0&&['en','de'].includes(args[localeIndex+1]))setLocale(args[localeIndex+1]);
-for(let i=0;i<args.length;i++){if(args[i]==='--locale'&&['en','de'].includes(args[i+1]))i++;else if(args[i]==='--project'&&args[i+1])project=args[++i];else if(args[i]==='--help'){process.stderr.write(t('Brickwright CAD MCP (stdio)\nnode apps/mcp/server.mjs [--project /absolute/path/project.bcad] [--locale en|de]\nBuild the workspace first. GUI and MCP use the same bounded CAD Script compiler.\n'));process.exit(0);}else{process.stderr.write(t`Unknown argument: ${args[i]}\n`);process.exit(1);}}
+for(let i=0;i<args.length;i++){if(args[i]==='--locale'&&['en','de'].includes(args[i+1]))i++;else if(args[i]==='--project'&&args[i+1])project=args[++i];else if(args[i]==='--help'){process.stderr.write(t('CrispCAD MCP (stdio)\nnode apps/mcp/server.mjs [--project /absolute/path/project.bcad] [--locale en|de]\nBuild the workspace first. GUI and MCP use the same bounded CAD Script compiler.\n'));process.exit(0);}else{process.stderr.write(t`Unknown argument: ${args[i]}\n`);process.exit(1);}}
 let host;try{host=await createCodeHost({project});}catch(error){process.stderr.write(t`Cannot open CAD MCP host: ${error.message}\n`);process.exit(1);}
 const versions=['2024-11-05','2025-03-26','2025-06-18','2025-11-25'];let negotiated,initialized=false,buffer='',discarding=false,queue=Promise.resolve(),closing=false;
 const active=new Map();

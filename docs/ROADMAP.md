@@ -1,5 +1,10 @@
 # Roadmap
 
+**Current plan (2026-11-24):** [CrispCAD convergence](CRISPCAD-CONVERGENCE.md)
+covers the terminal and command layer, the optional exact SMLib backend and the
+catalog cross-check. The sections below are earlier milestones, kept as a
+record.
+
 ## Now: a usable standalone CAD workbench
 
 Implemented in the current workbench update: labeled tool groups, a camera-synchronized front/right/top view cube, other principal views, a millimetre baseplate, framing and zoom, perspective/orthographic projection, snap controls, and placing bodies on the workplane. Keep navigation and view preferences outside the CAD document and undo history. Keep the editor embeddable with instance-local events and complete disposal.

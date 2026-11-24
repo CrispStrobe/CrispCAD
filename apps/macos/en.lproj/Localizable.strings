@@ -1,9 +1,9 @@
-"About Brickwright CAD" = "About Brickwright CAD";
+"About CrispCAD" = "About CrispCAD";
 "Settings…" = "Settings…";
-"Hide Brickwright CAD" = "Hide Brickwright CAD";
+"Hide CrispCAD" = "Hide CrispCAD";
 "Hide Others" = "Hide Others";
 "Show All" = "Show All";
-"Quit Brickwright CAD" = "Quit Brickwright CAD";
+"Quit CrispCAD" = "Quit CrispCAD";
 "File" = "File";
 "New Project" = "New Project";
 "Open Project…" = "Open Project…";
@@ -53,7 +53,7 @@
 "Minimize" = "Minimize";
 "Help" = "Help";
 "Workbench Help" = "Workbench Help";
-"Brickwright CAD could not start" = "Brickwright CAD could not start";
+"CrispCAD could not start" = "CrispCAD could not start";
 "The last model save could not finish" = "The last model save could not finish";
 "You can keep editing and export a project file." = "You can keep editing and export a project file.";
 "Keep editing" = "Keep editing";

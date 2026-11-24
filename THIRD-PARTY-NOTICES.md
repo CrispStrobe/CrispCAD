@@ -1,6 +1,6 @@
 # Third-party notices
 
-Original Brickwright CAD code: BSD-3-Clause, see LICENSE.
+Original CrispCAD code: BSD-3-Clause, see LICENSE.
 
 Reused independent arithmetic: Brickwright contributors, BSD-3-Clause.
 `packages/editor/src/vendor/touch-gestures.js` and `transform-math.js` are copied

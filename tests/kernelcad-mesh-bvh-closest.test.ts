@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Andrii Shylenko and kernelCAD contributors
-// Modified for Brickwright CAD from kernelCAD-web commit 964fa6cfe94ecf16c2c44b94770846ae23665d82: import paths only.
+// Modified for CrispCAD from kernelCAD-web commit 964fa6cfe94ecf16c2c44b94770846ae23665d82: import paths only.
 import { describe, expect, it } from 'vitest';
 import { TriangleBvh } from '../packages/geometry/src/analysis/meshBvh.js';
 

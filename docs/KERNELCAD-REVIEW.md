@@ -50,6 +50,14 @@ Corrections:
 
 ## Fork recommendation: defer
 
+**Update 2026-11-24.** The owner created the fork anyway, as the CrispCAD kernel
+lab (`CrispStrobe/kernelCAD-web`, branch `ccr-f42f1bfe-3ekdio`). It has the
+native `smlib-native` kernel, which does not need OpenCASCADE. This repository,
+now CrispCAD, still does not adopt the fork's application. It takes over the
+kernel through an exact-backend adapter, as
+[CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md) describes. The reasoning
+below still applies to the application layer.
+
 The proposal to fork kernelCAD into a separate OCCT-free engine is not adopted
 now. OCCT is woven through the kernel layer (153 files in the OCCT backend alone),
 face/edge naming, export and validation; the only alternative backend is four

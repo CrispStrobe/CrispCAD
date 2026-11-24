@@ -16,7 +16,7 @@ test('compact workbench exposes shape controls, numeric transforms, selection an
  expect(await page.evaluate(()=>{const d=JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!);return d.nodes[d.roots[0]].transform.position;})).not.toEqual(prior);
  const bar=await page.locator('.design-bar').boundingBox();expect(bar!.height).toBeLessThanOrEqual(52);expect((await canvas.boundingBox())!.y).toBeLessThan(60);
  await page.screenshot({path:`test-results/compact-workbench-${test.info().project.name}.png`,fullPage:true});
- await page.getByLabel('Application menu',{exact:true}).click();await page.getByRole('button',{name:'About Brickwright CAD',exact:true}).click();await expect(page.getByRole('dialog',{name:'About Brickwright CAD',exact:true})).toContainText('Brickwright-lite');
+ await page.getByLabel('Application menu',{exact:true}).click();await page.getByRole('button',{name:'About CrispCAD',exact:true}).click();await expect(page.getByRole('dialog',{name:'About CrispCAD',exact:true})).toContainText('Brickwright-lite');
 });
 test('heart generators retain editable bending through save and reload',async({page})=>{
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');await addShape(page,'Heart');

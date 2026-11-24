@@ -119,13 +119,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         let menu = NSMenu()
         let appItem = NSMenuItem(); menu.addItem(appItem)
         let appMenu = NSMenu(); appItem.submenu = appMenu
-        let about=appMenu.addItem(withTitle: "About Brickwright CAD", action: #selector(showAbout), keyEquivalent: "");about.target=self
+        let about=appMenu.addItem(withTitle: "About CrispCAD", action: #selector(showAbout), keyEquivalent: "");about.target=self
         let preferences=appMenu.addItem(withTitle:"Settings…",action:#selector(showSettings),keyEquivalent:",");preferences.target=self
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle:"Hide Brickwright CAD",action:#selector(NSApplication.hide(_:)),keyEquivalent:"h")
+        appMenu.addItem(withTitle:"Hide CrispCAD",action:#selector(NSApplication.hide(_:)),keyEquivalent:"h")
         let hideOthers=appMenu.addItem(withTitle:"Hide Others",action:#selector(NSApplication.hideOtherApplications(_:)),keyEquivalent:"h");hideOthers.keyEquivalentModifierMask=[.command,.option]
         appMenu.addItem(withTitle:"Show All",action:#selector(NSApplication.unhideAllApplications(_:)),keyEquivalent:"");appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Quit Brickwright CAD", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "Quit CrispCAD", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         func section(_ title:String)->NSMenu {let item=NSMenuItem(title:title,action:nil,keyEquivalent:"");menu.addItem(item);let submenu=NSMenu(title:title);item.submenu=submenu;return submenu}
         let file=section("File")
         addCommand(file,"New Project","new","n");addCommand(file,"Open Project…","open","o");addCommand(file,"Project Library…","projects","o",[.command,.shift]);file.addItem(.separator())
@@ -155,7 +155,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         webView.allowsBackForwardNavigationGestures = false
         webView.navigationDelegate = self; webView.uiDelegate = self; webView.isInspectable = true
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1440, height: 920), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
-        window.title = smoke ? "Brickwright CAD — verification" : "Brickwright CAD"
+        window.title = smoke ? "CrispCAD — verification" : "CrispCAD"
         window.minSize = NSSize(width: 800, height: 600); window.contentView = webView
         window.center(); if !smoke { window.setFrameAutosaveName("CADWorkspace") }; window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -193,7 +193,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     }
     private func fail(_ message: String) {
         if smoke { fputs("FAIL: \(message)\n", stderr); exit(1) }
-        let alert = NSAlert(); alert.messageText = L("Brickwright CAD could not start"); alert.informativeText = message; alert.runModal()
+        let alert = NSAlert(); alert.messageText = L("CrispCAD could not start"); alert.informativeText = message; alert.runModal()
     }
     @objc private func showAbout(){webView?.evaluateJavaScript("document.querySelector('#cad-root')?.shadowRoot?.querySelector('#about')?.click();")}
     @objc private func showSettings(){webView?.evaluateJavaScript("document.querySelector('#cad-root')?.shadowRoot?.querySelector('#settings')?.click();")}
@@ -325,6 +325,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         let folder: URL
         if smoke { folder = FileManager.default.temporaryDirectory.appendingPathComponent("bw-cad-smoke-\(ProcessInfo.processInfo.processIdentifier)") }
         else if let path = UserDefaults.standard.string(forKey:"CADLibraryFolder") { folder = URL(fileURLWithPath:path,isDirectory:true) }
+        // The folder keeps its pre-CrispCAD name so existing projects and histories stay where users saved them.
         else { folder = FileManager.default.urls(for:.documentDirectory,in:.userDomainMask)[0].appendingPathComponent("Brickwright CAD",isDirectory:true) }
         try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
         return folder.resolvingSymlinksInPath()
@@ -500,7 +501,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 }
 
 @main
-struct BrickwrightCAD {
+struct CrispCAD {
     @MainActor static func main() {
         let application = NSApplication.shared
         let delegate = AppDelegate()

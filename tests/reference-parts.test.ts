@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // The 27 kernelCAD reference parts (kernelCAD-web 964fa6c,
-// assets/reference-parts/scorecard.json, MIT), rebuilt in Brickwright CAD Script.
+// assets/reference-parts/scorecard.json, MIT), rebuilt in CrispCAD Script.
 // Expected values are analytic closed forms (volume, surface area, bbox).
 // kernelCAD boxes are corner-anchored and cylinders start at z=0; ours are
 // centred, so each translation below is explicit. Curved parts are faceted by

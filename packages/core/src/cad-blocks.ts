@@ -606,7 +606,7 @@ export interface CompiledBlocks {program:CodeProgram;source:string;
  /** One part per colour, in order of first use; a single part (the whole model) when it uses at most one colour. */
  parts:CompiledBlocksPart[]}
 function cadSource(c:Compiled):{program:CodeProgram;source:string}{
- const lines=[`// ${comment(c.name)} — generated from blocks by Brickwright CAD. Units: mm, degrees.`,`// Edit the blocks to change this definition; parameters stay editable here.`];
+ const lines=[`// ${comment(c.name)} — generated from blocks by CrispCAD. Units: mm, degrees.`,`// Edit the blocks to change this definition; parameters stay editable here.`];
  for(const p of c.params)lines.push(`param ${p.ident}: scalar = ${fmt(p.value)};${p.ident!==p.name?` // ${comment(p.name)}`:''}`);
  for(const b of collectLets(c.scope))lines.push(`const ${b.name} = ${printExpr(b.value,'cad')};`);
  lines.push(`return ${cadShapes(c.scope.body,'')};`);
@@ -755,7 +755,7 @@ function scadShape(s:Core,pad:string):string[]{
  }
 }
 export function exportBlocksOpenSCAD(program:CadBlocksProgram):string{
- const c=compile(program),lines=[`// ${comment(c.name)} — generated from blocks by Brickwright CAD.`,'// Units: mm, degrees. Shapes are centred on their own origin.',''];
+ const c=compile(program),lines=[`// ${comment(c.name)} — generated from blocks by CrispCAD.`,'// Units: mm, degrees. Shapes are centred on their own origin.',''];
  if(c.params.length){lines.push('/* [Parameters] */');for(const p of c.params){const range=p.min!==undefined&&p.max!==undefined?` // [${fmt(p.min)}:${p.step!==undefined?fmt(p.step)+':':''}${fmt(p.max)}]`:'';lines.push(`${p.ident} = ${fmt(p.value)};${range}${p.ident!==p.name&&!range?` // ${comment(p.name)}`:''}`);}lines.push('','/* [Hidden] */');}
  for(const b of c.scope.lets)lines.push(`${b.name} = ${printExpr(b.value,'scad')};`);
  if(c.scope.lets.length)lines.push('');
@@ -844,7 +844,7 @@ const sscale = (factors, shape) => factors.reduce((result, f, axis) => f < 0
 export function exportBlocksJSCAD(program:CadBlocksProgram):string{
  const c=compile(program);
  const defs=c.params.map(p=>`  {name: ${JSON.stringify(p.ident)}, type: ${p.min!==undefined&&p.max!==undefined?"'slider'":"'number'"}, initial: ${fmt(p.value)}${p.min!==undefined?`, min: ${fmt(p.min)}`:''}${p.max!==undefined?`, max: ${fmt(p.max)}`:''}${p.step!==undefined?`, step: ${fmt(p.step)}`:''}, caption: ${JSON.stringify(p.name)}},`);
- const lines=[`// ${comment(c.name)} — generated from blocks by Brickwright CAD.`,'// Units: mm. Block angles are degrees; the helpers convert them.',JSCAD_PRELUDE,
+ const lines=[`// ${comment(c.name)} — generated from blocks by CrispCAD.`,'// Units: mm. Block angles are degrees; the helpers convert them.',JSCAD_PRELUDE,
   'const getParameterDefinitions = () => [',...defs,'];','',
   'const main = (params = {}) => {',
   ...c.params.map(p=>`  const ${p.ident} = params.${p.ident} ?? ${fmt(p.value)};`),

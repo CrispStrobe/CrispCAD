@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Andrii Shylenko and kernelCAD contributors
-// Modified for Brickwright CAD (BSD-3-Clause project) from kernelCAD-web commit
+// Modified for CrispCAD (BSD-3-Clause project) from kernelCAD-web commit
 // 964fa6cfe94ecf16c2c44b94770846ae23665d82: replaced the kernelCAD invalid-argument
 // renderer import with a local equivalent; geometry is unchanged.
 // src/modeling/spurGear.ts

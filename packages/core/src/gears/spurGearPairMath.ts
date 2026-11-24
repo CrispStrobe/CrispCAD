@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Andrii Shylenko and kernelCAD contributors
-// Copied into Brickwright CAD (BSD-3-Clause project) from kernelCAD-web commit
+// Copied into CrispCAD (BSD-3-Clause project) from kernelCAD-web commit
 // 964fa6cfe94ecf16c2c44b94770846ae23665d82: unchanged.
 //
 // External spur-mesh placement. Two gears of modules m1, m2 and tooth counts

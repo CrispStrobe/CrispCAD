@@ -10,7 +10,7 @@ npm run mac:verify
 npm run mac:run
 ```
 
-The output is `apps/macos/build/Brickwright CAD.app`. `mac:run` / `mac:install`
+The output is `apps/macos/build/CrispCAD.app` (named `Brickwright CAD.app` before the 2026-11-24 rename; the bundle identifier is unchanged, and `mac:install` removes the old bundle). `mac:run` / `mac:install`
 verifies and installs it into `~/Applications`, asking any running copy to quit
 normally before replacement. It never force-quits an editing session. It is
 locally ad-hoc signed, not
@@ -27,7 +27,7 @@ native sheets. The reusable CAD packages remain independent of AppKit/WebKit.
 
 Models and iterations are journaled in this app's WebKit website data, separately
 from browser and iPad workspaces. On startup the app also copies existing journal
-projects to `~/Documents/Brickwright CAD`, then maintains full `.bcad` archives
+projects to `~/Documents/Brickwright CAD` (the folder keeps its pre-rename name so existing projects stay in place), then maintains full `.bcad` archives
 automatically. **Settings → Choose library folder** changes that location and
 copies the current library. Previous folders are kept. Missing IndexedDB journals
 can be recovered from the selected folder through Projects/startup recovery.

@@ -68,5 +68,5 @@ export const messages: Record<string,string> = {
   "Cannot open CAD MCP host: {0}\n": "CAD-MCP-Host kann nicht geöffnet werden: {0}\n",
   "MCP request failed: {0}\n": "MCP-Anfrage fehlgeschlagen: {0}\n",
   "Unknown argument: {0}\n": "Unbekanntes Argument: {0}\n",
-  "Brickwright CAD MCP (stdio)\nnode apps/mcp/server.mjs [--project /absolute/path/project.bcad] [--locale en|de]\nBuild the workspace first. GUI and MCP use the same bounded CAD Script compiler.\n": "Brickwright CAD MCP (stdio)\nnode apps/mcp/server.mjs [--project /absolute/path/project.bcad] [--locale en|de]\nErstelle zuerst den Workspace. Oberfläche und MCP verwenden denselben begrenzten CAD-Script-Compiler.\n"
+  "CrispCAD MCP (stdio)\nnode apps/mcp/server.mjs [--project /absolute/path/project.bcad] [--locale en|de]\nBuild the workspace first. GUI and MCP use the same bounded CAD Script compiler.\n": "CrispCAD MCP (stdio)\nnode apps/mcp/server.mjs [--project /absolute/path/project.bcad] [--locale en|de]\nErstelle zuerst den Workspace. Oberfläche und MCP verwenden denselben begrenzten CAD-Script-Compiler.\n"
 };

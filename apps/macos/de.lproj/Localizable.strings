@@ -1,9 +1,9 @@
-"About Brickwright CAD" = "Über Brickwright CAD";
+"About CrispCAD" = "Über CrispCAD";
 "Settings…" = "Einstellungen…";
-"Hide Brickwright CAD" = "Brickwright CAD ausblenden";
+"Hide CrispCAD" = "CrispCAD ausblenden";
 "Hide Others" = "Andere ausblenden";
 "Show All" = "Alle einblenden";
-"Quit Brickwright CAD" = "Brickwright CAD beenden";
+"Quit CrispCAD" = "CrispCAD beenden";
 "File" = "Datei";
 "New Project" = "Neues Projekt";
 "Open Project…" = "Projekt öffnen…";
@@ -53,7 +53,7 @@
 "Minimize" = "Minimieren";
 "Help" = "Hilfe";
 "Workbench Help" = "Werkbank-Hilfe";
-"Brickwright CAD could not start" = "Brickwright CAD konnte nicht gestartet werden";
+"CrispCAD could not start" = "CrispCAD konnte nicht gestartet werden";
 "The last model save could not finish" = "Das letzte Speichern des Modells konnte nicht abgeschlossen werden";
 "You can keep editing and export a project file." = "Sie können weiterarbeiten und eine Projektdatei exportieren.";
 "Keep editing" = "Weiterarbeiten";

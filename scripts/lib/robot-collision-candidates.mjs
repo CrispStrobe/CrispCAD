@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-// Deterministic convex collision candidate generator for Brickwright CAD robot parts.
+// Deterministic convex collision candidate generator for CrispCAD robot parts.
 // Candidates are never trusted blindly: runtime prepareCollision independently checks them
 // against live Manifold CSG source meshes within volume (<= 2%) and bounds (<= 0.2 mm) tolerances.
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
