@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "Interference check is limited to 64 bodies": "Die Kollisionsprüfung ist auf 64 Körper begrenzt",
+  "{0} is not a closed solid; interference cannot be measured": "{0} ist kein geschlossener Körper; Überschneidungen können nicht gemessen werden",
+  "Unknown object id": "Unbekannte Objekt-ID",
+  "Invalid views": "Ungültige Ansichten",
+  "Measure the current model: per body volume, surface area, bounds, size, centroid, triangle count and closed-mesh topology, plus each object's kind, name, placement and code parameters. Optionally limit to objectIds.": "Vermisst das aktuelle Modell: je Körper Volumen, Oberfläche, Begrenzung, Größe, Schwerpunkt, Dreiecksanzahl und Netztopologie sowie Art, Name, Lage und Code-Parameter jedes Objekts. Optional auf objectIds begrenzt.",
+  "Find solid bodies of the current model that overlap (common volume above minVolumeMm3, default 0.001) and, with clearanceMm, pairs closer than that gap. Bounding boxes prefilter the pairs.": "Findet sich überschneidende Körper des aktuellen Modells (gemeinsames Volumen über minVolumeMm3, Standard 0,001) und mit clearanceMm Paare mit kleinerem Abstand. Begrenzungsquader filtern die Paare vor.",
+  "Render the current model headlessly to PNG images from canonical views (iso, top, front, right, back, left, bottom). Orthographic, flat-shaded in body colours; for visual review, not measurement.": "Rendert das aktuelle Modell ohne Bildschirm als PNG aus Standardansichten (iso, top, front, right, back, left, bottom). Orthografisch, flach schattiert in Körperfarben; zur visuellen Prüfung, nicht zum Messen.",
   "Screen the current model for FDM printing: watertight mesh, sampled minimum wall thickness, overhangs/bridges, bed fit and the best of six axis orientations. Sampled screening only, not a print guarantee.": "Prüft das aktuelle Modell für den FDM-Druck: geschlossenes Netz, stichprobenartige Mindestwandstärke, Überhänge/Brücken, Druckbettgröße und die beste von sechs Achsausrichtungen. Nur eine stichprobenartige Vorprüfung, keine Druckgarantie.",
   "Recorded library sources require STL with attribution. 3MF attribution export is not supported.": "Aufgezeichnete Bibliotheksquellen erfordern STL mit Quellenangaben. Ein 3MF-Export mit Quellenangaben wird nicht unterstützt.",
   "STL and attribution exceed 64 MiB; no export was delivered.": "STL und Quellenangaben überschreiten 64 MiB; es wurde kein Export ausgegeben.",

@@ -11,3 +11,7 @@ export {checkPrintability,checkMeshTopology,DEFAULT_PRINTABILITY_SETTINGS,PRINTA
 export type {PrintabilityReport,PrintabilitySettings,BodyPrintability,PrintOrientationSummary,MeshTopologyCheck} from './analysis/printability.js';
 export {TriangleBvh} from './analysis/meshBvh.js';
 export {checkMinWall} from './analysis/minWall.js';
+export {inspectBodies} from './analysis/inspect.js';
+export type {BodyInspection} from './analysis/inspect.js';
+export {renderBodies,encodePNG,RENDER_VIEWS} from './analysis/render.js';
+export type {RenderView} from './analysis/render.js';

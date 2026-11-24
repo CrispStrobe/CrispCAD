@@ -27,6 +27,26 @@ export async function createGeometryKernel(options: { wasmURL?: string; wasmBina
     }, partitionConvex: (mesh: Pick<BodyMesh,'positions'|'indices'>, maxPieces=2048) => partitionConvex(module,mesh.positions,mesh.indices,maxPieces).map(remember),
     isConvexPiece(piece:{positions:Float64Array;indices:Uint32Array}){const snapshot=convexRegistry.get(piece);return !!snapshot&&snapshot.positions.length===piece.positions.length&&snapshot.indices.length===piece.indices.length&&snapshot.positions.every((v,i)=>v===piece.positions[i])&&snapshot.indices.every((v,i)=>v===piece.indices[i]);},
     collisionCSG: collisionCSG(module,remember),
+    /** Pairwise common volume of evaluated solids (bounding-box prefiltered). */
+    interference(bodies: readonly BodyMesh[], options: { minVolumeMm3?: number; clearanceMm?: number } = {}) {
+      const solids = bodies.filter(b => !b.reference && !b.hole && b.indices.length);
+      if (solids.length > 64) throw new GeometryResourceLimitError(t('Interference check is limited to 64 bodies'));
+      const minVolume = options.minVolumeMm3 ?? 1e-3, gap = options.clearanceMm ?? 0, built = new Map<string, Manifold>(), pairs: { a: string; b: string; volumeMm3: number; boundsMm?: { min: number[]; max: number[] } }[] = [], touching: { a: string; b: string; gapMm: number }[] = [];
+      const solid = (body: BodyMesh) => { let m = built.get(body.id); if (!m) { const mesh = new module.Mesh({ numProp: 3, vertProperties: new Float32Array(body.positions), triVerts: new Uint32Array(body.indices) }); mesh.merge(); m = new module.Manifold(mesh); built.set(body.id, m); if (m.status() !== 'NoError') throw new Error(t`${body.name} is not a closed solid; interference cannot be measured`); } return m; };
+      try {
+        for (let i = 0; i < solids.length; i++) for (let j = i + 1; j < solids.length; j++) {
+          const A = solids[i], B = solids[j];
+          if ([0, 1, 2].some(k => A.bounds.min[k] > B.bounds.max[k] + gap || B.bounds.min[k] > A.bounds.max[k] + gap)) continue;
+          const common = solid(A).intersect(solid(B));
+          try {
+            const volume = common.volume();
+            if (volume > minVolume) { const box = common.boundingBox(); pairs.push({ a: A.id, b: B.id, volumeMm3: volume, boundsMm: { min: [...box.min], max: [...box.max] } }); }
+            else if (gap > 0) { const distance = solid(A).minGap(solid(B), gap); if (distance < gap) touching.push({ a: A.id, b: B.id, gapMm: distance }); }
+          } finally { common.delete(); }
+        }
+      } finally { for (const m of built.values()) m.delete(); }
+      return { interfering: pairs, closerThanClearance: touching };
+    },
     hullPoints(points: readonly [number,number,number][]) { if(points.length<4||points.length>4096||points.some(p=>p.length!==3||p.some(v=>!Number.isFinite(v)||Math.abs(v)>1e6)))throw new Error(t('Collision hull points exceed the finite geometry budget'));const hull=module.Manifold.hull(points);try{if(hull.isEmpty())throw new Error(t('Collision segment is degenerate'));const mesh=hull.getMesh();return remember({positions:new Float64Array(Array.from({length:mesh.numVert*3},(_,i)=>mesh.vertProperties[Math.floor(i/3)*mesh.numProp+i%3])),indices:new Uint32Array(mesh.triVerts)});}finally{hull.delete();} },
   };
 }
