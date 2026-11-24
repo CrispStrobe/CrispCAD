@@ -10,7 +10,7 @@ import {assertProvenanceUpgrade,pruneModelProvenance} from './model-provenance.j
 import {constructionInputs,isCube,constrainCubeEdit,constrainCubeTransform, checkDocument, createDocument, freezeDocument, identityTransform, newId, parseDocument, pruneDocument, serializeDocument, validateDocument } from './document.js';
 import type { CadDocument, Primitive, SolidNode, Transform, Vec3 } from './document.js';
 import type {CadJoint} from './physics.js';
-import { defaultPartPhysics, allocateMotorPort } from './physics.js';
+import { defaultPartPhysics, allocateMotorPort, pruneGearMeshes } from './physics.js';
 import { applyParametricBindings, assertDrivenEdit } from './parameters.js';
 import type {CodeProgram} from './code.js';
 import {checkSketchCollection,closePathProfile,evaluateSketch,featureValue,isSketchFeature} from './features.js';
@@ -22,7 +22,9 @@ import {hasOutlineRelations,positionRegionLoops,sketchOutlineProfiles} from './s
 import {solveRegionEdgeLengths} from './region-edge-lengths.js';
 import type { ParametricDesign } from './parameters.js';
 import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositionExpression} from './fragments.js';
-function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}return result;}
+function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}
+ // Gear meshes follow their copied partner; a partner outside the copy is dropped.
+ const copied=new Map(joints.map((joint,i)=>[joint.id,result[i].id]));for(const next of result)if(next.gearMesh){const partner=copied.get(next.gearMesh.joint);if(partner)next.gearMesh={...next.gearMesh,joint:partner};else delete next.gearMesh;}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'|'artworkSourceId'|'artworkProfile'>>;
 function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38){
@@ -584,7 +586,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     }); },
     remove(ids: readonly string[] = selection,title='Delete') { commit(title, d => {
       if (!ids.some(id => d.roots.includes(id))) throw new Error(t('Select a top-level body'));
-      d.roots = d.roots.filter(id => !ids.includes(id)); if(d.joints)d.joints=d.joints.filter(j=>d.roots.includes(j.bodyA)&&d.roots.includes(j.bodyB)); pruneDocument(d); return [];
+      d.roots = d.roots.filter(id => !ids.includes(id)); if(d.joints)d.joints=pruneGearMeshes(d.joints.filter(j=>d.roots.includes(j.bodyA)&&d.roots.includes(j.bodyB))); pruneDocument(d); return [];
     }); },
     setInitialVelocity(bodyId:string,linear:Vec3,angular:Vec3){commit('Set initial velocity',d=>{upgradeSimulation(d);if(!d.roots.includes(bodyId))throw new Error(t('Select a top-level body'));d.nodes[bodyId].physics={...(d.nodes[bodyId].physics??defaultPartPhysics()),initialVelocityMmS:[...linear],initialAngularVelocityDps:[...angular]};});},
     setSimulation(settings:SimulationSettings){commit('Configure simulation',d=>{upgradeSimulation(d);d.simulation=structuredClone(settings);});},
@@ -592,11 +594,14 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     addJoint(kind:CadJoint['kind'],bodyA:string,bodyB:string,anchor:Vec3,axis:Vec3,options:{limits?:[number,number];coneAngle?:number}={}){let id='';commit('Add connector',d=>{upgradeSimulation(d);const joint=jointAtWorldFrame(d,kind,bodyA,bodyB,anchor,axis,options);if(['hinge','slider'].includes(kind))joint.control={port:allocateMotorPort(d.joints??[])};id=joint.id;(d.joints??=[]).push(joint);});return id;},
     moveJoint(id:string,anchor:Vec3,axis:Vec3){commit('Move connector',d=>{const joint=d.joints?.find(j=>j.id===id);if(!joint)throw new Error(t('Unknown connector'));const next=jointAtWorldFrame(d,joint.kind,joint.bodyA,joint.bodyB,anchor,axis);for(const key of ['anchorA','anchorB','axisA','axisB'] as const)joint[key]=next[key];});},
     updateJoint(id:string,patch:Partial<Pick<CadJoint,'limits'|'coneAngle'|'collideConnected'>>){commit('Edit connector',d=>{const joint=d.joints?.find(j=>j.id===id);if(!joint)throw new Error(t('Unknown connector'));Object.assign(joint,structuredClone(patch));});},
-    removeJoint(id:string){commit('Remove connector',d=>{d.joints=d.joints?.filter(j=>j.id!==id);});},
+    removeJoint(id:string){commit('Remove connector',d=>{if(d.joints)d.joints=pruneGearMeshes(d.joints.filter(j=>j.id!==id));});},
+    /** Couple two hinges as meshing gears: ω(second) = ratio · ω(first), relative to each hinge frame. */
+    meshGears(first:string,second:string,ratio:number){commit('Mesh gears',d=>{const a=d.joints?.find(j=>j.id===first),b=d.joints?.find(j=>j.id===second);if(a?.kind!=='hinge'||b?.kind!=='hinge'||a===b)throw new Error(t('Choose two different hinge connectors'));if(!Number.isFinite(ratio)||Math.abs(ratio)<1e-3||Math.abs(ratio)>1e3)throw new Error(t('Gear ratio must be between 0.001 and 1000 in magnitude'));upgradeSimulation(d);delete b.gearMesh;a.gearMesh={joint:b.id,ratio};});},
+    unmeshGears(id:string){commit('Unmesh gears',d=>{const joint=d.joints?.find(j=>j.id===id);if(!joint?.gearMesh)throw new Error(t('This connector has no gear mesh'));delete joint.gearMesh;});},
     addTracer(bodyId:string,point:Vec3,color='#ef8354'){let id='';commit('Add motion tracer',d=>{upgradeSimulation(d);id=newId();(d.tracers??=[]).push({id,bodyId,point:[...point],color});});return id;},
     removeTracer(id:string){commit('Remove motion tracer',d=>{if(d.version>=8)d.tracers=d.tracers?.filter(trace=>trace.id!==id);});},
     setMotorPort(jointId:string,port:string|null){commit('Configure motor port',d=>{const joint=d.joints?.find(j=>j.id===jointId);if(!joint||!['hinge','slider'].includes(joint.kind))throw new Error(t('Unknown hinge joint'));if(port===null)delete joint.control;else joint.control={port};});},
-    detachJoints(ids: readonly string[] = selection) { commit('Detach joints',d=>{if(d.joints)d.joints=d.joints.filter(j=>!ids.includes(j.bodyA)&&!ids.includes(j.bodyB));}); },
+    detachJoints(ids: readonly string[] = selection) { commit('Detach joints',d=>{if(d.joints)d.joints=pruneGearMeshes(d.joints.filter(j=>!ids.includes(j.bodyA)&&!ids.includes(j.bodyB)));}); },
     undo() { const prev = undo.pop(); if (!prev) return; redo.push(snapshot()); ({ document, selection, label } = prev); revision++; emit(); },
     redo() { const next = redo.pop(); if (!next) return; undo.push(snapshot()); ({ document, selection, label } = next); revision++; emit(); },
     load(next: CadDocument | string) {

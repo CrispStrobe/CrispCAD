@@ -3,6 +3,8 @@ import {parseCodeText,resolveCodeText} from './code-text.js';
 import type {CodeTextAst} from './code-text.js';
 import {textVertexBudget} from './font-budgets.js';
 import {t} from './i18n.js';
+import {SpurGearProfileError} from './gears/spurGear.js';
+import {SPUR_GEAR_MAX_TEETH,internalSpurGearPolygon,spurGearPolygon} from './gears/profile.js';
 export type CodeProfile={kind:'resize';size:[number,number];auto:[boolean,boolean];profile:CodeProfile}|{kind:'affine';matrix:number[];profile:CodeProfile}|{kind:'offset';distance:number;round:boolean;segments:number;profile:CodeProfile}|{kind:'text';text:string;size:number;font:'sans'|'serif'|'mono';halign:'left'|'center'|'right';valign:'baseline'|'top'|'center'|'bottom';spacing:number;curveSteps:number}|{kind:'empty'}|{kind:'polygon';contours:[number,number][][]}|{kind:'circle';radius:number;segments:number}|{kind:'rectangle';size:[number,number];center:boolean}|{kind:'union'|'subtract'|'intersect'|'hull'|'minkowski';profiles:CodeProfile[]}|{kind:'move'|'scale';vector:[number,number];profile:CodeProfile}|{kind:'rotate';angle:number;profile:CodeProfile};
 interface Scalar{text:string;at:number}
 export interface ProfileAst{name:string;at:number;scalars:Scalar[];texts?:string[];textParts?:(string|Scalar)[];scadFormat?:boolean;message?:CodeTextAst;variable?:string;points?:Scalar[][];paths?:Scalar[][];sequence?:PointSequenceAst;profiles:ProfileAst[]}
@@ -28,6 +30,7 @@ export function parseCodeProfile(p:Parser,depth=0):ProfileAst{
  else if(a.name==='offset2d'){for(let i=0;i<3;i++){a.scalars.push(p.scalar([',']));p.expect(',');}a.profiles.push(parseCodeProfile(p,depth+1));}
  else if(a.name==='polygonGenerated2d'){a.sequence=parsePointSequence(p);if(p.peek()===','){p.expect(',');a.paths=lists();}}
  else if(a.name==='polygon2d'){a.points=lists();if(p.peek()===','){p.expect(',');a.paths=lists();}}
+ else if(a.name==='spurGear2d'||a.name==='internalSpurGear2d'){while(p.peek()!==')'){a.scalars.push(p.scalar([',',')']));if(a.scalars.length>4)p.fail(t('Unexpected profile arguments'),a.at);if(p.peek()!==',')break;p.expect(',');}}
  else if(['circle2d','rectangle2d'].includes(a.name)){while(p.peek()!==')'){a.scalars.push(p.scalar([',',')']));if(a.scalars.length>3)p.fail(t('Unexpected profile arguments'),a.at);if(p.peek()!==',')break;p.expect(',');}}
  else if(['union2d','subtract2d','intersect2d','hull2d','minkowski2d'].includes(a.name)){while(p.peek()!==')'){a.profiles.push(parseCodeProfile(p,depth+1));if(a.profiles.length>64)p.limited(t('At most 64 profile operands'),a.at);if(p.peek()!==',')break;p.expect(',');}}
  else if(['move2d','scale2d','rotate2d'].includes(a.name)){const count=a.name==='rotate2d'?1:2;for(let i=0;i<count;i++){a.scalars.push(p.scalar([',']));p.expect(',');}a.profiles.push(parseCodeProfile(p,depth+1));}
@@ -40,6 +43,9 @@ export function resolveCodeProfile(a:ProfileAst,number:(s:Scalar,unit:'mm'|'deg'
  if(a.name==='assert2d'){if(!number(a.scalars[0],'scalar',-1e9,1e9,false,true)){const message=a.message?resolveCodeText(a.message,format??(s=>String(number(s,'scalar',-1e9,1e9,false,true)))):undefined;fail(message?t`Source assertion failed: ${message}`:t('Source assertion failed'),a.at);}return resolveCodeProfile(a.profiles[0],number,fail,step,bind,format);}
  if(a.name==='choose2d')return resolveCodeProfile(a.profiles[number(a.scalars[0],'scalar',-1e9,1e9,false,true)?0:1],number,fail,step,bind,format);
  if(a.name==='forRange2d'||a.name==='forValues2d'){let values:number[]=[];if(a.name==='forValues2d')values=a.scalars.map(s=>number(s,'scalar',-1e6,1e6));else{const start=n(0,'scalar',-1e6,1e6),end=n(1,'scalar',-1e6,1e6),increment=n(2,'scalar',-1e6,1e6);if(increment===0)fail(t('Range step must be nonzero'),a.at);const count=Math.max(0,Math.floor((end-start)/increment+1e-9)+1);if(count>256)fail(t('Loop exceeds 256 values'),a.at);values=Array.from({length:count},(_,i)=>start+i*increment);}const profiles=values.map(v=>bind!(a.variable!,v,()=>resolveCodeProfile(a.profiles[0],number,fail,step,bind,format)));return profiles.length?{kind:'union',profiles}:{kind:'empty'};}
+ if(a.name==='spurGear2d'||a.name==='internalSpurGear2d'){arity(2,4);const options={module:n(0,'mm',0.05,100),teeth:n(1,'scalar',6,SPUR_GEAR_MAX_TEETH,true),pressureAngleDeg:a.scalars[2]?n(2,'deg',10,35):20,backlash:a.scalars[3]?n(3,'mm',0,10):0};let contour:[number,number][]=[];
+  try{contour=a.name==='spurGear2d'?spurGearPolygon(options):internalSpurGearPolygon(options);}catch(error){if(error instanceof SpurGearProfileError)fail(t('Spur gear parameters leave no valid tooth; raise teeth, lower the pressure angle or reduce backlash'),a.at);throw error;}
+  if(contour.length>4096)fail(t('Profile point budget exceeded'),a.at);return {kind:'polygon',contours:[contour]};}
  if(a.name==='circle2d'){arity(1,2);const radius=n(0,'mm',0),segments=a.scalars[1]?n(1,'scalar',3,4096,true):48;return radius?{kind:'circle',radius,segments}:{kind:'empty'};}
  if(a.name==='rectangle2d'){arity(2,3);const size:[number,number]=[n(0,'mm',0),n(1,'mm',0)],center=a.scalars[2]?n(2,'scalar',0,1,false,true)!==0:false;return size.includes(0)?{kind:'empty'}:{kind:'rectangle',size,center};}
  if(a.name==='polygonGenerated2d'){

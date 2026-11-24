@@ -46,6 +46,10 @@ history. Use a dedicated file: this process is its writer until closed.
 | `cad_list_revisions` | Paginated iteration metadata |
 | `cad_restore_revision` | Append a restore, preserving later work |
 | `cad_export_project` | Base64 complete history-inclusive project |
+| `cad_inspect` | Read-only per-body volume, area, bounds, centroid and topology, with object kinds, placements, code parameters and joints |
+| `cad_check_interference` | Read-only overlapping body pairs (common volume) and, with `clearanceMm`, near misses |
+| `cad_render` | Read-only PNG views (iso/top/front/right/back/left/bottom) returned as MCP image content |
+| `cad_check_printability` | Read-only FDM screening of the current model: watertightness, sampled minimum wall, overhangs/bridges, bed fit, six ranked axis orientations |
 | `cad_export_stl` | Base64 printable mesh; automatic paired attribution for recorded library sources |
 
 Read `cad_get_model`, then send its `revision` as `expectedRevision` for every
@@ -117,3 +121,26 @@ the current revision, supply `objectId` and `expectedRevision`, and optionally
 `diameter`, `length` and either `pitch` or `turnsPerStart`. `preview: true` saves
 nothing. Acceptance appends one revision and resets local scale. See
 [thread redesign](SCREW-REDESIGN.md) for defaults and guards.
+
+## Printability screening
+
+`cad_check_printability` evaluates the current model in the geometry worker and
+returns, per solid body, edge-manifold topology, a sampled minimum wall thickness
+(one inward ray per triangle), overhang regions classified as unsupported, bridged,
+first-layer or short-reach, bed contact/tip risk, and the six axis-aligned build
+directions ranked best first. Optional settings: `nozzleMm` (0.4), `maxOverhangDeg`
+(45), `maxBridgeMm` (10), `minWallMm` (0.8) and `bedXMm`/`bedYMm`/`bedZMm`
+(220/220/250). Results are tessellation-bounded screening, not a slicer result
+or print guarantee. The mesh algorithms are adapted MIT code from kernelCAD; see
+THIRD-PARTY-NOTICES.md and [the kernelCAD review](KERNELCAD-REVIEW.md).
+
+## Review tools
+
+`cad_inspect`, `cad_check_interference` and `cad_render` evaluate the current
+model in the geometry worker and change nothing. Inspection integrates signed
+tetrahedra of the evaluated mesh (volume, centroid) and reports closed-mesh
+topology. Interference intersects each bounding-box-overlapping pair with
+Manifold; `clearanceMm` adds Manifold's minimum-gap search for pairs that do not
+overlap. `cad_render` is an original headless software rasterizer (orthographic,
+z-buffered, flat-shaded in body colours, PNG via fflate's zlib), up to four views
+of 64–1024 px; the images arrive as MCP `image` content beside a short JSON summary.

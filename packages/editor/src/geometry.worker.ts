@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {FeatureEvaluationError,setLocale} from '@brickwright/cad-core';
-import { createGeometryKernel } from '@brickwright/cad-geometry';
+import { checkPrintability, createGeometryKernel } from '@brickwright/cad-geometry';
 import type { GeometryKernel } from '@brickwright/cad-geometry';
 import type {GeometryRequest} from './geometry-client.js';
 let kernel: Promise<GeometryKernel> | null = null;
@@ -20,6 +20,10 @@ self.onmessage = async (event: MessageEvent<GeometryRequest>) => {
       return;
     }
     const result=ready.evaluate(event.data.document);
+    if(event.data.printability){
+      self.postMessage({request,result:checkPrintability(result.bodies,event.data.printability)});
+      return;
+    }
     self.postMessage({ request, result }, { transfer: result.bodies.flatMap(b => [b.positions.buffer, b.indices.buffer]) });
   } catch (error) { self.postMessage({ request, error: error instanceof Error ? error.message : String(error), ...(error instanceof FeatureEvaluationError?{diagnostic:error.diagnostic}:{}) }); }
 };

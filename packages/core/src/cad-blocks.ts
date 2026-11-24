@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {pruneGearMeshes} from './physics.js';
 // Block/pseudocode modelling programs. One JSON syntax tree, compiled to three
 // parametric targets: native CAD Script (the retained definition), OpenSCAD and
 // JSCAD. Scratch hosts and MCP build the tree; nothing here executes user code.
@@ -134,7 +135,7 @@ const neg=(e:E):E=>e.k==='num'?num(-e.v):{k:'neg',a:e};
 const RESERVED=new Set(`
 param const let return scalar mm cm m in deg rad true false undef PI
 box cylinder frustum sphere hull empty choose forRange forValues union subtract intersect move rotate scale repeat mirror axisRotate resize affine polyhedron minkowski extrude extrudeProfile revolve assertCode
-rectangle2d circle2d polygon2d move2d rotate2d scale2d union2d subtract2d intersect2d hull2d text2d offset2d minkowski2d choose2d forRange2d forValues2d polygonGenerated2d pointRange pointValues pointConcat pointChoose sumRange filterAt formatSCAD formatText
+rectangle2d circle2d polygon2d move2d rotate2d scale2d union2d subtract2d intersect2d hull2d text2d offset2d minkowski2d choose2d forRange2d forValues2d polygonGenerated2d spurGear2d internalSpurGear2d pointRange pointValues pointConcat pointChoose sumRange filterAt formatSCAD formatText
 sin cos tan asin acos atan atan2 sqrt abs floor ceil round exp ln log pow min max norm cross len concat lookup str chr ord search version rands sign
 cube sphere polygon square circle text translate color offset linear_extrude rotate_extrude projection surface import render children module function include use each assert echo for if else intersection_for difference intersection
 break case catch class continue debugger default delete do export extends finally function import instanceof new null super switch this throw try typeof var void while with yield await enum implements interface package private protected public static of arguments eval undefined NaN Infinity Math require module exports main params
@@ -712,7 +713,7 @@ export function applyBlocksModel(session:CadSession,name:string,compiled:Compile
    }
   });
   const stale=[...byName.values()].filter(n=>!wanted.has(n.name)).map(n=>n.id);
-  if(stale.length){d.roots=d.roots.filter(id=>!stale.includes(id));if(d.joints)d.joints=d.joints.filter(j=>d.roots.includes(j.bodyA)&&d.roots.includes(j.bodyB));pruneDocument(d);}
+  if(stale.length){d.roots=d.roots.filter(id=>!stale.includes(id));if(d.joints)d.joints=pruneGearMeshes(d.joints.filter(j=>d.roots.includes(j.bodyA)&&d.roots.includes(j.bodyB)));pruneDocument(d);}
  });
  return {status:session.state.revision===revision?'unchanged':found.length?'updated':'built',ids};
 }

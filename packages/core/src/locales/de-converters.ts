@@ -88,6 +88,7 @@ export const messages:Record<string,string>={
   "JSCAD syntax tree limit exceeded": "JSCAD-Syntaxbaumgrenze überschritten",
   "JSCAD export of tapered profiles requires slice extrusion": "Der JSCAD-Export verjüngter Profile erfordert eine Scheibenextrusion",
   "Profile nesting exceeds 32": "Die Profilverschachtelung überschreitet 32 Ebenen",
+  "Spur gear parameters leave no valid tooth; raise teeth, lower the pressure angle or reduce backlash": "Die Zahnradparameter ergeben keinen gültigen Zahn; Zähnezahl erhöhen, Eingriffswinkel verringern oder Flankenspiel reduzieren",
   "Profile point budget exceeded": "Das Punktlimit für Profile wurde überschritten",
   "Unexpected profile arguments": "Unerwartete Profilargumente",
   "At most 64 profile operands": "Höchstens 64 Profiloperanden sind erlaubt",

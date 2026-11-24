@@ -2,7 +2,7 @@
 import {t,simulationSettings} from '@brickwright/cad-core';
 import type initJolt from 'jolt-physics/wasm-compat';
 import { validateDocument, defaultPartPhysics, documentGeometryKey } from '@brickwright/cad-core';
-import type { CadDocument, Vec3 } from '@brickwright/cad-core';
+import type { CadDocument, CadJoint, Vec3 } from '@brickwright/cad-core';
 import type { GeometryResult } from '@brickwright/cad-geometry';
 import { solidMassProperties, combineMassProperties } from './mass.js';
 import { geometryHash, isQualifiedCollision } from './collision.js';
@@ -15,7 +15,10 @@ const rotate=(point:number[],rotation:Vec3)=>{let [x,y,z]=point;for(let i=0;i<3;
 export async function createPhysicsWorld(document:CadDocument,result:GeometryResult,prepared:ReadonlyMap<string,PreparedCollision>,options:{J?:any;ground?:boolean;mode?:'mechanism'|'rigid-preview'}={}){
  const doc=validateDocument(document),sceneSettings=simulationSettings(doc);if(result.sourceKey!==documentGeometryKey(doc))throw new Error(t('Geometry is stale for this document'));const meshes=result.bodies.filter(b=>!b.reference&&!b.hole);if(!meshes.length)throw new Error(t('There are no physical solids to simulate'));if(meshes.length>256)throw new Error(t('Simulation budget is 256 bodies'));
  for(const mesh of meshes){const p=prepared.get(mesh.id);if(!p||!await isQualifiedCollision(p)||p.certificate.sourceSHA256!==await geometryHash(mesh)||p.certificate.relativeError>p.certificate.tolerance.volumeFraction||p.certificate.boundsErrorMm>p.certificate.tolerance.boundsMm||!p.hulls.length||p.hulls.length>2048)throw new Error(t`${mesh.name}: qualified collision geometry is missing or stale`);}
- if(options.mode!=='rigid-preview')for(const mesh of meshes){const intent=doc.nodes[mesh.id]?.physics?.intent??'rigid';if(intent!=='rigid'&&!(intent==='hinge'&&doc.joints?.some(j=>j.bodyA===mesh.id||j.bodyB===mesh.id)))throw new Error(t`${mesh.name}: ${intent} needs a qualified mechanical model and mates. Choose rigid-preview explicitly to simulate only its rigid geometry.`);}
+ const gearBody=(j:CadJoint,partner:CadJoint)=>{const shared=[partner.bodyA,partner.bodyB];return shared.includes(j.bodyB)&&!shared.includes(j.bodyA)?j.bodyA:j.bodyB;};
+ // Gears coupled by a gear mesh are a qualified mechanical model.
+ const meshedGears=new Set<string>();for(const joint of doc.joints??[]){const other=joint.gearMesh&&doc.joints!.find(j=>j.id===joint.gearMesh!.joint);if(other){meshedGears.add(gearBody(joint,other));meshedGears.add(gearBody(other,joint));}}
+ if(options.mode!=='rigid-preview')for(const mesh of meshes){const intent=doc.nodes[mesh.id]?.physics?.intent??'rigid';if(intent!=='rigid'&&!(intent==='hinge'&&doc.joints?.some(j=>j.bodyA===mesh.id||j.bodyB===mesh.id))&&!(intent==='gear'&&meshedGears.has(mesh.id)))throw new Error(t`${mesh.name}: ${intent} needs a qualified mechanical model and mates. Choose rigid-preview explicitly to simulate only its rigid geometry.`);}
  if([...prepared.values()].reduce((sum,p)=>sum+p.hulls.length,0)>4096)throw new Error(t('Simulation scene exceeds the 4096-convex-piece budget'));
  const J=options.J??await(modulePromise??=import('jolt-physics/wasm-compat').then(module=>module.default()));
  const settings=new J.JoltSettings();settings.mMaxBodies=512;settings.mMaxBodyPairs=Math.max(1024,meshes.length*meshes.length);settings.mMaxContactConstraints=8192;
@@ -36,6 +39,8 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
  const massById=new Map(meshes.map(mesh=>[mesh.id,solidMassProperties(mesh,(doc.nodes[mesh.id].physics??defaultPartPhysics()).densityKgM3)]));
  const assemblyMass=new Map([...assemblies].map(([id,members])=>[id,combineMassProperties(members.map(m=>massById.get(m.id)!))]));
  const pairKey=(a:string,b:string)=>a<b?a+'\0'+b:b+'\0'+a;
+ // A gear mesh constraint replaces tooth contact between the two gears.
+ for(const joint of doc.joints??[]){const other=joint.gearMesh&&doc.joints!.find(j=>j.id===joint.gearMesh!.joint);if(other)group.DisableCollision(bodyIndex.get(gearBody(joint,other))!,bodyIndex.get(gearBody(other,joint))!);}
  for(const joint of doc.joints??[])if(joint.collideConnected===false||assemblies.get(fixedRoot(joint.bodyA))!.length===1&&assemblies.get(fixedRoot(joint.bodyB))!.length===1)group.DisableCollision(bodyIndex.get(joint.bodyA)!,bodyIndex.get(joint.bodyB)!);
  // Authored robot mode: connector limits control internal travel. Loose objects
  // and ground remain independent collision participants.
@@ -117,6 +122,19 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
    // Extra iterations improve loaded-hinge accuracy within that reserve.
    if(joint.kind==='hinge'&&separatedHingePairs.has(pairKey(fixedRoot(joint.bodyA),fixedRoot(joint.bodyB))))cs.mNumPositionStepsOverride=40;
    const constraint=cs.Create(a,b);constraint.AddRef();system.AddConstraint(constraint);constraints.set(joint.id,constraint);temporaries.forEach(v=>J.destroy(v));J.destroy(cs);
+  }
+  // Ideal tooth contact at the pitch point between two hinged gears (fork's
+  // GearMeshConstraint): the reaction loads both axles, and the ratio holds
+  // relative to each hinge frame. The gear is the hinge body not shared with
+  // the partner hinge (bodyB when both or neither are shared).
+  for(const joint of doc.joints??[]){
+   if(joint.kind!=='hinge'||!joint.gearMesh)continue;const other=doc.joints!.find(j=>j.id===joint.gearMesh!.joint);if(other?.kind!=='hinge')throw new Error(t('Invalid gear mesh'));
+   const side=(j:CadJoint,partner:CadJoint)=>{const id=gearBody(j,partner),gearIsA=id===j.bodyA&&id!==j.bodyB,tr=doc.nodes[id].transform,anchor=gearIsA?j.anchorA:j.anchorB,axis=gearIsA?j.axisA:j.axisB;
+    return {body:byId.get(fixedRoot(id)),point:rotate(anchor.map((v,i)=>v*tr.scale[i]),tr.rotation).map((v,i)=>(v+tr.position[i])*.001),axis:rotate(axis,tr.rotation).map(v=>gearIsA?-v:v)};};
+   const g1=side(joint,other),g2=side(other,joint);if(g1.body===g2.body)throw new Error(t('Meshing gears must be separate moving bodies'));
+   const ms=new J.GearMeshConstraintSettings(),p1=new J.RVec3(...g1.point),a1=new J.Vec3(...g1.axis),p2=new J.RVec3(...g2.point),a2=new J.Vec3(...g2.axis);
+   ms.mSpace=J.EConstraintSpace_WorldSpace;ms.mPoint1=p1;ms.mHingeAxis1=a1;ms.mPoint2=p2;ms.mHingeAxis2=a2;ms.mRatio=joint.gearMesh.ratio;ms.mNumVelocityStepsOverride=30;ms.mNumPositionStepsOverride=10;
+   const mesh=J.castObject(ms.Create(g1.body,g2.body),J.GearMeshConstraint);[p1,a1,p2,a2].forEach(v=>J.destroy(v));J.destroy(ms);mesh.AddRef();system.AddConstraint(mesh);mesh.SetConstraints(constraints.get(joint.id),constraints.get(other.id));constraints.set(`gear-mesh:${joint.id}`,mesh);
   }
   // Project authored per-part velocities onto the rigid component, preserving
   // linear and angular momentum instead of letting the last alias win.

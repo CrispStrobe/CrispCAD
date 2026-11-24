@@ -7,6 +7,7 @@ import {apexScaraCatalog,isApexScara,createApexScaraDocument,apexScaraPreview} f
 import {orionCarouselCatalog,isOrionCarousel,createOrionCarouselDocument,orionCarouselPreview} from './orion-carousel.js';
 import {vortexPinballCatalog,isVortexPinball,createVortexPinballDocument,vortexPinballPreview} from './vortex-pinball.js';
 import {titanViseCatalog,isTitanVise,createTitanViseDocument,titanVisePreview} from './titan-vise.js';
+import {gearPairCatalog,isGearPair,createGearPairDocument,gearPairPreview} from './gear-pair.js';
 import {hermesCraneCatalog,isHermesCrane,createHermesCraneDocument,hermesCranePreview} from './hermes-crane.js';
 import {chronosDrawbridgeCatalog,isChronosDrawbridge,createChronosDrawbridgeDocument,chronosDrawbridgePreview} from './chronos-drawbridge.js';
 import {polarisTrackerCatalog,isPolarisTracker,createPolarisTrackerDocument,polarisTrackerPreview} from './polaris-tracker.js';
@@ -75,7 +76,7 @@ const templates:ShapePreset[]=[
 const screwNames=[['hex-head-screw','Hex-head screw'],['socket-head-screw','Socket-head screw'],['countersunk-screw','Countersunk screw'],['pan-head-screw','Pan-head screw'],['set-screw','Set screw'],['wood-screw','Wood screw']];
 const entries=[...templates,...screwNames.map(([id,name])=>({id,name,category:'',description:'A screw with editable head, drive and V-thread dimensions.',keywords:'screw bolt thread fastener hex socket countersunk pan',color:'#b0b7c2'})),...originalCatalog];
 export const shapeCatalog:readonly ShapePreset[]=Object.freeze([
- ...roverCatalog,...steerableRoverCatalog,...kestrelArmCatalog,...atlasForkliftCatalog,...mantisWalkerCatalog,...cycloneSorterCatalog,...heliosCatapultCatalog,...labyrinthTilterCatalog,...apexScaraCatalog,...orionCarouselCatalog,...vortexPinballCatalog,...titanViseCatalog,...hermesCraneCatalog,...chronosDrawbridgeCatalog,...polarisTrackerCatalog,...borealLauncherCatalog,...zephyrConveyorCatalog,...quasarPressCatalog,...novaLoaderCatalog,...vectorPlotterCatalog,...aegisSentryCatalog,...stratosGimbalCatalog,...motorCatalog,...simulationExampleCatalog,
+ ...roverCatalog,...steerableRoverCatalog,...kestrelArmCatalog,...atlasForkliftCatalog,...mantisWalkerCatalog,...cycloneSorterCatalog,...heliosCatapultCatalog,...labyrinthTilterCatalog,...apexScaraCatalog,...orionCarouselCatalog,...vortexPinballCatalog,...titanViseCatalog,...gearPairCatalog,...hermesCraneCatalog,...chronosDrawbridgeCatalog,...polarisTrackerCatalog,...borealLauncherCatalog,...zephyrConveyorCatalog,...quasarPressCatalog,...novaLoaderCatalog,...vectorPlotterCatalog,...aegisSentryCatalog,...stratosGimbalCatalog,...motorCatalog,...simulationExampleCatalog,
  ...Object.entries(essentials).flatMap(([category,ids])=>ids.map(id=>Object.freeze({...entries.find(p=>p.id===id)!,category,additional:false}))),
  ...entries.filter(p=>!Object.values(essentials).flat().includes(p.id)).map(p=>Object.freeze({...p,category:'Additional shapes',additional:true})),
 ]);
@@ -92,6 +93,7 @@ export function presetGeometry(id: string, preview = false, recipe?:GeneratorRec
  if(isOrionCarousel(id))return orionCarouselPreview(id);
  if(isVortexPinball(id))return vortexPinballPreview(id);
  if(isTitanVise(id))return titanVisePreview(id);
+ if(isGearPair(id))return gearPairPreview();
  if(isHermesCrane(id))return hermesCranePreview(id);
  if(isChronosDrawbridge(id))return chronosDrawbridgePreview(id);
  if(isPolarisTracker(id))return polarisTrackerPreview(id);
@@ -141,6 +143,7 @@ export function createPresetDocument(id: string, text = 'BRICKWRIGHT', options: 
  if(isOrionCarousel(id))return createOrionCarouselDocument(id);
  if(isVortexPinball(id))return createVortexPinballDocument(id);
  if(isTitanVise(id))return createTitanViseDocument(id);
+ if(isGearPair(id))return createGearPairDocument();
  if(isHermesCrane(id))return createHermesCraneDocument(id);
  if(isChronosDrawbridge(id))return createChronosDrawbridgeDocument(id);
  if(isPolarisTracker(id))return createPolarisTrackerDocument(id);

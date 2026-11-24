@@ -55,3 +55,9 @@ export * from './drawing-sheet.js';
 export {trimSketchProfile} from './sketch-trim.js';
 
 export * from './outline-relations.js';
+export {spurGearPolygon,internalSpurGearPolygon,SPUR_GEAR_MAX_TEETH} from './gears/profile.js';
+export {spurGearOutline,internalSpurGearBoreOutline,spurGearRadii,assertPlanetaryToothCompatibility,SpurGearProfileError} from './gears/spurGear.js';
+export type {SpurGearProfileOptions,SpurGearOutline,SpurGearRadii} from './gears/spurGear.js';
+export {externalCenterDistanceMm,externalSpeedRatio,meshAlignDeg,pitchRadiusMm,tipRadiusMm} from './gears/spurGearPairMath.js';
+export {importKernelCAD,KCAD_IMPORT_LIMITS,KCAD_ACCEPTED_LICENSES} from './kcad-import.js';
+export type {KernelCADImport,KernelCADPart} from './kcad-import.js';

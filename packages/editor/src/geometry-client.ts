@@ -2,13 +2,13 @@
 import {FeatureEvaluationError,getLocale,t} from '@brickwright/cad-core';
 import type {FeatureDiagnostic} from '@brickwright/cad-core';
 import type { CadDocument,PlanarSketch,SketchProfile } from '@brickwright/cad-core';
-import type { AssemblyCut,AssemblySection,GeometryResult } from '@brickwright/cad-geometry';
+import type { AssemblyCut,AssemblySection,GeometryResult,PrintabilityReport,PrintabilitySettings } from '@brickwright/cad-geometry';
 /** A timed-out/crashed kernel is discarded; the next edit starts a fresh worker. */
 type OffsetRequest={offset:{sketch:PlanarSketch;context:Pick<CadDocument,'parametric'>;distance:number}};
 type SliceRequest={slice:{geometry:GeometryResult;cut:AssemblyCut}};
-type GeometryPayload={document:CadDocument}|OffsetRequest|SliceRequest;
+type GeometryPayload={document:CadDocument;printability?:Partial<PrintabilitySettings>}|OffsetRequest|SliceRequest;
 export type GeometryRequest=GeometryPayload&{request:number;wasmURL:string;locale:string};
-type WorkerResult=GeometryResult|SketchProfile|AssemblySection;
+type WorkerResult=GeometryResult|SketchProfile|AssemblySection|PrintabilityReport;
 export function createGeometryClient(wasmURL: string, createWorker?: () => Worker) {
   let worker: Worker | null = null; let sequence = 0; let disposed = false;
   const pending = new Map<number, { resolve: (r: WorkerResult) => void; reject: (e: Error) => void; timer: ReturnType<typeof setTimeout> }>();
@@ -41,6 +41,10 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
     sliceAssembly(geometry:GeometryResult,cut:AssemblyCut){return send<AssemblySection>({slice:{geometry,cut}});},
     offsetSketch(sketch:PlanarSketch,context:Pick<CadDocument,'parametric'>,distance:number){
       return send<SketchProfile>({offset:{sketch,context,distance}});
+    },
+    /** Evaluate and screen in the worker without transferring meshes to the UI. */
+    checkPrintability(document:CadDocument,settings:Partial<PrintabilitySettings>={}){
+      return send<PrintabilityReport>({document,printability:settings});
     },
     dispose() { disposed = true; fail(new Error(t('Editor was disposed'))); },
   };

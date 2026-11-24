@@ -47,6 +47,37 @@ includes samples, startup, independent checks, exact pin and artifact/source has
 artifacts outside production assets. Full solver correctness and difficult branch
 continuation are not established by these probes.
 
+
+## Coupled sketch comparison with kernelCAD's solver — 2026-11-24
+
+kernelCAD ships an 810-line MIT TypeScript sketch solver: Gauss–Seidel relaxation
+over per-constraint projections, 100 sweeps, with an aggregate residual verdict.
+We compared it with the dart_csp geometric session on one coupled, fully
+constrained fixture: a ladder of N rectangular bays (fixed corner, horizontal rails,
+vertical rungs, per-bay widths), solved cold from the same perturbation and then
+after width edits, with coordinates checked against the analytic answer. Linux x64
+container (Xeon 2.3 GHz); kernelCAD on Node 22, dart_csp on the Dart 3.12.2 VM (JIT).
+[Harness and raw data](../experiments/constraints/sketch-compare/README.md).
+
+| Bays (2D coords) | kernelCAD cold | kernelCAD edit (median) | dart_csp cold | dart_csp edit (median) |
+| --- | --- | --- | --- | --- |
+| 4 (20) | 0.7 ms, 2.2e-3 mm | 0.5 ms, 2.4e-3 mm | 54 ms, 4e-10 mm | 3.8 ms, 1.5e-8 mm |
+| 16 (68) | 0.5 ms, 5.5e-2 mm | 0.4 ms, **1.1 mm**, not converged | 31 ms, 3e-9 mm | 4.7 ms, 6e-8 mm |
+| 64 (260) | 3.8 ms, 5.6e-2 mm | 0.7 ms, **2.0 mm**, not converged | 46 ms, 2e-8 mm | 29 ms, 2e-7 mm |
+
+Errors are the worst coordinate deviation. kernelCAD's cold solves report
+`converged` while 0.05 mm off, because its verdict threshold (0.5 aggregate) is
+loose by design. Raising its cap to 10,000 sweeps still left the 64-bay edit 0.12 mm
+off, at a 68 ms median, slower than dart_csp; per-constraint dead bands (1e-3 mm
+for distances) accumulate along the chain. It has no Jacobian, no degree-of-freedom
+or rank report, and no drag targets.
+
+Decision: keep the dart_csp worker-adapter plan. kernelCAD's relaxation suits
+small interactive previews only. Its constraint vocabulary (coincident, distance,
+horizontal/vertical, parallel/perpendicular, tangent, radius, angle, concentric,
+symmetric, equal length) is a useful checklist for our sketch schema. dart_csp's
+absolute times here are native-VM; browser JS/Wasm numbers are in the section above.
+
 ## Historical interval-only measurements
 
 The pinned dart_csp interval solver compiles to JavaScript **and Dart/Wasm** and
