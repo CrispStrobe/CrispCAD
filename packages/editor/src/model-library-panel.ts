@@ -376,7 +376,7 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
    if(filter.value==='projects')return;
    if(!working)status.textContent='';
    renderList();
-   if(!working)renderDetails();
+   if(!working&&!archiveSelection&&!selectedProject)renderDetails();
   }).catch(error=>{
    if(!disposed&&!loaded&&!working&&filter.value!=='projects')report(error);
   }).finally(()=>{loading=undefined;});

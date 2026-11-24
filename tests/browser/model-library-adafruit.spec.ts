@@ -30,12 +30,18 @@ test('screen and insert a real original only after explicit units and up axis',a
  const bytes=await readFile('tests/fixtures/adafruit/keyplate.stl');
  expect(bytes.length).toBe(original.bytes);
  await page.route(url,route=>route.fulfill({body:bytes,headers:{'access-control-allow-origin':'*'}}));
+ let releaseCatalogue!:()=>void;
+ const catalogueReady=new Promise<void>(resolve=>{releaseCatalogue=resolve;});
+ await page.route('**/model-library-local-*.js',async route=>{await catalogueReady;await route.continue();});
  await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  await page.getByLabel('File menu',{exact:true}).click();await page.getByRole('button',{name:'Model library',exact:true}).click();
  const dialog=page.getByRole('dialog',{name:'Model library',exact:true});await dialog.getByLabel('Search models').fill('5128 MacroPad');
  await dialog.locator('.model-library-card').filter({hasText:'5128 MacroPad RP2040 Kit'}).click();
  await dialog.getByLabel('Original file').selectOption(String(folder.files.indexOf(original)));
  const insert=dialog.getByRole('button',{name:'Screen and insert STL'});await expect(insert).toBeDisabled();
+ releaseCatalogue();
+ await expect(dialog.getByLabel('Model library status')).toBeEmpty();
+ await expect(dialog.getByLabel('Original file')).toHaveValue(String(folder.files.indexOf(original)));
  await dialog.getByLabel('STL source units').selectOption('mm');await dialog.getByLabel('STL source up axis').selectOption('Z');await expect(insert).toBeEnabled();await insert.click();
  await expect(dialog.getByRole('status')).toContainText('STL inserted with provenance');
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!));
