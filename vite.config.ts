@@ -1,7 +1,9 @@
+import {libraryPreviewAssets} from './scripts/library-preview-assets.js';
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 import {preserveDwgClassNames} from './scripts/preserve-dwg-class-names.js';
 export default defineConfig({
+  plugins: [libraryPreviewAssets()],
   root: 'apps/standalone', base: './',
   build: { outDir: '../../dist', emptyOutDir: true, rollupOptions: { input: { main: resolve('apps/standalone/index.html'), embedded: resolve('apps/standalone/embedded.html') } } },
   worker: { format: 'es', plugins: () => [preserveDwgClassNames()] },

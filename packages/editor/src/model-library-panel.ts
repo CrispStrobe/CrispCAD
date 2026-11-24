@@ -33,8 +33,10 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
  if(options?.catalogue){const checked=validateModelLibraryCatalogue(options.catalogue);if(checked.valid)catalogue=checked.catalogue;else initialError=checked.errors.join(' ');}
  const archive=adafruitArchive,archiveCache=options?.cache??createArchiveBrowserCache();
  let archivePreviews:Record<string,string>|undefined,archivePreviewLoading:Promise<void>|undefined;
- const applyArchivePreviews=()=>{for(const image of dialog.querySelectorAll<HTMLImageElement>('img[data-adafruit-preview]')){const source=archivePreviews?.[image.dataset.adafruitPreview!];if(source)image.src=source;}};
- const loadArchivePreviews=()=>archivePreviewLoading??=(import('./adafruit-preview-data.json').then(({default:data})=>{if(data.upstreamCommit!==archive.upstreamCommit||data.archiveCommit!==archive.commit)throw new Error('Adafruit preview source revision mismatch');if(disposed)return;archivePreviews=data.previews;applyArchivePreviews();}).finally(()=>{archivePreviewLoading=undefined;}));
+ const loadArchivePreviews=()=>archivePreviewLoading??=(import('brickwright:adafruit-previews').then(({default:data})=>{
+   if(data.upstreamCommit!==archive.upstreamCommit||data.archiveCommit!==archive.commit)throw new Error('Adafruit preview source revision mismatch');
+   archivePreviews=data.previews;
+ }).finally(()=>{archivePreviewLoading=undefined;}));
  let loading:Promise<void>|undefined,loaded=!options?.load;
  const localFiles=new Map([...options?.localFiles??[]].map(([path,bytes])=>[path,bytes.slice()]));
  let disposed=false,working=false,selected:ModelLibraryAsset|undefined,archiveSelection:ModelLibraryArchive['folders'][number]|undefined,controller:AbortController|undefined,selectedProject:ModelLibraryProject|undefined;
@@ -53,8 +55,20 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
  const link=(label:string,url:string)=>{const a=el('a',label);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;};
  const sourceFor=(asset:ModelLibraryAsset)=>[asset.editableSource,asset.original].find(source=>source?.path&&['cad-script','openscad','jscad'].includes(source.format));
  function badge(asset:ModelLibraryAsset){const tag=el('span',asset.licence.spdx);tag.className='licence-tag';tag.dataset.licence=asset.licence.spdx;return tag;}
- function image(asset:ModelLibraryAsset){const url=options?.previews?.get(asset.original.sha256);if(url){const img=el('img');img.src=url;img.alt=asset.title;img.draggable=false;return img;}const placeholder=el('span','◇');placeholder.className='preview-unavailable';placeholder.title=t('Preview unavailable');placeholder.setAttribute('aria-label',t('Preview unavailable'));return placeholder;}
- function archiveImage(folder:ModelLibraryArchive['folders'][number]){if(folder.name==='Adafruit archive files'){const label=el('span','≡');label.className='preview-unavailable';label.title=t('Original source files');return label;}const image=el('img');image.alt=folder.name;image.loading='lazy';image.draggable=false;image.dataset.adafruitPreview=folder.name;const url=archivePreviews?.[folder.name];if(url)image.src=url;return image;}
+ function image(asset:ModelLibraryAsset){
+  const url=options?.previews?.get(asset.original.sha256);
+  if(url)return previewImage(asset.title,()=>url);
+  const placeholder=el('span','◇');placeholder.className='preview-unavailable';placeholder.title=t('Preview unavailable');return placeholder;
+ }
+ function archiveImage(folder:ModelLibraryArchive['folders'][number]){
+  if(folder.name==='Adafruit archive files'){const label=el('span','≡');label.className='preview-unavailable';label.title=t('Original source files');return label;}
+  const image=previewImage(folder.name,()=>{
+   if(archivePreviews)return archivePreviews[folder.name];
+   return loadArchivePreviews().then(()=>archivePreviews?.[folder.name]);
+  });
+  image.dataset.adafruitPreview=folder.name;
+  return image;
+ }
  function renderList(){
   const scroll=list.scrollTop;clearPreviews(list);list.replaceChildren();
   const terms=fold(search.value).trim().split(/\s+/).filter(Boolean);
@@ -69,7 +83,7 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
    card.onclick=()=>{selectedProject=project;selected=undefined;archiveSelection=undefined;renderList();renderDetails();};
    list.append(card);
   }
-  for(const asset of matches){const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;card.setAttribute('aria-label',`${asset.title} · ${asset.licence.spdx}`);card.setAttribute('aria-pressed',String(selected?.id===asset.id));const name=el('strong',asset.title),meta=el('span');meta.className='model-card-meta';meta.append(badge(asset),el('small',sourceFor(asset)?t('Editable source'):t('Mesh')));card.append(image(asset),name,meta);card.onclick=()=>{selectedProject=undefined;selected=asset;archiveSelection=undefined;renderList();renderDetails();};list.append(card);}for(const folder of archiveMatches){const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;card.setAttribute('aria-pressed',String(archiveSelection===folder));card.dataset.archiveFolder=folder.name;card.append(archiveImage(folder),el('strong',folder.name),el('small',t('Adafruit · Original files')));card.onclick=()=>{selectedProject=undefined;selected=undefined;archiveSelection=folder;renderList();renderDetails();if(folder.name!=='Adafruit archive files'&&!archivePreviews)void loadArchivePreviews().catch(error=>{if(!disposed)report(error);});};list.append(card);}list.scrollTop=scroll;
+  for(const asset of matches){const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;card.setAttribute('aria-label',`${asset.title} · ${asset.licence.spdx}`);card.setAttribute('aria-pressed',String(selected?.id===asset.id));const name=el('strong',asset.title),meta=el('span');meta.className='model-card-meta';meta.append(badge(asset),el('small',sourceFor(asset)?t('Editable source'):t('Mesh')));card.append(image(asset),name,meta);card.onclick=()=>{selectedProject=undefined;selected=asset;archiveSelection=undefined;renderList();renderDetails();};list.append(card);}for(const folder of archiveMatches){const card=el('button');card.type='button';card.className='model-library-card';card.disabled=working;card.setAttribute('aria-pressed',String(archiveSelection===folder));card.dataset.archiveFolder=folder.name;card.append(archiveImage(folder),el('strong',folder.name),el('small',t('Adafruit · Original files')));card.onclick=()=>{selectedProject=undefined;selected=undefined;archiveSelection=folder;renderList();renderDetails();};list.append(card);}list.scrollTop=scroll;
  }
  function appendInfo(asset:ModelLibraryAsset,technical:HTMLElement){
   const licence=el('section');licence.className='model-library-licence';licence.append(el('h4',t('Licence & attribution')));
@@ -78,25 +92,39 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
   const advanced=el('details');advanced.className='model-library-technical';advanced.append(el('summary',t('Technical details')),technical);details.append(advanced);
  }
  function optionalNotes(){const label=el('label',t('Notes (optional)')),notes=el('input');notes.type='text';notes.maxLength=3500;notes.setAttribute('aria-label',t('Incorporation modification notes'));notes.placeholder=t('Notes (optional)');label.className='library-notes';label.append(notes);return {label,notes};}
- const pendingProjectPreviews=new WeakMap<Element,()=>string>();
- const previewObserver=new IntersectionObserver(entries=>{
+ type PreviewSource=()=>string|undefined|Promise<string|undefined>;
+ const pendingPreviews=new WeakMap<Element,PreviewSource>();
+ const showPreview=async(image:HTMLImageElement)=>{
+  const load=pendingPreviews.get(image);
+  pendingPreviews.delete(image);
+  if(!load||!image.isConnected||disposed)return;
+  try{const url=await load();if(url&&image.isConnected&&!disposed)image.src=url;}
+  catch{if(image.isConnected&&!disposed)image.alt=t('Preview unavailable');}
+ };
+ const previewObserver=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{
   for(const entry of entries){
    if(!entry.isIntersecting)continue;
-   previewObserver.unobserve(entry.target);
-   const image=entry.target as HTMLImageElement,loadPreview=pendingProjectPreviews.get(image);
-   pendingProjectPreviews.delete(image);
-   if(loadPreview&&image.isConnected){try{image.src=loadPreview();}catch{image.alt=t('Preview unavailable');}}
+   previewObserver?.unobserve(entry.target);
+   void showPreview(entry.target as HTMLImageElement);
   }
- });
+ },{rootMargin:'96px'}):null;
  function clearPreviews(container:HTMLElement){
-  for(const image of container.querySelectorAll('img[data-project-preview]'))previewObserver.unobserve(image);
+  for(const image of container.querySelectorAll('img[data-library-preview]')){
+   previewObserver?.unobserve(image);
+   pendingPreviews.delete(image);
+  }
+ }
+ function previewImage(alt:string,load:PreviewSource){
+  const image=el('img');image.alt=alt;image.decoding='async';image.draggable=false;
+  image.dataset.libraryPreview='';pendingPreviews.set(image,load);
+  if(previewObserver)previewObserver.observe(image);
+  else queueMicrotask(()=>{void showPreview(image);});
+  return image;
  }
  function projectImage(project:ModelLibraryProject){
-  if(!project.preview){const placeholder=el('span','◇');placeholder.className='preview-unavailable';return placeholder;}
-  const image=el('img');image.alt='';image.loading='lazy';image.draggable=false;
-  if(typeof project.preview==='string')image.src=project.preview;
-  else{image.dataset.projectPreview='';pendingProjectPreviews.set(image,project.preview);previewObserver.observe(image);}
-  return image;
+  const source=project.preview;
+  if(!source){const placeholder=el('span','◇');placeholder.className='preview-unavailable';return placeholder;}
+  return previewImage('',typeof source==='string'?()=>source:source);
  }
  function renderProject(project:ModelLibraryProject){
   const preview=el('div');preview.className='model-library-preview';preview.append(projectImage(project));
@@ -191,5 +219,5 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
  search.oninput=renderList;
  filter.onchange=()=>{selectedProject=undefined;selected=undefined;archiveSelection=undefined;renderList();renderDetails();};
  file.onchange=async()=>{const chosen=file.files?.[0];file.value='';if(!chosen||working)return;try{if(chosen.size>4*1024*1024)throw new Error(t('Catalogue exceeds 4 MiB'));const parsed=parseModelLibraryCatalogue(await chosen.text());if(disposed||working)return;if(!parsed.valid)throw new Error(parsed.errors.join(' '));catalogue=parsed.catalogue;selectedProject=undefined;selected=undefined;archiveSelection=undefined;search.value=filter.value='';status.textContent='';renderList();renderDetails();}catch(error){report(error);}};
- return {open(filterMode?:'projects'){if(!disposed&&!dialog.open){if(filterMode){filter.value=filterMode;search.value='';selectedProject=undefined;selected=undefined;archiveSelection=undefined;}renderList();if(!working)renderDetails();dialog.showModal();search.focus();if(!loaded){status.textContent=t('Loading models…');loading??=options!.load!().then(data=>{if(disposed)return;const checked=validateModelLibraryCatalogue(data.catalogue);if(!checked.valid)throw new Error(checked.errors.join(' '));catalogue=checked.catalogue;options={...options,...data};localFiles.clear();for(const [path,bytes]of data.localFiles??[])localFiles.set(path,bytes.slice());loaded=true;status.textContent='';renderList();renderDetails();}).catch(error=>{if(!disposed)report(error);}).finally(()=>{loading=undefined;});}}},dispose(){disposed=true;controller?.abort();previewObserver.disconnect();dialog.remove();}};
+ return {open(filterMode?:'projects'){if(!disposed&&!dialog.open){if(filterMode){filter.value=filterMode;search.value='';selectedProject=undefined;selected=undefined;archiveSelection=undefined;}renderList();if(!working)renderDetails();dialog.showModal();search.focus();if(!loaded){status.textContent=t('Loading models…');loading??=options!.load!().then(data=>{if(disposed)return;const checked=validateModelLibraryCatalogue(data.catalogue);if(!checked.valid)throw new Error(checked.errors.join(' '));catalogue=checked.catalogue;options={...options,...data};localFiles.clear();for(const [path,bytes]of data.localFiles??[])localFiles.set(path,bytes.slice());loaded=true;status.textContent='';renderList();renderDetails();}).catch(error=>{if(!disposed)report(error);}).finally(()=>{loading=undefined;});}}},dispose(){disposed=true;controller?.abort();previewObserver?.disconnect();dialog.remove();}};
 }

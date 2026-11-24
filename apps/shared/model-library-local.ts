@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+/// <reference path="../../packages/editor/src/library-preview-assets.d.ts" />
 import {bundledSourceFiles,bundledAssetLicenceTexts} from './model-library-files.js';
 import {createLocalModelLibraryCatalogue, parseModelLibraryCatalogue, validateModelLibraryCatalogue} from '@brickwright/cad-core';
 import manifestText from '../../library/examples-manifest.json?raw';
@@ -11,7 +12,7 @@ import jscadText from '../../library/jscad-editor-manifest.json?raw';
 import ldrawText from '../../library/ldraw-editor-manifest.json?raw';
 import ldrawBatchText from '../../library/ldraw-reviewed-batch-manifest.json?raw';
 import seedText from '../../library/seed-catalogue.json?raw';
-import previewText from '../../library/previews.json?raw';
+import previewData from 'brickwright:cad-model-previews';
 import bsdNotice from '../../library/evidence/brickwright-examples-LICENSE.txt?raw';
 import cc0Notice from '../../library/evidence/slicer-test-models-LICENSE.md?raw';
 import mitNotice from '../../library/evidence/jscad-LICENSE.txt?raw';
@@ -46,7 +47,7 @@ export function createBundledModelLibrary() {
   gear.licence.attribution += ` Applicable original JSCAD MIT notice (retained for source and converted geometry; line breaks normalized to spaces): ${mitNotice.replace(/\r?\n/g, ' ')}`;
   const checked = validateModelLibraryCatalogue({...examples, assets: [...examples.assets, ...fixtures.assets, ...createLocalModelLibraryCatalogue(JSON.parse(supportedText)).assets, gear, ...corpus.assets, ...a2d.assets, ...scon.assets, ...jscad.assets, ...ldraw.assets]});
   if (!checked.valid) throw new Error(checked.errors.join(' '));
-  const previews=new Map<string,string>(Object.entries(JSON.parse(previewText).previews));
+  const previews=new Map<string,string>(Object.entries(previewData.previews));
   for(const asset of checked.catalogue.assets)if(!previews.has(asset.original.sha256))throw new Error('Missing bundled model preview: '+asset.id);
   return {catalogue:checked.catalogue,localFiles,previews,licenceTexts:new Map([['BSD-3-Clause',bsdNotice],['CC0-1.0',cc0Notice],['MIT',mitNotice],...bundledAssetLicenceTexts([manifestText,fixtureText,supportedText,corpusText,a2dText,sconText,jscadText,ldrawText,ldrawBatchText,seedText].flatMap(text=>JSON.parse(text).assets),licenceDocuments)])};
 }
