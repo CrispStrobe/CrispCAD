@@ -362,8 +362,42 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
       el('pre',JSON.stringify(report,null,2)));
     container.append(expanded);
   }
+ function loadCatalogue(){
+  if(loaded||filter.value==='projects')return;
+  if(!working)status.textContent=t('Loading models…');
+  loading??=Promise.resolve().then(()=>options!.load!()).then(data=>{
+   if(disposed||loaded)return;
+   const checked=validateModelLibraryCatalogue(data.catalogue);
+   if(!checked.valid)throw new Error(checked.errors.join(' '));
+   catalogue=checked.catalogue;options={...options,...data};
+   localFiles.clear();
+   for(const [path,bytes]of data.localFiles??[])localFiles.set(path,bytes.slice());
+   loaded=true;
+   if(filter.value==='projects')return;
+   if(!working)status.textContent='';
+   renderList();
+   if(!working)renderDetails();
+  }).catch(error=>{
+   if(!disposed&&!loaded&&!working&&filter.value!=='projects')report(error);
+  }).finally(()=>{loading=undefined;});
+ }
  search.oninput=()=>{resetPage();renderList();};
- filter.onchange=()=>{resetPage();selectedProject=undefined;selected=undefined;archiveSelection=undefined;renderList();renderDetails();};
- file.onchange=async()=>{const chosen=file.files?.[0];file.value='';if(!chosen||working)return;try{if(chosen.size>4*1024*1024)throw new Error(t('Catalogue exceeds 4 MiB'));const parsed=parseModelLibraryCatalogue(await chosen.text());if(disposed||working)return;if(!parsed.valid)throw new Error(parsed.errors.join(' '));catalogue=parsed.catalogue;resetPage();selectedProject=undefined;selected=undefined;archiveSelection=undefined;search.value=filter.value='';status.textContent='';renderList();renderDetails();}catch(error){report(error);}};
- return {open(filterMode?:'projects'){if(!disposed&&!dialog.open){if(filterMode){resetPage();filter.value=filterMode;search.value='';selectedProject=undefined;selected=undefined;archiveSelection=undefined;}renderList();if(!working)renderDetails();dialog.showModal();search.focus();if(!loaded){status.textContent=t('Loading models…');loading??=options!.load!().then(data=>{if(disposed)return;const checked=validateModelLibraryCatalogue(data.catalogue);if(!checked.valid)throw new Error(checked.errors.join(' '));catalogue=checked.catalogue;options={...options,...data};localFiles.clear();for(const [path,bytes]of data.localFiles??[])localFiles.set(path,bytes.slice());loaded=true;status.textContent='';renderList();renderDetails();}).catch(error=>{if(!disposed)report(error);}).finally(()=>{loading=undefined;});}}},dispose(){disposed=true;controller?.abort();previewObserver?.disconnect();recentCards.clear();cards.clear();dialog.remove();}};
+ filter.onchange=()=>{
+  resetPage();selectedProject=undefined;selected=undefined;archiveSelection=undefined;
+  if(filter.value==='projects'&&!loaded&&!working)status.textContent='';
+  renderList();renderDetails();loadCatalogue();
+ };
+ file.onchange=async()=>{const chosen=file.files?.[0];file.value='';if(!chosen||working)return;try{if(chosen.size>4*1024*1024)throw new Error(t('Catalogue exceeds 4 MiB'));const parsed=parseModelLibraryCatalogue(await chosen.text());if(disposed||working)return;if(!parsed.valid)throw new Error(parsed.errors.join(' '));catalogue=parsed.catalogue;loaded=true;resetPage();selectedProject=undefined;selected=undefined;archiveSelection=undefined;search.value=filter.value='';status.textContent='';renderList();renderDetails();}catch(error){if(!disposed)report(error);}};
+ return {
+  open(filterMode?:'projects'){
+   if(disposed||dialog.open)return;
+   if(filterMode){
+    resetPage();filter.value=filterMode;search.value='';selectedProject=undefined;selected=undefined;archiveSelection=undefined;
+    if(!loaded&&!working)status.textContent='';
+   }
+   renderList();if(!working)renderDetails();
+   dialog.showModal();search.focus();loadCatalogue();
+  },
+  dispose(){disposed=true;controller?.abort();previewObserver?.disconnect();recentCards.clear();cards.clear();dialog.remove();}
+ };
 }
