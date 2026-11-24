@@ -12,7 +12,7 @@ import type {ModelRevision} from '@brickwright/cad-history';
 import {saveProject,decodeProject,scheduleLibrarySave,flushLibrary,initializeLibrary} from './library.js';
 import {mountAppDialogs} from './app-dialogs.js';
 import {createModelLibraryBrowserCache} from './model-library-cache.js';
-import {createBundledModelLibraryOptions} from '../../shared/model-library-local.js';
+import type {createBundledModelLibraryOptions} from '../../shared/model-library-local.js';
 import {mountDesktopHost} from './desktop.js';
 try { setLocale(localStorage.getItem('brickwright-cad:locale') ?? navigator.language); } catch { setLocale(navigator.language); }
 localizeHost();
@@ -75,7 +75,10 @@ function start(doc?: CadDocument) {
   try {
     editor = mountCadEditor(root, {
       colorMode,
-      modelLibrary:{cache:createModelLibraryBrowserCache(),load:async()=>bundledModelLibrary??=createBundledModelLibraryOptions()},
+      modelLibrary:{cache:createModelLibraryBrowserCache(),load:async()=>{
+        const {createBundledModelLibraryOptions}=await import('../../shared/model-library-local.js');
+        return bundledModelLibrary??=createBundledModelLibraryOptions();
+      }},
       document: doc, wasmURL: new URL('../cad-assets/manifold.wasm', import.meta.url).href,
       headerContent:hostActions,surfaceSnap,onSurfaceSnapChange:saveSurfaceSnap,navigationPreset,resizeControls,gridDisplay,rightPane,shapeBrowserLayout,onShapeBrowserLayoutChange:saveShapeBrowser,nativeMenus:desktop.available,
       showTransformReadout:showReadout,onTransformReadoutChange:saveReadout,appearance,

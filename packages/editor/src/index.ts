@@ -4,7 +4,7 @@ import {mountSimulationPanel} from './simulation-panel.js';
 import {mountScrewRedesign} from './screw-redesign.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import {prepareMeshExport} from './export-policy.js';
-import {mountModelLibraryPanel, type ModelLibraryOptions, type ModelLibraryProject} from './model-library-panel.js';
+import type {mountModelLibraryPanel, ModelLibraryOptions, ModelLibraryProject} from './model-library-panel.js';
 export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
 import { t } from '@brickwright/cad-core';
@@ -169,13 +169,22 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const partsToggle = button('Objects', () => togglePanel(tree, partsToggle), status, 'panel-toggle objects-toggle');
   partsToggle.title = t('Show objects');
   const propertiesToggle = button('Properties', () => togglePanel(inspector, propertiesToggle), status, 'panel-toggle properties-toggle');
-  const modelLibraryPanel=mountModelLibraryPanel(shell,session,doc=>client.evaluate(doc),options.modelLibrary,async()=>{await whenIdle();viewport.frame();},options.onExport,options.presetProjects&&{
-    open:options.presetProjects.open,
-    items:options.presetProjects.items.map(item=>{
-      const preset=shapeCatalog.find(shape=>shape.id===item.id);
-      return {...item,preview:item.preview??(preset?()=>presetPreview(preset):undefined)};
-    })
-  });
+  let modelLibraryPanel:ReturnType<typeof mountModelLibraryPanel>|undefined;
+  async function openModelLibrary(filter?:'projects'){
+    if(disposed)return;
+    if(!modelLibraryPanel){
+      const {mountModelLibraryPanel}=await import('./model-library-panel.js');
+      if(disposed)return;
+      modelLibraryPanel??=mountModelLibraryPanel(shell,session,doc=>client.evaluate(doc),options.modelLibrary,async()=>{await whenIdle();viewport.frame();},options.onExport,options.presetProjects&&{
+        open:options.presetProjects.open,
+        items:options.presetProjects.items.map(item=>{
+          const preset=shapeCatalog.find(shape=>shape.id===item.id);
+          return {...item,preview:item.preview??(preset?()=>presetPreview(preset):undefined)};
+        })
+      });
+    }
+    modelLibraryPanel.open(filter);
+  }
   const parametersPanel=mountParametersPanel(shell,session);
   const sketchPanel=mountSketchPanel(shell,session,doc=>client.evaluate(doc),client.offsetSketch,async()=>{await whenIdle();viewport.frame();},()=>grid);
   button('Sketch',()=>sketchPanel.open(),toolbar,'compact-icon').title=t('Create a dimensioned sketch and extrusion');
@@ -309,8 +318,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const toolbarResize=new ResizeObserver(updateToolbarLayout);toolbarResize.observe(toolbar);
   if(options.toolbarContent)toolbarResize.observe(options.toolbarContent);
   toolGroup('File', 'file-tools');
-  button('Model library',()=>modelLibraryPanel.open());
-  if(options.embedded)button('Model library',()=>modelLibraryPanel.open(),toolbar,'compact-icon').style.order='-1';
+  button('Model library',()=>openModelLibrary());
+  if(options.embedded)button('Model library',()=>openModelLibrary(),toolbar,'compact-icon').style.order='-1';
   button('Model source',()=>modelSourcePanel.toggle());
   if(projectsControl){projectsControl.textContent=t('Projects');toolParent.append(projectsControl);}
   if(iterationControl)button('History…',()=>{tree.classList.remove('closed');tree.classList.add('open');partsToggle.setAttribute('aria-pressed','true');iterationControl.focus();});
@@ -744,7 +753,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'projection':projectionButton.click();break;case 'workplane':planeButton.click();break;case 'objects':partsToggle.click();break;case 'properties':propertiesToggle.click();break;case 'drop':viewport.dropSelection();break;case 'parameters':parametersPanel.open();break;case 'sketch':sketchPanel.open();break;case 'sketch-path':pathPanel.open();break;case 'revolve':sketchPanel.openRevolution();break;case 'mirror':openMirror();break;case 'pattern':openPattern();break;
       case 'edit-mirror':mirrorPanel.open(session.state.selection[0],true);break;
       case 'edit-pattern':patternPanel.open(session.state.selection[0],true);break;
-      case 'command-palette':palette.open();break;case 'model-source':modelSourcePanel.toggle();break;case 'model-library':modelLibraryPanel.open();break;case 'robot-projects':modelLibraryPanel.open('projects');break;case 'code':codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);break;case 'readout':readout.setVisible(!readout.visible);break;
+      case 'command-palette':palette.open();break;case 'model-source':modelSourcePanel.toggle();break;case 'model-library':return openModelLibrary();case 'robot-projects':return openModelLibrary('projects');case 'code':codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);break;case 'readout':readout.setVisible(!readout.visible);break;
       case 'shapes':picker.open(true);break;
       case 'union':case 'subtract':case 'intersect':session.combine(command);break;
       default:throw new Error(t('Unknown editor command'));
@@ -785,7 +794,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { simulation.refresh(); viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; fileLifetime.abort(); toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; fileLifetime.abort(); toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel?.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;

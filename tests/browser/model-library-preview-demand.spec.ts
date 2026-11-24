@@ -9,6 +9,7 @@ test('model and Adafruit previews load near the viewport and work offline after 
  await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  await page.waitForFunction(()=>navigator.serviceWorker.controller !== null);
  expect(previewRequests).toEqual([]);
+ await expect(page.locator('#cad-root .model-library-dialog')).toHaveCount(0);
  const before=await page.evaluate(()=>localStorage.getItem('brickwright-cad:standalone:v1'));
  const open=async()=>{
   await page.getByLabel('File menu',{exact:true}).click();
@@ -18,6 +19,7 @@ test('model and Adafruit previews load near the viewport and work offline after 
  const dialog=page.getByRole('dialog',{name:'Model library',exact:true});
  const modelImage=dialog.locator('.model-library-list img').first();
  await expect(modelImage).toHaveJSProperty('naturalWidth',220);
+ await expect(page.locator('#cad-root .model-library-dialog')).toHaveCount(1);
  const cards=dialog.locator('.model-library-card'),first=await cards.first().textContent();
  await expect(cards).toHaveCount(36);
  expect(previewRequests.length).toBeLessThan(40);
