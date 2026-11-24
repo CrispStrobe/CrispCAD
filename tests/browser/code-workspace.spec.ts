@@ -34,3 +34,49 @@ test('retains a stale draft and requires an explicit baseline refresh before rep
  await workspace.getByRole('button',{name:'Use current model',exact:true}).click();await workspace.getByRole('button',{name:'Apply code changes',exact:true}).click();await expect.poll(async()=>(await saved(page)).nodes[id].program.source).toBe(draft);expect((await saved(page)).roots).toEqual([id]);
  await page.getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(async()=>(await saved(page)).nodes[id].program.source).toBe('return box(20, 10, 10);');
 });
+
+test('chooses parameter suggestions with the keyboard and lets focus leave the source',async({page})=>{
+ await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');const before=await saved(page);
+ const workspace=await openWorkspace(page),source=workspace.getByLabel('CAD code source',{exact:true}),suggestions=workspace.getByRole('listbox',{name:'Parameter suggestions',exact:true});
+ const prefix='param width: mm = 40; param wall: mm = 2; return box(w';
+ await source.fill(prefix);await source.press('Control+Space');await expect(suggestions).toBeVisible();
+ await expect(suggestions.getByRole('option',{name:'wall',exact:true})).toHaveAttribute('aria-selected','true');
+ await source.press('ArrowDown');await expect(suggestions.getByRole('option',{name:'width',exact:true})).toHaveAttribute('aria-selected','true');
+ await source.press('Enter');await expect(source).toHaveValue(prefix+'idth');await expect(suggestions).toBeHidden();await expect(source).toBeFocused();
+ await source.fill(prefix);await source.press('Control+Space');await source.press('ArrowUp');await source.press('Tab');
+ await expect(source).toHaveValue(prefix+'idth');await expect(source).toBeFocused();
+ await source.fill(prefix);await source.press('Control+Space');await source.press('Escape');
+ await expect(suggestions).toBeHidden();await expect(workspace).toBeVisible();await expect(source).toHaveValue(prefix);
+ await source.press('Tab');await expect(source).toHaveValue(prefix+'  ');await expect(source).toBeFocused();
+ await source.press('Shift+Tab');await expect(source).not.toBeFocused();expect(await saved(page)).toEqual(before);
+});
+
+test('an old linked Apply completion does not close a reopened workspace',async({page})=>{
+ // Hold only the live-model rebuild after Apply. The trial build still runs,
+ // commits the model, and reaches the panel's pending after() callback.
+ await page.addInitScript(()=>{
+  const original=Worker.prototype.postMessage;
+  const gate={remaining:0,held:false,release:()=>{}};
+  Object.assign(window,{workspaceBuildGate:gate});
+  Worker.prototype.postMessage=function(...args:Parameters<Worker['postMessage']>){
+   const message=args[0] as {document?:unknown;printability?:unknown};
+   if(gate.remaining>0&&message?.document&&!message.printability&&--gate.remaining===0){
+    gate.held=true;gate.release=()=>{gate.held=false;Reflect.apply(original,this,args);};return;
+   }
+   Reflect.apply(original,this,args);
+  };
+ });
+ await page.goto('/');await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ let workspace=await openWorkspace(page);await workspace.getByLabel('CAD code source',{exact:true}).fill('return box(20, 10, 5);');
+ await expect(workspace.getByRole('status',{name:'Code status',exact:true})).toContainText('Preview ready');
+ await page.evaluate(()=>{(window as unknown as {workspaceBuildGate:{remaining:number}}).workspaceBuildGate.remaining=2;});
+ await workspace.getByRole('button',{name:'Create & show model source',exact:true}).click();
+ await expect.poll(()=>page.evaluate(()=>(window as unknown as {workspaceBuildGate:{held:boolean}}).workspaceBuildGate.held)).toBe(true);
+ await expect.poll(async()=>(await saved(page)).roots.length).toBe(1);
+ await workspace.getByRole('button',{name:'Close code',exact:true}).click();workspace=await openWorkspace(page);
+ const draft='return sphere(7);';await workspace.getByLabel('CAD code source',{exact:true}).fill(draft);
+ await page.evaluate(()=>{(window as unknown as {workspaceBuildGate:{release:()=>void}}).workspaceBuildGate.release();});
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await expect(workspace).toBeVisible();await expect(workspace.getByLabel('CAD code source',{exact:true})).toHaveValue(draft);
+ await expect(page.getByLabel('Model source',{exact:true})).toBeHidden();
+});

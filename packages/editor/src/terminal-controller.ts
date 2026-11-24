@@ -3,14 +3,15 @@ import {identityTransform,newId,t} from '@brickwright/cad-core';
 import type {CadSession,Vec3,SessionCommandRecord} from '@brickwright/cad-core';
 import type {CadCommand} from './index.js';
 import {paletteCommands} from './command-palette.js';
-import {parseTerminalPoint,terminalArguments,terminalNumber} from './terminal-coordinates.js';
+import {parseTerminalPoint,terminalArguments,terminalNumber,terminalTokens} from './terminal-coordinates.js';
 
 export interface TerminalStorage {getItem(key:string):string|null;setItem(key:string,value:string):void}
 export interface TerminalEntry {id:number;kind:'input'|'action'|'output'|'error';summary:string;text?:string}
 export interface TerminalPrompt {command:string;message:string;point:boolean;plane?:'XY';base?:Vec3}
 export interface TerminalState {entries:readonly TerminalEntry[];history:readonly string[];prompt?:TerminalPrompt;busy:boolean}
+export interface TerminalCompletion {text:string;caret:number;label:string;description:string}
 type Value=number|Vec3|string[];
-type Step={message:string;point?:boolean;plane?:'XY';parse:(text:string,values:Value[])=>Value};
+type Step={message:string;point?:boolean;plane?:'XY';completion?:'bodies'|'sketches';parse:(text:string,values:Value[])=>Value};
 type Pending={name:string;steps:Step[];values:Value[];revision:number;projectId:string;targets?:string[];finish:(values:Value[])=>void};
 export type TerminalOptions={executeEditorCommand:(command:CadCommand)=>void|Promise<void>;openCodeWorkspace:()=>void;storage?:TerminalStorage};
 type Definition={name:string;aliases:readonly string[];description:string;usage:string};
@@ -40,6 +41,9 @@ export function completeTerminalCommand(text:string):string[] {
  return terminalCommands.filter(entry=>entry.name.startsWith(query)||entry.aliases.some(alias=>alias.startsWith(query)))
   .sort((a,b)=>Number(!a.name.startsWith(query))-Number(!b.name.startsWith(query))||a.name.localeCompare(b.name)).map(entry=>entry.name);
 }
+
+const findCommand=(token:string)=>terminalCommands.find(entry=>entry.name===token.toLowerCase()||entry.aliases.includes(token.toLowerCase()));
+const quoteArgument=(value:string)=>'"'+value.replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"';
 
 export function createTerminalController(session:CadSession,options:TerminalOptions){
  let entries:TerminalEntry[]=[],history:string[]=[],serial=0,pending:Pending|undefined,busy=false,disposed=false,executing=false;
@@ -72,10 +76,53 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
  function selected():string[]{const ids=session.state.selection.filter(id=>session.state.document.roots.includes(id));if(!ids.length)throw new Error(t('Select a top-level body'));return [...ids];}
  function resolveSelection(text:string):string[]{
   if(!text.trim())return selected();
-  const tokens=terminalArguments(text),doc=session.state.document;
-  if(tokens.length===1&&tokens[0].toLowerCase()==='all')return [...doc.roots];
-  if(tokens.length===1&&tokens[0].toLowerCase()==='none')return [];
-  return [...new Set(tokens.map(token=>{if(doc.roots.includes(token))return token;const matches=doc.roots.filter(id=>doc.nodes[id].name===token);if(matches.length!==1)throw new Error(t`Choose one existing object ID or unique name: ${token}`);return matches[0];}))];
+  const tokens=terminalTokens(text),doc=session.state.document;
+  if(tokens.length===1&&!tokens[0].quoted&&tokens[0].value.toLowerCase()==='all')return [...doc.roots];
+  if(tokens.length===1&&!tokens[0].quoted&&tokens[0].value.toLowerCase()==='none')return [];
+  return [...new Set(tokens.map(({value:token})=>{if(doc.roots.includes(token))return token;const matches=doc.roots.filter(id=>doc.nodes[id].name===token);if(matches.length!==1)throw new Error(t`Choose one existing object ID or unique name: ${token}`);return matches[0];}))];
+ }
+ function complete(text:string,caret=text.length):TerminalCompletion[]{
+  if(disposed||busy||text.length>4096)return [];
+  caret=Math.max(0,Math.min(text.length,caret));
+  const before=terminalTokens(text.slice(0,caret),true),last=before.at(-1),current=last?.end===caret?last:undefined;
+  const prior=current?before.slice(0,-1):before,start=current?.start??caret;
+  const end=terminalTokens(text,true).find(token=>token.start===start)?.end??caret;
+  const prefix=current?.value??'',query=prefix.toLowerCase();
+  let kind:'commands'|'bodies'|'sketches'|undefined,argumentsBefore=prior;
+  if(pending){kind=pending.steps[pending.values.length].completion;}
+  else if(!prior.length){kind='commands';}
+  else{
+   const name=findCommand(prior[0].value)?.name;argumentsBefore=prior.slice(1);
+   if(name==='help'&&!argumentsBefore.length)kind='commands';
+   else if(name==='extrude'&&!argumentsBefore.length)kind='sketches';
+   else if(name==='select'&&!/^\s*\[/.test(text.slice(prior[0].end)))kind='bodies';
+  }
+  const choices:{value:string;label:string;description:string}[]=[];
+  if(kind==='commands'){
+   for(const name of completeTerminalCommand(prefix)){const command=findCommand(name)!;choices.push({value:name,label:name,description:t(command.description)});}
+  }else if(kind){
+   if(kind==='sketches'&&argumentsBefore.length)return [];
+   if(kind==='bodies'&&argumentsBefore.some(token=>!token.quoted&&['all','none'].includes(token.value.toLowerCase())))return [];
+   const doc=session.state.document;
+   const entities=kind==='bodies'?doc.roots.map(id=>doc.nodes[id]):Object.values(doc.sketches??{});
+   const names=new Map<string,number>();for(const entity of entities)names.set(entity.name,(names.get(entity.name)??0)+1);
+   const ids=new Set(entities.map(entity=>entity.id));
+   const used=new Set(argumentsBefore.map(token=>token.value));
+   for(const entity of entities){
+    if(kind==='sketches'&&'profile' in entity&&entity.profile.kind==='path')continue;
+    if(used.has(entity.id)||used.has(entity.name))continue;
+    if(entity.name.toLowerCase().startsWith(query)&&entity.name&&!/[\x00-\x1f\x7f]/.test(entity.name)&&names.get(entity.name)===1&&!ids.has(entity.name))choices.push({value:quoteArgument(entity.name),label:entity.name,description:entity.id});
+    if(entity.id.toLowerCase().startsWith(query))choices.push({value:entity.id,label:entity.id,description:entity.name});
+   }
+   choices.sort((a,b)=>Number(!a.value.startsWith('"'))-Number(!b.value.startsWith('"'))||a.label.localeCompare(b.label));
+   if(kind==='bodies'&&!argumentsBefore.length&&!current?.quoted){
+    for(const keyword of ['all','none'])if(keyword.startsWith(query))choices.unshift({value:keyword,label:keyword,description:t(findCommand('select')!.description)});
+   }
+  }
+  return choices.map(choice=>{
+   const suffix=text.slice(end),gap=/^\s*/.exec(suffix)![0].length,replacement=choice.value+(suffix?'':' ');
+   return {text:text.slice(0,start)+replacement+suffix,caret:start+replacement.length+gap,label:choice.label,description:choice.description};
+  });
  }
  const point=(message:string,plane?:'XY',fallback?:()=>Vec3):Step=>({message,point:true,plane,parse:text=>{
   const result=!text.trim()&&fallback?fallback():parseTerminalPoint(text,lastPoint);
@@ -123,16 +170,16 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
    begin(name,args,[point(t('Center: X,Y — type or pick on the XY workplane.'),'XY'),{message:t('Radius (mm).'),parse:dimension}],values=>{const a=values[0] as Vec3;session.addSketch({id:newId(),kind:'circle',center:[a[0],a[1]],radius:values[1] as number,segments:64},{name:t('Circle'),plane:'XY'});});return;
   }
   if(name==='extrude'){
-   begin(name,args,[{message:t('Closed sketch ID or exact name (use list to see sketches).'),parse:text=>{
+   begin(name,args,[{message:t('Closed sketch ID or exact name (use list to see sketches).'),completion:'sketches',parse:text=>{
     const quoted=/^["']/.test(text.trim()),parts=quoted?terminalArguments(text):[];
     if(quoted&&parts.length!==1)throw new Error(t('Choose one closed sketch by ID or unique name.'));
     const target=quoted?parts[0]:text.trim();
-    const sketches=Object.values(session.state.document.sketches??{}),matches=sketches.filter(sketch=>sketch.id===target||sketch.name===target);
+    const sketches=Object.values(session.state.document.sketches??{}),byId=sketches.find(sketch=>sketch.id===target),matches=byId?[byId]:sketches.filter(sketch=>sketch.name===target);
     if(matches.length!==1||matches[0].profile.kind==='path')throw new Error(t('Choose one closed sketch by ID or unique name.'));
     return [matches[0].id];
    }},{message:t('Height (mm).'),parse:dimension}],values=>session.extrudeSketch((values[0] as string[])[0],{distance:values[1] as number}));return;
   }
-  if(name==='select'){begin(name,args.length?[args.join(' ')]:[],[{message:t('Select objects on the canvas, then Enter; or type all, none, an ID or a quoted name.'),parse:resolveSelection}],values=>session.select(values[0] as string[]));return;}
+  if(name==='select'){begin(name,args.length?[args.join(' ')]:[],[{message:t('Select objects on the canvas, then Enter; or type all, none, an ID or a quoted name.'),completion:'bodies',parse:resolveSelection}],values=>session.select(values[0] as string[]));return;}
   if(name==='move'||name==='rotate'||name==='scale'){
    const ids=selected();
    const steps=name==='move'?[point(t('Base point: X,Y,Z — Enter uses the origin.'),undefined,()=>[0,0,0]),point(t('Destination: X,Y,Z or @dX,dY,dZ.'))]:[{message:name==='rotate'?t('Rotation delta: X,Y,Z in degrees.'):t('Scale factors: X,Y,Z, each greater than zero.'),parse:(text:string)=>{const v=vector(text);if(name==='scale')v.forEach(n=>positive(String(n)));return v;}}];
@@ -150,13 +197,16 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
    if(pending){append('input',text||'↵');answer(text);return;}
    const match=/^(\S+)(?:\s+([\s\S]*))?$/.exec(text)!;
    const token=match[1].toLowerCase(),tail=match[2]??'';
-   const definition=terminalCommands.find(entry=>entry.name===token||entry.aliases.includes(token));
+   const definition=findCommand(token);
    if(!definition)throw new Error(t`Unknown command: ${token}. Type help.`);
    const name=definition.name;
    append('input',text.length>240?text.slice(0,237)+'…':text);remember(text);
    if(name==='apply'||name==='select'&&tail.trim().startsWith('[')){session.executeCommand(name+' '+tail);return;}
    const args=name==='select'?(tail.trim()?[tail]:[]):terminalArguments(tail);
+   // A sketch name can itself begin with a quote. Keep its original quoting until the prompt parses it.
+   if(name==='extrude'&&args.length){const first=terminalTokens(tail)[0];args[0]=tail.slice(first.start,first.end);}
    if(name==='help'){
+    if(args.length>1)throw new Error(t('Too many arguments. Use help for command syntax.'));
     const entry=args.length?terminalCommands.find(entry=>entry.name===args[0].toLowerCase()||entry.aliases.includes(args[0].toLowerCase())):undefined;
     if(args.length&&!entry)throw new Error(t('Unknown editor command'));
     append('output',entry?`${entry.usage}\n${t(entry.description)}${entry.aliases.length?'\n'+t('Aliases')+': '+entry.aliases.join(', '):''}`:terminalCommands.map(entry=>`${entry.usage} — ${t(entry.description)}`).join('\n'));return;
@@ -174,7 +224,7 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
   finally{busy=false;emit();}
  }
  return {
-  get state(){return state();},submit,
+  get state(){return state();},submit,complete,
   reportError(error:unknown){append('error',error instanceof Error?error.message:String(error));},
   submitPoint(value:Vec3){if(!pending?.steps[pending.values.length].point)return;return submit(value.join(','));},
   cancel(){if(pending){pending=undefined;append('output',t('Command canceled.'));}},

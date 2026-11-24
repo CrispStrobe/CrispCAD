@@ -72,6 +72,7 @@ export const messages:Record<string,string>={
  'CAD code workspace':'CAD-Code-Arbeitsbereich',
  'Parameter suggestions':'Parametervorschläge',
  'Ctrl+Space: parameter completion · Ctrl+Enter: preview':'Strg+Leertaste: Parameter ergänzen · Strg+Enter: Vorschau',
+ 'Ctrl+Space: parameter completion · Ctrl+Enter: preview · Shift+Tab: leave source':'Strg+Leertaste: Parameter ergänzen · Strg+Enter: Vorschau · Umschalt+Tab: Quelltextfeld verlassen',
  'Use current model':'Aktuelles Modell verwenden',
  'A different design is open. Reopen the code workspace.':'Ein anderer Entwurf ist geöffnet. Öffnen Sie den Code-Arbeitsbereich erneut.',
  'This code object was removed. Restore it with Undo before applying.':'Dieser Code-Körper wurde entfernt. Stellen Sie ihn vor dem Anwenden mit Rückgängig wieder her.',
@@ -82,5 +83,6 @@ export const messages:Record<string,string>={
  'Preview is out of date.':'Die Vorschau ist veraltet.',
  'The model changed. Use current model to keep your draft and review it again.':'Das Modell wurde geändert. Wählen Sie Aktuelles Modell verwenden, um Ihren Entwurf zu behalten und erneut zu prüfen.',
  'Choose a parameter suggestion.':'Wählen Sie einen Parametervorschlag.',
+ 'Choose a parameter suggestion with ↑/↓ and Enter or Tab.':'Wählen Sie mit ↑/↓ einen Parametervorschlag und bestätigen Sie mit Enter oder Tab.',
  'No parameter suggestions.':'Keine Parametervorschläge.',
 };

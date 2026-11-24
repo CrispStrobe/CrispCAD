@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+import {constructionInputs} from './document.js';
 import type {CadDocument} from './document.js';
 
 /** Data only: recorded commands never evaluate JavaScript or contain callbacks. */
@@ -10,6 +11,11 @@ export interface SessionValueChange {
   before:SessionCommandValue;
   after:SessionCommandValue;
 }
+export interface SessionSketchJointContext {
+  sketchId:string;
+  /** Only relationships affect the sketch-edit guard; joint settings may vary. */
+  joints:{id:string;bodyA:string;bodyB:string}[];
+}
 export interface ApplySessionCommand {
   version:1;
   kind:'apply';
@@ -17,6 +23,8 @@ export interface ApplySessionCommand {
   label:string;
   changes:SessionValueChange[];
   selection:string[];
+  /** Optional read dependencies. Older version-1 records contain only writes. */
+  context?:{sketchJoints:SessionSketchJointContext[]};
 }
 export type SessionCommand = ApplySessionCommand
   | {version:1;kind:'select';ids:string[]}
@@ -64,6 +72,28 @@ function checkValue(value:unknown):asserts value is SessionCommandValue{
   onlyKeys(value,value.present?['present','value']:['present']);
   if(value.present){if(!Object.hasOwn(value,'value'))fail('missing value');checkJson(value.value);}
 }
+function checkContext(value:unknown):asserts value is NonNullable<ApplySessionCommand['context']>{
+  if(!object(value))fail('expected command context');
+  onlyKeys(value,['sketchJoints']);
+  if(!Array.isArray(value.sketchJoints)||!value.sketchJoints.length||value.sketchJoints.length>256)fail('expected sketch joint context');
+  const sketches=new Set<string>();
+  for(const entry of value.sketchJoints){
+    if(!object(entry))fail('expected sketch joint context');
+    onlyKeys(entry,['sketchId','joints']);
+    if(!validId(entry.sketchId)||sketches.has(entry.sketchId))fail('expected distinct sketch identifiers');
+    sketches.add(entry.sketchId);
+    if(!Array.isArray(entry.joints)||entry.joints.length>2000)fail('expected joint relationships');
+    const joints=new Set<string>();
+    for(const joint of entry.joints){
+      if(!object(joint))fail('expected joint relationship');
+      onlyKeys(joint,['id','bodyA','bodyB']);
+      // Joint IDs follow the existing physics schema, which permits _ or - first.
+      if(typeof joint.id!=='string'||!/^[a-zA-Z0-9_-]{1,96}$/.test(joint.id)||joints.has(joint.id)
+        ||!validId(joint.bodyA)||!validId(joint.bodyB)||joint.bodyA===joint.bodyB)fail('invalid joint relationship');
+      joints.add(joint.id);
+    }
+  }
+}
 
 /** Validate and detach callers' data before any part of a command is applied. */
 export function copySessionCommand(value:unknown):SessionCommand{
@@ -77,9 +107,10 @@ export function copySessionCommand(value:unknown):SessionCommand{
     return {version:1,kind:'select',ids:[...value.ids]};
   }
   if(value.kind!=='apply')fail('unknown command kind');
-  onlyKeys(value,['version','kind','projectId','label','changes','selection']);
+  onlyKeys(value,['version','kind','projectId','label','changes','selection','context']);
   if(!validId(value.projectId)||typeof value.label!=='string')fail('missing project identity or label');
   checkIds(value.selection);
+  if(value.context!==undefined)checkContext(value.context);
   if(!Array.isArray(value.changes)||!value.changes.length)fail('expected document changes');
   const paths:string[][]=[];
   for(const change of value.changes){
@@ -149,6 +180,19 @@ export function sameSessionValue(left:unknown,right:unknown):boolean{
   return keys.length===other.length&&keys.every(key=>Object.hasOwn(b,key)&&sameSessionValue(a[key],b[key]));
 }
 
+function sketchJointRelationships(document:CadDocument,sketchId:string):SessionSketchJointContext['joints']{
+  const related=new Map<string,boolean>();
+  function uses(id:string):boolean{
+    if(related.has(id))return related.get(id)!;
+    const node=document.nodes[id];
+    const result=!!node&&(node.kind==='extrusion'||node.kind==='revolution'
+      ?node.sketchId===sketchId:constructionInputs(node).some(uses));
+    related.set(id,result);return result;
+  }
+  return (document.joints??[]).filter(joint=>uses(joint.bodyA)||uses(joint.bodyB))
+    .map(({id,bodyA,bodyB})=>({id,bodyA,bodyB})).sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
+}
+
 /** @internal Capture the accepted result, including derived parameter/source edits. */
 export function createDocumentCommand(before:CadDocument,after:CadDocument,label:string,selection:readonly string[]):ApplySessionCommand{
   if(before.id!==after.id)fail('commands must preserve the project identity');
@@ -162,7 +206,14 @@ export function createDocumentCommand(before:CadDocument,after:CadDocument,label
     changes.push({path,before:storedValue(a),after:storedValue(b)});
   }
   visit(before,after,[]);
-  return {version:1,kind:'apply',projectId:before.id,label,changes,selection:[...selection]};
+  // A sketch edit reads its joint relationships even when it does not write them.
+  // Capture the before-context so accepted assembly edits can still replay their
+  // coordinated sketch/joint changes, while newly attached joints make it stale.
+  const sketchJoints=Object.entries(before.sketches??{})
+    .filter(([id,sketch])=>!sameSessionValue(sketch,after.sketches?.[id]))
+    .map(([sketchId])=>({sketchId,joints:sketchJointRelationships(before,sketchId)}));
+  return {version:1,kind:'apply',projectId:before.id,label,changes,selection:[...selection],
+    ...(sketchJoints.length?{context:{sketchJoints}}:{})};
 }
 
 function location(document:CadDocument,path:readonly string[]):{parent:Record<string,unknown>;key:string}{
@@ -178,6 +229,11 @@ function location(document:CadDocument,path:readonly string[]):{parent:Record<st
 /** @internal Apply to a private candidate only, after checking every precondition. */
 export function applyDocumentCommand(document:CadDocument,command:ApplySessionCommand):CadDocument{
   if(command.projectId!==document.id)throw new Error('Recorded command belongs to a different project');
+  for(const entry of command.context?.sketchJoints??[]){
+    if(!document.sketches||!Object.hasOwn(document.sketches,entry.sketchId)
+      ||!sameSessionValue(sketchJointRelationships(document,entry.sketchId),entry.joints))
+      throw new Error(`Recorded command is stale: joint relationships changed for sketch ${entry.sketchId}`);
+  }
   for(const change of command.changes){
     const {parent,key}=location(document,change.path),current=Object.hasOwn(parent,key)?parent[key]:undefined;
     if(change.before.present?current===undefined||!sameSessionValue(current,change.before.value):current!==undefined)

@@ -15,8 +15,11 @@ The standalone app remembers visibility locally; the default is closed.
 
 - **Enter** submits input or accepts a displayed default. With no pending prompt,
   an empty Enter repeats the most recent command line.
-- **Tab** completes a command name; repeated Tab cycles matches. Completion never
-  runs a command. Shift+Tab cycles in the other direction.
+- **Tab** completes commands, the argument to `help`, body names/IDs for `select`,
+  and closed-sketch names/IDs for `extrude`. The same entity choices work at their
+  interactive prompts. Repeated Tab cycles matches; Shift+Tab cycles backward.
+  Completion never runs a command and preserves later arguments when the caret
+  is in the middle of a line.
 - **Up/Down** recalls command input and restores the unfinished input at the end
   of the history list. Prompt responses are separate from command history.
 - **Escape** cancels a pending command. Partial input creates no model edit.
@@ -26,6 +29,10 @@ The standalone app remembers visibility locally; the default is closed.
 Command names and fixed aliases are case-insensitive. Object names use exact
 matching; quote names with spaces. Unknown, ambiguous, extra or invalid input
 reports an error. Invalid prompt input leaves that prompt available for correction.
+Completion inserts quotes and escapes automatically. Duplicate names are offered
+by stable ID instead. Quoted `"all"` and `"none"` select objects with those names;
+the unquoted words are selection keywords. An exact object or sketch ID takes
+precedence over a name that happens to look like that ID.
 A model revision made elsewhere cancels a pending command rather than applying
 its old input to changed geometry. Changing the selected bodies also cancels a
 pending transform, so it cannot act on bodies that are no longer highlighted.
@@ -148,6 +155,16 @@ usually reports a stale command. To try a record, Undo its original action and
 then replay it. It is not a request to create another independent copy; use
 `duplicate` or another creation command for that.
 
+New records that change an existing sketch also carry optional
+`context.sketchJoints` read preconditions. These record the joint relationships
+of dependent solids, including dependencies through booleans, mirrors and
+patterns. Attaching or reconnecting a joint before replay makes the edit stale,
+even when its written sketch coordinates are unchanged. Unrelated names, colors
+and joints remain untouched. Accepted assembly edits that change a sketch and
+its joints together still replay as one transaction. Older version-1 records
+without this context keep their original structural checks. Capturing the read
+dependencies of every other editing policy remains follow-up work.
+
 Every successfully completed modeling operation enters the existing Undo stack
 once. There is no terminal Undo stack and no saved-document schema migration.
 Viewing the transcript, changing visibility, typing, completing, and previewing
@@ -174,14 +191,19 @@ input and the transient transcript and loads that project's input history.
 
 Enter `code`, use the terminal's **Code workspace** button, or choose that command
 in the command palette. A selected code object opens for editing; otherwise the
-workspace resumes its last applicable draft. **New code draft** starts another
-object. The original **Code** modal remains available for the established flow.
+workspace resumes its last applicable draft. **New code draft** opens the
+project's retained new-object draft, preserving any unapplied source already
+there. Once that draft is applied, the next new draft starts another object.
+The original **Code** modal remains available for the established flow.
 
 The workspace keeps source, object name, parameter overrides, target identity and
 the source baseline. Its local draft does not change the CAD model. Preview runs
 after a 450 ms pause and shows geometry and compiler diagnostics. Ctrl/Command+
 Enter explicitly previews, and Ctrl/Command+Space completes declared parameter
-identifiers. Explicit build errors select the compiler's reported source location.
+identifiers. For multiple suggestions, Up/Down changes the highlighted choice,
+Enter or Tab inserts it, and Escape dismisses the suggestions. With suggestions
+closed, Tab indents and Shift+Tab leaves the source field. Explicit build errors
+select the compiler's reported source location.
 
 **Create code object** or **Apply code changes** validates the source and geometry,
 commits one edit, and leaves the workspace open. Applying again edits the same
@@ -191,9 +213,14 @@ code node and travels with saved projects and their history.
 
 If another action changes the model or the saved source, Apply is blocked.
 **Use current model** explicitly refreshes the baseline while retaining the
-draft for review. If the target was removed, restore it with Undo or begin a new
+draft for review. Refreshing also invalidates any preview or Apply already in
+flight; accepting the refreshed draft still requires a new explicit Apply.
+If the target was removed, restore it with Undo or begin a new
 draft. Late previews and file imports from a closed/replaced workspace cannot
 overwrite the active editor or commit old input.
+The linked **Apply & show model source** action also checks that the same view,
+draft and model are still current after its asynchronous rebuild. Closing or
+replacing the workspace suppresses that old navigation callback.
 
 Local draft storage retains up to 16 recently used drafts across projects, with
 the CAD Script compiler's existing 32 KiB UTF-8 source limit. It is bounded to
@@ -201,6 +228,12 @@ the CAD Script compiler's existing 32 KiB UTF-8 source limit. It is bounded to
 cross-device use. Unavailable/full storage is reported in the workspace, and the
 active draft remains available in memory. Embedded hosts choose their storage
 adapter; without one, drafts/history remain in memory for that mounted editor.
+Each save or removal merges this editor's outstanding changes into the latest
+readable stored collection. Sequential editor instances therefore preserve one
+another's unrelated drafts, and failed writes remain available for retry.
+The synchronous adapter has no cross-tab transaction or conflict-resolution
+protocol: simultaneous writes can still race, and the same draft uses the last
+successful write.
 
 ## Host and core APIs
 
@@ -251,14 +284,36 @@ points, aliases/completion, selected-body transforms, sketch/extrusion identity,
 GUI-to-text-to-replay roundtrips, stale and invalid rejection, source/draft
 persistence, and compatibility with existing model history.
 
+Run the focused checks with:
+
+```sh
+npm run test:terminal
+```
+
+This builds the packages and runs the command, completion, draft-store and panel
+regressions. `tests/editor-panels.test.ts` mounts the actual terminal and code
+panels in a ShadowRoot with real CAD sessions. It checks focus, history, prompt
+cancellation, quoted entity completion, one-step Apply, parameter keyboard
+navigation, and stale asynchronous callbacks. Geometry evaluation, preview
+rendering and pointer hit testing are stubbed; these checks do not qualify
+WebGL, layout or touch. The pinned MIT `happy-dom` package is a test-only dependency.
+
 Browser scenarios in `tests/browser/terminal.spec.ts` and
 `tests/browser/code-workspace.spec.ts` cover mixed pointer/typed input, focus,
 history recall, GUI replay, draft reload, live preview, explicit Apply and stale
-source review. They must run on a machine permitted to launch Chromium/WebKit;
-the implementation environment could build/discover them but could not launch
-Chromium because its sandbox denied browser IPC sockets.
+source review, including argument completion and linked-Apply lifecycle changes.
+Run them on a machine with Chromium/WebKit installed:
 
-Next milestones are configurable aliases; argument and entity completion;
+```sh
+npx playwright test tests/browser/terminal.spec.ts tests/browser/code-workspace.spec.ts
+```
+
+Browser qualification remains open. The initial implementation environment
+denied browser IPC; this follow-up environment could not install the browsers
+because the Playwright download host returned HTTP 403. Test discovery and DOM
+interaction checks are not a substitute for those browser runs.
+
+Next milestones are configurable aliases; completion for further command arguments;
 active sketch planes and advanced snaps; continuous paths/arcs and constraint
 prompts; more readable action serializers; transaction-based command scripts;
 durable journal export and cross-project replay; complete view-command capture;

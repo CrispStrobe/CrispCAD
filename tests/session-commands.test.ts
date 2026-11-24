@@ -118,6 +118,83 @@ describe('replayable session commands',()=>{
     expect(session.state.document.nodes[id].color).not.toBe('#123456');
   });
 
+  it('rejects a recorded sketch edit when a joint was attached to its dependent body',()=>{
+    const session=createCadSession(),sketch=session.addSketch({kind:'rectangle',id:'profile',width:20,depth:30});
+    const extrusion=session.extrudeSketch(sketch,{distance:8}),operand=session.add(box());
+    const body=session.combine('union',[extrusion,operand]),other=session.add(box()),{records}=observe(session);
+    const patch={profile:{kind:'rectangle' as const,id:'profile',width:25,depth:30}};
+    session.updateSketch(sketch,patch);const record=applyRecord(records);
+    expect(record.command.context).toEqual({sketchJoints:[{sketchId:sketch,joints:[]}]});
+    session.undo();session.addJoint('fixed',body,other,[0,0,0],[0,0,1]);
+    const before=session.serialize(),history=session.history,revision=session.state.revision,count=records.length;
+    expect(()=>session.updateSketch(sketch,patch)).toThrow(/Detach joints/);
+    expect(()=>session.executeCommand(record.text)).toThrow(/stale: joint relationships/);
+    expect(session.serialize()).toBe(before);expect(session.history).toEqual(history);
+    expect(session.state.revision).toBe(revision);expect(records).toHaveLength(count);
+  });
+
+  it('preserves unrelated names, colors and joints when replaying a sketch edit',()=>{
+    const session=createCadSession(),sketch=session.addSketch({kind:'rectangle',id:'profile',width:20,depth:30});
+    const body=session.extrudeSketch(sketch,{distance:8}),a=session.add(box()),b=session.add(box()),{records}=observe(session);
+    session.updateSketch(sketch,{profile:{kind:'rectangle',id:'profile',width:25,depth:30}});
+    const record=applyRecord(records);session.undo();
+    session.update(body,{name:'Retained name',color:'#123456'});
+    const joint=session.addJoint('fixed',a,b,[0,0,0],[0,0,1]);
+    expect(session.executeCommand(record.text)).toBe(true);
+    expect(session.state.document.sketches![sketch].profile).toMatchObject({width:25});
+    expect(session.state.document.nodes[body]).toMatchObject({name:'Retained name',color:'#123456'});
+    expect(session.state.document.joints!.map(entry=>entry.id)).toEqual([joint]);
+    session.undo();expect(session.state.document.sketches![sketch].profile).toMatchObject({width:20});
+    expect(session.state.document.joints!.map(entry=>entry.id)).toEqual([joint]);
+  });
+
+  it('detects a previously unrelated joint reconnected to the edited sketch',()=>{
+    const session=createCadSession(),sketch=session.addSketch({kind:'rectangle',id:'profile',width:20,depth:30});
+    const body=session.extrudeSketch(sketch,{distance:8}),a=session.add(box()),b=session.add(box());
+    session.addJoint('fixed',a,b,[0,0,0],[0,0,1]);const {records}=observe(session);
+    session.updateSketch(sketch,{profile:{kind:'rectangle',id:'profile',width:25,depth:30}});
+    const record=applyRecord(records);session.undo();
+    session.editAssembly('Reconnect joint',draft=>{draft.joints![0].bodyA=body;});
+    const before=session.serialize();
+    expect(()=>session.executeCommand(record.text)).toThrow(/stale: joint relationships/);
+    expect(session.serialize()).toBe(before);
+  });
+
+  it('replays an accepted atomic assembly edit with its original joint context',()=>{
+    const session=createCadSession(),sketch=session.addSketch({kind:'rectangle',id:'profile',width:20,depth:30});
+    const body=session.extrudeSketch(sketch,{distance:8}),other=session.add(box());
+    const joint=session.addJoint('fixed',body,other,[0,0,0],[0,0,1]),{records}=observe(session);
+    session.editAssembly('Resize connected assembly',draft=>{
+      draft.sketches![sketch].profile={kind:'rectangle',id:'profile',width:25,depth:30};
+      draft.joints![0].anchorA=[5,0,0];
+    });
+    const expected=session.serialize(),record=applyRecord(records);
+    expect(record.command.context).toEqual({sketchJoints:[{sketchId:sketch,joints:[{id:joint,bodyA:body,bodyB:other}]}]});
+    expect(Object.isFrozen(record.command.context!.sketchJoints[0].joints)).toBe(true);
+    session.undo();const history=session.history.past.length;
+    expect(session.executeCommand(record.text)).toBe(true);expect(session.serialize()).toBe(expected);
+    expect(session.history.past).toHaveLength(history+1);
+    // Earlier version-1 records remain readable and replayable without new fields.
+    const legacy=structuredClone(record.command);delete legacy.context;session.undo();
+    expect(session.executeCommand(serializeSessionCommand(legacy))).toBe(true);
+    expect(session.serialize()).toBe(expected);
+  });
+
+  it('validates optional read context before replaying any document changes',()=>{
+    const session=createCadSession(),sketch=session.addSketch({kind:'rectangle',id:'profile',width:20,depth:30}),{records}=observe(session);
+    session.updateSketch(sketch,{profile:{kind:'rectangle',id:'profile',width:25,depth:30}});
+    const valid=structuredClone(applyRecord(records).command);session.undo();
+    const before=session.serialize(),history=session.history;
+    for(const context of [
+      null,{}, {sketchJoints:[]}, {sketchJoints:Array(1)},
+      {sketchJoints:[{sketchId:sketch,joints:[],extra:true}]},
+      {sketchJoints:[{sketchId:sketch,joints:[]},{sketchId:sketch,joints:[]}]},
+      {sketchJoints:[{sketchId:sketch,joints:Array(1)}]},
+      {sketchJoints:[{sketchId:sketch,joints:[{id:'joint',bodyA:'same',bodyB:'same'}]}]},
+    ])expect(()=>session.executeCommand({...valid,context} as ApplySessionCommand)).toThrow(/Invalid session command/);
+    expect(session.serialize()).toBe(before);expect(session.history).toEqual(history);
+  });
+
   it('shares existing selection and undo/redo behavior without adding modeling history',()=>{
     const session=createCadSession(),id=session.add(box()),{records}=observe(session),revision=session.state.revision;
     expect(session.executeCommand('select []')).toBe(true);

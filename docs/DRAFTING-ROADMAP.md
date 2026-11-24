@@ -484,19 +484,25 @@ retains shared edge lengths across loops. Other edge relations remain open.
 
 The first implementation adds an optional bottom **Terminal** dock, also
 available from the command palette or Ctrl/Command+backtick. It has interactive
-prompts, fixed aliases, Tab command completion, Up/Down input history, and
+prompts, fixed aliases, Tab command and entity completion, Up/Down input history, and
 Escape cancellation. Basic solids, XY line/rectangle/circle sketches,
 extrusion, selection and transforms use the existing CAD session. Point
 prompts accept typed absolute, relative and polar coordinates or viewport
 picks. Completed modeling commands make one Undo step; partial input does
 not change the model. A conflicting model edit cancels the pending command.
+Completion offers body names/IDs for selection, closed sketches for extrusion,
+and commands for help, both inline and at prompts. It quotes names, preserves
+arguments after the caret, and supports backward cycling with Shift+Tab.
 
 Accepted session edits now emit versioned, replayable commands at the shared
 commit boundary. This includes GUI inspector edits, imports, sketch and code
 changes, and arbitrary assembly edits. The terminal shows their action labels
 with **Use command** to insert the exact replay text. Replay checks project
 identity and the prior values of touched properties, then uses the same
-validation and Undo machinery. Selection and Undo/Redo also have canonical
+validation and Undo machinery. New sketch-edit records also check dependent
+joint relationships, so attaching or reconnecting a joint invalidates an older
+edit. Older records without that optional context retain their structural
+checks. Selection and Undo/Redo also have canonical
 commands. This journal is transient and does not alter saved document schemas
 or history revisions. Camera gestures and other view-only interactions are
 not yet a complete replayable command stream.
@@ -507,13 +513,19 @@ completes parameter names with Ctrl/Command+Space, and applies only on an explic
 Create/Apply action. Standalone hosts save bounded drafts and command history
 locally; embedded hosts can supply a storage adapter. The original Code modal
 remains available. Saved code objects keep editable source and their identity.
+Parameter suggestions support arrows, Enter/Tab and Escape; Shift+Tab leaves the
+source field. Draft saves merge the latest readable storage collection to retain
+unrelated drafts from sequential editor instances. Late linked-Apply callbacks
+cannot close a replacement workspace or navigate after dismissal.
 
 See [Terminal and code workspace](TERMINAL-WORKSPACE.md) for syntax, host APIs,
-validation and limits. Follow-up work: configurable aliases, argument/entity
+validation and limits. `npm run test:terminal` runs the focused core and DOM
+interaction regressions. Follow-up work: configurable aliases, further argument
 completion, arbitrary sketch workplanes and richer snapping, continuous
 polyline/arc/constraint prompts, readable serializers for more modeling actions,
-portable multi-command scripts, durable action-journal export, and complete
-view-command capture. Browser qualification is still required for this first
+portable multi-command scripts, durable action-journal export, broader replay
+read dependencies, cross-tab draft transactions, and complete view-command
+capture. Browser qualification is still required for this first
 slice; new Chromium/WebKit scenarios are included with the implementation.
 
 Cota documents a prompt-driven command line with history, completion, and

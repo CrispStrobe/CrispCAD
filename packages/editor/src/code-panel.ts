@@ -8,7 +8,9 @@ import type {CodeWorkspaceStorage} from './code-workspace-state.js';
 import {codeWorkspaceStyle} from './code-workspace-style.js';
 const el=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
 const sameProgram=(a:CodeProgram|undefined,b:CodeProgram|undefined)=>JSON.stringify(a)===JSON.stringify(b);
+let nextPanelId=0;
 export function mountCodePanel(parent:HTMLElement,session:CadSession,evaluate:(doc:CadDocument)=>Promise<GeometryResult>,after:()=>Promise<unknown>,onExport?:(file:{name:string;bytes:Uint8Array;mime:string})=>void|Promise<void>,onModelSource?:()=>void,options:{workspaceStorage?:CodeWorkspaceStorage}={}){
+ const panelId=++nextPanelId;
  const dialog=el('dialog'),style=el('style');style.textContent=codeWorkspaceStyle;
  dialog.className='code-dialog';dialog.setAttribute('aria-label',t('Code object'));parent.append(style,dialog);
  const drafts=createCodeWorkspaceStore(options.workspaceStorage);
@@ -46,15 +48,19 @@ export function mountCodePanel(parent:HTMLElement,session:CadSession,evaluate:(d
   const layout=el('div');layout.className='code-layout';const left=el('div'),right=el('div');left.className='code-source-pane';right.className='code-preview-pane';
   const name=el('input');name.value=restored?.name??node?.name??t('Coded plate');name.setAttribute('aria-label',t('Code object name'));name.disabled=!!id;
   const source=el('textarea');source.setAttribute('aria-label',t('CAD code source'));source.spellcheck=false;source.wrap='off';source.value=restored?.program.source??original.source;
-  const completions=el('div');completions.className='code-completions';completions.setAttribute('aria-label',t('Parameter suggestions'));
+  const completions=el('div');completions.className='code-completions';completions.id=`code-parameters-${panelId}-${version}`;completions.hidden=true;completions.setAttribute('role','listbox');completions.setAttribute('aria-label',t('Parameter suggestions'));
+  source.setAttribute('aria-autocomplete','list');source.setAttribute('aria-controls',completions.id);
+  let completion:ReturnType<typeof codeParameterCompletions>|undefined,completionIndex=0;
   const note=el('p');note.className='code-workspace-note';note.hidden=!workspace;
-  const shortcuts=el('p',t('Ctrl+Space: parameter completion · Ctrl+Enter: preview'));shortcuts.className='code-workspace-note';shortcuts.hidden=!workspace;
+  const shortcuts=el('p',t('Ctrl+Space: parameter completion · Ctrl+Enter: preview · Shift+Tab: leave source'));shortcuts.className='code-workspace-note';shortcuts.hidden=!workspace;
   const reload=el('button',t('Use current model'));reload.hidden=!stale;reload.onclick=()=>{
    const current=session.state;
    if(current.document.id!==projectId){status.textContent=t('A different design is open. Reopen the code workspace.');return;}
    const target=id?current.document.nodes[id]:undefined;
    if(id&&target?.kind!=='code'){status.textContent=t('This code object was removed. Restore it with Undo before applying.');return;}
    model=current.document;expected=current.revision;baseline=target?.kind==='code'?structuredClone(target.program):undefined;stale=false;reload.hidden=true;
+   // Refreshing the baseline invalidates geometry and Apply work already in flight.
+   inputVersion++;
    status.textContent=t('Draft kept. Preview it against the current model before applying.');persist();schedulePreview();
   };
   const help=el('details');help.append(el('summary',t('Language reference')),el('pre',t('param width: mm = 40;\nlet base = box(width, 30, 5);\nreturn subtract(base, cylinder(3, 20));\n\nUnits: mm, deg, scalar. Arithmetic: + - * / ( ).\nShapes: box(w,d,h), cylinder(r,h[,segments]), sphere(r[,segments]).\nBooleans: union(a,b,...), subtract(base,cut,...), intersect(a,b,...).\nTransforms: move([x,y,z],shape), rotate([x,y,z],shape), scale([x,y,z],shape).\nPattern: repeat(count,[dx,dy,dz],shape). Nest transforms in operation order.\nNamed shapes use let; one final return produces one rigid body.\n// starts a comment. This is CAD Script, not JavaScript or .scad.')));
@@ -93,8 +99,20 @@ export function mountCodePanel(parent:HTMLElement,session:CadSession,evaluate:(d
    clearTimeout(previewTimer);
    if(workspace&&!stale&&active())previewTimer=setTimeout(()=>void build(false,true),450);
   }
+  function clearCompletions(){completion=undefined;completionIndex=0;completions.replaceChildren();completions.hidden=true;source.removeAttribute('aria-activedescendant');}
+  function selectCompletion(index:number){
+   if(!completion?.matches.length)return;
+   completionIndex=(index+completion.matches.length)%completion.matches.length;
+   [...completions.children].forEach((button,index)=>{button.setAttribute('aria-selected',String(index===completionIndex));button.classList.toggle('primary',index===completionIndex);});
+   const selected=completions.children[completionIndex];if(selected)source.setAttribute('aria-activedescendant',selected.id);
+  }
+  function chooseCompletion(index:number){
+   if(!completion)return;
+   const value=completion.matches[index];if(value===undefined)return;
+   source.setRangeText(value,completion.start,completion.end,'end');source.focus();changed();
+  }
   function changed(){
-   inputVersion++;completions.replaceChildren();source.removeAttribute('aria-invalid');image.hidden=true;
+   inputVersion++;clearCompletions();source.removeAttribute('aria-invalid');image.hidden=true;
    measures.textContent=t('Preview is out of date.');status.textContent=t('Source changed. Preview or apply to rebuild.');persist();schedulePreview();
   }
   function reportError(error:unknown,focus:boolean){
@@ -119,7 +137,7 @@ export function mountCodePanel(parent:HTMLElement,session:CadSession,evaluate:(d
   async function build(commit:boolean,automatic=false):Promise<boolean>{
    if(busy||!active())return false;
    if(stale||session.state.revision!==expected){markStale();return false;}
-   busy=true;clearTimeout(previewTimer);preview.disabled=apply.disabled=true;status.textContent=t('Building coded solid…');
+   busy=true;clearTimeout(previewTimer);preview.disabled=apply.disabled=true;if(linked)linked.disabled=true;status.textContent=t('Building coded solid…');
    const submittedVersion=inputVersion,submitted=program(),submittedName=name.value;
    try{
     compileCode(submitted);
@@ -147,24 +165,38 @@ export function mountCodePanel(parent:HTMLElement,session:CadSession,evaluate:(d
       if(workspace){if(previousId!==id)drafts.remove(projectId,previousId);persist();name.disabled=true;apply.textContent=t('Apply code changes');if(linked)linked.textContent=t('Apply & show model source');}
      }finally{applying=false;}
      if(!workspace)hide();
+     const completionView=view,completionRevision=session.state.revision;
      await after();
+     // The modal may have closed itself above. Other closes, replacements,
+     // draft edits and model changes must cancel this view's linked follow-up.
+     if(disposed||view!==completionView||inputVersion!==submittedVersion||session.state.revision!==completionRevision)return false;
     }
     return true;
    }catch(error){if(active()&&inputVersion===submittedVersion)reportError(error,!automatic);return false;}
-   finally{busy=false;preview.disabled=apply.disabled=false;if(active()&&inputVersion!==submittedVersion)schedulePreview();}
+   finally{busy=false;preview.disabled=apply.disabled=false;if(linked)linked.disabled=false;if(active()&&inputVersion!==submittedVersion)schedulePreview();}
   }
   preview.onclick=()=>void build(false);apply.onclick=()=>void build(true);source.oninput=changed;name.oninput=changed;
   source.onkeydown=event=>{
    if(event.isComposing)return;
    if(event.code==='Space'&&(event.ctrlKey||event.metaKey)){
-    event.preventDefault();const completion=codeParameterCompletions(source.value,source.selectionStart);
-    const choose=(value:string)=>{source.setRangeText(value,completion.start,completion.end,'end');source.focus();changed();};
-    if(completion.matches.length===1)choose(completion.matches[0]);
-    else{completions.replaceChildren(...completion.matches.map(value=>{const button=el('button',value);button.type='button';button.onclick=()=>choose(value);return button;}));status.textContent=completion.matches.length?t('Choose a parameter suggestion.'):t('No parameter suggestions.');}
-   }else if(event.key==='Tab'){event.preventDefault();source.setRangeText('  ',source.selectionStart,source.selectionEnd,'end');changed();}
-   else if(event.key==='Enter'&&(event.metaKey||event.ctrlKey)){event.preventDefault();void build(false);}
-   else if(event.key==='Escape'&&completions.childElementCount){event.preventDefault();event.stopPropagation();completions.replaceChildren();}
+    event.preventDefault();clearCompletions();completion=codeParameterCompletions(source.value,source.selectionStart);
+    if(completion.matches.length===1)chooseCompletion(0);
+    else if(completion.matches.length){
+     completions.replaceChildren(...completion.matches.map((value,index)=>{const button=el('button',value);button.type='button';button.id=`${completions.id}-${index}`;button.tabIndex=-1;button.setAttribute('role','option');button.onpointerdown=event=>event.preventDefault();button.onclick=()=>chooseCompletion(index);return button;}));
+     completions.hidden=false;selectCompletion(0);status.textContent=t('Choose a parameter suggestion with ↑/↓ and Enter or Tab.');
+    }else{clearCompletions();status.textContent=t('No parameter suggestions.');}
+    return;
+   }
+   if(completion){
+    if((event.key==='ArrowUp'||event.key==='ArrowDown')&&!event.ctrlKey&&!event.metaKey&&!event.altKey){event.preventDefault();selectCompletion(completionIndex+(event.key==='ArrowUp'?-1:1));return;}
+    if(event.key==='Tab'&&!event.shiftKey||event.key==='Enter'&&!event.ctrlKey&&!event.metaKey&&!event.altKey){event.preventDefault();chooseCompletion(completionIndex);return;}
+    if(event.key==='Escape'){event.preventDefault();event.stopPropagation();clearCompletions();return;}
+    if(['Tab','ArrowLeft','ArrowRight','Home','End','PageUp','PageDown'].includes(event.key))clearCompletions();
+   }
+   if(event.key==='Tab'&&!event.shiftKey){event.preventDefault();source.setRangeText('  ',source.selectionStart,source.selectionEnd,'end');changed();}
+   else if(event.key==='Enter'&&(event.metaKey||event.ctrlKey)){event.preventDefault();clearCompletions();void build(false);}
   };
+  source.onpointerdown=clearCompletions;source.onblur=clearCompletions;
   left.append(name,exampleLabel,interchange,source,completions,shortcuts,note,importNotes,help);right.append(image,measures,fields,reset);layout.append(left,right);
   const footer=el('footer');footer.append(status,reload,preview,apply);dialog.append(header,layout,footer);
   try{parameterFields();}catch(error){reportError(error,false);}

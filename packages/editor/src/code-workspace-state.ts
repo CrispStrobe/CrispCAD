@@ -30,7 +30,7 @@ function readDraft(value:unknown):CodeWorkspaceDraft|undefined {
  if(!program||value.baseline!==undefined&&!baseline)return;
  return {projectId:value.projectId,...(typeof value.targetId==='string'?{targetId:value.targetId}:{}),name:value.name,program,...(baseline?{baseline}:{})};
 }
-const sameTarget=(a:CodeWorkspaceDraft,projectId:string,targetId?:string)=>a.projectId===projectId&&a.targetId===targetId;
+const sameTarget=(a:Pick<CodeWorkspaceDraft,'projectId'|'targetId'>,projectId:string,targetId?:string)=>a.projectId===projectId&&a.targetId===targetId;
 
 export function browserCodeWorkspaceStorage():CodeWorkspaceStorage|undefined {
  try{return typeof localStorage==='undefined'?undefined:localStorage;}catch{return;}
@@ -38,28 +38,57 @@ export function browserCodeWorkspaceStorage():CodeWorkspaceStorage|undefined {
 
 /** A bounded, defensive store; an unavailable host adapter still leaves in-session drafts. */
 export function createCodeWorkspaceStore(storage?:CodeWorkspaceStorage) {
- let drafts:CodeWorkspaceDraft[]=[];
- try {
-  const raw=storage?.getItem(storageKey);
-  if(raw&&raw.length<=maxStoredCharacters){
+ type Change={projectId:string;targetId?:string;draft?:CodeWorkspaceDraft};
+ let drafts:CodeWorkspaceDraft[]=[],pending:Change[]=[];
+ function readStored():CodeWorkspaceDraft[]|null|undefined {
+  if(!storage)return;
+  let raw:string|null;
+  try{raw=storage.getItem(storageKey);}catch{return;}
+  if(!raw)return [];
+  if(raw.length>maxStoredCharacters)return null;
+  try{
    const parsed:unknown=JSON.parse(raw);
-   if(object(parsed)&&parsed.version===1&&Array.isArray(parsed.drafts))drafts=parsed.drafts.slice(-maxDrafts).flatMap(value=>{const draft=readDraft(value);return draft?[draft]:[];});
+   if(object(parsed)&&parsed.version===1&&Array.isArray(parsed.drafts))return parsed.drafts.slice(-maxDrafts).flatMap(value=>{const draft=readDraft(value);return draft?[draft]:[];});
+  }catch{/* Corrupt storage can be replaced by the next accepted draft. */}
+  return null;
+ }
+ function applyChanges(current:CodeWorkspaceDraft[],changes:Change[]){
+  for(const change of changes){
+   current=current.filter(item=>!sameTarget(item,change.projectId,change.targetId));
+   if(change.draft)current.push(change.draft);
   }
- }catch{/* Corrupt or unavailable host storage must not prevent opening the editor. */}
+  return current.slice(-maxDrafts);
+ }
+ function refresh(){
+  const stored=readStored();
+  if(stored)drafts=applyChanges(stored,pending);
+ }
+ function remember(change:Change){
+  pending=[...pending.filter(item=>!sameTarget(item,change.projectId,change.targetId)),change];
+  drafts=applyChanges(drafts,[change]);
+  // Evicted unsaved drafts must not grow an unbounded hidden source cache.
+  pending=pending.filter(item=>!item.draft||drafts.some(draft=>sameTarget(draft,item.projectId,item.targetId)));
+ }
+ refresh();
  function persist(){
   if(!storage)return false;
-  try{const encoded=JSON.stringify({version:1,drafts});if(encoded.length>maxStoredCharacters)return false;storage.setItem(storageKey,encoded);return true;}catch{return false;}
+  // Another editor/tab can have saved since this store was created. Merge only
+  // this instance's outstanding changes into the latest saved collection.
+  const stored=readStored();
+  if(stored===undefined)return false;
+  drafts=applyChanges(stored??drafts,pending);
+  try{const encoded=JSON.stringify({version:1,drafts});if(encoded.length>maxStoredCharacters)return false;storage.setItem(storageKey,encoded);pending=[];return true;}catch{return false;}
  }
  return {
-  load(projectId:string,targetId?:string){const found=[...drafts].reverse().find(draft=>sameTarget(draft,projectId,targetId));return found?structuredClone(found):undefined;},
-  latest(projectId:string){const found=[...drafts].reverse().find(draft=>draft.projectId===projectId);return found?structuredClone(found):undefined;},
+  load(projectId:string,targetId?:string){refresh();const found=[...drafts].reverse().find(draft=>sameTarget(draft,projectId,targetId));return found?structuredClone(found):undefined;},
+  latest(projectId:string){refresh();const found=[...drafts].reverse().find(draft=>draft.projectId===projectId);return found?structuredClone(found):undefined;},
   save(value:CodeWorkspaceDraft){
    const draft=readDraft(value);
    if(!draft)return {accepted:false,persistent:false};
-   drafts=[...drafts.filter(item=>!sameTarget(item,draft.projectId,draft.targetId)),draft].slice(-maxDrafts);
+   remember({projectId:draft.projectId,targetId:draft.targetId,draft});
    return {accepted:true,persistent:persist()};
   },
-  remove(projectId:string,targetId?:string){drafts=drafts.filter(item=>!sameTarget(item,projectId,targetId));persist();}
+  remove(projectId:string,targetId?:string){remember({projectId,targetId});persist();}
  };
 }
 

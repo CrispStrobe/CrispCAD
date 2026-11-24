@@ -33,21 +33,28 @@ export function parseTerminalPoint(text:string,base?:Vec3):Vec3 {
  return point.map(v=>Math.abs(v)<1e-12?0:v) as Vec3;
 }
 
-/** Quotes keep object names together; commas may contain surrounding whitespace. */
-export function terminalArguments(text:string):string[] {
- const result:string[]=[];let token='',quote='',escaped=false;
+export interface TerminalArgument {value:string;start:number;end:number;quoted:boolean}
+
+/** Retain quoting and source spans so completion and keyword parsing agree. */
+export function terminalTokens(text:string,allowIncomplete=false):TerminalArgument[] {
+ const result:TerminalArgument[]=[];let token='',quote='',escaped=false,start=-1,quoted=false;
+ const finish=(end:number)=>{if(start>=0)result.push({value:token,start,end,quoted});token='';start=-1;quoted=false;};
  for(let i=0;i<text.length;i++){
   const char=text[i];
   if(escaped){token+=char;escaped=false;continue;}
   if(quote){if(char==='\\'){escaped=true;continue;}if(char===quote){quote='';continue;}token+=char;continue;}
-  if(char==='"'||char==="'"){quote=char;continue;}
+  if(char==='"'||char==="'"){if(start<0)start=i;quote=char;quoted=true;continue;}
   if(/\s/.test(char)){
    const next=text.slice(i).trimStart()[0];
-   if(token.endsWith(',')||token.endsWith('<')||next===','||next==='<')continue;
-   if(token){result.push(token);token='';}
-  }else token+=char;
+   if(start>=0&&!quoted&&(token.endsWith(',')||token.endsWith('<')||next===','||next==='<'))continue;
+   finish(i);
+  }else{if(start<0)start=i;token+=char;}
  }
- if(quote||escaped)throw new Error(t('Close the quoted argument.'));
- if(token)result.push(token);
+ if((quote||escaped)&&!allowIncomplete)throw new Error(t('Close the quoted argument.'));
+ if(escaped)token+='\\';
+ finish(text.length);
  return result;
 }
+
+/** Quotes keep object names together; commas may contain surrounding whitespace. */
+export function terminalArguments(text:string):string[] {return terminalTokens(text).map(token=>token.value);}

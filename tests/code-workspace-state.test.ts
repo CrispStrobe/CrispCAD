@@ -27,6 +27,63 @@ it('copies caller and restored data and retains the baseline for detecting anoth
  expect(store.load('project','code')!.baseline!.source).toContain('param width');
 });
 
+it('merges saves from independent editors and refreshes drafts written by another instance',()=>{
+ const host=storage(),first=createCodeWorkspaceStore(host),second=createCodeWorkspaceStore(host);
+ const a=draft('project-a','code-a'),b=draft('project-b'),c=draft('project-a','code-b');
+ first.save(a);second.save(b);first.save(c);
+ const reopened=createCodeWorkspaceStore(host);
+ expect(reopened.load('project-a','code-a')).toEqual(a);expect(reopened.load('project-b')).toEqual(b);expect(reopened.load('project-a','code-b')).toEqual(c);
+ expect(second.latest('project-a')).toEqual(c);
+ const updated=structuredClone(a);updated.program.source='return sphere(9);';second.save(updated);
+ expect(first.load('project-a','code-a')).toEqual(updated);expect(first.load('project-b')).toEqual(b);
+});
+
+it('merges removals without deleting unrelated drafts or resurrecting stale ones',()=>{
+ const host=storage(),first=createCodeWorkspaceStore(host),second=createCodeWorkspaceStore(host),third=createCodeWorkspaceStore(host);
+ first.save(draft('project-a','code-a'));first.save(draft('project-a','code-b'));
+ second.load('project-a','code-a');third.save(draft('project-b'));
+ second.remove('project-a','code-a');first.save(draft('project-c'));
+ const reopened=createCodeWorkspaceStore(host);
+ expect(reopened.load('project-a','code-a')).toBeUndefined();expect(reopened.load('project-a','code-b')).toEqual(draft('project-a','code-b'));
+ expect(reopened.load('project-b')).toEqual(draft('project-b'));expect(reopened.load('project-c')).toEqual(draft('project-c'));
+});
+
+it('retains unsaved changes and removals through write failures while merging other editors',()=>{
+ const host=storage();let blocked=false;
+ const flaky={getItem:host.getItem,setItem(key:string,value:string){if(blocked)throw new Error('quota');host.setItem(key,value);}};
+ const first=createCodeWorkspaceStore(flaky),second=createCodeWorkspaceStore(host);
+ first.save(draft('old'));blocked=true;
+ first.remove('old');expect(first.save(draft('local'))).toEqual({accepted:true,persistent:false});second.save(draft('other'));
+ expect(first.load('old')).toBeUndefined();expect(first.load('local')).toEqual(draft('local'));expect(first.load('other')).toEqual(draft('other'));
+ blocked=false;expect(first.save(draft('retry'))).toEqual({accepted:true,persistent:true});
+ const reopened=createCodeWorkspaceStore(host);expect(reopened.load('old')).toBeUndefined();
+ for(const project of ['local','other','retry'])expect(reopened.load(project)).toEqual(draft(project));
+});
+
+it('does not overwrite unreadable shared storage and flushes local drafts after access returns',()=>{
+ const host=storage();let blocked=false,writes=0;
+ const flaky={getItem(key:string){if(blocked)throw new Error('unavailable');return host.getItem(key);},setItem(key:string,value:string){writes++;host.setItem(key,value);}};
+ const first=createCodeWorkspaceStore(flaky),second=createCodeWorkspaceStore(host);blocked=true;
+ second.save(draft('other'));expect(first.save(draft('local'))).toEqual({accepted:true,persistent:false});expect(writes).toBe(0);
+ expect(first.load('local')).toEqual(draft('local'));blocked=false;
+ expect(first.save(draft('retry'))).toEqual({accepted:true,persistent:true});
+ const reopened=createCodeWorkspaceStore(host);for(const project of ['local','other','retry'])expect(reopened.load(project)).toEqual(draft(project));
+});
+
+it('keeps in-session drafts when shared storage becomes corrupt and repairs it on the next save',()=>{
+ const host=storage(),store=createCodeWorkspaceStore(host);store.save(draft('existing'));
+ host.setItem('brickwright-cad:code-workspace:v1','{invalid');
+ expect(store.load('existing')).toEqual(draft('existing'));expect(store.save(draft('new'))).toEqual({accepted:true,persistent:true});
+ const reopened=createCodeWorkspaceStore(host);expect(reopened.load('existing')).toEqual(draft('existing'));expect(reopened.load('new')).toEqual(draft('new'));
+});
+
+it('applies the draft limit to the merged collection across editors',()=>{
+ const host=storage(),editors=[createCodeWorkspaceStore(host),createCodeWorkspaceStore(host)];
+ for(let i=0;i<20;i++)editors[i%2].save(draft(`project-${i}`));
+ const reopened=createCodeWorkspaceStore(host);
+ for(let i=0;i<20;i++)expect(reopened.load(`project-${i}`)).toEqual(i<4?undefined:draft(`project-${i}`));
+});
+
 it('degrades safely when device storage is unavailable or corrupt',()=>{
  const unavailable={getItem(){throw new Error('blocked');},setItem(){throw new Error('quota');}};
  const store=createCodeWorkspaceStore(unavailable),value=draft();expect(store.save(value)).toEqual({accepted:true,persistent:false});expect(store.load('project-a')).toEqual(value);
