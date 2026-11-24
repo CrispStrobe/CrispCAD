@@ -9,7 +9,7 @@ interface PaletteContext extends CadCommandState {
  canEditPattern:boolean;
 }
 type CommandEntry={command:CadCommand;label:string;alias?:string;requires?:keyof PaletteContext};
-const paletteCommands:readonly CommandEntry[]=[
+export const paletteCommands:readonly CommandEntry[]=[
  {command:'shapes',label:'Find a shape',alias:'shape browser primitives'},
  {command:'model-library',label:'Model library',alias:'parts catalog'},
  {command:'sketch',label:'Sketch & extrude',alias:'profile DXF'},
@@ -21,6 +21,8 @@ const paletteCommands:readonly CommandEntry[]=[
  {command:'edit-pattern',label:'Edit pattern',requires:'canEditPattern'},
  {command:'parameters',label:'Parameters',alias:'named dimensions formulas'},
  {command:'code',label:'Code an object',alias:'CAD Script'},
+ {command:'terminal',label:'CAD terminal',alias:'command line console'},
+ {command:'code-workspace',label:'Code workspace',alias:'persistent CAD Script editor'},
  {command:'model-source',label:'Model source'},
  {command:'union',label:'Union',alias:'combine join',requires:'canCombine'},
  {command:'subtract',label:'Subtract',alias:'boolean cut difference',requires:'canCombine'},
@@ -156,3 +158,4 @@ export function mountCommandPalette(parent:HTMLElement,context:()=>PaletteContex
   dispose(){dialog.close();dialog.remove();}
  };
 }
+
