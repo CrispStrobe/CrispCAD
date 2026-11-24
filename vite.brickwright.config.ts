@@ -1,10 +1,11 @@
 import {libraryPreviewAssets} from './scripts/library-preview-assets.js';
+import {libraryCatalogueAssets} from './scripts/library-catalogue-assets.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import {defineConfig} from 'vite';
 import {resolve} from 'node:path';
 import {preserveDwgClassNames} from './scripts/preserve-dwg-class-names.js';
 export default defineConfig({
-  plugins: [libraryPreviewAssets()],
+  plugins: [libraryPreviewAssets(), libraryCatalogueAssets()],
   base:'./',
   build:{outDir:'dist/brickwright-sdk',emptyOutDir:true,target:'es2020',
     lib:{entry:resolve('apps/brickwright/sdk.ts'),formats:['es'],fileName:()=> 'sdk.js'},

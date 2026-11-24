@@ -1,16 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 /// <reference path="../../packages/editor/src/library-preview-assets.d.ts" />
+/// <reference path="./library-catalogue-assets.d.ts" />
 import {bundledLibraryFiles,bundledAssetLicenceTexts} from './model-library-files.js';
 import {createLocalModelLibraryCatalogue, parseModelLibraryCatalogue, validateModelLibraryCatalogue} from '@brickwright/cad-core';
-import manifestText from '../../library/examples-manifest.json?raw';
-import supportedText from '../../library/supported-models-manifest.json?raw';
-import fixtureText from '../../library/fixtures-manifest.json?raw';
-import corpusText from '../../library/editor-corpus-manifest.json?raw';
-import a2dText from '../../library/a2d-editor-manifest.json?raw';
-import sconText from '../../library/scon-editor-manifest.json?raw';
-import jscadText from '../../library/jscad-editor-manifest.json?raw';
-import ldrawText from '../../library/ldraw-editor-manifest.json?raw';
-import ldrawBatchText from '../../library/ldraw-reviewed-batch-manifest.json?raw';
+import readManifests from 'brickwright:cad-catalogue-manifests';
 import seedText from '../../library/seed-catalogue.json?raw';
 import previewData from 'brickwright:cad-model-previews';
 import bsdNotice from '../../library/evidence/brickwright-examples-LICENSE.txt?raw';
@@ -24,8 +17,7 @@ const meshData = import.meta.glob('../../library/meshes/ldraw/*.stl', {query: '?
 export function createBundledModelLibraryOptions() {
   const bundledFiles = bundledLibraryFiles(sources,meshData);
   // Attribution needs the original manifest records as well as the normalized catalogue.
-  const manifests = [manifestText,fixtureText,supportedText,corpusText,a2dText,sconText,jscadText,ldrawText,ldrawBatchText]
-    .map(text=>JSON.parse(text));
+  const manifests = readManifests();
   const [examples,fixtures,supported, ...remaining] = manifests.map(createLocalModelLibraryCatalogue);
   const seeds = parseModelLibraryCatalogue(seedText);
   if (!seeds.valid) throw new Error(seeds.errors.join(' '));
