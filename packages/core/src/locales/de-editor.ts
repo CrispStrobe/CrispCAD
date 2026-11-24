@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 export const messages: Record<string,string> = {
+  "CAD terminal": "CAD-Terminal",
+  "Close CAD terminal": "CAD-Terminal schließen",
+  "Terminal transcript": "Terminalprotokoll",
+  "Terminal prompt": "Terminaleingabeaufforderung",
+  "Run command": "Befehl ausführen",
+  "Terminal command": "Terminalbefehl",
+  "Recall terminal entry": "Terminaleintrag abrufen",
+  "Enter a command; Tab completes, ↑/↓ recalls, Esc cancels.": "Befehl eingeben; Tab vervollständigt, ↑/↓ ruft Befehle ab, Esc bricht ab.",
   "An edge length match refers to a missing edge.": "Eine Kantenlängenbeziehung verweist auf eine fehlende Kante.",
   "Match lengths between straight edges.": "Gleiche die Längen gerader Kanten ab.",
   "Invalid region edge length match.": "Ungültige Kantenlängenbeziehung in der Region.",

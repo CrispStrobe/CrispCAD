@@ -2,14 +2,14 @@
 import {newId,t} from '@brickwright/cad-core';
 import type {CadCommand,CadCommandState} from './index.js';
 
-interface PaletteContext extends CadCommandState {
+export interface PaletteContext extends CadCommandState {
  canWrapBody:boolean;
  canDrop:boolean;
  canEditMirror:boolean;
  canEditPattern:boolean;
 }
 type CommandEntry={command:CadCommand;label:string;alias?:string;requires?:keyof PaletteContext};
-const paletteCommands:readonly CommandEntry[]=[
+export const paletteCommands:readonly CommandEntry[]=[
  {command:'shapes',label:'Find a shape',alias:'shape browser primitives'},
  {command:'model-library',label:'Model library',alias:'parts catalog'},
  {command:'sketch',label:'Sketch & extrude',alias:'profile DXF'},
@@ -22,6 +22,7 @@ const paletteCommands:readonly CommandEntry[]=[
  {command:'parameters',label:'Parameters',alias:'named dimensions formulas'},
  {command:'code',label:'Code an object',alias:'CAD Script'},
  {command:'model-source',label:'Model source'},
+ {command:'terminal',label:'CAD terminal',alias:'command line console'},
  {command:'union',label:'Union',alias:'combine join',requires:'canCombine'},
  {command:'subtract',label:'Subtract',alias:'boolean cut difference',requires:'canCombine'},
  {command:'intersect',label:'Intersect',alias:'boolean overlap',requires:'canCombine'},

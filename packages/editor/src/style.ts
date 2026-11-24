@@ -137,4 +137,18 @@ export const editorStyle = `
 .sketch-drawing-line,.sketch-drawing-hover{stroke:#3189e0;stroke-width:2px}
 .sketch-drawing-hover{stroke-dasharray:5 4}
 .sketch-drawing-start{fill:#28a36d}.sketch-drawing-point{fill:#3189e0}
+
+/* Command console is optional and shares the editor's bottom dock with model source. */
+.editor:has(.cad-terminal:not([hidden])){grid-template-rows:48px minmax(0,1fr) minmax(110px,25%) 26px}
+.editor:has(.cad-terminal:not([hidden])):has(.model-source-pane:not([hidden])){grid-template-rows:48px minmax(0,1fr) minmax(100px,28%) minmax(110px,24%) 26px}
+.cad-terminal{display:flex;flex-direction:column;min-height:0;min-width:0;gap:4px;padding:5px 10px;background:var(--cad-panel);border-top:1px solid var(--line)}
+.cad-terminal header,.cad-terminal form{display:flex;align-items:center;gap:8px;flex:none;min-width:0}
+.cad-terminal header strong{margin-right:auto;color:var(--accent);font-size:12px}
+.cad-terminal button{min-height:26px;padding:3px 7px;font-size:11px;flex:none}
+.cad-terminal form input{flex:1;min-width:0;font:12px/1.4 ui-monospace,Menlo,monospace;padding:5px}
+.terminal-log{flex:1;min-height:0;overflow:auto;font:11px/1.4 ui-monospace,Menlo,monospace;overflow-wrap:anywhere}
+.terminal-row{display:flex;align-items:start;justify-content:space-between;gap:6px;padding:1px 0}
+.terminal-row button{min-height:20px;padding:0 5px;font-size:10px}
+.terminal-prompt{font:11px/1.4 ui-monospace,Menlo,monospace;color:var(--cad-muted);overflow-wrap:anywhere;max-height:3em;overflow:auto;flex:none}
+@media(pointer:coarse){.cad-terminal button{min-height:34px}.cad-terminal form input{font-size:16px}}
 `;

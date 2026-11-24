@@ -4,6 +4,7 @@ import {upgradeSimulation,jointAtWorldFrame,materialPhysics,simulationTracers} f
 import type {SimulationSettings} from './simulation.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import {generateModelSource,compileModelSource,updateModelSource,sameModelValue} from './model-source.js';
+import {prepareRecordedCadEdit} from './recorded-edit.js';
 import {t} from './i18n.js';
 import type {ModelProvenanceRecord} from './model-provenance.js';
 import {assertProvenanceUpgrade,pruneModelProvenance} from './model-provenance.js';
@@ -93,6 +94,7 @@ function guardBodyOperationEdit(doc:CadDocument,id:string,kind:'mirror'|'pattern
   if(doc.joints?.some(j=>contains(j.bodyA)||contains(j.bodyB)))throw new Error(guard.joints);
   if(doc.tracers?.some(trace=>contains(trace.bodyId)))throw new Error(guard.tracers);
 }
+export type SessionChange='commit'|'selection'|'undo'|'redo'|'load';
 export interface SessionState { document: CadDocument; selection: readonly string[]; revision: number; canUndo: boolean; canRedo: boolean; label: string }
 const cloneNode = (node: SolidNode): SolidNode => ({ ...node,
   ...(node.provenance!==undefined?{provenance:structuredClone(node.provenance)}:{}),
@@ -158,10 +160,14 @@ function affectedOutlines(document:CadDocument,next:CadDocument){
 export function createCadSession(initial: CadDocument = createDocument()) {
   let document = freezeDocument(validateDocument(initial)); let selection: string[] = []; let revision = 0; let label = 'Opened';let liveModelSource=false;
   let disposed=false;
-  const undo: Snapshot[] = []; const redo: Snapshot[] = []; const listeners = new Set<(state: SessionState) => void>();
+  const undo: Snapshot[] = []; const redo: Snapshot[] = []; const listeners = new Set<(state: SessionState, change:SessionChange) => void>();
   const state = (): SessionState => ({ document, selection: Object.freeze([...selection]), revision, canUndo: !!undo.length, canRedo: !!redo.length, label });
-  const emit = () => { for (const listener of [...listeners]) listener(state()); };
+  const emit = (change:SessionChange) => { for (const listener of [...listeners]) listener(state(),change); };
   const snapshot = (): Snapshot => ({ document, selection: [...selection], label });
+  function acceptCommit(title:string,validated:CadDocument,nextSelection?:string[]){
+    undo.push(snapshot()); if (undo.length > 100) undo.shift(); redo.length = 0;
+    document = validated; selection = nextSelection ?? selection.filter(id => !!document.nodes[id]); label = title; revision++; emit('commit');
+  }
   function commit(title: string, edit: (draft: CadDocument) => string[] | void) {
     const draft = { ...document, ...(document.version>=8&&document.tracers?{tracers:structuredClone(document.tracers)}:{}), roots: [...document.roots], ...(document.joints ? {joints: structuredClone(document.joints)} : {}), ...(document.parametric ? {parametric:structuredClone(document.parametric)} : {}), ...(document.sketches?{sketches:structuredClone(document.sketches)}:{}), nodes: Object.fromEntries(Object.entries(document.nodes).map(([id, node]) => [id, cloneNode(node)])) };
     const nextSelection = edit(draft);
@@ -176,9 +182,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     }
     const header=(doc:CadDocument)=>{const {nodes,...rest}=doc;return JSON.stringify(rest);};
     if (header(draft)===header(document) && Object.keys(draft.nodes).length===Object.keys(document.nodes).length && Object.entries(draft.nodes).every(([id,node])=>document.nodes[id]===node)) return;
-    const validated = freezeDocument(draft);
-    undo.push(snapshot()); if (undo.length > 100) undo.shift(); redo.length = 0;
-    document = validated; selection = nextSelection ?? selection.filter(id => !!document.nodes[id]); label = title; revision++; emit();
+    acceptCommit(title,freezeDocument(draft),nextSelection||undefined);
   }
   function editParameters(design:ParametricDesign,profiles:ReadonlyMap<string,SketchProfile>=new Map()){
     commit('Edit parameters',draft=>{
@@ -302,8 +306,15 @@ export function createCadSession(initial: CadDocument = createDocument()) {
       const before=revision;commit('Edit model source',d=>{for(const key of Object.keys(d))delete (d as any)[key];Object.assign(d,structuredClone(prepared.document));return selection.filter(id=>!!d.nodes[id]);});preparedSources.delete(prepared);return revision!==before;
     },
     applyModelSource(source:string,options:SourceOptions={}){return session.applyPreparedModelSource(prepareModelSource(source,options));},
-    subscribe(listener: (state: SessionState) => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
-    select(ids: readonly string[]) { selection = [...new Set(ids)].filter(id => Object.hasOwn(document.nodes, id)); emit(); },
+    /** Replay a validated retained-graph edit as exactly one normal history step. */
+    applyRecordedEdit(value:unknown){
+      if(disposed)throw new Error('Editor was disposed');
+      const prepared=prepareRecordedCadEdit(document,value);
+      if(sameModelValue(document,prepared.document))return false;
+      acceptCommit(prepared.label,freezeDocument(prepared.document),prepared.selection);return true;
+    },
+    subscribe(listener: (state: SessionState,change:SessionChange) => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
+    select(ids: readonly string[]) { selection = [...new Set(ids)].filter(id => Object.hasOwn(document.nodes, id)); emit('selection'); },
     /** Record reviewed source metadata for existing geometry; no fetching or insertion. */
     attachProvenance(ids:readonly string[],record:ModelProvenanceRecord) {commit('Record model provenance',d=>{
       if(!ids.length||!ids.every(id=>Object.hasOwn(d.nodes,id)))throw new Error('Select existing objects for model provenance');
@@ -602,11 +613,11 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     removeTracer(id:string){commit('Remove motion tracer',d=>{if(d.version>=8)d.tracers=d.tracers?.filter(trace=>trace.id!==id);});},
     setMotorPort(jointId:string,port:string|null){commit('Configure motor port',d=>{const joint=d.joints?.find(j=>j.id===jointId);if(!joint||!['hinge','slider'].includes(joint.kind))throw new Error(t('Unknown hinge joint'));if(port===null)delete joint.control;else joint.control={port};});},
     detachJoints(ids: readonly string[] = selection) { commit('Detach joints',d=>{if(d.joints)d.joints=pruneGearMeshes(d.joints.filter(j=>!ids.includes(j.bodyA)&&!ids.includes(j.bodyB)));}); },
-    undo() { const prev = undo.pop(); if (!prev) return; redo.push(snapshot()); ({ document, selection, label } = prev); revision++; emit(); },
-    redo() { const next = redo.pop(); if (!next) return; undo.push(snapshot()); ({ document, selection, label } = next); revision++; emit(); },
+    undo() { const prev = undo.pop(); if (!prev) return; redo.push(snapshot()); ({ document, selection, label } = prev); revision++; emit('undo'); },
+    redo() { const next = redo.pop(); if (!next) return; undo.push(snapshot()); ({ document, selection, label } = next); revision++; emit('redo'); },
     load(next: CadDocument | string) {
       const validated = freezeDocument(typeof next === 'string' ? parseDocument(next) : validateDocument(next));
-      document = validated;liveModelSource=false; selection = []; undo.length = 0; redo.length = 0; label = 'Opened'; revision++; emit();
+      document = validated;liveModelSource=false; selection = []; undo.length = 0; redo.length = 0; label = 'Opened'; revision++; emit('load');
     },
     serialize() { return serializeDocument(document); },
     dispose() { disposed=true; listeners.clear(); undo.length = 0; redo.length = 0; },

@@ -482,6 +482,19 @@ retains shared edge lengths across loops. Other edge relations remain open.
 
 ## Command line and code workspace
 
+The shared editor now has an opt-in **CAD terminal** bottom dock. It uses the
+existing command palette registry and session history; `help`, Tab, aliases,
+Up/Down, Escape, typed `box` and `move`, `list`, and stable-ID selection are
+available. Committed GUI/model-source changes expose a recallable `apply-edit`
+command with changed retained-graph fields, preconditions and selection. Replay
+validates the candidate and creates one Undo step; it does not call `load` or
+create another history stack. See [CAD terminal](CAD-TERMINAL.md).
+
+Still open: qualification on both hosts and physical touch hardware, richer
+semantic output and input coverage, picked points in pending commands,
+command scripts and a persistent CAD Script workspace (distinct from the
+existing Model Source pane).
+
 Keep sketching and object editing available through the pointer and keyboard.
 Add a dockable CAD command line with prompts, completion, aliases and
 history. Start by routing existing CAD commands through the same editor

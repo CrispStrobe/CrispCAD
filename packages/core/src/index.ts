@@ -1,6 +1,8 @@
 export {constructionInputs,isCube,constrainCubeTransform, MAX_DOCUMENT_BYTES, documentGeometryKey, identityTransform, newId, createDocument, validateDocument, parseDocument, serializeDocument, freezeDocument, pruneDocument } from './document.js';
 export type { Vec3, Transform, Primitive, Shape, SolidNode, CadDocument } from './document.js';
 export * from './session.js';
+export {recordCadEdit} from './recorded-edit.js';
+export type {RecordedCadEdit} from './recorded-edit.js';
 export * from './physics.js';
 export {sha256Hex,geometrySignature} from './hash.js';
 export * from './parameters.js';
