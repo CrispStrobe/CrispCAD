@@ -99,27 +99,30 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
  const describeAsset=(asset:ModelLibraryAsset)=>`${asset.title} ${asset.author} ${asset.licence.spdx}`;
  const describeFolder=(folder:ModelLibraryArchive['folders'][number])=>`${folder.name} Adafruit ${folder.files.map(file=>file.path).join(' ')}`;
  const describeProject=(project:ModelLibraryProject)=>`${project.title} ${project.note??''}`;
- function modelsOfType(mode:string){
+ function modelsOfType(mode:string,includeArchive:boolean){
   return {
    assets:mode==='projects'?[]:catalogue.assets.filter(asset=>!mode||mode==='models'||(mode==='source')===!!sourceFor(asset)),
-   folders:['source','projects'].includes(mode)?[]:archive.folders.filter(folder=>mode!=='mesh'||folder.files.some(file=>file.format==='stl')),
+   folders:!includeArchive||['source','projects'].includes(mode)?[]:archive.folders.filter(folder=>mode!=='mesh'||folder.files.some(file=>file.format==='stl')),
    projects:!mode||mode==='projects'?(projects?.items??[]):[],
   };
  }
- let searchResult:{catalogue:ModelLibraryCatalogue;mode:string;query:string;terms:string[];models:ReturnType<typeof modelsOfType>}|undefined;
+ let searchResult:{catalogue:ModelLibraryCatalogue;mode:string;includeArchive:boolean;query:string;terms:string[];models:ReturnType<typeof modelsOfType>}|undefined;
  function matchingModels(){
   const mode=filter.value,terms=fold(search.value).trim().split(/\s+/).filter(Boolean),query=terms.join(' ');
-  const prior=searchResult?.catalogue===catalogue&&searchResult.mode===mode?searchResult:undefined;
+  // The default grid will reorder when the full catalogue arrives. Keep archive
+  // search usable while avoiding previews for a temporary first page.
+  const includeArchive=loaded||!loading||terms.length>0;
+  const prior=searchResult?.catalogue===catalogue&&searchResult.mode===mode&&searchResult.includeArchive===includeArchive?searchResult:undefined;
   if(prior?.query===query)return prior.models;
   // If each old term is contained in a new term, no previously excluded card can match.
   const narrows=prior?.terms.every(term=>terms.some(next=>next.includes(term)));
-  const candidates=narrows&&prior?prior.models:modelsOfType(mode);
+  const candidates=narrows&&prior?prior.models:modelsOfType(mode,includeArchive);
   const models=terms.length?{
    assets:candidates.assets.filter(asset=>matchesSearch(asset,terms,describeAsset)),
    folders:candidates.folders.filter(folder=>matchesSearch(folder,terms,describeFolder)),
    projects:candidates.projects.filter(project=>matchesSearch(project,terms,describeProject)),
   }:candidates;
-  searchResult={catalogue,mode,query,terms,models};
+  searchResult={catalogue,mode,includeArchive,query,terms,models};
   return models;
  }
  function refreshCards(){
@@ -223,7 +226,7 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
     cursor=card.nextSibling;
    }
   }else{
-   emptyList.textContent=(catalogue.assets.length||archive.folders.length||projects?.items.length)?t('No matching models.'):t('No published catalogue is bundled. Open a reviewed remote catalogue JSON to browse models.');
+   emptyList.textContent=!loaded&&loading&&!search.value.trim()?'':(catalogue.assets.length||archive.folders.length||projects?.items.length)?t('No matching models.'):t('No published catalogue is bundled. Open a reviewed remote catalogue JSON to browse models.');
    if(emptyList.parentNode!==list)list.append(emptyList);
   }
   refreshCards();
@@ -379,13 +382,16 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
    if(!working&&!archiveSelection&&!selectedProject)renderDetails();
   }).catch(error=>{
    if(!disposed&&!loaded&&!working&&filter.value!=='projects')report(error);
-  }).finally(()=>{loading=undefined;});
+  }).finally(()=>{
+   loading=undefined;
+   if(!disposed&&!loaded&&filter.value!=='projects')renderList();
+  });
  }
  search.oninput=()=>{resetPage();renderList();};
  filter.onchange=()=>{
   resetPage();selectedProject=undefined;selected=undefined;archiveSelection=undefined;
   if(filter.value==='projects'&&!loaded&&!working)status.textContent='';
-  renderList();renderDetails();loadCatalogue();
+  loadCatalogue();renderList();renderDetails();
  };
  file.onchange=async()=>{const chosen=file.files?.[0];file.value='';if(!chosen||working)return;try{if(chosen.size>4*1024*1024)throw new Error(t('Catalogue exceeds 4 MiB'));const parsed=parseModelLibraryCatalogue(await chosen.text());if(disposed||working)return;if(!parsed.valid)throw new Error(parsed.errors.join(' '));catalogue=parsed.catalogue;loaded=true;resetPage();selectedProject=undefined;selected=undefined;archiveSelection=undefined;search.value=filter.value='';status.textContent='';renderList();renderDetails();}catch(error){if(!disposed)report(error);}};
  return {
@@ -395,8 +401,8 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
     resetPage();filter.value=filterMode;search.value='';selectedProject=undefined;selected=undefined;archiveSelection=undefined;
     if(!loaded&&!working)status.textContent='';
    }
-   renderList();if(!working)renderDetails();
-   dialog.showModal();search.focus();loadCatalogue();
+   loadCatalogue();renderList();if(!working)renderDetails();
+   dialog.showModal();search.focus();
   },
   dispose(){disposed=true;controller?.abort();previewObserver?.disconnect();recentCards.clear();cards.clear();dialog.remove();}
  };
