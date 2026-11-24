@@ -85,8 +85,9 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
  }
  type LibraryItem=ModelLibraryProject|ModelLibraryAsset|ModelLibraryArchive['folders'][number];
  let cards=new Map<LibraryItem,HTMLButtonElement>();
+ const recentCards=new Map<LibraryItem,HTMLButtonElement>();
  let pressedCard:HTMLButtonElement|undefined;
- let cardsDisabled=false,cardPreviews=options?.previews;
+ let cardsDisabled=false,cardPreviews=options?.previews,cardCatalogue=catalogue;
  const emptyList=el('p');
  const searchText=new WeakMap<LibraryItem,string>();
  function matchesSearch<Item extends LibraryItem>(item:Item,terms:string[],describe:(item:Item)=>string){
@@ -124,7 +125,27 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
   card.onclick=()=>{if(working)return;onSelect();refreshCards();renderDetails();};
   return card;
  }
+ function takeCard(item:LibraryItem){
+  const mounted=cards.get(item);
+  if(mounted)return mounted;
+  const recent=recentCards.get(item);
+  if(recent){recentCards.delete(item);recent.disabled=working;}
+  return recent;
+ }
+ function rememberCard(item:LibraryItem,card:HTMLButtonElement){
+  const preview=card.querySelector<HTMLImageElement>('img[data-library-preview]');
+  // Retain cards that need no preview work while detached. Unseen and
+  // unfinished previews get a fresh viewport observation on the next visit.
+  if(preview&&(!preview.complete||!preview.naturalWidth))return;
+  recentCards.set(item,card);
+  if(recentCards.size>MODELS_PER_PAGE){
+   const oldest=recentCards.keys().next();
+   if(!oldest.done)recentCards.delete(oldest.value);
+  }
+ }
  function renderList(){
+  const reuseRecent=cardCatalogue===catalogue&&cardPreviews===options?.previews;
+  if(!reuseRecent)recentCards.clear();
   const scroll=list.scrollTop,mode=filter.value;
   const terms=fold(search.value).trim().split(/\s+/).filter(Boolean);
   const matches=mode==='projects'?[]:catalogue.assets.filter(asset=>
@@ -143,7 +164,7 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
   if(total)modelRange.textContent=t`${start+1}–${Math.min(total,end)} of ${total} models`;
   const next=new Map<LibraryItem,HTMLButtonElement>();
   for(const project of pageSlice(projectMatches,0)){
-   let card=cards.get(project);
+   let card=takeCard(project);
    if(!card){
     card=createCard(()=>{selectedProject=project;selected=undefined;archiveSelection=undefined;});
     card.append(projectImage(project),el('strong',project.title),el('small',t('Robot project · Includes code')));
@@ -151,7 +172,7 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
    next.set(project,card);
   }
   for(const asset of pageSlice(matches,projectMatches.length)){
-   let card=cardPreviews===options?.previews?cards.get(asset):undefined;
+   let card=cardPreviews===options?.previews?takeCard(asset):undefined;
    if(!card){
     card=createCard(()=>{selectedProject=undefined;selected=asset;archiveSelection=undefined;});
     card.setAttribute('aria-label',`${asset.title} · ${asset.licence.spdx}`);
@@ -162,7 +183,7 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
    next.set(asset,card);
   }
   for(const folder of pageSlice(archiveMatches,projectMatches.length+matches.length)){
-   let card=cards.get(folder);
+   let card=takeCard(folder);
    if(!card){
     card=createCard(()=>{selectedProject=undefined;selected=undefined;archiveSelection=folder;});
     card.dataset.archiveFolder=folder.name;
@@ -173,8 +194,9 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
   for(const [item,card] of cards){
    if(next.get(item)===card)continue;
    clearPreviews(card);card.remove();
+   if(reuseRecent)rememberCard(item,card);
   }
-  cards=next;cardPreviews=options?.previews;
+  cards=next;cardPreviews=options?.previews;cardCatalogue=catalogue;
   if(cards.size){
    emptyList.remove();
    let cursor=list.firstChild;
@@ -325,5 +347,5 @@ export function mountModelLibraryPanel(parent:HTMLElement,session:CadSession,eva
  search.oninput=()=>{resetPage();renderList();};
  filter.onchange=()=>{resetPage();selectedProject=undefined;selected=undefined;archiveSelection=undefined;renderList();renderDetails();};
  file.onchange=async()=>{const chosen=file.files?.[0];file.value='';if(!chosen||working)return;try{if(chosen.size>4*1024*1024)throw new Error(t('Catalogue exceeds 4 MiB'));const parsed=parseModelLibraryCatalogue(await chosen.text());if(disposed||working)return;if(!parsed.valid)throw new Error(parsed.errors.join(' '));catalogue=parsed.catalogue;resetPage();selectedProject=undefined;selected=undefined;archiveSelection=undefined;search.value=filter.value='';status.textContent='';renderList();renderDetails();}catch(error){report(error);}};
- return {open(filterMode?:'projects'){if(!disposed&&!dialog.open){if(filterMode){resetPage();filter.value=filterMode;search.value='';selectedProject=undefined;selected=undefined;archiveSelection=undefined;}renderList();if(!working)renderDetails();dialog.showModal();search.focus();if(!loaded){status.textContent=t('Loading models…');loading??=options!.load!().then(data=>{if(disposed)return;const checked=validateModelLibraryCatalogue(data.catalogue);if(!checked.valid)throw new Error(checked.errors.join(' '));catalogue=checked.catalogue;options={...options,...data};localFiles.clear();for(const [path,bytes]of data.localFiles??[])localFiles.set(path,bytes.slice());loaded=true;status.textContent='';renderList();renderDetails();}).catch(error=>{if(!disposed)report(error);}).finally(()=>{loading=undefined;});}}},dispose(){disposed=true;controller?.abort();previewObserver?.disconnect();dialog.remove();}};
+ return {open(filterMode?:'projects'){if(!disposed&&!dialog.open){if(filterMode){resetPage();filter.value=filterMode;search.value='';selectedProject=undefined;selected=undefined;archiveSelection=undefined;}renderList();if(!working)renderDetails();dialog.showModal();search.focus();if(!loaded){status.textContent=t('Loading models…');loading??=options!.load!().then(data=>{if(disposed)return;const checked=validateModelLibraryCatalogue(data.catalogue);if(!checked.valid)throw new Error(checked.errors.join(' '));catalogue=checked.catalogue;options={...options,...data};localFiles.clear();for(const [path,bytes]of data.localFiles??[])localFiles.set(path,bytes.slice());loaded=true;status.textContent='';renderList();renderDetails();}).catch(error=>{if(!disposed)report(error);}).finally(()=>{loading=undefined;});}}},dispose(){disposed=true;controller?.abort();previewObserver?.disconnect();recentCards.clear();cards.clear();dialog.remove();}};
 }
