@@ -9,9 +9,9 @@
 - OpenSCAD and ImplicitCAD are ideas-only references: consult documentation,
   not their GPL/AGPL implementations. Keep our CAD Script compiler original;
   see docs/CODE-MODE.md for the implemented language and reference boundary.
-- The repository remains private. On 2026-11-13 the owner requested no GitHub Actions
-  while private to conserve Free-tier CI allowance. Actions is disabled, and the
-  old workflow is archived outside .github/workflows. Run checks/builds locally;
-  do not enable cloud workflows or change visibility unless the owner directs it.
+- The repository is public since 2026-11-24 (it was private until then). The
+  owner asked on 2026-11-13 not to run GitHub Actions. Actions stays disabled and
+  the old workflow is archived outside .github/workflows. Run checks and builds
+  locally, and do not enable cloud workflows unless the owner says so.
 - Preserve saved project definitions and every existing history revision. UI/view
   preferences and transient drag previews do not belong in model history.

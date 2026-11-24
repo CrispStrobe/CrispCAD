@@ -53,6 +53,9 @@ and step 4 of [PARAMETRIC-CAD-STRATEGY.md](PARAMETRIC-CAD-STRATEGY.md#delivery-o
   `archive/cad-sim-optimization-20261116`.
 - Renamed the product to CrispCAD. Identifiers that existing data depends on
   were deliberately kept (see the README).
+- Repository made public after secret scans of the full history (gitleaks,
+  trufflehog and pattern greps; every hit was a false positive) and a review of
+  library and vendored licences.
 - Still open: 18 unit tests were already failing on `main` before #78. They are
   tolerance misses (about 8.7e-9 against a 5e-9 limit) and timeouts in heavy
   rover, physics and library tests. #78 adds no failures.
@@ -71,7 +74,41 @@ Done in the kernel lab, on branch `ccr-f42f1bfe-3ekdio`:
 Exit criterion: the suite has no new failures against the upstream baseline,
 and the coverage numbers in `docs/kernels.md` are measured.
 
-### Phase 2: exact backend experiment in CrispCAD
+### Phase 2: exact backend experiment in CrispCAD. **Qualified in Node 2026-11-24**
+
+Results (details in [experiments/exact-kernel/README.md](../experiments/exact-kernel/README.md)):
+
+- **Reference parts:** 27/27 within 1e-6. Worst relative errors are 1.4e-15 on
+  volume and 1.2e-11 on area; bounding boxes are within 3.2e-13 mm.
+- **Fillet, chamfer and shell:** within 1e-8 of the closed forms.
+- **STEP read back by SMLib:** 27/27 exact.
+- **STEP read back by our own `step-tessellator.wasm` importer:**
+  - 26/27 parts. Flat-faced parts come back identical; curved parts are within
+    6.4e-3 on volume.
+  - It cannot mesh a full torus. That is an importer gap: SMLib reads the same
+    file exactly.
+- **Malformed input:** rejected before the kernel runs. Failures inside the
+  kernel come back as clean errors.
+- **Speed and memory (Node):**
+  - build: 0.85 s CPU for all 27 parts;
+  - mesh: 2.2 s CPU for all 27 parts;
+  - WASM memory peaks at 92 MiB.
+  - Meshing a face with many holes grows roughly with the square of the hole
+    count: 3.8 s for a plate with 48 holes.
+- **Not supported yet** (each raises an explicit error):
+  - minkowski, text, twisted or tapered extrusion;
+  - most hulls;
+  - circles with fewer than 16 segments;
+  - large tessellated constructors.
+
+Remaining work for this phase:
+
+- product entry (iPad WebKit measurements, the geometry worker, cancellation);
+- the importer's torus gap;
+- faster meshing of faces with many holes.
+
+Original scope of the phase:
+
 
 Lives in `experiments/exact-kernel/` with its own `package.json`. It is not a
 runtime dependency.
@@ -126,13 +163,13 @@ Product entry additionally needs:
 ## Owner decisions
 
 - **Licence of the exact backend.** `@classcad/smlibwasm` is
-  `MIT AND Apache-2.0 AND OFL-1.1`; the OFL part covers bundled fonts.
-  [AGENTS.md](../AGENTS.md) requires MIT/Apache/BSD-like dependencies. Options:
-  accept the OFL fonts, or ship the package without them. Until this is decided,
-  the backend stays in `experiments/`.
+  `MIT AND Apache-2.0 AND OFL-1.1`. The only OFL items are the Lato font
+  (`dist/_fonts.js`, `dist/_fonts.d.ts`) and `fonts/OFL.txt`. The audit showed
+  the font can be dropped: with a build alias to an empty module, modeling and
+  STEP still work, and only `Text()` fails cleanly. Tree-shaking alone does not
+  remove it. Recommendation: ship with the alias, so the dependency is
+  MIT + Apache-2.0 only. Until this is decided, the backend stays in
+  `experiments/`.
 - **Name of the kernel lab.** The fork also calls itself "CrispCAD". Renaming the
   fork repository, for example to `crispcad-kernel-lab`, would avoid two things
   with the same name.
-- **Repository visibility.** The owner asked on 2026-11-24 for this repository
-  to become public. That happens after a check for secrets in its history and a
-  review of third-party licences.

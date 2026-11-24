@@ -1,11 +1,12 @@
 # Local verification; GitHub Actions paused
 
-Owner decision, 2026-11-13: preserve the private repository and its GitHub Free-tier
-CI allowance. GitHub Actions is disabled in repository settings. There are no
+Owner decision, 2026-11-13: no GitHub Actions runs (taken while the repository was
+private, to save the Free-tier CI allowance). The repository became public on
+2026-11-24, and Actions is still disabled in repository settings. There are no
 active workflow files under `.github/workflows` and no automatic push/PR runs.
 The former configuration is retained at
 [ci/github-check.yml.disabled](ci/github-check.yml.disabled) for a deliberate future
-change. Do not enable Actions or change repository visibility automatically.
+change. Do not enable Actions unless the owner asks.
 
 Run verification locally:
 
