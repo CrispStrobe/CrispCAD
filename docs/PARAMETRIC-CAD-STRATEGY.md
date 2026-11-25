@@ -215,8 +215,9 @@ no Macad3D code or interface has been transplanted.
    SMLib (`@classcad/smlibwasm`) standalone qualification: [experiments/exact-kernel](../experiments/exact-kernel/README.md).
    Product entry (2026-11-25): STEP export and exact measures passed this gate and ship
    opt-in through `@brickwright/cad-exact` (the kernel lab's `@crispcad/exact-kernel`);
-   fillet, chamfer and shell wait for a document node, see the
-   [design note](CRISPCAD-CONVERGENCE.md#exact-features-design-note).
+   exact fillet, chamfer and shell followed the same day as the `exact-feature` node of
+   document version 41, see
+   [exact features](CRISPCAD-CONVERGENCE.md#exact-features-document-version-41-done-2026-11-25).
 5. **Components, configurations and assembly.** Explicit linked versus independent
    instances, parameter variants, stable mate frames and qualified Jolt actuators.
    Share the same headless command layer with Brickwright and CrispMesh.

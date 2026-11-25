@@ -79,6 +79,54 @@ parameters are validated before committing. See [PARAMETERS.md](PARAMETERS.md)
 for expression syntax and limits. Up to 256 sketches are supported within the
 existing 16 MiB snapshot and 2000 solid-node budgets.
 
+### Document versions
+
+The document `version` is the oldest schema that can represent the document, not the version
+of the application that saved it. Opening or saving never changes it; an edit raises it only
+when it adds something an older schema cannot hold (a sketch: 3, a mirror: 13, a pattern: 14,
+an artwork-linked sketch: 39–40, …). Older applications refuse versions they do not know
+instead of opening an approximation, and nothing is ever downgraded. So a project keeps opening
+in older builds until it uses a newer feature.
+
+**Version 41 (2026-11-25) adds `exact-feature` nodes**: exact fillet, chamfer and shell built
+by the optional exact B-rep kernel. A project that has none keeps its version (40 or lower) and
+stays readable by builds that predate 41; adding the first exact feature raises it to 41. Undo
+returns to the earlier version, and history revisions keep the version they were saved with.
+
+```ts
+interface ExactFaceSelector { faceNormal: [number, number, number]; outermost?: true }
+interface ExactFeature {
+  kind: 'exact-feature';
+  featureVersion: 1;
+  source: string;                       // the body it rounds, bevels or hollows
+  operation: 'fillet' | 'chamfer' | 'shell';
+  size: FeatureScalar;                  // radius, distance or wall thickness (mm)
+  edges?: 'all' | ExactFaceSelector;    // fillet and chamfer only
+  openFaces?: ExactFaceSelector[];      // shell only: 1–6 removed faces
+  display?: { sourceKey: string; positions: number[]; indices: number[] };
+  // Normal SolidNode identity, name, color, transform and physics also apply.
+}
+```
+
+- Selectors follow the kernel interface: every edge, or the edges of one planar face chosen by
+  outward normal (`outermost` takes the furthest matching face); shell faces are removed by
+  outward normal. Normals are in the frame the source is placed in. There is no topological
+  naming.
+- `display` is a cache: the exact result tessellated at 0.01 mm / 10°, bounded like a `mesh`
+  node (750 000 coordinates, 1 500 000 indices). `sourceKey` is `exactFeatureKey(doc, id)`, a
+  signature of the settings, the source subtree's geometry (ignoring IDs, names, colours,
+  physics and other displays) and the values of parameters its expressions name. Manifold uses
+  the mesh only while the key matches; otherwise evaluation fails with
+  `FeatureEvaluationError` code `stale-exact` naming the node. A missing `display` is valid and
+  stale. Only commits inside `session.withKernel(...)` may set a display, and only one whose key
+  matches the model being committed.
+- `constructionInputs` includes `source`; copy, paste, duplicate, regeneration and model source
+  remap it like a mirror source. Model source writes `exactFeature(id, {...}, asset(id))`,
+  referencing the mesh like an imported mesh asset. History archives store the display as a
+  shared content object, so moving or renaming a feature does not copy it.
+- STEP export and exact measures rebuild the operation on the exact source; they never read
+  `display`.
+
 ## Graph and errors
 
 `designGraph(doc)` derives a deterministic topological order from canonical

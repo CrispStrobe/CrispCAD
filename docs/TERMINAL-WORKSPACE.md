@@ -86,6 +86,10 @@ commands use the same placement default.
 | `code` | opens the persistent CAD Script workspace | `script` |
 | `export step` | optional bodies: `all`, IDs or quoted names (default: the selection, else every solid body) | |
 | `measure exact` | optional bodies, as for `export step` | |
+| `fillet` | radius; optional bodies (default: the selection); `--face <normal>` | |
+| `chamfer` | distance; optional bodies; `--face <normal>` | |
+| `shell` | wall thickness; optional bodies; one or more `--open <normal>` | |
+| `recompute exact` | optional bodies (default: all) | |
 
 Movement acts on the selected top-level bodies in one transaction. Rotation
 adds each body's XYZ rotation values; scaling multiplies each body's local scale.
@@ -134,10 +138,45 @@ export step all
 - A request has 60 seconds; cancelling (or the timeout) terminates only the exact worker. The
   Manifold evaluator keeps running.
 
+### Exact fillet, chamfer and shell
+
+`fillet`, `chamfer` and `shell` add an exact feature (document version 41) built by the same
+kernel. They edit the model, so each is one Undo step, recorded with the kernel that built it.
+
+```text
+fillet 2 "Bracket"                  # round every edge, r = 2 mm
+chamfer 1 "Bracket" --face top      # bevel the edges of the top face by 1 mm
+shell 1.5 "Box" --open +z --open -y # hollow to a 1.5 mm wall, open at the top and front
+recompute exact                     # rebuild out-of-date exact features
+```
+
+- **Selectors.** Without `--face`, every edge is used. `--face` takes the edges of one planar
+  face, chosen by its outward normal: `+x`, `-x`, `+y`, `-y`, `+z`, `-z`, `top`, `bottom`,
+  `front` (−Y), `back`, `left`, `right`, or an explicit `X,Y,Z`. If several faces match, the
+  outermost along the normal is used. A shell removes 1 to 6 faces, each `--open <normal>`.
+  There is no topological naming: selectors are re-evaluated on the current source.
+- **Targets** are top-level bodies by ID or exact name, `all`, or (no target) the selection.
+  The body becomes the feature's source, under Inputs, and stays editable.
+- **How it is stored.** The node keeps the operation, size and selectors, plus the exact
+  result tessellated at 0.01 mm / 10° (`display`), so Manifold-only consumers (viewport,
+  physics, printability, drawings, STL/3MF, BrickWright) work without the kernel. `export step`
+  and `measure exact` never use that mesh; they rebuild the operation on the exact source.
+- **Out of date.** The mesh carries the key of the source geometry and settings it was computed
+  from. After an upstream change (a source dimension, a parameter it uses, the size) Manifold
+  refuses it with `stale-exact`: “… the exact fillet is out of date after an upstream change.
+  Recompute it with the exact kernel …”. `recompute exact [targets]` rebuilds every stale
+  feature in one Undo step (“Recompute exact features”). Renaming, moving, duplicating or
+  pasting a feature keeps its mesh.
+- **Replay.** The commit happens inside `session.withKernel(...)`, so its record carries
+  `context.kernel`; `apply` refuses it on another kernel version (see
+  [GUI actions and exact replay](#gui-actions-and-exact-replay)).
+- A radius the kernel cannot realise fails with the kernel's diagnostic and changes nothing.
+
 What the exact lowering covers: boxes, cylinders and spheres (segment counts are display
 resolution; the solids are exact), sketch extrusions and revolutions on every plane (rectangles,
 circles, outlines with arcs, regions with holes: arcs and circles stay exact), mirror, linear
-and circular patterns, Booleans including solid/hole combinations, and CAD Script objects (see
+and circular patterns, Booleans including solid/hole combinations, exact fillets, chamfers and
+shells (rebuilt on their exact source), and CAD Script objects (see
 [experiments/exact-kernel](../experiments/exact-kernel/README.md#cad-script-lowering)).
 
 ### Custom aliases
@@ -249,6 +288,13 @@ together in one Undo step. Capturing the read dependencies of every other
 editing policy remains follow-up work; older records cannot gain context they
 never recorded.
 
+Edits whose result was computed by the exact kernel (`fillet`, `chamfer`, `shell`,
+`recompute exact`, the editor's automatic recompute) carry `context.kernel`
+(`{id:'smlib', package:'@crispcad/exact-kernel', version}`). Replay needs a host that declares
+the same kernel package and version; another version is refused with “Recorded command is
+stale: it was built with @crispcad/exact-kernel 0.1.0, but this host has …”, and a host without
+the kernel is refused as well. Records without `context.kernel` replay everywhere.
+
 Every successfully completed modeling operation enters the existing Undo stack
 once. There is no terminal Undo stack and no saved-document schema migration.
 Viewing the transcript, changing visibility, typing, completing, and previewing
@@ -342,8 +388,10 @@ Records without `context.kernel`, including every record made before this field 
 depend on a kernel and replay as before. Kernel records are non-portable in the CAD Script
 journal export. `export step` and `measure exact` do not edit the model, so they produce no
 records; their results name the kernel (`kernel` in `CommandRunResult` and in the MCP results).
-No shipped command edits the model through the exact kernel yet (see the design note in
-[CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#exact-features-design-note)).
+The commands that edit the model through the exact kernel are `fillet`, `chamfer`, `shell` and
+`recompute exact` (and the editor's dialog and automatic recompute, which run the same code);
+their records carry `context.kernel`. See
+[exact fillet, chamfer and shell](#exact-fillet-chamfer-and-shell).
 
 ## Journal export
 

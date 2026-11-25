@@ -311,6 +311,31 @@ creates declare the pinned exact kernel; a host that passes its own `session` de
 with `createCadSession(document, {kernels})` (from `@brickwright/cad-exact/identity`), or such
 records are refused with a clear message.
 
+**Document version 41: exact fillet, chamfer and shell (2026-11-25).** The SDK built from this
+repository reads and writes version 41, which adds the `exact-feature` node
+([PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md#document-versions)). A document reaches version 41
+only when a user adds an exact feature; every other document keeps its version. The node stores
+the exact kernel's display mesh, so a host evaluates, simulates, prints and drafts it with
+Manifold alone: no exact kernel is loaded until a user creates or recomputes one. An
+out-of-date mesh is the evaluation error `stale-exact`; the embedded editor recomputes it after
+the user's own edit, as one step labelled "Recompute exact features" recorded with
+`context.kernel`.
+
+**BrickWright must sync this SDK before CrispCAD-saved version 41 files reach it.** The SB3
+bundle keeps `brickwright/cad.json` byte for byte whatever its version (checked by
+`npm run verify:brickwright`, which now also round-trips a version 41 document through the real
+BrickWright writer and loader), but an editor built on an older SDK refuses to open it
+("unsupported format, version or units"). Projects without exact features are unaffected.
+`npm run verify:brickwright-sync` reports the BrickWright SDK as stale ("Vendored SDK differs")
+until BrickWright runs `scripts/sync-cad-sdk.mjs` against this build; that is the expected state
+between the two releases. On a scratch clone of brickwright-lite synced to this build it passes
+(Jolt pins, shared interaction sources and the pinned SDK). `npm run build:brickwright-sdk` had
+been failing since the exact kernel entered the geometry worker (SMLib's top-level await under
+the SDK's ES2020 target); worker chunks may now use it, and packaging checks that `sdk.js` and
+every host-parsed chunk still parse as ES2020. A host that passes its own `session` must declare the exact kernel
+(`createCadSession(document, {kernels:[exactKernelIdentity]})`), or creating and recomputing
+exact features fails with "This session does not provide the smlib kernel".
+
 Full SDK preview/control behavior: [motor programs](CAD-MOTOR-PROGRAMS.md) and
 [simulation coverage](SIMLAB-PARITY.md). The standalone owns its project library;
 Brickwright owns its SB3 persistence and VM controls. Both retain the full versioned

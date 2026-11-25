@@ -12,6 +12,7 @@ const labels = new Set([
   'union', 'intersect', 'Subtract (first selected is the base)', 'Separate operands',
   'Duplicate', 'Delete', 'Detach joints', 'Import geometry', 'Cut objects',
   'Paste objects', 'Restore coded project', 'Imported project', 'Duplicate project', 'Rename project', 'Edit model source', 'Run commands',
+  'Fillet body', 'Chamfer body', 'Shell body', 'Add exact features', 'Edit exact feature', 'Recompute exact features',
 ]);
 export function translateHistoryLabel(label: string): string {
   if (labels.has(label)) return t(label);

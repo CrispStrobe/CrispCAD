@@ -31,6 +31,7 @@ export function selectionFragment(input:CadDocument,selection:readonly string[])
    if(isSketchFeature(n))sketchFeatureExpressions(n).forEach(references);
    if(n.kind==='mirror'&&typeof n.offset==='string')references(n.offset);
    if(n.kind==='pattern')patternExpressions(n.pattern).forEach(references);
+   if(n.kind==='exact-feature'&&typeof n.size==='string')references(n.size);
   }const scanned=new Set<string>();
   while([...required].some(name=>!scanned.has(name)))for(const name of [...required])if(!scanned.has(name)){scanned.add(name);references(original.parameters[name].expression);}
   original.parameters=Object.fromEntries(Object.entries(original.parameters).filter(([name])=>required.has(name)));
@@ -54,6 +55,7 @@ export function mergeFragmentParameters(target:CadDocument,source:CadDocument,id
   if(n.kind==='extrusion'&&pasted.kind==='extrusion'&&typeof n.distance==='string')pasted.distance=rewrite(n.distance);
   if(n.kind==='mirror'&&pasted.kind==='mirror'&&typeof n.offset==='string')pasted.offset=rewrite(n.offset);
   if(n.kind==='pattern'&&pasted.kind==='pattern')pasted.pattern=mapPatternScalars(n.pattern,value=>typeof value==='string'?rewrite(value):value);
+  if(n.kind==='exact-feature'&&pasted.kind==='exact-feature'&&typeof n.size==='string')pasted.size=rewrite(n.size);
   if(n.kind==='revolution'&&pasted.kind==='revolution'){
    if(typeof n.angle==='string')pasted.angle=rewrite(n.angle);
    if(typeof n.axisOffset==='string')pasted.axisOffset=rewrite(n.axisOffset);

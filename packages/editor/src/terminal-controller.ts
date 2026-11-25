@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {commandHelp,commandRegistry,createCommandJournal,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseExactCommand,prepareCommand,t} from '@brickwright/cad-core';
+import {commandHelp,commandRegistry,createCommandJournal,EXACT_FEATURE_COMMANDS,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseExactCommand,parseExactFeatureCommand,parseRecomputeCommand,prepareCommand,recomputeExactFeatures,runExactFeatureCommand,t} from '@brickwright/cad-core';
 import type {CadSession,Vec3,SessionCommandRecord,CommandSpec,CommandStep,CommandValue,PreparedCommand,JournalExportFormat,ExactCommandHost,ExactCommandFile} from '@brickwright/cad-core';
 import type {CadCommand} from './index.js';
 import {terminalArguments,terminalTokens} from './terminal-coordinates.js';
@@ -15,7 +15,8 @@ type Value=CommandValue;
 type Step=CommandStep;
 type Pending={name:string;steps:readonly Step[];values:Value[];revision:number;projectId:string;targets?:readonly string[];finish:(values:Value[])=>void;invocation:PreparedCommand['invocation']};
 export type TerminalOptions={executeEditorCommand:(command:CadCommand)=>void|Promise<void>;openCodeWorkspace:()=>void;storage?:TerminalStorage;
- /** Serves `export step` and `measure exact` (the editor's lazily loaded exact-kernel worker). */
+ /** Serves `export step`, `measure exact`, `fillet`, `chamfer`, `shell` and `recompute exact`
+  * (the editor's lazily loaded exact-kernel worker). */
  exact?:ExactCommandHost;
  /** Delivers a file a command produced, such as the STEP export. */
  saveFile?:(file:ExactCommandFile)=>Promise<void>};
@@ -171,6 +172,15 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
     if(!args.length){append('output',journal.summary());return;}
     if(args[0]!=='export'||args.length>2||args[1]!==undefined&&!['cadscript','replay'].includes(args[1]))throw new Error(t('Usage: journal [export [cadscript|replay]].'));
     append('output',journal.export((args[1]??'cadscript') as JournalExportFormat));return;
+   }
+   if(EXACT_FEATURE_COMMANDS.includes(name)||name==='recompute'){
+    const parsed=name==='recompute'?undefined:parseExactFeatureCommand(session,name,tail),recompute=parsed?undefined:parseRecomputeCommand(session,tail);
+    if(!options.exact)throw new Error(t('The exact kernel is not available in this host.'));
+    append('output',t('Running on the exact kernel…'));
+    const record=<T,>(line:string,commit:()=>T)=>journal.withInvocation(line,commit);
+    const done=parsed?await runExactFeatureCommand(session,options.exact,parsed,{record}):await recomputeExactFeatures(session,options.exact,recompute!.features,{record,invocation:recompute!.invocation});
+    append('output',done.output);
+    return;
    }
    if(definition.kernel==='exact'){
     const exact=parseExactCommand(session,name,tail);

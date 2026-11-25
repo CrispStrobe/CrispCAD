@@ -14,6 +14,7 @@ import type {SketchPoint} from './sketch-outline.js';
 import {constructionInputs} from './document.js';
 import type {CadDocument, Vec3} from './document.js';
 import {evaluateExpression, evaluateParameters} from './parameters.js';
+import {evaluateExactFeature} from './exact-feature.js';
 import type {Quantity, ParameterUnit} from './parameters.js';
 
 /** A literal or bounded expression, never an executable script or a triangle index. */
@@ -269,6 +270,7 @@ export function checkFeatures(doc:CadDocument) {
     if(node.kind==='extrusion'){if(doc.version<3)throw new Error(t('Extrusion features require document version 3'));evaluateExtrusion(node,doc);}
     else if(node.kind==='mirror')evaluateMirror(node,doc);
     else if(node.kind==='pattern')evaluatePattern(node,doc);
+    else if(node.kind==='exact-feature')evaluateExactFeature(node,doc);
     else if(node.kind==='revolution'){if(doc.version<12)throw new Error(t('Revolution features require document version 12'));evaluateRevolution(node,doc);}
   }
 }
@@ -340,6 +342,7 @@ export function designGraph(doc:CadDocument):DesignGraphEntry[] {
     if(isSketchFeature(n))deps.push(`sketch:${n.sketchId}`,...sketchFeatureExpressions(n).flatMap(references));
     if(n.kind==='mirror'&&typeof n.offset==='string')deps.push(...references(n.offset));
     if(n.kind==='pattern')deps.push(...patternExpressions(n.pattern).flatMap(references));
+    if(n.kind==='exact-feature'&&typeof n.size==='string')deps.push(...references(n.size));
     for(const b of doc.parametric?.bindings??[])if(b.nodeId===n.id)deps.push(...references(b.expression));
     entries.push({key:`feature:${n.id}`,id:n.id,kind:'feature',label:n.name,dependencies:[...new Set(deps)]});}
   const byKey=new Map(entries.map(e=>[e.key,e])),ordered:DesignGraphEntry[]=[],seen=new Set<string>(),visiting=new Set<string>();
