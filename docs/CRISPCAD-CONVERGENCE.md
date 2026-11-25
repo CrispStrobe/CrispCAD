@@ -82,7 +82,35 @@ CrispCAD ──(packaged CAD SDK, @brickwright/cad-*)──▶ BrickWright (bric
   tolerance misses (about 8.7e-9 against a 5e-9 limit) and timeouts in heavy
   rover, physics and library tests. #78 adds no failures.
 
-### Phase 1: finish the kernel in the lab
+### Phase 1: finish the kernel in the lab. **Done 2026-11-25**
+
+Results, on lab branch `ccr-f42f1bfe-3ekdio` (head `c4bea5b93`):
+
+- **Catalog coverage:** **2,391/2,402 (99.5%)** build natively with
+  OpenCASCADE blocked, up from 2,344. The reproducible harness is
+  `experiments/kernel-qualification/catalogCoverage.ts`. 11 models still fail:
+  - 3 sweeps along curved rails;
+  - 2 holes on side faces;
+  - 1 sketch with several loops;
+  - 1 loft with sections off the XY plane;
+  - 4 SMLib extrude errors.
+- **Native mates:** these work, reusing the solver, which does not depend on the
+  kernel. On all 35 mated catalog models (594 parts), placements are identical
+  to OpenCASCADE's and volumes agree to within 8.7e-6. Still needing
+  OpenCASCADE:
+  - connectors placed by face or edge queries;
+  - `solvedModel(poses)` assemblies.
+
+  No catalog model uses either.
+- **Upstream `develop`:** merged (31 commits).
+- **Test suite:** typecheck, lint, ratchets and the licence audit pass. The fork
+  introduced two regressions, both now fixed. A clean full-suite count was
+  impossible on the shared machine (load average 130–320). Failures were
+  compared file by file against upstream instead, and the remaining
+  differences are timeouts and environment problems.
+
+Original scope:
+
 
 Done in the kernel lab, on branch `ccr-f42f1bfe-3ekdio`:
 
