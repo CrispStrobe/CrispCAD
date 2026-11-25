@@ -1,7 +1,7 @@
 # CrispCAD
 
 A local 3D solid editor for designing parts, editing dimensions and building
-models with code. Run it in a browser or as a native macOS/iPad app, or embed the
+models, optionally with code. Run it in a browser or as a native macOS/iPad app, or embed the
 same editor and document model in another application.
 
 **Status:** an early working CAD workbench. Geometry uses a mesh-solid kernel
@@ -9,11 +9,8 @@ same editor and document model in another application.
 constrained sketches remain roadmap work. See the
 [convergence roadmap](docs/CRISPCAD-CONVERGENCE.md).
 
-CrispCAD was called **Brickwright CAD** until 2026-11-24. The rename covers the
-product, app names and repository; saved projects, history archives, file
-formats, bundle identifiers and the `@brickwright/cad-*` packages that the
-[BrickWright](docs/INTEGRATION.md) programming app embeds keep their identifiers,
-so nothing existing has to be migrated.
+CrispCAD is used in our **Brickwright** App. See the `@brickwright/cad-*` packages; the
+[BrickWright](docs/INTEGRATION.md).
 
 ![CrispCAD workbench](docs/images/workbench.png)
 
