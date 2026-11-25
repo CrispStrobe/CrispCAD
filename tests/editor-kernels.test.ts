@@ -26,7 +26,7 @@ const boxIn=(session:ReturnType<typeof createCadSession>)=>session.add({kind:'bo
 describe('editor kernels for host sessions',()=>{
  it('exports the pinned exact kernel identity and declares it on editor sessions',()=>{
   expect(exactKernelIdentity).toBe(packageIdentity);
-  expect(exactKernelIdentity).toEqual({id:'smlib',package:'@crispcad/exact-kernel',version:'0.1.1'});
+  expect(exactKernelIdentity).toEqual({id:'smlib',package:'@crispcad/exact-kernel',version:'0.1.2'});
   expect(editorKernels).toEqual([exactKernelIdentity]);
   expect(Object.isFrozen(editorKernels)).toBe(true);
   expect(createEditorSession().kernels).toEqual([exactKernelIdentity]);

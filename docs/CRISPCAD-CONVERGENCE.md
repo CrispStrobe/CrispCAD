@@ -198,9 +198,15 @@ Product entry additionally needs:
 
 ### Phase 2b: move the exact kernel into the lab as a package. **Done 2026-11-25**
 
-Release: [`exact-kernel-v0.1.1`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.1)
-of the kernel lab, tarball `crispcad-exact-kernel-0.1.1.tgz`, SHA-256
-`a4852c58f150ea9b61a33135aa8ad60ea9dd2410095ed4b9bbae39060cc608a7`.
+Release: [`exact-kernel-v0.1.2`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.2)
+of the kernel lab, tarball `crispcad-exact-kernel-0.1.2.tgz`, SHA-256
+`f025cd79c5ee747ed0561a932e0db865a863335523bffa237142e5e2ddf73823`.
+
+0.1.2 replaced 0.1.1 (SHA-256 `a4852c58…08a7`) on 2026-11-25. It fixes the 0.1.1 bounding
+box's speed on trimmed curved bodies, with identical boxes (largest difference 1.8e-12 mm on
+243 catalog models): 0.1.1 sampled B-spline edges with SMLib's `Edge.pointAt`, which
+recomputes the arc length on every call (0.2–0.4 s per point); 0.1.2 evaluates the edge's
+own NURBS in JavaScript. The catalog's slowest boxes went from 38–576 s to 9–24 ms.
 
 0.1.1 replaced 0.1.0 (SHA-256 `1de74c8d…0027`) on 2026-11-25. It fixes three things the
 cross-check found: SMLib's own bounding box misses interior extremes of rotated curved
@@ -452,8 +458,9 @@ and native volumes at lab `2566debd9` / `e6ff5d3fc`:
   ≤ 6.5e-6. Path arcs were not the cause in the models checked.
 - **Fixed in the converter:** `for (let …)` closures shared one binding (`roll-cage-trolley`'s
   wire grid all at the last row; found by the native box).
-- **Reported, not fixed:** the exact kernel's 0.1.1 `bbox()` takes up to 3 min on trimmed NURBS
-  bodies (ellipsoid heaps; exact CPU 806 → 1,753 s for the catalog); the lab's native build gives
+- **Reported:** the exact kernel's 0.1.1 `bbox()` takes up to 3 min on trimmed NURBS
+  bodies (ellipsoid heaps; exact CPU 806 → 1,753 s for the catalog), **fixed in 0.1.2** (9–24 ms,
+  same boxes; the full catalog was not rerun on 0.1.2); still open: the lab's native build gives
   a self-intersecting outline (helmet chin straps) zero volume but nonzero area.
 
 ## Owner decisions (2026-11-24)
