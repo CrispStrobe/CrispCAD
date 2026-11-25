@@ -758,3 +758,11 @@ transpiler cannot strip to plain JS, or invalid dimensions at default parameters
 All 63,281 converted parts were evaluated with Manifold; 3 produced no solid. Curved
 primitives use 48 segments, so converted reference parts match their analytic
 volumes to about 3e-3 and planar parts exactly (`tests/kcad-import.test.ts`).
+
+Cross-check with Manifold and the exact kernel on all 2,402 models (2026-11-25, Phase 4,
+[experiments/catalog-crosscheck](../experiments/catalog-crosscheck/README.md)): where both
+kernels build a converted part they agree, but the converter turns kernelCAD's
+`cylinder(h, r, n)` (exact in kernelCAD, whatever *n*) and the ring of `torus(R, r, n)` into
+*n*-gons. That affects 10,608 parts and up to 15 % of a model's volume, and is the main
+converter fix to make. Next come `await shape.boundingBox(...)` (24 models, misreported as
+TypeScript), `extrudeRoundedRect` `axis` (34) and negative box dimensions (12).

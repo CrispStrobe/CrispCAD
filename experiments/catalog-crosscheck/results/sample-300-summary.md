@@ -59,7 +59,7 @@
 Parts built by both kernels: 6965; median |ΔV|/V of agreeing parts 0.00; planar agreeing parts 6096, max |ΔV|/V 8.8e-7.
 Low-segment intent probe: 1403 parts (1403 agree with Manifold within the faceting of the emitted N), median Manifold/intent − 1 = -0.06, min -0.36; 132 exact-unsupported models are unsupported only for that reason.
 Model totals, Manifold vs exact (kernelCAD intent for low segments), 264 models: 102 within 1e-6, 135 within 1e-3, 204 within 1e-2, 19 beyond 5e-2; median -8.2e-4, 5th percentile -0.06, min -0.10.
-CPU: Manifold 15 s total (median part 1.02 ms); exact 105 s total (median part 2.91 ms, max 0.7 s).
+CPU: Manifold 11 s total (median part 0.74 ms); exact 75 s total (median part 2.36 ms, max 0.4 s).
 
 | Three-way class (with native volumes) | Count |
 | --- | ---: |

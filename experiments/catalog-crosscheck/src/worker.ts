@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Child process of run.ts: converts one kernelCAD model at a time and builds every part
-// with Manifold (packages/geometry) and with the SMLib exact kernel (experiments/exact-kernel).
+// with Manifold (packages/geometry) and with the SMLib exact kernel (@crispcad/exact-kernel via packages/exact).
 // Protocol (process IPC): parent sends {id, kit, file}; child answers {type:'result', record}.
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -9,9 +9,8 @@ import { compileCode, createCadSession, type CodeProgram, type CodeShape, type C
 import { createGeometryKernel } from '@brickwright/cad-geometry';
 // @ts-expect-error untyped script module
 import { convertKernelCAD } from '../../../scripts/convert-kcad.mjs';
-import { ExactKernelError, type ExactKernel, type ExactSolid } from '../../exact-kernel/src/exact-kernel.ts';
-import { evaluateCadScript, lowerCodeShape, MIN_EXACT_SEGMENTS } from '../../exact-kernel/src/lower-cad-script.ts';
-import { createSmlibKernel } from '../../exact-kernel/src/smlib-kernel.ts';
+import { createSmlibKernel, ExactKernelError, type ExactKernel, type ExactSolid } from '@crispcad/exact-kernel';
+import { evaluateCadScript, lowerCodeShape, MIN_EXACT_SEGMENTS } from '../../../packages/exact/src/lower-cad-script.ts';
 import { chord, delta, tolerance, type Calibration, type CurvedKind, type Tolerance } from './tolerance.ts';
 
 type BBox = { min: number[]; max: number[] };

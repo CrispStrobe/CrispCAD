@@ -12,17 +12,17 @@
    "cpus": 8,
    "model": "Apple M1",
    "loadAverageAtStart": [
-    120.3,
-    101.2,
-    73
+    135.3,
+    163.8,
+    158.4
    ],
    "loadAverageAtEnd": [
-    138.4,
-    111.1,
-    78.8
+    136.1,
+    146.3,
+    151.9
    ]
   },
-  "started": "2026-11-25T05:14:42.488Z",
+  "started": "2026-11-25T05:53:28.667Z",
   "calibration": {
    "volume": {
     "prism": 1.0000000209001643,
@@ -178,8 +178,8 @@
    "node": "v26.4.0",
    "exact": "@classcad/smlibwasm 0.6.2"
   },
-  "finished": "2026-11-25T05:15:46.683Z",
-  "lastRunMinutes": 1.1
+  "finished": "2026-11-25T05:57:11.523Z",
+  "lastRunMinutes": 3.7
  },
  "models": 300,
  "modelClasses": {
@@ -269,12 +269,12 @@
   "min": -0.09968368387002835
  },
  "timing": {
-  "manifoldCpuMsTotal": 14836,
-  "exactCpuMsTotal": 104653,
-  "manifoldCpuMsMedianPart": 1.02,
-  "exactCpuMsMedianPart": 2.91,
-  "exactCpuMsMaxPart": 679.71,
-  "convertWallMsMedian": 74.91
+  "manifoldCpuMsTotal": 11018,
+  "exactCpuMsTotal": 75434,
+  "manifoldCpuMsMedianPart": 0.74,
+  "exactCpuMsMedianPart": 2.36,
+  "exactCpuMsMaxPart": 373.36,
+  "convertWallMsMedian": 33.36
  },
  "worstDisagreements": [
   {
