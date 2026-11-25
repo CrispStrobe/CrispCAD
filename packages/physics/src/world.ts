@@ -126,7 +126,7 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
     // Jolt copies these coordinates into its arrays and compound settings.
     // Reuse one set of native temporaries for all the hulls in this world.
     scratchVertex??=new J.Vec3(0,0,0);
-    scratchPosition??=new J.RVec3(0,0,0);
+    scratchPosition??=new J.Vec3(0,0,0);
     scratchRotation??=new J.Quat(0,0,0,1);
     // Condition each axis to [-.5,.5] to preserve shared axis-aligned bounds.
     const leaf=new J.ConvexHullShapeSettings();
