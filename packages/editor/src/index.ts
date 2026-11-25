@@ -16,7 +16,7 @@ import {importStep} from './step-import.js';
 import type { AssemblySection,GeometryResult } from '@brickwright/cad-geometry';
 import { createGeometryClient } from './geometry-client.js';
 // Identity only: no WebAssembly is loaded until an exact command runs in the exact worker.
-import {exactKernelIdentity} from '@brickwright/cad-exact/identity';
+import {createEditorSession,exactEditHost} from './kernels.js';
 import {artworkSketchTargets,prepareArtworkSketchRefresh} from './costume-refresh.js';
 import type {SketchProfile} from '@brickwright/cad-core';
 import {mountTransformReadout} from './transform-readout.js';
@@ -109,7 +109,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?
 }
 /** Mounts one isolated editor. No storage, window keyboard handlers, React or Scratch globals. */
 export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
-  const session = options.session ?? createCadSession(options.document,{kernels:[exactKernelIdentity]}); const ownsSession = !options.session;
+  const session = options.session ?? createEditorSession(options.document); const ownsSession = !options.session;
   const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
   if (shadow.childElementCount) throw new Error(t('Mount target is already in use'));
   const style = el('style'); style.textContent = themedEditorStyle(editorStyle+terminalStyle);host.dataset.cadColorMode=options.colorMode??'dark'; const shell = el('section', 'editor'); shell.setAttribute('aria-label', 'CAD editor');
@@ -214,7 +214,10 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     if(session.state.selection.length!==1)throw new Error(t('Select one top-level body to pattern'));
     patternPanel.open(id);
   };
-  const exactFeaturePanel=mountExactFeaturePanel(shell,session,()=>client.exact,async()=>{await whenIdle();viewport.frame();});
+  // Exact features commit kernel output, which only a session declaring the exact kernel accepts
+  // (see createEditorSession). Refuse before loading and running the kernel, not after.
+  const exactEdits=exactEditHost(session,client.exact);
+  const exactFeaturePanel=mountExactFeaturePanel(shell,session,()=>exactEdits,async()=>{await whenIdle();viewport.frame();});
   const openExactFeature=()=>{
     const [id]=session.state.selection,node=session.state.document.nodes[id];
     if(session.state.selection.length!==1)throw new Error(t('Select a top-level body for the exact feature'));
@@ -235,7 +238,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     const doc=session.state.document,stale=staleExactFeatures(doc);
     if(!stale.length)return;
     recomputing=true;message.textContent=t('Recomputing exact features on the exact kernel…');
-    try{await recomputeExactFeatures(session,client.exact,stale);}
+    try{await recomputeExactFeatures(session,exactEdits,stale);}
     catch(error){if(!automatic||session.state.document===doc)throw error;}
     finally{recomputing=false;}
   }
@@ -289,7 +292,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const openCodeWorkspace=()=>codePanel.openWorkspace(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);
   const terminalToggle=button('Terminal',()=>terminal.toggle(),status,'panel-toggle');
   terminalToggle.title=t('CAD terminal (Ctrl/⌘+`)');terminalToggle.setAttribute('aria-keyshortcuts','Control+Backquote Meta+Backquote');
-  const terminal=mountTerminalPanel(shell,session,{executeEditorCommand:executeCommand,openCodeWorkspace,storage:options.workspaceStorage,exact:client.exact,saveFile:async file=>{if(!options.onExport)throw new Error(t('This host has not provided file export'));await options.onExport({name:file.name,bytes:new TextEncoder().encode(file.text),mime:file.mime});},pickPoint:(done,plane)=>viewport.pickDraftPoint(done,plane),focusCanvas:()=>viewport.canvas.focus({preventScroll:true}),onVisibilityChange:visible=>terminalToggle.setAttribute('aria-pressed',String(visible))});
+  const terminal=mountTerminalPanel(shell,session,{executeEditorCommand:executeCommand,openCodeWorkspace,storage:options.workspaceStorage,exact:exactEdits,saveFile:async file=>{if(!options.onExport)throw new Error(t('This host has not provided file export'));await options.onExport({name:file.name,bytes:new TextEncoder().encode(file.text),mime:file.mime});},pickPoint:(done,plane)=>viewport.pickDraftPoint(done,plane),focusCanvas:()=>viewport.canvas.focus({preventScroll:true}),onVisibilityChange:visible=>terminalToggle.setAttribute('aria-pressed',String(visible))});
   button('Code',()=>codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined),toolbar,'compact-icon').title=t('Code an object');
   const parametersButton=button('Parameters',()=>parametersPanel.open(),toolbar,'compact-icon');parametersButton.title=t('Model parameters and formulas');
   if(options.headerContent){options.headerContent.classList.add('host-actions');designBar.append(options.headerContent);}
@@ -867,6 +870,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;
 export { createCadSession } from '@brickwright/cad-core';
+export {createEditorSession,editorKernels,exactKernelIdentity,providesKernel} from './kernels.js';
 export {browserCodeWorkspaceStorage} from './code-workspace-state.js';
 export type {CodeWorkspaceStorage} from './code-workspace-state.js';
 export { shapeCatalog, createPresetDocument } from './shapes.js';

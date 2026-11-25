@@ -96,4 +96,5 @@ export const messages:Record<string,string>={
  'Built exactly by the B-rep kernel (loaded on first use). A face is chosen by its outward normal; the outermost matching face is used. The source stays editable under Inputs.':'Exakt vom B-Rep-Kern erzeugt (beim ersten Gebrauch geladen). Eine Fläche wird über ihre äußere Normale gewählt; die äußerste passende Fläche wird verwendet. Die Quelle bleibt unter „Eingaben“ bearbeitbar.',
  'Apply exact feature changes':'Änderungen am exakten Feature anwenden',
  'Apply exact feature':'Exaktes Feature anwenden',
+ 'This editor session does not declare the exact kernel. The host must create it with createEditorSession() (or kernels: [exactKernelIdentity]).':'Diese Editor-Sitzung deklariert den exakten Kern nicht. Die Host-Anwendung muss sie mit createEditorSession() (oder kernels: [exactKernelIdentity]) erzeugen.',
 };
