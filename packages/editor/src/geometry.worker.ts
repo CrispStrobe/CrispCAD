@@ -16,8 +16,9 @@ self.onmessage = async (event: MessageEvent<GeometryRequest>) => {
       const {operation,document,bodies}=event.data.exact,started=performance.now();
       exact??=import('@brickwright/cad-exact').then(module=>module.createExactBackend()).catch(error=>{exact=null;throw error;});
       const backend=await exact,loaded=performance.now();
-      const result:ExactCommandResult=operation==='measure'?{operation,...backend.measure(document,bodies)}:{operation,...backend.exportStep(document,bodies)};
-      self.postMessage({request,result,timing:{loadMs:loaded-started,runMs:performance.now()-loaded,memory:backend.kernel.memory()}});
+      const computed=operation==='measure'?{operation,...backend.measure(document,bodies)}:{operation,...backend.exportStep(document,bodies)};
+      const result={...computed,timing:{loadMs:loaded-started,runMs:performance.now()-loaded,memoryBytes:backend.kernel.memory().heap}} as ExactCommandResult;
+      self.postMessage({request,result});
       return;
     }
     kernel ??= createGeometryKernel({ wasmURL });

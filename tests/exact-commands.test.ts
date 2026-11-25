@@ -3,7 +3,7 @@
 // replay, the terminal's export step / measure exact routing, and the worker client's separate,
 // cancellable exact channel.
 import {afterEach,describe,expect,it,vi} from 'vitest';
-import {createCadSession,createCommandJournal,createDocument,parseSessionCommand,serializeSessionCommand} from '../packages/core/src/index.js';
+import {createCadSession,createCommandJournal,createDocument,formatExactResult,parseSessionCommand,serializeSessionCommand} from '../packages/core/src/index.js';
 import type {ExactCommandHost,ExactCommandResult,KernelIdentity,SessionCommandRecord} from '../packages/core/src/index.js';
 import {createTerminalController} from '../packages/editor/src/terminal-controller.js';
 import {createGeometryClient} from '../packages/editor/dist/geometry-client.js';
@@ -105,8 +105,10 @@ describe('geometry client exact channel',()=>{
   workers[0].onmessage!({data:{request:workers[0].messages[0].request,result:{bodies:[],volume:0,triangles:0}}});
   expect((await evaluation).volume).toBe(0);
   const second=client.exact.run({operation:'measure',document:createDocument(),bodies:[]});
-  workers[2].onmessage!({data:{request:workers[2].messages[0].request,result:measure,timing:{loadMs:5,runMs:1,memory:{used:1,heap:0,handles:0}}}});
-  expect(await second).toEqual(measure);expect(client.lastExactTiming).toMatchObject({loadMs:5});
+  const timed={...measure,timing:{loadMs:812.4,runMs:3.2,memoryBytes:64*1048576}};
+  workers[2].onmessage!({data:{request:workers[2].messages[0].request,result:timed}});
+  expect(await second).toEqual(timed);
+  expect(formatExactResult(timed,createDocument()).output).toMatch(/\nExact kernel: load 812 ms · run 3 ms · WASM memory 64 MiB$/);
   const failed=client.exact.run({operation:'export-step',document:createDocument(),bodies:[]});
   const rejected=expect(failed).rejects.toMatchObject({name:'ExactCommandError',diagnostic:{feature:'mesh'}});
   workers[2].onmessage!({data:{request:workers[2].messages[1].request,error:'Scan (mesh): no exact B-rep',exactDiagnostic:{code:'unsupported',bodyId:'s',nodeId:'s',feature:'mesh',message:'Scan (mesh): no exact B-rep'}}});

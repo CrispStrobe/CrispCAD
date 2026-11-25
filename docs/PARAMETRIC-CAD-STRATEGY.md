@@ -213,6 +213,10 @@ no Macad3D code or interface has been transplanted.
    [the kernelCAD review](KERNELCAD-REVIEW.md) for what was adopted (MIT gear
    and mesh-printability code) and why a kernelCAD fork is deferred.
    SMLib (`@classcad/smlibwasm`) standalone qualification: [experiments/exact-kernel](../experiments/exact-kernel/README.md).
+   Product entry (2026-11-25): STEP export and exact measures passed this gate and ship
+   opt-in through `@brickwright/cad-exact` (the kernel lab's `@crispcad/exact-kernel`);
+   fillet, chamfer and shell wait for a document node, see the
+   [design note](CRISPCAD-CONVERGENCE.md#exact-features-design-note).
 5. **Components, configurations and assembly.** Explicit linked versus independent
    instances, parameter variants, stable mate frames and qualified Jolt actuators.
    Share the same headless command layer with Brickwright and CrispMesh.

@@ -10,8 +10,6 @@ type ExactRequest={exact:{operation:ExactCommandRequest['operation'];document:Ca
 type GeometryPayload={document:CadDocument;printability?:Partial<PrintabilitySettings>}|OffsetRequest|SliceRequest|ExactRequest;
 export type GeometryRequest=GeometryPayload&{request:number;wasmURL:string;locale:string};
 type WorkerResult=GeometryResult|SketchProfile|AssemblySection|PrintabilityReport|ExactCommandResult;
-/** Load and run time of the last exact request, measured inside the worker. */
-export interface ExactTiming {loadMs:number;runMs:number;memory:{used:number;heap:number;handles:number}}
 /** An exact-kernel failure with the body and feature it names (see @brickwright/cad-exact). */
 export class ExactCommandError extends Error {
   constructor(message:string,readonly diagnostic?:{code:string;bodyId:string;nodeId:string;feature:string;message:string}){super(message);this.name='ExactCommandError';}
@@ -25,7 +23,7 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
   // kernel's memory (64–92 MiB, never shrinking) is released by terminating its worker.
   function channel(timeoutMs:number,timeoutMessage:()=>string){
     let worker: Worker | null = null;
-    const pending = new Map<number, { resolve: (r: WorkerResult) => void; reject: (e: Error) => void; timer: ReturnType<typeof setTimeout>; timing?:(timing:ExactTiming)=>void }>();
+    const pending = new Map<number, { resolve: (r: WorkerResult) => void; reject: (e: Error) => void; timer: ReturnType<typeof setTimeout> }>();
     const fail = (error: Error) => {
       worker?.terminate(); worker = null;
       for (const p of pending.values()) { clearTimeout(p.timer); p.reject(error); } pending.clear();
@@ -34,15 +32,14 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
       if (worker) return worker;
       worker = createWorker ? createWorker() : new Worker(new URL('./geometry.worker.js', import.meta.url), { type: 'module' });
       worker.onmessage = e => {
-        const data = e.data as { request: number; result?: WorkerResult; error?: string; diagnostic?:FeatureDiagnostic; exactDiagnostic?:ExactCommandError['diagnostic']; timing?:ExactTiming }; const request = pending.get(data.request);
+        const data = e.data as { request: number; result?: WorkerResult; error?: string; diagnostic?:FeatureDiagnostic; exactDiagnostic?:ExactCommandError['diagnostic'] }; const request = pending.get(data.request);
         if (!request) return; pending.delete(data.request); clearTimeout(request.timer);
-        if(data.timing)request.timing?.(data.timing);
         if (data.error) request.reject(data.diagnostic?new FeatureEvaluationError(data.diagnostic):data.exactDiagnostic?new ExactCommandError(data.error,data.exactDiagnostic):new Error(data.error)); else request.resolve(data.result!);
       };
       worker.onerror = event => fail(new Error(event.message || t('Geometry worker failed')));
       return worker;
     };
-    function send<R extends WorkerResult>(payload:GeometryPayload,signal?:AbortSignal,timing?:(timing:ExactTiming)=>void):Promise<R>{
+    function send<R extends WorkerResult>(payload:GeometryPayload,signal?:AbortSignal):Promise<R>{
       if (disposed) return Promise.reject(new Error(t('Editor was disposed')));
       if(signal?.aborted)return Promise.reject(new Error(t('Request cancelled')));
       const request = ++sequence;
@@ -50,7 +47,7 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
         const abort=()=>fail(new Error(t('Request cancelled')));
         const done=()=>signal?.removeEventListener('abort',abort);
         const timer = setTimeout(() => fail(new Error(timeoutMessage())), timeoutMs);
-        pending.set(request, { resolve:result=>{done();resolve(result as R);}, reject:error=>{done();reject(error);}, timer, timing });
+        pending.set(request, { resolve:result=>{done();resolve(result as R);}, reject:error=>{done();reject(error);}, timer });
         signal?.addEventListener('abort',abort,{once:true});
         try { ensure().postMessage({ ...payload, request, wasmURL,locale:getLocale() }); } catch (e) { fail(e instanceof Error ? e : new Error(String(e))); }
       });
@@ -59,10 +56,9 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
   }
   const geometry=channel(30000,()=>t('Geometry exceeded 30 seconds. Simplify the edit or Undo.'));
   const exact=channel(EXACT_TIMEOUT_MS,()=>t('The exact kernel exceeded 60 seconds; the request was stopped.'));
-  let lastExactTiming:ExactTiming|undefined;
   const exactHost:ExactCommandHost={
     run(request,signal){
-      return exact.send<ExactCommandResult>({exact:{operation:request.operation,document:request.document,bodies:[...request.bodies]}},signal,timing=>{lastExactTiming=timing;});
+      return exact.send<ExactCommandResult>({exact:{operation:request.operation,document:request.document,bodies:[...request.bodies]}},signal);
     },
   };
   return {
@@ -77,7 +73,6 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
     },
     /** Exact-kernel requests (`export step`, `measure exact`); the kernel loads on first use. */
     exact:exactHost,
-    get lastExactTiming(){return lastExactTiming;},
     /** Stop a running exact request and release the exact kernel's memory. */
     cancelExact(){exact.fail(new Error(t('Request cancelled')));},
     dispose() { disposed = true; geometry.fail(new Error(t('Editor was disposed'))); exact.fail(new Error(t('Editor was disposed'))); },

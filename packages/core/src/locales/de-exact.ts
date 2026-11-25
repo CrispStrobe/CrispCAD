@@ -8,6 +8,7 @@ export const messages:Record<string,string>={
  '{0} uses the exact kernel; run it in a host that loads it.':'{0} verwendet den exakten Kern; führe es in einer Umgebung aus, die ihn lädt.',
  '{0} ({1}): volume {2} mm³ · area {3} mm² · bounds {4} – {5} · centroid {6}':'{0} ({1}): Volumen {2} mm³ · Fläche {3} mm² · Grenzen {4} – {5} · Schwerpunkt {6}',
  'Exact measures ({0}):':'Exakte Messwerte ({0}):',
+ 'Exact kernel: load {0} ms · run {1} ms · WASM memory {2} MiB':'Exakter Kern: Laden {0} ms · Ausführung {1} ms · WASM-Speicher {2} MiB',
  'STEP export: {0} bodies, {1} KiB, exact B-rep ({2}).':'STEP-Export: {0} Körper, {1} KiB, exakte B-Rep ({2}).',
  'The exact kernel exceeded 60 seconds; the request was stopped.':'Der exakte Kern hat 60 Sekunden überschritten; die Anfrage wurde gestoppt.',
  'STEP · exact B-rep (loads the exact kernel)':'STEP · exakte B-Rep (lädt den exakten Kern)',

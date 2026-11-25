@@ -51,6 +51,8 @@ history. Use a dedicated file: this process is its writer until closed.
 | `cad_render` | Read-only PNG views (iso/top/front/right/back/left/bottom) returned as MCP image content |
 | `cad_check_printability` | Read-only FDM screening of the current model: watertightness, sampled minimum wall, overhangs/bridges, bed fit, six ranked axis orientations |
 | `cad_export_stl` | Base64 printable mesh; automatic paired attribution for recorded library sources |
+| `cad_export_step` | Read-only exact STEP (AP214) as base64 from the optional exact B-rep kernel; `objectIds` limits the bodies; unsupported bodies fail with a diagnostic naming body and feature |
+| `cad_measure_exact` | Read-only exact volume, area, bounds and centroid per body from the exact kernel |
 | `cad_list_commands` | Read-only list of the shared command vocabulary with typed arguments |
 | `cad_run_commands` | Run terminal commands headlessly; all edits become one history step |
 
@@ -177,6 +179,17 @@ The result lists each command's canonical invocation and output, plus
 `journal`: the [journal export](TERMINAL-WORKSPACE.md#journal-export) of the
 script, in which plain primitives appear as CAD Script.
 
+`export step` and `measure exact` also run here. They use the optional exact B-rep kernel
+(`@brickwright/cad-exact`), which the host starts in its own thread
+(`apps/mcp/exact-worker.mjs`) on the first exact request; a request has 60 seconds, and
+cancellation terminates only that thread. Each reads the model as of its own line. Their
+results carry `kernel` (`{id:'smlib', package:'@crispcad/exact-kernel', version, smlib}`); an
+`export step` result carries `file` (`name`, `mime: model/step`, `base64`; all files of one
+script at most 3 MiB). A body without an exact construction (imported mesh, minkowski, text,
+…) stops the script with `Line N: <body> (<feature>): …`; nothing falls back to a mesh.
+Recorded `apply` lines that carry `context.kernel` replay only when this host provides that
+kernel version ([kernel identity](TERMINAL-WORKSPACE.md#kernel-identity-in-recorded-commands)).
+
 ### Headless CLI
 
 The CLI reuses the MCP host, so it has the same writer lock, validation and
@@ -188,7 +201,13 @@ npm run build:packages
 node apps/cli/crispcad.mjs commands
 node apps/cli/crispcad.mjs run design.bcad "box 40,30,4" "select all" "move 0,0,0 @0,0,2"
 node apps/cli/crispcad.mjs run design.bcad "sphere 5" --dry-run
-node apps/cli/crispcad.mjs inspect design.bcad        # also: interference, printability
+node apps/cli/crispcad.mjs inspect design.bcad        # also: interference, printability, measure
+node apps/cli/crispcad.mjs step design.bcad design.step  # exact STEP via the exact kernel
+node apps/cli/crispcad.mjs run design.bcad "export step all" --out exports/
 ```
+
+`measure` and `step` use the exact kernel (`cad_measure_exact`, `cad_export_step`). Files that
+`run` commands produce (`export step`) are written to `--out`; without it the JSON reports only
+their names and sizes.
 
 `--locale de` gives German descriptions and diagnostics.

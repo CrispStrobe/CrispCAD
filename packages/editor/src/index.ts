@@ -15,6 +15,8 @@ import { importSTL } from '@brickwright/cad-geometry';
 import {importStep} from './step-import.js';
 import type { AssemblySection,GeometryResult } from '@brickwright/cad-geometry';
 import { createGeometryClient } from './geometry-client.js';
+// Identity only: no WebAssembly is loaded until an exact command runs in the exact worker.
+import {exactKernelIdentity} from '@brickwright/cad-exact/identity';
 import {artworkSketchTargets,prepareArtworkSketchRefresh} from './costume-refresh.js';
 import type {SketchProfile} from '@brickwright/cad-core';
 import {mountTransformReadout} from './transform-readout.js';
@@ -106,7 +108,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?
 }
 /** Mounts one isolated editor. No storage, window keyboard handlers, React or Scratch globals. */
 export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
-  const session = options.session ?? createCadSession(options.document); const ownsSession = !options.session;
+  const session = options.session ?? createCadSession(options.document,{kernels:[exactKernelIdentity]}); const ownsSession = !options.session;
   const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
   if (shadow.childElementCount) throw new Error(t('Mount target is already in use'));
   const style = el('style'); style.textContent = themedEditorStyle(editorStyle+terminalStyle);host.dataset.cadColorMode=options.colorMode??'dark'; const shell = el('section', 'editor'); shell.setAttribute('aria-label', 'CAD editor');

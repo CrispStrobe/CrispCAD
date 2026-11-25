@@ -28,9 +28,11 @@ export interface ExactBodyMeasureReport {
  readonly centroid:readonly number[];
  readonly solids:number;
 }
+/** Measured where the kernel runs: loading (0 once loaded), the request, and WASM memory. */
+export interface ExactTiming {readonly loadMs:number;readonly runMs:number;readonly memoryBytes:number}
 export type ExactCommandResult=
- |{readonly operation:'measure';readonly kernel:ExactKernelReport;readonly bodies:readonly ExactBodyMeasureReport[]}
- |{readonly operation:'export-step';readonly kernel:ExactKernelReport;readonly bodies:readonly {id:string;name:string}[];readonly step:string;readonly bytes:number};
+ |{readonly operation:'measure';readonly kernel:ExactKernelReport;readonly bodies:readonly ExactBodyMeasureReport[];readonly timing?:ExactTiming}
+ |{readonly operation:'export-step';readonly kernel:ExactKernelReport;readonly bodies:readonly {id:string;name:string}[];readonly step:string;readonly bytes:number;readonly timing?:ExactTiming};
 /** Runs exact requests. Implemented by the editor's geometry client and the MCP host. */
 export interface ExactCommandHost {run(request:ExactCommandRequest,signal?:AbortSignal):Promise<ExactCommandResult>}
 export interface ExactCommandFile {readonly name:string;readonly mime:string;readonly text:string}
@@ -69,13 +71,14 @@ export function parseExactCommand(session:CadSession,name:string,tail:string):{o
 }
 
 const kernelLabel=(kernel:ExactKernelReport)=>`${kernel.id} · ${kernel.package} ${kernel.version}`;
+const timingLine=(timing?:ExactTiming)=>timing?['\n'+t`Exact kernel: load ${Math.round(timing.loadMs)} ms · run ${Math.round(timing.runMs)} ms · WASM memory ${Math.round(timing.memoryBytes/1048576)} MiB`]:[];
 /** Terminal/CLI text for a result, and the STEP file for an export. */
 export function formatExactResult(result:ExactCommandResult,document:CadDocument):ExactCommandOutput{
  if(result.operation==='measure'){
   const lines=result.bodies.map(body=>t`${body.name} (${body.id}): volume ${formatNumber(body.volume)} mm³ · area ${formatNumber(body.area)} mm² · bounds ${formatPoint(body.bounds.min)} – ${formatPoint(body.bounds.max)} · centroid ${formatPoint(body.centroid)}`);
-  return {output:[t`Exact measures (${kernelLabel(result.kernel)}):`,...lines].join('\n'),kernel:result.kernel};
+  return {output:[t`Exact measures (${kernelLabel(result.kernel)}):`,...lines].join('\n')+timingLine(result.timing).join(''),kernel:result.kernel};
  }
  const title=document.title.replace(/[\\/:*?"<>|\u0000-\u001f\u007f]/g,'-').trim().slice(0,230)||'design';
  const file={name:`${title}.step`,mime:STEP_MIME,text:result.step};
- return {output:t`STEP export: ${result.bodies.length} bodies, ${Math.ceil(result.bytes/1024)} KiB, exact B-rep (${kernelLabel(result.kernel)}).`,file,kernel:result.kernel};
+ return {output:t`STEP export: ${result.bodies.length} bodies, ${Math.ceil(result.bytes/1024)} KiB, exact B-rep (${kernelLabel(result.kernel)}).`+timingLine(result.timing).join(''),file,kernel:result.kernel};
 }

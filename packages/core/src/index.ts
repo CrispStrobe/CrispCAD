@@ -72,4 +72,4 @@ export type {CommandSpec,CommandArgumentSpec,CommandArgumentKind,CommandCategory
 export {createCommandJournal,exportCommandJournal,primitiveCadScript,portableJournalObjects,JOURNAL_LIMITS,JOURNAL_FORMAT} from './command-journal.js';
 export type {CommandJournal,CommandJournalEntry,JournalExportFormat,JournalExportOptions} from './command-journal.js';
 export {parseExactCommand,resolveExactTargets,formatExactResult,STEP_MIME} from './exact-commands.js';
-export type {ExactOperation,ExactCommandRequest,ExactCommandResult,ExactCommandHost,ExactCommandFile,ExactCommandOutput,ExactKernelReport,ExactBodyMeasureReport} from './exact-commands.js';
+export type {ExactOperation,ExactCommandRequest,ExactCommandResult,ExactCommandHost,ExactCommandFile,ExactCommandOutput,ExactKernelReport,ExactBodyMeasureReport,ExactTiming} from './exact-commands.js';
