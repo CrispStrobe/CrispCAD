@@ -152,11 +152,50 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
  for(const frame of separatedFrames.values())group.DisableCollision(bodyIndex.get(frame.bodyA)!,bodyIndex.get(frame.bodyB)!);
  const restoreSeparatedPair=(key:string)=>{if(!separatedHingePairs.delete(key))return;const frame=separatedFrames.get(key)!;if(sceneSettings.selfCollisions!==false)group.EnableCollision(bodyIndex.get(frame.bodyA)!,bodyIndex.get(frame.bodyB)!);};
  const invalidateSeparatedPairs=(id:string)=>{const body=byId.get(id);for(const[key,frame]of separatedFrames)if(byId.get(frame.bodyA)===body||byId.get(frame.bodyB)===body)restoreSeparatedPair(key);};
- const checkSeparatedFrames=()=>{for(const key of separatedHingePairs){const frame=separatedFrames.get(key)!,current=(id:string,anchor:Vec3,axis:Vec3)=>{const body=byId.get(id),p=body.GetPosition(),q=body.GetRotation(),rotation=[q.GetX(),q.GetY(),q.GetZ(),q.GetW()];return{anchor:quaternionPoint(anchor,rotation).map((v,i)=>v+1000*[p.GetX(),p.GetY(),p.GetZ()][i])as Vec3,axis:quaternionPoint(axis,rotation)as Vec3};},a=current(frame.bodyA,frame.anchorA,frame.axisA),b=current(frame.bodyB,frame.anchorB,frame.axisB);
-  // This is sampled drift protection, not an arbitrary-force CCD guarantee.
-  // External impulse/velocity/drag APIs invalidate before mutating the body.
-  if(hingeFrameDriftBound(a.anchor,a.axis,b.anchor,b.axis,frame.radiusB)>=.249)restoreSeparatedPair(key);
- }};
+ type HingePose={position:Vec3;rotation:number[];sample:number};
+ const hingePoses=new Map<string,HingePose>();
+ for(const {bodyA,bodyB} of separatedFrames.values()){
+  for(const id of [bodyA,bodyB]){
+   if(!hingePoses.has(id))hingePoses.set(id,{position:[0,0,0],rotation:[0,0,0,1],sample:0});
+  }
+ }
+ let hingeSample=0;
+ const currentHingeFrame=(id:string,anchor:Vec3,axis:Vec3)=>{
+  const pose=hingePoses.get(id)!;
+  if(pose.sample!==hingeSample){
+   const body=byId.get(id),position=body.GetPosition(),rotation=body.GetRotation();
+   pose.position[0]=position.GetX();
+   pose.position[1]=position.GetY();
+   pose.position[2]=position.GetZ();
+   pose.rotation[0]=rotation.GetX();
+   pose.rotation[1]=rotation.GetY();
+   pose.rotation[2]=rotation.GetZ();
+   pose.rotation[3]=rotation.GetW();
+   pose.sample=hingeSample;
+  }
+  const point=quaternionPoint(anchor,pose.rotation);
+  return {
+   anchor:[
+    point[0]+1000*pose.position[0],
+    point[1]+1000*pose.position[1],
+    point[2]+1000*pose.position[2],
+   ] as Vec3,
+   axis:quaternionPoint(axis,pose.rotation) as Vec3,
+  };
+ };
+ const checkSeparatedFrames=()=>{
+  if(!separatedHingePairs.size)return;
+  // Several hinges can share a body. Sample each pose once per boundary.
+  hingeSample++;
+  for(const key of separatedHingePairs){
+   const frame=separatedFrames.get(key)!;
+   const a=currentHingeFrame(frame.bodyA,frame.anchorA,frame.axisA);
+   const b=currentHingeFrame(frame.bodyB,frame.anchorB,frame.axisB);
+   // This is sampled drift protection, not an arbitrary-force CCD guarantee.
+   // External impulse/velocity/drag APIs invalidate before mutating the body.
+   if(hingeFrameDriftBound(a.anchor,a.axis,b.anchor,b.axis,frame.radiusB)>=.249)restoreSeparatedPair(key);
+  }
+ };
  const usePartMaterials=assemblies.size<meshes.length;
  const materialByToken=usePartMaterials?meshes.map(mesh=>doc.nodes[mesh.id].physics??defaultPartPhysics()):[];
  // A body keeps its shape and material for the lifetime of this world.

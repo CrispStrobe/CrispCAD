@@ -79,6 +79,30 @@ it('permanently restores native part filtering before external mutations of a se
  const moving=structuredClone(doc);moving.nodes.left.physics!.initialVelocityMmS=[100,0,0];const world=await worldFor(moving);try{expect(world.separatedHingePairCount).toBe(0);}finally{world.dispose();}
 });
 
+it('samples shared hinge assembly poses once at each step boundary',async()=>{
+ const doc=fixture();
+ const rotors=[
+  {id:'first',base:'right',x:60,anchor:40,axis:[0,1,0] as const},
+  {id:'second',base:'left',x:-60,anchor:-40,axis:[0,0,1] as const},
+ ];
+ for(const {id,base,x,anchor,axis} of rotors){
+  doc.nodes[id]={...structuredClone(doc.nodes[base]),id,name:id,transform:{...identityTransform(),position:[x,0,20]}};
+  doc.roots.push(id);
+  doc.joints!.push(jointAtWorldFrame(doc,'hinge',base,id,[anchor,0,20],[...axis]));
+ }
+ const world=await worldFor(doc);
+ const positions=vi.spyOn(J.Body.prototype,'GetPosition');
+ const rotations=vi.spyOn(J.Body.prototype,'GetRotation');
+ try{
+  expect(world.separatedHingePairCount).toBe(2);
+  world.step(.01);
+  // Three bodies, two boundaries per substep, two substeps.
+  expect(positions).toHaveBeenCalledTimes(12);
+  expect(rotations).toHaveBeenCalledTimes(12);
+  expect(world.separatedHingePairCount).toBe(2);
+ }finally{positions.mockRestore();rotations.mockRestore();world.dispose();}
+});
+
 it('reuses authored hinge clearance while keeping live filtering separate for each world',async()=>{
  const doc=fixture();
  doc.nodes.rotor={...structuredClone(doc.nodes.right),id:'rotor',name:'rotor',transform:{...identityTransform(),position:[60,0,20]}};
