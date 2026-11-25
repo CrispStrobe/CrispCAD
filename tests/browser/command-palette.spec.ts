@@ -73,10 +73,12 @@ test('find commands by their terminal aliases',async({page,hasTouch})=>{
  await expect(dialog.getByRole('option')).toHaveText(['Fit']);
  await search.fill('dup');
  await expect(dialog.getByRole('status')).toHaveText('No available commands match');
- await page.keyboard.press('Escape');
+ await press(dialog.getByRole('button',{name:'Close command palette'}));
+ await expect(dialog).toBeHidden();
  await page.getByRole('button',{name:'Terminal',exact:true}).click();
  const input=page.getByRole('region',{name:'CAD terminal',exact:true}).getByRole('combobox',{name:'CAD command'});
- await input.fill('box 10,10,10');await input.press('Enter');
+ await input.fill('box 10,10,10 0,0,5');await input.press('Enter');
+ await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!).roots.length)).toBe(1);
  await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
  await press(button);
  await search.fill('erase');
