@@ -177,7 +177,13 @@ headless command runner from `packages/core`:
 
 The result lists each command's canonical invocation and output, plus
 `journal`: the [journal export](TERMINAL-WORKSPACE.md#journal-export) of the
-script, in which plain primitives appear as CAD Script.
+script, in which plain primitives and literal sketch extrusions and revolutions
+appear as CAD Script.
+
+The editor's terminal runs pasted multi-line scripts the same way
+(`runCommandScript` in `packages/core`): a private trial session, the same runner,
+and one commit (labelled "Run command script") or none. See
+[multi-line scripts](TERMINAL-WORKSPACE.md#multi-line-scripts).
 
 `export step` and `measure exact` also run here. They use the optional exact B-rep kernel
 (`@brickwright/cad-exact`), which the host starts in its own thread

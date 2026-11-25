@@ -10,7 +10,7 @@ const el=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const nod
 export function mountTerminalPanel(parent:HTMLElement,session:CadSession,options:PanelOptions){
  const controller=createTerminalController(session,options);
  const panel=el('section');panel.className='cad-terminal';panel.hidden=true;panel.setAttribute('aria-label',t('CAD terminal'));
- const header=el('header'),title=el('h2',t('CAD terminal')),hint=el('span',t('Tab completes · ↑↓ history · Esc cancels'));
+ const header=el('header'),title=el('h2',t('CAD terminal')),hint=el('span',t('Tab completes · ↑↓ history · Esc cancels · paste several lines to run a script'));
  const code=el('button',t('Code workspace')),clear=el('button',t('Clear transcript')),close=el('button','×');
  code.type=clear.type=close.type='button';code.onclick=options.openCodeWorkspace;clear.onclick=()=>controller.clear();close.setAttribute('aria-label',t('Close terminal'));close.onclick=()=>setVisible(false);
  header.append(title,hint,code,clear,close);
@@ -77,6 +77,16 @@ export function mountTerminalPanel(parent:HTMLElement,session:CadSession,options
  }
  form.onsubmit=event=>{event.preventDefault();const text=input.value;input.value='';historyIndex=-1;resetCompletion();void controller.submit(text).then(focusAfterCommand);};
  input.oninput=()=>{historyIndex=-1;resetCompletion();completion();};
+ // A single-line input drops line breaks, so a pasted multi-line script runs at once, atomically.
+ input.addEventListener('paste',event=>{
+  const pasted=event.clipboardData?.getData('text/plain')??'';
+  if(!/[\r\n]/.test(pasted.trim()))return;
+  event.preventDefault();if(controller.state.busy)return;
+  const start=input.selectionStart??input.value.length,end=input.selectionEnd??start;
+  const text=input.value.slice(0,start)+pasted+input.value.slice(end);
+  input.value='';historyIndex=-1;resetCompletion();
+  void controller.submit(text).then(focusAfterCommand);
+ });
  input.addEventListener('click',()=>{resetCompletion();completion();});
  input.addEventListener('keyup',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){resetCompletion();completion();}});
  panel.addEventListener('keydown',event=>{

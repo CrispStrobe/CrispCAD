@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {commandHelp,commandRegistry,createCommandJournal,EXACT_FEATURE_COMMANDS,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseExactCommand,parseExactFeatureCommand,parseRecomputeCommand,prepareCommand,recomputeExactFeatures,runExactFeatureCommand,t} from '@brickwright/cad-core';
+import {commandHelp,commandRegistry,commandScriptLines,runCommandScript,createCommandJournal,EXACT_FEATURE_COMMANDS,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseExactCommand,parseExactFeatureCommand,parseRecomputeCommand,prepareCommand,recomputeExactFeatures,runExactFeatureCommand,t} from '@brickwright/cad-core';
 import type {CadSession,Vec3,SessionCommandRecord,CommandSpec,CommandStep,CommandValue,PreparedCommand,JournalExportFormat,ExactCommandHost,ExactCommandFile} from '@brickwright/cad-core';
 import type {CadCommand} from './index.js';
 import {terminalArguments,terminalTokens} from './terminal-coordinates.js';
@@ -35,6 +35,8 @@ const quoteArgument=(value:string)=>'"'+value.replace(/\\/g,'\\\\').replace(/"/g
 export function createTerminalController(session:CadSession,options:TerminalOptions){
  let entries:TerminalEntry[]=[],history:string[]=[],serial=0,pending:Pending|undefined,busy=false,disposed=false,executing=false;
  let projectId=session.state.document.id,lastPoint:Vec3|undefined;
+ // The last multi-line script, repeated by empty Enter or `repeat` until another command runs.
+ let lastScript:string|undefined;
  const listeners=new Set<(state:TerminalState)=>void>();
  const customAliases=createTerminalAliases(terminalCommands,options.storage);
  // Host-owned journal of accepted commands; never part of the document or its history.
@@ -53,10 +55,10 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
   while(entries.length>200||bytes>2*1024*1024&&entries.length>1){const entry=entries.shift()!;bytes-=entry.summary.length+(entry.text?.length??0);}
   emit();
  }
- function remember(text:string){if(text.length>4096||/^apply\s/i.test(text))return;if(history.at(-1)!==text)history.push(text);history=history.slice(-100);try{options.storage?.setItem(historyKey(),JSON.stringify(history));}catch{}}
+ function remember(text:string){lastScript=undefined;if(text.length>4096||/^apply\s/i.test(text))return;if(history.at(-1)!==text)history.push(text);history=history.slice(-100);try{options.storage?.setItem(historyKey(),JSON.stringify(history));}catch{}}
  const unsubscribeCommands=session.subscribeCommands((record:SessionCommandRecord)=>append('action',record.summary,record.text));
  const unsubscribe=session.subscribe(current=>{
-  if(current.document.id!==projectId){projectId=current.document.id;pending=undefined;lastPoint=undefined;entries=[];loadHistory();emit();}
+  if(current.document.id!==projectId){projectId=current.document.id;pending=undefined;lastPoint=undefined;lastScript=undefined;entries=[];loadHistory();emit();}
   else if(pending&&!executing&&current.revision!==pending.revision){pending=undefined;append('error',t('The model changed. Start the command again.'));}
   else if(pending?.targets&&!executing&&JSON.stringify(current.selection.filter(id=>current.document.roots.includes(id)))!==JSON.stringify(pending.targets)){pending=undefined;append('error',t('The selection changed. Start the command again.'));}
  });
@@ -126,11 +128,46 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
   emit();
  }
  function start(name:string,args:string[]){begin(args,prepareCommand(session,name,{lastPoint:()=>lastPoint}));}
+ /** Custom aliases apply to the first word of each script line, as they do when typed. */
+ const expandScriptAliases=(script:string)=>script.split(/\r?\n/).map(line=>{
+  const match=/^(\s*)(\S+)([\s\S]*)$/.exec(line);if(!match||match[2].startsWith('//'))return line;
+  const target=customAliases.resolve(match[2]);return target?match[1]+target+match[3]:line;
+ }).join('\n');
+ /** A multi-line script: all lines commit as one Undo step, or nothing changes. */
+ async function runScript(script:string){
+  lastScript=script;busy=true;
+  const count=commandScriptLines(script),shown=script.split(/\r?\n/);
+  append('input',(shown.length>24?[...shown.slice(0,23),'…']:shown).join('\n').slice(0,4000));
+  try{
+   const done=await runCommandScript(session,expandScriptAliases(script),{exact:options.exact,journal,record:(line,commit)=>journal.withInvocation(line,commit)});
+   for(const result of done.results)if(result.output!==undefined)append('output',result.output);
+   for(const file of done.files){
+    if(!options.saveFile)throw new Error(t('This host has not provided file export'));
+    await options.saveFile(file);
+   }
+   append('output',done.edited?t`Script: ${count} commands, committed as one Undo step.`:t`Script: ${count} commands; the model did not change.`);
+  }catch(error){
+   const message=error instanceof Error?error.message:String(error);
+   append('error',error&&typeof error==='object'&&'line' in error?message+' '+t('The script changed nothing.'):message);
+  }finally{busy=false;emit();}
+ }
  async function submit(raw:string){
   if(disposed||busy)return;let text=raw.trim();
-  if(!pending&&!text)text=history.at(-1)??'';
+  if(!pending&&!text)text=lastScript??history.at(-1)??'';
   if(!pending&&!text)return;
   if(text.length>2*1024*1024){append('error',t('Command text exceeds the terminal limit.'));return;}
+  if(!pending){
+   const first=/^(\S+)([\s\S]*)$/.exec(text)!;
+   if(resolveCommand(first[1].toLowerCase())?.name==='repeat'&&!/[\r\n]/.test(text)){
+    const previous=lastScript??history.at(-1);
+    if(first[2].trim()||!previous){append('input',text);append('error',first[2].trim()?t('Too many arguments. Use help for command syntax.'):t('Nothing to repeat.'));return;}
+    text=previous;
+   }
+  }
+  if(/[\r\n]/.test(text)){
+   if(pending){append('error',t('Finish or cancel the current command before running a script.'));return;}
+   return runScript(text);
+  }
   busy=true;emit();
   try{
    if(pending){append('input',text||'↵');answer(text);return;}

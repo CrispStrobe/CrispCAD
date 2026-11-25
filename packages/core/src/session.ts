@@ -332,6 +332,8 @@ export function createCadSession(initial: CadDocument = createDocument(), option
     get history() { return {past:undo.map((_,i)=>undo[i+1]?.label??label),future:[...redo].reverse().map(step=>step.label)}; },
     get modelSource(){return document.version>=6&&document.modelSource?document.modelSource.source:generateModelSource(document);},
     enableModelSource(){sourceReady();liveModelSource=true;},
+    /** True after `enableModelSource`: every commit keeps the model source up to date. */
+    get modelSourceLive(){return liveModelSource;},
     prepareModelSource,
     async prepareModelSourceWithOutlineSolve(source:string,options:SourceOptions,solve:OutlineSolver,signal:AbortSignal){
       const expected=revision,previous=document;
