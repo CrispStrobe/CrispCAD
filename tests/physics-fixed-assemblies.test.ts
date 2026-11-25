@@ -48,7 +48,22 @@ it('retains each leaf material in added and persisted contacts of a heterogeneou
  const doc=fixture();doc.simulation={...defaultSimulationSettings(),groundFriction:.8,groundRestitution:.1};for(const id of doc.roots)doc.nodes[id].transform.position[2]=5;doc.joints=[jointAtWorldFrame(doc,'fixed','left','right',[0,0,5],[0,1,0])];Object.assign(doc.nodes.left.physics!,{friction:.12,restitution:.02});Object.assign(doc.nodes.right.physics!,{friction:.9,restitution:.2});
  const seen:{event:string;token:number;friction:number;restitution:number;reduction:boolean}[]=[];
  const observed={...J,ContactListenerJS:function(){const listener=new J.ContactListenerJS();for(const event of ['OnContactAdded','OnContactPersisted']){let callback:(...args:number[])=>void=()=>{};const wrapped=(...args:number[])=>{callback(...args);const a=J.wrapPointer(args[0],J.Body),b=J.wrapPointer(args[1],J.Body),m=J.wrapPointer(args[2],J.ContactManifold),s=J.wrapPointer(args[3],J.ContactSettings),ta=a.GetShape().GetSubShapeUserData(m.mSubShapeID1),tb=b.GetShape().GetSubShapeUserData(m.mSubShapeID2),body=ta?a:b;seen.push({event,token:ta||tb,friction:s.mCombinedFriction,restitution:s.mCombinedRestitution,reduction:body.GetUseManifoldReduction()});};Object.defineProperty(listener,event,{get:()=>wrapped,set:value=>{callback=value;},configurable:true});}return listener;}};
- const world=await worldFor(doc,observed);try{for(let i=0;i<5;i++)world.step(.1);for(const event of ['OnContactAdded','OnContactPersisted'])for(const token of [1,2]){const contact=seen.find(c=>c.event===event&&c.token===token);expect(contact).toBeDefined();expect(contact!.friction).toBeCloseTo(Math.sqrt(.8*(token===1?.12:.9)),6);expect(contact!.restitution).toBeCloseTo(token===1?.1:.2,6);expect(contact!.reduction).toBe(false);}}finally{world.dispose();}
+ const world=await worldFor(doc,observed);
+ try{
+  world.spawnSphere('preview-material',[100,0,6],[0,0,-50],6);
+  for(let i=0;i<5;i++)world.step(.1);
+  for(const event of ['OnContactAdded','OnContactPersisted'])for(const token of [1,2]){
+   const contact=seen.find(c=>c.event===event&&c.token===token);
+   expect(contact).toBeDefined();
+   expect(contact!.friction).toBeCloseTo(Math.sqrt(.8*(token===1?.12:.9)),6);
+   expect(contact!.restitution).toBeCloseTo(token===1?.1:.2,6);
+   expect(contact!.reduction).toBe(false);
+  }
+  const preview=seen.find(c=>c.event==='OnContactAdded'&&c.token===0);
+  expect(preview).toBeDefined();
+  expect(preview!.friction).toBeCloseTo(Math.sqrt(Math.fround(.8)*Math.fround(.4)),6);
+  expect(preview!.restitution).toBeCloseTo(.45,6);
+ }finally{world.dispose();}
 });
 
 it('falls back from the full-turn proof when accepted hinge frames are offset or skewed',async()=>{

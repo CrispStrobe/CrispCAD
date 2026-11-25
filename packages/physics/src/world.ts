@@ -96,6 +96,11 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
   // External impulse/velocity/drag APIs invalidate before mutating the body.
   if(hingeFrameDriftBound(a.anchor,a.axis,b.anchor,b.axis,frame.radiusB)>=.249)restoreSeparatedPair(key);
  }};
+ const usePartMaterials=assemblies.size<meshes.length;
+ const materialByToken=usePartMaterials?meshes.map(mesh=>doc.nodes[mesh.id].physics??defaultPartPhysics()):[];
+ // A body keeps its shape and material for the lifetime of this world.
+ // Cache the native float defaults and keep the authored leaf values for mixing.
+ const contactBodies=new Map<number,{compound?:any;friction:number;restitution:number}>();
  const add=(shape:any,id:string,motion:'dynamic'|'static',properties:any,mass?:ReturnType<typeof solidMassProperties>)=>{
   const pos=new J.RVec3(0,0,0),q=new J.Quat(0,0,0,1);const bc=new J.BodyCreationSettings(shape,pos,q,motion==='static'?J.EMotionType_Static:J.EMotionType_Dynamic,motion==='static'?0:1);J.destroy(pos);J.destroy(q);
   bc.mFriction=properties.friction;bc.mRestitution=properties.restitution;bc.mLinearDamping=0;bc.mAngularDamping=0;
@@ -104,7 +109,12 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
    bc.mMotionQuality=J.EMotionQuality_LinearCast;bc.mOverrideMassProperties=J.EOverrideMassProperties_MassAndInertiaProvided;
    const mp=new J.MassProperties();mp.mMass=mass.massKg;const matrix=new J.Mat44();for(let col=0;col<3;col++){const v=new J.Vec3(mass.inertiaKgM2[0][col],mass.inertiaKgM2[1][col],mass.inertiaKgM2[2][col]);matrix.SetColumn3(col,v);J.destroy(v);}const end=new J.Vec4(0,0,0,1);matrix.SetColumn4(3,end);J.destroy(end);mp.mInertia=matrix;bc.mMassPropertiesOverride=mp;J.destroy(matrix);J.destroy(mp);
   }
-  try{const body=bodies.CreateBody(bc);if(!body)throw new Error(t('Jolt body allocation failed'));bodies.AddBody(body.GetID(),motion==='static'?J.EActivation_DontActivate:J.EActivation_Activate);ownedBodies.push(body);byId.set(id,body);if(mass)bodyMass.set(id,mass.massKg);}finally{J.destroy(bc);}
+  try{const body=bodies.CreateBody(bc);if(!body)throw new Error(t('Jolt body allocation failed'));bodies.AddBody(body.GetID(),motion==='static'?J.EActivation_DontActivate:J.EActivation_Activate);ownedBodies.push(body);byId.set(id,body);if(mass)bodyMass.set(id,mass.massKg);
+   if(usePartMaterials)contactBodies.set(J.getPointer(body),{
+    compound:meshIndex.has(id)?body.GetShape():undefined,
+    friction:body.GetFriction(),restitution:body.GetRestitution(),
+   });
+  }finally{J.destroy(bc);}
  };
  function dispose(){if(disposed)return;disposed=true;for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
  let scratchVertex:any,scratchPosition:any,scratchRotation:any;
@@ -146,16 +156,26 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
    }
    const created=compound.Create();try{if(created.HasError())throw new Error(created.GetError().c_str());const shape=created.Get();const center=shape.GetCenterOfMass();const shift=new J.Vec3(mass.centerM[0]-center.GetX(),mass.centerM[1]-center.GetY(),mass.centerM[2]-center.GetZ());const corrected=new J.OffsetCenterOfMassShape(shape,shift);J.destroy(shift);add(corrected,id,motion,properties,mass);const body=byId.get(id);if(new Set(members.map(m=>{const p=doc.nodes[m.id].physics??defaultPartPhysics();return p.friction+':'+p.restitution;})).size>1)body.SetUseManifoldReduction(false);for(const mesh of members){byId.set(mesh.id,body);bodyMass.set(mesh.id,mass.massKg);}}finally{created.Clear();J.destroy(compound);}
   }
-  if(assemblies.size<meshes.length){
+  if(usePartMaterials){
    // Filter original mate pairs before narrow-phase and CCD work. A late
    // contact rejection still performs expensive shaft/bore collision queries.
    partFilter=new J.PartPairSimShapeFilter();for(const mesh of meshes){const token=meshIndex.get(mesh.id)!+1;partFilter.SetColliderPart(byId.get(mesh.id).GetID(),token,token);}const paired=new Set<string>();
    for(const joint of doc.joints??[]){const a=fixedRoot(joint.bodyA),b=fixedRoot(joint.bodyB);if(a===b)continue;const key=pairKey(a,b),bodyA=byId.get(a).GetID(),bodyB=byId.get(b).GetID();if(!paired.has(key)){partFilter.AddBodyPair(bodyA,bodyB,false);paired.add(key);}partFilter.AddPartPair(bodyA,bodyB,meshIndex.get(joint.bodyA)!+1,meshIndex.get(joint.bodyB)!+1);}system.SetSimShapeFilter(partFilter);
-   const member=(body:any,subShape:any)=>meshes[body.GetShape().GetSubShapeUserData(subShape)-1];
    contactListener=new J.ContactListenerJS();
    contactListener.OnContactValidate=()=>J.ValidateResult_AcceptAllContactsForThisBodyPair;
-   const material=(body:any,subShape:any)=>{const mesh=member(body,subShape);return mesh?(doc.nodes[mesh.id].physics??defaultPartPhysics()):{friction:body.GetFriction(),restitution:body.GetRestitution()};};
-   const contact=(a:number,b:number,manifold:number,settings:number)=>{const m=J.wrapPointer(manifold,J.ContactManifold),p=material(J.wrapPointer(a,J.Body),m.mSubShapeID1),q=material(J.wrapPointer(b,J.Body),m.mSubShapeID2),s=J.wrapPointer(settings,J.ContactSettings);s.mCombinedFriction=Math.sqrt(p.friction*q.friction);s.mCombinedRestitution=Math.max(p.restitution,q.restitution);};
+   const material=(pointer:number,subShape:any)=>{
+    const body=contactBodies.get(pointer)!;
+    if(!body.compound)return body;
+    const token=body.compound.GetSubShapeUserData(subShape);
+    return materialByToken[token-1]??body;
+   };
+   const contact=(a:number,b:number,manifold:number,settings:number)=>{
+    const m=J.wrapPointer(manifold,J.ContactManifold);
+    const p=material(a,m.mSubShapeID1),q=material(b,m.mSubShapeID2);
+    const s=J.wrapPointer(settings,J.ContactSettings);
+    s.mCombinedFriction=Math.sqrt(p.friction*q.friction);
+    s.mCombinedRestitution=Math.max(p.restitution,q.restitution);
+   };
    contactListener.OnContactAdded=contact;contactListener.OnContactPersisted=contact;contactListener.OnContactRemoved=()=>{};system.SetContactListener(contactListener);
   }
   for(const joint of doc.joints??[]){

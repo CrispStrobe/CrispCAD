@@ -51,6 +51,10 @@ manufactured-mechanism accuracy.
   continuous casts. Separate contact materials remain effective for each part;
   heterogeneous assemblies disable manifold reduction so adjacent parts cannot
   inherit one another's friction or restitution.
+  A physics world resolves leaf materials once and retains each body's shape
+  handle and native default material for contact callbacks. Compound contacts
+  still select the leaf by its native token, and the same friction and
+  restitution formulas apply to ground and preview objects.
 - Hinge presets contain separate leaves and a pin, local joint frames, angular
   limits, a hinge constraint and a fixed pin connection. Inserting, duplicating,
   deleting, saving and reopening retain/remap the relevant references.
