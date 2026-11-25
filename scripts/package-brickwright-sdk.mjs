@@ -10,6 +10,8 @@ await copyFile('LICENSE',join(out,'LICENSE'));
 // Preserve the same complete runtime notices as the standalone distribution.
 await import('./copy-assets.mjs');
 await copyFile('apps/standalone/public/cad-assets/notices.txt',join(out,'NOTICE.txt'));
+// Host bundlers parse sdk.js as ES2020; only worker chunks may use newer syntax (top-level await).
+{const {transform}=await import('esbuild');await transform(await readFile(join(out,'sdk.js'),'utf8'),{format:'esm',target:'es2020',loader:'js'});}
 const files={};
 async function walk(dir,rel=''){
  for(const entry of await readdir(dir,{withFileTypes:true})){

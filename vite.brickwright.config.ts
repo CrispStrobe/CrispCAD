@@ -14,4 +14,9 @@ export default defineConfig({
     assetsInlineLimit:0,
   },
   worker:{format:'es',plugins:()=>[preserveDwgClassNames()],rollupOptions:{output:exactKernelWorkerOutput}},
+  // The lazily loaded exact-kernel chunk (only inside the geometry worker) initialises its
+  // WebAssembly with top-level await. Hosts never parse worker chunks with their bundler; they
+  // load them as module workers, which support it. sdk.js itself has no top-level await
+  // (scripts/package-brickwright-sdk.mjs checks).
+  esbuild:{supported:{'top-level-await':true}},
 });
