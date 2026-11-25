@@ -218,8 +218,9 @@ of the kernel lab, tarball `crispcad-exact-kernel-0.1.0.tgz`, SHA-256
   with this repository's CLI.
 
 Next: product entry, as Phase 3 steps 1 and 2. **Done 2026-11-25** (branch
-`feat/exact-kernel-product`), except exact `fillet`/`chamfer`/`shell`, which need a
-document-model change; see the [design note](#exact-features-design-note):
+`feat/exact-kernel-product`); exact `fillet`/`chamfer`/`shell`, which needed a document-model
+change, followed on branch `feat/exact-features-v41` (see
+[exact features](#exact-features-document-version-41-done-2026-11-25)):
 
 - the geometry worker: a second, lazily created instance of the same worker script loads the
   kernel on the first exact request (the kernel's own `new URL('smlibwasm.wasm')` is resolved
@@ -262,8 +263,9 @@ The lab's own `smlib-native` backend does not use the package yet.
    - Licences: THIRD-PARTY-NOTICES.md, `packages/exact/NOTICE.md`, the editor NOTICE, the
      offline `cad-assets/notices.txt` (the kernel's NOTICE, LICENSE and bundled licence texts)
      and the About dialog list the kernel and its MIT + Apache-2.0 closure.
-   - Exact `fillet`, `chamfer` and `shell` are **not** shipped; see the
-     [design note](#exact-features-design-note).
+   - Exact `fillet`, `chamfer` and `shell`: **done 2026-11-25** (branch
+     `feat/exact-features-v41`), see
+     [exact features](#exact-features-document-version-41-done-2026-11-25).
 2. Recorded commands carry the kernel that built them. Replay rejects a kernel
    change. **Done 2026-11-25** (mechanism): `apply` records may carry
    `context.kernel = {id, package, version}`; edits made in `session.withKernel(kernel, …)`
@@ -271,10 +273,9 @@ The lab's own `smlib-native` backend does not use the package yet.
    (`createCadSession(doc, {kernels})`; the editor and MCP host declare
    `@brickwright/cad-exact/identity`, which loads no WebAssembly). Replay refuses a missing
    kernel or another package version with a clear message, and re-records a replayed edit with
-   its kernel. Old records have no kernel and replay unchanged. Because `export step` and
-   `measure exact` only read the model, no shipped command produces such a record yet; their
-   results carry the kernel identity instead. The first producer will be the exact features
-   below.
+   its kernel. Old records have no kernel and replay unchanged. `export step` and
+   `measure exact` only read the model; their results carry the kernel identity instead. The
+   producers are the exact features below (`fillet`, `chamfer`, `shell`, `recompute exact`).
 3. One registry in `packages/core`, used by four front ends: the terminal, the
    MCP server (`cad_inspect`, `cad_check_interference`, `cad_render`,
    `cad_check_printability`), a headless CLI, and the command palette. The lab's
@@ -301,48 +302,77 @@ The lab's own `smlib-native` backend does not use the package yet.
    marked non-portable replay text. The journal is outside document history.
    Next: portable export of sketches and extrusions.
 
-### Exact features design note
+### Exact features (document version 41). **Done 2026-11-25**
 
-Exact `fillet`, `chamfer` and `shell` change geometry, so unlike `export step` they need a
-document node. That change was judged too large to make safely together with product entry:
+Branch `feat/exact-features-v41`; the owner approved the format change on 2026-11-25. This
+implements the design note that stood here (kept in git history), with these results:
 
-- **Every evaluator is synchronous and Manifold-only.** The editor worker, the MCP worker,
-  physics collision preparation, drawings, printability and the BrickWright SDK all evaluate a
-  document with Manifold alone. A node that only the exact kernel can build would force the
-  9.4 MB kernel into every consumer of such a document, including BrickWright and the eager
-  offline path, which contradicts "opt-in, lazily loaded".
-- **A stored mesh goes stale.** Storing the exact result's tessellation in the node lets
-  Manifold display it without the kernel, but any edit upstream (a sketch dimension, a
-  parameter) invalidates it, and a host without the kernel cannot recompute it.
-- **Versioning.** A new node kind needs document version 41. Older apps refuse unknown versions
-  (they never downgrade), so BrickWright and the SDK must accept version 41 before CrispCAD
-  writes it.
+1. **Node and version.** `{kind:'exact-feature', featureVersion:1, source, operation:
+   'fillet'|'chamfer'|'shell', size, edges?:'all'|{faceNormal, outermost?}, openFaces?,
+   display?:{sourceKey, positions, indices}}` (`packages/core/src/exact-feature.ts`).
+   `checkDocument` requires version 41, an existing source, selectors as the kernel interface
+   defines them (all edges or one planar face; 1–6 distinct open faces; no topological naming)
+   and a display bounded like a `mesh` node. `constructionInputs`, copy/paste, duplicate,
+   regeneration, the design graph and model source (`exactFeature(id, {...}, asset(id))`) treat
+   `source` like a mirror source.
+   - **Versioning decision.** The document version stays "the oldest schema that holds this
+     document", as for every earlier bump: only adding an exact feature raises a document to 41.
+     Documents without one keep their version and still open in older builds, including
+     BrickWright on its current SDK. Purely additive: no migration, old projects and history
+     revisions load unchanged.
+   - `display` is optional: a node without one (for example written by hand or through model
+     source) is valid and stale.
+2. **Display and stale detection.** The Manifold evaluator builds the node from `display` only
+   when `display.sourceKey === exactFeatureKey(doc, id)`: a signature of the settings, the
+   source subtree's geometry (IDs, names, colours, physics, provenance and other displays
+   ignored) and the values of the parameters its expressions name. Otherwise it raises
+   `FeatureEvaluationError` code `stale-exact` naming the node: "*Name*: the exact fillet is out
+   of date after an upstream change. Recompute it with the exact kernel (Recompute exact, or the
+   terminal command recompute exact)." Renaming, moving, duplicating or pasting a feature keeps
+   the mesh. The exact backend (`packages/exact/src/display.ts`) tessellates at 0.01 mm / 10°,
+   welds, and refuses a surface that is not closed and consistently oriented. Hosts with the
+   kernel (editor exact worker, MCP exact thread, CLI) commit displays only inside
+   `session.withKernel(...)`, and the session refuses a display whose key does not match the
+   model it commits to.
+   - **Recompute policy (editor).** After a committed user edit (never a drag preview, Undo,
+     Redo or load) leaves an exact feature stale, the editor recomputes it once and commits the
+     mesh as its own step, "Recompute exact features", recorded with `context.kernel`. A drag
+     only previews and commits once at the end, so it adds at most that one follow-up step.
+     Undoing the recompute returns to the stale state without recomputing again (otherwise Redo
+     would be lost); the inspector's **Recompute exact** and `recompute exact` do it on request.
+     Explicit-only recompute was rejected: one stale feature blocks the whole Manifold
+     evaluation, so every upstream edit would leave the viewport showing an error.
+3. **STEP and exact measures** lower the node as `fillet`/`chamfer`/`shell` of the lowered
+   source on `@crispcad/exact-kernel`; the display is never used.
+4. **Commands** in the shared registry: `fillet <radius> [targets] [--face <normal>]`,
+   `chamfer <distance> [targets] [--face <normal>]`, `shell <thickness> [targets] --open <normal>
+   …`, `recompute exact [targets]` (normals `+x`…`-z`, `top`/`bottom`/`front`/`back`/`left`/
+   `right` or `X,Y,Z`; the outermost matching face is used). Terminal, MCP `cad_run_commands`,
+   CLI `run`, the command palette ("Fillet, chamfer or shell"), and the Edit menu's **Fillet,
+   chamfer, shell** dialog, which builds the same command. The inspector of an exact feature has
+   **Edit exact feature** and **Recompute exact**. German translations for every string.
+5. **Acceptance gate** (`tests/exact-features.test.ts`, `tests/browser/exact-features.spec.ts`),
+   20×30×10 mm box:
 
-Proposed design, for a follow-up branch:
+   | Operation | Exact vs closed form | Display (Manifold) vs exact | Display mesh | Command |
+   | --- | --- | --- | --- | --- |
+   | `fillet 2` (all edges) | 9.4e-16 | 1.9e-4 (inside: chordal 0.01 mm) | 2,064 vertices, 4,124 triangles | 3.3 s |
+   | `chamfer 2 --face top` | 0 | 0 | 12 vertices, 20 triangles | 0.4 s |
+   | `shell 2 --open top` | 6.8e-16 | 6.8e-16 | 16 vertices, 28 triangles | 1.0 s |
 
-1. Node `{kind:'exact-feature', featureVersion:1, source, operation:'fillet'|'chamfer'|'shell',
-   size:FeatureScalar, edges:'all'|{faceNormal, outermost?}, openFaces?:FaceSelector[],
-   display:{sourceKey, positions, indices}}`, document version 41. `constructionInputs`
-   includes `source`; `checkDocument` validates the selectors against the kernel interface
-   (all edges or the edges of one planar face; open faces by outward normal; no topological
-   naming) and the display mesh like a `mesh` node (750 000 positions).
-2. Display, physics, drawings: the Manifold evaluator builds the node from `display` only when
-   `display.sourceKey` equals the geometry key of the source subtree; otherwise it raises a
-   `FeatureEvaluationError` with code `stale-exact` naming the node. A host with the exact
-   kernel (the editor's exact worker, the MCP exact thread) recomputes the display mesh
-   (tessellation at 0.01 mm / 10°) and commits it inside `session.withKernel(...)`, so the
-   record carries `context.kernel` and replay refuses another kernel version (step 2, done).
-3. STEP and exact measures: `lowerDocumentBody` lowers the node as
-   `fillet`/`chamfer`/`shell` of the lowered source, so STEP stays exact.
-4. Saved projects and history: purely additive; no migration of existing documents. Undo,
-   redo and the history archive treat the node like any other.
-5. Acceptance gate: closed forms (all-edge box fillet, top chamfer, open-top shell) at 1e-8
-   relative; the Manifold display volume within the tessellation tolerance of the exact volume;
-   undo/redo and archive round trip; replay refused after a kernel version change; collision
-   preparation on the display mesh; `npm run verify:brickwright` with version 41.
+   Command times are Node wall times including the first kernel load, on the shared machine at
+   load average 130. Also covered: save/load, Undo/Redo, the history archive (old revisions
+   restore unchanged; the display is one shared content object across revisions, so moving a
+   feature stores no copy) and model source round trips; stale detection after an upstream edit
+   and a parameter change, then recompute (new volume within 1e-8 of the closed form); replay
+   refused for another kernel version or a host without the kernel, accepted for the same one;
+   collision preparation (convex decomposition and certificate) on the display mesh of a shell;
+   every shipped `.bcad` project and every revision of the shipped history archive load
+   unchanged below version 41; `npm run verify:brickwright` with a version 41 document.
 
-Until then `measure exact` (exact volume, area, bounds and centroid) is the exact measure in
-the product.
+Left open: an exact display path for many-hole faces (meshing cost, Phase 2); a parameter
+renamed on paste (`width` → `width_2`) makes a pasted feature stale until it is recomputed;
+fillets of individual edges need topological naming and are out of scope.
 
 ### Phase 4: cross-checking with the catalog
 

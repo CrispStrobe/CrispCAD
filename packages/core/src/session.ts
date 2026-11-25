@@ -650,6 +650,7 @@ export function createCadSession(initial: CadDocument = createDocument(), option
       if(d.version>=5&&'provenance' in patch)throw new Error('Use attachProvenance to record sources');
       if('program' in patch)throw new Error(t('Use updateCode to edit a code program'));
       if('generator' in patch)throw new Error(t('Use shape regeneration to change generator inputs'));
+      if(d.nodes[id].kind==='exact-feature'&&['display','source','operation','size','edges','openFaces','featureVersion'].some(key=>key in patch))throw new Error(t('Edit an exact feature with Edit exact feature, or recompute it with the exact kernel'));
       // Kind and identity cannot be changed by inspector edits.
       if ((patch.id && patch.id !== id) || (patch.kind && patch.kind !== d.nodes[id].kind)) throw new Error(t('Cannot change object identity or kind'));
       const next = constrainCubeEdit(d.nodes[id],{ ...d.nodes[id], ...structuredClone(patch) } as SolidNode);

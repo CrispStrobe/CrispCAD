@@ -388,8 +388,10 @@ Records without `context.kernel`, including every record made before this field 
 depend on a kernel and replay as before. Kernel records are non-portable in the CAD Script
 journal export. `export step` and `measure exact` do not edit the model, so they produce no
 records; their results name the kernel (`kernel` in `CommandRunResult` and in the MCP results).
-No shipped command edits the model through the exact kernel yet (see the design note in
-[CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#exact-features-design-note)).
+The commands that edit the model through the exact kernel are `fillet`, `chamfer`, `shell` and
+`recompute exact` (and the editor's dialog and automatic recompute, which run the same code);
+their records carry `context.kernel`. See
+[exact fillet, chamfer and shell](#exact-fillet-chamfer-and-shell).
 
 ## Journal export
 

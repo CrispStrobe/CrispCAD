@@ -29,6 +29,7 @@ export const messages:Record<string,string>={
  'Chamfer of {0}':'Fase von {0}',
  'Shell of {0}':'Schale von {0}',
  'Select an exact feature':'Wähle ein exaktes Feature',
+ 'Edit an exact feature with Edit exact feature, or recompute it with the exact kernel':'Bearbeite ein exaktes Feature mit „Exaktes Feature bearbeiten“ oder berechne es mit dem exakten Kern neu',
  'Object identity already exists':'Die Objektkennung existiert bereits',
  'Exact display meshes can only be committed by the exact kernel.':'Exakte Anzeigenetze können nur vom exakten Kern übernommen werden.',
  'The model changed while the exact kernel was running. Recompute the exact features again.':'Das Modell hat sich geändert, während der exakte Kern lief. Berechne die exakten Features erneut.',
