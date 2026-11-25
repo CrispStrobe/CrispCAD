@@ -166,8 +166,8 @@ it('inspects the end of a stopped recording and returns from replay to the edita
 });
 
 it('sends geometry on cold starts and reuses the completed worker through Stop',async()=>{
- const geometry={bodies:[]} as unknown as GeometryResult;
- const changedGeometry={bodies:[],sourceKey:'edited'} as unknown as GeometryResult;
+ const geometry:GeometryResult={bodies:[],volume:0,triangles:0};
+ const changedGeometry={...geometry,sourceKey:'edited'};
  const ready=vi.fn(async()=>geometry).mockResolvedValueOnce(geometry).mockResolvedValueOnce(geometry).mockResolvedValueOnce(changedGeometry);
  const f=fixture(ready);
  try{
