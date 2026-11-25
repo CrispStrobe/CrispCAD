@@ -38,11 +38,55 @@ retain normal text editing shortcuts. Pointer gestures and ResizeObserver live
 only as long as the mount. `dispose()` terminates the worker, removes listeners,
 disconnects observation and frees the GPU resources/context.
 
-A host can supply a `createCadSession()` instance via `session` to keep history
-when its pane unmounts. In that case the host owns and eventually disposes the
-session. Without a supplied session, the editor owns it. Multiple mounts should
-use different sessions for independent histories; deliberate shared-session
-mounts share document and selection by design.
+A host can supply its own session via `session` to keep history when its pane
+unmounts. In that case the host owns and eventually disposes the session. Without
+a supplied session, the editor owns it. Multiple mounts should use different
+sessions for independent histories; deliberate shared-session mounts share
+document and selection by design.
+
+### Host-created sessions and kernels
+
+A session lists the kernels its host runs (`session.kernels`). Recorded commands
+whose `context.kernel` names another kernel or version are refused on replay, and
+an edit that commits kernel output (exact fillet, chamfer, shell and their
+recompute) is accepted only by a session that declares that kernel. The editor's
+geometry worker bundles the pinned exact kernel (lazily), so create the sessions
+you pass to `mountCadEditor` with the editor's kernels:
+
+```ts
+import {createEditorSession, editorKernels, exactKernelIdentity, mountCadEditor} from '@brickwright/cad-editor';
+// Browser SDK (sdk.js): the same exports; its createCadSession is createEditorSession.
+
+const session = createEditorSession(hostDocument);        // declares editorKernels
+mountCadEditor(container, {session, wasmURL});
+// session.kernels -> [{id:'smlib', package:'@crispcad/exact-kernel', version:'0.1.0'}]
+
+createEditorSession(doc, {kernels: [...editorKernels, myKernel]}); // add a host kernel
+createEditorSession(doc, {kernels: []});                           // declare none
+createCadSession(doc, {kernels: [exactKernelIdentity]});           // core, explicit
+```
+
+| Export | Meaning |
+| --- | --- |
+| `exactKernelIdentity` | Pinned exact kernel `{id:'smlib', package:'@crispcad/exact-kernel', version}`; importing it loads no WebAssembly. Same object as `@brickwright/cad-exact/identity`. |
+| `editorKernels` | Frozen list of kernels the editor's default worker runs (currently the exact kernel). |
+| `createEditorSession(document?, {kernels?})` | `createCadSession` with `kernels` defaulting to `editorKernels`. |
+| `providesKernel(kernels, kernel)` | True when `kernels` declares exactly that id, package and version. |
+
+Defaults, decided for replay safety: declaring a kernel claims the host really
+runs that version. `@brickwright/cad-core`'s `createCadSession` (and the
+`createCadSession` re-exported by `@brickwright/cad-editor`) declares nothing,
+since a headless host may not ship the kernel. The browser SDK always ships the
+exact kernel's chunks and WebAssembly under `assets/exact/`, so its
+`createCadSession` is `createEditorSession`: existing hosts that call
+`sdk.createCadSession(doc)` declare it without code changes; pass `kernels` to
+choose otherwise. `mountCadEditor` never adds kernels to a session the host
+passes (a session's kernels are fixed at creation and the host may replay its
+records elsewhere, or supply a `createWorker` without the exact kernel). With a
+host session that does not declare it, the editor refuses Fillet, chamfer, shell
+and Recompute exact up front ("This editor session does not declare the exact
+kernel…") instead of running the kernel first; STEP export and `measure exact`
+commit nothing and still work.
 
 File export is deliberately host-owned; if `onExport` is absent the export
 buttons are disabled. The default Open button uses a scoped HTML file input;
@@ -301,15 +345,28 @@ not automatically installed in an already built Brickwright app.
 
 **Exact kernel in the SDK (2026-11-25).** The editor now depends on
 `@brickwright/cad-exact`, which pins the kernel lab's `@crispcad/exact-kernel` release
-tarball. The SDK build (`vite.brickwright.config.ts`) emits the exact chunks and the 9.4 MB
-`smlibwasm.wasm` under `assets/exact/` as lazy worker assets: they load only when a host
-user runs `export step`, `measure exact` or the export dialog's STEP option. The SDK grows by
-about 10.5 MB on disk, nothing at load time. A host that ships the SDK must also ship the
+tarball. The SDK build (`vite.brickwright.config.ts`) emits the exact chunks and the
+`smlibwasm-<hash>.wasm` file (9,430,902 bytes) under `assets/exact/` as lazy worker assets; the
+chunk fetches it by a URL relative to itself, so an SDK served from a sub-path works. Nothing under
+`assets/exact/` is requested until a host user runs an exact command (`export step`,
+`measure exact`, the export dialog's STEP option, Fillet/chamfer/shell or Recompute exact).
+Measured on the build of 2026-11-25: `assets/exact/` holds 11.0 MB in seven files (the 9.4 MB
+WebAssembly, 1.42 MB and 0.11 MB kernel chunks, four small files); nothing of it at load time.
+Vite's library mode inlines `new URL('*.wasm', import.meta.url)` assets as base64 whatever
+`assetsInlineLimit` says, and SDK builds up to 912d6f4 carried the WebAssembly twice as base64
+(26.7 MB under `assets/exact/`, no `.wasm` file). The worker build now marks those references
+`?no-inline` (`emitWasmFiles` in `scripts/exact-kernel-assets.js`), which also emits Manifold's
+and the STEP tessellator's WebAssembly as files instead of base64 in the geometry, simulation
+and STEP-import workers: the SDK without previews went from 64.0 MB to 47.2 MB.
+`scripts/package-brickwright-sdk.mjs` fails if any SDK chunk contains a `data:application/wasm`
+URL or a base64 WebAssembly run of 64 KiB or more, if `assets/exact/` lacks exactly one
+`smlibwasm-*.wasm` referenced by an exact chunk, or if a host-loaded top-level chunk names it. A host that ships the SDK must also ship the
 kernel's notices (they are part of the SDK's `NOTICE.txt`). Recorded commands with
 `context.kernel` replay only where the same kernel version is provided: sessions the editor
-creates declare the pinned exact kernel; a host that passes its own `session` declares kernels
-with `createCadSession(document, {kernels})` (from `@brickwright/cad-exact/identity`), or such
-records are refused with a clear message.
+creates declare the pinned exact kernel; a host that passes its own `session` creates it with
+`createEditorSession` (or the SDK's `createCadSession`, which declares the bundled kernel), see
+[Host-created sessions and kernels](#host-created-sessions-and-kernels), or such records are
+refused with a clear message.
 
 **Document version 41: exact fillet, chamfer and shell (2026-11-25).** The SDK built from this
 repository reads and writes version 41, which adds the `exact-feature` node
@@ -333,8 +390,11 @@ between the two releases. On a scratch clone of brickwright-lite synced to this 
 been failing since the exact kernel entered the geometry worker (SMLib's top-level await under
 the SDK's ES2020 target); worker chunks may now use it, and packaging checks that `sdk.js` and
 every host-parsed chunk still parse as ES2020. A host that passes its own `session` must declare the exact kernel
-(`createCadSession(document, {kernels:[exactKernelIdentity]})`), or creating and recomputing
-exact features fails with "This session does not provide the smlib kernel".
+(`createEditorSession(document)`, the SDK's `createCadSession(document)`, or
+`kernels:[exactKernelIdentity]`), or creating and recomputing exact features is refused with
+"This editor session does not declare the exact kernel". SDK builds up to 912d6f4 did not export
+the identity, so BrickWright's own CAD tab session could not declare it ("This session does not
+provide the smlib kernel"); syncing a later SDK fixes it without host changes.
 
 Full SDK preview/control behavior: [motor programs](CAD-MOTOR-PROGRAMS.md) and
 [simulation coverage](SIMLAB-PARITY.md). The standalone owns its project library;

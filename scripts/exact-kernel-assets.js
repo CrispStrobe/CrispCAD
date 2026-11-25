@@ -11,3 +11,24 @@ export const exactKernelWorkerOutput={
   chunkFileNames:chunk=>chunk.moduleIds.some(exactModule)?`${EXACT_ASSET_DIR}[name]-[hash].js`:'assets/[name]-[hash].js',
   assetFileNames:asset=>(asset.names??[asset.name]).some(name=>name&&exactAsset(name))?`${EXACT_ASSET_DIR}[name]-[hash][extname]`:'assets/[name]-[hash][extname]',
 };
+
+/**
+ * Vite's library mode inlines every `new URL('x.wasm', import.meta.url)` asset as a base64 data
+ * URL, whatever `assetsInlineLimit` says: the SDK build put the 9.4 MB smlibwasm.wasm into two
+ * exact chunks (~26 MB). Marking those references `?no-inline` makes Vite emit the file instead
+ * (still routed by exactKernelWorkerOutput, so smlibwasm lands under assets/exact/) and leave a
+ * URL relative to the referencing chunk, which works when a host serves the SDK from a sub-path.
+ * The kernel fetches it only when it initialises, i.e. on the first exact command.
+ */
+export function emitWasmFiles(){
+  const wasmURL=/\bnew\s+URL\s*\(\s*(['"])([^'"?#]+\.wasm)\1\s*,\s*import\.meta\.url\s*\)/g;
+  return {
+    name:'crispcad:emit-wasm-files',enforce:'pre',apply:'build',
+    transform(code,id){
+      if(!code.includes('.wasm')||!code.includes('import.meta.url'))return null;
+      let changed=false;
+      const next=code.replace(wasmURL,(_,quote,file)=>{changed=true;return `new URL(${quote}${file}?no-inline${quote}, import.meta.url)`;});
+      return changed?{code:next,map:null}:null;
+    },
+  };
+}

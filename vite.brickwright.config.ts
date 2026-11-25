@@ -4,7 +4,7 @@ import {libraryCatalogueAssets} from './scripts/library-catalogue-assets.js';
 import {defineConfig} from 'vite';
 import {resolve} from 'node:path';
 import {preserveDwgClassNames} from './scripts/preserve-dwg-class-names.js';
-import {exactKernelWorkerOutput} from './scripts/exact-kernel-assets.js';
+import {exactKernelWorkerOutput,emitWasmFiles} from './scripts/exact-kernel-assets.js';
 export default defineConfig({
   plugins: [libraryPreviewAssets(), libraryCatalogueAssets()],
   base:'./',
@@ -13,7 +13,8 @@ export default defineConfig({
     // Keep fonts as files rather than duplicating them into the worker and host.
     assetsInlineLimit:0,
   },
-  worker:{format:'es',plugins:()=>[preserveDwgClassNames()],rollupOptions:{output:exactKernelWorkerOutput}},
+  // Library mode inlines WebAssembly as base64; emit it as lazily fetched files instead.
+  worker:{format:'es',plugins:()=>[preserveDwgClassNames(),emitWasmFiles()],rollupOptions:{output:exactKernelWorkerOutput}},
   // The lazily loaded exact-kernel chunk (only inside the geometry worker) initialises its
   // WebAssembly with top-level await. Hosts never parse worker chunks with their bundler; they
   // load them as module workers, which support it. sdk.js and its chunks stay ES2020
