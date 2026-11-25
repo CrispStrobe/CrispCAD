@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {createGeometryKernel} from '@brickwright/cad-geometry';
-import {createPhysicsWorld,prepareDocumentCollisions} from '@brickwright/cad-physics';
+import {createPhysicsWorld,loadPhysicsEngine,prepareDocumentCollisions} from '@brickwright/cad-physics';
 import {defaultPartPhysics,documentGeometryKey,setLocale,t} from '@brickwright/cad-core';
 import type {GeometryKernel,GeometryResult} from '@brickwright/cad-geometry';
 import type {PreparedCollision} from '@brickwright/cad-physics';
@@ -52,6 +52,9 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
    world?.dispose();world=undefined;setLocale(command.locale);
    const authored=command.document??lastStart?.authored;
    if(!authored)throw new Error(t('Start simulation first'));
+   // Start fetching and compiling Jolt while preparing the collision geometry.
+   // World construction awaits the same promise and reports engine failures.
+   if(authored.roots.length)void loadPhysicsEngine(true).catch(()=>{});
    // The worker owns this copy. Apply Fix base to the run's node only so
    // later runs continue from the authored motion, including dynamic bases.
    document=authored;

@@ -11,11 +11,13 @@ import {hingeMembersSeparated,hingeFrameSeparationMargin,hingeFrameDriftBound} f
 let modulePromise:ReturnType<typeof initJolt>|undefined;
 let simdPromise:ReturnType<typeof initJolt>|undefined;
 const loadScalarJolt=()=>(modulePromise??=import('jolt-physics/wasm-compat').then(module=>module.default()));
-function loadJolt(preferSimd:boolean){
+/** Resolve the shared engine independently of world and collision construction. */
+export function loadPhysicsEngine(preferSimd:boolean){
  if(!preferSimd)return loadScalarJolt();
+ if(simdPromise)return simdPromise;
  // Empty function containing i32.const, i8x16.splat and drop.
  const simdProbe=new Uint8Array([0,97,115,109,1,0,0,0,1,4,1,96,0,0,3,2,1,0,10,9,1,7,0,65,0,253,15,26,11]);
- return simdPromise??=(WebAssembly.validate(simdProbe)
+ return simdPromise=(WebAssembly.validate(simdProbe)
   ?import('jolt-physics/wasm-simd-compat').then(module=>module.default()).catch(loadScalarJolt)
   :loadScalarJolt());
 }
@@ -30,7 +32,7 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
  const meshedGears=new Set<string>();for(const joint of doc.joints??[]){const other=joint.gearMesh&&doc.joints!.find(j=>j.id===joint.gearMesh!.joint);if(other){meshedGears.add(gearBody(joint,other));meshedGears.add(gearBody(other,joint));}}
  if(options.mode!=='rigid-preview')for(const mesh of meshes){const intent=doc.nodes[mesh.id]?.physics?.intent??'rigid';if(intent!=='rigid'&&!(intent==='hinge'&&doc.joints?.some(j=>j.bodyA===mesh.id||j.bodyB===mesh.id))&&!(intent==='gear'&&meshedGears.has(mesh.id)))throw new Error(t`${mesh.name}: ${intent} needs a qualified mechanical model and mates. Choose rigid-preview explicitly to simulate only its rigid geometry.`);}
  if([...prepared.values()].reduce((sum,p)=>sum+p.hulls.length,0)>4096)throw new Error(t('Simulation scene exceeds the 4096-convex-piece budget'));
- const J=options.J??await loadJolt(options.preferSimd??false);
+ const J=options.J??await loadPhysicsEngine(options.preferSimd??false);
  const settings=new J.JoltSettings();settings.mMaxBodies=512;settings.mMaxBodyPairs=Math.max(1024,meshes.length*meshes.length);settings.mMaxContactConstraints=8192;
  const pairs=new J.ObjectLayerPairFilterTable(2);pairs.EnableCollision(0,1);pairs.EnableCollision(1,1);
  const broad=new J.BroadPhaseLayerInterfaceTable(2,2);const staticLayer=new J.BroadPhaseLayer(0),dynamicLayer=new J.BroadPhaseLayer(1);broad.MapObjectToBroadPhaseLayer(0,staticLayer);broad.MapObjectToBroadPhaseLayer(1,dynamicLayer);J.destroy(staticLayer);J.destroy(dynamicLayer);
