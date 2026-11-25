@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import {defaultPartPhysics} from '@brickwright/cad-core';
 import type {CadDocument} from '@brickwright/cad-core';
 import type {SimulationCommand,SimulationFrame,SimulationTelemetry} from '../packages/editor/src/simulation-protocol.js';
 
@@ -95,4 +96,34 @@ it('parks the world and reuses qualified contacts only for the same construction
  changed.nodes['body-0'].physics={sourcePreset:'new-collision-construction'} as CadDocument['nodes'][string]['physics'];
  await start(changed);
  expect(mock.prepare).toHaveBeenCalledTimes(2);
+});
+
+it('requires an initial document before a payload-free start',async()=>{
+ const response=await send({op:'start',wasmURL:'/manifold.wasm',fixBase:false,locale:'en'});
+ expect(response.error).toMatch(/Start simulation first/);
+ expect(mock.create).not.toHaveBeenCalled();
+});
+
+it('restarts from the authored document and applies Fix base only to each run',async()=>{
+ const document=scene(2);
+ document.nodes['body-0'].physics=defaultPartPhysics();
+ const settings={op:'start',wasmURL:'/manifold.wasm',locale:'en'} as const;
+ const expectBase=(motion:'static'|'dynamic')=>expect(mock.create).toHaveBeenLastCalledWith(
+  expect.objectContaining({nodes:expect.objectContaining({'body-0':expect.objectContaining({
+   physics:expect.objectContaining({motion}),
+  })})}),expect.anything(),expect.anything(),expect.anything());
+ expect((await send({...settings,document,fixBase:true})).error).toBeUndefined();
+ expectBase('static');
+ expect(document.nodes['body-0'].physics.motion).toBe('dynamic');
+ await send(actuation());
+ await send({op:'park'});
+ const restarted=await send({...settings,fixBase:false});
+ expect(restarted.error).toBeUndefined();
+ expect(restarted.frame.time).toBe(0);
+ expectBase('dynamic');
+ await send({op:'park'});
+ expect((await send({...settings,fixBase:true})).error).toBeUndefined();
+ expectBase('static');
+ expect(mock.create).toHaveBeenCalledTimes(3);
+ expect(mock.prepare).toHaveBeenCalledTimes(1);
 });

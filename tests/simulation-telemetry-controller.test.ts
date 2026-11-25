@@ -165,25 +165,28 @@ it('inspects the end of a stopped recording and returns from replay to the edita
  }finally{f.dispose();}
 });
 
-it('sends geometry on cold starts and reuses the completed worker through Stop',async()=>{
+it('sends the design and geometry on cold starts and reuses both through Stop',async()=>{
  const geometry:GeometryResult={bodies:[],volume:0,triangles:0};
  const changedGeometry={...geometry,sourceKey:'edited'};
  const ready=vi.fn(async()=>geometry).mockResolvedValueOnce(geometry).mockResolvedValueOnce(geometry).mockResolvedValueOnce(changedGeometry);
  const f=fixture(ready);
  try{
   await f.controller.prepare();
-  expect(client.send).toHaveBeenLastCalledWith(expect.objectContaining({op:'start',geometry}));
+  expect(client.send).toHaveBeenLastCalledWith(expect.objectContaining({op:'start',document:f.session.state.document,geometry}));
   await f.controller.stop();
   expect(client.send).toHaveBeenLastCalledWith({op:'park'});
   expect(client.dispose).not.toHaveBeenCalled();
   expect(f.controller.state.state).toBe('idle');
   await f.controller.prepare();
-  expect(client.send).toHaveBeenLastCalledWith(expect.objectContaining({op:'start',geometry:undefined}));
+  const restart=client.send.mock.lastCall![0];
+  expect(restart.op).toBe('start');
+  expect(restart).not.toHaveProperty('document');
+  expect(restart).not.toHaveProperty('geometry');
   await f.controller.stop();
   f.session.add({kind:'box',size:[3,3,3]});
   expect(client.dispose).toHaveBeenCalledOnce();
   await f.controller.prepare();
-  expect(client.send).toHaveBeenLastCalledWith(expect.objectContaining({op:'start',geometry:changedGeometry}));
+  expect(client.send).toHaveBeenLastCalledWith(expect.objectContaining({op:'start',document:f.session.state.document,geometry:changedGeometry}));
   expect(ready).toHaveBeenCalledTimes(3);
  }finally{f.dispose();}
 });
