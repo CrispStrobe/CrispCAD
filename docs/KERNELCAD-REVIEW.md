@@ -51,7 +51,7 @@ Corrections:
 ## Fork recommendation: defer
 
 **Update 2026-11-24.** The owner created the fork anyway, as the CrispCAD kernel
-lab (`CrispStrobe/kernelCAD-web`, branch `ccr-f42f1bfe-3ekdio`). It has the
+lab (`CrispStrobe/crispcad-kernel-lab`, default branch `develop`). It has the
 native `smlib-native` kernel, which does not need OpenCASCADE. This repository,
 now CrispCAD, still does not adopt the fork's application. It takes over the
 kernel through an exact-backend adapter, as
