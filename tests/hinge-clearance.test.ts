@@ -12,6 +12,15 @@ it('handles offset axes and projected hulls crossing the axis conservatively',()
  const surrounding=box('around',[-2,-1,-2],[2,1,2]),nearAxis=box('rotor',[-.5,-1,-.5],[.5,1,.5]);expect(hingeMembersSeparated([surrounding],[nearAxis],[0,0,0],[0,1,0],()=>false)).toBe(false);
  const translate=(m:ReturnType<typeof box>)=>({...m,hulls:m.hulls.map(h=>({...h,positions:h.positions.map((v,i)=>v+[100,-50,20][i%3])}))});expect(hingeMembersSeparated([translate(box('a',[10,-1,-1],[12,1,1]))],[translate(box('b',[1,-1,-1],[2,1,1]))],[100,-50,20],[0,1,0],()=>false)).toBe(true);
 });
+it('finds a long axial interval behind shorter intervals and preserves the margin boundary',()=>{
+ const fixed=box('fixed',[10,5,-1],[12,6,1]);
+ const short=box('short',[10,0,-1],[12,1,1]).hulls[0];
+ const boundary=box('boundary',[10,6.25,-1],[12,7,1]).hulls[0];
+ const long=box('long',[10,-10,-1],[12,5.01,1]).hulls[0];
+ const test=(hulls:typeof fixed.hulls)=>hingeMembersSeparated([fixed],[{id:'rotor',hulls}],[0,0,0],[0,2,0],()=>false);
+ expect(test([boundary,short])).toBe(true);
+ expect(test([boundary,short,long])).toBe(false);
+});
 it('bounds near-coaxial frame uncertainty by the material lever arm',()=>{
  const hulls=box('part',[10,-1,-1],[12,1,1]).hulls;const exact=hingeFrameSeparationMargin(hulls,[0,0,0],[0,1,0],[0,0,0],[0,1,0]);expect(exact).toBeGreaterThanOrEqual(.25);expect(exact).toBeLessThan(.251);
  expect(hingeFrameSeparationMargin(hulls,[1e9,0,0],[0,1,0],[1e9,0,0],[0,1,8e-9])).toBeUndefined();expect(hingeFrameSeparationMargin(hulls,[0,0,0],[0,1,0],[.0001,0,0],[0,1,0])).toBeUndefined();

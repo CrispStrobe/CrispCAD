@@ -2,7 +2,8 @@
 import type {Vec3} from '@brickwright/cad-core';
 import type {ConvexPiece} from './collision.js';
 type Member={id:string;hulls:readonly ConvexPiece[]};
-type Sweep={axialMin:number;axialMax:number;radialMin:number;radialMax:number};
+type RadialRange={min:number;max:number};
+type Sweep={hull:ConvexPiece;min:number;end:number;radial?:RadialRange};
 const cross=(a:number[],b:number[],c:number[])=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
 /** Maximum movement needed to return B to an ideal hinge pose at this instant:
  * translate its anchor, then apply the shortest rotation aligning both axes.
@@ -28,13 +29,65 @@ export function hingeMembersSeparated(left:readonly Member[],right:readonly Memb
  const length=Math.hypot(...axis);if(!Number.isFinite(length)||length<1e-9||!Number.isFinite(marginMm)||marginMm<=0||!Number.isInteger(maxPairChecks)||maxPairChecks<=0)return false;
  let checks=0;for(const a of left)for(const b of right)if(!excluded(a.id,b.id)){checks+=a.hulls.length*b.hulls.length;if(checks>maxPairChecks)return false;}
  const z=axis.map(v=>v/length),seed=Math.abs(z[0])<.9?[1,0,0]:[0,1,0],dot=z.reduce((s,v,i)=>s+v*seed[i],0),u=seed.map((v,i)=>v-dot*z[i]),ul=Math.hypot(...u);for(let i=0;i<3;i++)u[i]/=ul;const v=[z[1]*u[2]-z[2]*u[1],z[2]*u[0]-z[0]*u[2],z[0]*u[1]-z[1]*u[0]],cache=new Map<ConvexPiece,Sweep>();
- const project=(hull:ConvexPiece):Sweep=>{const prior=cache.get(hull);if(prior)return prior;let axialMin=Infinity,axialMax=-Infinity,radialMax=0;const points:number[][]=[];
-  for(let i=0;i<hull.positions.length;i+=3){const p=[0,1,2].map(j=>hull.positions[i+j]-anchor[j]),along=p.reduce((s,x,j)=>s+x*z[j],0),point=[p.reduce((s,x,j)=>s+x*u[j],0),p.reduce((s,x,j)=>s+x*v[j],0)];axialMin=Math.min(axialMin,along);axialMax=Math.max(axialMax,along);radialMax=Math.max(radialMax,Math.hypot(...point));points.push(point);}
+ const component=(positions:Float64Array,i:number,basis:number[])=>
+  ((0+(positions[i]-anchor[0])*basis[0])+(positions[i+1]-anchor[1])*basis[1])+(positions[i+2]-anchor[2])*basis[2];
+ const axial=(hull:ConvexPiece):Sweep=>{
+  const prior=cache.get(hull);
+  if(prior)return prior;
+  let min=Infinity,max=-Infinity;
+  for(let i=0;i<hull.positions.length;i+=3){
+   const along=component(hull.positions,i,z);
+   min=Math.min(min,along);max=Math.max(max,along);
+  }
+  const sweep={hull,min,end:max+marginMm};
+  cache.set(hull,sweep);
+  return sweep;
+ };
+ const radial=(sweep:Sweep):RadialRange=>{
+  if(sweep.radial)return sweep.radial;
+  let radialMax=0;
+  const positions=sweep.hull.positions,points:number[][]=[];
+  for(let i=0;i<positions.length;i+=3){
+   const point=[component(positions,i,u),component(positions,i,v)];
+   radialMax=Math.max(radialMax,Math.hypot(...point));
+   points.push(point);
+  }
   points.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const unique=points.filter((p,i)=>!i||p[0]!==points[i-1][0]||p[1]!==points[i-1][1]),lower:number[][]=[],upper:number[][]=[];
   for(const p of unique){while(lower.length>=2&&cross(lower.at(-2)!,lower.at(-1)!,p)<=0)lower.pop();lower.push(p);}for(const p of [...unique].reverse()){while(upper.length>=2&&cross(upper.at(-2)!,upper.at(-1)!,p)<=0)upper.pop();upper.push(p);}const polygon=unique.length===1?unique:[...lower.slice(0,-1),...upper.slice(0,-1)];
   let radialMin=Infinity;if(polygon.length>=3&&polygon.every((p,i)=>cross(p,polygon[(i+1)%polygon.length],[0,0])>=-1e-10))radialMin=0;else for(let i=0;i<polygon.length;i++){const a=polygon[i],b=polygon[(i+1)%polygon.length],dx=b[0]-a[0],dy=b[1]-a[1],den=dx*dx+dy*dy,t=den?Math.max(0,Math.min(1,-(a[0]*dx+a[1]*dy)/den)):0;radialMin=Math.min(radialMin,Math.hypot(a[0]+t*dx,a[1]+t*dy));}
-  const result={axialMin,axialMax,radialMin,radialMax};cache.set(hull,result);return result;
+  return sweep.radial={min:radialMin,max:radialMax};
  };
- for(const a of left)for(const b of right){if(excluded(a.id,b.id))continue;for(const ah of a.hulls){const x=project(ah);for(const bh of b.hulls){const y=project(bh);if(x.axialMax+marginMm<=y.axialMin||y.axialMax+marginMm<=x.axialMin||x.radialMax+marginMm<=y.radialMin||y.radialMax+marginMm<=x.radialMin)continue;return false;}}}
+ const indexed=new Map<Member,{sweeps:Sweep[];prefixEnd:number[]}>();
+ for(const a of left)for(const b of right){
+  if(excluded(a.id,b.id)||!a.hulls.length||!b.hulls.length)continue;
+  let index=indexed.get(b);
+  if(!index){
+   const sweeps=b.hulls.map(axial);
+   if(sweeps.some(sweep=>!Number.isFinite(sweep.min)||!Number.isFinite(sweep.end)))return false;
+   sweeps.sort((x,y)=>x.min-y.min);
+   let end=-Infinity;
+   const prefixEnd=sweeps.map(sweep=>end=Math.max(end,sweep.end));
+   index={sweeps,prefixEnd};
+   indexed.set(b,index);
+  }
+  const {sweeps,prefixEnd}=index;
+  for(const hull of a.hulls){
+   const x=axial(hull);
+   if(!Number.isFinite(x.min)||!Number.isFinite(x.end))return false;
+   // Skip the prefix that ends before x, then stop when starts reach x's end.
+   let low=0,high=sweeps.length;
+   while(low<high){
+    const mid=(low+high)>>>1;
+    if(prefixEnd[mid]<=x.min)low=mid+1;else high=mid;
+   }
+   for(let i=low;i<sweeps.length&&sweeps[i].min<x.end;i++){
+    const y=sweeps[i];
+    if(y.end<=x.min)continue;
+    const xr=radial(x),yr=radial(y);
+    if(xr.max+marginMm<=yr.min||yr.max+marginMm<=xr.min)continue;
+    return false;
+   }
+  }
+ }
  return true;
 }
