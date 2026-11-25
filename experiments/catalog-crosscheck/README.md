@@ -116,3 +116,7 @@ relative; where the exact build is unsupported only for low segment counts, the
 kernelCAD-intent build stands in. **TODO (lab):** emit this file from the lab's
 `smlib-native` catalog run (`buildModel({ code, fileName, kernel: 'smlib-native' })`,
 summing part volumes), then rerun `summarize.ts` with `--native`.
+
+## Results
+
+RESULTS_PLACEHOLDER
