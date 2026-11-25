@@ -107,14 +107,43 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
   try{const body=bodies.CreateBody(bc);if(!body)throw new Error(t('Jolt body allocation failed'));bodies.AddBody(body.GetID(),motion==='static'?J.EActivation_DontActivate:J.EActivation_Activate);ownedBodies.push(body);byId.set(id,body);if(mass)bodyMass.set(id,mass.massKg);}finally{J.destroy(bc);}
  };
  function dispose(){if(disposed)return;disposed=true;for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
+ let scratchVertex:any,scratchPosition:any,scratchRotation:any;
  try {
   if(options.ground??sceneSettings.ground){const ext=new J.Vec3(2,2,.005),shape=new J.BoxShape(ext,.0001);J.destroy(ext);add(shape,'ground','static',{friction:sceneSettings.groundFriction,restitution:sceneSettings.groundRestitution});const p=new J.RVec3(0,0,-.005);bodies.SetPosition(byId.get('ground').GetID(),p,J.EActivation_DontActivate);J.destroy(p);}
   for(const [id,members]of assemblies){const properties=doc.nodes[members[0].id].physics??defaultPartPhysics(),motion=members.some(m=>doc.nodes[m.id].physics?.motion==='static')?'static':'dynamic',mass=assemblyMass.get(id)!,compound=new J.StaticCompoundShapeSettings();
-   for(const mesh of members)for(const hull of prepared.get(mesh.id)!.hulls) {if(hull.positions.length<12||hull.positions.length>192||Array.from(hull.positions).some(v=>!Number.isFinite(v)))throw new Error(t('Collision hull violates the solver budget'));const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(let k=0;k<hull.positions.length;k++) {min[k%3]=Math.min(min[k%3],hull.positions[k]);max[k%3]=Math.max(max[k%3],hull.positions[k]);}const center=min.map((v,k)=>(v+max[k])/2),spans=max.map((v,k)=>v-min[k]),extent=Math.max(...spans);if(spans.some(v=>v<=0))throw new Error(t('Collision hull has no finite extent'));
-    // Condition each axis to [-.5,.5] to preserve shared axis-aligned bounds
-    // more accurately and avoid float-rounding cracks between hulls.
-    // ScaledShape then converts back to metres without moving the contact surface.
-    const leaf=new J.ConvexHullShapeSettings();leaf.mUserData=meshIndex.get(mesh.id)!+1;leaf.mMaxConvexRadius=Math.min(.02,.1*Math.min(...max.map((v,k)=>v-min[k])))/extent;leaf.mHullTolerance=Math.min(.005,prepared.get(mesh.id)!.certificate.tolerance.boundsMm/extent/4);for(let k=0;k<hull.positions.length;k+=3){const p=new J.Vec3((hull.positions[k]-center[0])/spans[0],(hull.positions[k+1]-center[1])/spans[1],(hull.positions[k+2]-center[2])/spans[2]);leaf.mPoints.push_back(p);J.destroy(p);}const scaling=new J.Vec3(spans[0]*.001,spans[1]*.001,spans[2]*.001),scaled=new J.ScaledShapeSettings(leaf,scaling);J.destroy(scaling);const position=new J.Vec3(center[0]*.001,center[1]*.001,center[2]*.001),q=new J.Quat(0,0,0,1);compound.AddShape(position,q,scaled,meshIndex.get(mesh.id)!+1);J.destroy(position);J.destroy(q);}
+   for(const mesh of members)for(const hull of prepared.get(mesh.id)!.hulls){
+    const positions=hull.positions;
+    if(positions.length<12||positions.length>192)throw new Error(t('Collision hull violates the solver budget'));
+    const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];
+    for(let k=0;k<positions.length;k++){
+     const value=positions[k],axis=k%3;
+     if(!Number.isFinite(value))throw new Error(t('Collision hull violates the solver budget'));
+     min[axis]=Math.min(min[axis],value);
+     max[axis]=Math.max(max[axis],value);
+    }
+    const center=min.map((v,k)=>(v+max[k])/2),spans=max.map((v,k)=>v-min[k]),extent=Math.max(...spans);
+    if(spans.some(v=>v<=0))throw new Error(t('Collision hull has no finite extent'));
+    // Jolt copies these coordinates into its arrays and compound settings.
+    // Reuse one set of native temporaries for all the hulls in this world.
+    scratchVertex??=new J.Vec3(0,0,0);
+    scratchPosition??=new J.RVec3(0,0,0);
+    scratchRotation??=new J.Quat(0,0,0,1);
+    // Condition each axis to [-.5,.5] to preserve shared axis-aligned bounds.
+    const leaf=new J.ConvexHullShapeSettings();
+    const token=meshIndex.get(mesh.id)!+1;
+    leaf.mUserData=token;
+    leaf.mMaxConvexRadius=Math.min(.02,.1*Math.min(...spans))/extent;
+    leaf.mHullTolerance=Math.min(.005,prepared.get(mesh.id)!.certificate.tolerance.boundsMm/extent/4);
+    const points=leaf.mPoints;
+    for(let k=0;k<positions.length;k+=3){
+     scratchVertex.Set((positions[k]-center[0])/spans[0],(positions[k+1]-center[1])/spans[1],(positions[k+2]-center[2])/spans[2]);
+     points.push_back(scratchVertex);
+    }
+    scratchVertex.Set(spans[0]*.001,spans[1]*.001,spans[2]*.001);
+    const scaled=new J.ScaledShapeSettings(leaf,scratchVertex);
+    scratchPosition.Set(center[0]*.001,center[1]*.001,center[2]*.001);
+    compound.AddShape(scratchPosition,scratchRotation,scaled,token);
+   }
    const created=compound.Create();try{if(created.HasError())throw new Error(created.GetError().c_str());const shape=created.Get();const center=shape.GetCenterOfMass();const shift=new J.Vec3(mass.centerM[0]-center.GetX(),mass.centerM[1]-center.GetY(),mass.centerM[2]-center.GetZ());const corrected=new J.OffsetCenterOfMassShape(shape,shift);J.destroy(shift);add(corrected,id,motion,properties,mass);const body=byId.get(id);if(new Set(members.map(m=>{const p=doc.nodes[m.id].physics??defaultPartPhysics();return p.friction+':'+p.restitution;})).size>1)body.SetUseManifoldReduction(false);for(const mesh of members){byId.set(mesh.id,body);bodyMass.set(mesh.id,mass.massKg);}}finally{created.Clear();J.destroy(compound);}
   }
   if(assemblies.size<meshes.length){
@@ -165,6 +194,11 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
   }
   system.OptimizeBroadPhase();
  }catch(e){dispose();throw e;}
+ finally{
+  if(scratchVertex)J.destroy(scratchVertex);
+  if(scratchPosition)J.destroy(scratchPosition);
+  if(scratchRotation)J.destroy(scratchRotation);
+ }
  const sourceCenterM=(id:string)=>{const body=byId.get(id),part=massById.get(id);if(!part){const p=body.GetCenterOfMassPosition();return [p.GetX(),p.GetY(),p.GetZ()];}const p=body.GetPosition(),q=body.GetRotation();return quaternionPoint(part.centerM,[q.GetX(),q.GetY(),q.GetZ(),q.GetW()]).map((v,i)=>v+[p.GetX(),p.GetY(),p.GetZ()][i]);};
  let previewCount=0;
  function spawnPreview(id:string,positionMm:Vec3,velocityMmS:Vec3,sizeMm:number,kind:'sphere'|'box'){
