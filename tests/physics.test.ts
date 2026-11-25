@@ -5,10 +5,29 @@ import {createPresetDocument} from '../packages/editor/src/shapes.js';
 import {createCadSession,defaultGenerator,defaultCodeProgram,importOpenSCAD} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
-import {createPhysicsShapeCache,createPhysicsWorld,prepareDocumentCollisions,solidMassProperties} from '../packages/physics/src/index.js';
+import {createPhysicsShapeCache,createPhysicsWorld,prepareDocumentCollisions,preparePhysicsDocument,solidMassProperties} from '../packages/physics/src/index.js';
 let kernel:GeometryKernel,J:Awaited<ReturnType<typeof initJolt>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});J=await initJolt();});
 describe('qualified Jolt physics boundary',()=>{
+ it('retains the validated document and applies Fix base independently each run',async()=>{
+  const doc=structuredClone(createPresetDocument('box')),id=doc.roots[0];
+  doc.nodes[id].transform.position[2]=70;
+  const geometry=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,geometry,kernel);
+  const snapshot=preparePhysicsDocument(doc),shapeCache=createPhysicsShapeCache();
+  doc.nodes[id].transform.position[2]=90;
+  await expect(createPhysicsWorld(doc,geometry,prepared,{J})).rejects.toThrow('stale');
+  let world=await createPhysicsWorld(snapshot,geometry,prepared,{J,shapeCache,fixBase:true});
+  try{
+   const initial=world.pose(id);
+   world.step(.1);
+   expect(world.pose(id)).toEqual(initial);
+   world.dispose();
+   world=await createPhysicsWorld(snapshot,geometry,prepared,{J,shapeCache,fixBase:false});
+   expect(world.pose(id)).toEqual(initial);
+   world.step(.1);
+   expect(world.pose(id).positionMm[2]).toBeLessThan(initial.positionMm[2]);
+  }finally{world.dispose();shapeCache.clear();}
+ });
  it('reuses parked compounds and releases them without invalidating a live world',async()=>{
   const doc=structuredClone(createPresetDocument('box')),id=doc.roots[0];
   doc.nodes[id].transform.position[2]=70;
