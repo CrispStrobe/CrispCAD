@@ -12,17 +12,17 @@
    "cpus": 8,
    "model": "Apple M1",
    "loadAverageAtStart": [
-    123,
-    109.8,
-    79.2
+    164.3,
+    180.7,
+    146.4
    ],
    "loadAverageAtEnd": [
-    186.2,
-    181.2,
-    161.9
+    143.1,
+    172.5,
+    145.3
    ]
   },
-  "started": "2026-11-25T05:16:08.783Z",
+  "started": "2026-11-25T07:37Z",
   "calibration": {
    "volume": {
     "prism": 1.0000000209001643,
@@ -178,199 +178,90 @@
    "node": "v26.4.0",
    "exact": "@classcad/smlibwasm 0.6.2"
   },
-  "finished": "2026-11-25T05:50:41.984Z",
-  "lastRunMinutes": 34.6
+  "finished": "2026-11-25T08:06:41.297Z",
+  "lastRunMinutes": 0.8,
+  "note": "Converter at fix/kcad-converter-semantics a2212a3. All 2,402 models ran 07:37-08:01Z (24.5 min, 3 jobs); the 35 models whose conversion changed with the connector commit were then removed and rerun by resume (08:06Z). started is to the minute."
  },
  "models": 2402,
  "modelClasses": {
-  "exact-unsupported": 1127,
-  "agree": 989,
-  "converter-failure": 153,
-  "kernel-failure": 115,
-  "disagree": 18
+  "agree": 2223,
+  "kernel-failure": 119,
+  "converter-failure": 31,
+  "disagree": 24,
+  "exact-unsupported": 5
  },
  "convertStatus": {
-  "converted": 2231,
-  "unsupported": 104,
-  "failed": 49,
-  "partial": 18
+  "converted": 2352,
+  "unsupported": 25,
+  "partial": 19,
+  "failed": 6
  },
  "convertErrors": {
-  "Line N, column N: Unsupported kernelCAD feature …": 104,
-  "Line N, column N: Invalid JavaScript syntax; strip TypeScript annotations first": 24,
-  "Line N, column N: Expected positive kernelCAD box dimensions": 12,
-  "Line N, column N: Unknown kernelCAD name …": 6,
-  "Line N, column N: Expected a finite kernelCAD number": 6,
-  "Line N, column N: Expected a bounded kernelCAD array": 1
+  "Line N, column N: Unsupported kernelCAD feature …": 25,
+  "Line N, column N: Unknown kernelCAD name …": 6
  },
- "parts": 63281,
+ "parts": 69295,
  "partClasses": {
-  "agree": 52087,
-  "exact-unsupported": 10662,
-  "exact-failure": 437,
-  "disagree": 92,
-  "manifold-failure": 2,
-  "both-failed": 1
+  "agree": 68666,
+  "exact-failure": 445,
+  "disagree": 116,
+  "exact-unsupported": 68
  },
  "disagreementReasons": {
-  "bbox": 59,
-  "area": 30,
-  "volume": 3
+  "bbox": 57,
+  "area": 33,
+  "volume": 26
  },
  "disagreementCauses": {
-  "exact bbox inside Manifold mesh bbox (SMLib tight bbox)": 59,
+  "exact bbox inside Manifold mesh bbox (SMLib tight bbox)": 57,
+  "planar part, volume beyond the 1e-6 floor (|dV|/V ≤ 1e-5: Manifold numerics or float32 polyhedron vertices at large coordinates)": 26,
   "planar part, area off by < 1e-3 (float32 mesh positions far from the origin)": 25,
   "planar loft, exact area too large with equal volume (SMLib area of stitched polyhedron)": 5,
-  "planar part, volume beyond the 1e-6 floor (|dV|/V ≈ 1e-6: Manifold numerics at large coordinates)": 3
+  "planar part, Manifold area too large with equal volume (faces of exactly touching operands kept inside the mesh)": 3
  },
  "exactUnsupported": {
-  "cylinder with N segments is ambiguous for an exact kernel (a polygon or a circle?); use N+ segments for a true circle, or polygon2d/polyhedron for a polygonal s": 10300,
-  "revolve with N segments is ambiguous for an exact kernel (a polygon or a circle?); use N+ segments for a true circle, or polygon2d/polyhedron for a polygonal sh": 308,
-  "Hull of N distinct vertices exceeds the exact hull budget (N).": 30,
-  "A polyhedron of N faces exceeds the exact faceted-solid budget (N); tessellated constructors (ellipsoid, ellipticFrustum, roundedCylinder, many-section loft) ha": 24
+  "A polyhedron of N faces exceeds the exact faceted-solid budget (N); tessellated constructors (ellipsoid, ellipticFrustum, roundedCylinder, many-section loft) ha": 38,
+  "Hull of N distinct vertices exceeds the exact hull budget (N).": 30
  },
  "exactFailures": {
-  "invalid-input: The polyhedron faces do not close around a valid solid.": 437,
-  "invalid-input: The program produces no solid.": 1
+  "invalid-input: The polyhedron faces do not close around a valid solid.": 445
  },
- "manifoldFailures": {
-  "feature Na076aec-N-Nf0c-Nd-Nfaeedc64d: part: Code produces no printable solid": 1,
-  "feature Nb1aa1f-N-N-b17c-Nf72c436b: part: Code produces no printable solid": 1,
-  "feature N-Na87-N-a0ff-Nfc7a3b: part: Code produces no printable solid": 1
- },
+ "manifoldFailures": {},
  "agreement": {
-  "partsBuiltByBoth": 52179,
+  "partsBuiltByBoth": 68782,
   "medianRelVolumeAgreeing": 0,
   "maxRelVolumeAgreeingPlanar": 9.66980869e-7,
-  "planarPartsAgreeing": 46863
+  "planarPartsAgreeing": 50860
  },
  "intent": {
-  "parts": 10608,
+  "parts": 0,
   "note": "Parts the converter emitted with < 16 segments (cylinder/torus); exact kernel run on kernelCAD intent (exact cylinder, n-gon torus tube). relVolume = Manifold/intent - 1.",
-  "medianRelVolume": -0.06451071634524819,
-  "minRelVolume": -0.5865033285225241,
-  "agreeWithinFacetingOfEmittedSegments": 10608,
-  "byRelVolume": {
-   "-0.0997": 3184,
-   "-0.0645": 2993,
-   "-0.0451": 2138,
-   "-0.1730": 1280,
-   "-0.0332": 703,
-   "-0.3634": 148,
-   "-0.2432": 28,
-   "-0.0621": 16,
-   "-0.1047": 9,
-   "-0.1038": 9,
-   "-0.0307": 5,
-   "-0.0793": 4,
-   "-0.0547": 4,
-   "-0.0609": 4,
-   "-0.0428": 4,
-   "-0.0605": 4,
-   "-0.0303": 4,
-   "-0.0301": 4,
-   "-0.0297": 4,
-   "-0.0387": 4,
-   "0.0003": 3,
-   "-0.0312": 3,
-   "-0.5865": 3,
-   "0.0124": 2,
-   "-0.0659": 2,
-   "0.0019": 2,
-   "-0.0244": 2,
-   "-0.0242": 2,
-   "0.0015": 2,
-   "-0.0675": 2,
-   "-0.0055": 2,
-   "-0.0286": 2,
-   "0.0014": 2,
-   "-0.0221": 2,
-   "0.0189": 2,
-   "0.0006": 1,
-   "0.0059": 1,
-   "-0.0280": 1,
-   "-0.0168": 1,
-   "0.0017": 1,
-   "-0.0666": 1,
-   "-0.0275": 1,
-   "-0.0240": 1,
-   "0.0022": 1,
-   "0.0011": 1,
-   "0.0630": 1,
-   "-0.1866": 1,
-   "-0.0430": 1,
-   "0.0034": 1,
-   "-0.0199": 1,
-   "-0.0153": 1,
-   "0.0367": 1,
-   "-0.0252": 1,
-   "-0.0465": 1,
-   "-0.0082": 1,
-   "0.0016": 1,
-   "0.0079": 1,
-   "0.0002": 1,
-   "0.0032": 1,
-   "-0.0269": 1,
-   "-0.0880": 1
-  },
-  "modelsOnlyLowSegmentUnsupported": 1123
+  "medianRelVolume": 0,
+  "minRelVolume": null,
+  "agreeWithinFacetingOfEmittedSegments": 0,
+  "byRelVolume": {},
+  "modelsOnlyLowSegmentUnsupported": 0
  },
  "modelTotals": {
-  "models": 2128,
-  "exactlyEqual": 838,
-  "within1e3": 1170,
-  "within1e2": 1679,
-  "beyond5e2": 115,
-  "p05": -0.053648868791659754,
-  "median": -0.0004510192917859257,
-  "p95": 2.563183887360765e-9,
-  "min": -0.15282830733182995
+  "models": 2240,
+  "exactlyEqual": 903,
+  "within1e3": 1720,
+  "within1e2": 2237,
+  "beyond5e2": 0,
+  "p05": -0.002853342553687077,
+  "median": -0.0000382554197232432,
+  "p95": 2.7500790533707686e-9,
+  "min": -0.01000861697175326
  },
  "timing": {
-  "manifoldCpuMsTotal": 99002,
-  "exactCpuMsTotal": 726243,
-  "manifoldCpuMsMedianPart": 0.92,
-  "exactCpuMsMedianPart": 2.84,
-  "exactCpuMsMaxPart": 1445.74,
-  "convertWallMsMedian": 47.22
+  "manifoldCpuMsTotal": 87491,
+  "exactCpuMsTotal": 806114,
+  "manifoldCpuMsMedianPart": 0.75,
+  "exactCpuMsMedianPart": 4.08,
+  "exactCpuMsMaxPart": 729.95,
+  "convertWallMsMedian": 20.69
  },
  "worstDisagreements": [
-  {
-   "model": "recycling-facility/used-oil-dropoff-tank.kcad.ts",
-   "part": "saddle--800",
-   "reasons": [
-    "bbox"
-   ],
-   "relVolume": 0.01860623124,
-   "dVolume": 855442.76,
-   "dArea": 33938.701,
-   "dBbox": 32.9084638,
-   "tolerance": {
-    "volume": 4378002.59,
-    "area": 53833.13528,
-    "bbox": 8.641854029,
-    "minSegments": 24,
-    "approximate": false
-   }
-  },
-  {
-   "model": "recycling-facility/used-oil-dropoff-tank.kcad.ts",
-   "part": "saddle-800",
-   "reasons": [
-    "bbox"
-   ],
-   "relVolume": 0.01860623124,
-   "dVolume": 855442.76,
-   "dArea": 33938.701,
-   "dBbox": 32.9084638,
-   "tolerance": {
-    "volume": 4378002.59,
-    "area": 53833.13528,
-    "bbox": 8.641854029,
-    "minSegments": 24,
-    "approximate": false
-   }
-  },
   {
    "model": "amusement-park/ride-operator-console.kcad.ts",
    "part": "estop-head",
@@ -1054,19 +945,60 @@
     "minSegments": 48,
     "approximate": false
    }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-2-3",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83246,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-2-4",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83401,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
   }
  ],
  "disagreeingModels": {
   "retail-store/produce-display-table.kcad.ts": 48,
   "amusement-park/ride-operator-console.kcad.ts": 7,
+  "airfield/cargo-aircraft.kcad.ts": 7,
   "solar-energy/pole-mount-transformer.kcad.ts": 7,
+  "airfield/widebody-airliner.kcad.ts": 6,
   "theatre-production/backstage-call-board.kcad.ts": 5,
+  "airfield/narrowbody-airliner.kcad.ts": 4,
+  "airfield/private-jet.kcad.ts": 4,
   "lighting/chandelier.kcad.ts": 4,
   "telecom-infrastructure/monopole-mast.kcad.ts": 3,
   "grid-substation/substation-overhead-line-gantry.kcad.ts": 3,
   "solar-energy/plane-of-array-irradiance-sensor.kcad.ts": 3,
-  "recycling-facility/used-oil-dropoff-tank.kcad.ts": 2,
+  "airfield/regional-jet.kcad.ts": 2,
   "railway/electric-locomotive.kcad.ts": 2,
+  "travel-gear/duffel-bag.kcad.ts": 2,
   "theatre-production/lighting-control-console.kcad.ts": 1,
   "amusement-park/ride-photo-camera.kcad.ts": 1,
   "nature/bramble.kcad.ts": 1,
@@ -1074,7 +1006,8 @@
   "nature/baobab-tree.kcad.ts": 1,
   "office/paper-shredder.kcad.ts": 1,
   "mining/radial-stacker.kcad.ts": 1,
-  "theatre-production/stage-manager-console.kcad.ts": 1
+  "theatre-production/stage-manager-console.kcad.ts": 1,
+  "characters/excavator.kcad.ts": 1
  },
  "native": {
   "source": {
@@ -1082,19 +1015,18 @@
    "statusOnly": true
   },
   "classes": {
-   "native built / ours exact-unsupported": 1126,
-   "native built / ours agree": 988,
-   "native built / ours converter-failure": 144,
-   "native built / ours kernel-failure": 115,
-   "native built / ours disagree": 18,
-   "native failed / ours converter-failure": 9,
-   "native failed / ours agree": 1,
-   "native failed / ours exact-unsupported": 1
+   "native built / ours agree": 2220,
+   "native built / ours kernel-failure": 119,
+   "native built / ours disagree": 24,
+   "native built / ours converter-failure": 23,
+   "native failed / ours converter-failure": 8,
+   "native built / ours exact-unsupported": 5,
+   "native failed / ours agree": 3
   },
   "models": [
    {
     "id": "amusement-park/miniature-park-tram-engine.kcad.ts",
-    "class": "native failed / ours converter-failure"
+    "class": "native failed / ours agree"
    },
    {
     "id": "construction-equipment/pipe-roller-stand.kcad.ts",
@@ -1122,7 +1054,7 @@
    },
    {
     "id": "retail-store/impulse-merchandiser.kcad.ts",
-    "class": "native failed / ours exact-unsupported"
+    "class": "native failed / ours agree"
    },
    {
     "id": "sports/batting-helmet.kcad.ts",

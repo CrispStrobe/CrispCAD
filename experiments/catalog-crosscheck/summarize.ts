@@ -37,9 +37,10 @@ function cause(p: PartRecord): string {
   if (r.includes('bbox') && tooTight) return r.length === 1 ? 'exact bbox inside Manifold mesh bbox (SMLib tight bbox)' : 'exact bbox too tight + ' + r.filter(x => x !== 'bbox').join('+');
   if (p.tolerance!.curved === 0) {
     const relA = Math.abs(p.diff!.area) / (p.exact as { area: number }).area;
-    if (r.join() === 'area' && relA > 1e-3) return 'planar loft, exact area too large with equal volume (SMLib area of stitched polyhedron)';
+    if (r.join() === 'area' && relA > 1e-3 && p.diff!.area < 0) return 'planar loft, exact area too large with equal volume (SMLib area of stitched polyhedron)';
+    if (r.join() === 'area' && relA > 1e-3) return 'planar part, Manifold area too large with equal volume (faces of exactly touching operands kept inside the mesh)';
     if (r.join() === 'area') return 'planar part, area off by < 1e-3 (float32 mesh positions far from the origin)';
-    return `planar part, ${r.join('+')} beyond the 1e-6 floor (|dV|/V ≈ 1e-6: Manifold numerics at large coordinates)`;
+    return `planar part, ${r.join('+')} beyond the 1e-6 floor (|dV|/V ≤ 1e-5: Manifold numerics or float32 polyhedron vertices at large coordinates)`;
   }
   return `curved part, ${r.join('+')} beyond faceting tolerance`;
 }

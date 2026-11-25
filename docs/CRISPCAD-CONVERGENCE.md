@@ -382,7 +382,8 @@ fillets of individual edges need topological naming and are out of scope.
 
 ### Phase 4: cross-checking with the catalog. **Steps 1, 2 and 4 done 2026-11-25; step 3 waits for lab volumes**
 
-1. Convert the lab's catalog with `scripts/convert-kcad.mjs` (93.6% convert).
+1. Convert the lab's catalog with `scripts/convert-kcad.mjs` (98.7% convert, 93.6% before
+   the 2026-11-25 converter fixes).
 2. Build each converted model with Manifold and with the exact backend.
 3. Compare both against the lab's native SMLib volumes. Three independent
    results let us tell converter errors apart from kernel errors.
@@ -391,23 +392,27 @@ fillets of individual edges need topological naming and are out of scope.
 
 Results (harness and details in
 [experiments/catalog-crosscheck/README.md](../experiments/catalog-crosscheck/README.md)),
-full catalog, 2,402 models, 63,281 converted parts:
+full catalog, 2,402 models, 69,295 converted parts (after the converter fixes):
 
-- **Where both kernels build a part, they agree.** 52,087 of the 52,179 parts built by
+- **Where both kernels build a part, they agree.** 68,666 of the 68,782 parts built by
   both agree within a tolerance derived from each part's segment counts; planar parts to
   9.7e-7 relative volume.
-- **Models:** 989 agree; 1,127 are exact-unsupported (1,123 only because of low-segment
-  cylinders and tori); 115 hit an exact-kernel failure; 18 disagree; 153 do not convert.
-- **The largest error is the converter's, not a kernel's.** kernelCAD ignores the segment
-  count of `cylinder(h, r, n)` (always exact) and uses `torus`'s only for the tube; the
-  converter emits *n*-gon prisms. Built as kernelCAD means them, all 10,608 such parts
-  agree with Manifold up to the *n*-gon deficit, which costs up to 15 % of a model's volume
-  (115 models over 5 %).
+- **Models:** 2,223 agree; 5 are exact-unsupported (hull and faceted-solid budgets); 119 hit
+  an exact-kernel failure; 24 disagree; 31 do not convert (989 / 1,127 / 115 / 18 / 153
+  before the fixes).
+- **The largest error was the converter's, not a kernel's, and is fixed.** kernelCAD ignores
+  the segment count of `cylinder(h, r, n)` (always exact) and uses `torus`'s only for the
+  tube; the converter emitted *n*-gon prisms (10,608 parts, up to 15 % of a model's volume).
+  It now emits true cylinders and polygon tubes; every model whose parts build is within
+  1.0 % of the exact volume (48-segment faceting). The same pass added
+  `await shape.boundingBox({ exact: true })`, negative box sizes, `extrudeRoundedRect` axes,
+  pose-0 mates and connectors.
 - **Exact-kernel gaps found:** SMLib's tight bbox misses the extreme of some rotated
-  spheres (59 parts; `Sphere(62).rotate(X, 11)`); its area of stitched loft polyhedra is
+  spheres (57 parts; `Sphere(62).rotate(X, 11)`); its area of stitched loft polyhedra is
   wrong (5 parts; a hexagonal frustum is off by 73 % against the closed form); long
-  multi-section lofts fail to stitch (437 parts).
-- **Manifold:** 3 parts about 1.1e-6 off at metre-scale coordinates.
+  multi-section lofts fail to stitch (445 parts).
+- **Manifold:** 26 planar parts 1e-6 to 7e-6 off at large coordinates (float32 vertices);
+  3 unions keep the faces of exactly touching operands in the area.
 - **Native column:** the lab commits only build status (2,391/2,402). Our classes are
   cross-tabulated against it; the three-way volume split (converter vs kernel errors) needs
   the lab's catalog harness to write per-model volumes (format in the README).

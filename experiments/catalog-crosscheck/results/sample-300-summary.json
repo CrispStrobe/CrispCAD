@@ -12,17 +12,17 @@
    "cpus": 8,
    "model": "Apple M1",
    "loadAverageAtStart": [
-    135.3,
-    163.8,
-    158.4
+    143,
+    171.5,
+    145.3
    ],
    "loadAverageAtEnd": [
-    136.1,
-    146.3,
-    151.9
+    153.7,
+    172.1,
+    146.1
    ]
   },
-  "started": "2026-11-25T05:53:28.667Z",
+  "started": "2026-11-25T07:32Z",
   "calibration": {
    "volume": {
     "prism": 1.0000000209001643,
@@ -178,141 +178,89 @@
    "node": "v26.4.0",
    "exact": "@classcad/smlibwasm 0.6.2"
   },
-  "finished": "2026-11-25T05:57:11.523Z",
-  "lastRunMinutes": 3.7
+  "finished": "2026-11-25T08:07:15.506Z",
+  "lastRunMinutes": 0.4,
+  "note": "Converter at fix/kcad-converter-semantics a2212a3. Fresh run 07:32Z (1.4 min); the sample models whose conversion changed with the connector commit were rerun by resume. started is to the minute."
  },
  "models": 300,
  "modelClasses": {
-  "exact-unsupported": 133,
-  "agree": 127,
-  "converter-failure": 23,
-  "kernel-failure": 12,
-  "disagree": 5
+  "agree": 277,
+  "kernel-failure": 13,
+  "disagree": 6,
+  "converter-failure": 3,
+  "exact-unsupported": 1
  },
  "convertStatus": {
-  "converted": 273,
-  "unsupported": 13,
-  "failed": 10,
-  "partial": 4
+  "converted": 293,
+  "partial": 4,
+  "failed": 2,
+  "unsupported": 1
  },
  "convertErrors": {
-  "Line N, column N: Unsupported kernelCAD feature …": 13,
-  "Line N, column N: Invalid JavaScript syntax; strip TypeScript annotations first": 6,
   "Line N, column N: Unknown kernelCAD name …": 2,
-  "Line N, column N: Expected a bounded kernelCAD array": 1,
-  "Line N, column N: Expected positive kernelCAD box dimensions": 1
+  "Line N, column N: Unsupported kernelCAD feature …": 1
  },
- "parts": 8410,
+ "parts": 9379,
  "partClasses": {
-  "agree": 6904,
-  "exact-unsupported": 1411,
-  "disagree": 61,
-  "exact-failure": 34
+  "agree": 9273,
+  "disagree": 62,
+  "exact-failure": 35,
+  "exact-unsupported": 9
  },
  "disagreementReasons": {
-  "bbox": 57,
-  "area": 3,
-  "volume": 1
+  "bbox": 55,
+  "area": 4,
+  "volume": 3
  },
  "disagreementCauses": {
-  "exact bbox inside Manifold mesh bbox (SMLib tight bbox)": 57,
+  "exact bbox inside Manifold mesh bbox (SMLib tight bbox)": 55,
+  "planar part, volume beyond the 1e-6 floor (|dV|/V ≤ 1e-5: Manifold numerics or float32 polyhedron vertices at large coordinates)": 3,
   "planar part, area off by < 1e-3 (float32 mesh positions far from the origin)": 3,
-  "planar part, volume beyond the 1e-6 floor (|dV|/V ≈ 1e-6: Manifold numerics at large coordinates)": 1
+  "planar part, Manifold area too large with equal volume (faces of exactly touching operands kept inside the mesh)": 1
  },
  "exactUnsupported": {
-  "cylinder with N segments is ambiguous for an exact kernel (a polygon or a circle?); use N+ segments for a true circle, or polygon2d/polyhedron for a polygonal s": 1298,
-  "revolve with N segments is ambiguous for an exact kernel (a polygon or a circle?); use N+ segments for a true circle, or polygon2d/polyhedron for a polygonal sh": 105,
-  "A polyhedron of N faces exceeds the exact faceted-solid budget (N); tessellated constructors (ellipsoid, ellipticFrustum, roundedCylinder, many-section loft) ha": 7,
+  "A polyhedron of N faces exceeds the exact faceted-solid budget (N); tessellated constructors (ellipsoid, ellipticFrustum, roundedCylinder, many-section loft) ha": 8,
   "Hull of N distinct vertices exceeds the exact hull budget (N).": 1
  },
  "exactFailures": {
-  "invalid-input: The polyhedron faces do not close around a valid solid.": 34
+  "invalid-input: The polyhedron faces do not close around a valid solid.": 35
  },
  "manifoldFailures": {},
  "agreement": {
-  "partsBuiltByBoth": 6965,
+  "partsBuiltByBoth": 9335,
   "medianRelVolumeAgreeing": 0,
   "maxRelVolumeAgreeingPlanar": 8.774383043e-7,
-  "planarPartsAgreeing": 6096
+  "planarPartsAgreeing": 6783
  },
  "intent": {
-  "parts": 1403,
+  "parts": 0,
   "note": "Parts the converter emitted with < 16 segments (cylinder/torus); exact kernel run on kernelCAD intent (exact cylinder, n-gon torus tube). relVolume = Manifold/intent - 1.",
-  "medianRelVolume": -0.06451071639751882,
-  "minRelVolume": -0.36338022762869715,
-  "agreeWithinFacetingOfEmittedSegments": 1403,
-  "byRelVolume": {
-   "-0.0997": 465,
-   "-0.0645": 385,
-   "-0.0451": 237,
-   "-0.1730": 170,
-   "-0.0332": 125,
-   "-0.2432": 10,
-   "-0.3634": 5,
-   "-0.0221": 2,
-   "-0.0280": 1,
-   "-0.0430": 1,
-   "-0.0082": 1,
-   "0.0002": 1
-  },
-  "modelsOnlyLowSegmentUnsupported": 132
+  "medianRelVolume": 0,
+  "minRelVolume": null,
+  "agreeWithinFacetingOfEmittedSegments": 0,
+  "byRelVolume": {},
+  "modelsOnlyLowSegmentUnsupported": 0
  },
  "modelTotals": {
-  "models": 264,
-  "exactlyEqual": 102,
-  "within1e3": 135,
-  "within1e2": 204,
-  "beyond5e2": 19,
-  "p05": -0.061815245071612845,
-  "median": -0.0008234777213784739,
-  "p95": 2.0945609691125355e-9,
-  "min": -0.09968368387002835
+  "models": 282,
+  "exactlyEqual": 106,
+  "within1e3": 210,
+  "within1e2": 281,
+  "beyond5e2": 0,
+  "p05": -0.0028533428935891836,
+  "median": -0.00008013322921984756,
+  "p95": 1.1104688280028086e-9,
+  "min": -0.01000508238091391
  },
  "timing": {
-  "manifoldCpuMsTotal": 11018,
-  "exactCpuMsTotal": 75434,
-  "manifoldCpuMsMedianPart": 0.74,
-  "exactCpuMsMedianPart": 2.36,
-  "exactCpuMsMaxPart": 373.36,
-  "convertWallMsMedian": 33.36
+  "manifoldCpuMsTotal": 9536,
+  "exactCpuMsTotal": 103136,
+  "manifoldCpuMsMedianPart": 0.58,
+  "exactCpuMsMedianPart": 3.64,
+  "exactCpuMsMaxPart": 580.97,
+  "convertWallMsMedian": 8.49
  },
  "worstDisagreements": [
-  {
-   "model": "recycling-facility/used-oil-dropoff-tank.kcad.ts",
-   "part": "saddle--800",
-   "reasons": [
-    "bbox"
-   ],
-   "relVolume": 0.01860623124,
-   "dVolume": 855442.76,
-   "dArea": 33938.701,
-   "dBbox": 32.9084638,
-   "tolerance": {
-    "volume": 4378002.59,
-    "area": 53833.13528,
-    "bbox": 8.641854029,
-    "minSegments": 24,
-    "approximate": false
-   }
-  },
-  {
-   "model": "recycling-facility/used-oil-dropoff-tank.kcad.ts",
-   "part": "saddle-800",
-   "reasons": [
-    "bbox"
-   ],
-   "relVolume": 0.01860623124,
-   "dVolume": 855442.76,
-   "dArea": 33938.701,
-   "dBbox": 32.9084638,
-   "tolerance": {
-    "volume": 4378002.59,
-    "area": 53833.13528,
-    "bbox": 8.641854029,
-    "minSegments": 24,
-    "approximate": false
-   }
-  },
   {
    "model": "amusement-park/ride-operator-console.kcad.ts",
    "part": "estop-head",
@@ -996,42 +944,50 @@
     "minSegments": 48,
     "approximate": false
    }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-2-3",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83246,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-2-4",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83401,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
   }
  ],
  "disagreeingModels": {
   "retail-store/produce-display-table.kcad.ts": 48,
   "amusement-park/ride-operator-console.kcad.ts": 7,
   "telecom-infrastructure/monopole-mast.kcad.ts": 3,
-  "recycling-facility/used-oil-dropoff-tank.kcad.ts": 2,
-  "mining/run-of-mine-hopper.kcad.ts": 1
- },
- "native": {
-  "source": {
-   "kernel": "smlib-native (status only)",
-   "statusOnly": true
-  },
-  "classes": {
-   "native built / ours exact-unsupported": 133,
-   "native built / ours agree": 126,
-   "native built / ours converter-failure": 21,
-   "native built / ours kernel-failure": 12,
-   "native built / ours disagree": 5,
-   "native failed / ours converter-failure": 2,
-   "native failed / ours agree": 1
-  },
-  "models": [
-   {
-    "id": "construction-equipment/skid-steer-loader.kcad.ts",
-    "class": "native failed / ours agree"
-   },
-   {
-    "id": "standard-components/beam-coupling.kcad.ts",
-    "class": "native failed / ours converter-failure"
-   },
-   {
-    "id": "water-treatment/grit-classifier.kcad.ts",
-    "class": "native failed / ours converter-failure"
-   }
-  ]
+  "airfield/regional-jet.kcad.ts": 2,
+  "mining/run-of-mine-hopper.kcad.ts": 1,
+  "characters/excavator.kcad.ts": 1
  }
 }
