@@ -14,7 +14,10 @@ leaves the canvas available. Close it with the same shortcut or its close button
 The standalone app remembers visibility locally; the default is closed.
 
 - **Enter** submits input or accepts a displayed default. With no pending prompt,
-  an empty Enter repeats the most recent command line.
+  an empty Enter (or `repeat`) repeats the most recent command line, or the most
+  recent multi-line script.
+- **Pasting several lines** runs them as one script: one Undo step, or no change
+  at all (see [multi-line scripts](#multi-line-scripts)).
 - **Tab** completes commands, the argument to `help`, body names/IDs for `select`,
   and closed-sketch names/IDs for `extrude`. The same entity choices work at their
   interactive prompts. Repeated Tab cycles matches; Shift+Tab cycles backward.
@@ -106,7 +109,8 @@ Existing commands such as `undo`, `redo`, `duplicate`, `delete`, `union`,
 `subtract`, `intersect`, `fit`, `top`, `front`, `parameters`, `sketch`, `sketch-path`,
 `mirror`, `pattern`, and `model-source` route through the editor's command bridge.
 Commands that require their existing editor panel open that panel. Common aliases
-include `u`, `re`, `dup`, `erase`/`del`, `join`, and `zoom`.
+include `u`, `re`, `dup`, `erase`/`del`, `join`, and `zoom`. The command palette finds
+commands by these aliases too; labels and the default order are unchanged.
 
 ### Exact-kernel commands
 
@@ -240,6 +244,49 @@ the XY plane. These initial picks do not implement the full sketch-panel
 endpoint/intersection/tangent snapping system. Camera navigation remains
 available while choosing points.
 
+## Multi-line scripts
+
+Paste several lines into the command input, or pass text with line breaks to the
+controller's `submit`, and the terminal runs them as one script:
+
+```text
+// mounting plate
+box 40,30,4 0,0,2
+rect 50,0 70,20
+extrude Rectangle 6
+select all
+move 0,0,0 @0,0,10
+```
+
+- **Atomic.** Every line succeeds and the result commits as one session edit,
+  one Undo step labelled **Run command script** (German: *Befehlsskript
+  ausführen*), with one action row in the transcript. If a line fails, nothing
+  changes and the error names it: `Line 4: Choose one closed sketch by ID or
+  unique name. The script changed nothing.`
+- **Same runner.** Lines run through the registry's headless runner on a private
+  trial session, exactly like MCP `cad_run_commands`; core exposes it as
+  `runCommandScript(session, script, options)`. Blank lines and `//` comments are
+  skipped; at most 256 commands. Nothing is evaluated as JavaScript.
+- **No prompts.** Each command needs its full arguments, or takes the default an
+  empty Enter would give (a body's center on the workplane, a move's base at the
+  origin); otherwise `Missing arguments`. View, panel and terminal-only commands
+  (`fit`, `top`, `clear`, `alias`, `code`, `repeat`) are refused.
+- **Context.** The script starts with the current selection. Custom aliases apply
+  to the first word of each line. `undo`/`redo` inside a script only reach lines of
+  the same script. Relative points refer to earlier points of the same script.
+  `export step` files are delivered only after the whole script succeeded.
+- **Replay.** The committed record is an ordinary `apply` record, so **Use command**,
+  `journal export replay` and the headless runner replay the whole script as one
+  step. If the model changes while a script waits for the exact kernel, nothing is
+  committed.
+- **Repeat.** Empty Enter or `repeat` reruns the last script as another single step
+  until a different command is entered. Scripts are not added to the single-line
+  input history.
+
+There is no `script`/`run` keyword: `script` is already an alias of `code`, and a
+one-line separator would compete with quoted names and JSON replay records. A
+pasted block (or the API) is the multi-line form.
+
 ## GUI actions and exact replay
 
 The session's central commit boundary emits the accepted result of every
@@ -330,7 +377,7 @@ also carries the command palette label, search keywords and availability flag.
 | Front end | Uses the registry for |
 | --- | --- |
 | Terminal | Execution of every modeling command (box … select, move/rotate/scale), help, completion, alias targets |
-| Command palette | Labels, order, keywords and availability (`requires`) |
+| Command palette | Labels, order, keywords, availability (`requires`), and search by alias (`erase`, `del`, `dup`, `zoom`, `join`, …) |
 | MCP | `cad_list_commands` and `cad_run_commands` (see [MCP](MCP.md#shared-command-vocabulary)) |
 | CLI | `node apps/cli/crispcad.mjs run <project.bcad> "<command>" …` |
 
@@ -409,7 +456,7 @@ and `exportCommandJournal(entries, options)`. The terminal controller also has
 `exportJournal(format)`.
 
 The CAD Script export turns bodies with a faithful CAD Script equivalent into
-`@object` blocks. Each block is a complete CAD Script program that can be pasted
+`@object` blocks: primitives, and extrusions and revolutions of closed sketches. Each block is a complete CAD Script program that can be pasted
 into the code workspace or sent to `cad_create_code_object`. Everything else is
 kept in `@replay … non-portable` blocks as canonical replay text, commented out
 with `//| `:
@@ -427,7 +474,11 @@ with `//| `:
 // from: box 40,30,10 0,0,5; move 0,0,0 10,0,0; rotate 0,0,30
 return move([10, 0, 5], rotate([0, 0, 30], box(40, 30, 10)));
 
-// @replay 3 non-portable: rectangle 0,0 20,30
+// @object 2 "Extrusion" color #eea52b
+// from: rectangle 0,0 20,30; extrude 5d1e… 8
+return extrudeProfile(8, rectangle2d(20, 30));
+
+// @replay 4 non-portable: rectangle 50,0 60,10
 //| apply {"version":1,"kind":"apply","projectId":"3f0c…",…}
 ```
 
@@ -442,8 +493,27 @@ Portability rules:
 - An edit that consumes a body (a boolean, mirror or pattern), turns it into a
   hole or reference, or otherwise changes it non-portably makes that body
   non-portable as well, together with every edit it depends on.
-- Sketches, extrusions, imports, code objects, parameters and assembly edits
-  are non-portable for now.
+- An extrusion or revolution is portable when its sketch was created in the
+  journal, is closed, lies on the XY, XZ or YZ plane and uses only literal values,
+  and the feature's distance, angle and axis offset are literal too. Later edits of
+  the sketch or the feature fold into the program. Rectangles and circles keep
+  their analytic form (`rectangle2d`, `move2d(…, circle2d(r, segments))`); other
+  closed profiles use the sketch's evaluated polygon (`polygon2d`, with arcs
+  tessellated as the model does and holes as index paths). The program follows
+  the feature evaluator: `extrudeProfile(distance, profile)`, shifted by
+  `-distance/2` when symmetric, then rotated `[90,0,0]` (XZ) or `[90,0,90]` (YZ);
+  `revolve(profile moved by -axisOffset, angle, 128)`, rotated `[-90,0,0]` (XY)
+  or `[0,0,90]` (YZ) and moved back along the axis offset; then the body's own
+  transform. Tests rebuild every exported program and compare volume and bounding
+  box with the original body.
+- A sketch that no portable body uses (for example an open line, or a closed
+  sketch never extruded) has no CAD Script equivalent and stays replay text. A
+  sketch is non-portable together with every feature on it when one of them is
+  (a parametric distance, a boolean that consumes it, joints); one record that
+  creates portable and non-portable things together, such as a terminal script,
+  stays replay text as a whole.
+- Imports, code objects, parameters, exact features and assembly edits are
+  non-portable for now.
 - Undo/redo pairs known to the journal cancel out; undone edits are left out.
   Undo or redo of edits made before the journal started stays as replay text.
   Selection entries are omitted: apply records carry their own selection.
@@ -547,6 +617,18 @@ there are no subscribers. Structural deltas avoid including unchanged mesh
 buffers when only transforms change. Parsing accepts data only, with no callbacks
 or executable source.
 
+An atomic script commits several command lines as one step:
+
+```ts
+import {runCommandScript} from '@brickwright/cad-core';
+
+const {results, edited, invocation, files} = await runCommandScript(session, script, {
+  exact,                     // optional ExactCommandHost for export/measure/fillet/…
+  record: journal.withInvocation, // attribute the single commit in a journal
+});
+// On failure it throws `Line N: …` (with `line` and the partial `results`) and the session is unchanged.
+```
+
 ## Validation and next work
 
 Unit coverage verifies prompt atomicity/cancellation, absolute/relative/polar
@@ -561,7 +643,7 @@ npm run test:terminal
 ```
 
 This builds the packages and runs the command, registry, journal, completion,
-draft-store and panel regressions. `tests/editor-panels.test.ts` mounts the actual terminal and code
+draft-store, script, palette and panel regressions. `tests/editor-panels.test.ts` mounts the actual terminal and code
 panels in a ShadowRoot with real CAD sessions. It checks focus, history, prompt
 cancellation, quoted entity completion, one-step Apply, parameter keyboard
 navigation, and stale asynchronous callbacks. Geometry evaluation, preview
@@ -570,7 +652,9 @@ WebGL, layout or touch. The pinned MIT `happy-dom` package is a test-only depend
 The focused command now also includes alias persistence/failure recovery and
 asynchronous source-import regressions.
 
-Browser scenarios in `tests/browser/terminal.spec.ts` and
+Browser scenarios in `tests/browser/terminal.spec.ts`,
+`tests/browser/terminal-scripts.spec.ts` (a pasted script as one Undo step, repeat,
+and a failing line that changes nothing) and
 `tests/browser/code-workspace.spec.ts` cover mixed pointer/typed input, focus,
 history recall, GUI replay, draft reload, live preview, explicit Apply and stale
 source review, including argument completion, custom-alias persistence and
@@ -594,9 +678,8 @@ Embedded-host review and qualification on a physical iPad are still open.
 
 Next milestones are completion for further command arguments;
 active sketch planes and advanced snaps; continuous paths/arcs and constraint
-prompts; more readable action serializers; transaction-based command scripts in
-the terminal (MCP and the CLI already commit a script as one step); portable
-export of sketches and extrusions; cross-project replay; complete view-command
+prompts; more readable action serializers; portable export of parametric sketches,
+regions with placements and booleans of portable bodies; cross-project replay; complete view-command
 capture; and qualified mouse, touch and narrow-layout behavior.
 
 ## Design notes from PR #79
@@ -611,7 +694,8 @@ of this one. These of its decisions still apply:
   where feasible. The generic record remains the fallback for extension actions
   and unusual data.
 - Repeat and multi-line scripts need atomic grouping: one Undo step per script,
-  with diagnostics that point at the failing line.
+  with diagnostics that point at the failing line. **Done 2026-11-25**, see
+  [multi-line scripts](#multi-line-scripts).
 - Model Source (the GUI-synchronised source dock) and the CAD Script workspace
   are different languages with different jobs. Do not merge them.
 

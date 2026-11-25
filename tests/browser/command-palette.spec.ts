@@ -60,3 +60,28 @@ test('find localized CAD commands by German task names',async({page,hasTouch})=>
  await press(dialog.getByRole('option',{name:'Drehen',exact:true}));
  await expect(page.getByRole('dialog',{name:'Skizze und Drehkörper'})).toBeVisible();
 });
+
+test('find commands by their terminal aliases',async({page,hasTouch})=>{
+ const press=(control:ReturnType<typeof page.getByRole>)=>hasTouch?control.tap():control.click();
+ await page.goto('/');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ const button=page.getByRole('button',{name:'Command palette',exact:true});
+ const dialog=page.getByRole('dialog',{name:'Command palette'});
+ const search=dialog.getByRole('combobox',{name:'Search CAD commands'});
+ await press(button);
+ await search.fill('zoom');
+ await expect(dialog.getByRole('option')).toHaveText(['Fit']);
+ await search.fill('dup');
+ await expect(dialog.getByRole('status')).toHaveText('No available commands match');
+ await page.keyboard.press('Escape');
+ await page.getByRole('button',{name:'Terminal',exact:true}).click();
+ const input=page.getByRole('region',{name:'CAD terminal',exact:true}).getByRole('combobox',{name:'CAD command'});
+ await input.fill('box 10,10,10');await input.press('Enter');
+ await expect(page.locator('#cad-root')).toHaveAttribute('data-state','ready');
+ await press(button);
+ await search.fill('erase');
+ await expect(dialog.getByRole('option')).toHaveText(['Delete']);
+ await page.keyboard.press('Enter');
+ await expect(dialog).toBeHidden();
+ await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1')!).roots.length)).toBe(0);
+});

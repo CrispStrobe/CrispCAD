@@ -294,13 +294,26 @@ The lab's own `smlib-native` backend does not use the package yet.
    - CLI: `apps/cli/crispcad.mjs` with `commands`, `run`, `inspect`,
      `interference`, `printability`, on top of the MCP host.
    - View/camera commands stay editor-side but are described in the registry.
+   - Terminal scripts and palette aliases: **done 2026-11-25** (branch
+     `feat/terminal-scripts-journal`). Pasted multi-line input runs through the
+     headless runner on a trial session (`runCommandScript`, the `cad_run_commands`
+     approach) and commits as one Undo step labelled "Run command script", or changes
+     nothing and names the failing line. Empty Enter or `repeat` reruns the last
+     command or script. The palette searches registry aliases (`erase`, `del`, `dup`,
+     `zoom`, …) without changing labels or order. See
+     [multi-line scripts](TERMINAL-WORKSPACE.md#multi-line-scripts).
 4. Durable journal export as CAD Script, the language of the code workspace.
    This closes the "portable multi-command scripts" item from #78.
    **Done 2026-11-24**: `journal export [cadscript|replay]` in the terminal and
    `createCommandJournal` / `exportCommandJournal` in core. Plain primitives
    and their later edits become CAD Script programs; everything else stays as
    marked non-portable replay text. The journal is outside document history.
-   Next: portable export of sketches and extrusions.
+   Portable export of sketches and extrusions: **done 2026-11-25** (branch
+   `feat/terminal-scripts-journal`). Closed literal sketches on XY, XZ or YZ that are
+   extruded or revolved become `extrudeProfile`/`revolve` programs, checked by
+   rebuilding each one and comparing volume and bounding box. Unused, parametric or
+   consumed sketches stay `@replay` text.
+   Still open: parametric profiles and booleans of portable bodies.
 
 ### Exact features (document version 41). **Done 2026-11-25**
 
