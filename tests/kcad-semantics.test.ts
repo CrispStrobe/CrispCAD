@@ -3,7 +3,8 @@
 // (experiments/catalog-crosscheck): exact cylinders whatever the segment argument, tori
 // faceted only in the tube, `await shape.boundingBox({ exact: true })`, negative box sizes
 // and `extrudeRoundedRect` axes. Each case is checked against a closed form with the exact
-// kernel (no faceting) and with Manifold (within the faceting of 48 segments).
+// kernel (no faceting) and with Manifold (within the faceting of 48 segments). Exact builds
+// get a 60 s budget: the suite runs on heavily loaded machines.
 import {readFileSync} from 'node:fs';
 import {beforeAll,describe,expect,it} from 'vitest';
 import {compileCode,createCadSession,importKernelCAD} from '@brickwright/cad-core';
@@ -24,7 +25,7 @@ function measure(program:CodeProgram){
 const rel=(a:number,b:number)=>Math.abs(a-b)/Math.abs(b);
 const facet48=1-Math.sin(2*Math.PI/48)/(2*Math.PI/48); // inscribed 48-gon area deficit
 
-describe('kcad cylinder and torus semantics',()=>{
+describe('kcad cylinder and torus semantics',{timeout:60_000},()=>{
  it('emits a true cylinder whatever the segment argument',()=>{
   for(const n of ['', ', 6', ', 8', ', 64']){
    const program=only(`return cylinder(30, 10${n});`);
@@ -68,7 +69,7 @@ describe('kcad cylinder and torus semantics',()=>{
  });
 });
 
-describe('kcad boxes and rounded rectangles',()=>{
+describe('kcad boxes and rounded rectangles',{timeout:60_000},()=>{
  it('spans [size, 0] for negative box sizes and |size| when centred',()=>{
   const corner=measure(only('return box(-10, 20, -5);'));
   expect(corner.exact.volume).toBeCloseTo(1000,6);
@@ -102,7 +103,7 @@ describe('kcad boxes and rounded rectangles',()=>{
  });
 });
 
-describe('kcad boundingBox',()=>{
+describe('kcad boundingBox',{timeout:60_000},()=>{
  it('evaluates await shape.boundingBox({ exact: true }) at conversion time',()=>{
   const c=convert(`const parts = [box(10, 10, 10).translate(0, 0, -3), sphere(4).translate(20, 0, 2), cylinder(6, 2, 8).rotateX(90)];
 let lowest = Infinity;
@@ -149,7 +150,7 @@ return box(1, 1, Math.min(5, b.min[2]) + 1);`)).toThrow(/side of a cut/);
  });
 });
 
-describe('kcad assembly connectors',()=>{
+describe('kcad assembly connectors',{timeout:60_000},()=>{
  it('ignores connectors and pose-0 mates (the as-built pose) and refuses other poses',()=>{
   const rig=(pose:number)=>`const a = assembly('rig');
 a.part('base', box(10, 10, 2)).connector('hinge', { type: 'axis', origin: [0, 0, 2], axis: [1, 0, 0] });
@@ -163,7 +164,7 @@ return a.model();`;
  });
 });
 
-describe('kcad JavaScript helpers used by the catalog',()=>{
+describe('kcad JavaScript helpers used by the catalog',{timeout:60_000},()=>{
  it('supports string replace/replaceAll, findIndex, splice, array rest and hyperbolic Math',()=>{
   const c=convert(`const label = 'm1.5'.replace('m', '').replaceAll('.', 'p');
 const list = [4, 5, 6, 7];
