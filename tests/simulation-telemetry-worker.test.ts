@@ -13,7 +13,7 @@ const mock=vi.hoisted(()=>{
   get time(){return state.time;},dispose:vi.fn(),
   pose:vi.fn((id:string)=>({positionMm:[Number(id.slice(5))||0,state.linear,state.angle],quaternion:[0,0,0,1]})),
   hingeAngle:vi.fn((id:string)=>id==='servo'?state.servo:state.angle),sliderPosition:vi.fn(()=>state.linear),
-  bodyRay:vi.fn(()=>100-state.linear+state.angle),
+  bodyRay:vi.fn(()=>100-state.linear+state.angle),validateBodyRay:vi.fn(),
   applyJointImpulse:vi.fn((id:string,impulse:number)=>{if(id==='slider')state.linearSpeed+=impulse*10;else state.speed+=impulse*100;}),
   setHingeServo:vi.fn((_id:string,angle:number)=>{state.target=angle;}),coastHingeMotor:vi.fn(),
   step:vi.fn((seconds:number)=>{state.time+=seconds;state.angle+=state.speed*seconds;state.linear+=state.linearSpeed*seconds;state.servo+=(state.target-state.servo)*.25;})
@@ -64,6 +64,28 @@ it('sends identical 200 Hz feedback with 75% fewer pose queries for a four-step 
  expect(batchedBytes).toBeLessThan(fullBytes*.3);
  expect(batched.at(-1)!.time).toBe(.02);expect(JSON.stringify(document)).toBe(saved);
  console.info(JSON.stringify({benchmark:'cad-coupled-telemetry',bodies:document.roots.length,substeps:4,fullPoseQueries,batchedPoseQueries,fullBytes,batchedBytes,payloadReduction:1-batchedBytes/fullBytes}));
+});
+
+it('samples each coupled sensor once after physics advances',async()=>{
+ await start(scene(2));
+ const measurement=await send({...actuation(),telemetryOnly:true});
+ expect(measurement.error).toBeUndefined();
+ expect(mock.world.validateBodyRay).toHaveBeenCalledTimes(1);
+ expect(mock.world.bodyRay).toHaveBeenCalledTimes(1);
+ expect(mock.world.validateBodyRay.mock.invocationCallOrder[0]).toBeLessThan(mock.world.step.mock.invocationCallOrder[0]);
+ expect(mock.world.step.mock.invocationCallOrder[0]).toBeLessThan(mock.world.bodyRay.mock.invocationCallOrder[0]);
+ expect(measurement.frame.distances.range).toBe(mock.world.bodyRay.mock.results[0].value);
+});
+
+it('rejects invalid rays before applying any actuator or sampling a distance',async()=>{
+ await start(scene(2));
+ mock.world.validateBodyRay.mockImplementationOnce(()=>{throw new Error('Invalid body sensor ray');});
+ const response=await send(actuation());
+ expect(response.error).toBe('Invalid body sensor ray');
+ expect(mock.world.time).toBe(0);
+ expect(mock.world.applyJointImpulse).not.toHaveBeenCalled();
+ expect(mock.world.setHingeServo).not.toHaveBeenCalled();
+ expect(mock.world.bodyRay).not.toHaveBeenCalled();
 });
 
 it('keeps full legacy actuator and manual replies, including sensor and linear fields',async()=>{

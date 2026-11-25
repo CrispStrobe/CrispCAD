@@ -19,9 +19,20 @@ it('supports slider force impulses without a velocity motor and rejects invalid 
  }finally{world.dispose();}},30000);
 
 it('body-mounted rays ignore their own rigid assembly and see external obstacles',async()=>{
- const s=createCadSession(),host=s.add({kind:'box',size:[20,20,20]}),wall=s.add({kind:'box',size:[20,20,20]},{transform:{...identityTransform(),position:[100,0,0]}});
+ const s=createCadSession();
+ const host=s.add({kind:'box',size:[20,20,20]});
+ const attachment=s.add({kind:'box',size:[20,20,20]},{transform:{...identityTransform(),position:[20,0,0]}});
+ const wall=s.add({kind:'box',size:[20,20,20]},{transform:{...identityTransform(),position:[100,0,0]}});
+ s.addJoint('fixed',host,attachment,[10,0,0],[1,0,0]);
  const doc=s.state.document,geometry=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,geometry,kernel),world=await createPhysicsWorld(doc,geometry,prepared,{ground:false});
- try{expect(world.bodyRay(host,[0,0,0],[1,0,0],200)).toBeCloseTo(90,2);expect(world.bodyRay(host,[0,0,0],[-1,0,0],200)).toBeNull();expect(()=>world.bodyRay(host,[0,0,0],[0,0,0],200)).toThrow();}finally{world.dispose();s.dispose();}
+ try{
+  expect(world.bodyRay(host,[0,0,0],[1,0,0],200)).toBeCloseTo(90,2);
+  expect(world.bodyRay(host,[0,0,0],[-1,0,0],200)).toBeNull();
+  expect(()=>world.bodyRay(host,[0,0,0],[0,0,0],200)).toThrow('Invalid body sensor ray');
+  expect(()=>world.validateBodyRay(host,[0,0,0],[0,0,0],200)).toThrow('Invalid body sensor ray');
+  expect(()=>world.validateBodyRay(host,[0,0,0],[1,0,0],200)).not.toThrow();
+  expect(world.raycast([40,0,0],[200,0,0])?.bodyId).toBe(wall);
+ }finally{world.dispose();s.dispose();}
 });
 
 it('an implicit ideal position servo reaches its target with finite torque and reaction',async()=>{const {world,a,b,joint}=await fixture('hinge',true,true);try{world.setHingeServo(joint,Math.PI/4,.001);for(let i=0;i<1000;i++){world.setHingeServo(joint,Math.PI/4,.001);world.step(.005);}expect(world.hingeAngle(joint)).toBeCloseTo(Math.PI/4,2);expect(()=>world.setHingeServo(joint,NaN,.001)).toThrow();}finally{world.dispose();}});

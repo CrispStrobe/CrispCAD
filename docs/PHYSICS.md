@@ -28,6 +28,10 @@ manufactured-mechanism accuracy.
 - Documents remain millimetres, right-handed Z-up. The adapter converts geometry
   to SI once and uses Z-up gravity. It advances in fixed 1/200 s steps. Body
   poses are deltas relative to the evaluated, world-space CAD geometry.
+- Coupled distance sensors validate their rays before applying actuator commands.
+  Each sensor samples once after the 5 ms physics step and ignores its own rigid
+  assembly. Distance readings use the nearest hit fraction. Editor picking also
+  resolves the original part ID.
 - Body density, friction, restitution, motion type and mechanical intent are
   explicit versioned metadata. The starting density is a generic 1050 kg/m³
   plastic assumption; it is editable and is not a measured material assignment.

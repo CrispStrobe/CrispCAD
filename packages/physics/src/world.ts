@@ -208,16 +208,35 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
   add(shape,id,'dynamic',{friction:.4,restitution:.45},{massKg,volumeM3,centerM:[0,0,0],inertiaKgM2:[[inertia,0,0],[0,inertia,0],[0,0,inertia]]});previewCount++;
   const body=byId.get(id),p=new J.RVec3(...positionMm.map(v=>v*.001)),v=new J.Vec3(...velocityMmS.map(v=>v*.001));bodies.SetPosition(body.GetID(),p,J.EActivation_Activate);bodies.SetLinearVelocity(body.GetID(),v);J.destroy(p);J.destroy(v);
  }
- function castRay(fromMm:Vec3,toMm:Vec3,ignoreBodyId?:string){
+ function castRay(fromMm:Vec3,toMm:Vec3,ignoreBodyId?:string,includeBody=true){
    if(disposed||![...fromMm,...toMm].every(Number.isFinite))throw new Error(t('Invalid physics state or ray'));
    const own:any[]=[];const keep=(value:any)=>{own.push(value);return value;};
    try{const ray=keep(new J.RRayCast()),origin=keep(new J.RVec3(...fromMm.map(v=>v*.001))),direction=keep(new J.Vec3(...toMm.map((v,i)=>(v-fromMm[i])*.001)));ray.mOrigin=origin;ray.mDirection=direction;
     const settings=keep(new J.RayCastSettings()),collector=keep(new J.CastRayClosestHitCollisionCollector()),permissive=keep(new J.ObjectVsBroadPhaseLayerFilterJS());permissive.ShouldCollide=()=>true;
     const broadFilter=keep(new J.DefaultBroadPhaseLayerFilter(permissive,0)),objectFilter=keep(new J.ObjectLayerFilterJS());objectFilter.ShouldCollide=()=>true;
     const bodyFilter=keep(ignoreBodyId?new J.IgnoreSingleBodyFilter(byId.get(ignoreBodyId)!.GetID()):new J.BodyFilter()),shapeFilter=keep(new J.ShapeFilter());system.GetNarrowPhaseQuery().CastRay(ray,settings,collector,broadFilter,objectFilter,bodyFilter,shapeFilter);
-    if(!collector.HadHit())return null;const hit=collector.mHit,index=hit.mBodyID.GetIndexAndSequenceNumber(),entry=[...byId].find(([,body])=>body.GetID().GetIndexAndSequenceNumber()===index),member=entry?meshes[entry[1].GetShape().GetSubShapeUserData(hit.mSubShapeID2)-1]:undefined;return {bodyId:member?.id??entry?.[0],fraction:hit.mFraction};
+    if(!collector.HadHit())return null;
+    const hit=collector.mHit,fraction=hit.mFraction;
+    if(!includeBody)return {bodyId:undefined,fraction};
+    const index=hit.mBodyID.GetIndexAndSequenceNumber(),entry=[...byId].find(([,body])=>body.GetID().GetIndexAndSequenceNumber()===index),member=entry?meshes[entry[1].GetShape().GetSubShapeUserData(hit.mSubShapeID2)-1]:undefined;
+    return {bodyId:member?.id??entry?.[0],fraction};
    }finally{for(const value of own.reverse())J.destroy(value);}
 
+ }
+
+ function bodyRayEndpoints(id:string,originMm:Vec3,direction:Vec3,rangeMm:number){
+   const node=doc.nodes[id],body=byId.get(id);
+   if(disposed||!node||!body||![...originMm,...direction,rangeMm].every(Number.isFinite)||rangeMm<=0||rangeMm>100000||Math.hypot(...direction)<1e-9){
+    throw new Error(t('Invalid body sensor ray'));
+   }
+   const rotation=body.GetRotation(),q=[rotation.GetX(),rotation.GetY(),rotation.GetZ(),rotation.GetW()];
+   const position=body.GetPosition(),translation=[position.GetX(),position.GetY(),position.GetZ()];
+   const local=originMm.map((value,i)=>value*node.transform.scale[i]);
+   const source=rotate(local,node.transform.rotation).map((value,i)=>value+node.transform.position[i]);
+   const origin=quaternionPoint(source,q).map((value,i)=>value+translation[i]*1000) as Vec3;
+   const axis=quaternionPoint(rotate(direction,node.transform.rotation),q),length=Math.hypot(...axis);
+   const to=origin.map((value,i)=>value+axis[i]/length*rangeMm) as Vec3;
+   return {origin,to};
  }
 
  return {
@@ -236,13 +255,15 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
   geometryBoundsMm(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const body=byId.get(id),mesh=meshes.find(m=>m.id===id);if(!body||!mesh)throw new Error(t('Unknown physics body'));const p=body.GetPosition(),q=body.GetRotation(),x=q.GetX(),y=q.GetY(),z=q.GetZ(),w=q.GetW(),translation=[p.GetX()*1000,p.GetY()*1000,p.GetZ()*1000],min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(let i=0;i<mesh.positions.length;i+=3){const a=mesh.positions[i],b=mesh.positions[i+1],c=mesh.positions[i+2],u=2*(y*c-z*b),v=2*(z*a-x*c),t=2*(x*b-y*a),rotated=[a+w*u+y*t-z*v,b+w*v+z*u-x*t,c+w*t+x*v-y*u];for(let j=0;j<3;j++){const value=rotated[j]+translation[j];min[j]=Math.min(min[j],value);max[j]=Math.max(max[j],value);}}return {min,max};},
   boundsMm(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const body=byId.get(id);if(!body)throw new Error(t('Unknown physics body'));const original=prepared.get(id);if(original&&assemblies.get(fixedRoot(id))!.length>1){const p=body.GetPosition(),q=body.GetRotation(),rotation=[q.GetX(),q.GetY(),q.GetZ(),q.GetW()],position=[p.GetX()*1000,p.GetY()*1000,p.GetZ()*1000],min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(const hull of original.hulls)for(let i=0;i<hull.positions.length;i+=3){const point=quaternionPoint(Array.from(hull.positions.subarray(i,i+3)),rotation);for(let axis=0;axis<3;axis++){const v=point[axis]+position[axis];min[axis]=Math.min(min[axis],v);max[axis]=Math.max(max[axis],v);}}return {min,max};}const box=body.GetWorldSpaceBounds();return {min:[box.mMin.GetX()*1000,box.mMin.GetY()*1000,box.mMin.GetZ()*1000],max:[box.mMax.GetX()*1000,box.mMax.GetY()*1000,box.mMax.GetZ()*1000]};},
   raycast(fromMm:Vec3,toMm:Vec3){return castRay(fromMm,toMm);},
+  /** Reject invalid sensor input before a coupled command changes the world. */
+  validateBodyRay(id:string,originMm:Vec3,direction:Vec3,rangeMm:number){
+   const {origin,to}=bodyRayEndpoints(id,originMm,direction,rangeMm);
+   if(![...origin,...to].every(Number.isFinite))throw new Error(t('Invalid physics state or ray'));
+  },
   /** Sample an ideal single ray carried by a body, ignoring its complete rigid assembly. */
   bodyRay(id:string,originMm:Vec3,direction:Vec3,rangeMm:number){
-   const node=doc.nodes[id],body=byId.get(id);if(disposed||!node||!body||![...originMm,...direction,rangeMm].every(Number.isFinite)||rangeMm<=0||rangeMm>100000||Math.hypot(...direction)<1e-9)throw new Error(t('Invalid body sensor ray'));
-   const rotation=body.GetRotation(),q=[rotation.GetX(),rotation.GetY(),rotation.GetZ(),rotation.GetW()],position=body.GetPosition();
-   const source=rotate(originMm.map((v,i)=>v*node.transform.scale[i]),node.transform.rotation).map((v,i)=>v+node.transform.position[i]),moved=quaternionPoint(source,q),origin=moved.map((v,i)=>v+[position.GetX(),position.GetY(),position.GetZ()][i]*1000) as Vec3;
-   const axis=quaternionPoint(rotate(direction,node.transform.rotation),q),length=Math.hypot(...axis),to=origin.map((v,i)=>v+axis[i]/length*rangeMm) as Vec3;
-   const hit=castRay(origin,to,id);return hit?hit.fraction*rangeMm:null;
+   const {origin,to}=bodyRayEndpoints(id,originMm,direction,rangeMm);
+   const hit=castRay(origin,to,id,false);return hit?hit.fraction*rangeMm:null;
   },
   linearVelocityMmS(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const body=byId.get(id);if(!body)throw new Error(t('Unknown physics body'));const point=new J.RVec3(...sourceCenterM(id)),v=bodies.GetPointVelocity(body.GetID(),point);const velocity=[v.GetX()*1000,v.GetY()*1000,v.GetZ()*1000];J.destroy(point);return velocity;},
   setLinearVelocity(id:string,velocityMmS:Vec3){if(disposed||velocityMmS.length!==3||velocityMmS.some(v=>!Number.isFinite(v)||Math.abs(v)>10000))throw new Error(t('Invalid initial body velocity'));const body=byId.get(id);if(!body)throw new Error(t('Unknown physics body'));if(body.IsStatic())throw new Error(t('A fixed body cannot be thrown'));invalidateSeparatedPairs(id);const center=body.GetCenterOfMassPosition(),r=sourceCenterM(id).map((v,i)=>v-[center.GetX(),center.GetY(),center.GetZ()][i]),angular=body.GetAngularVelocity(),w=[angular.GetX(),angular.GetY(),angular.GetZ()],v=new J.Vec3(...velocityMmS.map((v,i)=>v*.001-w[(i+1)%3]*r[(i+2)%3]+w[(i+2)%3]*r[(i+1)%3]));bodies.SetLinearVelocity(body.GetID(),v);bodies.ActivateBody(body.GetID());J.destroy(v);},
