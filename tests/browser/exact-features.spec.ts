@@ -36,9 +36,9 @@ test('chamfer a body from the Edit menu, recompute it after an upstream edit, an
  await editMenu.click();
  await page.getByRole('button',{name:'Fillet, chamfer, shell',exact:true}).click();
  const dialog=page.getByRole('dialog',{name:'Fillet, chamfer or shell'});
- await dialog.getByLabel('Operation').selectOption('chamfer');
- await dialog.getByLabel('Distance (mm)').fill('2');
- await dialog.getByLabel('Edges',{exact:true}).selectOption('+z');
+ await dialog.getByRole('combobox',{name:'Operation',exact:true}).selectOption('chamfer');
+ await dialog.getByRole('spinbutton',{name:'Distance (mm)',exact:true}).fill('2');
+ await dialog.getByRole('combobox',{name:'Edges',exact:true}).selectOption('+z');
  await dialog.getByRole('button',{name:'Apply exact feature'}).click();
  await expect(dialog).toBeHidden({timeout:120_000});
  await ready();
@@ -54,7 +54,10 @@ test('chamfer a body from the Edit menu, recompute it after an upstream edit, an
  await input.click();
  const height=page.getByLabel('Height (mm)',{exact:true});
  await height.fill('14');await height.press('Enter');
- await expect.poll(async()=>(await run(page,'journal',/./)).includes('Recompute exact features'),{timeout:120_000}).toBe(true);
+ // The terminal transcript shows each accepted commit: the user's edit, then the recompute.
+ const {region}=await terminal(page),actions=region.locator('.terminal-entry');
+ await expect(actions.filter({hasText:'Recompute exact features'})).toHaveCount(1,{timeout:120_000});
+ await expect(actions.filter({hasText:'Edit object'})).toHaveCount(1);
  await ready();
  await expect(root).not.toHaveAttribute('data-state','error');
  expect(await run(page,'measure exact all',/volume/)).toMatch(/volume 8210\.66666667 mm³/);

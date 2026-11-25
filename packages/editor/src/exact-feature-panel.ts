@@ -38,7 +38,7 @@ export function mountExactFeaturePanel(parent:HTMLElement,session:CadSession,exa
    const option=document.createElement('option');option.value=value;option.textContent=label;operation.append(option);
   }
   operation.value=previous?.operation??'fillet';
-  const size=document.createElement('input');size.type='number';size.min='0.01';size.step='0.1';
+  const size=document.createElement('input');size.type='number';size.min='0.01';size.step='any';
   size.value=String(typeof previous?.size==='number'?previous.size:previous?.size??1);
   const edges=document.createElement('select');
   for(const [value,label] of [['all',t('All edges')],...faces.map(face=>[face.key,t`Edges of the ${t(face.label)} face`])]){
