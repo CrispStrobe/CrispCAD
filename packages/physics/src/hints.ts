@@ -6,7 +6,20 @@ import type {CadDocument,Vec3,Transform} from '@brickwright/cad-core';
 import type {GeometryKernel,GeometryResult} from '@brickwright/cad-geometry';
 import {prepareCollision} from './collision.js';
 import type {ConvexPiece,PreparedCollision} from './collision.js';
-function point(p:Vec3,t:Transform):Vec3 {let [x,y,z]=p.map((v,i)=>v*t.scale[i]);for(let i=0;i<3;i++){const a=t.rotation[i]*Math.PI/180,c=Math.cos(a),s=Math.sin(a);if(i===0)[y,z]=[c*y-s*z,s*y+c*z];if(i===1)[x,z]=[c*x+s*z,-s*x+c*z];if(i===2)[x,y]=[c*x-s*y,s*x+c*y];}return [x+t.position[0],y+t.position[1],z+t.position[2]];}
+function pointTransform(transform:Transform){
+ const [scaleX,scaleY,scaleZ]=transform.scale;
+ const [offsetX,offsetY,offsetZ]=transform.position;
+ const [rx,ry,rz]=transform.rotation.map(degrees=>degrees*Math.PI/180);
+ const cx=Math.cos(rx),sx=Math.sin(rx),cy=Math.cos(ry),sy=Math.sin(ry),cz=Math.cos(rz),sz=Math.sin(rz);
+ return (point:Vec3)=>{
+  const x=point[0]*scaleX,y=point[1]*scaleY,z=point[2]*scaleZ;
+  const y1=cx*y-sx*z,z1=sx*y+cx*z;
+  const x2=cy*x+sy*z1,z2=-sy*x+cy*z1;
+  point[0]=cz*x2-sz*y1+offsetX;
+  point[1]=sz*x2+cz*y1+offsetY;
+  point[2]=z2+offsetZ;
+ };
+}
 function triangulate(profile:number[][]):number[][] {
  const ids=profile.map((_,i)=>i);if(Math.hypot(...profile[0].map((v,i)=>v-profile.at(-1)![i]))<1e-6)ids.pop();
  const cross=(a:number,b:number,c:number)=>(profile[b][0]-profile[a][0])*(profile[c][1]-profile[a][1])-(profile[b][1]-profile[a][1])*(profile[c][0]-profile[a][0]);
@@ -28,21 +41,41 @@ export async function prepareDocumentCollisions(input:CadDocument,result:Geometr
  const doc=validateDocument(input);if(result.sourceKey!==documentGeometryKey(doc))throw new Error(t('Geometry is stale for collision preparation'));const prepared=new Map<string,PreparedCollision>();
  // Root meshes were already evaluated and checked against this document's geometry key.
  const localCache=new Map(result.bodies.map(body=>[body.id,body]));
- const worldPoint=(p:Vec3,transforms:Transform[])=>transforms.reduceRight((value,t)=>point(value,t),p);
+ const pointTransforms=new WeakMap<Transform,ReturnType<typeof pointTransform>>();
+ const transformPoint=(p:Vec3,transforms:Transform[])=>{
+  for(let i=transforms.length-1;i>=0;i--){
+   const transform=transforms[i];
+   let apply=pointTransforms.get(transform);
+   if(!apply){apply=pointTransform(transform);pointTransforms.set(transform,apply);}
+   apply(p);
+  }
+  return p;
+ };
  function worldMesh(id:string,parents:Transform[]){let body=localCache.get(id);if(!body){const nodes:CadDocument['nodes']={};const visit=(key:string)=>{if(nodes[key])return;const n=doc.nodes[key];nodes[key]=n;if(n.kind==='boolean')n.inputs.forEach(visit);};visit(id);const fragment:CadDocument={...doc,nodes,roots:[id],joints:undefined,parametric:doc.parametric?{...doc.parametric,bindings:doc.parametric.bindings.filter(b=>Object.hasOwn(nodes,b.nodeId))}:undefined};
    // Construction evaluation is a private subset. Retain only source records
    // and tracers that still belong to that subset, without changing the scene.
    pruneModelProvenance(fragment);if(fragment.version>=8&&fragment.tracers)fragment.tracers=fragment.tracers.filter(trace=>trace.bodyId===id);
-   body=kernel.evaluate(fragment).bodies[0];localCache.set(id,body);}if(!parents.length)return body;const positions=new Float32Array(body.positions.length),min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(let i=0;i<positions.length;i+=3){const p=worldPoint([body.positions[i],body.positions[i+1],body.positions[i+2]],parents);for(let j=0;j<3;j++){positions[i+j]=p[j];min[j]=Math.min(min[j],p[j]);max[j]=Math.max(max[j],p[j]);}}return {...body,positions,bounds:{min,max}};}
+   body=kernel.evaluate(fragment).bodies[0];localCache.set(id,body);}if(!parents.length)return body;const positions=new Float32Array(body.positions.length),min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(let i=0;i<positions.length;i+=3){const p=transformPoint([body.positions[i],body.positions[i+1],body.positions[i+2]],parents);for(let j=0;j<3;j++){positions[i+j]=p[j];min[j]=Math.min(min[j],p[j]);max[j]=Math.max(max[j],p[j]);}}return {...body,positions,bounds:{min,max}};}
  function candidatesFor(id:string,parents:Transform[],refineAnnular=false):ConvexPiece[]{
   const node=doc.nodes[id],hint=node.physics?.collisionHint;
-  if(node.physics?.collisionAssembly){const transforms=[...parents,node.transform];return node.physics.collisionAssembly.map(piece=>({positions:new Float64Array(piece.positions.flatMap((_,i)=>i%3===0?worldPoint(piece.positions.slice(i,i+3) as Vec3,transforms):[])),indices:new Uint32Array(piece.indices)}));}
+  if(node.physics?.collisionAssembly){
+   const transforms=[...parents,node.transform];
+   const point:Vec3=[0,0,0];
+   return node.physics.collisionAssembly.map(piece=>{
+    const positions=new Float64Array(piece.positions.length);
+    for(let i=0;i<positions.length;i+=3){
+     point[0]=piece.positions[i];point[1]=piece.positions[i+1];point[2]=piece.positions[i+2];
+     positions.set(transformPoint(point,transforms),i);
+    }
+    return {positions,indices:new Uint32Array(piece.indices)};
+   });
+  }
   if(node.kind==='boolean'&&node.operation==='union'){const pieces=node.inputs.flatMap(child=>candidatesFor(child,[...parents,node.transform],refineAnnular));if(pieces.length>2048)throw new Error(t('Construction collision exceeds its compound budget'));return pieces;}
   if(node.kind==='boolean'&&node.operation==='intersect'){const transforms=[...parents,node.transform];return kernel.collisionCSG.intersect(candidatesFor(node.inputs[0],transforms,refineAnnular),node.inputs.slice(1).map(child=>worldMesh(child,transforms)));}
-  if(node.kind==='boolean'&&node.operation==='subtract'){const transforms=[...parents,node.transform],base=candidatesFor(node.inputs[0],transforms,refineAnnular),cuts=node.inputs.slice(1).map(child=>worldMesh(child,transforms));const seeded=node.physics?.sourcePreset==='nut'?kernel.collisionCSG.grid(candidatesFor(node.inputs[0],[],refineAnnular)).map(piece=>{const positions=new Float64Array(piece.positions.length);for(let i=0;i<positions.length;i+=3){const p=worldPoint([piece.positions[i],piece.positions[i+1],piece.positions[i+2]],transforms);positions.set(p,i);}return {...piece,positions};}):base;return kernel.collisionCSG.subtract(seeded,cuts);}
+  if(node.kind==='boolean'&&node.operation==='subtract'){const transforms=[...parents,node.transform],base=candidatesFor(node.inputs[0],transforms,refineAnnular),cuts=node.inputs.slice(1).map(child=>worldMesh(child,transforms));const seeded=node.physics?.sourcePreset==='nut'?kernel.collisionCSG.grid(candidatesFor(node.inputs[0],[],refineAnnular)).map(piece=>{const positions=new Float64Array(piece.positions.length);for(let i=0;i<positions.length;i+=3){const p=transformPoint([piece.positions[i],piece.positions[i+1],piece.positions[i+2]],transforms);positions.set(p,i);}return {...piece,positions};}):base;return kernel.collisionCSG.subtract(seeded,cuts);}
   if(node.kind==='mesh'&&node.physics?.sourcePreset==='bent-tube'&&hint?.kind!=='annular-grid'){
    const points=(theta:number,phi:number,radius:number):Vec3=>[(20+radius*Math.cos(phi))*Math.cos(theta),(20+radius*Math.cos(phi))*Math.sin(theta),radius*Math.sin(phi)];const pieces:ConvexPiece[]=[];
-   for(let i=0;i<12;i++)for(let j=0;j<32;j++){const vertices:Vec3[]=[];for(const step of [i,i+.5,i+1])for(const side of [j,j+1])for(const radius of [3,5])vertices.push(worldPoint(points(step/12*Math.PI/2,side/32*Math.PI*2,radius),[...parents,node.transform]));pieces.push(kernel.hullPoints(vertices));}return pieces;
+   for(let i=0;i<12;i++)for(let j=0;j<32;j++){const vertices:Vec3[]=[];for(const step of [i,i+.5,i+1])for(const side of [j,j+1])for(const radius of [3,5])vertices.push(transformPoint(points(step/12*Math.PI/2,side/32*Math.PI*2,radius),[...parents,node.transform]));pieces.push(kernel.hullPoints(vertices));}return pieces;
   }
   if(hint?.kind==='annular-grid'&&node.kind==='mesh'){
    const S=hint.sides,N=hint.segments,at=(ring:number,side:number,inner:number):Vec3=>{const i=(ring*2+inner)*(S+1)+(side+S)%S;return [node.positions[i*3],node.positions[i*3+1],node.positions[i*3+2]];},transforms=[...parents,node.transform],pieces:ConvexPiece[]=[];
@@ -54,33 +87,33 @@ export async function prepareDocumentCollisions(input:CadDocument,result:Geometr
     if(N*S>2048)throw new Error(t('Section collision refinement exceeds its compound budget'));
     const faces=[0,1,3,0,3,2,4,6,7,4,7,5,0,4,5,0,5,1,2,3,7,2,7,6,0,2,6,0,6,4,1,5,7,1,7,3];
     for(let ring=0;ring<N;ring++)for(let side=0;side<S;side++){
-     const v:Vec3[]=[];for(const inner of [0,1])for(const level of [ring,ring+1])for(const [offset,direction]of [[0,-1],[1,1]])v.push(worldPoint(edge(level,side+offset,inner,direction),transforms));
+     const v:Vec3[]=[];for(const inner of [0,1])for(const level of [ring,ring+1])for(const [offset,direction]of [[0,-1],[1,1]])v.push(transformPoint(edge(level,side+offset,inner,direction),transforms));
      let volume=0;const origin=v[0];for(let i=0;i<faces.length;i+=3){const [a,b,c]=faces.slice(i,i+3).map(j=>v[j].map((n,k)=>n-origin[k]));volume+=a[0]*(b[1]*c[2]-b[2]*c[1])+a[1]*(b[2]*c[0]-b[0]*c[2])+a[2]*(b[0]*c[1]-b[1]*c[0]);}
      const indices=new Uint32Array(faces);if(volume<0)for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
      pieces.push(...kernel.partitionConvex({positions:new Float32Array(v.flat()),indices},Math.max(1,2048-pieces.length)));if(pieces.length>2048)throw new Error(t('Section collision refinement exceeds its compound budget'));
     }
     return pieces;
    }
-   for(let group=0;group<groups;group++)for(let side=0;side<S;side++){const points:Vec3[]=[];for(let r=Math.floor(group*N/groups);r<=Math.floor((group+1)*N/groups);r++)for(const inner of [0,1]){points.push(worldPoint(edge(r,side,inner,-1),transforms),worldPoint(edge(r,side+1,inner,1),transforms));}pieces.push(kernel.hullPoints(points));}
+   for(let group=0;group<groups;group++)for(let side=0;side<S;side++){const points:Vec3[]=[];for(let r=Math.floor(group*N/groups);r<=Math.floor((group+1)*N/groups);r++)for(const inner of [0,1]){points.push(transformPoint(edge(r,side,inner,-1),transforms),transformPoint(edge(r,side+1,inner,1),transforms));}pieces.push(kernel.hullPoints(points));}
    // Keep the centre of filled transitions in one supporting face, rather than
    // making all sector tips meet at a numerically ambiguous axis.
-   if(filled){let radius=Infinity;for(let ring=0;ring<=N;ring++)for(let side=0;side<S;side++){const p=at(ring,side,0);radius=Math.min(radius,Math.hypot(p[0],p[1])*.5);}const points:Vec3[]=[];for(const z of [at(0,0,1)[2],at(N,0,1)[2]])for(let side=0;side<32;side++)points.push(worldPoint([radius*Math.cos(side*Math.PI/16),radius*Math.sin(side*Math.PI/16),z],transforms));pieces.push(kernel.hullPoints(points));}
+   if(filled){let radius=Infinity;for(let ring=0;ring<=N;ring++)for(let side=0;side<S;side++){const p=at(ring,side,0);radius=Math.min(radius,Math.hypot(p[0],p[1])*.5);}const points:Vec3[]=[];for(const z of [at(0,0,1)[2],at(N,0,1)[2]])for(let side=0;side<32;side++)points.push(transformPoint([radius*Math.cos(side*Math.PI/16),radius*Math.sin(side*Math.PI/16),z],transforms));pieces.push(kernel.hullPoints(points));}
    return pieces;
   }
   if(hint&&node.kind==='mesh'){
    if(hint.kind==='tube-grid'&&Math.ceil(hint.segments/(hint.stride??1))>2048)throw new Error(t('Construction collision exceeds its compound budget'));
    const stride=hint.stride??1,perSide=hint.sides+(hint.seam===false?0:1),at=(ring:number,side:number):Vec3=>{const i=hint.layout==='rows'?ring*perSide+side:side*(hint.segments+1)+ring;return [node.positions[i*3],node.positions[i*3+1],node.positions[i*3+2]];},transforms=[...parents,node.transform],pieces:ConvexPiece[]=[];
-   if(hint.kind==='tube-grid')for(let ring=0;ring<hint.segments;ring+=stride){const points:Vec3[]=[];for(let r=ring;r<=Math.min(hint.segments,ring+stride);r++)for(let side=0;side<hint.sides;side++)points.push(worldPoint(at(r,side),transforms));pieces.push(kernel.hullPoints(points));}
+   if(hint.kind==='tube-grid')for(let ring=0;ring<hint.segments;ring+=stride){const points:Vec3[]=[];for(let r=ring;r<=Math.min(hint.segments,ring+stride);r++)for(let side=0;side<hint.sides;side++)points.push(transformPoint(at(r,side),transforms));pieces.push(kernel.hullPoints(points));}
    // A tiny angular overlap closes numerical seams between adjacent convex
    // sectors. Source/compound volume and bounds gates include the overlap.
-   else {const profile=Array.from({length:hint.sides+1},(_,i)=>{const p=at(0,i);return [Math.hypot(p[0],p[1]),p[2]];}),extent=Math.max(...profile.map(p=>p[0]))+Math.max(...profile.map(p=>p[1]))-Math.min(...profile.map(p=>p[1])),selected=simplifyRadialProfile(profile,Math.min(.05,extent*.001)),polygons=triangulate(selected.map(i=>profile[i])).map(p=>p.map(i=>selected[i])),step=Math.max(1,Math.ceil(hint.segments*polygons.length/2048));for(let ring=0;ring<hint.segments;ring+=step)for(const polygon of polygons){const points:Vec3[]=[];for(const [r,overlap]of [[ring,-1e-5],[Math.min(hint.segments,ring+step),1e-5]])for(const side of polygon){const p=at(r,side),c=Math.cos(overlap),s=Math.sin(overlap);points.push(worldPoint([p[0]*c-p[1]*s,p[0]*s+p[1]*c,p[2]],transforms));}pieces.push(kernel.hullPoints(points));}}
+   else {const profile=Array.from({length:hint.sides+1},(_,i)=>{const p=at(0,i);return [Math.hypot(p[0],p[1]),p[2]];}),extent=Math.max(...profile.map(p=>p[0]))+Math.max(...profile.map(p=>p[1]))-Math.min(...profile.map(p=>p[1])),selected=simplifyRadialProfile(profile,Math.min(.05,extent*.001)),polygons=triangulate(selected.map(i=>profile[i])).map(p=>p.map(i=>selected[i])),step=Math.max(1,Math.ceil(hint.segments*polygons.length/2048));for(let ring=0;ring<hint.segments;ring+=step)for(const polygon of polygons){const points:Vec3[]=[];for(const [r,overlap]of [[ring,-1e-5],[Math.min(hint.segments,ring+step),1e-5]])for(const side of polygon){const p=at(r,side),c=Math.cos(overlap),s=Math.sin(overlap);points.push(transformPoint([p[0]*c-p[1]*s,p[0]*s+p[1]*c,p[2]],transforms));}pieces.push(kernel.hullPoints(points));}}
    // A sector compound is volume-correct but a ray exactly on its shared
    // radial boundaries can miss every floor sector in Jolt. Add an inscribed
    // floor core so the central support face is one convex surface. It remains
    // inside the sampled source and participates in normal CSG qualification.
    if(hint.kind==='radial-profile'&&node.physics?.sourcePreset==='vase'){
     const profile=Array.from({length:hint.sides+1},(_,i)=>{const p=at(0,i);return [Math.hypot(p[0],p[1]),p[2]];}),bottom=profile[0][1],floor=profile.at(-1)![1],top=Math.max(...profile.map(p=>p[1])),end=profile.findIndex(p=>p[1]===top);
-    if(profile[0][0]<1e-6&&profile.at(-1)![0]<1e-6&&floor>bottom){const outer=profile.slice(1,end+1).filter(p=>p[1]<=floor),radius=Math.min(...outer.map(p=>p[0]))*Math.cos(Math.PI/hint.segments);if(radius>0&&Number.isFinite(radius)){const points:Vec3[]=[];for(const z of [bottom,floor])for(let i=0;i<32;i++)points.push(worldPoint([radius*Math.cos(i*Math.PI/16),radius*Math.sin(i*Math.PI/16),z],transforms));pieces.push(kernel.hullPoints(points));}}
+    if(profile[0][0]<1e-6&&profile.at(-1)![0]<1e-6&&floor>bottom){const outer=profile.slice(1,end+1).filter(p=>p[1]<=floor),radius=Math.min(...outer.map(p=>p[0]))*Math.cos(Math.PI/hint.segments);if(radius>0&&Number.isFinite(radius)){const points:Vec3[]=[];for(const z of [bottom,floor])for(let i=0;i<32;i++)points.push(transformPoint([radius*Math.cos(i*Math.PI/16),radius*Math.sin(i*Math.PI/16),z],transforms));pieces.push(kernel.hullPoints(points));}}
    }
    return pieces;
   }
