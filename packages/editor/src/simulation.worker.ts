@@ -6,6 +6,7 @@ import type {GeometryKernel,GeometryResult} from '@brickwright/cad-geometry';
 import type {PreparedCollision} from '@brickwright/cad-physics';
 import type {CadDocument} from '@brickwright/cad-core';
 import type {SimulationCommand,SimulationFrame,SimulationRay,SimulationTelemetry} from './simulation-protocol.js';
+import {createCollisionMeasurement} from './collision-measurement-client.js';
 let kernel:Promise<GeometryKernel>|undefined,world:Awaited<ReturnType<typeof createPhysicsWorld>>|undefined,document:CadDocument|undefined;
 type PreparedConstruction={key:string;geometry:GeometryResult;collisions:ReadonlyMap<string,PreparedCollision>};
 let lastStart:{authored:CadDocument;construction:PreparedConstruction}|undefined;
@@ -69,8 +70,11 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
     if(construction?.key!==key){
      const ready=await(kernel??=createGeometryKernel({wasmURL:command.wasmURL}));
      const geometry=command.geometry?.sourceKey===geometryKey?command.geometry:ready.evaluate(authored);
-     const collisions=await prepareDocumentCollisions(authored,geometry,ready);
-     construction={key,geometry,collisions};
+     const background=createCollisionMeasurement(authored,geometry,command.wasmURL,command.locale,ready.collisionCSG.measure);
+     try{
+      const collisions=await prepareDocumentCollisions(authored,geometry,ready,background);
+      construction={key,geometry,collisions};
+     }finally{background?.close();}
     }
    }
    const {geometry,collisions}=construction;

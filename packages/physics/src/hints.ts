@@ -3,9 +3,9 @@ import {t} from '@brickwright/cad-core';
 import {simplifyRadialProfile} from './radial-profile.js';
 import { documentGeometryKey, validateDocument, pruneModelProvenance } from '@brickwright/cad-core';
 import type {CadDocument,Vec3,Transform} from '@brickwright/cad-core';
-import type {GeometryKernel,GeometryResult} from '@brickwright/cad-geometry';
+import type {BodyMesh,GeometryKernel,GeometryResult} from '@brickwright/cad-geometry';
 import {prepareCollision} from './collision.js';
-import type {ConvexPiece,PreparedCollision} from './collision.js';
+import type {ConvexPiece,MeasureCollision,PreparedCollision} from './collision.js';
 function pointTransform(transform:Transform){
  const [scaleX,scaleY,scaleZ]=transform.scale;
  const [offsetX,offsetY,offsetZ]=transform.position;
@@ -37,7 +37,7 @@ function triangulate(profile:number[][]):number[][] {
 /** Candidate generation follows the retained construction graph, so a union
  * keeps its useful convex parts and a cutter is applied to those parts before
  * final qualification. Nothing bypasses the current source-mesh CSG gate. */
-export async function prepareDocumentCollisions(input:CadDocument,result:GeometryResult,kernel:GeometryKernel):Promise<Map<string,PreparedCollision>>{
+export async function prepareDocumentCollisions(input:CadDocument,result:GeometryResult,kernel:GeometryKernel,background?:{bodyId:string;measure:MeasureCollision;started:Promise<void>}):Promise<Map<string,PreparedCollision>>{
  const doc=validateDocument(input);if(result.sourceKey!==documentGeometryKey(doc))throw new Error(t('Geometry is stale for collision preparation'));const prepared=new Map<string,PreparedCollision>();
  // Root meshes were already evaluated and checked against this document's geometry key.
  const localCache=new Map(result.bodies.map(body=>[body.id,body]));
@@ -120,11 +120,22 @@ export async function prepareDocumentCollisions(input:CadDocument,result:Geometr
   return kernel.partitionConvex(worldMesh(id,parents));
  }
  const annularCache=new Map<string,boolean>();const hasAnnular=(id:string):boolean=>{const prior=annularCache.get(id);if(prior!==undefined)return prior;const n=doc.nodes[id],value=n.physics?.collisionHint?.kind==='annular-grid'||n.kind==='boolean'&&n.inputs.some(hasAnnular);annularCache.set(id,value);return value;};
- for(const mesh of result.bodies.filter(b=>!b.reference&&!b.hole)){
-  try{prepared.set(mesh.id,await prepareCollision(mesh,kernel,{candidates:candidatesFor(mesh.id,[])}));}
-  catch(first){let construction=first;if(hasAnnular(mesh.id)){try{prepared.set(mesh.id,await prepareCollision(mesh,kernel,{candidates:candidatesFor(mesh.id,[],true)}));continue;}catch(refinement){construction=new Error(`${first instanceof Error?first.message:String(first)}; ${refinement instanceof Error?refinement.message:String(refinement)}`);}}
-   try{prepared.set(mesh.id,await prepareCollision(mesh,kernel));}catch(second){throw new Error(t`${mesh.name}: source construction failed (${construction instanceof Error?construction.message:String(construction)}); whole-mesh preparation also failed. ${second instanceof Error?second.message:String(second)}`);}
+ async function prepareBody(mesh:BodyMesh,measure?:MeasureCollision){
+  try{return await prepareCollision(mesh,kernel,{candidates:candidatesFor(mesh.id,[]),measure});}
+  catch(first){let construction=first;if(hasAnnular(mesh.id)){try{return await prepareCollision(mesh,kernel,{candidates:candidatesFor(mesh.id,[],true),measure});}catch(refinement){construction=new Error(`${first instanceof Error?first.message:String(first)}; ${refinement instanceof Error?refinement.message:String(refinement)}`);}}
+   try{return await prepareCollision(mesh,kernel,{measure});}catch(second){throw new Error(t`${mesh.name}: source construction failed (${construction instanceof Error?construction.message:String(construction)}); whole-mesh preparation also failed. ${second instanceof Error?second.message:String(second)}`);}
   }
  }
- return prepared;
+ const bodies=result.bodies.filter(b=>!b.reference&&!b.hole);
+ const backgroundBody=background&&bodies.find(body=>body.id===background.bodyId);
+ const backgroundResult=backgroundBody&&prepareBody(backgroundBody,background!.measure);
+ // Give the nested worker time to initialize before starting synchronous
+ // CSG here. On browsers that deny the helper, the local fallback settles
+ // the background result instead.
+ if(backgroundResult)await Promise.race([background!.started,backgroundResult]);
+ try{for(const mesh of bodies)if(mesh!==backgroundBody)prepared.set(mesh.id,await prepareBody(mesh));}
+ catch(error){await backgroundResult?.catch(()=>{});throw error;}
+ if(!backgroundBody||!backgroundResult)return prepared;
+ prepared.set(backgroundBody.id,await backgroundResult);
+ return new Map(bodies.map(mesh=>[mesh.id,prepared.get(mesh.id)!]));
 }
