@@ -55,10 +55,11 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
    const parked=standby?.available?standby:undefined;
    client=parked??createSimulationClient();
    standby=undefined;
-   // A completed worker keeps the evaluated geometry when parked. Design edits
-   // discard the worker, so only the initial start needs to send the mesh buffers.
+   // A completed worker keeps the authored document and its geometry when
+   // parked. Document edits discard that worker, so a new revision is sent.
+   const source=parked?{}:{document:session.state.document,geometry:geometry||undefined};
    const first=await client.send({
-    op:'start',document:session.state.document,geometry:parked?undefined:geometry||undefined,
+    op:'start',...source,
     wasmURL:new URL(wasmURL,document.baseURI).href,fixBase:fixBase(),rigidPreview,locale:getLocale(),
    });
    if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));

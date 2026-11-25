@@ -7,6 +7,7 @@ import type {PreparedCollision} from '@brickwright/cad-physics';
 import type {CadDocument} from '@brickwright/cad-core';
 import type {SimulationCommand,SimulationFrame,SimulationRay,SimulationTelemetry} from './simulation-protocol.js';
 let kernel:Promise<GeometryKernel>|undefined,world:Awaited<ReturnType<typeof createPhysicsWorld>>|undefined,document:CadDocument|undefined;
+let authoredDocument:CadDocument|undefined;
 let preparedCache:{key:string;geometry:GeometryResult;collisions:ReadonlyMap<string,PreparedCollision>}|undefined;
 // Candidate hints and assemblies are outside the visual geometry signature.
 function preparationKey(doc:CadDocument,geometryKey:string|undefined){
@@ -34,10 +35,18 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
   }
   if(command.op==='start'){
    world?.dispose();world=undefined;setLocale(command.locale);
-   // postMessage already gave this worker an independent copy of the design.
-   document=command.document;
-   const first=document.roots.find(id=>!document!.nodes[id].reference&&document!.nodes[id].role!=='hole');
-   if(command.fixBase&&first)document.nodes[first].physics={...(document.nodes[first].physics??defaultPartPhysics()),motion:'static'};
+   const authored=command.document??authoredDocument;
+   if(!authored)throw new Error(t('Start simulation first'));
+   // The worker owns this copy. Apply Fix base to the run's node only so
+   // later runs continue from the authored motion, including dynamic bases.
+   document=authored;
+   const first=command.fixBase?authored.roots.find(id=>!authored.nodes[id].reference&&authored.nodes[id].role!=='hole'):undefined;
+   if(first){
+    const node=authored.nodes[first];
+    document={...authored,nodes:{...authored.nodes,[first]:{...node,
+     physics:{...(node.physics??defaultPartPhysics()),motion:'static'},
+    }}};
+   }
    const ready=await(kernel??=createGeometryKernel({wasmURL:command.wasmURL}));
    const geometryKey=documentGeometryKey(document),key=preparationKey(document,geometryKey);
    if(preparedCache?.key!==key){
@@ -49,6 +58,7 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
    const {geometry,collisions}=preparedCache;
    driven.clear();previewBalls.clear();distances={};world=await createPhysicsWorld(document,geometry,collisions,{mode:command.rigidPreview?'rigid-preview':'mechanism',preferSimd:true});
    for(const map of [angles,lastAngles,speeds,linearPositions,linearSpeeds])for(const key of Object.keys(map))delete map[key];measure();measureSliders();
+   authoredDocument=authored;
   }else{
    if(!world)throw new Error(t('Start simulation first'));
    if(command.op==='step'){if(!Number.isFinite(command.seconds)||command.seconds<=0||command.seconds>.05||Math.abs(command.seconds*200-Math.round(command.seconds*200))>1e-8)throw new Error(t('Invalid simulation step'));for(let i=0;i<Math.round(command.seconds*200);i++){world.step(.005);measure();measureSliders();}}

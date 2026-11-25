@@ -8,7 +8,8 @@ export interface SimulationTelemetry {time:number;angles:Record<string,number>;s
 export interface SimulationFrame extends SimulationTelemetry {poses:SimulationPose[]}
 export interface SimulationActuatorStep {op:'actuator-step';impulses:{id:string;impulse:number}[];rays?:SimulationRay[];servos?:SimulationServo[];telemetryOnly?:boolean}
 export type SimulationCommand =
- |{op:'start';document:CadDocument;geometry?:GeometryResult;wasmURL:string;fixBase:boolean;locale:string;rigidPreview?:boolean}
+ |({op:'start';wasmURL:string;fixBase:boolean;locale:string;rigidPreview?:boolean}&
+   ({document:CadDocument;geometry?:GeometryResult}|{document?:never;geometry?:never}))
  |{op:'park'}
  |{op:'step';seconds:number}
  |SimulationActuatorStep
