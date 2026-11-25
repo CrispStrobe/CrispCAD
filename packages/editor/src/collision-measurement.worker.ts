@@ -9,9 +9,9 @@ self.onmessage=async({data}:MessageEvent<CollisionMeasurementRequest>)=>{
  try{
   const ready=await(kernel??=createGeometryKernel({wasmURL:data.wasmURL}));
   setLocale(data.locale);
-  self.postMessage({started:true} satisfies CollisionMeasurementReply);
-  try{reply={measurement:ready.collisionCSG.measure(data.source,data.hulls)};}
-  catch(error){reply={error:error instanceof Error?error.message:String(error)};}
- }catch{reply={unavailable:true};}
+  self.postMessage({id:data.id,started:true} satisfies CollisionMeasurementReply);
+  try{reply={id:data.id,measurement:ready.collisionCSG.measure(data.source,data.hulls)};}
+  catch(error){reply={id:data.id,error:error instanceof Error?error.message:String(error)};}
+ }catch{reply={id:data.id,unavailable:true};}
  self.postMessage(reply);
 };

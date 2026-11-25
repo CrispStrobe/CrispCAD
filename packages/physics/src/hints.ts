@@ -37,7 +37,7 @@ function triangulate(profile:number[][]):number[][] {
 /** Candidate generation follows the retained construction graph, so a union
  * keeps its useful convex parts and a cutter is applied to those parts before
  * final qualification. Nothing bypasses the current source-mesh CSG gate. */
-export async function prepareDocumentCollisions(input:CadDocument,result:GeometryResult,kernel:GeometryKernel,background?:{bodyId:string;measure:MeasureCollision;started:Promise<void>}):Promise<Map<string,PreparedCollision>>{
+export async function prepareDocumentCollisions(input:CadDocument,result:GeometryResult,kernel:GeometryKernel,background?:{bodyIds:ReadonlySet<string>;measure:MeasureCollision;started:Promise<void>}):Promise<Map<string,PreparedCollision>>{
  const doc=validateDocument(input);if(result.sourceKey!==documentGeometryKey(doc))throw new Error(t('Geometry is stale for collision preparation'));const prepared=new Map<string,PreparedCollision>();
  // Root meshes were already evaluated and checked against this document's geometry key.
  const localCache=new Map(result.bodies.map(body=>[body.id,body]));
@@ -127,15 +127,17 @@ export async function prepareDocumentCollisions(input:CadDocument,result:Geometr
   }
  }
  const bodies=result.bodies.filter(b=>!b.reference&&!b.hole);
- const backgroundBody=background&&bodies.find(body=>body.id===background.bodyId);
- const backgroundResult=backgroundBody&&prepareBody(backgroundBody,background!.measure);
+ const jobs=background?bodies.filter(body=>background.bodyIds.has(body.id))
+  .map(async body=>[body.id,await prepareBody(body,background.measure)] as const):[];
+ const backgroundResults=jobs.length?Promise.all(jobs):undefined;
  // Give the nested worker time to initialize before starting synchronous
  // CSG here. On browsers that deny the helper, the local fallback settles
  // the background result instead.
- if(backgroundResult)await Promise.race([background!.started,backgroundResult]);
- try{for(const mesh of bodies)if(mesh!==backgroundBody)prepared.set(mesh.id,await prepareBody(mesh));}
- catch(error){await backgroundResult?.catch(()=>{});throw error;}
- if(!backgroundBody||!backgroundResult)return prepared;
- prepared.set(backgroundBody.id,await backgroundResult);
+ try{
+  if(backgroundResults)await Promise.race([background!.started,backgroundResults]);
+  for(const mesh of bodies)if(!background?.bodyIds.has(mesh.id))prepared.set(mesh.id,await prepareBody(mesh));
+  if(backgroundResults)for(const [id,collision] of await backgroundResults)prepared.set(id,collision);
+ }catch(error){await Promise.allSettled(jobs);throw error;}
+ if(!backgroundResults)return prepared;
  return new Map(bodies.map(mesh=>[mesh.id,prepared.get(mesh.id)!]));
 }

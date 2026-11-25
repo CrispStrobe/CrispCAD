@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {it,expect} from 'vitest';
+import {it,expect,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
-import {createDocument,identityTransform,validateDocument} from '@brickwright/cad-core';
+import {createDocument,defaultPartPhysics,identityTransform,validateDocument} from '@brickwright/cad-core';
 import type {CadDocument} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import {geometryHash,isQualifiedCollision,prepareCollision,prepareDocumentCollisions} from '../packages/physics/src/index.js';
 import {createMotorDocument} from '../packages/editor/src/motor-models.js';
+import {createCollisionMeasurement} from '../packages/editor/src/collision-measurement-client.js';
 
 it('reuses the evaluated root and keeps only child provenance in collision fragments',async()=>{
  const kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')}),doc=createDocument();doc.version=8;
@@ -40,11 +41,11 @@ it('binds a background collision measurement to its original geometry bytes',asy
  expect(await isQualifiedCollision(prepared)).toBe(false);
 });
 
-it('starts the background measurement before local CSG and retains body order',async()=>{
+it('queues multiple background measurements before local CSG and retains body order',async()=>{
  const kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});
  const doc=createDocument();
- for(const id of ['local','remote'])doc.nodes[id]={id,name:id,kind:'box',size:[10,10,10],transform:identityTransform(),color:'#123456'};
- doc.roots=['local','remote'];
+ doc.roots=['local','remote-a','remote-b'];
+ for(const [i,id] of doc.roots.entries())doc.nodes[id]={id,name:id,kind:'box',size:[10+i,10,10],transform:identityTransform(),color:'#123456'};
  const geometry=kernel.evaluate(doc);
  const expected=await prepareDocumentCollisions(doc,geometry,kernel);
  const calls:string[]=[];
@@ -54,15 +55,49 @@ it('starts the background measurement before local CSG and retains body order',a
   calls.push('local');
   return kernel.collisionCSG.measure(...args);
  }}};
- const result=prepareDocumentCollisions(doc,geometry,local,{bodyId:'remote',started,async measure(source,hulls){
+ const result=prepareDocumentCollisions(doc,geometry,local,{bodyIds:new Set(['remote-a','remote-b']),started,async measure(source,hulls){
   calls.push('remote');
   await started;
   return kernel.collisionCSG.measure(source,hulls);
  }});
- expect(calls).toEqual(['remote']);
+ expect(calls).toEqual(['remote','remote']);
  announce();
  const prepared=await result;
- expect(calls).toEqual(['remote','local']);
+ expect(calls).toEqual(['remote','remote','local']);
  expect([...prepared.keys()]).toEqual(doc.roots);
  expect([...prepared.values()].map(value=>value.certificate)).toEqual([...expected.values()].map(value=>value.certificate));
+});
+
+it('falls back for every pending job when the helper never starts',async()=>{
+ const kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});
+ const doc=createDocument();
+ doc.roots=['a','b','c','d'];
+ for(const id of doc.roots)doc.nodes[id]={id,name:id,kind:'box',size:[10,10,10],transform:identityTransform(),color:'#123456'};
+ const geometry=kernel.evaluate(doc);
+ for(const node of Object.values(doc.nodes)){
+  node.physics={...defaultPartPhysics(),collisionAssembly:Array.from({length:256},()=>({positions:[],indices:[]}))};
+ }
+ let terminated=0;
+ const postMessage=vi.fn();
+ vi.stubGlobal('Worker',class{postMessage=postMessage;terminate(){terminated++;}});
+ vi.stubGlobal('navigator',{hardwareConcurrency:8});
+ vi.useFakeTimers();
+ try{
+  const measure=vi.fn(kernel.collisionCSG.measure);
+  const helper=createCollisionMeasurement(doc,geometry,'manifold.wasm','en',measure)!;
+  expect(helper.bodyIds.size).toBe(2);
+  const source=geometry.bodies[0],hulls=kernel.partitionConvex(source);
+  const jobs=[helper.measure(source,hulls),helper.measure(source,hulls)];
+  expect(postMessage).toHaveBeenCalledTimes(2);
+  await vi.advanceTimersByTimeAsync(1999);
+  expect(measure).not.toHaveBeenCalled();
+  await vi.advanceTimersByTimeAsync(1);
+  const [first,second]=await Promise.all(jobs);
+  expect(first).toEqual(second);
+  expect(measure).toHaveBeenCalledTimes(2);
+  expect(terminated).toBe(1);
+ }finally{
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+ }
 });
