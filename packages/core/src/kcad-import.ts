@@ -232,7 +232,12 @@ export function importKernelCAD(source:string,overrides:Record<string,number|str
     switch(path){
      case 'Assembly.part':{const name=args[0];if(typeof name!=='string')return unsupported('part name');const value=args[1] instanceof Procedure?call(args[1],[]):args[1];if(value instanceof Assembly)return unsupported('nested assembly');self.parts.push({name,shape:asShape(value)});return self;}
      case 'Assembly.model':return self;
-     case 'Assembly.mate':case 'Assembly.place':warnings.add(t`Ignored kernelCAD assembly ${path.slice(9)}(); parts keep their authored placement`);return self;
+     // Connectors only name frames for mates; a mate at pose 0 is the as-built placement, so both
+     // leave the converted geometry unchanged. Another pose would move parts and is refused.
+     case 'Assembly.connector':warnings.add(t`Ignored kernelCAD assembly ${path.slice(9)}(); parts keep their authored placement`);return self;
+     case 'Assembly.mate':{const o=args.find(plain) as RecordValue|undefined;if(o&&o.pose!==undefined&&number(o.pose)!==0)return unsupported('assembly.mate with a nonzero pose');}
+     // falls through
+     case 'Assembly.place':warnings.add(t`Ignored kernelCAD assembly ${path.slice(9)}(); parts keep their authored placement`);return self;
     }
     return unsupported(path.replace('Assembly.','assembly.'));
    }

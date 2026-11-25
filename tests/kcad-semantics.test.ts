@@ -149,6 +149,20 @@ return box(1, 1, Math.min(5, b.min[2]) + 1);`)).toThrow(/side of a cut/);
  });
 });
 
+describe('kcad assembly connectors',()=>{
+ it('ignores connectors and pose-0 mates (the as-built pose) and refuses other poses',()=>{
+  const rig=(pose:number)=>`const a = assembly('rig');
+a.part('base', box(10, 10, 2)).connector('hinge', { type: 'axis', origin: [0, 0, 2], axis: [1, 0, 0] });
+a.part('arm', box(2, 2, 20).translate(0, 0, 2)).connector('hinge', { type: 'axis', origin: [0, 0, 2], axis: [1, 0, 0] });
+a.mate('hinge', 'base.hinge', 'arm.hinge', 'revolute', { pose: ${pose}, limitsDeg: [-90, 90] });
+return a.model();`;
+  const c=convert(rig(0));
+  expect(c.parts.map(p=>p.name)).toEqual(['base','arm']);
+  expect(c.warnings.some(w=>/connector\(\)/.test(w))).toBe(true);
+  expect(()=>convert(rig(30))).toThrow(/assembly.mate with a nonzero pose/);
+ });
+});
+
 describe('kcad JavaScript helpers used by the catalog',()=>{
  it('supports string replace/replaceAll, findIndex, splice, array rest and hyperbolic Math',()=>{
   const c=convert(`const label = 'm1.5'.replace('m', '').replaceAll('.', 'p');
