@@ -38,6 +38,8 @@ manufactured-mechanism accuracy.
 - Mass, center of mass and the complete inertia tensor come from signed
   tetrahedral integrals of the actual evaluated solid, not from overlapping
   collision hulls. Jolt receives an explicit COM offset and full mass/inertia.
+  The triangle loop reuses coordinate storage and computes each coordinate sum
+  once, with the same floating-point accumulation order.
 - Parts connected by fixed mates form one native compound rigid body. Their
   evaluated masses and centers are summed, and their inertia tensors are
   combined using the parallel-axis theorem. This prevents solver drift across
