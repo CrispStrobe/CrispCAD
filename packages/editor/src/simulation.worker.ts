@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {createGeometryKernel} from '@brickwright/cad-geometry';
-import {createPhysicsWorld,loadPhysicsEngine,prepareDocumentCollisions} from '@brickwright/cad-physics';
+import {createPhysicsShapeCache,createPhysicsWorld,loadPhysicsEngine,prepareDocumentCollisions} from '@brickwright/cad-physics';
 import {defaultPartPhysics,documentGeometryKey,setLocale,t} from '@brickwright/cad-core';
 import type {GeometryKernel,GeometryResult} from '@brickwright/cad-geometry';
 import type {PreparedCollision} from '@brickwright/cad-physics';
@@ -9,7 +9,7 @@ import type {SimulationCommand,SimulationFrame,SimulationRay,SimulationTelemetry
 import {createCollisionMeasurement} from './collision-measurement-client.js';
 let kernel:Promise<GeometryKernel>|undefined,world:Awaited<ReturnType<typeof createPhysicsWorld>>|undefined,document:CadDocument|undefined;
 type PreparedConstruction={key:string;geometry:GeometryResult;collisions:ReadonlyMap<string,PreparedCollision>};
-let lastStart:{authored:CadDocument;construction:PreparedConstruction}|undefined;
+let lastStart:{authored:CadDocument;construction:PreparedConstruction;shapes:ReturnType<typeof createPhysicsShapeCache>}|undefined;
 // Candidate hints and assemblies are outside the visual geometry signature.
 function preparationKey(doc:CadDocument,geometryKey:string|undefined){
  return JSON.stringify([geometryKey,Object.values(doc.nodes).map(node=>{
@@ -81,9 +81,15 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
     }
    }
    const {geometry,collisions}=construction;
-   driven.clear();previewBalls.clear();distances={};world=await createPhysicsWorld(document,geometry,collisions,{mode:command.rigidPreview?'rigid-preview':'mechanism',preferSimd:true});
-   for(const map of [angles,lastAngles,speeds,linearPositions,linearSpeeds])for(const key of Object.keys(map))delete map[key];measure();measureSliders();
-   lastStart={authored,construction};
+   const previousShapes=lastStart?.shapes;
+   const shapes=lastStart?.authored===authored?lastStart.shapes:createPhysicsShapeCache();
+   try{
+    driven.clear();previewBalls.clear();distances={};
+    world=await createPhysicsWorld(document,geometry,collisions,{mode:command.rigidPreview?'rigid-preview':'mechanism',preferSimd:true,shapeCache:shapes});
+    for(const map of [angles,lastAngles,speeds,linearPositions,linearSpeeds])for(const key of Object.keys(map))delete map[key];measure();measureSliders();
+   }catch(error){if(shapes!==previousShapes)shapes.clear();throw error;}
+   if(shapes!==previousShapes)previousShapes?.clear();
+   lastStart={authored,construction,shapes};
   }else{
    if(!world)throw new Error(t('Start simulation first'));
    if(command.op==='step'){if(!Number.isFinite(command.seconds)||command.seconds<=0||command.seconds>.05||Math.abs(command.seconds*200-Math.round(command.seconds*200))>1e-8)throw new Error(t('Invalid simulation step'));for(let i=0;i<Math.round(command.seconds*200);i++){world.step(.005);measure();measureSliders();}}

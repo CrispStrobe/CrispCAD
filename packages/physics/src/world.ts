@@ -21,10 +21,26 @@ export function loadPhysicsEngine(preferSimd:boolean){
   ?import('jolt-physics/wasm-simd-compat').then(module=>module.default()).catch(loadScalarJolt)
   :loadScalarJolt());
 }
+type NativeShape=InstanceType<Awaited<ReturnType<typeof initJolt>>['Shape']>;
+type RetainedCompound={engine:unknown;tokens:string;inputs:PreparedCollision[];shape:NativeShape};
+type PhysicsShapeCache={clear():void};
+const retainedCompounds=new WeakMap<PhysicsShapeCache,Map<string,RetainedCompound>>();
+/** Owns one native reference per retained compound for a parked simulation. */
+export function createPhysicsShapeCache():PhysicsShapeCache{
+ const entries=new Map<string,RetainedCompound>();
+ const cache={
+  clear(){
+   for(const {shape} of entries.values())shape.Release();
+   entries.clear();
+  },
+ };
+ retainedCompounds.set(cache,entries);
+ return cache;
+}
 const rotate=(point:number[],rotation:Vec3)=>{let [x,y,z]=point;for(let i=0;i<3;i++){const a=rotation[i]*Math.PI/180,c=Math.cos(a),s=Math.sin(a);if(i===0)[y,z]=[c*y-s*z,s*y+c*z];if(i===1)[x,z]=[c*x+s*z,-s*x+c*z];if(i===2)[x,y]=[c*x-s*y,s*x+c*y];}return [x,y,z];};
 /** Evaluated geometry is baked in world-space mm; body poses are deltas to that
  * geometry. SI conversion happens once, at this boundary. Fixed 200 Hz steps. */
-export async function createPhysicsWorld(document:CadDocument,result:GeometryResult,prepared:ReadonlyMap<string,PreparedCollision>,options:{J?:any;ground?:boolean;preferSimd?:boolean;mode?:'mechanism'|'rigid-preview'}={}){
+export async function createPhysicsWorld(document:CadDocument,result:GeometryResult,prepared:ReadonlyMap<string,PreparedCollision>,options:{J?:any;ground?:boolean;preferSimd?:boolean;mode?:'mechanism'|'rigid-preview';shapeCache?:PhysicsShapeCache}={}){
  const doc=validateDocument(document),sceneSettings=simulationSettings(doc);if(result.sourceKey!==documentGeometryKey(doc))throw new Error(t('Geometry is stale for this document'));const meshes=result.bodies.filter(b=>!b.reference&&!b.hole);if(!meshes.length)throw new Error(t('There are no physical solids to simulate'));if(meshes.length>256)throw new Error(t('Simulation budget is 256 bodies'));
  for(const mesh of meshes){const p=prepared.get(mesh.id);if(!p||!await isQualifiedCollision(p)||p.certificate.sourceSHA256!==await geometryHash(mesh)||p.certificate.relativeError>p.certificate.tolerance.volumeFraction||p.certificate.boundsErrorMm>p.certificate.tolerance.boundsMm||!p.hulls.length||p.hulls.length>2048)throw new Error(t`${mesh.name}: qualified collision geometry is missing or stale`);}
  const gearBody=(j:CadJoint,partner:CadJoint)=>{const shared=[partner.bodyA,partner.bodyB];return shared.includes(j.bodyB)&&!shared.includes(j.bodyA)?j.bodyA:j.bodyB;};
@@ -120,9 +136,9 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
  };
  function dispose(){if(disposed)return;disposed=true;for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
  let scratchVertex:any,scratchPosition:any,scratchRotation:any;
- try {
-  if(options.ground??sceneSettings.ground){const ext=new J.Vec3(2,2,.005),shape=new J.BoxShape(ext,.0001);J.destroy(ext);add(shape,'ground','static',{friction:sceneSettings.groundFriction,restitution:sceneSettings.groundRestitution});const p=new J.RVec3(0,0,-.005);bodies.SetPosition(byId.get('ground').GetID(),p,J.EActivation_DontActivate);J.destroy(p);}
-  for(const [id,members]of assemblies){const properties=doc.nodes[members[0].id].physics??defaultPartPhysics(),motion=members.some(m=>doc.nodes[m.id].physics?.motion==='static')?'static':'dynamic',mass=assemblyMass.get(id)!,compound=new J.StaticCompoundShapeSettings();
+ function createCompound(members:typeof meshes):NativeShape{
+  const compound=new J.StaticCompoundShapeSettings();
+  try{
    for(const mesh of members)for(const hull of prepared.get(mesh.id)!.hulls){
     const positions=hull.positions;
     if(positions.length<12||positions.length>192)throw new Error(t('Collision hull violates the solver budget'));
@@ -156,7 +172,39 @@ export async function createPhysicsWorld(document:CadDocument,result:GeometryRes
     scratchPosition.Set(center[0]*.001,center[1]*.001,center[2]*.001);
     compound.AddShape(scratchPosition,scratchRotation,scaled,token);
    }
-   const created=compound.Create();try{if(created.HasError())throw new Error(created.GetError().c_str());const shape=created.Get();const center=shape.GetCenterOfMass();const shift=new J.Vec3(mass.centerM[0]-center.GetX(),mass.centerM[1]-center.GetY(),mass.centerM[2]-center.GetZ());const corrected=new J.OffsetCenterOfMassShape(shape,shift);J.destroy(shift);add(corrected,id,motion,properties,mass);const body=byId.get(id);if(new Set(members.map(m=>{const p=doc.nodes[m.id].physics??defaultPartPhysics();return p.friction+':'+p.restitution;})).size>1)body.SetUseManifoldReduction(false);for(const mesh of members){byId.set(mesh.id,body);bodyMass.set(mesh.id,mass.massKg);}}finally{created.Clear();J.destroy(compound);}
+   const created=compound.Create();
+   try{
+    if(created.HasError())throw new Error(created.GetError().c_str());
+    const shape=created.Get() as NativeShape;
+    shape.AddRef();
+    return shape;
+   }finally{created.Clear();}
+  }finally{J.destroy(compound);}
+ }
+ const cache=options.shapeCache&&retainedCompounds.get(options.shapeCache);
+ try {
+  if(options.ground??sceneSettings.ground){const ext=new J.Vec3(2,2,.005),shape=new J.BoxShape(ext,.0001);J.destroy(ext);add(shape,'ground','static',{friction:sceneSettings.groundFriction,restitution:sceneSettings.groundRestitution});const p=new J.RVec3(0,0,-.005);bodies.SetPosition(byId.get('ground').GetID(),p,J.EActivation_DontActivate);J.destroy(p);}
+  for(const [id,members]of assemblies){
+   const properties=doc.nodes[members[0].id].physics??defaultPartPhysics(),motion=members.some(m=>doc.nodes[m.id].physics?.motion==='static')?'static':'dynamic',mass=assemblyMass.get(id)!;
+   const tokens=members.map(mesh=>meshIndex.get(mesh.id)!+1).join(',');
+   const inputs=members.map(mesh=>prepared.get(mesh.id)!);
+   const prior=cache?.get(id);
+   const matches=prior&&prior.engine===J&&prior.tokens===tokens&&prior.inputs.length===inputs.length
+    &&prior.inputs.every((input,i)=>input===inputs[i]);
+   const shape=matches?prior.shape:createCompound(members);
+   if(cache&&!matches){
+    prior?.shape.Release();
+    cache.set(id,{engine:J,tokens,inputs,shape});
+   }
+   try{
+    const center=shape.GetCenterOfMass(),shift=new J.Vec3(mass.centerM[0]-center.GetX(),mass.centerM[1]-center.GetY(),mass.centerM[2]-center.GetZ());
+    const corrected=new J.OffsetCenterOfMassShape(shape,shift);
+    J.destroy(shift);
+    add(corrected,id,motion,properties,mass);
+   }finally{if(!cache)shape.Release();}
+   const body=byId.get(id);
+   if(new Set(members.map(m=>{const p=doc.nodes[m.id].physics??defaultPartPhysics();return p.friction+':'+p.restitution;})).size>1)body.SetUseManifoldReduction(false);
+   for(const mesh of members){byId.set(mesh.id,body);bodyMass.set(mesh.id,mass.massKg);}
   }
   if(usePartMaterials){
    // Filter original mate pairs before narrow-phase and CCD work. A late

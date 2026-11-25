@@ -5,10 +5,46 @@ import {createPresetDocument} from '../packages/editor/src/shapes.js';
 import {createCadSession,defaultGenerator,defaultCodeProgram,importOpenSCAD} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
-import {createPhysicsWorld,prepareDocumentCollisions,solidMassProperties} from '../packages/physics/src/index.js';
+import {createPhysicsShapeCache,createPhysicsWorld,prepareDocumentCollisions,solidMassProperties} from '../packages/physics/src/index.js';
 let kernel:GeometryKernel,J:Awaited<ReturnType<typeof initJolt>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});J=await initJolt();});
 describe('qualified Jolt physics boundary',()=>{
+ it('reuses parked compounds and releases them without invalidating a live world',async()=>{
+  const doc=structuredClone(createPresetDocument('box')),id=doc.roots[0];
+  doc.nodes[id].transform.position[2]=70;
+  const geometry=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,geometry,kernel);
+  let compounds=0;
+  const engine=Object.create(J);
+  engine.StaticCompoundShapeSettings=new Proxy(J.StaticCompoundShapeSettings,{construct(target,args){
+   compounds++;
+   return Reflect.construct(target,args);
+  }});
+  const shapeCache=createPhysicsShapeCache();
+  const options={J:engine,shapeCache};
+  let world=await createPhysicsWorld(doc,geometry,prepared,options);
+  try{
+   const initial=world.pose(id);
+   world.step(.1);
+   const moved=world.pose(id);
+   world.dispose();
+   world=await createPhysicsWorld(doc,geometry,prepared,options);
+   expect(compounds).toBe(1);
+   expect(world.pose(id)).toEqual(initial);
+   shapeCache.clear();
+   world.step(.1);
+   expect(world.pose(id)).toEqual(moved);
+   world.dispose();
+   world=await createPhysicsWorld(doc,geometry,prepared,options);
+   expect(compounds).toBe(2);
+   const replacement=await prepareDocumentCollisions(doc,geometry,kernel);
+   world.dispose();
+   world=await createPhysicsWorld(doc,geometry,replacement,options);
+   expect(compounds).toBe(3);
+   replacement.get(id)!.hulls[0].positions[0]+=1;
+   await expect(createPhysicsWorld(doc,geometry,replacement,options)).rejects.toThrow('missing or stale');
+   expect(compounds).toBe(3);
+  }finally{world.dispose();shapeCache.clear();}
+ });
  it('qualifies parametric extrusions and refuses old collision proofs after sketch recomputation',async()=>{
   const s=createCadSession();s.setParametric({version:1,parameters:{width:{expression:'20',unit:'mm'}},bindings:[]});const id=s.addSketchExtrusion({kind:'rectangle',id:'profile',width:'width',depth:10},{distance:'width / 2'});s.update(id,{transform:{position:[0,0,50],rotation:[0,0,0],scale:[1,1,1]}});
   const before=kernel.evaluate(s.state.document),old=await prepareDocumentCollisions(s.state.document,before,kernel);
