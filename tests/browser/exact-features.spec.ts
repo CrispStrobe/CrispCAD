@@ -65,7 +65,7 @@ test('chamfer a body from the Edit menu, recompute it after an upstream edit, an
  // Undo the recompute: the stale mesh is refused with an actionable message, and not recomputed again.
  await page.getByRole('button',{name:'Undo',exact:true}).click();
  await expect(root).toHaveAttribute('data-state','error');
- await expect(page.getByText(/out of date after an upstream change\. Recompute it with the exact kernel/)).toBeVisible();
+ await expect(page.getByRole('alert')).toContainText(/out of date after an upstream change\. Recompute it with the exact kernel/);
  await page.getByRole('button',{name:'Redo',exact:true}).click();
  await ready();
  expect(await run(page,'recompute exact',/up to date/)).toContain('Every exact feature is up to date.');
