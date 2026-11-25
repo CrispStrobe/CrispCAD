@@ -1,0 +1,25 @@
+{
+  "project": "chromium",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.7922.34 Safari/537.36",
+  "date": "2026-11-25T03:20:32.102Z",
+  "parts": 27,
+  "coldMeasure": {
+    "wallMs": 2213,
+    "loadMs": 260,
+    "runMs": 759,
+    "memoryMiB": 64
+  },
+  "warmMeasure": {
+    "wallMs": 1150,
+    "loadMs": 0,
+    "runMs": 527,
+    "memoryMiB": 64
+  },
+  "exportStep": {
+    "wallMs": 1116,
+    "loadMs": 0,
+    "runMs": 817,
+    "memoryMiB": 64,
+    "stepBytes": 154899
+  }
+}

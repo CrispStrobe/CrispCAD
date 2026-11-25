@@ -1,0 +1,26 @@
+{
+  "name": "@brickwright/cad-exact",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "BSD-3-Clause",
+  "description": "Optional exact B-rep backend for CrispCAD: lowers documents and CAD Script onto the kernel lab's @crispcad/exact-kernel (SMLib) for STEP export and exact measures. Loaded lazily; Manifold stays the default kernel.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./identity": {
+      "types": "./dist/identity.d.ts",
+      "import": "./dist/identity.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE.md"
+  ],
+  "dependencies": {
+    "@brickwright/cad-core": "0.1.0",
+    "@crispcad/exact-kernel": "https://github.com/CrispStrobe/crispcad-kernel-lab/releases/download/exact-kernel-v0.1.0/crispcad-exact-kernel-0.1.0.tgz"
+  }
+}

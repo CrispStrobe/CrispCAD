@@ -8,9 +8,8 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { createCadSession } from '@brickwright/cad-core';
 import { createGeometryKernel, type GeometryKernel } from '@brickwright/cad-geometry';
-import { createSmlibKernel } from '../src/smlib-kernel.ts';
-import { cadScript, evaluateCadScript, lowerCodeShape } from '../src/lower-cad-script.ts';
-import type { ExactKernel } from '../src/exact-kernel.ts';
+import { cadScript, evaluateCadScript, lowerCodeShape } from '../../../packages/exact/src/lower-cad-script.ts';
+import { createSmlibKernel, type ExactKernel } from '@crispcad/exact-kernel';
 
 let exact: ExactKernel, manifold: GeometryKernel;
 beforeAll(async () => {

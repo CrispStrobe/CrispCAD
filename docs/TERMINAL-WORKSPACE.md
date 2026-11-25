@@ -84,6 +84,8 @@ commands use the same placement default.
 | `rotate` | X,Y,Z degree deltas | `ro` |
 | `scale` | positive X,Y,Z scale factors | `sc` |
 | `code` | opens the persistent CAD Script workspace | `script` |
+| `export step` | optional bodies: `all`, IDs or quoted names (default: the selection, else every solid body) | |
+| `measure exact` | optional bodies, as for `export step` | |
 
 Movement acts on the selected top-level bodies in one transaction. Rotation
 adds each body's XYZ rotation values; scaling multiplies each body's local scale.
@@ -101,6 +103,42 @@ Existing commands such as `undo`, `redo`, `duplicate`, `delete`, `union`,
 `mirror`, `pattern`, and `model-source` route through the editor's command bridge.
 Commands that require their existing editor panel open that panel. Common aliases
 include `u`, `re`, `dup`, `erase`/`del`, `join`, and `zoom`.
+
+### Exact-kernel commands
+
+`export step` and `measure exact` run on the optional exact B-rep kernel
+(`@brickwright/cad-exact` on the kernel lab's `@crispcad/exact-kernel`, SMLib). They
+read the model and never edit it.
+
+```text
+measure exact "Bracket"
+export step all
+```
+
+- **Loaded on first use.** The first exact command loads the kernel (9.4 MB of
+  WebAssembly) in its own instance of the geometry worker; until then nothing of it is
+  downloaded. The output ends with `Exact kernel: load … ms · run … ms · WASM memory … MiB`;
+  `load` is 0 once the kernel is loaded.
+- **No fallback.** A body without an exact construction is an error naming the body and its
+  feature, for example `Scan (mesh): Imported meshes have no exact B-rep …` or
+  `Rounded (code): minkowski has no exact lowering …`. Nothing is ever exported or measured
+  from a Manifold mesh instead.
+- `export step` writes one AP214 file with one solid per body, in world millimetres, through
+  the host's file export (a download in the browser). Bodies that touch or overlap are refused,
+  because one STEP solid would merge them; export them separately or combine them first.
+  Reference and hole bodies are never exported. Recorded library sources (STL with
+  attribution) are refused.
+- `measure exact` reports volume (mm³), surface area (mm²), bounds and centroid from the
+  B-rep, not from a mesh.
+- Plain `export` still opens the export dialog, which also offers **STEP · exact B-rep**.
+- A request has 60 seconds; cancelling (or the timeout) terminates only the exact worker. The
+  Manifold evaluator keeps running.
+
+What the exact lowering covers: boxes, cylinders and spheres (segment counts are display
+resolution; the solids are exact), sketch extrusions and revolutions on every plane (rectangles,
+circles, outlines with arcs, regions with holes: arcs and circles stay exact), mirror, linear
+and circular patterns, Booleans including solid/hole combinations, and CAD Script objects (see
+[experiments/exact-kernel](../experiments/exact-kernel/README.md#cad-script-lowering)).
 
 ### Custom aliases
 
@@ -230,8 +268,143 @@ input and the transient transcript and loads that project's input history.
   are not yet captured as a comprehensive replay stream. No-op edits and project
   loads are not recorded as model commands.
 - The journal starts when the editor is mounted. It does not reconstruct command
-  data from archived history labels. Replay currently targets the same project;
-  cross-project ID remapping and portable multi-command macros remain future work.
+  data from archived history labels. Replay text targets the same project;
+  cross-project ID remapping remains future work. `journal export` (below) gives
+  a durable export whose portable part is CAD Script.
+
+## Shared command registry
+
+Every command the terminal knows is defined once, in `packages/core`
+(`command-registry.ts`). Each entry has its canonical name, fixed aliases, an
+i18n description and usage line, typed arguments (point, XY point, vector,
+number, sketch, bodies, keyword, JSON record), whether it edits the model, and
+whether it runs **headlessly** over a `CadSession` with no DOM. The same entry
+also carries the command palette label, search keywords and availability flag.
+
+| Front end | Uses the registry for |
+| --- | --- |
+| Terminal | Execution of every modeling command (box … select, move/rotate/scale), help, completion, alias targets |
+| Command palette | Labels, order, keywords and availability (`requires`) |
+| MCP | `cad_list_commands` and `cad_run_commands` (see [MCP](MCP.md#shared-command-vocabulary)) |
+| CLI | `node apps/cli/crispcad.mjs run <project.bcad> "<command>" …` |
+
+The terminal still prompts for missing arguments; the shared
+`prepareCommand(session, name)` returns those prompts and the executor, so a
+typed command and a headless run make the same single commit and the same Undo
+step. View, panel and clipboard commands (`fit`, `top`, `sketch`, `copy`, …)
+remain editor-side through the command bridge but are described in the same
+registry. Headless runs refuse them with a clear error.
+
+```ts
+import {createCadSession,createCommandRunner} from '@brickwright/cad-core';
+const session=createCadSession();
+const runner=createCommandRunner(session);
+runner.runScript('box 40,30,10\nselect "Box"\nmove 0,0,0 @10,0,0');
+```
+
+The headless runner has no prompts. A missing argument takes the value an
+empty Enter would give (a body's center defaults to the workplane; a move's
+base defaults to the origin) or fails with `Missing arguments`. Scripts take
+one command per line; blank lines and `//` comments are skipped; the first
+failing line stops the script and is reported as `Line N: …`. Relative points
+(`@dx,dy`) refer to the previous accepted point of the same runner.
+
+### Exact-kernel commands in the registry
+
+`export` and `measure` carry `kernel: 'exact'`. Core parses and resolves their targets and
+formats their results (`parseExactCommand`, `formatExactResult`), but has no kernel: a host
+passes an `ExactCommandHost` (`run(request, signal)`) and calls `runAsync` / `runScriptAsync`.
+The synchronous `run` refuses exact commands. Each exact command reads the model as of its
+own script line.
+
+| Host | Exact host |
+| --- | --- |
+| Editor terminal and export dialog | `createGeometryClient(...).exact`: a lazily created second worker; `cancelExact()` |
+| MCP `cad_run_commands`, `cad_export_step`, `cad_measure_exact` | `apps/mcp/exact-worker.mjs`, a thread started on first use |
+| CLI | the MCP host: `step <project> <file.step>`, `measure <project>`, `run … --out <dir>` |
+
+### Kernel identity in recorded commands
+
+An `apply` record whose changes were computed by a kernel carries
+`context.kernel = {id, package, version}` (for the exact kernel
+`{"id":"smlib","package":"@crispcad/exact-kernel","version":"0.1.0"}`). Sessions declare the
+kernels their host provides (`createCadSession(document, {kernels})`; the editor's terminal
+journal and the MCP host declare the exact kernel through `@brickwright/cad-exact/identity`,
+which loads no WebAssembly). Edits made inside `session.withKernel(kernel, run)` are recorded
+with it. Replay (`apply …`, the journal's `replay` export) refuses a record whose kernel the
+host does not provide, or provides in another package version:
+
+```text
+Recorded command is stale: it was built with @crispcad/exact-kernel 0.1.0, but this host has 0.2.0
+```
+
+Records without `context.kernel`, including every record made before this field existed, never
+depend on a kernel and replay as before. Kernel records are non-portable in the CAD Script
+journal export. `export step` and `measure exact` do not edit the model, so they produce no
+records; their results name the kernel (`kernel` in `CommandRunResult` and in the MCP results).
+No shipped command edits the model through the exact kernel yet (see the design note in
+[CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#exact-features-design-note)).
+
+## Journal export
+
+The terminal keeps a host-owned journal of every accepted command (typed and
+GUI). It is bounded (1000 entries, 8 MiB), lives in memory beside the session,
+and resets when another project is loaded. It is never written to the
+document, its history or its saved schema, and exporting it adds no revision.
+
+- `journal` prints a summary.
+- `journal export` (or `journal export cadscript`) writes the CAD Script export.
+- `journal export replay` writes every entry as canonical replay text.
+
+Core exposes the same: `createCommandJournal(session)`, `journal.export(format)`
+and `exportCommandJournal(entries, options)`. The terminal controller also has
+`exportJournal(format)`.
+
+The CAD Script export turns bodies with a faithful CAD Script equivalent into
+`@object` blocks. Each block is a complete CAD Script program that can be pasted
+into the code workspace or sent to `cad_create_code_object`. Everything else is
+kept in `@replay … non-portable` blocks as canonical replay text, commented out
+with `//| `:
+
+```text
+// crispcad-journal 1 · cadscript
+// Data only. Never evaluate this text as JavaScript.
+// project: 3f0c…
+// Each "@object" block is a complete CAD Script program for one body.
+// "@replay" blocks are non-portable: canonical replay text (prefixed "//| ")
+// that only applies to the recorded project.
+// 1 selection, undo and redo entries were resolved and omitted.
+
+// @object 1 "Box" color #76b7ce
+// from: box 40,30,10 0,0,5; move 0,0,0 10,0,0; rotate 0,0,30
+return move([10, 0, 5], rotate([0, 0, 30], box(40, 30, 10)));
+
+// @replay 3 non-portable: rectangle 0,0 20,30
+//| apply {"version":1,"kind":"apply","projectId":"3f0c…",…}
+```
+
+Portability rules:
+
+- A body is portable when it was created in the journal as a plain box,
+  sphere or cylinder (typed or from the GUI), and every later edit that touched
+  it only changed its own properties while it stayed a plain primitive.
+  Transforms, renames, colour and size edits fold into its final placement.
+  The program is `move(position, rotate(rotation, scale(scale, primitive)))`,
+  the same order as the model's own transform, with explicit segment counts.
+- An edit that consumes a body (a boolean, mirror or pattern), turns it into a
+  hole or reference, or otherwise changes it non-portably makes that body
+  non-portable as well, together with every edit it depends on.
+- Sketches, extrusions, imports, code objects, parameters and assembly edits
+  are non-portable for now.
+- Undo/redo pairs known to the journal cancel out; undone edits are left out.
+  Undo or redo of edits made before the journal started stays as replay text.
+  Selection entries are omitted: apply records carry their own selection.
+
+The replay format lists canonical commands one per line after `//` header
+comments. The headless runner and MCP `cad_run_commands` can run it against the
+recorded project. Neither export is ever evaluated as JavaScript: CAD Script
+goes through the bounded compiler, and replay text through the data-only
+command parser.
 
 ## Persistent code workspace
 
@@ -339,8 +512,8 @@ Run the focused checks with:
 npm run test:terminal
 ```
 
-This builds the packages and runs the command, completion, draft-store and panel
-regressions. `tests/editor-panels.test.ts` mounts the actual terminal and code
+This builds the packages and runs the command, registry, journal, completion,
+draft-store and panel regressions. `tests/editor-panels.test.ts` mounts the actual terminal and code
 panels in a ShadowRoot with real CAD sessions. It checks focus, history, prompt
 cancellation, quoted entity completion, one-step Apply, parameter keyboard
 navigation, and stale asynchronous callbacks. Geometry evaluation, preview
@@ -373,9 +546,10 @@ Embedded-host review and qualification on a physical iPad are still open.
 
 Next milestones are completion for further command arguments;
 active sketch planes and advanced snaps; continuous paths/arcs and constraint
-prompts; more readable action serializers; transaction-based command scripts;
-durable journal export and cross-project replay; complete view-command capture;
-and qualified mouse, touch and narrow-layout behavior.
+prompts; more readable action serializers; transaction-based command scripts in
+the terminal (MCP and the CLI already commit a script as one step); portable
+export of sketches and extrusions; cross-project replay; complete view-command
+capture; and qualified mouse, touch and narrow-layout behavior.
 
 ## Design notes from PR #79
 

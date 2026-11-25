@@ -1,8 +1,8 @@
 export {constructionInputs,isCube,constrainCubeTransform, MAX_DOCUMENT_BYTES, documentGeometryKey, identityTransform, newId, createDocument, validateDocument, parseDocument, serializeDocument, freezeDocument, pruneDocument } from './document.js';
 export type { Vec3, Transform, Primitive, Shape, SolidNode, CadDocument } from './document.js';
 export * from './session.js';
-export {parseSessionCommand,serializeSessionCommand} from './session-commands.js';
-export type {SessionCommand,ApplySessionCommand,SessionCommandRecord,SessionValueChange,SessionCommandValue,SessionJsonValue,SessionSketchJointContext,SessionBodyOperationContext} from './session-commands.js';
+export {parseSessionCommand,serializeSessionCommand,checkKernelIdentity,checkCommandKernel} from './session-commands.js';
+export type {KernelIdentity,SessionCommandEnvironment,SessionCommand,ApplySessionCommand,SessionCommandRecord,SessionValueChange,SessionCommandValue,SessionJsonValue,SessionSketchJointContext,SessionBodyOperationContext} from './session-commands.js';
 export * from './physics.js';
 export {sha256Hex,geometrySignature} from './hash.js';
 export * from './parameters.js';
@@ -64,3 +64,12 @@ export {externalCenterDistanceMm,externalSpeedRatio,meshAlignDeg,pitchRadiusMm,t
 export {importKernelCAD,KCAD_IMPORT_LIMITS,KCAD_ACCEPTED_LICENSES} from './kcad-import.js';
 export type {KernelCADImport,KernelCADPart} from './kcad-import.js';
 
+
+export {commandNumber,parseCommandPoint,commandTokens,commandArguments} from './command-arguments.js';
+export type {CommandToken} from './command-arguments.js';
+export {commandRegistry,findCommandSpec,paletteCommandSpecs,prepareCommand,interactiveCommandNames,commandHelp,listModel,createCommandRunner,COMMAND_LINE_LIMIT} from './command-registry.js';
+export type {CommandSpec,CommandArgumentSpec,CommandArgumentKind,CommandCategory,CommandAvailability,CommandPaletteSpec,CommandStep,CommandValue,PreparedCommand,CommandContext,CommandRunResult,CommandRunnerOptions,CommandRunner} from './command-registry.js';
+export {createCommandJournal,exportCommandJournal,primitiveCadScript,portableJournalObjects,JOURNAL_LIMITS,JOURNAL_FORMAT} from './command-journal.js';
+export type {CommandJournal,CommandJournalEntry,JournalExportFormat,JournalExportOptions} from './command-journal.js';
+export {parseExactCommand,resolveExactTargets,formatExactResult,STEP_MIME} from './exact-commands.js';
+export type {ExactOperation,ExactCommandRequest,ExactCommandResult,ExactCommandHost,ExactCommandFile,ExactCommandOutput,ExactKernelReport,ExactBodyMeasureReport,ExactTiming} from './exact-commands.js';

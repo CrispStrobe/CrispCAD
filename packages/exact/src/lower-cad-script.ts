@@ -7,8 +7,7 @@
 // Anything without an exact construction is an ExactKernelError('unsupported'); nothing falls
 // back to Manifold or to a mesh.
 import { compileCode, CadCodeError, type CodeProgram, type CodeShape, type CodeProfile } from '@brickwright/cad-core';
-import { ExactKernelError, type ExactKernel, type ExactProfile, type ExactSolid, type Vec2, type Vec3 } from './exact-kernel.ts';
-import { convexHull, isConvexPolyhedron } from './polytope.ts';
+import { convexHull, ExactKernelError, isConvexPolyhedron, type ExactKernel, type ExactProfile, type ExactSolid, type Vec2, type Vec3 } from '@crispcad/exact-kernel';
 
 /** Below this many segments a circle is ambiguous (e.g. `cylinder(r, h, 6)` as a hexagonal
  * prism), so it is refused instead of being silently rounded. */
@@ -118,7 +117,7 @@ function lowerProfile(k: ExactKernel, p: CodeProfile): ExactProfile | null {
       const c = lowerProfile(k, p.profile);
       return c && k.profile.offset(c, p.distance, p.round);
     }
-    case 'text': return unsupported('text2d needs a font outline path; the exact backend has none (and smlibwasm\'s bundled Lato font is the OFL item under licence review).');
+    case 'text': return unsupported('text2d needs a font outline path, and the exact kernel package ships no font.');
     case 'minkowski': return unsupported('minkowski2d has no exact lowering (planar Minkowski sums of curved profiles are not exposed by this kernel adapter).');
     case 'union': case 'subtract': case 'intersect': case 'hull': {
       const children = p.profiles.map(c => lowerProfile(k, c));
@@ -208,6 +207,18 @@ function lowerHull(k: ExactKernel, shapes: readonly CodeShape[]): ExactSolid | n
   return k.translate(k.fillet(grown, r, 'all'), min.map((v, i) => v + size[i] / 2) as unknown as Vec3);
 }
 
+/** Revolve an XY profile (X radial, Y height) about world Z with the Manifold evaluator's
+ * conventions: a wholly non-positive profile is reflected, and negative sweeps turn clockwise. */
+export function revolveProfile(k: ExactKernel, profile: ExactProfile, degrees: number): ExactSolid {
+  const b = k.profile.bounds(profile), negative = b.max[0] <= 0;
+  if (b.min[0] < -1e-8 && !negative) invalid('Revolved profiles must stay on one side of the radial axis.');
+  const angle = Math.abs(degrees);
+  if (angle > 360) invalid('Revolution angle exceeds 360 degrees.');
+  let solid = k.revolve(negative ? k.profile.scale(profile, [-1, 1]) : profile, degrees);
+  if (negative && angle !== 360) solid = k.rotate(solid, [0, 0, 1], 180);
+  return solid;
+}
+
 // ---- solids ----
 function rigid(k: ExactKernel, s: ExactSolid, m: M34): ExactSolid {
   const { scale, rotation, translate } = decomposeAffine(m);
@@ -236,14 +247,7 @@ export function lowerCodeShape(k: ExactKernel, shape: CodeShape): ExactSolid | n
       circular('revolve', shape.segments);
       if (shape.angle === 0) return null;
       const profile = lowerProfile(k, shape.profile);
-      if (!profile) return null;
-      const b = k.profile.bounds(profile), negative = b.max[0] <= 0;
-      if (b.min[0] < -1e-8 && !negative) invalid('Revolved profiles must stay on one side of the radial axis.');
-      const angle = Math.abs(shape.angle);
-      if (angle > 360) invalid('Revolution angle exceeds 360 degrees.');
-      let solid = k.revolve(negative ? k.profile.scale(profile, [-1, 1]) : profile, shape.angle);
-      if (negative && angle !== 360) solid = k.rotate(solid, [0, 0, 1], 180);
-      return solid;
+      return profile && revolveProfile(k, profile, shape.angle);
     }
     case 'polyhedron': {
       if (shape.faces.length > MAX_POLYHEDRON_FACES) unsupported(`A polyhedron of ${shape.faces.length} faces exceeds the exact faceted-solid budget (${MAX_POLYHEDRON_FACES}); tessellated constructors (ellipsoid, ellipticFrustum, roundedCylinder, many-section loft) have no exact lowering yet.`);

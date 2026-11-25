@@ -1,4 +1,4 @@
-# Exact B-rep backend experiment: SMLib via `@classcad/smlibwasm`
+# Exact B-rep backend experiment: the lab's exact kernel (SMLib)
 
 Delivery step 4 of [PARAMETRIC-CAD-STRATEGY.md](../../docs/PARAMETRIC-CAD-STRATEGY.md)
 ("Exact-backend qualification") and item 2 of the
@@ -6,23 +6,37 @@ Delivery step 4 of [PARAMETRIC-CAD-STRATEGY.md](../../docs/PARAMETRIC-CAD-STRATE
 exact B-rep kernel **standalone**, behind a narrow interface, with the 27-part kernelCAD
 scorecard as the gate.
 
-**Status: experiment only.** `@classcad/smlibwasm` 0.6.2 is a dependency of this directory's
-own `package.json` and nothing else. It is not in the root `package.json`, the workspaces or
-any `packages/*` code, and nothing here is shipped. The licence decision on its OFL-1.1 font
-is pending with the owner (see [Licence audit](#licence-audit)).
+**Status: qualified; in the product since 2026-11-25** as the opt-in
+[`@brickwright/cad-exact`](../../packages/exact) package (`export step`, `measure exact`; see
+[Product path](#product-path-2026-11-25)). This directory remains the qualification suite. The
+kernel is the CrispCAD kernel lab's
+[`@crispcad/exact-kernel`](https://github.com/CrispStrobe/crispcad-kernel-lab/tree/ccr-f42f1bfe-3ekdio/packages/exact-kernel)
+0.1.0 (MIT AND Apache-2.0), installed from the tarball of the lab release
+[`exact-kernel-v0.1.0`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.0)
+and pinned by URL and lockfile integrity (Phase 2b of
+[CRISPCAD-CONVERGENCE.md](../../docs/CRISPCAD-CONVERGENCE.md#phase-2b-move-the-exact-kernel-into-the-lab-as-a-package)).
+Since 2026-11-25 it is a dependency of `packages/exact` (same URL and integrity), and this
+directory uses the root install; until then it had its own `package.json` dependency and lock. The
+package prebundles `@classcad/smlibwasm` 0.6.2 without its font, so every installed file is
+MIT or Apache-2.0 (see [Licence audit](#licence-audit)).
+
+The `ExactKernel` interface, its SMLib implementation and the exact convex hull
+(`src/exact-kernel.ts`, `src/smlib-kernel.ts`, `src/polytope.ts` until 2026-11-25) moved into
+that package. The CAD Script lowering moved to
+[`packages/exact/src/lower-cad-script.ts`](../../packages/exact/src/lower-cad-script.ts) on
+2026-11-25; the tests here import it from there.
 
 ## Run
 
 ```sh
-npm ci                                   # repository root: vitest, TypeScript, Manifold, cad-core
-npx tsc -b packages/core packages/geometry
+npm ci                                   # repository root, including @crispcad/exact-kernel
+npx tsc -b packages/core packages/geometry packages/exact
 cd experiments/exact-kernel
-npm ci                                   # only @classcad/smlibwasm (12 MB, no dependencies)
-npm test                                 # 97 tests, about 40 s
+npm test                                 # 99 tests
 npm run typecheck
 npm run bench                            # timings and WASM memory -> results/bench-<os>-<arch>.json
-node licence-audit.mjs [--files]         # every shipped file, size, hash, licence
-node check-no-font.mjs                   # modeling + STEP with the OFL font stubbed out
+node product-bench.ts                    # product path in Node -> results/node-product-<os>-<arch>.json
+node licence-audit.mjs [--files]         # every installed file, size, hash, licence
 ```
 
 Node ≥ 22.18 (tested on 26.4). `vitest` and `typescript` come from the root install.
@@ -31,17 +45,15 @@ Node ≥ 22.18 (tested on 26.4). `vitest` and `typescript` come from the root in
 
 | File | Purpose |
 | --- | --- |
-| [`src/exact-kernel.ts`](src/exact-kernel.ts) | The narrow `ExactKernel` interface: centred box/cylinder/cone/sphere/torus, planar polyhedron, 2D profiles (polygon with holes, circle, rectangle, 2D Booleans, hull, offset, transforms), extrude, revolve, union/subtract/intersect, translate/rotate/mirror/scale, fillet/chamfer (all edges or the edges of one planar face), shell (one open face), volume/area/bbox/validity/component count, tessellation, STEP export and exact STEP import, kernel memory, `scope`. Opaque handles; errors are `ExactKernelError` with code `unsupported`, `invalid-input` or `kernel-failure`. |
-| [`src/smlib-kernel.ts`](src/smlib-kernel.ts) | The SMLib implementation. Validates inputs before the kernel sees them, converts every kernel exception into `kernel-failure`, and rejects any result that is not a solid. The package is imported lazily because it instantiates its WASM at import time. |
-| [`src/lower-cad-script.ts`](src/lower-cad-script.ts) | Lowers this repository's compiled CAD Script (`compileCode(program).shape`, the `CodeShape`/`CodeProfile` trees of `@brickwright/cad-core`) onto `ExactKernel`, following the Manifold evaluator's conventions in `packages/geometry/src/kernel.ts`. No Manifold fallback. |
-| [`src/polytope.ts`](src/polytope.ts) | Exact convex hull of a small point set as planar polygon faces (for `hull` of polyhedral solids and convex `polyhedron`/`loft` output). |
+| `@crispcad/exact-kernel` (installed) | The narrow `ExactKernel` interface and its SMLib implementation: centred box/cylinder/cone/sphere/torus, planar polyhedron, 2D profiles (polygon with holes, circle, rectangle, rounded rectangle, line/arc/spline paths, 2D Booleans, hull, offset, transforms), extrude, revolve, loft, sweep, union/subtract/intersect/split, translate/rotate/mirror/scale, fillet/chamfer (all edges or the edges of one planar face), shell (open faces), volume/area/bbox/mass properties/validity/components, tessellation, STL, STEP export and exact STEP import, kernel memory, `scope`; also `convexHull`. Opaque handles; inputs are validated before the kernel sees them; errors are `ExactKernelError` with code `unsupported`, `invalid-input` or `kernel-failure`. WASM loads only on `createSmlibKernel()`. Its own tests (in the lab) cover the lab's 27 reference parts at 1e-6 and a licence gate on the packed tarball. |
+| [`packages/exact/src/lower-cad-script.ts`](../../packages/exact/src/lower-cad-script.ts) (moved there 2026-11-25) | Lowers this repository's compiled CAD Script (`compileCode(program).shape`, the `CodeShape`/`CodeProfile` trees of `@brickwright/cad-core`) onto `ExactKernel`, following the Manifold evaluator's conventions in `packages/geometry/src/kernel.ts`. No Manifold fallback. |
 | `tests/reference-parts.test.ts` | The gate: the 27 scorecard parts (sources copied unchanged from the root `tests/reference-parts.test.ts`) at 1e-6 relative volume and area, bbox within 1e-6 mm, valid solid, expected component count. |
 | `tests/lowering.test.ts` | 22 further CAD Script programs (Euler order, oblique mirror, signed scale, rigid and orthogonal-scale `affine`, partial/negative/mirrored revolves, profiles with holes, even-odd polygons, hulls, cone to a point, partial torus, `resize` of a sphere, round `offset2d`, `hull2d`, `repeat`, empty branches, a non-convex polyhedron) against Manifold (1e-3 volume, 0.05 mm bbox) and closed forms (1e-6). |
 | `tests/kernel.test.ts` | Fillet, chamfer, shell and a cylinder-rim fillet against closed forms (1e-8); explicit `unsupported` cases; malformed input; recovery after kernel failures. |
 | `tests/step-roundtrip.test.ts` | STEP out of SMLib, back in through the editor's importer and through SMLib's reader. |
-| `tests/licence.test.ts`, `check-no-font.mjs` | Modeling and STEP work with the OFL font removed. |
+| `tests/licence.test.ts` | The release tarball is pinned (URL and lockfile integrity), declares MIT AND Apache-2.0, has no runtime dependencies and no font; `Text()` fails cleanly; modeling and STEP work. |
 | `bench.ts`, `results/` | Node timings and WASM memory. |
-| `licence-audit.mjs` | File-by-file licence listing of the installed package. |
+| `licence-audit.mjs` | File-by-file licence listing of the installed package and its bundle inputs. |
 
 ### CAD Script lowering
 
@@ -66,7 +78,8 @@ sheared `affine`/`affine2d`.
 
 ## Results
 
-Measured 2026-11-24, Apple M1, macOS, Node 26.4.0, `@classcad/smlibwasm` 0.6.2.
+Measured 2026-11-24, Apple M1, macOS, Node 26.4.0, `@classcad/smlibwasm` 0.6.2; re-run 2026-11-25
+through `@crispcad/exact-kernel` 0.1.0 (same SMLib build) with identical results.
 
 | Gate | Result |
 | --- | --- |
@@ -111,41 +124,84 @@ path needs a different display mesher for planar faces, per-face caching, or Man
 display. Lowering `a − (b ∪ c)` as one n-ary cut (instead of fusing the cutters first) was
 about 1.6× faster on the 48-hole plate and is what the lowering does.
 
+## Product path (2026-11-25)
+
+`@brickwright/cad-exact` lowers whole documents (not only CAD Script) and serves `export step`
+and `measure exact` in the editor (a lazily created worker), the MCP host (a thread) and the CLI.
+See [CRISPCAD-CONVERGENCE.md](../../docs/CRISPCAD-CONVERGENCE.md#phase-3-one-command-vocabulary)
+for the design and [TERMINAL-WORKSPACE.md](../../docs/TERMINAL-WORKSPACE.md#exact-kernel-commands)
+for the commands.
+
+### Measurements: the 27 reference parts as one document
+
+Measured 2026-11-25 on the same shared Apple M1 (load average 100–300 throughout, so treat
+wall times as upper bounds). The document holds the 27 scorecard parts as code objects 400 mm
+apart; `measure exact all` checks every volume against the closed form (1e-6, all pass in every
+runtime), and `export step all` writes one 155 KB AP214 file with all 27 solids
+(`MANIFOLD_SOLID_BREP` ≥ 27). Browser numbers come from
+[`tests/browser/exact-kernel.spec.ts`](../../tests/browser/exact-kernel.spec.ts) against the
+production build (`npm run build`, `vite preview`), with `EXACT_BENCH=1`; `load`, `run` and WASM
+memory are measured inside the worker, `wall` in the test (terminal round trip, polled, so up to
+about 1 s coarse). Raw data: [`results/browser-chromium.json`](results/browser-chromium.json),
+[`results/browser-ipad-webkit.json`](results/browser-ipad-webkit.json),
+[`results/node-product-darwin-arm64.json`](results/node-product-darwin-arm64.json).
+
+| Runtime | Kernel load (download + compile 9.4 MB + init) | `measure exact`, 27 parts, first | again | `export step`, 27 parts | WASM memory |
+| --- | --- | --- | --- | --- | --- |
+| Chromium 151 (Playwright, desktop) | 260 ms | 759 ms (wall 2.2 s incl. load) | 527 ms | 817 ms (wall 1.1 s) | 64 MiB |
+| WebKit 26.5, iPad Pro 11 emulation (Playwright) | 402 ms | 799 ms (wall 1.6 s) | 633 ms | 876 ms (wall 1.3 s) | 64 MiB |
+| Node 26.4 (`product-bench.ts`, 3 runs) | 108–207 ms wall, ~0.2 s CPU | 1.4–1.7 s wall, ~2.0 s CPU | 0.9–1.1 s | 1.5–1.7 s | 64 MiB; RSS +63–108 MiB |
+
+Observations:
+
+- The kernel loads only on the first exact request: before it, no file under `assets/exact/`
+  is requested (checked in both browsers). Afterwards the service worker serves it from its
+  lazy cache.
+- Linear memory stays at the 64 MiB the module reserves at load for this workload (all
+  handles freed after every request; `handles` 0). The 48-hole stress plate grew it to 92 MiB
+  in the Node bench. Terminating the exact worker (cancel, 60 s timeout, editor disposal)
+  releases it.
+- The second `measure exact` is ~30 % faster than the first (JIT and kernel warm-up).
+- **iPad caveat:** WebKit here is desktop WebKit on the M1 with iPad emulation (viewport, touch,
+  user agent), not iOS. No physical iPad was reachable from this machine, so iOS memory limits
+  (tab termination well below the 4 GB wasm32 limit) and the slower A-series compile are not
+  measured. Expect the cold load to be several times slower on an iPad; the 64 MiB baseline
+  is a device-independent fact of the module.
+
 ## Licence audit
 
-`node licence-audit.mjs` lists all 120 files (11.9 MiB) of `@classcad/smlibwasm@0.6.2`
-(declared `MIT AND Apache-2.0 AND OFL-1.1`, no dependencies):
+**Owner decision (2026-11-24): MIT + Apache-2.0 only.** `node licence-audit.mjs` lists the 23
+installed files (10.7 MiB) of `@crispcad/exact-kernel@0.1.0`, declared `MIT AND Apache-2.0`,
+with no runtime dependencies:
 
 | Licence | Files | Bytes | Notes |
 | --- | --- | --- | --- |
-| Apache-2.0 + MIT | `wasm/smlibwasm.wasm`, `wasm/smlibwasm.mjs` | 9 518 020 | SMLib and its SM_API wrapper from NVIDIA USD BRep (Apache-2.0, "a few files … modified by AWV Informatik AG to fix defects", patches listed in the smlibpy repository), AWV's bindings (MIT), Emscripten runtime (MIT/UIUC). wasm SHA-256 `d00feb54…952c1a9e`. |
-| MIT | 110 files in `dist/` | 2 513 955 | AWV Informatik AG's TypeScript wrapper (compiled JS + d.ts). `_brotli.js` is "after" Google's MIT reference decoder. |
-| MIT | `dist/_brotli_dictionary.js`, `.d.ts` | 158 097 | Brotli static dictionary (RFC 7932), only used to read WOFF2 fonts. |
-| **OFL-1.1** | `dist/_fonts.js`, `dist/_fonts.d.ts` | 260 966 | **Lato Regular 1.105** as base64, the default font of `Text()`. The `.d.ts` repeats the base64 as a literal type. |
-| OFL-1.1 (text) | `fonts/OFL.txt` | 4 536 | Lato licence. |
-| notices | `LICENSE` (MIT), `NOTICE`, `LICENSE.usd-brep` (Apache-2.0) | 15 008 | Must ship with any product use. |
+| Apache-2.0 + MIT | `dist/smlibwasm.wasm` | 9 430 902 | SMLib and its SM_API wrapper from NVIDIA USD BRep (Apache-2.0, "a few files … modified by AWV Informatik AG to fix defects", patches listed in the smlibpy repository) with AWV's bindings (MIT), unmodified from `@classcad/smlibwasm` 0.6.2. |
+| MIT | 9 JavaScript files in `dist/` | 1 787 503 | The package's adapter and the prebundled smlibwasm wrapper (AWV Informatik AG), its Emscripten loader (MIT) and the Brotli static dictionary (MIT). |
+| MIT | types, manifest, README, `dist/bundle-inputs.json` | 28 186 | `bundle-inputs.json` lists all 64 bundled source files with their licence (63 MIT, the WASM Apache-2.0 AND MIT). |
+| notices | `LICENSE`, `NOTICE`, `licenses/` (MIT: package, smlibwasm, Emscripten; Apache-2.0: USD BRep) | 17 208 | Must ship with any product use. |
 
-Findings:
+How the closure is held to MIT + Apache-2.0:
 
-- **The OFL item is only the Lato font**, and it can be dropped. Nothing in modeling or STEP
-  uses it: with `dist/_fonts.js` replaced by an empty string (a Node module hook in
-  `check-no-font.mjs`; in a product build a bundler alias), a filleted, shelled box builds and
-  round-trips STEP exactly, and only `Text()` without an explicit font fails, cleanly, with
-  `FontError`. `fonts/OFL.txt` and `_fonts.d.ts` then go too. Tree-shaking alone does **not**
-  remove it: `font.js` decodes it at module level (`DEFAULT_FONT = _fromBase64(LATO_REGULAR)`)
-  and the package has no `sideEffects: false`, so a Vite build that imports only
-  `Box`/`fuse`/`fillet`/`toStep` by name still contains the font (checked; the Brotli dictionary
-  is removed). Options: a build alias to an empty `_fonts.js` (the wrapper is MIT, so the patch
-  is allowed), or ask upstream for a font-free entry. Note that OFL-1.1 itself permits bundling
-  with software; the question is only the owner's policy.
-- No GPL/LGPL/AGPL text in `dist/` or the WASM strings. The WASM contains "Open CASCADE
-  Topology" banners: those are the `.brep` file-format reader/writer (NVIDIA usd-brep's bridge,
-  `exportBrep`/`importBrep`), not OpenCASCADE code; OCCT is not loaded.
-- `dist/viewer.js` (`show()`/`htmlPage`) writes an HTML page that loads three.js from
-  cdn.jsdelivr.net. Not used here; a product build must not call it.
-- Not verified here: that the WASM binary is reproducible from the public smlibpy/usd-brep
-  sources. A product entry should rebuild it (`npm run wasm` in smlibpy, Emscripten) and compare,
-  or build it ourselves.
+- **The font is gone.** smlibwasm 0.6.2 is `MIT AND Apache-2.0 AND OFL-1.1`; its only OFL
+  items were the Lato font (`dist/_fonts.js`, `dist/_fonts.d.ts`) and `fonts/OFL.txt`. The
+  lab's build aliases `_fonts.js` to an empty module (tree-shaking alone does not remove it:
+  `font.js` decodes it at module level, and the package has no `sideEffects: false`), and the
+  other two files are not bundled. `Text()` then fails with `unsupported`; modeling and STEP
+  are unaffected (`tests/licence.test.ts` here; `tests/no-font.test.ts` in the lab).
+- **The lab's licence test** packs the tarball, unpacks it and fails on any file without a
+  known MIT or Apache-2.0 licence, on OFL or GPL licence text, on any line of the upstream
+  font's data, on runtime dependencies, and on any `replicad` or OpenCASCADE reference outside
+  smlibwasm's `.brep` file-format strings. The WASM contains "Open CASCADE Topology" banners:
+  they belong to smlibwasm's `.brep` reader and writer (`exportBrep`/`importBrep`), not to
+  OpenCASCADE code; OCCT is not loaded.
+- `tests/licence.test.ts` here checks that the dependency is the lab release tarball pinned by
+  URL and integrity, that it is the only installed package, and the declared licences.
+- smlibwasm's `show()`/`htmlPage` (which writes an HTML page loading three.js from
+  cdn.jsdelivr.net) is still inside the bundle; a product build must not call it.
+- Not verified: that the WASM binary is reproducible from the public smlibpy/usd-brep sources.
+  A product entry should rebuild it (`npm run wasm` in smlibpy, Emscripten) and compare, or
+  build it in the lab.
 
 ## Not covered
 
@@ -157,27 +213,37 @@ Findings:
   selection by persistent identity (topological naming) is not attempted.
 - Tessellation is checked only for size and timing, not for watertightness or as input to the
   Jolt collision pipeline.
-- Browser/WebKit: nothing was run in a browser, a worker or on an iPad; all numbers are Node.
+- Browser/WebKit: measured in Chromium and iPad-emulated WebKit through the product path (see
+  above); not on a physical iPad.
 - Only SMLib. WASMLib and Solidcore are not implemented against `ExactKernel` here (the fork's
   `experiments/kernel-qualification` has WASMLib scorecard numbers).
 
 ## What product entry would need
 
-1. **Licence decision** on the Lato font (or the alias above), NOTICE/LICENSE texts in
-   THIRD-PARTY-NOTICES.md, and a reproducible or self-built WASM.
+Status 2026-11-25: items 1 (notices), 2 (browser measurements, except a physical iPad), 3 (worker
+integration) and 4 (cancellation) are done for `export step` and `measure exact`; item 5 is done
+for STEP and measures (display and collision stay on Manifold meshes); item 6 is open. Still open
+from item 1: a reproducible or self-built WASM.
+
+1. **Licences:** decided (MIT + Apache-2.0; the font is aliased away in the lab package). Still
+   needed: the package's NOTICE/LICENSE texts in THIRD-PARTY-NOTICES.md, and a reproducible or
+   self-built WASM.
 2. **iPad WebKit measurements**: cold load (9.4 MB WASM compile; 0.3 s CPU / 0.5–1.1 s wall on a loaded M1 in
    Node), per-operation latency for the scorecard and the stress parts, and peak memory. The
    module reserves 64 MB at load and only grows (to 92 MB here); iOS kills tabs far below the
    module's 4 GB limit, so measure peak heap on large parts and recycle the worker when it grows.
 3. **Worker integration**: run the kernel only in the geometry worker. Compile the module once
-   and pass it with `@classcad/smlibwasm/init` (`wasmModule`) so a restarted worker does not
-   recompile 9.4 MB. In a browser the package starts a "defeature" supervisor worker at import
-   (`_guard.js`) and probe workers for guarded fillet steps on imported parts: account for the
+   and pass it with `createSmlibKernel({ wasmModule })` so a restarted worker does not
+   recompile 9.4 MB (the package serves the file as `@crispcad/exact-kernel/smlibwasm.wasm`).
+   In a browser the bundled smlibwasm starts a "defeature" supervisor worker when it loads
+   (`dist/_defeature_supervisor.js`, next to the bundle) and probe workers for guarded fillet
+   steps on imported parts: account for the
    extra threads, CSP `worker-src`, and a second WASM instance during those steps. Watch
-   `memoryUsage().crashes`: after a WASM trap the package says its memory may be damaged, so the
-   worker must be replaced.
+   for WASM traps (smlibwasm's `memoryUsage().crashes`, not yet exposed by `ExactKernel.memory()`):
+   after a trap the module's memory may be damaged, so the worker must be replaced.
 4. **Cancellation and budgets**: kernel calls are synchronous; the stress cases take seconds.
-   The worker needs a timeout/terminate path (the package's `KernelWorker` has one) and
+   The worker needs a timeout/terminate path (smlibwasm's `KernelWorker` has one; the lab
+   package does not expose it) and
    per-model budgets like the Manifold path's face limits.
 5. **Wiring**: an exact body type beside Manifold's `BodyMesh` (tessellate for display and
    collision; keep the B-rep for STEP and measurements), explicit per-body kernel choice with
