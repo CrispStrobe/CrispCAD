@@ -27,7 +27,9 @@ type PhysicsShapeCache={clear():void};
 const retainedCompounds=new WeakMap<PhysicsShapeCache,Map<string,RetainedCompound>>();
 declare const physicsDocumentBrand:unique symbol;
 type PhysicsDocument={readonly [physicsDocumentBrand]:true};
-const physicsDocuments=new WeakMap<object,{document:CadDocument;geometryKey:string}>();
+type SeparatedHingeFrame={bodyA:string;bodyB:string;anchorA:Vec3;anchorB:Vec3;axisA:Vec3;axisB:Vec3;radiusB:number};
+type HingeClearance={inputs:[string,PreparedCollision][];frames:ReadonlyMap<string,SeparatedHingeFrame>};
+const physicsDocuments=new WeakMap<object,{document:CadDocument;geometryKey:string;hingeClearance?:HingeClearance}>();
 /** Retain a validated, private copy of the authored physics document. */
 export function preparePhysicsDocument(input:CadDocument):PhysicsDocument{
  const document=validateDocument(input);
@@ -113,14 +115,41 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
   const axes=positionAxes.filter(j=>servoComponent(j.bodyA)===component).length,iterations=Math.min(320,80*axes);
   for(const joint of doc.joints??[])if(servoComponent(joint.bodyA)===component)constraints.get(joint.id)?.SetNumVelocityStepsOverride(iterations);
  };
- const originalExcluded=new Set((doc.joints??[]).map(j=>pairKey(j.bodyA,j.bodyB))),separatedHingePairs=new Set<string>();
- const separatedFrames=new Map<string,{bodyA:string;bodyB:string;anchorA:Vec3;anchorB:Vec3;axisA:Vec3;axisB:Vec3;radiusB:number}>();
- for(const joint of doc.joints??[]){if(joint.kind!=='hinge'||joint.collideConnected===false)continue;const a=fixedRoot(joint.bodyA),b=fixedRoot(joint.bodyB),key=pairKey(a,b);if(a===b||separatedHingePairs.has(key))continue;const tr=doc.nodes[joint.bodyA].transform,tb=doc.nodes[joint.bodyB].transform,anchor=rotate(joint.anchorA.map((v,i)=>v*tr.scale[i]),tr.rotation).map((v,i)=>v+tr.position[i]) as Vec3,axis=rotate(joint.axisA,tr.rotation) as Vec3,otherAnchor=rotate(joint.anchorB.map((v,i)=>v*tb.scale[i]),tb.rotation).map((v,i)=>v+tb.position[i]),otherAxis=rotate(joint.axisB,tb.rotation),members=(root:string)=>assemblies.get(root)!.map(mesh=>({id:mesh.id,hulls:prepared.get(mesh.id)!.hulls}));
-  // The ordinary mate tolerance is intentionally looser than this proof: even
-  // a small axis skew can move a distant feature beyond its clearance margin.
-  const left=members(a),right=members(b);if(left.length===1&&right.length===1)continue;const margin=hingeFrameSeparationMargin([...left,...right].flatMap(m=>m.hulls),anchor,axis,otherAnchor as Vec3,otherAxis as Vec3);if(margin===undefined)continue;
-  if(hingeMembersSeparated(left,right,anchor,axis,(x,y)=>originalExcluded.has(pairKey(x,y)),margin)){group.DisableCollision(bodyIndex.get(a)!,bodyIndex.get(b)!);separatedHingePairs.add(key);let radiusB=0;for(const member of right)for(const hull of member.hulls)for(let i=0;i<hull.positions.length;i+=3)radiusB=Math.max(radiusB,Math.hypot(...otherAnchor.map((v,j)=>v-hull.positions[i+j])));separatedFrames.set(key,{bodyA:a,bodyB:b,anchorA:anchor,anchorB:otherAnchor as Vec3,axisA:axis,axisB:otherAxis as Vec3,radiusB});}
+ function computeHingeClearance(){
+  const originalExcluded=new Set((doc.joints??[]).map(j=>pairKey(j.bodyA,j.bodyB)));
+  const frames=new Map<string,SeparatedHingeFrame>();
+  const members=(root:string)=>assemblies.get(root)!.map(mesh=>({id:mesh.id,hulls:prepared.get(mesh.id)!.hulls}));
+  for(const joint of doc.joints??[]){
+   if(joint.kind!=='hinge'||joint.collideConnected===false)continue;
+   const a=fixedRoot(joint.bodyA),b=fixedRoot(joint.bodyB),key=pairKey(a,b);
+   if(a===b||frames.has(key))continue;
+   const left=members(a),right=members(b);
+   if(left.length===1&&right.length===1)continue;
+   const tr=doc.nodes[joint.bodyA].transform,tb=doc.nodes[joint.bodyB].transform;
+   const anchor=rotate(joint.anchorA.map((v,i)=>v*tr.scale[i]),tr.rotation).map((v,i)=>v+tr.position[i]) as Vec3;
+   const axis=rotate(joint.axisA,tr.rotation) as Vec3;
+   const otherAnchor=rotate(joint.anchorB.map((v,i)=>v*tb.scale[i]),tb.rotation).map((v,i)=>v+tb.position[i]) as Vec3;
+   const otherAxis=rotate(joint.axisB,tb.rotation) as Vec3;
+   // Even a small axis skew can move distant features beyond their clearance.
+   const margin=hingeFrameSeparationMargin([...left,...right].flatMap(m=>m.hulls),anchor,axis,otherAnchor,otherAxis);
+   if(margin===undefined||!hingeMembersSeparated(left,right,anchor,axis,(x,y)=>originalExcluded.has(pairKey(x,y)),margin))continue;
+   let radiusB=0;
+   for(const member of right)for(const hull of member.hulls)for(let i=0;i<hull.positions.length;i+=3){
+    radiusB=Math.max(radiusB,Math.hypot(otherAnchor[0]-hull.positions[i],otherAnchor[1]-hull.positions[i+1],otherAnchor[2]-hull.positions[i+2]));
+   }
+   frames.set(key,{bodyA:a,bodyB:b,anchorA:anchor,anchorB:otherAnchor,axisA:axis,axisB:otherAxis,radiusB});
+  }
+  return frames;
  }
+ // The validated document is private. Reuse its authored clearance only
+ // with the same qualified hulls, after the fresh hash checks above.
+ const priorClearance=snapshot?.hingeClearance;
+ const reuseClearance=priorClearance&&priorClearance.inputs.length===meshes.length
+  &&meshes.every((mesh,i)=>priorClearance.inputs[i][0]===mesh.id&&priorClearance.inputs[i][1]===prepared.get(mesh.id));
+ const separatedFrames=reuseClearance?priorClearance.frames:computeHingeClearance();
+ if(snapshot&&!reuseClearance)snapshot.hingeClearance={inputs:meshes.map(mesh=>[mesh.id,prepared.get(mesh.id)!]),frames:separatedFrames};
+ const separatedHingePairs=new Set(separatedFrames.keys());
+ for(const frame of separatedFrames.values())group.DisableCollision(bodyIndex.get(frame.bodyA)!,bodyIndex.get(frame.bodyB)!);
  const restoreSeparatedPair=(key:string)=>{if(!separatedHingePairs.delete(key))return;const frame=separatedFrames.get(key)!;if(sceneSettings.selfCollisions!==false)group.EnableCollision(bodyIndex.get(frame.bodyA)!,bodyIndex.get(frame.bodyB)!);};
  const invalidateSeparatedPairs=(id:string)=>{const body=byId.get(id);for(const[key,frame]of separatedFrames)if(byId.get(frame.bodyA)===body||byId.get(frame.bodyB)===body)restoreSeparatedPair(key);};
  const checkSeparatedFrames=()=>{for(const key of separatedHingePairs){const frame=separatedFrames.get(key)!,current=(id:string,anchor:Vec3,axis:Vec3)=>{const body=byId.get(id),p=body.GetPosition(),q=body.GetRotation(),rotation=[q.GetX(),q.GetY(),q.GetZ(),q.GetW()];return{anchor:quaternionPoint(anchor,rotation).map((v,i)=>v+1000*[p.GetX(),p.GetY(),p.GetZ()][i])as Vec3,axis:quaternionPoint(axis,rotation)as Vec3};},a=current(frame.bodyA,frame.anchorA,frame.axisA),b=current(frame.bodyB,frame.anchorB,frame.axisB);

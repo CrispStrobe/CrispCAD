@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {beforeAll,it,expect} from 'vitest';
+import {beforeAll,it,expect,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import initJolt from 'jolt-physics/debug-wasm-compat';
 import {createDocument,identityTransform,jointAtWorldFrame,defaultPartPhysics,defaultSimulationSettings} from '@brickwright/cad-core';
 import type {CadDocument} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
-import {createPhysicsWorld,prepareDocumentCollisions} from '../packages/physics/src/index.js';
+import {createPhysicsWorld,prepareDocumentCollisions,preparePhysicsDocument} from '../packages/physics/src/index.js';
+import * as hingeClearance from '../packages/physics/src/hinge-clearance.js';
 let kernel:GeometryKernel,J:Awaited<ReturnType<typeof initJolt>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});J=await initJolt();});
 function fixture(){const doc=createDocument();doc.version=8;doc.simulation={...defaultSimulationSettings(),gravity:[0,0,0],ground:false};doc.joints=[];for(const [id,x]of [['left',-20],['right',20]]as const){doc.nodes[id]={id,name:id,kind:'box',size:[10,10,10],transform:{...identityTransform(),position:[x,0,20]},color:'#123456',physics:defaultPartPhysics()};doc.roots.push(id);}doc.joints.push(jointAtWorldFrame(doc,'fixed','left','right',[0,0,20],[0,1,0]));return doc;}
@@ -76,6 +77,36 @@ it('permanently restores native part filtering before external mutations of a se
  const mutations=[(w:Awaited<ReturnType<typeof worldFor>>)=>w.applyImpulse('left',[.001,0,0]),(w:Awaited<ReturnType<typeof worldFor>>)=>w.setLinearVelocity('left',[100,0,0]),(w:Awaited<ReturnType<typeof worldFor>>)=>w.setAngularVelocity('left',[0,0,1]),(w:Awaited<ReturnType<typeof worldFor>>)=>w.grabBody('left',[-20,0,20],[-19,0,20])];
  for(const mutate of mutations){const world=await worldFor(doc);try{expect(world.separatedHingePairCount).toBe(1);mutate(world);expect(world.separatedHingePairCount).toBe(0);world.releaseGrab();world.step(.005);expect(world.separatedHingePairCount).toBe(0);}finally{world.dispose();}}
  const moving=structuredClone(doc);moving.nodes.left.physics!.initialVelocityMmS=[100,0,0];const world=await worldFor(moving);try{expect(world.separatedHingePairCount).toBe(0);}finally{world.dispose();}
+});
+
+it('reuses authored hinge clearance while keeping live filtering separate for each world',async()=>{
+ const doc=fixture();
+ doc.nodes.rotor={...structuredClone(doc.nodes.right),id:'rotor',name:'rotor',transform:{...identityTransform(),position:[60,0,20]}};
+ doc.roots.push('rotor');
+ doc.joints!.push(jointAtWorldFrame(doc,'hinge','right','rotor',[40,0,20],[0,1,0]));
+ const document=preparePhysicsDocument(doc),geometry=kernel.evaluate(doc);
+ const prepared=await prepareDocumentCollisions(doc,geometry,kernel);
+ const measure=vi.spyOn(hingeClearance,'hingeMembersSeparated');
+ let world:Awaited<ReturnType<typeof createPhysicsWorld>>|undefined;
+ try{
+  world=await createPhysicsWorld(document,geometry,prepared,{J});
+  expect(measure).toHaveBeenCalledTimes(1);
+  expect(world.separatedHingePairCount).toBe(1);
+  world.setLinearVelocity('left',[100,0,0]);
+  expect(world.separatedHingePairCount).toBe(0);
+  world.dispose();
+  world=await createPhysicsWorld(document,geometry,prepared,{J});
+  expect(measure).toHaveBeenCalledTimes(1);
+  expect(world.separatedHingePairCount).toBe(1);
+  world.dispose();
+  const replacement=new Map(prepared);
+  replacement.set('rotor',(await prepareDocumentCollisions(doc,geometry,kernel)).get('rotor')!);
+  world=await createPhysicsWorld(document,geometry,replacement,{J});
+  expect(measure).toHaveBeenCalledTimes(2);
+  replacement.get('rotor')!.hulls[0].positions[0]+=1;
+  await expect(createPhysicsWorld(document,geometry,replacement,{J})).rejects.toThrow('missing or stale');
+  expect(measure).toHaveBeenCalledTimes(2);
+ }finally{world?.dispose();measure.mockRestore();}
 });
 
 it('supports explicit adjacent-link exclusion while retaining other-body contacts and legacy behavior',async()=>{
