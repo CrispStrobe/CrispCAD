@@ -8,7 +8,8 @@ with the SMLib exact B-rep kernel (`@crispcad/exact-kernel`, qualified in
 [`../exact-kernel`](../exact-kernel/README.md)) through
 [`packages/exact/src/lower-cad-script.ts`](../../packages/exact/src/lower-cad-script.ts). The two builds are compared on volume, area and bounding box
 within a tolerance derived from the segment counts in each part. A third column, the lab's
-own native SMLib volumes, is an optional input (see [Native volumes](#native-volumes)).
+own native SMLib build of the original sources (volume, area, box per model), is read from the
+lab's committed results (see [Native volumes](#native-volumes)).
 
 **Status: experiment only.** Nothing here is shipped or imported by `packages/*`. No
 catalog source or converted CAD Script is committed: `results/` holds only per-model
@@ -94,143 +95,227 @@ agree), `agree` (every part built by both and agrees), `timeout`, `worker-crash`
 
 ### Native volumes
 
-The third column, the lab's `smlib-native` kernel, is not produced here: this harness
-does not run the lab's tooling. The lab clone has no committed per-model catalog volumes
-(its `experiments/kernel-qualification/results-catalog-native.json` lists build failures
-only). `--native <file>` (for `run.ts` or `summarize.ts`) accepts that coverage file as a
-status-only column (`git -C <lab> show <rev>:experiments/kernel-qualification/results-catalog-native.json > lab.json`),
-or volumes in this format:
+The third column is the lab's `smlib-native` build of the original `.kcad.ts` sources. This
+harness does not run the lab's tooling; the lab commits the per-model numbers, and
+`--native <file>` (for `run.ts` or `summarize.ts`) reads them:
+
+```sh
+git -C "$LAB" show origin/develop:experiments/kernel-qualification/results-catalog-native-volumes.json > native.json
+node summarize.ts results/full.jsonl --native native.json
+```
 
 ```json
 { "kernel": "smlib-native", "labCommit": "<sha>",
   "models": {
-    "<kit>/<model>.kcad.ts": { "status": "ok", "volumeMm3": 12345.6 },
-    "<kit>/<other>.kcad.ts": { "status": "error", "error": "recompute.kernel.unsupported-feature: mate" } } }
+    "<kit>/<model>.kcad.ts": { "status": "ok", "volumeMm3": 12345.6, "areaMm2": 789.0,
+                               "bbox": { "min": [0, 0, 0], "max": [1, 2, 3] }, "parts": 4 },
+    "<kit>/<other>.kcad.ts": { "status": "error", "error": "…" } } }
 ```
 
-with `volumeMm3` the sum of the model's part volumes at default parameters (the same
-quantity as `totals` here; mates and placement do not change it). With it, each model
-gets a three-way class: `all-agree`; `converter-error` (Manifold ≈ exact, both ≠ native:
-the converted program differs from the source); `manifold-error` (exact ≈ native,
-Manifold ≠); `exact-error` (Manifold ≈ native within faceting, exact ≠); `unresolved`;
-`native-missing` / `native-failed` / `ours-failed`. Exact vs native is held to 1e-6
-relative; where the exact build is unsupported only for low segment counts, the
-kernelCAD-intent build stands in. **TODO (lab):** emit this file from the lab's
-`smlib-native` catalog run (`buildModel({ code, fileName, kernel: 'smlib-native' })`,
-summing part volumes), then rerun `summarize.ts` with `--native`.
+`volumeMm3` and `areaMm2` are sums over the model's parts at default parameters, `bbox` the
+union of the part boxes (the same quantities as summing and uniting our parts). The lab's older
+status-only coverage file (`results-catalog-native.json`) is also accepted. Each model gets one
+three-way class from the volumes:
+
+| Class | Meaning |
+| --- | --- |
+| `all-agree` | exact = native within 1e-6 relative, and Manifold agrees within its faceting tolerance |
+| `converter-error` | Manifold ≈ exact, both ≠ native: the converted program is not the source's geometry |
+| `converter-partial` | the converter skipped parts (reported) and the totals differ |
+| `converter-failed` | the converter refused the model; nothing to compare |
+| `manifold-error` | exact ≈ native, Manifold ≠ |
+| `exact-error` | Manifold ≈ native within faceting, exact ≠ |
+| `exact-failed, manifold ≈ / ≠ native` | some part does not build in the exact kernel |
+| `unresolved`, `native-missing`, `native-failed`, `ours-failed` | as named |
+
+Where the volumes agree, the summary also compares the exact area with the native area (1e-6)
+and the exact box with the native box (1e-3 mm). Per-model three-way classes are the `native`
+field of `results/<name>-models.json`; `results/<name>-summary.json` (`native.models`) lists
+every model that is not `all-agree` or whose area or box differs, with the three volumes
+(`M`, `E`, `N`), `relConverter` = E/N − 1, `relArea` and `dBox`.
 
 ## Results
 
-Measured 2026-11-25 on an 8-core Apple M1 shared with other sessions (load average 30–230),
-Node 26.4.0, catalog at kernel-lab commit `d09cda7f6` (its `catalog/` is identical at
-`c4bea5b93`, where the lab's coverage was measured), with the converter fixes of branch
-`fix/kcad-converter-semantics` (see [Converter fixes](#converter-fixes-2026-11-25)) and the
-merged exact kernel (`@crispcad/exact-kernel` 0.1.0, `packages/exact/src/lower-cad-script.ts`).
-**The full catalog was run**: 2,402 models, 69,295 converted parts, 24.5 min wall with three
-workers (Manifold 87 s CPU in total, median part 0.75 ms; exact 806 s CPU, median part
-4.1 ms, slowest part 0.7 s); the 35 models whose conversion changed with the last converter
-commit (assembly connectors) were then rerun by resume. The 300-model stratified sample (seed
-`crosscheck-1`, all 50 kits) is the quick regression run (1.4 min at load 30). Files:
+Measured 2026-11-25 on an 8-core Apple M1 shared with other sessions (load average 3–130),
+Node 26.4.0, with the exact kernel **`@crispcad/exact-kernel` 0.1.1** (CrispCAD main `dda7ce2`
+plus this commit's two converter fixes, see [Fixes](#fixes-2026-11-25-second-pass)). Catalog at kernel-lab commit
+`e6ff5d3fc` (`origin/develop`); its `catalog/kits` is identical to `2566debd9`, where the lab
+measured its native volumes (`results-catalog-native-volumes.json`, lab commit `a8b4a722d`
+and later). Three of the catalog's models changed since the previous run (`airfield`
+fuel truck, hangar and maintenance lift, 28 → 100 parts). **Full catalog**: 2,402 models,
+69,367 converted parts, about 20 min wall with four workers, in four resumed segments (see
+`note` in [`results/full-run.json`](results/full-run.json)). Files:
 [`results/full-summary.md`](results/full-summary.md),
-[`results/full-summary.json`](results/full-summary.json) (counts, causes, worst cases),
-[`results/full-models.json`](results/full-models.json) (one line per model: class, converter
-status, part classes, volume totals), [`results/full-run.json`](results/full-run.json) (run
-parameters, calibration); the same for `sample-300`, whose per-part
-[`sample-300.jsonl`](results/sample-300.jsonl) is committed (the full run's 39 MB JSONL is not;
-`npm run full` regenerates it). The full summary was written with the lab's status-only
-coverage file (`summarize.ts results/full.jsonl --native lab.json`).
+[`results/full-summary.json`](results/full-summary.json) (counts, causes, worst cases,
+three-way rows), [`results/full-models.json`](results/full-models.json) (one line per model:
+class, three-way class, converter status, part classes, volume totals),
+[`results/full-run.json`](results/full-run.json) (run parameters, calibration); the same for
+`sample-300`, whose per-part [`sample-300.jsonl`](results/sample-300.jsonl) is committed (the
+full run's 39 MB JSONL is not; `npm run full` regenerates it).
 
-| Model class (full catalog) | Before fixes | Now | |
-| --- | ---: | ---: | --- |
-| agree | 989 | 2,223 | every part built by both kernels and agrees |
-| exact-unsupported | 1,127 | 5 | before: 1,123 only because of low-segment cylinders/tori; now hull and faceted-solid budgets |
-| kernel-failure | 115 | 119 | an exact `invalid-input` (445 parts, all long multi-section lofts) |
-| disagree | 18 | 24 | 116 parts, causes below |
-| converter-failure | 153 | 31 | 25 unsupported features, 6 unknown helper names |
+### Manifold against the exact kernel
 
-| Part class | Before (63,281 parts) | Now (69,295 parts) |
+| Model class (full catalog) | Before converter fixes | 0.1.0 | **0.1.1** | |
+| --- | ---: | ---: | ---: | --- |
+| agree | 989 | 2,223 | **2,350** | every part built by both kernels and agrees |
+| exact-unsupported | 1,127 | 5 | **0** | hull budget 64 → 1,024 (kernel), polyhedron budget 256 → 2,048 (lowering) |
+| kernel-failure | 115 | 119 | **1** | `nature/tumbleweed`, a converter triangulation (cause 4) |
+| disagree | 18 | 24 | **20** | 56 parts, causes below |
+| converter-failure | 153 | 31 | **31** | unchanged |
+
+| Part class | 0.1.0 (69,295 parts) | **0.1.1 (69,367 parts)** |
 | --- | ---: | ---: |
-| agree | 52,087 | 68,666 |
-| exact-unsupported | 10,662 (10,608 low-segment cylinders/tori) | 68 (38 polyhedra over 256 faces, 30 hulls over the vertex budget) |
-| exact-failure | 437 | 445 (`The polyhedron faces do not close around a valid solid`) |
-| disagree | 92 | 116 |
-| manifold-failure / both-failed | 2 / 1 | 0 / 0 |
+| agree | 68,666 | **69,307** |
+| exact-unsupported | 68 (38 polyhedra over 256 faces, 30 hulls over 64 points) | **0** |
+| exact-failure | 445 (long multi-section lofts) | **4** (tumbleweed) |
+| disagree | 116 | **56** |
 
-**Where both kernels build a part they agree.** 68,782 parts were built by both (52,179
-before); 68,666 agree within the derived tolerance, the 50,860 planar ones to 9.7e-7 relative
-volume at worst (median 0). **Model volumes now match the exact build to the faceting of 48
-segments:** over the 2,240 models whose parts all build in both kernels, Manifold's total is
-within 1e-2 of the exact total for 2,237 and the worst is −1.0 % (a 48-gon prism loses
-0.29 %, a 48 × 48 sphere more), median −3.8e-5. Before the fixes, 115 of
-2,128 models were more than 5 % low and the worst was −15.3 %, all from low-segment cylinders
-and tori. The low-segment intent probe now finds no parts.
+Model by model against the 0.1.0 run: 2,221 stay `agree`; 112 `kernel-failure` → `agree` and
+2 → `disagree` (their lofts now build; two planar parts are at the 1e-6 floor, cause 1);
+6 `disagree` → `agree` (sphere boxes, loft areas); the 4 remaining `kernel-failure` models also
+had parts over the 256-face budget and agree now that it is raised.
 
-Sample (300 models): agree 127 → 277, exact-unsupported 133 → 1, converter-failure 23 → 3,
-kernel-failure 12 → 13, disagree 5 → 6; 9,379 parts (8,410 before), model totals within 1e-2
-for 281 of 282 (worst −1.0 %, before −10 %).
+**What 0.1.1 fixed, checked part by part:**
 
-The native column is available only as build status (the lab's
-`experiments/kernel-qualification/results-catalog-native.json` at `c4bea5b93` lists its 11
-failures and no volumes): of the 2,391 models the lab builds, we convert 2,368 (23 are
-converter failures); of its 11 failures, 8 are also converter failures here (curved sweeps,
-side-face holes, off-XY lofts, multi-loop sketches) and 3 are classed `agree` here only because
-they convert partially (`skid-steer-loader`, `miniature-park-tram-engine`,
-`impulse-merchandiser`): the parts the converter skips are self-intersecting extrusion
-profiles, the same extrudes the lab's SMLib build fails on.
+- *Rotated sphere boxes* (57 parts before): none left. `retail-store/produce-display-table`
+  `heap-0-0` now has exact min z 539.976 (Manifold 539.99, whose vertices lie on the surface;
+  0.1.0 gave 543.32).
+- *Loft frustum area* (5 parts): `lighting/chandelier` `canopy` exact area 47,342.285 mm²
+  against the closed form 47,342.29 (0.1.0: 81,727.14); the other four agree too.
+- *Long multi-section lofts* (445 parts): all build and agree, e.g.
+  `postal-logistics/postal-pallet-roller-deck` `roller-a`. The 4 exact failures left are the
+  twisted star lofts of `nature/tumbleweed` (cause 4), a converter problem.
+- *Hull budget* (30 parts over 64 points): all build.
+
+**Where both kernels build a part they agree.** 69,363 parts were built by both; 69,307
+agree within the derived tolerance, the 51,429 planar ones to 9.7e-7 relative volume at worst
+(median 0). Over the 2,370 models whose parts all build, Manifold's total is within 1e-2 of
+the exact total for 2,367 and the worst is −1.0 % (48-segment faceting), median −2.6e-5.
+
+**Cost.** Exact CPU 1,753 s in total (0.1.0: 806 s), median part 5.2 ms (4.1 ms). Nearly all
+of the increase is the new exact `bbox` on a few trimmed NURBS bodies: 11 parts take 5–187 s
+(cause 6), against 0.7 s for the slowest part on 0.1.0.
+
+Sample (300 models, seed `crosscheck-1`, 2.5 min): agree 277 → 293, exact-unsupported 1 → 0,
+kernel-failure 13 → 0, disagree 6 → 4, converter-failure 3; 9,379 parts.
+
+### Three-way: Manifold, exact, native
+
+| Three-way class (full catalog) | Models | Sample |
+| --- | ---: | ---: |
+| all-agree | **2,215** | 278 |
+| converter-error | 137 | 15 |
+| converter-failed | 31 | 3 |
+| converter-partial | 18 | 4 |
+| exact-failed, manifold ≠ native | 1 | 0 |
+| exact-error, manifold-error, unresolved | 0 | 0 |
+
+The lab builds all 2,402 models. **No disagreement is the exact kernel's or Manifold's:** where
+our build is complete and the converter is right, exact and native volumes agree to 1e-6 (2,215
+models), the exact area agrees with the native area to 1e-6 for 2,198 of them and to 1e-3 for
+2,210, and the boxes agree to 1e-3 mm for 2,214. Every disagreement traces to the converted
+program:
+
+- **converter-error (137 models; all contain lofts).** Exact ≈ Manifold, both ≠ native, median
+  E/N − 1 = −1.3e-3, from −8.7 % (`nature/flower-patch`) to +28.5 % (`nature/hill-tile`), 37
+  beyond 1 %. Causes 4 and 5 below: 129 are twisted ruled lofts, 5 are smooth lofts, 3 are left
+  at ≤ 6.5e-6 once the lofts are fixed.
+- **converter-partial (18).** The converter skips parts it cannot express (self-intersecting
+  extrusion outlines, unordered loft sections, nesting over 32) and says so; the native build
+  has them. The lab's own build of such an outline is questionable (cause 7).
+- **converter-failed (31).** As before: lofts with different section point counts 12,
+  `shape.hole(s)` 4, `helix` 3, `prismSideY` 3, part over the CAD Script limits 3, others 6.
+- **exact-failed (1).** `nature/tumbleweed`: Manifold 43.0e6 mm³ against native 91.7e6 (−53 %),
+  the exact kernel refuses the solid (cause 4).
+
+The arcs hypothesis (path arcs emitted as 16-segment polygons) does not explain these numbers:
+the three converter-error models checked first (`containers/wicker-basket` −2.1 %,
+`fire-station/bay-warning-beacon` −1.9 %, `characters/spider-bot` −1.5 %) have no arcs; all
+three are ruled lofts between polygons turned against each other.
 
 ### Causes
 
-Disagreements (116 parts in 24 models), each class checked against the converted CAD Script
-and the `.kcad.ts` source:
+Disagreements between Manifold and exact (56 parts in 20 models):
 
-1. **SMLib's tight bounding box misses a rotated sphere's extreme (57 parts; exact kernel).**
-   In every case the exact bbox is *inside* Manifold's, which is impossible for a correct bbox
-   because Manifold's vertices lie on the true surface. Examples:
-   `retail-store/produce-display-table` (48 fruit spheres on a tilted crate:
-   `heap-0-0` exact min z 543.32 vs Manifold 539.99), `amusement-park/ride-operator-console`
-   (`estop-head`, `sphere(62).scale([1, 1, 0.5])` on a sloped desk: 2.19 mm). Minimal repro:
-   `Sphere(62).rotate(Axis.X, 11).bbox()` gives min z −60.861 instead of −62 (the loose box
-   and the 0°, 30°, 45°, 90° rotations are right); volume and area are exact.
-2. **Planar volumes at the 1e-6 floor (26 parts; Manifold numerics).** 23 are thin wing and
-   window lofts of the newly converted `airfield` aircraft (winglets, cheat lines, 0.4–2 mm thick,
-   600 mm from the origin), 1e-6 to 7.4e-6 off: CAD Script polyhedra reach Manifold as float32
-   vertex positions. The other 3 are the metre-scale parts of before
-   (`mining/run-of-mine-hopper` `ring-stiffener-1`: exact equals the closed form to 1e-10,
-   Manifold is 1.13e-6 high; `nature/baobab-tree` `tuft-5`, `nature/bramble` `berries-4`).
-3. **Float32 mesh area far from the origin (25 parts; harness, not a kernel).** Thin planar
-   parts placed metres from the origin (`telecom-infrastructure/monopole-mast` jumpers at
-   z ≈ 9,900 mm, `solar-energy/pole-mount-transformer` bolts) miss the 1e-5 area floor by up
-   to 1.8e-5, because the harness sums Manifold's mesh in float32. Volumes agree to 3e-10.
-4. **SMLib area of a stitched loft polyhedron is too large (5 parts; exact kernel).**
-   `lighting/chandelier` `canopy`, a hexagonal frustum
-   `loft([hexagon r 14 @ z 780, hexagon r 90 @ z 830])`: closed-form area 47,342.29 mm²,
-   Manifold 47,342.29, exact 81,727.14, while both volumes agree to 3e-8. Also the chandelier's
-   three `up-cup`s and `office/paper-shredder` `head`.
-5. **Manifold keeps the faces of exactly touching operands (3 parts; Manifold, area only).**
-   `characters/excavator` `undercarriage` unions a 920 × 900 × 220 box with two track prisms
-   whose inner faces lie exactly on the box's ±x faces: the exact area excludes those faces,
-   Manifold's is larger by exactly 2 × 900 × 220 = 396,000 mm², volumes equal. Same in
-   `travel-gear/duffel-bag` `wrap-strap-0/1` (13,600 mm²). Manifold's symbolic perturbation
-   does not merge exactly coincident faces; the exact area is the right one.
+1. **Planar volumes at the 1e-6 floor (28 parts; Manifold numerics).** Thin `airfield` wing
+   parts 600 mm from the origin (winglets, sharklets: up to 7.4e-6) and the three metre-scale
+   parts of before (`mining/run-of-mine-hopper` `ring-stiffener-1`, `nature/baobab-tree`
+   `tuft-5`, `nature/bramble` `berries-4`). CAD Script polyhedra reach Manifold as float32
+   vertex positions.
+2. **Float32 mesh area far from the origin (25 parts; harness).** Thin planar parts metres from
+   the origin (`telecom-infrastructure/monopole-mast` jumpers at z ≈ 9,900 mm) miss the 1e-5
+   area floor by up to 1.8e-5 because the harness sums Manifold's mesh in float32.
+3. **Manifold keeps the faces of exactly touching operands (3 parts; Manifold, area only).**
+   `characters/excavator` `undercarriage` (+396,000 mm² = 2 × 900 × 220) and
+   `travel-gear/duffel-bag` `wrap-strap-0/1`; the exact area is the right one.
 
-Unsupported and failing parts:
+The rotated-sphere box (57 parts) and the stitched-loft area (5 parts) of the 0.1.0 run are
+gone (see above).
 
-6. **Long multi-section lofts fail to stitch (445 parts; exact kernel).** Rollers, tyres,
-   vessels and drums built as `loftCylinder`-style 10–16-gon lofts with four or more sections
-   (`postal-logistics/postal-pallet-roller-deck` `roller-a`: sections at z 0, 75.6, 1004.4,
-   1080 around r 13.5–15.4). The same loft scaled to 30 mm long builds, so the failure is
-   aspect-ratio dependent: the exact convex hull merges near-coplanar facets of the
-   six-decimal points over a 1 m length into faces that are not planar within SMLib's stitch
-   tolerance. Concentrated in mining, water treatment and shipyard.
-7. **Converter failures (31 models).** Lofts whose sections have different point counts 12
-   (kernelCAD lofts them with OCCT's section matching, which has no clear CAD Script
-   equivalent), `shape.hole(s)` 4, `helix` 3, the catalog helper `prismSideY` 3 (an unknown
-   name: not part of the API the converter models), `shape.boundingBox` of a part over the CAD
-   Script limits 3, `Array(n)` 2, `multiple moveTo in one path`, `void`, an off-XY loft plane and
-   a numeric property of a non-array value, 1 each. A further 19 models convert partially
-   (self-intersecting extrusion profiles, loft sections not ordered along Z, nesting over 32).
+Converter (found with the native column):
 
-### Converter fixes (2026-11-25)
+4. **Ruled lofts between turned polygons are triangulated, not ruled (129 models + tumbleweed;
+   not fixed).** kernelCAD's `loft(…, { ruled: true })` joins vertex *i* of one section to
+   vertex *i* of the next with a ruled (bilinear) surface; the lab's native build does the
+   same. CAD Script's `loft` ([`packages/core/src/code-loft.ts`](../../packages/core/src/code-loft.ts))
+   splits every side quad into two triangles along one fixed diagonal. When a section is turned
+   against the next, the quads are not planar and the diagonal decides the volume. Closed form,
+   `fire-station/bay-warning-beacon` `lower-lamp` (10-gon r 82 at z 0 → 10-gon r 77.9 turned by
+   π/10 at z 150): ruled 2,772,519.67 mm³; CrispCAD's diagonal 2,678,272.48; the other diagonal
+   2,866,766.86 (the ruled volume is exactly their mean). The model's two lamps account for
+   native − exact = 188,494.36 mm³ to 0.01 mm³. In `nature/tumbleweed` (10-point stars turned by
+   up to 0.65 rad between sections) the triangulated surface intersects itself: Manifold loses
+   53 % and SMLib refuses it. **Probe:** with each non-planar side quad split into four triangles
+   through the mean of its corners, which gives exactly the ruled volume (the fan's volume is
+   the mean of both diagonals), and the 2,048-face budget, 139 of the 147 models with a
+   converter error or an exact failure agree with native to 1e-6 (tumbleweed to 5.6e-10). The
+   probe was reverted: it changes `loft` for every CAD Script document (Manifold meshes, face
+   counts, area of twisted lofts, which then matches the ruled surface only to about 1e-3), so it
+   is an owner decision, not a converter patch.
+5. **Smooth lofts are converted as ruled (5 models; known, warned).** kernelCAD lofts through
+   more than two sections without `ruled: true` are smooth surfaces; the converter warns and
+   lofts them ruled. Residuals with the probe above: `nature/hill-tile` +31 %,
+   `nature/ground-tile` +7.0 %, `wind-energy/wind-turbine-blade` −3.6 %,
+   `wind-energy/horizontal-axis-wind-turbine` −0.82 %, `wind-energy/offshore-wind-turbine`
+   −0.60 %. Three more (`characters/spider-bot`, `interior/bean-bag`, `interior/toilet`) are
+   left at 2.8e-6 to 6.5e-6 after the probe; not investigated.
+   Where the volumes agree, 16 of the 17 models whose exact area differs from native by more
+   than 1e-6 (2e-6 to 1.5e-3: `props/rowboat`, `marine/fishing-boat`, `marine/motorboat`,
+   `nature/palm-tree` above 1e-3) contain lofts; consistent with cause 4 (two triangles do not
+   have a ruled quad's area even where the volumes cancel), not checked one by one.
+
+Exact kernel and lab (reported, not fixed here):
+
+6. **Exact `bbox` of trimmed NURBS bodies is very slow (exact kernel 0.1.1).**
+   `mining/apron-feeder` `ore-heap` = `subtract(scale([2.3, 1.55, 0.95], sphere(1000)), box)`:
+   building it, volume and area take 0.12 s, `bbox()` 203 s (load about 15), with the right
+   result. Also `recycling-facility/glass-washer-trommel` `cullet-pile` 166 s,
+   `recycling-facility/landfill-liner-roll` `sandbag-2` 178 s,
+   `recycling-facility/green-waste-shredder` `mulch-pile` 75 s, `sports/lacrosse-stick` `head`
+   58 s, `recycling-facility/near-infrared-sorter` `eject-fraction` 58 s, five more 5–10 s.
+   0.1.1's box samples and refines extremes of NURBS faces; 0.1.0's slowest part was 0.7 s.
+   Two models hit the 300 s timeout at load 120 and were rerun with 1,500 s.
+7. **Lab: a self-intersecting outline builds as a zero-volume body with area (native).**
+   `alpine-expedition/alpine-helmet` `chin-strap-0/1`: the outline (±112, 66), (±96, 62),
+   (±18, 0), (±4, 6) crosses itself (a bow tie with lobes of 89.0 and 493.0 mm²), extruded
+   14 mm. The native build gives each strap volume 0 but area 4,376.8 mm² (= 14 × perimeter
+   254.9 + 2 × |signed area| 404) and its box (down to z = 0). That is not a solid: either refuse
+   it or build both lobes (8,149.3 mm³). Our converter skips both parts and reports them
+   (`partial`); the model's volume agrees, its area (−2.4 %) and box (22 mm) do not.
+
+### Fixes (2026-11-25, second pass)
+
+| Fix | Where | Models / parts | Effect |
+| --- | --- | --- | --- |
+| `let` loop variables get a fresh binding per iteration (JavaScript semantics), so closures made in a `for` body keep that iteration's value | [`packages/core/src/kcad-import.ts`](../../packages/core/src/kcad-import.ts) | 1 model, 46 parts (`retail-store/roll-cage-trolley`: every wire of the mesh walls was placed at the last row and column; volume unchanged, so only the native box showed it, 1,706 vs 1,700 mm) | box matches native |
+| Polyhedron budget of the exact lowering 256 → 2,048 faces (the kernel stitches 2,044 faces in its own tests; the catalog's largest, 578 faces, build in under 1.2 s) | [`packages/exact/src/lower-cad-script.ts`](../../packages/exact/src/lower-cad-script.ts) | 38 parts, 14 models (12-gon lathes, shedded insulators, fuselage lofts) | 9 models agree with native to 6e-10; the 5 aircraft are converter-error (cause 4) and agree to 3.4e-9 with the ruled-loft probe |
+
+Tests: [`tests/kcad-semantics.test.ts`](../../tests/kcad-semantics.test.ts) (closures in `for
+(let …)`, body updates of the loop variable, a 578-face 12-gon loft against the closed form).
+The parts over 256 faces are polygonal in the source too: the lab builds them as the same
+polygonal lofts (volumes agree to 6e-10), not as smooth surfaces.
+
+### Fixes (2026-11-25, first pass)
 
 Each fix is pinned with closed-form examples (exact kernel and Manifold) in
 [`tests/kcad-semantics.test.ts`](../../tests/kcad-semantics.test.ts).
@@ -244,41 +329,35 @@ Each fix is pinned with closed-form examples (exact kernel and Manifold) in
 | JavaScript used by catalog helpers: `string.replace/replaceAll`, `findIndex`, `splice`, array rest patterns, `Math.cosh` & co., `in` on records, `for…of` over strings, `Infinity` sentinels, integer intermediates above 1e9 (seeded generators) | 25 | all convert |
 | Lofts with different section point counts | 12 | left unsupported (no clear semantics) |
 
-Converter outcome (all 2,402 models): converted 2,231 → 2,352, partial 18 → 19, unsupported
-104 → 25, failed 49 → 6; 98.7 % of models convert (97.9 % completely), up from 93.6 %.
+Converter outcome (all 2,402 models, unchanged by the second pass): converted 2,352, partial 19,
+unsupported 25, failed 6; 98.7 % of models convert (97.9 % completely), 93.6 % before the
+first pass.
 
 ### Follow-ups
 
-Converter (`packages/core/src/kcad-import.ts`):
+Converter and CAD Script:
 
+- **Ruled lofts (cause 4, 129 models):** decide whether CAD Script `loft` means the ruled
+  surface. If so, split non-planar side quads through their centre (exact ruled volume, see the
+  probe) or lower lofts to SMLib's ruled loft in the exact backend. This is the largest
+  remaining converter error.
+- Smooth lofts (cause 5): need a smooth loft construct in CAD Script.
 - Path arcs (`threePointsArc`) are still polygons (16 segments per half turn) when they reach
-  CAD Script; only whole `path().circle()`s stay exact. Emitting arcs exactly needs an arc
-  construct in CAD Script profiles.
-- Lofts with different section point counts (12), `shape.hole(s)` (4), `helix` (3): need
-  semantics or exact-kernel features first.
+  CAD Script; no converter-error model was traced to them yet.
+- Lofts with different section point counts (12), `shape.hole(s)` (4), `helix` (3).
 
-Exact kernel (`@crispcad/exact-kernel` / `packages/exact`):
+Exact kernel and lab (to report in the lab):
 
-- `bbox()`: SMLib's tight box is wrong for some rotated spheres. Take the union with the
-  bbox of a fine tessellation, or compute sphere/torus faces analytically; add
-  `Sphere(62).rotate(X, 11)` as a regression case. Report upstream (`brep_bounding_box`).
-- `area()` of stitched polyhedra: wrong for loft frusta (chandelier `canopy` is a minimal
-  case with a closed form); compute polyhedron areas from the faces, and report upstream.
-- Long multi-section lofts: snap near-coplanar hull facets (or triangulate instead of
-  merging) so stitching succeeds; 445 catalog parts.
-- Hull and polyhedron budgets (68 parts).
+- `bbox()` of trimmed NURBS bodies takes minutes (cause 6); the box is right.
+- Native build of self-intersecting outlines gives zero-volume bodies with area (cause 7).
 
-Harness and lab:
+Harness:
 
-- **TODO (lab): native volumes.** Extend the lab's `catalogCoverage.ts` to write the summed
-  part volume per model in the [format above](#native-volumes); then the three-way classes
-  (`converter-error` / `manifold-error` / `exact-error`) are one `summarize.ts --native` away.
-  That column will also expose converter faceting the two-kernel check cannot see (path arcs).
-- Use Manifold's double-precision surface area instead of the float32 mesh (removes cause 3).
+- Use Manifold's double-precision surface area instead of the float32 mesh (removes cause 2).
 
 ### Kernel versions
 
 The first full run (before the converter fixes) used the exact kernel as it was before the
-2026-11-25 move into `@crispcad/exact-kernel`; rerunning the sample on the merged kernel gave
-bit-identical builds and unchanged classes. The runs above use the merged kernel
-(`@crispcad/exact-kernel` 0.1.0, the same SMLib build).
+2026-11-25 move into `@crispcad/exact-kernel`; the 0.1.0 runs used the merged kernel 0.1.0
+(the numbers in the "0.1.0" column above, catalog at lab `d09cda7f6`). The runs above use
+`@crispcad/exact-kernel` 0.1.1 (same SMLib build, `@classcad/smlibwasm` 0.6.2).

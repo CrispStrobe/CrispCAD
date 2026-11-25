@@ -115,7 +115,12 @@ export function importKernelCAD(source:string,overrides:Record<string,number|str
   case 'BreakStatement':if(node.label)unsupported('labelled break',node);return 'break';
   case 'ContinueStatement':if(node.label)unsupported('labelled continue',node);return 'continue';
   case 'IfStatement':return evaluate(node.test,scope)?statement(node.consequent,scope):node.alternate?statement(node.alternate,scope):undefined;
-  case 'ForStatement':{const local=new Scope(scope);if(node.init)node.init.type==='VariableDeclaration'?statement(node.init,local):evaluate(node.init,local);let iterations=0;while(!node.test||evaluate(node.test,local)){if(++iterations>KCAD_IMPORT_LIMITS.loopIterations)fail(t('kernelCAD loop limit exceeded'),node,'resource-limit');const result=loopBody(node.body,local);if(result==='break')break;if(result)return result;if(node.update)evaluate(node.update,local);}return;}
+  case 'ForStatement':{
+   // `let` loop variables get a fresh binding per iteration (as in JavaScript), so closures made in the body keep that iteration's value.
+   const head=new Scope(scope);if(node.init)node.init.type==='VariableDeclaration'?statement(node.init,head):evaluate(node.init,head);
+   const perIteration=node.init?.type==='VariableDeclaration'&&node.init.kind==='let';
+   const copy=(from:Scope)=>{if(!perIteration)return from;const next=new Scope(scope);for(const [key,value] of from.values)next.values.set(key,value);return next;};
+   let local=copy(head),iterations=0;while(!node.test||evaluate(node.test,local)){if(++iterations>KCAD_IMPORT_LIMITS.loopIterations)fail(t('kernelCAD loop limit exceeded'),node,'resource-limit');const result=loopBody(node.body,local);if(result==='break')break;if(result)return result;local=copy(local);if(node.update)evaluate(node.update,local);}return;}
   case 'ForOfStatement':{const source=evaluate(node.right,scope),items=typeof source==='string'?[...source]:list(source);if(items.length>KCAD_IMPORT_LIMITS.loopIterations)fail(t('kernelCAD loop limit exceeded'),node,'resource-limit');for(const item of items){const local=new Scope(scope);if(node.left.type!=='VariableDeclaration')unsupported('for-of target',node);bind(node.left.declarations[0].id,item,local,node.left.kind==='const');const result=loopBody(node.body,local);if(result==='break')break;if(result)return result;}return;}
   case 'WhileStatement':{let iterations=0;while(evaluate(node.test,scope)){if(++iterations>KCAD_IMPORT_LIMITS.loopIterations)fail(t('kernelCAD loop limit exceeded'),node,'resource-limit');const result=loopBody(node.body,new Scope(scope));if(result==='break')break;if(result)return result;}return;}
   case 'ThrowStatement':return fail(t('kernelCAD source threw an error'),node);

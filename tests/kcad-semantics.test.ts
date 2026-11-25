@@ -184,3 +184,31 @@ return box(r > 0 && r < 1 ? 1 : 100, n, 1);`);
   expect(d.parts[0].program.source).toBe('return move([0.5, 1, 0.5], box(1, 2, 1));');
  });
 });
+
+describe('kcad loop bindings',()=>{
+ it('gives `let` loop variables a fresh binding per iteration, so closures keep their own value',()=>{
+  // The catalog's roll-cage-trolley builds its wire grid as `for (let r …) parts.push(() => blk(…, r, …))`:
+  // with one shared binding every wire landed at the last row (found by the native box, 2026-11-25).
+  const c=convert("const p = assembly('a'); const fs = [];\nfor (let i = 0; i < 3; i++) fs.push(() => box(2, 2, 2).translate(i * 10, 0, 0));\nfs.forEach((f, k) => p.part('b' + k, f()));\nreturn p.model();");
+  expect(c.parts.map(p=>p.program.source)).toEqual([0,10,20].map(x=>`return move([${x}, 0, 0], move([1, 1, 1], box(2, 2, 2)));`));
+ });
+
+ it('keeps updates made in the body for the next iteration',()=>{
+  const c=convert("const p = assembly('a');\nfor (let i = 0; i < 6; i++) { if (i === 1) i = 3; p.part('b' + i, box(1, 1, 1).translate(i, 0, 0)); }\nreturn p.model();");
+  expect(c.parts.map(p=>p.name)).toEqual(['b0','b3','b4','b5']);
+ });
+});
+
+describe('kcad many-section lofts',{timeout:60_000},()=>{
+ it('builds a 578-face shedded 12-gon loft exactly (polyhedron budget 2,048)',()=>{
+  // The catalog's shedded insulators and lathes: ruled lofts of 12-gons through 25 sections.
+  const radii=Array.from({length:25},(_,i)=>i%2?140:100);
+  const program=only(`const ngon = (r) => { let p = path().moveTo(r, 0); for (let i = 1; i < 12; i++) p = p.lineTo(r * Math.cos(2 * Math.PI * i / 12), r * Math.sin(2 * Math.PI * i / 12)); return p.close(); };
+const rs = ${JSON.stringify(radii)};
+return ngon(rs[0]).loft(rs.slice(1).map(ngon), { spacing: 10, ruled: true });`);
+  // Frustum of similar 12-gons per section pair: h/3 (A1 + A2 + sqrt(A1 A2)), A = 3 r².
+  const V=radii.slice(1).reduce((s,r,i)=>{const a=3*radii[i]**2,b=3*r**2;return s+10/3*(a+b+Math.sqrt(a*b));},0),m=measure(program);
+  expect(rel(m.exact.volume,V)).toBeLessThan(1e-6);
+  expect(rel(m.manifold.volume,V)).toBeLessThan(1e-6);
+ });
+});

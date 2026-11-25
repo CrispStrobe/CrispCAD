@@ -65,7 +65,7 @@ Node ≥ 22.18 (tested on 26.4). `vitest` and `typescript` come from the root in
 | `union`, `subtract`, `intersect`, `empty` | SMLib Booleans; `empty()` operands behave as in Manifold. |
 | `move`, `rotate` (X then Y then Z), `scale` (signed), `mirror`, `axisRotate`, `repeat`, `resize` | Kernel transforms; `resize` uses the exact bounding box. |
 | `affine` | Only when the columns are orthogonal (rotation × axis scale × translation). Shear is `unsupported`. |
-| `polyhedron`, `loft` (planar output) | Convex input → one face per supporting plane (coplanar triangles merged); non-convex → faces stitched as given. More than 256 faces → `unsupported`. |
+| `polyhedron`, `loft` (planar output) | Convex input → one face per supporting plane (coplanar triangles merged); non-convex → faces stitched as given. More than 2,048 faces → `unsupported` (256 until 2026-11-25). |
 | `hull` | Polyhedral leaves (boxes, polyhedra, straight-edged extrusions, also tapered) → exact convex polytope. Equal spheres whose centres span an axis-aligned box → that box grown by *r* with every edge filleted at *r* (the exact identity behind the scorecard's `rounded-box`). |
 | Profiles: `polygon2d` (even-odd, holes), `circle2d`, `rectangle2d`, `move2d`/`rotate2d`/`scale2d`, `affine2d` (no shear), `resize2d`, `offset2d`, `union2d`/`subtract2d`/`intersect2d`, `hull2d` | SMLib sketches; arcs stay exact (offset corners, hull tangents). |
 

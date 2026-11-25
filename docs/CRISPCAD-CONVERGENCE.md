@@ -411,7 +411,7 @@ Left open: an exact display path for many-hole faces (meshing cost, Phase 2); a 
 renamed on paste (`width` → `width_2`) makes a pasted feature stale until it is recomputed;
 fillets of individual edges need topological naming and are out of scope.
 
-### Phase 4: cross-checking with the catalog. **Steps 1, 2 and 4 done 2026-11-25; step 3 waits for lab volumes**
+### Phase 4: cross-checking with the catalog. **Done 2026-11-25 (exact kernel 0.1.1, native volumes from the lab)**
 
 1. Convert the lab's catalog with `scripts/convert-kcad.mjs` (98.7% convert, 93.6% before
    the 2026-11-25 converter fixes).
@@ -423,30 +423,38 @@ fillets of individual edges need topological naming and are out of scope.
 
 Results (harness and details in
 [experiments/catalog-crosscheck/README.md](../experiments/catalog-crosscheck/README.md)),
-full catalog, 2,402 models, 69,295 converted parts (after the converter fixes):
+full catalog, 2,402 models, 69,367 converted parts, `@crispcad/exact-kernel` 0.1.1, catalog
+and native volumes at lab `2566debd9` / `e6ff5d3fc`:
 
-- **Where both kernels build a part, they agree.** 68,666 of the 68,782 parts built by
-  both agree within a tolerance derived from each part's segment counts; planar parts to
-  9.7e-7 relative volume.
-- **Models:** 2,223 agree; 5 are exact-unsupported (hull and faceted-solid budgets); 119 hit
-  an exact-kernel failure; 24 disagree; 31 do not convert (989 / 1,127 / 115 / 18 / 153
-  before the fixes).
-- **The largest error was the converter's, not a kernel's, and is fixed.** kernelCAD ignores
-  the segment count of `cylinder(h, r, n)` (always exact) and uses `torus`'s only for the
-  tube; the converter emitted *n*-gon prisms (10,608 parts, up to 15 % of a model's volume).
-  It now emits true cylinders and polygon tubes; every model whose parts build is within
-  1.0 % of the exact volume (48-segment faceting). The same pass added
-  `await shape.boundingBox({ exact: true })`, negative box sizes, `extrudeRoundedRect` axes,
-  pose-0 mates and connectors.
-- **Exact-kernel gaps found:** SMLib's tight bbox misses the extreme of some rotated
-  spheres (57 parts; `Sphere(62).rotate(X, 11)`); its area of stitched loft polyhedra is
-  wrong (5 parts; a hexagonal frustum is off by 73 % against the closed form); long
-  multi-section lofts fail to stitch (445 parts).
-- **Manifold:** 26 planar parts 1e-6 to 7e-6 off at large coordinates (float32 vertices);
-  3 unions keep the faces of exactly touching operands in the area.
-- **Native column:** the lab commits only build status (2,391/2,402). Our classes are
-  cross-tabulated against it; the three-way volume split (converter vs kernel errors) needs
-  the lab's catalog harness to write per-model volumes (format in the README).
+- **Where both kernels build a part, they agree.** 69,307 of the 69,363 parts built by both
+  agree within a tolerance derived from each part's segment counts; planar parts to 9.7e-7
+  relative volume. The other 56 are Manifold numerics (float32 vertices and mesh area far from
+  the origin, faces of exactly touching operands kept).
+- **Models:** 2,350 agree, 0 exact-unsupported, 1 exact-kernel failure, 20 disagree, 31 do not
+  convert (0.1.0: 2,223 / 5 / 119 / 24 / 31; before the converter fixes 989 / 1,127 / 115 / 18 /
+  153).
+- **0.1.1 cleared every exact-kernel gap the 0.1.0 run found:** rotated-sphere boxes (57 parts),
+  the hexagonal frustum area (chandelier `canopy` 47,342.285 mm², closed form 47,342.29; was
+  81,727), the long multi-section lofts that did not stitch (445 parts, all build and agree) and
+  the 64-point hull limit (30 parts). Our polyhedron budget went from 256 to 2,048 faces (38
+  parts; the lab builds them as the same polygonal lofts, volumes agree to 6e-10).
+- **Native column (lab `smlib-native`, all 2,402 models built):** 2,215 models agree in all
+  three (exact = native to 1e-6; area to 1e-6 for 2,198 of them, boxes to 1e-3 mm for 2,214);
+  137 converter errors; 18 partial conversions; 31 converter failures; 1 exact failure
+  (tumbleweed, a converter triangulation). **No model is an exact-kernel or Manifold error
+  against native**; every disagreement is the converted program.
+- **The remaining converter error is CAD Script's `loft`:** it splits each side quad along one
+  diagonal, while kernelCAD and the lab build a ruled surface. Between sections turned against
+  each other the two differ (beacon lamp: 2,678,272 vs 2,772,520 mm³, closed form). A probe that
+  splits such quads through their centre (exact ruled volume) makes 139 of the 147 converter
+  errors and exact failures agree with native to 1e-6. Not merged: it changes `loft` for every
+  document, an owner decision. The rest: 5 smooth lofts converted as ruled (up to +31 %), 3 at
+  ≤ 6.5e-6. Path arcs were not the cause in the models checked.
+- **Fixed in the converter:** `for (let …)` closures shared one binding (`roll-cage-trolley`'s
+  wire grid all at the last row; found by the native box).
+- **Reported, not fixed:** the exact kernel's 0.1.1 `bbox()` takes up to 3 min on trimmed NURBS
+  bodies (ellipsoid heaps; exact CPU 806 → 1,753 s for the catalog); the lab's native build gives
+  a self-intersecting outline (helmet chin straps) zero volume but nonzero area.
 
 ## Owner decisions (2026-11-24)
 

@@ -776,10 +776,14 @@ before the fixes. Converted reference parts match their analytic volumes to abou
 Manifold (48 segments) and exactly with the exact kernel
 (`tests/kcad-import.test.ts`, `tests/kcad-semantics.test.ts`).
 
-Cross-check with Manifold and the exact kernel on all 2,402 models (2026-11-25, Phase 4,
+Cross-check with Manifold, the exact kernel (0.1.1) and the lab's native SMLib build on all
+2,402 models (2026-11-25, Phase 4,
 [experiments/catalog-crosscheck](../experiments/catalog-crosscheck/README.md)): where both
-kernels build a converted part they agree (68,666 of 68,782), and every model whose parts all
-build is within 1.0 % of the exact volume (faceting of 48 segments; before the cylinder/torus
-fix 115 models were more than 5 % low, the worst by 15.3 %). The remaining disagreements are
-kernel issues (SMLib bbox of rotated spheres, area of stitched lofts; Manifold float32
-vertices and touching faces), not conversion errors.
+kernels build a converted part they agree (69,307 of 69,363; the rest are Manifold float32
+numerics and touching faces), and every model whose parts all build is within 1.0 % of the exact volume (faceting
+of 48 segments). Against the native build of the original source, 2,215 models agree to 1e-6;
+the 137 that do not are conversion errors, all in models with lofts: CAD Script's `loft` triangulates the
+side quads between sections turned against each other where kernelCAD builds a ruled surface
+(129 models, up to 8.7 %), smooth lofts are converted as ruled (5 models, up to 31 %), and 3 are left at
+≤ 6.5e-6.
+`for (let …)` closures now get a fresh loop binding per iteration, as in JavaScript.

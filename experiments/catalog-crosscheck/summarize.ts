@@ -20,7 +20,7 @@ function coverageAsNative(c: CoverageFile, ids: string[]): NativeFile {
   const failed = new Map(c.failures.map(f => [catalogId(f.file), f.message ?? 'failed']));
   return { kernel: 'smlib-native (status only)', models: Object.fromEntries(ids.map(id => [id, failed.has(catalogId(id)) ? { status: 'error', error: failed.get(catalogId(id)) } : { status: 'ok' }])) };
 }
-interface NativeFile { kernel?: string; labCommit?: string; models: Record<string, { status: string; volumeMm3?: number; error?: string }> }
+interface NativeFile { kernel?: string; labCommit?: string; models: Record<string, { status: string; volumeMm3?: number; areaMm2?: number; bbox?: { min: number[]; max: number[] }; parts?: number; error?: string }> }
 const count = <T>(xs: T[], key: (x: T) => string) => { const m: Record<string, number> = {}; for (const x of xs) m[key(x)] = (m[key(x)] ?? 0) + 1; return Object.fromEntries(Object.entries(m).sort((a, b) => b[1] - a[1])); };
 /** Collapse numbers and quoted names so equal causes group together. */
 const normalise = (e: string) => e.replace(/“[^”]*”|"[^"]*"|'[^']*'/g, '…').replace(/(?<![A-Za-z\d])-?\d+(\.\d+)?(e-?\d+)?/g, 'N').slice(0, 160);
@@ -106,6 +106,7 @@ export function summarize(jsonl: string, options: { native?: string; meta?: Reco
     disagreeingModels: count(disagree, p => p.model),
   };
 
+  const threeWay = new Map<string, string>();
   if (options.native) {
     const raw = JSON.parse(readFileSync(options.native, 'utf8')) as NativeFile | CoverageFile;
     const statusOnly = !('models' in raw);
@@ -117,19 +118,41 @@ export function summarize(jsonl: string, options: { native?: string; meta?: Reco
       if (!n) return { id: m.id, class: 'native-missing' };
       if (n.status !== 'ok' || typeof n.volumeMm3 !== 'number') return { id: m.id, class: m.totals?.manifold != null ? 'native-failed' : 'all-failed' };
       const M = m.totals?.manifold ?? null, E = m.totals?.exact ?? m.totals?.exactIntent ?? null, N = n.volumeMm3;
-      if (M == null && E == null) return { id: m.id, class: 'ours-failed', N };
+      const skipped = m.convert.skippedParts ?? 0, row = { id: m.id, convert: m.convert.status, parts: m.parts?.length ?? 0, nativeParts: n.parts ?? null, skipped };
+      if (M == null && E == null) return { ...row, class: m.parts?.length ? 'ours-failed' : 'converter-failed', N };
       const tolM = (m.parts ?? []).reduce((s, p) => s + (p.tolerance?.volume ?? 0), 0) + 1e-6 * Math.abs(N);
       const tolE = 1e-6 * Math.abs(N) + 1e-9;
       const en = E != null && Math.abs(E - N) <= tolE, mn = M != null && Math.abs(M - N) <= tolM, me = M != null && E != null && Math.abs(M - E) <= tolM;
-      const cls = en && (mn || M == null) ? 'all-agree' : me && !en ? 'converter-error' : en && !me ? 'manifold-error' : mn && E != null && !en ? 'exact-error' : 'unresolved';
-      return { id: m.id, class: cls, M, E, N, relConverter: E != null ? E / N - 1 : M! / N - 1 };
+      // Exact area (sum) and box (union) over the parts, as the lab sums and unions them.
+      const exactParts = (m.parts ?? []).map(p => (p.exact.ok ? p.exact : p.exactIntent?.ok ? p.exactIntent : null) as { area: number; bbox: { min: number[]; max: number[] } } | null);
+      let relArea: number | null = null, dBox: number | null = null;
+      if (E != null && exactParts.every(Boolean) && typeof n.areaMm2 === 'number') relArea = exactParts.reduce((s, b) => s + b!.area, 0) / n.areaMm2 - 1;
+      if (E != null && exactParts.every(Boolean) && n.bbox) {
+        const lo = [0, 1, 2].map(i => Math.min(...exactParts.map(b => b!.bbox.min[i]))), hi = [0, 1, 2].map(i => Math.max(...exactParts.map(b => b!.bbox.max[i])));
+        dBox = Math.max(...[0, 1, 2].flatMap(i => [Math.abs(lo[i] - n.bbox!.min[i]), Math.abs(hi[i] - n.bbox!.max[i])]));
+      }
+      const cls = skipped && !en ? 'converter-partial'
+        : E == null ? (mn ? 'exact-failed, manifold ≈ native' : 'exact-failed, manifold ≠ native')
+        : en && (mn || M == null) ? 'all-agree' : me && !en ? 'converter-error' : en && !me ? 'manifold-error' : mn && !en ? 'exact-error' : 'unresolved';
+      return { ...row, class: cls, M, E, N, relConverter: E != null ? E / N - 1 : M! / N - 1, relArea, dBox };
     });
-    summary.native = { source: { kernel: native.kernel, labCommit: native.labCommit, statusOnly }, classes: count(three, t => t.class), models: statusOnly ? three.filter(t => t.class.startsWith('native failed')) : three };
+    // Exact vs native on area and box where the exact volume agrees (same kernel, so 1e-6).
+    const volOk = three.filter(t => t.class === 'all-agree' || t.class === 'manifold-error') as { id: string; relArea?: number | null; dBox?: number | null; N?: number }[];
+    const nativeMeasures = statusOnly ? null : {
+      volumeAgreeing: volOk.length,
+      areaWithin1e6: volOk.filter(t => t.relArea != null && Math.abs(t.relArea) <= 1e-6).length,
+      areaWithin1e3: volOk.filter(t => t.relArea != null && Math.abs(t.relArea) <= 1e-3).length,
+      areaBeyond1e3: volOk.filter(t => t.relArea != null && Math.abs(t.relArea) > 1e-3).map(t => ({ id: t.id, relArea: t.relArea })),
+      bboxWithin1e3mm: volOk.filter(t => t.dBox != null && t.dBox <= 1e-3).length,
+      bboxBeyond1e3mm: volOk.filter(t => t.dBox != null && t.dBox > 1e-3).map(t => ({ id: t.id, dBox: t.dBox })),
+    };
+    for (const t of three) threeWay.set(t.id, t.class);
+    summary.native = { source: { kernel: native.kernel, labCommit: native.labCommit, statusOnly }, classes: count(three, t => t.class), exactVsNative: nativeMeasures, models: statusOnly ? three.filter(t => t.class.startsWith('native failed')) : three.filter(t => t.class !== 'all-agree' || ('relArea' in t && t.relArea != null && Math.abs(t.relArea) > 1e-6) || ('dBox' in t && t.dBox != null && t.dBox > 1e-3)) };
   }
 
   const out = jsonl.replace(/\.jsonl$/, '');
   // Compact per-model table (committable for the full run): id, class, convert status, parts, totals.
-  writeFileSync(`${out}-models.json`, JSON.stringify(models.map(m => ({ id: m.id, class: m.class, convert: m.convert.status, ...(m.convert.error ? { error: m.convert.error } : {}), parts: m.parts?.length ?? 0, partClasses: count(m.parts ?? [], p => p.class), totals: m.totals ?? null })), null, 0).replace(/},{"id"/g, '},\n{"id"') + '\n');
+  writeFileSync(`${out}-models.json`, JSON.stringify(models.map(m => ({ id: m.id, class: m.class, convert: m.convert.status, ...(m.convert.error ? { error: m.convert.error } : {}), parts: m.parts?.length ?? 0, partClasses: count(m.parts ?? [], p => p.class), totals: m.totals ?? null, ...(threeWay.has(m.id) ? { native: threeWay.get(m.id) } : {}) })), null, 0).replace(/},{"id"/g, '},\n{"id"') + '\n');
   writeFileSync(`${out}-summary.json`, JSON.stringify(summary, null, 1) + '\n');
   const table = (title: string, rec: Record<string, number>, limit = 15) => [`| ${title} | Count |`, '| --- | ---: |', ...Object.entries(rec).slice(0, limit).map(([k, v]) => `| ${k.replace(/\|/g, '\\|')} | ${v} |`)].join('\n');
   const t = summary.timing as Record<string, number>, a = summary.agreement as Record<string, number>, i = summary.intent as Record<string, number>;
@@ -148,7 +171,10 @@ export function summarize(jsonl: string, options: { native?: string; meta?: Reco
     `Low-segment intent probe: ${i.parts} parts (${i.agreeWithinFacetingOfEmittedSegments} agree with Manifold within the faceting of the emitted N), median Manifold/intent − 1 = ${fmt(i.medianRelVolume)}, min ${i.minRelVolume == null ? '–' : fmt(i.minRelVolume)}; ${i.modelsOnlyLowSegmentUnsupported} exact-unsupported models are unsupported only for that reason.`,
     (() => { const t = summary.modelTotals as Record<string, number>; return `Model totals, Manifold vs exact (kernelCAD intent for low segments), ${t.models} models: ${t.exactlyEqual} within 1e-6, ${t.within1e3} within 1e-3, ${t.within1e2} within 1e-2, ${t.beyond5e2} beyond 5e-2; median ${fmt(t.median)}, 5th percentile ${fmt(t.p05)}, min ${fmt(t.min)}.`; })(),
     `CPU: Manifold ${(t.manifoldCpuMsTotal / 1000).toFixed(0)} s total (median part ${fmt(t.manifoldCpuMsMedianPart)} ms); exact ${(t.exactCpuMsTotal / 1000).toFixed(0)} s total (median part ${fmt(t.exactCpuMsMedianPart)} ms, max ${(t.exactCpuMsMaxPart / 1000).toFixed(1)} s).`,
-    ...(summary.native ? ['', table('Three-way class (with native volumes)', (summary.native as { classes: Record<string, number> }).classes)] : ['', 'Native (lab) volumes: not provided; see README "Native volumes".']),
+    ...(summary.native ? ['', table('Three-way class (with native volumes)', (summary.native as { classes: Record<string, number> }).classes, 20), ...(() => {
+      const x = (summary.native as { exactVsNative: { volumeAgreeing: number; areaWithin1e6: number; areaWithin1e3: number; bboxWithin1e3mm: number } | null }).exactVsNative;
+      return x ? ['', `Exact vs native where the volumes agree (${x.volumeAgreeing} models): area within 1e-6 for ${x.areaWithin1e6}, within 1e-3 for ${x.areaWithin1e3}; box within 1e-3 mm for ${x.bboxWithin1e3mm}.`] : [];
+    })()] : ['', 'Native (lab) volumes: not provided; see README "Native volumes".']),
   ].join('\n');
   writeFileSync(`${out}-summary.md`, markdown + '\n');
   return { summary, markdown };

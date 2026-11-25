@@ -12,9 +12,12 @@ import { convexHull, ExactKernelError, isConvexPolyhedron, type ExactKernel, typ
 /** Below this many segments a circle is ambiguous (e.g. `cylinder(r, h, 6)` as a hexagonal
  * prism), so it is refused instead of being silently rounded. */
 export const MIN_EXACT_SEGMENTS = 16;
-/** Polyhedra above this many faces are tessellated constructors (ellipsoid, elliptic frustum,
- * rounded cylinder, many-section lofts) with no exact lowering yet. */
-export const MAX_POLYHEDRON_FACES = 256;
+/** Polyhedra are stitched face by face; above this many faces the stitch gets slow. The exact
+ * kernel's own tests stitch 2,044 faces (about 3 s); the largest catalog polyhedra (12-gon lathes,
+ * shedded insulators, fuselage lofts: up to 578 faces) build in about 1 s. Tessellated
+ * constructors (ellipsoid, elliptic frustum, rounded cylinder) are polyhedra here too: exact
+ * as polyhedra, not as the smooth surfaces they approximate. */
+export const MAX_POLYHEDRON_FACES = 2048;
 
 const unsupported = (message: string): never => { throw new ExactKernelError('unsupported', message); };
 const invalid = (message: string): never => { throw new ExactKernelError('invalid-input', message); };
@@ -250,7 +253,7 @@ export function lowerCodeShape(k: ExactKernel, shape: CodeShape): ExactSolid | n
       return profile && revolveProfile(k, profile, shape.angle);
     }
     case 'polyhedron': {
-      if (shape.faces.length > MAX_POLYHEDRON_FACES) unsupported(`A polyhedron of ${shape.faces.length} faces exceeds the exact faceted-solid budget (${MAX_POLYHEDRON_FACES}); tessellated constructors (ellipsoid, ellipticFrustum, roundedCylinder, many-section loft) have no exact lowering yet.`);
+      if (shape.faces.length > MAX_POLYHEDRON_FACES) unsupported(`A polyhedron of ${shape.faces.length} faces exceeds the exact faceted-solid budget (${MAX_POLYHEDRON_FACES} faces).`);
       if (isConvexPolyhedron(shape.points, shape.faces)) { const hull = convexHull(shape.points); return k.polyhedron(hull.points, hull.faces); }
       return k.polyhedron(shape.points, shape.faces);
     }
