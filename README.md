@@ -9,7 +9,7 @@ same editor and document model in another application.
 constrained sketches remain roadmap work. See the
 [convergence roadmap](docs/CRISPCAD-CONVERGENCE.md).
 
-CrispCAD is used in our **Brickwright** App. See the `@brickwright/cad-*` packages; the
+CrispCAD is used in our **Brickwright** App. See the `@brickwright/cad-*` packages;
 [BrickWright](docs/INTEGRATION.md).
 
 ![CrispCAD workbench](docs/images/workbench.png)
