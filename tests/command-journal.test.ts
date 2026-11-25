@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {beforeAll,describe,expect,it} from 'vitest';
 import {readFileSync} from 'node:fs';
-import {compileCode,createCadSession,createCommandJournal,createCommandRunner,createDocument,exportCommandJournal,portableJournalObjects,serializeDocument} from '@brickwright/cad-core';
+import {compileCode,createCadSession,createCommandJournal,createCommandRunner,createDocument,exportCommandJournal,newId,portableJournalObjects,serializeDocument} from '@brickwright/cad-core';
 import type {CadDocument} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import {createTerminalController} from '../packages/editor/src/terminal-controller.js';
@@ -36,6 +36,58 @@ describe('command journal export',()=>{
    const flat=(bounds:{min:number[];max:number[]})=>[...bounds.min,...bounds.max];
    flat(rebuilt.bodies[0].bounds).forEach((value,i)=>expect(value).toBeCloseTo(flat(original.bodies[0].bounds)[i],5));
   }
+ });
+ it('exports sketch extrusions and revolutions on every plane as equivalent CAD Script',()=>{
+  const {session,journal,runner}=fixture();
+  runner.runScript('rect 0,0 20,30\nextrude Rectangle 5\ncircle 50,0 8\nextrude Circle 12\nselect "Extrusion 2"\nmove 0,0,0 0,10,3\nrotate 0,0,30');
+  session.addSketchExtrusion({id:newId(),kind:'rectangle',width:10,depth:4},{name:'Side',plane:'XZ',distance:6,symmetric:true,position:[1,2,3]});
+  session.addSketchExtrusion({id:newId(),kind:'outline',points:[[0,0],[12,0],[12,8],[0,8]],bulges:[0,0.4,0,0]},{name:'Arched',plane:'YZ',distance:3});
+  session.addSketchRevolution({id:newId(),kind:'outline',points:[[5,0],[9,0],[9,6],[5,6]]},{name:'Ring',plane:'XY',angle:270,position:[0,-40,0]});
+  session.addSketchRevolution({id:newId(),kind:'circle',radius:2,center:[6,1],segments:32},{name:'Torus',plane:'YZ',angle:360,axisOffset:1});
+  session.addSketchRevolution({id:newId(),kind:'rectangle',width:4,depth:6},{name:'Disc',plane:'XZ',angle:90});
+  const text=journal.export();
+  expect(replayBlocks(text)).toEqual([]);expect(objectBlocks(text)).toHaveLength(7);
+  expect(text).toContain('// from: rectangle 0,0 20,30; extrude ');
+  expect(text).toContain('return extrudeProfile(5, rectangle2d(20, 30));');
+  expect(text).toContain('return move([0, 10, 3], rotate([0, 0, 30], extrudeProfile(12, move2d(50, 0, circle2d(8, 64)))));');
+  expect(text).toContain('return move([1, 2, 3], rotate([90, 0, 0], move([0, 0, -3], extrudeProfile(6, rectangle2d(10, 4, true)))));');
+  expect(text).toMatch(/return rotate\(\[90, 0, 90\], extrudeProfile\(3, polygon2d\(\[/);
+  expect(text).toContain('revolve(move2d(-5, 0, move2d(5, 0, rectangle2d(4, 6))), 270, 128)');
+  const exported=portableJournalObjects(journal.entries);expect(exported.map(o=>o.id)).toEqual(session.state.document.roots);
+  for(const object of exported){
+   const document=session.state.document,original=kernel.evaluate({...document,nodes:{[object.id]:document.nodes[object.id]},roots:[object.id]});
+   const code=createCadSession();code.addCode({version:1,language:'brickwright-cad-script',source:object.source,parameters:{}});
+   const rebuilt=kernel.evaluate(code.state.document);
+   expect(rebuilt.volume).toBeGreaterThan(1);
+   // Same polygons; only float rounding of the nested transforms differs.
+   expect(rebuilt.volume/original.volume).toBeCloseTo(1,7);
+   const flat=(bounds:{min:number[];max:number[]})=>[...bounds.min,...bounds.max];
+   flat(rebuilt.bodies[0].bounds).forEach((value,i)=>expect(value).toBeCloseTo(flat(original.bodies[0].bounds)[i],5));
+  }
+ });
+ it('keeps sketches non-portable when they are parametric, unused or consumed',()=>{
+  const {session,journal,runner}=fixture();
+  session.setParametric({version:1,parameters:{h:{expression:'7',unit:'mm'}},bindings:[]});
+  const sketch=session.addSketch({id:newId(),kind:'rectangle',width:10,depth:10},{name:'Param',plane:'XY'});
+  session.extrudeSketch(sketch,{distance:'h'});
+  // A literal extrusion that a union later consumes, and a sketch nothing extrudes.
+  runner.runScript('circle 0,0 4\ncircle 30,0 4\nbox 2,2,2 30,0,1\nrect 50,0 60,10');
+  const circles=Object.values(session.state.document.sketches!).filter(s=>s.name==='Circle').map(s=>s.id);
+  runner.run(`extrude ${circles[0]} 3`);runner.run(`extrude ${circles[1]} 3`);
+  const consumed=session.state.document.roots.at(-1)!,box=session.state.document.roots.find(id=>session.state.document.nodes[id].kind==='box')!;
+  session.select([consumed,box]);session.combine('union');
+  const text=journal.export(),objects=objectBlocks(text);
+  // Only the first circle's extrusion is portable.
+  expect(objects).toHaveLength(1);expect(objects[0]).toContain(`// from: circle 0,0 4; extrude ${circles[0]} 3`);
+  expect(objects[0]).toContain('return extrudeProfile(3, circle2d(4, 64));');
+  const replay=replayBlocks(text).map(block=>block.split('\n')[0]);
+  expect(replay.filter(line=>line.includes('Extrude sketch'))).toHaveLength(1);
+  expect(replay.some(line=>line.includes('rectangle 50,0 60,10'))).toBe(true);
+  expect(replay.some(line=>line.includes(`extrude ${circles[1]} 3`))).toBe(true);
+  expect(replay.some(line=>line.includes('circle 30,0 4'))).toBe(true);
+  // Editing the portable sketch later folds into its extrusion.
+  session.updateSketch(circles[0],{profile:{...session.state.document.sketches![circles[0]].profile,radius:5} as never});
+  expect(journal.export()).toContain('return extrudeProfile(3, circle2d(5, 64));');
  });
  it('keeps non-portable edits as marked canonical replay text and resolves undo/redo',()=>{
   const {session,journal,runner}=fixture();

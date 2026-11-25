@@ -66,6 +66,7 @@ const drafting:readonly Draft[]=[
  {name:'clear',aliases:['cls'],description:'Clear the terminal transcript',usage:'clear',category:'terminal',editsModel:false,arguments:[]},
  {name:'alias',aliases:[],description:'List, inspect or define a custom command alias',usage:'alias [name [command]]',category:'terminal',editsModel:false,arguments:[arg('name','alias',{optional:true}),arg('command','command',{optional:true})]},
  {name:'unalias',aliases:[],description:'Remove a custom command alias',usage:'unalias <name>',category:'terminal',editsModel:false,arguments:[arg('name','alias')]},
+ {name:'repeat',aliases:[],description:'Repeat the last command or script',usage:'repeat',category:'terminal',editsModel:true,arguments:[]},
  {name:'box',aliases:['b'],description:'Create a box',usage:'box [width,depth,height] [center]',category:'create',editsModel:true,arguments:[arg('size','vector',{min:.01,max:100000}),arg('center','point',{optional:true})],headless:true},
  {name:'sphere',aliases:['sp'],description:'Create a sphere',usage:'sphere [radius] [center]',category:'create',editsModel:true,arguments:[arg('radius','number',{min:.01,max:50000}),arg('center','point',{optional:true})],headless:true},
  {name:'cylinder',aliases:['cyl'],description:'Create a cylinder',usage:'cylinder [radius] [height] [center]',category:'create',editsModel:true,arguments:[arg('radius','number',{min:.01,max:50000}),arg('height','number',{min:.01,max:100000}),arg('center','point',{optional:true})],headless:true},

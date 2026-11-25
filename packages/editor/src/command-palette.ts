@@ -8,19 +8,21 @@ interface PaletteContext extends CadCommandState {
  canEditMirror:boolean;
  canEditPattern:boolean;
 }
-type CommandEntry={command:CadCommand;label:string;alias?:string;requires?:keyof PaletteContext};
-/** Labels, search keywords and availability come from the shared command registry. */
-export const paletteCommands:readonly CommandEntry[]=paletteCommandSpecs().map(({name,palette})=>({command:name as CadCommand,label:palette!.label,...(palette!.keywords?{alias:palette!.keywords}:{}),...(palette!.requires?{requires:palette!.requires}:{})}));
+type CommandEntry={command:CadCommand;label:string;alias?:string;aliases?:readonly string[];requires?:keyof PaletteContext};
+/** Labels, search keywords, terminal aliases and availability come from the shared command registry. */
+export const paletteCommands:readonly CommandEntry[]=paletteCommandSpecs().map(({name,aliases,palette})=>({command:name as CadCommand,label:palette!.label,...(aliases.length?{aliases}:{}),...(palette!.keywords?{alias:palette!.keywords}:{}),...(palette!.requires?{requires:palette!.requires}:{})}));
 const normalize=(value:string)=>value.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase().trim();
 
-export function findPaletteCommands<T extends {label:string;alias?:string}>(items:readonly T[],query:string):T[]{
+/** Matches labels and keywords by substring and registry aliases (`del`, `erase`) by prefix.
+ * A query that is exactly an alias ranks like a label prefix. */
+export function findPaletteCommands<T extends {label:string;alias?:string;aliases?:readonly string[]}>(items:readonly T[],query:string):T[]{
  const input=normalize(query);
  if(!input)return [...items];
  const tokens=input.split(/\s+/);
  return items.flatMap(item=>{
-  const label=normalize(item.label),keywords=normalize(item.alias??'');
-  if(!tokens.every(token=>label.includes(token)||keywords.includes(token)))return [];
-  return [{item,score:label===input?0:label.startsWith(input)?1:label.includes(input)?2:3}];
+  const label=normalize(item.label),keywords=normalize(item.alias??''),aliases=(item.aliases??[]).map(normalize);
+  if(!tokens.every(token=>label.includes(token)||keywords.includes(token)||aliases.some(alias=>alias.startsWith(token))))return [];
+  return [{item,score:label===input?0:label.startsWith(input)||aliases.includes(input)?1:label.includes(input)?2:3}];
  }).sort((a,b)=>a.score-b.score).map(result=>result.item);
 }
 

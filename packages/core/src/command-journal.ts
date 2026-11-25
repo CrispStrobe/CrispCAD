@@ -13,8 +13,11 @@
  *   runnable by the headless command runner (comment lines are skipped).
  */
 import type {SolidNode,Transform} from './document.js';
+import {compileCode} from './code.js';
+import {evaluateSketch} from './features.js';
+import type {PlanarSketch} from './features.js';
 import type {CadSession} from './session.js';
-import type {SessionCommandRecord,SessionJsonValue,ApplySessionCommand} from './session-commands.js';
+import type {SessionCommandRecord,SessionCommandValue,SessionJsonValue,ApplySessionCommand} from './session-commands.js';
 
 export interface CommandJournalEntry {
  readonly index:number;
@@ -61,13 +64,33 @@ export function createCommandJournal(session:CadSession,limits:{entries?:number;
 }
 export type CommandJournal=ReturnType<typeof createCommandJournal>;
 
-type PortableNode=Extract<SolidNode,{kind:'box'|'sphere'|'cylinder'}>;
+type PrimitiveNode=Extract<SolidNode,{kind:'box'|'sphere'|'cylinder'}>;
+type FeatureNode=Extract<SolidNode,{kind:'extrusion'|'revolution'}>;
+type PortableNode=PrimitiveNode|FeatureNode;
 interface PortableObject {id:string;node:PortableNode;entries:CommandJournalEntry[];created:number}
-interface Plan {objects:Map<string,PortableObject>;replay:CommandJournalEntry[];omitted:number;undone:number}
+interface PortableSketch {id:string;sketch:PlanarSketch;entries:CommandJournalEntry[]}
+interface Fold {objects:Map<string,PortableObject>;sketches:Map<string,PortableSketch>}
+interface Plan extends Fold {replay:CommandJournalEntry[];omitted:number;undone:number}
 
+/** The stored value of a recorded before/after slot, if present. */
+const stored=(slot:SessionCommandValue)=>slot.present?slot.value:undefined;
 const record=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
-const portableNode=(value:unknown):value is PortableNode=>record(value)&&['box','sphere','cylinder'].includes(value.kind as string)
- &&!value.reference&&value.role!=='hole'&&record(value.transform);
+const finite=(value:unknown):value is number=>typeof value==='number'&&Number.isFinite(value);
+const plainBody=(value:Record<string,unknown>)=>!value.reference&&value.role!=='hole'&&record(value.transform);
+/** Plain primitives and literal sketch extrusions/revolutions have a CAD Script equivalent. */
+const portableNode=(value:unknown):value is PortableNode=>{
+ if(!record(value)||!plainBody(value))return false;
+ if(['box','sphere','cylinder'].includes(value.kind as string))return true;
+ if(value.featureVersion!==1||typeof value.sketchId!=='string')return false;
+ if(value.kind==='extrusion')return finite(value.distance)&&typeof value.symmetric==='boolean';
+ return value.kind==='revolution'&&finite(value.angle)&&(value.axisOffset===undefined||finite(value.axisOffset));
+};
+/** A closed sketch on a principal plane whose profile uses literal values only. */
+const portableSketch=(value:unknown):value is PlanarSketch=>{
+ if(!record(value)||!record(value.profile)||value.profile.kind==='path'||!['XY','XZ','YZ'].includes(value.plane as string))return false;
+ try{evaluateSketch(value as unknown as PlanarSketch,{});return true;}catch{return false;}
+};
+const sketchKey=(id:string)=>'sketch:'+id;
 // Derived bookkeeping that every model edit may rewrite.
 const sideEffect=(path:readonly string[])=>path[0]==='roots'||path[0]==='version'||path[0]==='modelSource';
 
@@ -95,77 +118,204 @@ function effectiveEntries(entries:readonly CommandJournalEntry[]){
  return {entries:entries.filter(entry=>kept.has(entry)),omitted,undone};
 }
 
+/** Sketch IDs that the created or changed feature nodes of a command refer to. */
+function referencedSketches(command:ApplySessionCommand):string[]{
+ const ids:string[]=[];
+ for(const change of command.changes){
+  if(change.path[0]!=='nodes')continue;
+  const value=change.path.length===2?stored(change.after):change.path.length===1?undefined:change.path[2]==='sketchId'?{sketchId:stored(change.after)}:undefined;
+  if(record(value)&&typeof value.sketchId==='string')ids.push(value.sketchId);
+  {const all=stored(change.after);if(change.path.length===1&&record(all))for(const node of Object.values(all))if(record(node)&&typeof node.sketchId==='string')ids.push(node.sketchId);}
+ }
+ return ids;
+}
+
 /**
  * Decide which bodies are portable. A body is portable when it was created in
- * the journal as a plain box, sphere or cylinder and every later edit that
- * touched it only changed its own properties while it stayed a plain
- * primitive. A non-portable edit that touches a body (or removes it from the
- * roots) makes that body non-portable too, and so on until nothing changes.
+ * the journal as a plain box, sphere or cylinder, or as an extrusion or
+ * revolution of a closed literal sketch created in the journal, and every
+ * later edit that touched it (or its sketch) only changed their own
+ * properties while they stayed portable. A non-portable edit that touches a
+ * body or sketch (or removes a body from the roots) makes it non-portable too,
+ * together with the sketch a feature uses and every other feature on that
+ * sketch, and so on until nothing changes. A sketch that no portable body
+ * uses has no CAD Script equivalent and stays replay text.
  */
 function planJournal(entries:readonly CommandJournalEntry[]):Plan{
  const effective=effectiveEntries(entries);
  const tainted=new Set<string>();
  for(;;){
-  const objects=new Map<string,PortableObject>(),replay:CommandJournalEntry[]=[],grown=new Set<string>();
+  const fold:Fold={objects:new Map(),sketches:new Map()},replay:CommandJournalEntry[]=[],grown=new Set<string>();
+  const taint=(key:string)=>{if(!tainted.has(key))grown.add(key);};
   for(const entry of effective.entries){
    const command=entry.record.command;
    if(command.kind!=='apply'){replay.push(entry);continue;}
-   const result=foldEntry(command,objects,tainted,entry);
+   const before=new Map([...fold.objects].map(([id,object])=>[id,object.node]));
+   const result=foldEntry(command,fold,tainted,entry);
    if(result.portable)continue;
    replay.push(entry);
-   // Bodies a non-portable edit touched are no longer tracked; the next pass taints them from the start.
-   for(const id of result.touched){objects.delete(id);if(!tainted.has(id))grown.add(id);}
+   // Bodies and sketches a non-portable edit touched are no longer tracked; the next pass taints them from the start.
+   for(const key of result.touched){
+    if(!key.startsWith('sketch:')){const node=before.get(key);if(node&&'sketchId' in node)taint(sketchKey(node.sketchId));fold.objects.delete(key);}
+    else fold.sketches.delete(key.slice(7));
+    taint(key);
+   }
+   for(const id of referencedSketches(command))taint(sketchKey(id));
   }
-  if(!grown.size)return {objects,replay,omitted:effective.omitted,undone:effective.undone};
-  for(const id of grown)tainted.add(id);
+  if(!grown.size){
+   // Sketches without a portable body, and programs the compiler refuses, stay replay text.
+   const used=new Set([...fold.objects.values()].flatMap(object=>'sketchId' in object.node?[object.node.sketchId]:[]));
+   for(const id of fold.sketches.keys())if(!used.has(id))taint(sketchKey(id));
+   for(const object of fold.objects.values())if(!grown.size&&!compiles(objectCadScript(object.node,fold.sketches)))taint(object.id);
+  }
+  if(!grown.size)return {...fold,replay,omitted:effective.omitted,undone:effective.undone};
+  for(const key of grown)tainted.add(key);
  }
 }
-function foldEntry(command:ApplySessionCommand,objects:Map<string,PortableObject>,tainted:ReadonlySet<string>,entry:CommandJournalEntry):{portable:boolean;touched:string[]}{
- const touched=new Set<string>(),deleted=new Set<string>();let portable=!command.context,roots:readonly unknown[]|undefined;
+function compiles(source:string|undefined){
+ if(source===undefined)return false;
+ try{compileCode({version:1,language:'brickwright-cad-script',source,parameters:{}});return true;}catch{return false;}
+}
+function foldEntry(command:ApplySessionCommand,fold:Fold,tainted:ReadonlySet<string>,entry:CommandJournalEntry):{portable:boolean;touched:string[]}{
+ const {objects,sketches}=fold;
+ const touched=new Set<string>(),deleted=new Set<string>();let portable=!command.context?.kernel&&!command.context?.bodyOperations,roots:readonly unknown[]|undefined;
  for(const change of command.changes){
   const [head,id]=change.path;
   if(head==='nodes'&&id!==undefined){touched.add(id);if(change.path.length===2&&!change.after.present)deleted.add(id);}
+  if(head==='sketches'){
+   if(id!==undefined)touched.add(sketchKey(id));
+   else for(const value of [stored(change.before),stored(change.after)])if(record(value))for(const key of Object.keys(value))touched.add(sketchKey(key));
+  }
   if(head==='roots'&&change.path.length===1&&change.after.present&&Array.isArray(change.after.value))roots=change.after.value;
   if(sideEffect(change.path))continue;
+  if(head==='sketches'){
+   // The first sketch of a document creates the whole collection.
+   if(id===undefined){
+    {const created=stored(change.after);if(change.before.present||!record(created)||Object.entries(created).some(([key,value])=>tainted.has(sketchKey(key))||!portableSketch(value)))portable=false;}
+    continue;
+   }
+   if(tainted.has(sketchKey(id))){portable=false;continue;}
+   if(sketches.has(id))continue;
+   if(change.path.length===2&&!change.before.present&&change.after.present&&portableSketch(stored(change.after)))continue;
+   portable=false;continue;
+  }
   if(head!=='nodes'||id===undefined||tainted.has(id)){portable=false;continue;}
   if(objects.has(id))continue;
-  if(change.path.length===2&&!change.before.present&&change.after.present&&portableNode(change.after.value))continue;
+  if(change.path.length===2&&!change.before.present&&change.after.present&&portableNode(stored(change.after)))continue;
   portable=false;
  }
+ // Sketch joint context only exists when a sketch with joints changed; joints are not portable.
+ if(command.context?.sketchJoints?.some(item=>item.joints.length))portable=false;
  // A body that leaves the roots without being deleted was consumed, e.g. by a boolean.
  if(roots)for(const id of objects.keys())if(!roots.includes(id)&&!deleted.has(id)){touched.add(id);portable=false;}
  if(!portable)return {portable:false,touched:[...touched]};
- // Fold into a trial copy first: every touched body must remain a plain primitive.
- const trial=new Map([...objects].map(([id,object])=>[id,{...object,node:structuredClone(object.node)}]));
+ // Fold into a trial copy first: every touched body and sketch must remain portable.
+ const trialObjects=new Map([...objects].map(([id,object])=>[id,{...object,node:structuredClone(object.node)}]));
+ const trialSketches=new Map([...sketches].map(([id,sketch])=>[id,{...sketch,sketch:structuredClone(sketch.sketch)}]));
  for(const change of command.changes){
   if(sideEffect(change.path))continue;
-  const id=change.path[1];
-  if(change.path.length===2){
-   if(change.after.present)trial.set(id,{id,node:structuredClone(change.after.value) as unknown as PortableNode,entries:[],created:entry.index});
-   else trial.delete(id);
+  const [head,id]=change.path;
+  if(head==='sketches'){
+   if(id===undefined){for(const [key,value] of Object.entries(stored(change.after) as Record<string,unknown>))trialSketches.set(key,{id:key,sketch:structuredClone(value) as unknown as PlanarSketch,entries:[]});continue;}
+   if(change.path.length===2){
+    if(change.after.present)trialSketches.set(id,{id,sketch:structuredClone(stored(change.after)) as unknown as PlanarSketch,entries:[]});
+    else trialSketches.delete(id);
+    continue;
+   }
+   setPath(trialSketches.get(id)!.sketch as unknown as Record<string,unknown>,change.path.slice(2),change.after);
    continue;
   }
-  setPath(trial.get(id)!.node as unknown as Record<string,unknown>,change.path.slice(2),change.after);
+  if(change.path.length===2){
+   if(change.after.present)trialObjects.set(id,{id,node:structuredClone(stored(change.after)) as unknown as PortableNode,entries:[],created:entry.index});
+   else trialObjects.delete(id);
+   continue;
+  }
+  setPath(trialObjects.get(id)!.node as unknown as Record<string,unknown>,change.path.slice(2),change.after);
  }
- for(const id of touched){const object=trial.get(id);if(object&&!portableNode(object.node))return {portable:false,touched:[...touched]};}
- objects.clear();
- for(const [id,object] of trial){if(touched.has(id))object.entries=[...object.entries,entry];objects.set(id,object);}
+ for(const key of touched){
+  if(key.startsWith('sketch:')){const sketch=trialSketches.get(key.slice(7));if(sketch&&!portableSketch(sketch.sketch))return {portable:false,touched:[...touched]};continue;}
+  const object=trialObjects.get(key);
+  if(object&&!portableNode(object.node))return {portable:false,touched:[...touched]};
+ }
+ // Every feature must still use a tracked, portable sketch.
+ for(const object of trialObjects.values())if('sketchId' in object.node&&!trialSketches.has(object.node.sketchId))return {portable:false,touched:[...touched]};
+ objects.clear();sketches.clear();
+ for(const [id,object] of trialObjects){if(touched.has(id))object.entries=[...object.entries,entry];objects.set(id,object);}
+ for(const [id,sketch] of trialSketches){if(touched.has(sketchKey(id)))sketch.entries=[...sketch.entries,entry];sketches.set(id,sketch);}
  return {portable:true,touched:[...touched]};
 }
 
 const number=(value:number)=>{const n=Object.is(value,-0)?0:value;return String(n);};
 const vector=(value:readonly number[])=>`[${value.map(number).join(', ')}]`;
 const same=(value:readonly number[],expected:readonly number[])=>value.every((n,i)=>n===expected[i]);
-/** CAD Script for one primitive at its node transform (scale, then XYZ rotation, then translation). */
-export function primitiveCadScript(node:Pick<SolidNode,'transform'>&({kind:'box';size:readonly number[]}|{kind:'sphere';radius:number;segments:number}|{kind:'cylinder';radius:number;height:number;segments:number})):string{
- let shape=node.kind==='box'?`box(${node.size.map(number).join(', ')})`
-  :node.kind==='sphere'?`sphere(${number(node.radius)}, ${node.segments})`
-  :`cylinder(${number(node.radius)}, ${number(node.height)}, ${node.segments})`;
- const transform:Transform=node.transform;
+/** Wraps a shape in a node transform: scale, then XYZ rotation, then translation (the model's order). */
+function placed(shape:string,transform:Transform){
  if(!same(transform.scale,[1,1,1]))shape=`scale(${vector(transform.scale)}, ${shape})`;
  if(!same(transform.rotation,[0,0,0]))shape=`rotate(${vector(transform.rotation)}, ${shape})`;
  if(!same(transform.position,[0,0,0]))shape=`move(${vector(transform.position)}, ${shape})`;
- return `return ${shape};`;
+ return shape;
+}
+/** CAD Script for one primitive at its node transform (scale, then XYZ rotation, then translation). */
+export function primitiveCadScript(node:Pick<SolidNode,'transform'>&({kind:'box';size:readonly number[]}|{kind:'sphere';radius:number;segments:number}|{kind:'cylinder';radius:number;height:number;segments:number})):string{
+ const shape=node.kind==='box'?`box(${node.size.map(number).join(', ')})`
+  :node.kind==='sphere'?`sphere(${number(node.radius)}, ${node.segments})`
+  :`cylinder(${number(node.radius)}, ${number(node.height)}, ${node.segments})`;
+ return `return ${placed(shape,node.transform)};`;
+}
+const point2=(point:readonly number[])=>`[${number(point[0])}, ${number(point[1])}]`;
+const moved2d=(x:number,y:number,profile:string)=>x===0&&y===0?profile:`move2d(${number(x)}, ${number(y)}, ${profile})`;
+/**
+ * CAD Script profile expression for a closed literal sketch, in sketch coordinates.
+ * Rectangles and circles keep their analytic form; other profiles use the
+ * sketch's own evaluated polygon (tessellated arcs and holes included).
+ */
+export function sketchProfileCadScript(sketch:PlanarSketch):string{
+ const profile=sketch.profile;
+ if(profile.kind==='rectangle'&&finite(profile.width)&&finite(profile.depth))return `rectangle2d(${number(profile.width)}, ${number(profile.depth)}, true)`;
+ if(profile.kind==='circle'&&finite(profile.radius)){const [x,y]=profile.center??[0,0];return moved2d(x,y,`circle2d(${number(profile.radius)}, ${profile.segments})`);}
+ const evaluated=evaluateSketch(sketch,{});
+ if(profile.kind==='outline'&&!profile.bulges&&profile.points.length===4){
+  const xs=profile.points.map(p=>p[0]),ys=profile.points.map(p=>p[1]),x0=Math.min(...xs),y0=Math.min(...ys),x1=Math.max(...xs),y1=Math.max(...ys);
+  const axisAligned=profile.points.every(([x,y])=>(x===x0||x===x1)&&(y===y0||y===y1))&&new Set(profile.points.map(p=>p.join(','))).size===4;
+  if(axisAligned&&x1>x0&&y1>y0)return moved2d(x0,y0,`rectangle2d(${number(x1-x0)}, ${number(y1-y0)})`);
+ }
+ const loops=[evaluated.contour,...(evaluated.holes??[])];
+ if(loops.length===1)return `polygon2d([${evaluated.contour.map(point2).join(', ')}])`;
+ let next=0;
+ const paths=loops.map(loop=>`[${loop.map(()=>next++).join(', ')}]`);
+ return `polygon2d([${loops.flat().map(point2).join(', ')}], [${paths.join(', ')}])`;
+}
+/** CAD Script for a literal extrusion or revolution of `sketch`, built like the model's feature evaluator. */
+export function featureCadScript(node:FeatureNode,sketch:PlanarSketch):string{
+ const profile=sketchProfileCadScript(sketch);
+ let shape:string;
+ if(node.kind==='extrusion'){
+  const distance=node.distance as number;
+  shape=`extrudeProfile(${number(distance)}, ${profile})`;
+  if(node.symmetric)shape=`move([0, 0, ${number(-distance/2)}], ${shape})`;
+  if(sketch.plane==='XZ')shape=`rotate([90, 0, 0], ${shape})`;
+  else if(sketch.plane==='YZ')shape=`rotate([90, 0, 90], ${shape})`;
+ }else{
+  // The axis is parallel to sketch Y at sketch X = axisOffset (default: the profile's smallest X).
+  const axis=node.axisOffset===undefined?Math.min(...evaluateSketch(sketch,{}).contour.map(p=>p[0])):node.axisOffset as number;
+  shape=`revolve(${moved2d(-axis,0,profile)}, ${number(node.angle as number)}, 128)`;
+  if(sketch.plane==='XY')shape=`rotate([-90, 0, 0], ${shape})`;
+  else if(sketch.plane==='YZ')shape=`rotate([0, 0, 90], ${shape})`;
+  if(axis)shape=`move(${vector(sketch.plane==='YZ'?[0,axis,0]:[axis,0,0])}, ${shape})`;
+ }
+ return `return ${placed(shape,node.transform)};`;
+}
+function objectCadScript(node:PortableNode,sketches:ReadonlyMap<string,PortableSketch>):string|undefined{
+ if(node.kind==='extrusion'||node.kind==='revolution'){
+  const sketch=sketches.get(node.sketchId);
+  try{return sketch&&featureCadScript(node,sketch.sketch);}catch{return undefined;}
+ }
+ return primitiveCadScript(node);
+}
+/** Entries that shaped an object: its own and those of the sketch it uses. */
+function objectEntries(object:PortableObject,sketches:ReadonlyMap<string,PortableSketch>){
+ const sketch='sketchId' in object.node?sketches.get(object.node.sketchId):undefined;
+ return [...new Set([...(sketch?.entries??[]),...object.entries])].sort((a,b)=>a.index-b.index);
 }
 
 const comment=(text:string)=>text.replace(/[\r\n\u2028\u2029]+/g,' ');
@@ -194,11 +344,11 @@ export function exportCommandJournal(entries:readonly CommandJournalEntry[],opti
  let objectNumber=0;
  const objects=[...plan.objects.values()].sort((a,b)=>a.created-b.created);
  for(const object of objects){
-  const sources=object.entries.map(entry=>entry.invocation??entry.record.summary);
+  const sources=objectEntries(object,plan.sketches).map(entry=>entry.invocation??entry.record.summary);
   blocks.push({index:object.created,lines:[
    `// @object ${++objectNumber} ${JSON.stringify(object.node.name??'')}${object.node.color?` color ${object.node.color}`:''}`,
    ...(sources.length?[`// from: ${comment(sources.join('; '))}`]:[]),
-   primitiveCadScript(object.node),
+   objectCadScript(object.node,plan.sketches)!,
   ]});
  }
  for(const entry of plan.replay)blocks.push({index:entry.index,lines:[
@@ -211,6 +361,7 @@ export function exportCommandJournal(entries:readonly CommandJournalEntry[],opti
 }
 /** @internal Exposed for tests: the bodies the export treats as portable. */
 export function portableJournalObjects(entries:readonly CommandJournalEntry[]):{id:string;source:string}[]{
- return [...planJournal(entries).objects.values()].sort((a,b)=>a.created-b.created).map(object=>({id:object.id,source:primitiveCadScript(object.node)}));
+ const plan=planJournal(entries);
+ return [...plan.objects.values()].sort((a,b)=>a.created-b.created).map(object=>({id:object.id,source:objectCadScript(object.node,plan.sketches)!}));
 }
 
