@@ -104,6 +104,14 @@ Import STL meshes and export STL or 3MF for printing. Mesh exports do not contai
 the editable feature graph. 3MF currently exports geometry without materials.
 Model-derived exports retain the applicable attribution/provenance sidecars.
 
+**Exact STEP export and exact measures (opt-in).** `export step` (also the export
+dialog's **STEP · exact B-rep** option, MCP `cad_export_step` and `crispcad step`) and
+`measure exact` rebuild bodies on an exact B-rep kernel (SMLib, from the
+[CrispCAD kernel lab](https://github.com/CrispStrobe/crispcad-kernel-lab), MIT + Apache-2.0).
+Manifold stays the default kernel; the exact kernel (9.4 MB WebAssembly) loads only on first
+use. Bodies without an exact construction, such as imported meshes, are reported by name
+instead of being written as triangles. See [terminal commands](docs/TERMINAL-WORKSPACE.md#exact-kernel-commands).
+
 The reviewed model library keeps original sources, hashes, licence evidence,
 unit assumptions and qualification records. Browsing does not qualify a model;
 source conversion, mesh screening and collision qualification are separate steps.
@@ -208,6 +216,7 @@ verification, pairing and signing instructions.
 | --- | --- |
 | `@brickwright/cad-core` | Versioned documents, parameters, source conversion, commands and undo |
 | `@brickwright/cad-geometry` | Headless solid evaluation, mesh import/export and library insertion |
+| `@brickwright/cad-exact` | Optional exact B-rep backend (lazy): STEP export and exact measures on `@crispcad/exact-kernel` |
 | `@brickwright/cad-editor` | Embeddable editor, renderer and geometry worker |
 | `@brickwright/cad-history` | Append-only revisions, ancestry and portable archives |
 | `@brickwright/cad-physics` | Qualified collision shapes, mass/inertia and headless Jolt simulation |
@@ -235,7 +244,8 @@ enables it. See [local checks](docs/CI.md).
 ## Licensing and data
 
 Original code is [BSD-3-Clause](LICENSE). Runtime components include Three.js (MIT),
-Manifold (Apache-2.0), Acorn (MIT) and the optional Brickwright Jolt fork (MIT).
+Manifold (Apache-2.0), Acorn (MIT), the optional Brickwright Jolt fork (MIT) and the
+optional exact kernel `@crispcad/exact-kernel` (MIT AND Apache-2.0: SMLib/USD BRep, smlibwasm).
 [Third-party notices](THIRD-PARTY-NOTICES.md) identify the bundled components.
 Model content has its own per-asset grants and attribution requirements.
 

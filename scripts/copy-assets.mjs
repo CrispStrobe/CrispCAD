@@ -16,6 +16,10 @@ const manifest=JSON.parse(await readFile('package.json','utf8'));
 await writeFile('apps/standalone/public/cad-assets/build-info.json',JSON.stringify({version:manifest.version,commit,dirty,builtAt:new Date().toISOString()},null,2));
 await copyFile('LICENSE','apps/standalone/public/cad-assets/app-license.txt');
 let complete=await readFile('apps/standalone/public/cad-assets/notices.txt','utf8');
-for(const packageName of ['core','geometry','editor','history','physics','brickwright'])complete+=`\n\n--- @brickwright/cad-${packageName} ---\n\n${await readFile(`packages/${packageName}/NOTICE.md`,'utf8')}`;
+// Optional exact kernel (lazy asset): its own LICENSE, NOTICE and bundled licence texts.
+const exactKernel='node_modules/@crispcad/exact-kernel';
+complete+=`\n\n--- @crispcad/exact-kernel (optional exact B-rep kernel, loaded on first use) ---\n\n${await readFile(`${exactKernel}/NOTICE`,'utf8')}\n\n${await readFile(`${exactKernel}/LICENSE`,'utf8')}`;
+for(const file of ['smlibwasm-LICENSE','emscripten-LICENSE','usd-brep-LICENSE'])complete+=`\n\n--- @crispcad/exact-kernel licenses/${file} ---\n\n${await readFile(`${exactKernel}/licenses/${file}`,'utf8')}`;
+for(const packageName of ['core','geometry','exact','editor','history','physics','brickwright'])complete+=`\n\n--- @brickwright/cad-${packageName} ---\n\n${await readFile(`packages/${packageName}/NOTICE.md`,'utf8')}`;
 complete+='\n\n--- ion-ios-filesystem 2.0.1 (native Filesystem dependency) ---\n\n'+await readFile('third-party/ion-ios-filesystem/LICENSE','utf8');
 await writeFile('apps/standalone/public/cad-assets/notices.txt',complete);

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {commandHelp,commandRegistry,createCommandJournal,findCommandSpec,interactiveCommandNames,listModel,prepareCommand,t} from '@brickwright/cad-core';
-import type {CadSession,Vec3,SessionCommandRecord,CommandSpec,CommandStep,CommandValue,PreparedCommand,JournalExportFormat} from '@brickwright/cad-core';
+import {commandHelp,commandRegistry,createCommandJournal,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseExactCommand,prepareCommand,t} from '@brickwright/cad-core';
+import type {CadSession,Vec3,SessionCommandRecord,CommandSpec,CommandStep,CommandValue,PreparedCommand,JournalExportFormat,ExactCommandHost,ExactCommandFile} from '@brickwright/cad-core';
 import type {CadCommand} from './index.js';
 import {terminalArguments,terminalTokens} from './terminal-coordinates.js';
 import {createTerminalAliases} from './terminal-aliases.js';
@@ -14,7 +14,11 @@ export interface TerminalCompletion {text:string;caret:number;label:string;descr
 type Value=CommandValue;
 type Step=CommandStep;
 type Pending={name:string;steps:readonly Step[];values:Value[];revision:number;projectId:string;targets?:readonly string[];finish:(values:Value[])=>void;invocation:PreparedCommand['invocation']};
-export type TerminalOptions={executeEditorCommand:(command:CadCommand)=>void|Promise<void>;openCodeWorkspace:()=>void;storage?:TerminalStorage};
+export type TerminalOptions={executeEditorCommand:(command:CadCommand)=>void|Promise<void>;openCodeWorkspace:()=>void;storage?:TerminalStorage;
+ /** Serves `export step` and `measure exact` (the editor's lazily loaded exact-kernel worker). */
+ exact?:ExactCommandHost;
+ /** Delivers a file a command produced, such as the STEP export. */
+ saveFile?:(file:ExactCommandFile)=>Promise<void>};
 /** Terminal help/completion order comes from the shared command registry. */
 export const terminalCommands:readonly CommandSpec[]=commandRegistry.filter(entry=>entry.terminal);
 
@@ -167,6 +171,21 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
     if(!args.length){append('output',journal.summary());return;}
     if(args[0]!=='export'||args.length>2||args[1]!==undefined&&!['cadscript','replay'].includes(args[1]))throw new Error(t('Usage: journal [export [cadscript|replay]].'));
     append('output',journal.export((args[1]??'cadscript') as JournalExportFormat));return;
+   }
+   if(definition.kernel==='exact'){
+    const exact=parseExactCommand(session,name,tail);
+    if(exact){
+     if(!options.exact)throw new Error(t('The exact kernel is not available in this host.'));
+     const document=session.state.document;
+     append('output',t('Running on the exact kernel…'));
+     const formatted=formatExactResult(await options.exact.run({operation:exact.operation,document,bodies:exact.bodies}),document);
+     append('output',formatted.output);
+     if(formatted.file){
+      if(!options.saveFile)throw new Error(t('This host has not provided file export'));
+      await options.saveFile(formatted.file);
+     }
+     return;
+    }
    }
    if(interactiveCommandNames.includes(name)){start(name,args);return;}
    if(args.length)throw new Error(t('Too many arguments. Use help for command syntax.'));

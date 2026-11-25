@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Acceptance gate: the 27-part kernelCAD scorecard on the exact kernel at 1e-6 relative.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { cadScript, evaluateCadScript } from '../src/lower-cad-script.ts';
+import { cadScript, evaluateCadScript } from '../../../packages/exact/src/lower-cad-script.ts';
 import { createSmlibKernel, type ExactKernel } from '@crispcad/exact-kernel';
 import { REFERENCE_PARTS } from './reference-parts.fixture.ts';
 

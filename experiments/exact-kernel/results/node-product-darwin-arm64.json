@@ -1,0 +1,26 @@
+{
+  "project": "node",
+  "node": "v26.4.0",
+  "date": "2026-11-25T03:24:48.413Z",
+  "parts": 27,
+  "load": {
+    "wallMs": 108,
+    "cpuMs": 196
+  },
+  "coldMeasure": {
+    "wallMs": 1383,
+    "cpuMs": 1916
+  },
+  "warmMeasure": {
+    "wallMs": 919,
+    "cpuMs": 977
+  },
+  "exportStep": {
+    "wallMs": 1722,
+    "cpuMs": 1551,
+    "stepBytes": 154899
+  },
+  "wasmMemoryMiB": 64,
+  "rssGrowthMiB": 63,
+  "liveHandles": 0
+}

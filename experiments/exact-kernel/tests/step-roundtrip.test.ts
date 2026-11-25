@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { decodeStep, type StepMesh } from '../../../packages/editor/src/decode-step.ts';
-import { cadScript, evaluateCadScript } from '../src/lower-cad-script.ts';
+import { cadScript, evaluateCadScript } from '../../../packages/exact/src/lower-cad-script.ts';
 import { createSmlibKernel, type ExactKernel } from '@crispcad/exact-kernel';
 import { REFERENCE_PARTS } from './reference-parts.fixture.ts';
 

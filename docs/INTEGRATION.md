@@ -299,6 +299,18 @@ verification never overwrites either checkout. Run Brickwright's SDK/VM checks
 after pinning, and commit its SDK files with the host changes. A CAD release is
 not automatically installed in an already built Brickwright app.
 
+**Exact kernel in the SDK (2026-11-25).** The editor now depends on
+`@brickwright/cad-exact`, which pins the kernel lab's `@crispcad/exact-kernel` release
+tarball. The SDK build (`vite.brickwright.config.ts`) emits the exact chunks and the 9.4 MB
+`smlibwasm.wasm` under `assets/exact/` as lazy worker assets: they load only when a host
+user runs `export step`, `measure exact` or the export dialog's STEP option. The SDK grows by
+about 10.5 MB on disk, nothing at load time. A host that ships the SDK must also ship the
+kernel's notices (they are part of the SDK's `NOTICE.txt`). Recorded commands with
+`context.kernel` replay only where the same kernel version is provided: sessions the editor
+creates declare the pinned exact kernel; a host that passes its own `session` declares kernels
+with `createCadSession(document, {kernels})` (from `@brickwright/cad-exact/identity`), or such
+records are refused with a clear message.
+
 Full SDK preview/control behavior: [motor programs](CAD-MOTOR-PROGRAMS.md) and
 [simulation coverage](SIMLAB-PARITY.md). The standalone owns its project library;
 Brickwright owns its SB3 persistence and VM controls. Both retain the full versioned

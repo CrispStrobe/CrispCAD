@@ -4,7 +4,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { arch, cpus, loadavg, platform } from 'node:os';
 import { performance } from 'node:perf_hooks';
-import { cadScript, evaluateCadScript } from './src/lower-cad-script.ts';
+import { cadScript, evaluateCadScript } from '../../packages/exact/src/lower-cad-script.ts';
 import type { ExactKernel, ExactSolid } from '@crispcad/exact-kernel';
 import { REFERENCE_PARTS } from './tests/reference-parts.fixture.ts';
 

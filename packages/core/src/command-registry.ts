@@ -13,8 +13,10 @@ import type {Vec3} from './document.js';
 import {t} from './i18n.js';
 import type {CadSession} from './session.js';
 import {commandArguments,commandNumber,commandTokens,parseCommandPoint} from './command-arguments.js';
+import {formatExactResult,parseExactCommand} from './exact-commands.js';
+import type {ExactCommandFile,ExactCommandHost,ExactKernelReport} from './exact-commands.js';
 
-export type CommandCategory='terminal'|'create'|'sketch'|'feature'|'selection'|'transform'|'history'|'edit'|'boolean'|'view'|'panel'|'replay';
+export type CommandCategory='terminal'|'create'|'sketch'|'feature'|'selection'|'transform'|'history'|'edit'|'boolean'|'view'|'panel'|'replay'|'exchange'|'analysis';
 export type CommandArgumentKind='point'|'vector'|'number'|'sketch'|'bodies'|'command'|'alias'|'json'|'keyword';
 export interface CommandArgumentSpec {
  readonly name:string;
@@ -50,6 +52,8 @@ export interface CommandSpec {
  /** The terminal routes this command through the editor's command bridge. */
  readonly editorBridge:boolean;
  readonly palette?:CommandPaletteSpec;
+ /** Served by the optional exact B-rep kernel (lazily loaded; never a silent fallback). */
+ readonly kernel?:'exact';
 }
 
 const arg=(name:string,kind:CommandArgumentKind,extra:Partial<CommandArgumentSpec>={}):CommandArgumentSpec=>({name,kind,...extra});
@@ -75,6 +79,8 @@ const drafting:readonly Draft[]=[
  {name:'select',aliases:['sel'],description:'Select bodies by ID or exact name',usage:'select [all|none|"name"|id ...]',category:'selection',editsModel:false,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true},
  {name:'code',aliases:['script'],description:'Open the persistent code workspace',usage:'code',category:'panel',editsModel:false,arguments:[]},
  {name:'apply',aliases:[],description:'Replay a recorded model edit',usage:'apply <recorded JSON>',category:'replay',editsModel:true,arguments:[arg('record','json')],headless:true},
+ {name:'export',aliases:[],description:'Export geometry',usage:'export [step [all|"name"|id ...]]',category:'exchange',editsModel:false,arguments:[arg('format','keyword',{optional:true,values:['step']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
+ {name:'measure',aliases:[],description:'Measure volume, area and bounds exactly with the B-rep kernel',usage:'measure exact [all|"name"|id ...]',category:'analysis',editsModel:false,arguments:[arg('mode','keyword',{values:['exact']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
  {name:'journal',aliases:[],description:'Summarize or export the command journal',usage:'journal [export [cadscript|replay]]',category:'terminal',editsModel:false,arguments:[arg('action','keyword',{optional:true,values:['export']}),arg('format','keyword',{optional:true,values:['cadscript','replay']})],headless:true},
 ];
 type PaletteDraft={command:string;label:string;alias?:string;requires?:CommandAvailability};
@@ -141,7 +147,7 @@ const paletteSpec=(command:string):CommandPaletteSpec|undefined=>{
  return {label:entry.label,order:index,...(entry.alias?{keywords:entry.alias}:{}),...(entry.requires?{requires:entry.requires}:{})};
 };
 export const commandRegistry:readonly CommandSpec[]=freeze([
- ...drafting.map(({headless,...entry}):CommandSpec=>{const spec=paletteSpec(entry.name);return {...entry,headless:!!headless,terminal:true,editorBridge:false,...(spec?{palette:spec}:{})};}),
+ ...drafting.map(({headless,...entry}):CommandSpec=>{const spec=paletteSpec(entry.name);return {...entry,headless:!!headless,terminal:true,editorBridge:false,...(spec?{palette:spec}:{})} as CommandSpec;}),
  ...palette.filter(entry=>!drafting.some(d=>d.name===entry.command)).map(({command,label}):CommandSpec=>{
   const spec=paletteSpec(command)!;
   return {name:command,aliases:bridgeAliases[command]??[],description:label,usage:command,category:bridgeCategory[command]??'panel',editsModel:bridgeEdits.has(command),arguments:[],headless:headlessBridge.has(command),terminal:!notInTerminal.has(command),editorBridge:true,palette:spec};
@@ -282,10 +288,17 @@ export interface CommandRunResult {
  readonly output?:string;
  /** True when the model revision changed. */
  readonly edited:boolean;
+ /** A file the command produced (`export step`). */
+ readonly file?:ExactCommandFile;
+ /** The kernel that served an exact command. */
+ readonly kernel?:ExactKernelReport;
 }
 export interface CommandRunnerOptions {
  /** Records invocations and answers `journal`. */
  journal?:{withInvocation<T>(line:string,run:()=>T):T;summary():string;export(format?:'cadscript'|'replay'):string};
+ /** Serves `export step` and `measure exact`; only `runAsync`/`runScriptAsync` use it. */
+ exact?:ExactCommandHost;
+ signal?:AbortSignal;
 }
 export const COMMAND_LINE_LIMIT=256*1024;
 
@@ -296,7 +309,7 @@ export const COMMAND_LINE_LIMIT=256*1024;
  */
 export function createCommandRunner(session:CadSession,options:CommandRunnerOptions={}){
  let lastPoint:Vec3|undefined;
- function run(raw:string):CommandRunResult{
+ function parse(raw:string){
   const text=raw.trim();
   if(!text)throw new Error(t('Enter a command.'));
   if(text.length>COMMAND_LINE_LIMIT)throw new Error(t('Command text exceeds the terminal limit.'));
@@ -304,6 +317,27 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
   const spec=findCommandSpec(match[1]),tail=match[2]??'';
   if(!spec)throw new Error(t`Unknown command: ${match[1].toLowerCase()}. Type help.`);
   if(!spec.headless)throw new Error(t`${spec.name} needs the interactive editor.`);
+  return {text,spec,tail};
+ }
+ /** Exact commands read the model; the request holds the snapshot taken now. */
+ function exactRequest(spec:CommandSpec,tail:string){
+  if(spec.kernel!=='exact')return undefined;
+  const parsed=parseExactCommand(session,spec.name,tail);
+  if(!parsed)throw new Error(t('Usage: export step [all|"name"|id ...].'));
+  return parsed;
+ }
+ async function runAsync(raw:string):Promise<CommandRunResult>{
+  const {spec,tail}=parse(raw),request=exactRequest(spec,tail);
+  if(!request)return run(raw);
+  if(!options.exact)throw new Error(t('The exact kernel is not available in this host.'));
+  const document=session.state.document;
+  const result=await options.exact.run({operation:request.operation,document,bodies:request.bodies},options.signal);
+  const formatted=formatExactResult(result,document);
+  return {command:spec.name,invocation:request.invocation,output:formatted.output,edited:false,kernel:formatted.kernel,...(formatted.file?{file:formatted.file}:{})};
+ }
+ function run(raw:string):CommandRunResult{
+  const {text,spec,tail}=parse(raw);
+  if(exactRequest(spec,tail))throw new Error(t`${spec.name} uses the exact kernel; run it in a host that loads it.`);
   const name=spec.name,before=session.state.revision;
   const done=(invocation:string,output?:string):CommandRunResult=>({command:name,invocation,...(output!==undefined?{output}:{}),edited:session.state.revision!==before});
   if(name==='apply'||name==='select'&&tail.trim().startsWith('[')){session.executeCommand(name+' '+tail);return done(text.length>240?name:text);}
@@ -337,16 +371,31 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
   if(options.journal)options.journal.withInvocation(invocation,()=>command.finish(values));else command.finish(values);
   return done(invocation);
  }
+ function scriptLines(script:string,limits:{maxLines?:number}){
+  const commands=script.split(/\r?\n/).map((line,index)=>({line:line.trim(),number:index+1})).filter(entry=>entry.line&&!entry.line.startsWith('//'));
+  if(commands.length>(limits.maxLines??256))throw new Error(t`A command script accepts at most ${limits.maxLines??256} commands.`);
+  return commands;
+ }
+ const lineError=(error:unknown,number:number,results:CommandRunResult[])=>Object.assign(new Error(t`Line ${number}: ${error instanceof Error?error.message:String(error)}`),{line:number,results});
  return {
   run,
+  /** Like `run`, and also serves exact-kernel commands through `options.exact`. */
+  runAsync,
   /** Runs a script: one command per line; blank lines and `//` comments are skipped. Stops at the first error, reporting its line. */
   runScript(script:string,limits:{maxLines?:number}={}):CommandRunResult[]{
-   const lines=script.split(/\r?\n/),results:CommandRunResult[]=[];
-   const commands=lines.map((line,index)=>({line:line.trim(),number:index+1})).filter(entry=>entry.line&&!entry.line.startsWith('//'));
-   if(commands.length>(limits.maxLines??256))throw new Error(t`A command script accepts at most ${limits.maxLines??256} commands.`);
-   for(const entry of commands){
+   const results:CommandRunResult[]=[];
+   for(const entry of scriptLines(script,limits)){
     try{results.push(run(entry.line));}
-    catch(error){throw Object.assign(new Error(t`Line ${entry.number}: ${error instanceof Error?error.message:String(error)}`),{line:entry.number,results});}
+    catch(error){throw lineError(error,entry.number,results);}
+   }
+   return results;
+  },
+  /** `runScript` with exact-kernel commands; each reads the model as of its own line. */
+  async runScriptAsync(script:string,limits:{maxLines?:number}={}):Promise<CommandRunResult[]>{
+   const results:CommandRunResult[]=[];
+   for(const entry of scriptLines(script,limits)){
+    try{results.push(await runAsync(entry.line));}
+    catch(error){throw lineError(error,entry.number,results);}
    }
    return results;
   },

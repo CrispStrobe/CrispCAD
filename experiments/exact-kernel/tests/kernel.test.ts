@@ -2,7 +2,7 @@
 // The ExactKernel interface directly: fillet/chamfer/shell against closed forms (CAD Script has
 // no such features yet), explicit "unsupported" errors, and clean rejection of malformed input.
 import { beforeAll, describe, expect, it } from 'vitest';
-import { cadScript, evaluateCadScript, lowerCodeShape } from '../src/lower-cad-script.ts';
+import { cadScript, evaluateCadScript, lowerCodeShape } from '../../../packages/exact/src/lower-cad-script.ts';
 import { createSmlibKernel, ExactKernelError, type ExactKernel, type ExactSolid } from '@crispcad/exact-kernel';
 
 let k: ExactKernel;

@@ -68,6 +68,20 @@ Runtime dependencies:
   (MIT / University of Illinois-NCSA). Preserve their upstream notices when
   redistributing a runtime build.
 - fflate 0.8.3, MIT, copyright Arjun Barrett.
+- Optional exact B-rep kernel: `@crispcad/exact-kernel` 0.1.0 from the CrispCAD
+  kernel lab (https://github.com/CrispStrobe/crispcad-kernel-lab, release
+  `exact-kernel-v0.1.0`), MIT AND Apache-2.0, copyright CrispCAD contributors. It
+  prebundles `@classcad/smlibwasm` 0.6.2 (MIT, copyright 2026 AWV Informatik AG)
+  without its OFL font, with SMLib and its SM_API wrapper from USD BRep
+  (Apache-2.0, copyright 2020-2026 NVIDIA CORPORATION & AFFILIATES; a few files
+  modified by AWV Informatik AG to fix defects, listed in the smlibpy repository's
+  third_party/patches), the Emscripten runtime (MIT) and the Brotli static
+  dictionary (MIT). It contains no OpenCASCADE code. The release tarball URL and
+  integrity are pinned in package-lock.json; it is a dependency of
+  `@brickwright/cad-exact` only, and the standalone app downloads it (9.4 MB
+  WebAssembly) only when an exact command or STEP export first runs. Its NOTICE,
+  LICENSE and the bundled MIT and Apache-2.0 licence texts ship in the app's
+  offline notices (`cad-assets/notices.txt`).
 - qrcode-generator 2.0.4, MIT, copyright 2009 Kazuhiko Arase.
 - Shared simulation physics package: Brickwright JoltPhysics.js 1.1.0-bw.10
   and Jolt Physics, MIT, copyright Jorrit Rouwe and contributors. The qualified

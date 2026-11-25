@@ -16,16 +16,18 @@ let k: ExactKernel;
 beforeAll(async () => { k = await createSmlibKernel(); });
 
 it('pins the lab release tarball by URL and integrity', () => {
-  const manifest = JSON.parse(readFileSync(new URL('package.json', here), 'utf8'));
-  const lock = JSON.parse(readFileSync(new URL('package-lock.json', here), 'utf8'));
-  const spec = manifest.devDependencies['@crispcad/exact-kernel'];
+  // Since 2026-11-25 the product package packages/exact owns the dependency; this directory
+  // uses the root install.
+  const manifest = JSON.parse(readFileSync(new URL('../../packages/exact/package.json', here), 'utf8'));
+  const lock = JSON.parse(readFileSync(new URL('../../package-lock.json', here), 'utf8'));
+  const spec = manifest.dependencies['@crispcad/exact-kernel'];
   expect(spec).toMatch(RELEASE);
   const entry = lock.packages['node_modules/@crispcad/exact-kernel'];
   expect(entry.resolved).toBe(spec);
   expect(entry.integrity).toMatch(/^sha512-/);
   expect(entry.version).toBe(read('package.json').version);
-  expect(manifest.devDependencies['@classcad/smlibwasm']).toBeUndefined();
-  expect(Object.keys(lock.packages).filter(p => p.includes('node_modules/'))).toEqual(['node_modules/@crispcad/exact-kernel']);
+  expect(entry.dependencies).toBeUndefined();
+  expect(Object.keys(lock.packages).filter(p => /node_modules\/@classcad\//.test(p))).toEqual([]);
 });
 
 it('installs only MIT and Apache-2.0 code, with no runtime dependencies and no font', () => {

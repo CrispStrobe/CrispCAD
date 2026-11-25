@@ -3,11 +3,12 @@ import {libraryCatalogueAssets} from './scripts/library-catalogue-assets.js';
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 import {preserveDwgClassNames} from './scripts/preserve-dwg-class-names.js';
+import {exactKernelWorkerOutput} from './scripts/exact-kernel-assets.js';
 export default defineConfig({
   plugins: [libraryPreviewAssets(), libraryCatalogueAssets()],
   root: 'apps/standalone', base: './',
   build: { outDir: '../../dist', emptyOutDir: true, rollupOptions: { input: { main: resolve('apps/standalone/index.html'), embedded: resolve('apps/standalone/embedded.html') } } },
-  worker: { format: 'es', plugins: () => [preserveDwgClassNames()] },
+  worker: { format: 'es', plugins: () => [preserveDwgClassNames()], rollupOptions: { output: exactKernelWorkerOutput } },
   server: { host: '127.0.0.1', port: 4317, strictPort: true, fs: { allow: [process.cwd()] } },
   preview: { port: 4317, strictPort: true },
 });
