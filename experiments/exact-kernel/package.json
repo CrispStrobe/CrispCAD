@@ -4,14 +4,11 @@
   "private": true,
   "type": "module",
   "license": "BSD-3-Clause",
-  "description": "Standalone qualification of the kernel lab's exact kernel (@crispcad/exact-kernel, SMLib) with CrispCAD's CAD Script lowering. Not a shipped dependency.",
+  "description": "Standalone qualification of the kernel lab's exact kernel (@crispcad/exact-kernel, SMLib) with CrispCAD's CAD Script lowering, which now lives in packages/exact. Uses the root install.",
   "scripts": {
     "test": "vitest run",
     "bench": "node --expose-gc bench.ts",
     "typecheck": "tsc -p tsconfig.json",
     "licence": "node licence-audit.mjs"
-  },
-  "devDependencies": {
-    "@crispcad/exact-kernel": "https://github.com/CrispStrobe/crispcad-kernel-lab/releases/download/exact-kernel-v0.1.0/crispcad-exact-kernel-0.1.0.tgz"
   }
 }

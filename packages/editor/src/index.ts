@@ -8,7 +8,7 @@ import {mountPrintabilityPanel} from './printability-panel.js';
 import type {mountModelLibraryPanel, ModelLibraryOptions, ModelLibraryProject} from './model-library-panel.js';
 export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
-import { t } from '@brickwright/cad-core';
+import { t,formatExactResult,validateDocument as validateExportDocument } from '@brickwright/cad-core';
 import { drawingAssemblyAvailable,isAssemblyDrawingSource,constructionInputs, createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters,redesignScrew } from '@brickwright/cad-core';
 import type { CadDocument, CadSession, DrawingInputs, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe } from '@brickwright/cad-core';
 import { importSTL } from '@brickwright/cad-geometry';
@@ -261,7 +261,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const openCodeWorkspace=()=>codePanel.openWorkspace(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);
   const terminalToggle=button('Terminal',()=>terminal.toggle(),status,'panel-toggle');
   terminalToggle.title=t('CAD terminal (Ctrl/⌘+`)');terminalToggle.setAttribute('aria-keyshortcuts','Control+Backquote Meta+Backquote');
-  const terminal=mountTerminalPanel(shell,session,{executeEditorCommand:executeCommand,openCodeWorkspace,storage:options.workspaceStorage,pickPoint:(done,plane)=>viewport.pickDraftPoint(done,plane),focusCanvas:()=>viewport.canvas.focus({preventScroll:true}),onVisibilityChange:visible=>terminalToggle.setAttribute('aria-pressed',String(visible))});
+  const terminal=mountTerminalPanel(shell,session,{executeEditorCommand:executeCommand,openCodeWorkspace,storage:options.workspaceStorage,exact:client.exact,saveFile:async file=>{if(!options.onExport)throw new Error(t('This host has not provided file export'));await options.onExport({name:file.name,bytes:new TextEncoder().encode(file.text),mime:file.mime});},pickPoint:(done,plane)=>viewport.pickDraftPoint(done,plane),focusCanvas:()=>viewport.canvas.focus({preventScroll:true}),onVisibilityChange:visible=>terminalToggle.setAttribute('aria-pressed',String(visible))});
   button('Code',()=>codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined),toolbar,'compact-icon').title=t('Code an object');
   const parametersButton=button('Parameters',()=>parametersPanel.open(),toolbar,'compact-icon');parametersButton.title=t('Model parameters and formulas');
   if(options.headerContent){options.headerContent.classList.add('host-actions');designBar.append(options.headerContent);}
@@ -350,7 +350,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   async function chooseImport(){if(options.requestImport){const file=await options.requestImport();if(file)await importFile(file.name,file.bytes);}else importInput.click();}
   button('Import STL or STEP…',chooseImport);
   const exportDialog=el('dialog','export-dialog');exportDialog.setAttribute('aria-label',t('Export model'));exportDialog.append(el('h2','',t('Export model')));
-  const exportFormat=el('select');exportFormat.setAttribute('aria-label',t('Export format'));for(const [value,label] of [['stl','STL · triangle mesh'],['3mf','3MF · packaged mesh']]){const option=el('option','',t(label));option.value=value;exportFormat.append(option);}exportDialog.append(exportFormat);
+  const exportFormat=el('select');exportFormat.setAttribute('aria-label',t('Export format'));for(const [value,label] of [['stl','STL · triangle mesh'],['3mf','3MF · packaged mesh'],['step','STEP · exact B-rep (loads the exact kernel)']]){const option=el('option','',t(label));option.value=value;exportFormat.append(option);}exportDialog.append(exportFormat);
   const attributionHelp=el('p','',t('Recorded sources export as one ZIP containing STL and attribution JSON. Distribute both files together and retain any separately required licence texts and notices.'));
   const notesLabel=el('label','',t('Changes since insertion'));
   const exportNotes=el('textarea');exportNotes.maxLength=4096;exportNotes.rows=3;exportNotes.setAttribute('aria-label',t('Changes since insertion'));notesLabel.append(exportNotes);
@@ -358,13 +358,15 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   exportDialog.append(attributionHelp,notesLabel,notesHelp);
   let exporting=false,exportCanceled=false,exportDialogRevision=-1;
   function showExport(){exportNotes.value='';exportCanceled=false;exportDialogRevision=session.state.revision;refreshExportAttribution();exportDialog.showModal();}
-  function refreshExportAttribution(){const attributed=hasModelAttribution(session.state.document);attributionHelp.hidden=notesLabel.hidden=notesHelp.hidden=!attributed;exportNotes.required=attributed;}
-  const exportActions=el('footer');button('Cancel export',()=>{exportCanceled=true;exportDialog.close();},exportActions);
+  function refreshExportAttribution(){const attributed=hasModelAttribution(session.state.document)&&exportFormat.value!=='step';attributionHelp.hidden=notesLabel.hidden=notesHelp.hidden=!attributed;exportNotes.required=attributed;}
+  const stepHelp=el('p','export-step-help',t('STEP export rebuilds the selected bodies (or all bodies) with the exact B-rep kernel, which loads on first use (about 9 MB). Bodies without an exact construction, such as imported meshes, are reported instead of being exported as triangles.'));stepHelp.hidden=true;exportDialog.append(stepHelp);
+  exportFormat.addEventListener('change',()=>{stepHelp.hidden=exportFormat.value!=='step';refreshExportAttribution();});
+  const exportActions=el('footer');button('Cancel export',()=>{exportCanceled=true;if(exporting&&exportFormat.value==='step')client.cancelExact();exportDialog.close();},exportActions);
   exportDialog.addEventListener('cancel',()=>{exportCanceled=true;});
   const exportRun=button('Export',async()=>{
     if(exporting)return;
     exporting=true;refreshButtons();
-    try{await deliver(exportFormat.value as 'stl'|'3mf',exportNotes.value,()=>{
+    try{await deliver(exportFormat.value as 'stl'|'3mf'|'step',exportNotes.value,()=>{
       if(exportCanceled||!exportDialog.open)throw new Error(t('Export canceled'));
       if(session.state.revision!==exportDialogRevision)throw new Error(t('The model changed while exporting. Export again from the current model.'));
     });exportDialog.close();}finally{exporting=false;refreshButtons();}
@@ -775,7 +777,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     }
     if(!['open','import','save','export','parameters','shapes','code','code-workspace','terminal','model-source','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','model-library','robot-projects','command-palette'].includes(command))viewport.canvas.focus({preventScroll:true});
   }
-  async function deliver(format: 'bcad' | 'stl' | '3mf', modificationNotes?: string, checkCanceled: () => void = () => {}) {
+  async function deliver(format: 'bcad' | 'stl' | '3mf' | 'step', modificationNotes?: string, checkCanceled: () => void = () => {}) {
     if(format==='bcad'&&options.saveProject){await options.saveProject();return;}
     if (!options.onExport) throw new Error(t('This host has not provided file export'));
     if(format==='bcad'){
@@ -788,6 +790,17 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       checkCanceled();
       if(session.state.revision!==exportRevision)throw new Error(t('The model changed while exporting. Export again from the current model.'));
     };
+    if(format==='step'){
+      // Exact B-rep only: never a Manifold mesh. Unsupported bodies fail with their feature named.
+      const snapshot=validateExportDocument(session.state.document);
+      if(hasModelAttribution(snapshot))throw new Error(t('Recorded library sources export as STL with attribution; exact STEP export is not available for them yet.'));
+      const bodies=session.state.selection.filter(id=>snapshot.roots.includes(id));
+      const result=await client.exact.run({operation:'export-step',document:snapshot,bodies});
+      checkCurrent();
+      const {file}=formatExactResult(result,snapshot);
+      await options.onExport({name:file!.name,bytes:new TextEncoder().encode(file!.text),mime:file!.mime});
+      return;
+    }
     const file=await prepareMeshExport(session.state.document,format,()=>whenIdle(),checkCurrent,modificationNotes);
     checkCurrent();
     await options.onExport(file);

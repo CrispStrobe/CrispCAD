@@ -6,6 +6,8 @@ import {compileBlocksToCadScript,exportBlocksOpenSCAD,exportBlocksJSCAD,createCa
 import {appendPortableRevision,readPortableHistory} from '@brickwright/cad-history';
 import {createPresetDocument} from '@brickwright/cad-editor';
 import {exportSTL} from '@brickwright/cad-geometry';
+import {exactKernelIdentity} from '@brickwright/cad-exact/identity';
+import {formatExactResult} from '@brickwright/cad-core';
 
 export const codeHelp={language:'brickwright-cad-script',version:1,example:defaultCodeProgram().source,syntax:['param name: mm|deg|scalar = expression;','let name = shape;','return shape;'],generatorRecipeTool:'cad_apply_model_source',generatorRecipeSyntax:'generated(id, metadata, recipe); roots([id]);',generatorRecipes:{...Object.fromEntries([...basicGeneratorPresets,...enclosureGeneratorPresets,...curvedGeneratorPresets,...transitionGeneratorPresets,'cube','ruler','screw','thread','nut','heart','text','name-tag'].map(id=>[id,defaultGenerator(id)])),...Object.fromEntries(['hex-head-screw','socket-head-screw','countersunk-screw','pan-head-screw','set-screw','wood-screw'].map(id=>[id,screwVariant(id)]))},functions:['torus(majorRadius, tubeRadius [, tubeSegments, ringSegments, tubeRotation, sweep, start])','ellipsoid(radiusX, radiusY, radiusZ [, segments])','roundedCylinder(radius, height, capHeight [, segments])','ellipticFrustum(rx0,ry0,rx1,ry1,height[,segments,startAngle,endAngle,angularSegments])','loft([[[x,y,z],...],...])','minRange(i,start,end,step[,predicate],value)','maxRange(i,start,end,step[,predicate],value)','frustum(bottom,top,height[,segments])','hull(a,...)','choose(condition,a,b)','forRange(i,start,end,step,shape)','forValues(i,[values],shape)','empty()','box(width,depth,height)','cylinder(radius,height[,segments])','sphere(radius[,segments])','extrude(height,[[x,y],...])','spurGear2d(module, teeth[, pressureAngleDeg=20, backlash=0]) — involute spur gear profile, tooth 0 on +X; mesh at centre distance module*(z1+z2)/2','internalSpurGear2d(module, teeth[, pressureAngleDeg=20, backlash=0]) — ring-gear tooth-space cutter to subtract from a disc','union(a,b,...)','subtract(base,cut,...)','intersect(a,b,...)','move([x,y,z],shape)','rotate([x,y,z],shape)','scale([x,y,z],shape)','repeat(count,[dx,dy,dz],shape)'],limits:CODE_LIMITS,notes:['// comments; unit-aware + - * / and parentheses','Named shapes and parameters can reference later declarations; cycles are refused','Code-local parameters are independent of global model parameters','One returned construction produces one rigid body','This is not JavaScript or .scad; imports, files, network and arbitrary script execution are unsupported']};
 const source={type:'string',minLength:1,maxLength:32768},id={type:'string',minLength:1,maxLength:96},parameters={type:'object',additionalProperties:{type:'string',minLength:1,maxLength:256}},revision={type:'integer',minimum:1};
@@ -31,6 +33,8 @@ export const toolDefinitions=[
  spec('cad_list_commands','List the shared CAD command vocabulary (terminal, palette, CLI): names, aliases, usage, typed arguments, whether a command edits the model and whether it runs headlessly in cad_run_commands.',{headlessOnly:{type:'boolean'}}),
  spec('cad_run_commands','Run CAD terminal commands headlessly, one per line (at most 64; // comments allowed), against a copy of the current model. The script starts with an empty selection; select bodies before move/rotate/scale. All edits are validated and saved as one history step; preview saves nothing. Returns command outputs and a journal export. View and panel commands are refused.',{commands:{type:'string',minLength:1,maxLength:65536},expectedRevision:revision,preview:{type:'boolean'}},['commands','expectedRevision'],false),
  spec('cad_export_project','Return a complete history-inclusive .bcad archive as base64; large projects use the configured project file instead.'),
+ spec('cad_export_step','Return an exact STEP (AP214) file as base64, built with the optional exact B-rep kernel (SMLib, loaded on first use). One solid per body; objectIds limits the bodies (default: every solid body). Bodies without an exact construction, such as imported meshes or minkowski, fail with a diagnostic naming the body and feature; no mesh is ever written as STEP. Recorded library sources are refused (STL with attribution only).',{objectIds:{type:'array',maxItems:64,items:{type:'string'}}}),
+ spec('cad_measure_exact','Measure bodies exactly with the optional B-rep kernel: volume, surface area, bounding box and centroid from the exact solid, not a mesh. objectIds limits the bodies.',{objectIds:{type:'array',maxItems:64,items:{type:'string'}}}),
  spec('cad_export_stl','Return printable binary STL as base64. Recorded library sources automatically include a paired attribution JSON file; supply accurate modificationNotes describing changes since insertion (including when unchanged) and distribute both files together.',{modificationNotes:{type:'string',minLength:1,maxLength:4096}})
 ];
 function validateArguments(definition,args){
@@ -45,6 +49,14 @@ function validateArguments(definition,args){
   if(s.type==='object'){if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).length>64||Object.values(value).some(v=>typeof v!=='string'||!v.trim()||v.length>256))throw new Error(t`Invalid ${key}`);}
  }
 }
+/** Exact-kernel thread, started on the first exact request (60 s budget: the first call loads 9.4 MB of WebAssembly). */
+function createExactWorkerClient(){let worker,sequence=0,disposed=false;const pending=new Map();
+ const fail=error=>{const previous=worker;worker=undefined;void previous?.terminate();for(const p of pending.values())p.reject(error);pending.clear();};
+ return {run(request,signal){if(disposed)return Promise.reject(new Error(t('Geometry host closed')));if(signal?.aborted)return Promise.reject(new Error(t('Request cancelled')));
+  if(!worker){worker=new Worker(new URL('./exact-worker.mjs',import.meta.url),{execArgv:[],stdout:true,stderr:true});worker.stdout.on('data',data=>process.stderr.write(data));worker.stderr.on('data',data=>process.stderr.write(data));const current=worker;worker.on('message',data=>{if(worker!==current)return;const p=pending.get(data.id);if(!p)return;pending.delete(data.id);if(data.error)p.reject(Object.assign(new Error(data.error),data.diagnostic?{diagnostic:data.diagnostic}:{}));else p.resolve(data.result);});worker.on('error',error=>{if(worker===current)fail(error);});worker.on('exit',()=>{if(worker===current)fail(new Error(t('Geometry worker exited')));});}
+  const id=++sequence;return new Promise((resolve,reject)=>{const cleanup=()=>{clearTimeout(timer);signal?.removeEventListener('abort',abort);};const abort=()=>fail(new Error(t('Request cancelled')));const timer=setTimeout(()=>fail(new Error(t('The exact kernel exceeded 60 seconds; the request was stopped.'))),60000);pending.set(id,{resolve:value=>{cleanup();resolve(value);},reject:error=>{cleanup();reject(error);}});signal?.addEventListener('abort',abort,{once:true});try{worker.postMessage({id,locale:getLocale(),request:{operation:request.operation,document:request.document,bodies:[...request.bodies]}});}catch(error){fail(error);}});
+ },dispose(){disposed=true;fail(new Error(t('Geometry host closed')));}};
+}
 function createWorkerClient(){let worker,sequence=0,disposed=false;const pending=new Map();
  const fail=error=>{const previous=worker;worker=undefined;void previous?.terminate();for(const p of pending.values())p.reject(error);pending.clear();};
  return {evaluate(document,signal,printability,analysis){if(disposed)return Promise.reject(new Error(t('Geometry host closed')));if(signal?.aborted)return Promise.reject(new Error(t('Request cancelled')));
@@ -53,7 +65,7 @@ function createWorkerClient(){let worker,sequence=0,disposed=false;const pending
  },dispose(){disposed=true;fail(new Error(t('Geometry host closed')));}};
 }
 export async function createCodeHost(options={}){
- const geometry=createWorkerClient();let projectPath=options.project?resolve(options.project):undefined,lockPath,lockHandle,archive,lastDisk,session,metadata,disposed=false;
+ const geometry=createWorkerClient(),exact=createExactWorkerClient(),kernels=[exactKernelIdentity];let projectPath=options.project?resolve(options.project):undefined,lockPath,lockHandle,archive,lastDisk,session,metadata,disposed=false;
  async function persist(bytes){if(!projectPath)return;let current;try{current=await readFile(projectPath);}catch(error){if(error.code!=='ENOENT')throw error;}
   if((current===undefined)!==(lastDisk===undefined)||current&&lastDisk&&!current.equals(lastDisk))throw new Error(t('Project changed outside this session. Existing file and history were preserved.'));
   const temporary=`${projectPath}.${newId()}.tmp`;let file;try{file=await open(temporary,'wx',0o600);await file.writeFile(bytes);await file.sync();await file.close();file=undefined;await rename(temporary,projectPath);lastDisk=Buffer.from(bytes);}finally{await file?.close();await unlink(temporary).catch(()=>{});}
@@ -64,7 +76,7 @@ export async function createCodeHost(options={}){
   }
   if(!archive)archive=await appendPortableRevision(undefined,createDocument('Coded project'),'Opened project');
   metadata=await readPortableHistory(archive);session=createCadSession(metadata.readDocument(metadata.project.headId));await geometry.evaluate(session.state.document);if(!lastDisk)await persist(archive);
- } catch(error){geometry.dispose();await lockHandle?.close();if(lockHandle)await unlink(lockPath).catch(()=>{});if(error.code==='EEXIST')throw new Error(t`Project already has an MCP writer lock: ${lockPath}. Stop that writer, or inspect a stale lock before removing it.`);throw error;}
+ } catch(error){geometry.dispose();exact.dispose();await lockHandle?.close();if(lockHandle)await unlink(lockPath).catch(()=>{});if(error.code==='EEXIST')throw new Error(t`Project already has an MCP writer lock: ${lockPath}. Stop that writer, or inspect a stale lock before removing it.`);throw error;}
  const program=(source,params={})=>({version:1,language:'brickwright-cad-script',source,parameters:structuredClone(params)});
  const cancelled=signal=>{if(signal?.aborted)throw new Error(t('Request cancelled'));};
  const summary=result=>({volumeMm3:result.volume,triangles:result.triangles,bodies:result.bodies.map(b=>({id:b.id,name:b.name,volumeMm3:b.volume,boundsMm:b.bounds}))});
@@ -89,6 +101,16 @@ export async function createCodeHost(options={}){
    return {revision,objects,bodies:bodies.filter(b=>!ids||ids.includes(b.id)),joints:(document.joints??[]).map(j=>({id:j.id,kind:j.kind,bodyA:j.bodyA,bodyB:j.bodyB,...(j.gearMesh?{gearMesh:j.gearMesh}:{})}))};}
   if(name==='cad_check_interference'){const revision=metadata.project.serial,result=await geometry.evaluate(validateDocument(session.state.document),signal,undefined,{kind:'interference',options:{...(args.minVolumeMm3!==undefined?{minVolumeMm3:args.minVolumeMm3}:{}),...(args.clearanceMm!==undefined?{clearanceMm:args.clearanceMm}:{})}});cancelled(signal);return {revision,...result};}
   if(name==='cad_render'){const views=args.views??['iso'];if(!views.length||views.some(v=>!['iso','top','front','right','back','left','bottom'].includes(v)))throw new Error(t('Invalid views'));const revision=metadata.project.serial,{views:rendered}=await geometry.evaluate(validateDocument(session.state.document),signal,undefined,{kind:'render',options:{views,size:args.size??512}});cancelled(signal);return {revision,images:rendered.map(r=>({view:r.view,mimeType:'image/png',data:r.png}))};}
+  if(name==='cad_export_step'||name==='cad_measure_exact'){
+   const document=validateDocument(session.state.document),revision=metadata.project.serial,ids=args.objectIds??[];
+   if(ids.some(id=>!document.roots.includes(id)))throw new Error(t('Unknown object id'));
+   if(name==='cad_export_step'&&hasModelAttribution(document))throw new Error(t('Recorded library sources export as STL with attribution; exact STEP export is not available for them yet.'));
+   const result=await exact.run({operation:name==='cad_export_step'?'export-step':'measure',document,bodies:ids},signal);cancelled(signal);
+   if(result.operation==='measure')return {revision,kernel:result.kernel,bodies:result.bodies};
+   const {file}=formatExactResult(result,document),base64=Buffer.from(file.text).toString('base64');
+   if(base64.length>3*1024*1024)throw new Error(t('STEP export exceeds the MCP 3 MiB limit; export fewer bodies or use the editor.'));
+   return {revision,kernel:result.kernel,bodies:result.bodies,name:file.name,mime:file.mime,base64};
+  }
   if(name==='cad_export_stl'){
    // Snapshot before worker IO: concurrent requests may advance the live project.
    const document=validateDocument(session.state.document),attributed=hasModelAttribution(document);
@@ -113,9 +135,14 @@ export async function createCodeHost(options={}){
   }
   if(name==='cad_run_commands'){
    // The registry runs data-only commands on a private trial session: no JavaScript, files or view state.
-   const expected=metadata.project.serial,trial=createCadSession(session.state.document),journal=createCommandJournal(trial);
+   const expected=metadata.project.serial,trial=createCadSession(session.state.document,{kernels}),journal=createCommandJournal(trial);
    try{
-    const results=createCommandRunner(trial,{journal}).runScript(args.commands,{maxLines:64}).map(r=>({command:r.command,invocation:r.invocation,edited:r.edited,...(r.output!==undefined?{output:r.output}:{})}));
+    let fileBytes=0;
+    const results=(await createCommandRunner(trial,{journal,exact,signal}).runScriptAsync(args.commands,{maxLines:64})).map(r=>{
+     const file=r.file&&{name:r.file.name,mime:r.file.mime,base64:Buffer.from(r.file.text).toString('base64')};
+     if(file&&(fileBytes+=file.base64.length)>3*1024*1024)throw new Error(t('Command files exceed the MCP 3 MiB limit; export fewer bodies per command.'));
+     return {command:r.command,invocation:r.invocation,edited:r.edited,...(r.output!==undefined?{output:r.output}:{}),...(file?{file}:{}),...(r.kernel?{kernel:r.kernel}:{})};
+    });
     const exported=journal.export();cancelled(signal);
     if(serializeDocument(trial.state.document)===serializeDocument(session.state.document))return {revision:expected,committed:false,results,journal:exported};
     const result=await geometry.evaluate(validateDocument(trial.state.document),signal);cancelled(signal);
@@ -137,5 +164,5 @@ export async function createCodeHost(options={}){
   else if(name==='cad_update_code_object'){const n=trial.state.document.nodes[args.objectId];if(n?.kind!=='code')throw new Error(t('Code object not found'));trial.updateCode(n.id,{...n.program,...(args.source!==undefined?{source:args.source}:{}),...(args.parameters!==undefined?{parameters:structuredClone(args.parameters)}:{})});}
   else if(name==='cad_restore_revision')trial.load(metadata.readDocument(args.revisionId));else throw new Error(t('Unknown tool'));
   const result=await geometry.evaluate(trial.state.document,signal);await accept(trial.state.document,name==='cad_restore_revision'?'Restore coded project':trial.state.label,signal,name==='cad_restore_revision'?args.revisionId:undefined);return {...info(),objectId:objectId??null,geometry:summary(result)};
- },async dispose(){if(disposed)return;disposed=true;geometry.dispose();session?.dispose();await lockHandle?.close();if(lockHandle)await unlink(lockPath).catch(()=>{});}};
+ },async dispose(){if(disposed)return;disposed=true;geometry.dispose();exact.dispose();session?.dispose();await lockHandle?.close();if(lockHandle)await unlink(lockPath).catch(()=>{});}};
 }

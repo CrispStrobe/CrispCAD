@@ -23,6 +23,16 @@ export interface SessionBodyOperationContext {
   joints:SessionSketchJointContext['joints'];
   tracers:{id:string;bodyId:string}[];
 }
+/** A geometry kernel a recorded edit depended on, e.g. the exact kernel package that computed it. */
+export interface KernelIdentity {
+  /** Stable kernel id (`smlib`). */
+  readonly id:string;
+  /** Package that ships it (`@crispcad/exact-kernel`). */
+  readonly package:string;
+  readonly version:string;
+}
+/** Kernels a host provides when it replays recorded commands. */
+export interface SessionCommandEnvironment {readonly kernels?:readonly KernelIdentity[]}
 export interface ApplySessionCommand {
   version:1;
   kind:'apply';
@@ -31,7 +41,9 @@ export interface ApplySessionCommand {
   changes:SessionValueChange[];
   selection:string[];
   /** Optional read dependencies. Older version-1 records contain only writes. */
-  context?:{sketchJoints?:SessionSketchJointContext[];bodyOperations?:SessionBodyOperationContext[]};
+  context?:{sketchJoints?:SessionSketchJointContext[];bodyOperations?:SessionBodyOperationContext[];
+    /** The kernel whose output this edit contains. Records without it never depend on a kernel. */
+    kernel?:KernelIdentity};
 }
 export type SessionCommand = ApplySessionCommand
   | {version:1;kind:'select';ids:string[]}
@@ -92,10 +104,17 @@ function checkJointRelationships(value:unknown):asserts value is SessionSketchJo
     joints.add(joint.id);
   }
 }
+const kernelText=/^[A-Za-z0-9@][A-Za-z0-9@/._+-]{0,127}$/;
+export function checkKernelIdentity(value:unknown):asserts value is KernelIdentity{
+  if(!object(value))fail('expected kernel identity');
+  onlyKeys(value,['id','package','version']);
+  if(![value.id,value.package,value.version].every(text=>typeof text==='string'&&kernelText.test(text)))fail('invalid kernel identity');
+}
 function checkContext(value:unknown):asserts value is NonNullable<ApplySessionCommand['context']>{
   if(!object(value))fail('expected command context');
-  onlyKeys(value,['sketchJoints','bodyOperations']);
-  if(value.sketchJoints===undefined&&value.bodyOperations===undefined)fail('expected command read dependencies');
+  onlyKeys(value,['sketchJoints','bodyOperations','kernel']);
+  if(value.sketchJoints===undefined&&value.bodyOperations===undefined&&value.kernel===undefined)fail('expected command read dependencies');
+  if(value.kernel!==undefined)checkKernelIdentity(value.kernel);
   if(value.sketchJoints!==undefined){
     if(!Array.isArray(value.sketchJoints)||!value.sketchJoints.length||value.sketchJoints.length>256)fail('expected sketch joint context');
     const sketches=new Set<string>();
@@ -246,7 +265,7 @@ function bodyOperationInputs(node:SolidNode|undefined){
 }
 
 /** @internal Capture the accepted result, including derived parameter/source edits. */
-export function createDocumentCommand(before:CadDocument,after:CadDocument,label:string,selection:readonly string[]):ApplySessionCommand{
+export function createDocumentCommand(before:CadDocument,after:CadDocument,label:string,selection:readonly string[],kernel?:KernelIdentity):ApplySessionCommand{
   if(before.id!==after.id)fail('commands must preserve the project identity');
   const changes:SessionValueChange[]=[];
   function visit(a:unknown,b:unknown,path:string[]){
@@ -272,7 +291,8 @@ export function createDocumentCommand(before:CadDocument,after:CadDocument,label
     return [{bodyId:node.id,kind:node.kind,...bodyOperationRelationships(before,node.id)}];
   });
   return {version:1,kind:'apply',projectId:before.id,label,changes,selection:[...selection],
-    ...(sketchJoints.length||bodyOperations.length?{context:{...(sketchJoints.length?{sketchJoints}:{}),...(bodyOperations.length?{bodyOperations}:{})}}:{})};
+    ...(sketchJoints.length||bodyOperations.length||kernel?{context:{...(sketchJoints.length?{sketchJoints}:{}),...(bodyOperations.length?{bodyOperations}:{}),
+      ...(kernel?{kernel:{id:kernel.id,package:kernel.package,version:kernel.version}}:{})}}:{})};
 }
 
 function location(document:CadDocument,path:readonly string[]):{parent:Record<string,unknown>;key:string}{
@@ -285,9 +305,19 @@ function location(document:CadDocument,path:readonly string[]):{parent:Record<st
   return {parent,key:path[path.length-1]};
 }
 
+/** A recorded kernel must be provided by the host in the same package version. */
+export function checkCommandKernel(command:ApplySessionCommand,environment:SessionCommandEnvironment={}):void{
+  const kernel=command.context?.kernel;
+  if(!kernel)return;
+  const available=(environment.kernels??[]).find(entry=>entry.id===kernel.id&&entry.package===kernel.package);
+  if(!available)throw new Error(`Recorded command was built with the ${kernel.id} kernel (${kernel.package} ${kernel.version}), which this host does not provide`);
+  if(available.version!==kernel.version)throw new Error(`Recorded command is stale: it was built with ${kernel.package} ${kernel.version}, but this host has ${available.version}`);
+}
+
 /** @internal Apply to a private candidate only, after checking every precondition. */
-export function applyDocumentCommand(document:CadDocument,command:ApplySessionCommand):CadDocument{
+export function applyDocumentCommand(document:CadDocument,command:ApplySessionCommand,environment:SessionCommandEnvironment={}):CadDocument{
   if(command.projectId!==document.id)throw new Error('Recorded command belongs to a different project');
+  checkCommandKernel(command,environment);
   for(const entry of command.context?.sketchJoints??[]){
     if(!document.sketches||!Object.hasOwn(document.sketches,entry.sketchId)
       ||!sameSessionValue(sketchJointRelationships(document,entry.sketchId),entry.joints))

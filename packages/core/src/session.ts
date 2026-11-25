@@ -9,7 +9,8 @@ import type {ModelProvenanceRecord} from './model-provenance.js';
 import {assertProvenanceUpgrade,pruneModelProvenance} from './model-provenance.js';
 import {constructionInputs,isCube,constrainCubeEdit,constrainCubeTransform, checkDocument, createDocument, freezeDocument, identityTransform, newId, parseDocument, pruneDocument, serializeDocument, validateDocument } from './document.js';
 import type { CadDocument, Primitive, SolidNode, Transform, Vec3 } from './document.js';
-import {applyDocumentCommand,copySessionCommand,createDocumentCommand,parseSessionCommand,sameSessionValue,sessionCommandRecord} from './session-commands.js';
+import {applyDocumentCommand,checkKernelIdentity,copySessionCommand,createDocumentCommand,parseSessionCommand,sameSessionValue,sessionCommandRecord} from './session-commands.js';
+import type {KernelIdentity} from './session-commands.js';
 import type {SessionCommand,SessionCommandRecord} from './session-commands.js';
 import type {CadJoint} from './physics.js';
 import { defaultPartPhysics, allocateMotorPort, pruneGearMeshes } from './physics.js';
@@ -163,7 +164,13 @@ function affectedOutlines(document:CadDocument,next:CadDocument){
     return chordsSatisfied&&outlineCurvesSatisfied(profile.points,profile.bulges,curves)?[]:[{sketch,profile,request,curves,chordsSatisfied}];
   }));
 }
-export function createCadSession(initial: CadDocument = createDocument()) {
+export interface CadSessionOptions {
+  /** Kernels this host provides. Recorded commands built by another kernel version are refused. */
+  kernels?: readonly KernelIdentity[];
+}
+export function createCadSession(initial: CadDocument = createDocument(), options: CadSessionOptions = {}) {
+  const kernels:readonly KernelIdentity[]=Object.freeze((options.kernels??[]).map(kernel=>{checkKernelIdentity(kernel);return Object.freeze({id:kernel.id,package:kernel.package,version:kernel.version});}));
+  let activeKernel:KernelIdentity|undefined;
   let document = freezeDocument(validateDocument(initial)); let selection: string[] = []; let revision = 0; let label = 'Opened';let liveModelSource=false;
   let disposed=false;
   const undo: Snapshot[] = []; const redo: Snapshot[] = []; const listeners = new Set<(state: SessionState) => void>();
@@ -197,7 +204,7 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     const acceptedSelection=nextSelection??selection.filter(id=>!!validated.nodes[id]);
     // Capture only accepted commits, at their common boundary. Large headless
     // sessions pay no delta/serialization cost unless someone is observing.
-    const record=commandListeners.size?sessionCommandRecord(createDocumentCommand(document,validated,title,acceptedSelection),title):undefined;
+    const record=commandListeners.size?sessionCommandRecord(createDocumentCommand(document,validated,title,acceptedSelection,activeKernel),title):undefined;
     undo.push(snapshot()); if (undo.length > 100) undo.shift(); redo.length = 0;
     document = validated; selection = acceptedSelection; label = title; revision++;
     if(record)publishCommand(record);
@@ -328,6 +335,17 @@ export function createCadSession(initial: CadDocument = createDocument()) {
     subscribe(listener: (state: SessionState) => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     /** Stream accepted model actions; this transient journal is not saved in the model. */
     subscribeCommands(listener:(record:SessionCommandRecord)=>void){commandListeners.add(listener);return ()=>{commandListeners.delete(listener);};},
+    /** Kernels this session accepts in recorded commands. */
+    get kernels(){return kernels;},
+    /** Commits made while `run` executes contain this kernel's output; their records carry its
+     * identity so replay can refuse another kernel version. The kernel must be one of `kernels`. */
+    withKernel<T>(kernel:KernelIdentity,run:()=>T):T{
+      const provided=kernels.find(entry=>entry.id===kernel.id&&entry.package===kernel.package&&entry.version===kernel.version);
+      if(!provided)throw new Error(`This session does not provide the ${kernel.id} kernel (${kernel.package} ${kernel.version})`);
+      if(activeKernel&&activeKernel!==provided)throw new Error('Only one kernel can record an edit');
+      const previous=activeKernel;activeKernel=provided;
+      try{return run();}finally{activeKernel=previous;}
+    },
     /** Replay data through the same validation and Undo boundary used by the GUI. */
     executeCommand(value:SessionCommand|string):boolean{
       const command=typeof value==='string'?parseSessionCommand(value):copySessionCommand(value);
@@ -338,11 +356,13 @@ export function createCadSession(initial: CadDocument = createDocument()) {
         if(!command.ids.every(id=>Object.hasOwn(document.nodes,id)))throw new Error('Select existing objects');
         const changed=!sameModelValue(selection,command.ids);session.select(command.ids);return changed;
       }
-      const candidate=applyDocumentCommand(document,command);
-      commit(command.label,d=>{
+      const candidate=applyDocumentCommand(document,command,{kernels});
+      const replay=()=>commit(command.label,d=>{
         replaceDocumentContents(d,structuredClone(candidate));
         return [...command.selection];
       },candidate);
+      // A replayed kernel edit is recorded again with the kernel it was checked against.
+      if(command.context?.kernel)session.withKernel(command.context.kernel,replay);else replay();
       return revision!==before;
     },
     select(ids: readonly string[]) {

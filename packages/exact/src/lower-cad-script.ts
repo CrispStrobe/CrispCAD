@@ -207,6 +207,18 @@ function lowerHull(k: ExactKernel, shapes: readonly CodeShape[]): ExactSolid | n
   return k.translate(k.fillet(grown, r, 'all'), min.map((v, i) => v + size[i] / 2) as unknown as Vec3);
 }
 
+/** Revolve an XY profile (X radial, Y height) about world Z with the Manifold evaluator's
+ * conventions: a wholly non-positive profile is reflected, and negative sweeps turn clockwise. */
+export function revolveProfile(k: ExactKernel, profile: ExactProfile, degrees: number): ExactSolid {
+  const b = k.profile.bounds(profile), negative = b.max[0] <= 0;
+  if (b.min[0] < -1e-8 && !negative) invalid('Revolved profiles must stay on one side of the radial axis.');
+  const angle = Math.abs(degrees);
+  if (angle > 360) invalid('Revolution angle exceeds 360 degrees.');
+  let solid = k.revolve(negative ? k.profile.scale(profile, [-1, 1]) : profile, degrees);
+  if (negative && angle !== 360) solid = k.rotate(solid, [0, 0, 1], 180);
+  return solid;
+}
+
 // ---- solids ----
 function rigid(k: ExactKernel, s: ExactSolid, m: M34): ExactSolid {
   const { scale, rotation, translate } = decomposeAffine(m);
@@ -235,14 +247,7 @@ export function lowerCodeShape(k: ExactKernel, shape: CodeShape): ExactSolid | n
       circular('revolve', shape.segments);
       if (shape.angle === 0) return null;
       const profile = lowerProfile(k, shape.profile);
-      if (!profile) return null;
-      const b = k.profile.bounds(profile), negative = b.max[0] <= 0;
-      if (b.min[0] < -1e-8 && !negative) invalid('Revolved profiles must stay on one side of the radial axis.');
-      const angle = Math.abs(shape.angle);
-      if (angle > 360) invalid('Revolution angle exceeds 360 degrees.');
-      let solid = k.revolve(negative ? k.profile.scale(profile, [-1, 1]) : profile, shape.angle);
-      if (negative && angle !== 360) solid = k.rotate(solid, [0, 0, 1], 180);
-      return solid;
+      return profile && revolveProfile(k, profile, shape.angle);
     }
     case 'polyhedron': {
       if (shape.faces.length > MAX_POLYHEDRON_FACES) unsupported(`A polyhedron of ${shape.faces.length} faces exceeds the exact faceted-solid budget (${MAX_POLYHEDRON_FACES}); tessellated constructors (ellipsoid, ellipticFrustum, roundedCylinder, many-section loft) have no exact lowering yet.`);

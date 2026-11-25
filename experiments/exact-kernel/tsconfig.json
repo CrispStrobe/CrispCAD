@@ -11,5 +11,5 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "tests", "bench.ts", "vitest.config.ts"]
+  "include": ["tests", "bench.ts", "vitest.config.ts"]
 }
