@@ -214,7 +214,7 @@ describe('stale detection and recompute',()=>{
   expect(same.state.document).toEqual(session.state.document);
   expect(rel(manifold.evaluate(same.state.document).volume,shellOpenTop(2))).toBeLessThan(1e-6);
   const newer=createCadSession(empty,{kernels:[{...exactKernelIdentity,version:'0.2.0'}]});
-  expect(()=>newer.executeCommand(recorded.text)).toThrow('Recorded command is stale: it was built with @crispcad/exact-kernel 0.1.0, but this host has 0.2.0');
+  expect(()=>newer.executeCommand(recorded.text)).toThrow('Recorded command is stale: it was built with @crispcad/exact-kernel 0.1.1, but this host has 0.2.0');
   expect(newer.state.revision).toBe(0);
   expect(()=>createCadSession(empty).executeCommand(recorded.text)).toThrow(/which this host does not provide/);
   expect(box).toBeTruthy();
@@ -233,14 +233,14 @@ describe('commands',()=>{
   await expect(runner.runAsync('chamfer 1 all --face 0,0,0')).rejects.toThrow(/non-zero outward normal/);
   const fillet=await runner.runAsync('fillet 0.5 all --face top');
   expect(fillet).toMatchObject({command:'fillet',edited:true,invocation:expect.stringMatching(/^fillet 0\.5 [\w-]+ --face \+z$/),kernel:{id:'smlib'}});
-  expect(fillet.output).toMatch(/Exact fillet \(smlib · @crispcad\/exact-kernel 0\.1\.0\):\nFillet of Block \([\w-]+\): exact volume [\d.]+ mm³ · display \d+ triangles/);
+  expect(fillet.output).toMatch(/Exact fillet \(smlib · @crispcad\/exact-kernel 0\.1\.1\):\nFillet of Block \([\w-]+\): exact volume [\d.]+ mm³ · display \d+ triangles/);
   // Too large a fillet fails in the kernel with a diagnostic and changes nothing.
   const revision=session.state.revision;
   await expect(runner.runAsync('fillet 50 all')).rejects.toThrow();
   expect(session.state.revision).toBe(revision);
   expect((await runner.runAsync('recompute exact')).output).toBe('Every exact feature is up to date.');
   await expect(runner.runAsync('recompute')).rejects.toThrow(/Usage: recompute exact/);
-  expect(journal.export('replay')).toContain('"kernel":{"id":"smlib","package":"@crispcad/exact-kernel","version":"0.1.0"}');
+  expect(journal.export('replay')).toContain(`"kernel":${JSON.stringify(exactKernelIdentity)}`);
   expect(journal.export('cadscript')).toMatch(/@replay \d+ non-portable: fillet 0\.5 /);
   journal.dispose();
  },120_000);

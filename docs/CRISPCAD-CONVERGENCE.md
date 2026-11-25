@@ -94,6 +94,14 @@ Results, on lab branch `ccr-f42f1bfe-3ekdio` (head `c4bea5b93`):
   - 1 sketch with several loops;
   - 1 loft with sections off the XY plane;
   - 4 SMLib extrude errors.
+
+  **Update, lab release `exact-kernel-v0.1.1` (2026-11-25): 2,402/2,402.** All 11 build
+  now (side-face holes, multi-loop sketches, YZ/XZ and apex lofts, helical sweeps,
+  self-touching outlines). The harness also writes per-model volume, area and exact box
+  (`experiments/kernel-qualification/results-catalog-native-volumes.json` in the lab) in
+  the cross-check's `--native` format. Still refused natively, with an explicit error:
+  `'smooth'` sweeps, smooth lofts to a point, rotated loft sections, twisted or tapered
+  extrusions, countersinks.
 - **Native mates:** these work, reusing the solver, which does not depend on the
   kernel. On all 35 mated catalog models (594 parts), placements are identical
   to OpenCASCADE's and volumes agree to within 8.7e-6. Still needing
@@ -190,9 +198,19 @@ Product entry additionally needs:
 
 ### Phase 2b: move the exact kernel into the lab as a package. **Done 2026-11-25**
 
-Release: [`exact-kernel-v0.1.0`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.0)
-of the kernel lab, tarball `crispcad-exact-kernel-0.1.0.tgz`, SHA-256
-`1de74c8d15d184359c855f119e5d5a89e587fa6faa6ead9beb6efd73fc510027`.
+Release: [`exact-kernel-v0.1.1`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.1)
+of the kernel lab, tarball `crispcad-exact-kernel-0.1.1.tgz`, SHA-256
+`a4852c58f150ea9b61a33135aa8ad60ea9dd2410095ed4b9bbae39060cc608a7`.
+
+0.1.1 replaced 0.1.0 (SHA-256 `1de74c8d…0027`) on 2026-11-25. It fixes three things the
+cross-check found: SMLib's own bounding box misses interior extremes of rotated curved
+solids (the package now measures the box from surface points); the exact convex hull kept
+near-coplanar faces, which inflated loft areas (a hexagonal frustum by 73 %) and made long
+multi-section lofts fail to stitch; and the hull limit rises from 64 to 1,024 points.
+Commands recorded with 0.1.0 are refused on replay as stale, by design; saved exact
+features keep their display and recompute only when their model changes. An upstream
+report for the bounding-box and `xor` orientation bugs is drafted, not sent, in the lab's
+`docs/smlibwasm-upstream-report.md`.
 
 - **Package:** `@crispcad/exact-kernel` in the lab's
   [`packages/exact-kernel`](https://github.com/CrispStrobe/crispcad-kernel-lab/tree/ccr-f42f1bfe-3ekdio/packages/exact-kernel)
