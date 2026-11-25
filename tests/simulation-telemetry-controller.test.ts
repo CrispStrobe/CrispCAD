@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {createCadSession} from '@brickwright/cad-core';
+import type {GeometryResult} from '@brickwright/cad-geometry';
 import {createSimulationController} from '../packages/editor/src/simulation-controller.js';
 import type {SimulationFrame,SimulationTelemetry} from '../packages/editor/src/simulation-protocol.js';
 
@@ -15,10 +16,10 @@ beforeEach(()=>{
  client.send.mockReset().mockImplementation(async()=>fullFrame());client.dispose.mockReset();
 });
 afterEach(()=>vi.unstubAllGlobals());
-function fixture(){
+function fixture(ready:()=>Promise<GeometryResult|void>=async()=>{}){
  const session=createCadSession();session.add({kind:'box',size:[10,10,10]});
  const changed=vi.fn(),frameChanged=vi.fn();
- const controller=createSimulationController(session,'/manifold.wasm',async()=>{},changed,frameChanged);
+ const controller=createSimulationController(session,'/manifold.wasm',ready,changed,frameChanged);
  return {session,controller,changed,frameChanged,dispose:()=>{controller.dispose();session.dispose();}};
 }
 
@@ -164,18 +165,25 @@ it('inspects the end of a stopped recording and returns from replay to the edita
  }finally{f.dispose();}
 });
 
-it('keeps a completed worker warm through Stop and invalidates it on an edit',async()=>{
- const f=fixture();
+it('sends geometry on cold starts and reuses the completed worker through Stop',async()=>{
+ const geometry={bodies:[]} as unknown as GeometryResult;
+ const changedGeometry={bodies:[],sourceKey:'edited'} as unknown as GeometryResult;
+ const ready=vi.fn(async()=>geometry).mockResolvedValueOnce(geometry).mockResolvedValueOnce(geometry).mockResolvedValueOnce(changedGeometry);
+ const f=fixture(ready);
  try{
   await f.controller.prepare();
+  expect(client.send).toHaveBeenLastCalledWith(expect.objectContaining({op:'start',geometry}));
   await f.controller.stop();
   expect(client.send).toHaveBeenLastCalledWith({op:'park'});
   expect(client.dispose).not.toHaveBeenCalled();
   expect(f.controller.state.state).toBe('idle');
   await f.controller.prepare();
-  expect(client.send).toHaveBeenLastCalledWith(expect.objectContaining({op:'start'}));
+  expect(client.send).toHaveBeenLastCalledWith(expect.objectContaining({op:'start',geometry:undefined}));
   await f.controller.stop();
   f.session.add({kind:'box',size:[3,3,3]});
   expect(client.dispose).toHaveBeenCalledOnce();
+  await f.controller.prepare();
+  expect(client.send).toHaveBeenLastCalledWith(expect.objectContaining({op:'start',geometry:changedGeometry}));
+  expect(ready).toHaveBeenCalledTimes(3);
  }finally{f.dispose();}
 });

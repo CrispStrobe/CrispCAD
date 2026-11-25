@@ -49,7 +49,21 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
   if(disposed)throw new Error(t('Editor was disposed'));if(client&&!preparing)return;if(preparing)return preparing;
   replay.clear();traces.clear();replayTime=undefined;
   const expected=epoch;error='';
-  const pending=(async()=>{const geometry=await ready();if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));client=standby?.available?standby:createSimulationClient();standby=undefined;const first=await client.send({op:'start',document:session.state.document,geometry:geometry||undefined,wasmURL:new URL(wasmURL,document.baseURI).href,fixBase:fixBase(),rigidPreview,locale:getLocale()});if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));frame=first;present(frame);})();
+  const pending=(async()=>{
+   const geometry=await ready();
+   if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));
+   const parked=standby?.available?standby:undefined;
+   client=parked??createSimulationClient();
+   standby=undefined;
+   // A completed worker keeps the evaluated geometry when parked. Design edits
+   // discard the worker, so only the initial start needs to send the mesh buffers.
+   const first=await client.send({
+    op:'start',document:session.state.document,geometry:parked?undefined:geometry||undefined,
+    wasmURL:new URL(wasmURL,document.baseURI).href,fixBase:fixBase(),rigidPreview,locale:getLocale(),
+   });
+   if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));
+   frame=first;present(frame);
+  })();
   preparing=pending;notify();
   try{await pending;}catch(e){if(expected===epoch)fail(e);throw e;}finally{if(preparing===pending)preparing=undefined;notify();}
  }
