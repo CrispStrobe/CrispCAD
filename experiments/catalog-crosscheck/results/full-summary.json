@@ -1,0 +1,1141 @@
+{
+ "run": {
+  "name": "full",
+  "catalogModels": 2402,
+  "selected": 2402,
+  "mode": "all",
+  "seed": null,
+  "labCommit": "d09cda7f6dc3de493773af63574ef90207150532",
+  "timeoutSeconds": 300,
+  "jobs": 3,
+  "machine": {
+   "cpus": 8,
+   "model": "Apple M1",
+   "loadAverageAtStart": [
+    123,
+    109.8,
+    79.2
+   ],
+   "loadAverageAtEnd": [
+    186.2,
+    181.2,
+    161.9
+   ]
+  },
+  "started": "2026-11-25T05:16:08.783Z",
+  "calibration": {
+   "volume": {
+    "prism": 1.0000000209001643,
+    "sphere": 3.523332817625635,
+    "revolve": 1
+   },
+   "area": {
+    "prism": 1,
+    "sphere": 1.9144953289323134,
+    "revolve": 1
+   },
+   "bbox": {
+    "prism": 1,
+    "sphere": 2.5410165611938584,
+    "revolve": 1
+   },
+   "samples": [
+    {
+     "kind": "prism",
+     "segments": 8,
+     "volumeDeficit": 0.09968368392,
+     "areaDeficit": 0.05023098929,
+     "maxBboxShrink": 0.2871471824,
+     "delta": 0.09968368384,
+     "fv": 1.000000001,
+     "fa": 0.5039038221,
+     "fb": 0.3772272975
+    },
+    {
+     "kind": "prism",
+     "segments": 16,
+     "volumeDeficit": 0.02550464157,
+     "areaDeficit": 0.0127769796,
+     "maxBboxShrink": 0.1428218364,
+     "delta": 0.0255046416,
+     "fv": 0.999999999,
+     "fa": 0.500966836,
+     "fb": 0.743293888
+    },
+    {
+     "kind": "prism",
+     "segments": 48,
+     "volumeDeficit": 0.002853342581,
+     "areaDeficit": 0.001426980118,
+     "maxBboxShrink": 0.01188542635,
+     "delta": 0.00285334265,
+     "fv": 0.9999999756,
+     "fa": 0.5001082215,
+     "fb": 0.5551144437
+    },
+    {
+     "kind": "prism",
+     "segments": 96,
+     "volumeDeficit": 0.000713794192,
+     "areaDeficit": 0.0003569214875,
+     "maxBboxShrink": 0.003024857844,
+     "delta": 0.0007137941771,
+     "fv": 1.000000021,
+     "fa": 0.5000341821,
+     "fb": 0.5649583659
+    },
+    {
+     "kind": "sphere",
+     "segments": 8,
+     "volumeDeficit": 0.2974560916,
+     "areaDeficit": 0.1709816748,
+     "maxBboxShrink": 1.785770426,
+     "delta": 0.09968368384,
+     "fv": 2.983999789,
+     "fa": 1.715242337,
+     "fb": 2.345979321
+    },
+    {
+     "kind": "sphere",
+     "segments": 16,
+     "volumeDeficit": 0.08557907588,
+     "areaDeficit": 0.0472378957,
+     "maxBboxShrink": 0.444667398,
+     "delta": 0.0255046416,
+     "fv": 3.355431425,
+     "fa": 1.852129367,
+     "fb": 2.314201859
+    },
+    {
+     "kind": "sphere",
+     "segments": 48,
+     "volumeDeficit": 0.01000994338,
+     "areaDeficit": 0.005446754394,
+     "maxBboxShrink": 0.05440511509,
+     "delta": 0.00285334265,
+     "fv": 3.508146272,
+     "fa": 1.908903017,
+     "fb": 2.541016561
+    },
+    {
+     "kind": "sphere",
+     "segments": 96,
+     "volumeDeficit": 0.002514934449,
+     "areaDeficit": 0.001366555618,
+     "maxBboxShrink": 0.01339327252,
+     "delta": 0.0007137941771,
+     "fv": 3.523332818,
+     "fa": 1.914495329,
+     "fb": 2.501486598
+    },
+    {
+     "kind": "revolve",
+     "segments": 8,
+     "volumeDeficit": 0.1894305309,
+     "areaDeficit": 0.08614463777,
+     "maxBboxShrink": 0.8363547763,
+     "delta": 0.09968368384,
+     "fv": 0.9501581581,
+     "fa": 0.4320899592,
+     "fb": 0.4394900892
+    },
+    {
+     "kind": "revolve",
+     "segments": 16,
+     "volumeDeficit": 0.05035879645,
+     "areaDeficit": 0.02224670358,
+     "maxBboxShrink": 0.4214587041,
+     "delta": 0.0255046416,
+     "fv": 0.9872476793,
+     "fa": 0.4361304882,
+     "fb": 0.8773663378
+    },
+    {
+     "kind": "revolve",
+     "segments": 48,
+     "volumeDeficit": 0.005698543711,
+     "areaDeficit": 0.002495802019,
+     "maxBboxShrink": 0.03223600412,
+     "delta": 0.00285334265,
+     "fv": 0.9985733242,
+     "fa": 0.4373470565,
+     "fb": 0.6022391107
+    },
+    {
+     "kind": "revolve",
+     "segments": 96,
+     "volumeDeficit": 0.00142707889,
+     "areaDeficit": 0.0006245188094,
+     "maxBboxShrink": 0.007359525689,
+     "delta": 0.0007137941771,
+     "fv": 0.9996431292,
+     "fa": 0.4374642084,
+     "fb": 0.5498209596
+    }
+   ]
+  },
+  "versions": {
+   "node": "v26.4.0",
+   "exact": "@classcad/smlibwasm 0.6.2"
+  },
+  "finished": "2026-11-25T05:50:41.984Z",
+  "lastRunMinutes": 34.6
+ },
+ "models": 2402,
+ "modelClasses": {
+  "exact-unsupported": 1127,
+  "agree": 989,
+  "converter-failure": 153,
+  "kernel-failure": 115,
+  "disagree": 18
+ },
+ "convertStatus": {
+  "converted": 2231,
+  "unsupported": 104,
+  "failed": 49,
+  "partial": 18
+ },
+ "convertErrors": {
+  "Line N, column N: Unsupported kernelCAD feature …": 104,
+  "Line N, column N: Invalid JavaScript syntax; strip TypeScript annotations first": 24,
+  "Line N, column N: Expected positive kernelCAD box dimensions": 12,
+  "Line N, column N: Unknown kernelCAD name …": 6,
+  "Line N, column N: Expected a finite kernelCAD number": 6,
+  "Line N, column N: Expected a bounded kernelCAD array": 1
+ },
+ "parts": 63281,
+ "partClasses": {
+  "agree": 52087,
+  "exact-unsupported": 10662,
+  "exact-failure": 437,
+  "disagree": 92,
+  "manifold-failure": 2,
+  "both-failed": 1
+ },
+ "disagreementReasons": {
+  "bbox": 59,
+  "area": 30,
+  "volume": 3
+ },
+ "disagreementCauses": {
+  "exact bbox inside Manifold mesh bbox (SMLib tight bbox)": 59,
+  "planar part, area off by < 1e-3 (float32 mesh positions far from the origin)": 25,
+  "planar loft, exact area too large with equal volume (SMLib area of stitched polyhedron)": 5,
+  "planar part, volume beyond the 1e-6 floor (|dV|/V ≈ 1e-6: Manifold numerics at large coordinates)": 3
+ },
+ "exactUnsupported": {
+  "cylinder with N segments is ambiguous for an exact kernel (a polygon or a circle?); use N+ segments for a true circle, or polygon2d/polyhedron for a polygonal s": 10300,
+  "revolve with N segments is ambiguous for an exact kernel (a polygon or a circle?); use N+ segments for a true circle, or polygon2d/polyhedron for a polygonal sh": 308,
+  "Hull of N distinct vertices exceeds the exact hull budget (N).": 30,
+  "A polyhedron of N faces exceeds the exact faceted-solid budget (N); tessellated constructors (ellipsoid, ellipticFrustum, roundedCylinder, many-section loft) ha": 24
+ },
+ "exactFailures": {
+  "invalid-input: The polyhedron faces do not close around a valid solid.": 437,
+  "invalid-input: The program produces no solid.": 1
+ },
+ "manifoldFailures": {
+  "feature Na076aec-N-Nf0c-Nd-Nfaeedc64d: part: Code produces no printable solid": 1,
+  "feature Nb1aa1f-N-N-b17c-Nf72c436b: part: Code produces no printable solid": 1,
+  "feature N-Na87-N-a0ff-Nfc7a3b: part: Code produces no printable solid": 1
+ },
+ "agreement": {
+  "partsBuiltByBoth": 52179,
+  "medianRelVolumeAgreeing": 0,
+  "maxRelVolumeAgreeingPlanar": 9.66980869e-7,
+  "planarPartsAgreeing": 46863
+ },
+ "intent": {
+  "parts": 10608,
+  "note": "Parts the converter emitted with < 16 segments (cylinder/torus); exact kernel run on kernelCAD intent (exact cylinder, n-gon torus tube). relVolume = Manifold/intent - 1.",
+  "medianRelVolume": -0.06451071634524819,
+  "minRelVolume": -0.5865033285225241,
+  "agreeWithinFacetingOfEmittedSegments": 10608,
+  "byRelVolume": {
+   "-0.0997": 3184,
+   "-0.0645": 2993,
+   "-0.0451": 2138,
+   "-0.1730": 1280,
+   "-0.0332": 703,
+   "-0.3634": 148,
+   "-0.2432": 28,
+   "-0.0621": 16,
+   "-0.1047": 9,
+   "-0.1038": 9,
+   "-0.0307": 5,
+   "-0.0793": 4,
+   "-0.0547": 4,
+   "-0.0609": 4,
+   "-0.0428": 4,
+   "-0.0605": 4,
+   "-0.0303": 4,
+   "-0.0301": 4,
+   "-0.0297": 4,
+   "-0.0387": 4,
+   "0.0003": 3,
+   "-0.0312": 3,
+   "-0.5865": 3,
+   "0.0124": 2,
+   "-0.0659": 2,
+   "0.0019": 2,
+   "-0.0244": 2,
+   "-0.0242": 2,
+   "0.0015": 2,
+   "-0.0675": 2,
+   "-0.0055": 2,
+   "-0.0286": 2,
+   "0.0014": 2,
+   "-0.0221": 2,
+   "0.0189": 2,
+   "0.0006": 1,
+   "0.0059": 1,
+   "-0.0280": 1,
+   "-0.0168": 1,
+   "0.0017": 1,
+   "-0.0666": 1,
+   "-0.0275": 1,
+   "-0.0240": 1,
+   "0.0022": 1,
+   "0.0011": 1,
+   "0.0630": 1,
+   "-0.1866": 1,
+   "-0.0430": 1,
+   "0.0034": 1,
+   "-0.0199": 1,
+   "-0.0153": 1,
+   "0.0367": 1,
+   "-0.0252": 1,
+   "-0.0465": 1,
+   "-0.0082": 1,
+   "0.0016": 1,
+   "0.0079": 1,
+   "0.0002": 1,
+   "0.0032": 1,
+   "-0.0269": 1,
+   "-0.0880": 1
+  },
+  "modelsOnlyLowSegmentUnsupported": 1123
+ },
+ "modelTotals": {
+  "models": 2128,
+  "exactlyEqual": 838,
+  "within1e3": 1170,
+  "within1e2": 1679,
+  "beyond5e2": 115,
+  "p05": -0.053648868791659754,
+  "median": -0.0004510192917859257,
+  "p95": 2.563183887360765e-9,
+  "min": -0.15282830733182995
+ },
+ "timing": {
+  "manifoldCpuMsTotal": 99002,
+  "exactCpuMsTotal": 726243,
+  "manifoldCpuMsMedianPart": 0.92,
+  "exactCpuMsMedianPart": 2.84,
+  "exactCpuMsMaxPart": 1445.74,
+  "convertWallMsMedian": 47.22
+ },
+ "worstDisagreements": [
+  {
+   "model": "recycling-facility/used-oil-dropoff-tank.kcad.ts",
+   "part": "saddle--800",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": 0.01860623124,
+   "dVolume": 855442.76,
+   "dArea": 33938.701,
+   "dBbox": 32.9084638,
+   "tolerance": {
+    "volume": 4378002.59,
+    "area": 53833.13528,
+    "bbox": 8.641854029,
+    "minSegments": 24,
+    "approximate": false
+   }
+  },
+  {
+   "model": "recycling-facility/used-oil-dropoff-tank.kcad.ts",
+   "part": "saddle-800",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": 0.01860623124,
+   "dVolume": 855442.76,
+   "dArea": 33938.701,
+   "dBbox": 32.9084638,
+   "tolerance": {
+    "volume": 4378002.59,
+    "area": 53833.13528,
+    "bbox": 8.641854029,
+    "minSegments": 24,
+    "approximate": false
+   }
+  },
+  {
+   "model": "amusement-park/ride-operator-console.kcad.ts",
+   "part": "estop-head",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.01000994352,
+   "dVolume": -4996.4933,
+   "dArea": -177.67266,
+   "dBbox": 2.191791,
+   "tolerance": {
+    "volume": 10036.74462,
+    "area": 528.0872793,
+    "bbox": 0.6748096664,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-0-0-1",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83223,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-0-0-2",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.82943,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-0-0-3",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83243,
+   "dBbox": 0.9421689,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-0-0-4",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83088,
+   "dBbox": 0.9421689,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-0-1-0",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83104,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-0-1-3",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83165,
+   "dBbox": 0.9421689,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-0-1-4",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83165,
+   "dBbox": 0.9421689,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-0-2-0",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.82943,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-0-2-1",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83223,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-0-2-2",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83223,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-0-2-3",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83088,
+   "dBbox": 0.9421689,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-0-2-4",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83243,
+   "dBbox": 0.9421689,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-1-0-0",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83292,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-1-0-1",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83292,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-1-0-2",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83011,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-1-0-3",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83269,
+   "dBbox": 0.9421689,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-1-0-4",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83115,
+   "dBbox": 0.9421689,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-1-1-0",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83173,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-1-1-1",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83196,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-1-1-2",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83173,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-1-1-3",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83191,
+   "dBbox": 0.9421689,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-1-1-4",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83191,
+   "dBbox": 0.9421689,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-1-2-0",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83011,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-1-2-4",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83269,
+   "dBbox": 0.9421689,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-0-0",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83509,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-0-1",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83509,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-0-2",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83228,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-0-3",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83401,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-0-4",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83246,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-1-0",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.8339,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-1-1",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83413,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-1-2",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.8339,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-1-3",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83323,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-1-4",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83323,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-2-0",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83228,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-2-1",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83509,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  },
+  {
+   "model": "retail-store/produce-display-table.kcad.ts",
+   "part": "produce-2-2-2",
+   "reasons": [
+    "bbox"
+   ],
+   "relVolume": -0.0100099435,
+   "dVolume": -4081.255,
+   "dArea": -144.83509,
+   "dBbox": 0.942169,
+   "tolerance": {
+    "volume": 8198.252615,
+    "area": 290.7776943,
+    "bbox": 0.5006868293,
+    "minSegments": 48,
+    "approximate": false
+   }
+  }
+ ],
+ "disagreeingModels": {
+  "retail-store/produce-display-table.kcad.ts": 48,
+  "amusement-park/ride-operator-console.kcad.ts": 7,
+  "solar-energy/pole-mount-transformer.kcad.ts": 7,
+  "theatre-production/backstage-call-board.kcad.ts": 5,
+  "lighting/chandelier.kcad.ts": 4,
+  "telecom-infrastructure/monopole-mast.kcad.ts": 3,
+  "grid-substation/substation-overhead-line-gantry.kcad.ts": 3,
+  "solar-energy/plane-of-array-irradiance-sensor.kcad.ts": 3,
+  "recycling-facility/used-oil-dropoff-tank.kcad.ts": 2,
+  "railway/electric-locomotive.kcad.ts": 2,
+  "theatre-production/lighting-control-console.kcad.ts": 1,
+  "amusement-park/ride-photo-camera.kcad.ts": 1,
+  "nature/bramble.kcad.ts": 1,
+  "mining/run-of-mine-hopper.kcad.ts": 1,
+  "nature/baobab-tree.kcad.ts": 1,
+  "office/paper-shredder.kcad.ts": 1,
+  "mining/radial-stacker.kcad.ts": 1,
+  "theatre-production/stage-manager-console.kcad.ts": 1
+ },
+ "native": {
+  "source": {
+   "kernel": "smlib-native (status only)",
+   "statusOnly": true
+  },
+  "classes": {
+   "native built / ours exact-unsupported": 1126,
+   "native built / ours agree": 988,
+   "native built / ours converter-failure": 144,
+   "native built / ours kernel-failure": 115,
+   "native built / ours disagree": 18,
+   "native failed / ours converter-failure": 9,
+   "native failed / ours agree": 1,
+   "native failed / ours exact-unsupported": 1
+  },
+  "models": [
+   {
+    "id": "amusement-park/miniature-park-tram-engine.kcad.ts",
+    "class": "native failed / ours converter-failure"
+   },
+   {
+    "id": "construction-equipment/pipe-roller-stand.kcad.ts",
+    "class": "native failed / ours converter-failure"
+   },
+   {
+    "id": "construction-equipment/skid-steer-loader.kcad.ts",
+    "class": "native failed / ours agree"
+   },
+   {
+    "id": "hydroponics/hydroponic-grow-rack.kcad.ts",
+    "class": "native failed / ours converter-failure"
+   },
+   {
+    "id": "industrial-plant/plate-heat-exchanger.kcad.ts",
+    "class": "native failed / ours converter-failure"
+   },
+   {
+    "id": "mining/spiral-concentrator.kcad.ts",
+    "class": "native failed / ours converter-failure"
+   },
+   {
+    "id": "nature/rock-arch.kcad.ts",
+    "class": "native failed / ours converter-failure"
+   },
+   {
+    "id": "retail-store/impulse-merchandiser.kcad.ts",
+    "class": "native failed / ours exact-unsupported"
+   },
+   {
+    "id": "sports/batting-helmet.kcad.ts",
+    "class": "native failed / ours converter-failure"
+   },
+   {
+    "id": "standard-components/beam-coupling.kcad.ts",
+    "class": "native failed / ours converter-failure"
+   },
+   {
+    "id": "water-treatment/grit-classifier.kcad.ts",
+    "class": "native failed / ours converter-failure"
+   }
+  ]
+ }
+}

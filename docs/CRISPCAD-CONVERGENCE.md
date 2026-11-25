@@ -344,7 +344,7 @@ Proposed design, for a follow-up branch:
 Until then `measure exact` (exact volume, area, bounds and centroid) is the exact measure in
 the product.
 
-### Phase 4: cross-checking with the catalog
+### Phase 4: cross-checking with the catalog. **Steps 1, 2 and 4 done 2026-11-25; step 3 waits for lab volumes**
 
 1. Convert the lab's catalog with `scripts/convert-kcad.mjs` (93.6% convert).
 2. Build each converted model with Manifold and with the exact backend.
@@ -352,6 +352,29 @@ the product.
    results let us tell converter errors apart from kernel errors.
 4. Record the results next to
    [CODE-CONVERTERS.md](CODE-CONVERTERS.md#kernelcad-kcadts-models-2026-11-24).
+
+Results (harness and details in
+[experiments/catalog-crosscheck/README.md](../experiments/catalog-crosscheck/README.md)),
+full catalog, 2,402 models, 63,281 converted parts:
+
+- **Where both kernels build a part, they agree.** 52,087 of the 52,179 parts built by
+  both agree within a tolerance derived from each part's segment counts; planar parts to
+  9.7e-7 relative volume.
+- **Models:** 989 agree; 1,127 are exact-unsupported (1,123 only because of low-segment
+  cylinders and tori); 115 hit an exact-kernel failure; 18 disagree; 153 do not convert.
+- **The largest error is the converter's, not a kernel's.** kernelCAD ignores the segment
+  count of `cylinder(h, r, n)` (always exact) and uses `torus`'s only for the tube; the
+  converter emits *n*-gon prisms. Built as kernelCAD means them, all 10,608 such parts
+  agree with Manifold up to the *n*-gon deficit, which costs up to 15 % of a model's volume
+  (115 models over 5 %).
+- **Exact-kernel gaps found:** SMLib's tight bbox misses the extreme of some rotated
+  spheres (59 parts; `Sphere(62).rotate(X, 11)`); its area of stitched loft polyhedra is
+  wrong (5 parts; a hexagonal frustum is off by 73 % against the closed form); long
+  multi-section lofts fail to stitch (437 parts).
+- **Manifold:** 3 parts about 1.1e-6 off at metre-scale coordinates.
+- **Native column:** the lab commits only build status (2,391/2,402). Our classes are
+  cross-tabulated against it; the three-way volume split (converter vs kernel errors) needs
+  the lab's catalog harness to write per-model volumes (format in the README).
 
 ## Owner decisions (2026-11-24)
 

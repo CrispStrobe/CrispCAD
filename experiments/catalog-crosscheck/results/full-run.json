@@ -1,0 +1,182 @@
+{
+ "name": "full",
+ "catalogModels": 2402,
+ "selected": 2402,
+ "mode": "all",
+ "seed": null,
+ "labCommit": "d09cda7f6dc3de493773af63574ef90207150532",
+ "timeoutSeconds": 300,
+ "jobs": 3,
+ "machine": {
+  "cpus": 8,
+  "model": "Apple M1",
+  "loadAverageAtStart": [
+   123,
+   109.8,
+   79.2
+  ],
+  "loadAverageAtEnd": [
+   186.2,
+   181.2,
+   161.9
+  ]
+ },
+ "started": "2026-11-25T05:16:08.783Z",
+ "calibration": {
+  "volume": {
+   "prism": 1.0000000209001643,
+   "sphere": 3.523332817625635,
+   "revolve": 1
+  },
+  "area": {
+   "prism": 1,
+   "sphere": 1.9144953289323134,
+   "revolve": 1
+  },
+  "bbox": {
+   "prism": 1,
+   "sphere": 2.5410165611938584,
+   "revolve": 1
+  },
+  "samples": [
+   {
+    "kind": "prism",
+    "segments": 8,
+    "volumeDeficit": 0.09968368392,
+    "areaDeficit": 0.05023098929,
+    "maxBboxShrink": 0.2871471824,
+    "delta": 0.09968368384,
+    "fv": 1.000000001,
+    "fa": 0.5039038221,
+    "fb": 0.3772272975
+   },
+   {
+    "kind": "prism",
+    "segments": 16,
+    "volumeDeficit": 0.02550464157,
+    "areaDeficit": 0.0127769796,
+    "maxBboxShrink": 0.1428218364,
+    "delta": 0.0255046416,
+    "fv": 0.999999999,
+    "fa": 0.500966836,
+    "fb": 0.743293888
+   },
+   {
+    "kind": "prism",
+    "segments": 48,
+    "volumeDeficit": 0.002853342581,
+    "areaDeficit": 0.001426980118,
+    "maxBboxShrink": 0.01188542635,
+    "delta": 0.00285334265,
+    "fv": 0.9999999756,
+    "fa": 0.5001082215,
+    "fb": 0.5551144437
+   },
+   {
+    "kind": "prism",
+    "segments": 96,
+    "volumeDeficit": 0.000713794192,
+    "areaDeficit": 0.0003569214875,
+    "maxBboxShrink": 0.003024857844,
+    "delta": 0.0007137941771,
+    "fv": 1.000000021,
+    "fa": 0.5000341821,
+    "fb": 0.5649583659
+   },
+   {
+    "kind": "sphere",
+    "segments": 8,
+    "volumeDeficit": 0.2974560916,
+    "areaDeficit": 0.1709816748,
+    "maxBboxShrink": 1.785770426,
+    "delta": 0.09968368384,
+    "fv": 2.983999789,
+    "fa": 1.715242337,
+    "fb": 2.345979321
+   },
+   {
+    "kind": "sphere",
+    "segments": 16,
+    "volumeDeficit": 0.08557907588,
+    "areaDeficit": 0.0472378957,
+    "maxBboxShrink": 0.444667398,
+    "delta": 0.0255046416,
+    "fv": 3.355431425,
+    "fa": 1.852129367,
+    "fb": 2.314201859
+   },
+   {
+    "kind": "sphere",
+    "segments": 48,
+    "volumeDeficit": 0.01000994338,
+    "areaDeficit": 0.005446754394,
+    "maxBboxShrink": 0.05440511509,
+    "delta": 0.00285334265,
+    "fv": 3.508146272,
+    "fa": 1.908903017,
+    "fb": 2.541016561
+   },
+   {
+    "kind": "sphere",
+    "segments": 96,
+    "volumeDeficit": 0.002514934449,
+    "areaDeficit": 0.001366555618,
+    "maxBboxShrink": 0.01339327252,
+    "delta": 0.0007137941771,
+    "fv": 3.523332818,
+    "fa": 1.914495329,
+    "fb": 2.501486598
+   },
+   {
+    "kind": "revolve",
+    "segments": 8,
+    "volumeDeficit": 0.1894305309,
+    "areaDeficit": 0.08614463777,
+    "maxBboxShrink": 0.8363547763,
+    "delta": 0.09968368384,
+    "fv": 0.9501581581,
+    "fa": 0.4320899592,
+    "fb": 0.4394900892
+   },
+   {
+    "kind": "revolve",
+    "segments": 16,
+    "volumeDeficit": 0.05035879645,
+    "areaDeficit": 0.02224670358,
+    "maxBboxShrink": 0.4214587041,
+    "delta": 0.0255046416,
+    "fv": 0.9872476793,
+    "fa": 0.4361304882,
+    "fb": 0.8773663378
+   },
+   {
+    "kind": "revolve",
+    "segments": 48,
+    "volumeDeficit": 0.005698543711,
+    "areaDeficit": 0.002495802019,
+    "maxBboxShrink": 0.03223600412,
+    "delta": 0.00285334265,
+    "fv": 0.9985733242,
+    "fa": 0.4373470565,
+    "fb": 0.6022391107
+   },
+   {
+    "kind": "revolve",
+    "segments": 96,
+    "volumeDeficit": 0.00142707889,
+    "areaDeficit": 0.0006245188094,
+    "maxBboxShrink": 0.007359525689,
+    "delta": 0.0007137941771,
+    "fv": 0.9996431292,
+    "fa": 0.4374642084,
+    "fb": 0.5498209596
+   }
+  ]
+ },
+ "versions": {
+  "node": "v26.4.0",
+  "exact": "@classcad/smlibwasm 0.6.2"
+ },
+ "finished": "2026-11-25T05:50:41.984Z",
+ "lastRunMinutes": 34.6
+}
