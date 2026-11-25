@@ -52,6 +52,9 @@ export function summarize(jsonl: string, options: { native?: string; meta?: Reco
       note: 'Parts the converter emitted with < 16 segments (cylinder/torus); exact kernel run on kernelCAD intent (exact cylinder, n-gon torus tube). relVolume = Manifold/intent - 1.',
       medianRelVolume: median(intent.map(p => p.manifold.volume / p.exactIntent.volume - 1)),
       minRelVolume: intent.length ? Math.min(...intent.map(p => p.manifold.volume / p.exactIntent.volume - 1)) : null,
+      agreeWithinFacetingOfEmittedSegments: intent.filter(p => p.intentAgrees).length,
+      byRelVolume: count(intent, p => (p.manifold.volume / p.exactIntent.volume - 1).toFixed(4)),
+      modelsOnlyLowSegmentUnsupported: models.filter(m => m.class === 'exact-unsupported' && (m.parts ?? []).every(p => p.class === 'agree' || (p.class === 'exact-unsupported' && p.intentAgrees))).length,
     },
     timing: {
       manifoldCpuMsTotal: Math.round(parts.reduce((s, p) => s + p.manifold.cpuMs, 0)),
@@ -97,7 +100,7 @@ export function summarize(jsonl: string, options: { native?: string; meta?: Reco
     table('Exact failure (part)', summary.exactFailures as Record<string, number>, 10), '',
     table('Manifold failure (part)', summary.manifoldFailures as Record<string, number>, 10), '',
     `Parts built by both kernels: ${a.partsBuiltByBoth}; median |ΔV|/V of agreeing parts ${fmt(a.medianRelVolumeAgreeing)}; planar agreeing parts ${a.planarPartsAgreeing}, max |ΔV|/V ${a.maxRelVolumeAgreeingPlanar == null ? '–' : fmt(a.maxRelVolumeAgreeingPlanar)}.`,
-    `Low-segment intent probe: ${i.parts} parts, median Manifold/intent − 1 = ${fmt(i.medianRelVolume)}, min ${i.minRelVolume == null ? '–' : fmt(i.minRelVolume)}.`,
+    `Low-segment intent probe: ${i.parts} parts (${i.agreeWithinFacetingOfEmittedSegments} agree with Manifold within the faceting of the emitted N), median Manifold/intent − 1 = ${fmt(i.medianRelVolume)}, min ${i.minRelVolume == null ? '–' : fmt(i.minRelVolume)}; ${i.modelsOnlyLowSegmentUnsupported} exact-unsupported models are unsupported only for that reason.`,
     `CPU: Manifold ${(t.manifoldCpuMsTotal / 1000).toFixed(0)} s total (median part ${fmt(t.manifoldCpuMsMedianPart)} ms); exact ${(t.exactCpuMsTotal / 1000).toFixed(0)} s total (median part ${fmt(t.exactCpuMsMedianPart)} ms, max ${(t.exactCpuMsMaxPart / 1000).toFixed(1)} s).`,
     ...(summary.native ? ['', table('Three-way class (with native volumes)', (summary.native as { classes: Record<string, number> }).classes)] : ['', 'Native (lab) volumes: not provided; see README "Native volumes".']),
   ].join('\n');

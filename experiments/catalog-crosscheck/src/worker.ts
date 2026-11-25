@@ -12,7 +12,7 @@ import { convertKernelCAD } from '../../../scripts/convert-kcad.mjs';
 import { ExactKernelError, type ExactKernel, type ExactSolid } from '../../exact-kernel/src/exact-kernel.ts';
 import { evaluateCadScript, lowerCodeShape, MIN_EXACT_SEGMENTS } from '../../exact-kernel/src/lower-cad-script.ts';
 import { createSmlibKernel } from '../../exact-kernel/src/smlib-kernel.ts';
-import { delta, tolerance, type Calibration, type CurvedKind, type Tolerance } from './tolerance.ts';
+import { chord, delta, tolerance, type Calibration, type CurvedKind, type Tolerance } from './tolerance.ts';
 
 type BBox = { min: number[]; max: number[] };
 export interface Build { ok: true; volume: number; area: number; bbox: BBox; wallMs: number; cpuMs: number; triangles?: number; valid?: boolean }
@@ -25,6 +25,8 @@ export interface PartRecord {
   /** Exact build of kernelCAD's intent where the converter emitted a low segment count
    * (cylinder segments are ignored by kernelCAD; torus segments facet only the tube). */
   exactIntent?: Build | BuildError;
+  /** Manifold agrees with exactIntent within the faceting tolerance of the emitted N. */
+  intentAgrees?: boolean;
   tolerance?: Tolerance;
   diff?: { volume: number; area: number; bbox: number; relVolume: number };
   class: PartClass;
@@ -109,23 +111,55 @@ function intentShape(s: CodeShape): CodeShape {
   }
 }
 
-/** Measured Manifold faceting factors (deficit / δ(N)) for the tolerance model. */
+/** Largest support-function shortfall of Manifold's unit sphere over 4000 directions
+ * (Fibonacci lattice): the worst bbox shrink of a sphere under any rotation. An ellipsoid
+ * (scaled sphere) shrinks by at most this times its largest radius. */
+function sphereCoveringGap(n: number): number {
+  const s = createCadSession();
+  try {
+    s.addCode({ version: 1, language: 'brickwright-cad-script', source: `return sphere(1, ${n});`, parameters: {} } as CodeProgram, 'unit');
+    const p = manifoldKernel.evaluate(s.state.document).bodies[0].positions;
+    let gap = 0;
+    const count = 4000, golden = Math.PI * (3 - Math.sqrt(5));
+    for (let i = 0; i < count; i++) {
+      const z = 1 - (2 * i + 1) / count, rr = Math.sqrt(1 - z * z), x = rr * Math.cos(golden * i), y = rr * Math.sin(golden * i);
+      let best = -Infinity;
+      for (let j = 0; j < p.length; j += 3) best = Math.max(best, p[j] * x + p[j + 1] * y + p[j + 2] * z);
+      gap = Math.max(gap, 1 - best);
+    }
+    return gap;
+  } finally { s.dispose(); }
+}
+
+/** Measured Manifold faceting factors (deficit / δ(N), bbox shrink / r·(1 − cos(π/N))) for
+ * the tolerance model. Bboxes are measured on rotated copies, where shrink is largest. */
 function calibrate(): Calibration & { samples: Record<string, unknown>[] } {
   const samples: Record<string, unknown>[] = [];
-  const cal: Calibration = { volume: { prism: 1, sphere: 1, revolve: 1 }, area: { prism: 1, sphere: 1, revolve: 1 } };
-  const cases: [CurvedKind, (n: number) => string, number, number, number][] = [
-    // kind, source, analytic volume, analytic area, number of faceted directions
-    ['prism', n => `return cylinder(10, 20, ${n});`, Math.PI * 100 * 20, 2 * Math.PI * 10 * 30, 1],
-    ['sphere', n => `return sphere(10, ${n});`, 4 / 3 * Math.PI * 1000, 4 * Math.PI * 100, 1],
-    ['revolve', n => `return torus(20, 5, ${n}, ${n});`, 2 * Math.PI * Math.PI * 20 * 25, 4 * Math.PI * Math.PI * 100, 2],
+  const cal: Calibration = { volume: { prism: 1, sphere: 1, revolve: 1 }, area: { prism: 1, sphere: 1, revolve: 1 }, bbox: { prism: 1, sphere: 1, revolve: 1 } };
+  const program = (source: string) => ({ version: 1, language: 'brickwright-cad-script', source, parameters: {} }) as CodeProgram;
+  const rotations: [number, number, number][] = [[0, 0, 0], [37, 23, 11], [90, 0, 7.5], [13, 61, 29], [45, 45, 0], [3, 5, 7]];
+  const R = (v: number[]) => { const [a, b, c] = v.map(x => x * Math.PI / 180); const rx = [[1, 0, 0], [0, Math.cos(a), -Math.sin(a)], [0, Math.sin(a), Math.cos(a)]], ry = [[Math.cos(b), 0, Math.sin(b)], [0, 1, 0], [-Math.sin(b), 0, Math.cos(b)]], rz = [[Math.cos(c), -Math.sin(c), 0], [Math.sin(c), Math.cos(c), 0], [0, 0, 1]]; const m = (x: number[][], y: number[][]) => x.map((row, i) => y[0].map((_, j) => row.reduce((s, _v, k) => s + x[i][k] * y[k][j], 0))); return m(rz, m(ry, rx)); };
+  // kind, source, analytic volume, analytic area, faceted directions, analytic half-extents of the rotated shape, reference radius
+  const cases: [CurvedKind, (n: number) => string, number, number, number, (axis: number[]) => number[], number][] = [
+    ['prism', n => `cylinder(10, 20, ${n})`, Math.PI * 100 * 20, 2 * Math.PI * 10 * 30, 1, a => a.map(ai => Math.abs(ai) * 10 + 10 * Math.sqrt(Math.max(0, 1 - ai * ai))), 10],
+    ['sphere', n => `sphere(10, ${n})`, 4 / 3 * Math.PI * 1000, 4 * Math.PI * 100, 1, () => [10, 10, 10], 10],
+    ['revolve', n => `torus(20, 5, ${n}, ${n})`, 2 * Math.PI * Math.PI * 20 * 25, 4 * Math.PI * Math.PI * 100, 2, a => a.map(ai => 5 + 20 * Math.sqrt(Math.max(0, 1 - ai * ai))), 25],
   ];
-  for (const [kind, source, volume, area, dirs] of cases) for (const n of [8, 16, 48, 96]) {
-    const b = buildManifold({ version: 1, language: 'brickwright-cad-script', source: source(n), parameters: {} } as CodeProgram);
-    if (!b.ok) throw new Error(`calibration ${kind} ${n}: ${b.error}`);
-    const fv = (volume - b.volume) / volume / (dirs * delta(n)), fa = (area - b.area) / area / (dirs * delta(n));
-    samples.push({ kind, segments: n, volumeDeficit: r10((volume - b.volume) / volume), areaDeficit: r10((area - b.area) / area), delta: r10(delta(n)), fv: r10(fv), fa: r10(fa) });
+  for (const [kind, shape, volume, area, dirs, extent, radius] of cases) for (const n of [8, 16, 48, 96]) {
+    let shrink = 0, base: Build | undefined;
+    for (const rot of rotations) {
+      const b = buildManifold(program(`return rotate([${rot.join(', ')}], ${shape(n)});`));
+      if (!b.ok) throw new Error(`calibration ${kind} ${n}: ${b.error}`);
+      base ??= b;
+      const axis = R(rot).map(row => row[2]), half = extent(axis);
+      for (let i = 0; i < 3; i++) shrink = Math.max(shrink, half[i] - b.bbox.max[i], b.bbox.min[i] + half[i]);
+    }
+    if (kind === 'sphere') shrink = Math.max(shrink, radius * sphereCoveringGap(n));
+    const fv = (volume - base!.volume) / volume / (dirs * delta(n)), fa = (area - base!.area) / area / (dirs * delta(n)), fb = shrink / (radius * chord(n));
+    samples.push({ kind, segments: n, volumeDeficit: r10((volume - base!.volume) / volume), areaDeficit: r10((area - base!.area) / area), maxBboxShrink: r10(shrink), delta: r10(delta(n)), fv: r10(fv), fa: r10(fa), fb: r10(fb) });
     cal.volume[kind] = Math.max(cal.volume[kind], fv);
     cal.area[kind] = Math.max(cal.area[kind], fa);
+    cal.bbox[kind] = Math.max(cal.bbox[kind], fb);
   }
   return { ...cal, samples };
 }
@@ -140,6 +174,13 @@ function comparePart(name: string, program: CodeProgram): PartRecord {
   if (!exactBuild.ok && exactBuild.code === 'unsupported' && /segments is ambiguous/.test(exactBuild.error) && shape) {
     const s = intentShape(shape);
     record.exactIntent = measureExact(() => { const r = exact.scope(() => lowerCodeShape(exact, s)); if (!r) throw new ExactKernelError('invalid-input', 'The program produces no solid.'); return r; });
+  }
+  if (manifold.ok && record.exactIntent?.ok && shape) {
+    // The original tree's tolerance includes δ(N) of the low-segment circles, so agreement
+    // here means the only Manifold/intent difference is the converter's N-gon.
+    const it = record.exactIntent, diag = Math.hypot(...[0, 1, 2].map(i => it.bbox.max[i] - it.bbox.min[i]));
+    const tol = tolerance(shape, calibration, { volume: it.volume, area: it.area, diag });
+    record.intentAgrees = Math.abs(manifold.volume - it.volume) <= tol.volume && Math.abs(manifold.area - it.area) <= tol.area;
   }
   if (!manifold.ok) { record.class = exactBuild.ok ? 'manifold-failure' : 'both-failed'; return record; }
   if (!exactBuild.ok) { record.class = exactBuild.code === 'unsupported' ? 'exact-unsupported' : 'exact-failure'; return record; }

@@ -12,16 +12,17 @@
 // with V_i the nominal volume of curved construct i and f_kind a factor measured once per
 // run against Manifold (see `calibrate` in worker.ts; 1 for prisms, larger for spheres).
 // Area uses the same sum over nominal surfaces; the bbox may shrink by r·(1 − cos(π/N)) per
-// curved construct (vertices lie on the circle, edge midpoints inside it).
+// curved construct (vertices lie on the circle, edge midpoints inside it), times a measured
+// factor for rotated constructs (Manifold's sphere has coarser vertex spacing than π/N).
 import type { CodeShape, CodeProfile } from '@brickwright/cad-core';
 
 export type CurvedKind = 'prism' | 'sphere' | 'revolve';
 export interface Curved { kind: CurvedKind; segments: number; volume: number; surface: number; radius: number }
-export interface Calibration { volume: Record<CurvedKind, number>; area: Record<CurvedKind, number> }
+export interface Calibration { volume: Record<CurvedKind, number>; area: Record<CurvedKind, number>; bbox: Record<CurvedKind, number> }
 export interface Tolerance { volume: number; area: number; bbox: number; minSegments: number | null; curved: number; approximate: boolean }
 
 export const delta = (n: number) => { const a = 2 * Math.PI / n; return 1 - Math.sin(a) / a; };
-const chord = (n: number) => 1 - Math.cos(Math.PI / n);
+export const chord = (n: number) => 1 - Math.cos(Math.PI / n);
 
 interface Mass { area: number; cx: number; cy: number; perimeter: number; min: [number, number]; max: [number, number] }
 const EMPTY: Mass = { area: 0, cx: 0, cy: 0, perimeter: 0, min: [0, 0], max: [0, 0] };
@@ -141,7 +142,7 @@ export function tolerance(shape: CodeShape, cal: Calibration, ref: { volume: num
     const d = delta(c.segments);
     v += cal.volume[c.kind] * d * Math.abs(c.volume);
     a += cal.area[c.kind] * d * Math.abs(c.surface);
-    b = Math.max(b, c.radius * chord(c.segments));
+    b = Math.max(b, cal.bbox[c.kind] * c.radius * chord(c.segments));
   }
   return {
     volume: 2 * v + 1e-6 * Math.abs(ref.volume) + 1e-9,

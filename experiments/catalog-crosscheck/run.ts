@@ -37,7 +37,7 @@ Object.assign(meta, {
   started: meta.started ?? new Date().toISOString(),
 });
 
-let finished = 0;
+let finished = 0, startupFailures = 0;
 const started = Date.now();
 function worker(): Promise<void> {
   return new Promise(resolve => {
@@ -46,16 +46,17 @@ function worker(): Promise<void> {
     const spawn = () => {
       served = 0;
       child = fork(new URL('./src/worker.ts', import.meta.url).pathname, [], { stdio: ['ignore', 'ignore', 'pipe', 'ipc'], execArgv: ['--max-old-space-size=3072'] });
-      let stderr = '';
+      let stderr = '', ready = false;
       child.stderr!.on('data', d => { stderr = (stderr + d).slice(-2000); });
       child.on('message', (m: { type: string; record?: unknown; restart?: boolean; calibration?: unknown; versions?: unknown }) => {
-        if (m.type === 'ready') { meta.calibration ??= m.calibration; meta.versions ??= m.versions; next(); return; }
+        if (m.type === 'ready') { ready = true; startupFailures = 0; meta.calibration ??= m.calibration; meta.versions ??= m.versions; next(); return; }
         if (timer) clearTimeout(timer);
         record(m.record); current = null; served++;
         if (m.restart || served >= restartEvery) { child!.removeAllListeners('exit'); child!.kill(); spawn(); } else next();
       });
       child.on('exit', code => {
         if (timer) clearTimeout(timer);
+        if (!ready) { startupFailures++; if (startupFailures >= 3) { process.stderr.write(`Worker failed to start three times (is node_modules installed?):\n${stderr}\n`); process.exit(2); } }
         if (current) { record({ id: current.id, kit: current.kit, sha256: '', convert: { status: 'harness-error', wallMs: 0, error: `worker exited (${code}): ${stderr.split('\n').filter(Boolean).slice(-3).join(' | ').slice(0, 300)}` }, class: 'worker-crash' }); current = null; }
         if (queue.length) spawn(); else resolve();
       });
