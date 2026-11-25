@@ -369,6 +369,12 @@ implements the design note that stood here (kept in git history), with these res
    collision preparation (convex decomposition and certificate) on the display mesh of a shell;
    every shipped `.bcad` project and every revision of the shipped history archive load
    unchanged below version 41; `npm run verify:brickwright` with a version 41 document.
+   In Chromium, `tests/browser/exact-features.spec.ts` builds a chamfer from the Edit menu
+   (the kernel chunk is fetched only then), checks the exact volume, edits the source height
+   and sees exactly one "Recompute exact features" step follow, then Undo shows the stale
+   diagnostic and Redo restores it. Full `npx vitest run`: 2,125 tests, 19 failures, every one
+   of which also fails on `main` under the same load (34 there); `test:terminal` 167/167, the
+   exact experiment 99/99.
 
 Left open: an exact display path for many-hole faces (meshing cost, Phase 2); a parameter
 renamed on paste (`width` → `width_2`) makes a pasted feature stale until it is recomputed;
