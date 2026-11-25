@@ -11,17 +11,17 @@
   "cpus": 8,
   "model": "Apple M1",
   "loadAverageAtStart": [
-   123,
-   109.8,
-   79.2
+   164.3,
+   180.7,
+   146.4
   ],
   "loadAverageAtEnd": [
-   186.2,
-   181.2,
-   161.9
+   143.1,
+   172.5,
+   145.3
   ]
  },
- "started": "2026-11-25T05:16:08.783Z",
+ "started": "2026-11-25T07:37Z",
  "calibration": {
   "volume": {
    "prism": 1.0000000209001643,
@@ -177,6 +177,7 @@
   "node": "v26.4.0",
   "exact": "@classcad/smlibwasm 0.6.2"
  },
- "finished": "2026-11-25T05:50:41.984Z",
- "lastRunMinutes": 34.6
+ "finished": "2026-11-25T08:06:41.297Z",
+ "lastRunMinutes": 0.8,
+ "note": "Converter at fix/kcad-converter-semantics a2212a3. All 2,402 models ran 07:37-08:01Z (24.5 min, 3 jobs); the 35 models whose conversion changed with the connector commit were then removed and rerun by resume (08:06Z). started is to the minute."
 }

@@ -738,31 +738,48 @@ Licence gate: only models whose `meta()` declares `CC0-1.0` or `MIT` are convert
 kernelCAD's implicit default (CC-BY-4.0) and every other licence are refused. The
 generated `.cad` files record the source path, SHA-256 and licence.
 
-Supported: `box` (corner-anchored unless centred), `cylinder` (base at z = 0),
-`sphere`, `torus`, `extrudePolygon/Rect/Circle/RoundedRect`, `filletPolygon`,
-`path()` with `moveTo/lineTo/threePointsArc/circle/close`, sketch
-`extrude/revolve/loft` (XY planes, `spacing`, `ruled`), shape
+Supported: `box` (corner-anchored unless centred; a negative size spans [size, 0] as in
+OCCT), `cylinder` (base at z = 0), `sphere`, `torus`, `extrudePolygon/Rect/Circle`,
+`extrudeRoundedRect` (with `axis` `x`/`y`/`z`; the radius is clamped below half the shorter
+side as upstream), `filletPolygon`, `path()` with `moveTo/lineTo/threePointsArc/circle/close`,
+sketch `extrude/revolve/loft` (XY planes, `spacing`, `ruled`), shape
 `translate/rotate/rotateX/Y/Z/alongAxis/scale/mirror/color/union/subtract/intersect`,
-`assembly().part()/model()`, `param/params/presets/meta`, and the JavaScript used by
-helper functions (closures, loops, `switch`, template strings, array/Map methods,
-`Object.entries`, regular-expression `.test`). kernelCAD's `mirror` keeps the source
-and its reflection, as upstream does. `mate`/`place` are reported and skipped.
-Exact-B-rep operations (fillet, chamfer, shell, holes, sweeps, connectors) are
-refused with their names.
+`await shape.boundingBox({ exact: true })`, `assembly().part()/model()`,
+`param/params/presets/meta`, and the JavaScript used by helper functions (closures, loops,
+`switch`, template strings, array/Map/string methods, `Object.entries`, `in`,
+regular-expression `.test`). kernelCAD's `mirror` keeps the source and its reflection, as
+upstream does. `mate` (at pose 0, the as-built pose), `place` and `connector` are reported and
+skipped; a mate at another pose is refused. Exact-B-rep operations (fillet, chamfer, shell,
+holes, sweeps, helices) and lofts whose sections have different point counts are refused with
+their names.
 
-Measured on all 2,402 catalog models at kernelCAD `964fa6c` (all declare CC0-1.0):
-2,230 converted completely and 19 partially (a part over CAD Script limits or an
-empty result); 104 use unsupported features (top: `extrudeRoundedRect` axis option,
-assembly connectors, mismatched loft sections) and 49 fail (mostly TypeScript the
-transpiler cannot strip to plain JS, or invalid dimensions at default parameters).
-All 63,281 converted parts were evaluated with Manifold; 3 produced no solid. Curved
-primitives use 48 segments, so converted reference parts match their analytic
-volumes to about 3e-3 and planar parts exactly (`tests/kcad-import.test.ts`).
+Circular primitives keep the source format's meaning. `cylinder(h, r, n)` ignores *n*
+(kernelCAD's cylinder is always exact) and becomes CAD Script's `cylinder(r, h)`, whose
+default 48 segments are a faceting hint: Manifold builds a 48-gon, the exact lowering a true
+cylinder. `torus(R, r)` is an exact torus; `torus(R, r, n)` facets only the tube, so it becomes
+`revolve(polygon2d(n-gon), 360)`: an *n*-gon tube revolved exactly. `path().circle(cx, cy, r)`
+without a count stays a `circle2d`; with a count it is the *n*-gon polygon kernelCAD draws.
+`threePointsArc` arcs are still converted to polygons (16 segments per half turn).
+`boundingBox({ exact: true })` is evaluated at conversion time from support functions of the
+converted part (exact for true circles, cylinders, spheres, revolutions, transforms, unions and
+hulls); a side that a cut or intersection could change is refused only if the script reads it,
+and resolves in `Math.min/max` when another operand is certainly beyond it (the catalog's
+"rest the lowest part on the floor" idiom).
+
+Measured on all 2,402 catalog models at kernel-lab `d09cda7f6` (all declare CC0-1.0, 2026-11-25):
+2,352 converted completely and 19 partially (a part over CAD Script limits, a
+self-intersecting extrusion profile or an unordered loft); 25 use unsupported features (top:
+lofts with different section point counts 12, holes 4, `helix` 3, `boundingBox` of a part
+over the CAD Script limits 3) and 6 fail (catalog helper names the converter does not know).
+That is 98.7 % (97.9 % completely), up from 93.6 % (2,230 + 19) at kernel-lab `964fa6c`
+before the fixes. Converted reference parts match their analytic volumes to about 3e-3 with
+Manifold (48 segments) and exactly with the exact kernel
+(`tests/kcad-import.test.ts`, `tests/kcad-semantics.test.ts`).
 
 Cross-check with Manifold and the exact kernel on all 2,402 models (2026-11-25, Phase 4,
 [experiments/catalog-crosscheck](../experiments/catalog-crosscheck/README.md)): where both
-kernels build a converted part they agree, but the converter turns kernelCAD's
-`cylinder(h, r, n)` (exact in kernelCAD, whatever *n*) and the ring of `torus(R, r, n)` into
-*n*-gons. That affects 10,608 parts and up to 15 % of a model's volume, and is the main
-converter fix to make. Next come `await shape.boundingBox(...)` (24 models, misreported as
-TypeScript), `extrudeRoundedRect` `axis` (34) and negative box dimensions (12).
+kernels build a converted part they agree (68,666 of 68,782), and every model whose parts all
+build is within 1.0 % of the exact volume (faceting of 48 segments; before the cylinder/torus
+fix 115 models were more than 5 % low, the worst by 15.3 %). The remaining disagreements are
+kernel issues (SMLib bbox of rotated spheres, area of stitched lofts; Manifold float32
+vertices and touching faces), not conversion errors.
