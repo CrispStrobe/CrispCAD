@@ -326,9 +326,13 @@ bundle keeps `brickwright/cad.json` byte for byte whatever its version (checked 
 `npm run verify:brickwright`, which now also round-trips a version 41 document through the real
 BrickWright writer and loader), but an editor built on an older SDK refuses to open it
 ("unsupported format, version or units"). Projects without exact features are unaffected.
-`npm run verify:brickwright-sync` reports the BrickWright SDK as stale until BrickWright runs
-`scripts/sync-cad-sdk.mjs` against this build; that is the expected state between the two
-releases. A host that passes its own `session` must declare the exact kernel
+`npm run verify:brickwright-sync` reports the BrickWright SDK as stale ("Vendored SDK differs")
+until BrickWright runs `scripts/sync-cad-sdk.mjs` against this build; that is the expected state
+between the two releases. On a scratch clone of brickwright-lite synced to this build it passes
+(Jolt pins, shared interaction sources and the pinned SDK). `npm run build:brickwright-sdk` had
+been failing since the exact kernel entered the geometry worker (SMLib's top-level await under
+the SDK's ES2020 target); worker chunks may now use it, and packaging checks that `sdk.js` and
+every host-parsed chunk still parse as ES2020. A host that passes its own `session` must declare the exact kernel
 (`createCadSession(document, {kernels:[exactKernelIdentity]})`), or creating and recomputing
 exact features fails with "This session does not provide the smlib kernel".
 
