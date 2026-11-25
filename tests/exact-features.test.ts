@@ -116,6 +116,17 @@ describe('document model',()=>{
   session.withKernel(exactKernelIdentity,()=>session.addExactFeatures([{source:box,id,settings:{operation:'fillet',size:1,edges:'all'},display:feature.display}]));
   expect(staleExactFeatures(session.state.document)).toEqual([]);
  },120_000);
+ it('writes display buffers compactly and leaves documents without exact features byte-identical',async()=>{
+  const {session}=await withFeature({operation:'fillet',size:2,edges:'all'});
+  const doc=session.state.document,text=serializeDocument(doc);
+  expect(parseDocument(text)).toEqual(doc);
+  // Every coordinate of an indented buffer would take its own line; compact buffers take one.
+  expect(text.split('\n').length).toBeLessThan(400);
+  const pretty=JSON.stringify(validateDocument(doc),null,2);
+  expect(text.length).toBeLessThan(pretty.length*0.6);
+  const {session:plain}=boxSession();
+  expect(serializeDocument(plain.state.document)).toBe(JSON.stringify(validateDocument(plain.state.document),null,2));
+ },120_000);
  it('round-trips through save/load, Undo/Redo, the history archive and model source',async()=>{
   const {session,id}=await withFeature({operation:'chamfer',size:2,edges:top});
   const doc=session.state.document;

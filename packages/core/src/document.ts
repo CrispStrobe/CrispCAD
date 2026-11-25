@@ -132,8 +132,23 @@ export function parseDocument(source: string): CadDocument {
   if (new TextEncoder().encode(source).length > MAX_DOCUMENT_BYTES) fail(translate('file exceeds 16 MiB'));
   return validateDocument(JSON.parse(source));
 }
+/** Exact-feature display buffers are written on one line each. Indenting them would put every
+ * coordinate on its own line (a filleted box grew to ~317 KB). Only these buffers are compacted,
+ * so documents without exact features serialize byte for byte as before, which keeps
+ * hash-verified projects, library outputs and attribution hashes stable. */
+function compactExactDisplays(document: CadDocument): Map<unknown, string> {
+  const buffers = new Map<unknown, string>();
+  for (const node of Object.values(document.nodes) as {kind?: string; display?: {positions?: unknown; indices?: unknown}}[]) {
+    if (node.kind !== 'exact-feature' || !node.display) continue;
+    for (const array of [node.display.positions, node.display.indices])
+      if (Array.isArray(array)) buffers.set(array, `\u0000exact-display:${buffers.size}\u0000`);
+  }
+  return buffers;
+}
 export function serializeDocument(document: CadDocument): string {
-  const result = JSON.stringify(validateDocument(document), null, 2);
+  const valid = validateDocument(document), buffers = compactExactDisplays(valid);
+  let result = JSON.stringify(valid, buffers.size ? (_key, value) => buffers.get(value) ?? value : undefined, 2);
+  for (const [array, token] of buffers) result = result.replace(JSON.stringify(token), () => JSON.stringify(array));
   if (new TextEncoder().encode(result).length > MAX_DOCUMENT_BYTES) fail(translate('file exceeds 16 MiB'));
   return result;
 }
