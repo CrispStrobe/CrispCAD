@@ -184,21 +184,46 @@ Product entry additionally needs:
 - iPad WebKit memory and latency measurements;
 - running in the geometry worker;
 - consuming the kernel as the lab's package instead of the experiment's copy
-  (Phase 2b).
+  (Phase 2b, done 2026-11-25).
 
-### Phase 2b: move the exact kernel into the lab as a package
+### Phase 2b: move the exact kernel into the lab as a package. **Done 2026-11-25**
 
-1. In the lab, create an OpenCASCADE-free workspace package from the
-   experiment's `ExactKernel` interface and SMLib implementation (MIT, owner's
-   code), merged with the lab's `nativeLowerer` logic.
-2. Prebundle `@classcad/smlibwasm` with the font alias. Add a licence test that
-   fails if any shipped file is not MIT or Apache-2.0.
-3. Tag a release with the tarball, and replace the copy in
-   `experiments/exact-kernel` with that pinned dependency. The CAD Script
-   lowering stays in CrispCAD, because it depends on our compiler.
-4. Then product entry: the geometry worker, iPad WebKit measurements,
-   cancellation, and routing `fillet`, `shell` and `export step` to the exact
-   kernel (Phase 3, steps 1 and 2).
+Release: [`exact-kernel-v0.1.0`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.0)
+of the kernel lab, tarball `crispcad-exact-kernel-0.1.0.tgz`, SHA-256
+`1de74c8d15d184359c855f119e5d5a89e587fa6faa6ead9beb6efd73fc510027`.
+
+- **Package:** `@crispcad/exact-kernel` in the lab's
+  [`packages/exact-kernel`](https://github.com/CrispStrobe/crispcad-kernel-lab/tree/ccr-f42f1bfe-3ekdio/packages/exact-kernel)
+  (MIT). It holds the experiment's `ExactKernel` interface, SMLib implementation and exact
+  convex hull, relicensed MIT, plus what the lab's native SMLib backend uses: path
+  profiles, loft, sweep, split, components, mass properties, vertex normals and STL.
+- **Licence closure: MIT + Apache-2.0.** `@classcad/smlibwasm` 0.6.2 is prebundled
+  (esbuild) with its font module aliased to an empty one. The tarball has no runtime
+  dependencies; 23 files, 10.7 MiB. The lab's licence test packs and unpacks it and
+  fails on any file that is not MIT or Apache-2.0.
+- **Qualification in the lab, on the built bundle:**
+  - the 27 reference parts at 1e-6 (worst relative volume error 2.5e-15, area 1.2e-11);
+  - exact STEP round trips;
+  - fillet, chamfer and shell against closed forms;
+  - `Text()` fails cleanly without a font.
+- **Here:** [`experiments/exact-kernel`](../experiments/exact-kernel/README.md) depends on the
+  release tarball, pinned by URL and lockfile integrity. The copied interface and
+  implementation are deleted. The CAD Script lowering stays here. All 99 experiment
+  tests pass with unchanged results: 27/27 reference parts, STEP round trip with the
+  known torus importer gap, malformed input, and licence.
+- **Lab rename:** the lab's product text is "CrispCAD kernel lab", and its CLI is
+  `crispcad-lab`. `crispcad` remains as a deprecated alias, so it no longer collides
+  with this repository's CLI.
+
+Next: product entry, as Phase 3 steps 1 and 2:
+
+- the geometry worker, which can pass a compiled module with
+  `createSmlibKernel({ wasmModule })`;
+- iPad WebKit measurements;
+- cancellation;
+- routing `fillet`, `shell` and `export step` to the exact kernel.
+
+The lab's own `smlib-native` backend does not use the package yet.
 
 ### Phase 3: one command vocabulary
 

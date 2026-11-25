@@ -7,8 +7,7 @@
 // Anything without an exact construction is an ExactKernelError('unsupported'); nothing falls
 // back to Manifold or to a mesh.
 import { compileCode, CadCodeError, type CodeProgram, type CodeShape, type CodeProfile } from '@brickwright/cad-core';
-import { ExactKernelError, type ExactKernel, type ExactProfile, type ExactSolid, type Vec2, type Vec3 } from './exact-kernel.ts';
-import { convexHull, isConvexPolyhedron } from './polytope.ts';
+import { convexHull, ExactKernelError, isConvexPolyhedron, type ExactKernel, type ExactProfile, type ExactSolid, type Vec2, type Vec3 } from '@crispcad/exact-kernel';
 
 /** Below this many segments a circle is ambiguous (e.g. `cylinder(r, h, 6)` as a hexagonal
  * prism), so it is refused instead of being silently rounded. */
@@ -118,7 +117,7 @@ function lowerProfile(k: ExactKernel, p: CodeProfile): ExactProfile | null {
       const c = lowerProfile(k, p.profile);
       return c && k.profile.offset(c, p.distance, p.round);
     }
-    case 'text': return unsupported('text2d needs a font outline path; the exact backend has none (and smlibwasm\'s bundled Lato font is the OFL item under licence review).');
+    case 'text': return unsupported('text2d needs a font outline path, and the exact kernel package ships no font.');
     case 'minkowski': return unsupported('minkowski2d has no exact lowering (planar Minkowski sums of curved profiles are not exposed by this kernel adapter).');
     case 'union': case 'subtract': case 'intersect': case 'hull': {
       const children = p.profiles.map(c => lowerProfile(k, c));

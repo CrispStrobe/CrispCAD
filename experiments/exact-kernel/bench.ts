@@ -5,7 +5,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { arch, cpus, loadavg, platform } from 'node:os';
 import { performance } from 'node:perf_hooks';
 import { cadScript, evaluateCadScript } from './src/lower-cad-script.ts';
-import type { ExactKernel, ExactSolid } from './src/exact-kernel.ts';
+import type { ExactKernel, ExactSolid } from '@crispcad/exact-kernel';
 import { REFERENCE_PARTS } from './tests/reference-parts.fixture.ts';
 
 const RUNS = 5;
@@ -15,7 +15,7 @@ const gc = (globalThis as { gc?: () => void }).gc ?? (() => {});
 
 const rss0 = process.memoryUsage().rss;
 const cpu0 = process.cpuUsage(), t0 = performance.now();
-const { createSmlibKernel } = await import('./src/smlib-kernel.ts');
+const { createSmlibKernel } = await import('@crispcad/exact-kernel');
 const k: ExactKernel = await createSmlibKernel();
 const loadMs = performance.now() - t0, loadCpu = process.cpuUsage(cpu0);
 const afterLoad = k.memory();
