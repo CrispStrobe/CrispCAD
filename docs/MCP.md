@@ -190,6 +190,23 @@ script at most 3 MiB). A body without an exact construction (imported mesh, mink
 Recorded `apply` lines that carry `context.kernel` replay only when this host provides that
 kernel version ([kernel identity](TERMINAL-WORKSPACE.md#kernel-identity-in-recorded-commands)).
 
+`fillet`, `chamfer`, `shell` and `recompute exact` edit the model on the same thread
+([exact fillet, chamfer and shell](TERMINAL-WORKSPACE.md#exact-fillet-chamfer-and-shell)):
+
+```text
+select none
+fillet 1 "Bracket" --face top
+shell 2 "Housing" --open +z
+recompute exact
+```
+
+The exact kernel computes the feature and its display mesh (0.01 mm / 10°) on the trial
+session; the edit is recorded with `context.kernel`, so the script's `journal` replay text
+carries the kernel. The script is then evaluated with Manifold, which uses the display mesh,
+and committed as one history revision like any other script. A project with an exact feature
+is document version 41; the 1 MiB editable-model limit of the MCP host includes the display
+mesh.
+
 ### Headless CLI
 
 The CLI reuses the MCP host, so it has the same writer lock, validation and
@@ -206,7 +223,9 @@ node apps/cli/crispcad.mjs step design.bcad design.step  # exact STEP via the ex
 node apps/cli/crispcad.mjs run design.bcad "export step all" --out exports/
 ```
 
-`measure` and `step` use the exact kernel (`cad_measure_exact`, `cad_export_step`). Files that
+`measure` and `step` use the exact kernel (`cad_measure_exact`, `cad_export_step`), and so do
+`run` scripts with `fillet`, `chamfer`, `shell` or `recompute exact`, for example
+`node apps/cli/crispcad.mjs run design.bcad "fillet 1 all"`. Files that
 `run` commands produce (`export step`) are written to `--out`; without it the JSON reports only
 their names and sizes.
 

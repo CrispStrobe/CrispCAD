@@ -5,11 +5,12 @@ import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 import { strFromU8, unzipSync } from 'fflate';
 import { attachCadProject, extractCadProject } from '@brickwright/cad-brickwright';
-import { createCadSession, serializeDocument } from '@brickwright/cad-core';
+import { createCadSession, parseDocument, serializeDocument } from '@brickwright/cad-core';
 const root = resolve(process.argv[2] ?? '../local/lite-work');
 const require = createRequire(resolve(root, 'package.json')); const JSZip = require('jszip');
 const bundle = await import(pathToFileURL(resolve(root, 'overlay/scratch-gui/src/lib/bw-project-bundle.js')));
 const { SIM_LAB_STORAGE_KEY } = await import(pathToFileURL(resolve(root, 'overlay/scratch-gui/src/lib/bw-sim/model/sim-lab-persist.js')));
+const { CAD_STORAGE_KEY } = await import(pathToFileURL(resolve(root, 'overlay/scratch-gui/src/lib/bw-cad-project.js')));
 const { readFile } = await import('node:fs/promises');
 const ldraw = await readFile(resolve(root, 'overlay/scratch-gui/static/sim-lab/models/driving-base.ldr'), 'utf8');
 const saved = new Map([[SIM_LAB_STORAGE_KEY, JSON.stringify({ name: 'Existing LEGO model', ldraw })]]);
@@ -27,4 +28,16 @@ try {
  saved.clear(); const result = await bundle.extractBrickwrightState(attached.buffer.slice(attached.byteOffset, attached.byteOffset + attached.byteLength));
  assert.notEqual(result?.outcome, 'refused'); assert.equal(JSON.parse(saved.get(SIM_LAB_STORAGE_KEY)).ldraw, ldraw);
  console.log('PASS: real Brickwright SB3 writer → CAD adapter → real Brickwright loader; LEGO model and all original entries preserved.');
+ // Document version 41 (exact fillet/chamfer/shell): this SDK writes and reads it, and the
+ // Brickwright bundle keeps it byte for byte. Brickwright's own CAD editor opens it only after
+ // it syncs an SDK with version 41 (docs/INTEGRATION.md).
+ const exact = createCadSession(); const block = exact.add({ kind: 'box', size: [20, 30, 10] });
+ exact.addExactFeatures([{ source: block, settings: { operation: 'fillet', size: 2, edges: 'all' } }]);
+ assert.equal(exact.state.document.version, 41);
+ const v41 = attachCadProject(existing, exact.state.document);
+ assert.deepEqual(extractCadProject(v41), exact.state.document);
+ saved.clear(); const loaded = await bundle.extractBrickwrightState(v41.buffer.slice(v41.byteOffset, v41.byteOffset + v41.byteLength));
+ assert.notEqual(loaded?.outcome, 'refused'); assert.equal(saved.get(CAD_STORAGE_KEY), exact.serialize());
+ assert.deepEqual(parseDocument(saved.get(CAD_STORAGE_KEY)), exact.state.document);
+ console.log('PASS: document version 41 (exact features) survives the real Brickwright SB3 writer and loader unchanged and parses with this SDK.');
 } finally { delete globalThis.localStorage; delete globalThis.window; delete globalThis.CustomEvent; }

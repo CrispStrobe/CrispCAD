@@ -112,6 +112,15 @@ Manifold stays the default kernel; the exact kernel (9.4 MB WebAssembly) loads o
 use. Bodies without an exact construction, such as imported meshes, are reported by name
 instead of being written as triangles. See [terminal commands](docs/TERMINAL-WORKSPACE.md#exact-kernel-commands).
 
+**Exact fillet, chamfer and shell (opt-in).** `fillet`, `chamfer` and `shell` (terminal, the
+Edit menu's **Fillet, chamfer, shell** dialog, the command palette, MCP `cad_run_commands` and
+`crispcad run`) round or bevel every edge or the edges of one face, or hollow a body with open
+faces, on the same exact kernel. The result is stored with its exact tessellation, so display,
+physics and printing keep using Manifold; STEP and exact measures rebuild it exactly. After an
+upstream edit the editor recomputes it as one attributed Undo step; `recompute exact` does it
+on request. Projects with exact features are document version 41; others keep their version.
+See [exact fillet, chamfer and shell](docs/TERMINAL-WORKSPACE.md#exact-fillet-chamfer-and-shell).
+
 The reviewed model library keeps original sources, hashes, licence evidence,
 unit assumptions and qualification records. Browsing does not qualify a model;
 source conversion, mesh screening and collision qualification are separate steps.
@@ -216,7 +225,7 @@ verification, pairing and signing instructions.
 | --- | --- |
 | `@brickwright/cad-core` | Versioned documents, parameters, source conversion, commands and undo |
 | `@brickwright/cad-geometry` | Headless solid evaluation, mesh import/export and library insertion |
-| `@brickwright/cad-exact` | Optional exact B-rep backend (lazy): STEP export and exact measures on `@crispcad/exact-kernel` |
+| `@brickwright/cad-exact` | Optional exact B-rep backend (lazy): STEP export, exact measures and exact fillet/chamfer/shell display meshes on `@crispcad/exact-kernel` |
 | `@brickwright/cad-editor` | Embeddable editor, renderer and geometry worker |
 | `@brickwright/cad-history` | Append-only revisions, ancestry and portable archives |
 | `@brickwright/cad-physics` | Qualified collision shapes, mass/inertia and headless Jolt simulation |

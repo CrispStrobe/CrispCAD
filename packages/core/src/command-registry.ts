@@ -13,7 +13,7 @@ import type {Vec3} from './document.js';
 import {t} from './i18n.js';
 import type {CadSession} from './session.js';
 import {commandArguments,commandNumber,commandTokens,parseCommandPoint} from './command-arguments.js';
-import {formatExactResult,parseExactCommand} from './exact-commands.js';
+import {EXACT_FEATURE_COMMANDS,formatExactResult,parseExactCommand,parseExactFeatureCommand,parseRecomputeCommand,recomputeExactFeatures,runExactFeatureCommand} from './exact-commands.js';
 import type {ExactCommandFile,ExactCommandHost,ExactKernelReport} from './exact-commands.js';
 
 export type CommandCategory='terminal'|'create'|'sketch'|'feature'|'selection'|'transform'|'history'|'edit'|'boolean'|'view'|'panel'|'replay'|'exchange'|'analysis';
@@ -81,6 +81,10 @@ const drafting:readonly Draft[]=[
  {name:'apply',aliases:[],description:'Replay a recorded model edit',usage:'apply <recorded JSON>',category:'replay',editsModel:true,arguments:[arg('record','json')],headless:true},
  {name:'export',aliases:[],description:'Export geometry',usage:'export [step [all|"name"|id ...]]',category:'exchange',editsModel:false,arguments:[arg('format','keyword',{optional:true,values:['step']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
  {name:'measure',aliases:[],description:'Measure volume, area and bounds exactly with the B-rep kernel',usage:'measure exact [all|"name"|id ...]',category:'analysis',editsModel:false,arguments:[arg('mode','keyword',{values:['exact']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
+ {name:'fillet',aliases:[],description:'Round edges exactly with the B-rep kernel',usage:'fillet <radius> [all|"name"|id ...] [--face <normal>]',category:'feature',editsModel:true,arguments:[arg('radius','number',{min:.01,max:10000}),arg('targets','bodies',{optional:true,repeated:true}),arg('face','keyword',{optional:true,values:['--face']})],headless:true,kernel:'exact'},
+ {name:'chamfer',aliases:[],description:'Bevel edges exactly with the B-rep kernel',usage:'chamfer <distance> [all|"name"|id ...] [--face <normal>]',category:'feature',editsModel:true,arguments:[arg('distance','number',{min:.01,max:10000}),arg('targets','bodies',{optional:true,repeated:true}),arg('face','keyword',{optional:true,values:['--face']})],headless:true,kernel:'exact'},
+ {name:'shell',aliases:[],description:'Hollow a body to a wall thickness with open faces, exactly with the B-rep kernel',usage:'shell <thickness> [all|"name"|id ...] --open <normal> [--open <normal> ...]',category:'feature',editsModel:true,arguments:[arg('thickness','number',{min:.01,max:10000}),arg('targets','bodies',{optional:true,repeated:true}),arg('open','keyword',{values:['--open'],repeated:true})],headless:true,kernel:'exact'},
+ {name:'recompute',aliases:[],description:'Recompute out-of-date exact fillets, chamfers and shells with the B-rep kernel',usage:'recompute exact [all|"name"|id ...]',category:'feature',editsModel:true,arguments:[arg('mode','keyword',{values:['exact']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
  {name:'journal',aliases:[],description:'Summarize or export the command journal',usage:'journal [export [cadscript|replay]]',category:'terminal',editsModel:false,arguments:[arg('action','keyword',{optional:true,values:['export']}),arg('format','keyword',{optional:true,values:['cadscript','replay']})],headless:true},
 ];
 type PaletteDraft={command:string;label:string;alias?:string;requires?:CommandAvailability};
@@ -95,6 +99,7 @@ const palette:readonly PaletteDraft[]=[
  {command:'edit-mirror',label:'Edit mirror',requires:'canEditMirror'},
  {command:'pattern',label:'Pattern body',alias:'linear circular repeat bolt circle',requires:'canWrapBody'},
  {command:'edit-pattern',label:'Edit pattern',requires:'canEditPattern'},
+ {command:'exact-feature',label:'Fillet, chamfer or shell',alias:'round bevel hollow exact B-rep',requires:'canWrapBody'},
  {command:'parameters',label:'Parameters',alias:'named dimensions formulas'},
  {command:'code',label:'Code an object',alias:'CAD Script'},
  {command:'terminal',label:'CAD terminal',alias:'command line console'},
@@ -296,7 +301,8 @@ export interface CommandRunResult {
 export interface CommandRunnerOptions {
  /** Records invocations and answers `journal`. */
  journal?:{withInvocation<T>(line:string,run:()=>T):T;summary():string;export(format?:'cadscript'|'replay'):string};
- /** Serves `export step` and `measure exact`; only `runAsync`/`runScriptAsync` use it. */
+ /** Serves `export step`, `measure exact`, `fillet`, `chamfer`, `shell` and `recompute exact`;
+  * only `runAsync`/`runScriptAsync` use it. */
  exact?:ExactCommandHost;
  signal?:AbortSignal;
 }
@@ -321,13 +327,22 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
  }
  /** Exact commands read the model; the request holds the snapshot taken now. */
  function exactRequest(spec:CommandSpec,tail:string){
-  if(spec.kernel!=='exact')return undefined;
+  if(spec.kernel!=='exact'||EXACT_FEATURE_COMMANDS.includes(spec.name)||spec.name==='recompute')return undefined;
   const parsed=parseExactCommand(session,spec.name,tail);
   if(!parsed)throw new Error(t('Usage: export step [all|"name"|id ...].'));
   return parsed;
  }
  async function runAsync(raw:string):Promise<CommandRunResult>{
-  const {spec,tail}=parse(raw),request=exactRequest(spec,tail);
+  const {spec,tail}=parse(raw);
+  if(EXACT_FEATURE_COMMANDS.includes(spec.name)||spec.name==='recompute'){
+   // Exact edits: the kernel computes the result first, then one commit records it with the kernel.
+   const parsed=spec.name==='recompute'?undefined:parseExactFeatureCommand(session,spec.name,tail),recompute=parsed?undefined:parseRecomputeCommand(session,tail);
+   if(!options.exact)throw new Error(t('The exact kernel is not available in this host.'));
+   const before=session.state.revision,record=options.journal?<T,>(line:string,commit:()=>T)=>options.journal!.withInvocation(line,commit):undefined;
+   const done=parsed?await runExactFeatureCommand(session,options.exact,parsed,{signal:options.signal,record}):await recomputeExactFeatures(session,options.exact,recompute!.features,{signal:options.signal,record,invocation:recompute!.invocation});
+   return {command:spec.name,invocation:done.invocation,output:done.output,edited:session.state.revision!==before,...(done.kernel?{kernel:done.kernel}:{})};
+  }
+  const request=exactRequest(spec,tail);
   if(!request)return run(raw);
   if(!options.exact)throw new Error(t('The exact kernel is not available in this host.'));
   const document=session.state.document;
@@ -337,7 +352,7 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
  }
  function run(raw:string):CommandRunResult{
   const {text,spec,tail}=parse(raw);
-  if(exactRequest(spec,tail))throw new Error(t`${spec.name} uses the exact kernel; run it in a host that loads it.`);
+  if(EXACT_FEATURE_COMMANDS.includes(spec.name)||spec.name==='recompute'||exactRequest(spec,tail))throw new Error(t`${spec.name} uses the exact kernel; run it in a host that loads it.`);
   const name=spec.name,before=session.state.revision;
   const done=(invocation:string,output?:string):CommandRunResult=>({command:name,invocation,...(output!==undefined?{output}:{}),edited:session.state.revision!==before});
   if(name==='apply'||name==='select'&&tail.trim().startsWith('[')){session.executeCommand(name+' '+tail);return done(text.length>240?name:text);}

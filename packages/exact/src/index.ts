@@ -2,16 +2,19 @@
 // Optional exact B-rep backend. Importing this module loads no WebAssembly; `createExactBackend`
 // loads the kernel lab's SMLib build once per process or worker. Hosts import this module
 // lazily (dynamic import) so the default Manifold path never pays for it.
-import {validateDocument,t} from '@brickwright/cad-core';
-import type {CadDocument,KernelIdentity} from '@brickwright/cad-core';
+import {staleExactFeatures,validateDocument,t} from '@brickwright/cad-core';
+import type {CadDocument,ExactFeatureDisplay,KernelIdentity} from '@brickwright/cad-core';
 import {createSmlibKernel,ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactSolid,SmlibLoadOptions} from '@crispcad/exact-kernel';
 import {exactKernelIdentity} from './identity.js';
 import {lowerDocumentBody} from './lower-document.js';
+import {exactFeatureDisplay} from './display.js';
 
 export * from './identity.js';
 export {lowerCodeShape,evaluateCadScript,cadScript,revolveProfile,MIN_EXACT_SEGMENTS,MAX_POLYHEDRON_FACES} from './lower-cad-script.js';
-export {lowerDocumentBody,sketchProfile,ExactLoweringError} from './lower-document.js';
+export {lowerDocumentBody,lowerDocumentNode,sketchProfile,ExactLoweringError} from './lower-document.js';
+export {displayMesh,exactFeatureDisplay} from './display.js';
+export type {ExactFeatureResult} from './display.js';
 export type {ExactDiagnostic} from './lower-document.js';
 export {ExactKernelError} from '@crispcad/exact-kernel';
 export type {ExactKernel,ExactSolid,SmlibLoadOptions} from '@crispcad/exact-kernel';
@@ -35,6 +38,7 @@ export interface ExactBodyMeasure {
  solids:number;
 }
 export interface ExactMeasureResult {kernel:ExactKernelInfo;bodies:ExactBodyMeasure[]}
+export interface ExactFeatureDisplayResult {kernel:ExactKernelInfo;features:{id:string;name:string;display:ExactFeatureDisplay;volume:number}[]}
 export interface ExactStepResult {kernel:ExactKernelInfo;bodies:{id:string;name:string}[];step:string;bytes:number}
 
 /** Bodies an exact command acts on: the given top-level bodies, or every printable one. */
@@ -61,6 +65,8 @@ export interface ExactBackend {
  measure(doc:CadDocument,ids?:readonly string[]):ExactMeasureResult;
  /** One AP214 STEP file with one solid per body, in world millimetres. */
  exportStep(doc:CadDocument,ids?:readonly string[]):ExactStepResult;
+ /** Display meshes of exact features (default: every missing or stale one), for the model given. */
+ featureDisplays(doc:CadDocument,ids?:readonly string[]):ExactFeatureDisplayResult;
 }
 
 export function createExactBackendFromKernel(kernel:ExactKernel):ExactBackend{
@@ -83,6 +89,12 @@ export function createExactBackendFromKernel(kernel:ExactKernel):ExactBackend{
      return {id:targets[i],name:doc.nodes[targets[i]].name,volume:kernel.volume(solid),area:kernel.area(solid),bounds:{min:[...box.min],max:[...box.max]},centroid:[...mass.centroid],solids:kernel.solidCount(solid)};
     })};
    });
+  },
+  featureDisplays(input,ids){
+   const doc=validateDocument(input),targets=ids?.length?[...new Set(ids)]:staleExactFeatures(doc);
+   if(targets.length>MAX_EXACT_BODIES)throw new ExactKernelError('invalid-input',t`Exact commands are limited to ${MAX_EXACT_BODIES} bodies.`);
+   for(const id of targets)if(doc.nodes[id]?.kind!=='exact-feature')throw new ExactKernelError('invalid-input',t`${id} is not an exact feature`);
+   return {kernel:info,features:targets.map(id=>kernel.scope(()=>({id,name:doc.nodes[id].name,...exactFeatureDisplay(kernel,doc,id)})))};
   },
   exportStep(input,ids){
    return kernel.scope(()=>{

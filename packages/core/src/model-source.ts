@@ -29,8 +29,8 @@ export const sameModelValue=(a:any,b:any):boolean=>{
 };
 function put(object:any,path:string[],value:any){let current=object;for(const key of path.slice(0,-1))current=current[key];current[path.at(-1)!]=value;}
 function at(object:any,path:string[]){for(const key of path){if(object===undefined)return undefined;object=object[key];}return object;}
-const kindFor=(node:SolidNode)=>node.kind==='boolean'?'combine':node.kind;
-const geometryFields=['size','radius','height','segments','operation','inputs','positions','indices','program','sketchId','featureVersion','distance','symmetric','angle','axisOffset','source','plane','offset','pattern'];
+const kindFor=(node:SolidNode)=>node.kind==='boolean'?'combine':node.kind==='exact-feature'?'exactFeature':node.kind;
+const geometryFields=['size','radius','height','segments','operation','inputs','positions','indices','program','sketchId','featureVersion','distance','symmetric','angle','axisOffset','source','plane','offset','pattern','edges','openFaces','display'];
 function compactGenerators(document:CadDocument):Map<string,Set<string>>{
  const result=new Map<string,Set<string>>();for(const root of Object.values(document.nodes)){
   if(!root.generator)continue;const descendants=new Set<string>();const visit=(id:string)=>{if(descendants.has(id))return;descendants.add(id);const n=document.nodes[id];constructionInputs(n).forEach(visit);};visit(root.id);descendants.delete(root.id);
@@ -58,6 +58,7 @@ function modelRecords(document:CadDocument):RecordSpec[]{
   if(raw.kind==='extrusion'&&typeof raw.distance==='string')metadata.distance=new Formula(raw.distance);
   if(raw.kind==='pattern')metadata.pattern=mapPatternScalars(raw.pattern,value=>typeof value==='string'?new Formula(value):value);
   if(raw.kind==='mirror'&&typeof raw.offset==='string')metadata.offset=new Formula(raw.offset);
+  if(raw.kind==='exact-feature'&&typeof raw.size==='string')metadata.size=new Formula(raw.size);
   if(raw.kind==='revolution')for(const key of ['angle','axisOffset'] as const){
    const value=raw[key];if(typeof value==='string')metadata[key]=new Formula(value);
   }
@@ -65,6 +66,8 @@ function modelRecords(document:CadDocument):RecordSpec[]{
   let args:any[]=[id,metadata];
   if(raw.kind==='code'){delete metadata.program;args=[id,metadata,raw.program.source,raw.program.parameters];}
   if(raw.kind==='mesh'){delete metadata.positions;delete metadata.indices;args=[id,metadata,new Asset(id)];}
+  // The exact display mesh is a cache, referenced like a mesh asset and never written as text.
+  if(raw.kind==='exact-feature'){delete metadata.display;if(raw.display)args=[id,metadata,new Asset(id)];}
   records.push({key:`node:${id}`,kind:kindFor(raw),args});
  }
  records.push({key:'roots',kind:'roots',args:[doc.roots]});
@@ -109,9 +112,9 @@ function parseRecords(source:string):SourceRecord[]{
   if(['Identifier','BinaryExpression','LogicalExpression','ConditionalExpression','UnaryExpression'].includes(node.type)||node.type==='CallExpression'&&node.callee.type==='Identifier')return new Formula(source.slice(node.start,node.end));
   return fail(t('Unsupported design source expression'),node.start,'unsupported-feature');
  }
- const allowed=new Set(['project','parameter','sketch','box','cylinder','sphere','combine','mesh','code','extrusion','revolution','mirror','pattern','generated','roots','joints','sources']);const records:SourceRecord[]=[],keys=new Set<string>();
+ const allowed=new Set(['project','parameter','sketch','box','cylinder','sphere','combine','mesh','code','extrusion','revolution','mirror','pattern','exactFeature','generated','roots','joints','sources']);const records:SourceRecord[]=[],keys=new Set<string>();
  for(const node of tree!.body){if(node.type==='EmptyStatement')continue;const call=node.expression;if(node.type!=='ExpressionStatement'||call?.type!=='CallExpression'||call.callee.type!=='Identifier'||!allowed.has(call.callee.name)||call.arguments.some((arg:Ast)=>arg.type==='SpreadElement'))fail(t('Use declarative design calls only'),node.start,'unsupported-feature');
-  const kind=call.callee.name,args=call.arguments.map(literal),isBody=['box','cylinder','sphere','combine','mesh','code','extrusion','revolution','mirror','pattern','generated'].includes(kind),identified=isBody||kind==='parameter'||kind==='sketch';
+  const kind=call.callee.name,args=call.arguments.map(literal),isBody=['box','cylinder','sphere','combine','mesh','code','extrusion','revolution','mirror','pattern','exactFeature','generated'].includes(kind),identified=isBody||kind==='parameter'||kind==='sketch';
   if(identified&&(typeof args[0]!=='string'||!/^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$/.test(args[0])||['constructor','prototype','__proto__'].includes(args[0])))fail(t('Design records require a stable identifier'),call.start);
   const key=identified?`${isBody?'node':kind}:${args[0]}`:kind;if(keys.has(key))fail(t('Duplicate design source record'),call.start);keys.add(key);records.push({key,kind,args,node,call});if(records.length>MODEL_SOURCE_LIMITS.records)fail(t('Too many design source records'),call.start,'resource-limit');
  }
@@ -122,7 +125,7 @@ function parseRecords(source:string):SourceRecord[]{
 export function compileModelSource(source:string,context:CadDocument,options:{regenerate?:(recipe:GeneratorRecipe,name:string)=>CadDocument}={}):CadDocument{
  const records=parseRecords(source),fail=(detail:string,record?:SourceRecord):never=>{throw new CadCodeError(detail,record?.node.start??0,source);};
  const project=records.find(r=>r.key==='project')!;if(project.args.length!==1||!project.args[0]||typeof project.args[0]!=='object'||Array.isArray(project.args[0]))fail(t('Invalid project declaration'),project);
- if(![6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40].includes(project.args[0].version))fail(t('Model source uses project version 6 through 40'),project);
+ if(![6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41].includes(project.args[0].version))fail(t('Model source uses project version 6 through 41'),project);
  const doc:any={...project.args[0],nodes:Object.create(null),roots:[],modelSource:{version:1,language:'brickwright-design',source}};
  if(doc.id!==context.id)fail(t('Keep the current project identity in model source'),project);
  delete doc.provenance;delete doc.sketches;delete doc.joints;
@@ -152,12 +155,17 @@ export function compileModelSource(source:string,context:CadDocument,options:{re
    const root=prototype.id,seen=new Set<string>();const collect=(id:string)=>{if(seen.has(id))return;seen.add(id);const value=construction.nodes[id];constructionInputs(value).forEach(collect);};collect(root);
    for(const id of seen){if(id===root)continue;if(declaredNodeIds.has(id)){if(recipe)fail(t('Edit generated construction through its recipe, or detach the generator'),record);continue;}if(Object.hasOwn(doc.nodes,id))fail(t('Generated construction has conflicting identifiers'),record);doc.nodes[id]=copyNode(construction.nodes[id]);}
    node={...copyNode(prototype),...metadata,id:args[0]};if(recipe)node.generator=recipe;else delete node.generator;
-  }else node={name:kind==='combine'?'Combination':kind[0].toUpperCase()+kind.slice(1),color:'#eea52b',transform:identityTransform(),...metadata,id:args[0],kind:kind==='combine'?'boolean':kind};
+  }else node={name:kind==='combine'?'Combination':kind[0].toUpperCase()+kind.slice(1),color:'#eea52b',transform:identityTransform(),...metadata,id:args[0],kind:kind==='combine'?'boolean':kind==='exactFeature'?'exact-feature':kind};
   if(kind==='code'){if(args.length!==4||typeof args[2]!=='string'||Object.hasOwn(metadata,'program'))fail(t('Code calls need source and input overrides'),record);node.program={version:1,language:'brickwright-cad-script',source:args[2],parameters:args[3]};}
   else if(kind==='mesh'){
    if(args.length!==3||!(args[2] instanceof Asset)||'positions'in metadata||'indices'in metadata)fail(t('Mesh calls require a project asset reference'),record);
    const original=Object.hasOwn(context.nodes,args[2].id)?context.nodes[args[2].id]:undefined;if(original?.kind!=='mesh')return fail(t('Referenced mesh asset is unavailable'),record);node.positions=original.positions;node.indices=original.indices;
    if(context.version>=5&&original.provenance?.length)node.provenance=[...new Set([...(node.provenance??[]),...original.provenance])];
+  }else if(kind==='exactFeature'){
+   if(args.length>3||'display'in metadata||args.length===3&&!(args[2] instanceof Asset))fail(t('Exact feature calls may only reference their display mesh as a project asset'),record);
+   // A missing or changed display is stale; a host with the exact kernel recomputes it.
+   const original=args.length===3&&Object.hasOwn(context.nodes,args[2].id)?context.nodes[args[2].id]:undefined;
+   if(original?.kind==='exact-feature'&&original.display)node.display=original.display;
   }else if(kind!=='generated'&&args.length!==2)fail(t('Unexpected design call arguments'),record);
   if(kind==='cylinder'||kind==='sphere')node.segments??=48;
   for(const [property,path] of Object.entries(fields)){
@@ -176,11 +184,12 @@ export function compileModelSource(source:string,context:CadDocument,options:{re
    }
   }
   if(node.kind==='mirror'&&node.offset instanceof Formula)node.offset=node.offset.expression;
+  if(node.kind==='exact-feature'&&node.size instanceof Formula)node.size=node.size.expression;
   if(node.kind==='revolution')for(const key of ['angle','axisOffset'])if(node[key] instanceof Formula)node[key]=node[key].expression;
   doc.nodes[node.id]=node;
  }
  if(hasParameters)doc.parametric={version:1,parameters,bindings};else delete doc.parametric;
- const rejectUnresolved=(value:any)=>{if(value instanceof Formula||value instanceof Asset)fail(t('Expression is not supported in this design field'));if(value&&typeof value==='object')for(const v of Object.values(value))rejectUnresolved(v);};for(const node of Object.values(doc.nodes) as any[])rejectUnresolved(node.kind==='mesh'?{...node,positions:undefined,indices:undefined}:node);rejectUnresolved(doc.sketches);rejectUnresolved(doc.joints);rejectUnresolved(Object.fromEntries(Object.entries(doc).filter(([key])=>!['nodes','sketches','joints','modelSource'].includes(key))));
+ const rejectUnresolved=(value:any)=>{if(value instanceof Formula||value instanceof Asset)fail(t('Expression is not supported in this design field'));if(value&&typeof value==='object')for(const v of Object.values(value))rejectUnresolved(v);};for(const node of Object.values(doc.nodes) as any[])rejectUnresolved(node.kind==='mesh'?{...node,positions:undefined,indices:undefined}:node.kind==='exact-feature'?{...node,display:undefined}:node);rejectUnresolved(doc.sketches);rejectUnresolved(doc.joints);rejectUnresolved(Object.fromEntries(Object.entries(doc).filter(([key])=>!['nodes','sketches','joints','modelSource'].includes(key))));
  applyParametricBindings(doc);pruneModelProvenance(doc);
  return doc;
 }

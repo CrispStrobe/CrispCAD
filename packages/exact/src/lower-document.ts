@@ -6,7 +6,7 @@
 //
 // Nothing falls back to a mesh: an imported mesh or any construction without an exact lowering is
 // an ExactKernelError naming the body and the feature.
-import {compileCode,evaluateExtrusion,evaluateMirror,evaluatePattern,evaluateRevolution,evaluateSketchRegion,featureValue,sketchBulgeMidpoint,sketchOutline} from '@brickwright/cad-core';
+import {compileCode,evaluateExactFeature,evaluateExtrusion,evaluateMirror,evaluatePattern,evaluateRevolution,evaluateSketchRegion,featureValue,identityTransform,sketchBulgeMidpoint,sketchOutline} from '@brickwright/cad-core';
 import type {CadDocument,PlanarSketch,SketchLoop,SketchPoint,SolidNode,Vec3} from '@brickwright/cad-core';
 import {ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactProfile,ExactSolid,PathSegment} from '@crispcad/exact-kernel';
@@ -133,6 +133,14 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
     }else solid=node.operation==='union'?k.union(operands[0],...operands.slice(1)):node.operation==='subtract'?k.subtract(operands[0],...operands.slice(1)):k.intersect(operands[0],...operands.slice(1));
     break;
    }
+   case 'exact-feature':{
+    // Always rebuilt on the exact source; the stored display mesh is never used here.
+    const feature=evaluateExactFeature(node,doc),source=lowerNode(k,doc,node.source,bodyId,cache);
+    solid=feature.operation==='fillet'?k.fillet(source,feature.size,feature.edges)
+     :feature.operation==='chamfer'?k.chamfer(source,feature.size,feature.edges)
+     :k.shell(source,feature.size,feature.openFaces);
+    break;
+   }
    case 'mesh':return unsupported(node.surface?'Reference surfaces have no exact solid.':'Imported meshes have no exact B-rep; only bodies built from primitives, sketches, features and CAD Script can be exported or measured exactly.');
    default:return unsupported(`'${(node as {kind:string}).kind}' has no exact lowering.`);
   }
@@ -153,4 +161,14 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
 export function lowerDocumentBody(k:ExactKernel,doc:CadDocument,bodyId:string):ExactSolid{
  if(!doc.roots.includes(bodyId))throw new ExactKernelError('invalid-input',`${bodyId} is not a top-level body.`);
  return lowerNode(k,doc,bodyId,bodyId,new Map());
+}
+
+/** Any node as an exact solid in its parent's frame (its own transform applied). Call inside
+ * `k.scope`. With `local`, the node's own transform is left out (the frame of its inputs). */
+export function lowerDocumentNode(k:ExactKernel,doc:CadDocument,id:string,options:{local?:boolean}={}):ExactSolid{
+ const node=doc.nodes[id];
+ if(!node)throw new ExactKernelError('invalid-input',`${id} is not a node of this model.`);
+ const source=options.local?{...doc,nodes:{...doc.nodes,[id]:{...node,transform:identityTransform()}}}:doc;
+ const bodyId=doc.roots.find(root=>root===id)??id;
+ return lowerNode(k,source,id,bodyId,new Map());
 }

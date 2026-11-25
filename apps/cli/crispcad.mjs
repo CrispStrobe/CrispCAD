@@ -7,7 +7,7 @@ import {writeFile} from 'node:fs/promises';
 import {t,setLocale} from '@brickwright/cad-core';
 import {createCodeHost} from '../mcp/host.mjs';
 
-const usage=()=>t('CrispCAD CLI\nnode apps/cli/crispcad.mjs commands\nnode apps/cli/crispcad.mjs run <project.bcad> "<command>" ["<command>" ...] [--dry-run] [--out <directory>]\nnode apps/cli/crispcad.mjs inspect|interference|printability|measure <project.bcad>\nnode apps/cli/crispcad.mjs step <project.bcad> <file.step>\nOptions: --locale en|de. Output is JSON on stdout. measure and step use the exact B-rep kernel; --out writes files that commands produce, such as export step.\n');
+const usage=()=>t('CrispCAD CLI\nnode apps/cli/crispcad.mjs commands\nnode apps/cli/crispcad.mjs run <project.bcad> "<command>" ["<command>" ...] [--dry-run] [--out <directory>]\nnode apps/cli/crispcad.mjs inspect|interference|printability|measure <project.bcad>\nnode apps/cli/crispcad.mjs step <project.bcad> <file.step>\nOptions: --locale en|de. Output is JSON on stdout. measure, step and the commands fillet, chamfer, shell and recompute exact use the exact B-rep kernel; --out writes files that commands produce, such as export step.\n');
 const argv=process.argv.slice(2),positional=[];let dryRun=false,outDir;
 for(let i=0;i<argv.length;i++){
  if(argv[i]==='--locale'&&['en','de'].includes(argv[i+1]))setLocale(argv[++i]);

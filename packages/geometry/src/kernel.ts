@@ -5,7 +5,7 @@ import {triangulatePolyhedron} from './polyhedron.js';
 import {textProfileContours} from './font-profile.js';
 import Module from 'manifold-3d';
 import type { Manifold, ManifoldToplevel, CrossSection } from 'manifold-3d';
-import { validateDocument, documentGeometryKey, evaluateExtrusion, evaluateRevolution, evaluateMirror, evaluatePattern, FeatureEvaluationError, compileCode } from '@brickwright/cad-core';
+import { validateDocument, documentGeometryKey, evaluateExtrusion, evaluateRevolution, evaluateMirror, evaluatePattern, FeatureEvaluationError, compileCode, exactFeatureKey, staleExactFeatureError } from '@brickwright/cad-core';
 import type { CadDocument, SolidNode, CodeShape,CodeProfile,PlanarSketch,Vec3 } from '@brickwright/cad-core';
 import { collisionCSG } from './collision-csg.js';
 import { partitionConvex } from './convex.js';
@@ -218,6 +218,13 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
       case 'mesh': {
         if(node.surface)throw new Error(t('Reference helpers cannot be combined into printable solids'));
         const mesh = new module.Mesh({ numProp: 3, vertProperties: new Float32Array(node.positions), triVerts: new Uint32Array(node.indices) });
+        mesh.merge(); solid = keep(new module.Manifold(mesh)); break;
+      }
+      case 'exact-feature': {
+        // Manifold never builds the exact operation; it shows the exact kernel's mesh, and only
+        // while that mesh still belongs to the current source geometry and settings.
+        if(!node.display||node.display.sourceKey!==exactFeatureKey(doc,id))throw staleExactFeatureError(node);
+        const mesh = new module.Mesh({ numProp: 3, vertProperties: new Float32Array(node.display.positions), triVerts: new Uint32Array(node.display.indices) });
         mesh.merge(); solid = keep(new module.Manifold(mesh)); break;
       }
       case 'boolean': {
