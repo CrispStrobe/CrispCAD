@@ -1,7 +1,7 @@
 # Shared Robots and CAD interaction
 
 CAD's viewport and Brickwright's Robots editor now use the same pure rectangle
-selection functions and pointer camera intentions. The selection source lives in brickwright-lite at
+selection functions and pointer camera intentions. The selection source lives in BrickWright (`CrispStrobe/brickwright`, formerly brickwright-lite) at
 `overlay/scratch-gui/src/lib/editor-interaction/box-selection.js`; CAD vendors it
 unchanged at `packages/editor/src/vendor/box-selection.js`. It normalizes drag
 rectangles and intersects projected bounding boxes, clipping homogeneous edges
@@ -16,8 +16,8 @@ of Scratch and Robots' simulation and coordinate system.
 Update the shared source in a dedicated Lite worktree and commit it, then run:
 
 ```sh
-node scripts/sync-editor-interaction.mjs /path/to/brickwright-lite-worktree
-node scripts/sync-editor-interaction.mjs /path/to/brickwright-lite-worktree --check
+node scripts/sync-editor-interaction.mjs /path/to/brickwright-worktree
+node scripts/sync-editor-interaction.mjs /path/to/brickwright-worktree --check
 npm run build:packages
 npm test -- tests/box-selection.test.ts
 npm run test:e2e -- --project=chromium tests/browser/solid-hole.spec.ts tests/browser/camera.spec.ts

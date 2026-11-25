@@ -138,7 +138,7 @@ and [source-research tools](docs/SOURCE-RESEARCH.md).
 **Shapes → Robots** includes the Scout TT rover, its PLA print layout, a
 five-socket shaft fit gauge and a bolted electronics carrier. The assembly combines two existing Adafruit 3777
 TT motor models with twelve original PLA parts and stable **A / left** and
-**B / right** joint ports for the shared CAD controls in Brickwright Lite.
+**B / right** joint ports for the shared CAD controls in BrickWright.
 
 Open the [assembled BCAD model](examples/scout-tt-rover/scout-tt-rover.bcad),
 download the [PLA build kit](examples/scout-tt-rover/scout-tt-rover-kit.zip), or

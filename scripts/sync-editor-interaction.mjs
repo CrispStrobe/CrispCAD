@@ -7,7 +7,7 @@ import {dirname, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2), sourceRoot = args.find(a => !a.startsWith('--'));
-if (!sourceRoot || args.some(a => a.startsWith('--') && a !== '--check')) throw new Error('Usage: node scripts/sync-editor-interaction.mjs <brickwright-lite-checkout> [--check]');
+if (!sourceRoot || args.some(a => a.startsWith('--') && a !== '--check')) throw new Error('Usage: node scripts/sync-editor-interaction.mjs <brickwright-checkout> [--check]');
 const modules = ['box-selection', 'camera-pointer', 'touch-gestures', 'transform-math'];
 const checkout = resolve(sourceRoot);
 const git = (...args) => execFileSync('git', ['-C', checkout, ...args], {encoding:'utf8'}).trim();

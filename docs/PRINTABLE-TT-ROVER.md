@@ -394,7 +394,7 @@ Swap a motor's leads or invert that channel in firmware if necessary. Increase
 load gradually and check motor/driver heating and wheel retention. The model
 contains no temperature, stall, current, battery-discharge or wire simulation.
 
-## CAD and Brickwright Lite controls
+## CAD and BrickWright controls
 
 Ports are fixed in the document, independent of translated display names:
 
@@ -521,7 +521,7 @@ required for this build workflow.
 [feather-rp2040]: https://www.adafruit.com/product/4884
 [feather-spec]: https://learn.adafruit.com/adafruit-feather/feather-specification
 [adafruit-source]: https://github.com/adafruit/Adafruit_CAD_Parts/tree/9f2a89f3d5c3491886d58cb7fe83385417563cf4
-[lite-cad]: https://github.com/CrispStrobe/brickwright-lite/blob/fc333ddf88023cf17e9bb5973109b74a350f2ab7/docs/CAD-EDITOR.md
+[lite-cad]: https://github.com/CrispStrobe/brickwright/blob/fc333ddf88023cf17e9bb5973109b74a350f2ab7/docs/CAD-EDITOR.md
 [rover-source]: https://github.com/CrispStrobe/brickwright-cad/blob/feat/scout-tt-integration-20261116/packages/editor/src/tt-rover.ts
 [brickwright-license]: https://github.com/CrispStrobe/brickwright-cad/blob/53581e9cbd2565e9e088c8fcd52fb1ba5c739b09/LICENSE
 [adafruit-license]: https://github.com/CrispStrobe/brickwright-cad/blob/53581e9cbd2565e9e088c8fcd52fb1ba5c739b09/library/sources/adafruit-motors/LICENSE

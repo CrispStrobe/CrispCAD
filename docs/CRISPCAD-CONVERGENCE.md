@@ -22,7 +22,7 @@ and step 4 of [PARAMETRIC-CAD-STRATEGY.md](PARAMETRIC-CAD-STRATEGY.md#delivery-o
 
 ```
 crispcad-kernel-lab ──(exact-kernel package, MIT + Apache-2.0 only)──▶ CrispCAD
-CrispCAD ──(packaged CAD SDK, @brickwright/cad-*)──▶ BrickWright (brickwright-lite)
+CrispCAD ──(packaged CAD SDK, @brickwright/cad-*)──▶ BrickWright (`CrispStrobe/brickwright`, formerly brickwright-lite)
 ```
 
 - **The lab owns the exact kernel.** The OpenCASCADE-free SMLib kernel and its

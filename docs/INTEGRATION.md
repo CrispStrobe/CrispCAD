@@ -334,7 +334,7 @@ npm run build:brickwright-sdk
 # In the Brickwright worktree:
 node scripts/sync-cad-sdk.mjs /path/to/brickwright-cad
 # Back in CAD, verify both directions and the common Jolt release/integrity:
-npm run verify:brickwright-sync -- /path/to/brickwright-lite
+npm run verify:brickwright-sync -- /path/to/brickwright
 ```
 
 The check refuses a stale SDK, mismatched file hashes, changed shared interaction

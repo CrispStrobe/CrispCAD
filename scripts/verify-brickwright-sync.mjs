@@ -6,7 +6,7 @@ import {execFileSync} from 'node:child_process';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
-if(process.argv.length!==3)throw Error('Usage: npm run verify:brickwright-sync -- <brickwright-lite-checkout>');
+if(process.argv.length!==3)throw Error('Usage: npm run verify:brickwright-sync -- <brickwright-checkout>');
 const host=resolve(process.argv[2]);
 assert.equal(execFileSync('git',['-C',root,'status','--porcelain'],{encoding:'utf8'}).trim(),'','Commit CAD changes before verifying a packaged SDK');
 const read=p=>JSON.parse(readFileSync(p,'utf8'));

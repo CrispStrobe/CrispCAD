@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-// Owner's catalogue from CrispStrobe/brickwright-lite, retrieved 2026-11-13.
+// Owner's catalogue from CrispStrobe/brickwright (then named brickwright-lite), retrieved 2026-11-13.
 // Metadata reused from the owner’s BSD-3-Clause app catalogue.
 // Local artwork is bundled; rendering this catalogue makes no store requests.
 //

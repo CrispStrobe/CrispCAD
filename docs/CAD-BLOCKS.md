@@ -1,6 +1,6 @@
 # Block and pseudocode modelling
 
-Hosts with a block editor (Brickwright Lite's **CAD shapes** extension) and
+Hosts with a block editor (BrickWright's **CAD shapes** extension) and
 agents (MCP `cad_compile_blocks`) describe a model as a small JSON program,
 format `brickwright-cad-blocks`. `packages/core/src/cad-blocks.ts` compiles that
 one tree to three **parametric** targets:
@@ -96,7 +96,7 @@ as **one undo step**: one code object per part, named `name`, then
 `name (#rrggbb)`. A later build finds them again by name and updates them in place.
 It keeps the parameter overrides that the new source still declares, and removes
 colour parts the model no longer has. Its result is `built`, `updated` or
-`unchanged`. Brickwright Lite's CAD shapes blocks use it.
+`unchanged`. BrickWright's CAD shapes blocks use it.
 
 OpenSCAD and JSCAD keep colours natively: `color("#rrggbb") { … }` and
 `colorize([r, g, b], …)`.

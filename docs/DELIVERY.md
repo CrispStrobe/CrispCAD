@@ -2,7 +2,9 @@
 
 > Historical record. The product was called Brickwright CAD until 2026-11-24 and
 > is now CrispCAD; app paths below such as `Brickwright CAD.app` are now
-> `CrispCAD.app`.
+> `CrispCAD.app`. Brickwright Lite (`brickwright-lite`) was renamed BrickWright
+> (`CrispStrobe/brickwright`) on 2026-11-25; the earlier TurboWarp-based repository is now
+> `brickwright-legacy`.
 
 The shared CAD SDK is integrated into Brickwright Lite as a default-off workspace
 editor. Circuit DC/gearmotors can drive physical CAD hinges and lead-screw sliders;
