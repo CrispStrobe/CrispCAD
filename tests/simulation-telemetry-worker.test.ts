@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
-import {defaultPartPhysics} from '@brickwright/cad-core';
+import {defaultPartPhysics,documentGeometryKey} from '@brickwright/cad-core';
 import type {CadDocument} from '@brickwright/cad-core';
 import type {SimulationCommand,SimulationFrame,SimulationTelemetry} from '../packages/editor/src/simulation-protocol.js';
 
@@ -21,6 +21,10 @@ const mock=vi.hoisted(()=>{
  const create=vi.fn(async()=>{for(const key of Object.keys(state) as (keyof typeof state)[])state[key]=0;return world;});
  const prepare=vi.fn(async()=>new Map());
  return {world,create,prepare};
+});
+vi.mock('@brickwright/cad-core',async importOriginal=>{
+ const core=await importOriginal<typeof import('@brickwright/cad-core')>();
+ return {...core,documentGeometryKey:vi.fn(core.documentGeometryKey)};
 });
 vi.mock('@brickwright/cad-geometry',()=>({createGeometryKernel:async()=>({evaluate:()=>({})})}));
 vi.mock('@brickwright/cad-physics',()=>({createPhysicsWorld:mock.create,prepareDocumentCollisions:mock.prepare}));
@@ -126,4 +130,21 @@ it('restarts from the authored document and applies Fix base only to each run',a
  expectBase('static');
  expect(mock.create).toHaveBeenCalledTimes(3);
  expect(mock.prepare).toHaveBeenCalledTimes(1);
+ expect(documentGeometryKey).toHaveBeenCalledTimes(1);
+});
+
+it('keeps the successful document and construction together when a later start fails',async()=>{
+ const original=scene(2);
+ const first=await start(original);
+ expect(first.error).toBeUndefined();
+ const changed=structuredClone(original);
+ changed.nodes['body-0'].physics={...defaultPartPhysics(),sourcePreset:'new-collision-construction'};
+ mock.create.mockRejectedValueOnce(new Error('Construction failed'));
+ expect((await start(changed)).error).toBe('Construction failed');
+ const restarted=await send({op:'start',wasmURL:'/manifold.wasm',fixBase:false,locale:'en'});
+ expect(restarted.error).toBeUndefined();
+ expect(restarted.frame).toEqual(first.frame);
+ expect(mock.create).toHaveBeenLastCalledWith(original,expect.anything(),expect.anything(),expect.anything());
+ expect(mock.prepare).toHaveBeenCalledTimes(2);
+ expect(documentGeometryKey).toHaveBeenCalledTimes(2);
 });
