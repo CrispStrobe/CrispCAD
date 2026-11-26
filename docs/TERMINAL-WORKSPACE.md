@@ -93,6 +93,7 @@ commands use the same placement default.
 | `chamfer` | distance; optional bodies; `--face <normal>` | |
 | `shell` | wall thickness; optional bodies; one or more `--open <normal>` | |
 | `recompute exact` | optional bodies (default: all) | |
+| `upgrade-lofts` | optional bodies: `all`, IDs or quoted names (default: every code object with triangulated lofts); rebuilds CAD Script revision-1 lofts as ruled surfaces in one Undo step ([language revisions](CODE-MODE.md#language-revisions)); also in the command palette, MCP `cad_run_commands` and the CLI | |
 
 Movement acts on the selected top-level bodies in one transaction. Rotation
 adds each body's XYZ rotation values; scaling multiplies each body's local scale.

@@ -105,7 +105,7 @@ export interface CadEditorOptions {
   onError?: (error: Error) => void;
 }
 export interface CadCommandState {canUndo:boolean;canRedo:boolean;hasSelection:boolean;canDelete:boolean;canCombine:boolean;canExport:boolean;hasBodies:boolean;ready:boolean}
-export type CadCommand='new'|'open'|'save'|'import'|'export'|'printability'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'exact-feature'|'command-palette'|'readout'|'code'|'code-workspace'|'terminal'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect';
+export type CadCommand='new'|'open'|'save'|'import'|'export'|'printability'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'exact-feature'|'command-palette'|'readout'|'code'|'code-workspace'|'terminal'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect'|'upgrade-lofts';
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag); element.className = className; if (text !== undefined) element.textContent = text; return element;
 }
@@ -816,6 +816,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'command-palette':palette.open();break;case 'model-source':modelSourcePanel.toggle();break;case 'model-library':return openModelLibrary();case 'robot-projects':return openModelLibrary('projects');case 'code':codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);break;case 'readout':readout.setVisible(!readout.visible);break;
       case 'shapes':picker.open(true);break;
       case 'union':case 'subtract':case 'intersect':session.combine(command);break;
+      case 'upgrade-lofts':session.upgradeLofts();break;
       default:throw new Error(t('Unknown editor command'));
     }
     if(!['open','import','save','export','parameters','shapes','code','code-workspace','terminal','model-source','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','exact-feature','model-library','robot-projects','command-palette'].includes(command))viewport.canvas.focus({preventScroll:true});

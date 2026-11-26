@@ -367,7 +367,8 @@ in one document without either changing. The session applies these rules on ever
 
 Opening a project never changes a program's revision. To rebuild saved lofts as ruled
 surfaces, open the code object and choose **Upgrade lofts to ruled surfaces** (shown only
-for revision-1 programs with a `loft`), or call `session.upgradeLofts(ids?)`: one Undo step
+for revision-1 programs with a `loft`), run the shared command `upgrade-lofts [all|"name"|id ...]` (terminal, command palette, MCP
+`cad_run_commands`, CLI), or call `session.upgradeLofts(ids?)`: one Undo step
 labelled "Upgrade lofts to ruled surfaces" that sets the selected (or every) such program to
 revision 2 and raises the document to version 42; Undo restores the triangulated lofts and
 the document version. Model source writes a revision-2 program as

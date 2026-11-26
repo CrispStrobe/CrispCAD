@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {commandHelp,commandRegistry,commandScriptLines,runCommandScript,createCommandJournal,EXACT_FEATURE_COMMANDS,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseExactCommand,parseExactFeatureCommand,parseRecomputeCommand,prepareCommand,recomputeExactFeatures,runExactFeatureCommand,t} from '@brickwright/cad-core';
+import {commandHelp,commandRegistry,commandScriptLines,runCommandScript,createCommandJournal,EXACT_FEATURE_COMMANDS,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseUpgradeLofts,parseExactCommand,parseExactFeatureCommand,parseRecomputeCommand,prepareCommand,recomputeExactFeatures,runExactFeatureCommand,t} from '@brickwright/cad-core';
 import type {CadSession,Vec3,SessionCommandRecord,CommandSpec,CommandStep,CommandValue,PreparedCommand,JournalExportFormat,ExactCommandHost,ExactCommandFile} from '@brickwright/cad-core';
 import type {CadCommand} from './index.js';
 import {terminalArguments,terminalTokens} from './terminal-coordinates.js';
@@ -204,6 +204,7 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
     append('output',listModel(session));return;
    }
    if(name==='clear'){if(args.length)throw new Error(t('Too many arguments. Use help for command syntax.'));entries=[];emit();return;}
+   if(name==='upgrade-lofts'){const command=parseUpgradeLofts(session,tail);append('output',journal.withInvocation(command.invocation,()=>command.run()));return;}
    if(name==='code'){if(args.length)throw new Error(t('Too many arguments. Use help for command syntax.'));options.openCodeWorkspace();return;}
    if(name==='journal'){
     if(!args.length){append('output',journal.summary());return;}

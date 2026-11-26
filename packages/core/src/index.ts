@@ -72,7 +72,7 @@ export type {KernelCADImport,KernelCADPart} from './kcad-import.js';
 
 export {commandNumber,parseCommandPoint,commandTokens,commandArguments} from './command-arguments.js';
 export type {CommandToken} from './command-arguments.js';
-export {commandRegistry,findCommandSpec,paletteCommandSpecs,prepareCommand,interactiveCommandNames,commandHelp,listModel,createCommandRunner,COMMAND_LINE_LIMIT} from './command-registry.js';
+export {commandRegistry,findCommandSpec,paletteCommandSpecs,prepareCommand,interactiveCommandNames,commandHelp,listModel,parseUpgradeLofts,createCommandRunner,COMMAND_LINE_LIMIT} from './command-registry.js';
 export type {CommandSpec,CommandArgumentSpec,CommandArgumentKind,CommandCategory,CommandAvailability,CommandPaletteSpec,CommandStep,CommandValue,PreparedCommand,CommandContext,CommandRunResult,CommandRunnerOptions,CommandRunner} from './command-registry.js';
 export {runCommandScript,commandScriptLines,COMMAND_SCRIPT_LABEL} from './command-script.js';
 export type {CommandScriptOptions,CommandScriptResult} from './command-script.js';

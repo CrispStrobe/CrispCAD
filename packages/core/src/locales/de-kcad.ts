@@ -40,6 +40,8 @@ export const messages: Record<string,string> = {
   "Upgrade lofts to ruled surfaces": "Lofts auf Regelflächen umstellen",
   "This object’s lofts are triangulated along one diagonal, as saved. Upgrading rebuilds them as ruled surfaces; Undo restores them.": "Die Lofts dieses Objekts sind wie gespeichert entlang einer Diagonale trianguliert. Umstellen baut sie als Regelflächen neu auf; Rückgängig stellt sie wieder her.",
   "Lofts upgraded to ruled surfaces. Undo restores the triangulated lofts.": "Lofts auf Regelflächen umgestellt. Rückgängig stellt die triangulierten Lofts wieder her.",
+  "Rebuild triangulated lofts (CAD Script revision 1) as ruled surfaces in one Undo step": "Triangulierte Lofts (CAD Script Revision 1) in einem Rückgängig-Schritt als Regelflächen neu aufbauen",
+  "Upgraded the lofts of {0} code objects to ruled surfaces: {1}. Undo restores the triangulated lofts.": "Lofts von {0} Codeobjekten auf Regelflächen umgestellt: {1}. Rückgängig stellt die triangulierten Lofts wieder her.",
   // smoothLoft (document version 43).
   "CAD Script smoothLoft requires document version 43": "CAD Script smoothLoft erfordert Dokumentversion 43",
   "Smooth loft folds back along Z; space its sections further apart or reduce their offsets": "Der glatte Loft läuft entlang Z zurück; Querschnitte weiter auseinander legen oder ihre Versätze verringern",

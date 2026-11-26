@@ -86,6 +86,7 @@ const drafting:readonly Draft[]=[
  {name:'chamfer',aliases:[],description:'Bevel edges exactly with the B-rep kernel',usage:'chamfer <distance> [all|"name"|id ...] [--face <normal>]',category:'feature',editsModel:true,arguments:[arg('distance','number',{min:.01,max:10000}),arg('targets','bodies',{optional:true,repeated:true}),arg('face','keyword',{optional:true,values:['--face']})],headless:true,kernel:'exact'},
  {name:'shell',aliases:[],description:'Hollow a body to a wall thickness with open faces, exactly with the B-rep kernel',usage:'shell <thickness> [all|"name"|id ...] --open <normal> [--open <normal> ...]',category:'feature',editsModel:true,arguments:[arg('thickness','number',{min:.01,max:10000}),arg('targets','bodies',{optional:true,repeated:true}),arg('open','keyword',{values:['--open'],repeated:true})],headless:true,kernel:'exact'},
  {name:'recompute',aliases:[],description:'Recompute out-of-date exact fillets, chamfers and shells with the B-rep kernel',usage:'recompute exact [all|"name"|id ...]',category:'feature',editsModel:true,arguments:[arg('mode','keyword',{values:['exact']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
+ {name:'upgrade-lofts',aliases:[],description:'Rebuild triangulated lofts (CAD Script revision 1) as ruled surfaces in one Undo step',usage:'upgrade-lofts [all|"name"|id ...]',category:'edit',editsModel:true,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true},
  {name:'journal',aliases:[],description:'Summarize or export the command journal',usage:'journal [export [cadscript|replay]]',category:'terminal',editsModel:false,arguments:[arg('action','keyword',{optional:true,values:['export']}),arg('format','keyword',{optional:true,values:['cadscript','replay']})],headless:true},
 ];
 type PaletteDraft={command:string;label:string;alias?:string;requires?:CommandAvailability};
@@ -106,6 +107,7 @@ const palette:readonly PaletteDraft[]=[
  {command:'terminal',label:'CAD terminal',alias:'command line console'},
  {command:'code-workspace',label:'Code workspace',alias:'persistent CAD Script editor'},
  {command:'model-source',label:'Model source'},
+ {command:'upgrade-lofts',label:'Upgrade lofts to ruled surfaces',alias:'ruled loft triangulated revision'},
  {command:'union',label:'Union',alias:'combine join',requires:'canCombine'},
  {command:'subtract',label:'Subtract',alias:'boolean cut difference',requires:'canCombine'},
  {command:'intersect',label:'Intersect',alias:'boolean overlap',requires:'canCombine'},
@@ -281,6 +283,20 @@ export function commandHelp(spec?:CommandSpec,extraAliases:readonly string[]=[],
  const names=[...spec.aliases,...extraAliases];
  return `${spec.usage}\n${t(spec.description)}${names.length?'\n'+t('Aliases')+': '+names.join(', '):''}`;
 }
+/** `upgrade-lofts [all|"name"|id ...]`: the code objects to upgrade (none named: every code object
+ * with triangulated lofts), the canonical invocation, and `run`, which makes the one commit
+ * (session.upgradeLofts) and returns the terminal output. */
+export function parseUpgradeLofts(session:CadSession,tail:string):{invocation:string;run():string}{
+ const doc=session.state.document,tokens=commandTokens(tail);
+ let ids:string[]|undefined;
+ if(tokens.length&&!(tokens.length===1&&!tokens[0].quoted&&tokens[0].value.toLowerCase()==='all')){
+  ids=[...new Set(tokens.map(({value:token})=>{if(doc.roots.includes(token))return token;const matches=doc.roots.filter(id=>doc.nodes[id].name===token);if(matches.length!==1)throw new Error(t`Choose one existing object ID or unique name: ${token}`);return matches[0];}))];
+ }
+ return {invocation:'upgrade-lofts'+(ids?' '+ids.map(quoteWord).join(' '):''),run(){
+  const upgraded=session.upgradeLofts(ids),names=upgraded.map(id=>session.state.document.nodes[id].name);
+  return t`Upgraded the lofts of ${upgraded.length} code objects to ruled surfaces: ${names.join(', ')}. Undo restores the triangulated lofts.`;
+ }};
+}
 /** `list` text: bodies, then sketches. */
 export function listModel(session:CadSession):string{
  const doc=session.state.document;
@@ -366,6 +382,7 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
    return done(text,commandHelp(entry));
   }
   if(name==='list'){if(args.length)throw new Error(t('Too many arguments. Use help for command syntax.'));return done(text,listModel(session));}
+  if(name==='upgrade-lofts'){const command=parseUpgradeLofts(session,tail),output=options.journal?options.journal.withInvocation(command.invocation,()=>command.run()):command.run();return done(command.invocation,output);}
   if(name==='journal'){
    if(!options.journal)throw new Error(t('No command journal is attached.'));
    if(!args.length)return done(text,options.journal.summary());

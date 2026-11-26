@@ -2,7 +2,7 @@
 // CAD Script revision 2: `loft` builds ruled side surfaces; revision 1 keeps the fixed diagonal.
 import {readFileSync} from 'node:fs';
 import {beforeAll,describe,expect,it} from 'vitest';
-import {CAD_SCRIPT_REVISION,validateDocument,compileCode,createCadSession,createDocument,generateModelSource,compileModelSource,hasTriangulatedLofts,importKernelCAD,parseDocument,serializeDocument} from '@brickwright/cad-core';
+import {CAD_SCRIPT_REVISION,createCommandRunner,findCommandSpec,validateDocument,compileCode,createCadSession,createDocument,generateModelSource,compileModelSource,hasTriangulatedLofts,importKernelCAD,parseDocument,serializeDocument} from '@brickwright/cad-core';
 import type {CadDocument,CodeProgram,Vec3} from '@brickwright/cad-core';
 import {createGeometryKernel,type GeometryKernel} from '@brickwright/cad-geometry';
 import {createExactBackend,type ExactBackend} from '@brickwright/cad-exact';
@@ -140,6 +140,21 @@ describe('revision gate and document version 42',{timeout:120_000},()=>{
   s.redo();expect(s.state.document.version).toBe(42);
   const fresh=createCadSession(createDocument());fresh.addCode(program('return box(1, 1, 1);',1));
   expect(()=>fresh.upgradeLofts()).toThrow('No triangulated lofts to upgrade');
+ });
+
+ it('offers upgrade-lofts in the shared command registry: one undoable step for terminal, MCP and CLI',()=>{
+  expect(findCommandSpec('upgrade-lofts')).toMatchObject({headless:true,editsModel:true,terminal:true,palette:{label:'Upgrade lofts to ruled surfaces'}});
+  const s=legacy(),other=s.addCode(program(loftSource(beacon),1),'Second'),before=s.serialize(),runner=createCommandRunner(s),first=s.state.document.roots[0];
+  const named=runner.run('upgrade-lofts Lamp');
+  expect(named).toMatchObject({command:'upgrade-lofts',invocation:`upgrade-lofts ${first}`,edited:true});
+  expect(named.output).toContain('Lamp');
+  const version=(id:string)=>{const node=s.state.document.nodes[id];return node.kind==='code'?node.program.version:0;};
+  expect([version(first),version(other)]).toEqual([2,1]);
+  expect(runner.run('upgrade-lofts')).toMatchObject({invocation:'upgrade-lofts',edited:true});
+  expect([version(first),version(other)]).toEqual([2,2]);expect(s.state.label).toBe('Upgrade lofts to ruled surfaces');
+  expect(()=>runner.run('upgrade-lofts all')).toThrow('No triangulated lofts to upgrade');
+  s.undo();s.undo();expect(s.serialize()).toBe(before);
+  expect(()=>runner.run('upgrade-lofts "No such"')).toThrow('Choose one existing object');
  });
 
  it('converts kernelCAD ruled lofts as revision 2 and loft-free parts as revision 1',()=>{
