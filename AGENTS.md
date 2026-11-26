@@ -15,3 +15,12 @@
   locally, and do not enable cloud workflows unless the owner says so.
 - Preserve saved project definitions and every existing history revision. UI/view
   preferences and transient drag previews do not belong in model history.
+
+## Browser tests: one shared browser
+
+Browser specs run in one shared Chromium. Never download WebKit, Firefox or a per-worktree
+browser copy. `PLAYWRIGHT_BROWSERS_PATH` and `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` (set in
+the shell profile) point every checkout at the same store and binary, whatever Playwright
+version a checkout pins. The `ipad` project emulates iPad Pro 11 (viewport, touch, user agent)
+in that Chromium; real WebKit (`ipad-webkit`) runs only with `CAD_WEBKIT=1`, and only when a
+WebKit-specific question needs it. Delete any browser you download for that afterwards.
