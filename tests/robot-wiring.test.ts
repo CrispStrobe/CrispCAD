@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {beforeAll,expect,it} from 'vitest';
+import {beforeAll,expect,it,vi} from 'vitest';
 import * as T from 'three';
 import {readFileSync} from 'node:fs';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
@@ -25,7 +25,12 @@ it('keeps cable endpoints on their bodies during separate simulation poses, reus
  const group=scene.getObjectByName('Functional cable harnesses')!,mesh=group.children[0] as T.Mesh;
  const array=mesh.geometry.getAttribute('position').array,source=localToWorldPoint(wires[0].from.point,doc.nodes[wires[0].from.bodyId].transform),target=center(mesh,24);
  center(mesh,0).forEach((v,i)=>expect(v).toBeCloseTo(source[i],4));
- bodies.get(wires[0].from.bodyId)!.position.x=100;display.update();
+ const body=bodies.get(wires[0].from.bodyId)!;
+ const updateWorld=vi.spyOn(body,'updateWorldMatrix');
+ try{
+  body.position.x=100;display.update();
+  expect(updateWorld).toHaveBeenCalledTimes(1);
+ }finally{updateWorld.mockRestore();}
  expect(mesh.geometry.getAttribute('position').array).toBe(array);
  center(mesh,0).forEach((v,i)=>expect(v).toBeCloseTo(source[i]+(i===0?100:0),4));
  center(mesh,24).forEach((v,i)=>expect(v).toBeCloseTo(target[i],4));

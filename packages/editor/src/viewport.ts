@@ -67,7 +67,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   let navigationPreset:NavigationPreset='tinkercad',spaceHeld=false;let cameraGestures:CameraGestures|undefined;let cameraDrag:{id:number;x:number;y:number;kind:'pan'|'orbit';gizmoEnabled:boolean}|undefined;
   let fineEnabled=false,shiftHeld=false;gizmo.isFine=()=>fineEnabled||shiftHeld;
   gizmo.setTranslationSnap(1); gizmo.setRotationSnap(15 * RAD); gizmo.setScaleSnap(null);
-  let simulating=false;let presentedPoses=new Map<string,SimulationPose>();
+  let simulating=false;const presentedPoses=new Map<string,SimulationPose>();
+  const posePosition=new THREE.Vector3(),poseRotation=new THREE.Quaternion(),poseScale=new THREE.Vector3(1,1,1);
   const previewBalls=new Map<string,THREE.Mesh>();
   let simulationDrag:((value:{bodyId:string;point:Vec3;target:Vec3}|null)=>void)|undefined,grabEnabled=false,grab:{pointerId:number;bodyId:string;point:Vec3;plane:THREE.Plane;target:Vec3;pending?:number;orbit:boolean}|undefined;
   function endGrab(){if(!grab)return;const old=grab;grab=undefined;if(old.pending!==undefined)cancelAnimationFrame(old.pending);orbit.enabled=old.orbit;if(canvas.hasPointerCapture(old.pointerId))canvas.releasePointerCapture(old.pointerId);simulationDrag?.(null);}
@@ -380,7 +381,33 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       if(surfacePlacement.active)endPlacement();cancelPointPick();cancelTransform();
       pointPick={done:point=>done(point?.point??null),gizmo:gizmo.enabled,cursor:canvas.style.cursor,draftPlane:plane??'surface'};
       gizmo.enabled=false;canvas.style.cursor='crosshair';scheduleDraw();return cancelPointPick;
-    },setConnectorHandlesVisible:connectorHandles.setVisible,setSimulationDrag(handler:typeof simulationDrag){simulationDrag=handler;},setSimulationDragEnabled(enabled:boolean){grabEnabled=enabled;if(!enabled)endGrab();},cancelSimulationDrag:endGrab,pickPoint(done:(point:SimulationPoint|null)=>void){if(simulating)throw new Error(t('Reset simulation before placing connectors'));cancelPointPick();cancelTransform();pointPick={done,gizmo:gizmo.enabled,cursor:canvas.style.cursor};gizmo.enabled=false;canvas.style.cursor='crosshair';canvas.focus();return cancelPointPick;},setSimulationTraces:showTraces,setSimulationPoses(value:SimulationPose[]|null){presentedPoses=new Map((value??[]).map(pose=>[pose.id,pose]));const visiblePreviews=new Set((value??[]).filter(pose=>pose.previewRadiusMm).map(pose=>pose.id));for(const [id,mesh]of previewBalls)if(!visiblePreviews.has(id)){scene.remove(mesh);mesh.geometry.dispose();(mesh.material as THREE.Material).dispose();previewBalls.delete(id);}if(!value)endGrab();cancelPointPick();cancelTransform();simulating=value!==null;gizmo.enabled=!simulating;for(const mesh of meshes.values()){mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;}if(!value)clearPreviewBalls();for(const pose of value??[]){if(pose.previewRadiusMm&&!previewBalls.has(pose.id)){const ball=new THREE.Mesh(pose.previewShape==='box'?new THREE.BoxGeometry(2*pose.previewRadiusMm,2*pose.previewRadiusMm,2*pose.previewRadiusMm):new THREE.SphereGeometry(pose.previewRadiusMm,24,12),new THREE.MeshStandardMaterial({color:'#ea9b4a',roughness:.55}));ball.userData.id=pose.id;scene.add(ball);previewBalls.set(pose.id,ball);}const mesh=meshes.get(pose.id)??previewBalls.get(pose.id);if(mesh){mesh.matrixAutoUpdate=false;mesh.matrix.compose(new THREE.Vector3(...pose.positionMm as [number,number,number]),new THREE.Quaternion(...pose.quaternion as [number,number,number,number]),new THREE.Vector3(1,1,1));mesh.matrixWorldNeedsUpdate=true;}}canvas.dataset.previewBalls=String(previewBalls.size);placeGizmo();scheduleDraw();}, canvas, update, setSelection, frame, setView, cancelTransform,get interacting(){return surfacePlacement.active||!!boxSelect||!!drag||!!directDrag?.moved;},
+    },setConnectorHandlesVisible:connectorHandles.setVisible,setSimulationDrag(handler:typeof simulationDrag){simulationDrag=handler;},setSimulationDragEnabled(enabled:boolean){grabEnabled=enabled;if(!enabled)endGrab();},cancelSimulationDrag:endGrab,pickPoint(done:(point:SimulationPoint|null)=>void){if(simulating)throw new Error(t('Reset simulation before placing connectors'));cancelPointPick();cancelTransform();pointPick={done,gizmo:gizmo.enabled,cursor:canvas.style.cursor};gizmo.enabled=false;canvas.style.cursor='crosshair';canvas.focus();return cancelPointPick;},setSimulationTraces:showTraces,setSimulationPoses(value:SimulationPose[]|null){
+      presentedPoses.clear();
+      for(const pose of value??[])presentedPoses.set(pose.id,pose);
+      for(const [id,mesh] of previewBalls)if(!presentedPoses.get(id)?.previewRadiusMm){
+        scene.remove(mesh);mesh.geometry.dispose();(mesh.material as THREE.Material).dispose();previewBalls.delete(id);
+      }
+      if(!value)endGrab();
+      cancelPointPick();cancelTransform();simulating=value!==null;gizmo.enabled=!simulating;
+      for(const [id,mesh] of meshes)if(!presentedPoses.has(id)){
+        mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;
+      }
+      for(const pose of value??[]){
+        if(pose.previewRadiusMm&&!previewBalls.has(pose.id)){
+          const radius=pose.previewRadiusMm;
+          const geometry=pose.previewShape==='box'?new THREE.BoxGeometry(2*radius,2*radius,2*radius):new THREE.SphereGeometry(radius,24,12);
+          const ball=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:'#ea9b4a',roughness:.55}));
+          ball.userData.id=pose.id;scene.add(ball);previewBalls.set(pose.id,ball);
+        }
+        const mesh=meshes.get(pose.id)??previewBalls.get(pose.id);
+        if(mesh){
+          mesh.matrixAutoUpdate=false;
+          mesh.matrix.compose(posePosition.fromArray(pose.positionMm),poseRotation.fromArray(pose.quaternion),poseScale);
+          mesh.matrixWorldNeedsUpdate=true;
+        }
+      }
+      canvas.dataset.previewBalls=String(previewBalls.size);placeGizmo();scheduleDraw();
+    }, canvas, update, setSelection, frame, setView, cancelTransform,get interacting(){return surfacePlacement.active||!!boxSelect||!!drag||!!directDrag?.moved;},
     beginPlacement(){cancelPointPick();if(surfacePlacement.active)endPlacement(false);cancelTransform();placementControls={rotate:orbit.enableRotate,gizmo:gizmo.enabled};surfacePlacement.begin();orbit.enableRotate=false;gizmo.enabled=false;gizmo.getHelper().visible=false;draw();},
     setPlacementRole(value:'solid'|'hole'){surfacePlacement.setRole(value);draw();},
     setPlacementGeometry(result:GeometryResult){surfacePlacement.setGeometry(result);draw();},

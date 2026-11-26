@@ -53,19 +53,35 @@ export function robotWires(doc:CadDocument,result:GeometryResult):RobotWire[]{
  return wires;
 }
 const STEPS=24,SIDES=6;
+const ring=Array.from({length:SIDES+1},(_,k)=>{
+ const angle=k/SIDES*Math.PI*2;
+ return {cos:Math.cos(angle),sin:Math.sin(angle)};
+});
 /** Reuse fixed vertex/index buffers. Only poses move; no tube allocations per tick. */
 export function createRobotWiring(scene:T.Scene,document:()=>CadDocument,body:(id:string)=>T.Object3D|undefined){
  const group=new T.Group();group.name='Functional cable harnesses';scene.add(group);
  const cables:{wire:RobotWire;mesh:T.Mesh<T.BufferGeometry,T.MeshStandardMaterial>;anchors:WireAnchor[];points:T.Vector3[];curve:T.CatmullRomCurve3;samples:T.Vector3[];dirty:boolean}[]=[];
  const p=new T.Vector3(),tangent=new T.Vector3(),normal=new T.Vector3(),binormal=new T.Vector3();
- function clear(){for(const c of cables){c.mesh.geometry.dispose();c.mesh.material.dispose();}cables.length=0;group.clear();}
- function point(a:WireAnchor,out:T.Vector3){const node=document().nodes[a.bodyId],mesh=body(a.bodyId);if(!node||!mesh)return undefined;mesh.updateWorldMatrix(true,false);return out.set(...localToWorldPoint(a.point,node.transform)).applyMatrix4(mesh.matrixWorld);}
+ function clear(){for(const c of cables){c.mesh.geometry.dispose();c.mesh.material.dispose();}cables.length=0;updatedBodies.clear();group.clear();}
+ const updatedBodies=new Set<T.Object3D>();
+ function point(nodes:CadDocument['nodes'],a:WireAnchor,out:T.Vector3){
+  const node=nodes[a.bodyId],mesh=body(a.bodyId);
+  if(!node||!mesh)return undefined;
+  if(!updatedBodies.has(mesh)){
+   mesh.updateWorldMatrix(true,false);
+   updatedBodies.add(mesh);
+  }
+  return out.set(...localToWorldPoint(a.point,node.transform)).applyMatrix4(mesh.matrixWorld);
+ }
  function update(){
+  if(!cables.length)return;
+  updatedBodies.clear();
+  const {nodes}=document();
   for(const c of cables){
    let changed=c.dirty;c.mesh.visible=true;
    for(let i=0;i<c.anchors.length;i++){
     const v=c.points[i],x=v.x,y=v.y,z=v.z;
-    if(!point(c.anchors[i],v)){c.mesh.visible=false;c.dirty=true;break;}
+    if(!point(nodes,c.anchors[i],v)){c.mesh.visible=false;c.dirty=true;break;}
     if(Math.abs(v.x-x)>1e-7||Math.abs(v.y-y)>1e-7||Math.abs(v.z-z)>1e-7)changed=true;
    }
    if(!c.mesh.visible||!changed)continue;c.dirty=false;
@@ -75,7 +91,7 @@ export function createRobotWiring(scene:T.Scene,document:()=>CadDocument,body:(i
     p.copy(c.samples[j]);tangent.subVectors(c.samples[Math.min(STEPS,j+1)],c.samples[Math.max(0,j-1)]).normalize();
     normal.set(0,0,1);if(Math.abs(tangent.z)>.95)normal.set(0,1,0);normal.cross(tangent).normalize();binormal.crossVectors(tangent,normal).normalize();
     for(let k=0;k<=SIDES;k++){
-     const angle=k/SIDES*Math.PI*2,cs=Math.cos(angle),sn=Math.sin(angle),idx=j*(SIDES+1)+k;
+     const {cos:cs,sin:sn}=ring[k],idx=j*(SIDES+1)+k;
      const x=normal.x*cs+binormal.x*sn,y=normal.y*cs+binormal.y*sn,z=normal.z*cs+binormal.z*sn;
      positions.setXYZ(idx,p.x+x*.55,p.y+y*.55,p.z+z*.55);normals.setXYZ(idx,x,y,z);
     }
