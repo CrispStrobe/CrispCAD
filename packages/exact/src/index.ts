@@ -9,6 +9,8 @@ import type {ExactKernel,ExactSolid,SmlibLoadOptions} from '@crispcad/exact-kern
 import {exactKernelIdentity} from './identity.js';
 import {lowerDocumentBody} from './lower-document.js';
 import {exactFeatureDisplay} from './display.js';
+import {withWasmMemoryCap} from './memory-cap.js';
+import type {ExactFeatureLimits} from './lower-document.js';
 
 export * from './identity.js';
 export {lowerCodeShape,evaluateCadScript,cadScript,revolveProfile,MIN_EXACT_SEGMENTS,MAX_POLYHEDRON_FACES} from './lower-cad-script.js';
@@ -16,7 +18,12 @@ export {lowerDocumentBody,lowerDocumentNode,sketchProfile,ExactLoweringError} fr
 export {displayMesh,displayTessellation,exactFeatureDisplay} from './display.js';
 export {triangulatePolygon,facewiseMesh,MANY_LOOPS} from './face-mesh.js';
 export type {ExactFeatureResult} from './display.js';
-export type {ExactDiagnostic} from './lower-document.js';
+export type {ExactDiagnostic,ExactFeatureLimits} from './lower-document.js';
+export {EXACT_LIMITS_TABLET,EXACT_LIMITS_DESKTOP,EXACT_LIMITS_NONE,CURVED_EDGE_WEIGHT,resolveExactLimits} from './limits.js';
+export type {ExactLimits} from './limits.js';
+export {exactFeatureCost,checkExactFeatureCost} from './feature-cost.js';
+export type {ExactFeatureCost} from './feature-cost.js';
+export {capWasmMemory,withWasmMemoryCap} from './memory-cap.js';
 export {ExactKernelError} from '@crispcad/exact-kernel';
 export type {ExactKernel,ExactSolid,SmlibLoadOptions} from '@crispcad/exact-kernel';
 
@@ -59,47 +66,52 @@ export function exactTargets(doc:CadDocument,ids?:readonly string[]):string[]{
  return targets;
 }
 
+/** Per request: exact features that would touch more than `limits` allow are refused before the
+ * kernel runs them (fillet, chamfer and shell, also when STEP export or a measure rebuilds them). */
+export interface ExactRunOptions {readonly limits?:ExactFeatureLimits}
 export interface ExactBackend {
  readonly kernel:ExactKernel;
  readonly info:ExactKernelInfo;
+ /** The ceiling the kernel's WebAssembly memory was loaded with (bytes), if any. */
+ readonly memoryCapBytes?:number;
  /** Exact volume, area, bounding box and centroid of each body. */
- measure(doc:CadDocument,ids?:readonly string[]):ExactMeasureResult;
+ measure(doc:CadDocument,ids?:readonly string[],options?:ExactRunOptions):ExactMeasureResult;
  /** One AP214 STEP file with one solid per body, in world millimetres. */
- exportStep(doc:CadDocument,ids?:readonly string[]):ExactStepResult;
+ exportStep(doc:CadDocument,ids?:readonly string[],options?:ExactRunOptions):ExactStepResult;
  /** Display meshes of exact features (default: every missing or stale one), for the model given. */
- featureDisplays(doc:CadDocument,ids?:readonly string[]):ExactFeatureDisplayResult;
+ featureDisplays(doc:CadDocument,ids?:readonly string[],options?:ExactRunOptions):ExactFeatureDisplayResult;
 }
 
-export function createExactBackendFromKernel(kernel:ExactKernel):ExactBackend{
+export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes?:number):ExactBackend{
  const info:ExactKernelInfo=Object.freeze({...exactKernelIdentity,smlib:kernel.version,licence:kernel.licence});
- const lower=(input:CadDocument,ids?:readonly string[])=>{
+ const lower=(input:CadDocument,ids?:readonly string[],options:ExactRunOptions={})=>{
   const doc=validateDocument(input),targets=exactTargets(doc,ids);
   return {doc,targets,solids:targets.map(id=>{
-   const solid=lowerDocumentBody(kernel,doc,id);
+   const solid=lowerDocumentBody(kernel,doc,id,options);
    if(!kernel.isValid(solid))throw new ExactKernelError('kernel-failure',t`${doc.nodes[id].name}: the exact result is not a valid closed solid.`);
    return solid;
   })};
  };
  return {
-  kernel,info,
-  measure(input,ids){
+  kernel,info,...(memoryCapBytes?{memoryCapBytes}:{}),
+  measure(input,ids,options){
    return kernel.scope(()=>{
-    const {doc,targets,solids}=lower(input,ids);
+    const {doc,targets,solids}=lower(input,ids,options);
     return {kernel:info,bodies:solids.map((solid,i)=>{
      const box=kernel.bbox(solid),mass=kernel.massProperties(solid);
      return {id:targets[i],name:doc.nodes[targets[i]].name,volume:kernel.volume(solid),area:kernel.area(solid),bounds:{min:[...box.min],max:[...box.max]},centroid:[...mass.centroid],solids:kernel.solidCount(solid)};
     })};
    });
   },
-  featureDisplays(input,ids){
+  featureDisplays(input,ids,options={}){
    const doc=validateDocument(input),targets=ids?.length?[...new Set(ids)]:staleExactFeatures(doc);
    if(targets.length>MAX_EXACT_BODIES)throw new ExactKernelError('invalid-input',t`Exact commands are limited to ${MAX_EXACT_BODIES} bodies.`);
    for(const id of targets)if(doc.nodes[id]?.kind!=='exact-feature')throw new ExactKernelError('invalid-input',t`${id} is not an exact feature`);
-   return {kernel:info,features:targets.map(id=>kernel.scope(()=>({id,name:doc.nodes[id].name,...exactFeatureDisplay(kernel,doc,id)})))};
+   return {kernel:info,features:targets.map(id=>kernel.scope(()=>({id,name:doc.nodes[id].name,...exactFeatureDisplay(kernel,doc,id,options)})))};
   },
-  exportStep(input,ids){
+  exportStep(input,ids,options){
    return kernel.scope(()=>{
-    const {doc,targets,solids}=lower(input,ids);
+    const {doc,targets,solids}=lower(input,ids,options);
     let combined:ExactSolid=solids[0];
     if(solids.length>1){
      // One STEP solid per body: a union may only collect bodies that stay apart.
@@ -121,22 +133,50 @@ export function createExactBackendFromKernel(kernel:ExactKernel):ExactBackend{
  };
 }
 
+export interface ExactBackendOptions extends SmlibLoadOptions {
+ /**
+  * Ceiling for the kernel's WebAssembly memory (bytes; see memory-cap.ts). A job that needs more
+  * fails with an error instead of growing the page's memory; the kernel is not to be trusted
+  * afterwards (`isFatalExactError`), so a host discards it, e.g. by ending its worker. Like the
+  * other options, it counts only on the first call in a process or worker. Ignored with
+  * `wasmModule` (an already compiled module cannot be changed).
+  */
+ maxMemoryBytes?:number;
+}
 let shared:Promise<ExactBackend>|undefined;
 /** Load SMLib once (per process or worker) and return the exact backend on it. */
-export function createExactBackend(options:SmlibLoadOptions={}):Promise<ExactBackend>{
- shared??=createSmlibKernel(options).then(createExactBackendFromKernel,error=>{shared=undefined;throw error;});
+export function createExactBackend(options:ExactBackendOptions={}):Promise<ExactBackend>{
+ const {maxMemoryBytes,...load}=options;
+ shared??=withWasmMemoryCap(maxMemoryBytes,()=>createSmlibKernel(load))
+  .then(({value,capped})=>createExactBackendFromKernel(value,capped?maxMemoryBytes:undefined),error=>{shared=undefined;throw error;});
  return shared;
+}
+
+/**
+ * Whether `error` from an exact request leaves the kernel unusable: a WebAssembly trap (out of
+ * bounds, unreachable, an Emscripten abort), memory exhaustion, or a kernel that reports damage.
+ * The kernel's ordinary refusals (`ExactKernelError` from a fillet it cannot build) are not fatal.
+ * A host that sees a fatal error discards the kernel (its worker); the next request loads it anew.
+ */
+export function isFatalExactError(error:unknown):boolean{
+ for(let e:unknown=error,depth=0;e&&depth<8;e=(e as {cause?:unknown}).cause,depth++){
+  if(typeof WebAssembly!=='undefined'&&e instanceof WebAssembly.RuntimeError)return true;
+  if(e instanceof RangeError&&/memory|allocat/i.test(e.message))return true;
+  const message=e instanceof Error?e.message:typeof e==='string'?e:'';
+  if(/\bAborted\(|out of memory|memory access out of bounds|bad_alloc|Cannot enlarge memory|memory may be damaged|kernel crashed/i.test(message))return true;
+ }
+ return false;
 }
 
 /**
  * One exact request on a loaded backend, with its timing: what the editor's exact worker, the MCP
  * exact thread and the in-thread fallback all run. `loadMs` is the caller's (0 once loaded).
  */
-export function runExactRequest(backend:ExactBackend,request:ExactCommandRequest,loadMs=0):ExactCommandResult{
+export function runExactRequest(backend:ExactBackend,request:ExactCommandRequest,loadMs=0,options:ExactRunOptions={}):ExactCommandResult{
  const started=performance.now();
- const computed=request.operation==='measure'?{operation:'measure' as const,...backend.measure(request.document,request.bodies)}
-  :request.operation==='feature-display'?{operation:'feature-display' as const,...backend.featureDisplays(request.document,request.bodies)}
-  :{operation:'export-step' as const,...backend.exportStep(request.document,request.bodies)};
+ const computed=request.operation==='measure'?{operation:'measure' as const,...backend.measure(request.document,request.bodies,options)}
+  :request.operation==='feature-display'?{operation:'feature-display' as const,...backend.featureDisplays(request.document,request.bodies,options)}
+  :{operation:'export-step' as const,...backend.exportStep(request.document,request.bodies,options)};
  return {...computed,timing:{loadMs,runMs:performance.now()-started,memoryBytes:backend.kernel.memory().heap}};
 }
 
@@ -145,19 +185,22 @@ export function runExactRequest(backend:ExactBackend,request:ExactCommandRequest
  * and for tests. It blocks that thread for as long as the kernel runs (on a browser's main thread,
  * the UI), so the editor uses it only when it cannot start its exact worker. An abort before the
  * request starts or while it waits for the kernel to load cancels it; a running kernel call cannot
- * be interrupted in-thread, so an abort during it only discards the result.
+ * be interrupted in-thread, so an abort during it only discards the result. Pass `limits` (e.g.
+ * EXACT_LIMITS_TABLET) to refuse heavy features before they block the thread; without them nothing
+ * is refused, as for the MCP and CLI hosts.
  */
-export function createInThreadExactHost(options:SmlibLoadOptions={}):ExactCommandHost{
+export function createInThreadExactHost(options:ExactBackendOptions&ExactRunOptions={}):ExactCommandHost{
+ const {limits,...load}=options;
  const cancelled=()=>new Error(t('Request cancelled'));
  return {
   async run(request,signal){
    if(signal?.aborted)throw cancelled();
-   const started=performance.now(),backend=await createExactBackend(options),loaded=performance.now();
+   const started=performance.now(),backend=await createExactBackend(load),loaded=performance.now();
    if(signal?.aborted)throw cancelled();
    // Yield once so a caller that just showed progress gets a frame before the kernel blocks.
    await new Promise(resolve=>setTimeout(resolve,0));
    if(signal?.aborted)throw cancelled();
-   const result=runExactRequest(backend,request,loaded-started);
+   const result=runExactRequest(backend,request,loaded-started,{limits});
    if(signal?.aborted)throw cancelled();
    return result;
   },

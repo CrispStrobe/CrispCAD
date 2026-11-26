@@ -1,0 +1,314 @@
+{
+ "node": "v26.4.0",
+ "date": "2026-11-26T08:52:40.913Z",
+ "note": "process CPU time on a shared, loaded Apple M1; no probe worker (as in the browser editor)",
+ "rows": [
+  {
+   "variant": "fillet-poly",
+   "holes": 50,
+   "build": {
+    "cpuMs": 327,
+    "wallMs": 485,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 50,
+    "curvedEdges": 0,
+    "faces": 52
+   },
+   "operation": {
+    "cpuMs": 2429,
+    "wallMs": 3744,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 1394,
+    "wallMs": 2514,
+    "memoryMiB": 64
+   },
+   "triangles": 6996,
+   "afterwards": 5805
+  },
+  {
+   "variant": "fillet-poly",
+   "holes": 100,
+   "build": {
+    "cpuMs": 571,
+    "wallMs": 772,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 100,
+    "curvedEdges": 0,
+    "faces": 102
+   },
+   "operation": {
+    "cpuMs": 4224,
+    "wallMs": 8202,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 2159,
+    "wallMs": 4042,
+    "memoryMiB": 64
+   },
+   "triangles": 16096,
+   "afterwards": 5805
+  },
+  {
+   "variant": "fillet-poly",
+   "holes": 200,
+   "build": {
+    "cpuMs": 869,
+    "wallMs": 1467,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 200,
+    "curvedEdges": 0,
+    "faces": 202
+   },
+   "operation": {
+    "cpuMs": 9390,
+    "wallMs": 22523,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 3200,
+    "wallMs": 5503,
+    "memoryMiB": 111
+   },
+   "triangles": 32196,
+   "afterwards": 5805
+  },
+  {
+   "variant": "fillet-poly",
+   "holes": 400,
+   "build": {
+    "cpuMs": 1340,
+    "wallMs": 1648,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 400,
+    "curvedEdges": 0,
+    "faces": 402
+   },
+   "operation": {
+    "cpuMs": 30846,
+    "wallMs": 80325,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 5933,
+    "wallMs": 20807,
+    "memoryMiB": 229
+   },
+   "triangles": 64396,
+   "afterwards": 5805
+  },
+  {
+   "variant": "fillet-poly",
+   "holes": 800,
+   "crashed": ""
+  },
+  {
+   "variant": "chamfer-poly",
+   "holes": 50,
+   "build": {
+    "cpuMs": 301,
+    "wallMs": 2534,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 50,
+    "curvedEdges": 0,
+    "faces": 52
+   },
+   "operation": {
+    "cpuMs": 2778,
+    "wallMs": 19511,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 1514,
+    "wallMs": 8106,
+    "memoryMiB": 64
+   },
+   "triangles": 8546,
+   "afterwards": 5805
+  },
+  {
+   "variant": "chamfer-poly",
+   "holes": 100,
+   "build": {
+    "cpuMs": 626,
+    "wallMs": 2552,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 100,
+    "curvedEdges": 0,
+    "faces": 102
+   },
+   "operation": {
+    "cpuMs": 4400,
+    "wallMs": 24406,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 2167,
+    "wallMs": 12129,
+    "memoryMiB": 64
+   },
+   "triangles": 16796,
+   "afterwards": 5805
+  },
+  {
+   "variant": "chamfer-poly",
+   "holes": 200,
+   "build": {
+    "cpuMs": 977,
+    "wallMs": 4628,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 200,
+    "curvedEdges": 0,
+    "faces": 202
+   },
+   "operation": {
+    "cpuMs": 10373,
+    "wallMs": 86360,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 3496,
+    "wallMs": 27759,
+    "memoryMiB": 111
+   },
+   "triangles": 33196,
+   "afterwards": 5805
+  },
+  {
+   "variant": "chamfer-poly",
+   "holes": 400,
+   "crashed": ""
+  },
+  {
+   "variant": "chamfer-poly",
+   "holes": 800,
+   "crashed": ""
+  },
+  {
+   "variant": "shell-poly",
+   "holes": 50,
+   "build": {
+    "cpuMs": 387,
+    "wallMs": 5576,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 150,
+    "curvedEdges": 0,
+    "faces": 52,
+    "weightedEdges": 150
+   },
+   "error": "operation: ExactKernelError: SMLib shell failed: shell: the kernel did not finish within 20 s; setGuardSeconds(seconds) sets the limit",
+   "operation": {
+    "cpuMs": 2537,
+    "wallMs": 29128,
+    "memoryMiB": 64
+   },
+   "afterwards": 5805
+  },
+  {
+   "variant": "shell-poly",
+   "holes": 100,
+   "build": {
+    "cpuMs": 676,
+    "wallMs": 6882,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 300,
+    "curvedEdges": 0,
+    "faces": 102,
+    "weightedEdges": 300
+   },
+   "error": "operation: ExactKernelError: SMLib shell failed: shell: the kernel did not finish within 20 s; setGuardSeconds(seconds) sets the limit",
+   "operation": {
+    "cpuMs": 3229,
+    "wallMs": 32626,
+    "memoryMiB": 64
+   },
+   "afterwards": 5805
+  },
+  {
+   "variant": "shell-poly",
+   "holes": 200,
+   "build": {
+    "cpuMs": 1187,
+    "wallMs": 13428,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 600,
+    "curvedEdges": 0,
+    "faces": 202,
+    "weightedEdges": 600
+   },
+   "error": "operation: ExactKernelError: SMLib shell failed: shell: the kernel did not finish within 20 s; setGuardSeconds(seconds) sets the limit",
+   "operation": {
+    "cpuMs": 4076,
+    "wallMs": 59080,
+    "memoryMiB": 64
+   },
+   "afterwards": 5805
+  },
+  {
+   "variant": "shell-poly",
+   "holes": 400,
+   "build": {
+    "cpuMs": 2160,
+    "wallMs": 45918,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 1200,
+    "curvedEdges": 0,
+    "faces": 402,
+    "weightedEdges": 1200
+   },
+   "error": "operation: ExactKernelError: SMLib shell failed: shell: the kernel did not finish within 20 s; setGuardSeconds(seconds) sets the limit",
+   "operation": {
+    "cpuMs": 6794,
+    "wallMs": 118583,
+    "memoryMiB": 64
+   },
+   "afterwards": 5805
+  },
+  {
+   "variant": "shell-poly",
+   "holes": 800,
+   "build": {
+    "cpuMs": 6412,
+    "wallMs": 129706,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 2400,
+    "curvedEdges": 0,
+    "faces": 802,
+    "weightedEdges": 2400
+   },
+   "error": "operation: ExactKernelError: SMLib shell failed: shell: the kernel did not finish within 20 s; setGuardSeconds(seconds) sets the limit",
+   "operation": {
+    "cpuMs": 14426,
+    "wallMs": 205074,
+    "memoryMiB": 92
+   },
+   "afterwards": 5805
+  }
+ ]
+}

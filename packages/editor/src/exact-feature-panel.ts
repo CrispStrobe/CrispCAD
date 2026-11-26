@@ -62,16 +62,20 @@ export function mountExactFeaturePanel(parent:HTMLElement,session:CadSession,exa
   fields.append(operationField(t('Operation'),operation).label,sizeField.label,edgeField.label,open);
   sync();
 
-  const form=document.createElement('form'),hint=document.createElement('p'),footer=document.createElement('footer'),status=document.createElement('p'),apply=document.createElement('button');
+  const form=document.createElement('form'),hint=document.createElement('p'),footer=document.createElement('footer'),status=document.createElement('p'),apply=document.createElement('button'),cancel=document.createElement('button');
   hint.textContent=t('Built exactly by the B-rep kernel (loaded on first use). A face is chosen by its outward normal; the outermost matching face is used. The source stays editable under Inputs.');
   status.className='parameter-status';status.setAttribute('role','status');
   apply.type='submit';apply.className='primary';apply.textContent=t(previous?'Apply exact feature changes':'Apply exact feature');
-  footer.append(status,apply);form.append(hint,fields,footer);dialog.append(header,form);
+  // Cancel stops the exact worker (see geometry-client): nothing is committed until the kernel answers.
+  cancel.type='button';cancel.textContent=t('Cancel');cancel.hidden=true;cancel.title=t('Stop the exact kernel. The model is not changed.');
+  cancel.onclick=()=>controller?.abort();
+  footer.append(status,cancel,apply);form.append(hint,fields,footer);dialog.append(header,form);
   form.onsubmit=async event=>{
    event.preventDefault();
    if(apply.disabled)return;
    apply.disabled=true;status.textContent=t('Running on the exact kernel…');
-   controller=new AbortController();
+   controller=new AbortController();cancel.hidden=false;
+   const started=Date.now(),elapsed=setInterval(()=>{if(epoch===ticket)status.textContent=t`Running on the exact kernel… ${Math.floor((Date.now()-started)/1000)} s`;},1000);
    try{
     const host=exact();
     if(!host)throw new Error(t('The exact kernel is not available in this host.'));
@@ -86,8 +90,9 @@ export function mountExactFeaturePanel(parent:HTMLElement,session:CadSession,exa
     dialog.close();
     await afterApply();
    }catch(error){
-    if(dialog.open&&epoch===ticket)status.textContent=error instanceof Error?error.message:String(error);
-   }finally{apply.disabled=false;}
+    const message=error instanceof Error?error.message:String(error);
+    if(dialog.open&&epoch===ticket)status.textContent=controller?.signal.aborted?t('Cancelled. The model was not changed.'):message;
+   }finally{clearInterval(elapsed);apply.disabled=false;cancel.hidden=true;}
   };
   dialog.showModal();
  }

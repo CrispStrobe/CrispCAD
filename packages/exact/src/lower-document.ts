@@ -6,11 +6,16 @@
 //
 // Nothing falls back to a mesh: an imported mesh or any construction without an exact lowering is
 // an ExactKernelError naming the body and the feature.
-import {compileCode,evaluateExactFeature,evaluateExtrusion,evaluateMirror,evaluatePattern,evaluateRevolution,evaluateSketchRegion,featureValue,identityTransform,sketchBulgeMidpoint,sketchOutline} from '@brickwright/cad-core';
+import {t,compileCode,evaluateExactFeature,evaluateExtrusion,evaluateMirror,evaluatePattern,evaluateRevolution,evaluateSketchRegion,featureValue,identityTransform,sketchBulgeMidpoint,sketchOutline} from '@brickwright/cad-core';
 import type {CadDocument,PlanarSketch,SketchLoop,SketchPoint,SolidNode,Vec3} from '@brickwright/cad-core';
 import {ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactProfile,ExactSolid,PathSegment} from '@crispcad/exact-kernel';
 import {lowerCodeShape,revolveProfile} from './lower-cad-script.js';
+import {checkExactFeatureCost} from './feature-cost.js';
+import type {ExactLimits} from './limits.js';
+
+/** The pre-flight part of ExactLimits: what one exact feature may touch. */
+export type ExactFeatureLimits=Pick<ExactLimits,'maxFeatureEdges'|'maxShellFaces'>;
 
 /** Where an exact lowering failed: the body, the node inside it and its feature kind. */
 export interface ExactDiagnostic {
@@ -72,7 +77,7 @@ function rotateXYZ(k:ExactKernel,solid:ExactSolid,degrees:readonly number[]):Exa
  return out;
 }
 
-function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:Map<string,ExactSolid>):ExactSolid{
+function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:Map<string,ExactSolid>,limits?:ExactFeatureLimits):ExactSolid{
  const cached=cache.get(id);if(cached)return cached;
  const node=doc.nodes[id] as SolidNode;
  let solid:ExactSolid;
@@ -107,12 +112,12 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
    case 'mirror':{
     const {axis,offset}=evaluateMirror(node,doc),normal:[number,number,number]=[0,0,0];
     normal[axis]=1;
-    solid=k.mirror(lowerNode(k,doc,node.source,bodyId,cache),normal);
+    solid=k.mirror(lowerNode(k,doc,node.source,bodyId,cache,limits),normal);
     if(offset){const position:[number,number,number]=[0,0,0];position[axis]=2*offset;solid=k.translate(solid,position);}
     break;
    }
    case 'pattern':{
-    const pattern=evaluatePattern(node,doc),source=lowerNode(k,doc,node.source,bodyId,cache),copies=[source];
+    const pattern=evaluatePattern(node,doc),source=lowerNode(k,doc,node.source,bodyId,cache,limits),copies=[source];
     if(pattern.mode==='linear'){
      for(let i=1;i<pattern.count;i++){const delta:[number,number,number]=[0,0,0];delta[pattern.axis]=i*pattern.spacing;copies.push(k.translate(source,delta));}
     }else{
@@ -124,7 +129,7 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
     break;
    }
    case 'boolean':{
-    const operands=node.inputs.map(input=>lowerNode(k,doc,input,bodyId,cache));
+    const operands=node.inputs.map(input=>lowerNode(k,doc,input,bodyId,cache,limits));
     if(node.useHoleRoles){
      const solids=operands.filter((_,i)=>doc.nodes[node.inputs[i]].role!=='hole'),holes=operands.filter((_,i)=>doc.nodes[node.inputs[i]].role==='hole');
      if(!solids.length)unsupported('A combination of holes only has no solid to export.');
@@ -135,7 +140,9 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
    }
    case 'exact-feature':{
     // Always rebuilt on the exact source; the stored display mesh is never used here.
-    const feature=evaluateExactFeature(node,doc),source=lowerNode(k,doc,node.source,bodyId,cache);
+    const feature=evaluateExactFeature(node,doc),source=lowerNode(k,doc,node.source,bodyId,cache,limits);
+    // Refuse a job that is too large for this host before the kernel runs it (see limits.ts).
+    if(limits)checkExactFeatureCost(source,feature.operation,feature.edges,limits);
     solid=feature.operation==='fillet'?k.fillet(source,feature.size,feature.edges)
      :feature.operation==='chamfer'?k.chamfer(source,feature.size,feature.edges)
      :k.shell(source,feature.size,feature.openFaces);
@@ -150,7 +157,12 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
   if(position.some(v=>v!==0))solid=k.translate(solid,position);
  }catch(error){
   if(error instanceof ExactLoweringError)throw error;
-  const code=error instanceof ExactKernelError?error.code:'invalid-input',message=error instanceof Error?error.message:String(error);
+  const code=error instanceof ExactKernelError?error.code:'invalid-input';
+  let message=error instanceof Error?error.message:String(error);
+  // smlibwasm's own wall-clock guard on shell/offset steps (20 s, not configurable from here): its
+  // message ends in a developer hint (setGuardSeconds), so say what happened instead.
+  const guard=/the kernel did not finish within ([\d.]+) s/.exec(message);
+  if(guard)message=t`The exact kernel stopped this step at its own ${guard[1]} s limit, so it was not built. The model was not changed. Try a simpler body.`;
   throw new ExactLoweringError({code,bodyId,nodeId:id,feature:node.kind,message:`${node.name} (${node.kind}): ${message}`},{cause:error});
  }
  cache.set(id,solid);return solid;
@@ -158,17 +170,17 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
 
 /** One top-level body as an exact solid, in world millimetres. Call inside `k.scope` (or dispose
  * the result); intermediate solids are owned by the caller's scope. */
-export function lowerDocumentBody(k:ExactKernel,doc:CadDocument,bodyId:string):ExactSolid{
+export function lowerDocumentBody(k:ExactKernel,doc:CadDocument,bodyId:string,options:{limits?:ExactFeatureLimits}={}):ExactSolid{
  if(!doc.roots.includes(bodyId))throw new ExactKernelError('invalid-input',`${bodyId} is not a top-level body.`);
- return lowerNode(k,doc,bodyId,bodyId,new Map());
+ return lowerNode(k,doc,bodyId,bodyId,new Map(),options.limits);
 }
 
 /** Any node as an exact solid in its parent's frame (its own transform applied). Call inside
  * `k.scope`. With `local`, the node's own transform is left out (the frame of its inputs). */
-export function lowerDocumentNode(k:ExactKernel,doc:CadDocument,id:string,options:{local?:boolean}={}):ExactSolid{
+export function lowerDocumentNode(k:ExactKernel,doc:CadDocument,id:string,options:{local?:boolean;limits?:ExactFeatureLimits}={}):ExactSolid{
  const node=doc.nodes[id];
  if(!node)throw new ExactKernelError('invalid-input',`${id} is not a node of this model.`);
  const source=options.local?{...doc,nodes:{...doc.nodes,[id]:{...node,transform:identityTransform()}}}:doc;
  const bodyId=doc.roots.find(root=>root===id)??id;
- return lowerNode(k,source,id,bodyId,new Map());
+ return lowerNode(k,source,id,bodyId,new Map(),options.limits);
 }

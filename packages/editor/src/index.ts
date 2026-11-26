@@ -52,6 +52,8 @@ import {mountPathPanel} from './path-panel.js';
 import {mountMirrorPanel} from './mirror-panel.js';
 import {mountPatternPanel} from './pattern-panel.js';
 import {mountExactFeaturePanel} from './exact-feature-panel.js';
+import {mountExactActivity} from './exact-activity.js';
+import type {ExactLimits} from '@brickwright/cad-exact/limits';
 import {mountCommandPalette} from './command-palette.js';
 import { mountParametersPanel, propertyLabels } from './parameters-panel.js';
 import {solveOutlinePoints} from './outline-constraint-solve.js';
@@ -96,6 +98,12 @@ export interface CadEditorOptions {
   createWorker?: () => Worker;
   /** Exact requests when the exact worker cannot start; see GeometryClientOptions.exactFallback. */
   exactFallback?: ExactCommandHost;
+  /**
+   * How much one exact job may take (see GeometryClientOptions.exactLimits). Defaults to
+   * EXACT_LIMITS_TABLET from `@brickwright/cad-exact/limits`, which is safe on an iPad; desktop
+   * hosts may pass EXACT_LIMITS_DESKTOP or their own values.
+   */
+  exactLimits?: Partial<ExactLimits>;
   onDocumentChange?: (document: CadDocument, revision: number) => void;
   onSimulationInterrupt?:()=>void;
   onSelectionChange?: (selection: readonly string[]) => void;
@@ -132,7 +140,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   let operationError = '';
   function report(e: unknown) { const error = e instanceof Error ? e : new Error(String(e)); operationError = error.message; message.textContent = error.message; if (!disposed) options.onError?.(error); }
   const run = (fn: () => unknown) => { try { const result = fn(); if (result instanceof Promise) result.catch(report); } catch (e) { report(e); } };
-  const client = createGeometryClient(new URL(options.wasmURL, document.baseURI).href, options.createWorker, {exactFallback:options.exactFallback});
+  const client = createGeometryClient(new URL(options.wasmURL, document.baseURI).href, options.createWorker, {exactFallback:options.exactFallback,exactLimits:options.exactLimits});
+  const exactActivity=mountExactActivity(status,client);
   let viewport: ReturnType<typeof mountViewport>;let customAppearance=!!options.appearance;
   try { viewport = mountViewport(viewHost, session, report,options.appearance);if(!options.appearance&&options.colorMode==='light')viewport.setAppearance({background:'#e7eef7',baseplate:'#cdd9e8'});viewport.setNavigation(options.navigationPreset??'tinkercad');if(options.cameraGestures)viewport.setCameraGestures(options.cameraGestures);viewport.setResizeControls(options.resizeControls??'dimensions');viewport.setGridDisplay(options.gridDisplay??'snap');viewport.setSurfaceSnap(options.surfaceSnap??true); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
   const empty = el('div', 'empty'); empty.append(el('strong', '', t('Your next idea starts here.')), document.createTextNode(t('Pick a shape above. Set its dimensions in Properties. Drag to orbit; pinch to zoom.'))); viewHost.append(empty);
@@ -868,12 +877,16 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { simulation.refresh(); viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; fileLifetime.abort(); toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel?.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); exactFeaturePanel.dispose(); unsubscribeRecompute(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); terminal.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); printabilityPanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; fileLifetime.abort(); toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel?.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); exactFeaturePanel.dispose(); exactActivity.dispose(); unsubscribeRecompute(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); terminal.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); printabilityPanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;
 export { createCadSession } from '@brickwright/cad-core';
 export {createEditorSession,editorKernels,exactKernelIdentity,providesKernel} from './kernels.js';
+// Limits for exact jobs (no kernel code: importing these loads nothing under assets/exact/).
+export {EXACT_LIMITS_TABLET,EXACT_LIMITS_DESKTOP,resolveExactLimits} from '@brickwright/cad-exact/limits';
+export type {ExactLimits} from '@brickwright/cad-exact/limits';
+export type {ExactActivity} from './geometry-client.js';
 export {browserCodeWorkspaceStorage} from './code-workspace-state.js';
 export type {CodeWorkspaceStorage} from './code-workspace-state.js';
 export { shapeCatalog, createPresetDocument } from './shapes.js';

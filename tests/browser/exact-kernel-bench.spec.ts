@@ -123,3 +123,42 @@ test('exact features in the editor: latency and main-thread blocking with the ex
  console.log(JSON.stringify(result,null,1));
  await writeFile(`experiments/exact-kernel/results/browser-editor-${testInfo.project.name}.json`,JSON.stringify(result,null,2)+'\n');
 });
+
+// Heavy exact jobs through the editor (the exact-check debug page on the plain preview server, so,
+// as in the product, the page is not cross-origin isolated and smlibwasm has no probe worker):
+// what the default tablet limits refuse, and what the same jobs cost without limits or under a low
+// memory ceiling. Writes experiments/exact-kernel/results/browser-guards-<project>.json.
+test('heavy exact jobs in the editor: refusal, time, memory and the worker afterwards',async({page},testInfo)=>{
+ test.setTimeout(3_600_000);
+ const cases=[
+  {label:'200-hole rim fillet, tablet limits',query:'holes=200',command:'fillet 0.5 Plate --face +z'},
+  {label:'200-hole shell, tablet limits',query:'holes=200',command:'shell 0.5 Plate --open +z'},
+  {label:'25-hole rim fillet, tablet limits',query:'holes=25',command:'fillet 0.5 Plate --face +z'},
+  {label:'100-hole shell, tablet limits',query:'holes=100',command:'shell 0.5 Plate --open +z'},
+  {label:'200-hole rim fillet, no limits',query:'holes=200&exact-limits=none',command:'fillet 0.5 Plate --face +z'},
+  {label:'200-hole shell, no limits',query:'holes=200&exact-limits=none',command:'shell 0.5 Plate --open +z'},
+  {label:'200-hole rim chamfer, 80 MiB memory ceiling',query:'holes=200&exact-limits=none&memory-mib=80',command:'chamfer 0.5 Plate --face +z'},
+ ];
+ const steps=[];
+ for(const {label,query,command} of cases){
+  await page.goto(`/exact-check.html?${query}`);
+  const root=page.locator('#exact-check-editor');await expect(root).toHaveAttribute('data-state',/^(ready|error)$/,{timeout:300_000});
+  const terminal=page.getByRole('region',{name:'CAD terminal',exact:true}),input=terminal.getByRole('combobox',{name:'CAD command'}),entries=terminal.locator('.terminal-entry');
+  const idleWorkers=page.workers().length;
+  await page.evaluate(()=>{const w=window as unknown as {probe:{last:number;maxGap:number;running:boolean}};w.probe={last:performance.now(),maxGap:0,running:true};const tick=()=>{const p=w.probe,now=performance.now(),gap=now-p.last;p.last=now;if(gap>p.maxGap)p.maxGap=gap;if(p.running)setTimeout(tick,0);};setTimeout(tick,0);});
+  const started=Date.now();
+  await input.fill(command);await input.press('Enter');
+  await expect.poll(async()=>/WASM memory|rror|too much|Shelling a body|out of memory|did not finish|failed/.test((await entries.last().textContent())??''),{timeout:900_000}).toBe(true);
+  const wallMs=Date.now()-started;
+  const maxGapMs=await page.evaluate(()=>{const p=(window as unknown as {probe:{maxGap:number;running:boolean}}).probe;p.running=false;return Math.round(p.maxGap);});
+  const text=((await entries.last().textContent())??'').replace(/\s+/g,' ').trim();
+  const timing=/load (\d+) ms · run (\d+) ms · WASM memory (\d+) MiB/.exec(text);
+  await page.waitForTimeout(500);
+  const outcome=timing?'built':/too much|Shelling a body/.test(text)?'refused':/out of memory/.test(text)?'out of memory':/did not finish/.test(text)?'timed out':'failed';
+  steps.push({label,query,command,outcome,wallMs,...(timing?{loadMs:+timing[1],runMs:+timing[2],wasmMiB:+timing[3]}:{}),maxMainThreadGapMs:maxGapMs,exactWorkerAlive:page.workers().length>idleWorkers,message:text.slice(0,400)});
+  console.log(JSON.stringify(steps.at(-1)));
+ }
+ const result={project:testInfo.project.name,date:new Date().toISOString(),userAgent:await page.evaluate(()=>navigator.userAgent),note:'shared, loaded Apple M1; Chromium (the ipad project emulates the iPad viewport and user agent only)',steps};
+ await writeFile(`experiments/exact-kernel/results/browser-guards-${testInfo.project.name}.json`,JSON.stringify(result,null,2)+'\n');
+ expect(steps.filter(s=>s.label.includes('tablet limits')&&s.label.startsWith('200')).map(s=>s.outcome)).toEqual(['refused','refused']);
+});

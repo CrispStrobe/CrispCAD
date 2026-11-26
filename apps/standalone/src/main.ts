@@ -2,7 +2,7 @@ import {t,setLocale,getLocale} from '@brickwright/cad-core';
 import {localizeHost} from './host-i18n.js';
 import './app.css';
 import { Capacitor } from '@capacitor/core';
-import { mountCadEditor,browserCodeWorkspaceStorage } from '@brickwright/cad-editor';
+import { mountCadEditor,browserCodeWorkspaceStorage,EXACT_LIMITS_DESKTOP,EXACT_LIMITS_TABLET } from '@brickwright/cad-editor';
 import { parseDocument, serializeDocument } from '@brickwright/cad-core';
 import type { CadDocument } from '@brickwright/cad-core';
 import { download } from './files.js';
@@ -33,6 +33,12 @@ function saveSurfaceSnap(value:boolean){surfaceSnap=value;try{localStorage.setIt
 let showReadout=false;try{showReadout=localStorage.getItem('brickwright-cad:view:readout')==='true';}catch{}
 function saveReadout(visible:boolean){showReadout=visible;try{localStorage.setItem('brickwright-cad:view:readout',String(visible));}catch{}}
 let navigationPreset:'tinkercad'|'fusion'=window.brickwrightDesktop||/Mac/.test(navigator.platform)&&navigator.maxTouchPoints===0?'fusion':'tinkercad';try{const v=localStorage.getItem('brickwright-cad:view:navigation');if(v==='fusion'||v==='tinkercad')navigationPreset=v;}catch{}
+// Exact-kernel limits (docs/CRISPCAD-CONVERGENCE.md, "Heavy exact jobs on iPad"): the macOS app and
+// computers without touch get the desktop limits, everything else (iPad, which reports a Mac
+// platform but has touch points, phones, touch laptops) the tablet ones. ?exact-limits=tablet|desktop
+// overrides it, for checks.
+const exactLimitsChoice=new URLSearchParams(location.search).get('exact-limits');
+const exactLimits=exactLimitsChoice==='desktop'||exactLimitsChoice!=='tablet'&&(!!window.brickwrightDesktop||/Mac|Win|Linux/.test(navigator.platform)&&navigator.maxTouchPoints===0)?EXACT_LIMITS_DESKTOP:EXACT_LIMITS_TABLET;
 function saveNavigation(value:'tinkercad'|'fusion'){localStorage.setItem('brickwright-cad:view:navigation',value);navigationPreset=value;editor?.setNavigation(value);}
 let rightPane={shapesFirst:true,split:50};try{const v=JSON.parse(localStorage.getItem('brickwright-cad:view:right-pane')??'null');if(v&&typeof v.shapesFirst==='boolean'&&Number.isFinite(v.split)&&v.split>=20&&v.split<=80)rightPane=v;}catch{}
 function saveRightPane(value:typeof rightPane){rightPane={...value};try{localStorage.setItem('brickwright-cad:view:right-pane',JSON.stringify(value));}catch{}editor?.setRightPane(value);}
@@ -75,7 +81,7 @@ function start(doc?: CadDocument) {
   try {
     editor = mountCadEditor(root, {
       workspaceStorage:browserCodeWorkspaceStorage(),
-      colorMode,
+      colorMode,exactLimits,
       modelLibrary:{cache:createModelLibraryBrowserCache(),load:async()=>{
         const {createBundledModelLibraryOptions}=await import('../../shared/model-library-local.js');
         return bundledModelLibrary??=createBundledModelLibraryOptions();

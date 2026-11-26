@@ -1,0 +1,475 @@
+{
+ "node": "v26.4.0",
+ "date": "2026-11-26T08:00:37.961Z",
+ "note": "process CPU time on a shared, loaded Apple M1; no probe worker (as in the browser editor)",
+ "rows": [
+  {
+   "variant": "fillet",
+   "holes": 10,
+   "build": {
+    "cpuMs": 428,
+    "wallMs": 251,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 14,
+    "curvedEdges": 10,
+    "faces": 16
+   },
+   "operation": {
+    "cpuMs": 1429,
+    "wallMs": 1074,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 2339,
+    "wallMs": 1629,
+    "memoryMiB": 64
+   },
+   "triangles": 23244,
+   "afterwards": 5805
+  },
+  {
+   "variant": "fillet",
+   "holes": 25,
+   "build": {
+    "cpuMs": 836,
+    "wallMs": 441,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 29,
+    "curvedEdges": 25,
+    "faces": 31
+   },
+   "operation": {
+    "cpuMs": 2590,
+    "wallMs": 2315,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 4352,
+    "wallMs": 3741,
+    "memoryMiB": 64
+   },
+   "triangles": 57864,
+   "afterwards": 5805
+  },
+  {
+   "variant": "fillet",
+   "holes": 50,
+   "build": {
+    "cpuMs": 1501,
+    "wallMs": 748,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 54,
+    "curvedEdges": 50,
+    "faces": 56
+   },
+   "operation": {
+    "cpuMs": 4980,
+    "wallMs": 6200,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 8081,
+    "wallMs": 12298,
+    "memoryMiB": 64
+   },
+   "triangles": 115564,
+   "afterwards": 5805
+  },
+  {
+   "variant": "fillet",
+   "holes": 100,
+   "build": {
+    "cpuMs": 2495,
+    "wallMs": 5314,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 104,
+    "curvedEdges": 100,
+    "faces": 106
+   },
+   "operation": {
+    "cpuMs": 12004,
+    "wallMs": 16288,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 14864,
+    "wallMs": 15260,
+    "memoryMiB": 64
+   },
+   "triangles": 230964,
+   "afterwards": 5805
+  },
+  {
+   "variant": "fillet",
+   "holes": 150,
+   "build": {
+    "cpuMs": 3286,
+    "wallMs": 2323,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 154,
+    "curvedEdges": 150,
+    "faces": 156
+   },
+   "operation": {
+    "cpuMs": 23241,
+    "wallMs": 29553,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 22030,
+    "wallMs": 33959,
+    "memoryMiB": 64
+   },
+   "triangles": 346364,
+   "afterwards": 5805
+  },
+  {
+   "variant": "fillet",
+   "holes": 200,
+   "build": {
+    "cpuMs": 4228,
+    "wallMs": 6138,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 204,
+    "curvedEdges": 200,
+    "faces": 206
+   },
+   "operation": {
+    "cpuMs": 40202,
+    "wallMs": 48873,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 29157,
+    "wallMs": 46154,
+    "memoryMiB": 64
+   },
+   "triangles": 461764,
+   "afterwards": 5805
+  },
+  {
+   "variant": "chamfer",
+   "holes": 10,
+   "build": {
+    "cpuMs": 402,
+    "wallMs": 330,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 14,
+    "curvedEdges": 10,
+    "faces": 16
+   },
+   "operation": {
+    "cpuMs": 2595,
+    "wallMs": 1856,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 1243,
+    "wallMs": 816,
+    "memoryMiB": 64
+   },
+   "triangles": 3900,
+   "afterwards": 5805
+  },
+  {
+   "variant": "chamfer",
+   "holes": 25,
+   "build": {
+    "cpuMs": 847,
+    "wallMs": 773,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 29,
+    "curvedEdges": 25,
+    "faces": 31
+   },
+   "operation": {
+    "cpuMs": 4776,
+    "wallMs": 6052,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 2092,
+    "wallMs": 2008,
+    "memoryMiB": 64
+   },
+   "triangles": 9720,
+   "afterwards": 5805
+  },
+  {
+   "variant": "chamfer",
+   "holes": 50,
+   "build": {
+    "cpuMs": 1513,
+    "wallMs": 879,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 54,
+    "curvedEdges": 50,
+    "faces": 56
+   },
+   "operation": {
+    "cpuMs": 8165,
+    "wallMs": 10061,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 3412,
+    "wallMs": 3042,
+    "memoryMiB": 64
+   },
+   "triangles": 19420,
+   "afterwards": 5805
+  },
+  {
+   "variant": "chamfer",
+   "holes": 100,
+   "build": {
+    "cpuMs": 2388,
+    "wallMs": 1461,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 104,
+    "curvedEdges": 100,
+    "faces": 106
+   },
+   "operation": {
+    "cpuMs": 16065,
+    "wallMs": 21108,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 5964,
+    "wallMs": 10833,
+    "memoryMiB": 64
+   },
+   "triangles": 38820,
+   "afterwards": 5805
+  },
+  {
+   "variant": "chamfer",
+   "holes": 150,
+   "build": {
+    "cpuMs": 3328,
+    "wallMs": 3453,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 154,
+    "curvedEdges": 150,
+    "faces": 156
+   },
+   "operation": {
+    "cpuMs": 25470,
+    "wallMs": 39226,
+    "memoryMiB": 92
+   },
+   "display": {
+    "cpuMs": 8582,
+    "wallMs": 13472,
+    "memoryMiB": 92
+   },
+   "triangles": 58220,
+   "afterwards": 5805
+  },
+  {
+   "variant": "chamfer",
+   "holes": 200,
+   "build": {
+    "cpuMs": 4315,
+    "wallMs": 4993,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 204,
+    "curvedEdges": 200,
+    "faces": 206
+   },
+   "operation": {
+    "cpuMs": 37243,
+    "wallMs": 70187,
+    "memoryMiB": 111
+   },
+   "display": {
+    "cpuMs": 10726,
+    "wallMs": 12430,
+    "memoryMiB": 111
+   },
+   "triangles": 77620,
+   "afterwards": 5805
+  },
+  {
+   "variant": "shell",
+   "holes": 10,
+   "build": {
+    "cpuMs": 414,
+    "wallMs": 325,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 32,
+    "curvedEdges": 20,
+    "faces": 16
+   },
+   "operation": {
+    "cpuMs": 1949,
+    "wallMs": 1197,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 189,
+    "wallMs": 115,
+    "memoryMiB": 64
+   },
+   "triangles": 2948,
+   "afterwards": 5805
+  },
+  {
+   "variant": "shell",
+   "holes": 25,
+   "build": {
+    "cpuMs": 788,
+    "wallMs": 544,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 62,
+    "curvedEdges": 50,
+    "faces": 31
+   },
+   "operation": {
+    "cpuMs": 3597,
+    "wallMs": 3028,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 394,
+    "wallMs": 255,
+    "memoryMiB": 64
+   },
+   "triangles": 7328,
+   "afterwards": 5805
+  },
+  {
+   "variant": "shell",
+   "holes": 50,
+   "build": {
+    "cpuMs": 1591,
+    "wallMs": 898,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 112,
+    "curvedEdges": 100,
+    "faces": 56
+   },
+   "operation": {
+    "cpuMs": 6097,
+    "wallMs": 6406,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 580,
+    "wallMs": 536,
+    "memoryMiB": 64
+   },
+   "triangles": 14628,
+   "afterwards": 5805
+  },
+  {
+   "variant": "shell",
+   "holes": 100,
+   "build": {
+    "cpuMs": 2365,
+    "wallMs": 1552,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 212,
+    "curvedEdges": 200,
+    "faces": 106
+   },
+   "operation": {
+    "cpuMs": 13500,
+    "wallMs": 16805,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 1225,
+    "wallMs": 1372,
+    "memoryMiB": 64
+   },
+   "triangles": 29228,
+   "afterwards": 5805
+  },
+  {
+   "variant": "shell",
+   "holes": 150,
+   "build": {
+    "cpuMs": 3185,
+    "wallMs": 2394,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 312,
+    "curvedEdges": 300,
+    "faces": 156
+   },
+   "operation": {
+    "cpuMs": 23278,
+    "wallMs": 27433,
+    "memoryMiB": 77
+   },
+   "display": {
+    "cpuMs": 1463,
+    "wallMs": 1085,
+    "memoryMiB": 77
+   },
+   "triangles": 43828,
+   "afterwards": 5805
+  },
+  {
+   "variant": "shell",
+   "holes": 200,
+   "build": {
+    "cpuMs": 4150,
+    "wallMs": 3368,
+    "memoryMiB": 64
+   },
+   "cost": {
+    "edges": 412,
+    "curvedEdges": 400,
+    "faces": 206
+   },
+   "operation": {
+    "cpuMs": 32877,
+    "wallMs": 34426,
+    "memoryMiB": 111
+   },
+   "display": {
+    "cpuMs": 1727,
+    "wallMs": 1284,
+    "memoryMiB": 111
+   },
+   "triangles": 58428,
+   "afterwards": 5805
+  }
+ ]
+}

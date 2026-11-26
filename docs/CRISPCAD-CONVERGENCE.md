@@ -191,13 +191,110 @@ Remaining work for this phase:
     thread block it for their whole duration: 241 ms for the fillet, 1.06 s for the 48-hole
     chamfer, 4.2 s for the rim fillet (Chromium reports each as one Long Task of that length).
   Raw data and method: [experiments/exact-kernel](../experiments/exact-kernel/README.md#browser-features-memory-and-the-main-thread-2026-11-26).
-  Not measured: iOS's slower WebAssembly compile, its per-tab memory limit (the 1 GiB rim-fillet
-  case above is the one to try first) and cold load over a real network;
+  Not measured: iOS's slower WebAssembly compile, its per-tab memory limit and cold load over a
+  real network (the 1 GiB rim-fillet case above turned out to be SMLib's whole-body mesh, which
+  the product no longer uses for it; see the next item);
+- heavy jobs on iPad (limits, memory ceiling, recycling, Cancel): **done 2026-11-26**, see
+  [Heavy exact jobs on iPad](#heavy-exact-jobs-on-ipad-2026-11-26) below;
 - the geometry worker for every exact request: **done** (2026-11-25, extended 2026-11-26). Feature
   recompute, STEP export and exact measures all run in the lazily created exact worker through
   one `runExactRequest` (shared with the MCP exact thread). Hosts that cannot start a worker can
   pass `exactFallback` (for example `createInThreadExactHost()`), which runs on the calling thread
   with the blocking measured above.
+
+#### Heavy exact jobs on iPad (2026-11-26)
+
+Goal: a heavy exact job either finishes within sane limits or is refused or stopped with a clear,
+translated message; the editor never crashes and the model and its history are never harmed.
+Measurements: [experiments/exact-kernel](../experiments/exact-kernel/README.md#heavy-jobs-limits-memory-ceiling-and-recycling-2026-11-26).
+
+What the measurements changed:
+
+- **Memory is no longer the problem for the measured jobs.** On the product path (face-wise
+  display mesh; in the browser editor smlibwasm has no probe worker, because the page is not
+  cross-origin isolated) the 200-hole rim fillet, chamfer and shell end at 64–111 MiB of
+  WebAssembly memory. The 1 GiB measured earlier was SMLib's whole-body mesh of the result, which
+  the product uses only as a fallback.
+- **Time is.** The 200-hole rim fillet takes about 74 s CPU end to end on the loaded M1 (roughly
+  35 s unloaded), the shell about 39 s; both grow faster than linearly. Fillet and chamfer of
+  natively built bodies have no kernel deadline at all, and the kernel's 20 s guard (`shell`
+  only, and only part of it) cannot be changed from CrispCAD: `setGuardSeconds` is not exported
+  by `@crispcad/exact-kernel`. The editor's own budget is what ends a slow job.
+- **A straight edge costs about a quarter of a curved one** (fillet and display of 100 straight
+  edges 6.4 s CPU, of 100 hole rims 27 s; 400 straight edges 37 s).
+- **The kernel's shell guard is wall-clock.** Under heavy load, shells of a 50-tooth prism failed
+  with "did not finish within 20 s" after 2.5 s of CPU; the kernel stayed usable. On a slow iPad
+  the same can happen to shells that would finish; the editor now says so in a translated message
+  ("stopped this step at its own 20 s limit… The model was not changed").
+
+Design (`packages/exact/src/limits.ts`, `feature-cost.ts`, `memory-cap.ts`;
+`packages/editor/src/geometry-client.ts`, `geometry.worker.ts`, `exact-activity.ts`):
+
+1. **Pre-flight.** Before the kernel runs a fillet, chamfer or shell (also when STEP export or a
+   measure rebuilds one), the source solid's selected edges are counted, a curved edge as four
+   straight ones, or for shell its faces. Over the host's limit the job is refused with a
+   translated message that names the counts and the limit; the kernel never starts.
+2. **Memory ceiling.** The exact worker loads the kernel with its WebAssembly memory maximum
+   lowered in the module bytes (smlibwasm defines its own memory, 64 MiB, growable to 4 GiB; the
+   maximum is one LEB128 number, rewritten in place while the kernel is instantiated). Past the
+   ceiling SMLib reports `SM_ERR_OUT_OF_MEMORY` cleanly (`bad_alloc` is caught, measured), and the
+   editor says the kernel ran out of memory for this job.
+3. **Recycling.** After a job that left the kernel's memory above `recycleAboveBytes`, and after
+   any memory exhaustion or WebAssembly trap, the client ends the exact worker (its memory goes
+   back to the page) and starts a new one lazily on the next request; requests queued behind a
+   broken kernel are rerun in the new worker.
+4. **Time.** The request budget comes from the limits (60 s tablet, 120 s desktop); then the
+   worker is terminated, since the kernel cannot be interrupted mid-call, and the message says
+   the model was not changed.
+5. **UI.** The status bar shows the running exact job, its elapsed seconds and a Cancel button
+   for every exact request (terminal, recompute, measure, STEP export); the Fillet, chamfer, shell
+   dialog, which is modal, has its own Cancel and elapsed time. Cancel terminates the exact
+   worker. That is safe: exact output is committed only after the kernel answered and the model's
+   revision is unchanged, so a cancelled, refused, failed or timed-out job leaves the model and its
+   history as they were. An exact feature whose recompute did not finish stays stale, and the
+   viewport keeps showing the previous geometry with the stale message.
+
+Thresholds (`EXACT_LIMITS_TABLET` is the default for every host that passes nothing; the
+standalone app uses `EXACT_LIMITS_DESKTOP` in the macOS app and on computers without touch):
+
+| Limit | Tablet | Desktop | Evidence |
+| --- | ---: | ---: | --- |
+| Fillet/chamfer edges (curved × 4) | 400 (≈ 100 hole rims) | 1000 | 100 rims: 27 s CPU loaded, ≈ 14 s unloaded, fillet and display. 200 rims (804) refused on tablet. A box filleted on every edge is 12, a plate with 25 holes 104. |
+| Shell faces | 160 | 500 | 156 faces: 25 s CPU loaded; 206 faces (200 holes) refused on tablet. |
+| Memory ceiling | 512 MiB | 2 GiB | Heaviest measured product job 111 MiB; iPad tabs die at roughly 1–1.5 GB for the whole page. |
+| Recycle above | 192 MiB | 512 MiB | Normal jobs stay at the 64 MiB starting memory, so they never recycle. |
+| Request budget | 60 s | 120 s | Includes the first load (0.1–0.4 s measured). |
+
+Before and after, the 200-hole plate (Node, product path, loaded M1; browser numbers in the
+experiment's `results/browser-guards-*.json`):
+
+| Job | Before | After, tablet limits |
+| --- | --- | --- |
+| Rim fillet | ran 74 s CPU (past the 60 s budget under load; with SMLib's whole-body mesh it reached 1 GiB) | refused in the time it takes to lower the plate, with "Rounding 204 edges (200 of them curved)…" |
+| Shell, open top | ran 35–39 s; under heavier load, the probe-worker path failed at the kernel's 20 s guard | refused: "Shelling a body with 206 faces…" |
+| Any job needing more memory than the ceiling | grew until the tab died | fails with "ran out of memory", worker ended, model unchanged |
+
+**A physical iPad is still unmeasured.** Every number here is from an Apple M1 (Node, Chromium
+with the iPad profile, and the WebKit figures above). Recipe for the owner, on a real iPad:
+
+1. On the Mac: `npm ci && npm run build && npx vite preview --host 0.0.0.0 --port 4317`, and note
+   the Mac's LAN address (System Settings › Wi-Fi › Details). Mac and iPad on the same network.
+2. On the iPad, in Safari: `http://<mac-address>:4317/exact-check.html?holes=200`. The page
+   mounts the editor on a 200-hole plate in memory only (nothing is saved; the stored project is
+   untouched) and shows the limits in force and a heartbeat with the longest main-thread stall.
+3. With the default (tablet) limits, run the listed terminal commands (`fillet 0.5 Plate --face +z`,
+   `shell 0.5 Plate --open +z`). Expected: both refused within seconds.
+4. Then `…/exact-check.html?holes=100` (accepted on tablet): run the fillet and note the terminal's
+   `run … ms · WASM memory … MiB` line and the wall time.
+5. Then `…/exact-check.html?holes=200&exact-limits=none`: run the fillet, then reload and run the
+   shell. Note the times and memory, whether the tab survived (a reload or "A problem repeatedly
+   occurred" means Safari killed it), and the longest stall. Use the status bar's Cancel once to
+   check that the editor stays usable.
+6. Optional: `&memory-mib=80` with `chamfer 0.5 Plate --face +z` on 200 holes shows the memory
+   ceiling ending a job ("ran out of memory").
+
+The same page runs in the Chromium `ipad` project: `EXACT_BENCH=1 npx playwright test
+tests/browser/exact-kernel-bench.spec.ts --project ipad -g heavy`.
 
 Original scope of the phase:
 

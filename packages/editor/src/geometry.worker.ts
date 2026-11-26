@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {FeatureEvaluationError,setLocale} from '@brickwright/cad-core';
+import {FeatureEvaluationError,setLocale,t} from '@brickwright/cad-core';
 import type {ExactCommandResult} from '@brickwright/cad-core';
 import { createGeometryKernel } from '@brickwright/cad-geometry';
 import type { GeometryKernel } from '@brickwright/cad-geometry';
@@ -7,6 +7,13 @@ import type {GeometryRequest} from './geometry-client.js';
 let kernel: Promise<GeometryKernel> | null = null;
 // The exact kernel is a separate, lazily imported chunk with its own 9.4 MB WebAssembly. Only a
 // worker that receives an exact request loads it; Manifold-only sessions never fetch it.
+/** The message for a kernel failure the kernel cannot recover from (see isFatalExactError). */
+const exactFailure=(error:unknown)=>{
+  const detail=error instanceof Error?error.message:String(error);
+  return /out of memory|bad_alloc|SM_ERR_OUT_OF_MEMORY|Cannot enlarge memory/i.test(detail)
+    ?t('The exact kernel ran out of memory for this job, so it was stopped. The model was not changed. Simplify the feature (fewer edges or holes) or run it on a computer.')
+    :t`The exact kernel failed and was restarted. The model was not changed. (${detail.split('\n')[0].slice(0,200)})`;
+};
 let exact:Promise<{module:typeof import('@brickwright/cad-exact');backend:import('@brickwright/cad-exact').ExactBackend}>|null=null;
 self.onmessage = async (event: MessageEvent<GeometryRequest>) => {
   const {request,wasmURL}=event.data;
@@ -14,10 +21,22 @@ self.onmessage = async (event: MessageEvent<GeometryRequest>) => {
     setLocale(event.data.locale??'en');
     if('exact' in event.data){
       const started=performance.now();
-      exact??=import('@brickwright/cad-exact').then(async module=>({module,backend:await module.createExactBackend()})).catch(error=>{exact=null;throw error;});
+      // The memory ceiling applies when the kernel loads (the first exact request of this worker);
+      // the client starts a new worker when its limits change.
+      const limits=event.data.exactLimits;
+      exact??=import('@brickwright/cad-exact').then(async module=>({module,backend:await module.createExactBackend({maxMemoryBytes:limits?.maxMemoryBytes})})).catch(error=>{exact=null;throw error;});
       const {module,backend}=await exact;
-      const result:ExactCommandResult=module.runExactRequest(backend,event.data.exact,performance.now()-started);
-      self.postMessage({request,result});
+      try{
+        const result:ExactCommandResult=module.runExactRequest(backend,event.data.exact,performance.now()-started,{limits});
+        self.postMessage({request,result});
+      }catch(error){
+        // A trap or memory exhaustion leaves the kernel unusable: say so, and the client ends this
+        // worker (freeing its memory) and runs the next request in a new one.
+        if(!module.isFatalExactError(error))throw error;
+        const diagnostic=error&&typeof error==='object'&&'diagnostic' in error?(error as {diagnostic:{message:string}}).diagnostic:undefined;
+        const message=exactFailure(error);
+        self.postMessage({request,error:message,fatal:true,...(diagnostic?{exactDiagnostic:{...diagnostic,message}}:{})});
+      }
       return;
     }
     kernel ??= createGeometryKernel({ wasmURL });

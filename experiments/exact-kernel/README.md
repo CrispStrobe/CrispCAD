@@ -216,7 +216,8 @@ and the longest gap is 5–14 ms.
   compiles asynchronously, so even in-thread the main thread is blocked for at most 37 ms by it.
 - **Memory.** Linear memory stays at the 64 MiB the module reserves at load for all of these,
   including the 48-rim fillet (all handles freed after each request). The Node plates go further:
-  1 GiB after rounding 200 hole rims (see below). `performance.measureUserAgentSpecificMemory`
+  1 GiB after rounding 200 hole rims and meshing the result as one body (see below; the product's
+  face-wise mesh of the same result stays at 64 MiB, see "Heavy jobs"). `performance.measureUserAgentSpecificMemory`
   does not exist in WebKit; in Chromium (cross-origin isolated) the page measured 1 MiB before
   and 142 MiB after the worker run (page and worker), 75 MiB after the in-thread run, and the
   in-thread JavaScript heap grew from 2 to 11 MiB.
@@ -279,6 +280,79 @@ filleted rows gain only the planar faces' share (with 10 holes the per-face over
 slightly slower). Shelling 200 holes took 19.6 s, at the edge of the kernel's 20 s guard: under
 heavier load the same shell failed with "the kernel did not finish within 20 s". Both are kernel
 limits, not display ones.
+
+### Heavy jobs: limits, memory ceiling and recycling (2026-11-26)
+
+Question: can a heavy exact job kill an iPad tab, and how does the editor end such jobs cleanly?
+
+**Where the time and memory go, product path.** `node limits-bench.ts` runs each case in a fresh
+process (linear memory never shrinks), with `SharedArrayBuffer` hidden: the browser editor is not
+cross-origin isolated, so smlibwasm has no probe worker there and runs fillet, chamfer and shell in
+the exact worker's own kernel; Node would otherwise use a probe worker. Each row builds the plate
+of the table above, runs the feature on its top face (r/d 0.5 mm; shell 0.5 mm, open top) and
+then the display mesh as `displayTessellation` makes it (face-wise for many-hole faces). Process
+CPU time on the shared M1 at load average **40–180** (heavier than the table above, so about twice
+its CPU times; compare ratios, not absolutes). Raw data:
+[`results/limits-darwin-arm64.json`](results/limits-darwin-arm64.json).
+
+| Holes | Top-face edges (curved) | Fillet op + display | Chamfer op + display | Shell faces | Shell op + display | WASM memory after (max of the three) |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: |
+| 10 | 14 (10) | 1.4 + 2.3 s | 2.6 + 1.2 s | 16 | 1.9 + 0.2 s | 64 MiB |
+| 25 | 29 (25) | 2.6 + 4.4 s | 4.8 + 2.1 s | 31 | 3.6 + 0.4 s | 64 MiB |
+| 50 | 54 (50) | 5.0 + 8.1 s | 8.2 + 3.4 s | 56 | 6.1 + 0.6 s | 64 MiB |
+| 100 | 104 (100) | 12.0 + 14.9 s | 16.1 + 6.0 s | 106 | 13.5 + 1.2 s | 64 MiB |
+| 150 | 154 (150) | 23.2 + 22.0 s | 25.5 + 8.6 s | 156 | 23.3 + 1.5 s | 92 MiB |
+| 200 | 204 (200) | 40.2 + 29.2 s | 37.2 + 10.7 s | 206 | 32.9 + 1.7 s | 111 MiB |
+
+(Building the 200-hole plate itself: 4.2 s.)
+
+Straight edges, `limits-bench.ts 50,100,200,400,800 fillet-poly,chamfer-poly,shell-poly`: a
+gear-like sawtooth prism of n straight edges, top face filleted/chamfered at 0.2 mm, or shelled
+(load average 160–320 by then; raw data
+[`results/limits-darwin-arm64-poly.json`](results/limits-darwin-arm64-poly.json)):
+
+| Straight edges | Fillet op + display | Chamfer op + display | WASM memory |
+| ---: | ---: | ---: | ---: |
+| 50 | 2.4 + 1.4 s | 2.8 + 1.5 s | 64 MiB |
+| 100 | 4.2 + 2.2 s | 4.4 + 2.2 s | 64 MiB |
+| 200 | 9.4 + 3.2 s | 10.4 + 3.5 s | 111 MiB |
+| 400 | 30.8 + 5.9 s | (not finished in 10 min) | 229 MiB |
+
+So a curved edge (hole rim) costs about 4–5 straight ones (100: 27 s against 6.4 s; 200: 69 s
+against 12.6 s), which is the weight the pre-flight uses. Every **shell** of these prisms
+(50–800 teeth) failed with `the kernel did not finish within 20 s` after 2.5–14 s of CPU but
+29–205 s of wall time: smlibwasm's guard is wall-clock, so on a starved (or slow) device it stops
+shells that would finish. The kernel stayed usable after every such stop. The editor now reports
+it as "The exact kernel stopped this step at its own 20 s limit…" instead of smlibwasm's
+developer hint.
+
+Findings:
+
+- **Memory is not what limits these jobs any more.** With the face-wise display mesh the heaviest
+  row ends at 111 MiB, not 1 GiB: the 1 036 MiB in the table above was SMLib's *whole-body* mesh
+  of the result (the "before" column), which the product now uses only as a fallback when the
+  face-wise mesh fails. That fallback, and jobs not measured here, are what the memory ceiling is
+  for.
+- **Time is.** A 200-rim fillet is about 74 s CPU end to end here (roughly 35 s unloaded), past
+  the editor's 60 s budget on a slower device. Cost grows faster than linearly in the edges
+  (fillet op: 12 s for 100 rims, 40 s for 200).
+- **The shell guard is wall-clock and covers only part of the shell.** The 200-hole shell did not
+  hit it (33 s op, the offset step itself was quick); the sawtooth shells below did, at 2.5 s CPU.
+  smlibwasm's `setGuardSeconds` is not exported by `@crispcad/exact-kernel`, so CrispCAD cannot
+  change it; its own request budget ends the job instead.
+- **Fillet and chamfer have no kernel deadline at all** on natively built bodies
+  (`round_edges` runs in-thread): only terminating the worker stops them.
+
+**The memory ceiling works.** `cap-probe.ts` loads the kernel with a 96 MiB ceiling and asks SMLib
+for the whole-body mesh of the 200-hole plate (297 MiB uncapped): after 5.8 s it fails with
+`ExactKernelError(kernel-failure): SMLib mesh failed: tessellate failed (SM_ERR_OUT_OF_MEMORY)
+… (std::bad_alloc)`, memory stays at 92 MiB, and the same kernel then fillets a box correctly.
+SMLib's bindings catch `bad_alloc`, so exhaustion is a clean error, not an abort. The editor still
+ends that worker (a precaution after `bad_alloc`, and the memory goes back to the page).
+`tests/exact-memory-cap.test.ts` keeps this as a test.
+
+How the guards work, and the thresholds: see
+[CRISPCAD-CONVERGENCE.md](../../docs/CRISPCAD-CONVERGENCE.md#heavy-exact-jobs-on-ipad-2026-11-26).
 
 ## Licence audit
 

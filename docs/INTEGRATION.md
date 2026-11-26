@@ -101,6 +101,33 @@ running in-thread request cannot be interrupted, so an abort only discards its r
 the option such requests fail with the worker's error. The browser SDK does not set it: its
 host-loaded chunks must not reference the kernel (see below).
 
+### Limits for heavy exact jobs (2026-11-26)
+
+`mountCadEditor` takes `exactLimits` (`Partial<ExactLimits>`; the SDK and
+`@brickwright/cad-editor` export `EXACT_LIMITS_TABLET`, `EXACT_LIMITS_DESKTOP` and
+`resolveExactLimits`; importing them loads nothing under `assets/exact/`). Missing fields come
+from `EXACT_LIMITS_TABLET`, which is meant to be safe on an iPad, so a host that passes nothing
+gets those. Fields:
+
+| Field | Tablet | Desktop | What it does |
+| --- | ---: | ---: | --- |
+| `maxFeatureEdges` | 400 (≈ 100 curved) | 1000 | Fillet/chamfer: refused before the kernel runs when the selected edges, counted with each curved edge as `CURVED_EDGE_WEIGHT` (4) straight ones, exceed it. |
+| `maxShellFaces` | 160 | 500 | Shell: refused when the body has more faces. |
+| `maxMemoryBytes` | 512 MiB | 2 GiB | Ceiling for the exact worker's WebAssembly memory (written into the module's memory maximum when it loads). A job that needs more fails with "ran out of memory". |
+| `recycleAboveBytes` | 192 MiB | 512 MiB | After a job that left the kernel's memory above this, the worker is ended (its memory returns to the page) and the next job starts a new one. |
+| `requestTimeoutMs` | 60 s | 120 s | The whole request, first load included; then the worker is ended. |
+
+Refusals, the memory ceiling, the timeout and Cancel all end in a translated message, and none of
+them changes the model or its history: exact output is committed only after the kernel answered.
+A worker whose kernel reported memory exhaustion or a WebAssembly trap is ended and queued
+requests rerun in a new one. While an exact job runs, the status bar shows what it is, for how
+long, and a Cancel button (`client.exactActivity`/`onExactActivity` in the geometry client); the
+Fillet, chamfer, shell dialog has its own Cancel. The standalone app uses the desktop limits in the
+macOS app and on computers without touch, and the tablet limits elsewhere (`?exact-limits=` overrides
+it). `createInThreadExactHost({limits})` applies the same pre-flight to the in-thread fallback (no
+memory ceiling there: the kernel shares the page's thread and process).
+
+
 File export is deliberately host-owned; if `onExport` is absent the export
 buttons are disabled. The default Open button uses a scoped HTML file input;
 `requestOpen` replaces it with the host's native picker. `openFile(name, bytes)`
