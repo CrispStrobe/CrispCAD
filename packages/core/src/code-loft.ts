@@ -2,8 +2,24 @@
 import {t} from './i18n.js';
 import type {Vec3} from './document.js';
 
-/** Matching, simple XY rings, connected in authored vertex order. No resampling. */
-export function loftPolyhedron(input:readonly (readonly Vec3[])[]):{points:Vec3[];faces:number[][]}{
+/** True when the side quad a-b-c-d (a, b on one section, d, c above them) is not planar: its
+ * two sections are turned against each other there, so the two diagonals give different solids. */
+export function twistedLoftQuad(a:Vec3,b:Vec3,c:Vec3,d:Vec3):boolean{
+ const u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],w=[d[0]-a[0],d[1]-a[1],d[2]-a[2]];
+ const det=u[0]*(v[1]*w[2]-v[2]*w[1])-u[1]*(v[0]*w[2]-v[2]*w[0])+u[2]*(v[0]*w[1]-v[1]*w[0]);
+ return Math.abs(det)>1e-9*Math.hypot(...u)*Math.hypot(...v)*Math.hypot(...w);
+}
+/** Matching, simple XY rings, connected in authored vertex order. No resampling.
+ *
+ * `ruled` selects the side surface (CAD Script revision 2, see docs/CODE-MODE.md#matched-section-lofts).
+ * Revision 1 (`ruled` false) splits every side quad into two triangles along the diagonal from
+ * section vertex j to the next section's vertex j+1, as JSCAD's `extrudeFromSlices` does; that is
+ * frozen, so saved revision-1 programs keep their geometry. Revision 2 means the ruled
+ * (bilinear) surface through each quad: planar quads keep the same two triangles, a twisted quad
+ * becomes four triangles fanned around the mean of its corners, which has exactly the ruled
+ * surface's volume. Then `ruled` in the result holds the normalized sections, so a backend with
+ * true ruled surfaces (the exact kernel) can build them instead of the facets. */
+export function loftPolyhedron(input:readonly (readonly Vec3[])[],ruled=false):{points:Vec3[];faces:number[][];ruled?:Vec3[][]}{
  const invalid=()=>{throw new Error(t('Loft needs matching planar XY sections ordered along Z'));};
  const topology=()=>{throw new Error(t('Loft sections must be simple and have consistent winding'));};
  const count=input[0]?.length??0;
@@ -31,7 +47,11 @@ export function loftPolyhedron(input:readonly (readonly Vec3[])[]):{points:Vec3[
  const points=sections.flat(),faces:number[][]=[Array.from({length:count},(_,i)=>count-1-i)];
  for(let s=0;s<sections.length-1;s++)for(let j=0;j<count;j++){
   const a=s*count+j,b=s*count+(j+1)%count,c=b+count,d=a+count;
-  faces.push([a,b,c],[a,c,d]);
+  if(ruled&&twistedLoftQuad(points[a],points[b],points[c],points[d])){
+   const m=points.length;points.push([0,1,2].map(k=>(points[a][k]+points[b][k]+points[c][k]+points[d][k])/4) as Vec3);
+   faces.push([a,b,m],[b,c,m],[c,d,m],[d,a,m]);
+  }else faces.push([a,b,c],[a,c,d]);
  }
- faces.push(Array.from({length:count},(_,i)=>points.length-count+i));return {points,faces};
+ const ringPoints=sections.length*count,twisted=points.length>ringPoints;
+ faces.push(Array.from({length:count},(_,i)=>ringPoints-count+i));return twisted?{points,faces,ruled:sections}:{points,faces};
 }

@@ -259,7 +259,25 @@ parameters. Each section lies on one Z plane; section heights must be strictly
 ordered, vertex counts must match, and winding must be consistent. Consistently
 clockwise or descending sections are normalized. Concave rings are supported;
 self-crossing rings, repeated edges and mixed winding are rejected. The constructor
-retains authored vertex correspondence and uses triangles between adjacent rings.
+retains authored vertex correspondence: vertex *i* of a section is joined to vertex *i*
+of the next.
+
+**Side surfaces are ruled (CAD Script revision 2, 2026-11-26).** Each side quad between
+two sections is the ruled (bilinear) surface through its four corners, the surface
+kernelCAD's `loft(…, { ruled: true })` and the exact kernel's ruled loft build. Where
+the quad is planar (sections that are scaled or shifted, not turned) that is two
+triangles. Where one section is turned against the next the quad is twisted: the mesh
+then fans four triangles around the mean of its corners, which has exactly the ruled
+surface's volume (its area is the ruled area to about 1e-3), and the exact backend
+builds the ruled surface itself (volume and area exact). For a 10-gon of radius 82 at
+z 0 and a 10-gon of radius 77.9 turned by π/10 at z 150 the volume is
+h/6 · (A₀ + 4A½ + A₁) = 2,772,519.67 mm³.
+
+Programs saved before revision 2 keep **revision 1** lofts: every side quad is split
+along the diagonal from vertex *j* of a section to vertex *j*+1 of the next (as JSCAD's
+`extrudeFromSlices` does), 2,678,272.48 mm³ for the example above; the other diagonal
+would give 2,866,766.86. See [Language revisions](#language-revisions) for which
+programs use which, and how to upgrade.
 
 The existing source/token/mesh budgets still apply. Additional loft limits are
 128 sections, 256 vertices per section, 4,096 total vertices and 131,072 section
@@ -275,6 +293,43 @@ reoriented. General tilted sections, changing
 vertex counts, section holes, default callbacks and open/closed sweep modes remain
 gaps. The full archived nuts-and-bolts demonstration still exceeds existing work
 or generated-source budgets; its authored resolution is not reduced silently.
+
+### Language revisions
+
+A code object stores `program.version`, the CAD Script revision it is written in.
+Revision 2 changed only `loft` (above); every other function is the same in both.
+
+| Revision | `loft` side quads | Written by |
+| --- | --- | --- |
+| 1 | two triangles along a fixed diagonal | programs saved before 2026-11-26; JSCAD slice imports (JSCAD triangulates the same way); every program without a `loft` call |
+| 2 | ruled surfaces | new or edited programs that call `loft`, the kernelCAD converter |
+
+The revision belongs to the program, not to the document, so old and new lofts can sit
+in one document without either changing. The session applies these rules on every edit:
+
+- A program that does not call `loft` (anywhere in its source, whatever its parameters
+  choose) is stored as revision 1, where both revisions agree. Projects without lofts
+  therefore keep their document version and stay readable by older SDKs.
+- New code (the code panel and workspace, `.cadcode` imports, the MCP tools,
+  `scripts/convert-code.mjs`, the kernelCAD converter) is written in
+  `CAD_SCRIPT_REVISION` (2). Copy, paste, duplicate and JSCAD imports keep the revision
+  they have.
+- Editing a program never introduces revision-1 lofts: adding a `loft` to a program that
+  had none gives a ruled loft. A program that already called `loft` at revision 1 keeps
+  revision 1 when edited, so its geometry only changes where its source does.
+- A document that holds a revision-2 program is document version 42
+  ([PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md#document-versions)); `checkDocument` refuses
+  revision 2 below 42. SDKs from before revision 2 refuse version 42 ("unsupported format,
+  version or units") and revision-2 programs ("Unsupported code program schema"); they never
+  build a ruled loft along the diagonal.
+
+Opening a project never changes a program's revision. To rebuild saved lofts as ruled
+surfaces, open the code object and choose **Upgrade lofts to ruled surfaces** (shown only
+for revision-1 programs with a `loft`), or call `session.upgradeLofts(ids?)`: one Undo step
+labelled "Upgrade lofts to ruled surfaces" that sets the selected (or every) such program to
+revision 2 and raises the document to version 42; Undo restores the triangulated lofts and
+the document version. Model source writes a revision-2 program as
+`code(id, {...}, source, overrides, 2)`; four arguments mean revision 1.
 
 ### Bounded extrema and elliptical tapers
 

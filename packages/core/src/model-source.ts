@@ -64,7 +64,7 @@ function modelRecords(document:CadDocument):RecordSpec[]{
   }
   if(generators.has(id)){for(const key of [...geometryFields,'generator'])delete metadata[key];records.push({key:`node:${id}`,kind:'generated',args:[id,metadata,raw.generator]});continue;}
   let args:any[]=[id,metadata];
-  if(raw.kind==='code'){delete metadata.program;args=[id,metadata,raw.program.source,raw.program.parameters];}
+  if(raw.kind==='code'){delete metadata.program;args=[id,metadata,raw.program.source,raw.program.parameters];if(raw.program.version!==1)args.push(raw.program.version);}
   if(raw.kind==='mesh'){delete metadata.positions;delete metadata.indices;args=[id,metadata,new Asset(id)];}
   // The exact display mesh is a cache, referenced like a mesh asset and never written as text.
   if(raw.kind==='exact-feature'){delete metadata.display;if(raw.display)args=[id,metadata,new Asset(id)];}
@@ -125,7 +125,7 @@ function parseRecords(source:string):SourceRecord[]{
 export function compileModelSource(source:string,context:CadDocument,options:{regenerate?:(recipe:GeneratorRecipe,name:string)=>CadDocument}={}):CadDocument{
  const records=parseRecords(source),fail=(detail:string,record?:SourceRecord):never=>{throw new CadCodeError(detail,record?.node.start??0,source);};
  const project=records.find(r=>r.key==='project')!;if(project.args.length!==1||!project.args[0]||typeof project.args[0]!=='object'||Array.isArray(project.args[0]))fail(t('Invalid project declaration'),project);
- if(![6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41].includes(project.args[0].version))fail(t('Model source uses project version 6 through 41'),project);
+ if(![6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42].includes(project.args[0].version))fail(t('Model source uses project version 6 through 41'),project);
  const doc:any={...project.args[0],nodes:Object.create(null),roots:[],modelSource:{version:1,language:'brickwright-design',source}};
  if(doc.id!==context.id)fail(t('Keep the current project identity in model source'),project);
  delete doc.provenance;delete doc.sketches;delete doc.joints;
@@ -156,7 +156,7 @@ export function compileModelSource(source:string,context:CadDocument,options:{re
    for(const id of seen){if(id===root)continue;if(declaredNodeIds.has(id)){if(recipe)fail(t('Edit generated construction through its recipe, or detach the generator'),record);continue;}if(Object.hasOwn(doc.nodes,id))fail(t('Generated construction has conflicting identifiers'),record);doc.nodes[id]=copyNode(construction.nodes[id]);}
    node={...copyNode(prototype),...metadata,id:args[0]};if(recipe)node.generator=recipe;else delete node.generator;
   }else node={name:kind==='combine'?'Combination':kind[0].toUpperCase()+kind.slice(1),color:'#eea52b',transform:identityTransform(),...metadata,id:args[0],kind:kind==='combine'?'boolean':kind==='exactFeature'?'exact-feature':kind};
-  if(kind==='code'){if(args.length!==4||typeof args[2]!=='string'||Object.hasOwn(metadata,'program'))fail(t('Code calls need source and input overrides'),record);node.program={version:1,language:'brickwright-cad-script',source:args[2],parameters:args[3]};}
+  if(kind==='code'){if(args.length!==4&&!(args.length===5&&args[4]===2)||typeof args[2]!=='string'||Object.hasOwn(metadata,'program'))fail(t('Code calls need source and input overrides'),record);node.program={version:args.length===5?2:1,language:'brickwright-cad-script',source:args[2],parameters:args[3]};}
   else if(kind==='mesh'){
    if(args.length!==3||!(args[2] instanceof Asset)||'positions'in metadata||'indices'in metadata)fail(t('Mesh calls require a project asset reference'),record);
    const original=Object.hasOwn(context.nodes,args[2].id)?context.nodes[args[2].id]:undefined;if(original?.kind!=='mesh')return fail(t('Referenced mesh asset is unavailable'),record);node.positions=original.positions;node.indices=original.indices;

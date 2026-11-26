@@ -93,6 +93,17 @@ by the optional exact B-rep kernel. A project that has none keeps its version (4
 stays readable by builds that predate 41; adding the first exact feature raises it to 41. Undo
 returns to the earlier version, and history revisions keep the version they were saved with.
 
+**Version 42 (2026-11-26) adds CAD Script revision 2: ruled lofts.** A code object's
+`program.version` may be 2, which builds `loft` side quads as ruled surfaces instead of two
+triangles along a fixed diagonal ([CODE-MODE.md](CODE-MODE.md#language-revisions)).
+`checkDocument` accepts revision 2 only in version 42 documents. A document reaches 42 only
+when it holds a revision-2 program, that is a program that calls `loft` and was created or
+edited since revision 2, or whose lofts were upgraded with **Upgrade lofts to ruled
+surfaces** (one Undo step). Programs without `loft` are stored as revision 1, so projects
+without lofts keep their version, and saved revision-1 lofts keep their triangulated
+geometry, byte for byte, until the user upgrades them. Builds that predate 42 refuse such a
+document rather than building its lofts along the diagonal.
+
 ```ts
 interface ExactFaceSelector { faceNormal: [number, number, number]; outermost?: true }
 interface ExactFeature {

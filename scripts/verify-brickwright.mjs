@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 import { strFromU8, unzipSync } from 'fflate';
 import { attachCadProject, extractCadProject } from '@brickwright/cad-brickwright';
-import { createCadSession, parseDocument, serializeDocument } from '@brickwright/cad-core';
+import { CAD_SCRIPT_REVISION, createCadSession, parseDocument, serializeDocument } from '@brickwright/cad-core';
 const root = resolve(process.argv[2] ?? '../local/lite-work');
 const require = createRequire(resolve(root, 'package.json')); const JSZip = require('jszip');
 const bundle = await import(pathToFileURL(resolve(root, 'overlay/scratch-gui/src/lib/bw-project-bundle.js')));
@@ -40,4 +40,15 @@ try {
  assert.notEqual(loaded?.outcome, 'refused'); assert.equal(saved.get(CAD_STORAGE_KEY), exact.serialize());
  assert.deepEqual(parseDocument(saved.get(CAD_STORAGE_KEY)), exact.state.document);
  console.log('PASS: document version 41 (exact features) survives the real Brickwright SB3 writer and loader unchanged and parses with this SDK.');
+ // Document version 42 (CAD Script revision 2, ruled lofts): the same byte-for-byte path. An
+ // older vendored SDK refuses the version instead of triangulating the lofts (docs/INTEGRATION.md).
+ const ruled = createCadSession();
+ ruled.addCode({ version: CAD_SCRIPT_REVISION, language: 'brickwright-cad-script', parameters: {}, source: 'return loft([[[0,0,0],[20,0,0],[20,20,0],[0,20,0]],[[10,-4,15],[24,10,15],[10,24,15],[-4,10,15]]]);' });
+ assert.equal(ruled.state.document.version, 42);
+ const v42 = attachCadProject(existing, ruled.state.document);
+ assert.deepEqual(extractCadProject(v42), ruled.state.document);
+ saved.clear(); const loadedRuled = await bundle.extractBrickwrightState(v42.buffer.slice(v42.byteOffset, v42.byteOffset + v42.byteLength));
+ assert.notEqual(loadedRuled?.outcome, 'refused'); assert.equal(saved.get(CAD_STORAGE_KEY), ruled.serialize());
+ assert.deepEqual(parseDocument(saved.get(CAD_STORAGE_KEY)), ruled.state.document);
+ console.log('PASS: document version 42 (ruled lofts) survives the real Brickwright SB3 writer and loader unchanged and parses with this SDK.');
 } finally { delete globalThis.localStorage; delete globalThis.window; delete globalThis.CustomEvent; }

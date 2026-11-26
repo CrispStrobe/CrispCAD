@@ -19,10 +19,10 @@ const maxDrafts=16,maxSourceBytes=32768,maxStoredCharacters=2_000_000;
 const object=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
 const identifier=(value:unknown):value is string=>typeof value==='string'&&value.length>0&&value.length<=256;
 function readProgram(value:unknown):CodeProgram|undefined {
- if(!object(value)||value.version!==1||value.language!=='brickwright-cad-script'||typeof value.source!=='string'||new TextEncoder().encode(value.source).length>maxSourceBytes||!object(value.parameters))return;
+ if(!object(value)||value.version!==1&&value.version!==2||value.language!=='brickwright-cad-script'||typeof value.source!=='string'||new TextEncoder().encode(value.source).length>maxSourceBytes||!object(value.parameters))return;
  const entries=Object.entries(value.parameters);
  if(entries.length>256||entries.some(([key,text])=>!/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(key)||['constructor','prototype','__proto__'].includes(key)||typeof text!=='string'||text.length>1024))return;
- return {version:1,language:'brickwright-cad-script',source:value.source,parameters:Object.fromEntries(entries) as Record<string,string>};
+ return {version:value.version,language:'brickwright-cad-script',source:value.source,parameters:Object.fromEntries(entries) as Record<string,string>};
 }
 function readDraft(value:unknown):CodeWorkspaceDraft|undefined {
  if(!object(value)||!identifier(value.projectId)||value.targetId!==undefined&&!identifier(value.targetId)||typeof value.name!=='string'||value.name.length>2000)return;

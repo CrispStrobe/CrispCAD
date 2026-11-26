@@ -253,6 +253,7 @@ export function lowerCodeShape(k: ExactKernel, shape: CodeShape): ExactSolid | n
       return profile && revolveProfile(k, profile, shape.angle);
     }
     case 'polyhedron': {
+      if (shape.ruled) return ruledLoft(k, shape.ruled, shape.points, shape.faces);
       if (shape.faces.length > MAX_POLYHEDRON_FACES) unsupported(`A polyhedron of ${shape.faces.length} faces exceeds the exact faceted-solid budget (${MAX_POLYHEDRON_FACES} faces).`);
       if (isConvexPolyhedron(shape.points, shape.faces)) { const hull = convexHull(shape.points); return k.polyhedron(hull.points, hull.faces); }
       return k.polyhedron(shape.points, shape.faces);
@@ -297,6 +298,31 @@ export function lowerCodeShape(k: ExactKernel, shape: CodeShape): ExactSolid | n
     }
     default: return unsupported(`CAD Script '${(shape as { kind: string }).kind}' has no exact lowering.`);
   }
+}
+
+/** Signed volume of a closed, outward-oriented polygon mesh (fans from each face's first vertex). */
+export function polyhedronVolume(points: readonly Vec3[], faces: readonly (readonly number[])[]): number {
+  let six = 0;
+  for (const face of faces) for (let i = 1; i + 1 < face.length; i++) {
+    const a = points[face[0]], b = points[face[i]], c = points[face[i + 1]];
+    six += a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0]) + a[2] * (b[0] * c[1] - b[1] * c[0]);
+  }
+  return six / 6;
+}
+
+/** A revision-2 CAD Script loft with twisted sides: SMLib's ruled loft through the sections, so
+ * each side is the true ruled (bilinear) surface that the mesh facets. Vertex i of a section is
+ * joined to vertex i of the next; the result must have the facets' volume (a fan around each
+ * twisted quad's centre has exactly the ruled volume), otherwise the kernel did not keep that
+ * correspondence and the solid is refused. Revision-1 lofts never get here: they stay polyhedra. */
+function ruledLoft(k: ExactKernel, sections: readonly (readonly Vec3[])[], points: readonly Vec3[], faces: readonly (readonly number[])[]): ExactSolid {
+  const solid = k.loft(sections.map(ring => ({ profile: k.profile.polygon([ring.map(p => [p[0], p[1]] as Vec2)]), at: [0, 0, ring[0][2]] as Vec3 })), { ruled: true });
+  const expected = polyhedronVolume(points, faces), actual = k.volume(solid);
+  if (!(Math.abs(actual - expected) <= 1e-7 * Math.abs(expected))) {
+    solid.dispose();
+    throw new ExactKernelError('kernel-failure', `The ruled loft's volume ${actual} differs from its faceted volume ${expected}; the kernel did not keep the vertex correspondence.`);
+  }
+  return solid;
 }
 
 /** Compile CAD Script and lower it to one exact solid (possibly of several components).

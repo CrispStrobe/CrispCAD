@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {t,codeExamples,codeExampleProgram,importOpenSCAD,getOpenSCADImportWarnings,importJSCAD,exportOpenSCAD,exportJSCAD,exportCodeSource,getLocale,compileCode,createCadSession,defaultCodeProgram,CadCodeError,pruneDocument} from '@brickwright/cad-core';
+import {t,codeExamples,codeExampleProgram,importOpenSCAD,getOpenSCADImportWarnings,importJSCAD,exportOpenSCAD,exportJSCAD,exportCodeSource,getLocale,compileCode,createCadSession,defaultCodeProgram,CadCodeError,pruneDocument,CAD_SCRIPT_REVISION,hasTriangulatedLofts} from '@brickwright/cad-core';
 import type {CadSession,CodeProgram,CadDocument} from '@brickwright/cad-core';
 import type {GeometryResult} from '@brickwright/cad-geometry';
 import {evaluatedPreview} from './shapes.js';
@@ -35,6 +35,9 @@ export function mountCodePanel(parent:HTMLElement,session:CadSession,evaluate:(d
   const original=node?.kind==='code'?node.program:defaultCodeProgram(),restored=workspace?drafts.load(projectId,id):undefined;
   let baseline=restored?restored.baseline:(node?.kind==='code'?structuredClone(node.program):undefined);
   let stale=!!restored&&!!id&&!sameProgram(restored.baseline,node?.kind==='code'?node.program:undefined);
+  // The CAD Script revision of the draft: an existing object keeps its own (the session decides
+  // whether an edit keeps revision-1 lofts), new code is written in the current revision.
+  let revision:CodeProgram['version']=restored?.program.version??(node?.kind==='code'?node.program.version:CAD_SCRIPT_REVISION);
   let overrides=structuredClone(restored?.program.parameters??original.parameters),busy=false,applying=false,inputVersion=0,importVersion=0,previewTimer:ReturnType<typeof setTimeout>|undefined;
   activeTarget=id;activeProject=projectId;
   dialog.classList.toggle('code-workspace',workspace);dialog.setAttribute('aria-label',t(workspace?'CAD code workspace':'Code object'));
@@ -81,8 +84,9 @@ export function mountCodePanel(parent:HTMLElement,session:CadSession,evaluate:(d
     // Only the most recently selected file may replace this draft or report an
     // error. A newer import can start before either file has finished reading.
     if(!active()||startedAt!==inputVersion||request!==importVersion)return;
-    const jscad=/\.(?:jscad|js)$/i.test(selected.name)?importJSCAD(text):undefined,converted=jscad?.program??(/\.scad$/i.test(selected.name)?importOpenSCAD(text):{version:1 as const,language:'brickwright-cad-script' as const,source:text,parameters:{}});compileCode(converted);
-    source.value=converted.source;showNotes(jscad?.warnings??getOpenSCADImportWarnings(converted));overrides={};parameterFields();changed();status.textContent=jscad?jscad.warnings[0]??t('Source loaded. Preview or apply to check its geometry.'):/\.scad$/i.test(selected.name)?t('Source converted. Preview before creating.'):t('Source loaded. Preview or apply to check its geometry.');
+    const jscad=/\.(?:jscad|js)$/i.test(selected.name)?importJSCAD(text):undefined,converted=jscad?.program??(/\.scad$/i.test(selected.name)?importOpenSCAD(text):{version:CAD_SCRIPT_REVISION,language:'brickwright-cad-script' as const,source:text,parameters:{}});compileCode(converted);
+    // JSCAD slice lofts keep revision 1: JSCAD triangulates them along the same diagonal.
+    revision=jscad?converted.version:CAD_SCRIPT_REVISION;source.value=converted.source;showNotes(jscad?.warnings??getOpenSCADImportWarnings(converted));overrides={};parameterFields();changed();status.textContent=jscad?jscad.warnings[0]??t('Source loaded. Preview or apply to check its geometry.'):/\.scad$/i.test(selected.name)?t('Source converted. Preview before creating.'):t('Source loaded. Preview or apply to check its geometry.');
    }catch(error){if(active()&&startedAt===inputVersion&&request===importVersion)reportError(error,false);}
   };
   exportButton.onclick=async()=>{try{const p=program(),extension=format.value,text=extension==='scad'?exportOpenSCAD(p):extension==='jscad'?exportJSCAD(p):exportCodeSource(p);await onExport?.({name:`${(name.value||'object').replace(/[^A-Za-z0-9_-]+/g,'_')}.${extension}`,bytes:new TextEncoder().encode(text),mime:'text/plain'});if(active())status.textContent=t('Source exported. The model and its history are unchanged.');}catch(error){if(active())reportError(error,false);}};interchange.append(importButton,file,format,exportButton);
@@ -90,7 +94,7 @@ export function mountCodePanel(parent:HTMLElement,session:CadSession,evaluate:(d
   const status=el('p');status.setAttribute('role','status');status.setAttribute('aria-label',t('Code status'));
   const preview=el('button',t('Preview code')),apply=el('button',t(id?'Apply code changes':'Create code object'));apply.className='primary';
   const reset=el('button',t('Use source defaults'));reset.onclick=()=>{overrides={};try{parameterFields();}catch(error){reportError(error,false);}changed();status.textContent=t('Overrides cleared. Preview to reload parameter controls.');};
-  const program=():CodeProgram=>({version:1,language:'brickwright-cad-script',source:source.value,parameters:structuredClone(overrides)});
+  const program=():CodeProgram=>({version:revision,language:'brickwright-cad-script',source:source.value,parameters:structuredClone(overrides)});
   function active(){return !disposed&&view===version&&dialog.open;}
   function persist(){
    if(!workspace)return;
@@ -200,7 +204,21 @@ export function mountCodePanel(parent:HTMLElement,session:CadSession,evaluate:(d
    else if(event.key==='Enter'&&(event.metaKey||event.ctrlKey)){event.preventDefault();clearCompletions();void build(false);}
   };
   source.onpointerdown=clearCompletions;source.onblur=clearCompletions;
-  left.append(name,exampleLabel,interchange,source,completions,shortcuts,note,importNotes,help);right.append(image,measures,fields,reset);layout.append(left,right);
+  // Saved revision-1 lofts are triangulated along a fixed diagonal; upgrading rebuilds them as
+  // ruled surfaces in one Undo step (docs/CODE-MODE.md#language-revisions).
+  const upgrade=el('button',t('Upgrade lofts to ruled surfaces'));upgrade.hidden=!(id&&node?.kind==='code'&&hasTriangulatedLofts(node.program));
+  upgrade.title=t('This object’s lofts are triangulated along one diagonal, as saved. Upgrading rebuilds them as ruled surfaces; Undo restores them.');
+  upgrade.onclick=()=>{
+   if(!id||!active())return;
+   if(stale||session.state.revision!==expected){markStale();return;}
+   applying=true;
+   try{session.upgradeLofts([id]);}catch(error){reportError(error,false);return;}finally{applying=false;}
+   const target=session.state.document.nodes[id];
+   model=session.state.document;expected=session.state.revision;if(target?.kind==='code')baseline=structuredClone(target.program);revision=2;upgrade.hidden=true;
+   inputVersion++;persist();schedulePreview();
+   status.textContent=t('Lofts upgraded to ruled surfaces. Undo restores the triangulated lofts.');
+  };
+  left.append(name,exampleLabel,interchange,source,completions,shortcuts,note,importNotes,upgrade,help);right.append(image,measures,fields,reset);layout.append(left,right);
   const footer=el('footer');footer.append(status,reload,preview,apply);dialog.append(header,layout,footer);
   try{parameterFields();}catch(error){reportError(error,false);}
   const unsubscribe=session.subscribe(state=>{if(!applying&&state.revision!==expected)markStale();});

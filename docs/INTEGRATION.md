@@ -368,6 +368,18 @@ creates declare the pinned exact kernel; a host that passes its own `session` cr
 [Host-created sessions and kernels](#host-created-sessions-and-kernels), or such records are
 refused with a clear message.
 
+**Document version 42: ruled lofts (CAD Script revision 2, 2026-11-26).** A code program's
+`version` may now be 2, which builds `loft` side quads between turned sections as ruled
+surfaces ([CODE-MODE.md](CODE-MODE.md#language-revisions)). Only documents that hold such a
+program are version 42: programs without a `loft` call are stored as revision 1, and saved
+revision-1 lofts keep their triangulated geometry until the user chooses **Upgrade lofts to
+ruled surfaces**. BrickWright needs no code change: syncing the SDK is enough, and until then its
+vendored SDK (which accepts versions up to 40) refuses version 42 documents instead of building
+their lofts along the old diagonal. The SB3 bundle keeps `brickwright/cad.json` byte for byte
+whatever its version. Hosts that create code programs themselves can keep writing
+`version: 1`; new lofts are then triangulated only if the host adds a new code object with a
+loft at revision 1 (use `CAD_SCRIPT_REVISION` for new content).
+
 **Document version 41: exact fillet, chamfer and shell (2026-11-25).** The SDK built from this
 repository reads and writes version 41, which adds the `exact-feature` node
 ([PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md#document-versions)). A document reaches version 41

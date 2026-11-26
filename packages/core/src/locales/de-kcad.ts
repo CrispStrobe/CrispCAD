@@ -35,4 +35,10 @@ export const messages: Record<string,string> = {
   "kernelCAD source threw an error": "Der kernelCAD-Quelltext hat einen Fehler ausgelöst",
   "kernelCAD syntax nesting limit exceeded": "kernelCAD-Verschachtelungsgrenze überschritten",
   "kernelCAD syntax tree limit exceeded": "kernelCAD-Syntaxbaumgrenze überschritten",
+  // CAD Script revision 2: ruled lofts.
+  "CAD Script revision 2 (ruled lofts) requires document version 42": "CAD Script Revision 2 (Regelflächen-Lofts) erfordert Dokumentversion 42",
+  "No triangulated lofts to upgrade": "Keine triangulierten Lofts zum Umstellen",
+  "Upgrade lofts to ruled surfaces": "Lofts auf Regelflächen umstellen",
+  "This object’s lofts are triangulated along one diagonal, as saved. Upgrading rebuilds them as ruled surfaces; Undo restores them.": "Die Lofts dieses Objekts sind wie gespeichert entlang einer Diagonale trianguliert. Umstellen baut sie als Regelflächen neu auf; Rückgängig stellt sie wieder her.",
+  "Lofts upgraded to ruled surfaces. Undo restores the triangulated lofts.": "Lofts auf Regelflächen umgestellt. Rückgängig stellt die triangulierten Lofts wieder her.",
 };

@@ -16,6 +16,7 @@ import type {CadJoint} from './physics.js';
 import { defaultPartPhysics, allocateMotorPort, pruneGearMeshes } from './physics.js';
 import { applyParametricBindings, assertDrivenEdit } from './parameters.js';
 import type {CodeProgram} from './code.js';
+import {hasTriangulatedLofts,normalizeCodeRevisions} from './code-revision.js';
 import {checkSketchCollection,closePathProfile,evaluateSketch,featureValue,isSketchFeature} from './features.js';
 import type {PlanarSketch,SketchProfile,FeatureScalar,RevolutionFeature,MirrorFeature,PatternFeature,PatternSettings} from './features.js';
 import {isOutlineCurveRule,outlineBulgesForCurves,outlineCurvesSatisfied,outlineRelationsForSolve,outlineSatisfiesRelations} from './outline-relations.js';
@@ -209,6 +210,7 @@ export function createCadSession(initial: CadDocument = createDocument(), option
     const nextSelection = edit(draft);
     const positioned=positionSketchRegions(draft);
     applyParametricBindings(draft);
+    normalizeCodeRevisions(document,draft);
     if(liveModelSource||draft.version>=6&&draft.modelSource){assertProvenanceUpgrade(draft);draft.version=Math.max(6,draft.version) as CadDocument['version'];draft.modelSource={version:1,language:'brickwright-design',source:updateModelSource(draft.modelSource?.source,draft)};}
     checkDocument(draft);
     for(const id of positioned)assertSketchJointsEditable(draft,id);
@@ -488,6 +490,24 @@ export function createCadSession(initial: CadDocument = createDocument(), option
     },
     addCode(program:CodeProgram,name='Code object',options:{position?:Vec3}={}){const id=newId();commit('Add code object',d=>{d.version=Math.max(d.version,4) as CadDocument['version'];d.nodes[id]={id,kind:'code',program:structuredClone(program),name:uniqueObjectName(name,new Set(d.roots.map(key=>d.nodes[key].name))),color:'#76b7ce',transform:{...identityTransform(),position:options.position??[0,0,0]}};d.roots.push(id);return [id];});return id;},
     updateCode(id:string,program:CodeProgram){commit('Edit code object',d=>{const node=d.nodes[id];if(node?.kind!=='code')throw new Error(t('Select a code object'));guardConstructionEdit(d,id);const next={...node,program:structuredClone(program)};if(next.physics&&!sameModelValue(node.program,program)){next.physics={...next.physics};delete next.physics.collisionAssembly;}d.nodes[id]=next;});},
+    /** Rebuild the revision-1 (triangulated) lofts of these code objects, or of every code object,
+     * as ruled surfaces (CAD Script revision 2): one Undo step that changes their geometry. */
+    upgradeLofts(ids?:readonly string[]){
+      let upgraded:string[]=[];
+      commit('Upgrade lofts to ruled surfaces',d=>{
+        const chosen=ids?[...new Set(ids)]:Object.keys(d.nodes);
+        if(ids&&chosen.some(id=>d.nodes[id]?.kind!=='code'))throw new Error(t('Select a code object'));
+        upgraded=chosen.filter(id=>{const node=d.nodes[id];return node.kind==='code'&&hasTriangulatedLofts(node.program);});
+        if(!upgraded.length)throw new Error(t('No triangulated lofts to upgrade'));
+        for(const id of upgraded){
+          guardConstructionEdit(d,id);
+          const node=d.nodes[id] as Extract<SolidNode,{kind:'code'}>,next={...node,program:{...structuredClone(node.program),version:2 as const}};
+          if(next.physics){next.physics={...next.physics};delete next.physics.collisionAssembly;}
+          d.nodes[id]=next;
+        }
+      });
+      return upgraded;
+    },
     addSketch(profile:SketchProfile,options:Pick<SketchPatch,'name'|'plane'|'artworkSourceId'|'artworkProfile'>={}) {
       const id=newId();
       commit('Add sketch',d=>{

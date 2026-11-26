@@ -5,7 +5,7 @@
 // TypeScript annotations must be stripped first (see scripts/convert-kcad.mjs).
 // Output is an evaluated snapshot: one CAD Script program per assembly part.
 import {parse} from 'acorn';
-import {CadCodeError,CODE_LIMITS,compileCode} from './code.js';
+import {CAD_SCRIPT_REVISION,CadCodeError,CODE_LIMITS,compileCode} from './code.js';
 import type {CodeProgram} from './code.js';
 import {t} from './i18n.js';
 import {shapeBoundsBySide} from './kcad-bounds.js';
@@ -224,7 +224,7 @@ export function importKernelCAD(source:string,overrides:Record<string,number|str
       // Evaluated at conversion time from the converted part: exact bounds of the modelled solid
       // (true circles, cylinders and spheres), which is what { exact: true } asks for.
       const o=optionsOf(args[0],['exact'],'boundingBox');if(o.exact!==true)return unsupported('shape.boundingBox without { exact: true } (padded kernel bounds)');
-      let tree;try{tree=compileCode({version:1,language:'brickwright-cad-script',parameters:{},source:`return ${self.source};`}).shape;}catch{return unsupported('shape.boundingBox of a part over the CAD Script limits');}
+      let tree;try{tree=compileCode({version:CAD_SCRIPT_REVISION,language:'brickwright-cad-script',parameters:{},source:`return ${self.source};`}).shape;}catch{return unsupported('shape.boundingBox of a part over the CAD Script limits');}
       // A side that is not guaranteed (a cutter reaching it, an intersection) becomes a marker that
       // refuses conversion only when the script actually reads it.
       const b=shapeBoundsBySide(tree),side=(v:number|undefined,lower:number,upper:number):Value=>v===undefined?new UncertainBound(lower,upper):Number(fmt(v)),both=(f:(lo:number,hi:number)=>number)=>b.min.map((lo,i)=>lo===undefined||b.max[i]===undefined?new UncertainBound(-Infinity,Infinity):Number(fmt(f(lo,b.max[i]!))));
@@ -281,7 +281,8 @@ export function importKernelCAD(source:string,overrides:Record<string,number|str
  const returned=result instanceof Returned?result.value:undefined;
  const parts=returned instanceof Assembly?returned.parts:returned instanceof Shape?[{name:typeof meta?.name==='string'?meta.name:'model',shape:returned}]:fail(t('kernelCAD source must return a shape or an assembly model'));
  const out:KernelCADPart[]=[],skippedParts:{name:string;reason:string}[]=[];
- for(const part of parts){const program:CodeProgram={version:1,language:'brickwright-cad-script',parameters:{},source:`return ${part.shape.source};`};try{compileCode(program);out.push({name:part.name,...(part.shape.color?{color:part.shape.color}:{}),program});}catch(error){skippedParts.push({name:part.name,reason:error instanceof Error?error.message:String(error)});}}
+ // kernelCAD's ruled lofts are ruled surfaces: programs with a loft are revision 2, the others revision 1 (identical).
+ for(const part of parts){const program:CodeProgram={version:CAD_SCRIPT_REVISION,language:'brickwright-cad-script',parameters:{},source:`return ${part.shape.source};`};try{if(!compileCode(program).usesLoft)program.version=1;out.push({name:part.name,...(part.shape.color?{color:part.shape.color}:{}),program});}catch(error){skippedParts.push({name:part.name,reason:error instanceof Error?error.message:String(error)});}}
  if(!out.length)fail(t('No kernelCAD part fits the CAD Script limits'),undefined,'resource-limit');
  const text=(v:Value)=>typeof v==='string'?v:undefined;
  return {...(text(meta?.name)?{name:text(meta?.name)}:{}),...(text(meta?.title)?{title:text(meta?.title)}:{}),...(text(meta?.description)?{description:text(meta?.description)}:{}),license,parts:out,skippedParts,warnings:[...warnings],parameters:{...parameters}};

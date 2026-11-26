@@ -18,6 +18,7 @@ export * from './sketch-dxf-layer.js';
 export * from './sketch-dxf-width.js';
 export * from './templates.js';
 export * from './code.js';
+export * from './code-revision.js';
 
 export * from "./i18n.js";
 

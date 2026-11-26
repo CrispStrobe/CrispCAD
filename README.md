@@ -118,6 +118,11 @@ upstream edit the editor recomputes it as one attributed Undo step; `recompute e
 on request. Projects with exact features are document version 41; others keep their version.
 See [exact fillet, chamfer and shell](docs/TERMINAL-WORKSPACE.md#exact-fillet-chamfer-and-shell).
 
+**Ruled lofts.** CAD Script's `loft` builds ruled side surfaces between sections turned against
+each other, as kernelCAD and the exact kernel do (language revision 2). Saved programs keep
+their triangulated lofts until **Upgrade lofts to ruled surfaces** (one Undo step); projects
+with ruled lofts are document version 42. See [language revisions](docs/CODE-MODE.md#language-revisions).
+
 The reviewed model library keeps original sources, hashes, licence evidence,
 unit assumptions and qualification records. Browsing does not qualify a model;
 source conversion, mesh screening and collision qualification are separate steps.

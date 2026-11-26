@@ -38,6 +38,7 @@ export const messages: Record<string,string> = {
   'Edit shape parameters': 'Formparameter bearbeiten',
   'Add code object': 'Codeobjekt hinzufügen',
   'Edit code object': 'Codeobjekt bearbeiten',
+  'Upgrade lofts to ruled surfaces': 'Lofts auf Regelflächen umstellen',
   'Add sketch': 'Skizze hinzufügen',
   'Extrude sketch': 'Skizze extrudieren',
   'Add sketch extrusion': 'Skizzenextrusion hinzufügen',

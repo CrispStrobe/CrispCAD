@@ -3,14 +3,14 @@ import {readFile,writeFile,stat,access} from 'node:fs/promises';
 import {resolve,extname,basename} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
-import {importOpenSCAD,getOpenSCADImportWarnings,importJSCAD,exportOpenSCAD,exportJSCAD,exportCodeSource,compileCode,createCadSession,CadCodeError,setLocale,t} from '@brickwright/cad-core';
+import {importOpenSCAD,getOpenSCADImportWarnings,importJSCAD,exportOpenSCAD,exportJSCAD,exportCodeSource,compileCode,createCadSession,CadCodeError,setLocale,t,CAD_SCRIPT_REVISION} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import {appendPortableRevision} from '@brickwright/cad-history';
 export function convertSource(source,{from,to='cadcode',parameters={},entryPoint,arguments:args}={}){
  let program,outputs,warnings=[],evaluatedSnapshot=false,inputParameters={};
  if(from==='openscad'){program=importOpenSCAD(source);warnings=getOpenSCADImportWarnings(program);}
  else if(from==='jscad'){const result=importJSCAD(source,parameters,{entryPoint,arguments:args});({program,outputs,warnings,evaluatedSnapshot}=result);inputParameters=result.parameters;}
- else if(from==='cadcode')program={version:1,language:'brickwright-cad-script',source,parameters:{}};
+ else if(from==='cadcode')program={version:CAD_SCRIPT_REVISION,language:'brickwright-cad-script',source,parameters:{}};
  else throw Error(t('Choose openscad, jscad or cadcode as the input format'));
  if(from!=='jscad')program.parameters=parameters;compileCode(program);
  outputs??=[{program}];
