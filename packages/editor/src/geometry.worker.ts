@@ -7,17 +7,16 @@ import type {GeometryRequest} from './geometry-client.js';
 let kernel: Promise<GeometryKernel> | null = null;
 // The exact kernel is a separate, lazily imported chunk with its own 9.4 MB WebAssembly. Only a
 // worker that receives an exact request loads it; Manifold-only sessions never fetch it.
-let exact:Promise<import('@brickwright/cad-exact').ExactBackend>|null=null;
+let exact:Promise<{module:typeof import('@brickwright/cad-exact');backend:import('@brickwright/cad-exact').ExactBackend}>|null=null;
 self.onmessage = async (event: MessageEvent<GeometryRequest>) => {
   const {request,wasmURL}=event.data;
   try {
     setLocale(event.data.locale??'en');
     if('exact' in event.data){
-      const {operation,document,bodies}=event.data.exact,started=performance.now();
-      exact??=import('@brickwright/cad-exact').then(module=>module.createExactBackend()).catch(error=>{exact=null;throw error;});
-      const backend=await exact,loaded=performance.now();
-      const computed=operation==='measure'?{operation,...backend.measure(document,bodies)}:operation==='feature-display'?{operation,...backend.featureDisplays(document,bodies)}:{operation,...backend.exportStep(document,bodies)};
-      const result={...computed,timing:{loadMs:loaded-started,runMs:performance.now()-loaded,memoryBytes:backend.kernel.memory().heap}} as ExactCommandResult;
+      const started=performance.now();
+      exact??=import('@brickwright/cad-exact').then(async module=>({module,backend:await module.createExactBackend()})).catch(error=>{exact=null;throw error;});
+      const {module,backend}=await exact;
+      const result:ExactCommandResult=module.runExactRequest(backend,event.data.exact,performance.now()-started);
       self.postMessage({request,result});
       return;
     }

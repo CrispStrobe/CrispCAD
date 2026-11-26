@@ -3,7 +3,7 @@
 // loads the kernel lab's SMLib build once per process or worker. Hosts import this module
 // lazily (dynamic import) so the default Manifold path never pays for it.
 import {staleExactFeatures,validateDocument,t} from '@brickwright/cad-core';
-import type {CadDocument,ExactFeatureDisplay,KernelIdentity} from '@brickwright/cad-core';
+import type {CadDocument,ExactCommandHost,ExactCommandRequest,ExactCommandResult,ExactFeatureDisplay,KernelIdentity} from '@brickwright/cad-core';
 import {createSmlibKernel,ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactSolid,SmlibLoadOptions} from '@crispcad/exact-kernel';
 import {exactKernelIdentity} from './identity.js';
@@ -125,4 +125,40 @@ let shared:Promise<ExactBackend>|undefined;
 export function createExactBackend(options:SmlibLoadOptions={}):Promise<ExactBackend>{
  shared??=createSmlibKernel(options).then(createExactBackendFromKernel,error=>{shared=undefined;throw error;});
  return shared;
+}
+
+/**
+ * One exact request on a loaded backend, with its timing: what the editor's exact worker, the MCP
+ * exact thread and the in-thread fallback all run. `loadMs` is the caller's (0 once loaded).
+ */
+export function runExactRequest(backend:ExactBackend,request:ExactCommandRequest,loadMs=0):ExactCommandResult{
+ const started=performance.now();
+ const computed=request.operation==='measure'?{operation:'measure' as const,...backend.measure(request.document,request.bodies)}
+  :request.operation==='feature-display'?{operation:'feature-display' as const,...backend.featureDisplays(request.document,request.bodies)}
+  :{operation:'export-step' as const,...backend.exportStep(request.document,request.bodies)};
+ return {...computed,timing:{loadMs,runMs:performance.now()-started,memoryBytes:backend.kernel.memory().heap}};
+}
+
+/**
+ * An `ExactCommandHost` that runs the kernel in the calling thread: for hosts without workers,
+ * and for tests. It blocks that thread for as long as the kernel runs (on a browser's main thread,
+ * the UI), so the editor uses it only when it cannot start its exact worker. An abort before the
+ * request starts or while it waits for the kernel to load cancels it; a running kernel call cannot
+ * be interrupted in-thread, so an abort during it only discards the result.
+ */
+export function createInThreadExactHost(options:SmlibLoadOptions={}):ExactCommandHost{
+ const cancelled=()=>new Error(t('Request cancelled'));
+ return {
+  async run(request,signal){
+   if(signal?.aborted)throw cancelled();
+   const started=performance.now(),backend=await createExactBackend(options),loaded=performance.now();
+   if(signal?.aborted)throw cancelled();
+   // Yield once so a caller that just showed progress gets a frame before the kernel blocks.
+   await new Promise(resolve=>setTimeout(resolve,0));
+   if(signal?.aborted)throw cancelled();
+   const result=runExactRequest(backend,request,loaded-started);
+   if(signal?.aborted)throw cancelled();
+   return result;
+  },
+ };
 }

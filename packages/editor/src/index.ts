@@ -18,7 +18,7 @@ import { createGeometryClient } from './geometry-client.js';
 // Identity only: no WebAssembly is loaded until an exact command runs in the exact worker.
 import {createEditorSession,exactEditHost} from './kernels.js';
 import {artworkSketchTargets,prepareArtworkSketchRefresh} from './costume-refresh.js';
-import type {SketchProfile} from '@brickwright/cad-core';
+import type {ExactCommandHost,SketchProfile} from '@brickwright/cad-core';
 import {mountTransformReadout} from './transform-readout.js';
 import type {GridDisplay} from './workplane-grid.js';
 export type {GridDisplay} from './workplane-grid.js';
@@ -94,6 +94,8 @@ export interface CadEditorOptions {
   session?: CadSession;
   document?: CadDocument;
   createWorker?: () => Worker;
+  /** Exact requests when the exact worker cannot start; see GeometryClientOptions.exactFallback. */
+  exactFallback?: ExactCommandHost;
   onDocumentChange?: (document: CadDocument, revision: number) => void;
   onSimulationInterrupt?:()=>void;
   onSelectionChange?: (selection: readonly string[]) => void;
@@ -130,7 +132,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   let operationError = '';
   function report(e: unknown) { const error = e instanceof Error ? e : new Error(String(e)); operationError = error.message; message.textContent = error.message; if (!disposed) options.onError?.(error); }
   const run = (fn: () => unknown) => { try { const result = fn(); if (result instanceof Promise) result.catch(report); } catch (e) { report(e); } };
-  const client = createGeometryClient(new URL(options.wasmURL, document.baseURI).href, options.createWorker);
+  const client = createGeometryClient(new URL(options.wasmURL, document.baseURI).href, options.createWorker, {exactFallback:options.exactFallback});
   let viewport: ReturnType<typeof mountViewport>;let customAppearance=!!options.appearance;
   try { viewport = mountViewport(viewHost, session, report,options.appearance);if(!options.appearance&&options.colorMode==='light')viewport.setAppearance({background:'#e7eef7',baseplate:'#cdd9e8'});viewport.setNavigation(options.navigationPreset??'tinkercad');if(options.cameraGestures)viewport.setCameraGestures(options.cameraGestures);viewport.setResizeControls(options.resizeControls??'dimensions');viewport.setGridDisplay(options.gridDisplay??'snap');viewport.setSurfaceSnap(options.surfaceSnap??true); } catch (e) { client.dispose(); shadow.replaceChildren(); if (ownsSession) session.dispose(); throw e; }
   const empty = el('div', 'empty'); empty.append(el('strong', '', t('Your next idea starts here.')), document.createTextNode(t('Pick a shape above. Set its dimensions in Properties. Drag to orbit; pinch to zoom.'))); viewHost.append(empty);

@@ -115,6 +115,31 @@ describe('geometry client exact channel',()=>{
   await rejected;
   client.dispose();
  });
+ it('falls back to the host\'s in-thread runner when the exact worker cannot start, never for Manifold',async()=>{
+  const runs:string[]=[],fallback={run:async(request:{operation:string})=>{runs.push(request.operation);return measure;}};
+  // A constructor that throws: the request runs in the fallback, and so does every later one.
+  let constructed=0;
+  const thrown=createGeometryClient('wasm',()=>{constructed++;throw new Error('Workers are disabled');},{exactFallback:fallback as never});
+  expect(await thrown.exact.run({operation:'measure',document:createDocument(),bodies:[]})).toEqual(measure);
+  expect(await thrown.exact.run({operation:'export-step',document:createDocument(),bodies:[]})).toEqual(measure);
+  expect(runs).toEqual(['measure','export-step']);expect(constructed).toBe(1);
+  await expect(thrown.evaluate(createDocument())).rejects.toThrow('Workers are disabled');
+  thrown.dispose();
+  // A worker script that fails to load before answering: what is waiting moves to the fallback.
+  const workers:MockWorker[]=[],failing=createGeometryClient('wasm',()=>{const w=new MockWorker();workers.push(w);return w as unknown as Worker;},{exactFallback:fallback as never});
+  const waiting=failing.exact.run({operation:'measure',document:createDocument(),bodies:[]});
+  workers[0].onerror!({message:'Module scripts are not supported'});
+  expect(await waiting).toEqual(measure);expect(workers[0].terminated).toBe(true);
+  // A worker that answered once keeps its errors: a crash later is not a reason to block the UI.
+  const answering=createGeometryClient('wasm',()=>{const w=new MockWorker();workers.push(w);return w as unknown as Worker;},{exactFallback:fallback as never});
+  const first=answering.exact.run({operation:'measure',document:createDocument(),bodies:[]});
+  const worker=workers.at(-1)!;worker.onmessage!({data:{request:worker.messages[0].request,result:measure}});await first;
+  const crashed=answering.exact.run({operation:'measure',document:createDocument(),bodies:[]});
+  worker.onerror!({message:'out of memory'});
+  await expect(crashed).rejects.toThrow('out of memory');
+  expect(runs).toHaveLength(3);
+  failing.dispose();answering.dispose();
+ });
  it('gives the first exact request 60 seconds before stopping it',async()=>{
   vi.useFakeTimers();
   const workers:MockWorker[]=[],client=createGeometryClient('wasm',()=>{const w=new MockWorker();workers.push(w);return w as unknown as Worker;});
