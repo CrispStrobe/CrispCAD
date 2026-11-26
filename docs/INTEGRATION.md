@@ -113,9 +113,9 @@ gets those. Fields:
 | --- | ---: | ---: | --- |
 | `maxFeatureEdges` | 400 (≈ 100 curved) | 1000 | Fillet/chamfer: refused before the kernel runs when the selected edges, counted with each curved edge as `CURVED_EDGE_WEIGHT` (4) straight ones, exceed it. |
 | `maxShellFaces` | 160 | 500 | Shell: refused when the body has more faces. |
-| `maxMemoryBytes` | 512 MiB | 2 GiB | Ceiling for the exact worker's WebAssembly memory (written into the module's memory maximum when it loads). A job that needs more fails with "ran out of memory". |
+| `maxMemoryBytes` | 512 MiB | 2 GiB | Ceiling for the exact worker's WebAssembly memory (the kernel's `maxMemoryBytes`, applied when it loads, once per worker). A job that needs more fails with "ran out of memory". |
 | `recycleAboveBytes` | 192 MiB | 512 MiB | After a job that left the kernel's memory above this, the worker is ended (its memory returns to the page) and the next job starts a new one. |
-| `requestTimeoutMs` | 60 s | 120 s | The whole request, first load included; then the worker is ended. |
+| `requestTimeoutMs` | 60 s | 120 s | The whole request, first load included; then the worker is ended. The kernel's own guard for shell-like steps is loaded as half of it (`guardSeconds`; `exactKernelOptions(limits)`). |
 
 Refusals, the memory ceiling, the timeout and Cancel all end in a translated message, and none of
 them changes the model or its history: exact output is committed only after the kernel answered.
@@ -124,8 +124,9 @@ requests rerun in a new one. While an exact job runs, the status bar shows what 
 long, and a Cancel button (`client.exactActivity`/`onExactActivity` in the geometry client); the
 Fillet, chamfer, shell dialog has its own Cancel. The standalone app uses the desktop limits in the
 macOS app and on computers without touch, and the tablet limits elsewhere (`?exact-limits=` overrides
-it). `createInThreadExactHost({limits})` applies the same pre-flight to the in-thread fallback (no
-memory ceiling there: the kernel shares the page's thread and process).
+it). `createInThreadExactHost({limits})` applies the same pre-flight to the in-thread fallback; given
+full `ExactLimits` it also loads the kernel with their memory ceiling and guard, which there is the
+only stop a shell-like step has (a kernel call on the page's thread cannot be ended).
 
 
 File export is deliberately host-owned; if `onExport` is absent the export

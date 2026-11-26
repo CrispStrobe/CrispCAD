@@ -147,8 +147,8 @@ describe('registry commands',()=>{
   expect(exactKernelIdentity).toEqual({id:'smlib',package:pkg.name,version:pkg.version});
   const manifest=JSON.parse(readFileSync('packages/exact/package.json','utf8')),lock=JSON.parse(readFileSync('package-lock.json','utf8'));
   const spec=manifest.dependencies['@crispcad/exact-kernel'],entry=lock.packages['node_modules/@crispcad/exact-kernel'];
-  expect(spec).toBe('https://github.com/CrispStrobe/crispcad-kernel-lab/releases/download/exact-kernel-v0.1.4/crispcad-exact-kernel-0.1.4.tgz');
-  expect(entry).toMatchObject({resolved:spec,version:'0.1.4',license:'MIT AND Apache-2.0',integrity:'sha512-q/D0H45a3XUXnp4MNrGCCFsiOhbLhjkVtnVVu2+ladAYXzMUd0pVrrWRQypVWG5G3KMJ3BlwUnEseCpCnqx6PQ=='});
+  expect(spec).toBe('https://github.com/CrispStrobe/crispcad-kernel-lab/releases/download/exact-kernel-v0.1.6/crispcad-exact-kernel-0.1.6.tgz');
+  expect(entry).toMatchObject({resolved:spec,version:'0.1.6',license:'MIT AND Apache-2.0',integrity:'sha512-/nRsGn4f02a16RUNntKbBm79PfFmXIZiEA/TArjWZQIIVSLhFfrCSPOhkZvhtOjR6exEYSiDumCmwpn/9F/wIQ=='});
   expect(entry.dependencies).toBeUndefined();
  });
 });

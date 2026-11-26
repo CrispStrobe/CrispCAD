@@ -34,10 +34,11 @@ Runtime dependencies:
   (MIT / University of Illinois-NCSA). Preserve their upstream notices when
   redistributing a runtime build.
 - fflate 0.8.3, MIT, copyright Arjun Barrett.
-- Optional exact B-rep kernel: `@crispcad/exact-kernel` 0.1.4 from the CrispCAD
+- Optional exact B-rep kernel: `@crispcad/exact-kernel` 0.1.6 from the CrispCAD
   kernel lab (https://github.com/CrispStrobe/crispcad-kernel-lab, release
-  `exact-kernel-v0.1.4`), MIT AND Apache-2.0, copyright CrispCAD contributors. It
-  prebundles `@classcad/smlibwasm` 0.6.2 (MIT, copyright 2026 AWV Informatik AG)
+  `exact-kernel-v0.1.6`), MIT AND Apache-2.0, copyright CrispCAD contributors. It
+  prebundles smlibwasm 0.6.2 (`@classcad/smlibwasm`, MIT, copyright 2026 AWV
+  Informatik AG), built from source by the lab with recorded provenance and
   without its OFL font, with SMLib and its SM_API wrapper from USD BRep
   (Apache-2.0, copyright 2020-2026 NVIDIA CORPORATION & AFFILIATES; a few files
   modified by AWV Informatik AG to fix defects, listed in the smlibpy repository's

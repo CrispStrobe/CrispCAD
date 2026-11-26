@@ -21,10 +21,12 @@ self.onmessage = async (event: MessageEvent<GeometryRequest>) => {
     setLocale(event.data.locale??'en');
     if('exact' in event.data){
       const started=performance.now();
-      // The memory ceiling applies when the kernel loads (the first exact request of this worker);
-      // the client starts a new worker when its limits change.
+      // The kernel's memory ceiling (maxMemoryBytes) and its guard for shell-like steps
+      // (guardSeconds, derived from the request budget) apply when it loads, once per worker (the
+      // first exact request); the client starts a new worker when its limits change. The request
+      // budget, ending this worker, stays the real stop for a job the guard does not reach.
       const limits=event.data.exactLimits;
-      exact??=import('@brickwright/cad-exact').then(async module=>({module,backend:await module.createExactBackend({maxMemoryBytes:limits?.maxMemoryBytes})})).catch(error=>{exact=null;throw error;});
+      exact??=import('@brickwright/cad-exact').then(async module=>({module,backend:await module.createExactBackend(limits?module.exactKernelOptions(limits):{})})).catch(error=>{exact=null;throw error;});
       const {module,backend}=await exact;
       try{
         const result:ExactCommandResult=module.runExactRequest(backend,event.data.exact,performance.now()-started,{limits});

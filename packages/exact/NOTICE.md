@@ -6,14 +6,17 @@ from `experiments/exact-kernel` on 2026-11-25).
 
 Runtime dependencies:
 - `@brickwright/cad-core` 0.1.0 (this repository, BSD-3-Clause).
-- `@crispcad/exact-kernel` 0.1.4 from the CrispCAD kernel lab
-  (https://github.com/CrispStrobe/crispcad-kernel-lab, release `exact-kernel-v0.1.4`,
-  tarball `crispcad-exact-kernel-0.1.4.tgz`, SHA-256
-  ee3f53510c6c406137b79417769547aed0877240c653eed925ca8c3efa578b6e), declared
+- `@crispcad/exact-kernel` 0.1.6 from the CrispCAD kernel lab
+  (https://github.com/CrispStrobe/crispcad-kernel-lab, release `exact-kernel-v0.1.6`,
+  tarball `crispcad-exact-kernel-0.1.6.tgz`, SHA-256
+  2f928537b3c55c96ddab8656af6760e09f670980ec01621dd324bc83545deaa3), declared
   `MIT AND Apache-2.0`, copyright CrispCAD contributors. It has no runtime dependencies.
   Its `dist/` prebundles:
-  - `@classcad/smlibwasm` 0.6.2, MIT, copyright 2026 AWV Informatik AG, without its
-    default text font (the OFL Lato font module is replaced by an empty one);
+  - smlibwasm 0.6.2 (`@classcad/smlibwasm`), MIT, copyright 2026 AWV Informatik AG,
+    built from source by the kernel lab (smlibpy v0.6.2 with USD BRep, Emscripten
+    6.0.12; the package's `BUILD-PROVENANCE.json` records the sources and the sha256 of
+    every file, each identical to the npm release), not installed from npm, and without
+    its default text font (the OFL Lato font module is replaced by an empty one);
   - `dist/smlibwasm.wasm`: SMLib and its SM_API wrapper from USD BRep, Apache-2.0,
     copyright 2020-2026 NVIDIA CORPORATION & AFFILIATES, with AWV's bindings (MIT). A few
     USD BRep files are compiled from copies modified by AWV Informatik AG to fix defects

@@ -5,11 +5,12 @@
 import {staleExactFeatures,validateDocument,t} from '@brickwright/cad-core';
 import type {CadDocument,ExactCommandHost,ExactCommandRequest,ExactCommandResult,ExactFeatureDisplay,KernelIdentity} from '@brickwright/cad-core';
 import {createSmlibKernel,ExactKernelError} from '@crispcad/exact-kernel';
-import type {ExactKernel,ExactSolid,SmlibLoadOptions} from '@crispcad/exact-kernel';
+import type {ExactKernel,ExactSolid,SmlibKernel,SmlibLoadOptions} from '@crispcad/exact-kernel';
 import {exactKernelIdentity} from './identity.js';
 import {lowerDocumentBody} from './lower-document.js';
 import {exactFeatureDisplay} from './display.js';
-import {withWasmMemoryCap} from './memory-cap.js';
+import {exactKernelOptions} from './limits.js';
+import type {ExactLimits} from './limits.js';
 import type {ExactFeatureLimits} from './lower-document.js';
 
 export * from './identity.js';
@@ -19,13 +20,12 @@ export {displayMesh,displayTessellation,exactFeatureDisplay} from './display.js'
 export {triangulatePolygon,facewiseMesh,MANY_LOOPS} from './face-mesh.js';
 export type {ExactFeatureResult} from './display.js';
 export type {ExactDiagnostic,ExactFeatureLimits} from './lower-document.js';
-export {EXACT_LIMITS_TABLET,EXACT_LIMITS_DESKTOP,EXACT_LIMITS_NONE,CURVED_EDGE_WEIGHT,resolveExactLimits} from './limits.js';
+export {EXACT_LIMITS_TABLET,EXACT_LIMITS_DESKTOP,EXACT_LIMITS_NONE,CURVED_EDGE_WEIGHT,resolveExactLimits,exactGuardSeconds,exactKernelOptions} from './limits.js';
 export type {ExactLimits} from './limits.js';
 export {exactFeatureCost,checkExactFeatureCost} from './feature-cost.js';
 export type {ExactFeatureCost} from './feature-cost.js';
-export {capWasmMemory,withWasmMemoryCap} from './memory-cap.js';
 export {ExactKernelError} from '@crispcad/exact-kernel';
-export type {ExactKernel,ExactSolid,SmlibLoadOptions} from '@crispcad/exact-kernel';
+export type {ExactKernel,ExactSolid,SmlibKernel,SmlibLoadOptions} from '@crispcad/exact-kernel';
 
 /** At most this many bodies per exact request (as the Manifold interference check). */
 export const MAX_EXACT_BODIES=64;
@@ -72,7 +72,7 @@ export interface ExactRunOptions {readonly limits?:ExactFeatureLimits}
 export interface ExactBackend {
  readonly kernel:ExactKernel;
  readonly info:ExactKernelInfo;
- /** The ceiling the kernel's WebAssembly memory was loaded with (bytes), if any. */
+ /** The ceiling the kernel's WebAssembly memory was loaded with (bytes, whole 64 KiB pages), if any. */
  readonly memoryCapBytes?:number;
  /** Exact volume, area, bounding box and centroid of each body. */
  measure(doc:CadDocument,ids?:readonly string[],options?:ExactRunOptions):ExactMeasureResult;
@@ -82,7 +82,7 @@ export interface ExactBackend {
  featureDisplays(doc:CadDocument,ids?:readonly string[],options?:ExactRunOptions):ExactFeatureDisplayResult;
 }
 
-export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes?:number):ExactBackend{
+export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(kernel as Partial<SmlibKernel>).maxMemoryBytes):ExactBackend{
  const info:ExactKernelInfo=Object.freeze({...exactKernelIdentity,smlib:kernel.version,licence:kernel.licence});
  const lower=(input:CadDocument,ids?:readonly string[],options:ExactRunOptions={})=>{
   const doc=validateDocument(input),targets=exactTargets(doc,ids);
@@ -133,22 +133,21 @@ export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes?:
  };
 }
 
-export interface ExactBackendOptions extends SmlibLoadOptions {
- /**
-  * Ceiling for the kernel's WebAssembly memory (bytes; see memory-cap.ts). A job that needs more
-  * fails with an error instead of growing the page's memory; the kernel is not to be trusted
-  * afterwards (`isFatalExactError`), so a host discards it, e.g. by ending its worker. Like the
-  * other options, it counts only on the first call in a process or worker. Ignored with
-  * `wasmModule` (an already compiled module cannot be changed).
-  */
- maxMemoryBytes?:number;
-}
+/**
+ * How the kernel loads, and its limits (`exactKernelOptions(limits)` derives the last two):
+ * - `maxMemoryBytes`: ceiling for the kernel's WebAssembly memory, applied by the kernel when the
+ *   module is instantiated (the wasm bytes are not changed). A job that needs more fails with
+ *   `kernel-failure` "ran out of memory" instead of growing the page's memory; the kernel is not to
+ *   be trusted afterwards (`isFatalExactError`), so a host discards it, e.g. by ending its worker,
+ *   which is also how the memory returns to its baseline.
+ * - `guardSeconds`: the kernel's guard for shell, offset and similar steps (default 20 s; 0: none).
+ * Like the other options, they count only on the first call in a process or worker.
+ */
+export type ExactBackendOptions=SmlibLoadOptions;
 let shared:Promise<ExactBackend>|undefined;
 /** Load SMLib once (per process or worker) and return the exact backend on it. */
 export function createExactBackend(options:ExactBackendOptions={}):Promise<ExactBackend>{
- const {maxMemoryBytes,...load}=options;
- shared??=withWasmMemoryCap(maxMemoryBytes,()=>createSmlibKernel(load))
-  .then(({value,capped})=>createExactBackendFromKernel(value,capped?maxMemoryBytes:undefined),error=>{shared=undefined;throw error;});
+ shared??=createSmlibKernel(options).then(kernel=>createExactBackendFromKernel(kernel),error=>{shared=undefined;throw error;});
  return shared;
 }
 
@@ -187,10 +186,13 @@ export function runExactRequest(backend:ExactBackend,request:ExactCommandRequest
  * request starts or while it waits for the kernel to load cancels it; a running kernel call cannot
  * be interrupted in-thread, so an abort during it only discards the result. Pass `limits` (e.g.
  * EXACT_LIMITS_TABLET) to refuse heavy features before they block the thread; without them nothing
- * is refused, as for the MCP and CLI hosts.
+ * is refused, as for the MCP and CLI hosts. Full `ExactLimits` also set the kernel's memory ceiling
+ * and guard (`exactKernelOptions`) unless the load options give them, since in-thread the guard is
+ * the only stop for a shell-like step.
  */
-export function createInThreadExactHost(options:ExactBackendOptions&ExactRunOptions={}):ExactCommandHost{
- const {limits,...load}=options;
+export function createInThreadExactHost(options:ExactBackendOptions&{readonly limits?:ExactFeatureLimits&Partial<ExactLimits>}={}):ExactCommandHost{
+ const {limits,...given}=options;
+ const load={...(limits&&typeof limits.maxMemoryBytes==='number'&&typeof limits.requestTimeoutMs==='number'?exactKernelOptions(limits as ExactLimits):{}),...given};
  const cancelled=()=>new Error(t('Request cancelled'));
  return {
   async run(request,signal){

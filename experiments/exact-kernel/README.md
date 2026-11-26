@@ -11,13 +11,14 @@ scorecard as the gate.
 [Product path](#product-path-2026-11-25)). This directory remains the qualification suite. The
 kernel is the CrispCAD kernel lab's
 [`@crispcad/exact-kernel`](https://github.com/CrispStrobe/crispcad-kernel-lab/tree/ccr-f42f1bfe-3ekdio/packages/exact-kernel)
-0.1.4 (MIT AND Apache-2.0), installed from the tarball of the lab release
-[`exact-kernel-v0.1.4`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.4)
+0.1.6 (MIT AND Apache-2.0), installed from the tarball of the lab release
+[`exact-kernel-v0.1.6`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.6)
 and pinned by URL and lockfile integrity (Phase 2b of
 [CRISPCAD-CONVERGENCE.md](../../docs/CRISPCAD-CONVERGENCE.md#phase-2b-move-the-exact-kernel-into-the-lab-as-a-package)).
 Since 2026-11-25 it is a dependency of `packages/exact` (same URL and integrity), and this
 directory uses the root install; until then it had its own `package.json` dependency and lock. The
-package prebundles `@classcad/smlibwasm` 0.6.2 without its font, so every installed file is
+package prebundles smlibwasm 0.6.2 (`@classcad/smlibwasm`), built from source in the lab with
+recorded provenance and without its font, so every installed file is
 MIT or Apache-2.0 (see [Licence audit](#licence-audit)).
 
 The `ExactKernel` interface, its SMLib implementation and the exact convex hull
@@ -339,12 +340,16 @@ Findings:
   (fillet op: 12 s for 100 rims, 40 s for 200).
 - **The shell guard is wall-clock and covers only part of the shell.** The 200-hole shell did not
   hit it (33 s op, the offset step itself was quick); the sawtooth shells below did, at 2.5 s CPU.
-  smlibwasm's `setGuardSeconds` is not exported by `@crispcad/exact-kernel`, so CrispCAD cannot
-  change it; its own request budget ends the job instead.
+  Until kernel 0.1.6 `setGuardSeconds` was not exported, so CrispCAD could not change it; it now
+  loads the kernel with `guardSeconds` at half the request budget, but in an ordinary Web Worker
+  the guard is checked only inside long intersection loops, so the request budget ends the job.
 - **Fillet and chamfer have no kernel deadline at all** on natively built bodies
   (`round_edges` runs in-thread): only terminating the worker stops them.
 
-**The memory ceiling works.** `cap-probe.ts` loads the kernel with a 96 MiB ceiling and asks SMLib
+**The memory ceiling works.** (Measured with CrispCAD's byte rewrite of the module's memory
+maximum; since kernel 0.1.6 the kernel's own `maxMemoryBytes` holds the ceiling at
+instantiation, and `tests/exact-memory-cap.test.ts` checks the same behaviour with it.)
+`cap-probe.ts` loads the kernel with a 96 MiB ceiling and asks SMLib
 for the whole-body mesh of the 200-hole plate (297 MiB uncapped): after 5.8 s it fails with
 `ExactKernelError(kernel-failure): SMLib mesh failed: tessellate failed (SM_ERR_OUT_OF_MEMORY)
 … (std::bad_alloc)`, memory stays at 92 MiB, and the same kernel then fillets a box correctly.

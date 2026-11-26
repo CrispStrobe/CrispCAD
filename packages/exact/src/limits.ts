@@ -16,13 +16,15 @@ export interface ExactLimits {
  readonly maxFeatureEdges:number;
  /** Shell: the most faces the shelled body may have (the kernel offsets every one). */
  readonly maxShellFaces:number;
- /** The exact kernel's WebAssembly memory may not grow beyond this (bytes; applied where the kernel
-  * loads, i.e. in the editor's exact worker). A job that needs more fails cleanly. */
+ /** The exact kernel's WebAssembly memory may not grow beyond this (bytes; the kernel's
+  * `maxMemoryBytes`, applied where it loads, i.e. in the editor's exact worker, once per worker).
+  * A job that needs more fails cleanly with "ran out of memory". */
  readonly maxMemoryBytes:number;
  /** After a job that left the kernel's memory above this (bytes), the host discards the kernel
   * (terminates its worker) so memory returns to its baseline; the next job loads it again. */
  readonly recycleAboveBytes:number;
- /** The whole request, including the first load, is stopped after this long (ms). */
+ /** The whole request, including the first load, is stopped after this long (ms): the host ends
+  * the worker. The kernel's own guard for shell-like steps is derived from it (`exactGuardSeconds`). */
  readonly requestTimeoutMs:number;
 }
 
@@ -54,4 +56,26 @@ export function resolveExactLimits(limits:Partial<ExactLimits>|undefined,base:Ex
   if(typeof value==='number'&&value>0)out[key]=value;
  }
  return Object.freeze(out);
+}
+
+/**
+ * The kernel's guard for shell, offset and similar steps (`createSmlibKernel({guardSeconds})`),
+ * derived from the request budget: half of it, so a step the kernel stops itself leaves time for
+ * the rest of the job and answers before the host has to end the worker. Undefined (the kernel's
+ * own 20 s) without a finite budget. The guard is wall-clock only where the kernel can run a probe
+ * worker (Node, cross-origin-isolated workers); in an ordinary Web Worker SMLib checks it only
+ * inside long intersection loops, so the request budget and ending the worker stay the real stop.
+ */
+export function exactGuardSeconds(limits:Pick<ExactLimits,'requestTimeoutMs'>):number|undefined{
+ const ms=limits.requestTimeoutMs;
+ return Number.isFinite(ms)&&ms>0?Math.max(1,Math.floor(ms/2000)):undefined;
+}
+/**
+ * The kernel load options `limits` imply (pass them to `createExactBackend` where the kernel
+ * loads): the memory ceiling, when finite, and the guard. Both hold for the whole process or
+ * worker; the kernel loads once there, so a host with other limits starts a new worker.
+ */
+export function exactKernelOptions(limits:Pick<ExactLimits,'maxMemoryBytes'|'requestTimeoutMs'>):{maxMemoryBytes?:number;guardSeconds?:number}{
+ const guardSeconds=exactGuardSeconds(limits);
+ return {...(Number.isFinite(limits.maxMemoryBytes)&&limits.maxMemoryBytes>0?{maxMemoryBytes:limits.maxMemoryBytes}:{}),...(guardSeconds!==undefined?{guardSeconds}:{})};
 }

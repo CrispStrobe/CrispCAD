@@ -1,59 +1,46 @@
 // SPDX-License-Identifier: BSD-3-Clause
-// Guards for heavy exact jobs (iPad safety): the WebAssembly memory ceiling, pre-flight refusal of
+// Guards for heavy exact jobs (iPad safety): the kernel's memory ceiling and guard from the limits, pre-flight refusal of
 // fillets/chamfers/shells that touch too many edges or faces, and the editor's exact channel:
 // recycling the worker after a job that grew its memory or broke its kernel, the request budget
 // from the host's limits, cancellation and the busy state.
 import {afterEach,beforeAll,describe,expect,it,vi} from 'vitest';
 import {createCadSession,createDocument,identityTransform} from '@brickwright/cad-core';
 import type {CadDocument,ExactFeatureSettings} from '@brickwright/cad-core';
-import {ExactKernelError,lowerDocumentNode,capWasmMemory,checkExactFeatureCost,createExactBackend,EXACT_LIMITS_DESKTOP,EXACT_LIMITS_NONE,EXACT_LIMITS_TABLET,exactFeatureCost,exactKernelIdentity,isFatalExactError,resolveExactLimits,runExactRequest,withWasmMemoryCap} from '@brickwright/cad-exact';
+import {ExactKernelError,lowerDocumentNode,checkExactFeatureCost,createExactBackend,EXACT_LIMITS_DESKTOP,EXACT_LIMITS_NONE,EXACT_LIMITS_TABLET,exactFeatureCost,exactGuardSeconds,exactKernelIdentity,exactKernelOptions,isFatalExactError,resolveExactLimits,runExactRequest} from '@brickwright/cad-exact';
 import type {ExactBackend} from '@brickwright/cad-exact';
 import * as limitsOnly from '@brickwright/cad-exact/limits';
 import {createGeometryClient} from '../packages/editor/dist/geometry-client.js';
 import type {ExactActivity} from '../packages/editor/dist/geometry-client.js';
 
 const MiB=1048576;
-/** A module with one exported memory: 1 page initially, at most `maxPages`, the max as `width` LEB bytes. */
-function memoryModule(maxPages:number|undefined,width=3):Uint8Array{
- const lebOf=(value:number,bytes?:number)=>{const out=[];do{let b=value&127;value=Math.floor(value/128);if(value||bytes&&out.length<bytes-1)b|=128;out.push(b);}while(value||bytes&&out.length<bytes);return out;};
- const limits=maxPages===undefined?[0,1]:[1,1,...lebOf(maxPages,width)];
- const memory=[1,...limits],exports=[1,1,'m'.charCodeAt(0),2,0];
- return new Uint8Array([0,0x61,0x73,0x6d,1,0,0,0,5,memory.length,...memory,7,exports.length,...exports]);
-}
-const memoryOf=async(bytes:Uint8Array)=>((await WebAssembly.instantiate(bytes)).instance.exports.m as WebAssembly.Memory);
 
-describe('WebAssembly memory ceiling',()=>{
- it('lowers a module\'s memory maximum in place, so growth past it fails',async()=>{
-  const original=memoryModule(65536);
-  const capped=capWasmMemory(original,3*65536)!;
-  expect(capped).toBeInstanceOf(Uint8Array);expect(capped.length).toBe(original.length);
-  expect(original).toEqual(memoryModule(65536));// the input is not changed
-  const memory=await memoryOf(capped);
-  expect(memory.grow(2)).toBe(1);
-  expect(()=>memory.grow(1)).toThrow(RangeError);
-  expect(memory.buffer.byteLength).toBe(3*65536);
-  // Uncapped, the same growth succeeds.
-  expect((await memoryOf(original)).grow(3)).toBe(1);
+describe('kernel load options from the limits',()=>{
+ it('give the kernel its memory ceiling and a guard derived from the request budget',()=>{
+  // The ceiling is the kernel's own `maxMemoryBytes` (held at instantiation; the wasm bytes are not
+  // rewritten); the guard is half the request budget, so the kernel answers before the host ends it.
+  expect(exactKernelOptions(EXACT_LIMITS_TABLET)).toEqual({maxMemoryBytes:512*MiB,guardSeconds:30});
+  expect(exactKernelOptions(EXACT_LIMITS_DESKTOP)).toEqual({maxMemoryBytes:2048*MiB,guardSeconds:60});
+  // No limits: no ceiling, and the kernel keeps its own 20 s guard.
+  expect(exactKernelOptions(EXACT_LIMITS_NONE)).toEqual({});
+  expect(exactGuardSeconds({requestTimeoutMs:5000})).toBe(2);
+  expect(exactGuardSeconds({requestTimeoutMs:500})).toBe(1);
+  expect(exactGuardSeconds({requestTimeoutMs:Infinity})).toBeUndefined();
+  for(const limits of [EXACT_LIMITS_TABLET,EXACT_LIMITS_DESKTOP])expect(exactGuardSeconds(limits)!*1000).toBeLessThan(limits.requestTimeoutMs);
  });
- it('never goes below the initial size and leaves modules it cannot or need not change alone',()=>{
-  const capped=capWasmMemory(memoryModule(65536),1)!;
-  expect(capped).toBeDefined();
-  expect(capWasmMemory(memoryModule(undefined),3*65536)).toBeUndefined();// no maximum: section would grow
-  expect(capWasmMemory(memoryModule(4),8*65536)).toBeUndefined();// already lower
-  expect(capWasmMemory(memoryModule(65536),Infinity)).toBeUndefined();
-  expect(capWasmMemory(new Uint8Array([1,2,3,4,5,6,7,8]),65536)).toBeUndefined();// not WebAssembly
-  // A ceiling that does not fit the old number's width is refused rather than moving offsets.
-  expect(capWasmMemory(memoryModule(100,1),2*65536)).toBeDefined();
-  expect(capWasmMemory(memoryModule(127,1),126*65536)).toBeDefined();
- });
- it('caps modules instantiated while the kernel loads, and restores WebAssembly afterwards',async()=>{
-  const instantiate=WebAssembly.instantiate;
-  const {value,capped}=await withWasmMemoryCap(2*65536,()=>memoryOf(memoryModule(65536)));
-  expect(capped).toBe(true);expect(()=>value.grow(2)).toThrow(RangeError);
-  expect(WebAssembly.instantiate).toBe(instantiate);
-  await expect(withWasmMemoryCap(2*65536,async()=>{throw new Error('load failed');})).rejects.toThrow('load failed');
-  expect(WebAssembly.instantiate).toBe(instantiate);
-  expect((await withWasmMemoryCap(undefined,async()=>1)).capped).toBe(false);
+ it('reach the kernel where it loads: an in-thread host with full limits passes them on',async()=>{
+  const created=vi.fn(async()=>{throw new Error('load stopped here');});
+  vi.resetModules();
+  vi.doMock('@crispcad/exact-kernel',async original=>({...(await original<object>()),createSmlibKernel:created}));
+  try{
+   const fresh=await import('@brickwright/cad-exact');
+   await expect(fresh.createInThreadExactHost({limits:EXACT_LIMITS_TABLET}).run(request())).rejects.toThrow('load stopped here');
+   expect(created).toHaveBeenLastCalledWith({maxMemoryBytes:512*MiB,guardSeconds:30});
+   // Feature limits alone (or explicit load options) leave the kernel's own defaults.
+   await expect(fresh.createInThreadExactHost({limits:{maxFeatureEdges:10,maxShellFaces:10}}).run(request())).rejects.toThrow();
+   expect(created).toHaveBeenLastCalledWith({});
+   await expect(fresh.createInThreadExactHost({limits:EXACT_LIMITS_TABLET,guardSeconds:5}).run(request())).rejects.toThrow();
+   expect(created).toHaveBeenLastCalledWith({maxMemoryBytes:512*MiB,guardSeconds:5});
+  }finally{vi.doUnmock('@crispcad/exact-kernel');vi.resetModules();}
  });
  it('tells fatal kernel failures from ordinary refusals',()=>{
   expect(isFatalExactError(new WebAssembly.RuntimeError('unreachable'))).toBe(true);
@@ -61,6 +48,8 @@ describe('WebAssembly memory ceiling',()=>{
   expect(isFatalExactError(new Error('SMLib mesh failed',{cause:new Error('SM_ERR_OUT_OF_MEMORY: the kernel ran out of memory (std::bad_alloc)')}))).toBe(true);
   expect(isFatalExactError(new Error('SMLib fillet failed: the radius may be too large'))).toBe(false);
   expect(isFatalExactError(undefined)).toBe(false);
+  // The kernel's ceiling refuses growth with a RangeError where it is not caught inside SMLib.
+  expect(isFatalExactError(new RangeError('WebAssembly memory ceiling of 536870912 bytes reached'))).toBe(true);
  });
 });
 
@@ -72,7 +61,7 @@ describe('limits',()=>{
   expect(EXACT_LIMITS_DESKTOP.maxFeatureEdges).toBeGreaterThan(EXACT_LIMITS_TABLET.maxFeatureEdges);
   expect(EXACT_LIMITS_TABLET.maxMemoryBytes).toBeLessThanOrEqual(512*MiB);
   // The editor's main thread imports this module: it must not pull in the kernel package.
-  expect(Object.keys(limitsOnly).sort()).toEqual(['CURVED_EDGE_WEIGHT','EXACT_LIMITS_DESKTOP','EXACT_LIMITS_NONE','EXACT_LIMITS_TABLET','resolveExactLimits']);
+  expect(Object.keys(limitsOnly).sort()).toEqual(['CURVED_EDGE_WEIGHT','EXACT_LIMITS_DESKTOP','EXACT_LIMITS_NONE','EXACT_LIMITS_TABLET','exactGuardSeconds','exactKernelOptions','resolveExactLimits']);
  });
 });
 

@@ -2,6 +2,7 @@
 // The optional exact kernel (@brickwright/cad-exact on @crispcad/exact-kernel) is a lazy chunk
 // of the geometry worker. Emit every file that belongs to it under assets/exact/, so the service
 // worker can leave it out of the eager offline precache and cache it on first use instead.
+import {transformWithEsbuild} from 'vite';
 export const EXACT_ASSET_DIR='assets/exact/';
 const exactModule=id=>/[\\/]@crispcad[\\/]exact-kernel[\\/]|[\\/]packages[\\/]exact[\\/]|[\\/]@brickwright[\\/]cad-exact[\\/]/.test(id);
 const exactAsset=name=>/^(smlibwasm|_defeature_)/.test(name);
@@ -29,6 +30,23 @@ export function emitWasmFiles(){
       let changed=false;
       const next=code.replace(wasmURL,(_,quote,file)=>{changed=true;return `new URL(${quote}${file}?no-inline${quote}, import.meta.url)`;});
       return changed?{code:next,map:null}:null;
+    },
+  };
+}
+
+/**
+ * Keep the function names of @crispcad/exact-kernel's bundled modules through minification. Since
+ * 0.1.6 the kernel holds a memory ceiling (`maxMemoryBytes`) by wrapping smlibwasm's Emscripten
+ * `_emscripten_resize_heap` import, which it finds by the function's `name` (the import keys are
+ * minified). A minified build renamed it, and the kernel then refused to load with a ceiling
+ * ("the loader has no _emscripten_resize_heap import"); every exact job in the browser failed.
+ */
+export function preserveExactKernelNames(){
+  return {
+    name:'crispcad:preserve-exact-kernel-names',enforce:'pre',
+    transform(code,id){
+      if(!/[\\/]@crispcad[\\/]exact-kernel[\\/]dist[\\/][^\\/?]+\.js$/.test(id.split('?')[0]))return null;
+      return transformWithEsbuild(code,id,{loader:'js',target:'esnext',keepNames:true});
     },
   };
 }

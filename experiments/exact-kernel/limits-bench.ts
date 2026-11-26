@@ -4,13 +4,13 @@
 // running peak). Calibrates the pre-flight limits in packages/exact/src/limits.ts.
 //
 // The browser editor is not cross-origin isolated, so smlibwasm has no probe worker there: shell
-// runs in the worker's own kernel under its 20 s deadline and fillet/chamfer run without one.
+// runs in the worker's own kernel under its guard (20 s unless guardSeconds sets it) and fillet/chamfer run without one.
 // Node has a probe worker; this bench hides SharedArrayBuffer so Node takes the editor's path.
 //
 //   npm run build:packages && node experiments/exact-kernel/limits-bench.ts [10,25,50,100,150,200] [fillet,chamfer,shell] [capMiB]
 // Variants fillet-poly, chamfer-poly, shell-poly use a sawtooth outline of n straight edges instead.
 // writes results/limits-<os>-<arch>.json. With capMiB, the kernel's memory is capped as in the
-// editor's worker (see packages/exact/src/memory-cap.ts).
+// editor's worker (the kernel's `maxMemoryBytes`, see packages/exact/src/limits.ts).
 import {execFileSync} from 'node:child_process';
 import {writeFileSync} from 'node:fs';
 import {cpuUsage} from 'node:process';

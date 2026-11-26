@@ -217,9 +217,10 @@ What the measurements changed:
   the product uses only as a fallback.
 - **Time is.** The 200-hole rim fillet takes about 74 s CPU end to end on the loaded M1 (roughly
   35 s unloaded), the shell about 39 s; both grow faster than linearly. Fillet and chamfer of
-  natively built bodies have no kernel deadline at all, and the kernel's 20 s guard (`shell`
-  only, and only part of it) cannot be changed from CrispCAD: `setGuardSeconds` is not exported
-  by `@crispcad/exact-kernel`. The editor's own budget is what ends a slow job.
+  natively built bodies have no kernel deadline at all, and the kernel's guard (`shell`
+  only, and only part of it) is not a reliable stop: in an ordinary Web Worker SMLib checks it
+  only inside long intersection loops. Since kernel 0.1.6 CrispCAD sets it (`guardSeconds`, half
+  the request budget), but the editor's own budget is what ends a slow job.
 - **A straight edge costs about a quarter of a curved one** (fillet and display of 100 straight
   edges 6.4 s CPU, of 100 hole rims 27 s; 400 straight edges 37 s).
 - **The kernel's shell guard is wall-clock.** Under heavy load, shells of a 50-tooth prism failed
@@ -227,25 +228,29 @@ What the measurements changed:
   the same can happen to shells that would finish; the editor now says so in a translated message
   ("stopped this step at its own 20 s limit… The model was not changed").
 
-Design (`packages/exact/src/limits.ts`, `feature-cost.ts`, `memory-cap.ts`;
+Design (`packages/exact/src/limits.ts`, `feature-cost.ts`;
 `packages/editor/src/geometry-client.ts`, `geometry.worker.ts`, `exact-activity.ts`):
 
 1. **Pre-flight.** Before the kernel runs a fillet, chamfer or shell (also when STEP export or a
    measure rebuilds one), the source solid's selected edges are counted, a curved edge as four
    straight ones, or for shell its faces. Over the host's limit the job is refused with a
    translated message that names the counts and the limit; the kernel never starts.
-2. **Memory ceiling.** The exact worker loads the kernel with its WebAssembly memory maximum
-   lowered in the module bytes (smlibwasm defines its own memory, 64 MiB, growable to 4 GiB; the
-   maximum is one LEB128 number, rewritten in place while the kernel is instantiated). Past the
-   ceiling SMLib reports `SM_ERR_OUT_OF_MEMORY` cleanly (`bad_alloc` is caught, measured), and the
-   editor says the kernel ran out of memory for this job.
+2. **Memory ceiling.** The exact worker loads the kernel with `maxMemoryBytes` from the limits
+   (`exactKernelOptions`; smlibwasm's memory starts at 64 MiB and may grow to 4 GiB, and since
+   kernel 0.1.6 the kernel holds the ceiling at instantiation without changing the module's
+   bytes; until then CrispCAD rewrote the memory maximum in the bytes). Past the ceiling SMLib
+   reports `SM_ERR_OUT_OF_MEMORY` cleanly (`bad_alloc` is caught, measured), and the editor says
+   the kernel ran out of memory for this job. The ceiling is set once per worker, so recycling
+   (3.) is still how memory returns to its baseline.
 3. **Recycling.** After a job that left the kernel's memory above `recycleAboveBytes`, and after
    any memory exhaustion or WebAssembly trap, the client ends the exact worker (its memory goes
    back to the page) and starts a new one lazily on the next request; requests queued behind a
    broken kernel are rerun in the new worker.
 4. **Time.** The request budget comes from the limits (60 s tablet, 120 s desktop); then the
    worker is terminated, since the kernel cannot be interrupted mid-call, and the message says
-   the model was not changed.
+   the model was not changed. The kernel's own guard for shell-like steps is loaded as half that
+   budget (`guardSeconds`, 30 s / 60 s), so where it takes, the kernel answers first with a
+   translated "stopped this step at its own … s limit"; it is a courtesy, not the stop.
 5. **UI.** The status bar shows the running exact job, its elapsed seconds and a Cancel button
    for every exact request (terminal, recompute, measure, STEP export); the Fillet, chamfer, shell
    dialog, which is modal, has its own Cancel and elapsed time. Cancel terminates the exact
@@ -334,9 +339,43 @@ Product entry additionally needs:
 
 ### Phase 2b: move the exact kernel into the lab as a package. **Done 2026-11-25**
 
-Release: [`exact-kernel-v0.1.4`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.4)
-of the kernel lab, tarball `crispcad-exact-kernel-0.1.4.tgz`, SHA-256
-`ee3f53510c6c406137b79417769547aed0877240c653eed925ca8c3efa578b6e`.
+Release: [`exact-kernel-v0.1.6`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.6)
+of the kernel lab, tarball `crispcad-exact-kernel-0.1.6.tgz`, SHA-256
+`2f928537b3c55c96ddab8656af6760e09f670980ec01621dd324bc83545deaa3`.
+
+0.1.6 replaced 0.1.4 (SHA-256 `ee3f5351…6b8e`) on 2026-11-26; 0.1.5 was skipped. What the two
+releases changed:
+
+- **Own smlibwasm build (0.1.5).** The bundled smlibwasm 0.6.2 is now compiled by the lab from
+  source (smlibpy v0.6.2, USD BRep `c9c5979f`, Emscripten 6.0.12, TypeScript 5.9.3), reproducibly:
+  the shipped `BUILD-PROVENANCE.json` records the sources, the build and the sha256 of every file,
+  and each file is byte-identical to the npm release. `@classcad/smlibwasm` is no longer a
+  dependency of the package (its lockfile entry has none).
+- **Loft pairing (0.1.5, made opt-in in 0.1.6).** 0.1.5 re-started straight-edged sections with
+  equal vertex counts as OpenCASCADE's `BRepOffsetAPI_ThruSections` does and built polygon
+  sections as wires; that broke CAD Script's ruled and smooth lofts (`tests/ruled-loft.test.ts`,
+  `tests/smooth-loft.test.ts` failed on 0.1.5), so CrispCAD skipped it. In 0.1.6
+  `k.loft(sections,{ruled,pairing})` defaults to `pairing:'authored'` (vertex i joins vertex i, as
+  in 0.1.4), and the OCCT-compatible rule is opt-in as `pairing:'closest'`. CrispCAD passes no
+  pairing: its lowering already authors the correspondence. Sections with different vertex counts
+  get OCCT's polar vertex insertion with either pairing.
+- **Kernel options (0.1.6).** `createSmlibKernel({maxMemoryBytes,guardSeconds})`, read back as
+  `k.maxMemoryBytes`, `k.guardSeconds()` and changed with `k.setGuardSeconds(s)`, all per process
+  or worker. The memory ceiling is applied at instantiation through Emscripten's
+  `instantiateWasm` hook (the wasm bytes are unchanged); past it a job fails with
+  `kernel-failure` "ran out of memory", and loading again with another ceiling is an error. CrispCAD
+  now uses both (see [Heavy exact jobs on iPad](#heavy-exact-jobs-on-ipad-2026-11-26)): the
+  editor's exact worker passes `maxMemoryBytes` from its limits instead of rewriting the module's
+  memory maximum in the bytes (`memory-cap.ts` is gone), and `guardSeconds` derived from the
+  request budget (half of it: 30 s tablet, 60 s desktop) instead of the fixed 20 s. The kernel
+  finds the loader's `_emscripten_resize_heap` import by its function name; Vite's minifier
+  renamed it, and in the built app the kernel then refused to load with a ceiling ("the loader has
+  no _emscripten_resize_heap import"), so every exact job failed in the browser while Node tests
+  passed. The app and SDK builds keep the kernel modules' names (`preserveExactKernelNames` in
+  `scripts/exact-kernel-assets.js`, checked by `tests/exact-kernel-names.test.ts` and the
+  `exact-guards` browser spec); finding the import by name is fragile and worth fixing in the lab.
+
+Recorded commands carry kernel 0.1.6; 0.1.4 recordings replay as stale, as designed.
 
 0.1.4 replaced 0.1.3 (SHA-256 `f9cfc354…3b8f`) on 2026-11-26. `profile.path` lofts now keep
 each section's outline as authored; SMLib's face construction had re-picked the start vertex
@@ -345,7 +384,7 @@ lofted to an octagon came out at 113.4e6 instead of 224.1e6 mm³). CrispCAD's ow
 passes sections to `k.loft` directly and was not affected; the lab's native build had the same
 bug (catalog `hill-tile`, `ground-tile`) and is fixed in the same lab change. The lab also
 documents a byte-identical rebuild of the bundled smlibwasm from source
-(`packages/exact-kernel/BUILD-WASM.md`); the release still ships the npm binary.
+(`packages/exact-kernel/BUILD-WASM.md`); 0.1.4 still shipped the npm binary.
 
 0.1.3 replaced 0.1.2 (SHA-256 `f025cd79…3823`) on 2026-11-26. `profile.polygon` and
 `profile.path` now refuse self-crossing outlines (bow ties, pentagrams) with `invalid-input`;

@@ -159,8 +159,9 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
   if(error instanceof ExactLoweringError)throw error;
   const code=error instanceof ExactKernelError?error.code:'invalid-input';
   let message=error instanceof Error?error.message:String(error);
-  // smlibwasm's own wall-clock guard on shell/offset steps (20 s, not configurable from here): its
-  // message ends in a developer hint (setGuardSeconds), so say what happened instead.
+  // The kernel's own guard on shell/offset steps (`guardSeconds`: 20 s by default; the editor's
+  // exact worker derives it from the request budget): its message ends in a developer hint
+  // (setGuardSeconds), so say what happened instead.
   const guard=/the kernel did not finish within ([\d.]+) s/.exec(message);
   if(guard)message=t`The exact kernel stopped this step at its own ${guard[1]} s limit, so it was not built. The model was not changed. Try a simpler body.`;
   throw new ExactLoweringError({code,bodyId,nodeId:id,feature:node.kind,message:`${node.name} (${node.kind}): ${message}`},{cause:error});
