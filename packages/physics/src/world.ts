@@ -94,6 +94,8 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
  const quaternionPoint=(p:number[],q:number[])=>{const [x,y,z,w]=q,[a,b,c]=p,u=2*(y*c-z*b),v=2*(z*a-x*c),t=2*(x*b-y*a);return [a+w*u+y*t-z*v,b+w*v+z*u-x*t,c+w*t+x*v-y*u];};
  const ownedBodies:any[]=[],byId=new Map<string,any>(),constraints=new Map<string,any>();let disposed=false,elapsed=0,contactListener:any,partFilter:any;
  let rayQuery:ReturnType<typeof createRayQuery>|undefined;
+ const sensorPoses=new Map<NativeBody,{revision:number;pose:ReturnType<typeof readPose>}>();
+ let poseRevision=0;
  const actuatorFrames=new Map<string,{
   joint:CadJoint;a:any;b:any;axis:number[];anchorM?:number[];motor:any;impulseConfigured:boolean;
  }>();
@@ -270,7 +272,7 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    });
   }finally{J.destroy(bc);}
  };
- function dispose(){if(disposed)return;disposed=true;rayQuery?.dispose();rayQuery=undefined;for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
+ function dispose(){if(disposed)return;disposed=true;rayQuery?.dispose();rayQuery=undefined;sensorPoses.clear();for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
  let scratchVertex:any,scratchPosition:any,scratchRotation:any;
  function createCompound(members:typeof meshes):NativeShape{
   const compound=new J.StaticCompoundShapeSettings();
@@ -456,12 +458,18 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    if(disposed||!node||!body||![...originMm,...direction,rangeMm].every(Number.isFinite)||rangeMm<=0||rangeMm>100000||Math.hypot(...direction)<1e-9){
     throw new Error(t('Invalid body sensor ray'));
    }
-   const rotation=body.GetRotation(),q=[rotation.GetX(),rotation.GetY(),rotation.GetZ(),rotation.GetW()];
-   const position=body.GetPosition(),translation=[position.GetX(),position.GetY(),position.GetZ()];
+   // Pre-step validation and post-step casts can share each native pose
+   // across all rays and welded parts at the same solver boundary.
+   let cached=sensorPoses.get(body);
+   if(cached?.revision!==poseRevision){
+    cached={revision:poseRevision,pose:readPose(body)};
+    sensorPoses.set(body,cached);
+   }
+   const {positionMm,quaternion}=cached.pose;
    const local=originMm.map((value,i)=>value*node.transform.scale[i]);
    const source=rotate(local,node.transform.rotation).map((value,i)=>value+node.transform.position[i]);
-   const origin=quaternionPoint(source,q).map((value,i)=>value+translation[i]*1000) as Vec3;
-   const axis=quaternionPoint(rotate(direction,node.transform.rotation),q),length=Math.hypot(...axis);
+   const origin=quaternionPoint(source,quaternion).map((value,i)=>value+positionMm[i]) as Vec3;
+   const axis=quaternionPoint(rotate(direction,node.transform.rotation),quaternion),length=Math.hypot(...axis);
    const to=origin.map((value,i)=>value+axis[i]/length*rangeMm) as Vec3;
    return {origin,to};
  }
@@ -488,6 +496,9 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    // The last substep already checked the current poses. External edits
    // that may break clearance restore collision filtering for affected pairs.
    if(substeps>0&&elapsed===0)checkSeparatedFrames();
+   // Existing sensor bodies move only inside the solver. Mark their cached
+   // poses stale before stepping, including if the native step throws.
+   if(substeps>0)poseRevision++;
    for(let i=0;i<substeps;i++){
     if(grab){const body=byId.get(grab.id),p=body.GetPosition(),q=body.GetRotation(),point=quaternionPoint(grab.local,[q.GetX(),q.GetY(),q.GetZ(),q.GetW()]).map((v,i)=>v+[p.GetX(),p.GetY(),p.GetZ()][i]),at=new J.RVec3(...point),velocity=bodies.GetPointVelocity(body.GetID(),at),speed=[velocity.GetX(),velocity.GetY(),velocity.GetZ()],acceleration=point.map((v,i)=>400*(grab!.target[i]*.001-v)-40*speed[i]),length=Math.hypot(...acceleration),force=new J.Vec3(...acceleration.map(v=>v*Math.min(1,100/Math.max(1e-9,length))*bodyMass.get(grab!.id)!));body.AddForce(force,at);bodies.ActivateBody(body.GetID());J.destroy(force);J.destroy(at);}
     world.Step(1/200,1);elapsed+=1/200;checkSeparatedFrames();

@@ -63,7 +63,9 @@ it('body-mounted rays ignore their own rigid assembly and see external obstacles
  const attachment=s.add({kind:'box',size:[20,20,20]},{transform:{...identityTransform(),position:[20,0,0]}});
  const wall=s.add({kind:'box',size:[20,20,20]},{transform:{...identityTransform(),position:[100,0,0]}});
  s.addJoint('fixed',host,attachment,[10,0,0],[1,0,0]);
- const doc=s.state.document,geometry=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,geometry,kernel),world=await createPhysicsWorld(doc,geometry,prepared,{ground:false});
+ const J=await loadPhysicsEngine(false);
+ const doc=s.state.document,geometry=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,geometry,kernel),world=await createPhysicsWorld(doc,geometry,prepared,{ground:false,J});
+ const position=vi.spyOn(J.Body.prototype,'GetPosition'),rotation=vi.spyOn(J.Body.prototype,'GetRotation');
  try{
   expect(world.bodyRay(host,[0,0,0],[1,0,0],200)).toBeCloseTo(90,2);
   expect(world.bodyRay(host,[0,0,0],[-1,0,0],200)).toBeNull();
@@ -76,7 +78,17 @@ it('body-mounted rays ignore their own rigid assembly and see external obstacles
   expect(()=>world.validateBodyRay(host,[0,0,0],[0,0,0],200)).toThrow('Invalid body sensor ray');
   expect(()=>world.validateBodyRay(host,[0,0,0],[1,0,0],200)).not.toThrow();
   expect(world.raycast([40,0,0],[200,0,0])?.bodyId).toBe(wall);
- }finally{world.dispose();s.dispose();}
+  expect(position).toHaveBeenCalledTimes(2);
+  expect(rotation).toHaveBeenCalledTimes(2);
+
+  world.setLinearVelocity(host,[20,0,0]);
+  world.step(.05);
+  position.mockClear();rotation.mockClear();
+  expect(world.bodyRay(host,[0,0,0],[1,0,0],200)).toBeCloseTo(89,2);
+  expect(world.bodyRay(attachment,[0,0,0],[1,0,0],200)).toBeCloseTo(69,2);
+  expect(position).toHaveBeenCalledTimes(1);
+  expect(rotation).toHaveBeenCalledTimes(1);
+ }finally{position.mockRestore();rotation.mockRestore();world.dispose();s.dispose();}
 });
 
 it('an implicit ideal position servo reaches its target with finite torque and reaction',async()=>{const {world,a,b,joint}=await fixture('hinge',true,true);try{world.setHingeServo(joint,Math.PI/4,.001);for(let i=0;i<1000;i++){world.setHingeServo(joint,Math.PI/4,.001);world.step(.005);}expect(world.hingeAngle(joint)).toBeCloseTo(Math.PI/4,2);expect(()=>world.setHingeServo(joint,NaN,.001)).toThrow();}finally{world.dispose();}});
