@@ -17,7 +17,7 @@
       "path": "../scripts/generate-jscad-editor-library.mjs",
       "sha256": "b099479546150230492a691d8084440b0465135baa0368bfd74769a5d6fc48e7"
     },
-    "packageLockSha256": "48250044aa9d6fa043bc0f32768be6dd53a4ac251a128ad53b87c6d47f4dcd8f",
+    "packageLockSha256": "9568c8bea98207a11edd9da6bc7fd381e629fb1a5e93d7fa32629b74bf9c024a",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
   },
   "assets": [

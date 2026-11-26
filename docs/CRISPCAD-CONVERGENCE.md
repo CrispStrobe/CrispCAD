@@ -230,9 +230,18 @@ Product entry additionally needs:
 
 ### Phase 2b: move the exact kernel into the lab as a package. **Done 2026-11-25**
 
-Release: [`exact-kernel-v0.1.3`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.3)
-of the kernel lab, tarball `crispcad-exact-kernel-0.1.3.tgz`, SHA-256
-`f9cfc354971f2f6624542f34e39a4473ce665a9a76cff4576b51461ed15a3b8f`.
+Release: [`exact-kernel-v0.1.4`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.4)
+of the kernel lab, tarball `crispcad-exact-kernel-0.1.4.tgz`, SHA-256
+`ee3f53510c6c406137b79417769547aed0877240c653eed925ca8c3efa578b6e`.
+
+0.1.4 replaced 0.1.3 (SHA-256 `f9cfc354…3b8f`) on 2026-11-26. `profile.path` lofts now keep
+each section's outline as authored; SMLib's face construction had re-picked the start vertex
+of outlines with collinear points, so a ruled loft joined the wrong vertices (an 8-point square
+lofted to an octagon came out at 113.4e6 instead of 224.1e6 mm³). CrispCAD's own lowering
+passes sections to `k.loft` directly and was not affected; the lab's native build had the same
+bug (catalog `hill-tile`, `ground-tile`) and is fixed in the same lab change. The lab also
+documents a byte-identical rebuild of the bundled smlibwasm from source
+(`packages/exact-kernel/BUILD-WASM.md`); the release still ships the npm binary.
 
 0.1.3 replaced 0.1.2 (SHA-256 `f025cd79…3823`) on 2026-11-26. `profile.polygon` and
 `profile.path` now refuse self-crossing outlines (bow ties, pentagrams) with `invalid-input`;
