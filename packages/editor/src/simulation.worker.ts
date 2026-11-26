@@ -50,7 +50,11 @@ const sense=(rays:SimulationRay[])=>{
 };
 // postMessage snapshots the records synchronously before the next command.
 const telemetry=():SimulationTelemetry=>({time:world!.time,angles,speeds,linearPositions,linearSpeeds,distances});
-const frame=():SimulationFrame=>({...telemetry(),poses:scene!.visibleRoots.map(id=>({id,...world!.pose(id)})).concat([...previewBalls].map(([id,spec])=>({id,...world!.pose(id),...spec})))});
+const frame=():SimulationFrame=>{
+ const poses:SimulationFrame['poses']=world!.poses(scene!.visibleRoots);
+ for(const [id,spec] of previewBalls)poses.push({id,...world!.pose(id),...spec});
+ return {...telemetry(),poses};
+};
 self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
  const command=event.data;
  try{

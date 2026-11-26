@@ -20,6 +20,31 @@ it('keeps welded poses exact while retaining original part bounds, ray IDs and h
  try{expect(world.rigidBodyCount).toBe(2);expect(world.boundsMm('left').min[0]).toBeCloseTo(-25);expect(world.boundsMm('right').max[0]).toBeCloseTo(25);expect(world.raycast([-20,0,40],[-20,0,0])?.bodyId).toBe('left');expect(world.raycast([40,0,40],[40,0,0])?.bodyId).toBe('motor');world.setHingeMotor(doc.joints![2].id,Math.PI,.02);world.step(.1);expect(world.hingeAngle(doc.joints![2].id)).toBeGreaterThan(.1);expect(world.pose('left')).toEqual(world.pose('right'));expect(world.pose('right')).toEqual(world.pose('motor'));expect(JSON.stringify(doc)).toBe(before);}finally{world.dispose();world.dispose();}expect(()=>world.pose('motor')).toThrow('disposed');
 });
 
+it('samples a welded body once in an ordered batch with independent pose arrays',async()=>{
+ const world=await worldFor(fixture());
+ const ids=['right','left','right'];
+ try{
+  const initial=ids.map(id=>({id,...world.pose(id)}));
+  const position=vi.spyOn(J.Body.prototype,'GetPosition');
+  const rotation=vi.spyOn(J.Body.prototype,'GetRotation');
+  try{
+   const batch=world.poses(ids);
+   expect(batch).toEqual(initial);
+   expect(position).toHaveBeenCalledTimes(1);
+   expect(rotation).toHaveBeenCalledTimes(1);
+   batch[0].positionMm[0]=123;
+   batch[0].quaternion[0]=1;
+   expect(batch.slice(1)).toEqual(initial.slice(1));
+  }finally{position.mockRestore();rotation.mockRestore();}
+  world.setLinearVelocity('left',[100,0,0]);world.step();
+  const moved=world.poses(ids);
+  expect(moved).toEqual(ids.map(id=>({id,...world.pose(id)})));
+  expect(moved[0].positionMm[0]).toBeGreaterThan(initial[0].positionMm[0]);
+  expect(()=>world.poses(['missing'])).toThrow('Unknown physics body');
+ }finally{world.dispose();}
+ expect(()=>world.poses([])).toThrow('disposed');
+});
+
 it('uses summed mass, parallel-axis inertia and each selected part COM for impulses and velocity setters',async()=>{
  const doc=fixture(),world=await worldFor(doc),mass=.0021,inertiaZ=8.75e-7;
  try{world.applyImpulse('left',[.00021,0,0],[0,0,20]);expect(world.linearVelocityMmS('left')[0]).toBeCloseTo(.00021/mass*1000,3);world.applyImpulse('right',[0,.0001,0]);const angular=.02*.0001/inertiaZ;expect(world.angularVelocity('left')[2]).toBeCloseTo(angular,4);expect(world.linearVelocityMmS('right')[1]-world.linearVelocityMmS('left')[1]).toBeCloseTo(angular*40,3);expect((world.linearVelocityMmS('left')[1]+world.linearVelocityMmS('right')[1])/2).toBeCloseTo(.0001/mass*1000,3);

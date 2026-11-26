@@ -12,6 +12,8 @@ const mock=vi.hoisted(()=>{
  const world={
   get time(){return state.time;},dispose:vi.fn(),
   pose:vi.fn((id:string)=>({positionMm:[Number(id.slice(5))||0,state.linear,state.angle],quaternion:[0,0,0,1]})),
+  poses:vi.fn((ids:readonly string[])=>ids.map(id=>({id,...world.pose(id)}))),
+  spawnBox:vi.fn(),
   hingeAngle:vi.fn((id:string)=>id==='servo'?state.servo:state.angle),sliderPosition:vi.fn(()=>state.linear),
   bodyRay:vi.fn(()=>100-state.linear+state.angle),validateBodyRay:vi.fn(),
   applyJointImpulse:vi.fn((id:string,impulse:number)=>{if(id==='slider')state.linearSpeed+=impulse*10;else state.speed+=impulse*100;}),
@@ -100,6 +102,18 @@ it('keeps full legacy actuator and manual replies, including sensor and linear f
  expect(reply.frame).toHaveProperty('linearPositions.slider');expect(reply.frame).toHaveProperty('linearSpeeds.slider');expect(reply.frame).toHaveProperty('distances.range');
  const manual=await send({op:'step',seconds:.005});expect(manual.frame.poses).toHaveLength(2);expect(manual.frame.time).toBe(.01);
  const sensed=await send({op:'sense',rays:actuation().rays!});expect(sensed.frame.poses).toHaveLength(2);expect(sensed.frame.time).toBe(.01);
+});
+
+it('keeps preview metadata and order after the batched authored poses',async()=>{
+ const document=scene(2);
+ const initial=await start(document);
+ expect(initial.error).toBeUndefined();
+ const response=await send({op:'ball',shape:'box',id:'preview-box',positionMm:[25,0,10],velocityMmS:[0,0,0],radiusMm:5});
+ expect(response.error).toBeUndefined();
+ expect(response.frame.poses.slice(0,2)).toEqual(initial.frame.poses);
+ expect(response.frame.poses.at(-1)).toMatchObject({id:'preview-box',previewRadiusMm:5,previewShape:'box'});
+ expect(mock.world.poses).toHaveBeenLastCalledWith(document.roots);
+ expect(mock.world.spawnBox).toHaveBeenCalledTimes(1);
 });
 
 it('applies the same actuator validation before a compact step can advance the clock',async()=>{
