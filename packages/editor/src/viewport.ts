@@ -35,6 +35,9 @@ const directions: Record<ViewDirection, [number, number, number]> = { top: [0, -
 export function mountViewport(container: HTMLElement, session: CadSession, onError: (e: unknown) => void,appearance?:{background:string;baseplate:string}) {
   const colours={background:'#111e29',baseplate:'#233644',...appearance};const validColour=(value:string)=>/^#[0-9a-f]{6}$/i.test(value);if(!validColour(colours.background)||!validColour(colours.baseplate))throw new Error(t('Choose a six-digit colour'));
   const scene = new THREE.Scene(); scene.background = new THREE.Color(colours.background);
+  // The root stays at identity. Rebuilding it would force every descendant
+  // to recompute its world matrix, even when only one simulated body moved.
+  scene.matrixAutoUpdate = false;
   let camera: THREE.PerspectiveCamera | THREE.OrthographicCamera = new THREE.PerspectiveCamera(42, 1, 0.1, 200000); camera.up.set(0, 0, 1); camera.position.set(180, -250, 220);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false }); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace; const canvas = renderer.domElement;
@@ -62,6 +65,11 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   }
   for (let n = -200; n <= 200; n += 50) { label(String(n), n, -208); label(String(n), -210, n); }
   label('X · mm', 224, -200, '#f38f88'); label('Y · mm', -200, 218, '#8fcea1');
+  workplane.traverse(object => {
+    object.updateMatrix();
+    object.matrixAutoUpdate = false;
+  });
+  axes.matrixAutoUpdate = false;
   const pivot = new THREE.Object3D(); scene.add(pivot);
   const gizmo = new PrecisionControls(camera, canvas); gizmo.setSize(0.85); gizmo.setSpace('world'); scene.add(gizmo.getHelper());
   let navigationPreset:NavigationPreset='tinkercad',spaceHeld=false;let cameraGestures:CameraGestures|undefined;let cameraDrag:{id:number;x:number;y:number;kind:'pan'|'orbit';gizmoEnabled:boolean}|undefined;
@@ -69,6 +77,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   gizmo.setTranslationSnap(1); gizmo.setRotationSnap(15 * RAD); gizmo.setScaleSnap(null);
   let simulating=false;const presentedPoses=new Map<string,SimulationPose>();
   const posePosition=new THREE.Vector3(),poseRotation=new THREE.Quaternion(),poseScale=new THREE.Vector3(1,1,1);
+  const simulationMatrix = new THREE.Matrix4(), authoredMatrix = new THREE.Matrix4();
   const previewBalls=new Map<string,THREE.Mesh>();
   let simulationDrag:((value:{bodyId:string;point:Vec3;target:Vec3}|null)=>void)|undefined,grabEnabled=false,grab:{pointerId:number;bodyId:string;point:Vec3;plane:THREE.Plane;target:Vec3;pending?:number;orbit:boolean}|undefined;
   function endGrab(){if(!grab)return;const old=grab;grab=undefined;if(old.pending!==undefined)cancelAnimationFrame(old.pending);orbit.enabled=old.orbit;if(canvas.hasPointerCapture(old.pointerId))canvas.releasePointerCapture(old.pointerId);simulationDrag?.(null);}
@@ -370,8 +379,12 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       const geometry=appearance??surfaceGeometry(body.positions,body.indices);
       const material = new THREE.MeshStandardMaterial({ color: body.hole?'#9eb8c8':appearance?'#ffffff':body.color,vertexColors:!!appearance,transparent:!!body.hole,opacity:body.hole?.3:1,depthWrite:!body.hole, metalness: 0.08, roughness: 0.65, flatShading: false });
       const mesh = new THREE.Mesh(geometry, material); mesh.userData.id = body.id;
+      // Geometry already includes the authored transform. Drag and physics
+      // previews write a delta directly to the local matrix.
+      mesh.matrixAutoUpdate = false;
       if(appearance){geometry.computeBoundingBox();meshBounds.register(mesh,geometry.getAttribute('position').array as Float32Array,{min:geometry.boundingBox!.min.toArray(),max:geometry.boundingBox!.max.toArray()});}else meshBounds.register(mesh,body.positions,body.bounds);
       const outline = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 28), new THREE.LineBasicMaterial({ color: '#172a36', transparent: true, opacity: 0.8 })); mesh.add(outline);
+      outline.matrixAutoUpdate = false;
       meshes.set(body.id, mesh); outlines.set(body.id, outline); scene.add(mesh);
     } wiring.reset(robotWires(session.state.document,result));canvas.dataset.wireCount=String(wiring.count);setSelection(selected); draw();
   }
@@ -411,21 +424,23 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       }
       if(!value)endGrab();
       cancelPointPick();cancelTransform();simulating=value!==null;gizmo.enabled=!simulating;
-      for(const [id,mesh] of meshes)if(!presentedPoses.has(id)){
-        mesh.matrix.identity();mesh.matrixWorldNeedsUpdate=true;
+      for(const [id,mesh] of meshes)if(!presentedPoses.has(id)&&!mesh.matrix.equals(authoredMatrix)){
+        mesh.matrix.copy(authoredMatrix);mesh.matrixWorldNeedsUpdate=true;
       }
       for(const pose of value??[]){
         if(pose.previewRadiusMm&&!previewBalls.has(pose.id)){
           const radius=pose.previewRadiusMm;
           const geometry=pose.previewShape==='box'?new THREE.BoxGeometry(2*radius,2*radius,2*radius):new THREE.SphereGeometry(radius,24,12);
           const ball=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:'#ea9b4a',roughness:.55}));
-          ball.userData.id=pose.id;scene.add(ball);previewBalls.set(pose.id,ball);
+          ball.userData.id=pose.id;ball.matrixAutoUpdate=false;scene.add(ball);previewBalls.set(pose.id,ball);
         }
         const mesh=meshes.get(pose.id)??previewBalls.get(pose.id);
         if(mesh){
-          mesh.matrixAutoUpdate=false;
-          mesh.matrix.compose(posePosition.fromArray(pose.positionMm),poseRotation.fromArray(pose.quaternion),poseScale);
-          mesh.matrixWorldNeedsUpdate=true;
+          simulationMatrix.compose(posePosition.fromArray(pose.positionMm),poseRotation.fromArray(pose.quaternion),poseScale);
+          if(!mesh.matrix.equals(simulationMatrix)){
+            mesh.matrix.copy(simulationMatrix);
+            mesh.matrixWorldNeedsUpdate=true;
+          }
         }
       }
       canvas.dataset.previewBalls=String(previewBalls.size);placeGizmo();scheduleDraw();
