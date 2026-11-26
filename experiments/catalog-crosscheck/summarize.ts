@@ -54,7 +54,8 @@ export function summarize(jsonl: string, options: { native?: string; meta?: Reco
   const intent = parts.filter(p => p.manifold.ok && p.exactIntent?.ok) as (PartRecord & { model: string; manifold: { volume: number }; exactIntent: { volume: number } })[];
   const disagree = both.filter(p => p.class === 'disagree').sort((a, b) => Math.abs(b.diff!.relVolume) - Math.abs(a.diff!.relVolume));
   const agreeRel = both.filter(p => p.class === 'agree').map(p => Math.abs(p.diff!.relVolume));
-  const planarAgree = both.filter(p => p.class === 'agree' && p.tolerance!.curved === 0).map(p => Math.abs(p.diff!.relVolume));
+  // Planar: no curved constructs and no twisted ruled-loft quads (whose fans differ from the ruled surface under Booleans).
+  const planarAgree = both.filter(p => p.class === 'agree' && p.tolerance!.curved === 0 && !p.tolerance!.ruledVolume).map(p => Math.abs(p.diff!.relVolume));
 
   const summary: Record<string, unknown> = {
     run: options.meta ?? (existsSync(jsonl.replace(/\.jsonl$/, '-run.json')) ? JSON.parse(readFileSync(jsonl.replace(/\.jsonl$/, '-run.json'), 'utf8')) : null),

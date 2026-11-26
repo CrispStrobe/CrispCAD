@@ -786,4 +786,13 @@ the 137 that do not are conversion errors, all in models with lofts: CAD Script'
 side quads between sections turned against each other where kernelCAD builds a ruled surface
 (129 models, up to 8.7 %), smooth lofts are converted as ruled (5 models, up to 31 %), and 3 are left at
 ≤ 6.5e-6.
+
+**Ruled lofts (2026-11-26).** The converter writes programs with a `loft` in CAD Script
+revision 2, whose lofts are ruled surfaces like kernelCAD's
+([CODE-MODE.md](CODE-MODE.md#language-revisions)); parts without a loft stay revision 1. Rerun on
+exact kernel 0.1.3 against the lab's refreshed native volumes (lab `5ea9d18f3`): 2,347 models
+agree in all three builds (was 2,214 with the same programs triangulated); the 5 converter
+errors left are the smooth lofts, `nature/tumbleweed` builds and agrees, and the exact area equals
+the native area to 1e-6 wherever the volumes agree. The 8 models the lab now refuses for
+self-crossing outlines are skipped part by part here (reported as partial).
 `for (let …)` closures now get a fresh loop binding per iteration, as in JavaScript.

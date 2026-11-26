@@ -29,7 +29,9 @@ npm run typecheck
 ```
 
 `node run.ts --catalog <dir> [--sample N | --all] [--seed s] [--jobs n] [--timeout s]
-[--name n] [--native file] [--lab-commit sha]`. Models are processed by `--jobs` worker
+[--name n] [--native file] [--lab-commit sha] [--loft-revision 1|2]`. `--loft-revision 1` rebuilds
+the converted lofts with CAD Script's revision-1 triangulation (one fixed diagonal per side quad)
+instead of the ruled surfaces the converter writes (revision 2, the default), for comparison. Models are processed by `--jobs` worker
 processes (default 3), each loading Manifold and SMLib once and being replaced every 40
 models or after a WASM trap; a model over `--timeout` seconds (default 300, wall clock) is
 killed and recorded as `timeout`. Results are appended to `results/<name>.jsonl` one model
@@ -80,6 +82,14 @@ per run against Manifold (`calibration` in `results/<name>-run.json`): f_v = 1.0
 prisms and revolutions (the closed form is exact) and 3.5 for Manifold's spheres, f_a ≤ 1
 except spheres (1.9), f_b = 1 except spheres (2.5, from the sphere mesh's worst support
 gap over 4,000 directions). Planar parts are therefore held to 1e-6 relative volume.
+
+**Ruled lofts.** A twisted side quad of a revision-2 loft is meshed by Manifold as four triangles
+around the mean of its corners, while the exact kernel builds the ruled (bilinear) surface. The
+volumes are identical, the surfaces are not. For every such quad the tolerance adds twice
+|fan area − ruled area| (8 × 8 Gauss-Legendre) to the area and twice the unsigned volume between
+fan and surface (∫ |(P − L) · n|, 6 × 6 sub-triangles per fan triangle) to the volume: a Boolean
+that cuts through a twisted quad can change the two builds by that much. Parts with such quads
+(`ruledArea`, `ruledVolume` in the record's tolerance) are not counted as planar.
 
 ### Classes
 
@@ -134,7 +144,133 @@ field of `results/<name>-models.json`; `results/<name>-summary.json` (`native.mo
 every model that is not `all-agree` or whose area or box differs, with the three volumes
 (`M`, `E`, `N`), `relConverter` = E/N − 1, `relArea` and `dBox`.
 
-## Results
+## Results: ruled lofts, exact kernel 0.1.3 (2026-11-26)
+
+Measured 2026-11-26 on the same 8-core Apple M1 shared with other sessions (load average
+28–183), Node 26.4.0, **`@crispcad/exact-kernel` 0.1.3**, CrispCAD main `8c0f8c1` (CAD Script
+revision 2: `loft` builds ruled side surfaces, see
+[CODE-MODE.md](../../docs/CODE-MODE.md#language-revisions); the converter writes its lofts in
+revision 2). Catalog at kernel-lab `c1548dbda` (`origin/develop`; `catalog/kits` identical to
+`e6ff5d3fc` and `e203019d8`). **Native volumes: lab commit `5ea9d18f3`**
+(`results-catalog-native-volumes.json`, measured on lab `e203019d8`, 2,394 of 2,402 built; the
+eight it now refuses are self-crossing outlines, see below). Two full runs, each 2,402 models
+and 69,367 converted parts with four workers in one segment:
+
+- **ruled** (the converter's revision-2 programs, 11.2 min): [`results/full-summary.md`](results/full-summary.md),
+  [`full-summary.json`](results/full-summary.json), [`full-models.json`](results/full-models.json),
+  [`full-run.json`](results/full-run.json);
+- **triangulated** (`--loft-revision 1`, the same programs at revision 1, i.e. what CAD Script
+  built before, 25.5 min at load 90–160): [`results/full-diagonal-summary.md`](results/full-diagonal-summary.md)
+  and the same three files.
+
+Sample (300 models, seed `crosscheck-1`, ruled, 1.6 min: agree 294, disagree 3, converter-failure 3;
+9,379 parts): [`results/sample-300-summary.md`](results/sample-300-summary.md),
+per part in [`sample-300.jsonl`](results/sample-300.jsonl). The full runs' JSONL (39 MB each) are not
+committed.
+
+### Headline: old against new
+
+| Full catalog | 0.1.1, triangulated (2026-11-25) | 0.1.3, triangulated | **0.1.3, ruled** |
+| --- | ---: | ---: | ---: |
+| Models agree (Manifold vs exact) | 2,350 | 2,350 | **2,354** |
+| Models disagree | 20 | 20 | **17** |
+| Models with an exact-kernel failure | 1 | 1 | **0** |
+| Parts agree / disagree / exact-failure | 69,307 / 56 / 4 | 69,307 / 56 / 4 | **69,325 / 42 / 0** |
+| Three-way all-agree | 2,215 | 2,214 | **2,347** |
+| Three-way converter-error | 137 | 137 | **5** |
+| Exact area = native area to 1e-6 (of volume-agreeing) | 2,198 of 2,215 | 2,198 of 2,214 | **2,347 of 2,347** |
+| Exact CPU (total, slowest part) | 1,753 s, 187 s | 1,350 s, 5.6 s | 1,310 s, 5.2 s |
+
+The 0.1.1 → 0.1.3 kernel step changes no class: the triangulated run on 0.1.3 reproduces every
+0.1.1 model class against the same native column, except that the lab's refreshed native file
+now refuses eight models (below). All the movement is the loft:
+
+- **132 of the 137 converter-error models become all-agree**, e.g.
+  `fire-station/bay-warning-beacon` 10,005,913.21 mm³ against native 10,005,913.19 (E/N − 1 =
+  2.0e-9; triangulated −1.9 %), `containers/wicker-basket` 2.3e-9 (−2.1 %), `nature/flower-patch`
+  1.2e-10 (−8.7 %), and the three that the reverted probe left at ≤ 6.5e-6
+  (`characters/spider-bot`, `interior/bean-bag`, `interior/toilet`) now agree to 9e-10: the
+  exact kernel builds the ruled surface itself, where the probe faceted it.
+- **`nature/tumbleweed` builds and agrees** (exact 91,689,392.15 against native
+  91,689,392.10, 5.6e-10; triangulated, Manifold lost 53 % and the exact kernel refused it).
+- **No model gets worse** (model by model against the 0.1.3 triangulated run).
+- **The exact area now matches native** wherever the volumes agree (2,347 of 2,347 to 1e-6;
+  triangulated 2,198), and so do the boxes (1e-3 mm).
+
+### Three-way: Manifold, exact, native (0.1.3, ruled)
+
+| Three-way class | Models | Sample (300) |
+| --- | ---: | ---: |
+| all-agree | **2,347** | 292 |
+| converter-failed | 31 | 3 |
+| converter-partial | 11 | 2 |
+| native-failed (self-crossing source outlines) | 8 | 2 |
+| converter-error (smooth lofts) | 5 | 1 |
+| exact-error, manifold-error, exact-failed, unresolved | 0 | 0 |
+
+**The remaining disagreements are only smooth lofts, partial conversions, conversions that are
+refused, and source models with self-crossing outlines.** None is the exact kernel's or
+Manifold's:
+
+- **converter-error (5): smooth lofts converted as ruled (cause 5).** kernelCAD lofts through
+  more than two sections without `ruled: true` are smooth surfaces; the converter warns and
+  builds them ruled. E/N − 1: `nature/hill-tile` +30.9 %, `nature/ground-tile` +7.0 %,
+  `wind-energy/wind-turbine-blade` −3.6 %, `wind-energy/horizontal-axis-wind-turbine` −0.82 %,
+  `wind-energy/offshore-wind-turbine` −0.60 %. Needs a smooth loft in CAD Script.
+- **converter-partial (11).** The converter skips parts it cannot express (unordered loft
+  sections, nesting over 32, self-crossing outlines) and reports them: `archaeology-fieldwork/hand-auger`,
+  `containers/amphora`, `food-kitchen/apple`, `lighting/brazier`, `retail-store/handbasket`,
+  `retail-store/shopping-basket`, `retail-store/impulse-merchandiser`,
+  `amusement-park/picnic-table-with-umbrella`, `amusement-park/churro-warmer-cart`,
+  `construction-equipment/skid-steer-loader`, `mining/rotary-blasthole-drill`.
+- **converter-failed (31).** Unchanged: lofts with different section point counts 12,
+  `shape.hole(s)` 4, `helix` 3, `prismSideY` 3, part over the CAD Script limits 3, others 6.
+- **native-failed (8): source-model problems, not a kernel or converter fault.** The lab's
+  native build now refuses self-crossing outlines ("The polygon outline crosses itself at …"),
+  as exact kernel 0.1.3 does and OCCT also gives invalid solids for them:
+  `alpine-expedition/alpine-helmet`, `amusement-park/miniature-park-tram-coach`,
+  `amusement-park/miniature-park-tram-engine`, `industrial-plant/industrial-boiler`,
+  `mining/magnetic-separator-drum`, `recycling-facility/cover-soil-spreader`,
+  `recycling-facility/tipping-floor-bin`, `recycling-facility/weighbridge-approach-ramp`.
+  **Our converter already does the sensible thing with all eight:** it skips exactly the
+  self-crossing parts (1–5 per model) with a reason and converts the rest (`partial`); every
+  converted part builds in both kernels and they agree (model class `agree`). Seven of them
+  were `converter-partial` and the helmet `all-agree` against the previous native file, whose
+  bow ties counted with signed, partly negative volume (cause 7). Nothing reaches Manifold or
+  the exact kernel as a self-crossing outline: CAD Script refuses such `extrude` outlines and
+  loft sections itself.
+
+### Manifold against the exact kernel (0.1.3, ruled)
+
+42 parts in 17 models disagree. 41 are the planar Manifold numerics of causes 1–3 below
+(13 volumes at the 1e-6 floor: `airfield` winglets, sharklets and cheatlines up to 7.4e-6,
+float32 vertices 600 mm from the origin; 25 float32 mesh areas far from the origin; 3 faces of
+exactly touching operands). One is new and comes from the ruled lofts:
+`interior/toilet` `bowl`, where a Boolean cuts through twisted loft quads. Manifold cuts the fan
+and the exact kernel the ruled surface, so the cut faces differ: volume 6e-6 (within the
+allowance), area 51 mm² against an allowance of 28 mm². The exact build is the right one
+(exact = native to 5e-11 in volume, 1e-10 in area). The 50,722 planar agreeing parts agree to
+9.7e-7 at worst.
+
+726 parts in 156 models have twisted ruled-loft quads. Manifold meshes their fans, the exact
+kernel builds the ruled surfaces: the volumes are identical, so they agree to 1.2e-8 (median)
+unless a Boolean cuts a twisted quad. Only 11 differ by more than 1e-6: the 8 `airfield` wing
+parts above and three cut lofts (`characters/spider-bot` `turret`, cut by a box: Manifold
++1.3e-4 against exact, which equals native; `interior/bean-bag` `sack` 7e-6; the toilet bowl).
+The [ruled-loft allowance](#tolerance) is a bound for such cuts and is loose (median 2.6 % of a
+part's volume, up to 25 % for the strongly twisted tumbleweed stars), so for these parts the
+agreement is better read from the numbers than from the class.
+
+Exact CPU 1,310 s in total, median part 6.7 ms, slowest 5.2 s (0.1.1: 1,753 s and 187 s; the
+bbox was fixed in 0.1.2). Building a twisted loft as SMLib's ruled loft instead of a stitched
+polyhedron costs nothing measurable.
+
+## Earlier results: triangulated lofts, exact kernel 0.1.1 (2026-11-25)
+
+The result files of this run were replaced by the runs above; it is kept for the history of
+the fixes. Cause 4 (ruled lofts) is fixed by CAD Script revision 2, cause 6 by exact kernel
+0.1.2, and cause 7 by the lab's native build and exact kernel 0.1.3 (both refuse self-crossing
+outlines).
 
 Measured 2026-11-25 on an 8-core Apple M1 shared with other sessions (load average 3–130),
 Node 26.4.0, with the exact kernel **`@crispcad/exact-kernel` 0.1.1** (CrispCAD main `dda7ce2`
@@ -153,7 +289,7 @@ class, three-way class, converter status, part classes, volume totals),
 `sample-300`, whose per-part [`sample-300.jsonl`](results/sample-300.jsonl) is committed (the
 full run's 39 MB JSONL is not; `npm run full` regenerates it).
 
-### Manifold against the exact kernel
+### Manifold against the exact kernel (0.1.1)
 
 | Model class (full catalog) | Before converter fixes | 0.1.0 | **0.1.1** | |
 | --- | ---: | ---: | ---: | --- |
@@ -199,7 +335,7 @@ of the increase is the new exact `bbox` on a few trimmed NURBS bodies: 11 parts 
 Sample (300 models, seed `crosscheck-1`, 2.5 min): agree 277 → 293, exact-unsupported 1 → 0,
 kernel-failure 13 → 0, disagree 6 → 4, converter-failure 3; 9,379 parts.
 
-### Three-way: Manifold, exact, native
+### Three-way: Manifold, exact, native (0.1.1)
 
 | Three-way class (full catalog) | Models | Sample |
 | --- | ---: | ---: |
@@ -337,27 +473,32 @@ first pass.
 
 Converter and CAD Script:
 
-- **Ruled lofts (cause 4, 129 models):** decide whether CAD Script `loft` means the ruled
-  surface. If so, split non-planar side quads through their centre (exact ruled volume, see the
-  probe) or lower lofts to SMLib's ruled loft in the exact backend. This is the largest
-  remaining converter error.
-- Smooth lofts (cause 5): need a smooth loft construct in CAD Script.
+- ~~Ruled lofts (cause 4)~~: **done 2026-11-26**, CAD Script revision 2 (both: the mesh fans
+  twisted quads around their centre, the exact backend builds SMLib's ruled loft).
+- Smooth lofts (cause 5, the last 5 converter errors): need a smooth loft construct in CAD
+  Script.
 - Path arcs (`threePointsArc`) are still polygons (16 segments per half turn) when they reach
   CAD Script; no converter-error model was traced to them yet.
 - Lofts with different section point counts (12), `shape.hole(s)` (4), `helix` (3).
 
 Exact kernel and lab (to report in the lab):
 
-- `bbox()` of trimmed NURBS bodies takes minutes (cause 6); the box is right.
-- Native build of self-intersecting outlines gives zero-volume bodies with area (cause 7).
+- ~~`bbox()` of trimmed NURBS bodies takes minutes (cause 6)~~: fixed in 0.1.2.
+- ~~Native build of self-intersecting outlines gives zero-volume bodies with area (cause 7)~~:
+  the lab's native build (lab `5ea9d18f3`) and exact kernel 0.1.3 refuse them.
 
 Harness:
 
 - Use Manifold's double-precision surface area instead of the float32 mesh (removes cause 2).
+- A tighter ruled-loft allowance (only the quads a Boolean actually cuts), and one for the cut
+  faces' area (`interior/toilet` `bowl`).
 
 ### Kernel versions
 
 The first full run (before the converter fixes) used the exact kernel as it was before the
 2026-11-25 move into `@crispcad/exact-kernel`; the 0.1.0 runs used the merged kernel 0.1.0
 (the numbers in the "0.1.0" column above, catalog at lab `d09cda7f6`). The runs above use
-`@crispcad/exact-kernel` 0.1.1 (same SMLib build, `@classcad/smlibwasm` 0.6.2).
+`@crispcad/exact-kernel` 0.1.1 (same SMLib build, `@classcad/smlibwasm` 0.6.2) for the
+2026-11-25 results and 0.1.3 for the 2026-11-26 results (same SMLib build; 0.1.2 made `bbox()`
+fast, 0.1.3 refuses self-crossing profiles). The run files record the SMLib build, not the
+kernel package version; their `note` field names it.

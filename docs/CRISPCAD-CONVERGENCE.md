@@ -425,7 +425,7 @@ Left open: an exact display path for many-hole faces (meshing cost, Phase 2); a 
 renamed on paste (`width` → `width_2`) makes a pasted feature stale until it is recomputed;
 fillets of individual edges need topological naming and are out of scope.
 
-### Phase 4: cross-checking with the catalog. **Done 2026-11-25 (exact kernel 0.1.1, native volumes from the lab)**
+### Phase 4: cross-checking with the catalog. **Done 2026-11-25 (exact kernel 0.1.1); rerun 2026-11-26 with ruled lofts on 0.1.3**
 
 1. Convert the lab's catalog with `scripts/convert-kcad.mjs` (98.7% convert, 93.6% before
    the 2026-11-25 converter fixes).
@@ -435,9 +435,38 @@ fillets of individual edges need topological naming and are out of scope.
 4. Record the results next to
    [CODE-CONVERTERS.md](CODE-CONVERTERS.md#kernelcad-kcadts-models-2026-11-24).
 
-Results (harness and details in
-[experiments/catalog-crosscheck/README.md](../experiments/catalog-crosscheck/README.md)),
-full catalog, 2,402 models, 69,367 converted parts, `@crispcad/exact-kernel` 0.1.1, catalog
+**Rerun 2026-11-26: ruled lofts (CAD Script revision 2), exact kernel 0.1.3, native volumes
+from lab `5ea9d18f3`** (2,394 of 2,402 built natively). Owner-approved: `loft` now builds ruled
+side surfaces in new and converted programs, version-gated so saved programs keep their
+triangulated lofts (per-program language revision, document version 42; see
+[CODE-MODE.md](CODE-MODE.md#language-revisions) and
+[PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md#document-versions)). The mesh fans each twisted side
+quad around its centre (exactly the ruled volume); the exact backend builds SMLib's ruled loft
+(ruled volume and area). Both full runs use the same converted programs, once at revision 1:
+
+| Full catalog | 0.1.1, triangulated | 0.1.3, triangulated | **0.1.3, ruled** |
+| --- | ---: | ---: | ---: |
+| Three-way all-agree | 2,215 | 2,214 | **2,347** |
+| Converter-error | 137 | 137 | **5** (smooth lofts) |
+| Exact-failed | 1 (tumbleweed) | 1 | **0** |
+| Converter-partial / -failed | 18 / 31 | 11 / 31 | 11 / 31 |
+| Native-failed (self-crossing source outlines) | – | 8 | 8 |
+| Manifold vs exact: models agree / disagree | 2,350 / 20 | 2,350 / 20 | 2,354 / 17 |
+
+- 132 of the 137 converter errors and tumbleweed now agree with native to 1e-6 (beacon lamp
+  model 2.0e-9); no model got worse. Exact areas equal native areas to 1e-6 for all 2,347
+  (triangulated: 2,198), boxes to 1e-3 mm.
+- **What is left is only smooth lofts, partial and refused conversions, and source problems:**
+  5 smooth lofts converted as ruled (`nature/hill-tile` +31 % … `wind-energy/offshore-wind-turbine`
+  −0.60 %), 11 partial conversions, 31 refused conversions, and 8 models with self-crossing
+  outlines that the lab's native build (and exact kernel 0.1.3, and OCCT) refuse. Our converter
+  skips exactly those self-crossing parts and the rest of each model agrees in both kernels.
+- The 0.1.1 → 0.1.3 kernel step changed no model class; exact CPU 1,753 → 1,310 s, slowest part
+  187 → 5.2 s (the 0.1.2 bbox fix).
+- One new Manifold-vs-exact disagreement: `interior/toilet` `bowl`, a Boolean cutting twisted loft
+  quads (area 51 mm² over the allowance; the exact build equals native).
+
+Earlier results, full catalog, 2,402 models, 69,367 converted parts, `@crispcad/exact-kernel` 0.1.1, catalog
 and native volumes at lab `2566debd9` / `e6ff5d3fc`:
 
 - **Where both kernels build a part, they agree.** 69,307 of the 69,363 parts built by both
@@ -457,7 +486,7 @@ and native volumes at lab `2566debd9` / `e6ff5d3fc`:
   137 converter errors; 18 partial conversions; 31 converter failures; 1 exact failure
   (tumbleweed, a converter triangulation). **No model is an exact-kernel or Manifold error
   against native**; every disagreement is the converted program.
-- **The remaining converter error is CAD Script's `loft`:** it splits each side quad along one
+- **The remaining converter error was CAD Script's `loft`** (fixed 2026-11-26, above): it splits each side quad along one
   diagonal, while kernelCAD and the lab build a ruled surface. Between sections turned against
   each other the two differ (beacon lamp: 2,678,272 vs 2,772,520 mm³, closed form). A probe that
   splits such quads through their centre (exact ruled volume) makes 139 of the 147 converter
@@ -468,8 +497,9 @@ and native volumes at lab `2566debd9` / `e6ff5d3fc`:
   wire grid all at the last row; found by the native box).
 - **Reported:** the exact kernel's 0.1.1 `bbox()` takes up to 3 min on trimmed NURBS
   bodies (ellipsoid heaps; exact CPU 806 → 1,753 s for the catalog), **fixed in 0.1.2** (9–24 ms,
-  same boxes; the full catalog was not rerun on 0.1.2); still open: the lab's native build gives
-  a self-intersecting outline (helmet chin straps) zero volume but nonzero area.
+  same boxes); the lab's native build gave
+  a self-intersecting outline (helmet chin straps) zero volume but nonzero area; since lab
+  `5ea9d18f3` it refuses such outlines, as exact kernel 0.1.3 does.
 
 ## Owner decisions (2026-11-24)
 

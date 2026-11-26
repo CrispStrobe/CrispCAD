@@ -19,7 +19,7 @@ import type { CodeShape, CodeProfile } from '@brickwright/cad-core';
 export type CurvedKind = 'prism' | 'sphere' | 'revolve';
 export interface Curved { kind: CurvedKind; segments: number; volume: number; surface: number; radius: number }
 export interface Calibration { volume: Record<CurvedKind, number>; area: Record<CurvedKind, number>; bbox: Record<CurvedKind, number> }
-export interface Tolerance { volume: number; area: number; bbox: number; minSegments: number | null; curved: number; approximate: boolean }
+export interface Tolerance { volume: number; area: number; bbox: number; minSegments: number | null; curved: number; approximate: boolean; /** Σ |facet area − ruled area| of twisted loft quads (CAD Script revision 2), mm². */ ruledArea?: number; /** Unsigned volume between those fans and ruled surfaces, mm³. */ ruledVolume?: number }
 
 export const delta = (n: number) => { const a = 2 * Math.PI / n; return 1 - Math.sin(a) / a; };
 export const chord = (n: number) => 1 - Math.cos(Math.PI / n);
@@ -92,9 +92,56 @@ function profileMass(p: CodeProfile, curved: Curved[] | null, flags: { approxima
   }
 }
 
+// 8-point Gauss-Legendre on [0, 1].
+const GL_X = [-0.9602898564975363, -0.7966664774136267, -0.5255324099163290, -0.1834346424956498, 0.1834346424956498, 0.5255324099163290, 0.7966664774136267, 0.9602898564975363].map(x => (x + 1) / 2);
+const GL_W = [0.1012285362903763, 0.2223810344533745, 0.3137066458778873, 0.3626837833783620, 0.3626837833783620, 0.3137066458778873, 0.2223810344533745, 0.1012285362903763].map(w => w / 2);
+type P3 = readonly number[];
+const cross3 = (u: P3, v: P3) => [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+const sub3 = (a: P3, b: P3) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const len3 = (u: P3) => Math.hypot(u[0], u[1], u[2]);
+/** For each twisted side quad of a revision-2 loft, Manifold meshes the four-triangle fan around
+ * the corners' mean and the exact kernel builds the ruled (bilinear) surface P(u, v). Their
+ * volumes are identical but the surfaces are not: `area` sums |fan area − ruled area|, `volume`
+ * the unsigned volume between them (∫ |(P − L) · n| over each fan triangle, L the fan's linear
+ * interpolation), which bounds what a Boolean cutting through the quad can change. */
+export function ruledFacets(sections: readonly (readonly P3[])[]): { area: number; volume: number } {
+  let area = 0, volume = 0;
+  const K = 6;
+  for (let s = 0; s + 1 < sections.length; s++) for (let j = 0; j < sections[s].length; j++) {
+    const n = sections[s].length, a = sections[s][j], b = sections[s][(j + 1) % n], c = sections[s + 1][(j + 1) % n], d = sections[s + 1][j];
+    const P = (u: number, v: number) => [0, 1, 2].map(e => (1 - u) * (1 - v) * a[e] + u * (1 - v) * b[e] + u * v * c[e] + (1 - u) * v * d[e]);
+    const m = P(0.5, 0.5);
+    const fan = [[a, b], [b, c], [c, d], [d, a]].reduce((sum, [p, q]) => sum + len3(cross3(sub3(p, m), sub3(q, m))) / 2, 0);
+    let ruled = 0;
+    for (let i = 0; i < 8; i++) for (let k = 0; k < 8; k++) {
+      const u = GL_X[i], v = GL_X[k];
+      const pu = [0, 1, 2].map(e => (1 - v) * (b[e] - a[e]) + v * (c[e] - d[e])), pv = [0, 1, 2].map(e => (1 - u) * (d[e] - a[e]) + u * (c[e] - b[e]));
+      ruled += GL_W[i] * GL_W[k] * len3(cross3(pu, pv));
+    }
+    if (!(Math.abs(fan - ruled) > 1e-12 * fan)) continue;
+    area += Math.abs(fan - ruled);
+    // Fan triangles in parameter space: two quad corners and the centre (0.5, 0.5).
+    for (const [p0, p1] of [[[0, 0], [1, 0]], [[1, 0], [1, 1]], [[1, 1], [0, 1]], [[0, 1], [0, 0]]] as [number, number][][]) {
+      const q0 = P(p0[0], p0[1]), q1 = P(p1[0], p1[1]), normal = cross3(sub3(q0, m), sub3(q1, m)), twice = len3(normal);
+      if (!twice) continue;
+      const unit = normal.map(x => x / twice);
+      // K² sub-triangles, midpoint rule; each has 1/K² of the fan triangle's area.
+      for (let i = 0; i < K; i++) for (let k = 0; k < K - i; k++) for (const up of [false, true]) {
+        if (up && k === K - i - 1) continue;
+        const bary = up ? [(i + 2 / 3) / K, (k + 2 / 3) / K] : [(i + 1 / 3) / K, (k + 1 / 3) / K];
+        const w0 = bary[0], w1 = bary[1], wm = 1 - w0 - w1;
+        const u = w0 * p0[0] + w1 * p1[0] + wm * 0.5, v = w0 * p0[1] + w1 * p1[1] + wm * 0.5;
+        const L = [0, 1, 2].map(e => w0 * q0[e] + w1 * q1[e] + wm * m[e]), dev = sub3(P(u, v), L);
+        volume += Math.abs(dev[0] * unit[0] + dev[1] * unit[1] + dev[2] * unit[2]) * (twice / 2) / (K * K);
+      }
+    }
+  }
+  return { area, volume };
+}
+
 /** Collect the curved constructs of a CodeShape tree with their nominal sizes. `factor` is
  * the volume multiplier of enclosing scales, `linear` the largest linear scale. */
-export function collectCurved(shape: CodeShape, out: Curved[] = [], flags = { approximate: false }, factor = 1, linear = 1): { curved: Curved[]; approximate: boolean } {
+export function collectCurved(shape: CodeShape, out: Curved[] = [], flags = { approximate: false, ruledArea: 0, ruledVolume: 0 }, factor = 1, linear = 1): { curved: Curved[]; approximate: boolean; ruledArea: number; ruledVolume: number } {
   const push = (c: Curved) => out.push({ ...c, volume: c.volume * factor, surface: c.surface * linear * linear, radius: c.radius * linear });
   const walk = (s: CodeShape, f = factor, l = linear) => collectCurved(s, out, flags, f, l);
   switch (shape.kind) {
@@ -128,15 +175,16 @@ export function collectCurved(shape: CodeShape, out: Curved[] = [], flags = { ap
       break;
     }
     case 'resize': flags.approximate = true; walk(shape.shape); break;
-    case 'repeat': { const before = out.length; walk(shape.shape); const added = out.splice(before); for (let i = 0; i < Math.max(0, shape.count); i++) out.push(...added); break; }
-    case 'polyhedron': case 'box': case 'extrude': case 'empty': break;
+    case 'repeat': { const before = out.length, ruledBefore = flags.ruledArea, ruledVolumeBefore = flags.ruledVolume; walk(shape.shape); const added = out.splice(before); for (let i = 0; i < Math.max(0, shape.count); i++) out.push(...added); flags.ruledArea = ruledBefore + (flags.ruledArea - ruledBefore) * Math.max(0, shape.count); flags.ruledVolume = ruledVolumeBefore + (flags.ruledVolume - ruledVolumeBefore) * Math.max(0, shape.count); break; }
+    case 'polyhedron': if (shape.ruled) { const r = ruledFacets(shape.ruled); flags.ruledArea += r.area * linear * linear; flags.ruledVolume += r.volume * factor; } break;
+    case 'box': case 'extrude': case 'empty': break;
   }
-  return { curved: out, approximate: flags.approximate };
+  return { curved: out, approximate: flags.approximate, ruledArea: flags.ruledArea, ruledVolume: flags.ruledVolume };
 }
 
 /** Derived tolerance for one part. `volume`, `area`, `diag` come from the exact build. */
 export function tolerance(shape: CodeShape, cal: Calibration, ref: { volume: number; area: number; diag: number }): Tolerance {
-  const { curved, approximate } = collectCurved(shape);
+  const { curved, approximate, ruledArea, ruledVolume } = collectCurved(shape);
   let v = 0, a = 0, b = 0;
   for (const c of curved) {
     const d = delta(c.segments);
@@ -145,11 +193,12 @@ export function tolerance(shape: CodeShape, cal: Calibration, ref: { volume: num
     b = Math.max(b, cal.bbox[c.kind] * c.radius * chord(c.segments));
   }
   return {
-    volume: 2 * v + 1e-6 * Math.abs(ref.volume) + 1e-9,
-    area: 2 * a + 1e-5 * Math.abs(ref.area) + 1e-9,
+    volume: 2 * v + 2 * ruledVolume + 1e-6 * Math.abs(ref.volume) + 1e-9,
+    area: 2 * a + 2 * ruledArea + 1e-5 * Math.abs(ref.area) + 1e-9,
     bbox: 2 * b + 1e-6 * ref.diag + 1e-6,
     minSegments: curved.length ? Math.min(...curved.map(c => c.segments)) : null,
     curved: curved.length,
     approximate,
+    ...(ruledArea ? { ruledArea, ruledVolume } : {}),
   };
 }

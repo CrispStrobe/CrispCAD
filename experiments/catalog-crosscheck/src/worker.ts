@@ -203,7 +203,8 @@ function processModel(job: { id: string; kit: string; file: string }): ModelReco
     return { id: job.id, kit: job.kit, sha256, convert: { status, wallMs: t.wallMs, error: message(t.error) }, class: status === 'licence' ? 'licence-refused' : 'converter-failure' };
   }
   const converted = t.value as { parts: { name: string; program: CodeProgram }[]; skippedParts: unknown[]; warnings: unknown[] };
-  const parts = converted.parts.map(p => comparePart(p.name, p.program));
+  // --loft-revision 1 rebuilds converted lofts with the fixed diagonal (CAD Script revision 1).
+  const parts = converted.parts.map(p => comparePart(p.name, process.env.CROSSCHECK_LOFT_REVISION === '1' ? { ...p.program, version: 1 } : p.program));
   const sum = (pick: (p: PartRecord) => Build | BuildError | undefined) => parts.every(p => pick(p)?.ok) ? r10(parts.reduce((s, p) => s + (pick(p) as Build).volume, 0)) : null;
   const intentSum = parts.some(p => p.exactIntent) && parts.every(p => p.exact.ok || p.exactIntent?.ok) ? r10(parts.reduce((s, p) => s + ((p.exact.ok ? p.exact : p.exactIntent) as Build).volume, 0)) : null;
   const classes = new Set(parts.map(p => p.class));

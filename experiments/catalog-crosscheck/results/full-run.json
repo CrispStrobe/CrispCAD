@@ -4,24 +4,25 @@
  "selected": 2402,
  "mode": "all",
  "seed": null,
- "labCommit": "e6ff5d3fcc6234bae133628ba0d089bb2e2301e5",
- "timeoutSeconds": 1500,
- "jobs": 3,
+ "labCommit": "c1548dbda83f5b8980980b1769ca7ec43ad2ffc1",
+ "timeoutSeconds": 900,
+ "jobs": 4,
+ "loftRevision": 2,
  "machine": {
   "cpus": 8,
   "model": "Apple M1",
   "loadAverageAtStart": [
-   7.2,
-   13,
-   28.6
+   28.2,
+   54.5,
+   66.1
   ],
   "loadAverageAtEnd": [
-   9,
-   13.2,
-   28.4
+   92.8,
+   102.1,
+   91
   ]
  },
- "started": "2026-11-25T21:44Z",
+ "started": "2026-11-26T04:49:31.326Z",
  "calibration": {
   "volume": {
    "prism": 1.0000000209001643,
@@ -177,7 +178,7 @@
   "node": "v26.4.0",
   "exact": "@classcad/smlibwasm 0.6.2"
  },
- "finished": "2026-11-25T22:13:34.264Z",
- "lastRunMinutes": null,
- "note": "Exact kernel @crispcad/exact-kernel 0.1.1 (CrispCAD main dda7ce2 plus the loop-binding fix and the 2,048-face polyhedron budget of this commit). Catalog at lab origin/develop e6ff5d3fc (catalog/kits identical to 2566debd9, where the native volumes were measured). Segments: 782 models 21:44-21:49Z (4 jobs, stopped for a disk check), the other 1,620 by resume 21:50-22:01Z (4 jobs, 300 s timeout); the 2 models that timed out at load 120 (mining/apron-feeder, recycling-facility/glass-washer-trommel: one ellipsoid part each whose exact bbox takes ~3 min) rerun with 1,500 s; retail-store/roll-cage-trolley rerun after the loop-binding fix; the 14 models with polyhedra over 256 faces rerun after the budget raise. started is to the minute."
+ "finished": "2026-11-26T05:00:43.297Z",
+ "lastRunMinutes": 11.2,
+ "note": "@crispcad/exact-kernel 0.1.3, CrispCAD main 8c0f8c1; converted lofts as CAD Script revision 2 (ruled). Native volumes: lab 5ea9d18f3 (measured on e203019d8)."
 }

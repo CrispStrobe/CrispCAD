@@ -19,6 +19,9 @@ if (!catalog) { process.stderr.write('Usage: node run.ts --catalog <kernelCAD ca
 const all = args.includes('--all'), size = Number(flag('sample', '300')), seed = flag('seed', 'crosscheck-1')!;
 const jobs = Number(flag('jobs', '3')), timeoutMs = Number(flag('timeout', '300')) * 1000, restartEvery = Number(flag('restart-every', '40'));
 const name = flag('name', all ? 'full' : `sample-${size}`)!;
+// CAD Script revision of converted lofts: 2 (ruled, what the converter writes) or 1 (the fixed diagonal, as before 2026-11-26).
+const loftRevision = flag('loft-revision', '2')!;
+if (!['1', '2'].includes(loftRevision)) throw new Error('--loft-revision is 1 or 2');
 const dir = new URL('./results/', import.meta.url).pathname;
 mkdirSync(dir, { recursive: true });
 const jsonl = `${dir}${name}.jsonl`, metaPath = `${dir}${name}-run.json`;
@@ -32,7 +35,7 @@ process.stdout.write(`${entries.length} catalog models, ${selected.length} selec
 const meta = existsSync(metaPath) ? JSON.parse(readFileSync(metaPath, 'utf8')) : {};
 Object.assign(meta, {
   name, catalogModels: entries.length, selected: selected.length, mode: all ? 'all' : 'stratified-by-kit', seed: all ? null : seed,
-  labCommit: flag('lab-commit', meta.labCommit ?? null), timeoutSeconds: timeoutMs / 1000, jobs,
+  labCommit: flag('lab-commit', meta.labCommit ?? null), timeoutSeconds: timeoutMs / 1000, jobs, loftRevision: Number(loftRevision),
   machine: { cpus: cpus().length, model: cpus()[0]?.model, loadAverageAtStart: loadavg().map(x => +x.toFixed(1)) },
   started: meta.started ?? new Date().toISOString(),
 });
@@ -45,7 +48,7 @@ function worker(): Promise<void> {
     const record = (r: unknown) => { appendFileSync(jsonl, JSON.stringify(r) + '\n'); finished++; if (finished % 10 === 0 || finished === total) process.stdout.write(`${finished}/${total} (${((Date.now() - started) / 60000).toFixed(1)} min, load ${loadavg()[0].toFixed(0)})\n`); };
     const spawn = () => {
       served = 0;
-      child = fork(new URL('./src/worker.ts', import.meta.url).pathname, [], { stdio: ['ignore', 'ignore', 'pipe', 'ipc'], execArgv: ['--max-old-space-size=3072'] });
+      child = fork(new URL('./src/worker.ts', import.meta.url).pathname, [], { stdio: ['ignore', 'ignore', 'pipe', 'ipc'], execArgv: ['--max-old-space-size=3072'], env: { ...process.env, CROSSCHECK_LOFT_REVISION: loftRevision } });
       let stderr = '', ready = false;
       child.stderr!.on('data', d => { stderr = (stderr + d).slice(-2000); });
       child.on('message', (m: { type: string; record?: unknown; restart?: boolean; calibration?: unknown; versions?: unknown }) => {
