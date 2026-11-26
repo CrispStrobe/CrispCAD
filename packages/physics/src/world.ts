@@ -93,6 +93,7 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
  const bodyMass=new Map<string,number>();let grab:{id:string;local:number[];target:Vec3}|undefined;
  const quaternionPoint=(p:number[],q:number[])=>{const [x,y,z,w]=q,[a,b,c]=p,u=2*(y*c-z*b),v=2*(z*a-x*c),t=2*(x*b-y*a);return [a+w*u+y*t-z*v,b+w*v+z*u-x*t,c+w*t+x*v-y*u];};
  const ownedBodies:any[]=[],byId=new Map<string,any>(),constraints=new Map<string,any>();let disposed=false,elapsed=0,contactListener:any,partFilter:any;
+ let rayQuery:ReturnType<typeof createRayQuery>|undefined;
  const actuatorFrames=new Map<string,{
   joint:CadJoint;a:any;b:any;axis:number[];anchorM?:number[];motor:any;impulseConfigured:boolean;
  }>();
@@ -269,7 +270,7 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    });
   }finally{J.destroy(bc);}
  };
- function dispose(){if(disposed)return;disposed=true;for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
+ function dispose(){if(disposed)return;disposed=true;rayQuery?.dispose();rayQuery=undefined;for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
  let scratchVertex:any,scratchPosition:any,scratchRotation:any;
  function createCompound(members:typeof meshes):NativeShape{
   const compound=new J.StaticCompoundShapeSettings();
@@ -413,20 +414,41 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
   add(shape,id,'dynamic',{friction:.4,restitution:.45},{massKg,volumeM3,centerM:[0,0,0],inertiaKgM2:[[inertia,0,0],[0,inertia,0],[0,0,inertia]]});previewCount++;
   const body=byId.get(id),p=new J.RVec3(...positionMm.map(v=>v*.001)),v=new J.Vec3(...velocityMmS.map(v=>v*.001));bodies.SetPosition(body.GetID(),p,J.EActivation_Activate);bodies.SetLinearVelocity(body.GetID(),v);J.destroy(p);J.destroy(v);
  }
+ function createRayQuery(){
+   const owned:object[]=[];
+   const keep=<T extends object>(value:T)=>{owned.push(value);return value;};
+   const dispose=()=>{for(let i=owned.length-1;i>=0;i--)J.destroy(owned[i]);};
+   try{
+    const ray=keep(new J.RRayCast()),origin=ray.mOrigin,direction=ray.mDirection;
+    const settings=keep(new J.RayCastSettings()),collector=keep(new J.CastRayClosestHitCollisionCollector());
+    const permissive=keep(new J.ObjectVsBroadPhaseLayerFilterJS());permissive.ShouldCollide=()=>true;
+    const broadFilter=keep(new J.DefaultBroadPhaseLayerFilter(permissive,0));
+    const objectFilter=keep(new J.ObjectLayerFilterJS());objectFilter.ShouldCollide=()=>true;
+    const bodyFilter=keep(new J.BodyFilter()),ignoredBodies=keep(new J.IgnoreMultipleBodiesFilter());
+    const shapeFilter=keep(new J.ShapeFilter()),query=system.GetNarrowPhaseQuery();
+    let lastIgnored:NativeBody|undefined;
+    return {collector,dispose,cast(from:Vec3,to:Vec3,ignored?:NativeBody){
+     origin.Set(from[0]*.001,from[1]*.001,from[2]*.001);
+     direction.Set((to[0]-from[0])*.001,(to[1]-from[1])*.001,(to[2]-from[2])*.001);
+     if(ignored&&ignored!==lastIgnored){
+      ignoredBodies.Clear();ignoredBodies.IgnoreBody(ignored.GetID());lastIgnored=ignored;
+     }
+     collector.Reset();
+     query.CastRay(ray,settings,collector,broadFilter,objectFilter,ignored?ignoredBodies:bodyFilter,shapeFilter);
+    }};
+   }catch(error){dispose();throw error;}
+ }
+
  function castRay(fromMm:Vec3,toMm:Vec3,ignoreBodyId?:string,includeBody=true){
    if(disposed||![...fromMm,...toMm].every(Number.isFinite))throw new Error(t('Invalid physics state or ray'));
-   const own:any[]=[];const keep=(value:any)=>{own.push(value);return value;};
-   try{const ray=keep(new J.RRayCast()),origin=keep(new J.RVec3(...fromMm.map(v=>v*.001))),direction=keep(new J.Vec3(...toMm.map((v,i)=>(v-fromMm[i])*.001)));ray.mOrigin=origin;ray.mDirection=direction;
-    const settings=keep(new J.RayCastSettings()),collector=keep(new J.CastRayClosestHitCollisionCollector()),permissive=keep(new J.ObjectVsBroadPhaseLayerFilterJS());permissive.ShouldCollide=()=>true;
-    const broadFilter=keep(new J.DefaultBroadPhaseLayerFilter(permissive,0)),objectFilter=keep(new J.ObjectLayerFilterJS());objectFilter.ShouldCollide=()=>true;
-    const bodyFilter=keep(ignoreBodyId?new J.IgnoreSingleBodyFilter(byId.get(ignoreBodyId)!.GetID()):new J.BodyFilter()),shapeFilter=keep(new J.ShapeFilter());system.GetNarrowPhaseQuery().CastRay(ray,settings,collector,broadFilter,objectFilter,bodyFilter,shapeFilter);
-    if(!collector.HadHit())return null;
-    const hit=collector.mHit,fraction=hit.mFraction;
-    if(!includeBody)return {bodyId:undefined,fraction};
-    const index=hit.mBodyID.GetIndexAndSequenceNumber(),entry=[...byId].find(([,body])=>body.GetID().GetIndexAndSequenceNumber()===index),member=entry?meshes[entry[1].GetShape().GetSubShapeUserData(hit.mSubShapeID2)-1]:undefined;
-    return {bodyId:member?.id??entry?.[0],fraction};
-   }finally{for(const value of own.reverse())J.destroy(value);}
-
+   // Queries are synchronous. Reset the collector and reuse its native storage.
+   const query=rayQuery??=createRayQuery();
+   query.cast(fromMm,toMm,ignoreBodyId===undefined?undefined:byId.get(ignoreBodyId));
+   if(!query.collector.HadHit())return null;
+   const hit=query.collector.mHit,fraction=hit.mFraction;
+   if(!includeBody)return {bodyId:undefined,fraction};
+   const index=hit.mBodyID.GetIndexAndSequenceNumber(),entry=[...byId].find(([,body])=>body.GetID().GetIndexAndSequenceNumber()===index),member=entry?meshes[entry[1].GetShape().GetSubShapeUserData(hit.mSubShapeID2)-1]:undefined;
+   return {bodyId:member?.id??entry?.[0],fraction};
  }
 
  function bodyRayEndpoints(id:string,originMm:Vec3,direction:Vec3,rangeMm:number){

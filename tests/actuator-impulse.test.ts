@@ -67,6 +67,11 @@ it('body-mounted rays ignore their own rigid assembly and see external obstacles
  try{
   expect(world.bodyRay(host,[0,0,0],[1,0,0],200)).toBeCloseTo(90,2);
   expect(world.bodyRay(host,[0,0,0],[-1,0,0],200)).toBeNull();
+  // A miss must clear the previous hit. Switching the ignored assembly
+  // must also release the previous filter before casting again.
+  expect(world.bodyRay(wall,[0,0,0],[-1,0,0],200)).toBeCloseTo(70,2);
+  expect(world.bodyRay(attachment,[0,0,0],[1,0,0],200)).toBeCloseTo(70,2);
+  expect(world.raycast([0,0,40],[0,0,-40])?.bodyId).toBe(host);
   expect(()=>world.bodyRay(host,[0,0,0],[0,0,0],200)).toThrow('Invalid body sensor ray');
   expect(()=>world.validateBodyRay(host,[0,0,0],[0,0,0],200)).toThrow('Invalid body sensor ray');
   expect(()=>world.validateBodyRay(host,[0,0,0],[1,0,0],200)).not.toThrow();
