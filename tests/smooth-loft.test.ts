@@ -3,7 +3,7 @@
 // sampled for Manifold; gated by document version 43.
 import {readFileSync} from 'node:fs';
 import {beforeAll,describe,expect,it} from 'vitest';
-import {CAD_SCRIPT_REVISION,compileCode,compileModelSource,createCadSession,generateModelSource,parseDocument,serializeDocument,smoothLoftCurves,smoothLoftRing,smoothLoftVolume,validateDocument} from '@brickwright/cad-core';
+import {CAD_SCRIPT_REVISION,compileCode,compileModelSource,createCadSession,generateModelSource,importKernelCAD,parseDocument,serializeDocument,smoothLoftCurves,smoothLoftRing,smoothLoftVolume,validateDocument} from '@brickwright/cad-core';
 import type {CadDocument,CodeProgram,Vec3} from '@brickwright/cad-core';
 import {createGeometryKernel,type GeometryKernel} from '@brickwright/cad-geometry';
 import {createExactBackend,type ExactBackend} from '@brickwright/cad-exact';
@@ -101,5 +101,32 @@ describe('document version 43',{timeout:120_000},()=>{
   expect(rebuilt.version).toBe(43);
   expect(Object.values(rebuilt.nodes).map(n=>n.kind==='code'?n.program.source:'').sort()).toEqual(Object.values(parsed.nodes).map(n=>n.kind==='code'?n.program.source:'').sort());
   expect(manifold.evaluate(rebuilt).volume).toBeCloseTo(manifold.evaluate(parsed).volume,6);
+ });
+});
+
+describe('kernelCAD converter',{timeout:120_000},()=>{
+ const source=(options:string,count=4)=>`meta({ name: 'vase', license: 'MIT' });
+const ring = (r, turn, dx) => { let p = path().moveTo(dx + r * Math.cos(turn), r * Math.sin(turn)); for (let i = 1; i < 8; i++) p = p.lineTo(dx + r * Math.cos(turn + 2 * Math.PI * i / 8), r * Math.sin(turn + 2 * Math.PI * i / 8)); return p.close(); };
+const rs = [[20, 0, 0], [28, 0.2, 3], [14, 0.35, -2], [22, 0.5, 1]].slice(0, ${count});
+return ring(...rs[0]).loft(rs.slice(1).map(r => ring(...r)), { spacing: 18${options} });`;
+ it('converts smooth lofts through three or more sections as smoothLoft, without a warning',()=>{
+  const converted=importKernelCAD(source(''));
+  expect(converted.warnings).toEqual([]);
+  const [part]=converted.parts;expect(part.program.source).toMatch(/^return smoothLoft\(/);
+  const built=build(part.program),shape=compileCode(part.program).shape;
+  if(shape.kind!=='polyhedron'||!shape.smooth)throw Error('smooth loft');
+  expect(rel(built.exact.volume,smoothLoftVolume(smoothLoftCurves(shape.smooth)))).toBeLessThan(1e-9);
+  expect(importKernelCAD(source(', ruled: true')).parts[0].program.source).toMatch(/^return loft\(/);
+  expect(importKernelCAD(source('',2)).parts[0].program.source).toMatch(/^return loft\(/);
+ });
+
+ it('reads exact bounds of the smooth surface, not of its mesh',()=>{
+  const converted=importKernelCAD(source('').replace(/return ring\(\.\.\.rs\[0\]\)\.loft\((.*)\);$/s,'const v = ring(...rs[0]).loft($1);\nconst b = v.boundingBox({ exact: true });\nreturn box(b.max[0] - b.min[0], 1, 1);'));
+  const sections=compileCode({...converted.parts[0].program,source:'return smoothLoft('+/smoothLoft\((.*)\)/s.exec(importKernelCAD(source('')).parts[0].program.source)![1]+');'}).shape;
+  if(sections.kind!=='polyhedron'||!sections.smooth)throw Error('smooth loft');
+  const curves=smoothLoftCurves(sections.smooth);let lo=Infinity,hi=-Infinity;
+  for(let i=0;i<=20000;i++)for(const p of smoothLoftRing(curves,i/20000)){lo=Math.min(lo,p[0]);hi=Math.max(hi,p[0]);}
+  const width=Number(/box\(([^,]+),/.exec(converted.parts[0].program.source)![1]);
+  expect(width).toBeCloseTo(hi-lo,4);
  });
 });

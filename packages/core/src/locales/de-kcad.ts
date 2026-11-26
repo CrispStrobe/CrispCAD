@@ -17,7 +17,6 @@ export const messages: Record<string,string> = {
   "Invalid kernelCAD fillet radius": "Ungültiger kernelCAD-Rundungsradius",
   "Invalid kernelCAD rounded rectangle": "Ungültiges abgerundetes kernelCAD-Rechteck",
   "No kernelCAD part fits the CAD Script limits": "Kein kernelCAD-Teil passt in die Grenzen von CAD Script",
-  "Smooth kernelCAD lofts through more than two sections are converted as ruled lofts": "Glatte kernelCAD-Übergänge durch mehr als zwei Querschnitte werden als geradlinige Übergänge konvertiert",
   "Unknown kernelCAD name “{0}”": "Unbekannter kernelCAD-Name „{0}“",
   "Unsupported kernelCAD feature “{0}”": "Nicht unterstützte kernelCAD-Funktion „{0}“",
   "kernelCAD array limit exceeded": "kernelCAD-Array-Grenze überschritten",
