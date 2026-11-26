@@ -122,7 +122,11 @@ it('samples shared hinge assembly poses once at each step boundary',async()=>{
  try{
   expect(world.separatedHingePairCount).toBe(2);
   world.step(.01);
-  // Three bodies, two boundaries per substep, two substeps.
+  // Three bodies at the initial boundary and after each of two substeps.
+  expect(positions).toHaveBeenCalledTimes(9);
+  expect(rotations).toHaveBeenCalledTimes(9);
+  world.step(.005);
+  // A separate call starts from the last checked boundary.
   expect(positions).toHaveBeenCalledTimes(12);
   expect(rotations).toHaveBeenCalledTimes(12);
   expect(world.separatedHingePairCount).toBe(2);

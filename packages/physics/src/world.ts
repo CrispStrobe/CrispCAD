@@ -459,8 +459,18 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
   releaseGrab(){grab=undefined;},
   spawnSphere(id:string,positionMm:Vec3,velocityMmS:Vec3,radiusMm=6){spawnPreview(id,positionMm,velocityMmS,radiusMm,'sphere');},
   spawnBox(id:string,positionMm:Vec3,velocityMmS:Vec3,halfSizeMm=6){spawnPreview(id,positionMm,velocityMmS,halfSizeMm,'box');},
-  step(seconds=1/200){if(disposed)throw new Error(t('Physics world was disposed'));if(!Number.isFinite(seconds)||seconds<=0||seconds>.1||Math.abs(seconds*200-Math.round(seconds*200))>1e-8)throw new Error(t('Step must be a positive multiple of 1/200 s, at most 0.1 s'));for(let i=0;i<Math.round(seconds*200);i++){checkSeparatedFrames();if(grab){const body=byId.get(grab.id),p=body.GetPosition(),q=body.GetRotation(),point=quaternionPoint(grab.local,[q.GetX(),q.GetY(),q.GetZ(),q.GetW()]).map((v,i)=>v+[p.GetX(),p.GetY(),p.GetZ()][i]),at=new J.RVec3(...point),velocity=bodies.GetPointVelocity(body.GetID(),at),speed=[velocity.GetX(),velocity.GetY(),velocity.GetZ()],acceleration=point.map((v,i)=>400*(grab!.target[i]*.001-v)-40*speed[i]),length=Math.hypot(...acceleration),force=new J.Vec3(...acceleration.map(v=>v*Math.min(1,100/Math.max(1e-9,length))*bodyMass.get(grab!.id)!));body.AddForce(force,at);bodies.ActivateBody(body.GetID());J.destroy(force);J.destroy(at);}
-    world.Step(1/200,1);elapsed+=1/200;checkSeparatedFrames();}},
+  step(seconds=1/200){
+   if(disposed)throw new Error(t('Physics world was disposed'));
+   const substeps=Math.round(seconds*200);
+   if(!Number.isFinite(seconds)||seconds<=0||seconds>.1||Math.abs(seconds*200-substeps)>1e-8)throw new Error(t('Step must be a positive multiple of 1/200 s, at most 0.1 s'));
+   // The last substep already checked the current poses. External edits
+   // that may break clearance restore collision filtering for affected pairs.
+   if(substeps>0&&elapsed===0)checkSeparatedFrames();
+   for(let i=0;i<substeps;i++){
+    if(grab){const body=byId.get(grab.id),p=body.GetPosition(),q=body.GetRotation(),point=quaternionPoint(grab.local,[q.GetX(),q.GetY(),q.GetZ(),q.GetW()]).map((v,i)=>v+[p.GetX(),p.GetY(),p.GetZ()][i]),at=new J.RVec3(...point),velocity=bodies.GetPointVelocity(body.GetID(),at),speed=[velocity.GetX(),velocity.GetY(),velocity.GetZ()],acceleration=point.map((v,i)=>400*(grab!.target[i]*.001-v)-40*speed[i]),length=Math.hypot(...acceleration),force=new J.Vec3(...acceleration.map(v=>v*Math.min(1,100/Math.max(1e-9,length))*bodyMass.get(grab!.id)!));body.AddForce(force,at);bodies.ActivateBody(body.GetID());J.destroy(force);J.destroy(at);}
+    world.Step(1/200,1);elapsed+=1/200;checkSeparatedFrames();
+   }
+  },
   get time(){return elapsed;},
   get rigidBodyCount(){return assemblies.size+previewCount;},
   get separatedHingePairCount(){return separatedHingePairs.size;},
