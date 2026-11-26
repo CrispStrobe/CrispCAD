@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {beforeAll,it,expect} from 'vitest';
+import {beforeAll,it,expect,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import {createCadSession,defaultSimulationSettings,defaultPartPhysics,identityTransform} from '@brickwright/cad-core';
-import {createPhysicsWorld,prepareDocumentCollisions} from '@brickwright/cad-physics';
+import {createPhysicsWorld,loadPhysicsEngine,prepareDocumentCollisions} from '../packages/physics/src/index.js';
 let kernel:Awaited<ReturnType<typeof createGeometryKernel>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 async function fixture(kind:'hinge'|'slider',fixed=false,spaced=false){const s=createCadSession(),settings=defaultSimulationSettings();settings.gravity=[0,0,0];s.setSimulation(settings);
@@ -17,6 +17,42 @@ it('applies a motor reaction to both dynamic bodies and reverses physical hinge 
 it('supports slider force impulses without a velocity motor and rejects invalid commands',async()=>{const{world,a,b,joint}=await fixture('slider',true);try{
  world.applyJointImpulse(joint,1e-4);world.step();expect(world.sliderPosition(joint)).toBeGreaterThan(0);expect(world.pose(a).positionMm).toEqual([0,0,0]);expect(()=>world.applyJointImpulse(joint,Infinity)).toThrow();expect(()=>world.applyJointImpulse('missing',.001)).toThrow();world.dispose();expect(()=>world.applyJointImpulse(joint,.001)).toThrow();
  }finally{world.dispose();}},30000);
+
+it.each(['hinge','slider'] as const)('reuses %s impulse settings until a velocity motor takes over',async kind=>{
+ const {world,joint}=await fixture(kind,true);
+ const J=await loadPhysicsEngine(false);
+ const prototype=kind==='hinge'?J.HingeConstraint.prototype:J.SliderConstraint.prototype;
+ const state=vi.spyOn(prototype,'SetMotorState');
+ const iterations=vi.spyOn(prototype,'SetNumVelocityStepsOverride');
+ try{
+  world.applyJointImpulse(joint,1e-5);
+  world.step();
+  world.applyJointImpulse(joint,1e-5);
+  expect(state.mock.calls).toEqual([[J.EMotorState_Off]]);
+  if(kind==='hinge')world.setHingeMotor(joint,2,.01);
+  else world.setSliderMotor(joint,2,1);
+  world.applyJointImpulse(joint,1e-5);
+  expect(state.mock.calls).toEqual([[J.EMotorState_Off],[J.EMotorState_Velocity],[J.EMotorState_Off]]);
+  expect(iterations.mock.calls).toEqual(kind==='hinge'?[[40],[40]]:[]);
+ }finally{state.mockRestore();iterations.mockRestore();world.dispose();}
+});
+
+it('restores impulse iterations after tuning a servo on the same chain',async()=>{
+ const s=createCadSession();
+ const bodies=[0,30,60].map(x=>s.add({kind:'box',size:[10,10,10]},{transform:{...identityTransform(),position:[x,0,20]}}));
+ const drive=s.addJoint('hinge',bodies[0],bodies[1],[15,0,20],[0,0,1],{limits:[-1,1]});
+ const servo=s.addJoint('hinge',bodies[1],bodies[2],[45,0,20],[0,0,1],{limits:[-1,1]});
+ const doc=s.state.document,geometry=kernel.evaluate(doc);
+ const world=await createPhysicsWorld(doc,geometry,await prepareDocumentCollisions(doc,geometry,kernel),{ground:false});
+ const J=await loadPhysicsEngine(false),iterations=vi.spyOn(J.HingeConstraint.prototype,'SetNumVelocityStepsOverride');
+ try{
+  world.applyJointImpulse(drive,1e-5);
+  world.setHingeServo(servo,.5,.01);
+  world.applyJointImpulse(drive,1e-5);
+  world.applyJointImpulse(drive,1e-5);
+  expect(iterations.mock.calls).toEqual([[40],[40]]);
+ }finally{iterations.mockRestore();world.dispose();s.dispose();}
+});
 
 it('body-mounted rays ignore their own rigid assembly and see external obstacles',async()=>{
  const s=createCadSession();
