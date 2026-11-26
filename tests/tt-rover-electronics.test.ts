@@ -25,6 +25,24 @@ beforeAll(async()=>{
 });
 afterAll(()=>carrier?.delete());
 
+it('places the drive A encoder pickup on the chassis, facing the wheel rim at a 2.5 mm sensing gap',()=>{
+ const doc=createTTRoverDocument(),node=doc.nodes['electronics-encoder'];
+ if(node.kind!=='box')throw Error('Expected encoder pickup envelope');
+ expect(doc.joints!.some(j=>j.kind==='fixed'&&j.bodyA==='chassis'&&j.bodyB==='electronics-encoder')).toBe(true);
+ const geometry=kernel.evaluate(doc),bounds=(id:string)=>geometry.bodies.find(b=>b.id===id)!.bounds;
+ const pickup=bounds('electronics-encoder'),chassis=bounds('chassis');
+ // Rests on the chassis top and reaches outboard toward the left wheel.
+ expect(pickup.min[2]).toBeCloseTo(chassis.max[2],4);expect(pickup.min[1]).toBeLessThan(chassis.max[1]-5);
+ const encoder=asSolid(geometry.bodies.find(b=>b.id==='electronics-encoder')!),wheel=asSolid(geometry.bodies.find(b=>b.id==='left-wheel')!);
+ try{
+  expect(overlap(encoder,wheel)).toBeLessThan(1e-7);
+  expect(encoder.minGap(wheel,5)).toBeCloseTo(2.5,3);
+  // Both emitter/detector pairs (±2.5 mm in X) look at the rim face, radius 25–30 about the axle.
+  const face=[(pickup.min[0]+pickup.max[0])/2,(pickup.min[2]+pickup.max[2])/2];
+  for(const dx of [-2.5,2.5]){const r=Math.hypot(face[0]+dx-25,face[1]-32);expect(r).toBeGreaterThan(25);expect(r).toBeLessThan(30);}
+ }finally{encoder.delete();wheel.delete();}
+});
+
 it('opens all six real PCB through-bolts and keeps a supporting land around each bore',()=>{
  // Independent fabrication coordinates: Feather Rev B, 45.72 x 17.78 pitch;
  // DRV8833, 20.32 pitch at 6.35 from the board centre after the documented rotation.
@@ -72,19 +90,39 @@ it('clears the existing deck posts and leaves at least 1.5 mm for the specified 
    finally{head.delete();headBase.delete();}
   }
  }finally{installed.delete();}
- for(const id of ['feather-envelope','driver-envelope']){
-  const node=doc.nodes[id];if(node.kind!=='box')throw Error('Expected component envelope');
-  expect(node.transform.position[2]-node.size[2]/2).toBe(58);
-  expect(doc.joints!.some(j=>j.kind==='fixed'&&j.bodyA==='carrier'&&j.bodyB===id)).toBe(true);
-  const boardBase=manifold.Manifold.cube(node.size),board=boardBase.translate(node.transform.position.map((v,i)=>v-node.size[i]/2) as [number,number,number]);
-  try{
-   for(const [x,y]of deckHoles){
-    const toolBase=manifold.Manifold.cylinder(20,2,2,32),tool=toolBase.translate([x,y,52]);
-    try{expect(overlap(board,tool),'4 mm screwdriver shaft must reach every M3 head with boards installed').toBeLessThan(1e-7);}
-    finally{tool.delete();toolBase.delete();}
-   }
-  }finally{board.delete();boardBase.delete();}
- }
+ // The METRO Mini, 5 V regulator and H-bridge stand on a printed tray over the
+ // carrier (they replaced the Feather and driver envelopes). Hold the tray and
+ // the boards to the same fastener rules, using their evaluated solids.
+ expect(doc.nodes['feather-envelope']).toBeUndefined();expect(doc.nodes['driver-envelope']).toBeUndefined();
+ const boards=['electronics-controller','electronics-regulator','electronics-driver-0'];
+ expect(doc.roots.filter(id=>/^electronics-(controller|regulator|driver-)/.test(id)).sort()).toEqual([...boards].sort());
+ for(const id of ['electronics-mount',...boards])expect(doc.joints!.some(j=>j.kind==='fixed'&&j.bodyA==='carrier'&&j.bodyB===id),id).toBe(true);
+ const geometry=kernel.evaluate(doc),solid=(id:string)=>asSolid(geometry.bodies.find(b=>b.id===id)!);
+ let posts:Manifold|undefined;const tray=solid('electronics-mount'),parts=boards.map(id=>[id,solid(id)] as const),installedCarrier=carrier.translate([0,0,49]);
+ // ISO 10642 M3 countersunk head: 6.72 mm maximum diameter.
+ const cylinder=(x:number,y:number,z:number,height:number,radius:number)=>{const base=manifold.Manifold.cylinder(height,radius,radius,48);try{return base.translate([x,y,z]);}finally{base.delete();}};
+ try{
+  const trayBox=tray.boundingBox();
+  expect(trayBox.min[2],'tray posts stand on the carrier top').toBeCloseTo(52,5);
+  expect(overlap(installedCarrier,tray),'tray must clear the carrier and its board bosses').toBeLessThan(1e-7);
+  for(const [id,board]of parts){
+   expect(overlap(tray,board),id).toBeLessThan(1e-7);
+   expect(board.boundingBox().min[2],id+' sits above the tray').toBeGreaterThanOrEqual(trayBox.max[2]-1e-6);
+  }
+  // Posts alone: the tray below its 2.4 mm plate.
+  const postTop=trayBox.max[2]-2.4-.01;posts=tray.trimByPlane([0,0,-1],-postTop);
+  expect(posts!.volume(),"four full-height posts (12-sided, bored)").toBeGreaterThan(4*3*(2.6**2-1.3**2)*7);
+  for(const [x,y]of deckHoles){
+   const tool=cylinder(x,y,52,20,2),head=cylinder(x,y,52,trayBox.max[2]-52+1,3.36),seat=cylinder(x,y,52,postTop-52,3.3);
+   try{
+    expect(overlap(tray,tool),'4 mm screwdriver shaft must reach every M3 head through the tray').toBeLessThan(1e-7);
+    expect(tray.minGap(tool,4),'tray access hole must leave 1.5 mm around the driver shaft').toBeGreaterThanOrEqual(1.5-1e-6);
+    expect(overlap(tray,head),'an M3 countersunk head must pass through the tray').toBeLessThan(1e-7);
+    expect(posts!.minGap(seat,4),'tray posts must keep 1.5 mm from every M3 head recess').toBeGreaterThanOrEqual(1.5-1e-6);
+    for(const [id,board]of parts)expect(overlap(board,tool),'4 mm screwdriver shaft must reach every M3 head with '+id+' installed').toBeLessThan(1e-7);
+   }finally{tool.delete();head.delete();seat.delete();}
+  }
+ }finally{tray.delete();installedCarrier.delete();posts?.delete();for(const [,board]of parts)board.delete();}
  expect(doc.joints!.some(j=>j.kind==='fixed'&&j.bodyA==='deck'&&j.bodyB==='carrier')).toBe(true);
 });
 

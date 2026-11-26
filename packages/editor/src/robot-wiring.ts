@@ -181,6 +181,6 @@ function completeElectronicsWires(doc:CadDocument,result:GeometryResult):RobotWi
    for(let j=0;j<3;j++)link('servo-'+port+'-'+j,`${port} servo ${['ground','regulated 5 V','signal D'+signal][j]}`,['#293b4d','#e94f4f','#e8b84c'][j],j===2?cpu(signal):anchor(bus,[-6.35+i*2.54,j?0:-2.54,2.4]),anchor(body,[(j-1)*.9,-10.5,3]));
   }
  }
- if(roots.has('electronics-encoder'))for(let i=0;i<4;i++)link('encoder-'+i,['Encoder ground','Encoder 5 V','Encoder A → D0','Encoder B → D1'][i],['#293b4d','#e94f4f','#55b4d5','#9e79cb'][i],anchor('electronics-encoder',[-3.81+i*2.54,3,1.5]),i===0?regPin('out-'):i===1?regPin('out+'):cpu(i-2));
+ if(roots.has('electronics-encoder'))for(let i=0;i<4;i++)link('encoder-'+i,['Encoder ground','Encoder 5 V','Encoder A → D0','Encoder B → D1'][i],['#293b4d','#e94f4f','#55b4d5','#9e79cb'][i],anchor('electronics-encoder',[-3.81+i*2.54,-3,-8.5]),i===0?regPin('out-'):i===1?regPin('out+'):cpu(i-2));
  return wires;
 }

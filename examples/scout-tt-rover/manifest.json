@@ -340,8 +340,8 @@
   "files": [
     {
       "path": "scout-tt-rover.bcad",
-      "bytes": 3622944,
-      "sha256": "5f12065a6162370c070ab9206cf7d9123d2c72c80b8ca14bc5c488af0b3e3c85"
+      "bytes": 2975385,
+      "sha256": "489d0e622d1225eecb7966a286c8db7ab9410678100938474769739a2082aedf"
     },
     {
       "path": "scout-tt-print-layout.bcad",
@@ -450,8 +450,8 @@
     },
     {
       "path": "BUILD-GUIDE.md",
-      "bytes": 33262,
-      "sha256": "0da9722c815873a034b32e70dedb1a2e6a2ab18d34901d2ec1aeed9dbfe2d67f"
+      "bytes": 34545,
+      "sha256": "2cad5bbde4162679536f6e12f6fdfe5543fd736e055472fe634aa8524dc2d541"
     },
     {
       "path": "NOTICE.md",

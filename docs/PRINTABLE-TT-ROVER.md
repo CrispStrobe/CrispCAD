@@ -204,12 +204,31 @@ hard insulating support that does not compress below 5 mm under the straps, and
 cover any exposed bolt tips. Confirm the actual holder and keep its switch and
 cover accessible. The simulation's pack mass is illustrative.
 
-The assembly retains original **22.86 × 50.8 × 8** Feather and **26 × 18 × 8**
-driver keep-outs. These remain conservative component envelopes, not vendor PCB
-meshes. Their undersides now sit on the printed carrier's mounting bosses at
-Z 58. The carrier supplies actual through-bolt mounting positions for the
-specific board revisions below. Its four M3 mounting holes fit the existing
-deck slots; the deck and its 28 mm posts retain their original dimensions.
+The printed carrier supplies through-bolt positions for the Feather and
+DRV8833 revisions below. Its four M3 mounting holes fit the existing deck
+slots; the deck and its 28 mm posts retain their original dimensions.
+
+The assembled CAD model (since the all-robot electronics update) shows the
+shared simulation electronics instead of the two board envelopes: a METRO Mini
+(45 × 18 × 6), an MPM3610 5 V regulator (11 × 18 × 4) and a dual H-bridge
+(26 × 18 × 8) on an 88 × 62 × 2.4 printed tray, Z 59.5–61.9, carried 7.5 mm
+above the carrier on four Ø5.2 posts at carrier X −2, Y ±14 and X 32, Y ±5.
+The right-hand posts stand between the M3 carrier-to-deck screws, at least
+4 mm from their Ø6.6 head recesses. Four Ø8 access holes in the tray sit over
+those screws at X 25/39, Y ±12.5: a 4 mm screwdriver reaches every head with
+the tray and boards installed (2 mm radial clearance in the tray), and an M3
+countersunk head (Ø6.72 maximum) passes through the tray. The boards stay
+clear of the driver path. These are component envelopes, not vendor PCB meshes.
+
+A two-channel reflective encoder pickup for drive A (12 × 8 × 17 envelope,
+including its printed mounting block) is screwed to the chassis top in front of
+the left motor, X 44.5–56.5, Y 47–64, Z 18–26, overhanging the chassis edge by
+9 mm. Its face looks along +Y at the left wheel's inner rim face (Y 66.5,
+radius 25–30 mm about the axle) through a 2.5 mm gap; both emitter/detector
+pairs sit at radius 25.1 and 29.7 mm. Apply a two-track stripe ring to that rim
+face for it to read. The pickup stays outside the wheel hub's swept radius
+(under 16 mm) and short of the rim, so the drive A hinge-clearance proof still
+holds. The 3777 motors themselves have no encoders.
 
 ## Removable electronics carrier
 

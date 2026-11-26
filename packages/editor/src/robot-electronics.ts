@@ -6,12 +6,19 @@ import {addComponentAppearance} from './component-provenance.js';
 import * as T from 'three';
 import {transformMatrix} from './transform-selection.js';
 import frames from './robot-assets/electronics-mount-frames.json' with {type:'json'};
-export const robotElectronicsMounts:Record<string,{body:string;origin:Vec3;rise:number;xs?:number[];ys?:number[]}>= {
- 'robot-tt-rover':{body:'carrier',origin:[16,0,52],rise:7.5,xs:[-18,18],ys:[-14,14]},
+/** Tray posts and access holes are relative to `origin`. `posts` overrides the
+ * xs×ys grid; `access` cuts round tool holes through the tray plate. */
+export interface RobotElectronicsMount{body:string;origin:Vec3;rise:number;xs?:number[];ys?:number[];posts?:[number,number][];access?:{radius:number;holes:[number,number][]}}
+export const robotElectronicsMounts:Record<string,RobotElectronicsMount>= {
+ // Scout: the four M3 carrier-to-deck screws sit at carrier X 25/39, Y ±12.5
+ // (ttRoverElectronics.deckHoles). Ø8 tray holes keep a 4 mm driver and an M3
+ // countersunk head clear; the right-hand posts stand between those screws.
+ 'robot-tt-rover':{body:'carrier',origin:[16,0,52],rise:7.5,posts:[[-18,-14],[-18,14],[16,-5],[16,5]],access:{radius:4,holes:[[9,-12.5],[9,12.5],[23,-12.5],[23,12.5]]}},
  'robot-steerable-rover':{body:'deck',origin:[-28,0,77.5],rise:1},
  'robot-atlas-forklift':{body:'chassis',origin:[-58,0,17.5],rise:28.3},
  'robot-mantis-walker':{body:'carrier',origin:[35,0,39.5],rise:1,xs:[-9,9],ys:[-8,8]},
- 'robot-nova-loader':{body:'chassis',origin:[-20,0,29],rise:11,xs:[-15,20],ys:[-18,18]},
+ // Nova: the X 0 drive bays are open to full height, so the front posts stand at X 12.
+ 'robot-nova-loader':{body:'chassis',origin:[-20,0,29],rise:11,xs:[-15,32],ys:[-18,18]},
  'robot-cyclone-sorter':{body:'frame',origin:[-14,-112,0],rise:0},
  'robot-helios-catapult':{body:'pedestal',origin:[0,-82,0],rise:0},
  'robot-labyrinth-tilter':{body:'stand',origin:[-16,-82,0],rise:0},
@@ -58,16 +65,19 @@ export function addRobotElectronics(doc:CadDocument){
  function box(id:string,name:string,size:Vec3,position:Vec3,density=800,preset?:string){
   doc.nodes[id]={id,name,kind:'box',size,transform:{...identityTransform(),position},color:'#3c596d',physics:{...defaultPartPhysics(),densityKgM3:density,restitution:.02,...(preset?{sourcePreset:preset}:{})}};doc.roots.push(id);mate(id);
  }
- const xs=mount.xs??[-36,36],ys=mount.ys??[-24,24];
- const posts=mount.rise>0?xs.flatMap(a=>ys.map(b=>`move([${a},${b},0],cylinder(2.6,${mount.rise},12))`)):[];
+ const xs=mount.xs??[-36,36],ys=mount.ys??[-24,24],postAt=mount.posts??xs.flatMap(a=>ys.map(b=>[a,b] as [number,number]));
+ // CAD Script cylinders are centred on their move point: posts span Z 0..rise
+ // under the plate (rise..rise+2.4); post bores and access holes pierce both.
+ const posts=mount.rise>0?postAt.map(([a,b])=>`move([${a},${b},${mount.rise/2}],cylinder(2.6,${mount.rise},12))`):[];
  const plate=`move([0,0,${mount.rise+1.2}],box(${compact?52:88},${compact?30:62},2.4))`;
- const holes=xs.flatMap(a=>ys.map(b=>`move([${a},${b},-1],cylinder(1.3,${mount.rise+5},12))`));
+ const holes=postAt.map(([a,b])=>`move([${a},${b},${mount.rise/2+1.2}],cylinder(1.3,${mount.rise+4.4},12))`)
+  .concat((mount.access?.holes??[]).map(([a,b])=>`move([${a},${b},${mount.rise+1.2}],cylinder(${mount.access!.radius},4.4,32))`));
  const program:CodeProgram={version:1,language:'brickwright-cad-script',parameters:{},source:'// Original shared electronics tray; BSD-3-Clause. Millimetres.\nreturn subtract('+ (posts.length?'union('+[plate,...posts].join(',')+')':plate)+',union('+holes.join(',')+'));\n'};
  doc.nodes['electronics-mount']={id:'electronics-mount',name:'Electronics tray · prototype mounting',kind:'code',program,transform:{...identityTransform(),position:[x,y,z]},color:'#536b80',physics:{...defaultPartPhysics(),densityKgM3:1240,material:'plastic',restitution:.02}};doc.roots.push('electronics-mount');mate('electronics-mount');
  box('electronics-controller','METRO Mini · ATmega328P / 16 MHz',[45,18,6],compact?[35,0,top+5]:[x-16,y+12,top+5]);
  addComponentAppearance(doc,'electronics-controller','visual-metro-mini');
  doc.nodes['electronics-controller'].physics!.parameters={clockHz:16000000,logicV:5,motorSupplyV:6};
- box('electronics-regulator','MPM3610 · regulated 5 V',[11,18,4],compact?[-35,0,63]:[x-31,y-18,top+4]);
+ box('electronics-regulator','MPM3610 · regulated 5 V',[11,18,4],compact?[-51.5,0,63]:[x-31,y-18,top+4]);
  addComponentAppearance(doc,'electronics-regulator','visual-buck-5v');
  const plan=robotElectricalPlan(doc);
  for(let i=0;i<plan.drivers;i++){
@@ -80,23 +90,33 @@ export function addRobotElectronics(doc:CadDocument){
  }else if(doc.id==='robot-steerable-rover'&&doc.nodes['battery-envelope']){
   doc.nodes['battery-envelope'].physics={...doc.nodes['battery-envelope'].physics!,sourcePreset:'visual-power-source'};doc.nodes['battery-envelope'].name='6 V portable supply · functional housing';
  }else{
-  box('electronics-power',doc.simulation?.fixBase===false?'6 V portable supply · functional housing':'6 V bench supply · functional housing',[36,26,16],compact?[-30,0,51]:[x+25,y+8,top+8],1200,'visual-power-source');
+  box('electronics-power',doc.simulation?.fixBase===false?'6 V portable supply · functional housing':'6 V bench supply · functional housing',[36,26,16],compact?[-46.5,0,51]:[x+25,y+8,top+8],1200,'visual-power-source');
  }
  if(compact){
   doc.nodes['electronics-servo-bus'].transform.rotation=[0,0,90];
   box('electronics-bus-mount','Servo header clip perch',[10,28,2],[65,0,43.9],1240);
+  // Behind the roll saddle (X > -27): posts stand on the spine top (Z 32) at
+  // X -46/-34 and carry the pod plate at Z 40.5..42.9, clear of the roll servo.
   const id='electronics-power-mount';
-  doc.nodes[id]={id,name:'Power pod clip carrier',kind:'code',program:{version:1,language:'brickwright-cad-script',parameters:{},source:'return union(move([0,0,9.7],box(36,26,2.4)),move([-16,-11,0],cylinder(2.6,8.5,12)),move([-16,11,0],cylinder(2.6,8.5,12)),move([-10,-11,0],cylinder(2.6,8.5,12)),move([-10,11,0],cylinder(2.6,8.5,12)));'},transform:{...identityTransform(),position:[-30,0,32]},color:'#536b80',physics:{...defaultPartPhysics(),densityKgM3:1240,material:'plastic'}};doc.roots.push(id);mate(id);
+  doc.nodes[id]={id,name:'Power pod clip carrier',kind:'code',program:{version:1,language:'brickwright-cad-script',parameters:{},source:'return union(move([0,0,9.7],box(36,26,2.4)),'+[.5,12.5].flatMap(px=>[-11,11].map(py=>`move([${px},${py},4.25],cylinder(2.6,8.5,12))`)).join(',')+');'},transform:{...identityTransform(),position:[-46.5,0,32]},color:'#536b80',physics:{...defaultPartPhysics(),densityKgM3:1240,material:'plastic'}};doc.roots.push(id);mate(id);
  }
  if(doc.id==='robot-nova-loader'){
   for(const [port,sign]of [['A',1],['B',-1]] as const){
-   box('electronics-actuator-'+port,port+' · compact DC gear drive (functional housing)',[14,24,31],[0,sign*14,16.4],900,'visual-dc-drive');
+   // Stop 1 mm short of the wheel (inner face |Y| 26) so the drive hinges keep
+   // their qualified full-turn clearance; the gearbox stays inside its bay.
+   box('electronics-actuator-'+port,port+' · compact DC gear drive (functional housing)',[14,24,31],[0,sign*13,16.4],900,'visual-dc-drive');
    doc.nodes['electronics-actuator-'+port].transform.rotation=[0,0,sign<0?180:0];
   }
  }
  if(doc.id==='robot-tt-rover'){
-  box('electronics-encoder','A · ideal two-channel encoder pickup',[12,8,6],[25,51,38],650,'visual-encoder');
+  // Reflective pickup on its printed block, screwed to the chassis top beside
+  // drive A. It reads a two-track stripe ring on the left wheel's inner rim face
+  // (Y 66.5, radius 25–30) through a 2.5 mm gap. Outside the wheel's swept hub
+  // (radius < 16) and short of its rim, so the hinge clearance proof still holds.
+  box('electronics-encoder','A · ideal two-channel encoder pickup',[12,8,17],[50.5,55.5,22],650,'visual-encoder');
   doc.nodes['electronics-encoder'].transform.rotation=[-90,0,0];
+  const joint=doc.joints!.find(j=>j.id==='electronics-fixed-electronics-encoder')!;
+  Object.assign(joint,jointAtWorldFrame(doc,'fixed','chassis','electronics-encoder',doc.nodes['electronics-encoder'].transform.position,[0,0,1]),{id:joint.id});
  }
  // Also support adding hardware to an older example moved/rotated as an assembly.
  const raw=frames[doc.id as keyof typeof frames];

@@ -100,9 +100,13 @@ function equipmentHousing(node:Extract<SolidNode,{kind:'box'}>,preset:string){
   box(0,0,-h/2+.7,w,d,1.4,'#285773');
   for(let i=0;i<Math.floor(w/2.54);i++)for(let j=0;j<3;j++)box(-w/2+1.27+i*2.54,(j-1)*2.54,.8,.65,.65,3.2,['#263341','#e9bd67','#f4ce4b'][j]);
  }else{
-  box(0,0,-h/2+.7,w,d,1.4,'#255b80');
-  for(const x of [-2.5,2.5])pieces.push(coloured(new T.CylinderGeometry(1.8,1.8,h-1.4,12).toNonIndexed().rotateX(Math.PI/2).translate(x,0,.7),new T.Color(x<0?'#eeeece':'#172333')));
-  for(let i=0;i<4;i++)box(-3.81+i*2.54,d/2-1,0,.64,.64,3,'#dec17d');
+  // Pickup PCB and emitter/detector pair in the outer 6 mm; any deeper
+  // envelope is its printed mounting block behind the PCB.
+  const p=Math.min(h,6),o=(h-p)/2;
+  if(h>p)box(0,0,-p/2,w,d,h-p,'#536b80');
+  box(0,0,o-p/2+.7,w,d,1.4,'#255b80');
+  for(const x of [-2.5,2.5])pieces.push(coloured(new T.CylinderGeometry(1.8,1.8,p-1.4,12).toNonIndexed().rotateX(Math.PI/2).translate(x,0,o+.7),new T.Color(x<0?'#eeeece':'#172333')));
+  for(let i=0;i<4;i++)box(-3.81+i*2.54,d/2-1,o,.64,.64,3,'#dec17d');
  }
  try{return mergeGeometries(pieces)!;}finally{pieces.forEach(p=>p.dispose());}
 }

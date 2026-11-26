@@ -4,37 +4,37 @@
   "engine": "Jolt 1.1.0-bw.10 wasm-compat",
   "engineModule": "jolt-physics/wasm-compat",
   "engineModuleSha256": "74f636a74387f6efcc3e4810f95f685dc1ac19562983b3d28a91d2e28b123ef0",
-  "runtime": "v24.22.1",
-  "sourceSha256": "67441b5ca2443dcffb825e7fe67a7e0c1f3298fb8e617aefe07e87bca2d09f5c",
+  "runtime": "v26.4.0",
+  "sourceSha256": "cc80917d2444019c2ba8d573318c785cfc9c135867b679849519c63cccfb7cf9",
   "stepHz": 200,
   "motionQuality": "LinearCast",
   "torqueLimitNm": 0.02,
   "speedDegreesPerSecond": 180,
-  "preparationMs": 9186.046843,
-  "worldCreationMs": 521.1207089999989,
-  "simulationMs": 15173.438438,
-  "nativeStepMs": 14897.536051000072,
+  "preparationMs": 26756.27925,
+  "worldCreationMs": 2325.8962909999973,
+  "simulationMs": 262919.871958,
+  "nativeStepMs": 259792.29292299997,
   "nativeSteps": 1520,
-  "bodyCount": 23,
+  "bodyCount": 26,
   "rigidBodyCount": 3,
   "separatedHingePairCount": 2,
-  "hulls": 4017,
-  "maxRelativeError": 0.010777572240709141,
-  "maxBoundsErrorMm": 0.049515724182128906,
-  "forwardMm": 179.0697703134161,
-  "reverseMm": -184.9962170797242,
-  "turnDegrees": 131.1112172099763,
+  "hulls": 3646,
+  "maxRelativeError": 0.01741866876331436,
+  "maxBoundsErrorMm": 0.13347339630126953,
+  "forwardMm": 180.4257619918818,
+  "reverseMm": -173.91775994913445,
+  "turnDegrees": 135.34699790235481,
   "movingHingeSamplingHz": 200,
-  "peakMovingHingeAnchorErrorMm": 0.059759002043785786,
+  "peakMovingHingeAnchorErrorMm": 0.06524763329435682,
   "movingHingePeakErrors": {
     "drive-a": {
-      "maximumMm": 0.05685833296430369,
-      "atSeconds": 3.6999999999999433,
+      "maximumMm": 0.06524763329435682,
+      "atSeconds": 4.509999999999926,
       "phase": "reverse"
     },
     "drive-b": {
-      "maximumMm": 0.059759002043785786,
-      "atSeconds": 4.449999999999927,
+      "maximumMm": 0.06414212222256817,
+      "atSeconds": 4.509999999999926,
       "phase": "reverse"
     }
   },
@@ -71,163 +71,163 @@
       "phase": "settled",
       "timeSeconds": 1.0000000000000007,
       "centerMm": [
-        -20.011778388070294,
-        -0.0005154231058009623,
-        15.694535506616695
+        -20.012617408266664,
+        -0.003377512116061034,
+        15.694592960640488
       ],
       "quaternion": [
-        -0.000009626642167859245,
-        0.0023404716048389673,
-        -0.000008366700967599172,
+        -0.000008920161235437263,
+        0.0023374268785119057,
+        -0.00008575685933465138,
         0.9999973177909851
       ],
-      "yawDegrees": -0.0009613431173236698,
+      "yawDegrees": -0.00982948256615825,
       "rotationDegrees": {
-        "A": -0.21269583935411274,
-        "B": -0.22213342655935134
+        "A": -0.19651246650792106,
+        "B": -0.2227929800412939
       },
       "velocityMmS": [
-        -0.0024829359972500242,
-        0.01720115869829897,
-        0.010347255738452077
+        -0.00011917529718630249,
+        0.050566923164296895,
+        0.0005384152927945252
       ],
-      "minimumSourceZMm": -0.017664654340687758,
-      "jointAnchorErrorMm": 0.00003820388478728378
+      "minimumSourceZMm": -0.01734617840467878,
+      "jointAnchorErrorMm": 0.00003933032316001503
     },
     {
       "phase": "forward",
       "timeSeconds": 2.9999999999999583,
       "centerMm": [
-        159.0579919253458,
-        -0.9130901986351911,
-        15.699046393416637
+        160.41314458361515,
+        0.17424287385462095,
+        15.702587109420744
       ],
       "quaternion": [
-        0.00002017204496951308,
-        0.0023121661506593227,
-        0.0032087224535644054,
-        0.9999922513961792
+        -0.000005348516879166709,
+        0.002278520492836833,
+        0.0023011164739727974,
+        0.9999947547912598
       ],
-      "yawDegrees": 0.36770145926508047,
+      "yawDegrees": 0.2636894134861152,
       "rotationDegrees": {
-        "A": 349.5308696015385,
-        "B": 350.2476185539824
+        "A": 348.8753806157608,
+        "B": 349.13918471962086
       },
       "velocityMmS": [
-        94.47082132101059,
-        -0.29064150294288993,
-        -0.28398711583577096
+        94.25204992294312,
+        -2.2581382654607296,
+        -1.9891872070729733
       ],
-      "minimumSourceZMm": -0.00021166191452132166,
-      "jointAnchorErrorMm": 0.004253491058426218
+      "minimumSourceZMm": -0.001039046302883484,
+      "jointAnchorErrorMm": 0.00379816433256961
     },
     {
       "phase": "braked-forward",
       "timeSeconds": 3.299999999999952,
       "centerMm": [
-        159.9072031192302,
-        -0.8566403203553347,
-        15.685694371692996
+        161.28874282701875,
+        0.1457710235354029,
+        15.688499964200052
       ],
       "quaternion": [
-        -0.0000660326040815562,
-        0.002408008323982358,
-        0.0035513006150722504,
-        0.9999907612800598
+        0.000029017501219641417,
+        0.002384667284786701,
+        0.002600830513983965,
+        0.9999938011169434
       ],
-      "yawDegrees": 0.4069352347466325,
+      "yawDegrees": 0.2980440389123606,
       "rotationDegrees": {
-        "A": 350.99707728236126,
-        "B": 351.92395273575227
+        "A": 350.5532797646243,
+        "B": 350.8793248210698
       },
       "velocityMmS": [
-        0.030127996069495566,
-        -0.26542373234406114,
-        -0.11785294918809086
+        -0.1940453366842121,
+        -0.9647547849453986,
+        0.8193427347578108
       ],
-      "minimumSourceZMm": -0.00916915590566214,
-      "jointAnchorErrorMm": 0.000128656202519198
+      "minimumSourceZMm": -0.00564848205932833,
+      "jointAnchorErrorMm": 0.001281092470176272
     },
     {
       "phase": "reverse",
       "timeSeconds": 5.299999999999909,
       "centerMm": [
-        -25.08901396049402,
-        -1.5005828842163038,
-        15.705673962390076
+        -12.629017122115691,
+        -0.40600156204520643,
+        15.692057404646864
       ],
       "quaternion": [
-        -5.79212269258278e-7,
-        0.002260548062622547,
-        0.0020124721340835094,
-        0.9999954104423523
+        0.000021823429051437415,
+        0.002365093445405364,
+        0.0022275622468441725,
+        0.9999947547912598
       ],
-      "yawDegrees": 0.23061409046602932,
+      "yawDegrees": 0.2552681064976979,
       "rotationDegrees": {
-        "A": -0.0009567145478360795,
-        "B": 0.9720681470866062
+        "A": 1.5011088802643713,
+        "B": 2.0419157882265244
       },
       "velocityMmS": [
-        -98.2009544968605,
-        -0.8529558544978499,
-        2.21426784992218
+        -94.20178830623627,
+        -3.135537728667259,
+        1.9192653708159924
       ],
-      "minimumSourceZMm": -0.0002924641815876816,
-      "jointAnchorErrorMm": 0.0022054313442171217
+      "minimumSourceZMm": -0.0008231798446530769,
+      "jointAnchorErrorMm": 0.0063463785787427306
     },
     {
       "phase": "braked-reverse",
       "timeSeconds": 5.599999999999903,
       "centerMm": [
-        -25.855608805706723,
-        -1.4772198406329888,
-        15.695221513333472
+        -13.239267670350173,
+        -0.4433727264002183,
+        15.69458107998048
       ],
       "quaternion": [
-        -0.00008905707363737747,
-        0.00234023155644536,
-        0.0019129705615341663,
-        0.9999954700469971
+        0.00003482344254734926,
+        0.002342263702303171,
+        0.002301713451743126,
+        0.9999946355819702
       ],
-      "yawDegrees": 0.219188339317851,
+      "yawDegrees": 0.2637686903475727,
       "rotationDegrees": {
-        "A": -1.4218772985098764,
-        "B": -0.3458455080453565
+        "A": 0.38141852062528575,
+        "B": 0.9453527159213673
       },
       "velocityMmS": [
-        0.06367445166688412,
-        0.5827805725857615,
-        -0.27451885398477316
+        0.15187451208475977,
+        1.3860162580385804,
+        -0.6576714804396033
       ],
-      "minimumSourceZMm": -0.020097569188906816,
-      "jointAnchorErrorMm": 0.0009350328045181485
+      "minimumSourceZMm": -0.013213924051019989,
+      "jointAnchorErrorMm": 0.0012723477370380613
     },
     {
       "phase": "turn",
       "timeSeconds": 7.59999999999986,
       "centerMm": [
-        23.002042348296964,
-        -17.6852004484839,
-        15.67890433239673
+        45.025771451577796,
+        -22.72136131063791,
+        15.67975333359609
       ],
       "quaternion": [
-        -0.0021755900233983994,
-        0.0011039559030905366,
-        0.9111503958702087,
-        0.41206687688827515
+        -0.0022733418736606836,
+        0.000897320918738842,
+        0.9259033799171448,
+        0.3777526617050171
       ],
-      "yawDegrees": 131.33040554929414,
+      "yawDegrees": 135.61076659270236,
       "rotationDegrees": {
-        "A": -335.0598459910017,
-        "B": 332.9889309271067
+        "A": -335.96630600896367,
+        "B": 335.9125694956685
       },
       "velocityMmS": [
-        30.044429004192352,
-        26.57649666070938,
-        -1.9579844083637
+        40.055468678474426,
+        40.55432230234146,
+        -0.5279906908981502
       ],
-      "minimumSourceZMm": -0.020971028759252164,
-      "jointAnchorErrorMm": 0.044722993172714366
+      "minimumSourceZMm": -0.02052528445068802,
+      "jointAnchorErrorMm": 0.005516159943534883
     }
   ],
   "certificates": {
@@ -424,32 +424,32 @@
       }
     },
     "left-casing": {
-      "hulls": 782,
+      "hulls": 464,
       "sourceSHA256": "4a4c122f4c703666e802a720082618178dfcfded84b41cc8445171db8c6b74da",
       "algorithm": "manifold-compound/v1",
       "strategy": "supplied",
       "maxHulls": 2048,
-      "missingVolumeMm3": 47.43436490681776,
-      "extraVolumeMm3": 16.8215777674221,
-      "numericalResidualVolumeMm3": 0.00006443553763801901,
-      "relativeError": 0.0028913551835830693,
-      "boundsErrorMm": 0.049515724182128906,
+      "missingVolumeMm3": 173.27974177811686,
+      "extraVolumeMm3": 45.82070460738571,
+      "numericalResidualVolumeMm3": 0.0000774225406559026,
+      "relativeError": 0.009858960488407868,
+      "boundsErrorMm": 0.13347339630126953,
       "tolerance": {
         "volumeFraction": 0.02,
         "boundsMm": 0.2
       }
     },
     "left-shaft": {
-      "hulls": 140,
+      "hulls": 127,
       "sourceSHA256": "1d15413b611b2e0d35a0cd84773b58049694737af321fb02fbd1046e309b8d55",
       "algorithm": "manifold-compound/v1",
       "strategy": "supplied",
       "maxHulls": 2048,
-      "missingVolumeMm3": 3.105048822230266,
-      "extraVolumeMm3": 0.9766503875687635,
-      "numericalResidualVolumeMm3": 0.0000042442797538733146,
-      "relativeError": 0.005676699094363729,
-      "boundsErrorMm": 0.007424545288085227,
+      "missingVolumeMm3": 10.02020566340054,
+      "extraVolumeMm3": 2.5042957810751854,
+      "numericalResidualVolumeMm3": 0.0000025453985923462596,
+      "relativeError": 0.01741866876331436,
+      "boundsErrorMm": 0.013941574096680398,
       "tolerance": {
         "volumeFraction": 0.02,
         "boundsMm": 0.2
@@ -488,32 +488,32 @@
       }
     },
     "right-casing": {
-      "hulls": 782,
+      "hulls": 464,
       "sourceSHA256": "0ba7c261af11219102eb474746edfad0900e3cd86d637ea7c70ff2bdcc185c7e",
       "algorithm": "manifold-compound/v1",
       "strategy": "supplied",
       "maxHulls": 2048,
-      "missingVolumeMm3": 47.43437978405136,
-      "extraVolumeMm3": 16.821577892591712,
-      "numericalResidualVolumeMm3": 0.00006460541862196578,
-      "relativeError": 0.002891355866296866,
-      "boundsErrorMm": 0.049515724182128906,
+      "missingVolumeMm3": 173.27972716207265,
+      "extraVolumeMm3": 45.820704607373244,
+      "numericalResidualVolumeMm3": 0.00007768805568275639,
+      "relativeError": 0.009858959842670373,
+      "boundsErrorMm": 0.13347339630126953,
       "tolerance": {
         "volumeFraction": 0.02,
         "boundsMm": 0.2
       }
     },
     "right-shaft": {
-      "hulls": 140,
+      "hulls": 127,
       "sourceSHA256": "6b4564dc5c4fc8fdd1cac7ad14bcbd72baca0f687107df31b0fed8141990048d",
       "algorithm": "manifold-compound/v1",
       "strategy": "supplied",
       "maxHulls": 2048,
-      "missingVolumeMm3": 3.105050506637864,
-      "extraVolumeMm3": 0.9766503875854653,
-      "numericalResidualVolumeMm3": 0.0000041754212269928814,
-      "relativeError": 0.0056767013412395385,
-      "boundsErrorMm": 0.007424545288085227,
+      "missingVolumeMm3": 10.020202787336551,
+      "extraVolumeMm3": 2.5042957808695108,
+      "numericalResidualVolumeMm3": 0.000002284323278090028,
+      "relativeError": 0.017418664399998014,
+      "boundsErrorMm": 0.013941574096680398,
       "tolerance": {
         "volumeFraction": 0.02,
         "boundsMm": 0.2
@@ -567,25 +567,73 @@
         "boundsMm": 0.2
       }
     },
-    "feather-envelope": {
-      "hulls": 1,
-      "sourceSHA256": "b3c5fa3e97b3225618e3c3d05d527ea798c6702133e48fd433251063f4a96bfa",
+    "electronics-mount": {
+      "hulls": 289,
+      "sourceSHA256": "0cf7cd0910cacff807e58a657f6ea7f6c37f0ad21a240b2be8aa053eab94b403",
       "algorithm": "manifold-compound/v1",
       "strategy": "supplied",
       "maxHulls": 2048,
-      "missingVolumeMm3": 0,
-      "extraVolumeMm3": 0,
-      "numericalResidualVolumeMm3": 1.8189894035458565e-12,
-      "relativeError": 1.9579438988711849e-16,
-      "boundsErrorMm": 3.8146972514141453e-7,
+      "missingVolumeMm3": 0.0005329392112981615,
+      "extraVolumeMm3": 5.528523930486682,
+      "numericalResidualVolumeMm3": 0.00007212483638951994,
+      "relativeError": 0.000424580346718253,
+      "boundsErrorMm": 0.0000015258789076710855,
       "tolerance": {
         "volumeFraction": 0.02,
         "boundsMm": 0.2
       }
     },
-    "driver-envelope": {
+    "electronics-controller": {
       "hulls": 1,
-      "sourceSHA256": "f0ff7f6721ba1ac75ade41c6cdb40b466048f023f13985ee21a2002a0cedca37",
+      "sourceSHA256": "2bba3dc2aa280aa7b2b45e177a7fbf3dfdddf92864138948e48e7a311d41820a",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0,
+      "extraVolumeMm3": 0,
+      "numericalResidualVolumeMm3": 0,
+      "relativeError": 0,
+      "boundsErrorMm": 0.0000015258789005656581,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "electronics-regulator": {
+      "hulls": 1,
+      "sourceSHA256": "975ed00399fa1898d5d9c816fead068b10aa5a50dda2e153e6d06dabd1775d6a",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0,
+      "extraVolumeMm3": 0,
+      "numericalResidualVolumeMm3": 0,
+      "relativeError": 0,
+      "boundsErrorMm": 0.0000015258789005656581,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "electronics-driver-0": {
+      "hulls": 1,
+      "sourceSHA256": "d3194e4fe69cc82c2842fe9ff0640d009866c44217fbc28b72a47e5b0406acb4",
+      "algorithm": "manifold-compound/v1",
+      "strategy": "supplied",
+      "maxHulls": 2048,
+      "missingVolumeMm3": 0,
+      "extraVolumeMm3": 0,
+      "numericalResidualVolumeMm3": 0,
+      "relativeError": 0,
+      "boundsErrorMm": 0.0000015258789005656581,
+      "tolerance": {
+        "volumeFraction": 0.02,
+        "boundsMm": 0.2
+      }
+    },
+    "electronics-encoder": {
+      "hulls": 1,
+      "sourceSHA256": "b46d8f1aabbcae38f6e963eabef91aea2a854ecd364d6a5c9c9378dfcae79106",
       "algorithm": "manifold-compound/v1",
       "strategy": "supplied",
       "maxHulls": 2048,
@@ -602,16 +650,16 @@
   },
   "movingHingePeakDriftBounds": {
     "drive-a": {
-      "maximumMm": 0.12413287790704462,
-      "atSeconds": 3.6999999999999433,
+      "maximumMm": 0.1420573476684071,
+      "atSeconds": 4.509999999999926,
       "phase": "reverse"
     },
     "drive-b": {
-      "maximumMm": 0.13015649139779772,
-      "atSeconds": 4.449999999999927,
+      "maximumMm": 0.13945509463730685,
+      "atSeconds": 4.509999999999926,
       "phase": "reverse"
     }
   },
-  "peakMovingHingeDriftBoundMm": 0.13015649139779772,
+  "peakMovingHingeDriftBoundMm": 0.1420573476684071,
   "passed": true
 }
