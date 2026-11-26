@@ -27,6 +27,7 @@ it.each(['hinge','slider'] as const)('reuses %s impulse settings until a velocit
  const prototype=kind==='hinge'?J.HingeConstraint.prototype:J.SliderConstraint.prototype;
  const state=vi.spyOn(prototype,'SetMotorState');
  const iterations=vi.spyOn(prototype,'SetNumVelocityStepsOverride');
+ const cast=vi.spyOn(J,'castObject');
  try{
   world.applyJointImpulse(joint,1e-5);
   world.step();
@@ -37,7 +38,15 @@ it.each(['hinge','slider'] as const)('reuses %s impulse settings until a velocit
   world.applyJointImpulse(joint,1e-5);
   expect(state.mock.calls).toEqual([[J.EMotorState_Off],[J.EMotorState_Velocity],[J.EMotorState_Off]]);
   expect(iterations.mock.calls).toEqual(kind==='hinge'?[[40],[40]]:[]);
- }finally{state.mockRestore();iterations.mockRestore();world.dispose();}
+  if(kind==='hinge'){
+   expect(Number.isFinite(world.hingeAngle(joint))).toBe(true);
+   expect(()=>world.sliderPosition(joint)).toThrow('Unknown slider connector');
+  }else{
+   expect(Number.isFinite(world.sliderPosition(joint))).toBe(true);
+   expect(()=>world.hingeAngle(joint)).toThrow('Unknown hinge joint');
+  }
+  expect(cast).not.toHaveBeenCalled();
+ }finally{cast.mockRestore();state.mockRestore();iterations.mockRestore();world.dispose();}
 });
 
 it('restores impulse iterations after tuning a servo on the same chain',async()=>{
