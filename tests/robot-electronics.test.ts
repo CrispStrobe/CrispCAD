@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {beforeAll,expect,it} from 'vitest';
+import {beforeAll,expect,it,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import {parseDocument,serializeDocument,localToWorldPoint,rotatePoint} from '@brickwright/cad-core';
@@ -7,6 +7,9 @@ import {createPresetDocument} from '../packages/editor/src/shapes.js';
 import {robotElectronicsMounts,robotElectricalPlan} from '../packages/editor/src/robot-electronics.js';
 import {componentAppearance} from '../packages/editor/src/component-appearance.js';
 import {robotWires} from '../packages/editor/src/robot-wiring.js';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 let kernel:Awaited<ReturnType<typeof createGeometryKernel>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 const expected:Record<string,[number,number]>={

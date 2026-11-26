@@ -7,6 +7,9 @@ import {freezeDocument,serializeDocument,localToWorldPoint} from '@brickwright/c
 import {createTTRoverDocument} from '../packages/editor/src/tt-rover.js';
 import {createAtlasForkliftDocument} from '../packages/editor/src/atlas-forklift.js';
 import {robotWires,createRobotWiring} from '../packages/editor/src/robot-wiring.js';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 let kernel:Awaited<ReturnType<typeof createGeometryKernel>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 function center(mesh:T.Mesh,index:number){const p=mesh.geometry.getAttribute('position');return [0,1,2].map(axis=>Array.from({length:6},(_,k)=>p.array[(index*7+k)*3+axis]).reduce((a,b)=>a+b)/6);}

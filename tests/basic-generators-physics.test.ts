@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {beforeAll,expect,it} from 'vitest';import {readFileSync} from 'node:fs';
+import {beforeAll,expect,it,vi} from 'vitest';import {readFileSync} from 'node:fs';
 import {defaultGenerator} from '@brickwright/cad-core';import {createGeometryKernel} from '@brickwright/cad-geometry';import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {prepareDocumentCollisions,createPhysicsWorld} from '../packages/physics/src/index.js';import {createPresetDocument} from '../packages/editor/src/shapes.js';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 let kernel:GeometryKernel;beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 const variants={
  'rounded-box':{width:50,depth:20,height:16,radius:6,detail:6},capsule:{length:60,width:18,height:12,segments:32},
@@ -17,4 +20,4 @@ for(const [preset,values]of Object.entries(variants))it(`edited ${preset} qualif
  if(preset==='torus'){expect(world.raycast([0,0,-10],[0,0,10])).toBeNull();expect(world.raycast([20,0,-10],[20,0,10])?.bodyId).toBe(id);}
  world.step(.02);expect(world.pose(id).positionMm.every(Number.isFinite)).toBe(true);
  }finally{world.dispose();}
-},60000);
+},180_000);

@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {beforeAll,expect,it} from 'vitest';import {readFileSync} from 'node:fs';
+import {beforeAll,expect,it,vi} from 'vitest';import {readFileSync} from 'node:fs';
 import {defaultGenerator,createCadSession} from '@brickwright/cad-core';import {createGeometryKernel} from '@brickwright/cad-geometry';import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {prepareDocumentCollisions,createPhysicsWorld} from '../packages/physics/src/index.js';import {createPresetDocument} from '../packages/editor/src/shapes.js';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 let kernel:GeometryKernel;beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 const cases:[string,Record<string,number>][]=[['counterbore',{boreDiameter:8,recessDiameter:18,shaftLength:16,recessDepth:4,clearance:.4,segments:96}],['countersink',{boreDiameter:6,recessDiameter:16,shaftLength:14,seatAngle:82,rimHeight:0,clearance:.3,segments:96}],['port',{length:45,width:12,height:10,segments:48}],['boss',{outerDiameter:18,boreDiameter:14,height:25,ribReach:10,ribThickness:2,ribHeight:7,segments:96}],['boss',{outerDiameter:12,boreDiameter:9,height:20,ribReach:0,segments:32}],['boss',{outerDiameter:14,boreDiameter:8,height:10,ribHeight:10,segments:128}],['rib',{length:45,height:25,thickness:2}]];
 for(const [preset,values]of cases)it(`edited ${preset} ${JSON.stringify(values)} preserves its actual volume and cavities in Jolt`,async()=>{
@@ -10,8 +13,8 @@ for(const [preset,values]of cases)it(`edited ${preset} ${JSON.stringify(values)}
  if(preset==='boss'){const p=recipe.values;expect(world.raycast([0,0,-5],[0,0,p.height+5])).toBeNull();const x=(p.outerDiameter+p.boreDiameter)/4;expect(world.raycast([x,0,-5],[x,0,p.height+5])?.bodyId).toBe(id);if(p.ribReach>0){const x=p.outerDiameter/2+p.ribReach*.8;expect(world.raycast([x,0,p.ribHeight+.5],[x,0,p.height+1])).toBeNull();expect(world.raycast([x,0,-1],[x,0,p.ribHeight+1])?.bodyId).toBe(id);}}
  world.step(.02);expect(world.pose(id).positionMm.every(Number.isFinite)).toBe(true);
  }finally{world.dispose();}
-},60000);
+},180_000);
 for(const preset of ['counterbore','countersink','port'])it(`${preset} subtraction preserves an open passage in the qualified collision compound`,async()=>{
  const recipe=defaultGenerator(preset)!,s=createCadSession(),base=s.add({kind:'box',size:[60,60,16]});s.insert(createPresetDocument(preset,'BW',{recipe}));const cutter=s.state.selection[0],p=recipe.values,totalHeight=preset==='counterbore'?p.shaftLength+p.recessDepth:preset==='countersink'?p.shaftLength+(p.recessDiameter-p.boreDiameter)/2/Math.tan(p.seatAngle*Math.PI/360)+p.rimHeight:p.height,cutterZ=8-totalHeight;s.update(cutter,{transform:{position:[0,0,cutterZ],rotation:[0,0,0],scale:[1,1,1]}});s.setRole('hole',[cutter]);const id=s.combine('union',[base,cutter]),g=kernel.evaluate(s.state.document),prepared=await prepareDocumentCollisions(s.state.document,g,kernel),world=await createPhysicsWorld(s.state.document,g,prepared,{ground:false,mode:'rigid-preview'});
  try{expect(prepared.get(id)!.certificate.relativeError).toBeLessThan(.02);expect(world.raycast([0,0,20],[0,0,-20])).toBeNull();expect(world.raycast([25,0,20],[25,0,-20])?.bodyId).toBe(id);if(preset!=='port'){const x=(p.boreDiameter+p.recessDiameter)/4,hit=world.raycast([x,0,20],[x,0,-20]);expect(hit?.bodyId).toBe(id);const shoulderZ=cutterZ+p.shaftLength+(preset==='countersink'?(x-p.boreDiameter/2)/Math.tan(p.seatAngle*Math.PI/360):0);expect(20-hit!.fraction*40).toBeCloseTo(shoulderZ,1);}world.step(.02);}finally{world.dispose();s.dispose();}
-},60000);
+},180_000);

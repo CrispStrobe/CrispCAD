@@ -4,6 +4,9 @@ import {readFileSync} from 'node:fs';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import {createCadSession,defaultSimulationSettings,defaultPartPhysics,identityTransform} from '@brickwright/cad-core';
 import {createPhysicsWorld,loadPhysicsEngine,prepareDocumentCollisions} from '../packages/physics/src/index.js';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 let kernel:Awaited<ReturnType<typeof createGeometryKernel>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 async function fixture(kind:'hinge'|'slider',fixed=false,spaced=false){const s=createCadSession(),settings=defaultSimulationSettings();settings.gravity=[0,0,0];s.setSimulation(settings);
@@ -13,10 +16,10 @@ async function fixture(kind:'hinge'|'slider',fixed=false,spaced=false){const s=c
  const joint=s.addJoint(kind,a,b,[spaced?15:0,spaced?5:0,spaced?25:20],[0,0,1]);const doc=structuredClone(s.state.document);s.dispose();const geometry=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,geometry,kernel),world=await createPhysicsWorld(doc,geometry,prepared,{ground:false});return {world,a,b,joint,doc};}
 it('applies a motor reaction to both dynamic bodies and reverses physical hinge motion',async()=>{const{world,a,b,joint,doc}=await fixture('hinge'),before=JSON.stringify(doc);try{
  world.applyJointImpulse(joint,1e-6);expect(world.angularVelocity(a)[2]).toBeLessThan(0);expect(world.angularVelocity(b)[2]).toBeGreaterThan(0);expect(world.angularVelocity(a)[2]+world.angularVelocity(b)[2]).toBeCloseTo(0,8);world.step();const first=world.hingeAngle(joint);expect(first).toBeGreaterThan(0);world.applyJointImpulse(joint,-3e-6);world.step();expect(world.hingeAngle(joint)).toBeLessThan(first);expect(JSON.stringify(doc)).toBe(before);
- }finally{world.dispose();}},30000);
+ }finally{world.dispose();}},120_000);
 it('supports slider force impulses without a velocity motor and rejects invalid commands',async()=>{const{world,a,b,joint}=await fixture('slider',true);try{
  world.applyJointImpulse(joint,1e-4);world.step();expect(world.sliderPosition(joint)).toBeGreaterThan(0);expect(world.pose(a).positionMm).toEqual([0,0,0]);expect(()=>world.applyJointImpulse(joint,Infinity)).toThrow();expect(()=>world.applyJointImpulse('missing',.001)).toThrow();world.dispose();expect(()=>world.applyJointImpulse(joint,.001)).toThrow();
- }finally{world.dispose();}},30000);
+ }finally{world.dispose();}},120_000);
 
 it.each(['hinge','slider'] as const)('reuses %s impulse settings until a velocity motor takes over',async kind=>{
  const {world,joint}=await fixture(kind,true);
@@ -84,4 +87,4 @@ it('keeps qualified rover hinge clearances under circuit-like startup torque',as
   }
   expect(world.pose('chassis').positionMm[0]).toBeGreaterThan(50);expect(JSON.stringify(doc)).toBe(source);
  }finally{world.dispose();}
-},60000);
+},240_000);

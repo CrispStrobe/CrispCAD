@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {expect,it} from 'vitest';
+import {expect,it,vi} from 'vitest';
 import {createCadSession,serializeDocument,pruneModelProvenance} from '@brickwright/cad-core';
 import {createAtlasForkliftDocument} from '../packages/editor/src/atlas-forklift.js';
 import {canAddRobotElectronics,addRobotElectronics} from '../packages/editor/src/robot-electronics.js';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 function olderAtlas(){
  const d=createAtlasForkliftDocument();for(const id of Object.keys(d.nodes))if(id.startsWith('electronics-'))delete d.nodes[id];d.roots=d.roots.filter(id=>d.nodes[id]);d.joints=d.joints!.filter(j=>d.nodes[j.bodyA]&&d.nodes[j.bodyB]);pruneModelProvenance(d);return d;
 }

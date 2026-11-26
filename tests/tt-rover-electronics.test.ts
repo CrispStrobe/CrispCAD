@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {afterAll,beforeAll,expect,it} from 'vitest';
+import {afterAll,beforeAll,expect,it,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import Module from 'manifold-3d';
 import type {Manifold,ManifoldToplevel} from 'manifold-3d';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {BodyMesh,GeometryKernel} from '@brickwright/cad-geometry';
 import {createTTRoverDocument,createTTRoverPart} from '../packages/editor/src/tt-rover.js';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 
 let manifold:ManifoldToplevel,kernel:GeometryKernel,carrier:Manifold;
 const boardHoles:[number,number][]=[[-8.89,-22.86],[8.89,-22.86],[-8.89,22.86],[8.89,22.86],[21.84,6.35],[42.16,6.35]];

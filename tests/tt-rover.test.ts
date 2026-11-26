@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {beforeAll,expect,it} from 'vitest';
+import {beforeAll,expect,it,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {createGeometryKernel,exportSTL,checkModelLibrarySTL} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {createCadSession,parseDocument,serializeDocument,localToWorldPoint,rotatePoint,validateModelLibraryCatalogue} from '@brickwright/cad-core';
 import {createTTRoverDocument,createTTRoverPart,ttRoverPartPrograms,ttRoverPrintQuantities,TT_ROVER_ID} from '../packages/editor/src/tt-rover.js';
 import {createPresetDocument,shapeCatalog} from '../packages/editor/src/shapes.js';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 let kernel:GeometryKernel;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 

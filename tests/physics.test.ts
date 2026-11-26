@@ -1,4 +1,4 @@
-import {beforeAll,describe,it,expect} from 'vitest';
+import {beforeAll,describe,it,expect,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import initJolt from 'jolt-physics/debug-wasm-compat';
 import {createPresetDocument} from '../packages/editor/src/shapes.js';
@@ -6,6 +6,9 @@ import {createCadSession,defaultGenerator,defaultCodeProgram,importOpenSCAD} fro
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {createPhysicsShapeCache,createPhysicsWorld,prepareDocumentCollisions,preparePhysicsDocument,solidMassProperties} from '../packages/physics/src/index.js';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 let kernel:GeometryKernel,J:Awaited<ReturnType<typeof initJolt>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});J=await initJolt();});
 describe('qualified Jolt physics boundary',()=>{
@@ -77,7 +80,7 @@ describe('qualified Jolt physics boundary',()=>{
    const result=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,result,kernel),world=await createPhysicsWorld(doc,result,prepared,{J,mode:'rigid-preview',ground:false});
    try{world.step(.1);expect(world.pose(doc.roots[0]).positionMm.every(Number.isFinite)).toBe(true);expect(prepared.get(doc.roots[0])!.certificate.relativeError).toBeLessThan(.02);}finally{world.dispose();}
   }
- },30000);
+ },120_000);
  it('requires fresh collision qualification after a driving parameter changes',async()=>{
   const s=createCadSession(),id=s.add({kind:'box',size:[20,20,10]},{transform:{position:[0,0,50],rotation:[0,0,0],scale:[1,1,1]}});
   s.setParametric({version:1,parameters:{width:{expression:'20',unit:'mm'}},bindings:[{nodeId:id,property:'width',expression:'width'}]});
@@ -112,20 +115,20 @@ describe('qualified Jolt physics boundary',()=>{
 it('keeps millimetre knurl tips above the floor and rejects tampered collider buffers',async()=>{
  const doc=structuredClone(createPresetDocument('knurl'));doc.nodes[doc.roots[0]].transform.position[2]=70;const result=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,result,kernel);const world=await createPhysicsWorld(doc,result,prepared,{J});try{for(let i=0;i<200;i++)world.step();expect(world.geometryBoundsMm(doc.roots[0]).min[2]).toBeGreaterThan(-.1);}finally{world.dispose();}
  const asset=prepared.get(doc.roots[0])!;expect(Object.isFrozen(asset.certificate)).toBe(true);asset.hulls[0].positions[0]+=1;await expect(createPhysicsWorld(doc,result,prepared,{J})).rejects.toThrow('missing or stale');
-},30000);
+},120_000);
 
 
 it('qualifies coded CSG against its actual mesh and requires fresh proof after local parameter edits',async()=>{
  const s=createCadSession(),id=s.addCode(defaultCodeProgram());s.update(id,{transform:{position:[0,0,60],rotation:[0,0,0],scale:[1,1,1]}});const original=kernel.evaluate(s.state.document),old=await prepareDocumentCollisions(s.state.document,original,kernel);const p=defaultCodeProgram();p.parameters.width='80';s.updateCode(id,p);const result=kernel.evaluate(s.state.document);expect(result.volume).toBeGreaterThan(original.volume);expect(solidMassProperties(result.bodies[0],1050).massKg).toBeCloseTo(result.volume*1050e-9,9);
  await expect(createPhysicsWorld(s.state.document,result,old,{J})).rejects.toThrow();const prepared=await prepareDocumentCollisions(s.state.document,result,kernel),world=await createPhysicsWorld(s.state.document,result,prepared,{J});try{for(let step=0;step<200;step++)world.step();expect(world.geometryBoundsMm(id).min[2]).toBeGreaterThan(-.25);}finally{world.dispose();}
-},30000);
+},120_000);
 
 it('qualifies imported taper/hull/control-flow solids with real mass and refuses stale collision certificates',async()=>{
  const s=createCadSession(),p=importOpenSCAD('height=12; hull(){for(i=[0:1])translate([i*5,0,0])cylinder(h=height,r1=5,r2=2,$fn=24); cube([3,3,3]);}'),id=s.addCode(p);s.update(id,{transform:{position:[0,0,60],rotation:[0,0,0],scale:[1,1,1]}});
  const original=kernel.evaluate(s.state.document),old=await prepareDocumentCollisions(s.state.document,original,kernel);p.parameters.height='20';s.updateCode(id,p);
  const changed=kernel.evaluate(s.state.document);expect(solidMassProperties(changed.bodies[0],1050).massKg).toBeCloseTo(changed.volume*1050e-9,9);await expect(createPhysicsWorld(s.state.document,changed,old,{J})).rejects.toThrow();
  const prepared=await prepareDocumentCollisions(s.state.document,changed,kernel),world=await createPhysicsWorld(s.state.document,changed,prepared,{J});try{for(let i=0;i<200;i++)world.step();expect(world.geometryBoundsMm(id).min[2]).toBeGreaterThan(-.25);}finally{world.dispose();}
-},30000);
+},120_000);
 it('qualifies imported profile holes and partial revolutions and preserves their empty space in Jolt',async()=>{
  for(const source of ['linear_extrude(10)difference(){square([20,20],true);circle(4,$fn=16);}','rotate_extrude(angle=180,$fn=24)translate([8,0])square([3,10]);']){
   const session=createCadSession(),id=session.addCode(importOpenSCAD(source)),doc=session.state.document,result=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,result,kernel);expect(prepared.get(id)!.certificate.relativeError).toBeLessThan(.02);
@@ -155,7 +158,7 @@ it('keeps an elliptical taper bore open in real Jolt collision geometry',async()
 });
 for(const preset of ['hex-head-screw','socket-head-screw','countersunk-screw','pan-head-screw'])it(`qualifies ${preset} without filling its drive recess`,async()=>{
  const doc=createPresetDocument(preset),id=doc.roots[0],recipe=doc.nodes[id].generator!,p=recipe.values,h=recipe.headStyle==='countersunk'?(p.headDiameter/2-p.diameter/2-p.threadDepth)/Math.tan(recipe.headAngle!*Math.PI/360):p.headHeight,result=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,result,kernel),world=await createPhysicsWorld(doc,result,prepared,{J,ground:false,mode:'rigid-preview'});try{const hit=world.raycast([0,0,h+2],[0,0,h-recipe.driveDepth!+.3]);if(recipe.driveStyle==='none')expect(hit?.bodyId).toBe(id);else expect(hit).toBeNull();expect(world.raycast([3.8,3.8,h+2],[3.8,3.8,.1])?.bodyId).toBe(id);expect(solidMassProperties(result.bodies[0],1050).massKg).toBeCloseTo(result.volume*1050e-9,10);}finally{world.dispose();}
-},30000);
+},120_000);
 it('keeps torus openings and rounded cap boundaries in real Jolt colliders',async()=>{
  for(const [source,miss,hit]of [
   ['return torus(6,1,16,24);',[[0,0,10],[0,0,-10]],[[6,0,10],[6,0,-10]]],

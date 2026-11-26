@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {beforeAll,describe,it,expect} from 'vitest';
+import {beforeAll,describe,it,expect,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import {createCadSession,defaultPartPhysics,defaultSimulationSettings,externalCenterDistanceMm,externalSpeedRatio,identityTransform,meshAlignDeg,validateDocument} from '@brickwright/cad-core';
 import {createPhysicsWorld,prepareDocumentCollisions} from '@brickwright/cad-physics';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 let kernel:Awaited<ReturnType<typeof createGeometryKernel>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 const gear=(teeth:number)=>({version:1 as const,language:'brickwright-cad-script' as const,parameters:{},source:`return extrudeProfile(5, spurGear2d(2, ${teeth}, 20, 0.3));`});

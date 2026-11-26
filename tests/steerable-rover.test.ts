@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {beforeAll,expect,it} from 'vitest';
+import {beforeAll,expect,it,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import initJolt from 'jolt-physics/debug-wasm-compat';
 import {createGeometryKernel,exportSTL,checkModelLibrarySTL} from '@brickwright/cad-geometry';
@@ -8,6 +8,9 @@ import {createCadSession,parseDocument,serializeDocument,localToWorldPoint,rotat
 import {createPhysicsWorld,prepareDocumentCollisions} from '../packages/physics/src/index.js';
 import {createSteerableRoverDocument,createSteerableRoverPart,steerableRoverPartPrograms,steerableRoverPrintQuantities,STEERABLE_ROVER_ID} from '../packages/editor/src/steerable-rover.js';
 import {createPresetDocument,shapeCatalog} from '../packages/editor/src/shapes.js';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 
 let kernel:GeometryKernel,J:Awaited<ReturnType<typeof initJolt>>;
 beforeAll(async()=>{

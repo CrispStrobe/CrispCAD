@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {beforeAll,expect,it} from 'vitest';import {readFileSync} from 'node:fs';import {screwVariant,redesignScrew} from '@brickwright/cad-core';import {createGeometryKernel} from '@brickwright/cad-geometry';import type {GeometryKernel} from '@brickwright/cad-geometry';import {createPresetDocument} from '../packages/editor/src/shapes.js';import {prepareDocumentCollisions,createPhysicsWorld} from '../packages/physics/src/index.js';
+import {beforeAll,expect,it,vi} from 'vitest';import {readFileSync} from 'node:fs';import {screwVariant,redesignScrew} from '@brickwright/cad-core';import {createGeometryKernel} from '@brickwright/cad-geometry';import type {GeometryKernel} from '@brickwright/cad-geometry';import {createPresetDocument} from '../packages/editor/src/shapes.js';import {prepareDocumentCollisions,createPhysicsWorld} from '../packages/physics/src/index.js';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 let kernel:GeometryKernel;beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 for(const [name,scale,request]of [['keep pitch',[1.5,1.5,2],{}],['keep turns',[2,2,2],{turnsPerStart:10}],['fine pitch',[1,1,1],{pitch:.5}],['long shaft',[1,1,1],{length:96,pitch:2}]] as const)it(`redesigned screw ${name} qualifies actual geometry and remains supported in Jolt`,async()=>{
  const recipe=redesignScrew(screwVariant('socket-head-screw')!,scale,request),d=createPresetDocument('screw','BW',{recipe}),id=d.roots[0];d.nodes[id].transform.position[2]=recipe.values.length+20;const g=kernel.evaluate(d),prepared=await prepareDocumentCollisions(d,g,kernel),world=await createPhysicsWorld(d,g,prepared,{mode:'rigid-preview'});
  try{expect(prepared.get(id)!.certificate.relativeError).toBeLessThan(.02);expect(prepared.get(id)!.hulls.length).toBeLessThanOrEqual(2048);for(let i=0;i<200;i++)world.step();expect(world.pose(id).positionMm.every(Number.isFinite)).toBe(true);expect(world.geometryBoundsMm(id).min[2]).toBeGreaterThanOrEqual(-.25);}finally{world.dispose();}
-},60000);
+},240_000);
 it('the rebuilt helical crest has the requested physical pitch and starts, rather than a stretched original flank',()=>{
  for(const hand of [-1,1]){const original=screwVariant('socket-head-screw')!;original.values.hand=hand;original.values.starts=2;const r=redesignScrew(original,[1.5,1.5,2],{turnsPerStart:6}),d=createPresetDocument('screw','BW',{recipe:r}),wires=Object.values(d.nodes).filter(n=>n.kind==='mesh'&&n.physics?.collisionHint?.kind==='tube-grid');expect(wires).toHaveLength(2);for(const wire of wires){if(wire.kind!=='mesh')throw new Error('Expected ridge');const a=wire.positions.slice((3*3+1)*3,(3*3+1)*3+3),b=wire.positions.slice((4*3+1)*3,(4*3+1)*3+3),angle=Math.atan2(a[0]*b[1]-a[1]*b[0],a[0]*b[0]+a[1]*b[1]),lead=Math.abs((b[2]-a[2])*2*Math.PI/angle);expect(lead).toBeCloseTo(r.values.pitch*r.values.starts,3);}}
 });

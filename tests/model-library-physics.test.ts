@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import 'fake-indexeddb/auto';
-import {beforeAll, describe, expect, it} from 'vitest';
+import {beforeAll, describe, expect, it,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {createPresetDocument} from '../packages/editor/src/shapes.js';
 import {createCadSession, parseDocument, parseModelLibraryCatalogue, validateModelLibraryCatalogue, type ModelLibraryCatalogue} from '@brickwright/cad-core';
 import {checkModelLibrarySTL, createGeometryKernel, exportSTL, type GeometryKernel} from '@brickwright/cad-geometry';
 import {qualifyModelLibrarySTL, qualifyModelLibrarySTLAndAttach, isQualifiedCollision, MODEL_LIBRARY_COLLISION_QUALIFIER_VERSION, MODEL_LIBRARY_JOLT_VERSION} from '../packages/physics/src/index.js';
 import {appendPortableRevision, readPortableHistory, openHistoryStore} from '../packages/history/src/index.js';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 let kernel: GeometryKernel;
 const identity = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
 const selection = {assetId: 'fixture', file: 'original'} as const;

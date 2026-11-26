@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {beforeAll,expect,it} from 'vitest';import {readFileSync} from 'node:fs';
+import {beforeAll,expect,it,vi} from 'vitest';import {readFileSync} from 'node:fs';
 import {defaultGenerator,createCadSession} from '@brickwright/cad-core';import {createGeometryKernel} from '@brickwright/cad-geometry';import type {GeometryKernel} from '@brickwright/cad-geometry';import {prepareDocumentCollisions,createPhysicsWorld} from '../packages/physics/src/index.js';import {createPresetDocument} from '../packages/editor/src/shapes.js';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 let kernel:GeometryKernel;beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
 const cases:[string,Record<string,number>][]=[['bent-tube',{bendRadius:30,outerDiameter:12,wallThickness:2,bendAngle:45,arcSegments:16,segments:32}],['bent-tube',{bendRadius:24,outerDiameter:12,wallThickness:.8,bendAngle:135,arcSegments:48,segments:48}],['bent-tube',{bendRadius:18,outerDiameter:8,wallThickness:1.5,bendAngle:180,arcSegments:48,segments:32}],['loft',{baseWidth:44,baseDepth:26,topDiameter:22,height:36,wallThickness:2,profileSegments:12,segments:48}],['loft',{baseWidth:26,baseDepth:40,topDiameter:46,height:28,wallThickness:1.5,profileSegments:8,segments:32}],['loft',{baseWidth:40,baseDepth:25,topDiameter:18,height:35,wallThickness:0,profileSegments:8,segments:32}],['dovetail',{baseWidth:18,topWidth:28,height:10,length:40,clearance:.3}]];
 for(const [preset,patch] of cases)it(`edited ${preset} ${JSON.stringify(patch)} qualifies actual sections and creates usable Jolt support`,async()=>{
@@ -10,10 +13,10 @@ for(const [preset,patch] of cases)it(`edited ${preset} ${JSON.stringify(patch)} 
  if(preset==='loft'){const ray=world.raycast([0,0,-5],[0,0,p.height+5]);if(p.wallThickness>0)expect(ray).toBeNull();else{expect(ray?.bodyId).toBe(id);expect(-5+ray!.fraction*(p.height+10)).toBeCloseTo(0,1);}const x=p.topDiameter/2-(p.wallThickness>0?p.wallThickness/2:1);expect(world.raycast([x,0,p.height+2],[x,0,p.height-1])?.bodyId).toBe(id);}
  world.step(.02);expect(world.pose(id).positionMm.every(Number.isFinite)).toBe(true);
  }finally{world.dispose();}
-},60000);
+},240_000);
 it('a clearanced dovetail socket preserves a traversable channel and the nominal key fits without material overlap',async()=>{
  const s=createCadSession(),base=s.add({kind:'box',size:[50,30,20]}),r=defaultGenerator('dovetail')!;r.values.clearance=.3;r.values.length=34;s.insert(createPresetDocument('dovetail','BW',{recipe:r}));const cut=s.state.selection[0];s.update(cut,{transform:{position:[0,17,0],rotation:[0,0,0],scale:[1,1,1]}});s.setRole('hole',[cut]);const id=s.combine('union',[base,cut]),g=kernel.evaluate(s.state.document),prepared=await prepareDocumentCollisions(s.state.document,g,kernel),w=await createPhysicsWorld(s.state.document,g,prepared,{ground:false,mode:'rigid-preview'});try{expect(w.raycast([0,-20,4],[0,20,4])).toBeNull();expect(w.raycast([20,-20,4],[20,20,4])?.bodyId).toBe(id);}finally{w.dispose();s.dispose();}
-},60000);
+},240_000);
 it('refines an expanding hollow transition inside a rotated retained union without blocking its passage',async()=>{
  const recipe=defaultGenerator('loft')!;Object.assign(recipe.values,{baseWidth:26,baseDepth:40,topDiameter:46,height:28,wallThickness:1.5,profileSegments:8,segments:32});const s=createCadSession(createPresetDocument('loft','BW',{recipe})),part=s.state.document.roots[0],rib=s.add({kind:'box',size:[6,8,12]});s.update(rib,{transform:{position:[16,0,6],rotation:[0,0,0],scale:[1,1,1]}});const id=s.combine('union',[part,rib]);s.update(id,{transform:{position:[5,-7,2],rotation:[0,0,17],scale:[1,1,1]}});const g=kernel.evaluate(s.state.document),prepared=await prepareDocumentCollisions(s.state.document,g,kernel),w=await createPhysicsWorld(s.state.document,g,prepared,{ground:false,mode:'rigid-preview'});try{expect(prepared.get(id)!.certificate.relativeError).toBeLessThan(.02);expect(w.raycast([5,-7,-3],[5,-7,35])).toBeNull();w.step(.02);expect(w.pose(id).positionMm.every(Number.isFinite)).toBe(true);}finally{w.dispose();s.dispose();}
-},60000);
+},240_000);

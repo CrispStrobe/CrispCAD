@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {it,expect} from 'vitest';
+import {it,expect,vi} from 'vitest';
 import {createTTRoverDocument} from '../packages/editor/src/tt-rover.js';
 import {prepareDocumentCollisions,createPhysicsWorld} from '../packages/physics/src/index.js';
 import {qualifyTTRoverPhysics} from '../scripts/qualify-tt-rover-physics.mjs';
+// Manifold/Jolt suite: under a loaded machine (load ~150) its tests and hooks ran up to ~10x
+// their idle time, past vitest's 5 s / 10 s defaults. Explicit per-test timeouts below still win.
+vi.setConfig({testTimeout:60_000,hookTimeout:120_000});
 
 it('qualifies the complete rover and drives forward, backward and in a differential turn with a free base',async()=>{
  const document=createTTRoverDocument();expect(document.simulation?.fixBase).toBe(false);
@@ -13,4 +16,4 @@ it('qualifies the complete rover and drives forward, backward and in a different
  const phases=Object.fromEntries(report.phases.map((p:{phase:string})=>[p.phase,p]));
  for(const port of ['A','B']as const){expect(phases.forward.rotationDegrees[port]-phases.settled.rotationDegrees[port]).toBeGreaterThan(180);expect(phases.reverse.rotationDegrees[port]-phases['braked-forward'].rotationDegrees[port]).toBeLessThan(-180);}
  expect(phases.turn.rotationDegrees.A-phases['braked-reverse'].rotationDegrees.A).toBeLessThan(-180);expect(phases.turn.rotationDegrees.B-phases['braked-reverse'].rotationDegrees.B).toBeGreaterThan(180);
-},60000);
+},300_000);
