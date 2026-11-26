@@ -1,6 +1,6 @@
 {
   "node": "v26.4.0",
-  "date": "2026-11-26T05:54:57.107Z",
+  "date": "2026-11-26T06:09:06.765Z",
   "tolerance": {
     "tolerance": 0.01,
     "angleDeg": 10
@@ -10,17 +10,17 @@
       "holes": 10,
       "variant": "plain",
       "build": {
-        "cpuMs": 592,
-        "wallMs": 2898
+        "cpuMs": 190,
+        "wallMs": 96
       },
       "display": {
-        "cpuMs": 156,
-        "wallMs": 675,
+        "cpuMs": 46,
+        "wallMs": 24,
         "triangles": 1492
       },
       "smlibWholeBody": {
-        "cpuMs": 1208,
-        "wallMs": 3689,
+        "cpuMs": 441,
+        "wallMs": 145,
         "triangles": 2612
       },
       "wasmMemoryMiB": 64
@@ -29,17 +29,17 @@
       "holes": 10,
       "variant": "fillet",
       "build": {
-        "cpuMs": 1904,
-        "wallMs": 7674
+        "cpuMs": 647,
+        "wallMs": 330
       },
       "display": {
-        "cpuMs": 1868,
-        "wallMs": 6068,
+        "cpuMs": 785,
+        "wallMs": 613,
         "triangles": 23244
       },
       "smlibWholeBody": {
-        "cpuMs": 1233,
-        "wallMs": 4709,
+        "cpuMs": 570,
+        "wallMs": 692,
         "triangles": 23244
       },
       "wasmMemoryMiB": 77
@@ -48,17 +48,17 @@
       "holes": 10,
       "variant": "shell",
       "build": {
-        "cpuMs": 1937,
-        "wallMs": 3749
+        "cpuMs": 915,
+        "wallMs": 930
       },
       "display": {
-        "cpuMs": 160,
-        "wallMs": 218,
+        "cpuMs": 118,
+        "wallMs": 63,
         "triangles": 2948
       },
       "smlibWholeBody": {
-        "cpuMs": 546,
-        "wallMs": 1798,
+        "cpuMs": 253,
+        "wallMs": 376,
         "triangles": 5188
       },
       "wasmMemoryMiB": 77
@@ -67,17 +67,17 @@
       "holes": 50,
       "variant": "plain",
       "build": {
-        "cpuMs": 694,
-        "wallMs": 1537
+        "cpuMs": 364,
+        "wallMs": 386
       },
       "display": {
-        "cpuMs": 293,
-        "wallMs": 531,
+        "cpuMs": 178,
+        "wallMs": 121,
         "triangles": 7412
       },
       "smlibWholeBody": {
-        "cpuMs": 2456,
-        "wallMs": 10003,
+        "cpuMs": 1093,
+        "wallMs": 1431,
         "triangles": 13012
       },
       "wasmMemoryMiB": 77
@@ -86,17 +86,17 @@
       "holes": 50,
       "variant": "fillet",
       "build": {
-        "cpuMs": 5044,
-        "wallMs": 32881
+        "cpuMs": 2396,
+        "wallMs": 2608
       },
       "display": {
-        "cpuMs": 7364,
-        "wallMs": 37675,
+        "cpuMs": 3119,
+        "wallMs": 4796,
         "triangles": 115564
       },
       "smlibWholeBody": {
-        "cpuMs": 8167,
-        "wallMs": 55551,
+        "cpuMs": 3504,
+        "wallMs": 5868,
         "triangles": 115564
       },
       "wasmMemoryMiB": 297
@@ -105,17 +105,17 @@
       "holes": 50,
       "variant": "shell",
       "build": {
-        "cpuMs": 4340,
-        "wallMs": 31999
+        "cpuMs": 2828,
+        "wallMs": 3203
       },
       "display": {
-        "cpuMs": 293,
-        "wallMs": 879,
+        "cpuMs": 228,
+        "wallMs": 232,
         "triangles": 14628
       },
       "smlibWholeBody": {
-        "cpuMs": 2605,
-        "wallMs": 15525,
+        "cpuMs": 1767,
+        "wallMs": 2089,
         "triangles": 25828
       },
       "wasmMemoryMiB": 297
@@ -124,17 +124,17 @@
       "holes": 200,
       "variant": "plain",
       "build": {
-        "cpuMs": 1778,
-        "wallMs": 6769
+        "cpuMs": 1429,
+        "wallMs": 1580
       },
       "display": {
-        "cpuMs": 483,
-        "wallMs": 1579,
+        "cpuMs": 387,
+        "wallMs": 395,
         "triangles": 29612
       },
       "smlibWholeBody": {
-        "cpuMs": 10971,
-        "wallMs": 34190,
+        "cpuMs": 9766,
+        "wallMs": 14064,
         "triangles": 52012
       },
       "wasmMemoryMiB": 297
@@ -143,17 +143,17 @@
       "holes": 200,
       "variant": "fillet",
       "build": {
-        "cpuMs": 23366,
-        "wallMs": 71377
+        "cpuMs": 20633,
+        "wallMs": 26621
       },
       "display": {
-        "cpuMs": 16572,
-        "wallMs": 50252,
+        "cpuMs": 14580,
+        "wallMs": 17558,
         "triangles": 461764
       },
       "smlibWholeBody": {
-        "cpuMs": 26175,
-        "wallMs": 101681,
+        "cpuMs": 23252,
+        "wallMs": 30167,
         "triangles": 461764
       },
       "wasmMemoryMiB": 1036
@@ -162,10 +162,20 @@
       "holes": 200,
       "variant": "shell",
       "build": {
-        "cpuMs": 14106,
-        "wallMs": 27295,
-        "error": "SMLib shell failed: shell: the kernel did not finish within 20 s; setGuardSeconds(seconds) sets the limit"
-      }
+        "cpuMs": 19561,
+        "wallMs": 27166
+      },
+      "display": {
+        "cpuMs": 900,
+        "wallMs": 1517,
+        "triangles": 58428
+      },
+      "smlibWholeBody": {
+        "cpuMs": 15814,
+        "wallMs": 21123,
+        "triangles": 103228
+      },
+      "wasmMemoryMiB": 1036
     }
   ]
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Display meshes of exact solids with many holes in one planar face (packages/exact/src/face-mesh.ts):
 // the polygon-with-holes triangulator, and the face-wise path that replaced SMLib's whole-body
-// mesh for such bodies (superlinear in the hole count: 18.7 s CPU for a plate with 200 holes).
+// mesh for such bodies (superlinear in the hole count: 10-19 s CPU for a plate with 200 holes).
 import {beforeAll,describe,expect,it} from 'vitest';
 import {createExactBackend,createInThreadExactHost,displayMesh,displayTessellation,exactKernelIdentity,triangulatePolygon} from '@brickwright/cad-exact';
 import type {ExactBackend,ExactKernel,ExactSolid} from '@brickwright/cad-exact';
@@ -80,8 +80,8 @@ describe('face-wise display mesh of plates with many holes',()=>{
   k.scope(()=>{
    const solid=holePlate(200),exact=k.volume(solid);
    const before=cpuMs(),mesh=displayTessellation(k,solid,'Plate'),cpu=cpuMs()-before;
-   // SMLib's whole-body mesh took 18.7 s CPU here (2026-11-26, Apple M1); the face-wise path
-   // about 1.5 s. The bound is generous for a loaded machine, and still fails the old path.
+   // SMLib's whole-body mesh took 9.8-18.7 s CPU here (2026-11-26, shared Apple M1); the face-wise path
+   // 0.4-1.5 s. The bound is generous for a loaded machine, and still fails the old path.
    expect(cpu).toBeLessThan(10_000);
    // Each hole wall is a band of 36 quads (10°); the planar faces keep exactly its points.
    expect(mesh.indices.length/3).toBe(200*72+2*(4+200*36+2*200-2)+4*2);

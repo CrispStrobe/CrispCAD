@@ -170,9 +170,10 @@ Remaining work for this phase:
   201). A body with a planar face of 8 or more loops is now meshed face by face
   (`packages/exact/src/face-mesh.ts`): SMLib meshes the curved faces one by one, plain hole walls
   become bands, and planar faces are triangulated in JavaScript from the same boundary points,
-  with a fallback to SMLib if anything does not close. Display of a plate with 200 holes: 0.48 s
-  CPU instead of 11.0 s; with 50 holes, shelled: 0.29 s instead of 2.6 s. Filleted hole rims stay
-  bound by the kernel: rounding 200 of them takes 23 s and grows linear memory to 1 GiB. Details
+  with a fallback to SMLib if anything does not close. Display of a plate with 200 holes: 0.39 s
+  CPU instead of 9.8 s; shelled, 0.90 s instead of 15.8 s; with 50 holes, shelled, 0.23 s instead
+  of 1.8 s. Filleted hole rims stay bound by the kernel: rounding 200 of them takes 21 s and grows
+  linear memory to 1 GiB (display 14.6 s instead of 23.3 s). Details
   and the full table: [experiments/exact-kernel](../experiments/exact-kernel/README.md#faces-with-many-holes-2026-11-26);
 - iPad WebKit measurements for fillet, chamfer, shell, memory and the main thread: **done
   2026-11-26 on Playwright WebKit (iPad Pro 11 profile); a physical iPad is still unmeasured.**
