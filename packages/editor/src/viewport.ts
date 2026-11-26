@@ -157,7 +157,29 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     const view = (exact ?? 'iso') as ViewDirection; canvas.dataset.view = view; viewListener?.(view); canvas.dataset.projection = camera instanceof THREE.OrthographicCamera ? 'orthographic' : 'perspective';
   }
   const wiring=createRobotWiring(scene,()=>session.state.document,id=>meshes.get(id));
-  const draw = () => { if (!disposed && (canvas.getClientRects().length||canvas.dataset.simulationRecording)) {canvas.dataset.cameraPosition=JSON.stringify(camera.position.toArray());canvas.dataset.cameraTarget=JSON.stringify(orbit.target.toArray());canvas.dataset.cameraZoom=String(camera instanceof THREE.OrthographicCamera?camera.zoom:camera.position.distanceTo(orbit.target));canvas.dataset.navigation=navigationPreset; canvas.dataset.transformAxis=gizmo.axis??'';updateCube();connectorHandles?.update();resizeControls?.update();publishPreview();for(const helper of selectionBoxes.values())helper.update(); wiring.update();renderer.render(scene, camera);if(canvas.dataset.simulationRecording)canvas.dispatchEvent(new Event('brickwright-simulation-frame')); } };
+  let readoutCamera:THREE.Camera|undefined,readoutZoom=0;
+  const readoutPosition=new THREE.Vector3(),readoutTarget=new THREE.Vector3(),readoutRotation=new THREE.Quaternion();
+  function updateCameraReadouts(){
+    if(readoutCamera===camera&&readoutPosition.equals(camera.position)&&readoutTarget.equals(orbit.target)
+      &&readoutRotation.equals(camera.quaternion)&&readoutZoom===camera.zoom)return;
+    readoutCamera=camera;readoutPosition.copy(camera.position);readoutTarget.copy(orbit.target);
+    readoutRotation.copy(camera.quaternion);readoutZoom=camera.zoom;
+    canvas.dataset.cameraPosition=JSON.stringify(camera.position.toArray());
+    canvas.dataset.cameraTarget=JSON.stringify(orbit.target.toArray());
+    canvas.dataset.cameraZoom=String(camera instanceof THREE.OrthographicCamera?camera.zoom:camera.position.distanceTo(orbit.target));
+    updateCube();
+  }
+  const draw = () => {
+    if(disposed||(!canvas.getClientRects().length&&!canvas.dataset.simulationRecording))return;
+    updateCameraReadouts();
+    if(canvas.dataset.navigation!==navigationPreset)canvas.dataset.navigation=navigationPreset;
+    const axis=gizmo.axis??'';
+    if(canvas.dataset.transformAxis!==axis)canvas.dataset.transformAxis=axis;
+    connectorHandles?.update();resizeControls?.update();publishPreview();
+    for(const helper of selectionBoxes.values())helper.update();
+    wiring.update();renderer.render(scene, camera);
+    if(canvas.dataset.simulationRecording)canvas.dispatchEvent(new Event('brickwright-simulation-frame'));
+  };
   canvas.addEventListener('brickwright-simulation-capture',draw);
   let pendingMove:PointerEvent|undefined;let pendingDraw:number|undefined;const scheduleDraw=()=>{if(pendingDraw!==undefined||disposed)return;pendingDraw=requestAnimationFrame(()=>{pendingDraw=undefined;const event=pendingMove;pendingMove=undefined;if(event)processDirectMove(event);draw();});};
   const connectorHandles=mountConnectorHandles(scene,()=>camera,canvas,session,()=>!simulating&&!spaceHeld&&!cameraDrag&&!pointPick&&!surfacePlacement.active,enabled=>{orbit.enabled=enabled;},()=>gridStep,()=>draw(),onError);
@@ -420,7 +442,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     get resizeControls(){return resizeStyle;},setResizeControls(value:'dimensions'|'gizmo'){if(surfacePlacement.active)endPlacement();cancelTransform();resizeStyle=value==='gizmo'?'gizmo':'dimensions';gizmo.setScaleSnap(resizeStyle==='gizmo'?.1:null);canvas.dataset.resizeControls=resizeStyle;placeGizmo();},
     setReadoutVisible(visible:boolean){annotationsVisible=visible;draw();},
     setTransformPreviewListener(listener:(preview:TransformPreview)=>void){previewListener=listener;draw();},
-    setViewListener(listener: (view: ViewDirection) => void) { viewListener = listener; draw(); },
+    setViewListener(listener: (view: ViewDirection) => void) { viewListener = listener; readoutCamera=undefined; draw(); },
     setMultiSelect(enabled: boolean) { multiSelect = enabled; },
     setCameraGestures:(gestures:CameraGestures)=>{cameraGestures={...gestures};},
     zoom:zoomCamera,pan:(dx:number,dy:number)=>navigate('pan',dx,dy),orbit:(dx:number,dy:number)=>navigate('orbit',dx,dy),setNavigation:(preset:NavigationPreset)=>{navigationPreset=preset;draw();},

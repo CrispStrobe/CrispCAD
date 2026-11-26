@@ -19,3 +19,25 @@ test('secondary trackpad click cannot open a browser menu during or after camera
  expect(await canvas.evaluate(el=>!el.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,button:2})))).toBe(true);
  expect(await page.evaluate(()=>({saved:localStorage.getItem('brickwright-cad:standalone:v1'),origin:performance.timeOrigin}))).toEqual(before);
 });
+
+test('stationary redraws reuse the camera readouts and the view cube',async({page})=>{
+ await page.goto('/');await ready(page);
+ const canvas=page.getByTestId('cad-canvas');
+ const cube=page.getByRole('group',{name:'View cube',exact:true});
+ const count=await canvas.evaluate(el=>{
+  const observer=new MutationObserver(()=>{});
+  observer.observe(el,{attributes:true,attributeFilter:[
+   'data-camera-position','data-camera-target','data-camera-zoom','data-view','data-projection',
+  ]});
+  observer.observe(el.parentElement!.querySelector('.view-cube')!,{attributes:true,subtree:true});
+  for(let i=0;i<4;i++)el.dispatchEvent(new Event('brickwright-simulation-capture'));
+  const count=observer.takeRecords().length;
+  observer.disconnect();
+  return count;
+ });
+ expect(count).toBe(0);
+ const initial=await canvas.getAttribute('data-camera-position');
+ await cube.getByRole('button',{name:'Top',exact:true}).click();
+ await expect(canvas).toHaveAttribute('data-view','top');
+ await expect(canvas).not.toHaveAttribute('data-camera-position',initial!);
+});
