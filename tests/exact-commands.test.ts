@@ -49,7 +49,7 @@ describe('kernel identity in recorded commands',()=>{
   const session=createCadSession(undefined,{kernels:[exactKernelIdentity]}),journal=createCommandJournal(session);
   session.withKernel(exactKernelIdentity,()=>session.add({kind:'box',size:[1,1,1]}));
   const replay=journal.export('replay');
-  expect(replay).toContain('"context":{"kernel":{"id":"smlib","package":"@crispcad/exact-kernel","version":"0.1.2"}}');
+  expect(replay).toContain('"context":{"kernel":{"id":"smlib","package":"@crispcad/exact-kernel","version":"0.1.3"}}');
   expect(journal.export('cadscript')).toMatch(/non-portable/);
   journal.dispose();
  });

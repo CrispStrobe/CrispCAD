@@ -23,7 +23,7 @@ it('cad_measure_exact and cad_export_step use the exact kernel, never a mesh',as
  const {host,a,b}=await fixture();
  expect(host.definitions.find((d:any)=>d.name==='cad_export_step').annotations.readOnlyHint).toBe(true);
  const measured=await host.call('cad_measure_exact',{});
- expect(measured.kernel).toMatchObject({id:'smlib',package:'@crispcad/exact-kernel',version:'0.1.2'});
+ expect(measured.kernel).toMatchObject({id:'smlib',package:'@crispcad/exact-kernel',version:'0.1.3'});
  expect(measured.bodies.map((body:any)=>body.id)).toEqual([a,b]);
  expect(Math.abs(measured.bodies[1].volume-Math.PI*250)).toBeLessThan(1e-9);
  const step=await host.call('cad_export_step',{objectIds:[b]});

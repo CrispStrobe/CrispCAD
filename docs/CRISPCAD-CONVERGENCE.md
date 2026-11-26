@@ -198,9 +198,17 @@ Product entry additionally needs:
 
 ### Phase 2b: move the exact kernel into the lab as a package. **Done 2026-11-25**
 
-Release: [`exact-kernel-v0.1.2`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.2)
-of the kernel lab, tarball `crispcad-exact-kernel-0.1.2.tgz`, SHA-256
-`f025cd79c5ee747ed0561a932e0db865a863335523bffa237142e5e2ddf73823`.
+Release: [`exact-kernel-v0.1.3`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.3)
+of the kernel lab, tarball `crispcad-exact-kernel-0.1.3.tgz`, SHA-256
+`f9cfc354971f2f6624542f34e39a4473ce665a9a76cff4576b51461ed15a3b8f`.
+
+0.1.3 replaced 0.1.2 (SHA-256 `f025cd79…3823`) on 2026-11-26. `profile.polygon` and
+`profile.path` now refuse self-crossing outlines (bow ties, pentagrams) with `invalid-input`;
+0.1.2 built them as solids with signed, partly negative volume. CAD Script refuses
+self-crossing loft sections and `extrude` outlines itself; a self-crossing profile that reaches
+the exact lowering another way now fails there with `invalid-input` instead of building a
+wrong solid. Recorded commands carry kernel 0.1.3;
+0.1.2 recordings replay as stale, as designed.
 
 0.1.2 replaced 0.1.1 (SHA-256 `a4852c58…08a7`) on 2026-11-25. It fixes the 0.1.1 bounding
 box's speed on trimmed curved bodies, with identical boxes (largest difference 1.8e-12 mm on

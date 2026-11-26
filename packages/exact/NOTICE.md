@@ -6,10 +6,10 @@ from `experiments/exact-kernel` on 2026-11-25).
 
 Runtime dependencies:
 - `@brickwright/cad-core` 0.1.0 (this repository, BSD-3-Clause).
-- `@crispcad/exact-kernel` 0.1.2 from the CrispCAD kernel lab
-  (https://github.com/CrispStrobe/crispcad-kernel-lab, release `exact-kernel-v0.1.2`,
-  tarball `crispcad-exact-kernel-0.1.2.tgz`, SHA-256
-  f025cd79c5ee747ed0561a932e0db865a863335523bffa237142e5e2ddf73823), declared
+- `@crispcad/exact-kernel` 0.1.3 from the CrispCAD kernel lab
+  (https://github.com/CrispStrobe/crispcad-kernel-lab, release `exact-kernel-v0.1.3`,
+  tarball `crispcad-exact-kernel-0.1.3.tgz`, SHA-256
+  f9cfc354971f2f6624542f34e39a4473ce665a9a76cff4576b51461ed15a3b8f), declared
   `MIT AND Apache-2.0`, copyright CrispCAD contributors. It has no runtime dependencies.
   Its `dist/` prebundles:
   - `@classcad/smlibwasm` 0.6.2, MIT, copyright 2026 AWV Informatik AG, without its
