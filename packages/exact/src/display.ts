@@ -5,15 +5,16 @@
 import {EXACT_DISPLAY_TOLERANCE,MAX_EXACT_DISPLAY_INDICES,MAX_EXACT_DISPLAY_POSITIONS,exactFeatureKey,t} from '@brickwright/cad-core';
 import type {CadDocument,ExactFeatureDisplay} from '@brickwright/cad-core';
 import {ExactKernelError} from '@crispcad/exact-kernel';
-import type {ExactKernel,TriangleMesh} from '@crispcad/exact-kernel';
+import type {ExactKernel,ExactSolid} from '@crispcad/exact-kernel';
 import {lowerDocumentNode} from './lower-document.js';
+import {facewiseMesh,hasManyHoleFace} from './face-mesh.js';
 
 /** Stored coordinates are rounded to 1 nm; Manifold reads them as Float32 anyway. */
 const round=(value:number)=>{const r=Math.round(value*1e6)/1e6;return Object.is(r,-0)?0:r;};
 
 /** Weld coincident vertices, drop degenerate triangles and require a closed, consistently
  * oriented surface: every directed edge must be matched by exactly one opposite edge. */
-export function displayMesh(mesh:Pick<TriangleMesh,'positions'|'indices'>,name:string):Omit<ExactFeatureDisplay,'sourceKey'>{
+export function displayMesh(mesh:{positions:ArrayLike<number>;indices:ArrayLike<number>},name:string):Omit<ExactFeatureDisplay,'sourceKey'>{
  const positions:number[]=[],indices:number[]=[],welded=new Map<string,number>(),remap=new Uint32Array(mesh.positions.length/3);
  for(let i=0;i<remap.length;i++){
   const x=round(mesh.positions[3*i]),y=round(mesh.positions[3*i+1]),z=round(mesh.positions[3*i+2]),key=`${x},${y},${z}`;
@@ -38,6 +39,26 @@ export function displayMesh(mesh:Pick<TriangleMesh,'positions'|'indices'>,name:s
  return {positions,indices};
 }
 
+/** The display mesh of `solid` at EXACT_DISPLAY_TOLERANCE, checked by `displayMesh`. A body with a
+ * planar face full of holes is meshed face by face (see face-mesh.ts), because SMLib's whole-body
+ * mesh is superlinear in the holes of one face; if that path fails, SMLib meshes the whole body. */
+export function displayTessellation(k:ExactKernel,solid:ExactSolid,name:string):Omit<ExactFeatureDisplay,'sourceKey'>{
+ if(hasManyHoleFace(solid)){
+  for(const bands of [true,false]){
+   try{
+    const mesh=facewiseMesh(k,solid,{...EXACT_DISPLAY_TOLERANCE,bands});
+    if(!mesh)break;
+    // A planar face SMLib had to mesh does not share the bands' circle points: retry without.
+    if(mesh.bands&&mesh.planarFallbacks)continue;
+    return displayMesh(mesh,name);
+   }catch(error){
+    if(error instanceof ExactKernelError&&error.code==='unsupported')throw error;
+   }
+  }
+ }
+ return displayMesh(k.tessellate(solid,EXACT_DISPLAY_TOLERANCE),name);
+}
+
 export interface ExactFeatureResult {display:ExactFeatureDisplay;volume:number}
 /** The exact feature `id` built on the exact kernel and tessellated for display. Call inside `k.scope`. */
 export function exactFeatureDisplay(k:ExactKernel,doc:CadDocument,id:string):ExactFeatureResult{
@@ -45,6 +66,6 @@ export function exactFeatureDisplay(k:ExactKernel,doc:CadDocument,id:string):Exa
  if(node?.kind!=='exact-feature')throw new ExactKernelError('invalid-input',t`${id} is not an exact feature`);
  const solid=lowerDocumentNode(k,doc,id,{local:true});
  if(!k.isValid(solid))throw new ExactKernelError('kernel-failure',t`${node.name}: the exact result is not a valid closed solid.`);
- const mesh=displayMesh(k.tessellate(solid,EXACT_DISPLAY_TOLERANCE),node.name);
+ const mesh=displayTessellation(k,solid,node.name);
  return {display:{sourceKey:exactFeatureKey(doc,id),...mesh},volume:k.volume(solid)};
 }
