@@ -5,6 +5,7 @@ import { validateDocument, defaultPartPhysics, documentGeometryKey } from '@bric
 import type { CadDocument, CadJoint, Vec3 } from '@brickwright/cad-core';
 import type { GeometryResult } from '@brickwright/cad-geometry';
 import { solidMassProperties, combineMassProperties } from './mass.js';
+import type { MassProperties } from './mass.js';
 import { geometryHash, isQualifiedCollision } from './collision.js';
 import type { PreparedCollision } from './collision.js';
 import {hingeMembersSeparated,hingeFrameSeparationMargin,hingeFrameDriftBound} from './hinge-clearance.js';
@@ -29,7 +30,15 @@ declare const physicsDocumentBrand:unique symbol;
 type PhysicsDocument={readonly [physicsDocumentBrand]:true};
 type SeparatedHingeFrame={bodyA:string;bodyB:string;anchorA:Vec3;anchorB:Vec3;axisA:Vec3;axisB:Vec3;radiusB:number};
 type HingeClearance={inputs:[string,PreparedCollision][];frames:ReadonlyMap<string,SeparatedHingeFrame>};
-const physicsDocuments=new WeakMap<object,{document:CadDocument;geometryKey:string;hingeClearance?:HingeClearance}>();
+type MassInput={id:string;sourceSHA256:string;positionsLength:number;indicesLength:number;bounds:number[]};
+type PreparedMass={
+ inputs:MassInput[];
+ massById:ReadonlyMap<string,MassProperties>;
+ assemblyMass:ReadonlyMap<string,MassProperties>;
+};
+const physicsDocuments=new WeakMap<object,{
+ document:CadDocument;geometryKey:string;hingeClearance?:HingeClearance;mass?:PreparedMass;
+}>();
 /** Retain a validated, private copy of the authored physics document. */
 export function preparePhysicsDocument(input:CadDocument):PhysicsDocument{
  const document=validateDocument(input);
@@ -58,7 +67,16 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
  if(result.sourceKey!==(snapshot?.geometryKey??documentGeometryKey(doc)))throw new Error(t('Geometry is stale for this document'));
  const meshes=result.bodies.filter(b=>!b.reference&&!b.hole);if(!meshes.length)throw new Error(t('There are no physical solids to simulate'));if(meshes.length>256)throw new Error(t('Simulation budget is 256 bodies'));
  const fixedBase=options.fixBase?doc.roots.find(id=>!doc.nodes[id].reference&&doc.nodes[id].role!=='hole'):undefined;
- for(const mesh of meshes){const p=prepared.get(mesh.id);if(!p||!await isQualifiedCollision(p)||p.certificate.sourceSHA256!==await geometryHash(mesh)||p.certificate.relativeError>p.certificate.tolerance.volumeFraction||p.certificate.boundsErrorMm>p.certificate.tolerance.boundsMm||!p.hulls.length||p.hulls.length>2048)throw new Error(t`${mesh.name}: qualified collision geometry is missing or stale`);}
+ const qualifiedSources:string[]=[];
+ for(const mesh of meshes){
+  const p=prepared.get(mesh.id);
+  if(!p||!await isQualifiedCollision(p)||p.certificate.sourceSHA256!==await geometryHash(mesh)
+   ||p.certificate.relativeError>p.certificate.tolerance.volumeFraction
+   ||p.certificate.boundsErrorMm>p.certificate.tolerance.boundsMm||!p.hulls.length||p.hulls.length>2048){
+   throw new Error(t`${mesh.name}: qualified collision geometry is missing or stale`);
+  }
+  if(snapshot)qualifiedSources.push(p.certificate.sourceSHA256);
+ }
  const gearBody=(j:CadJoint,partner:CadJoint)=>{const shared=[partner.bodyA,partner.bodyB];return shared.includes(j.bodyB)&&!shared.includes(j.bodyA)?j.bodyA:j.bodyB;};
  // Gears coupled by a gear mesh are a qualified mechanical model.
  const meshedGears=new Set<string>();for(const joint of doc.joints??[]){const other=joint.gearMesh&&doc.joints!.find(j=>j.id===joint.gearMesh!.joint);if(other){meshedGears.add(gearBody(joint,other));meshedGears.add(gearBody(other,joint));}}
@@ -100,8 +118,28 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
  for(const joint of doc.joints??[])if(joint.kind==='fixed')fixedParent.set(fixedRoot(joint.bodyB),fixedRoot(joint.bodyA));
  const assemblies=new Map<string,typeof meshes>();for(const mesh of meshes){const root=fixedRoot(mesh.id);if(!assemblies.has(root))assemblies.set(root,[]);assemblies.get(root)!.push(mesh);}
  const group=new J.GroupFilterTable(Math.max(1,assemblies.size)),bodyIndex=new Map<string,number>(),meshIndex=new Map(meshes.map((m,i)=>[m.id,i]));[...assemblies.values()].forEach((members,index)=>members.forEach(m=>bodyIndex.set(m.id,index)));
- const massById=new Map(meshes.map(mesh=>[mesh.id,solidMassProperties(mesh,(doc.nodes[mesh.id].physics??defaultPartPhysics()).densityKgM3)]));
- const assemblyMass=new Map([...assemblies].map(([id,members])=>[id,combineMassProperties(members.map(m=>massById.get(m.id)!))]));
+ // The document owns the densities and fixed mates. The current source bytes
+ // were checked above. Bounds also affect the numerical integration origin.
+ const massInputs=snapshot?meshes.map((mesh,i)=>({
+  id:mesh.id,sourceSHA256:qualifiedSources[i],
+  positionsLength:mesh.positions.length,indicesLength:mesh.indices.length,
+  bounds:[...mesh.bounds.min,...mesh.bounds.max],
+ })):undefined;
+ const priorMass=snapshot?.mass;
+ const sameMassInputs=priorMass&&massInputs&&priorMass.inputs.length===massInputs.length
+  &&massInputs.every(({id,sourceSHA256,positionsLength,indicesLength,bounds},i)=>{
+   const prior=priorMass.inputs[i];
+   return prior.id===id&&prior.sourceSHA256===sourceSHA256
+    &&prior.positionsLength===positionsLength&&prior.indicesLength===indicesLength
+    &&prior.bounds.length===bounds.length&&bounds.every((value,axis)=>Object.is(value,prior.bounds[axis]));
+  });
+ const massById=sameMassInputs?priorMass.massById:new Map(meshes.map(mesh=>[
+  mesh.id,solidMassProperties(mesh,(doc.nodes[mesh.id].physics??defaultPartPhysics()).densityKgM3),
+ ]));
+ const assemblyMass=sameMassInputs?priorMass.assemblyMass:new Map([...assemblies].map(([id,members])=>[
+  id,combineMassProperties(members.map(mesh=>massById.get(mesh.id)!)),
+ ]));
+ if(snapshot&&massInputs&&!sameMassInputs)snapshot.mass={inputs:massInputs,massById,assemblyMass};
  const pairKey=(a:string,b:string)=>a<b?a+'\0'+b:b+'\0'+a;
  // A gear mesh constraint replaces tooth contact between the two gears.
  for(const joint of doc.joints??[]){const other=joint.gearMesh&&doc.joints!.find(j=>j.id===joint.gearMesh!.joint);if(other)group.DisableCollision(bodyIndex.get(gearBody(joint,other))!,bodyIndex.get(gearBody(other,joint))!);}

@@ -8,6 +8,7 @@ import {createGeometryKernel} from '@brickwright/cad-geometry';
 import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {createPhysicsWorld,prepareDocumentCollisions,preparePhysicsDocument} from '../packages/physics/src/index.js';
 import * as hingeClearance from '../packages/physics/src/hinge-clearance.js';
+import * as mass from '../packages/physics/src/mass.js';
 let kernel:GeometryKernel,J:Awaited<ReturnType<typeof initJolt>>;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});J=await initJolt();});
 function fixture(){const doc=createDocument();doc.version=8;doc.simulation={...defaultSimulationSettings(),gravity:[0,0,0],ground:false};doc.joints=[];for(const [id,x]of [['left',-20],['right',20]]as const){doc.nodes[id]={id,name:id,kind:'box',size:[10,10,10],transform:{...identityTransform(),position:[x,0,20]},color:'#123456',physics:defaultPartPhysics()};doc.roots.push(id);}doc.joints.push(jointAtWorldFrame(doc,'fixed','left','right',[0,0,20],[0,1,0]));return doc;}
@@ -101,6 +102,32 @@ it('samples shared hinge assembly poses once at each step boundary',async()=>{
   expect(rotations).toHaveBeenCalledTimes(12);
   expect(world.separatedHingePairCount).toBe(2);
  }finally{positions.mockRestore();rotations.mockRestore();world.dispose();}
+});
+
+it('reuses warm mass properties while checking source meshes and integration bounds',async()=>{
+ const doc=fixture(),document=preparePhysicsDocument(doc),geometry=kernel.evaluate(doc);
+ const prepared=await prepareDocumentCollisions(doc,geometry,kernel);
+ const integrate=vi.spyOn(mass,'solidMassProperties');
+ const combine=vi.spyOn(mass,'combineMassProperties');
+ const measure=async(result:typeof geometry,fixBase=false)=>{
+  const world=await createPhysicsWorld(document,result,prepared,{J,fixBase});
+  try{return world.pose('left');}
+  finally{world.dispose();}
+ };
+ try{
+  const first=await measure(geometry);
+  expect(await measure(geometry,true)).toEqual(first);
+  expect(integrate).toHaveBeenCalledTimes(2);
+  expect(combine).toHaveBeenCalledTimes(1);
+  const shifted=structuredClone(geometry);
+  shifted.bodies[0].bounds.max[0]+=.1;
+  expect(await measure(shifted)).toEqual(first);
+  expect(integrate).toHaveBeenCalledTimes(4);
+  expect(combine).toHaveBeenCalledTimes(2);
+  shifted.bodies[0].positions[0]+=.1;
+  await expect(measure(shifted)).rejects.toThrow('missing or stale');
+  expect(integrate).toHaveBeenCalledTimes(4);
+ }finally{integrate.mockRestore();combine.mockRestore();}
 });
 
 it('reuses authored hinge clearance while keeping live filtering separate for each world',async()=>{
