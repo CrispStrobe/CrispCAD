@@ -81,8 +81,8 @@ describe('face-wise display mesh of plates with many holes',()=>{
    const solid=holePlate(200),exact=k.volume(solid);
    const before=cpuMs(),mesh=displayTessellation(k,solid,'Plate'),cpu=cpuMs()-before;
    // SMLib's whole-body mesh took 9.8-18.7 s CPU here (2026-11-26, shared Apple M1); the face-wise path
-   // 0.4-1.5 s. The bound is generous for a loaded machine, and still fails the old path.
-   expect(cpu).toBeLessThan(10_000);
+   // 0.4-1.5 s. The bound leaves 3x for a loaded machine; the triangle count below pins the path.
+   expect(cpu).toBeLessThan(5_000);
    // Each hole wall is a band of 36 quads (10°); the planar faces keep exactly its points.
    expect(mesh.indices.length/3).toBe(200*72+2*(4+200*36+2*200-2)+4*2);
    const volume=meshVolume(mesh);
