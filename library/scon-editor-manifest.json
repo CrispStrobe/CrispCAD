@@ -10,7 +10,7 @@
       "path": "../scripts/generate-scon-editor-library.mjs",
       "sha256": "778f89ca05ad4816c3458f941a0352ad13e66f92d1ca1176518e88099ed29424"
     },
-    "packageLockSha256": "a2c8ef1dac44bed09e5b322b1cdae62007b199f3c78e94e04506297f09047557",
+    "packageLockSha256": "aca13e0f336c6df8d0817083b2cdba141d520e5115c7a01ddcf9a83f01cd9c45",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
   },
   "selection": {

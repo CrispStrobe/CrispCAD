@@ -25,6 +25,6 @@
   ],
   "dependencies": {
     "@brickwright/cad-core": "0.1.0",
-    "@crispcad/exact-kernel": "https://github.com/CrispStrobe/crispcad-kernel-lab/releases/download/exact-kernel-v0.1.6/crispcad-exact-kernel-0.1.6.tgz"
+    "@crispcad/exact-kernel": "https://github.com/CrispStrobe/crispcad-kernel-lab/releases/download/exact-kernel-v0.1.7/crispcad-exact-kernel-0.1.7.tgz"
   }
 }

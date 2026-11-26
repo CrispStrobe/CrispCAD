@@ -10,7 +10,7 @@
       "path": "../scripts/generate-a2d-editor-library.mjs",
       "sha256": "08e55470f6ba9145e3d97c7f4a2c1554aa9ebb625fbd01491d0246d53edd7914"
     },
-    "packageLockSha256": "a2c8ef1dac44bed09e5b322b1cdae62007b199f3c78e94e04506297f09047557",
+    "packageLockSha256": "aca13e0f336c6df8d0817083b2cdba141d520e5115c7a01ddcf9a83f01cd9c45",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
   },
   "selection": {

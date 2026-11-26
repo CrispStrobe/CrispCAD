@@ -339,9 +339,20 @@ Product entry additionally needs:
 
 ### Phase 2b: move the exact kernel into the lab as a package. **Done 2026-11-25**
 
-Release: [`exact-kernel-v0.1.6`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.6)
-of the kernel lab, tarball `crispcad-exact-kernel-0.1.6.tgz`, SHA-256
-`2f928537b3c55c96ddab8656af6760e09f670980ec01621dd324bc83545deaa3`.
+Release: [`exact-kernel-v0.1.7`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.7)
+of the kernel lab, tarball `crispcad-exact-kernel-0.1.7.tgz`, SHA-256
+`09f406f64f4f9059ee03dc20cee7e4d99e7c07c5494f4f8d6c7eb6d1a11ad92b`.
+
+0.1.7 replaced 0.1.6 (SHA-256 `2f928537…deaa3`) on 2026-11-26:
+
+- **Memory ceiling without name lookup (0.1.7).** The kernel takes the loader's heap-resize import
+  by its keys in the module's import table, which minifiers keep, instead of by the function's
+  name. The app and SDK builds no longer need `preserveExactKernelNames` (removed);
+  `tests/exact-kernel-names.test.ts` now builds the kernel with Vite, minified, checks the
+  loader's names are gone and runs an 80 MiB ceiling on the result.
+- **`pairing:'closest'` with curved sections (0.1.7).** It re-starts sections with arcs, and
+  refuses (`unsupported`) what it cannot pair as OCCT does instead of silently leaving it as
+  drawn. CrispCAD passes no pairing, so its lofts are unchanged.
 
 0.1.6 replaced 0.1.4 (SHA-256 `ee3f5351…6b8e`) on 2026-11-26; 0.1.5 was skipped. What the two
 releases changed:
@@ -373,9 +384,9 @@ releases changed:
   no _emscripten_resize_heap import"), so every exact job failed in the browser while Node tests
   passed. The app and SDK builds keep the kernel modules' names (`preserveExactKernelNames` in
   `scripts/exact-kernel-assets.js`, checked by `tests/exact-kernel-names.test.ts` and the
-  `exact-guards` browser spec); finding the import by name is fragile and worth fixing in the lab.
+  `exact-guards` browser spec) until 0.1.7 stopped finding the import by name.
 
-Recorded commands carry kernel 0.1.6; 0.1.4 recordings replay as stale, as designed.
+Recorded commands carry kernel 0.1.7; 0.1.6 and older recordings replay as stale, as designed.
 
 0.1.4 replaced 0.1.3 (SHA-256 `f9cfc354…3b8f`) on 2026-11-26. `profile.path` lofts now keep
 each section's outline as authored; SMLib's face construction had re-picked the start vertex
