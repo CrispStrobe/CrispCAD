@@ -9,7 +9,7 @@
       "path": "../scripts/generate-fixture-library.mjs",
       "sha256": "a20c59239ba26802d1be238f754875b2200094af293f61e0fc16b327ca6eaf06"
     },
-    "packageLockSha256": "fce627d2348b17711a6341f1ec5a985603a2062ba94b114da86d6bfdfdf38cfa",
+    "packageLockSha256": "48250044aa9d6fa043bc0f32768be6dd53a4ac251a128ad53b87c6d47f4dcd8f",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
   },
   "assets": [

@@ -11,7 +11,7 @@
       "sha256": "88c942cc1cafbc6c861250ff5c233dfd3cfcb72c76276632e04c83b057f9cb7d",
       "bytes": 8013
     },
-    "packageLockSha256": "fce627d2348b17711a6341f1ec5a985603a2062ba94b114da86d6bfdfdf38cfa",
+    "packageLockSha256": "48250044aa9d6fa043bc0f32768be6dd53a4ac251a128ad53b87c6d47f4dcd8f",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c",
     "sourceModule": {
       "path": "sources/brickwright/code-examples.ts",
