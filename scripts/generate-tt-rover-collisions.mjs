@@ -72,5 +72,29 @@ const circle=M.CrossSection.circle(1.5,12),profile=circle.translate([30,0]);try{
 const quantities={chassis:1,cradle:2,wheel:2,deck:1,standoff:4,skid:1,carrier:1,casing:2,shaft:2,tire:4},sceneHulls=3+Object.entries(quantities).reduce((n,[id,q])=>n+q*records[id].hulls.length,0);
 if(sceneHulls>4096)throw Error('Rover exceeds the unchanged 4096-piece scene budget: '+sceneHulls);
 const output={format:'brickwright-rover-collision-candidates',version:1,qualification:{volumeFraction:.02,boundsMm:.2,sceneHulls,recheckedAtRuntime:true},records},target='packages/editor/src/robot-assets/tt-rover-collisions.json',bytes=JSON.stringify(output)+'\n';
-if(args[0]==='--write'){mkdirSync('packages/editor/src/robot-assets',{recursive:true});writeFileSync(target,bytes);}else if(readFileSync(target,'utf8')!==bytes)throw Error('Rover collision candidates differ; regenerate intentionally.');
+if(args[0]==='--write'){mkdirSync('packages/editor/src/robot-assets',{recursive:true});writeFileSync(target,bytes);}else{const problems=compareCandidates(JSON.parse(readFileSync(target,'utf8')),output);if(problems.length)throw Error('Rover collision candidates differ; regenerate intentionally.\n'+problems.join('\n'));}
+
+// --check compares the solids, not the bytes. Manifold may triangulate the coplanar faces of a
+// hull (a quad's diagonal) differently on another machine or engine for the same points, and the
+// certificate's volumes then differ in the last digits. Each hull must keep its exact vertices and
+// enclose the same volume with a closed triangulation; certificates must agree to 1e-6 (relative, or absolute in mm³).
+function compareCandidates(saved,fresh){
+ const problems=[],same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+ const closedVolume=h=>{const n=h.positions.length/3,seen=new Set();if(h.indices.length%3)return NaN;let v=0;
+  for(let i=0;i<h.indices.length;i+=3){const t=h.indices.slice(i,i+3);if(t.some(x=>!Number.isInteger(x)||x<0||x>=n))return NaN;
+   for(let k=0;k<3;k++){const e=t[k]+','+t[(k+1)%3];if(seen.has(e))return NaN;seen.add(e);}
+   const [a,b,c]=t.map(x=>h.positions.slice(3*x,3*x+3));v+=(a[0]*(b[1]*c[2]-b[2]*c[1])-a[1]*(b[0]*c[2]-b[2]*c[0])+a[2]*(b[0]*c[1]-b[1]*c[0]))/6;}
+  for(const e of seen){const [x,y]=e.split(',');if(!seen.has(y+','+x))return NaN;}return v;};
+ const near=(a,b)=>typeof a==='number'&&typeof b==='number'?Math.abs(a-b)<=1e-6+1e-6*Math.max(Math.abs(a),Math.abs(b)):same(a,b);
+ if(saved.format!==fresh.format||saved.version!==fresh.version||!same(saved.qualification,fresh.qualification))problems.push('format, version or qualification');
+ if(!same(Object.keys(saved.records),Object.keys(fresh.records)))problems.push('records: '+Object.keys(saved.records)+' vs '+Object.keys(fresh.records));
+ for(const [id,b] of Object.entries(fresh.records)){const a=saved.records[id];if(!a)continue;
+  if(a.licence!==b.licence||!same(a.source,b.source))problems.push(id+': licence or source');
+  const keys=Object.keys(b.certificate);if(!same(Object.keys(a.certificate),keys)||keys.some(k=>!near(a.certificate[k],b.certificate[k])))problems.push(id+': certificate');
+  if(a.hulls.length!==b.hulls.length){problems.push(id+': '+a.hulls.length+' hulls vs '+b.hulls.length);continue;}
+  a.hulls.forEach((h,i)=>{const g=b.hulls[i],va=closedVolume(h),vb=closedVolume(g);
+   if(!same(h.positions,g.positions)||!near(va,vb))problems.push(id+': hull '+i+' volume '+va+' vs '+vb);});
+ }
+ return problems;
+}
 console.log(sceneHulls,'total scene hulls; candidates',args[0]==='--write'?'written':'reproduced exactly');
