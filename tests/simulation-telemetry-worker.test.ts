@@ -79,6 +79,8 @@ it('samples each coupled sensor once after physics advances',async()=>{
  expect(measurement.error).toBeUndefined();
  expect(mock.world.validateBodyRay).toHaveBeenCalledTimes(1);
  expect(mock.world.bodyRay).toHaveBeenCalledTimes(1);
+ expect(mock.world.validateBodyRay).toHaveBeenCalledWith('body-0',[0,0,0],[1,0,0],4000,'range');
+ expect(mock.world.bodyRay).toHaveBeenCalledWith('body-0',[0,0,0],[1,0,0],4000,'range');
  expect(mock.world.validateBodyRay.mock.invocationCallOrder[0]).toBeLessThan(mock.world.step.mock.invocationCallOrder[0]);
  expect(mock.world.step.mock.invocationCallOrder[0]).toBeLessThan(mock.world.bodyRay.mock.invocationCallOrder[0]);
  expect(measurement.frame.distances.range).toBe(mock.world.bodyRay.mock.results[0].value);

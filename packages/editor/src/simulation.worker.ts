@@ -45,7 +45,7 @@ const checkRayBatch=(rays:SimulationRay[])=>{
 };
 const sense=(rays:SimulationRay[])=>{
  const next:Record<string,number|null>={};
- for(const ray of rays)next[ray.id]=world!.bodyRay(ray.bodyId,ray.originMm,ray.direction,ray.rangeMm);
+ for(const ray of rays)next[ray.id]=world!.bodyRay(ray.bodyId,ray.originMm,ray.direction,ray.rangeMm,ray.id);
  distances=next;
 };
 // postMessage snapshots the records synchronously before the next command.
@@ -107,7 +107,7 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
      checkRayBatch(command.rays);
      // Reject malformed input before mutating physics. The only reading sent
      // to the circuit is sampled after the step.
-     for(const ray of command.rays)world.validateBodyRay(ray.bodyId,ray.originMm,ray.direction,ray.rangeMm);
+     for(const ray of command.rays)world.validateBodyRay(ray.bodyId,ray.originMm,ray.direction,ray.rangeMm,ray.id);
     }
     const impulses=command.impulses,servos=command.servos??[];
     const invalidImpulse=()=>new Error(t('Invalid actuator impulse'));

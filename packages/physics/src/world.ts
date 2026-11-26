@@ -95,6 +95,8 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
  const ownedBodies:any[]=[],byId=new Map<string,any>(),constraints=new Map<string,any>();let disposed=false,elapsed=0,contactListener:any,partFilter:any;
  let rayQuery:ReturnType<typeof createRayQuery>|undefined;
  const sensorPoses=new Map<NativeBody,{revision:number;pose:ReturnType<typeof readPose>}>();
+ type SensorRay={bodyId:string;body:NativeBody;originMm:Vec3;direction:Vec3;rangeMm:number;source:number[];axis:number[];projected?:{revision:number;origin:Vec3;to:Vec3}};
+ const sensorRays=new Map<string,SensorRay>();
  let poseRevision=0;
  const actuatorFrames=new Map<string,{
   joint:CadJoint;a:any;b:any;axis:number[];anchorM?:number[];motor:any;impulseConfigured:boolean;
@@ -272,7 +274,7 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    });
   }finally{J.destroy(bc);}
  };
- function dispose(){if(disposed)return;disposed=true;rayQuery?.dispose();rayQuery=undefined;sensorPoses.clear();for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
+ function dispose(){if(disposed)return;disposed=true;rayQuery?.dispose();rayQuery=undefined;sensorPoses.clear();sensorRays.clear();for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
  let scratchVertex:any,scratchPosition:any,scratchRotation:any;
  function createCompound(members:typeof meshes):NativeShape{
   const compound=new J.StaticCompoundShapeSettings();
@@ -453,11 +455,36 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    return {bodyId:member?.id??entry?.[0],fraction};
  }
 
- function bodyRayEndpoints(id:string,originMm:Vec3,direction:Vec3,rangeMm:number){
+ function sameRayVector(a:Vec3,b:Vec3){
+   return a.length===b.length&&Object.is(a[0],b[0])&&Object.is(a[1],b[1])&&Object.is(a[2],b[2]);
+ }
+
+ function prepareSensorRay(id:string,originMm:Vec3,direction:Vec3,rangeMm:number,sensorId?:string):SensorRay{
    const node=doc.nodes[id],body=byId.get(id);
-   if(disposed||!node||!body||![...originMm,...direction,rangeMm].every(Number.isFinite)||rangeMm<=0||rangeMm>100000||Math.hypot(...direction)<1e-9){
+   if(disposed||!node||!body)throw new Error(t('Invalid body sensor ray'));
+   const previous=sensorId===undefined?undefined:sensorRays.get(sensorId);
+   if(previous&&previous.bodyId===id&&previous.body===body&&previous.rangeMm===rangeMm
+    &&sameRayVector(previous.originMm,originMm)&&sameRayVector(previous.direction,direction))return previous;
+   if(![...originMm,...direction,rangeMm].every(Number.isFinite)||rangeMm<=0||rangeMm>100000||Math.hypot(...direction)<1e-9){
     throw new Error(t('Invalid body sensor ray'));
    }
+   const local=originMm.map((value,i)=>value*node.transform.scale[i]);
+   const source=rotate(local,node.transform.rotation).map((value,i)=>value+node.transform.position[i]);
+   const ray:SensorRay={bodyId:id,body,originMm,direction,rangeMm,source,axis:rotate(direction,node.transform.rotation)};
+   if(sensorId!==undefined&&originMm.length===3&&direction.length===3){
+    // The worker accepts at most 32 rays per command. Bound retention even
+    // if a caller replaces its sensor IDs between commands.
+    if(!previous&&sensorRays.size===32)sensorRays.delete(sensorRays.keys().next().value!);
+    ray.originMm=[...originMm];ray.direction=[...direction];
+    sensorRays.set(sensorId,ray);
+   }
+   return ray;
+ }
+
+ function bodyRayEndpoints(id:string,originMm:Vec3,direction:Vec3,rangeMm:number,sensorId?:string){
+   const ray=prepareSensorRay(id,originMm,direction,rangeMm,sensorId);
+   if(ray.projected?.revision===poseRevision)return ray.projected;
+   const {body}=ray;
    // Pre-step validation and post-step casts can share each native pose
    // across all rays and welded parts at the same solver boundary.
    let cached=sensorPoses.get(body);
@@ -466,12 +493,10 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
     sensorPoses.set(body,cached);
    }
    const {positionMm,quaternion}=cached.pose;
-   const local=originMm.map((value,i)=>value*node.transform.scale[i]);
-   const source=rotate(local,node.transform.rotation).map((value,i)=>value+node.transform.position[i]);
-   const origin=quaternionPoint(source,quaternion).map((value,i)=>value+positionMm[i]) as Vec3;
-   const axis=quaternionPoint(rotate(direction,node.transform.rotation),quaternion),length=Math.hypot(...axis);
+   const origin=quaternionPoint(ray.source,quaternion).map((value,i)=>value+positionMm[i]) as Vec3;
+   const axis=quaternionPoint(ray.axis,quaternion),length=Math.hypot(...axis);
    const to=origin.map((value,i)=>value+axis[i]/length*rangeMm) as Vec3;
-   return {origin,to};
+   return ray.projected={revision:poseRevision,origin,to};
  }
 
  function bodyForPose(id:string):NativeBody{
@@ -526,13 +551,13 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
   boundsMm(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const body=byId.get(id);if(!body)throw new Error(t('Unknown physics body'));const original=prepared.get(id);if(original&&assemblies.get(fixedRoot(id))!.length>1){const p=body.GetPosition(),q=body.GetRotation(),rotation=[q.GetX(),q.GetY(),q.GetZ(),q.GetW()],position=[p.GetX()*1000,p.GetY()*1000,p.GetZ()*1000],min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(const hull of original.hulls)for(let i=0;i<hull.positions.length;i+=3){const point=quaternionPoint(Array.from(hull.positions.subarray(i,i+3)),rotation);for(let axis=0;axis<3;axis++){const v=point[axis]+position[axis];min[axis]=Math.min(min[axis],v);max[axis]=Math.max(max[axis],v);}}return {min,max};}const box=body.GetWorldSpaceBounds();return {min:[box.mMin.GetX()*1000,box.mMin.GetY()*1000,box.mMin.GetZ()*1000],max:[box.mMax.GetX()*1000,box.mMax.GetY()*1000,box.mMax.GetZ()*1000]};},
   raycast(fromMm:Vec3,toMm:Vec3){return castRay(fromMm,toMm);},
   /** Reject invalid sensor input before a coupled command changes the world. */
-  validateBodyRay(id:string,originMm:Vec3,direction:Vec3,rangeMm:number){
-   const {origin,to}=bodyRayEndpoints(id,originMm,direction,rangeMm);
+  validateBodyRay(id:string,originMm:Vec3,direction:Vec3,rangeMm:number,sensorId?:string){
+   const {origin,to}=bodyRayEndpoints(id,originMm,direction,rangeMm,sensorId);
    if(![...origin,...to].every(Number.isFinite))throw new Error(t('Invalid physics state or ray'));
   },
   /** Sample an ideal single ray carried by a body, ignoring its complete rigid assembly. */
-  bodyRay(id:string,originMm:Vec3,direction:Vec3,rangeMm:number){
-   const {origin,to}=bodyRayEndpoints(id,originMm,direction,rangeMm);
+  bodyRay(id:string,originMm:Vec3,direction:Vec3,rangeMm:number,sensorId?:string){
+   const {origin,to}=bodyRayEndpoints(id,originMm,direction,rangeMm,sensorId);
    const hit=castRay(origin,to,id,false);return hit?hit.fraction*rangeMm:null;
   },
   linearVelocityMmS(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const body=byId.get(id);if(!body)throw new Error(t('Unknown physics body'));const point=new J.RVec3(...sourceCenterM(id)),v=bodies.GetPointVelocity(body.GetID(),point);const velocity=[v.GetX()*1000,v.GetY()*1000,v.GetZ()*1000];J.destroy(point);return velocity;},

@@ -78,13 +78,22 @@ it('body-mounted rays ignore their own rigid assembly and see external obstacles
   expect(()=>world.validateBodyRay(host,[0,0,0],[0,0,0],200)).toThrow('Invalid body sensor ray');
   expect(()=>world.validateBodyRay(host,[0,0,0],[1,0,0],200)).not.toThrow();
   expect(world.raycast([40,0,0],[200,0,0])?.bodyId).toBe(wall);
+  const direction:[number,number,number]=[1,0,0];
+  world.validateBodyRay(host,[0,0,0],direction,200,'distance');
+  expect(world.bodyRay(host,[0,0,0],direction,200,'distance')).toBeCloseTo(90,2);
+  direction[0]=-1;
+  expect(world.bodyRay(host,[0,0,0],direction,200,'distance')).toBeNull();
+  expect(world.bodyRay(wall,[0,0,0],direction,200,'distance')).toBeCloseTo(70,2);
+  expect(world.bodyRay(wall,[0,0,0],direction,40,'distance')).toBeNull();
+  expect(()=>world.validateBodyRay(wall,[0,0,0],[0,0,0],40,'distance')).toThrow('Invalid body sensor ray');
+  expect(world.bodyRay(host,[0,0,0],[1,0,0],200,'distance')).toBeCloseTo(90,2);
   expect(position).toHaveBeenCalledTimes(2);
   expect(rotation).toHaveBeenCalledTimes(2);
 
   world.setLinearVelocity(host,[20,0,0]);
   world.step(.05);
   position.mockClear();rotation.mockClear();
-  expect(world.bodyRay(host,[0,0,0],[1,0,0],200)).toBeCloseTo(89,2);
+  expect(world.bodyRay(host,[0,0,0],[1,0,0],200,'distance')).toBeCloseTo(89,2);
   expect(world.bodyRay(attachment,[0,0,0],[1,0,0],200)).toBeCloseTo(69,2);
   expect(position).toHaveBeenCalledTimes(1);
   expect(rotation).toHaveBeenCalledTimes(1);
