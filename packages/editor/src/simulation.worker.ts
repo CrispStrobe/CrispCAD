@@ -7,7 +7,16 @@ import type {PreparedCollision} from '@brickwright/cad-physics';
 import type {CadDocument} from '@brickwright/cad-core';
 import type {SimulationCommand,SimulationFrame,SimulationRay,SimulationTelemetry} from './simulation-protocol.js';
 import {createCollisionMeasurement} from './collision-measurement-client.js';
-type SceneLayout={joints:NonNullable<CadDocument['joints']>;nodes:ReadonlySet<string>;visibleRoots:string[]};
+type SceneLayout={hinges:ReadonlySet<string>;sliders:ReadonlySet<string>;nodes:ReadonlySet<string>;visibleRoots:string[]};
+function sceneLayout(doc:CadDocument):SceneLayout{
+ const hinges=new Set<string>(),sliders=new Set<string>();
+ for(const joint of doc.joints??[]){
+  if(joint.kind==='hinge')hinges.add(joint.id);
+  else if(joint.kind==='slider')sliders.add(joint.id);
+ }
+ return {hinges,sliders,nodes:new Set(Object.keys(doc.nodes)),
+  visibleRoots:doc.roots.filter(id=>!doc.nodes[id].reference&&doc.nodes[id].role!=='hole')};
+}
 let kernel:Promise<GeometryKernel>|undefined,world:Awaited<ReturnType<typeof createPhysicsWorld>>|undefined,scene:SceneLayout|undefined;
 type PreparedConstruction={key:string;geometry:GeometryResult;collisions:ReadonlyMap<string,PreparedCollision>};
 let lastStart:{layout:SceneLayout;construction:PreparedConstruction;shapes:ReturnType<typeof createPhysicsShapeCache>;physics:ReturnType<typeof preparePhysicsDocument>}|undefined;
@@ -21,8 +30,8 @@ function preparationKey(doc:CadDocument,geometryKey:string|undefined){
 const driven=new Map<string,'hinge'|'slider'>();
 const previewBalls=new Map<string,{previewRadiusMm:number;previewShape:'sphere'|'box'}>();
 const angles:Record<string,number>={},lastAngles:Record<string,number>={},speeds:Record<string,number>={},linearPositions:Record<string,number>={},linearSpeeds:Record<string,number>={};
-const measure=()=>{for(const joint of scene!.joints)if(joint.kind==='hinge'){const current=world!.hingeAngle(joint.id)*180/Math.PI;let delta=current-(lastAngles[joint.id]??current);delta=((delta+180)%360+360)%360-180;angles[joint.id]=(angles[joint.id]??0)+delta;speeds[joint.id]=delta/.005;lastAngles[joint.id]=current;}};
-const measureSliders=()=>{for(const joint of scene!.joints)if(joint.kind==='slider'){const current=world!.sliderPosition(joint.id);linearSpeeds[joint.id]=linearPositions[joint.id]===undefined?0:(current-linearPositions[joint.id])/.005;linearPositions[joint.id]=current;}};
+const measure=()=>{for(const id of scene!.hinges){const current=world!.hingeAngle(id)*180/Math.PI;let delta=current-(lastAngles[id]??current);delta=((delta+180)%360+360)%360-180;angles[id]=(angles[id]??0)+delta;speeds[id]=delta/.005;lastAngles[id]=current;}};
+const measureSliders=()=>{for(const id of scene!.sliders){const current=world!.sliderPosition(id);linearSpeeds[id]=linearPositions[id]===undefined?0:(current-linearPositions[id])/.005;linearPositions[id]=current;}};
 let distances:Record<string,number|null>={};
 const checkRayBatch=(rays:SimulationRay[])=>{
  const invalid=()=>new Error(t('Invalid body sensor ray'));
@@ -39,7 +48,8 @@ const sense=(rays:SimulationRay[])=>{
  for(const ray of rays)next[ray.id]=world!.bodyRay(ray.bodyId,ray.originMm,ray.direction,ray.rangeMm);
  distances=next;
 };
-const telemetry=():SimulationTelemetry=>({time:world!.time,angles:{...angles},speeds:{...speeds},linearPositions:{...linearPositions},linearSpeeds:{...linearSpeeds},distances:{...distances}});
+// postMessage snapshots the records synchronously before the next command.
+const telemetry=():SimulationTelemetry=>({time:world!.time,angles,speeds,linearPositions,linearSpeeds,distances});
 const frame=():SimulationFrame=>({...telemetry(),poses:scene!.visibleRoots.map(id=>({id,...world!.pose(id)})).concat([...previewBalls].map(([id,spec])=>({id,...world!.pose(id),...spec})))});
 self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
  const command=event.data;
@@ -73,10 +83,7 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
    }
    const {geometry,collisions}=construction!;
    const physics=authored?preparePhysicsDocument(authored):previousStart!.physics;
-   const layout:SceneLayout=authored?{
-    joints:authored.joints??[],nodes:new Set(Object.keys(authored.nodes)),
-    visibleRoots:authored.roots.filter(id=>!authored.nodes[id].reference&&authored.nodes[id].role!=='hole'),
-   }:previousStart!.layout;
+   const layout=authored?sceneLayout(authored):previousStart!.layout;
    const shapes=authored?createPhysicsShapeCache():previousStart!.shapes;
    const previousShapes=previousStart?.shapes;
    try{
@@ -98,11 +105,26 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
      // to the circuit is sampled after the step.
      for(const ray of command.rays)world.validateBodyRay(ray.bodyId,ray.originMm,ray.direction,ray.rangeMm);
     }
-    if(!Array.isArray(command.impulses)||command.impulses.length>64||new Set(command.impulses.map(v=>v.id)).size!==command.impulses.length||command.impulses.some(v=>!Number.isFinite(v.impulse)||Math.abs(v.impulse)>1||!scene!.joints.some(j=>j.id===v.id&&['hinge','slider'].includes(j.kind))))throw new Error(t('Invalid actuator impulse'));
-    const servos=command.servos??[];
-    if(!Array.isArray(servos)||servos.length>64||new Set(servos.map(v=>v.id)).size!==servos.length||servos.some(v=>command.impulses.some(d=>d.id===v.id)||!Number.isFinite(v.angleRad)||Math.abs(v.angleRad)>Math.PI*2||!Number.isFinite(v.torqueNm)||v.torqueNm<=0||v.torqueNm>100||!scene!.joints.some(j=>j.id===v.id&&j.kind==='hinge')))throw new Error(t('Invalid position servo target'));
+    const impulses=command.impulses,servos=command.servos??[];
+    const invalidImpulse=()=>new Error(t('Invalid actuator impulse'));
+    const invalidServo=()=>new Error(t('Invalid position servo target'));
+    if(!Array.isArray(impulses)||impulses.length>64)throw invalidImpulse();
+    const claimed=new Set<string>();
+    const {hinges,sliders}=scene!;
+    for(const drive of impulses){
+     if(!drive||claimed.has(drive.id)||!Number.isFinite(drive.impulse)||Math.abs(drive.impulse)>1||
+      !(hinges.has(drive.id)||sliders.has(drive.id)))throw invalidImpulse();
+     claimed.add(drive.id);
+    }
+    if(!Array.isArray(servos)||servos.length>64)throw invalidServo();
+    for(const servo of servos){
+     if(!servo||claimed.has(servo.id)||!hinges.has(servo.id)||!Number.isFinite(servo.angleRad)||
+      Math.abs(servo.angleRad)>Math.PI*2||!Number.isFinite(servo.torqueNm)||servo.torqueNm<=0||
+      servo.torqueNm>100)throw invalidServo();
+     claimed.add(servo.id);
+    }
     for(const servo of servos){if(servo.enabled){world.setHingeServo(servo.id,servo.angleRad,servo.torqueNm);driven.set(servo.id,'hinge');}else{world.coastHingeMotor(servo.id);driven.delete(servo.id);}}
-    for(const drive of command.impulses)world.applyJointImpulse(drive.id,drive.impulse);world.step(.005);measure();measureSliders();if(command.rays)sense(command.rays);
+    for(const drive of impulses)world.applyJointImpulse(drive.id,drive.impulse);world.step(.005);measure();measureSliders();if(command.rays)sense(command.rays);
    }
    else if(command.op==='motor'){
     if(!Number.isFinite(command.speedDps)||Math.abs(command.speedDps)>720)throw new Error(t('Motor speed must be between -720 and 720 degrees per second'));

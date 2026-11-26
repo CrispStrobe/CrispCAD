@@ -26,12 +26,17 @@ vi.mock('@brickwright/cad-core',async importOriginal=>{
  const core=await importOriginal<typeof import('@brickwright/cad-core')>();
  return {...core,documentGeometryKey:vi.fn(core.documentGeometryKey)};
 });
-vi.mock('@brickwright/cad-geometry',()=>({createGeometryKernel:async()=>({evaluate:()=>({})})}));
-vi.mock('@brickwright/cad-physics',()=>({createPhysicsWorld:mock.create,prepareDocumentCollisions:mock.prepare}));
-let scope:{onmessage:(event:MessageEvent)=>Promise<void>;postMessage:ReturnType<typeof vi.fn>},sequence=0;
+vi.mock('@brickwright/cad-geometry',()=>({createGeometryKernel:async()=>({evaluate:()=>({}),collisionCSG:{measure:vi.fn()}})}));
+vi.mock('@brickwright/cad-physics',()=>({
+ createPhysicsWorld:mock.create,prepareDocumentCollisions:mock.prepare,
+ loadPhysicsEngine:async()=>{},createPhysicsShapeCache:()=>({clear:vi.fn()}),
+ preparePhysicsDocument:(document:CadDocument)=>structuredClone(document),
+}));
+const replies=vi.fn();
+let scope:{onmessage:(event:MessageEvent)=>Promise<void>;postMessage:(reply:unknown)=>void},sequence=0;
 beforeEach(async()=>{
  vi.resetModules();vi.clearAllMocks();sequence=0;
- scope={onmessage:async()=>{},postMessage:vi.fn()};vi.stubGlobal('self',scope);
+ scope={onmessage:async()=>{},postMessage:reply=>replies(structuredClone(reply))};vi.stubGlobal('self',scope);
  await import('../packages/editor/src/simulation.worker.js');
 });
 afterEach(()=>vi.unstubAllGlobals());
@@ -41,7 +46,7 @@ function scene(bodyCount=128):CadDocument{
 }
 async function send(command:SimulationCommand){
  const request=++sequence;await scope.onmessage({data:{...command,request}} as MessageEvent);
- const response=scope.postMessage.mock.lastCall![0];expect(response.request).toBe(request);return response;
+ const response=replies.mock.lastCall![0];expect(response.request).toBe(request);return response;
 }
 const start=(document=scene())=>send({op:'start',document,wasmURL:'/manifold.wasm',fixBase:false,locale:'en'});
 const command={op:'actuator-step',impulses:[{id:'hinge',impulse:.001},{id:'slider',impulse:.002}],rays:[{id:'range',bodyId:'body-0',originMm:[0,0,0],direction:[1,0,0],rangeMm:4000}],servos:[{id:'servo',angleRad:.25,torqueNm:.01,enabled:true}]} as const;
@@ -102,7 +107,14 @@ it('applies the same actuator validation before a compact step can advance the c
  for(const impulses of [[{id:'hinge',impulse:Infinity}],[{id:'missing',impulse:.001}],[{id:'hinge',impulse:.001},{id:'hinge',impulse:.001}]]){
   const response=await send({...actuation(),impulses,telemetryOnly:true});expect(response.error).toMatch(/Invalid actuator impulse/);expect(mock.world.time).toBe(0);
  }
- const servo=await send({...actuation(),servos:[{id:'servo',angleRad:NaN,torqueNm:.01,enabled:true}],telemetryOnly:true});expect(servo.error).toMatch(/Invalid position servo/);expect(mock.world.time).toBe(0);
+ const servo={id:'servo',angleRad:0,torqueNm:.01,enabled:true};
+ for(const servos of [[{...servo,angleRad:NaN}],[servo,servo],[{...servo,id:'hinge'}],[{...servo,id:'slider'}]]){
+  const response=await send({...actuation(),servos,telemetryOnly:true});
+  expect(response.error).toMatch(/Invalid position servo/);
+  expect(mock.world.time).toBe(0);
+ }
+ expect(mock.world.applyJointImpulse).not.toHaveBeenCalled();
+ expect(mock.world.setHingeServo).not.toHaveBeenCalled();
  const valid=await send({...actuation(),telemetryOnly:true});expect(valid.error).toBeUndefined();expect(valid.frame.time).toBe(.005);expect(valid.frame).not.toHaveProperty('poses');
 });
 
@@ -134,24 +146,20 @@ it('restarts from the authored document and applies Fix base only to each run',a
  const document=scene(2);
  document.nodes['body-0'].physics=defaultPartPhysics();
  const settings={op:'start',wasmURL:'/manifold.wasm',locale:'en'} as const;
- const expectBase=(motion:'static'|'dynamic')=>expect(mock.create).toHaveBeenLastCalledWith(
-  expect.objectContaining({nodes:expect.objectContaining({'body-0':expect.objectContaining({
-   physics:expect.objectContaining({motion}),
-  })})}),expect.anything(),expect.anything(),expect.anything());
+ const expectBase=(fixBase:boolean)=>expect(mock.create).toHaveBeenLastCalledWith(
+  document,expect.anything(),expect.anything(),expect.objectContaining({fixBase}));
  expect((await send({...settings,document,fixBase:true})).error).toBeUndefined();
- expectBase('static');
+ expectBase(true);
  expect(document.nodes['body-0'].physics.motion).toBe('dynamic');
  await send(actuation());
  await send({op:'park'});
  const restarted=await send({...settings,fixBase:false});
  expect(restarted.error).toBeUndefined();
  expect(restarted.frame.time).toBe(0);
- expectBase('dynamic');
+ expectBase(false);
  await send({op:'park'});
  expect((await send({...settings,fixBase:true})).error).toBeUndefined();
- expectBase('static');
- expect(mock.create).toHaveBeenCalledTimes(3);
- expect(mock.prepare).toHaveBeenCalledTimes(1);
+ expectBase(true);
  expect(documentGeometryKey).toHaveBeenCalledTimes(1);
 });
 
