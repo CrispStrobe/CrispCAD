@@ -458,7 +458,7 @@ Left open: an exact display path for many-hole faces (meshing cost, Phase 2); a 
 renamed on paste (`width` → `width_2`) makes a pasted feature stale until it is recomputed;
 fillets of individual edges need topological naming and are out of scope.
 
-### Phase 4: cross-checking with the catalog. **Done 2026-11-25 (exact kernel 0.1.1); rerun 2026-11-26 with ruled lofts on 0.1.3**
+### Phase 4: cross-checking with the catalog. **Done 2026-11-25 (exact kernel 0.1.1); rerun 2026-11-26 with ruled lofts and then smooth lofts on 0.1.3**
 
 1. Convert the lab's catalog with `scripts/convert-kcad.mjs` (98.7% convert, 93.6% before
    the 2026-11-25 converter fixes).
@@ -467,6 +467,33 @@ fillets of individual edges need topological naming and are out of scope.
    results let us tell converter errors apart from kernel errors.
 4. Record the results next to
    [CODE-CONVERTERS.md](CODE-CONVERTERS.md#kernelcad-kcadts-models-2026-11-24).
+
+**Second rerun 2026-11-26: smooth lofts, catalog and native volumes from lab `587e964cd`**
+(2,402 of 2,402 built natively; the lab fixed its 8 self-crossing models in `ef07c30bf`). CAD
+Script gained `smoothLoft`, SMLib's smooth loft through three or more sections (cubic B-spline
+through each vertex, chord-length parameters; document version 43, see
+[CODE-MODE.md](CODE-MODE.md#smooth-lofts)), and the converter writes kernelCAD's smooth lofts with
+it. The harness's loft allowance now counts a twisted or smooth quad's gap only where a Boolean
+operand can reach it, plus a cut-face area term (median allowance 2.6 % → 1e-6 of the volume).
+[Details](../experiments/catalog-crosscheck/README.md#results-smooth-lofts-exact-kernel-013-2026-11-26-second-run).
+
+| Full catalog | 0.1.3, ruled | **0.1.3, smooth lofts** |
+| --- | ---: | ---: |
+| Three-way all-agree | 2,347 | **2,358** |
+| Converter-error | 5 | **2** |
+| Converter-partial / -failed | 11 / 31 | 11 / 31 |
+| Native-failed | 8 | **0** |
+| Manifold vs exact: models agree / disagree | 2,354 / 17 | 2,353 / 18 |
+
+- The three wind-turbine models with smooth lofts agree with native to 1e-9 (were −3.6 % to
+  −0.60 %); the 8 fixed models agree in all three builds.
+- The 2 converter errors left (`nature/hill-tile` +31 %, `nature/ground-tile` +7 %) are ruled
+  lofts, not smooth ones, and the native build is the odd one out: its wire-built sections
+  re-seam a square drawn with collinear edge midpoints, joining the wrong vertices. Reported to
+  the lab.
+- Manifold vs exact: 49 parts in 18 models, all planar float32 numerics; the toilet `bowl` agrees
+  under the new cut-face term, and three thin parts 600 mm from the origin that the loose
+  ruled-loft allowance had hidden now show at 1.1e-6 to 1.2e-6.
 
 **Rerun 2026-11-26: ruled lofts (CAD Script revision 2), exact kernel 0.1.3, native volumes
 from lab `5ea9d18f3`** (2,394 of 2,402 built natively). Owner-approved: `loft` now builds ruled

@@ -54,8 +54,15 @@ export function summarize(jsonl: string, options: { native?: string; meta?: Reco
   const intent = parts.filter(p => p.manifold.ok && p.exactIntent?.ok) as (PartRecord & { model: string; manifold: { volume: number }; exactIntent: { volume: number } })[];
   const disagree = both.filter(p => p.class === 'disagree').sort((a, b) => Math.abs(b.diff!.relVolume) - Math.abs(a.diff!.relVolume));
   const agreeRel = both.filter(p => p.class === 'agree').map(p => Math.abs(p.diff!.relVolume));
-  // Planar: no curved constructs and no twisted ruled-loft quads (whose fans differ from the ruled surface under Booleans).
-  const planarAgree = both.filter(p => p.class === 'agree' && p.tolerance!.curved === 0 && !p.tolerance!.ruledVolume).map(p => Math.abs(p.diff!.relVolume));
+  // Planar: no curved constructs and no loft quads whose mesh differs from the exact surface (twisted ruled quads, smooth lofts).
+  const planarAgree = both.filter(p => p.class === 'agree' && p.tolerance!.curved === 0 && !p.tolerance!.loftQuads).map(p => Math.abs(p.diff!.relVolume));
+  // Loft parts: the allowance against the real difference, relative to the exact build.
+  const lofts = both.filter(p => p.tolerance?.loftQuads) as (typeof both[number] & { exact: { volume: number; area: number }; manifold: { area: number } })[];
+  const loftStats = lofts.length ? {
+    parts: lofts.length, partsWithReachableQuads: lofts.filter(p => p.tolerance!.exposedQuads).length,
+    medianVolumeAllowance: median(lofts.map(p => p.tolerance!.volume / Math.abs(p.exact.volume))), medianRelVolume: median(lofts.map(p => Math.abs(p.diff!.relVolume))),
+    medianAreaAllowance: median(lofts.map(p => p.tolerance!.area / Math.abs(p.exact.area))), medianRelArea: median(lofts.map(p => Math.abs(p.manifold.area - p.exact.area) / Math.abs(p.exact.area))),
+  } : null;
 
   const summary: Record<string, unknown> = {
     run: options.meta ?? (existsSync(jsonl.replace(/\.jsonl$/, '-run.json')) ? JSON.parse(readFileSync(jsonl.replace(/\.jsonl$/, '-run.json'), 'utf8')) : null),
@@ -76,6 +83,7 @@ export function summarize(jsonl: string, options: { native?: string; meta?: Reco
       medianRelVolumeAgreeing: median(agreeRel),
       maxRelVolumeAgreeingPlanar: planarAgree.length ? Math.max(...planarAgree) : null,
       planarPartsAgreeing: planarAgree.length,
+      lofts: loftStats,
     },
     intent: {
       parts: intent.length,
@@ -156,7 +164,7 @@ export function summarize(jsonl: string, options: { native?: string; meta?: Reco
   writeFileSync(`${out}-models.json`, JSON.stringify(models.map(m => ({ id: m.id, class: m.class, convert: m.convert.status, ...(m.convert.error ? { error: m.convert.error } : {}), parts: m.parts?.length ?? 0, partClasses: count(m.parts ?? [], p => p.class), totals: m.totals ?? null, ...(threeWay.has(m.id) ? { native: threeWay.get(m.id) } : {}) })), null, 0).replace(/},{"id"/g, '},\n{"id"') + '\n');
   writeFileSync(`${out}-summary.json`, JSON.stringify(summary, null, 1) + '\n');
   const table = (title: string, rec: Record<string, number>, limit = 15) => [`| ${title} | Count |`, '| --- | ---: |', ...Object.entries(rec).slice(0, limit).map(([k, v]) => `| ${k.replace(/\|/g, '\\|')} | ${v} |`)].join('\n');
-  const t = summary.timing as Record<string, number>, a = summary.agreement as Record<string, number>, i = summary.intent as Record<string, number>;
+  const t = summary.timing as Record<string, number>, a = summary.agreement as Record<string, number>, i = summary.intent as Record<string, number>, l = (summary.agreement as { lofts: typeof loftStats }).lofts;
   const markdown = [
     `# Catalog cross-check: ${models.length} models, ${parts.length} parts`, '',
     table('Model class', summary.modelClasses as Record<string, number>), '',
@@ -169,6 +177,7 @@ export function summarize(jsonl: string, options: { native?: string; meta?: Reco
     table('Exact failure (part)', summary.exactFailures as Record<string, number>, 10), '',
     table('Manifold failure (part)', summary.manifoldFailures as Record<string, number>, 10), '',
     `Parts built by both kernels: ${a.partsBuiltByBoth}; median |ΔV|/V of agreeing parts ${fmt(a.medianRelVolumeAgreeing)}; planar agreeing parts ${a.planarPartsAgreeing}, max |ΔV|/V ${a.maxRelVolumeAgreeingPlanar == null ? '–' : fmt(a.maxRelVolumeAgreeingPlanar)}.`,
+    ...(l ? [`Loft parts (twisted ruled or smooth quads): ${l.parts}, ${l.partsWithReachableQuads} with quads a Boolean operand can reach; median allowance ${fmt(l.medianVolumeAllowance)} of the volume (real |ΔV|/V ${fmt(l.medianRelVolume)}), ${fmt(l.medianAreaAllowance)} of the area (real ${fmt(l.medianRelArea)}).`] : []),
     `Low-segment intent probe: ${i.parts} parts (${i.agreeWithinFacetingOfEmittedSegments} agree with Manifold within the faceting of the emitted N), median Manifold/intent − 1 = ${fmt(i.medianRelVolume)}, min ${i.minRelVolume == null ? '–' : fmt(i.minRelVolume)}; ${i.modelsOnlyLowSegmentUnsupported} exact-unsupported models are unsupported only for that reason.`,
     (() => { const t = summary.modelTotals as Record<string, number>; return `Model totals, Manifold vs exact (kernelCAD intent for low segments), ${t.models} models: ${t.exactlyEqual} within 1e-6, ${t.within1e3} within 1e-3, ${t.within1e2} within 1e-2, ${t.beyond5e2} beyond 5e-2; median ${fmt(t.median)}, 5th percentile ${fmt(t.p05)}, min ${fmt(t.min)}.`; })(),
     `CPU: Manifold ${(t.manifoldCpuMsTotal / 1000).toFixed(0)} s total (median part ${fmt(t.manifoldCpuMsMedianPart)} ms); exact ${(t.exactCpuMsTotal / 1000).toFixed(0)} s total (median part ${fmt(t.exactCpuMsMedianPart)} ms, max ${(t.exactCpuMsMaxPart / 1000).toFixed(1)} s).`,

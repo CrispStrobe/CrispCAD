@@ -795,4 +795,12 @@ agree in all three builds (was 2,214 with the same programs triangulated); the 5
 errors left are the smooth lofts, `nature/tumbleweed` builds and agrees, and the exact area equals
 the native area to 1e-6 wherever the volumes agree. The 8 models the lab now refuses for
 self-crossing outlines are skipped part by part here (reported as partial).
+
+**Smooth lofts (2026-11-26).** kernelCAD lofts through more than two sections without
+`ruled: true` are smooth; the converter now writes them as CAD Script `smoothLoft`
+([CODE-MODE.md](CODE-MODE.md#smooth-lofts)), the same surface SMLib builds, instead of ruled lofts
+with a warning. Against lab `587e964cd` (native 2,402 of 2,402): 2,358 models agree in all three
+builds; the smooth-loft wind turbines agree with native to 1e-9; the 2 converter errors left are
+ruled lofts that the lab's native build joins at the wrong vertices (see
+[the cross-check](../experiments/catalog-crosscheck/README.md#results-smooth-lofts-exact-kernel-013-2026-11-26-second-run)).
 `for (let …)` closures now get a fresh loop binding per iteration, as in JavaScript.

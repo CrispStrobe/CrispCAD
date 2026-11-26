@@ -83,13 +83,32 @@ prisms and revolutions (the closed form is exact) and 3.5 for Manifold's spheres
 except spheres (1.9), f_b = 1 except spheres (2.5, from the sphere mesh's worst support
 gap over 4,000 directions). Planar parts are therefore held to 1e-6 relative volume.
 
-**Ruled lofts.** A twisted side quad of a revision-2 loft is meshed by Manifold as four triangles
-around the mean of its corners, while the exact kernel builds the ruled (bilinear) surface. The
-volumes are identical, the surfaces are not. For every such quad the tolerance adds twice
-|fan area − ruled area| (8 × 8 Gauss-Legendre) to the area and twice the unsigned volume between
-fan and surface (∫ |(P − L) · n|, 6 × 6 sub-triangles per fan triangle) to the volume: a Boolean
-that cuts through a twisted quad can change the two builds by that much. Parts with such quads
-(`ruledArea`, `ruledVolume` in the record's tolerance) are not counted as planar.
+**Lofts (since 2026-11-26).** Where a loft's mesh is not its exact surface, the tolerance adds a
+loft term, quad by quad ([`src/tolerance.ts`](src/tolerance.ts), `quadDifference`). That is every
+twisted side quad of a revision-2 `loft` (Manifold meshes the four-triangle fan around the corners'
+mean, the exact kernel the ruled surface) and every quad between two slices of a `smoothLoft`
+(Manifold meshes the sampled slices, the exact kernel the smooth surface). For each quad the
+harness measures, against the exact surface over it, the signed area difference (8 × 8
+Gauss-Legendre), the signed enclosed-volume difference and the unsigned gap volume (6 × 6
+sub-triangles per mesh triangle, distance along the triangle's normal) and the largest normal
+distance (thickness). It then asks whether a Boolean can cut the quad: the quad's box (in the part's
+coordinates, through every enclosing transform) is tested against the conservative boxes
+(`shapeBoundsBySide`) of the other operands of every enclosing union, subtraction and intersection,
+of the other copies of a `repeat`, and of anything under a hull, Minkowski sum or resize.
+
+- A quad nothing can reach ends up whole in the result: only the sums count, |Σ area difference|
+  and |Σ volume difference| (0 for ruled fans, whose volume is the ruled volume; the sampling error
+  for smooth lofts).
+- A quad some operand reaches may be cut: the allowance takes its unsigned gap volume, its
+  |area difference| and 2 · thickness · extent for the cut faces that cross the gap.
+
+Twice these sums are added to the volume and area allowances, and a smooth loft's thickness to the
+box allowance. Parts with loft quads (`loftQuads`, `exposedQuads`, `loftArea`, `loftVolume` in the
+record's tolerance) are not counted as planar. Until 2026-11-26 every twisted quad counted as cut
+(twice its unsigned gap), which made the allowance loose: median 2.6 % of a ruled part's volume
+against a real median difference of 1.2e-8. It is now at the 1e-6 floor for the median part and
+above 1e-3 for 21 of 1,873 loft parts (`containers/wicker-basket` `body`, 6.3 %, the largest: a
+basket whose cutter box overlaps every quad), and the cut faces have their own area term.
 
 ### Classes
 
@@ -144,7 +163,74 @@ field of `results/<name>-models.json`; `results/<name>-summary.json` (`native.mo
 every model that is not `all-agree` or whose area or box differs, with the three volumes
 (`M`, `E`, `N`), `relConverter` = E/N − 1, `relArea` and `dBox`.
 
-## Results: ruled lofts, exact kernel 0.1.3 (2026-11-26)
+## Results: smooth lofts, exact kernel 0.1.3 (2026-11-26, second run)
+
+Measured 2026-11-26 on the same machine (load average 35–134), Node 26.4.0,
+`@crispcad/exact-kernel` 0.1.3, CrispCAD main `70a2fda` plus this commit's harness: CAD Script
+`smoothLoft` ([CODE-MODE.md](../../docs/CODE-MODE.md#smooth-lofts)), which the converter now writes
+for kernelCAD's smooth lofts (more than two sections without `ruled: true`), and the
+[loft allowance](#tolerance) from reachable quads. **Catalog and native volumes: kernel lab
+`587e964cd`** (`origin/develop`; `results-catalog-native-volumes.json` measured on `ef07c30bf`,
+where the lab fixed the 8 models with self-crossing outlines: **2,402 of 2,402 built natively**).
+One segment, four workers, 5.8 min wall, 2,402 models, 69,389 converted parts:
+[`results/full-summary.md`](results/full-summary.md), [`full-summary.json`](results/full-summary.json),
+[`full-models.json`](results/full-models.json), [`full-run.json`](results/full-run.json). Sample
+(300 models, same seed, 1.3 min): all-agree 294, converter-failed 3, converter-partial 2,
+converter-error 1 (`nature/ground-tile`), [`results/sample-300-summary.md`](results/sample-300-summary.md).
+
+| Full catalog | 0.1.3, ruled (lab `5ea9d18f3`) | **0.1.3, smooth lofts (lab `587e964cd`)** |
+| --- | ---: | ---: |
+| Three-way all-agree | 2,347 | **2,358** |
+| Converter-error | 5 | **2** (a native-build issue, below) |
+| Converter-partial / -failed | 11 / 31 | 11 / 31 |
+| Native-failed (self-crossing source outlines) | 8 | **0** (fixed in the lab's catalog) |
+| Manifold vs exact: models agree / disagree | 2,354 / 17 | 2,353 / 18 |
+| Parts agree / disagree | 69,325 / 42 | 69,340 / 49 |
+| Exact area = native area to 1e-6 (of volume-agreeing) | 2,347 of 2,347 | **2,358 of 2,358** |
+| Exact CPU (total, slowest part) | 1,310 s, 5.2 s | 720 s, 3.0 s |
+
+- **The three wind-turbine models with smooth lofts agree with native to 1e-9**:
+  `wind-energy/wind-turbine-blade` exact 47,061,112.54 mm³ against native 47,061,112.51
+  (ruled: −3.6 %), `horizontal-axis-wind-turbine` 386,600,483.5 (−0.82 %),
+  `offshore-wind-turbine` 952,565,202.6 (−0.60 %). Manifold samples the 14 smooth blade and tip
+  parts within 3.7e-6 to 6.3e-5 of the exact volume, inside their allowance.
+- **The 8 formerly self-crossing models** (lab `ef07c30bf`) convert completely and agree in all
+  three builds.
+- **The 2 converter errors left are a native-build issue, not the converter's:**
+  `nature/hill-tile` (E/N − 1 = +30.9 %) and `nature/ground-tile` (+7.0 %) use **ruled** lofts
+  (`ruled: true`, so not smooth lofts) from a square drawn as eight points (corners and edge
+  midpoints, "so it lofts to an octagon", says the source) to an octagon. The lab's native lowering
+  builds sections as `makeFace(new Wire(lines))`, and for this square, whose consecutive edges are
+  collinear, SMLib starts the section curve at another vertex, so vertex *i* of the square is joined
+  to the wrong octagon vertex and the side faces twist through the middle. Building the same
+  sections through the exact kernel's `profile.path` (the same wire construction) reproduces the
+  native volume exactly (grass 1,059,613,212 + outcrop 30,089,040 + dirt 560,000,000 mm³ for the
+  hill; grass 307,682,982 + dirt for the ground tile); `profile.polygon`, which our lowering uses,
+  keeps the authored correspondence and gives our number, as OCCT's ThruSections would. Reported
+  for the lab to fix (build loft sections as polygons, or keep the authored vertex order).
+- **Manifold against exact:** 49 parts in 18 models disagree, all planar Manifold numerics
+  (causes 1–3 below: 21 volumes at the 1e-6 floor, 25 float32 mesh areas, 3 faces of touching
+  operands). `interior/toilet` `bowl` now agrees (volume 6.2e-6, area 5.9e-5 against an area
+  allowance of 3.3e-3, mostly the new cut-face term); `airfield/private-jet` `winglet-port` and
+  `winglet-starboard` (1.19e-6) and `nature/baobab-tree` `tuft-1` (1.14e-6) were hidden by the old
+  loose ruled-loft allowance and now show as what they are, float32 vertices far from the origin
+  (cause 1). No part is unsupported by or fails in the exact kernel.
+- **Loft allowance:** 1,873 loft parts, 69 of them with quads an operand can reach; median
+  allowance 1.0e-6 of the volume (real |ΔV|/V 1.3e-8) and 1.0e-5 of the area (real 2.6e-7);
+  was 2.6 % of the volume.
+
+**Toilet bowl and the four-triangle fan.** The bowl's twisted quads (36, of which a Boolean can
+reach 28) differ from the ruled surface by at most 0.32 mm on 215 mm quads (thickness/extent
+1.5e-3); the cut changes the Manifold build by 179 mm³ (6.2e-6) and 51 mm² (5.9e-5) against the
+exact one, which equals native. That is a real but small faceting effect of the same kind as
+48-segment circles (2.9e-3), and it only appears where a Boolean cuts a twisted quad; uncut ruled
+lofts keep the exact ruled volume. Subdividing strongly twisted quads (a tolerance-based split
+count) would shrink it but would change revision-2 geometry and so need a revision 3; not done.
+
+## Earlier results: ruled lofts, exact kernel 0.1.3 (2026-11-26)
+
+The result files of this run were replaced by the run above (the triangulated `full-diagonal-*`
+files are still this run's); kept for the history of the loft fixes.
 
 Measured 2026-11-26 on the same 8-core Apple M1 shared with other sessions (load average
 28–183), Node 26.4.0, **`@crispcad/exact-kernel` 0.1.3**, CrispCAD main `8c0f8c1` (CAD Script

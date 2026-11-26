@@ -5,25 +5,25 @@
   "selected": 300,
   "mode": "stratified-by-kit",
   "seed": "crosscheck-1",
-  "labCommit": "c1548dbda83f5b8980980b1769ca7ec43ad2ffc1",
-  "timeoutSeconds": 900,
+  "labCommit": "587e964cd00f64ee262a938f2bac219c2b9b60e1",
+  "timeoutSeconds": 300,
   "jobs": 4,
   "loftRevision": 2,
   "machine": {
    "cpus": 8,
    "model": "Apple M1",
    "loadAverageAtStart": [
-    164.4,
-    141.9,
-    125.5
+    111.9,
+    86.7,
+    77.4
    ],
    "loadAverageAtEnd": [
-    163.2,
-    150.2,
-    130.6
+    146.2,
+    103.7,
+    84.8
    ]
   },
-  "started": "2026-11-26T05:26:20.574Z",
+  "started": "2026-11-26T06:13:16.700Z",
   "calibration": {
    "volume": {
     "prism": 1.0000000209001643,
@@ -179,8 +179,9 @@
    "node": "v26.4.0",
    "exact": "@classcad/smlibwasm 0.6.2"
   },
-  "finished": "2026-11-26T05:27:56.645Z",
-  "lastRunMinutes": 1.6
+  "finished": "2026-11-26T06:14:36.258Z",
+  "lastRunMinutes": 1.3,
+  "note": "Same code and lab commit as full-run.json (smoothLoft, loft allowance from reachable quads; lab 587e964cd)."
  },
  "models": 300,
  "modelClasses": {
@@ -189,8 +190,8 @@
   "converter-failure": 3
  },
  "convertStatus": {
-  "converted": 293,
-  "partial": 4,
+  "converted": 295,
+  "partial": 2,
   "failed": 2,
   "unsupported": 1
  },
@@ -198,9 +199,9 @@
   "Line N, column N: Unknown kernelCAD name …": 2,
   "Line N, column N: Unsupported kernelCAD feature …": 1
  },
- "parts": 9379,
+ "parts": 9384,
  "partClasses": {
-  "agree": 9374,
+  "agree": 9379,
   "disagree": 5
  },
  "disagreementReasons": {
@@ -216,10 +217,18 @@
  "exactFailures": {},
  "manifoldFailures": {},
  "agreement": {
-  "partsBuiltByBoth": 9379,
+  "partsBuiltByBoth": 9384,
   "medianRelVolumeAgreeing": 0,
-  "maxRelVolumeAgreeingPlanar": 8.795203171e-7,
-  "planarPartsAgreeing": 6725
+  "maxRelVolumeAgreeingPlanar": 6.701796705e-7,
+  "planarPartsAgreeing": 6625,
+  "lofts": {
+   "parts": 211,
+   "partsWithReachableQuads": 8,
+   "medianVolumeAllowance": 0.000001000000000900843,
+   "medianRelVolume": 1.450690563e-8,
+   "medianAreaAllowance": 0.000010071239872997263,
+   "medianRelArea": 2.6279738208316887e-7
+  }
  },
  "intent": {
   "parts": 0,
@@ -242,12 +251,12 @@
   "min": -0.01000508238091391
  },
  "timing": {
-  "manifoldCpuMsTotal": 14576,
-  "exactCpuMsTotal": 179816,
-  "manifoldCpuMsMedianPart": 0.92,
-  "exactCpuMsMedianPart": 6.15,
-  "exactCpuMsMaxPart": 1268.98,
-  "convertWallMsMedian": 17.88
+  "manifoldCpuMsTotal": 10021,
+  "exactCpuMsTotal": 110328,
+  "manifoldCpuMsMedianPart": 0.58,
+  "exactCpuMsMedianPart": 4.02,
+  "exactCpuMsMaxPart": 836.35,
+  "convertWallMsMedian": 8.11
  },
  "worstDisagreements": [
   {
@@ -349,22 +358,21 @@
  "native": {
   "source": {
    "kernel": "smlib-native",
-   "labCommit": "e203019d8d9251671b79e4dda8a2e00c96e4bfee",
+   "labCommit": "ef07c30bf1408f2a5a788afd03473c3acae68bce",
    "statusOnly": false
   },
   "classes": {
-   "all-agree": 292,
+   "all-agree": 294,
    "converter-failed": 3,
    "converter-partial": 2,
-   "native-failed": 2,
    "converter-error": 1
   },
   "exactVsNative": {
-   "volumeAgreeing": 292,
-   "areaWithin1e6": 292,
-   "areaWithin1e3": 292,
+   "volumeAgreeing": 294,
+   "areaWithin1e6": 294,
+   "areaWithin1e3": 294,
    "areaBeyond1e3": [],
-   "bboxWithin1e3mm": 292,
+   "bboxWithin1e3mm": 294,
    "bboxBeyond1e3mm": []
   },
   "models": [
@@ -383,10 +391,6 @@
     "dBox": 6.507215300000098
    },
    {
-    "id": "amusement-park/miniature-park-tram-coach.kcad.ts",
-    "class": "native-failed"
-   },
-   {
     "id": "construction-equipment/skid-steer-loader.kcad.ts",
     "convert": "partial",
     "parts": 114,
@@ -395,14 +399,10 @@
     "class": "converter-partial",
     "M": 4314387009,
     "E": 4315929174,
-    "N": 4321833174.02464,
-    "relConverter": -0.0013660869790450558,
-    "relArea": -0.010756589438426722,
+    "N": 4321833174.024639,
+    "relConverter": -0.0013660869790448338,
+    "relArea": -0.010756589438426833,
     "dBox": 3.938021109206602e-8
-   },
-   {
-    "id": "industrial-plant/industrial-boiler.kcad.ts",
-    "class": "native-failed"
    },
    {
     "id": "nature/ground-tile.kcad.ts",

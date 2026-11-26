@@ -4,25 +4,25 @@
  "selected": 300,
  "mode": "stratified-by-kit",
  "seed": "crosscheck-1",
- "labCommit": "c1548dbda83f5b8980980b1769ca7ec43ad2ffc1",
- "timeoutSeconds": 900,
+ "labCommit": "587e964cd00f64ee262a938f2bac219c2b9b60e1",
+ "timeoutSeconds": 300,
  "jobs": 4,
  "loftRevision": 2,
  "machine": {
   "cpus": 8,
   "model": "Apple M1",
   "loadAverageAtStart": [
-   164.4,
-   141.9,
-   125.5
+   111.9,
+   86.7,
+   77.4
   ],
   "loadAverageAtEnd": [
-   163.2,
-   150.2,
-   130.6
+   146.2,
+   103.7,
+   84.8
   ]
  },
- "started": "2026-11-26T05:26:20.574Z",
+ "started": "2026-11-26T06:13:16.700Z",
  "calibration": {
   "volume": {
    "prism": 1.0000000209001643,
@@ -178,7 +178,7 @@
   "node": "v26.4.0",
   "exact": "@classcad/smlibwasm 0.6.2"
  },
- "finished": "2026-11-26T05:27:56.645Z",
- "lastRunMinutes": 1.6,
- "note": "@crispcad/exact-kernel 0.1.3, CrispCAD main 8c0f8c1; converted lofts as CAD Script revision 2 (ruled). Native volumes: lab 5ea9d18f3."
+ "finished": "2026-11-26T06:14:36.258Z",
+ "lastRunMinutes": 1.3,
+ "note": "Same code and lab commit as full-run.json (smoothLoft, loft allowance from reachable quads; lab 587e964cd)."
 }

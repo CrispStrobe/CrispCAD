@@ -5,25 +5,25 @@
   "selected": 2402,
   "mode": "all",
   "seed": null,
-  "labCommit": "c1548dbda83f5b8980980b1769ca7ec43ad2ffc1",
-  "timeoutSeconds": 900,
+  "labCommit": "587e964cd00f64ee262a938f2bac219c2b9b60e1",
+  "timeoutSeconds": 300,
   "jobs": 4,
   "loftRevision": 2,
   "machine": {
    "cpus": 8,
    "model": "Apple M1",
    "loadAverageAtStart": [
-    28.2,
-    54.5,
-    66.1
+    34.6,
+    38.6,
+    64.9
    ],
    "loadAverageAtEnd": [
-    92.8,
-    102.1,
-    91
+    133.7,
+    83.5,
+    75.7
    ]
   },
-  "started": "2026-11-26T04:49:31.326Z",
+  "started": "2026-11-26T06:06:04Z",
   "calibration": {
    "volume": {
     "prism": 1.0000000209001643,
@@ -179,47 +179,56 @@
    "node": "v26.4.0",
    "exact": "@classcad/smlibwasm 0.6.2"
   },
-  "finished": "2026-11-26T05:00:43.297Z",
-  "lastRunMinutes": 11.2
+  "finished": "2026-11-26T06:12:14.255Z",
+  "lastRunMinutes": 5.8,
+  "note": "@crispcad/exact-kernel 0.1.3, CrispCAD main 70a2fda plus the harness changes of this commit (smoothLoft; converter writes kernelCAD smooth lofts as smoothLoft; loft allowance from reachable quads). Catalog and native volumes: lab 587e964cd (native measured on ef07c30bf, 2,402 of 2,402). One segment, four workers."
  },
  "models": 2402,
  "modelClasses": {
-  "agree": 2354,
+  "agree": 2353,
   "converter-failure": 31,
-  "disagree": 17
+  "disagree": 18
  },
  "convertStatus": {
-  "converted": 2352,
+  "converted": 2360,
   "unsupported": 25,
-  "partial": 19,
+  "partial": 11,
   "failed": 6
  },
  "convertErrors": {
   "Line N, column N: Unsupported kernelCAD feature …": 25,
   "Line N, column N: Unknown kernelCAD name …": 6
  },
- "parts": 69367,
+ "parts": 69389,
  "partClasses": {
-  "agree": 69325,
-  "disagree": 42
+  "agree": 69340,
+  "disagree": 49
  },
  "disagreementReasons": {
-  "area": 29,
-  "volume": 13
+  "area": 28,
+  "volume": 21
  },
  "disagreementCauses": {
-  "planar part, area off by < 1e-3 (float32 mesh positions far from the origin)": 26,
-  "planar part, volume beyond the 1e-6 floor (|dV|/V ≤ 1e-5: Manifold numerics or float32 polyhedron vertices at large coordinates)": 13,
+  "planar part, area off by < 1e-3 (float32 mesh positions far from the origin)": 25,
+  "planar part, volume beyond the 1e-6 floor (|dV|/V ≤ 1e-5: Manifold numerics or float32 polyhedron vertices at large coordinates)": 21,
   "planar part, Manifold area too large with equal volume (faces of exactly touching operands kept inside the mesh)": 3
  },
  "exactUnsupported": {},
  "exactFailures": {},
  "manifoldFailures": {},
  "agreement": {
-  "partsBuiltByBoth": 69367,
+  "partsBuiltByBoth": 69389,
   "medianRelVolumeAgreeing": 0,
   "maxRelVolumeAgreeingPlanar": 9.66980869e-7,
-  "planarPartsAgreeing": 50722
+  "planarPartsAgreeing": 49614,
+  "lofts": {
+   "parts": 1873,
+   "partsWithReachableQuads": 69,
+   "medianVolumeAllowance": 0.000001000000001202082,
+   "medianRelVolume": 1.343904946e-8,
+   "medianAreaAllowance": 0.000010000038074550175,
+   "medianRelArea": 2.585732462996663e-7
+  }
  },
  "intent": {
   "parts": 0,
@@ -242,28 +251,82 @@
   "min": -0.01000861697175326
  },
  "timing": {
-  "manifoldCpuMsTotal": 111354,
-  "exactCpuMsTotal": 1309684,
-  "manifoldCpuMsMedianPart": 1,
-  "exactCpuMsMedianPart": 6.67,
-  "exactCpuMsMaxPart": 5171.55,
-  "convertWallMsMedian": 19.44
+  "manifoldCpuMsTotal": 68289,
+  "exactCpuMsTotal": 719648,
+  "manifoldCpuMsMedianPart": 0.56,
+  "exactCpuMsMedianPart": 3.86,
+  "exactCpuMsMaxPart": 2984.01,
+  "convertWallMsMedian": 7.59
  },
  "worstDisagreements": [
   {
-   "model": "interior/toilet.kcad.ts",
-   "part": "bowl",
+   "model": "airfield/narrowbody-airliner.kcad.ts",
+   "part": "sharklet-starboard",
    "reasons": [
-    "area"
+    "volume"
    ],
-   "relVolume": 0.000006221674712,
-   "dVolume": 178.84,
-   "dArea": 51.2119,
-   "dBbox": 0,
+   "relVolume": -0.00000739373113,
+   "dVolume": -0.037223,
+   "dArea": 0.037814,
+   "dBbox": 0.00002689999997,
    "tolerance": {
-    "volume": 44851.06148,
-    "area": 27.95236767,
-    "bbox": 0.0007943473388,
+    "volume": 0.005034401078,
+    "area": 0.1342673794,
+    "bbox": 0.0001144634743,
+    "minSegments": null,
+    "approximate": false
+   }
+  },
+  {
+   "model": "airfield/narrowbody-airliner.kcad.ts",
+   "part": "sharklet-port",
+   "reasons": [
+    "volume"
+   ],
+   "relVolume": -0.00000739373113,
+   "dVolume": -0.037223,
+   "dArea": 0.036879,
+   "dBbox": 0.00002930000005,
+   "tolerance": {
+    "volume": 0.005034401029,
+    "area": 0.1326491118,
+    "bbox": 0.0001144976722,
+    "minSegments": null,
+    "approximate": false
+   }
+  },
+  {
+   "model": "airfield/cargo-aircraft.kcad.ts",
+   "part": "winglet-starboard",
+   "reasons": [
+    "volume"
+   ],
+   "relVolume": -0.000007343056883,
+   "dVolume": -0.047939,
+   "dArea": 0.033981,
+   "dBbox": 0.00002689999997,
+   "tolerance": {
+    "volume": 0.006528481197,
+    "area": 0.1430322539,
+    "bbox": 0.0001029703879,
+    "minSegments": null,
+    "approximate": false
+   }
+  },
+  {
+   "model": "airfield/cargo-aircraft.kcad.ts",
+   "part": "winglet-port",
+   "reasons": [
+    "volume"
+   ],
+   "relVolume": -0.000007343056883,
+   "dVolume": -0.047939,
+   "dArea": 0.032042,
+   "dBbox": 0.00002930000005,
+   "tolerance": {
+    "volume": 0.00652848112,
+    "area": 0.1395469274,
+    "bbox": 0.0001030084389,
     "minSegments": null,
     "approximate": false
    }
@@ -279,8 +342,8 @@
    "dArea": 0.0006209999999,
    "dBbox": 5.000000556e-7,
    "tolerance": {
-    "volume": 0.002409884862,
-    "area": 0.01218642914,
+    "volume": 0.002422351541,
+    "area": 0.0122194849,
     "bbox": 0.00003800174806,
     "minSegments": null,
     "approximate": false
@@ -431,6 +494,42 @@
    }
   },
   {
+   "model": "airfield/private-jet.kcad.ts",
+   "part": "winglet-starboard",
+   "reasons": [
+    "volume"
+   ],
+   "relVolume": -0.000001187043841,
+   "dVolume": -0.004323,
+   "dArea": 0.140353,
+   "dBbox": 0.00002689999997,
+   "tolerance": {
+    "volume": 0.003641821045,
+    "area": 0.3266624298,
+    "bbox": 0.0001105893133,
+    "minSegments": null,
+    "approximate": false
+   }
+  },
+  {
+   "model": "airfield/private-jet.kcad.ts",
+   "part": "winglet-port",
+   "reasons": [
+    "volume"
+   ],
+   "relVolume": -0.000001187043841,
+   "dVolume": -0.004323,
+   "dArea": 0.134699,
+   "dBbox": 0.00002930000005,
+   "tolerance": {
+    "volume": 0.003641821039,
+    "area": 0.3156208011,
+    "bbox": 0.0001106141031,
+    "minSegments": null,
+    "approximate": false
+   }
+  },
+  {
    "model": "mining/thickener-bridge.kcad.ts",
    "part": "overflow-weir",
    "reasons": [
@@ -444,6 +543,24 @@
     "volume": 1304.738525,
     "area": 381.0530505,
     "bbox": 0.03094422543,
+    "minSegments": null,
+    "approximate": false
+   }
+  },
+  {
+   "model": "nature/baobab-tree.kcad.ts",
+   "part": "tuft-1",
+   "reasons": [
+    "volume"
+   ],
+   "relVolume": -0.000001139839589,
+   "dVolume": -453.1,
+   "dArea": 11084.657,
+   "dBbox": 0.0003689999994,
+   "tolerance": {
+    "volume": 397.5120751,
+    "area": 22205.4307,
+    "bbox": 0.002053589828,
     "minSegments": null,
     "approximate": false
    }
@@ -477,8 +594,8 @@
    "dArea": -0.0006147,
    "dBbox": 0.000001900000001,
    "tolerance": {
-    "volume": 0.001372730984,
-    "area": 0.007715032974,
+    "volume": 0.001372730987,
+    "area": 0.007715180026,
     "bbox": 0.00003106659276,
     "minSegments": null,
     "approximate": false
@@ -495,9 +612,27 @@
    "dArea": -0.0006147,
    "dBbox": 0.000001900000001,
    "tolerance": {
-    "volume": 0.001372730984,
-    "area": 0.007715032974,
+    "volume": 0.001372730987,
+    "area": 0.007715180026,
     "bbox": 0.00003106659276,
+    "minSegments": null,
+    "approximate": false
+   }
+  },
+  {
+   "model": "airfield/cargo-aircraft.kcad.ts",
+   "part": "cockpit-glass",
+   "reasons": [
+    "volume"
+   ],
+   "relVolume": 0.000001077617635,
+   "dVolume": 0.01759,
+   "dArea": 0.03268,
+   "dBbox": 0.00002440000003,
+   "tolerance": {
+    "volume": 0.01632304495,
+    "area": 0.2311996134,
+    "bbox": 0.000178985803,
     "minSegments": null,
     "approximate": false
    }
@@ -755,60 +890,6 @@
    }
   },
   {
-   "model": "solar-energy/pole-mount-transformer.kcad.ts",
-   "part": "lv-terminal-0",
-   "reasons": [
-    "area"
-   ],
-   "relVolume": 0,
-   "dVolume": 0,
-   "dArea": 0.046485,
-   "dBbox": 0,
-   "tolerance": {
-    "volume": 0.01052221015,
-    "area": 0.03120888529,
-    "bbox": 0.00005638050219,
-    "minSegments": null,
-    "approximate": false
-   }
-  },
-  {
-   "model": "solar-energy/pole-mount-transformer.kcad.ts",
-   "part": "lv-terminal-1",
-   "reasons": [
-    "area"
-   ],
-   "relVolume": 0,
-   "dVolume": 0,
-   "dArea": 0.046485,
-   "dBbox": 0,
-   "tolerance": {
-    "volume": 0.01052221015,
-    "area": 0.03120888529,
-    "bbox": 0.00005638050219,
-    "minSegments": null,
-    "approximate": false
-   }
-  },
-  {
-   "model": "solar-energy/pole-mount-transformer.kcad.ts",
-   "part": "lv-terminal-2",
-   "reasons": [
-    "area"
-   ],
-   "relVolume": 0,
-   "dVolume": 0,
-   "dArea": 0.046485,
-   "dBbox": 0,
-   "tolerance": {
-    "volume": 0.01052221015,
-    "area": 0.03120888529,
-    "bbox": 0.00005638050219,
-    "minSegments": null,
-    "approximate": false
-   }
-  },
-  {
    "model": "solar-energy/plane-of-array-irradiance-sensor.kcad.ts",
    "part": "cell-finger-1",
    "reasons": [
@@ -863,109 +944,37 @@
    }
   },
   {
-   "model": "theatre-production/backstage-call-board.kcad.ts",
-   "part": "sheet-notes-b-line-0",
+   "model": "solar-energy/pole-mount-transformer.kcad.ts",
+   "part": "lv-terminal-0",
    "reasons": [
     "area"
    ],
    "relVolume": 0,
    "dVolume": 0,
-   "dArea": 0.030638,
+   "dArea": 0.046485,
    "dBbox": 0,
    "tolerance": {
-    "volume": 0.000800001,
-    "area": 0.019300001,
-    "bbox": 0.0001617752374,
+    "volume": 0.01052221015,
+    "area": 0.03120888529,
+    "bbox": 0.00005638050219,
     "minSegments": null,
     "approximate": false
    }
   },
   {
-   "model": "theatre-production/backstage-call-board.kcad.ts",
-   "part": "sheet-notes-b-line-1",
+   "model": "solar-energy/pole-mount-transformer.kcad.ts",
+   "part": "lv-terminal-1",
    "reasons": [
     "area"
    ],
    "relVolume": 0,
    "dVolume": 0,
-   "dArea": 0.030638,
+   "dArea": 0.046485,
    "dBbox": 0,
    "tolerance": {
-    "volume": 0.000800001,
-    "area": 0.019300001,
-    "bbox": 0.0001617752374,
-    "minSegments": null,
-    "approximate": false
-   }
-  },
-  {
-   "model": "theatre-production/backstage-call-board.kcad.ts",
-   "part": "sheet-notes-b-line-2",
-   "reasons": [
-    "area"
-   ],
-   "relVolume": 0,
-   "dVolume": 0,
-   "dArea": 0.030638,
-   "dBbox": 0,
-   "tolerance": {
-    "volume": 0.000800001,
-    "area": 0.019300001,
-    "bbox": 0.0001617752374,
-    "minSegments": null,
-    "approximate": false
-   }
-  },
-  {
-   "model": "theatre-production/backstage-call-board.kcad.ts",
-   "part": "sheet-notes-b-line-3",
-   "reasons": [
-    "area"
-   ],
-   "relVolume": 0,
-   "dVolume": 0,
-   "dArea": 0.030638,
-   "dBbox": 0,
-   "tolerance": {
-    "volume": 0.000800001,
-    "area": 0.019300001,
-    "bbox": 0.0001617752374,
-    "minSegments": null,
-    "approximate": false
-   }
-  },
-  {
-   "model": "theatre-production/backstage-call-board.kcad.ts",
-   "part": "sheet-notes-b-line-4",
-   "reasons": [
-    "area"
-   ],
-   "relVolume": 0,
-   "dVolume": 0,
-   "dArea": 0.030638,
-   "dBbox": 0,
-   "tolerance": {
-    "volume": 0.000800001,
-    "area": 0.019300001,
-    "bbox": 0.0001617752374,
-    "minSegments": null,
-    "approximate": false
-   }
-  },
-  {
-   "model": "theatre-production/stage-manager-console.kcad.ts",
-   "part": "script-line-2",
-   "reasons": [
-    "area"
-   ],
-   "relVolume": 0,
-   "dVolume": 0,
-   "dArea": -0.041596,
-   "dBbox": 0,
-   "tolerance": {
-    "volume": 0.002400001,
-    "area": 0.032240001,
-    "bbox": 0.0002011281942,
+    "volume": 0.01052221015,
+    "area": 0.03120888529,
+    "bbox": 0.00005638050219,
     "minSegments": null,
     "approximate": false
    }
@@ -974,17 +983,18 @@
  "disagreeingModels": {
   "solar-energy/pole-mount-transformer.kcad.ts": 7,
   "airfield/widebody-airliner.kcad.ts": 6,
+  "airfield/cargo-aircraft.kcad.ts": 5,
   "theatre-production/backstage-call-board.kcad.ts": 5,
+  "airfield/narrowbody-airliner.kcad.ts": 4,
   "telecom-infrastructure/monopole-mast.kcad.ts": 3,
   "grid-substation/substation-overhead-line-gantry.kcad.ts": 3,
   "solar-energy/plane-of-array-irradiance-sensor.kcad.ts": 3,
-  "airfield/narrowbody-airliner.kcad.ts": 2,
-  "airfield/cargo-aircraft.kcad.ts": 2,
+  "airfield/private-jet.kcad.ts": 2,
   "railway/electric-locomotive.kcad.ts": 2,
   "travel-gear/duffel-bag.kcad.ts": 2,
-  "interior/toilet.kcad.ts": 1,
   "sports/golf-club.kcad.ts": 1,
   "mining/thickener-bridge.kcad.ts": 1,
+  "nature/baobab-tree.kcad.ts": 1,
   "mining/run-of-mine-hopper.kcad.ts": 1,
   "characters/excavator.kcad.ts": 1,
   "mining/radial-stacker.kcad.ts": 1,
@@ -993,29 +1003,24 @@
  "native": {
   "source": {
    "kernel": "smlib-native",
-   "labCommit": "e203019d8d9251671b79e4dda8a2e00c96e4bfee",
+   "labCommit": "ef07c30bf1408f2a5a788afd03473c3acae68bce",
    "statusOnly": false
   },
   "classes": {
-   "all-agree": 2347,
+   "all-agree": 2358,
    "converter-failed": 31,
    "converter-partial": 11,
-   "native-failed": 8,
-   "converter-error": 5
+   "converter-error": 2
   },
   "exactVsNative": {
-   "volumeAgreeing": 2347,
-   "areaWithin1e6": 2347,
-   "areaWithin1e3": 2347,
+   "volumeAgreeing": 2358,
+   "areaWithin1e6": 2358,
+   "areaWithin1e3": 2358,
    "areaBeyond1e3": [],
-   "bboxWithin1e3mm": 2347,
+   "bboxWithin1e3mm": 2358,
    "bboxBeyond1e3mm": []
   },
   "models": [
-   {
-    "id": "alpine-expedition/alpine-helmet.kcad.ts",
-    "class": "native-failed"
-   },
    {
     "id": "amusement-park/churro-warmer-cart.kcad.ts",
     "convert": "partial",
@@ -1029,14 +1034,6 @@
     "relConverter": -0.004934703152703501,
     "relArea": -0.044754568576165776,
     "dBox": 6.507215300000098
-   },
-   {
-    "id": "amusement-park/miniature-park-tram-coach.kcad.ts",
-    "class": "native-failed"
-   },
-   {
-    "id": "amusement-park/miniature-park-tram-engine.kcad.ts",
-    "class": "native-failed"
    },
    {
     "id": "amusement-park/picnic-table-with-umbrella.kcad.ts",
@@ -1062,15 +1059,6 @@
     "N": 295181972.82848364
    },
    {
-    "id": "archaeology-fieldwork/total-station.kcad.ts",
-    "convert": "unsupported",
-    "parts": 0,
-    "nativeParts": 86,
-    "skipped": 0,
-    "class": "converter-failed",
-    "N": 18090612.162412394
-   },
-   {
     "id": "archaeology-fieldwork/hand-auger.kcad.ts",
     "convert": "partial",
     "parts": 102,
@@ -1083,6 +1071,15 @@
     "relConverter": -0.8053588054918632,
     "relArea": -0.5217238670052338,
     "dBox": 50.91850299999999
+   },
+   {
+    "id": "archaeology-fieldwork/total-station.kcad.ts",
+    "convert": "unsupported",
+    "parts": 0,
+    "nativeParts": 86,
+    "skipped": 0,
+    "class": "converter-failed",
+    "N": 18090612.162412394
    },
    {
     "id": "construction-equipment/pipe-roller-stand.kcad.ts",
@@ -1102,9 +1099,9 @@
     "class": "converter-partial",
     "M": 4314387009,
     "E": 4315929174,
-    "N": 4321833174.02464,
-    "relConverter": -0.0013660869790450558,
-    "relArea": -0.010756589438426722,
+    "N": 4321833174.024639,
+    "relConverter": -0.0013660869790448338,
+    "relArea": -0.010756589438426833,
     "dBox": 3.938021109206602e-8
    },
    {
@@ -1137,7 +1134,7 @@
     "nativeParts": 12,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 6806241.347743845
+    "N": 6806241.347743848
    },
    {
     "id": "fire-rescue/large-diameter-hose-roll.kcad.ts",
@@ -1146,7 +1143,7 @@
     "nativeParts": 16,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 64509807.37454669
+    "N": 64509807.37454663
    },
    {
     "id": "food-kitchen/apple.kcad.ts",
@@ -1199,10 +1196,6 @@
     "N": 24079339.245378364
    },
    {
-    "id": "industrial-plant/industrial-boiler.kcad.ts",
-    "class": "native-failed"
-   },
-   {
     "id": "interior/sink-vanity.kcad.ts",
     "convert": "unsupported",
     "parts": 0,
@@ -1220,14 +1213,10 @@
     "class": "converter-partial",
     "M": 34473154.46,
     "E": 34473154.47,
-    "N": 65392011.29249343,
-    "relConverter": -0.47282315089217497,
+    "N": 65392011.29249345,
+    "relConverter": -0.4728231508921751,
     "relArea": -0.2791089791111385,
     "dBox": 9.29854109082953
-   },
-   {
-    "id": "mining/magnetic-separator-drum.kcad.ts",
-    "class": "native-failed"
    },
    {
     "id": "mining/spiral-concentrator.kcad.ts",
@@ -1308,10 +1297,6 @@
     "N": 12673184.114120496
    },
    {
-    "id": "recycling-facility/cover-soil-spreader.kcad.ts",
-    "class": "native-failed"
-   },
-   {
     "id": "recycling-facility/inbound-message-board.kcad.ts",
     "convert": "unsupported",
     "parts": 0,
@@ -1319,14 +1304,6 @@
     "skipped": 0,
     "class": "converter-failed",
     "N": 3379721534.1301475
-   },
-   {
-    "id": "recycling-facility/tipping-floor-bin.kcad.ts",
-    "class": "native-failed"
-   },
-   {
-    "id": "recycling-facility/weighbridge-approach-ramp.kcad.ts",
-    "class": "native-failed"
    },
    {
     "id": "retail-store/handbasket.kcad.ts",
@@ -1504,48 +1481,6 @@
     "skipped": 0,
     "class": "converter-failed",
     "N": 62824657.9808237
-   },
-   {
-    "id": "wind-energy/horizontal-axis-wind-turbine.kcad.ts",
-    "convert": "converted",
-    "parts": 39,
-    "nativeParts": 39,
-    "skipped": 0,
-    "class": "converter-error",
-    "M": 382744283.4,
-    "E": 383438749.2,
-    "N": 386600483.51641107,
-    "relConverter": -0.008178298918958493,
-    "relArea": -0.004955655185314045,
-    "dBox": 4.358275873528328e-8
-   },
-   {
-    "id": "wind-energy/offshore-wind-turbine.kcad.ts",
-    "convert": "converted",
-    "parts": 106,
-    "nativeParts": 106,
-    "skipped": 0,
-    "class": "converter-error",
-    "M": 944965649.9,
-    "E": 946883774.2,
-    "N": 952565202.6809214,
-    "relConverter": -0.005964346025795875,
-    "relArea": -0.003418556780466986,
-    "dBox": 5.640949893859215e-7
-   },
-   {
-    "id": "wind-energy/wind-turbine-blade.kcad.ts",
-    "convert": "converted",
-    "parts": 28,
-    "nativeParts": 28,
-    "skipped": 0,
-    "class": "converter-error",
-    "M": 45361051.69,
-    "E": 45367857.47,
-    "N": 47061112.51484266,
-    "relConverter": -0.035979919605781174,
-    "relArea": -0.0100954399103802,
-    "dBox": 27.232435954872443
    }
   ]
  }
