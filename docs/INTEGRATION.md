@@ -368,6 +368,14 @@ creates declare the pinned exact kernel; a host that passes its own `session` cr
 [Host-created sessions and kernels](#host-created-sessions-and-kernels), or such records are
 refused with a clear message.
 
+**Document version 43: smooth lofts (2026-11-26).** CAD Script's new `smoothLoft` builds the
+smooth surface through three or more sections that kernelCAD's default loft and the exact
+kernel build ([CODE-MODE.md](CODE-MODE.md#smooth-lofts)). Only documents that hold a program
+calling it are version 43; it is the same in both program revisions and changes no saved
+geometry. BrickWright needs no code change: syncing the SDK is enough, and until then its
+vendored SDK refuses version 43 documents ("unsupported format, version or units") instead of
+failing on the unknown function. The SB3 bundle keeps `brickwright/cad.json` byte for byte.
+
 **Document version 42: ruled lofts (CAD Script revision 2, 2026-11-26).** A code program's
 `version` may now be 2, which builds `loft` side quads between turned sections as ruled
 surfaces ([CODE-MODE.md](CODE-MODE.md#language-revisions)). Only documents that hold such a

@@ -279,7 +279,49 @@ along the diagonal from vertex *j* of a section to vertex *j*+1 of the next (as 
 would give 2,866,766.86. See [Language revisions](#language-revisions) for which
 programs use which, and how to upgrade.
 
-The existing source/token/mesh budgets still apply. Additional loft limits are
+### Smooth lofts
+
+`smoothLoft([section0, section1, ...])` (2026-11-26) takes the same sections as `loft` and
+joins them with one smooth surface instead of ruled sides: kernelCAD's default
+(`loft(…, { ruled: false })`) and the exact kernel's smooth loft. Vertex *i* of every section
+lies on one curve, a B-spline that interpolates vertex *i* of each section:
+
+- degree min(3, sections − 1): two sections give exactly the ruled `loft`, three a quadratic;
+- section parameters by chord length: for each vertex, the cumulative 3D distance from
+  section to section, normalized to 0..1; the parameters are the mean over the vertices, with
+  the vertex before the last (authored index *count* − 2, where the kernel's section curve starts
+  and closes) counted twice;
+- knots by averaging those parameters (Piegl & Tiller, eq. 9.8), clamped at both ends;
+- global interpolation: each curve passes through its vertex of every section.
+
+Every side face is straight across (between the curves of vertex *i* and *i* + 1 at the same
+parameter) and curved along the loft, and every slice of constant parameter is a planar polygon
+at one Z. This is the surface SMLib (and so the lab's native kernelCAD build) produces, checked
+control point by control point against the kernel's STEP output; the exact backend builds it
+with the kernel's smooth loft and refuses the solid if its volume differs from the surface's
+exact volume (`smoothLoftVolume`, the integral of slice area times dz, exact by Gauss-Legendre)
+by more than 1e-7.
+
+The mesh slices the surface at every section, at every knot and in between, so that along each
+vertex curve the chord sag is at most **1e-4 of the smallest section's XY diagonal**
+(`SMOOTH_LOFT_TOLERANCE`; per polynomial piece h²/8 · max |C″|, at most 256 slices per piece).
+Consecutive slices are joined like ruled loft sections (planar quads as two triangles, twisted
+ones as a fan around their centre), so the mesh is closed and manifold and passes through every
+authored section. Volumes are typically within 1e-4 of the exact surface's (for the catalog's
+wind turbine blades, 3.7e-6 to 6.3e-5).
+
+The surface must rise along Z everywhere: sections close together in Z but far apart in XY can
+make the interpolating curves turn back, which is refused ("Smooth loft folds back along Z").
+A slice that would cross itself is refused too. Booleans, transforms and every other function
+treat a smooth loft like any other solid.
+
+`smoothLoft` is the same in both [language revisions](#language-revisions). A document that
+holds a program calling `smoothLoft` is **document version 43**; `checkDocument` refuses
+`smoothLoft` below 43, and SDKs that predate it refuse version 43 ("unsupported format, version
+or units") as well as the function itself ("Unknown modeling function"). Documents without
+`smoothLoft` keep their version.
+
+For `loft` and `smoothLoft`, the existing source/token/mesh budgets still apply. Additional loft limits are
 128 sections, 256 vertices per section, 4,096 total vertices and 131,072 section
 intersection comparisons. No input is resampled to fit. Native edits retain their
 parameters and history. SCAD/JSCAD exports are evaluated polyhedron snapshots;

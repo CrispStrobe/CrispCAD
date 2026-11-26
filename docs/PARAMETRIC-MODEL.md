@@ -104,6 +104,13 @@ without lofts keep their version, and saved revision-1 lofts keep their triangul
 geometry, byte for byte, until the user upgrades them. Builds that predate 42 refuse such a
 document rather than building its lofts along the diagonal.
 
+**Version 43 (2026-11-26) adds CAD Script `smoothLoft`**, the smooth (cubic) surface through
+three or more loft sections ([CODE-MODE.md](CODE-MODE.md#smooth-lofts)). `checkDocument` accepts
+a program that calls `smoothLoft` only in version 43 documents; a document reaches 43 only when
+such a program is added or edited in, and Undo returns to the earlier version. `smoothLoft` is
+the same in both CAD Script revisions, so it changes no program revision and no saved geometry.
+Builds that predate 43 refuse such a document (and the function).
+
 ```ts
 interface ExactFaceSelector { faceNormal: [number, number, number]; outermost?: true }
 interface ExactFeature {

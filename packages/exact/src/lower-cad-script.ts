@@ -6,7 +6,7 @@
 //
 // Anything without an exact construction is an ExactKernelError('unsupported'); nothing falls
 // back to Manifold or to a mesh.
-import { compileCode, CadCodeError, type CodeProgram, type CodeShape, type CodeProfile } from '@brickwright/cad-core';
+import { compileCode, CadCodeError, smoothLoftCurves, smoothLoftVolume, type CodeProgram, type CodeShape, type CodeProfile } from '@brickwright/cad-core';
 import { convexHull, ExactKernelError, isConvexPolyhedron, type ExactKernel, type ExactProfile, type ExactSolid, type Vec2, type Vec3 } from '@crispcad/exact-kernel';
 
 /** Below this many segments a circle is ambiguous (e.g. `cylinder(r, h, 6)` as a hexagonal
@@ -253,6 +253,7 @@ export function lowerCodeShape(k: ExactKernel, shape: CodeShape): ExactSolid | n
       return profile && revolveProfile(k, profile, shape.angle);
     }
     case 'polyhedron': {
+      if (shape.smooth) return smoothLoft(k, shape.smooth);
       if (shape.ruled) return ruledLoft(k, shape.ruled, shape.points, shape.faces);
       if (shape.faces.length > MAX_POLYHEDRON_FACES) unsupported(`A polyhedron of ${shape.faces.length} faces exceeds the exact faceted-solid budget (${MAX_POLYHEDRON_FACES} faces).`);
       if (isConvexPolyhedron(shape.points, shape.faces)) { const hull = convexHull(shape.points); return k.polyhedron(hull.points, hull.faces); }
@@ -321,6 +322,21 @@ function ruledLoft(k: ExactKernel, sections: readonly (readonly Vec3[])[], point
   if (!(Math.abs(actual - expected) <= 1e-7 * Math.abs(expected))) {
     solid.dispose();
     throw new ExactKernelError('kernel-failure', `The ruled loft's volume ${actual} differs from its faceted volume ${expected}; the kernel did not keep the vertex correspondence.`);
+  }
+  return solid;
+}
+
+/** CAD Script `smoothLoft` through three or more sections: SMLib's smooth loft through the
+ * sections in authored order, the surface that `smoothLoftCurves` describes and the mesh samples
+ * (cubic interpolation, chord-length section parameters; docs/CODE-MODE.md#smooth-lofts). Its
+ * volume must equal that surface's exact volume, otherwise the kernel built another surface and
+ * the solid is refused. */
+function smoothLoft(k: ExactKernel, sections: NonNullable<Extract<CodeShape, { kind: 'polyhedron' }>['smooth']>): ExactSolid {
+  const solid = k.loft(sections.map(ring => ({ profile: k.profile.polygon([ring.map(p => [p[0], p[1]] as Vec2)]), at: [0, 0, ring[0][2]] as Vec3 })), { ruled: false });
+  const expected = smoothLoftVolume(smoothLoftCurves(sections)), actual = k.volume(solid);
+  if (!(Math.abs(actual - expected) <= 1e-7 * Math.abs(expected))) {
+    solid.dispose();
+    throw new ExactKernelError('kernel-failure', `The smooth loft's volume ${actual} differs from the volume ${expected} of the surface CAD Script defines; the kernel built another surface.`);
   }
   return solid;
 }

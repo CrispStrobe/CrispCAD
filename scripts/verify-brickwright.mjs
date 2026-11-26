@@ -51,4 +51,14 @@ try {
  assert.notEqual(loadedRuled?.outcome, 'refused'); assert.equal(saved.get(CAD_STORAGE_KEY), ruled.serialize());
  assert.deepEqual(parseDocument(saved.get(CAD_STORAGE_KEY)), ruled.state.document);
  console.log('PASS: document version 42 (ruled lofts) survives the real Brickwright SB3 writer and loader unchanged and parses with this SDK.');
+ // Document version 43 (CAD Script smoothLoft): the same byte-for-byte path.
+ const smooth = createCadSession();
+ smooth.addCode({ version: CAD_SCRIPT_REVISION, language: 'brickwright-cad-script', parameters: {}, source: 'return smoothLoft([[[0,0,0],[20,0,0],[20,20,0],[0,20,0]],[[-2,-2,10],[22,-2,10],[22,22,10],[-2,22,10]],[[4,4,25],[16,4,25],[16,16,25],[4,16,25]]]);' });
+ assert.equal(smooth.state.document.version, 43);
+ const v43 = attachCadProject(existing, smooth.state.document);
+ assert.deepEqual(extractCadProject(v43), smooth.state.document);
+ saved.clear(); const loadedSmooth = await bundle.extractBrickwrightState(v43.buffer.slice(v43.byteOffset, v43.byteOffset + v43.byteLength));
+ assert.notEqual(loadedSmooth?.outcome, 'refused'); assert.equal(saved.get(CAD_STORAGE_KEY), smooth.serialize());
+ assert.deepEqual(parseDocument(saved.get(CAD_STORAGE_KEY)), smooth.state.document);
+ console.log('PASS: document version 43 (smooth lofts) survives the real Brickwright SB3 writer and loader unchanged and parses with this SDK.');
 } finally { delete globalThis.localStorage; delete globalThis.window; delete globalThis.CustomEvent; }

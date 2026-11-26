@@ -11,6 +11,8 @@
 // revolutions, twisted or tapered extrusions and resizes are not.
 import type {CodeShape} from './code.js';
 import type {CodeProfile} from './code-profiles.js';
+import {smoothLoftCurves,smoothLoftSupport} from './code-loft.js';
+import type {SmoothLoftCurves} from './code-loft.js';
 
 type V3=[number,number,number];type V2=[number,number];
 interface Support {value:number;exact:boolean}
@@ -18,6 +20,9 @@ const EMPTY:Support={value:-Infinity,exact:true};
 const UNKNOWN:Support={value:Infinity,exact:false};
 const dot3=(a:readonly number[],b:readonly number[])=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 const tol=(v:number)=>1e-9*(1+Math.abs(v));
+const smoothCache=new WeakMap<object,SmoothLoftCurves>();
+/** A smooth loft's curves (its support is that of the surface, not of the sampled mesh). */
+function smoothCurves(sections:object&Parameters<typeof smoothLoftCurves>[0]):SmoothLoftCurves{let curves=smoothCache.get(sections);if(!curves){curves=smoothLoftCurves(sections);smoothCache.set(sections,curves);}return curves;}
 
 /** Support of a union (or hull): the maximum; exact when a maximising operand is exact. */
 function maxOf(items:Support[]):Support{
@@ -71,7 +76,7 @@ export function shapeSupport(shape:CodeShape,d:V3):Support{
   case 'cylinder':return {value:shape.radius*radial+Math.abs(dz)*shape.height/2,exact:true};
   case 'frustum':return {value:Math.max(shape.bottom*radial-dz*shape.height/2,shape.top*radial+dz*shape.height/2),exact:true};
   case 'sphere':return {value:shape.radius*Math.hypot(dx,dy,dz),exact:true};
-  case 'polyhedron':{let value=-Infinity;for(const p of shape.points)value=Math.max(value,dot3(p,d));return {value,exact:true};}
+  case 'polyhedron':{if(shape.smooth)return {value:smoothLoftSupport(smoothCurves(shape.smooth),d),exact:true};let value=-Infinity;for(const p of shape.points)value=Math.max(value,dot3(p,d));return {value,exact:true};}
   case 'extrude':{let value=-Infinity;for(const p of shape.points)value=Math.max(value,p[0]*dx+p[1]*dy);return {value:value+Math.max(0,dz*shape.height),exact:true};}
   case 'profile-extrude':{if(shape.twist!==0||shape.scaleTop[0]!==1||shape.scaleTop[1]!==1)return UNKNOWN;const s=profileSupport(shape.profile,[dx,dy]);return {value:s.value+Math.max(0,dz*shape.height),exact:s.exact};}
   case 'revolve':{

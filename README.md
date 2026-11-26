@@ -122,6 +122,9 @@ See [exact fillet, chamfer and shell](docs/TERMINAL-WORKSPACE.md#exact-fillet-ch
 each other, as kernelCAD and the exact kernel do (language revision 2). Saved programs keep
 their triangulated lofts until **Upgrade lofts to ruled surfaces** (one Undo step); projects
 with ruled lofts are document version 42. See [language revisions](docs/CODE-MODE.md#language-revisions).
+`smoothLoft` builds the smooth (cubic) surface through three or more sections, as kernelCAD's
+default loft and the exact kernel do; projects that use it are document version 43. See
+[smooth lofts](docs/CODE-MODE.md#smooth-lofts).
 
 The reviewed model library keeps original sources, hashes, licence evidence,
 unit assumptions and qualification records. Browsing does not qualify a model;

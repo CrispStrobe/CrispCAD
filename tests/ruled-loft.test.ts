@@ -89,7 +89,7 @@ describe('revision gate and document version 42',{timeout:120_000},()=>{
   const doc=structuredClone(s.state.document) as CadDocument;expect(doc.version).toBe(42);
   expect(()=>validateDocument({...doc,version:41})).toThrow('requires document version 42');
   // What an SDK before revision 2 does: it knows only document versions up to 41 and program revision 1.
-  expect(()=>validateDocument({...doc,version:43})).toThrow('unsupported format, version or units');
+  expect(()=>validateDocument({...doc,version:44 as 42})).toThrow('unsupported format, version or units');
   const node=Object.values(doc.nodes)[0];if(node.kind!=='code')throw Error('code');
   expect(()=>compileCode({...node.program,version:3 as 2})).toThrow('Unsupported code program schema');
   expect(()=>compileCode({...node.program,version:1})).not.toThrow();
