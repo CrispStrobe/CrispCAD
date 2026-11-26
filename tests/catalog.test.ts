@@ -7,11 +7,25 @@ import type {GeometryKernel} from '@brickwright/cad-geometry';
 import {solidMassProperties} from '../packages/physics/src/mass.js';
 let kernel:GeometryKernel;
 beforeAll(async()=>{kernel=await createGeometryKernel({wasmBinary:readFileSync('node_modules/manifold-3d/manifold.wasm')});});
+// body.volume is Manifold's double-precision volume, while mass integrates the
+// exported Float32 positions. Rounding moves each vertex by at most
+// sqrt(3)*|coordinate|*2^-24, which changes the enclosed volume by at most
+// surface area times that displacement (first order). A fixed absolute
+// tolerance only held while every catalog body happened to be small.
+function float32VolumeBoundMm3(body:{positions:Float32Array;indices:Uint32Array}){
+ const p=body.positions,ix=body.indices;let extent=0,area=0;
+ for(const v of p)extent=Math.max(extent,Math.abs(v));
+ for(let i=0;i<ix.length;i+=3){
+  const a=ix[i]*3,b=ix[i+1]*3,c=ix[i+2]*3,u=[0,1,2].map(k=>p[b+k]-p[a+k]),w=[0,1,2].map(k=>p[c+k]-p[a+k]);
+  area+=Math.hypot(u[1]*w[2]-u[2]*w[1],u[2]*w[0]-u[0]*w[2],u[0]*w[1]-u[1]*w[0])/2;
+ }
+ return 2*area*Math.sqrt(3)*extent*2**-24;
+}
 describe('independent shape catalog',()=>{
  for(const preset of shapeCatalog)it(`${preset.name} is a closed solid with finite physical mass and portable project data`,()=>{
   const doc=createPresetDocument(preset.id,'ABC');const result=kernel.evaluate(parseDocument(serializeDocument(doc)));
   expect(result.bodies.length).toBeGreaterThan(0);
-  for(const body of result.bodies){expect(body.positions.every(Number.isFinite)).toBe(true);expect(body.volume).toBeGreaterThan(0);const mass=solidMassProperties(body,1050);expect(mass.massKg).toBeCloseTo(body.volume*1050e-9,8);expect(mass.inertiaKgM2.every((row,i)=>row[i]>0)).toBe(true);}
+  for(const body of result.bodies){expect(body.positions.every(Number.isFinite)).toBe(true);expect(body.volume).toBeGreaterThan(0);const mass=solidMassProperties(body,1050);expect(Math.abs(mass.massKg-body.volume*1050e-9)).toBeLessThanOrEqual(float32VolumeBoundMm3(body)*1050e-9);expect(mass.inertiaKgM2.every((row,i)=>row[i]>0)).toBe(true);}
   if(preset.id==='ruler'){expect(result.volume).toBe(0);expect(()=>exportSTL(result.bodies)).toThrow('no solid');}else{expect(result.volume).toBeGreaterThan(0);expect(exportSTL(result.bodies).length).toBeGreaterThan(84);}
  });
  it('inserts an articulated hinge as one undoable edit and keeps joints through duplicate/delete/load',()=>{
