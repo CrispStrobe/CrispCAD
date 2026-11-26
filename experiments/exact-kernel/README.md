@@ -168,6 +168,57 @@ Observations:
   measured. Expect the cold load to be several times slower on an iPad; the 64 MiB baseline
   is a device-independent fact of the module.
 
+### Faces with many holes (2026-11-26)
+
+`node holes-bench.ts [10,50,200]` (raw data:
+[`results/holes-darwin-arm64.json`](results/holes-darwin-arm64.json)) builds a 3 mm plate with
+n holes of radius 2 mm, 6 mm apart, as one extruded profile; then optionally fillets every top
+edge (r 0.5, hole rims included) or shells it (0.5 mm wall, open top, 4 mm plate). It meshes
+each result for display both ways and checks both meshes closed. Process CPU time on the shared
+M1 (load average 70–140, so wall times were 2–5× higher):
+
+| Holes | Variant | Kernel op | Display before (SMLib whole body) | Display now | Triangles before → now | WASM memory after |
+| ---: | --- | ---: | ---: | ---: | --- | ---: |
+| 10 | plain | 0.6 s | 1.21 s | **0.16 s** | 2 612 → 1 492 | 64 MiB |
+| 50 | plain | 0.7 s | 2.46 s | **0.29 s** | 13 012 → 7 412 | 77 MiB |
+| 200 | plain | 1.8 s | 10.97 s | **0.48 s** | 52 012 → 29 612 | 297 MiB |
+| 10 | shell | 1.9 s | 0.55 s | **0.16 s** | 5 188 → 2 948 | 77 MiB |
+| 50 | shell | 4.3 s | 2.61 s | **0.29 s** | 25 828 → 14 628 | 297 MiB |
+| 200 | shell | fails: the kernel's 20 s guard | – | – | – | – |
+| 10 | fillet | 1.9 s | 1.23 s | 1.87 s | 23 244 (same) | 77 MiB |
+| 50 | fillet | 5.0 s | 8.17 s | 7.36 s | 115 564 (same) | 297 MiB |
+| 200 | fillet | 23.4 s | 26.18 s | 16.57 s | 461 764 (same) | **1 036 MiB** |
+
+**Cause.** SMLib's mesher is superlinear in the loops of one planar face: meshing only the top
+face of the plate took 0.11 s CPU with 11 loops, 0.45 s with 26, 0.85 s with 51, 2.2 s with 101
+and 6.9 s with 201, and the plate has two such faces. Every other face costs a roughly constant
+amount: about 20 ms per hole wall (64 points per circle), so 200 hole walls add 4 s. The CPU
+profile shows the time inside the WebAssembly, not in the JavaScript adapter, so it cannot be
+fixed in this repository's code paths that call SMLib's mesher.
+
+**Fix** (`packages/exact/src/face-mesh.ts`, used by `displayTessellation` for any body with a
+planar face of 8 or more loops):
+
+- SMLib meshes each non-planar face on its own. Per-face meshes share their edge points (the
+  union of per-face meshes of the reference, fillet, chamfer and shell parts is closed), so no
+  whole-body mesh is needed.
+- A hole wall that is a cylinder between two full circles on planar faces becomes a band with the
+  same points on both circles, as many as the chordal tolerance (0.01 mm) and the 10° angle need
+  (36 for a 2 mm hole instead of SMLib's 64, which is why the counts drop).
+- Planar faces are triangulated in JavaScript from exactly their neighbours' boundary points:
+  ear clipping, with each hole bridged in at its rightmost vertex (rightmost hole first, so a
+  bridge never crosses a hole not yet joined), and a uniform grid so an ear test only looks at
+  nearby vertices. 400 holes of 32 points triangulate in well under a second.
+- Safety: a polygon the clipper cannot finish (or whose triangles do not cover its area) goes
+  back to SMLib for that face; a mesh that `displayMesh` finds open goes back to SMLib's
+  whole-body mesh. Every row above was checked closed.
+
+Fillets are still bounded by the kernel itself: rounding 200 hole rims takes 23 s, produces a
+461 764-triangle display (the cap is 500 000) and grows linear memory to 1 GiB, which an iPad
+tab will likely not survive. Meshing the fillet faces themselves (tori) stays with SMLib, so the
+filleted rows gain only the planar faces' share. Shelling 200 holes stops at the kernel's 20 s
+guard; both are kernel limits, not display ones.
+
 ## Licence audit
 
 **Owner decision (2026-11-24): MIT + Apache-2.0 only.** `node licence-audit.mjs` lists the 23
