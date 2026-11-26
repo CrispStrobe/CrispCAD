@@ -1,0 +1,270 @@
+{
+  "project": "ipad-webkit",
+  "date": "2026-11-26T06:04:55.632Z",
+  "runs": {
+    "worker": {
+      "mode": "worker",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "crossOriginIsolated": true,
+      "memoryBefore": {
+        "userAgentMemory": "unavailable in this browser"
+      },
+      "memoryAfter": {
+        "userAgentMemory": "unavailable in this browser"
+      },
+      "steps": [
+        {
+          "label": "first use: load + measure exact of a box",
+          "wallMs": 174,
+          "loadMs": 146,
+          "runMs": 26,
+          "wasmMiB": 64,
+          "main": {
+            "maxGapMs": 19,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "fillet r2, all edges of a 20×30×10 box",
+          "wallMs": 292,
+          "loadMs": 0,
+          "runMs": 291,
+          "wasmMiB": 64,
+          "triangles": 4124,
+          "main": {
+            "maxGapMs": 10,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "chamfer 2, top face",
+          "wallMs": 35,
+          "loadMs": 0,
+          "runMs": 35,
+          "wasmMiB": 64,
+          "triangles": 20,
+          "main": {
+            "maxGapMs": 10,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "shell 2, open top",
+          "wallMs": 189,
+          "loadMs": 0,
+          "runMs": 188,
+          "wasmMiB": 64,
+          "triangles": 28,
+          "main": {
+            "maxGapMs": 22,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "chamfer 0.5, plate with 48 holes",
+          "wallMs": 1106,
+          "loadMs": 0,
+          "runMs": 1104,
+          "wasmMiB": 64,
+          "triangles": 7124,
+          "main": {
+            "maxGapMs": 10,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "fillet r2, all edges of a 20×30×10 box (again)",
+          "wallMs": 162,
+          "loadMs": 0,
+          "runMs": 161,
+          "wasmMiB": 64,
+          "triangles": 4124,
+          "main": {
+            "maxGapMs": 9,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "chamfer 2, top face (again)",
+          "wallMs": 19,
+          "loadMs": 0,
+          "runMs": 18,
+          "wasmMiB": 64,
+          "triangles": 20,
+          "main": {
+            "maxGapMs": 9,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "shell 2, open top (again)",
+          "wallMs": 27,
+          "loadMs": 0,
+          "runMs": 27,
+          "wasmMiB": 64,
+          "triangles": 28,
+          "main": {
+            "maxGapMs": 9,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "chamfer 0.5, plate with 48 holes (again)",
+          "wallMs": 987,
+          "loadMs": 0,
+          "runMs": 985,
+          "wasmMiB": 64,
+          "triangles": 7124,
+          "main": {
+            "maxGapMs": 10,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "fillet 0.5, top edges and 48 hole rims",
+          "wallMs": 4293,
+          "loadMs": 0,
+          "runMs": 4277,
+          "wasmMiB": 64,
+          "triangles": 110948,
+          "main": {
+            "maxGapMs": 15,
+            "blockedMs": 0
+          }
+        }
+      ]
+    },
+    "main": {
+      "mode": "main",
+      "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+      "crossOriginIsolated": true,
+      "memoryBefore": {
+        "userAgentMemory": "unavailable in this browser"
+      },
+      "memoryAfter": {
+        "userAgentMemory": "unavailable in this browser"
+      },
+      "steps": [
+        {
+          "label": "first use: load + measure exact of a box",
+          "wallMs": 161,
+          "loadMs": 107,
+          "runMs": 23,
+          "wasmMiB": 64,
+          "main": {
+            "maxGapMs": 37,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "fillet r2, all edges of a 20×30×10 box",
+          "wallMs": 241,
+          "loadMs": 0,
+          "runMs": 241,
+          "wasmMiB": 64,
+          "triangles": 4124,
+          "main": {
+            "maxGapMs": 241,
+            "blockedMs": 191
+          }
+        },
+        {
+          "label": "chamfer 2, top face",
+          "wallMs": 29,
+          "loadMs": 0,
+          "runMs": 29,
+          "wasmMiB": 64,
+          "triangles": 20,
+          "main": {
+            "maxGapMs": 29,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "shell 2, open top",
+          "wallMs": 30,
+          "loadMs": 0,
+          "runMs": 30,
+          "wasmMiB": 64,
+          "triangles": 28,
+          "main": {
+            "maxGapMs": 30,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "chamfer 0.5, plate with 48 holes",
+          "wallMs": 1063,
+          "loadMs": 0,
+          "runMs": 1056,
+          "wasmMiB": 64,
+          "triangles": 7124,
+          "main": {
+            "maxGapMs": 1059,
+            "blockedMs": 1009
+          }
+        },
+        {
+          "label": "fillet r2, all edges of a 20×30×10 box (again)",
+          "wallMs": 152,
+          "loadMs": 0,
+          "runMs": 143,
+          "wasmMiB": 64,
+          "triangles": 4124,
+          "main": {
+            "maxGapMs": 143,
+            "blockedMs": 93
+          }
+        },
+        {
+          "label": "chamfer 2, top face (again)",
+          "wallMs": 27,
+          "loadMs": 0,
+          "runMs": 18,
+          "wasmMiB": 64,
+          "triangles": 20,
+          "main": {
+            "maxGapMs": 18,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "shell 2, open top (again)",
+          "wallMs": 24,
+          "loadMs": 0,
+          "runMs": 17,
+          "wasmMiB": 64,
+          "triangles": 28,
+          "main": {
+            "maxGapMs": 18,
+            "blockedMs": 0
+          }
+        },
+        {
+          "label": "chamfer 0.5, plate with 48 holes (again)",
+          "wallMs": 997,
+          "loadMs": 0,
+          "runMs": 989,
+          "wasmMiB": 64,
+          "triangles": 7124,
+          "main": {
+            "maxGapMs": 991,
+            "blockedMs": 941
+          }
+        },
+        {
+          "label": "fillet 0.5, top edges and 48 hole rims",
+          "wallMs": 4156,
+          "loadMs": 0,
+          "runMs": 4148,
+          "wasmMiB": 64,
+          "triangles": 110948,
+          "main": {
+            "maxGapMs": 4160,
+            "blockedMs": 4110
+          }
+        }
+      ]
+    }
+  }
+}

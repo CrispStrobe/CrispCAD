@@ -168,6 +168,63 @@ Observations:
   measured. Expect the cold load to be several times slower on an iPad; the 64 MiB baseline
   is a device-independent fact of the module.
 
+### Browser: features, memory and the main thread (2026-11-26)
+
+[`tests/browser/exact-kernel-bench.spec.ts`](../../tests/browser/exact-kernel-bench.spec.ts)
+(opt-in: `EXACT_BENCH=1 npx playwright test tests/browser/exact-kernel-bench.spec.ts`) builds
+[`browser-bench/`](browser-bench) with Vite (the WebAssembly is emitted as a file, as in the
+product), serves it cross-origin isolated, and runs the same `feature-display` requests twice:
+in a module worker, as the editor's exact worker does, and on the page's own thread through
+`createInThreadExactHost`, which is what a host without a worker (and the main thread of any host
+before the worker move) pays. A 0 ms timer chain on the main thread records its longest gap and
+the time blocked beyond 50 ms per step; Chromium also reports Long Tasks (WebKit has no Long Tasks
+API). The second test drives the real editor (production build) through the terminal. Raw data:
+[`results/browser-bench-ipad-webkit.json`](results/browser-bench-ipad-webkit.json),
+[`results/browser-bench-chromium.json`](results/browser-bench-chromium.json),
+[`results/browser-editor-ipad-webkit.json`](results/browser-editor-ipad-webkit.json),
+[`results/browser-editor-chromium.json`](results/browser-editor-chromium.json). Same shared M1,
+load average 20–70 during these runs.
+
+WebKit 26.5 with Playwright's iPad Pro 11 profile; kernel time (`run`) / longest main-thread
+gap, in milliseconds:
+
+| Request (display mesh of an exact feature) | Worker: run / main gap | In-thread: run / main gap (blocked) |
+| --- | --- | --- |
+| First use: load (fetch + compile 9.4 MB) + `measure exact` of a box | load 146–173, run 26 / 19–20 | load 107–145, run 23 / 36–37 (0) |
+| Fillet r 2, every edge of a 20×30×10 box (4 124 triangles), cold / warm | 291 / 10; 161 / 9 | 241 / 241 (191); 143 / 143 (93) |
+| Chamfer 2, top face | 35 / 10; 18 / 9 | 29 / 29; 18 / 18 |
+| Shell 2, open top | 188 / 22; 27 / 9 | 30 / 30; 17 / 18 |
+| Chamfer 0.5 on a plate with 48 holes (lowering of 48 cuts + chamfer + display, 7 124 triangles) | 1 104 / 10; 985 / 10 | 1 056 / 1 059 (1 009); 989 / 991 (941) |
+| Fillet 0.5 of the same plate's top edges, all 48 hole rims (110 948 triangles) | 4 277 / 15 | 4 148 / 4 160 (4 110) |
+
+Chromium 151 (desktop profile) gives the same picture: in-thread, each request over 50 ms is one
+Long Task of its full length (258, 1 168, 165, 1 096 and 5 530 ms); in the worker there are none
+and the longest gap is 5–14 ms.
+
+- **Main thread: before/after the worker move.** In-thread the page cannot run for the whole
+  kernel call: up to 1.1 s for the 48-hole chamfer and 4.2 s for the rim fillet in WebKit. In
+  the worker the longest gap stays at 9–22 ms. The editor has run exact requests in a worker
+  since 2026-11-25; these numbers are its before/after.
+- **In the editor** (WebKit, production build, through the terminal): first fillet on a fresh
+  page 1.17 s wall (load 390 ms, kernel 325 ms; the rest is the round trip, the commit and the
+  Manifold rebuild of the display), longest main-thread gap 64 ms; warm fillet 418 ms wall, gap
+  66 ms; chamfer and shell 187–211 ms wall, gaps 53–56 ms. In Chromium the editor's own main
+  thread work around the same steps (rebuilding and drawing the scene with SwiftShader's software
+  WebGL under load) blocked it for 0.2–1.1 s, Undo included, while the kernel took 39–52 ms in
+  its worker: that is the viewport, not the exact kernel.
+- **First use** costs 107–173 ms here for fetching and compiling 9.4 MB from localhost. WebKit
+  compiles asynchronously, so even in-thread the main thread is blocked for at most 37 ms by it.
+- **Memory.** Linear memory stays at the 64 MiB the module reserves at load for all of these,
+  including the 48-rim fillet (all handles freed after each request). The Node plates go further:
+  1 GiB after rounding 200 hole rims (see below). `performance.measureUserAgentSpecificMemory`
+  does not exist in WebKit; in Chromium (cross-origin isolated) the page measured 1 MiB before
+  and 142 MiB after the worker run (page and worker), 75 MiB after the in-thread run, and the
+  in-thread JavaScript heap grew from 2 to 11 MiB.
+- **Not measured: a physical iPad.** All of this is desktop WebKit on the M1 with the iPad
+  profile (viewport, touch, user agent), not iOS. iOS compiles WebAssembly on a slower A-series
+  core and kills tabs far below the 4 GiB wasm32 limit; how far a real iPad gets with the
+  1 GiB rim fillet, and its cold-load time over a network, are open.
+
 ### Faces with many holes (2026-11-26)
 
 `node holes-bench.ts [10,50,200]` (raw data:
@@ -264,8 +321,8 @@ How the closure is held to MIT + Apache-2.0:
   selection by persistent identity (topological naming) is not attempted.
 - Tessellation is checked only for size and timing, not for watertightness or as input to the
   Jolt collision pipeline.
-- Browser/WebKit: measured in Chromium and iPad-emulated WebKit through the product path (see
-  above); not on a physical iPad.
+- Browser/WebKit: measured in Chromium and iPad-emulated WebKit through the product path,
+  including fillet, chamfer and shell and the main thread (see above); not on a physical iPad.
 - Only SMLib. WASMLib and Solidcore are not implemented against `ExactKernel` here (the fork's
   `experiments/kernel-qualification` has WASMLib scorecard numbers).
 
@@ -274,7 +331,10 @@ How the closure is held to MIT + Apache-2.0:
 Status 2026-11-25: items 1 (notices), 2 (browser measurements, except a physical iPad), 3 (worker
 integration) and 4 (cancellation) are done for `export step` and `measure exact`; item 5 is done
 for STEP and measures (display and collision stay on Manifold meshes); item 6 is open. Still open
-from item 1: a reproducible or self-built WASM.
+from item 1: a reproducible or self-built WASM. Status 2026-11-26: item 2 extended to exact
+fillet, chamfer and shell, memory and main-thread blocking (browser bench above; still no physical
+iPad); item 3 covers every exact request (`feature-display` included) through one shared
+`runExactRequest`, with an optional in-thread fallback for hosts without workers.
 
 1. **Licences:** decided (MIT + Apache-2.0; the font is aliased away in the lab package). Still
    needed: the package's NOTICE/LICENSE texts in THIRD-PARTY-NOTICES.md, and a reproducible or

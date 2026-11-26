@@ -1,0 +1,354 @@
+{
+  "project": "chromium",
+  "date": "2026-11-26T06:04:09.358Z",
+  "runs": {
+    "worker": {
+      "mode": "worker",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.7922.34 Safari/537.36",
+      "crossOriginIsolated": true,
+      "memoryBefore": {
+        "jsHeapMiB": 2,
+        "userAgentMemoryMiB": 1
+      },
+      "memoryAfter": {
+        "jsHeapMiB": 6,
+        "userAgentMemoryMiB": 142
+      },
+      "steps": [
+        {
+          "label": "first use: load + measure exact of a box",
+          "wallMs": 197,
+          "loadMs": 166,
+          "runMs": 29,
+          "wasmMiB": 64,
+          "main": {
+            "maxGapMs": 6,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "fillet r2, all edges of a 20×30×10 box",
+          "wallMs": 283,
+          "loadMs": 0,
+          "runMs": 282,
+          "wasmMiB": 64,
+          "triangles": 4124,
+          "main": {
+            "maxGapMs": 5,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "chamfer 2, top face",
+          "wallMs": 31,
+          "loadMs": 0,
+          "runMs": 31,
+          "wasmMiB": 64,
+          "triangles": 20,
+          "main": {
+            "maxGapMs": 6,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "shell 2, open top",
+          "wallMs": 162,
+          "loadMs": 0,
+          "runMs": 162,
+          "wasmMiB": 64,
+          "triangles": 28,
+          "main": {
+            "maxGapMs": 6,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "chamfer 0.5, plate with 48 holes",
+          "wallMs": 1155,
+          "loadMs": 0,
+          "runMs": 1154,
+          "wasmMiB": 64,
+          "triangles": 7124,
+          "main": {
+            "maxGapMs": 5,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "fillet r2, all edges of a 20×30×10 box (again)",
+          "wallMs": 166,
+          "loadMs": 0,
+          "runMs": 165,
+          "wasmMiB": 64,
+          "triangles": 4124,
+          "main": {
+            "maxGapMs": 5,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "chamfer 2, top face (again)",
+          "wallMs": 18,
+          "loadMs": 0,
+          "runMs": 18,
+          "wasmMiB": 64,
+          "triangles": 20,
+          "main": {
+            "maxGapMs": 5,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "shell 2, open top (again)",
+          "wallMs": 22,
+          "loadMs": 0,
+          "runMs": 22,
+          "wasmMiB": 64,
+          "triangles": 28,
+          "main": {
+            "maxGapMs": 5,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "chamfer 0.5, plate with 48 holes (again)",
+          "wallMs": 1107,
+          "loadMs": 0,
+          "runMs": 1106,
+          "wasmMiB": 64,
+          "triangles": 7124,
+          "main": {
+            "maxGapMs": 6,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "fillet 0.5, top edges and 48 hole rims",
+          "wallMs": 5524,
+          "loadMs": 0,
+          "runMs": 5509,
+          "wasmMiB": 64,
+          "triangles": 110948,
+          "main": {
+            "maxGapMs": 14,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        }
+      ]
+    },
+    "main": {
+      "mode": "main",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.7922.34 Safari/537.36",
+      "crossOriginIsolated": true,
+      "memoryBefore": {
+        "jsHeapMiB": 2,
+        "userAgentMemoryMiB": 1
+      },
+      "memoryAfter": {
+        "jsHeapMiB": 11,
+        "userAgentMemoryMiB": 75
+      },
+      "steps": [
+        {
+          "label": "first use: load + measure exact of a box",
+          "wallMs": 195,
+          "loadMs": 147,
+          "runMs": 31,
+          "wasmMiB": 64,
+          "main": {
+            "maxGapMs": 61,
+            "blockedMs": 11,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "fillet r2, all edges of a 20×30×10 box",
+          "wallMs": 259,
+          "loadMs": 0,
+          "runMs": 259,
+          "wasmMiB": 64,
+          "triangles": 4124,
+          "main": {
+            "maxGapMs": 260,
+            "blockedMs": 210,
+            "longTasks": {
+              "count": 1,
+              "totalMs": 258
+            }
+          }
+        },
+        {
+          "label": "chamfer 2, top face",
+          "wallMs": 30,
+          "loadMs": 0,
+          "runMs": 30,
+          "wasmMiB": 64,
+          "triangles": 20,
+          "main": {
+            "maxGapMs": 30,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "shell 2, open top",
+          "wallMs": 41,
+          "loadMs": 0,
+          "runMs": 40,
+          "wasmMiB": 64,
+          "triangles": 28,
+          "main": {
+            "maxGapMs": 41,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "chamfer 0.5, plate with 48 holes",
+          "wallMs": 1169,
+          "loadMs": 0,
+          "runMs": 1169,
+          "wasmMiB": 64,
+          "triangles": 7124,
+          "main": {
+            "maxGapMs": 1169,
+            "blockedMs": 1119,
+            "longTasks": {
+              "count": 1,
+              "totalMs": 1168
+            }
+          }
+        },
+        {
+          "label": "fillet r2, all edges of a 20×30×10 box (again)",
+          "wallMs": 166,
+          "loadMs": 0,
+          "runMs": 165,
+          "wasmMiB": 64,
+          "triangles": 4124,
+          "main": {
+            "maxGapMs": 166,
+            "blockedMs": 116,
+            "longTasks": {
+              "count": 1,
+              "totalMs": 165
+            }
+          }
+        },
+        {
+          "label": "chamfer 2, top face (again)",
+          "wallMs": 18,
+          "loadMs": 0,
+          "runMs": 18,
+          "wasmMiB": 64,
+          "triangles": 20,
+          "main": {
+            "maxGapMs": 18,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "shell 2, open top (again)",
+          "wallMs": 20,
+          "loadMs": 0,
+          "runMs": 20,
+          "wasmMiB": 64,
+          "triangles": 28,
+          "main": {
+            "maxGapMs": 20,
+            "blockedMs": 0,
+            "longTasks": {
+              "count": 0,
+              "totalMs": 0
+            }
+          }
+        },
+        {
+          "label": "chamfer 0.5, plate with 48 holes (again)",
+          "wallMs": 1097,
+          "loadMs": 0,
+          "runMs": 1096,
+          "wasmMiB": 64,
+          "triangles": 7124,
+          "main": {
+            "maxGapMs": 1097,
+            "blockedMs": 1047,
+            "longTasks": {
+              "count": 1,
+              "totalMs": 1096
+            }
+          }
+        },
+        {
+          "label": "fillet 0.5, top edges and 48 hole rims",
+          "wallMs": 5531,
+          "loadMs": 0,
+          "runMs": 5530,
+          "wasmMiB": 64,
+          "triangles": 110948,
+          "main": {
+            "maxGapMs": 5532,
+            "blockedMs": 5482,
+            "longTasks": {
+              "count": 1,
+              "totalMs": 5530
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -88,6 +88,19 @@ and Recompute exact up front ("This editor session does not declare the exact
 kernel…") instead of running the kernel first; STEP export and `measure exact`
 commit nothing and still work.
 
+The exact kernel runs in its own lazily created worker (a second instance of the geometry
+worker script), so a slow fillet never blocks the editor; cancelling, the 60 s budget and
+disposal terminate only that worker. `exactFallback` (a `mountCadEditor` option, an
+`ExactCommandHost`) is for hosts where that worker cannot start: no `Worker`, a constructor
+that throws, or a worker script that fails before it ever answered. Requests then run through
+it, typically
+`{run: (r, s) => import('@brickwright/cad-exact').then(m => m.createInThreadExactHost().run(r, s))}`,
+which runs the kernel on the page's thread and blocks the UI while it works (see the
+measurements in [experiments/exact-kernel](../experiments/exact-kernel/README.md)); a
+running in-thread request cannot be interrupted, so an abort only discards its result. Without
+the option such requests fail with the worker's error. The browser SDK does not set it: its
+host-loaded chunks must not reference the kernel (see below).
+
 File export is deliberately host-owned; if `onExport` is absent the export
 buttons are disabled. The default Open button uses a scoped HTML file input;
 `requestOpen` replaces it with the host's native picker. `openFile(name, bytes)`

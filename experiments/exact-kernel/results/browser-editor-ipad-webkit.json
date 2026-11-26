@@ -1,0 +1,75 @@
+{
+  "project": "ipad-webkit",
+  "date": "2026-11-26T06:01:54.966Z",
+  "userAgent": "Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1",
+  "steps": [
+    {
+      "label": "first use: fillet r2, all edges (load + run)",
+      "wallMs": 1170,
+      "loadMs": 390,
+      "runMs": 325,
+      "wasmMiB": 64,
+      "main": {
+        "maxGapMs": 64,
+        "blockedMs": 25
+      }
+    },
+    {
+      "label": "undo",
+      "wallMs": 125,
+      "main": {
+        "maxGapMs": 26,
+        "blockedMs": 0
+      }
+    },
+    {
+      "label": "chamfer 2, top face",
+      "wallMs": 187,
+      "loadMs": 0,
+      "runMs": 38,
+      "wasmMiB": 64,
+      "main": {
+        "maxGapMs": 56,
+        "blockedMs": 6
+      }
+    },
+    {
+      "label": "undo",
+      "wallMs": 147,
+      "main": {
+        "maxGapMs": 30,
+        "blockedMs": 0
+      }
+    },
+    {
+      "label": "shell 2, open top",
+      "wallMs": 211,
+      "loadMs": 0,
+      "runMs": 43,
+      "wasmMiB": 64,
+      "main": {
+        "maxGapMs": 53,
+        "blockedMs": 3
+      }
+    },
+    {
+      "label": "undo",
+      "wallMs": 149,
+      "main": {
+        "maxGapMs": 21,
+        "blockedMs": 0
+      }
+    },
+    {
+      "label": "fillet r2, all edges (warm)",
+      "wallMs": 418,
+      "loadMs": 1,
+      "runMs": 179,
+      "wasmMiB": 64,
+      "main": {
+        "maxGapMs": 66,
+        "blockedMs": 16
+      }
+    }
+  ]
+}

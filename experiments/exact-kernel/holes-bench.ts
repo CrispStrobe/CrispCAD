@@ -13,10 +13,12 @@ import type {ExactSolid} from '@brickwright/cad-exact';
 const counts=(process.argv[2]??'10,50,200').split(',').map(Number);
 const {kernel:k}=await createExactBackend();
 const display={tolerance:.01,angleDeg:10};
-function time<T>(run:()=>T){
+type Timed<T>={cpuMs:number;wallMs:number}&({value:T}|{error:string});
+function time<T>(run:()=>T):Timed<T>{
  const wall=performance.now(),cpu=cpuUsage();
- try{const value=run();const used=cpuUsage(cpu);return {value,cpuMs:Math.round((used.user+used.system)/1000),wallMs:Math.round(performance.now()-wall)};}
- catch(error){const used=cpuUsage(cpu);return {error:error instanceof Error?error.message.split('\n')[0]:String(error),cpuMs:Math.round((used.user+used.system)/1000),wallMs:Math.round(performance.now()-wall)};}
+ const spent=()=>{const used=cpuUsage(cpu);return {cpuMs:Math.round((used.user+used.system)/1000),wallMs:Math.round(performance.now()-wall)};};
+ try{const value=run();return {value,...spent()};}
+ catch(error){return {error:error instanceof Error?error.message.split('\n')[0]:String(error),...spent()};}
 }
 /** A plate `thickness` mm thick with `n` holes of radius 2 mm, 6 mm apart, as one extruded profile. */
 function plate(n:number,thickness:number):ExactSolid{
@@ -30,7 +32,7 @@ const variants:Record<string,(n:number)=>ExactSolid>={
  fillet:n=>k.fillet(plate(n,3),.5,top),
  shell:n=>k.shell(plate(n,4),.5,top),
 };
-const rows=[];
+const rows:Record<string,unknown>[]=[];
 for(const n of counts)for(const [variant,make] of Object.entries(variants)){
  k.scope(()=>{
   const build=time(()=>make(n));
@@ -39,7 +41,7 @@ for(const n of counts)for(const [variant,make] of Object.entries(variants)){
    const solid=build.value;
    const ours=time(()=>displayTessellation(k,solid,'plate'));
    const kernel=time(()=>displayMesh(k.tessellate(solid,display),'plate'));
-   const triangles=(r:typeof ours)=>'value' in r?r.value.indices.length/3:undefined;
+   const triangles=(r:Timed<{indices:ArrayLike<number>}>)=>'value' in r?r.value.indices.length/3:undefined;
    row.display={cpuMs:ours.cpuMs,wallMs:ours.wallMs,triangles:triangles(ours),...('error' in ours?{error:ours.error}:{})};
    row.smlibWholeBody={cpuMs:kernel.cpuMs,wallMs:kernel.wallMs,triangles:triangles(kernel),...('error' in kernel?{error:kernel.error}:{})};
    row.wasmMemoryMiB=Math.round(k.memory().heap/1048576);

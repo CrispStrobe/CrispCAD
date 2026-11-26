@@ -152,7 +152,7 @@ Results (details in [experiments/exact-kernel/README.md](../experiments/exact-ke
   - mesh: 2.2 s CPU for all 27 parts;
   - WASM memory peaks at 92 MiB.
   - Meshing a face with many holes grows roughly with the square of the hole
-    count: 3.8 s for a plate with 48 holes.
+    count: 3.8 s for a plate with 48 holes (display meshes avoid it since 2026-11-26, see below).
 - **Not supported yet** (each raises an explicit error):
   - minkowski, text, twisted or tapered extrusion;
   - most hulls;
@@ -164,8 +164,39 @@ Remaining work for this phase:
 - ~~product entry (iPad WebKit measurements, the geometry worker, cancellation)~~:
   **done 2026-11-25**, see [Phase 3](#phase-3-one-command-vocabulary) steps 1–2;
 - the importer's torus gap;
-- faster meshing of faces with many holes (display still uses Manifold, so this only matters
-  for a future exact display path).
+- ~~faster meshing of faces with many holes~~: **done 2026-11-26**. Exact features' display
+  meshes are the exact kernel's tessellation, so it mattered after all. SMLib's mesher is
+  superlinear in the loops of one planar face (0.85 s CPU for one face with 51 loops, 6.9 s with
+  201). A body with a planar face of 8 or more loops is now meshed face by face
+  (`packages/exact/src/face-mesh.ts`): SMLib meshes the curved faces one by one, plain hole walls
+  become bands, and planar faces are triangulated in JavaScript from the same boundary points,
+  with a fallback to SMLib if anything does not close. Display of a plate with 200 holes: 0.48 s
+  CPU instead of 11.0 s; with 50 holes, shelled: 0.29 s instead of 2.6 s. Filleted hole rims stay
+  bound by the kernel: rounding 200 of them takes 23 s and grows linear memory to 1 GiB. Details
+  and the full table: [experiments/exact-kernel](../experiments/exact-kernel/README.md#faces-with-many-holes-2026-11-26);
+- iPad WebKit measurements for fillet, chamfer, shell, memory and the main thread: **done
+  2026-11-26 on Playwright WebKit (iPad Pro 11 profile); a physical iPad is still unmeasured.**
+  WebKit 26.5 on a shared Apple M1:
+  - first use (fetch and compile 9.4 MB, then `measure exact` of a box): load 146–173 ms in the
+    worker; in the editor, the first fillet took 1.17 s wall (load 390 ms, kernel 325 ms);
+  - kernel time per display mesh, cold / warm: fillet r 2 of a 20×30×10 box 291 / 161 ms,
+    chamfer 35 / 18 ms, shell 188 / 27 ms; chamfer on a plate with 48 holes 1.1 / 1.0 s; fillet
+    of that plate's 48 hole rims 4.3 s (110 948 triangles);
+  - memory: linear memory stays at its 64 MiB reservation for all of these;
+    `measureUserAgentSpecificMemory` does not exist in WebKit (Chromium, cross-origin isolated:
+    142 MiB for page and worker after the run);
+  - main thread: with the kernel in the worker, the longest main-thread gap during any request is
+    9–22 ms (in the editor 53–66 ms, including the scene update). The same requests on the main
+    thread block it for their whole duration: 241 ms for the fillet, 1.06 s for the 48-hole
+    chamfer, 4.2 s for the rim fillet (Chromium reports each as one Long Task of that length).
+  Raw data and method: [experiments/exact-kernel](../experiments/exact-kernel/README.md#browser-features-memory-and-the-main-thread-2026-11-26).
+  Not measured: iOS's slower WebAssembly compile, its per-tab memory limit (the 1 GiB rim-fillet
+  case above is the one to try first) and cold load over a real network;
+- the geometry worker for every exact request: **done** (2026-11-25, extended 2026-11-26). Feature
+  recompute, STEP export and exact measures all run in the lazily created exact worker through
+  one `runExactRequest` (shared with the MCP exact thread). Hosts that cannot start a worker can
+  pass `exactFallback` (for example `createInThreadExactHost()`), which runs on the calling thread
+  with the blocking measured above.
 
 Original scope of the phase:
 
@@ -258,7 +289,8 @@ change, followed on branch `feat/exact-features-v41` (see
   kernel on the first exact request (the kernel's own `new URL('smlibwasm.wasm')` is resolved
   by Vite; compiled-module reuse across worker restarts is not needed while the exact worker
   lives until cancelled);
-- iPad WebKit (Playwright) and Chromium measurements; a physical iPad was not available;
+- iPad WebKit (Playwright) and Chromium measurements; a physical iPad was not available (extended
+  2026-11-26 to fillet, chamfer, shell, memory and main-thread blocking, see "Remaining work" above);
 - cancellation: `AbortSignal`, `cancelExact()` and a 60 s budget terminate only the exact worker;
 - `export step` and `measure exact` route to the exact kernel.
 

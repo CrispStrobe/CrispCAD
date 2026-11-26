@@ -1,0 +1,75 @@
+{
+  "project": "chromium",
+  "date": "2026-11-26T06:01:05.238Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.7922.34 Safari/537.36",
+  "steps": [
+    {
+      "label": "first use: fillet r2, all edges (load + run)",
+      "wallMs": 1175,
+      "loadMs": 317,
+      "runMs": 337,
+      "wasmMiB": 64,
+      "main": {
+        "maxGapMs": 262,
+        "blockedMs": 233
+      }
+    },
+    {
+      "label": "undo",
+      "wallMs": 2131,
+      "main": {
+        "maxGapMs": 505,
+        "blockedMs": 455
+      }
+    },
+    {
+      "label": "chamfer 2, top face",
+      "wallMs": 732,
+      "loadMs": 0,
+      "runMs": 39,
+      "wasmMiB": 64,
+      "main": {
+        "maxGapMs": 560,
+        "blockedMs": 526
+      }
+    },
+    {
+      "label": "undo",
+      "wallMs": 1074,
+      "main": {
+        "maxGapMs": 234,
+        "blockedMs": 184
+      }
+    },
+    {
+      "label": "shell 2, open top",
+      "wallMs": 1268,
+      "loadMs": 0,
+      "runMs": 52,
+      "wasmMiB": 64,
+      "main": {
+        "maxGapMs": 1119,
+        "blockedMs": 1073
+      }
+    },
+    {
+      "label": "undo",
+      "wallMs": 1585,
+      "main": {
+        "maxGapMs": 616,
+        "blockedMs": 566
+      }
+    },
+    {
+      "label": "fillet r2, all edges (warm)",
+      "wallMs": 727,
+      "loadMs": 0,
+      "runMs": 169,
+      "wasmMiB": 64,
+      "main": {
+        "maxGapMs": 487,
+        "blockedMs": 444
+      }
+    }
+  ]
+}
