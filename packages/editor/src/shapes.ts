@@ -192,7 +192,21 @@ export function presetPreview(preset: ShapePreset): string {
 export function evaluatedPreview(bodies: readonly import('@brickwright/cad-geometry').BodyMesh[]): string {
  const box=new THREE.Box3();for(const body of bodies)box.union(new THREE.Box3(new THREE.Vector3(...body.bounds.min as [number,number,number]),new THREE.Vector3(...body.bounds.max as [number,number,number])));
  const center=box.getCenter(new THREE.Vector3()),scale=108/Math.max(1,box.getSize(new THREE.Vector3()).length()),eye=new THREE.Vector3(1,-1.5,1.15).normalize(),right=new THREE.Vector3().crossVectors(new THREE.Vector3(0,0,1),eye).normalize(),up=new THREE.Vector3().crossVectors(eye,right).normalize(),light=new THREE.Vector3(-.4,-.6,1).normalize();
- const bitmap=document.createElement('canvas');bitmap.width=160;bitmap.height=160;const ctx=bitmap.getContext('2d')!;const triangles:{depth:number;points:number[][];color:string}[]=[];
- for(const body of bodies){const color=new THREE.Color(body.color);for(let i=0;i<body.indices.length;i+=3){const p=[0,1,2].map(j=>new THREE.Vector3().fromArray(body.positions,body.indices[i+j]*3).sub(center));const normal=new THREE.Vector3().crossVectors(p[1].clone().sub(p[0]),p[2].clone().sub(p[0])).normalize();if(normal.dot(eye)<=0)continue;triangles.push({depth:p.reduce((s,v)=>s+v.dot(eye),0)/3,points:p.map(v=>[80+v.dot(right)*scale,80-v.dot(up)*scale]),color:color.clone().multiplyScalar(.5+.5*Math.max(0,normal.dot(light))).getStyle()});}}
- triangles.sort((a,b)=>a.depth-b.depth);for(const triangle of triangles){ctx.beginPath();triangle.points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();ctx.fillStyle=ctx.strokeStyle=triangle.color;ctx.lineWidth=.55;ctx.fill();ctx.stroke();}return bitmap.toDataURL('image/png');
+ const bitmap=document.createElement('canvas');bitmap.width=160;bitmap.height=160;const ctx=bitmap.getContext('2d')!;
+ // Plain arithmetic per triangle (no vector objects): a detailed preset has 10^5 triangles, and
+ // this runs on the page's thread. Same projection, culling, depth order and shading as before.
+ const ex=eye.x,ey=eye.y,ez=eye.z,rx=right.x,ry=right.y,rz=right.z,ux=up.x,uy=up.y,uz=up.z,lx=light.x,ly=light.y,lz=light.z,cx=center.x,cy=center.y,cz=center.z;
+ const triangles:{depth:number;points:number[];color:string}[]=[],shade=new THREE.Color();
+ for(const body of bodies){const color=new THREE.Color(body.color),P=body.positions,I=body.indices;
+  for(let i=0;i<I.length;i+=3){
+   const a=I[i]*3,b=I[i+1]*3,c=I[i+2]*3;
+   const ax=P[a]-cx,ay=P[a+1]-cy,az=P[a+2]-cz,bx=P[b]-cx,by=P[b+1]-cy,bz=P[b+2]-cz,qx=P[c]-cx,qy=P[c+1]-cy,qz=P[c+2]-cz;
+   const e1x=bx-ax,e1y=by-ay,e1z=bz-az,e2x=qx-ax,e2y=qy-ay,e2z=qz-az;
+   let nx=e1y*e2z-e1z*e2y,ny=e1z*e2x-e1x*e2z,nz=e1x*e2y-e1y*e2x;const length=Math.sqrt(nx*nx+ny*ny+nz*nz)||1;nx/=length;ny/=length;nz/=length;
+   if(nx*ex+ny*ey+nz*ez<=0)continue;
+   const depth=((ax*ex+ay*ey+az*ez)+(bx*ex+by*ey+bz*ez)+(qx*ex+qy*ey+qz*ez))/3;
+   const points=[80+(ax*rx+ay*ry+az*rz)*scale,80-(ax*ux+ay*uy+az*uz)*scale,80+(bx*rx+by*ry+bz*rz)*scale,80-(bx*ux+by*uy+bz*uz)*scale,80+(qx*rx+qy*ry+qz*rz)*scale,80-(qx*ux+qy*uy+qz*uz)*scale];
+   triangles.push({depth,points,color:shade.copy(color).multiplyScalar(.5+.5*Math.max(0,nx*lx+ny*ly+nz*lz)).getStyle()});
+  }}
+ triangles.sort((a,b)=>a.depth-b.depth);for(const {points:p,color} of triangles){ctx.beginPath();ctx.moveTo(p[0],p[1]);ctx.lineTo(p[2],p[3]);ctx.lineTo(p[4],p[5]);ctx.closePath();ctx.fillStyle=ctx.strokeStyle=color;ctx.lineWidth=.55;ctx.fill();ctx.stroke();}return bitmap.toDataURL('image/png');
 }

@@ -309,7 +309,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   if(options.headerContent){options.headerContent.classList.add('host-actions');designBar.append(options.headerContent);}
   toolGroup('Shapes', 'shapes-tools');
   const shapesButton = button('Shapes', () => picker.toggle(), toolParent, 'shape-library-toggle');
-  const previewCache = new Map<string, Promise<string>>(),presetBuilds=new Map<string,Promise<{document:CadDocument;geometry:GeometryResult}>>();
+  const previewCache = new Map<string, string>(),presetBuilds=new Map<string,Promise<{document:CadDocument;geometry:GeometryResult}>>();
   function buildPreset(preset:ShapePreset,text:string,svg?:string,font?:import('@brickwright/cad-core').GeneratorRecipe['font']){const lettering=['text','name-tag','icon-tag','qr'].includes(preset.id),key=JSON.stringify([preset.id,lettering?text:'',lettering?svg:'',lettering?font:'']);let pending=presetBuilds.get(key);if(!pending){const doc=createPresetDocument(preset.id,text,{svg,font});pending=client.evaluate(doc).then(geometry=>({document:doc,geometry}));presetBuilds.set(key,pending);if(presetBuilds.size>80)presetBuilds.delete(presetBuilds.keys().next().value!);void pending.catch(()=>{if(presetBuilds.get(key)===pending)presetBuilds.delete(key);});}return pending;}
   let placing:{name:string;projectId:string;revision:number;selection:string[];ready:Promise<{document:CadDocument;geometry:GeometryResult}>;point?:PlacementPointer;dropping:boolean;role:'solid'|'hole'}|undefined;
   function cancelShapePlacement(){const prior=placing;if(!prior)return;placing=undefined;viewport.cancelPlacement();if(session.state.document.id===prior.projectId&&session.state.revision===prior.revision&&!session.state.selection.length)session.select(prior.selection);}
@@ -321,7 +321,12 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     const projectId=session.state.document.id,wasEmpty=!session.state.document.roots.length;const {document:doc,geometry:result}=await buildPreset(preset,text,svg,font);
     if(disposed)return;if(session.state.document.id!==projectId)throw new Error(t('Shape insertion was canceled because a different model was opened'));
     const minZ=Math.min(...result.bodies.map(body=>body.bounds.min[2]));session.insert(doc,[session.state.document.roots.length*12,0,-minZ],{mergeParameters:true});await whenIdle();if(wasEmpty)viewport.frame();
-  },report,preset=>{let preview=previewCache.get(preset.id);if(!preview){preview=buildPreset(preset,'ABC').then(built=>evaluatedPreview(built.geometry.bodies));previewCache.set(preset.id,preview);}return preview;},{excludedIds:options.presetProjects?.items.map(item=>item.id),layout:options.shapeBrowserLayout,onLayoutChange:options.onShapeBrowserLayoutChange,placement:{begin:beginShapePlacement,move:moveShapePlacement,drop:dropShapePlacement,cancel:cancelShapePlacement}});
+  },report,(preset,wanted)=>{
+    // Thumbnails are drawn on this thread, one per task and only for cards still shown: a search
+    // or a click on a card must not wait behind thumbnails of cards it has just replaced.
+    const cached=previewCache.get(preset.id);if(cached)return Promise.resolve(cached);
+    return buildPreset(preset,'ABC').then(async built=>{await new Promise(resolve=>setTimeout(resolve,0));const done=previewCache.get(preset.id);if(done)return done;if(disposed||!wanted())throw new Error('Thumbnail no longer shown');const url=evaluatedPreview(built.geometry.bodies);previewCache.set(preset.id,url);return url;});
+  },{excludedIds:options.presetProjects?.items.map(item=>item.id),layout:options.shapeBrowserLayout,onLayoutChange:options.onShapeBrowserLayoutChange,placement:{begin:beginShapePlacement,move:moveShapePlacement,drop:dropShapePlacement,cancel:cancelShapePlacement}});
 
   const add = (shape: Primitive) => {
     const transform = identityTransform(); const height = shape.kind === 'box' ? shape.size[2] : shape.kind === 'cylinder' ? shape.height : shape.radius * 2;
