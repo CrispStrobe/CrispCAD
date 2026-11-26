@@ -5,7 +5,36 @@ import {partitionConvex} from './convex.js';
 import type {ConvexPiece} from './convex.js';
 type MeshData={positions:ArrayLike<number>;indices:ArrayLike<number>};
 export function collisionCSG(module:ManifoldToplevel,remember:(piece:ConvexPiece)=>ConvexPiece=piece=>piece){
- const build=(mesh:MeshData)=>{const data=new module.Mesh({numProp:3,vertProperties:new Float32Array(mesh.positions),triVerts:new Uint32Array(mesh.indices)});data.merge();const solid=new module.Manifold(data);if(solid.status()!=='NoError'){solid.delete();throw new Error(t('Collision CSG requires a closed mesh'));}return solid;};
+ const maxHullVertices=64;
+ const indexedEdges=new Uint8Array(maxHullVertices*maxHullVertices);
+ const hasClosedIndices=(triangles:Uint32Array,vertexCount:number)=>{
+  // Keep the cheap check bounded to the size of our convex pieces.
+  if(!Number.isInteger(vertexCount)||vertexCount>maxHullVertices||triangles.length>384||triangles.length%3)return false;
+  indexedEdges.fill(0,0,vertexCount*vertexCount);
+  let pairs=0;
+  for(let i=0;i<triangles.length;i++){
+   const from=triangles[i],to=triangles[i%3===2?i-2:i+1];
+   if(from===to||from>=vertexCount||to>=vertexCount)return false;
+   const edge=from*vertexCount+to;
+   if(indexedEdges[edge])return false;
+   pairs+=indexedEdges[to*vertexCount+from];
+   indexedEdges[edge]=1;
+  }
+  return pairs*2===triangles.length;
+ };
+ const build=(mesh:MeshData)=>{
+  const vertices=new Float32Array(mesh.positions),triangles=new Uint32Array(mesh.indices);
+  const data=new module.Mesh({numProp:3,vertProperties:vertices,triVerts:triangles});
+  // Mesh.merge repairs open seams. Closed indexed hulls can be validated
+  // directly by the native constructor without that additional round trip.
+  if(!hasClosedIndices(triangles,vertices.length/3))data.merge();
+  const solid=new module.Manifold(data);
+  if(solid.status()!=='NoError'){
+   solid.delete();
+   throw new Error(t('Collision CSG requires a closed mesh'));
+  }
+  return solid;
+ };
  const data=(solid:Manifold):ConvexPiece=>{const m=solid.getMesh();return {positions:new Float64Array(Array.from({length:m.numVert*3},(_,i)=>m.vertProperties[Math.floor(i/3)*m.numProp+i%3])),indices:new Uint32Array(m.triVerts)};};
  const difference=(aa:Manifold,bb:Manifold)=>{let missing:Manifold|undefined,extra:Manifold|undefined;try{missing=aa.subtract(bb);extra=bb.subtract(aa);if(missing.status()!=='NoError'||extra.status()!=='NoError')throw new Error(t('Collision comparison failed'));const m=Math.abs(missing.volume()),e=Math.abs(extra.volume()),residual=Math.abs((m-e)-(aa.volume()-bb.volume()));return {missingVolumeMm3:m,extraVolumeMm3:e,numericalResidualVolumeMm3:residual};}finally{extra?.delete();missing?.delete();}};
  return {
