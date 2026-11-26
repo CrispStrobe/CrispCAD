@@ -1,0 +1,82 @@
+{
+  "project": "ipad",
+  "date": "2026-11-26T12:20:00Z",
+  "note": "shared Apple M1 at load average 90-150; Chromium (Google Chrome stable, since the shared Playwright Chromium store was gone) with the ipad project's iPad viewport and user agent; the run stopped at the unlimited 200-hole shell, so the 80 MiB ceiling case is missing; the ceiling was checked in a separate run with the 100-hole shell (92 MiB unlimited) under 70 MiB",
+  "steps": [
+    {
+      "label": "200-hole rim fillet, tablet limits",
+      "query": "holes=200",
+      "command": "fillet 0.5 Plate --face +z",
+      "outcome": "refused",
+      "wallMs": 13373,
+      "maxMainThreadGapMs": 236,
+      "exactWorkerAlive": true,
+      "message": "Fillet of Plate (exact-feature): Rounding 204 edges (200 of them curved) at once is too much for the exact kernel on this device, which allows about 100 curved or 400 straight edges per feature. Choose a face with fewer edges."
+    },
+    {
+      "label": "200-hole shell, tablet limits",
+      "query": "holes=200",
+      "command": "shell 0.5 Plate --open +z",
+      "outcome": "refused",
+      "wallMs": 10980,
+      "maxMainThreadGapMs": 96,
+      "exactWorkerAlive": true,
+      "message": "Shell of Plate (exact-feature): Shelling a body with 206 faces is too much for the exact kernel on this device, which allows 160. Shell a simpler body, or add the holes after shelling."
+    },
+    {
+      "label": "25-hole rim fillet, tablet limits",
+      "query": "holes=25",
+      "command": "fillet 0.5 Plate --face +z",
+      "outcome": "built",
+      "wallMs": 14801,
+      "loadMs": 1074,
+      "runMs": 6172,
+      "wasmMiB": 64,
+      "maxMainThreadGapMs": 5754,
+      "exactWorkerAlive": true,
+      "message": "Exact fillet (smlib \u00b7 @crispcad/exact-kernel 0.1.4): Fillet of Plate (cff80bfa-0f8e-444f-9892-275bf0258947): exact volume 3582.10381328 mm\u00b3 \u00b7 display 57864 triangles Exact kernel: load 1074 ms \u00b7 run 6172 ms \u00b7 WASM memory 64 MiB"
+    },
+    {
+      "label": "100-hole shell, tablet limits",
+      "query": "holes=100",
+      "command": "shell 0.5 Plate --open +z",
+      "outcome": "built",
+      "wallMs": 36686,
+      "loadMs": 1498,
+      "runMs": 26708,
+      "wasmMiB": 92,
+      "maxMainThreadGapMs": 7178,
+      "exactWorkerAlive": true,
+      "message": "Exact shell (smlib \u00b7 @crispcad/exact-kernel 0.1.4): Shell of Plate (71b134ba-d905-4121-8906-472ab9d99bef): exact volume 4369.18568398 mm\u00b3 \u00b7 display 29228 triangles Exact kernel: load 1498 ms \u00b7 run 26708 ms \u00b7 WASM memory 92 MiB"
+    },
+    {
+      "label": "200-hole rim fillet, no limits",
+      "query": "holes=200&exact-limits=none",
+      "command": "fillet 0.5 Plate --face +z",
+      "outcome": "built",
+      "wallMs": 96739,
+      "loadMs": 1290,
+      "runMs": 90651,
+      "wasmMiB": 111,
+      "maxMainThreadGapMs": 2190,
+      "exactWorkerAlive": true,
+      "message": "Exact fillet (smlib \u00b7 @crispcad/exact-kernel 0.1.4): Fillet of Plate (32f474d1-9880-4724-80cd-e952af025ea8): exact volume 21145.4839282 mm\u00b3 \u00b7 display 461764 triangles Exact kernel: load 1290 ms \u00b7 run 90651 ms \u00b7 WASM memory 111 MiB"
+    },
+    {
+      "label": "200-hole shell, no limits",
+      "query": "holes=200&exact-limits=none",
+      "command": "shell 0.5 Plate --open +z",
+      "outcome": "no answer within 15 min (no request budget with exact-limits=none); the test stopped here"
+    },
+    {
+      "label": "100-hole shell, 70 MiB memory ceiling (separate run, same build and browser)",
+      "query": "holes=100&memory-mib=70&timeout-s=600",
+      "command": "shell 0.5 Plate --open +z",
+      "outcome": "out of memory",
+      "wallMs": 19741,
+      "exactWorkerAlive": false,
+      "message": "The exact kernel ran out of memory for this job, so it was stopped. The model was not changed. Simplify the feature (fewer edges or holes) or run it on a computer.",
+      "next": "measure exact Plate in a new worker: load 202 ms, run 2607 ms, WASM memory 64 MiB"
+    }
+  ]
+}

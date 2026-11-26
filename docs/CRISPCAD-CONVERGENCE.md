@@ -265,14 +265,21 @@ standalone app uses `EXACT_LIMITS_DESKTOP` in the macOS app and on computers wit
 | Recycle above | 192 MiB | 512 MiB | Normal jobs stay at the 64 MiB starting memory, so they never recycle. |
 | Request budget | 60 s | 120 s | Includes the first load (0.1–0.4 s measured). |
 
-Before and after, the 200-hole plate (Node, product path, loaded M1; browser numbers in the
-experiment's `results/browser-guards-*.json`):
+Before and after, the 200-hole plate. Node: product path, loaded M1. Browser: the editor on the
+exact-check page in Chromium with the iPad profile, load average 90–150
+([`results/browser-guards-ipad.json`](../experiments/exact-kernel/results/browser-guards-ipad.json)):
 
-| Job | Before | After, tablet limits |
+| Job | Before (no limits) | After, tablet limits |
 | --- | --- | --- |
-| Rim fillet | ran 74 s CPU (past the 60 s budget under load; with SMLib's whole-body mesh it reached 1 GiB) | refused in the time it takes to lower the plate, with "Rounding 204 edges (200 of them curved)…" |
-| Shell, open top | ran 35–39 s; under heavier load, the probe-worker path failed at the kernel's 20 s guard | refused: "Shelling a body with 206 faces…" |
-| Any job needing more memory than the ceiling | grew until the tab died | fails with "ran out of memory", worker ended, model unchanged |
+| Rim fillet | Node 74 s CPU; browser: kernel run 90.7 s, 111 MiB, 461 764-triangle display (with SMLib's whole-body mesh it reached 1 GiB in Node) | refused before the kernel runs: "Rounding 204 edges (200 of them curved)…"; 13.4 s wall in the browser, almost all of it loading the kernel and lowering the 200 cylinders; longest main-thread gap 236 ms |
+| Shell, open top | Node, extruded plate: 35 s; Node, the same plate from CAD Script: stopped by the kernel's 20 s guard after 40 s wall; browser: no answer within 15 min (nothing stopped it with `exact-limits=none`) | refused: "Shelling a body with 206 faces…", 11.0 s wall |
+| Any job needing more memory than the ceiling | grows until the job ends (or the tab dies) | fails with "ran out of memory", worker ended, model unchanged. Browser: the 100-hole shell (92 MiB unlimited) under a 70 MiB ceiling failed so after 19.7 s, the exact worker was gone, and the next `measure exact` ran in a fresh one (load 202 ms, 64 MiB) |
+
+Accepted on tablet, in the browser: a 25-hole rim fillet (run 6.2 s, 64 MiB) and a 100-hole shell
+(run 26.7 s, 92 MiB) built normally. The longest main-thread gaps there (5.8–7.2 s) are the
+viewport rebuilding the result with software WebGL on the loaded machine, not the kernel, which
+runs in its worker. The unanswered browser shell is why the request budget matters: in the browser
+the kernel's own guard did not end it, and only terminating the worker does.
 
 **A physical iPad is still unmeasured.** Every number here is from an Apple M1 (Node, Chromium
 with the iPad profile, and the WebKit figures above). Recipe for the owner, on a real iPad:

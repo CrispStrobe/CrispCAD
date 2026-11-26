@@ -135,9 +135,9 @@ test('heavy exact jobs in the editor: refusal, time, memory and the worker after
   {label:'200-hole shell, tablet limits',query:'holes=200',command:'shell 0.5 Plate --open +z'},
   {label:'25-hole rim fillet, tablet limits',query:'holes=25',command:'fillet 0.5 Plate --face +z'},
   {label:'100-hole shell, tablet limits',query:'holes=100',command:'shell 0.5 Plate --open +z'},
-  {label:'200-hole rim fillet, no limits',query:'holes=200&exact-limits=none',command:'fillet 0.5 Plate --face +z'},
-  {label:'200-hole shell, no limits',query:'holes=200&exact-limits=none',command:'shell 0.5 Plate --open +z'},
-  {label:'200-hole rim chamfer, 80 MiB memory ceiling',query:'holes=200&exact-limits=none&memory-mib=80',command:'chamfer 0.5 Plate --face +z'},
+  {label:'200-hole rim fillet, no limits',query:'holes=200&exact-limits=none&timeout-s=600',command:'fillet 0.5 Plate --face +z'},
+  {label:'200-hole shell, no limits',query:'holes=200&exact-limits=none&timeout-s=600',command:'shell 0.5 Plate --open +z'},
+  {label:'200-hole rim chamfer, 80 MiB memory ceiling',query:'holes=200&exact-limits=none&memory-mib=80&timeout-s=600',command:'chamfer 0.5 Plate --face +z'},
  ];
  const steps=[];
  for(const {label,query,command} of cases){
@@ -157,8 +157,9 @@ test('heavy exact jobs in the editor: refusal, time, memory and the worker after
   const outcome=timing?'built':/too much|Shelling a body/.test(text)?'refused':/out of memory/.test(text)?'out of memory':/did not finish/.test(text)?'timed out':'failed';
   steps.push({label,query,command,outcome,wallMs,...(timing?{loadMs:+timing[1],runMs:+timing[2],wasmMiB:+timing[3]}:{}),maxMainThreadGapMs:maxGapMs,exactWorkerAlive:page.workers().length>idleWorkers,message:text.slice(0,400)});
   console.log(JSON.stringify(steps.at(-1)));
+  // Written after every case, so a run that stops early keeps what it measured.
+  const result={project:testInfo.project.name,date:new Date().toISOString(),userAgent:await page.evaluate(()=>navigator.userAgent),note:'shared, loaded Apple M1; Chromium (the ipad project emulates the iPad viewport and user agent only)',steps};
+  await writeFile(`experiments/exact-kernel/results/browser-guards-${testInfo.project.name}.json`,JSON.stringify(result,null,2)+'\n');
  }
- const result={project:testInfo.project.name,date:new Date().toISOString(),userAgent:await page.evaluate(()=>navigator.userAgent),note:'shared, loaded Apple M1; Chromium (the ipad project emulates the iPad viewport and user agent only)',steps};
- await writeFile(`experiments/exact-kernel/results/browser-guards-${testInfo.project.name}.json`,JSON.stringify(result,null,2)+'\n');
  expect(steps.filter(s=>s.label.includes('tablet limits')&&s.label.startsWith('200')).map(s=>s.outcome)).toEqual(['refused','refused']);
 });

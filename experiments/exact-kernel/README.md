@@ -223,8 +223,9 @@ and the longest gap is 5–14 ms.
   in-thread JavaScript heap grew from 2 to 11 MiB.
 - **Not measured: a physical iPad.** All of this is desktop WebKit on the M1 with the iPad
   profile (viewport, touch, user agent), not iOS. iOS compiles WebAssembly on a slower A-series
-  core and kills tabs far below the 4 GiB wasm32 limit; how far a real iPad gets with the
-  1 GiB rim fillet, and its cold-load time over a network, are open.
+  core and kills tabs far below the 4 GiB wasm32 limit; how a real iPad copes with the heavy
+  jobs below, and its cold-load time over a network, are open (recipe:
+  [CRISPCAD-CONVERGENCE.md](../../docs/CRISPCAD-CONVERGENCE.md#heavy-exact-jobs-on-ipad-2026-11-26)).
 
 ### Faces with many holes (2026-11-26)
 
@@ -350,6 +351,20 @@ for the whole-body mesh of the 200-hole plate (297 MiB uncapped): after 5.8 s it
 SMLib's bindings catch `bad_alloc`, so exhaustion is a clean error, not an abort. The editor still
 ends that worker (a precaution after `bad_alloc`, and the memory goes back to the page).
 `tests/exact-memory-cap.test.ts` keeps this as a test.
+
+**In the browser** (`EXACT_BENCH=1 npx playwright test tests/browser/exact-kernel-bench.spec.ts
+--project ipad -g heavy`: the editor on `exact-check.html`, where the plate is CAD Script, a box
+minus 200 cylinders, as a user would build it; raw data
+[`results/browser-guards-ipad.json`](results/browser-guards-ipad.json), load average 90–150,
+Google Chrome with the iPad profile because the shared Playwright Chromium was missing that day):
+tablet limits refused the 200-hole fillet and shell in 13.4 and 11.0 s wall (kernel load and
+lowering); accepted a 25-hole fillet (run 6.2 s, 64 MiB) and a 100-hole shell (26.7 s, 92 MiB).
+Without limits the 200-hole fillet ran 90.7 s (111 MiB) and the 200-hole shell gave no answer in
+15 minutes. In Node the same CAD Script plate's shell was stopped by the kernel's 20 s guard after
+40 s wall, so in the browser that guard did not take; the editor's request budget (60 s tablet,
+120 s desktop) is what ends such a job. The memory ceiling in the browser: the 100-hole shell under
+a 70 MiB ceiling failed with "ran out of memory" after 19.7 s, its worker was ended, and the next
+`measure exact` started a fresh one (load 202 ms, 64 MiB).
 
 How the guards work, and the thresholds: see
 [CRISPCAD-CONVERGENCE.md](../../docs/CRISPCAD-CONVERGENCE.md#heavy-exact-jobs-on-ipad-2026-11-26).
