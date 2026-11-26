@@ -3,7 +3,7 @@ import {beforeAll,expect,it,vi} from 'vitest';
 import * as T from 'three';
 import {readFileSync} from 'node:fs';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
-import {serializeDocument,localToWorldPoint} from '@brickwright/cad-core';
+import {freezeDocument,serializeDocument,localToWorldPoint} from '@brickwright/cad-core';
 import {createTTRoverDocument} from '../packages/editor/src/tt-rover.js';
 import {createAtlasForkliftDocument} from '../packages/editor/src/atlas-forklift.js';
 import {robotWires,createRobotWiring} from '../packages/editor/src/robot-wiring.js';
@@ -45,4 +45,37 @@ it('shows three servo conductors alongside the Atlas motor leads and omits print
  const print=createTTRoverDocument('robot-tt-rover-print');expect(robotWires(print,kernel.evaluate(print))).toEqual([]);
  const edited=createTTRoverDocument();delete edited.nodes['electronics-driver-0'];edited.roots=edited.roots.filter(id=>id!=='electronics-driver-0');edited.joints=edited.joints!.filter(j=>j.bodyA!=='electronics-driver-0'&&j.bodyB!=='electronics-driver-0');
  expect(robotWires(edited,kernel.evaluate(edited)).every(w=>w.to.bodyId!=='electronics-driver-0')).toBe(true);
+});
+it('refreshes authored cable anchors on document replacement and in-place edits',()=>{
+ const scene=new T.Scene(),body=new T.Object3D(),bodyId='chassis';
+ const initial=createTTRoverDocument();
+ let doc=freezeDocument(initial);
+ const lookup=vi.fn(()=>body);
+ const wire={id:'proof',label:'Cable',color:'#ffffff',from:{bodyId,point:[0,0,0] as [number,number,number]},to:{bodyId,point:[12,0,10] as [number,number,number]},via:[]};
+ const display=createRobotWiring(scene,()=>doc,lookup);
+ try{
+  display.reset([wire]);
+  const mesh=scene.getObjectByName('Cable') as T.Mesh;
+  const attribute=mesh.geometry.getAttribute('position');
+  const start=center(mesh,0)[0],version=attribute.version;
+  lookup.mockClear();
+  display.update();
+  expect(lookup).toHaveBeenCalledTimes(1);
+  expect(attribute.version).toBe(version);
+
+  const replacement=structuredClone(doc);
+  replacement.nodes[bodyId].transform.position[0]+=20;
+  doc=freezeDocument(replacement);
+  display.update();
+  expect(center(mesh,0)[0]).toBeCloseTo(start+20,4);
+
+  const editable=structuredClone(doc);
+  doc=editable;
+  display.update();
+  editable.nodes[bodyId].transform.position[0]+=15;
+  body.position.x+=5;
+  display.update();
+  expect(center(mesh,0)[0]).toBeCloseTo(start+40,4);
+  expect(mesh.geometry.getAttribute('position')).toBe(attribute);
+ }finally{display.dispose();}
 });

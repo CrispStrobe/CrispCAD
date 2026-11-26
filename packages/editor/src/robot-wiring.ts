@@ -57,31 +57,53 @@ const ring=Array.from({length:SIDES+1},(_,k)=>{
  const angle=k/SIDES*Math.PI*2;
  return {cos:Math.cos(angle),sin:Math.sin(angle)};
 });
-/** Reuse fixed vertex/index buffers. Only poses move; no tube allocations per tick. */
+/** Reuse authored anchor coordinates and fixed tube buffers across pose updates. */
 export function createRobotWiring(scene:T.Scene,document:()=>CadDocument,body:(id:string)=>T.Object3D|undefined){
  const group=new T.Group();group.name='Functional cable harnesses';scene.add(group);
- const cables:{wire:RobotWire;mesh:T.Mesh<T.BufferGeometry,T.MeshStandardMaterial>;anchors:WireAnchor[];points:T.Vector3[];curve:T.CatmullRomCurve3;samples:T.Vector3[];dirty:boolean}[]=[];
+ group.matrixAutoUpdate=false;
+ const cables:{mesh:T.Mesh<T.BufferGeometry,T.MeshStandardMaterial>;anchors:WireAnchor[];authoredPoints:(Vec3|undefined)[];points:T.Vector3[];curve:T.CatmullRomCurve3;samples:T.Vector3[];dirty:boolean}[]=[];
  const p=new T.Vector3(),tangent=new T.Vector3(),normal=new T.Vector3(),binormal=new T.Vector3();
- function clear(){for(const c of cables){c.mesh.geometry.dispose();c.mesh.material.dispose();}cables.length=0;updatedBodies.clear();group.clear();}
- const updatedBodies=new Set<T.Object3D>();
- function point(nodes:CadDocument['nodes'],a:WireAnchor,out:T.Vector3){
-  const node=nodes[a.bodyId],mesh=body(a.bodyId);
-  if(!node||!mesh)return undefined;
-  if(!updatedBodies.has(mesh)){
-   mesh.updateWorldMatrix(true,false);
-   updatedBodies.add(mesh);
+ let authoredDocument:CadDocument|undefined,immutableAnchors=false;
+ const frameBodies=new Map<string,T.Object3D|null>();
+ function clear(){for(const c of cables){c.mesh.geometry.dispose();c.mesh.material.dispose();}cables.length=0;frameBodies.clear();authoredDocument=undefined;group.clear();}
+ function refreshAuthoredPoints(doc:CadDocument) {
+  if(doc!==authoredDocument){
+   authoredDocument=doc;
+   // CadSession freezes complete snapshots. Also handle callers that keep
+   // a mutable document or mutate a nested transform in place.
+   immutableAnchors=Object.isFrozen(doc)&&Object.isFrozen(doc.nodes)&&cables.every(c=>c.anchors.every(a=>{
+    const node=doc.nodes[a.bodyId];
+    if(!node)return true;
+    const {transform}=node;
+    return Object.isFrozen(node)&&Object.isFrozen(transform)&&Object.isFrozen(transform.position)
+     &&Object.isFrozen(transform.rotation)&&Object.isFrozen(transform.scale);
+   }));
   }
-  return out.set(...localToWorldPoint(a.point,node.transform)).applyMatrix4(mesh.matrixWorld);
+  for(const c of cables)c.authoredPoints=c.anchors.map(a=>{
+   const transform=doc.nodes[a.bodyId]?.transform;
+   return transform?localToWorldPoint(a.point,transform):undefined;
+  });
+ }
+ function frameBody(id:string){
+  const previous=frameBodies.get(id);
+  if(previous!==undefined)return previous;
+  const mesh=body(id)??null;
+  mesh?.updateWorldMatrix(true,false);
+  frameBodies.set(id,mesh);
+  return mesh;
  }
  function update(){
   if(!cables.length)return;
-  updatedBodies.clear();
-  const {nodes}=document();
+  frameBodies.clear();
+  const doc=document();
+  if(doc!==authoredDocument||!immutableAnchors)refreshAuthoredPoints(doc);
   for(const c of cables){
    let changed=c.dirty;c.mesh.visible=true;
    for(let i=0;i<c.anchors.length;i++){
+    const authored=c.authoredPoints[i],mesh=authored&&frameBody(c.anchors[i].bodyId);
+    if(!authored||!mesh){c.mesh.visible=false;c.dirty=true;break;}
     const v=c.points[i],x=v.x,y=v.y,z=v.z;
-    if(!point(nodes,c.anchors[i],v)){c.mesh.visible=false;c.dirty=true;break;}
+    v.fromArray(authored).applyMatrix4(mesh.matrixWorld);
     if(Math.abs(v.x-x)>1e-7||Math.abs(v.y-y)>1e-7||Math.abs(v.z-z)>1e-7)changed=true;
    }
    if(!c.mesh.visible||!changed)continue;c.dirty=false;
@@ -102,7 +124,7 @@ export function createRobotWiring(scene:T.Scene,document:()=>CadDocument,body:(i
  return {get count(){return cables.length;},reset(wires:RobotWire[]){clear();for(const wire of wires){
    const geometry=new T.BufferGeometry(),vertices=(STEPS+1)*(SIDES+1);geometry.setAttribute('position',new T.BufferAttribute(new Float32Array(vertices*3),3).setUsage(T.DynamicDrawUsage));geometry.setAttribute('normal',new T.BufferAttribute(new Float32Array(vertices*3),3).setUsage(T.DynamicDrawUsage));
    const indices=[];for(let j=0;j<STEPS;j++)for(let k=0;k<SIDES;k++){const a=j*(SIDES+1)+k,b=a+SIDES+1;indices.push(a,a+1,b,b,a+1,b+1);}geometry.setIndex(indices);
-   const mesh=new T.Mesh(geometry,new T.MeshStandardMaterial({color:wire.color,roughness:.55}));mesh.name=wire.label;mesh.userData.wireId=wire.id;mesh.frustumCulled=false;group.add(mesh);const anchors=[wire.from,...wire.via,wire.to],points=anchors.map(()=>new T.Vector3());cables.push({wire,mesh,anchors,points,curve:new T.CatmullRomCurve3(points,false,'centripetal'),samples:Array.from({length:STEPS+1},()=>new T.Vector3()),dirty:true});
+   const mesh=new T.Mesh(geometry,new T.MeshStandardMaterial({color:wire.color,roughness:.55}));mesh.name=wire.label;mesh.userData.wireId=wire.id;mesh.frustumCulled=false;mesh.matrixAutoUpdate=false;group.add(mesh);const anchors=[wire.from,...wire.via,wire.to].map(a=>({bodyId:a.bodyId,point:[...a.point] as Vec3})),points=anchors.map(()=>new T.Vector3());cables.push({mesh,anchors,authoredPoints:[],points,curve:new T.CatmullRomCurve3(points,false,'centripetal'),samples:Array.from({length:STEPS+1},()=>new T.Vector3()),dirty:true});
   }update();},update,dispose(){clear();scene.remove(group);}};
 }
 
