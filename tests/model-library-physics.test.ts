@@ -2,6 +2,7 @@
 import 'fake-indexeddb/auto';
 import {beforeAll, describe, expect, it,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
+import {createRequire} from 'node:module';
 import {createPresetDocument} from '../packages/editor/src/shapes.js';
 import {createCadSession, parseDocument, parseModelLibraryCatalogue, validateModelLibraryCatalogue, type ModelLibraryCatalogue} from '@brickwright/cad-core';
 import {checkModelLibrarySTL, createGeometryKernel, exportSTL, type GeometryKernel} from '@brickwright/cad-geometry';
@@ -34,7 +35,11 @@ async function fixture(tube = false) {
 describe('optional library Jolt collision qualification', () => {
   it('keeps the reported engine version aligned with the pinned package release', () => {
     const manifest = JSON.parse(readFileSync('packages/physics/package.json', 'utf8'));
-    expect(manifest.dependencies['jolt-physics']).toBe(`https://github.com/CrispStrobe/JoltPhysics.js/releases/download/bw.10-qualified-20261112/jolt-physics-${MODEL_LIBRARY_JOLT_VERSION}.tgz`);
+    const installed = createRequire(import.meta.url).resolve('jolt-physics/package.json');
+    const lock = JSON.parse(readFileSync('package-lock.json', 'utf8')).packages['node_modules/jolt-physics'];
+    expect(lock.resolved).toBe(manifest.dependencies['jolt-physics']);
+    expect(lock.version).toBe(MODEL_LIBRARY_JOLT_VERSION);
+    expect(JSON.parse(readFileSync(installed, 'utf8')).version).toBe(MODEL_LIBRARY_JOLT_VERSION);
   });
   it('creates native shapes and steps the debug engine; returns separate hash/version/policy-bound evidence', async () => {
     const f = await fixture(), before = structuredClone(f.catalogue), original = f.bytes.slice();
@@ -78,6 +83,13 @@ describe('optional library Jolt collision qualification', () => {
     expect(report.selectedFile).toEqual(catalogue.assets[0].original);
     expect(report.quality.quality).not.toHaveProperty('collisionReport');
     expect(await isQualifiedCollision(JSON.parse(JSON.stringify(report)))).toBe(false);
+    for (const version of ['1.1.0-bw.9', '1.1.0-bw.10']) {
+      const historical = structuredClone(catalogue);
+      historical.assets[0].quality!.collisionReport!.evidence.engineVersion = version;
+      const summary = historical.assets[0].quality!.physics;
+      if (summary) summary.engineVersion = version;
+      expect(parseModelLibraryCatalogue(JSON.stringify(historical)).valid).toBe(true);
+    }
     const mutations: ((c: any) => void)[] = [
       c => c.version = 2,
       c => c.assets[0].quality.collisionReport.version = 2,

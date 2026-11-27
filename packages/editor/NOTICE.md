@@ -51,7 +51,7 @@ Runtime dependencies:
   LICENSE and the bundled MIT and Apache-2.0 licence texts ship in the app's
   offline notices (`cad-assets/notices.txt`).
 - qrcode-generator 2.0.4, MIT, copyright 2009 Kazuhiko Arase.
-- Shared simulation physics package: Brickwright JoltPhysics.js 1.1.0-bw.10
+- Shared simulation physics package: Brickwright JoltPhysics.js 1.1.0-bw.11
   and Jolt Physics, MIT, copyright Jorrit Rouwe and contributors. The qualified
   fork release URL and integrity are pinned in package-lock.json. It is not
   currently bundled into the standalone editor UI.
