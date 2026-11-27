@@ -26,8 +26,8 @@ type NativeShape=InstanceType<Awaited<ReturnType<typeof initJolt>>['Shape']>;
 type NativeBody=InstanceType<Awaited<ReturnType<typeof initJolt>>['Body']>;
 type NativeHinge=InstanceType<Awaited<ReturnType<typeof initJolt>>['HingeConstraint']>;
 type NativeSlider=InstanceType<Awaited<ReturnType<typeof initJolt>>['SliderConstraint']>;
-type HingeBinding={kind:'hinge';joint:CadJoint;motor:NativeHinge;angleRevision:number;angleRad:number};
-type MotorBinding=HingeBinding|{kind:'slider';joint:CadJoint;motor:NativeSlider};
+type HingeBinding={kind:'hinge';joint:CadJoint;motor:NativeHinge;angleRevision:number;angleRad:number;torqueNm?:number;velocityMode?:boolean};
+type MotorBinding=HingeBinding|{kind:'slider';joint:CadJoint;motor:NativeSlider;velocityMode?:boolean};
 type RetainedCompound={engine:unknown;tokens:string;inputs:PreparedCollision[];shape:NativeShape};
 type PhysicsShapeCache={clear():void};
 const retainedCompounds=new WeakMap<PhysicsShapeCache,Map<string,RetainedCompound>>();
@@ -147,24 +147,42 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
   return binding.angleRad;
  }
  const actuatorFrames=new Map<string,{
-  joint:CadJoint;a:any;b:any;axis:number[];anchorM?:number[];motor:any;impulseConfigured:boolean;
+  binding:MotorBinding;source:NativeBody;reactions:readonly (readonly [NativeBody,number])[];
+  axis:number[];anchorM?:number[];impulseConfigured:boolean;
  }>();
  let impulseVector:any,impulsePoint:any;
  function actuatorFrame(id:string){
   const known=actuatorFrames.get(id);if(known)return known;
   const binding=motorBindings.get(id);if(!binding)throw new Error(t('Choose a hinge or slider actuator'));
-  const {joint,motor}=binding;
-  const a=byId.get(joint.bodyA),b=byId.get(joint.bodyB);if(a===b)throw new Error(t('Actuator bodies belong to the same rigid assembly'));
+  const {joint}=binding;
+  const a=bodyForPose(joint.bodyA),b=bodyForPose(joint.bodyB);
+  if(a===b)throw new Error(t('Actuator bodies belong to the same rigid assembly'));
   const authored=doc.nodes[joint.bodyA].transform,axis=rotate(joint.axisA,authored.rotation);
   const anchorM=joint.kind==='slider'?rotate(joint.anchorA.map((v,i)=>v*authored.scale[i]),authored.rotation).map((v,i)=>(v+authored.position[i])*.001):undefined;
-  const result={joint,a,b,axis,anchorM,motor,impulseConfigured:false};actuatorFrames.set(id,result);return result;
+  const reactions=([[a,-1],[b,1]] as const).filter(([body])=>!body.IsStatic());
+  const result={binding,source:a,reactions,axis,anchorM,impulseConfigured:false};
+  actuatorFrames.set(id,result);
+  return result;
  }
 
- const enableVelocityMotor=(id:string,motor:any)=>{
-  motor.SetMotorState(J.EMotorState_Velocity);
-  const actuator=actuatorFrames.get(id);
+ const enableVelocityMotor=(binding:MotorBinding)=>{
+  if(binding.velocityMode)return;
+  binding.motor.SetMotorState(J.EMotorState_Velocity);
+  binding.velocityMode=true;
+  const actuator=actuatorFrames.get(binding.joint.id);
   if(actuator)actuator.impulseConfigured=false;
  };
+ const disableMotor=(binding:MotorBinding)=>{
+  binding.motor.SetMotorState(J.EMotorState_Off);
+  binding.velocityMode=false;
+ };
+ function setHingeTorque(binding:HingeBinding,torqueNm:number){
+  if(binding.torqueNm===torqueNm)return;
+  const settings=binding.motor.GetMotorSettings();
+  settings.mMinTorqueLimit=-torqueNm;
+  settings.mMaxTorqueLimit=torqueNm;
+  binding.torqueNm=torqueNm;
+ }
 
  // Fixed mates describe one rigid body, not a stiff chain of tiny solver
  // bodies. Keep every source ID as an alias of the common world-space pose.
@@ -582,21 +600,22 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
   setLinearVelocity(id:string,velocityMmS:Vec3){if(disposed||velocityMmS.length!==3||velocityMmS.some(v=>!Number.isFinite(v)||Math.abs(v)>10000))throw new Error(t('Invalid initial body velocity'));const body=byId.get(id);if(!body)throw new Error(t('Unknown physics body'));if(body.IsStatic())throw new Error(t('A fixed body cannot be thrown'));invalidateSeparatedPairs(id);const center=body.GetCenterOfMassPosition(),r=sourceCenterM(id).map((v,i)=>v-[center.GetX(),center.GetY(),center.GetZ()][i]),angular=body.GetAngularVelocity(),w=[angular.GetX(),angular.GetY(),angular.GetZ()],v=new J.Vec3(...velocityMmS.map((v,i)=>v*.001-w[(i+1)%3]*r[(i+2)%3]+w[(i+2)%3]*r[(i+1)%3]));bodies.SetLinearVelocity(body.GetID(),v);bodies.ActivateBody(body.GetID());J.destroy(v);},
   applyImpulse(id:string,impulseNs:Vec3,pointMm?:Vec3){if(disposed||impulseNs.length!==3||impulseNs.some(v=>!Number.isFinite(v)||Math.abs(v)>100)||pointMm&&(pointMm.length!==3||pointMm.some(v=>!Number.isFinite(v)||Math.abs(v)>1e6)))throw new Error(t('Invalid impulse'));const body=byId.get(id);if(!body)throw new Error(t('Unknown physics body'));if(body.IsStatic())throw new Error(t('A fixed body cannot be thrown'));invalidateSeparatedPairs(id);const impulse=new J.Vec3(...impulseNs),point=new J.RVec3(...(pointMm?pointMm.map(v=>v*.001):sourceCenterM(id)));body.AddImpulse(impulse,point);J.destroy(point);bodies.ActivateBody(body.GetID());J.destroy(impulse);},
   sliderPosition(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const binding=motorBindings.get(id);if(binding?.kind!=='slider')throw new Error(t('Unknown slider connector'));return binding.motor.GetCurrentPosition()*1000;},
-  setSliderMotor(id:string,speedMmS:number,maxForceN:number){if(disposed||!Number.isFinite(speedMmS)||Math.abs(speedMmS)>1000||!Number.isFinite(maxForceN)||maxForceN<=0||maxForceN>10000)throw new Error(t('Invalid slider motor command'));const binding=motorBindings.get(id);if(binding?.kind!=='slider')throw new Error(t('Unknown slider connector'));const {joint,motor}=binding,settings=motor.GetMotorSettings();settings.mMinForceLimit=-maxForceN;settings.mMaxForceLimit=maxForceN;motor.SetTargetVelocity(speedMmS*.001);enableVelocityMotor(id,motor);for(const id of [joint.bodyA,joint.bodyB])bodies.ActivateBody(byId.get(id).GetID());},
-  stopSliderMotor(id:string,action:'brake'|'coast'='brake'){if(disposed)throw new Error(t('Physics world was disposed'));const binding=motorBindings.get(id);if(binding?.kind!=='slider'||!['brake','coast'].includes(action))throw new Error(t('Unknown slider connector'));const {motor}=binding;if(action==='coast')motor.SetMotorState(J.EMotorState_Off);else{const settings=motor.GetMotorSettings();if(settings.mMaxForceLimit>10000){settings.mMaxForceLimit=10;settings.mMinForceLimit=-10;}motor.SetTargetVelocity(0);enableVelocityMotor(id,motor);}},
+  setSliderMotor(id:string,speedMmS:number,maxForceN:number){if(disposed||!Number.isFinite(speedMmS)||Math.abs(speedMmS)>1000||!Number.isFinite(maxForceN)||maxForceN<=0||maxForceN>10000)throw new Error(t('Invalid slider motor command'));const binding=motorBindings.get(id);if(binding?.kind!=='slider')throw new Error(t('Unknown slider connector'));const {joint,motor}=binding,settings=motor.GetMotorSettings();settings.mMinForceLimit=-maxForceN;settings.mMaxForceLimit=maxForceN;motor.SetTargetVelocity(speedMmS*.001);enableVelocityMotor(binding);for(const id of [joint.bodyA,joint.bodyB])bodies.ActivateBody(byId.get(id).GetID());},
+  stopSliderMotor(id:string,action:'brake'|'coast'='brake'){if(disposed)throw new Error(t('Physics world was disposed'));const binding=motorBindings.get(id);if(binding?.kind!=='slider'||!['brake','coast'].includes(action))throw new Error(t('Unknown slider connector'));const {motor}=binding;if(action==='coast')disableMotor(binding);else{const settings=motor.GetMotorSettings();if(settings.mMaxForceLimit>10000){settings.mMaxForceLimit=10;settings.mMinForceLimit=-10;}motor.SetTargetVelocity(0);enableVelocityMotor(binding);}},
   /** Internal actuator impulse: equal and opposite reactions, with the axis carried by body A. */
   applyJointImpulse(id:string,impulse:number){
    if(disposed||!Number.isFinite(impulse)||Math.abs(impulse)>1)throw new Error(t('Invalid actuator impulse'));
    const actuator=actuatorFrame(id);
-   const {joint,a,b,axis:authoredAxis,anchorM,motor}=actuator;
+   const {binding,source,reactions,axis:authoredAxis,anchorM}=actuator;
+   const {joint,motor}=binding;
    // Multiple motors can act on the same chassis before the next step.
    // Impulses change velocity immediately but leave its orientation intact.
-   const sample=bodyPoseSample(a),q=currentRotation(a,sample);
+   const sample=bodyPoseSample(source),q=currentRotation(source,sample);
    const [x,y,z]=quaternionPoint(authoredAxis,q).map(v=>v*impulse);
    impulseVector??=new J.Vec3(0,0,0);
    // These native settings persist across physics steps in this world.
    if(!actuator.impulseConfigured){
-    motor.SetMotorState(J.EMotorState_Off);
+    disableMotor(binding);
     if(joint.kind==='hinge'){
      motor.SetNumVelocityStepsOverride(40);
      motor.SetNumPositionStepsOverride(80);
@@ -604,49 +623,48 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
     actuator.impulseConfigured=true;
    }
    if(joint.kind==='slider'){
-    const origin=currentPositionM(a,sample),offset=quaternionPoint(anchorM!,q);
+    const origin=currentPositionM(source,sample),offset=quaternionPoint(anchorM!,q);
     impulsePoint??=new J.RVec3(0,0,0);
     impulsePoint.Set(offset[0]+origin[0],offset[1]+origin[1],offset[2]+origin[2]);
    }
-   for(const [body,sign]of [[a,-1],[b,1]] as const){
-    if(body.IsStatic())continue;
+   // Dynamic bodies are activated when added. This world disables sleeping.
+   for(const [body,sign]of reactions){
     impulseVector.Set(x*sign,y*sign,z*sign);
     if(joint.kind==='hinge')body.AddAngularImpulse(impulseVector);else body.AddImpulse(impulseVector,impulsePoint);
-    bodies.ActivateBody(body.GetID());
    }
   },
   /** Ideal torque-limited position servo, solved implicitly with both-body reaction. */
   setHingeServo(id:string,angleRad:number,maxTorqueNm:number){
    const binding=motorBindings.get(id);
    if(disposed||!Number.isFinite(angleRad)||Math.abs(angleRad)>Math.PI*2||!Number.isFinite(maxTorqueNm)||maxTorqueNm<=0||maxTorqueNm>100||binding?.kind!=='hinge')throw new Error(t('Invalid position servo target'));
-   const {joint,motor:hinge}=binding,motor=hinge.GetMotorSettings();
+   const {joint,motor:hinge}=binding;
    tuneSerialServo(joint.bodyA);
-   motor.mMinTorqueLimit=-maxTorqueNm;motor.mMaxTorqueLimit=maxTorqueNm;
+   setHingeTorque(binding,maxTorqueNm);
    // Ideal internal position loop. Native velocity constraints enforce the
    // torque bound implicitly. Use the same angle as telemetry at this boundary.
    const error=angleRad-readHingeAngle(binding),speed=Math.max(-Math.PI*5/3,Math.min(Math.PI*5/3,error*12));
-   hinge.SetTargetAngularVelocity(speed);enableVelocityMotor(id,hinge);for(const body of [joint.bodyA,joint.bodyB])bodies.ActivateBody(byId.get(body).GetID());
+   hinge.SetTargetAngularVelocity(speed);enableVelocityMotor(binding);
   },
   setHingeMotor(id:string,speedRadS:number,maxTorqueNm:number){
    if(disposed||!Number.isFinite(speedRadS)||Math.abs(speedRadS)>20||!Number.isFinite(maxTorqueNm)||maxTorqueNm<=0||maxTorqueNm>100)throw new Error(t('Invalid hinge motor command'));
    const binding=motorBindings.get(id);if(binding?.kind!=='hinge')throw new Error(t('Unknown hinge joint'));
-   const {joint,motor:hinge}=binding,motor=hinge.GetMotorSettings();
-   motor.mMinTorqueLimit=-maxTorqueNm;motor.mMaxTorqueLimit=maxTorqueNm;
-   hinge.SetTargetAngularVelocity(speedRadS);enableVelocityMotor(id,hinge);
+   const {joint,motor:hinge}=binding;
+   setHingeTorque(binding,maxTorqueNm);
+   hinge.SetTargetAngularVelocity(speedRadS);enableVelocityMotor(binding);
    for(const body of [joint.bodyA,joint.bodyB])bodies.ActivateBody(byId.get(body).GetID());
   },
   coastHingeMotor(id:string){
    if(disposed)throw new Error(t('Physics world was disposed'));
    const binding=motorBindings.get(id);if(binding?.kind!=='hinge')throw new Error(t('Unknown hinge joint'));
-   binding.motor.SetMotorState(J.EMotorState_Off);
+   disableMotor(binding);
   },
   stopHingeMotor(id:string){
    if(disposed)throw new Error(t('Physics world was disposed'));
    const binding=motorBindings.get(id);if(binding?.kind!=='hinge')throw new Error(t('Unknown hinge joint'));
    // Brake through the finite motor torque; never overwrite the body's pose/velocity.
-   const {joint,motor:hinge}=binding,motor=hinge.GetMotorSettings();
-   if(motor.mMaxTorqueLimit>100){motor.mMaxTorqueLimit=.02;motor.mMinTorqueLimit=-.02;}
-   hinge.SetTargetAngularVelocity(0);enableVelocityMotor(id,hinge);
+   const {joint,motor:hinge}=binding;
+   if(binding.torqueNm===undefined&&hinge.GetMotorSettings().mMaxTorqueLimit>100)setHingeTorque(binding,.02);
+   hinge.SetTargetAngularVelocity(0);enableVelocityMotor(binding);
    for(const body of [joint.bodyA,joint.bodyB])bodies.ActivateBody(byId.get(body).GetID());
   },
   hingeAngle(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const binding=motorBindings.get(id);if(binding?.kind!=='hinge')throw new Error(t('Unknown hinge joint'));return readHingeAngle(binding);},

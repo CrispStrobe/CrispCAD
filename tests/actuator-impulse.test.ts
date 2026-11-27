@@ -130,6 +130,41 @@ it('body-mounted rays ignore their own rigid assembly and see external obstacles
  }finally{position.mockRestore();rotation.mockRestore();world.dispose();s.dispose();}
 });
 
+it('keeps awake actuator bodies and updates native servo settings only on changes',async()=>{
+ const {world,joint}=await fixture('hinge',true,true);
+ const J=await loadPhysicsEngine(false);
+ const wake=vi.spyOn(J.BodyInterface.prototype,'ActivateBody');
+ const state=vi.spyOn(J.HingeConstraint.prototype,'SetMotorState');
+ const settings=vi.spyOn(J.HingeConstraint.prototype,'GetMotorSettings');
+ try{
+  world.setHingeServo(joint,.5,.001);
+  world.step();
+  world.setHingeServo(joint,.5,.001);
+  world.step();
+  expect(world.hingeAngle(joint)).toBeGreaterThan(0);
+  expect(wake).not.toHaveBeenCalled();
+  expect(settings).toHaveBeenCalledTimes(1);
+  expect(state.mock.calls).toEqual([[J.EMotorState_Velocity]]);
+
+  world.applyJointImpulse(joint,-1e-7);
+  world.setHingeServo(joint,.5,.001);
+  world.coastHingeMotor(joint);
+  world.setHingeServo(joint,.5,.002);
+  expect(state.mock.calls).toEqual([
+   [J.EMotorState_Velocity],[J.EMotorState_Off],[J.EMotorState_Velocity],
+   [J.EMotorState_Off],[J.EMotorState_Velocity],
+  ]);
+  expect(settings).toHaveBeenCalledTimes(2);
+  expect(wake).not.toHaveBeenCalled();
+
+  world.setHingeMotor(joint,1,.003);
+  world.stopHingeMotor(joint);
+  world.setHingeServo(joint,.5,.002);
+  expect(state).toHaveBeenCalledTimes(5);
+  expect(settings).toHaveBeenCalledTimes(4);
+ }finally{wake.mockRestore();state.mockRestore();settings.mockRestore();world.dispose();}
+});
+
 it('shares the current hinge angle between telemetry and a torque-limited position servo',async()=>{
  const {world,joint}=await fixture('hinge',true,true);
  const J=await loadPhysicsEngine(false),read=vi.spyOn(J.HingeConstraint.prototype,'GetCurrentAngle');
