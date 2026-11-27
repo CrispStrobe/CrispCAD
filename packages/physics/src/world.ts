@@ -99,7 +99,9 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
  const ownedBodies:any[]=[],byId=new Map<string,any>(),constraints=new Map<string,any>();let disposed=false,elapsed=0,contactListener:any,partFilter:any;
  const motorBindings=new Map<string,MotorBinding>();
  let rayQuery:ReturnType<typeof createRayQuery>|undefined;
- type BodyPoseSample={revision:number;positionM?:Vec3;rotation?:number[]};
+ type BodyPoseSample={
+  positionRevision:number;rotationRevision:number;positionM:Vec3;rotation:[number,number,number,number];
+ };
  const bodyPoseSamples=new Map<NativeBody,BodyPoseSample>();
  type SensorRay={bodyId:string;body:NativeBody;originMm:Vec3;direction:Vec3;rangeMm:number;source:number[];axis:number[];projected?:{revision:number;origin:Vec3;to:Vec3}};
  const sensorRays=new Map<string,SensorRay>();
@@ -109,28 +111,33 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
  function bodyPoseSample(body:NativeBody){
   let sample=bodyPoseSamples.get(body);
   if(!sample){
-   sample={revision:poseRevision};
+   sample={positionRevision:-1,rotationRevision:-1,positionM:[0,0,0],rotation:[0,0,0,1]};
    bodyPoseSamples.set(body,sample);
-  }else if(sample.revision!==poseRevision){
-   sample.revision=poseRevision;
-   sample.positionM=undefined;
-   sample.rotation=undefined;
   }
   return sample;
  }
  function currentPositionM(body:NativeBody,sample:BodyPoseSample){
-  if(!sample.positionM){
+  const {positionM}=sample;
+  if(sample.positionRevision!==poseRevision){
    const p=body.GetPosition();
-   sample.positionM=[p.GetX(),p.GetY(),p.GetZ()];
+   positionM[0]=p.GetX();
+   positionM[1]=p.GetY();
+   positionM[2]=p.GetZ();
+   sample.positionRevision=poseRevision;
   }
-  return sample.positionM;
+  return positionM;
  }
  function currentRotation(body:NativeBody,sample:BodyPoseSample){
-  if(!sample.rotation){
+  const {rotation}=sample;
+  if(sample.rotationRevision!==poseRevision){
    const q=body.GetRotation();
-   sample.rotation=[q.GetX(),q.GetY(),q.GetZ(),q.GetW()];
+   rotation[0]=q.GetX();
+   rotation[1]=q.GetY();
+   rotation[2]=q.GetZ();
+   rotation[3]=q.GetW();
+   sample.rotationRevision=poseRevision;
   }
-  return sample.rotation;
+  return rotation;
  }
  function readHingeAngle(binding:HingeBinding){
   if(binding.angleRevision!==poseRevision){
