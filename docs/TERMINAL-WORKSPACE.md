@@ -473,7 +473,9 @@ and `exportCommandJournal(entries, options)`. The terminal controller also has
 `exportJournal(format)`.
 
 The CAD Script export turns bodies with a faithful CAD Script equivalent into
-`@object` blocks: primitives, and extrusions and revolutions of closed sketches. Each block is a complete CAD Script program that can be pasted
+`@object` blocks: primitives, extrusions and revolutions of closed sketches (with
+their parameters when the sketch is parametric), and Booleans of such bodies. Each
+block is a complete CAD Script program that can be pasted
 into the code workspace or sent to `cad_create_code_object`. Everything else is
 kept in `@replay … non-portable` blocks as canonical replay text, commented out
 with `//| `:
@@ -495,6 +497,12 @@ return move([10, 0, 5], rotate([0, 0, 30], box(40, 30, 10)));
 // from: rectangle 0,0 20,30; extrude 5d1e… 8
 return extrudeProfile(8, rectangle2d(20, 30));
 
+// @object 3 "Subtract" color #eea52b
+// from: Edit parameters; Add sketch; Extrude sketch; cylinder 4 30 10,0,5; Subtract (first selected is the base)
+param w: mm = 30;
+param h: mm = w / 4;
+return subtract(extrudeProfile(h, rectangle2d(w, 20, true)), move([10, 0, 5], cylinder(4, 30, 48)));
+
 // @replay 4 non-portable: rectangle 50,0 60,10
 //| apply {"version":1,"kind":"apply","projectId":"3f0c…",…}
 ```
@@ -507,30 +515,52 @@ Portability rules:
   Transforms, renames, colour and size edits fold into its final placement.
   The program is `move(position, rotate(rotation, scale(scale, primitive)))`,
   the same order as the model's own transform, with explicit segment counts.
-- An edit that consumes a body (a boolean, mirror or pattern), turns it into a
-  hole or reference, or otherwise changes it non-portably makes that body
-  non-portable as well, together with every edit it depends on.
+- An edit that consumes a body (a mirror or pattern, or a boolean that is not
+  portable itself), turns it into a reference, or otherwise changes it
+  non-portably makes that body non-portable as well, together with every edit it
+  depends on.
 - An extrusion or revolution is portable when its sketch was created in the
-  journal, is closed, lies on the XY, XZ or YZ plane and uses only literal values,
-  and the feature's distance, angle and axis offset are literal too. Later edits of
-  the sketch or the feature fold into the program. Rectangles and circles keep
-  their analytic form (`rectangle2d`, `move2d(…, circle2d(r, segments))`); other
-  closed profiles use the sketch's evaluated polygon (`polygon2d`, with arcs
-  tessellated as the model does and holes as index paths). The program follows
-  the feature evaluator: `extrudeProfile(distance, profile)`, shifted by
-  `-distance/2` when symmetric, then rotated `[90,0,0]` (XZ) or `[90,0,90]` (YZ);
-  `revolve(profile moved by -axisOffset, angle, 128)`, rotated `[-90,0,0]` (XY)
-  or `[0,0,90]` (YZ) and moved back along the axis offset; then the body's own
-  transform. Tests rebuild every exported program and compare volume and bounding
-  box with the original body.
-- A sketch that no portable body uses (for example an open line, or a closed
-  sketch never extruded) has no CAD Script equivalent and stays replay text. A
-  sketch is non-portable together with every feature on it when one of them is
-  (a parametric distance, a boolean that consumes it, joints); one record that
-  creates portable and non-portable things together, such as a terminal script,
-  stays replay text as a whole.
-- Imports, code objects, parameters, exact features and assembly edits are
-  non-portable for now.
+  journal, is closed and lies on the XY, XZ or YZ plane, and its values are
+  literals or, for rectangles and circles, expressions of parameters created in
+  the journal; the feature's distance, angle and axis offset may be such
+  expressions too. Later edits of the sketch, the feature or the parameters fold
+  into the program. Rectangles and circles keep their analytic form
+  (`rectangle2d`, `move2d(…, circle2d(r, segments))`) with their expressions;
+  other closed profiles use the sketch's evaluated polygon (`polygon2d`, with arcs
+  tessellated as the model does and holes as index paths), so they must be
+  literal. The program follows the feature evaluator: `extrudeProfile(distance,
+  profile)`, shifted by `-distance/2` when symmetric, then rotated `[90,0,0]`
+  (XZ) or `[90,0,90]` (YZ); `revolve(profile moved by -axisOffset, angle, 128)`,
+  rotated `[-90,0,0]` (XY) or `[0,0,90]` (YZ) and moved back along the axis
+  offset; then the body's own transform.
+- A program starts with `param name: unit = expression;` for every parameter it
+  uses, directly or through another parameter's expression, in the order they
+  were created, with their current expressions. The program stays parametric:
+  `parameters` overrides of a code object change it as they change the model.
+  A parameter is portable when it was created in the journal (a new design, or a
+  new parameter in it) and later only edited; a parameter edit is portable while
+  the design has no bindings (bindings drive body properties, so an edit that
+  touches them makes it and every body tracked so far replay text).
+- A boolean (union, subtract, intersect) is portable when all its inputs are
+  portable bodies; the program nests their programs as the evaluator does,
+  `subtract(input 1, input 2, …)`, then the boolean's own transform. With hole
+  roles it is the union of the solid inputs minus the holes (`subtract(union(…),
+  hole, …)`), or the union of the holes when all are holes. Booleans nest, and
+  separating one gives its inputs back as bodies of their own. A hole that no
+  portable boolean takes has no CAD Script equivalent and stays replay text.
+- Tests rebuild every exported program and compare volume and bounding box with
+  the original body (primitives, sketch features, parametric profiles and
+  booleans alike).
+- A sketch or parameter that no portable body uses (for example an open line, a
+  closed sketch never extruded, a parameter nothing refers to) has no CAD Script
+  equivalent and stays replay text. A sketch is non-portable together with every
+  feature on it when one of them is (an expression of a parameter from before the
+  journal, a profile kind other than rectangle or circle with expressions,
+  joints); one record that creates portable and non-portable things together,
+  such as a terminal script or one parameter edit that creates a used and an
+  unused parameter, stays replay text as a whole.
+- Imports, code objects, mirrors, patterns, exact features, parameter bindings
+  and assembly edits are non-portable for now.
 - Undo/redo pairs known to the journal cancel out; undone edits are left out.
   Undo or redo of edits made before the journal started stays as replay text.
   Selection entries are omitted: apply records carry their own selection.
@@ -695,8 +725,8 @@ Embedded-host review and qualification on a physical iPad are still open.
 
 Next milestones are completion for further command arguments;
 active sketch planes and advanced snaps; continuous paths/arcs and constraint
-prompts; more readable action serializers; portable export of parametric sketches,
-regions with placements and booleans of portable bodies; cross-project replay; complete view-command
+prompts; more readable action serializers; portable export of parametric regions,
+outlines and paths, mirrors and patterns; cross-project replay; complete view-command
 capture; and qualified mouse, touch and narrow-layout behavior.
 
 ## Design notes from PR #79
