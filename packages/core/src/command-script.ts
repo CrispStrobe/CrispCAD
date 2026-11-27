@@ -23,6 +23,8 @@ export interface CommandScriptOptions {
  exact?:CommandRunnerOptions['exact'];
  /** Builds threaded screws for `part` and `fasten`, as for the runner. */
  generated?:CommandRunnerOptions['generated'];
+ /** Serves `check` (the manufacturing check), as for `runScriptAsync`. */
+ manufacturing?:CommandRunnerOptions['manufacturing'];
  signal?:AbortSignal;
  /** Answers `journal` lines (the host's journal of the real session). The script's own
   * lines are not journaled one by one: the committed script is one journal entry. */
@@ -63,7 +65,7 @@ export async function runCommandScript(session:CadSession,script:string,options:
   if(session.modelSourceLive)trial.enableModelSource();
   trial.select(session.state.selection);
   const journal=options.journal?{withInvocation:<T,>(_line:string,run:()=>T)=>run(),summary:()=>options.journal!.summary(),export:(format?:'cadscript'|'replay')=>options.journal!.export(format)}:undefined;
-  const runner=createCommandRunner(trial,{exact:options.exact,generated:options.generated,signal:options.signal,...(journal?{journal}:{})});
+  const runner=createCommandRunner(trial,{exact:options.exact,generated:options.generated,...(options.manufacturing?{manufacturing:options.manufacturing}:{}),signal:options.signal,...(journal?{journal}:{})});
   const results=await runner.runScriptAsync(script,{maxLines:options.maxLines});
   if(!results.length)throw new Error(t('Enter a command.'));
   options.signal?.throwIfAborted();

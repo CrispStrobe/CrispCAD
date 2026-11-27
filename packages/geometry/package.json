@@ -11,6 +11,10 @@
     "./printability": {
       "types": "./dist/analysis/printability.d.ts",
       "import": "./dist/analysis/printability.js"
+    },
+    "./manufacturing": {
+      "types": "./dist/analysis/manufacturing.d.ts",
+      "import": "./dist/analysis/manufacturing.js"
     }
   },
   "files": [

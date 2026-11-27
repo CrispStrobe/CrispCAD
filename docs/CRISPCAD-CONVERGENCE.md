@@ -1112,7 +1112,8 @@ reference for each.
    [Hole-driven fastening](#hole-driven-fastening-document-version-47-done-2026-11-27)).
 3. **Manufacturing checks beyond FDM:** CNC internal corner radius, edge-radius
    check, wall thickness measured on the exact body (`cnc-internal-corner-radius`,
-   `edge-radius-check`, `fdm-design-rules`).
+   `edge-radius-check`, `fdm-design-rules`). **Done 2026-11-27** (exact kernel 0.1.10, no new kernel
+   release; see [Check for manufacturing](#check-for-manufacturing-done-2026-11-27)).
 4. **Assemblies:** configurations, exploded view, mechanism validation and the
    planetary/ring-gear preset from [KERNELCAD-REVIEW.md](KERNELCAD-REVIEW.md#remaining-backlog-from-the-plan);
    step 5 of [PARAMETRIC-CAD-STRATEGY.md](PARAMETRIC-CAD-STRATEGY.md#delivery-order-and-acceptance).
@@ -1280,6 +1281,99 @@ hole through both); no fastener metadata on placed parts beyond their names (a l
 places a second stack); drill points on blind holes; hole callouts on drawings; lock nuts, lock
 washers, threaded rod and ISO 4014 partial-thread bolts (lab tables have them).
 
+#### Check for manufacturing. **Done 2026-11-27**
+
+**What it is.** File › **Check for manufacturing…** (also the macOS File menu, the command
+palette, the terminal command `check`, the MCP tool `cad_check_manufacturing` and the CLI verb
+`manufacturing`) checks the bodies for one process and lists what it found:
+
+- **FDM printing:** wall thickness (2 × nozzle), hole diameter (2 mm), and the printability
+  screen's watertightness, overhangs as modelled, best orientation and bed fit.
+- **3-axis CNC milling:** internal corner radius against the end mill (Ø6 by default) along the
+  setups' approach directions (`+z` by default): sharp vertical corners (radius 0, with their
+  length) and corner fillets below the tool radius fail; corners deeper than three times their
+  radius warn (the guide's "radius ≥ ⅓ of the depth"). Undercuts: surface no setup reaches, per
+  face with its area (more than 1 mm² fails). Wall thickness (0.8 mm).
+- **Laser-cut sheet:** a flat sheet of one thickness (every face one of its two sides or
+  perpendicular to them; the faces that are not are named), the minimum web between cuts and
+  hole size, both against the sheet thickness.
+- **Edge radius**, for every process: fillets and rounds with their radii, chamfers, sharp
+  external and internal edges; with a minimum and/or maximum fillet radius and a rule refusing
+  sharp external, internal or all edges (the lab's `require_edge_break`).
+
+Each body says whether it was measured on its **exact B-rep** or on its **mesh** and why ("no
+exact B-rep: …" for an imported mesh or a feature the kernel refuses, "exact kernel unavailable:
+…", "exact geometry not requested"), and each check says which it used: the FDM orientation rows
+are always the mesh screen. Mesh fallbacks are reduced on purpose: on a mesh, corners are creases
+sharper than 60° (no radii), and hole sizes and the edge-radius check are "not checked". A
+finding is a button: it sets the dialog aside and marks its faces (a translucent patch), edges or
+measuring line in the 3D view, with a bar to step through the findings (Previous, Next, Back to
+report, Done). Everything is tappable (44 px targets), so it works on an iPad without a keyboard.
+Settings (process, tool, setups, limits, exact on/off, selected bodies only) are this editor's;
+the check reads the model, adds no history entry and changes no document version.
+
+**Design.**
+- Kernel side: none new. The check asks the exact worker for the same data as an exact drawing
+  (`drawing` request, cached per document and shared with the drawing workspace): per body the
+  kernel's `topology()` (surface kind, radius and axis of each face, its outward normal at a
+  point; curve kind, samples and the two faces of each edge) and the face-wise mesh whose
+  triangles know their face. No exact kernel API was missing, so the lab needed no release.
+- Analysis (`packages/geometry/src/analysis/manufacturing.ts`, original code; the rules and
+  numbers follow the lab's guides `cnc-internal-corner-radius`, `edge-radius-check` and
+  `fdm-design-rules`, not its implementation): runs beside the meshes in the geometry worker (the
+  editor) or thread (MCP). Exact surface normals for planes, cylinders, cones, spheres and tori;
+  edges are tangent below 0.5° between the exact normals (12° where a freeform face's normal comes
+  from the mesh, and the report says so), otherwise convex or concave by which side of the other
+  face each lies on. Cylinders of one surface are grouped (SMLib can split a bore) and are full
+  bores or bosses when their triangles cover the whole turn. Blends are curved faces (cylinder,
+  torus, sphere) tangent to a neighbour that are not full bores; chamfers are planar strips
+  between two parallel convex rails at 10–80° (B-spline rails that are straight count as lines),
+  narrower than half their length, or cone rings between bevelled circles; mitre edges between two
+  chamfer faces belong to the bevel.
+- Wall thickness on the exact body: points spread over the faces (at most 40,000 per body), each
+  moved onto its exact face; the inward ray against the exact normal ends on the exact surface it
+  meets (plane, cylinder or sphere, solved in closed form next to the mesh hit); a hop whose middle
+  lies outside the solid is an air gap. One finding per pair of faces, then the thinnest spot of a
+  pair is replaced by the closed-form minimum where there is one (parallel planes, a plane and a
+  bore whose axis is parallel to it, two parallel bores), after checking that both closest points
+  lie on the two faces. So a 0.6 mm rib measures 0.600000 and a 2 mm web next to a Ø10 hole
+  2.000000; elsewhere the value is sampled. Undercut reachability is a ray along each approach
+  axis from every triangle (the face resting on the vice excepted), grouped by B-rep face.
+- Plain data in core (`manufacturing.ts`): settings with defaults and validation, the report
+  (checks with `geometry`, status, value/limit/unit, findings with world location, B-rep
+  face/edge indices and marks to draw), the `check` command's parser (canonical invocation) and
+  a text formatter for the terminal and CLI. Hosts implement `ManufacturingHost`; the command
+  runner, command scripts and the terminal take it as `manufacturing`.
+- Lazy kernel and tablet limits: the kernel loads only when "Exact B-rep where available" is on
+  (the default) and a check runs; the request runs in the exact worker under the editor's limits
+  (EXACT_LIMITS_TABLET on an iPad: memory ceiling, 60 s budget, Cancel). The drawing data's own
+  caps apply (2,000 faces and 6,000 edges per body, 400,000 triangles per request); a larger body
+  is checked on its mesh and named.
+
+**Tests.** `tests/manufacturing.test.ts` (14): a pocket with R2.5 corners fails a Ø6 end mill
+with four findings at the corners, warns at Ø4 (10 mm deep) and passes R4 at Ø4; a square pocket
+has four sharp corners 10 mm long and its floor edges are not flagged; a side groove 10 deep is
+1,300 mm² of undercut (faces of 500, 500 and 300 mm²) from `+z` and passes with `+z,+x`; a 1.5 mm
+wall is exact between its two faces; a box filleted R2 lists its rounds and fails a minimum of R3
+and a maximum of R1; a plain box with external edge breaks required has 12 sharp edges, a pocket
+with internal ones 8; an exact chamfer of the top face is recognised as 4 chamfers; a 0.6 mm rib
+and a Ø1.5 hole fail FDM, the Manifold mesh check measures the same rib within 1e-3 mm, and the
+fixed part passes; a 3 mm plate with a Ø2 hole and a 2 mm web warns, and a pocket block is not a
+sheet; an imported mesh is checked on its mesh with the reason, in English and German; the
+command's parser and a headless read-only run. `tests/mcp-manufacturing.test.ts` (2): the MCP tool
+(exact, mesh, marks on request, revision unchanged), the registry command in `cad_run_commands`
+and the CLI verb, also in German. Browser: `tests/browser/manufacturing.spec.ts` on the `ipad`
+project (by touch: mesh first with no kernel fetched, then exact, a finding marked in the 3D view
+and stepped through, a smaller tool, no history entry).
+
+**Left open.** Pocket depth against width (≤ 4 × width) and tool length; floor-to-wall radii
+against standard tools; dogbone recognition (it passes as a concave round today, which is right
+for the tool); minimum hole size per tool for CNC; chamfer widths on cone rings and bevels that
+are not strips; draft and sheet-metal checks (the lab's `sheet-metal` and `injection-molding`
+processes); bridges measured on the exact body (the FDM bridge rows are the mesh screen); a
+per-document saved choice of process (would need a document version); laser kerf and part size
+against the bed.
+
 ### Phase 7: delivery and qualification
 
 1. Exact features in BrickWright's CAD tab UI, not only through commands, behind the
@@ -1290,7 +1384,8 @@ washers, threaded rod and ISO 4014 partial-thread bolts (lab tables have them).
    [heavy exact jobs on iPad](#heavy-exact-jobs-on-ipad-2026-11-26)); needs the owner.
 
 Order: 5.1, 5.2 and 5.4 first (5.4 in the lab, alongside), then 6.1 with the drafting
-work (hidden-line views from exact edges done 2026-11-27), then the rest of Phase 6 by demand.
+work (hidden-line views from exact edges done 2026-11-27), then the rest of Phase 6 by demand
+(6.3, manufacturing checks, done 2026-11-27).
 
 ### Exact features in BrickWright's menus (Phase 7.1, 2026-11-27)
 

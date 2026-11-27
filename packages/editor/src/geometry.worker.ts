@@ -54,6 +54,12 @@ self.onmessage = async (event: MessageEvent<GeometryRequest>) => {
       return;
     }
     const result=ready.evaluate(event.data.document);
+    if(event.data.manufacturing){
+      const {checkManufacturing}=await import('@brickwright/cad-geometry/manufacturing');
+      const {settings,bodies,exact,exactUnavailable,kernel}=event.data.manufacturing;
+      self.postMessage({request,result:checkManufacturing({meshes:result.bodies,bodies,...(exact?{exact}:{}),...(exactUnavailable?{exactUnavailable}:{}),...(kernel?{kernel}:{})},settings)});
+      return;
+    }
     if(event.data.printability){
       const {checkPrintability}=await import('@brickwright/cad-geometry/printability');
       self.postMessage({request,result:checkPrintability(result.bodies,event.data.printability)});

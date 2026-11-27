@@ -17,6 +17,8 @@ import {EXACT_FEATURE_COMMANDS,formatExactResult,parseExactCommand,parseExactFea
 import type {ExactCommandFile,ExactCommandHost,ExactKernelReport} from './exact-commands.js';
 import {fastenerTable,parseFastenCommand,parseHoleCommand,parsePartCommand} from './fastening-commands.js';
 import type {GeneratedBuilder} from './fasteners.js';
+import {formatManufacturingReport,parseManufacturingCommand} from './manufacturing.js';
+import type {ManufacturingHost} from './manufacturing.js';
 
 export type CommandCategory='terminal'|'create'|'sketch'|'feature'|'selection'|'transform'|'history'|'edit'|'boolean'|'view'|'panel'|'replay'|'exchange'|'analysis';
 export type CommandArgumentKind='point'|'vector'|'number'|'sketch'|'bodies'|'command'|'alias'|'json'|'keyword'|'file';
@@ -85,6 +87,7 @@ const drafting:readonly Draft[]=[
  {name:'export',aliases:[],description:'Export geometry',usage:'export [step [all|"name"|id ...]]',category:'exchange',editsModel:false,arguments:[arg('format','keyword',{optional:true,values:['step']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
  {name:'import',aliases:[],description:'Import a STEP file as exact bodies with the B-rep kernel',usage:'import step [file]',category:'exchange',editsModel:true,arguments:[arg('format','keyword',{values:['step']}),arg('file','file',{optional:true})],headless:true,kernel:'exact'},
  {name:'measure',aliases:[],description:'Measure volume, area and bounds exactly with the B-rep kernel',usage:'measure exact [all|"name"|id ...]',category:'analysis',editsModel:false,arguments:[arg('mode','keyword',{values:['exact']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
+ {name:'check',aliases:['dfm'],description:'Check bodies for manufacturing (FDM, CNC milling, laser-cut sheet) on the exact B-rep where they have one; read-only',usage:'check fdm|cnc|laser [all|"name"|id ...] [--tool <mm>] [--axes +z,+x] [--min-wall <mm>] [--nozzle <mm>] [--min-hole <mm>] [--min-radius <mm>] [--max-radius <mm>] [--edge-break none|external|internal|all] [--mesh]',category:'analysis',editsModel:false,arguments:[arg('process','keyword',{values:['fdm','cnc','laser']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true},
  {name:'edges',aliases:[],description:'List the exact B-rep edges of bodies, numbered for fillet and chamfer',usage:'edges ["name"|id ...]',category:'analysis',editsModel:false,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
  {name:'fillet',aliases:[],description:'Round edges exactly with the B-rep kernel',usage:'fillet <radius> [all|"name"|id ...] [--face <normal>] | fillet <radius> "name"|id edges <number|reference> ...',category:'feature',editsModel:true,arguments:[arg('radius','number',{min:.01,max:10000}),arg('targets','bodies',{optional:true,repeated:true}),arg('face','keyword',{optional:true,values:['--face']})],headless:true,kernel:'exact'},
  {name:'chamfer',aliases:[],description:'Bevel edges exactly with the B-rep kernel',usage:'chamfer <distance> [all|"name"|id ...] [--face <normal>] | chamfer <distance> "name"|id edges <number|reference> ...',category:'feature',editsModel:true,arguments:[arg('distance','number',{min:.01,max:10000}),arg('targets','bodies',{optional:true,repeated:true}),arg('face','keyword',{optional:true,values:['--face']})],headless:true,kernel:'exact'},
@@ -113,6 +116,7 @@ const palette:readonly PaletteDraft[]=[
  {command:'hole',label:'Standard hole',alias:'drill clearance tapped counterbore countersink heat-set insert ISO 273'},
  {command:'standard-part',label:'Standard parts',alias:'screw bolt nut washer fastener ISO 4762 insert'},
  {command:'fasten',label:'Fasten holes',alias:'screw bolt nut washer insert fastener'},
+ {command:'manufacturing',label:'Check for manufacturing',alias:'DFM CNC milling FDM printing laser sheet wall thickness corner radius edge radius undercut',requires:'hasBodies'},
  {command:'exact-feature',label:'Fillet, chamfer or shell',alias:'round bevel hollow exact B-rep',requires:'canWrapBody'},
  {command:'parameters',label:'Parameters',alias:'named dimensions formulas'},
  {command:'code',label:'Code an object',alias:'CAD Script'},
@@ -153,7 +157,7 @@ const palette:readonly PaletteDraft[]=[
  {command:'export',label:'Export geometry',alias:'STL 3MF',requires:'canExport'}
 ];
 const bridgeAliases:Record<string,readonly string[]>={undo:['u'],redo:['re'],delete:['erase','del'],duplicate:['dup'],fit:['zoom'],union:['join']};
-const bridgeCategory:Record<string,CommandCategory>={undo:'history',redo:'history',copy:'edit',cut:'edit',paste:'edit',duplicate:'edit',delete:'edit',drop:'transform',union:'boolean',subtract:'boolean',intersect:'boolean','select-all':'selection',deselect:'selection',fit:'view',home:'view',top:'view',front:'view',right:'view',back:'view',left:'view',bottom:'view',projection:'view',workplane:'view'};
+const bridgeCategory:Record<string,CommandCategory>={manufacturing:'analysis',undo:'history',redo:'history',copy:'edit',cut:'edit',paste:'edit',duplicate:'edit',delete:'edit',drop:'transform',union:'boolean',subtract:'boolean',intersect:'boolean','select-all':'selection',deselect:'selection',fit:'view',home:'view',top:'view',front:'view',right:'view',back:'view',left:'view',bottom:'view',projection:'view',workplane:'view'};
 /** Bridged commands that also have a pure headless executor below. */
 const headlessBridge=new Set(['undo','redo','duplicate','delete','union','subtract','intersect','select-all','deselect']);
 const bridgeEdits=new Set(['undo','redo','cut','paste','duplicate','delete','drop','union','subtract','intersect']);
@@ -333,6 +337,8 @@ export interface CommandRunnerOptions {
  /** Serves `export step`, `measure exact`, `fillet`, `chamfer`, `shell` and `recompute exact`;
   * only `runAsync`/`runScriptAsync` use it. */
  exact?:ExactCommandHost;
+ /** Serves `check` (the manufacturing check): meshes, and the exact kernel's data when asked. */
+ manufacturing?:ManufacturingHost;
  /** Reads the file `import step <file>` names (the CLI; MCP and the editor have their own way in). */
  readFile?:(path:string)=>Promise<{name:string;bytes:Uint8Array}>;
  /** Builds threaded screws for `part` and `fasten` (the editor's createPresetDocument); without it
@@ -385,6 +391,12 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
    const done=await runStepImport(session,options.exact,await options.readFile(file),{signal:options.signal,record});
    return {command:spec.name,invocation:done.invocation,output:done.output,edited:session.state.revision!==before,...(done.kernel?{kernel:done.kernel}:{})};
   }
+  if(spec.name==='check'){
+   const parsed=parseManufacturingCommand(session,tail);
+   if(!options.manufacturing)throw new Error(t('The manufacturing check is not available in this host.'));
+   const report=await options.manufacturing.check(session.state.document,{bodies:parsed.bodies,settings:parsed.settings},options.signal);
+   return {command:spec.name,invocation:parsed.invocation,output:formatManufacturingReport(report),edited:false};
+  }
   const request=exactRequest(spec,tail);
   if(!request)return run(raw);
   if(!options.exact)throw new Error(t('The exact kernel is not available in this host.'));
@@ -395,6 +407,7 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
  }
  function run(raw:string):CommandRunResult{
   const {text,spec,tail}=parse(raw);
+  if(spec.name==='check')throw new Error(t('check runs the manufacturing check; run it in a host that provides it.'));
   if(EXACT_FEATURE_COMMANDS.includes(spec.name)||spec.name==='recompute'||spec.name==='import'||exactRequest(spec,tail))throw new Error(t`${spec.name} uses the exact kernel; run it in a host that loads it.`);
   const name=spec.name,before=session.state.revision;
   const done=(invocation:string,output?:string):CommandRunResult=>({command:name,invocation,...(output!==undefined?{output}:{}),edited:session.state.revision!==before});

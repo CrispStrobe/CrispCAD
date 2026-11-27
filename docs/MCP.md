@@ -50,6 +50,7 @@ history. Use a dedicated file: this process is its writer until closed.
 | `cad_check_interference` | Read-only overlapping body pairs (common volume) and, with `clearanceMm`, near misses |
 | `cad_render` | Read-only PNG views (iso/top/front/right/back/left/bottom) returned as MCP image content |
 | `cad_check_printability` | Read-only FDM screening of the current model: watertightness, sampled minimum wall, overhangs/bridges, bed fit, six ranked axis orientations |
+| `cad_check_manufacturing` | Read-only check for FDM printing, 3-axis CNC milling or a laser-cut sheet, plus edge-radius rules; exact B-rep where a body has one, mesh otherwise, each check labelled |
 | `cad_export_stl` | Base64 printable mesh; automatic paired attribution for recorded library sources |
 | `cad_export_step` | Read-only exact STEP (AP214) as base64 from the optional exact B-rep kernel; `objectIds` limits the bodies; unsupported bodies fail with a diagnostic naming body and feature |
 | `cad_measure_exact` | Read-only exact volume, area, bounds and centroid per body from the exact kernel |
@@ -129,6 +130,24 @@ the current revision, supply `objectId` and `expectedRevision`, and optionally
 `diameter`, `length` and either `pitch` or `turnsPerStart`. `preview: true` saves
 nothing. Acceptance appends one revision and resets local scale. See
 [thread redesign](SCREW-REDESIGN.md) for defaults and guards.
+
+## Manufacturing check
+
+`cad_check_manufacturing` (`process`: `fdm`, `cnc` or `laser`) checks the current model without
+changing it. Bodies with an exact B-rep are measured on it with the exact kernel (loaded on first
+use); `exact:false` skips the kernel. FDM: wall thickness (2 × `nozzleMm`, or `minWallMm`), hole
+diameter (`minHoleMm`, 2), and the printability screen's overhangs, orientation and bed fit. CNC:
+internal corner radius against `toolDiameterMm` (6) along `approachAxes` (`["+z"]`), undercuts
+(`maxUndercutAreaMm2`, 1) and wall thickness (`minWallMm`, 0.8). Laser: a flat sheet of one
+thickness, minimum web (the thickness, or `minWallMm`) and hole size. Every process adds the
+edge-radius check (`minRadiusMm`, `maxRadiusMm`, `edgeBreak`: `none`, `external`, `internal`,
+`all`). Each check reports `geometry` (`exact` or `mesh`); findings carry a world `location`,
+B-rep `faces`/`edges` indices on exact geometry and, with `includeMarks:true`, the triangles and
+lines the editor draws. The result also has a `verdict` and a plain-text `text`. The same check
+is the registry command `check fdm|cnc|laser [targets] [--tool <mm>] [--axes +z,+x] ...` in
+`cad_run_commands`, and the CLI verb `manufacturing` (`--process`, `--tool`, `--axes`,
+`--min-wall`, `--min-radius`, `--max-radius`, `--edge-break`, `--mesh`). See
+[CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#check-for-manufacturing-done-2026-11-27).
 
 ## Printability screening
 
@@ -234,6 +253,7 @@ node apps/cli/crispcad.mjs commands
 node apps/cli/crispcad.mjs run design.bcad "box 40,30,4" "select all" "move 0,0,0 @0,0,2"
 node apps/cli/crispcad.mjs run design.bcad "sphere 5" --dry-run
 node apps/cli/crispcad.mjs inspect design.bcad        # also: interference, printability, measure
+node apps/cli/crispcad.mjs manufacturing design.bcad --process cnc --tool 6  # read-only
 node apps/cli/crispcad.mjs step design.bcad design.step  # exact STEP via the exact kernel
 node apps/cli/crispcad.mjs run design.bcad "export step all" --out exports/
 ```

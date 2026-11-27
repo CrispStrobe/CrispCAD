@@ -5,18 +5,19 @@ import {mountScrewRedesign} from './screw-redesign.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import {prepareMeshExport} from './export-policy.js';
 import {mountPrintabilityPanel} from './printability-panel.js';
+import {mountManufacturingPanel} from './manufacturing-panel.js';
 import type {mountModelLibraryPanel, ModelLibraryOptions, ModelLibraryProject} from './model-library-panel.js';
 export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
 import { t,formatExactResult,validateDocument as validateExportDocument,FeatureEvaluationError,STALE_EXACT_CODE,staleExactFeatures,recomputeExactFeatures,runStepImport,MAX_STEP_IMPORT_BYTES } from '@brickwright/cad-core';
 import { describeHole,drawingAssemblyAvailable,isAssemblyDrawingSource,constructionInputs, createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters,redesignScrew } from '@brickwright/cad-core';
-import type { CadDocument, CadSession, DrawingInputs, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe, ExactDrawingData } from '@brickwright/cad-core';
+import type { CadDocument, CadSession, DrawingInputs, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe, ExactDrawingData , ManufacturingHost } from '@brickwright/cad-core';
 import { importSTL } from '@brickwright/cad-geometry';
 import {importStep} from './step-import.js';
 import type { AssemblySection,GeometryResult } from '@brickwright/cad-geometry';
 import { createGeometryClient } from './geometry-client.js';
 // Identity only: no WebAssembly is loaded until an exact command runs in the exact worker.
-import {createEditorSession,exactEditHost} from './kernels.js';
+import {createEditorSession,exactEditHost,exactKernelIdentity} from './kernels.js';
 import {artworkSketchTargets,prepareArtworkSketchRefresh} from './costume-refresh.js';
 import type {ExactCommandHost,SketchProfile} from '@brickwright/cad-core';
 import {mountTransformReadout} from './transform-readout.js';
@@ -121,7 +122,7 @@ export interface CadEditorOptions {
   onError?: (error: Error) => void;
 }
 export interface CadCommandState {canUndo:boolean;canRedo:boolean;hasSelection:boolean;canDelete:boolean;canCombine:boolean;canExport:boolean;hasBodies:boolean;ready:boolean}
-export type CadCommand='new'|'open'|'save'|'import'|'import-step'|'export'|'printability'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'exact-feature'|'command-palette'|'readout'|'code'|'code-workspace'|'terminal'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect'|'upgrade-lofts'|'hole'|'standard-part'|'fasten'|'export-step'|'exact-edges'|'measure-exact'|'recompute-exact'|'drawing'|'drawing-exact';
+export type CadCommand='new'|'open'|'save'|'import'|'import-step'|'export'|'printability'|'manufacturing'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'exact-feature'|'command-palette'|'readout'|'code'|'code-workspace'|'terminal'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect'|'upgrade-lofts'|'hole'|'standard-part'|'fasten'|'export-step'|'exact-edges'|'measure-exact'|'recompute-exact'|'drawing'|'drawing-exact';
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag); element.className = className; if (text !== undefined) element.textContent = text; return element;
 }
@@ -276,20 +277,37 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   paletteButton.setAttribute('aria-keyshortcuts','Control+Shift+P Meta+Shift+P');
   const assemblyProjection=createAssemblyProjectionClient();
   const assemblySections=new WeakMap<GeometryResult,Map<string,Promise<AssemblySection>>>();
-  // Exact drawing data per document, fetched from the exact worker only when a sheet asks for it.
+  // Exact drawing data per document, fetched from the exact worker only when a sheet or the
+  // manufacturing check asks for it (both read the same B-rep data, so they share it).
   const exactDrawings=new WeakMap<CadDocument,Promise<ExactDrawingData>>();
-  function exactDrawingData(doc:CadDocument){
+  function exactBrepData(doc:CadDocument,signal?:AbortSignal){
     let data=exactDrawings.get(doc);
     if(!data){
-      data=client.exact.run({operation:'drawing',document:doc,bodies:[]}).then(result=>{
+      data=client.exact.run({operation:'drawing',document:doc,bodies:[]},signal).then(result=>{
         if(result.operation!=='drawing')throw new Error(t('The exact kernel returned an unexpected result.'));
         return {bodies:result.bodies,failures:result.failures};
-      },error=>{throw new Error(t`Exact edges are unavailable: ${error instanceof Error?error.message:String(error)}`);});
+      });
       exactDrawings.set(doc,data);
       void data.catch(()=>{if(exactDrawings.get(doc)===data)exactDrawings.delete(doc);});
     }
     return data;
   }
+  const exactDrawingData=(doc:CadDocument)=>exactBrepData(doc).catch(error=>{throw new Error(t`Exact edges are unavailable: ${error instanceof Error?error.message:String(error)}`);});
+  // Check for manufacturing (read-only): the exact data when asked for (no fallback in silence: a
+  // body or a kernel that fails is checked on its mesh and the report says why), then the meshes
+  // and the analysis in the geometry worker.
+  const manufacturingHost:ManufacturingHost={
+    async check(doc,{bodies,settings},signal){
+      let exact:ExactDrawingData|undefined,exactUnavailable:string|undefined;
+      if(settings.exact){
+        try{exact=await exactBrepData(doc,signal);}
+        catch(error){if(signal?.aborted)throw error;exactUnavailable=error instanceof Error?error.message:String(error);}
+      }
+      signal?.throwIfAborted();
+      const kernel=`${exactKernelIdentity.id} · ${exactKernelIdentity.package} ${exactKernelIdentity.version}`;
+      return client.checkManufacturing(doc,{settings,bodies:[...bodies],...(exact?{exact,kernel}:{}),...(exactUnavailable?{exactUnavailable}:{})},signal);
+    },
+  };
   async function projectDrawingAssembly(sheets:readonly DrawingInputs[],options:{exact?:boolean}={}){
     const current=session.state.document;
     const active=()=>!disposed&&session.state.document===current;
@@ -329,7 +347,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const openCodeWorkspace=()=>codePanel.openWorkspace(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);
   const terminalToggle=button('Terminal',()=>terminal.toggle(),status,'panel-toggle');
   terminalToggle.title=t('CAD terminal (Ctrl/⌘+`)');terminalToggle.setAttribute('aria-keyshortcuts','Control+Backquote Meta+Backquote');
-  const terminal=mountTerminalPanel(shell,session,{executeEditorCommand:executeCommand,openCodeWorkspace,storage:options.workspaceStorage,exact:exactEdits,saveFile:async file=>{if(!options.onExport)throw new Error(t('This host has not provided file export'));await options.onExport({name:file.name,bytes:new TextEncoder().encode(file.text),mime:file.mime});},pickStepFile:()=>pickExactStep(),afterStepImport:ids=>afterExactImport(ids),pickPoint:(done,plane)=>viewport.pickDraftPoint(done,plane),focusCanvas:()=>viewport.canvas.focus({preventScroll:true}),onVisibilityChange:visible=>terminalToggle.setAttribute('aria-pressed',String(visible))});
+  const terminal=mountTerminalPanel(shell,session,{executeEditorCommand:executeCommand,openCodeWorkspace,storage:options.workspaceStorage,exact:exactEdits,manufacturing:manufacturingHost,saveFile:async file=>{if(!options.onExport)throw new Error(t('This host has not provided file export'));await options.onExport({name:file.name,bytes:new TextEncoder().encode(file.text),mime:file.mime});},pickStepFile:()=>pickExactStep(),afterStepImport:ids=>afterExactImport(ids),pickPoint:(done,plane)=>viewport.pickDraftPoint(done,plane),focusCanvas:()=>viewport.canvas.focus({preventScroll:true}),onVisibilityChange:visible=>terminalToggle.setAttribute('aria-pressed',String(visible))});
   button('Code',()=>codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined),toolbar,'compact-icon').title=t('Code an object');
   const parametersButton=button('Parameters',()=>parametersPanel.open(),toolbar,'compact-icon');parametersButton.title=t('Model parameters and formulas');
   if(options.headerContent){options.headerContent.classList.add('host-actions');designBar.append(options.headerContent);}
@@ -479,6 +497,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   menuButton('export-step');menuButton('drawing');menuButton('drawing-exact');
   const printabilityPanel=mountPrintabilityPanel(shell,()=>session.state.document,(doc,settings)=>client.checkPrintability(doc,settings));
   const printabilityButton=button('Check printability…',()=>printabilityPanel.open());printabilityButton.disabled=true;
+  const manufacturingPanel=mountManufacturingPanel(shell,viewHost,{document:()=>session.state.document,selection:()=>session.state.selection.filter(id=>session.state.document.roots.includes(id)),check:(doc,request,signal)=>manufacturingHost.check(doc,request,signal),show:mark=>viewport.showFinding(mark)});
+  const manufacturingButton=button('Check for manufacturing…',()=>manufacturingPanel.open());manufacturingButton.disabled=true;
   const viewActions = el('div', 'view-actions'); viewActions.setAttribute('role', 'toolbar'); viewActions.setAttribute('aria-label', 'View controls'); viewHost.append(viewActions);
   button('Home', () => viewport.frame('iso'), viewActions); button('Fit', () => viewport.frame(undefined,true), viewActions);
   button('Zoom in', () => viewport.zoom(1.25), viewActions); button('Zoom out', () => viewport.zoom(0.8), viewActions);
@@ -766,6 +786,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     palette.refresh();
     printabilityButton.disabled = running || !built || !built.triangles || builtRevision !== state.revision;
     for(const item of menuItems()){const b=menuButtons.get(item.command);if(b)b.disabled=!item.enabled;}
+    manufacturingButton.disabled = printabilityButton.disabled;
     run(()=>options.onCommandStateChange?.(commandState()));
   }
   function menuItems():EditorMenuItem[]{
@@ -893,7 +914,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   async function executeCommand(command:CadCommand){
     switch(command){
       case 'terminal':terminal.toggle();break;case 'code-workspace':openCodeWorkspace();break;
-      case 'new':await newProject();break;case 'open':await chooseOpen();break;case 'save':await deliver('bcad');break;case 'import':await chooseImport();break;case 'import-step':await importExactStep();break;case 'export':if(exportButton.disabled)throw new Error(t('Build a solid before exporting'));showExport();break;case 'printability':if(printabilityButton.disabled)throw new Error(t('Build a solid before checking printability'));printabilityPanel.open();break;
+      case 'new':await newProject();break;case 'open':await chooseOpen();break;case 'save':await deliver('bcad');break;case 'import':await chooseImport();break;case 'import-step':await importExactStep();break;case 'export':if(exportButton.disabled)throw new Error(t('Build a solid before exporting'));showExport();break;case 'printability':if(printabilityButton.disabled)throw new Error(t('Build a solid before checking printability'));printabilityPanel.open();break;case 'manufacturing':if(manufacturingButton.disabled)throw new Error(t('Build a solid before checking for manufacturing'));manufacturingPanel.open();break;
       case 'undo':session.undo();break;case 'redo':session.redo();break;case 'cut':await copySelection(true);break;case 'copy':await copySelection();break;case 'paste':await pasteSelection();break;case 'duplicate':session.duplicate();break;case 'delete':session.remove();break;
       case 'select-all':session.select(session.state.document.roots);break;case 'deselect':session.select([]);break;
       case 'select':setMode('select');break;case 'move':setMode('translate');break;case 'rotate':setMode('rotate');break;case 'scale':setMode('scale');break;
@@ -968,7 +989,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { simulation.refresh(); viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return;fasteningPanel.dispose();cancelShapePlacement(); simulation.dispose(); disposed = true; fileLifetime.abort(); toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel?.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); exactFeaturePanel.dispose(); exactMeasurePanel.dispose(); exactActivity.dispose(); unsubscribeRecompute(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); terminal.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); printabilityPanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return;fasteningPanel.dispose();cancelShapePlacement(); simulation.dispose();manufacturingPanel.dispose(); disposed = true; fileLifetime.abort(); toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel?.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); exactFeaturePanel.dispose(); exactActivity.dispose(); unsubscribeRecompute(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); terminal.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); printabilityPanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;

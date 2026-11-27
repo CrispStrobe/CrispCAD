@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {FeatureEvaluationError,getLocale,t} from '@brickwright/cad-core';
-import type {FeatureDiagnostic,ExactCommandRequest,ExactCommandResult,ExactCommandHost} from '@brickwright/cad-core';
+import type {FeatureDiagnostic,ExactCommandRequest,ExactCommandResult,ExactCommandHost,ExactDrawingData,ManufacturingReport,ManufacturingSettings} from '@brickwright/cad-core';
 import type { CadDocument,PlanarSketch,SketchProfile } from '@brickwright/cad-core';
 import type { AssemblyCut,AssemblySection,GeometryResult,PrintabilityReport,PrintabilitySettings } from '@brickwright/cad-geometry';
 import {EXACT_LIMITS_TABLET,resolveExactLimits} from '@brickwright/cad-exact/limits';
@@ -9,9 +9,11 @@ import type {ExactLimits} from '@brickwright/cad-exact/limits';
 type OffsetRequest={offset:{sketch:PlanarSketch;context:Pick<CadDocument,'parametric'>;distance:number}};
 type SliceRequest={slice:{geometry:GeometryResult;cut:AssemblyCut}};
 type ExactRequest={exact:{operation:ExactCommandRequest['operation'];document:CadDocument;bodies:string[];step?:ExactCommandRequest['step']}};
-type GeometryPayload={document:CadDocument;printability?:Partial<PrintabilitySettings>}|OffsetRequest|SliceRequest|ExactRequest;
+/** The manufacturing check: the meshes are evaluated in the worker, the exact data comes with the request. */
+export type ManufacturingRequest={settings:ManufacturingSettings;bodies:string[];exact?:ExactDrawingData;exactUnavailable?:string;kernel?:string};
+type GeometryPayload={document:CadDocument;printability?:Partial<PrintabilitySettings>;manufacturing?:ManufacturingRequest}|OffsetRequest|SliceRequest|ExactRequest;
 export type GeometryRequest=GeometryPayload&{request:number;wasmURL:string;locale:string;exactLimits?:ExactLimits};
-type WorkerResult=GeometryResult|SketchProfile|AssemblySection|PrintabilityReport|ExactCommandResult;
+type WorkerResult=GeometryResult|SketchProfile|AssemblySection|PrintabilityReport|ManufacturingReport|ExactCommandResult;
 /** An exact-kernel failure with the body and feature it names (see @brickwright/cad-exact). */
 export class ExactCommandError extends Error {
   constructor(message:string,readonly diagnostic?:{code:string;bodyId:string;nodeId:string;feature:string;message:string}){super(message);this.name='ExactCommandError';}
@@ -149,6 +151,10 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
     /** Evaluate and screen in the worker without transferring meshes to the UI. */
     checkPrintability(document:CadDocument,settings:Partial<PrintabilitySettings>={}){
       return geometry.send<PrintabilityReport>({document,printability:settings});
+    },
+    /** The manufacturing check, in the worker (meshes stay there); exact data, if any, is passed in. */
+    checkManufacturing(document:CadDocument,request:ManufacturingRequest,signal?:AbortSignal){
+      return geometry.send<ManufacturingReport>({document,manufacturing:request},signal);
     },
     /** Exact-kernel requests (`export step`, `measure exact`); the kernel loads on first use. */
     exact:exactHost,

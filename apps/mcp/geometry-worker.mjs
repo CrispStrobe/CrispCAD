@@ -3,12 +3,13 @@ import {parentPort} from 'node:worker_threads';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {setLocale} from '@brickwright/cad-core';
-import {createGeometryKernel,checkPrintability,inspectBodies,renderBodies} from '@brickwright/cad-geometry';
+import {createGeometryKernel,checkPrintability,checkManufacturing,inspectBodies,renderBodies} from '@brickwright/cad-geometry';
 const kernel=await createGeometryKernel({wasmBinary:readFileSync(fileURLToPath(import.meta.resolve('manifold-3d/manifold.wasm')))});
 // Analyses run beside the evaluation so meshes never cross the thread boundary.
 const analyses={
  printability:(bodies,options)=>({report:checkPrintability(bodies,options)}),
  inspect:bodies=>({bodies:inspectBodies(bodies)}),
+ manufacturing:(bodies,{settings,bodies:ids,exact,exactUnavailable,kernel})=>({report:checkManufacturing({meshes:bodies,bodies:ids,...(exact?{exact}:{}),...(exactUnavailable?{exactUnavailable}:{}),...(kernel?{kernel}:{})},settings)}),
  interference:(bodies,options)=>kernel.interference(bodies,options),
  render:(bodies,options)=>({views:options.views.map(view=>({view,png:Buffer.from(renderBodies(bodies,view,options.size)).toString('base64')}))}),
 };

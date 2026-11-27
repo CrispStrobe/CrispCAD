@@ -58,6 +58,7 @@ export const editorMenu:readonly EditorMenuEntry[]=Object.freeze([
  entry('drawing',0,'drawing','Assembly drawing…',{requires:'canDraw'}),
  entry('drawing',0,'drawing-exact','Assembly drawing from exact edges…',{requires:'canDraw',exact:true}),
  entry('drawing',1,'printability','Check printability…',{requires:'canExport'}),
+ entry('drawing',1,'manufacturing','Check for manufacturing…',{requires:'canExport',exact:true}),
  entry('edit',0,'undo','Undo',{requires:'canUndo'}),
  entry('edit',0,'redo','Redo',{requires:'canRedo'}),
  entry('edit',1,'cut','Cut',{requires:'canDelete'}),

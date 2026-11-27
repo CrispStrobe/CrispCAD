@@ -31,6 +31,9 @@ import type {TransformPreview,TransformAxisAnchor} from './transform-readout.js'
 import { snapDelta } from './vendor/transform-math.js';
 import {EDGE_PICK_MOUSE_PX,EDGE_PICK_TOUCH_PX,createEdgeOverlay,pickEdgeAt} from './viewport-edge-pick.js';
 import type {EdgeOverlay,PickableEdge} from './viewport-edge-pick.js';
+import {createFindingOverlay,markBounds} from './viewport-findings.js';
+import type {FindingOverlay} from './viewport-findings.js';
+import type {ManufacturingMark} from '@brickwright/cad-core';
 const RAD = Math.PI / 180;
 export type ViewDirection = 'top' | 'bottom' | 'front' | 'back' | 'right' | 'left' | 'iso';
 const directions: Record<ViewDirection, [number, number, number]> = { top: [0, -0.00001, 1], bottom: [0, -0.00001, -1], front: [0, -1, 0], back: [0, 1, 0], right: [1, 0, 0], left: [-1, 0, 0], iso: [1, -1.4, 1] };
@@ -91,6 +94,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   // Picking B-rep edges for exact fillets and chamfers (viewport-edge-pick.ts): taps toggle edges, the
   // camera still turns, nothing is selected or moved.
   let edgeTargetsTimer:ReturnType<typeof setTimeout>|undefined;
+  let findingOverlay:FindingOverlay|undefined;
   let edgePick:{overlay:EdgeOverlay;edges:readonly PickableEdge[];picked:Set<number>;toggle:(index:number)=>void;end:()=>void;gizmo:boolean;cursor:string}|undefined;
   function endEdgePick(notify=true){if(!edgePick)return;const previous=edgePick;edgePick=undefined;clearTimeout(edgeTargetsTimer);previous.overlay.dispose();gizmo.enabled=previous.gizmo;canvas.style.cursor=previous.cursor;delete canvas.dataset.edgePick;delete canvas.dataset.edgePickTargets;if(notify)previous.end();scheduleDraw();}
   function cancelPointPick(){if(!pointPick)return;const previous=pointPick;pointPick=undefined;if(cameraDrag)cameraDrag.gizmoEnabled=previous.gizmo;else gizmo.enabled=previous.gizmo;canvas.style.cursor=previous.cursor;previous.done(null);scheduleDraw();}
@@ -429,10 +433,10 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     cancelTransform(); const distance = camera.position.distanceTo(orbit.target);
     camera.position.copy(orbit.target).addScaledVector(new THREE.Vector3(...directions[direction]).normalize(), distance); orbit.update(); draw();
   }
-  function frame(direction?: ViewDirection,onlySelection=false) {
-    const box = new THREE.Box3(); for (const [id,mesh] of meshes)if(!onlySelection||!selected.length||selected.includes(id))box.union(new THREE.Box3().setFromObject(mesh));
+  function frame(direction?: ViewDirection,onlySelection=false,given?:THREE.Box3,minRadius=15) {
+    const box = new THREE.Box3(); if(given)box.copy(given);else for (const [id,mesh] of meshes)if(!onlySelection||!selected.length||selected.includes(id))box.union(new THREE.Box3().setFromObject(mesh));
     if (box.isEmpty()) box.set(new THREE.Vector3(-20, -20, 0), new THREE.Vector3(20, 20, 30));
-    const center = box.getCenter(new THREE.Vector3()); const radius = Math.max(15, box.getSize(new THREE.Vector3()).length() / 2);
+    const center = box.getCenter(new THREE.Vector3()); const radius = Math.max(minRadius, box.getSize(new THREE.Vector3()).length() / 2);
     const aspect = Math.max(0.1, container.clientWidth / Math.max(1, container.clientHeight));
     const distance = radius / Math.sin(42 * RAD / 2) / Math.min(1, aspect) * 1.2;
     const dir = direction ? new THREE.Vector3(...directions[direction]) : camera.position.clone().sub(orbit.target);
@@ -465,6 +469,17 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       };
     },
     get edgePicking(){return !!edgePick;},
+    /** Draw a manufacturing finding's marks over the model (null clears them); `frameIt` turns the
+     * view to it, keeping the direction and showing some of its surroundings. Read-only. */
+    showFinding(mark:ManufacturingMark|null,frameIt=true){
+      findingOverlay?.dispose();findingOverlay=undefined;delete canvas.dataset.finding;
+      if(mark){
+        findingOverlay=createFindingOverlay(scene,mark);canvas.dataset.finding=String(mark.lines.length+mark.triangles.length/9+mark.points.length/3);
+        const bounds=markBounds(mark);
+        if(frameIt&&bounds){const box=new THREE.Box3(new THREE.Vector3(...bounds.min),new THREE.Vector3(...bounds.max));frame(undefined,false,box,Math.max(5,box.getSize(new THREE.Vector3()).length()));return;}
+      }
+      scheduleDraw();
+    },
     pickDraftPoint(done:(point:Vec3|null)=>void,plane?:'XY'){
       if(simulating)throw new Error(t('Reset simulation before picking a drafting point.'));
       if(surfacePlacement.active)endPlacement();cancelPointPick();cancelTransform();

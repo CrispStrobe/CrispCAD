@@ -18,3 +18,5 @@ export {inspectBodies} from './analysis/inspect.js';
 export type {BodyInspection} from './analysis/inspect.js';
 export {renderBodies,encodePNG,RENDER_VIEWS} from './analysis/render.js';
 export type {RenderView} from './analysis/render.js';
+export {checkManufacturing,MAX_MANUFACTURING_FINDINGS} from './analysis/manufacturing.js';
+export type {ManufacturingInput} from './analysis/manufacturing.js';

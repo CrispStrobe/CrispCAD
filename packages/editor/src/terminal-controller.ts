@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {commandHelp,commandRegistry,commandScriptLines,runCommandScript,createCommandJournal,EXACT_FEATURE_COMMANDS,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseUpgradeLofts,parseExactCommand,parseExactFeatureCommand,parseImportCommand,parseRecomputeCommand,prepareCommand,fastenerTable,parseFastenCommand,parseHoleCommand,parsePartCommand,recomputeExactFeatures,runExactFeatureCommand,runStepImport,t} from '@brickwright/cad-core';
-import type {GeneratorRecipe,CadSession,Vec3,SessionCommandRecord,CommandSpec,CommandStep,CommandValue,PreparedCommand,JournalExportFormat,ExactCommandHost,ExactCommandFile} from '@brickwright/cad-core';
+import {commandHelp,commandRegistry,commandScriptLines,runCommandScript,createCommandJournal,EXACT_FEATURE_COMMANDS,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseUpgradeLofts,parseExactCommand,parseExactFeatureCommand,parseImportCommand,parseRecomputeCommand,prepareCommand,fastenerTable,parseFastenCommand,parseHoleCommand,parsePartCommand,recomputeExactFeatures,runExactFeatureCommand,runStepImport,t,formatManufacturingReport,parseManufacturingCommand} from '@brickwright/cad-core';
+import type {GeneratorRecipe,CadSession,Vec3,SessionCommandRecord,CommandSpec,CommandStep,CommandValue,PreparedCommand,JournalExportFormat,ExactCommandHost,ExactCommandFile,ManufacturingHost} from '@brickwright/cad-core';
 import type {CadCommand} from './index.js';
 import {terminalArguments,terminalTokens} from './terminal-coordinates.js';
 import {createPresetDocument} from './shapes.js';
@@ -21,6 +21,8 @@ export type TerminalOptions={executeEditorCommand:(command:CadCommand)=>void|Pro
  /** Serves `export step`, `measure exact`, `fillet`, `chamfer`, `shell` and `recompute exact`
   * (the editor's lazily loaded exact-kernel worker). */
  exact?:ExactCommandHost;
+ /** Serves `check` (the manufacturing check: the geometry worker, and the exact worker when asked). */
+ manufacturing?:ManufacturingHost;
  /** Delivers a file a command produced, such as the STEP export. */
  saveFile?:(file:ExactCommandFile)=>Promise<void>;
  /** Lets the user choose a STEP file for `import step` (undefined: cancelled). */
@@ -146,7 +148,7 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
   const count=commandScriptLines(script),shown=script.split(/\r?\n/);
   append('input',(shown.length>24?[...shown.slice(0,23),'…']:shown).join('\n').slice(0,4000));
   try{
-   const done=await runCommandScript(session,expandScriptAliases(script),{exact:options.exact,generated:presetBuilder,journal,record:(line,commit)=>journal.withInvocation(line,commit)});
+   const done=await runCommandScript(session,expandScriptAliases(script),{exact:options.exact,generated:presetBuilder,...(options.manufacturing?{manufacturing:options.manufacturing}:{}),journal,record:(line,commit)=>journal.withInvocation(line,commit)});
    for(const result of done.results)if(result.output!==undefined)append('output',result.output);
    for(const file of done.files){
     if(!options.saveFile)throw new Error(t('This host has not provided file export'));
@@ -228,6 +230,14 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
     const record=<T,>(line:string,commit:()=>T)=>journal.withInvocation(line,commit);
     const done=parsed?await runExactFeatureCommand(session,options.exact,parsed,{record}):await recomputeExactFeatures(session,options.exact,recompute!.features,{record,invocation:recompute!.invocation});
     append('output',done.output);
+    return;
+   }
+   if(name==='check'){
+    const parsed=parseManufacturingCommand(session,tail);
+    if(!options.manufacturing)throw new Error(t('The manufacturing check is not available in this host.'));
+    append('output',parsed.settings.exact?t('Checking on the exact kernel…'):t('Checking…'));
+    const report=await options.manufacturing.check(session.state.document,{bodies:parsed.bodies,settings:parsed.settings});
+    append('output',formatManufacturingReport(report));
     return;
    }
    if(name==='import'){
