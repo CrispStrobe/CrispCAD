@@ -18,12 +18,14 @@ import type {ExactEdgeReference} from './exact-edge-references.js';
 import type {KernelIdentity} from './session-commands.js';
 import type {ExactBodyData} from './exact-body.js';
 import type {ExactDrawingBody,ExactDrawingFailure,ExactSectionBody} from './exact-drawing.js';
+import type {StepEvidence} from './step-evidence.js';
+import {formatStepEvidence} from './step-evidence.js';
 import {MAX_STEP_IMPORT_BYTES} from './exact-body.js';
 import {sha256Hex} from './hash.js';
 import {commandNumber,commandTokens} from './command-arguments.js';
 import {t} from './i18n.js';
 
-export type ExactOperation='export-step'|'measure'|'feature-display'|'edges'|'import-step'|'drawing'|'section';
+export type ExactOperation='export-step'|'measure'|'feature-display'|'edges'|'import-step'|'drawing'|'section'|'step-evidence';
 export interface ExactCommandRequest {
  readonly operation:ExactOperation;
  /** Snapshot taken when the command ran. */
@@ -32,7 +34,8 @@ export interface ExactCommandRequest {
   * exact-feature nodes whose display mesh to compute (empty: every stale one). For `edges`, the
   * bodies whose B-rep edges to list. For `drawing`, the bodies to draw (empty: every printable one). */
  readonly bodies:readonly string[];
- /** `import-step` only: the file (its name without a path, and its bytes). */
+ /** `import-step` and `step-evidence` of a file: the file (its name without a path, and its bytes).
+  * `step-evidence` without it is a round trip of `bodies` (empty: every printable body). */
  readonly step?:{readonly name:string;readonly bytes:Uint8Array};
  /** `section` only: the world axis the cutting planes are normal to (0: X, 1: Y) and their positions. */
  readonly section?:{readonly axis:0|1;readonly positions:readonly number[]};
@@ -56,7 +59,8 @@ export type ExactCommandResult=
  |{readonly operation:'edges';readonly kernel:ExactKernelReport;readonly bodies:readonly ExactBodyEdgesReport[];readonly timing?:ExactTiming}
  |{readonly operation:'drawing';readonly kernel:ExactKernelReport;readonly bodies:readonly ExactDrawingBody[];readonly failures:readonly ExactDrawingFailure[];readonly timing?:ExactTiming}
  |{readonly operation:'section';readonly kernel:ExactKernelReport;readonly axis:0|1;readonly positions:readonly number[];readonly bodies:readonly ExactSectionBody[];readonly failures:readonly ExactDrawingFailure[];readonly timing?:ExactTiming}
- |{readonly operation:'import-step';readonly kernel:ExactKernelReport;readonly bodies:readonly ImportedExactBodyReport[];readonly notes:readonly string[];readonly timing?:ExactTiming};
+ |{readonly operation:'import-step';readonly kernel:ExactKernelReport;readonly bodies:readonly ImportedExactBodyReport[];readonly notes:readonly string[];readonly timing?:ExactTiming}
+ |{readonly operation:'step-evidence';readonly kernel:ExactKernelReport;readonly evidence:StepEvidence;readonly timing?:ExactTiming};
 /**
  * One B-rep edge of a body, for picking: its number in `edges` listings (1-based, in kernel
  * order), curve kind, length, points from start to end in the body's parent frame (world for a
@@ -131,6 +135,7 @@ export function formatExactResult(result:ExactCommandResult,document:CadDocument
   })]);
   return {output:[t`Exact edges (${kernelLabel(result.kernel)}):`,...lines,t('Fillet or chamfer chosen edges with: fillet <radius> "name" edges <number> ...')].join('\n')+timingLine(result.timing).join(''),kernel:result.kernel};
  }
+ if(result.operation==='step-evidence')return {output:formatStepEvidence(result.evidence)+'\n'+t`Exact kernel: ${kernelLabel(result.kernel)}`+timingLine(result.timing).join(''),kernel:result.kernel};
  if(result.operation==='feature-display')return {output:[t`Exact display meshes (${kernelLabel(result.kernel)}):`,...featureLines(result)].join('\n')+timingLine(result.timing).join(''),kernel:result.kernel};
  const title=document.title.replace(/[\\/:*?"<>|\u0000-\u001f\u007f]/g,'-').trim().slice(0,230)||'design';
  const file={name:`${title}.step`,mime:STEP_MIME,text:result.step};

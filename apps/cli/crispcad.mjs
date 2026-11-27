@@ -7,8 +7,8 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {t,setLocale} from '@brickwright/cad-core';
 import {createCodeHost} from '../mcp/host.mjs';
 
-const usage=()=>t('CrispCAD CLI\nnode apps/cli/crispcad.mjs commands\nnode apps/cli/crispcad.mjs run <project.bcad> "<command>" ["<command>" ...] [--dry-run] [--out <directory>]\nnode apps/cli/crispcad.mjs inspect|interference|printability|measure <project.bcad>\nnode apps/cli/crispcad.mjs drawing <project.bcad> <out.pdf|out.svg|out.dxf> [--sheet <id or title>] [--scale 1:2] [--mesh] [--no-dimensions] [--dxf r12|r2000] [--no-hidden]\nnode apps/cli/crispcad.mjs manufacturing <project.bcad> [--process fdm|cnc|laser] [--tool <mm>] [--axes +z,+x] [--min-wall <mm>] [--min-radius <mm>] [--max-radius <mm>] [--edge-break none|external|internal|all] [--mesh]\nnode apps/cli/crispcad.mjs step <project.bcad> <file.step>\nnode apps/cli/crispcad.mjs import <project.bcad> <file.step> [--dry-run]\nOptions: --locale en|de. Output is JSON on stdout. measure, step, import and the commands fillet, chamfer, shell and recompute exact use the exact B-rep kernel; --out writes files that commands produce, such as export step.\n');
-const argv=process.argv.slice(2),positional=[];let dryRun=false,outDir;
+const usage=()=>t('CrispCAD CLI\nnode apps/cli/crispcad.mjs commands\nnode apps/cli/crispcad.mjs run <project.bcad> "<command>" ["<command>" ...] [--dry-run] [--out <directory>]\nnode apps/cli/crispcad.mjs inspect|interference|printability|measure <project.bcad>\nnode apps/cli/crispcad.mjs drawing <project.bcad> <out.pdf|out.svg|out.dxf> [--sheet <id or title>] [--scale 1:2] [--mesh] [--no-dimensions] [--dxf r12|r2000] [--no-hidden]\nnode apps/cli/crispcad.mjs manufacturing <project.bcad> [--process fdm|cnc|laser] [--tool <mm>] [--axes +z,+x] [--min-wall <mm>] [--min-radius <mm>] [--max-radius <mm>] [--edge-break none|external|internal|all] [--mesh]\nnode apps/cli/crispcad.mjs materials <project.bcad> [--exact]\nnode apps/cli/crispcad.mjs blends <project.bcad>\nnode apps/cli/crispcad.mjs evidence <project.bcad> [<file.step>]\nnode apps/cli/crispcad.mjs step <project.bcad> <file.step>\nnode apps/cli/crispcad.mjs import <project.bcad> <file.step> [--dry-run]\nOptions: --locale en|de. Output is JSON on stdout. measure, blends, evidence, step, import and the commands fillet, chamfer, shell and recompute exact use the exact B-rep kernel; --out writes files that commands produce, such as export step.\n');
+const argv=process.argv.slice(2),positional=[];let dryRun=false,outDir,materialsExact=false;
 // Manufacturing check options (read-only; the CLI's "manufacturing" verb).
 const drawing={},check={},numberOptions={'--tool':'toolDiameterMm','--min-wall':'minWallMm','--min-radius':'minRadiusMm','--max-radius':'maxRadiusMm','--nozzle':'nozzleMm','--min-hole':'minHoleMm'};
 for(let i=0;i<argv.length;i++){
@@ -26,13 +26,14 @@ for(let i=0;i<argv.length;i++){
  else if(argv[i]==='--no-dimensions')drawing.autoDimensions=false;
  else if(argv[i]==='--no-hidden')drawing.hiddenLines=false;
  else if(argv[i]==='--dxf'&&argv[i+1])drawing.dxfVersion=argv[++i].toUpperCase();
+ else if(argv[i]==='--exact')materialsExact=true;
  else if(argv[i]==='--help'||argv[i]==='-h'){process.stdout.write(usage());process.exit(0);}
  else if(argv[i].startsWith('--')){process.stderr.write(t`Unknown argument: ${argv[i]}\n`);process.exit(1);}
  else positional.push(argv[i]);
 }
 const [verb,project,...commands]=positional;
-const tools={inspect:'cad_inspect',interference:'cad_check_interference',printability:'cad_check_printability',measure:'cad_measure_exact',manufacturing:'cad_check_manufacturing'};
-if(!verb||verb!=='commands'&&!project||verb==='run'&&!commands.length||(verb==='step'||verb==='import'||verb==='drawing')&&commands.length!==1||!['commands','run','step','import','drawing',...Object.keys(tools)].includes(verb)){process.stderr.write(usage());process.exit(1);}
+const tools={inspect:'cad_inspect',interference:'cad_check_interference',printability:'cad_check_printability',measure:'cad_measure_exact',manufacturing:'cad_check_manufacturing',materials:'cad_inspect_materials',blends:'cad_surface_blends'};
+if(!verb||verb!=='commands'&&!project||verb==='run'&&!commands.length||(verb==='step'||verb==='import'||verb==='drawing')&&commands.length!==1||verb==='evidence'&&commands.length>1||!['commands','run','step','import','drawing','evidence',...Object.keys(tools)].includes(verb)){process.stderr.write(usage());process.exit(1);}
 const host=await createCodeHost(verb==='commands'?{}:{project:resolve(project)});
 let code=0;
 try{
@@ -64,7 +65,15 @@ try{
   const {base64,...rest}=await host.call('cad_export_step',{}),path=resolve(commands[0]),bytes=Buffer.from(base64,'base64');
   await writeFile(path,bytes);result={...rest,path,bytes:bytes.length};
  }
- else result=await host.call(tools[verb],verb==='manufacturing'?{process:'cnc',...check}:{});
+ else if(verb==='evidence'){
+  // STEP evidence of a file, or (no file) a round trip of the project's bodies. Read-only.
+  if(commands.length){
+   const path=resolve(commands[0]),bytes=await readFile(path);
+   if(bytes.length>3*1024*1024)throw new Error(t('The STEP file exceeds the 3 MiB limit of this host; open it in the editor.'));
+   result=await host.call('cad_step_evidence',{name:basename(path),base64:bytes.toString('base64')});
+  }else result=await host.call('cad_step_evidence',{});
+ }
+ else result=await host.call(tools[verb],verb==='manufacturing'?{process:'cnc',...check}:verb==='materials'?{exact:materialsExact}:{});
  process.stdout.write(JSON.stringify(result,null,2)+'\n');
 }catch(error){process.stderr.write((error instanceof Error?error.message:String(error))+'\n');code=1;}
 finally{await host.dispose();}

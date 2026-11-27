@@ -7,6 +7,7 @@ interface PaletteContext extends CadCommandState {
  canDrop:boolean;
  canEditMirror:boolean;
  canEditPattern:boolean;
+ canEditSplit:boolean;
 }
 type CommandEntry={command:CadCommand;label:string;alias?:string;aliases?:readonly string[];requires?:keyof PaletteContext};
 /** Labels, search keywords, terminal aliases and availability come from the shared command registry. */

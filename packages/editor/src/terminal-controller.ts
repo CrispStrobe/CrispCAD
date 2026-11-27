@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {commandHelp,commandRegistry,commandScriptLines,runCommandScript,createCommandJournal,EXACT_FEATURE_COMMANDS,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseUpgradeLofts,parseExactCommand,parseExactFeatureCommand,parseImportCommand,parseRecomputeCommand,prepareCommand,fastenerTable,parseFastenCommand,parseHoleCommand,parsePartCommand,recomputeExactFeatures,runExactFeatureCommand,runStepImport,t,formatManufacturingReport,parseManufacturingCommand} from '@brickwright/cad-core';
-import type {GeneratorRecipe,CadSession,Vec3,SessionCommandRecord,CommandSpec,CommandStep,CommandValue,PreparedCommand,JournalExportFormat,ExactCommandHost,ExactCommandFile,ManufacturingHost} from '@brickwright/cad-core';
+import {commandHelp,commandRegistry,commandScriptLines,runCommandScript,createCommandJournal,EXACT_FEATURE_COMMANDS,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseUpgradeLofts,parseExactCommand,parseExactFeatureCommand,parseImportCommand,parseRecomputeCommand,prepareCommand,fastenerTable,parseFastenCommand,parseHoleCommand,parsePartCommand,recomputeExactFeatures,runExactFeatureCommand,runStepImport,t,formatManufacturingReport,parseManufacturingCommand,parseSplitCommand,parseMaterialsCommand,formatMaterialsReport,parseSurfaceBlendCommand,formatSurfaceBlendReport,parseStepEvidenceCommand} from '@brickwright/cad-core';
+import type {GeneratorRecipe,CadSession,Vec3,SessionCommandRecord,CommandSpec,CommandStep,CommandValue,PreparedCommand,JournalExportFormat,ExactCommandHost,ExactCommandFile,ManufacturingHost,MaterialsHost,SurfaceBlendHost} from '@brickwright/cad-core';
 import type {CadCommand} from './index.js';
 import {terminalArguments,terminalTokens} from './terminal-coordinates.js';
 import {createPresetDocument} from './shapes.js';
@@ -23,6 +23,10 @@ export type TerminalOptions={executeEditorCommand:(command:CadCommand)=>void|Pro
  exact?:ExactCommandHost;
  /** Serves `check` (the manufacturing check: the geometry worker, and the exact worker when asked). */
  manufacturing?:ManufacturingHost;
+ /** Serves `materials` (meshes in the geometry worker, exact volumes when asked). */
+ materials?:MaterialsHost;
+ /** Serves `blends` (the exact worker's data, analysed in the geometry worker). */
+ blends?:SurfaceBlendHost;
  /** Delivers a file a command produced, such as the STEP export. */
  saveFile?:(file:ExactCommandFile)=>Promise<void>;
  /** Lets the user choose a STEP file for `import step` (undefined: cancelled). */
@@ -148,7 +152,7 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
   const count=commandScriptLines(script),shown=script.split(/\r?\n/);
   append('input',(shown.length>24?[...shown.slice(0,23),'…']:shown).join('\n').slice(0,4000));
   try{
-   const done=await runCommandScript(session,expandScriptAliases(script),{exact:options.exact,generated:presetBuilder,...(options.manufacturing?{manufacturing:options.manufacturing}:{}),journal,record:(line,commit)=>journal.withInvocation(line,commit)});
+   const done=await runCommandScript(session,expandScriptAliases(script),{exact:options.exact,generated:presetBuilder,...(options.manufacturing?{manufacturing:options.manufacturing}:{}),...(options.materials?{materials:options.materials}:{}),...(options.blends?{blends:options.blends}:{}),journal,record:(line,commit)=>journal.withInvocation(line,commit)});
    for(const result of done.results)if(result.output!==undefined)append('output',result.output);
    for(const file of done.files){
     if(!options.saveFile)throw new Error(t('This host has not provided file export'));
@@ -216,6 +220,31 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
    if((name==='hole'||name==='part')&&!tail.trim()){await options.executeEditorCommand(name==='hole'?'hole':'standard-part');return;}
    if(name==='hole'||name==='fasten'||name==='part'){const command=name==='hole'?parseHoleCommand(session,tail):name==='fasten'?parseFastenCommand(session,tail,{generated:presetBuilder}):parsePartCommand(session,tail,{generated:presetBuilder});append('output',journal.withInvocation(command.invocation,()=>command.run()));return;}
    if(name==='fasteners'){append('output',fastenerTable(tail));return;}
+   if(name==='split'&&!tail.trim()){await options.executeEditorCommand('split-body');return;}
+   if(name==='split'){const command=parseSplitCommand(session,tail);append('output',journal.withInvocation(command.invocation,()=>command.run()));return;}
+   if(name==='materials'){
+    const parsed=parseMaterialsCommand(session,tail);
+    if(!options.materials)throw new Error(t('The materials report is not available in this host.'));
+    append('output',parsed.exact?t('Measuring on the exact kernel…'):t('Measuring…'));
+    append('output',formatMaterialsReport(await options.materials.inspect(session.state.document,{bodies:parsed.bodies,exact:parsed.exact})));
+    return;
+   }
+   if(name==='blends'){
+    const parsed=parseSurfaceBlendCommand(session,tail);
+    if(!options.blends)throw new Error(t('The surface-blend inspection is not available in this host.'));
+    append('output',t('Reading the exact B-rep…'));
+    append('output',formatSurfaceBlendReport(await options.blends.inspect(session.state.document,{bodies:parsed.bodies})));
+    return;
+   }
+   if(name==='evidence'){
+    const parsed=parseStepEvidenceCommand(session,tail);
+    if(!options.exact)throw new Error(t('The exact kernel is not available in this host.'));
+    if(parsed.file)throw new Error(t('In the editor, type evidence step and choose the model bodies, or use File › STEP evidence to choose a file.'));
+    append('output',t('Reading on the exact kernel…'));
+    const result=await options.exact.run({operation:'step-evidence',document:session.state.document,bodies:parsed.bodies});
+    append('output',formatExactResult(result,session.state.document).output);
+    return;
+   }
    if(name==='upgrade-lofts'){const command=parseUpgradeLofts(session,tail);append('output',journal.withInvocation(command.invocation,()=>command.run()));return;}
    if(name==='code'){if(args.length)throw new Error(t('Too many arguments. Use help for command syntax.'));options.openCodeWorkspace();return;}
    if(name==='journal'){

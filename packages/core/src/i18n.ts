@@ -28,6 +28,7 @@ import {messages as exactDrawings} from './locales/de-exact-drawings.js';
 import {messages as fastening} from './locales/de-fastening.js';
 import {messages as editorMenu} from './locales/de-editor-menu.js';
 import {messages as manufacturing} from './locales/de-manufacturing.js';
+import {messages as phase65} from './locales/de-phase-6-5.js';
 export type Locale='en'|'de';
 export const supportedLocales=Object.freeze([{code:'en' as const,name:'English'},{code:'de' as const,name:'Deutsch'}]);
 let locale:Locale='en';
@@ -38,7 +39,7 @@ export function t(message:string):string;
 export function t(parts:TemplateStringsArray,...values:unknown[]):string;
 export function t(message:string|TemplateStringsArray,...values:unknown[]):string {
  const key=typeof message==='string'?message:message.reduce((s,part,i)=>s+(i?`{${i-1}}`:'')+part,'');
- const translated=locale==='de'?(blocks[key]??printability[key]??gears[key]??kcad[key]??simlab[key]??adafruit[key]??simulation[key]??engineWorkflows[key]??modelSource[key]??converters[key]??modelLibrary[key]??additions[key]??editor[key]??diagnostics[key]??host[key]??readout[key]??terminal[key]??commands[key]??mcp[key]??workbench[key]??history[key]??exactKernel[key]??exactFeatures[key]??exactEdges[key]??stepImport[key]??exactDrawings[key]??editorMenu[key]??fastening[key]??manufacturing[key]??key):key;
+ const translated=locale==='de'?(blocks[key]??printability[key]??gears[key]??kcad[key]??simlab[key]??adafruit[key]??simulation[key]??engineWorkflows[key]??modelSource[key]??converters[key]??modelLibrary[key]??additions[key]??editor[key]??diagnostics[key]??host[key]??readout[key]??terminal[key]??commands[key]??mcp[key]??workbench[key]??history[key]??exactKernel[key]??exactFeatures[key]??exactEdges[key]??stepImport[key]??exactDrawings[key]??editorMenu[key]??fastening[key]??manufacturing[key]??phase65[key]??key):key;
  return typeof message==='string'?translated:translated.replace(/\{(\d+)\}/g,(_,index)=>String(values[Number(index)]));
 }
 /** Locale-specific display only. Saved model values and source use canonical syntax. */

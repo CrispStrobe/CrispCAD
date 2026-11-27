@@ -53,7 +53,18 @@ self.onmessage = async (event: MessageEvent<GeometryRequest>) => {
       self.postMessage({request,result:ready.sliceAssembly(geometry,cut)});
       return;
     }
+    if('blends' in event.data){
+      const {inspectSurfaceBlends}=await import('@brickwright/cad-geometry/blends');
+      const {document,exact,bodies,kernel:label,marks}=event.data.blends;
+      self.postMessage({request,result:inspectSurfaceBlends({document,exact,bodies,...(label?{kernel:label}:{}),marks:!!marks})});
+      return;
+    }
     const result=ready.evaluate(event.data.document);
+    if(event.data.materials){
+      const {materialMeasures}=await import('@brickwright/cad-geometry/materials');
+      self.postMessage({request,result:materialMeasures(ready,result.bodies)});
+      return;
+    }
     if(event.data.manufacturing){
       const {checkManufacturing}=await import('@brickwright/cad-geometry/manufacturing');
       const {settings,bodies,exact,exactUnavailable,kernel}=event.data.manufacturing;

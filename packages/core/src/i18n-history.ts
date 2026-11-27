@@ -14,6 +14,7 @@ const labels = new Set([
   'Paste objects', 'Restore coded project', 'Imported project', 'Duplicate project', 'Rename project', 'Edit model source', 'Run commands', 'Run command script',
   'Fillet body', 'Chamfer body', 'Shell body', 'Add exact features', 'Edit exact feature', 'Recompute exact features', 'Import STEP',
   'Add standard hole', 'Insert standard part', 'Insert standard parts', 'Fasten holes',
+  'Split body', 'Edit split',
 ]);
 export function translateHistoryLabel(label: string): string {
   if (labels.has(label)) return t(label);

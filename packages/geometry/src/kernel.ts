@@ -5,7 +5,7 @@ import {triangulatePolyhedron} from './polyhedron.js';
 import {textProfileContours} from './font-profile.js';
 import Module from 'manifold-3d';
 import type { Manifold, ManifoldToplevel, CrossSection } from 'manifold-3d';
-import { validateDocument, documentGeometryKey, evaluateExtrusion, evaluateRevolution, evaluateMirror, evaluatePattern, FeatureEvaluationError, compileCode, exactFeatureKey, staleExactFeatureError } from '@brickwright/cad-core';
+import { validateDocument, documentGeometryKey, evaluateExtrusion, evaluateRevolution, evaluateMirror, evaluatePattern, evaluateSplit, FeatureEvaluationError, compileCode, exactFeatureKey, staleExactFeatureError } from '@brickwright/cad-core';
 import type { CadDocument, SolidNode, CodeShape,CodeProfile,PlanarSketch,Vec3 } from '@brickwright/cad-core';
 import { collisionCSG } from './collision-csg.js';
 import { partitionConvex } from './convex.js';
@@ -192,6 +192,13 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
           position[axis]=2*offset;
           solid=keep(solid.translate(position));
         }
+        break;
+      }
+      case 'split': {
+        // One side of a plane cut (split.ts); an empty side is an error, never an empty body.
+        const {normal,offset}=evaluateSplit(node,doc),sign=node.side==='positive'?1:-1;
+        solid=keep(build(node.source).trimByPlane(normal.map(v=>sign*v) as Vec3,sign*offset));
+        if(solid.isEmpty()||solid.volume()<=1e-8)throw new Error(node.side==='positive'?t('Nothing of the body lies on the + side of the split plane'):t('Nothing of the body lies on the − side of the split plane'));
         break;
       }
       case 'pattern': {

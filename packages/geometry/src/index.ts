@@ -20,3 +20,6 @@ export {renderBodies,encodePNG,RENDER_VIEWS} from './analysis/render.js';
 export type {RenderView} from './analysis/render.js';
 export {checkManufacturing,MAX_MANUFACTURING_FINDINGS} from './analysis/manufacturing.js';
 export type {ManufacturingInput} from './analysis/manufacturing.js';
+export {inspectSurfaceBlends} from './analysis/blends.js';
+export type {SurfaceBlendInput} from './analysis/blends.js';
+export {materialMeasures,MAX_OVERLAP_BODIES} from './analysis/materials.js';

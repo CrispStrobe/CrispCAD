@@ -3,6 +3,8 @@ import type {DrawingInputs} from './drawing-sheet.js';
 import {upgradeSimulation,jointAtWorldFrame,localToWorldPoint,materialPhysics,simulationTracers} from './simulation.js';
 import {eulerFromMatrix,rotationMatrix} from './fasteners.js';
 import type {HoleFeature} from './fasteners.js';
+import {SPLIT_DOCUMENT_VERSION,splitSideName} from './split.js';
+import type {SplitFeature,SplitSide} from './split.js';
 import type {SimulationSettings} from './simulation.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import {generateModelSource,compileModelSource,updateModelSource,sameModelValue} from './model-source.js';
@@ -38,7 +40,7 @@ function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,ex
  const copied=new Map(joints.map((joint,i)=>[joint.id,result[i].id]));for(const next of result)if(next.gearMesh){const partner=copied.get(next.gearMesh.joint);if(partner)next.gearMesh={...next.gearMesh,joint:partner};else delete next.gearMesh;}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'|'artworkSourceId'|'artworkProfile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38|41|44|45|47){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38|41|44|45|47|48|49){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -67,7 +69,11 @@ function appendRevolution(doc:CadDocument,id:string,sketchId:string,inputs:Revol
   doc.roots.push(id);
   return [id];
 }
-const operationGuard=(kind:'mirror'|'pattern'|'exact-feature')=>kind==='mirror'?{
+const operationGuard=(kind:'mirror'|'pattern'|'exact-feature'|'split')=>kind==='split'?{
+  selection:t('Select one top-level body to split'),
+  joints:t('Detach this body’s joints before splitting it'),
+  tracers:t('Remove this body’s motion tracers before splitting it')
+}:kind==='mirror'?{
   selection:t('Select one top-level body to mirror'),
   joints:t('Detach this body’s joints before mirroring'),
   tracers:t('Remove this body’s motion tracers before mirroring')
@@ -97,7 +103,7 @@ function appendBodyOperation(doc:CadDocument,id:string,operation:MirrorFeature|P
   doc.roots[index]=id;
   return [id];
 }
-function guardBodyOperationEdit(doc:CadDocument,id:string,kind:'mirror'|'pattern'|'exact-feature'){
+function guardBodyOperationEdit(doc:CadDocument,id:string,kind:'mirror'|'pattern'|'exact-feature'|'split'){
   guardConstructionEdit(doc,id);
   const guard=operationGuard(kind);
   const contains=(key:string,seen=new Set<string>()):boolean=>{
@@ -120,6 +126,7 @@ const cloneNode = (node: SolidNode): SolidNode => ({ ...node,
   transform: { position: [...node.transform.position], rotation: [...node.transform.rotation], scale: [...node.transform.scale] },
   ...(node.kind === 'box' ? { size: [...node.size] } : {}),
   ...(node.kind === 'boolean' ? { inputs: [...node.inputs] } : {}),
+  ...(node.kind === 'split' ? { normal: [...node.normal] } : {}),
 }) as SolidNode;
 const equivalent = (a: SolidNode, b: SolidNode) => {
   if (a.kind === 'mesh' && b.kind === 'mesh') {
@@ -201,7 +208,7 @@ function insertFragment(d:CadDocument,source:CadDocument,placeRoot:(root:SolidNo
         const sketches=new Map(Object.keys(source.sketches??{}).map(id=>[id,newId()]));
         for(const [id,sketch] of Object.entries(source.sketches??{})){d.sketches??={};const next=structuredClone(sketch);next.id=sketches.get(id)!;next.profile.id=newId();delete next.artworkSourceId;delete next.artworkProfile;d.sketches[next.id]=next;}
         const names=new Set(d.roots.map(id=>d.nodes[id].name));
-        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version>=5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(isSketchFeature(node))node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if(node.kind==='mirror'||node.kind==='pattern'||node.kind==='exact-feature')node.source=ids.get(node.source)!; if(node.kind==='exact-feature'&&isEdgeReferences(node.edges))node.edges=mapEdgeReferenceIds(node.edges,key=>ids.get(key)); if (source.roots.includes(id)) placeRoot(node); d.nodes[node.id] = node; }
+        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version>=5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(isSketchFeature(node))node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if(node.kind==='mirror'||node.kind==='split'||node.kind==='pattern'||node.kind==='exact-feature')node.source=ids.get(node.source)!; if(node.kind==='exact-feature'&&isEdgeReferences(node.edges))node.edges=mapEdgeReferenceIds(node.edges,key=>ids.get(key)); if (source.roots.includes(id)) placeRoot(node); d.nodes[node.id] = node; }
         const roots = source.roots.map(id => ids.get(id)!); d.roots.push(...roots);
         for(const id of roots){d.nodes[id].name=uniqueObjectName(d.nodes[id].name,names);names.add(d.nodes[id].name);}
         if(mergeOffset)mergeFragmentParameters(d,source,ids,mergeOffset,sketches);
@@ -516,7 +523,7 @@ export function createCadSession(initial: CadDocument = createDocument(), option
         const connected=(key:string,seen=new Set<string>()):boolean=>{if(key===id)return true;if(seen.has(key))return false;seen.add(key);const n=d.nodes[key];return constructionInputs(n).some(child=>connected(child,seen));};
         if(d.joints?.some(j=>connected(j.bodyA)||connected(j.bodyB)))throw new Error(t('Detach joints before regenerating their bodies'));
         const map=new Map(Object.keys(source.nodes).map(key=>[key,key===source.roots[0]?id:newId()]));
-        for(const [key,node] of Object.entries(source.nodes)){const next=cloneNode(node);next.id=map.get(key)!;if(next.kind==='boolean')next.inputs=next.inputs.map(input=>map.get(input)!);if(next.kind==='mirror'||next.kind==='pattern'||next.kind==='exact-feature')next.source=map.get(next.source)!;if(next.kind==='exact-feature'&&isEdgeReferences(next.edges))next.edges=mapEdgeReferenceIds(next.edges,key=>map.get(key));d.nodes[next.id]=next;}
+        for(const [key,node] of Object.entries(source.nodes)){const next=cloneNode(node);next.id=map.get(key)!;if(next.kind==='boolean')next.inputs=next.inputs.map(input=>map.get(input)!);if(next.kind==='mirror'||next.kind==='split'||next.kind==='pattern'||next.kind==='exact-feature')next.source=map.get(next.source)!;if(next.kind==='exact-feature'&&isEdgeReferences(next.edges))next.edges=mapEdgeReferenceIds(next.edges,key=>map.get(key));d.nodes[next.id]=next;}
         const retained=d.version>=5?[...new Set([...descendants].flatMap(key=>document.nodes[key]?.provenance??[]))]:[];
         if(d.version<5&&Object.hasOwn(previous,'provenance'))d.nodes[id].provenance=structuredClone(previous.provenance);
         const next=d.nodes[id];if(retained.length)next.provenance=retained;next.name=previous.name;next.color=previous.color;if(previous.role)next.role=previous.role;next.transform=structuredClone(previous.transform);if(options.resetScale)next.transform.scale=[1,1,1];
@@ -623,6 +630,48 @@ export function createCadSession(initial: CadDocument = createDocument(), option
         guardBodyOperationEdit(d,id,node.kind);
         node.plane=inputs.plane;
         node.offset=inputs.offset;
+      });
+    },
+    /** Split a top-level body at the plane `dot(point, n) = offset` (n the normalised `normal`,
+     * world millimetres) into split nodes on the same source (document version 49), in one Undo
+     * step: `both` (the default) replaces the body with its two sides, `positive` or `negative`
+     * keeps one. Returns the new body ids, positive side first. */
+    splitBody(source:string,inputs:{normal:Vec3;offset:FeatureScalar;keep?:'both'|SplitSide}):string[]{
+      const sides:SplitSide[]=!inputs.keep||inputs.keep==='both'?['positive','negative']:[inputs.keep];
+      const ids=sides.map(()=>newId());
+      commit('Split body',d=>{
+        const body=d.nodes[source],index=d.roots.indexOf(source);
+        if(index<0||!body||body.reference)throw new Error(t('Select one top-level body to split'));
+        if(body.role==='hole')throw new Error(t('Hole cutters cannot be split; split the body they cut'));
+        if(d.joints?.some(j=>j.bodyA===source||j.bodyB===source))throw new Error(t('Detach this body’s joints before splitting it'));
+        if(d.tracers?.some(trace=>trace.bodyId===source))throw new Error(t('Remove this body’s motion tracers before splitting it'));
+        if(!(Math.hypot(...inputs.normal)>1e-9)||!inputs.normal.every(Number.isFinite))throw new Error(t('The split plane needs a non-zero normal'));
+        upgradeModelFeatures(d,SPLIT_DOCUMENT_VERSION);
+        const names=new Set(d.roots.map(key=>d.nodes[key].name)),material=body.physics;
+        sides.forEach((side,i)=>{
+          const name=uniqueObjectName(splitSideName(body.name,side),names);names.add(name);
+          d.nodes[ids[i]]={id:ids[i],kind:'split',splitVersion:1,source,normal:[...inputs.normal] as Vec3,offset:inputs.offset,side,name,color:body.color,transform:identityTransform(),
+            ...(material?{physics:{version:1,motion:material.motion,densityKgM3:material.densityKgM3,friction:material.friction,restitution:material.restitution,intent:'rigid',...(material.material?{material:material.material}:{})}}:{})};
+        });
+        d.roots.splice(index,1,...ids);
+        return ids;
+      });
+      return ids;
+    },
+    /** Move a split's plane. The other side of the same split (a split node on the same source
+     * with the same plane) moves with it, so the two halves stay complementary. */
+    editSplit(id:string,inputs:{normal:Vec3;offset:FeatureScalar}){
+      commit('Edit split',d=>{
+        const node=d.nodes[id];
+        if(node?.kind!=='split')throw new Error(t('Select a split body'));
+        if(!(Math.hypot(...inputs.normal)>1e-9)||!inputs.normal.every(Number.isFinite))throw new Error(t('The split plane needs a non-zero normal'));
+        const same=(n:SolidNode)=>n.kind==='split'&&n.source===node.source&&n.offset===node.offset&&n.normal.every((v,i)=>v===node.normal[i]);
+        const halves=Object.values(d.nodes).filter(same);
+        for(const half of halves){
+          guardBodyOperationEdit(d,half.id,'split');
+          const target=d.nodes[half.id] as SolidNode&SplitFeature;
+          target.normal=[...inputs.normal] as Vec3;target.offset=inputs.offset;
+        }
       });
     },
     patternBody(source:string,settings:PatternSettings) {
@@ -790,7 +839,7 @@ export function createCadSession(initial: CadDocument = createDocument(), option
           if (map.has(id)) return map.get(id)!;
           const next = newId(); map.set(id, next); const n = cloneNode(d.nodes[id]); n.id = next;
           if (n.kind === 'boolean') n.inputs = n.inputs.map(copy);
-          if(n.kind==='mirror'||n.kind==='pattern'||n.kind==='exact-feature')n.source=copy(n.source);
+          if(n.kind==='mirror'||n.kind==='split'||n.kind==='pattern'||n.kind==='exact-feature')n.source=copy(n.source);
           if(n.kind==='exact-feature'&&isEdgeReferences(n.edges))n.edges=mapEdgeReferenceIds(n.edges,key=>map.get(key));
           if(isSketchFeature(n)){let sketchId=copiedSketches.get(n.sketchId);if(!sketchId){sketchId=newId();copiedSketches.set(n.sketchId,sketchId);const sketch=structuredClone(d.sketches![n.sketchId]);sketch.id=sketchId;sketch.profile.id=newId();delete sketch.artworkSourceId;delete sketch.artworkProfile;d.sketches![sketchId]=sketch;}n.sketchId=sketchId;}
           d.nodes[next] = n; return next;

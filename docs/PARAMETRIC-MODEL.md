@@ -245,6 +245,26 @@ on assembly sheets. A document reaches 48 only when such a sheet is saved; a she
 the choice keeps the earlier version, and Undo returns to it. No geometry or other sheet field
 changes. Builds that predate 48 refuse such a document.
 
+**Version 49 (2026-11-27) adds `split` nodes**: one side of a body cut by a plane
+([CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#smaller-tools-phase-65-document-version-49-done-2026-11-27)).
+
+```ts
+{kind:'split';splitVersion:1;source:string;   // the body that is cut (any node)
+ normal:Vec3;offset:FeatureScalar;           // the plane dot(p, normal/|normal|) = offset, in mm
+ side:'positive'|'negative'}                 // positive: the material where dot(p, n) >= offset
+```
+
+The plane is in the split node's parent frame (world for a top-level body; a new split has the
+identity transform). Splitting a body makes two `split` nodes on the same source, one per side,
+so the source is shared by two parents and both sides follow every edit of it; editing the plane
+of one side moves the other side's identical plane with it. Manifold keeps a side with
+`trimByPlane`, the exact kernel with `splitByPlane`; a side with nothing in it is an error, never an
+empty body. `offset` may be a parameter expression (as a mirror's). `checkDocument` accepts
+`split` nodes only in version 49 documents, with an existing source other than the node itself, a
+non-zero finite normal and a side. A document reaches 49 only when a body is split; Undo returns
+to the earlier version. Model source writes `split(id, {...})`. Builds that predate 49 refuse
+such a document.
+
 ## Graph and errors
 
 `designGraph(doc)` derives a deterministic topological order from canonical

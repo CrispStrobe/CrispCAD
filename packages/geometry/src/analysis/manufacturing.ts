@@ -60,7 +60,7 @@ const AXES:Record<ApproachAxis,Vec3>={'+x':[1,0,0],'-x':[-1,0,0],'+y':[0,1,0],'-
 // ---------------------------------------------------------------------------------------------
 // Triangle surfaces (the exact body's face-wise mesh, or a Manifold mesh)
 
-interface Surface {
+export interface Surface {
  readonly positions:ArrayLike<number>;readonly indices:ArrayLike<number>;
  /** Per triangle: outward unit normal, centroid, area. */
  readonly normal:Float64Array;readonly centroid:Float64Array;readonly area:Float64Array;
@@ -94,9 +94,9 @@ function surfaceOf(positions:ArrayLike<number>,indices:ArrayLike<number>,faceOf?
 // The exact model: faces with analytic normals, classified edges, cylinder groups
 
 type EdgeKind='convex'|'concave'|'tangent'|'seam';
-interface EdgeInfo {readonly index:number;readonly kind:EdgeKind;readonly point:Vec3;readonly tangent:Vec3;readonly normals?:readonly [Vec3,Vec3];readonly angleDeg:number;readonly approximate:boolean;readonly line:boolean}
-interface CylinderGroup {readonly faces:number[];readonly radius:number;readonly origin:Vec3;readonly direction:Vec3;readonly concave:boolean;readonly full:boolean;readonly hMin:number;readonly hMax:number}
-interface ExactModel {
+export interface EdgeInfo {readonly index:number;readonly kind:EdgeKind;readonly point:Vec3;readonly tangent:Vec3;readonly normals?:readonly [Vec3,Vec3];readonly angleDeg:number;readonly approximate:boolean;readonly line:boolean}
+export interface CylinderGroup {readonly faces:number[];readonly radius:number;readonly origin:Vec3;readonly direction:Vec3;readonly concave:boolean;readonly full:boolean;readonly hMin:number;readonly hMax:number}
+export interface ExactModel {
  readonly body:ExactDrawingBody;readonly surface:Surface;
  readonly faceTris:number[][];readonly faceArea:number[];
  /** Edges of each face (indices into body.edges). */
@@ -413,8 +413,8 @@ function wallCheck(id:string,label:string,s:Surface,limit:number,model:ExactMode
 // ---------------------------------------------------------------------------------------------
 // Edge radius
 
-interface Blend {readonly faces:number[];readonly radius:number;readonly convex:boolean;readonly surface:string}
-interface Chamfer {readonly face:number;readonly rails:number[];readonly widthMm?:number}
+export interface Blend {readonly faces:number[];readonly radius:number;readonly convex:boolean;readonly surface:string}
+export interface Chamfer {readonly face:number;readonly rails:number[];readonly widthMm?:number}
 
 function edgeBreaks(m:ExactModel):{blends:Blend[];chamfers:Chamfer[];broken:Set<number>}{
  const {body,edges}=m,blends:Blend[]=[],chamfers:Chamfer[]=[],broken=new Set<number>();
@@ -734,3 +734,6 @@ export function checkManufacturing(input:ManufacturingInput,options:Partial<Manu
  return {version:MANUFACTURING_CHECK_VERSION,process:settings.process,settings,bodies,...(input.kernel&&bodies.some(b=>b.geometry==='exact')?{kernel:input.kernel}:{}),
   disclaimer:t('Design screening against rules of thumb, not a quote or a guarantee that the part can be made. Wall thickness is sampled; exact checks use the B-rep, mesh checks the tessellation.')};
 }
+
+// Shared with the surface-blend inspection (blends.ts), which reads the same exact model.
+export {buildExactModel,edgeBreaks,faceMark,faceCentre,edgeMark};

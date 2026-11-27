@@ -19,3 +19,5 @@ export function geometrySignature(source:string):string {
  }
  return `${source.length}:${a>>>0}:${b>>>0}`;
 }
+/** `sha256Hex` without a promise, for hosts that hash inside a synchronous request (the exact worker). */
+export function sha256HexSync(bytes:Uint8Array):string{return bytesToHex(sha256(bytes));}

@@ -29,7 +29,7 @@ export function selectionFragment(input:CadDocument,selection:readonly string[])
   const required=new Set<string>();const references=(expression:string)=>{const names=new Set<string>();evaluateExpression(expression,name=>values[name],{references:names});for(const name of names)if(Object.hasOwn(original.parameters,name))required.add(name);};
   original.bindings.forEach(binding=>references(binding.expression));for(const s of Object.values(doc.sketches??{}))sketchExpressions(s).forEach(references);for(const n of Object.values(doc.nodes)){
    if(isSketchFeature(n))sketchFeatureExpressions(n).forEach(references);
-   if(n.kind==='mirror'&&typeof n.offset==='string')references(n.offset);
+   if((n.kind==='mirror'||n.kind==='split')&&typeof n.offset==='string')references(n.offset);
    if(n.kind==='pattern')patternExpressions(n.pattern).forEach(references);
    if(n.kind==='exact-feature'&&typeof n.size==='string')references(n.size);
   }const scanned=new Set<string>();
@@ -53,7 +53,7 @@ export function mergeFragmentParameters(target:CadDocument,source:CadDocument,id
  for(const n of Object.values(source.nodes)) {
   const pasted=target.nodes[ids.get(n.id)!];
   if(n.kind==='extrusion'&&pasted.kind==='extrusion'&&typeof n.distance==='string')pasted.distance=rewrite(n.distance);
-  if(n.kind==='mirror'&&pasted.kind==='mirror'&&typeof n.offset==='string')pasted.offset=rewrite(n.offset);
+  if((n.kind==='mirror'&&pasted.kind==='mirror'||n.kind==='split'&&pasted.kind==='split')&&typeof n.offset==='string')pasted.offset=rewrite(n.offset);
   if(n.kind==='pattern'&&pasted.kind==='pattern')pasted.pattern=mapPatternScalars(n.pattern,value=>typeof value==='string'?rewrite(value):value);
   if(n.kind==='exact-feature'&&pasted.kind==='exact-feature'&&typeof n.size==='string')pasted.size=rewrite(n.size);
   if(n.kind==='revolution'&&pasted.kind==='revolution'){

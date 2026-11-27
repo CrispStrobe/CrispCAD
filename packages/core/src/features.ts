@@ -340,7 +340,7 @@ export function designGraph(doc:CadDocument):DesignGraphEntry[] {
   for(const s of Object.values(doc.sketches??{}))entries.push({key:`sketch:${s.id}`,id:s.id,kind:'sketch',label:s.name,dependencies:[...new Set(sketchExpressions(s).flatMap(references))]});
   for(const n of Object.values(doc.nodes)){const deps=constructionInputs(n).map(id=>`feature:${id}`);
     if(isSketchFeature(n))deps.push(`sketch:${n.sketchId}`,...sketchFeatureExpressions(n).flatMap(references));
-    if(n.kind==='mirror'&&typeof n.offset==='string')deps.push(...references(n.offset));
+    if((n.kind==='mirror'||n.kind==='split')&&typeof n.offset==='string')deps.push(...references(n.offset));
     if(n.kind==='pattern')deps.push(...patternExpressions(n.pattern).flatMap(references));
     if(n.kind==='exact-feature'&&typeof n.size==='string')deps.push(...references(n.size));
     for(const b of doc.parametric?.bindings??[])if(b.nodeId===n.id)deps.push(...references(b.expression));

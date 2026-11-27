@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {FeatureEvaluationError,getLocale,t} from '@brickwright/cad-core';
-import type {FeatureDiagnostic,ExactCommandRequest,ExactCommandResult,ExactCommandHost,ExactDrawingData,ManufacturingReport,ManufacturingSettings} from '@brickwright/cad-core';
+import type {FeatureDiagnostic,ExactCommandRequest,ExactCommandResult,ExactCommandHost,ExactDrawingData,ManufacturingReport,ManufacturingSettings,MaterialOverlap,MaterialVolume,SurfaceBlendReport} from '@brickwright/cad-core';
 import type { CadDocument,PlanarSketch,SketchProfile } from '@brickwright/cad-core';
 import type { AssemblyCut,AssemblySection,GeometryResult,PrintabilityReport,PrintabilitySettings } from '@brickwright/cad-geometry';
 import {EXACT_LIMITS_TABLET,resolveExactLimits} from '@brickwright/cad-exact/limits';
@@ -11,9 +11,13 @@ type SliceRequest={slice:{geometry:GeometryResult;cut:AssemblyCut}};
 type ExactRequest={exact:{operation:ExactCommandRequest['operation'];document:CadDocument;bodies:string[];step?:ExactCommandRequest['step']}};
 /** The manufacturing check: the meshes are evaluated in the worker, the exact data comes with the request. */
 export type ManufacturingRequest={settings:ManufacturingSettings;bodies:string[];exact?:ExactDrawingData;exactUnavailable?:string;kernel?:string};
-type GeometryPayload={document:CadDocument;printability?:Partial<PrintabilitySettings>;manufacturing?:ManufacturingRequest}|OffsetRequest|SliceRequest|ExactRequest;
+/** The surface-blend inspection: the analysis of exact data, in the worker (no meshes are evaluated). */
+export type SurfaceBlendWorkerRequest={blends:{document:CadDocument;exact:ExactDrawingData;bodies:string[];kernel?:string;marks?:boolean}};
+/** The multi-material inspection's measures: volumes and overlaps of the evaluated meshes. */
+export type MaterialMeasures={volumes:MaterialVolume[];overlaps?:MaterialOverlap[]};
+type GeometryPayload={document:CadDocument;printability?:Partial<PrintabilitySettings>;manufacturing?:ManufacturingRequest;materials?:true}|OffsetRequest|SliceRequest|ExactRequest|SurfaceBlendWorkerRequest;
 export type GeometryRequest=GeometryPayload&{request:number;wasmURL:string;locale:string;exactLimits?:ExactLimits};
-type WorkerResult=GeometryResult|SketchProfile|AssemblySection|PrintabilityReport|ManufacturingReport|ExactCommandResult;
+type WorkerResult=GeometryResult|SketchProfile|AssemblySection|PrintabilityReport|ManufacturingReport|ExactCommandResult|SurfaceBlendReport|MaterialMeasures;
 /** An exact-kernel failure with the body and feature it names (see @brickwright/cad-exact). */
 export class ExactCommandError extends Error {
   constructor(message:string,readonly diagnostic?:{code:string;bodyId:string;nodeId:string;feature:string;message:string}){super(message);this.name='ExactCommandError';}
@@ -155,6 +159,14 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
     /** The manufacturing check, in the worker (meshes stay there); exact data, if any, is passed in. */
     checkManufacturing(document:CadDocument,request:ManufacturingRequest,signal?:AbortSignal){
       return geometry.send<ManufacturingReport>({document,manufacturing:request},signal);
+    },
+    /** Volumes and overlaps of the evaluated bodies, for the materials report (meshes stay in the worker). */
+    materialMeasures(document:CadDocument,signal?:AbortSignal){
+      return geometry.send<MaterialMeasures>({document,materials:true},signal);
+    },
+    /** The surface-blend analysis of exact data, in the worker. */
+    inspectBlends(request:SurfaceBlendWorkerRequest['blends'],signal?:AbortSignal){
+      return geometry.send<SurfaceBlendReport>({blends:request},signal);
     },
     /** Exact-kernel requests (`export step`, `measure exact`); the kernel loads on first use. */
     exact:exactHost,

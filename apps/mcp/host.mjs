@@ -8,7 +8,7 @@ import {createPresetDocument} from '@brickwright/cad-editor';
 import {drawingSheetCut,drawingSheetFor,renderDrawingSheet,sectionPlanes,writeDrawing} from '@brickwright/cad-editor/drawing';
 import {exportSTL} from '@brickwright/cad-geometry';
 import {exactKernelIdentity} from '@brickwright/cad-exact/identity';
-import {formatExactResult,runStepImport,fastenerTable,THREADS,STOCK_LENGTHS,HEAT_SET_INSERTS,COUNTERBORE_4762} from '@brickwright/cad-core';
+import {formatExactResult,runStepImport,fastenerTable,THREADS,STOCK_LENGTHS,HEAT_SET_INSERTS,COUNTERBORE_4762,inspectMaterials,printableBodies,formatMaterialsReport,formatSurfaceBlendReport,formatStepEvidence} from '@brickwright/cad-core';
 
 export const codeHelp={language:'brickwright-cad-script',version:CAD_SCRIPT_REVISION,example:defaultCodeProgram().source,syntax:['param name: mm|deg|scalar = expression;','let name = shape;','return shape;'],generatorRecipeTool:'cad_apply_model_source',generatorRecipeSyntax:'generated(id, metadata, recipe); roots([id]);',generatorRecipes:{...Object.fromEntries([...basicGeneratorPresets,...enclosureGeneratorPresets,...curvedGeneratorPresets,...transitionGeneratorPresets,'cube','ruler','screw','thread','nut','heart','text','name-tag'].map(id=>[id,defaultGenerator(id)])),...Object.fromEntries(['hex-head-screw','socket-head-screw','countersunk-screw','pan-head-screw','set-screw','wood-screw'].map(id=>[id,screwVariant(id)]))},functions:['torus(majorRadius, tubeRadius [, tubeSegments, ringSegments, tubeRotation, sweep, start])','ellipsoid(radiusX, radiusY, radiusZ [, segments])','roundedCylinder(radius, height, capHeight [, segments])','ellipticFrustum(rx0,ry0,rx1,ry1,height[,segments,startAngle,endAngle,angularSegments])','loft([[[x,y,z],...],...]) or loft([...], {pairing: \"closest\"}) — pairing \"closest\" re-starts each section at the vertex and direction closest to the previous one (as OpenCASCADE ThruSections); needs document version 46','smoothLoft([[[x,y,z],...],...]) — smooth (cubic) surface through three or more loft sections; needs document version 43','minRange(i,start,end,step[,predicate],value)','maxRange(i,start,end,step[,predicate],value)','frustum(bottom,top,height[,segments])','hull(a,...)','choose(condition,a,b)','forRange(i,start,end,step,shape)','forValues(i,[values],shape)','empty()','box(width,depth,height)','cylinder(radius,height[,segments])','sphere(radius[,segments])','extrude(height,[[x,y],...])','spurGear2d(module, teeth[, pressureAngleDeg=20, backlash=0]) — involute spur gear profile, tooth 0 on +X; mesh at centre distance module*(z1+z2)/2','internalSpurGear2d(module, teeth[, pressureAngleDeg=20, backlash=0]) — ring-gear tooth-space cutter to subtract from a disc','union(a,b,...)','subtract(base,cut,...)','intersect(a,b,...)','move([x,y,z],shape)','rotate([x,y,z],shape)','scale([x,y,z],shape)','repeat(count,[dx,dy,dz],shape)'],limits:CODE_LIMITS,notes:['// comments; unit-aware + - * / and parentheses','Named shapes and parameters can reference later declarations; cycles are refused','Code-local parameters are independent of global model parameters','One returned construction produces one rigid body','This is not JavaScript or .scad; imports, files, network and arbitrary script execution are unsupported']};
 const source={type:'string',minLength:1,maxLength:32768},id={type:'string',minLength:1,maxLength:96},parameters={type:'object',additionalProperties:{type:'string',minLength:1,maxLength:256}},revision={type:'integer',minimum:1};
@@ -38,6 +38,10 @@ export const toolDefinitions=[
  spec('cad_add_hole','Add a standard hole (document version 47) as one saved step: clearance (ISO 273 close/normal/loose), tapped (tap drill), counterbore (for ISO 4762 heads), countersink (90°, for ISO 10642 heads) or heat-set insert pocket. position is the mouth on the face, axis points into the material (default 0,0,-1). depth is the blind depth, or with through the material thickness. targetId cuts that top-level body. Exact STEP export, measures and drawings see true cylinders and cones. preview saves nothing.',{type:{type:'string',enum:['clearance','tapped','counterbore','countersink','heat-set']},thread:{type:'string',enum:['M2','M2.5','M3','M4','M5','M6','M8','M10','M12','M16','M20']},fit:{type:'string',enum:['close','normal','loose']},depth:{type:'number',exclusiveMinimum:0,maximum:2000},through:{type:'boolean'},position:{type:'array',maxItems:3},axis:{type:'array',maxItems:3},targetId:id,expectedRevision:revision,preview:{type:'boolean'}},['type','thread','expectedRevision'],false),
  spec('cad_fasten','Place ISO fasteners in standard holes as one saved step: the screw a hole is made for (counterbore: ISO 4762, countersink: ISO 10642, through clearance: ISO 4017 bolt with ISO 7089 washers and ISO 4032 nut, tapped: the longest stocked screw that fits, heat-set pocket: the insert). Bolts take the shortest stocked length reaching two pitches past the nut. targets are hole or body ids or names, or a thread such as M3; none fastens every standard hole. detail envelope inserts unthreaded solids. preview saves nothing.',{targets:{type:'array',maxItems:64},family:{type:'string',enum:['socket-head','button-head','countersunk','hex-bolt','heat-set-insert']},mode:{type:'string',enum:['screw','bolt']},length:{type:'number',exclusiveMinimum:0,maximum:1000},detail:{type:'string',enum:['threaded','envelope']},expectedRevision:revision,preview:{type:'boolean'}},['expectedRevision'],false),
  spec('cad_insert_part','Insert one standard part with ISO dimensions as one saved step: socket-head (ISO 4762), button-head (ISO 7380-1), countersunk (ISO 10642), hex-bolt (ISO 4017), set-screw (ISO 4026), hex-nut (ISO 4032), washer (ISO 7089) or heat-set-insert. Screws need a stocked length (cad_fastener_table). Screws are threaded where the thread generator reaches, else envelopes. position and axis place the bearing plane (default origin, axis 0,0,-1: shank downwards). preview saves nothing.',{family:{type:'string',enum:['socket-head','button-head','countersunk','hex-bolt','set-screw','hex-nut','washer','heat-set-insert']},thread:{type:'string',enum:['M2','M2.5','M3','M4','M5','M6','M8','M10','M12','M16','M20']},length:{type:'number',exclusiveMinimum:0,maximum:1000},position:{type:'array',maxItems:3},axis:{type:'array',maxItems:3},detail:{type:'string',enum:['threaded','envelope']},expectedRevision:revision,preview:{type:'boolean'}},['family','thread','expectedRevision'],false),
+ spec('cad_split_body','Split a top-level body at a plane (document version 49) as one saved step: the plane is every point whose distance along the normal is offset (mm); the + side is where the normal points. keep both (default: the body becomes its two sides, positive first), positive or negative. Both sides follow later edits of the source; the exact path cuts the B-rep, so the cut face is an exact plane.',{objectId:id,normal:{type:'array',minItems:3,maxItems:3,items:{type:'number'}},offset:{type:'number',minimum:-100000,maximum:100000},keep:{type:'string',enum:['both','positive','negative']},expectedRevision:revision,preview:{type:'boolean'}},['objectId','normal','expectedRevision'],false),
+ spec('cad_inspect_materials','Multi-material inspection for printing (read-only): each body\'s material, colour, volume and mass; totals per material and per colour (with filament length at 1.75 mm); and findings: Booleans that fuse operands of different materials or colours into one body, and bodies of different materials or colours that share volume. exact:true takes volumes from the exact B-rep where a body has one (loads the exact kernel).',{objectIds:{type:'array',maxItems:64,items:{type:'string'}},exact:{type:'boolean'}}),
+ spec('cad_surface_blends','Inspect surface blends on the exact B-rep (read-only; loads the exact kernel): per body the fillets (concave) and rounds (convex) with their surface radius, chamfers with width, angles and setback, and freeform blends; for each its boundary edges, how many are tangent and the largest normal deviation across them (G1 evidence), and the modelled exact fillets/chamfers with the blends matching their size. Bodies without an exact B-rep are listed in failures. includeMarks adds triangles and outlines to draw each blend.',{objectIds:{type:'array',maxItems:64,items:{type:'string'}},includeMarks:{type:'boolean'}}),
+ spec('cad_step_evidence','STEP evidence for review (read-only; loads the exact kernel): with base64 (a STEP file), what the kernel reads in it; without, the model\'s bodies (objectIds, default all) written as one STEP file and read back, with the read-back volume and area compared to the model\'s (round trip within 1e-6). Per body: validity, exact volume, area, bounding box, centroid, principal moments, faces by surface kind with areas, edges by curve kind with lengths, closed and free edges, shortest edge and smallest face; for the file: bytes, SHA-256 and header (schema, originating system). Nothing is imported.',{base64:{type:'string',minLength:4,maxLength:4*1024*1024},name:{type:'string',minLength:1,maxLength:255},objectIds:{type:'array',maxItems:64,items:{type:'string'}}}),
  spec('cad_export_project','Return a complete history-inclusive .bcad archive as base64; large projects use the configured project file instead.'),
  spec('cad_export_step','Return an exact STEP (AP214) file as base64, built with the optional exact B-rep kernel (SMLib, loaded on first use). One solid per body; objectIds limits the bodies (default: every solid body). Bodies without an exact construction, such as imported meshes or minkowski, fail with a diagnostic naming the body and feature; no mesh is ever written as STEP. Recorded library sources are refused (STL with attribution only).',{objectIds:{type:'array',maxItems:64,items:{type:'string'}}}),
  spec('cad_import_step','Import a STEP file (AP203, AP214 or AP242 B-rep) as exact bodies with the optional exact B-rep kernel (SMLib, loaded on first use): one body per solid in the file, at the file\'s coordinates in millimetres, each keeping its exact B-rep (exact STEP export, measures, fillet, chamfer, shell) and the kernel\'s display mesh. The file is refused as a whole, never imported in part: text that is not STEP, malformed or cut short, no solid, a body the kernel cannot read, an open surface, more than 64 bodies. Saved as one history step; preview saves nothing. base64 holds the file\'s bytes.',{name:{type:'string',minLength:1,maxLength:255},base64:{type:'string',minLength:4,maxLength:4194304},expectedRevision:revision,preview:{type:'boolean'}},['name','base64','expectedRevision'],false),
@@ -97,6 +101,27 @@ export async function createCodeHost(options={}){
   const kernel=`${exactKernelIdentity.id} · ${exactKernelIdentity.package} ${exactKernelIdentity.version}`;
   return (await geometry.evaluate(document,signal,undefined,{kind:'manufacturing',options:{settings,bodies:[...bodies],...(exactData?{exact:exactData,kernel}:{}),...(exactUnavailable?{exactUnavailable}:{})}})).report;
  }};
+ const exactLabel=`${exactKernelIdentity.id} · ${exactKernelIdentity.package} ${exactKernelIdentity.version}`;
+ // Materials and mass: volumes and overlaps beside the meshes; exact volumes from the exact thread when
+ // asked, body by body where some have no exact B-rep (those keep their mesh volume, with the reason).
+ const materials={async inspect(document,{bodies,exact:useExact},signal){
+  const measures=await geometry.evaluate(document,signal,undefined,{kind:'materials'});cancelled(signal);
+  let volumes=measures.volumes;
+  if(useExact){
+   const wanted=bodies.length?bodies:printableBodies(document),measured=new Map(),reasons=new Map();
+   try{const result=await exact.run({operation:'measure',document,bodies:[...wanted]},signal);for(const b of result.bodies)measured.set(b.id,b.volume);}
+   catch(error){if(signal?.aborted)throw error;for(const id of wanted){try{const result=await exact.run({operation:'measure',document,bodies:[id]},signal);measured.set(id,result.bodies[0].volume);}catch(inner){if(signal?.aborted)throw inner;reasons.set(id,t`no exact B-rep: ${inner instanceof Error?inner.message:String(inner)}`);}}}
+   volumes=volumes.map(v=>measured.has(v.id)?{id:v.id,volumeMm3:measured.get(v.id),geometry:'exact'}:reasons.has(v.id)?{...v,reason:reasons.get(v.id)}:v);
+  }
+  cancelled(signal);
+  return inspectMaterials(document,volumes,{bodies,...(measures.overlaps?{overlaps:measures.overlaps}:{}),kernel:exactLabel});
+ }};
+ // Surface blends: the exact drawing data from the exact thread, analysed beside it in the geometry thread.
+ const blends={async inspect(document,{bodies},signal,marks=false){
+  const result=await exact.run({operation:'drawing',document,bodies:[]},signal);cancelled(signal);
+  if(result.operation!=='drawing')throw new Error(t('The exact kernel returned an unexpected result.'));
+  return (await geometry.evaluate(document,signal,undefined,{kind:'blends',options:{document,exact:{bodies:result.bodies,failures:result.failures},bodies:[...bodies],kernel:exactLabel,marks}})).report;
+ }};
  const summary=result=>({volumeMm3:result.volume,triangles:result.triangles,bodies:result.bodies.map(b=>({id:b.id,name:b.name,volumeMm3:b.volume,boundsMm:b.bounds}))});
  function info(){return {revision:metadata.project.serial,projectId:session.state.document.id,title:session.state.document.title,projectFile:projectPath??null,objects:session.state.document.roots.map(id=>{const n=session.state.document.nodes[id];return {id,name:n.name,kind:n.kind,transform:n.transform};})};}
  async function accept(doc,label,signal,parent){cancelled(signal);if(new TextEncoder().encode(serializeDocument(doc)).length>1024*1024)throw new Error(t('MCP editable model exceeds 1 MiB; the GUI supports larger projects'));const nextArchive=await appendPortableRevision(archive,doc,label,parent);const nextMetadata=await readPortableHistory(nextArchive);cancelled(signal);await persist(nextArchive);archive=nextArchive;metadata=nextMetadata;session.load(doc);}
@@ -123,6 +148,28 @@ export async function createCodeHost(options={}){
    // Marks (triangles and lines to draw) are large; they are left out unless asked for.
    const bodies=includeMarks?report.bodies:report.bodies.map(body=>({...body,checks:body.checks.map(check=>({...check,findings:check.findings.map(({mark,...finding})=>finding)}))}));
    return {revision,verdict:manufacturingVerdict(report),...report,bodies,text:formatManufacturingReport(report)};
+  }
+  if(name==='cad_inspect_materials'){
+   const document=validateDocument(session.state.document),revision=metadata.project.serial,ids=args.objectIds??[];
+   if(ids.some(id=>!document.roots.includes(id)))throw new Error(t('Unknown object id'));
+   const report=await materials.inspect(document,{bodies:ids,exact:!!args.exact},signal);cancelled(signal);
+   return {revision,...report,text:formatMaterialsReport(report)};
+  }
+  if(name==='cad_surface_blends'){
+   const document=validateDocument(session.state.document),revision=metadata.project.serial,ids=args.objectIds??[];
+   if(ids.some(id=>!document.roots.includes(id)))throw new Error(t('Unknown object id'));
+   const report=await blends.inspect(document,{bodies:ids},signal,!!args.includeMarks);cancelled(signal);
+   return {revision,...report,text:formatSurfaceBlendReport(report)};
+  }
+  if(name==='cad_step_evidence'){
+   const document=validateDocument(session.state.document),revision=metadata.project.serial,ids=args.objectIds??[];
+   if(ids.some(id=>!document.roots.includes(id)))throw new Error(t('Unknown object id'));
+   if(args.base64!==undefined&&(!/^[A-Za-z0-9+/]+={0,2}$/.test(args.base64)||args.base64.length%4))throw new Error(t('Invalid base64'));
+   if(args.base64!==undefined&&ids.length)throw new Error(t('Give either a STEP file (base64) or objectIds for a round trip, not both.'));
+   const step=args.base64!==undefined?{name:args.name??'file.step',bytes:new Uint8Array(Buffer.from(args.base64,'base64'))}:undefined;
+   const result=await exact.run({operation:'step-evidence',document,bodies:ids,...(step?{step}:{})},signal);cancelled(signal);
+   if(result.operation!=='step-evidence')throw new Error(t('The exact kernel returned an unexpected result.'));
+   return {revision,kernel:result.kernel,...result.evidence,text:formatStepEvidence(result.evidence)};
   }
   if(name==='cad_inspect'){const document=validateDocument(session.state.document),revision=metadata.project.serial,ids=args.objectIds;if(ids&&ids.some(id=>!document.roots.includes(id)))throw new Error(t('Unknown object id'));const {bodies}=await geometry.evaluate(document,signal,undefined,{kind:'inspect'});cancelled(signal);
    const objects=document.roots.filter(id=>!ids||ids.includes(id)).map(id=>{const n=document.nodes[id],compiled=n.kind==='code'?compileCode(n.program):undefined;return {id,name:n.name,kind:n.kind,transform:n.transform,...(n.reference?{reference:true}:{}),...(n.role==='hole'?{hole:true}:{}),...(compiled?{parameters:Object.fromEntries(Object.entries(compiled.values).map(([k,v])=>[k,v]))}:{}),...(n.generator?{generator:n.generator.preset}:{})};});
@@ -198,6 +245,12 @@ export async function createCodeHost(options={}){
     await accept(trial.state.document,'Import STEP',signal);return {...info(),committed:true,objectIds:done.ids,output:done.output,kernel:done.kernel,geometry:summary(result)};
    }finally{trial.dispose();}
   }
+  if(name==='cad_split_body'){
+   // A thin wrapper over the registry command `split`: one validated, saved step.
+   if(args.normal.length!==3||args.normal.some(v=>typeof v!=='number'))throw new Error(t`Invalid ${'normal'}`);
+   const quoteWord=value=>/^[A-Za-z0-9_-]+$/.test(value)?value:'"'+String(value).replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"';
+   args={commands:['split',quoteWord(args.objectId),args.normal.join(','),String(args.offset??0),...(args.keep&&args.keep!=='both'?[args.keep]:[])].join(' '),expectedRevision:args.expectedRevision,...(args.preview?{preview:true}:{})};name='cad_run_commands';
+  }
   if(name==='cad_add_hole'||name==='cad_fasten'||name==='cad_insert_part'){
    // Thin wrappers over the registry commands `hole`, `fasten` and `part`: one validated, saved step.
    const point=(value,fallback)=>{if(value===undefined)return fallback;if(value.length!==3||value.some(v=>typeof v!=='number'))throw new Error(t`Invalid ${'position'}`);return value.join(',');};
@@ -213,7 +266,7 @@ export async function createCodeHost(options={}){
    const expected=metadata.project.serial,trial=createCadSession(session.state.document,{kernels}),journal=createCommandJournal(trial);
    try{
     let fileBytes=0;
-    const results=(await createCommandRunner(trial,{journal,exact,manufacturing,signal,generated:(recipe,title)=>createPresetDocument(recipe.preset,title,{recipe})}).runScriptAsync(args.commands,{maxLines:64})).map(r=>{
+    const results=(await createCommandRunner(trial,{journal,exact,manufacturing,materials,blends,signal,generated:(recipe,title)=>createPresetDocument(recipe.preset,title,{recipe})}).runScriptAsync(args.commands,{maxLines:64})).map(r=>{
      const file=r.file&&{name:r.file.name,mime:r.file.mime,base64:Buffer.from(r.file.text).toString('base64')};
      if(file&&(fileBytes+=file.base64.length)>3*1024*1024)throw new Error(t('Command files exceed the MCP 3 MiB limit; export fewer bodies per command.'));
      return {command:r.command,invocation:r.invocation,edited:r.edited,...(r.output!==undefined?{output:r.output}:{}),...(file?{file}:{}),...(r.kernel?{kernel:r.kernel}:{})};

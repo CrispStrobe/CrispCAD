@@ -18,6 +18,9 @@ import {exactSectionData} from './section.js';
 import type {ExactDrawingData} from './drawing.js';
 import type {ExactSectionData} from '@brickwright/cad-core';
 import type {ExactStepImport} from './step-import.js';
+import {stepFileEvidence} from './step-evidence.js';
+import {STEP_ROUND_TRIP_TOLERANCE,sha256HexSync} from '@brickwright/cad-core';
+import type {StepEvidence} from '@brickwright/cad-core';
 
 export * from './identity.js';
 export {lowerCodeShape,evaluateCadScript,cadScript,revolveProfile,MIN_EXACT_SEGMENTS,MAX_POLYHEDRON_FACES} from './lower-cad-script.js';
@@ -26,6 +29,7 @@ export {displayMesh,displayTessellation,exactFeatureDisplay} from './display.js'
 export {triangulatePolygon,facewiseMesh,MANY_LOOPS} from './face-mesh.js';
 export {importStepBodies,storedBody,readStoredBody,createBrepCache} from './step-import.js';
 export {sectionEdges,exactSectionData,MAX_SECTION_PLANES,MAX_SECTION_EDGES} from './section.js';
+export {stepFileEvidence} from './step-evidence.js';
 export {exactDrawingBody,exactDrawingData,drawingMeshTolerance,MAX_DRAWING_FACES,MAX_DRAWING_EDGES,MAX_DRAWING_TRIANGLES} from './drawing.js';
 export type {ExactDrawingBody,ExactDrawingData,ExactDrawingEdge,ExactDrawingFace,ExactDrawingFailure} from './drawing.js';
 export type {ImportedExactBody,ExactStepImport,BrepCache} from './step-import.js';
@@ -106,6 +110,9 @@ export interface ExactBackend {
  section(doc:CadDocument,ids:readonly string[]|undefined,cut:{axis:0|1;positions:readonly number[]},options?:ExactRunOptions):ExactSectionResult;
  /** Read a STEP file as exact bodies (B-rep, measures and display of each), or refuse it whole. */
  importStep(bytes:Uint8Array,file:string,options?:ExactRunOptions):ExactStepImportResult;
+ /** Evidence of a STEP file (measures and topology of each body as read), or with a model and no
+  * file, of its bodies written as one STEP file and read back (a round trip). Read-only. */
+ stepEvidence(input:{bytes:Uint8Array;file:string}|{doc:CadDocument;ids?:readonly string[]},options?:ExactRunOptions):{kernel:ExactKernelInfo;evidence:StepEvidence};
 }
 
 /** Every node a set of top-level bodies is built from. */
@@ -184,6 +191,32 @@ export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(
    const limit=options.limits?.maxStepImportBytes;
    if(limit!==undefined&&bytes.byteLength>limit)throw new ExactKernelError('unsupported',t`${file} is ${(bytes.byteLength/1048576).toFixed(1)} MiB; this device imports STEP files of up to ${Math.round(limit/1048576)} MiB. Import it on a computer, or split the assembly.`);
    return {kernel:info,...kernel.scope(()=>importStepBodies(kernel,bytes,file))};
+  },
+  stepEvidence(input,options={}){
+   if('bytes' in input){
+    const limit=options.limits?.maxStepImportBytes;
+    if(limit!==undefined&&input.bytes.byteLength>limit)throw new ExactKernelError('unsupported',t`${input.file} is ${(input.bytes.byteLength/1048576).toFixed(1)} MiB; this device reads STEP files of up to ${Math.round(limit/1048576)} MiB.`);
+    return {kernel:info,evidence:kernel.scope(()=>stepFileEvidence(kernel,input.bytes,input.file))};
+   }
+   // Round trip: each body written as its own STEP file (as `export step <body>` writes it; bodies
+   // that touch, such as the two sides of a split, would merge in one file), read back, compared.
+   const measured=this.measure(input.doc,input.ids,options);
+   const files=measured.bodies.map(m=>{
+    const text=this.exportStep(input.doc,[m.id],options).step,bytes=new TextEncoder().encode(text);
+    return {id:m.id,bytes,evidence:kernel.scope(()=>stepFileEvidence(kernel,bytes,m.name+'.step'))};
+   });
+   for(const f of files)if(f.evidence.bodies.length!==1)throw new ExactKernelError('kernel-failure',t`The STEP file read back with ${f.evidence.bodies.length} bodies instead of ${1}.`);
+   const title=(input.doc.title.replace(/[\\/:*?"<>|\u0000-\u001f\u007f]/g,'-').trim().slice(0,230)||'design')+'.step';
+   const all=new Uint8Array(files.reduce((n,f)=>n+f.bytes.byteLength,0));let at=0;for(const f of files){all.set(f.bytes,at);at+=f.bytes.byteLength;}
+   const read=files.map(f=>f.evidence.bodies[0]);
+   const evidence:StepEvidence={...files[0].evidence,file:{name:title,bytes:all.byteLength,sha256:sha256HexSync(all),header:files[0].evidence.file.header},bodies:read,notes:files.flatMap(f=>f.evidence.notes),
+    totals:{volumeMm3:read.reduce((s,b)=>s+b.volumeMm3,0),areaMm2:read.reduce((s,b)=>s+b.areaMm2,0),faces:read.reduce((s,b)=>s+b.faces.total,0),edges:read.reduce((s,b)=>s+b.edges.total,0)}};
+   const dev=(a:number,b:number)=>Math.abs(a-b)/Math.max(Math.abs(a),1e-12);
+   const bodies=measured.bodies.map((m,i)=>{
+    const r=read[i],volumeDeviation=dev(m.volume,r.volumeMm3),areaDeviation=dev(m.area,r.areaMm2);
+    return {id:m.id,name:m.name,volumeMm3:m.volume,readVolumeMm3:r.volumeMm3,areaMm2:m.area,readAreaMm2:r.areaMm2,volumeDeviation,areaDeviation,pass:r.valid&&volumeDeviation<=STEP_ROUND_TRIP_TOLERANCE&&areaDeviation<=STEP_ROUND_TRIP_TOLERANCE};
+   });
+   return {kernel:info,evidence:{...evidence,roundTrip:{tolerance:STEP_ROUND_TRIP_TOLERANCE,bodies,pass:bodies.every(b=>b.pass)}}};
   },
   exportStep(input,ids,options){
    const prepared=prepare(input,ids);
@@ -268,6 +301,7 @@ export function runExactRequest(backend:ExactBackend,request:ExactCommandRequest
   :request.operation==='drawing'?{operation:'drawing' as const,...backend.drawing(request.document,request.bodies,options)}
   :request.operation==='section'?{operation:'section' as const,...backend.section(request.document,request.bodies,sectionInput(request),options)}
   :request.operation==='import-step'?{operation:'import-step' as const,...backend.importStep(stepInput(request),request.step!.name,options)}
+  :request.operation==='step-evidence'?{operation:'step-evidence' as const,...backend.stepEvidence(request.step?{bytes:stepInput(request),file:request.step.name}:{doc:request.document,ids:request.bodies},options)}
   :{operation:'export-step' as const,...backend.exportStep(request.document,request.bodies,options)};
  return {...computed,timing:{loadMs,runMs:performance.now()-started,memoryBytes:backend.kernel.memory().heap}};
 }

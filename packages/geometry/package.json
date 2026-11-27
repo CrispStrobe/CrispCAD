@@ -15,6 +15,14 @@
     "./manufacturing": {
       "types": "./dist/analysis/manufacturing.d.ts",
       "import": "./dist/analysis/manufacturing.js"
+    },
+    "./blends": {
+      "types": "./dist/analysis/blends.d.ts",
+      "import": "./dist/analysis/blends.js"
+    },
+    "./materials": {
+      "types": "./dist/analysis/materials.d.ts",
+      "import": "./dist/analysis/materials.js"
     }
   },
   "files": [

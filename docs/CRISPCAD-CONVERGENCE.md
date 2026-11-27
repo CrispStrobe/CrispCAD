@@ -1121,7 +1121,8 @@ reference for each.
    planetary/ring-gear preset from [KERNELCAD-REVIEW.md](KERNELCAD-REVIEW.md#remaining-backlog-from-the-plan);
    step 5 of [PARAMETRIC-CAD-STRATEGY.md](PARAMETRIC-CAD-STRATEGY.md#delivery-order-and-acceptance).
 5. **Smaller tools:** split by plane, multi-material inspection, MCP STEP evidence and
-   surface-blend tools.
+   surface-blend tools. **Done 2026-11-27** (document version 49 for split; see
+   [Smaller tools](#smaller-tools-phase-65-document-version-49-done-2026-11-27)).
 
 #### Drawings from exact edges. **Done 2026-11-27**
 
@@ -1488,6 +1489,84 @@ processes); bridges measured on the exact body (the FDM bridge rows are the mesh
 per-document saved choice of process (would need a document version); laser kerf and part size
 against the bed.
 
+#### Smaller tools (Phase 6.5, document version 49). **Done 2026-11-27**
+
+Four tools after the lab guides `split-by-plane`, `multi-material-inspection`, `mcp-step-evidence`
+and `mcp-surface-blends`; all original code (nothing ported, so no new notices). Each is in the
+editor (touch-sized dialogs; palette and the shared menu definition), the terminal and registry,
+MCP and the CLI, in English and German.
+
+- **Split body** (`split` nodes, document version 49). Object › Split body… (palette, toolbar Edit
+  › Split, terminal `split ["name"|id] <x|y|z|-x|…|X,Y,Z> [offset] [both|positive|negative]`, MCP
+  `cad_split_body`). The plane is `dot(p, n) = offset` with `n` the normalised normal, so the
+  offset is a signed distance in mm; the + side is where the normal points. "Pick the plane on a
+  face" puts the plane through a tapped point along the tapped face's normal. A split replaces the
+  body with two `split` nodes on the **same source** (the first shared input in the model graph;
+  `checkDocument`, pruning, copy/paste and the exact-feature key already walk graphs with `seen`
+  sets), so both sides follow every edit of the source, and editing one side's plane moves the
+  other's. Manifold keeps a side with `trimByPlane`; the exact kernel cuts the B-rep with its
+  `splitByPlane` (kernel 0.1.10 already had it; no lab release), so the cut face is an exact plane
+  and the other faces keep their surfaces (a Ø10 bore stays a cylinder of radius 5). A side with
+  nothing in it is an error in both kernels ("Nothing of the body lies on the + side…"), never an
+  empty body. The offset can be a parameter expression. Names: "Block (+ side)", "Block (− side)".
+  Details in [PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md#document-versions).
+- **Materials and mass** (read-only). File › Drawings and checks › Materials and mass…, terminal
+  `materials [targets] [--exact]`, MCP `cad_inspect_materials`, CLI `materials`. Per body: material
+  preset (or "No material set", the default 1050 kg/m³), colour, volume and mass; per material;
+  per colour with filament length at 1.75 mm (for multi-colour printing). Findings: **fused**, a
+  Boolean whose printing operands differ in material or colour (the result has one material; the
+  lab's diagnostic) and **overlap**, bodies of different materials or colours sharing volume
+  (Manifold intersections in the geometry worker, up to 64 bodies; a slicer would give the volume
+  to one of them). "Exact volumes" takes each body's volume from the exact B-rep (a body without
+  one keeps its mesh volume and says why). Core: `materials.ts`; measures:
+  `geometry/analysis/materials.ts`.
+- **Inspect surface blends** (read-only, exact only). File › Exact modeling › Inspect surface
+  blends…, terminal `blends [targets]`, MCP `cad_surface_blends`, CLI `blends`. On the exact
+  `drawing` data (cached per document, shared with drawings and the manufacturing check) and the
+  manufacturing check's exact model (`edgeBreaks`, now exported), per body: fillets (concave) and
+  rounds (convex) with surface kind and exact radius; chamfers with width, the two rail angles and,
+  for an equal-distance chamfer, the setback (width / 2 sin(φ/2)); freeform blends (spline faces
+  tangent to a neighbour). Evidence per blend: boundary edges, how many are tangent, the largest
+  angle between the exact normals across them, and `continuity` G1 / partly / none. The exact
+  fillets and chamfers a body was modelled with are compared with the B-rep ("Modelled fillet R2:
+  20 matching blends"). Each blend is a button that marks it in the 3D view, with the finding bar
+  (Previous, Next, Back to report, Done). Bodies without an exact B-rep are listed as not inspected:
+  a tessellation cannot give a radius. Analysis: `geometry/analysis/blends.ts`.
+- **STEP evidence** (read-only). File › STEP evidence…, terminal `evidence step [targets]`, MCP
+  `cad_step_evidence`, CLI `evidence <project> [<file.step>]`. New exact request `step-evidence`
+  (`exact/src/step-evidence.ts`): a file is read strictly as by STEP import (refused whole if a body
+  cannot be read) and summarised per body: kernel validity, solid count, exact volume, area,
+  bounding box, centroid, principal moments, faces by surface kind with areas, edges by curve kind
+  with lengths, closed and free edges, shortest edge, smallest face; for the file its bytes,
+  SHA-256 and header (schema, originating system, time stamp). Without a file it is a **round
+  trip**: each body written as its own STEP file (the two sides of a split touch, and one file
+  would merge them) and read back, volume and area compared to the model within 1e-6. Nothing is
+  imported.
+
+**Tests.** `tests/split-body.test.ts` (7): exact halves of a bored block at z = 8 (12 and 8 mm of
+(40·30 − 25π)), Manifold halves summing to the whole; the cut face is one exact plane of the
+cut area and the bore stays a cylinder; an oblique normal; an empty side refused by both kernels;
+both halves following a source edit and a plane edit, Undo; validation and the version gate; the
+registry command, journal, model source, history archive, German names.
+`tests/inspections-6-5.test.ts` (10): masses per body/material/colour and filament length; fused
+and overlapping materials; exact volumes and the command; German; rounds R2 with G1 evidence
+matching the modelled fillet; chamfer setback 1.5 at 45°/45°; a mesh body listed as not
+inspected; STEP evidence of a file (7 faces, cylinder area, no free edges), round trip, refusal of
+a non-STEP file, header reader. `tests/mcp-phase-6-5.test.ts` (3): `cad_split_body` (preview,
+commit, stale revision, empty side), the three inspections leaving the revision unchanged, the
+registry commands in `cad_run_commands`, and the CLI verbs (German too).
+`tests/editor-menu.test.ts` covers the new menu items. Browser:
+`tests/browser/phase-6-5-tools.spec.ts` on the `ipad` project (palette › Split body, plane picked
+by a tap on the top face, exact halves; materials table with the 7.8 g steel insert; a round
+marked in the 3D view; STEP evidence round trip and a chosen file; no history entries from the
+inspections).
+
+**Left open.** Split by a sketch line or a face other than a plane (the lab's `split(other)`);
+splitting a body inside a union (only top-level bodies); per-face materials of a fused body
+(inlays still need separate bodies, as in the lab); infill and support in the mass estimate;
+freeform blend radii (curvature of spline faces) and G2 evidence; STEP evidence of assemblies'
+product structure and of files over the import limits (16 MiB; 3 MiB through MCP).
+
 ### Phase 7: delivery and qualification
 
 1. Exact features in BrickWright's CAD tab UI, not only through commands, behind the
@@ -1499,7 +1578,7 @@ against the bed.
 
 Order: 5.1, 5.2 and 5.4 first (5.4 in the lab, alongside), then 6.1 with the drafting
 work (hidden-line views from exact edges done 2026-11-27), then the rest of Phase 6 by demand
-(6.3, manufacturing checks, done 2026-11-27).
+(6.3, manufacturing checks, done 2026-11-27; 6.5, smaller tools, done 2026-11-27).
 
 ### Exact features in BrickWright's menus (Phase 7.1, 2026-11-27)
 

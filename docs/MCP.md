@@ -58,6 +58,10 @@ history. Use a dedicated file: this process is its writer until closed.
 | `cad_add_hole` | Add a standard hole (clearance, tapped, counterbore, countersink, heat-set pocket; document version 47) as one saved step |
 | `cad_fasten` | Place the ISO screw, washers and nut (or insert) each standard hole is made for, as one saved step |
 | `cad_insert_part` | Insert one ISO standard part (screw, nut, washer, heat-set insert) as one saved step |
+| `cad_split_body` | Split a top-level body at a plane into its two sides (or keep one; document version 49) as one saved step |
+| `cad_inspect_materials` | Read-only material, colour, volume and mass per body, per material and per colour (filament), with fused and overlapping materials |
+| `cad_surface_blends` | Read-only fillets, rounds, chamfers and freeform blends on the exact B-rep, with radii, setbacks and tangency (G1) evidence |
+| `cad_step_evidence` | Read-only exact measures and topology summary of a STEP file (base64), or a round trip of the model's bodies |
 | `cad_list_commands` | Read-only list of the shared command vocabulary with typed arguments |
 | `cad_run_commands` | Run terminal commands headlessly; all edits become one history step |
 
@@ -148,6 +152,42 @@ is the registry command `check fdm|cnc|laser [targets] [--tool <mm>] [--axes +z,
 `cad_run_commands`, and the CLI verb `manufacturing` (`--process`, `--tool`, `--axes`,
 `--min-wall`, `--min-radius`, `--max-radius`, `--edge-break`, `--mesh`). See
 [CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#check-for-manufacturing-done-2026-11-27).
+
+## Phase 6.5 tools
+
+`cad_split_body` (`objectId`, `normal` [x, y, z], `offset` mm, `keep`: `both` (default),
+`positive` or `negative`, `expectedRevision`, `preview`) splits a body at the plane of points whose
+distance along the normalised normal is `offset`; the + side is where the normal points. It is the
+registry command `split ["name"|id] <x|y|z|-x|-y|-z|X,Y,Z> [offset] [both|positive|negative]`
+run in `cad_run_commands` and saved as one step. Both sides are `split` nodes on the same source
+(document version 49), so they follow later edits of it; the exact kernel cuts the B-rep.
+
+The three inspections change nothing (no revision, no history entry):
+
+- `cad_inspect_materials` (`objectIds`, `exact`): each body's material (`unassigned` uses the
+  default 1050 kg/m³), colour, volume and mass (g); groups `byMaterial` and `byColor` (with
+  `filamentM` at 1.75 mm); `findings` of kind `fused` (a Boolean whose operands differ in material
+  or colour: the result has one) and `overlap` (bodies of different materials or colours sharing
+  volume, measured with Manifold for up to 64 bodies). `exact:true` takes volumes from the exact
+  B-rep, body by body; a body without one keeps its mesh volume with a `reason`. Registry command:
+  `materials [targets] [--exact]`; CLI verb `materials` (`--exact`).
+- `cad_surface_blends` (`objectIds`, `includeMarks`): per body (exact B-rep only; others are in
+  `failures`) the blends: `fillet` (concave) and `round` (convex) with `radiusMm` and surface kind,
+  `chamfer` with `widthMm`, `anglesDeg` and, for an equal-distance chamfer, `setbackMm`, and
+  `freeform` (spline faces tangent to a neighbour); for each `boundaryEdges`, `tangentEdges`,
+  `maxTangentDeviationDeg` and `continuity` (`G1`, `partly`, `none`); and `authored`, the exact
+  fillets/chamfers the body was modelled with and how many blends match their size. Registry
+  command: `blends [targets]`; CLI verb `blends`.
+- `cad_step_evidence` (`base64` and `name`, or `objectIds`): with a file, what the exact kernel
+  reads in it; without, a round trip: each body written as its own STEP file and read back, with
+  volume and area compared (`roundTrip`, tolerance 1e-6). Per body: `valid`, `solids`, exact
+  `volumeMm3`, `areaMm2`, `bounds`, `centroid`, `principalMoments`, `faces.bySurface` (counts and
+  areas), `edges.byCurve` (counts and lengths), `closed` and `free` edges, the shortest edge and
+  smallest face; `file` has `bytes`, `sha256` and the header (`schema`, `originatingSystem`, …).
+  Nothing is imported. Registry command: `evidence step [targets]` (or `--file <path>` where the
+  host reads files); CLI verb `evidence <project.bcad> [<file.step>]`.
+
+See [CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#smaller-tools-phase-65-document-version-49-done-2026-11-27).
 
 ## Printability screening
 
@@ -254,6 +294,8 @@ node apps/cli/crispcad.mjs run design.bcad "box 40,30,4" "select all" "move 0,0,
 node apps/cli/crispcad.mjs run design.bcad "sphere 5" --dry-run
 node apps/cli/crispcad.mjs inspect design.bcad        # also: interference, printability, measure
 node apps/cli/crispcad.mjs manufacturing design.bcad --process cnc --tool 6  # read-only
+node apps/cli/crispcad.mjs materials design.bcad --exact      # read-only; also: blends
+node apps/cli/crispcad.mjs evidence design.bcad part.step    # read-only; no file: round trip
 node apps/cli/crispcad.mjs step design.bcad design.step  # exact STEP via the exact kernel
 node apps/cli/crispcad.mjs run design.bcad "export step all" --out exports/
 ```

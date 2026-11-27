@@ -273,7 +273,7 @@ export interface WorldFrame {origin:Vec3;rotation:M3}
 export function nodeWorldFrame(doc:CadDocument,id:string):WorldFrame{
  const chain:string[]=[id];
  for(let current=id;;){
-  const parent=Object.values(doc.nodes).find(node=>node.kind==='boolean'&&node.inputs.includes(current)||(node.kind==='mirror'||node.kind==='pattern'||node.kind==='exact-feature')&&node.source===current);
+  const parent=Object.values(doc.nodes).find(node=>node.kind==='boolean'&&node.inputs.includes(current)||(node.kind==='mirror'||node.kind==='split'||node.kind==='pattern'||node.kind==='exact-feature')&&node.source===current);
   if(!parent)break;
   if(parent.kind!=='boolean')throw new Error(t`${doc.nodes[id].name} is inside a mirror, pattern or exact feature; fasten its holes on the source body.`);
   chain.push(parent.id);current=parent.id;

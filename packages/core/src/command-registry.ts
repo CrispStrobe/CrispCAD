@@ -19,6 +19,12 @@ import {fastenerTable,parseFastenCommand,parseHoleCommand,parsePartCommand} from
 import type {GeneratedBuilder} from './fasteners.js';
 import {formatManufacturingReport,parseManufacturingCommand} from './manufacturing.js';
 import type {ManufacturingHost} from './manufacturing.js';
+import {parseSplitCommand} from './split.js';
+import {formatMaterialsReport,parseMaterialsCommand} from './materials.js';
+import type {MaterialsHost} from './materials.js';
+import {formatSurfaceBlendReport,parseSurfaceBlendCommand} from './surface-blends.js';
+import type {SurfaceBlendHost} from './surface-blends.js';
+import {parseStepEvidenceCommand} from './step-evidence.js';
 
 export type CommandCategory='terminal'|'create'|'sketch'|'feature'|'selection'|'transform'|'history'|'edit'|'boolean'|'view'|'panel'|'replay'|'exchange'|'analysis';
 export type CommandArgumentKind='point'|'vector'|'number'|'sketch'|'bodies'|'command'|'alias'|'json'|'keyword'|'file';
@@ -37,7 +43,7 @@ export interface CommandArgumentSpec {
  readonly repeated?:boolean;
 }
 /** Availability flags known to the editor; used by the command palette. */
-export type CommandAvailability='canWrapBody'|'canDrop'|'canEditMirror'|'canEditPattern'|'canUndo'|'canRedo'|'hasSelection'|'canDelete'|'canCombine'|'canExport'|'hasBodies'|'ready';
+export type CommandAvailability='canWrapBody'|'canDrop'|'canEditMirror'|'canEditPattern'|'canEditSplit'|'canUndo'|'canRedo'|'hasSelection'|'canDelete'|'canCombine'|'canExport'|'hasBodies'|'ready';
 export interface CommandPaletteSpec {readonly label:string;readonly keywords?:string;readonly requires?:CommandAvailability;readonly order:number}
 export interface CommandSpec {
  readonly name:string;
@@ -98,6 +104,10 @@ const drafting:readonly Draft[]=[
  {name:'fasten',aliases:[],description:'Place ISO fasteners in standard holes: the screw, washers and nut each hole needs',usage:'fasten [hole|body|M3 ...] [socket-head|button-head|countersunk|hex-bolt|heat-set-insert] [screw|bolt] [length <mm>] [envelope|threaded]',category:'feature',editsModel:true,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true},
  {name:'part',aliases:[],description:'Insert a standard part with ISO dimensions: screw, nut, washer or heat-set insert',usage:'part <socket-head|button-head|countersunk|hex-bolt|set-screw|hex-nut|washer|heat-set-insert> <M2…M20> [length] [at X,Y,Z] [axis X,Y,Z] [envelope|threaded]',category:'create',editsModel:true,arguments:[arg('family','keyword',{values:['socket-head','button-head','countersunk','hex-bolt','set-screw','hex-nut','washer','heat-set-insert']}),arg('thread','keyword'),arg('options','keyword',{optional:true,repeated:true})],headless:true},
  {name:'fasteners',aliases:[],description:'List the ISO fastener tables: clearance holes, tap drills, heads, nuts, washers, inserts',usage:'fasteners [M2…M20]',category:'analysis',editsModel:false,arguments:[arg('thread','keyword',{optional:true})],headless:true},
+ {name:'split',aliases:[],description:'Split a body at a plane into two bodies (both kernels; the exact path cuts the B-rep)',usage:'split ["name"|id] <x|y|z|-x|-y|-z|X,Y,Z> [offset] [both|positive|negative]',category:'feature',editsModel:true,arguments:[arg('targets','bodies',{optional:true}),arg('normal','keyword'),arg('offset','number',{optional:true,min:-100000,max:100000}),arg('keep','keyword',{optional:true,values:['both','positive','negative']})],headless:true},
+ {name:'materials',aliases:['mass'],description:'Report the material, colour, volume and mass of each body, per material and per colour, and fused or overlapping materials; read-only',usage:'materials [all|"name"|id ...] [--exact]',category:'analysis',editsModel:false,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true},
+ {name:'blends',aliases:[],description:'Inspect the fillets, rounds, chamfers and freeform blends of bodies on their exact B-rep, with their radii and tangency; read-only',usage:'blends [all|"name"|id ...]',category:'analysis',editsModel:false,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
+ {name:'evidence',aliases:[],description:'STEP evidence: exact measures and a topology summary of a STEP file, or of the model\'s bodies written as STEP and read back; read-only',usage:'evidence step [all|"name"|id ...] | evidence step --file <file.step>',category:'analysis',editsModel:false,arguments:[arg('format','keyword',{values:['step']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
  {name:'journal',aliases:[],description:'Summarize or export the command journal',usage:'journal [export [cadscript|replay]]',category:'terminal',editsModel:false,arguments:[arg('action','keyword',{optional:true,values:['export']}),arg('format','keyword',{optional:true,values:['cadscript','replay']})],headless:true},
 ];
 type PaletteDraft={command:string;label:string;alias?:string;requires?:CommandAvailability};
@@ -116,6 +126,11 @@ const palette:readonly PaletteDraft[]=[
  {command:'hole',label:'Standard hole',alias:'drill clearance tapped counterbore countersink heat-set insert ISO 273'},
  {command:'standard-part',label:'Standard parts',alias:'screw bolt nut washer fastener ISO 4762 insert'},
  {command:'fasten',label:'Fasten holes',alias:'screw bolt nut washer insert fastener'},
+ {command:'split-body',label:'Split body',alias:'cut plane halves section separate',requires:'canWrapBody'},
+ {command:'edit-split',label:'Edit split',requires:'canEditSplit'},
+ {command:'materials',label:'Materials and mass',alias:'multi-material colour filament weight density print',requires:'hasBodies'},
+ {command:'surface-blends',label:'Inspect surface blends',alias:'fillet round chamfer radius tangency G1 exact B-rep',requires:'hasBodies'},
+ {command:'step-evidence',label:'STEP evidence',alias:'step stp review topology measures round trip SHA-256'},
  {command:'manufacturing',label:'Check for manufacturing',alias:'DFM CNC milling FDM printing laser sheet wall thickness corner radius edge radius undercut',requires:'hasBodies'},
  {command:'exact-feature',label:'Fillet, chamfer or shell',alias:'round bevel hollow exact B-rep',requires:'canWrapBody'},
  {command:'parameters',label:'Parameters',alias:'named dimensions formulas'},
@@ -157,7 +172,7 @@ const palette:readonly PaletteDraft[]=[
  {command:'export',label:'Export geometry',alias:'STL 3MF',requires:'canExport'}
 ];
 const bridgeAliases:Record<string,readonly string[]>={undo:['u'],redo:['re'],delete:['erase','del'],duplicate:['dup'],fit:['zoom'],union:['join']};
-const bridgeCategory:Record<string,CommandCategory>={manufacturing:'analysis',undo:'history',redo:'history',copy:'edit',cut:'edit',paste:'edit',duplicate:'edit',delete:'edit',drop:'transform',union:'boolean',subtract:'boolean',intersect:'boolean','select-all':'selection',deselect:'selection',fit:'view',home:'view',top:'view',front:'view',right:'view',back:'view',left:'view',bottom:'view',projection:'view',workplane:'view'};
+const bridgeCategory:Record<string,CommandCategory>={manufacturing:'analysis','surface-blends':'analysis','step-evidence':'analysis','split-body':'feature','edit-split':'feature',undo:'history',redo:'history',copy:'edit',cut:'edit',paste:'edit',duplicate:'edit',delete:'edit',drop:'transform',union:'boolean',subtract:'boolean',intersect:'boolean','select-all':'selection',deselect:'selection',fit:'view',home:'view',top:'view',front:'view',right:'view',back:'view',left:'view',bottom:'view',projection:'view',workplane:'view'};
 /** Bridged commands that also have a pure headless executor below. */
 const headlessBridge=new Set(['undo','redo','duplicate','delete','union','subtract','intersect','select-all','deselect']);
 const bridgeEdits=new Set(['undo','redo','cut','paste','duplicate','delete','drop','union','subtract','intersect']);
@@ -339,6 +354,10 @@ export interface CommandRunnerOptions {
  exact?:ExactCommandHost;
  /** Serves `check` (the manufacturing check): meshes, and the exact kernel's data when asked. */
  manufacturing?:ManufacturingHost;
+ /** Serves `materials` (volumes and overlaps from the meshes, exact volumes when asked). */
+ materials?:MaterialsHost;
+ /** Serves `blends` (the exact kernel's data and the blend analysis). */
+ blends?:SurfaceBlendHost;
  /** Reads the file `import step <file>` names (the CLI; MCP and the editor have their own way in). */
  readFile?:(path:string)=>Promise<{name:string;bytes:Uint8Array}>;
  /** Builds threaded screws for `part` and `fasten` (the editor's createPresetDocument); without it
@@ -367,7 +386,7 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
  }
  /** Exact commands read the model; the request holds the snapshot taken now. */
  function exactRequest(spec:CommandSpec,tail:string){
-  if(spec.kernel!=='exact'||EXACT_FEATURE_COMMANDS.includes(spec.name)||spec.name==='recompute'||spec.name==='import')return undefined;
+  if(spec.kernel!=='exact'||EXACT_FEATURE_COMMANDS.includes(spec.name)||spec.name==='recompute'||spec.name==='import'||spec.name==='blends'||spec.name==='evidence')return undefined;
   const parsed=parseExactCommand(session,spec.name,tail);
   if(!parsed)throw new Error(t('Usage: export step [all|"name"|id ...].'));
   return parsed;
@@ -397,6 +416,31 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
    const report=await options.manufacturing.check(session.state.document,{bodies:parsed.bodies,settings:parsed.settings},options.signal);
    return {command:spec.name,invocation:parsed.invocation,output:formatManufacturingReport(report),edited:false};
   }
+  if(spec.name==='materials'){
+   const parsed=parseMaterialsCommand(session,tail);
+   if(!options.materials)throw new Error(t('The materials report is not available in this host.'));
+   const report=await options.materials.inspect(session.state.document,{bodies:parsed.bodies,exact:parsed.exact},options.signal);
+   return {command:spec.name,invocation:parsed.invocation,output:formatMaterialsReport(report),edited:false};
+  }
+  if(spec.name==='blends'){
+   const parsed=parseSurfaceBlendCommand(session,tail);
+   if(!options.blends)throw new Error(t('The surface-blend inspection is not available in this host.'));
+   const report=await options.blends.inspect(session.state.document,{bodies:parsed.bodies},options.signal);
+   return {command:spec.name,invocation:parsed.invocation,output:formatSurfaceBlendReport(report),edited:false};
+  }
+  if(spec.name==='evidence'){
+   const parsed=parseStepEvidenceCommand(session,tail);
+   if(!options.exact)throw new Error(t('The exact kernel is not available in this host.'));
+   let step:{name:string;bytes:Uint8Array}|undefined;
+   if(parsed.file){
+    if(!options.readFile)throw new Error(t('evidence step --file needs a host that can read files: use the STEP evidence dialog in the editor, cad_step_evidence over MCP, or the CLI.'));
+    step=await options.readFile(parsed.file);
+   }
+   const document=session.state.document;
+   const result=await options.exact.run({operation:'step-evidence',document,bodies:parsed.bodies,...(step?{step}:{})},options.signal);
+   const formatted=formatExactResult(result,document);
+   return {command:spec.name,invocation:parsed.invocation,output:formatted.output,edited:false,kernel:formatted.kernel};
+  }
   const request=exactRequest(spec,tail);
   if(!request)return run(raw);
   if(!options.exact)throw new Error(t('The exact kernel is not available in this host.'));
@@ -408,6 +452,8 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
  function run(raw:string):CommandRunResult{
   const {text,spec,tail}=parse(raw);
   if(spec.name==='check')throw new Error(t('check runs the manufacturing check; run it in a host that provides it.'));
+  if(spec.name==='materials')throw new Error(t('materials measures the evaluated bodies; run it in a host that provides it.'));
+  if(spec.name==='blends'||spec.name==='evidence')throw new Error(t`${spec.name} uses the exact kernel; run it in a host that loads it.`);
   if(EXACT_FEATURE_COMMANDS.includes(spec.name)||spec.name==='recompute'||spec.name==='import'||exactRequest(spec,tail))throw new Error(t`${spec.name} uses the exact kernel; run it in a host that loads it.`);
   const name=spec.name,before=session.state.revision;
   const done=(invocation:string,output?:string):CommandRunResult=>({command:name,invocation,...(output!==undefined?{output}:{}),edited:session.state.revision!==before});
@@ -423,6 +469,7 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
   if(name==='list'){if(args.length)throw new Error(t('Too many arguments. Use help for command syntax.'));return done(text,listModel(session));}
   if(name==='hole'||name==='fasten'||name==='part'){const command=name==='hole'?parseHoleCommand(session,tail):name==='fasten'?parseFastenCommand(session,tail,{generated:options.generated}):parsePartCommand(session,tail,{generated:options.generated}),output=options.journal?options.journal.withInvocation(command.invocation,()=>command.run()):command.run();return done(command.invocation,output);}
   if(name==='fasteners')return done(text,fastenerTable(tail));
+  if(name==='split'){const command=parseSplitCommand(session,tail),output=options.journal?options.journal.withInvocation(command.invocation,()=>command.run()):command.run();return done(command.invocation,output);}
   if(name==='upgrade-lofts'){const command=parseUpgradeLofts(session,tail),output=options.journal?options.journal.withInvocation(command.invocation,()=>command.run()):command.run();return done(command.invocation,output);}
   if(name==='journal'){
    if(!options.journal)throw new Error(t('No command journal is attached.'));

@@ -142,7 +142,7 @@ export function exactFeatureKey(doc:CadDocument,id:string):string{
   // An imported body's geometry is its B-rep; its display, measures and origin follow from it.
   if(n.kind==='exact-body'){delete entry.display;delete entry.measures;delete entry.origin;entry.brep=exactBodyKey(n);}
   if(n.kind==='boolean')entry.inputs=n.inputs.map(visit);
-  if(n.kind==='mirror'||n.kind==='pattern'||n.kind==='exact-feature')entry.source=visit(n.source);
+  if(n.kind==='mirror'||n.kind==='split'||n.kind==='pattern'||n.kind==='exact-feature')entry.source=visit(n.source);
   if(n.kind==='extrusion'||n.kind==='revolution'){
    const sketch=doc.sketches?.[n.sketchId];
    if(sketch&&!sketches.has(n.sketchId)){const {id:_profileId,...profile}=sketch.profile;sketches.set(n.sketchId,{plane:sketch.plane,profile});collect(profile);}
@@ -167,7 +167,7 @@ export function exactFeatureKey(doc:CadDocument,id:string):string{
 /** Exact features whose display is missing or out of date, in dependency order (sources first). */
 export function staleExactFeatures(doc:CadDocument,within?:readonly string[]):string[]{
  const result:string[]=[],seen=new Set<string>();
- const inputs=(n:SolidNode):readonly string[]=>n.kind==='boolean'?n.inputs:n.kind==='mirror'||n.kind==='pattern'||n.kind==='exact-feature'?[n.source]:[];
+ const inputs=(n:SolidNode):readonly string[]=>n.kind==='boolean'?n.inputs:n.kind==='mirror'||n.kind==='split'||n.kind==='pattern'||n.kind==='exact-feature'?[n.source]:[];
  const visit=(id:string)=>{
   if(seen.has(id))return;seen.add(id);
   const n=doc.nodes[id];if(!n)return;

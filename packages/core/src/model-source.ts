@@ -30,7 +30,7 @@ export const sameModelValue=(a:any,b:any):boolean=>{
 function put(object:any,path:string[],value:any){let current=object;for(const key of path.slice(0,-1))current=current[key];current[path.at(-1)!]=value;}
 function at(object:any,path:string[]){for(const key of path){if(object===undefined)return undefined;object=object[key];}return object;}
 const kindFor=(node:SolidNode)=>node.kind==='boolean'?'combine':node.kind==='exact-feature'?'exactFeature':node.kind==='exact-body'?'exactBody':node.kind;
-const geometryFields=['size','radius','height','segments','operation','inputs','positions','indices','program','sketchId','featureVersion','distance','symmetric','angle','axisOffset','source','plane','offset','pattern','edges','openFaces','display'];
+const geometryFields=['size','radius','height','segments','operation','inputs','positions','indices','program','sketchId','featureVersion','distance','symmetric','angle','axisOffset','source','plane','offset','pattern','splitVersion','normal','side','edges','openFaces','display'];
 function compactGenerators(document:CadDocument):Map<string,Set<string>>{
  const result=new Map<string,Set<string>>();for(const root of Object.values(document.nodes)){
   if(!root.generator)continue;const descendants=new Set<string>();const visit=(id:string)=>{if(descendants.has(id))return;descendants.add(id);const n=document.nodes[id];constructionInputs(n).forEach(visit);};visit(root.id);descendants.delete(root.id);
@@ -57,7 +57,7 @@ function modelRecords(document:CadDocument):RecordSpec[]{
   for(const binding of doc.parametric?.bindings??[])if(binding.nodeId===id)put(metadata,pathFor(raw,binding.property),new Formula(binding.expression));
   if(raw.kind==='extrusion'&&typeof raw.distance==='string')metadata.distance=new Formula(raw.distance);
   if(raw.kind==='pattern')metadata.pattern=mapPatternScalars(raw.pattern,value=>typeof value==='string'?new Formula(value):value);
-  if(raw.kind==='mirror'&&typeof raw.offset==='string')metadata.offset=new Formula(raw.offset);
+  if((raw.kind==='mirror'||raw.kind==='split')&&typeof raw.offset==='string')metadata.offset=new Formula(raw.offset);
   if(raw.kind==='exact-feature'&&typeof raw.size==='string')metadata.size=new Formula(raw.size);
   if(raw.kind==='revolution')for(const key of ['angle','axisOffset'] as const){
    const value=raw[key];if(typeof value==='string')metadata[key]=new Formula(value);
@@ -114,9 +114,9 @@ function parseRecords(source:string):SourceRecord[]{
   if(['Identifier','BinaryExpression','LogicalExpression','ConditionalExpression','UnaryExpression'].includes(node.type)||node.type==='CallExpression'&&node.callee.type==='Identifier')return new Formula(source.slice(node.start,node.end));
   return fail(t('Unsupported design source expression'),node.start,'unsupported-feature');
  }
- const allowed=new Set(['project','parameter','sketch','box','cylinder','sphere','combine','mesh','code','extrusion','revolution','mirror','pattern','exactFeature','exactBody','hole','generated','roots','joints','sources']);const records:SourceRecord[]=[],keys=new Set<string>();
+ const allowed=new Set(['project','parameter','sketch','box','cylinder','sphere','combine','mesh','code','extrusion','revolution','mirror','pattern','exactFeature','exactBody','hole','split','generated','roots','joints','sources']);const records:SourceRecord[]=[],keys=new Set<string>();
  for(const node of tree!.body){if(node.type==='EmptyStatement')continue;const call=node.expression;if(node.type!=='ExpressionStatement'||call?.type!=='CallExpression'||call.callee.type!=='Identifier'||!allowed.has(call.callee.name)||call.arguments.some((arg:Ast)=>arg.type==='SpreadElement'))fail(t('Use declarative design calls only'),node.start,'unsupported-feature');
-  const kind=call.callee.name,args=call.arguments.map(literal),isBody=['box','cylinder','sphere','combine','mesh','code','extrusion','revolution','mirror','pattern','exactFeature','exactBody','hole','generated'].includes(kind),identified=isBody||kind==='parameter'||kind==='sketch';
+  const kind=call.callee.name,args=call.arguments.map(literal),isBody=['box','cylinder','sphere','combine','mesh','code','extrusion','revolution','mirror','pattern','exactFeature','exactBody','hole','split','generated'].includes(kind),identified=isBody||kind==='parameter'||kind==='sketch';
   if(identified&&(typeof args[0]!=='string'||!/^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$/.test(args[0])||['constructor','prototype','__proto__'].includes(args[0])))fail(t('Design records require a stable identifier'),call.start);
   const key=identified?`${isBody?'node':kind}:${args[0]}`:kind;if(keys.has(key))fail(t('Duplicate design source record'),call.start);keys.add(key);records.push({key,kind,args,node,call});if(records.length>MODEL_SOURCE_LIMITS.records)fail(t('Too many design source records'),call.start,'resource-limit');
  }
@@ -127,7 +127,7 @@ function parseRecords(source:string):SourceRecord[]{
 export function compileModelSource(source:string,context:CadDocument,options:{regenerate?:(recipe:GeneratorRecipe,name:string)=>CadDocument}={}):CadDocument{
  const records=parseRecords(source),fail=(detail:string,record?:SourceRecord):never=>{throw new CadCodeError(detail,record?.node.start??0,source);};
  const project=records.find(r=>r.key==='project')!;if(project.args.length!==1||!project.args[0]||typeof project.args[0]!=='object'||Array.isArray(project.args[0]))fail(t('Invalid project declaration'),project);
- if(![6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48].includes(project.args[0].version))fail(t('Model source uses project version 6 through 41'),project);
+ if(![6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49].includes(project.args[0].version))fail(t('Model source uses project version 6 through 41'),project);
  const doc:any={...project.args[0],nodes:Object.create(null),roots:[],modelSource:{version:1,language:'brickwright-design',source}};
  if(doc.id!==context.id)fail(t('Keep the current project identity in model source'),project);
  delete doc.provenance;delete doc.sketches;delete doc.joints;
@@ -190,7 +190,7 @@ export function compileModelSource(source:string,context:CadDocument,options:{re
     pattern.sweep=restore(pattern.sweep);
    }
   }
-  if(node.kind==='mirror'&&node.offset instanceof Formula)node.offset=node.offset.expression;
+  if((node.kind==='mirror'||node.kind==='split')&&node.offset instanceof Formula)node.offset=node.offset.expression;
   if(node.kind==='exact-feature'&&node.size instanceof Formula)node.size=node.size.expression;
   if(node.kind==='revolution')for(const key of ['angle','axisOffset'])if(node[key] instanceof Formula)node[key]=node[key].expression;
   doc.nodes[node.id]=node;

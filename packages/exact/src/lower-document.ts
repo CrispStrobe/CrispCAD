@@ -6,7 +6,7 @@
 //
 // Nothing falls back to a mesh: an imported mesh or any construction without an exact lowering is
 // an ExactKernelError naming the body and the feature.
-import {t,compileCode,holeProfile,evaluateExactFeature,exactCopyFaceName,exactFaceName,isEdgeReferences,isExactFaceName,resolveEdgeReferences,splitExactFaceName,ExactEdgeReferenceError,evaluateExtrusion,evaluateMirror,evaluatePattern,evaluateRevolution,evaluateSketchRegion,featureValue,identityTransform,sketchBulgeMidpoint,sketchOutline} from '@brickwright/cad-core';
+import {t,compileCode,holeProfile,evaluateExactFeature,exactCopyFaceName,exactFaceName,isEdgeReferences,isExactFaceName,resolveEdgeReferences,splitExactFaceName,ExactEdgeReferenceError,evaluateExtrusion,evaluateMirror,evaluatePattern,evaluateSplit,evaluateRevolution,evaluateSketchRegion,featureValue,identityTransform,sketchBulgeMidpoint,sketchOutline} from '@brickwright/cad-core';
 import type {CadDocument,PlanarSketch,SketchLoop,SketchPoint,SolidNode,Vec3} from '@brickwright/cad-core';
 import {ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactProfile,ExactSolid,PathSegment} from '@crispcad/exact-kernel';
@@ -145,6 +145,17 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
     normal[axis]=1;
     solid=k.mirror(lowerNode(k,doc,node.source,bodyId,cache,limits,named,breps),normal);
     if(offset){const position:[number,number,number]=[0,0,0];position[axis]=2*offset;solid=k.translate(solid,position);}
+    break;
+   }
+   case 'split':{
+    // The exact kernel cuts the B-rep: the cut face is an exact plane, the others keep their surfaces.
+    const {normal,offset}=evaluateSplit(node,doc),source=lowerNode(k,doc,node.source,bodyId,cache,limits,named,breps);
+    const empty=()=>new ExactKernelError('invalid-input',node.side==='positive'?t('Nothing of the body lies on the + side of the split plane'):t('Nothing of the body lies on the − side of the split plane'));
+    let parts:[ExactSolid,ExactSolid];
+    // The kernel refuses a plane that leaves one side empty; that is this node's error, in our words.
+    try{parts=k.splitByPlane(source,normal,offset);}catch(error){if(error instanceof Error&&/nothing of the part lies/i.test(error.message))throw empty();throw error;}
+    solid=node.side==='positive'?parts[0]:parts[1];
+    if(k.solidCount(solid)<1||!(k.volume(solid)>1e-8))throw empty();
     break;
    }
    case 'pattern':{

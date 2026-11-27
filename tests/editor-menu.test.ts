@@ -18,8 +18,8 @@ it('names only commands the editor executes, each once',()=>{
 });
 it('offers the exact features, STEP exchange and drawings in the menu',()=>{
  const commands=editorMenu.map(item=>item.command);
- for(const command of ['import-step','export-step','exact-feature','exact-edges','measure-exact','recompute-exact','drawing','drawing-exact','printability','manufacturing','hole','fasten','standard-part'])expect(commands).toContain(command);
- expect(editorMenu.filter(item=>item.exact).map(item=>item.command)).toEqual(['import-step','export-step','exact-feature','exact-edges','measure-exact','recompute-exact','drawing-exact','manufacturing']);
+ for(const command of ['import-step','export-step','exact-feature','exact-edges','measure-exact','recompute-exact','drawing','drawing-exact','printability','manufacturing','hole','fasten','standard-part','split-body','materials','surface-blends','step-evidence'])expect(commands).toContain(command);
+ expect(editorMenu.filter(item=>item.exact).map(item=>item.command)).toEqual(['import-step','export-step','step-evidence','exact-feature','exact-edges','measure-exact','recompute-exact','surface-blends','drawing-exact','manufacturing']);
 });
 it('translates every label and section into German',()=>{
  setLocale('de');
