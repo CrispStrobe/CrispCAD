@@ -99,10 +99,18 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
  const ownedBodies:any[]=[],byId=new Map<string,any>(),constraints=new Map<string,any>();let disposed=false,elapsed=0,contactListener:any,partFilter:any;
  const motorBindings=new Map<string,MotorBinding>();
  let rayQuery:ReturnType<typeof createRayQuery>|undefined;
+ const bodyRotations=new Map<NativeBody,{revision:number;rotation:number[]}>();
  const sensorPoses=new Map<NativeBody,{revision:number;pose:ReturnType<typeof readPose>}>();
  type SensorRay={bodyId:string;body:NativeBody;originMm:Vec3;direction:Vec3;rangeMm:number;source:number[];axis:number[];projected?:{revision:number;origin:Vec3;to:Vec3}};
  const sensorRays=new Map<string,SensorRay>();
  let poseRevision=0;
+ function currentRotation(body:NativeBody){
+  const cached=bodyRotations.get(body);
+  if(cached?.revision===poseRevision)return cached.rotation;
+  const q=body.GetRotation(),rotation=[q.GetX(),q.GetY(),q.GetZ(),q.GetW()];
+  bodyRotations.set(body,{revision:poseRevision,rotation});
+  return rotation;
+ }
  function readHingeAngle(binding:HingeBinding){
   if(binding.angleRevision!==poseRevision){
    binding.angleRad=binding.motor.GetCurrentAngle();
@@ -286,7 +294,7 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    });
   }finally{J.destroy(bc);}
  };
- function dispose(){if(disposed)return;disposed=true;rayQuery?.dispose();rayQuery=undefined;sensorPoses.clear();sensorRays.clear();motorBindings.clear();for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
+ function dispose(){if(disposed)return;disposed=true;rayQuery?.dispose();rayQuery=undefined;bodyRotations.clear();sensorPoses.clear();sensorRays.clear();motorBindings.clear();for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
  let scratchVertex:any,scratchPosition:any,scratchRotation:any;
  function createCompound(members:typeof meshes):NativeShape{
   const compound=new J.StaticCompoundShapeSettings();
@@ -503,7 +511,10 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    // across all rays and welded parts at the same solver boundary.
    let cached=sensorPoses.get(body);
    if(cached?.revision!==poseRevision){
-    cached={revision:poseRevision,pose:readPose(body)};
+    const p=body.GetPosition();
+    cached={revision:poseRevision,pose:{
+     positionMm:[p.GetX()*1000,p.GetY()*1000,p.GetZ()*1000],quaternion:currentRotation(body),
+    }};
     sensorPoses.set(body,cached);
    }
    const {positionMm,quaternion}=cached.pose;
@@ -585,7 +596,9 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    if(disposed||!Number.isFinite(impulse)||Math.abs(impulse)>1)throw new Error(t('Invalid actuator impulse'));
    const actuator=actuatorFrame(id);
    const {joint,a,b,axis:authoredAxis,anchorM,motor}=actuator;
-   const rotation=a.GetRotation(),q=[rotation.GetX(),rotation.GetY(),rotation.GetZ(),rotation.GetW()];
+   // Multiple motors can act on the same chassis before the next step.
+   // Impulses change velocity immediately but leave its orientation intact.
+   const q=currentRotation(a);
    const [x,y,z]=quaternionPoint(authoredAxis,q).map(v=>v*impulse);
    impulseVector??=new J.Vec3(0,0,0);
    // These native settings persist across physics steps in this world.

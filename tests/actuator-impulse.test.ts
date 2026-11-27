@@ -66,6 +66,27 @@ it('restores impulse iterations after tuning a servo on the same chain',async()=
  }finally{iterations.mockRestore();world.dispose();s.dispose();}
 });
 
+it('shares a chassis rotation across motor reactions and sensor rays until the next step',async()=>{
+ const s=createCadSession();
+ const [chassis,left,right]=[0,-30,30].map(x=>s.add({kind:'box',size:[10,10,10]},{transform:{...identityTransform(),position:[x,0,20]}}));
+ const driveA=s.addJoint('hinge',chassis,left,[-15,0,20],[0,0,1],{limits:[-1,1]});
+ const driveB=s.addJoint('hinge',chassis,right,[15,0,20],[0,0,1],{limits:[-1,1]});
+ const J=await loadPhysicsEngine(false),doc=s.state.document,geometry=kernel.evaluate(doc);
+ const world=await createPhysicsWorld(doc,geometry,await prepareDocumentCollisions(doc,geometry,kernel),{J,ground:false});
+ const read=vi.spyOn(J.Body.prototype,'GetRotation');
+ try{
+  for(let step=0;step<3;step++){
+   world.applyJointImpulse(driveA,1e-7);
+   world.applyJointImpulse(driveB,1e-7);
+   expect(world.bodyRay(chassis,[0,0,0],[0,0,1],100)).toBeNull();
+   expect(read).toHaveBeenCalledTimes(step+1);
+   world.step();
+  }
+  expect(world.hingeAngle(driveA)).toBeGreaterThan(0);
+  expect(world.hingeAngle(driveB)).toBeGreaterThan(0);
+ }finally{read.mockRestore();world.dispose();s.dispose();}
+});
+
 it('body-mounted rays ignore their own rigid assembly and see external obstacles',async()=>{
  const s=createCadSession();
  const host=s.add({kind:'box',size:[20,20,20]});
