@@ -353,7 +353,9 @@ multi-outline sections apply. Example: a square drawn from its second corner on 
 from its first gives a prism with `"closest"`, and a twisted solid as authored.
 
 The [.kcad.ts converter](CODE-CONVERTERS.md#kernelcad-kcadts-models-2026-11-24) writes
-`{pairing: "closest"}` on every loft it converts. A document that holds a program with a pairing
+`{pairing: "closest"}` on every loft it converts. Where two starts are (nearly) equally close, as
+for outlines turned by half a step, rounding the coordinates to the converter's usual 1e-6 mm could
+pick the other one, so the sections of such a loft are written with every digit. A document that holds a program with a pairing
 option (either value) is **document version 46**; `checkDocument` refuses it below 46, and SDKs
 that predate it refuse version 46 ("unsupported format, version or units") as well as the option
 itself. Programs without the option, and documents without such programs, are unchanged and keep

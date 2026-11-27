@@ -9,6 +9,7 @@ import {CAD_SCRIPT_REVISION,CadCodeError,CODE_LIMITS,compileCode} from './code.j
 import type {CodeProgram} from './code.js';
 import {t} from './i18n.js';
 import {shapeBoundsBySide} from './kcad-bounds.js';
+import {closestLoftOrders} from './code-loft.js';
 
 type Ast={type:string;start:number;[key:string]:any};
 type RecordValue={[key:string]:Value};
@@ -36,6 +37,9 @@ export interface KernelCADImport {name?:string;title?:string;license:string;desc
 
 const fmt=(n:number)=>{const v=Math.abs(n)<1e-12?0:Number(n.toFixed(6));return String(Object.is(v,-0)?0:v);};
 const vec=(v:readonly number[])=>`[${v.map(fmt).join(', ')}]`;
+/** Every digit of a number (shortest round trip), for loft sections where rounding to fmt's 1e-6
+ * would decide a tie of the closest pairing differently from the source's own numbers. */
+const exact=(n:number)=>String(Object.is(n,-0)?0:n);
 
 export function importKernelCAD(source:string,overrides:Record<string,number|string|boolean>={}):KernelCADImport{
  if(typeof source!=='string')throw new CadCodeError(t('Expected source text'),0,'');
@@ -206,7 +210,12 @@ export function importKernelCAD(source:string,overrides:Record<string,number|str
       // kernelCAD lofts are smooth unless ruled: true; through two sections both are the ruled loft.
       // Its loft (OpenCASCADE's ThruSections) re-starts each section at the vertex and direction
       // closest to the previous one: CAD Script's pairing "closest" (document version 46).
-      return shape(`${o.ruled!==true&&sections.length>2?'smoothLoft':'loft'}([${(sections as Sketch[]).map((s,i)=>`[${s.contours[0].map(p=>vec([p[0]+origins[i][0],p[1]+origins[i][1],origins[i][2]])).join(', ')}]`).join(', ')}], {pairing: "closest"})`);}
+      // Sections whose pairing is a (near) tie keep every digit, so the written program pairs them
+      // as the source's numbers do; all others are rounded as usual.
+      const rings=(sections as Sketch[]).map((s,i)=>s.contours[0].map(p=>[p[0]+origins[i][0],p[1]+origins[i][1],origins[i][2]]));
+      const rounded=rings.map(r=>r.map(p=>p.map(v=>Number(fmt(v)))));
+      const tie=JSON.stringify(closestLoftOrders(rings as [number,number,number][][]))!==JSON.stringify(closestLoftOrders(rounded as [number,number,number][][]));
+      return shape(`${o.ruled!==true&&sections.length>2?'smoothLoft':'loft'}([${rings.map(r=>`[${r.map(p=>tie?`[${p.map(exact).join(', ')}]`:vec(p)).join(', ')}]`).join(', ')}], {pairing: "closest"})`);}
     }
     return unsupported(path.replace('Sketch.','sketch.'));
    }

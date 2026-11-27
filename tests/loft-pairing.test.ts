@@ -156,4 +156,18 @@ return square(10, ${turns[0]}).loft([${turns.slice(1).map((t,i)=>`square(${8-2*i
   expect(rel(smoothBuilt.exact.volume,smoothLoftVolume(smoothLoftCurves(shape.smooth)))).toBeLessThan(1e-9);
   expect(rel(smoothBuilt.manifold.volume,smoothBuilt.exact.volume)).toBeLessThan(1e-4);
  });
+ it('keeps every digit of sections whose closest pairing is a tie that rounding would decide',()=>{
+  // Twelve-gons turned against each other by half a step: two starts are equally close.
+  const tie=`meta({ name: 'sack', license: 'CC0-1.0' });
+const sides = 12, R = 450, H = 820;
+const ring = (r, back, rot) => { const pt = (k) => { const a = rot + (2 * Math.PI * k) / sides, sy = Math.sin(a), rr = r * (1 + back * Math.max(0, sy)); return [rr * Math.cos(a), rr * sy]; }; let p = path().moveTo(pt(0)[0], pt(0)[1]); for (let k = 1; k < sides; k++) p = p.lineTo(pt(k)[0], pt(k)[1]); return p.close(); };
+return ring(R * 0.85, 0, 0).loft([ring(R, 0.05, Math.PI / sides), ring(R * 0.9, 0.1, 0), ring(R * 0.6, 0.15, Math.PI / sides), ring(R * 0.28, 0.1, 0)], { planes: [{ plane: 'XY', origin: [0, 0, 0] }, { plane: 'XY', origin: [0, 0, H * 0.25] }, { plane: 'XY', origin: [0, R * 0.08, H * 0.55] }, { plane: 'XY', origin: [0, R * 0.3, H * 0.85] }, { plane: 'XY', origin: [0, R * 0.42, H] }], ruled: true });`;
+  const program=importKernelCAD(tie).parts[0].program,shape=compileCode(program).shape;
+  expect(program.source).toMatch(/\d\.\d{9,}/);
+  if(shape.kind!=='polyhedron'||!shape.closest)throw Error('ruled loft');
+  // As the source's own numbers pair: every section keeps its start.
+  expect(closestLoftOrders(shape.closest)).toEqual(shape.closest.map(()=>({start:0,forward:true})));
+  // A loft without a tie is written with the usual six decimals.
+  expect(importKernelCAD(source(', ruled: true')).parts[0].program.source).not.toMatch(/\d\.\d{7,}/);
+ });
 });
