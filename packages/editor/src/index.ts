@@ -53,6 +53,9 @@ import {mountPathPanel} from './path-panel.js';
 import {mountMirrorPanel} from './mirror-panel.js';
 import {mountPatternPanel} from './pattern-panel.js';
 import {mountExactFeaturePanel} from './exact-feature-panel.js';
+import {mountExactMeasurePanel} from './exact-measure-panel.js';
+import {editorMenu,resolveEditorMenu} from './editor-menu.js';
+import type {EditorMenuItem} from './editor-menu.js';
 import {mountExactActivity} from './exact-activity.js';
 import type {ExactLimits} from '@brickwright/cad-exact/limits';
 import {mountCommandPalette} from './command-palette.js';
@@ -91,7 +94,11 @@ export interface CadEditorOptions {
   decodeProject?: (bytes:Uint8Array) => Promise<CadDocument>;
   readClipboard?:()=>Promise<string|null>;
   writeClipboard?:(text:string)=>Promise<void>;
-  requestImport?:()=>Promise<{name:string;bytes:Uint8Array}|null>;
+  /**
+   * The host's file chooser for imports. `request` is given for STEP import as exact bodies
+   * (`accept` '.step,.stp'); without it the chooser offers STL and STEP.
+   */
+  requestImport?:(request?:{accept:string;purpose:'exact-step'})=>Promise<{name:string;bytes:Uint8Array}|null>;
   onCommandStateChange?:(state:CadCommandState)=>void;
   wasmURL: string;
   session?: CadSession;
@@ -114,7 +121,7 @@ export interface CadEditorOptions {
   onError?: (error: Error) => void;
 }
 export interface CadCommandState {canUndo:boolean;canRedo:boolean;hasSelection:boolean;canDelete:boolean;canCombine:boolean;canExport:boolean;hasBodies:boolean;ready:boolean}
-export type CadCommand='new'|'open'|'save'|'import'|'import-step'|'export'|'printability'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'exact-feature'|'command-palette'|'readout'|'code'|'code-workspace'|'terminal'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect'|'upgrade-lofts'|'hole'|'standard-part'|'fasten';
+export type CadCommand='new'|'open'|'save'|'import'|'import-step'|'export'|'printability'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'exact-feature'|'command-palette'|'readout'|'code'|'code-workspace'|'terminal'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect'|'upgrade-lofts'|'hole'|'standard-part'|'fasten'|'export-step'|'exact-edges'|'measure-exact'|'recompute-exact'|'drawing'|'drawing-exact';
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag); element.className = className; if (text !== undefined) element.textContent = text; return element;
 }
@@ -231,11 +238,12 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const exactEdits=exactEditHost(session,client.exact);
   const exactFeaturePanel=mountExactFeaturePanel(shell,session,()=>exactEdits,async()=>{await whenIdle();viewport.frame();},{pickEdges:options=>viewport.pickEdges(options)});
   const fasteningPanel=mountFasteningPanel(shell,session,{evaluate:doc=>client.evaluate(doc),afterApply:async()=>{await whenIdle();},pickPoint:done=>viewport.pickPoint(done),bodies:()=>built?.bodies,generated:(recipe,name)=>createPresetDocument(recipe.preset,name,{recipe})});
-  const openExactFeature=()=>{
+  const openExactFeature=(start:{chosen?:boolean;pickInView?:boolean}={})=>{
     const [id]=session.state.selection,node=session.state.document.nodes[id];
     if(session.state.selection.length!==1)throw new Error(t('Select a top-level body for the exact feature'));
-    exactFeaturePanel.open(id,node?.kind==='exact-feature');
+    exactFeaturePanel.open(id,node?.kind==='exact-feature',start);
   };
+  const exactMeasurePanel=mountExactMeasurePanel(shell,session,exactEdits);
   // Recompute policy: after a committed user edit (never a preview, Undo, Redo or load) leaves an
   // exact feature stale, the editor recomputes it once on the exact kernel and commits the new
   // display mesh as its own, kernel-attributed step, "Recompute exact features". Undoing that step
@@ -376,8 +384,14 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   mirrorButton.title=t('Mirror a selected body across a plane');
   const patternButton=button('Pattern',openPattern);
   patternButton.title=t('Repeat a selected body in a line or circle');
-  const exactFeatureButton=button('Fillet, chamfer, shell',openExactFeature);
+  const exactFeatureButton=button('Fillet, chamfer, shell',()=>openExactFeature());
   exactFeatureButton.title=t('Round, bevel or hollow a selected body exactly with the B-rep kernel');
+  // The rest of the menu's exact items (editor-menu.ts), so this toolbar and a host's menus match.
+  const menuButtons=new Map<CadCommand,HTMLButtonElement>();
+  const menuButton=(command:CadCommand,title?:string)=>{const item=editorMenu.find(entry=>entry.command===command)!;const b=button(item.label,()=>executeCommand(command));if(title)b.title=t(title);menuButtons.set(command,b);return b;};
+  menuButton('exact-edges');
+  menuButton('measure-exact','Volume, area, bounds and centroid from the exact B-rep kernel (selected bodies, or all)');
+  menuButton('recompute-exact');
   const cutButton=button('Cut',()=>copySelection(true));const copyButton=button('Copy',()=>copySelection());const pasteButton=button('Paste',()=>pasteSelection());
   const duplicateButton = button('Duplicate', () => executeCommand('duplicate')); const deleteButton = button('Delete', () => executeCommand('delete'));
   const contextActions=el('div','context-actions');contextActions.setAttribute('role','group');contextActions.setAttribute('aria-label',t('Selection actions'));toolbar.append(contextActions);for(const [label,command] of [['Copy','copy'],['Duplicate','duplicate'],['Delete','delete']] as const)button(label,()=>executeCommand(command),contextActions,'compact-icon');
@@ -425,7 +439,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     void file.arrayBuffer().then(buffer=>done({name:file.name,bytes:new Uint8Array(buffer)}),()=>done(undefined));};
   exactStepInput.addEventListener('cancel',()=>{const done=exactStepChoice;exactStepChoice=undefined;done?.(undefined);});
   async function pickExactStep():Promise<{name:string;bytes:Uint8Array}|undefined>{
-    if(options.requestImport){const file=await options.requestImport();if(file&&!/\.(step|stp)$/i.test(file.name))throw new Error(t('Import STEP accepts .step and .stp files.'));return file??undefined;}
+    if(options.requestImport){const file=await options.requestImport({accept:'.step,.stp',purpose:'exact-step'});if(file&&!/\.(step|stp)$/i.test(file.name))throw new Error(t('Import STEP accepts .step and .stp files.'));return file??undefined;}
     exactStepChoice?.(undefined);
     return new Promise(resolve=>{exactStepChoice=resolve;exactStepInput.click();});
   }
@@ -438,6 +452,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     await afterExactImport(done.ids);
   }
   button('Import STEP as exact bodies…',importExactStep);
+  async function exportStep(){if(exportButton.disabled)throw new Error(t('Build a solid before exporting'));showExport();exportFormat.value='step';exportFormat.dispatchEvent(new Event('change'));}
   const exportDialog=el('dialog','export-dialog');exportDialog.setAttribute('aria-label',t('Export model'));exportDialog.append(el('h2','',t('Export model')));
   const exportFormat=el('select');exportFormat.setAttribute('aria-label',t('Export format'));for(const [value,label] of [['stl','STL · triangle mesh'],['3mf','3MF · packaged mesh'],['step','STEP · exact B-rep (loads the exact kernel)']]){const option=el('option','',t(label));option.value=value;exportFormat.append(option);}exportDialog.append(exportFormat);
   const attributionHelp=el('p','',t('Recorded sources export as one ZIP containing STL and attribution JSON. Distribute both files together and retain any separately required licence texts and notices.'));
@@ -461,6 +476,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     });exportDialog.close();}finally{exporting=false;refreshButtons();}
   },exportActions,'primary');exportDialog.append(exportActions);exportDialog.addEventListener('keydown',event=>event.stopPropagation());shell.append(exportDialog);
   const exportButton=button('Export…',showExport);exportButton.disabled=true;
+  menuButton('export-step');menuButton('drawing');menuButton('drawing-exact');
   const printabilityPanel=mountPrintabilityPanel(shell,()=>session.state.document,(doc,settings)=>client.checkPrintability(doc,settings));
   const printabilityButton=button('Check printability…',()=>printabilityPanel.open());printabilityButton.disabled=true;
   const viewActions = el('div', 'view-actions'); viewActions.setAttribute('role', 'toolbar'); viewActions.setAttribute('aria-label', 'View controls'); viewHost.append(viewActions);
@@ -749,7 +765,13 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     exportButton.disabled = exportRun.disabled = exporting || !options.onExport || running || !built || !built.triangles || builtRevision !== state.revision;
     palette.refresh();
     printabilityButton.disabled = running || !built || !built.triangles || builtRevision !== state.revision;
+    for(const item of menuItems()){const b=menuButtons.get(item.command);if(b)b.disabled=!item.enabled;}
     run(()=>options.onCommandStateChange?.(commandState()));
+  }
+  function menuItems():EditorMenuItem[]{
+    const state=session.state,roots=state.selection.filter(id=>state.document.roots.includes(id)),base=commandState();
+    return resolveEditorMenu({canUndo:base.canUndo,canRedo:base.canRedo,hasSelection:base.hasSelection,canDelete:base.canDelete,canCombine:base.canCombine,canExport:base.canExport,hasBodies:base.hasBodies,
+      oneBody:state.selection.length===1&&roots.length===1&&!state.document.nodes[roots[0]]?.reference&&!running,canDraw:drawingAssemblyAvailable(state.document)},options.presetProjects?new Set():new Set(['robot-projects']));
   }
   function commandState():CadCommandState {const state=session.state,roots=state.selection.filter(id=>state.document.roots.includes(id));return {canUndo:state.canUndo,canRedo:state.canRedo,hasSelection:!!state.selection.length,canDelete:!!roots.length,canCombine:roots.length>=2,canExport:!!options.onExport&&!exporting&&!running&&!!built?.triangles&&builtRevision===state.revision,hasBodies:!!state.document.roots.length,ready:!running&&builtRevision===state.revision&&!!built};}
   const unsubscribe = session.subscribe(state => {if(placing&&(state.document.id!==placing.projectId||state.revision!==placing.revision))cancelShapePlacement();
@@ -880,6 +902,11 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'edit-mirror':mirrorPanel.open(session.state.selection[0],true);break;
       case 'edit-pattern':patternPanel.open(session.state.selection[0],true);break;
       case 'exact-feature':openExactFeature();break;
+      case 'exact-edges':openExactFeature({chosen:true,pickInView:true});break;
+      case 'measure-exact':await exactMeasurePanel.open();break;
+      case 'recompute-exact':if(!staleExactFeatures(session.state.document).length){message.textContent=t('No exact feature is out of date.');break;}await recomputeExact();message.textContent=t('Exact features recomputed.');break;
+      case 'export-step':await exportStep();break;
+      case 'drawing':case 'drawing-exact':if(!drawingAssemblyAvailable(session.state.document))throw new Error(t('Add a solid body to draw the assembly.'));drawingPanel.open({assembly:true,exact:command==='drawing-exact'});break;
       case 'command-palette':palette.open();break;case 'model-source':modelSourcePanel.toggle();break;case 'model-library':return openModelLibrary();case 'robot-projects':return openModelLibrary('projects');case 'code':codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);break;case 'readout':readout.setVisible(!readout.visible);break;
       case 'shapes':picker.open(true);break;
       case 'union':case 'subtract':case 'intersect':session.combine(command);break;
@@ -887,7 +914,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'hole':fasteningPanel.openHole();break;case 'standard-part':fasteningPanel.openPart();break;case 'fasten':fasteningPanel.openFasten();break;
       default:throw new Error(t('Unknown editor command'));
     }
-    if(!['open','import','import-step','save','export','parameters','shapes','code','code-workspace','terminal','model-source','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','exact-feature','model-library','robot-projects','command-palette','hole','standard-part','fasten'].includes(command))viewport.canvas.focus({preventScroll:true});
+    if(!['open','import','import-step','save','export','parameters','shapes','code','code-workspace','terminal','model-source','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','exact-feature','model-library','robot-projects','command-palette','hole','standard-part','fasten','exact-edges','measure-exact','export-step','drawing','drawing-exact'].includes(command))viewport.canvas.focus({preventScroll:true});
   }
   async function deliver(format: 'bcad' | 'stl' | '3mf' | 'step', modificationNotes?: string, checkCanceled: () => void = () => {}) {
     if(format==='bcad'&&options.saveProject){await options.saveProject();return;}
@@ -919,6 +946,11 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   buildTree(); buildInspector(); lastRevision = session.state.revision; lastSelection = JSON.stringify(session.state.selection); viewport.setSelection(session.state.selection); void buildLatest(); refreshButtons();
   return {
+    /**
+     * The editor's menu (editor-menu.ts) in the current locale, with each item's availability now.
+     * Hosts list it in their own menus and run an item with executeCommand(item.command).
+     */
+    menuItems,
     setTerminalVisible(visible:boolean){terminal.setVisible(visible);},get terminalVisible(){return terminal.visible;},
     openCodeWorkspace,
     setColorMode(mode:CadColorMode){if(!['light','dark'].includes(mode))throw new Error(t('Choose light or dark mode'));host.dataset.cadColorMode=mode;if(!customAppearance)viewport.setAppearance(mode==='light'?{background:'#e7eef7',baseplate:'#cdd9e8'}:{background:'#111e29',baseplate:'#233644'});},get colorMode(){return host.dataset.cadColorMode as CadColorMode;},simulation,session, whenIdle, openFile,setRightPane,get rightPane(){return {...rightPane};},importFile,executeCommand,setSurfaceSnap,get surfaceSnap(){return viewport.surfaceSnap;},setNavigation:viewport.setNavigation,setCameraGestures:viewport.setCameraGestures,setResizeControls:viewport.setResizeControls,setGridDisplay:viewport.setGridDisplay,get gridDisplay(){return viewport.gridDisplay;},get resizeControls(){return viewport.resizeControls;},setShapeBrowserLayout:(layout:ShapeBrowserLayout)=>picker.setLayout(layout),get shapeBrowserLayout(){return picker.layout;},setAppearance(value:{background:string;baseplate:string}){viewport.setAppearance(value);customAppearance=true;},get appearance(){return viewport.appearance;},get commandState(){return commandState();}, export: deliver, frame: viewport.frame,
@@ -936,10 +968,12 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { simulation.refresh(); viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return;fasteningPanel.dispose();cancelShapePlacement(); simulation.dispose(); disposed = true; fileLifetime.abort(); toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel?.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); exactFeaturePanel.dispose(); exactActivity.dispose(); unsubscribeRecompute(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); terminal.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); printabilityPanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return;fasteningPanel.dispose();cancelShapePlacement(); simulation.dispose(); disposed = true; fileLifetime.abort(); toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel?.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); exactFeaturePanel.dispose(); exactMeasurePanel.dispose(); exactActivity.dispose(); unsubscribeRecompute(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); terminal.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); printabilityPanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;
+export {editorMenu,editorMenuSections,resolveEditorMenu} from './editor-menu.js';
+export type {EditorMenuEntry,EditorMenuItem,EditorMenuRequirement,EditorMenuSection} from './editor-menu.js';
 export { createCadSession } from '@brickwright/cad-core';
 export {createEditorSession,editorKernels,exactKernelIdentity,providesKernel} from './kernels.js';
 // Limits for exact jobs (no kernel code: importing these loads nothing under assets/exact/).

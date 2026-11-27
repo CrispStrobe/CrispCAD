@@ -264,6 +264,34 @@ native panels/clipboard access. The browser fallback uses its file chooser and
 Clipboard API. `editor.importFile(name, bytes)` adds a validated STL fragment;
 `editor.openFile` replaces the workspace only after import preflight succeeds.
 
+### The editor's menu as data (2026-11-27)
+
+`packages/editor/src/editor-menu.ts` defines the editor's menu once: `editorMenu` lists every
+item (`command`, English `label`, `section`, `group` for separators, `requires`, and `exact` when
+the item loads the exact kernel on first use). Sections: `file`, `exact` ("Exact modeling
+(B-rep)"), `drawing` ("Drawings and checks"), `edit`, `view`, `object`, `tools` ("CAD tools");
+`editorMenuSections` names them. `editor.menuItems()` returns the items in the current locale
+(`title`, `sectionTitle`) with `enabled` for the current model and selection, and the host runs
+one with `editor.executeCommand(item.command)`. Re-read it on `onCommandStateChange`.
+`robot-projects` is left out when the host passes no `presetProjects`. The SDK exports
+`editorMenu`, `editorMenuSections` and `resolveEditorMenu`.
+
+Commands added for the menu: `import-step` (Import STEP as exact bodies…), `export-step` (the
+Export dialog with STEP chosen), `exact-feature`, `exact-edges` (the Fillet, chamfer, shell
+dialog on "Chosen edges", then picking in the 3D view as soon as the kernel has listed the
+edges), `measure-exact` (a dialog with the `measure exact` result for the selected bodies, or
+all), `recompute-exact`, `drawing` and `drawing-exact` (the assembly drawing with "Exact edges
+(B-rep)" off or on). The standalone toolbar shows the same exact and drawing items in its File
+and Edit menus. BrickWright lists the menu in its own File menu (STEP import/export at the top
+level, "Exact modeling (B-rep)" and "Drawings and checks" as submenus) and the remaining view,
+object and tool commands under Edit > CAD tools. `tests/editor-menu.test.ts` checks that every
+item is a command the editor runs, that every label has a German translation, and that the
+macOS app menus offer no command the definition lacks; add new user-facing commands here so
+every host lists them.
+
+`requestImport(request?)` receives `{accept:'.step,.stp', purpose:'exact-step'}` for STEP import
+as exact bodies, so a host chooser can offer STEP files only; without it, STL and STEP.
+
 `session.fragment(ids)` returns a complete selected-body document with only
 required formula dependencies and joints whose two bodies are both copied.
 `session.insert(fragment, offset, {mergeParameters:true, label:'Paste objects'})`

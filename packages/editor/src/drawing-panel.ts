@@ -69,7 +69,9 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
  let refresh:(()=>void)|undefined;
  const unsubscribe=session.subscribe(()=>{if(dialog.open)refresh?.();});
  return {
-  open(options:{featureId:string}|{sheetId:string}|{assembly:true}){
+  /** `exact` (assembly sheets): switch "Exact edges (B-rep)" on or off before the sheet opens. */
+  open(options:{featureId:string}|{sheetId:string}|{assembly:true;exact?:boolean}){
+   if('assembly' in options&&options.exact!==undefined)exactEdges=options.exact;
    const doc=session.state.document;
    const saved='sheetId' in options?doc.drawings?.find(sheet=>sheet.id===options.sheetId):undefined;
    const initial='featureId' in options?drawingSourceFor(doc,options.featureId):saved?.source;

@@ -42,8 +42,12 @@ export function mountExactFeaturePanel(parent:HTMLElement,session:CadSession,exa
  let setAside=false,endViewPick:(()=>void)|undefined;
  dialog.addEventListener('close',()=>{if(setAside)return;epoch++;controller?.abort();endViewPick?.();});
 
- /** `id`: a top-level body (new feature) or, with `edit`, an exact feature to change. */
- function open(id:string,edit=false){
+ /**
+  * `id`: a top-level body (new feature) or, with `edit`, an exact feature to change. `chosen`
+  * starts on "Chosen edges"; `pickInView` then also starts picking them in the 3D view once the
+  * kernel has listed them (the menu's "Fillet or chamfer chosen edges…").
+  */
+ function open(id:string,edit=false,start:{chosen?:boolean;pickInView?:boolean}={}){
   endViewPick?.();
   const doc=session.state.document,node=doc.nodes[id],revision=session.state.revision;
   if(edit?node?.kind!=='exact-feature':!node||node.reference||!doc.roots.includes(id))throw new Error(t('Select a top-level body for the exact feature'));
@@ -131,6 +135,7 @@ export function mountExactFeaturePanel(parent:HTMLElement,session:CadSession,exa
   };
   edges.onchange=sync;
   operation.onchange=sync;
+  if(start.chosen&&!previous)edges.value='chosen';
   const fields=document.createElement('div');fields.className='sketch-fields';
   fields.append(operationField(t('Operation'),operation).label,sizeField.label,edgeField.label,open);
   sync();
@@ -170,6 +175,7 @@ export function mountExactFeaturePanel(parent:HTMLElement,session:CadSession,exa
    }finally{clearInterval(elapsed);apply.disabled=false;cancel.hidden=true;}
   };
   dialog.showModal();
+  if(start.chosen&&start.pickInView&&view&&!previous)void loadEdges().then(()=>{if(epoch===ticket&&dialog.open&&!inView.disabled)inView.click();});
  }
  return {open,dispose(){epoch++;controller?.abort();endViewPick?.();dialog.close();dialog.remove();}};
 }

@@ -20,6 +20,9 @@ export {createDocument,parseDocument,serializeDocument,setLocale} from '@brickwr
 // mountCadEditor never changes the kernels of a session the host passes.
 export {createEditorSession,createEditorSession as createCadSession,editorKernels,exactKernelIdentity,providesKernel} from '@brickwright/cad-editor';
 // Exact-job limits for hosts (tablet defaults apply when none are given; see docs/INTEGRATION.md).
+// The editor's menu as data (labels and availability per editor: editor.menuItems()).
+export {editorMenu,editorMenuSections,resolveEditorMenu} from '@brickwright/cad-editor';
+export type {EditorMenuEntry,EditorMenuItem,EditorMenuSection} from '@brickwright/cad-editor';
 export {EXACT_LIMITS_TABLET,EXACT_LIMITS_DESKTOP,resolveExactLimits} from '@brickwright/cad-editor';
 export type {ExactLimits,ExactActivity} from '@brickwright/cad-editor';
 // Block/pseudocode modelling: hosts compile their block workspaces through the same core.

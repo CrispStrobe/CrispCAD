@@ -1283,13 +1283,46 @@ washers, threaded rod and ISO 4014 partial-thread bolts (lab tables have them).
 ### Phase 7: delivery and qualification
 
 1. Exact features in BrickWright's CAD tab UI, not only through commands, behind the
-   same tablet limits.
+   same tablet limits. **Done 2026-11-27** (see below): the editor's menu is data
+   (`editor-menu.ts`, `editor.menuItems()`), and BrickWright's File menu lists it.
 2. A catalog cross-check rerun with every exact-kernel release.
 3. Measure the heavy-job limits on a physical iPad (recipe in
    [heavy exact jobs on iPad](#heavy-exact-jobs-on-ipad-2026-11-26)); needs the owner.
 
 Order: 5.1, 5.2 and 5.4 first (5.4 in the lab, alongside), then 6.1 with the drafting
 work (hidden-line views from exact edges done 2026-11-27), then the rest of Phase 6 by demand.
+
+### Exact features in BrickWright's menus (Phase 7.1, 2026-11-27)
+
+BrickWright's CAD tab hid the editor's File group (embedded editors leave File to the host), so
+STEP import as exact bodies, STEP export, exact measure and drawings from exact edges were
+reachable there only through the terminal. Now:
+
+- **One menu definition.** `packages/editor/src/editor-menu.ts` lists every menu item (command,
+  label, section, separators, availability, whether it loads the exact kernel); the editor
+  resolves it per state with `editor.menuItems()` (translated, enabled or not), and the SDK
+  exports it. A host shows those items and runs `executeCommand(item.command)`.
+- **New editor commands** behind it: `export-step`, `exact-edges` (Fillet, chamfer, shell on
+  "Chosen edges", going straight to picking in the 3D view once the kernel has listed them),
+  `measure-exact` (a dialog with the kernel's volume, area, bounds and centroid for the selection,
+  or all bodies), `recompute-exact`, `drawing` and `drawing-exact` (assembly drawing with "Exact
+  edges (B-rep)" set). The standalone toolbar shows the same items in its File and Edit menus.
+- **BrickWright** (host wiring only): its File menu, at the left of the CAD tab's bar, gains
+  "Import STEP as exact bodies…" (a `.step,.stp` chooser: `requestImport` now receives
+  `{accept, purpose:'exact-step'}`) and "Export STEP (exact B-rep)…", and the submenus "Exact
+  modeling (B-rep)" (fillet/chamfer/shell, chosen edges with 3D picking, measure, recompute) and
+  "Drawings and checks" (assembly drawing, from exact edges); the remaining editor commands join
+  Edit > CAD tools. With the compact chrome on narrow windows and iPads, the File menu sits in the
+  CAD bar and the rest of the menu bar behind the "..." toggle; submenus open on tap.
+- Same tablet limits and lazy loading: every item runs through the same exact worker, so nothing
+  under `assets/exact/` is fetched until one runs.
+- German: `locales/de-editor-menu.ts`; `tests/editor-menu.test.ts` fails on an untranslated item
+  and on a macOS menu command the definition lacks. Browser: `tests/browser/editor-menu-exact.spec.ts`
+  (desktop and `ipad`).
+
+Left open: the macOS app still builds its native menus in Swift (the test keeps them a subset of
+the definition, but the exact items are not in them yet); the standalone web toolbar keeps its own
+File/Edit dropdowns (now with the exact items) rather than rendering the definition.
 
 ## Owner decisions (2026-11-24)
 
