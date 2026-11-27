@@ -26,6 +26,16 @@ it('keeps cable endpoints on their bodies during separate simulation poses, reus
  const doc=createTTRoverDocument(),wires=robotWires(doc,kernel.evaluate(doc));const scene=new T.Scene(),bodies=new Map(doc.roots.map(id=>[id,new T.Object3D()]));
  const display=createRobotWiring(scene,()=>doc,id=>bodies.get(id));display.reset(wires);
  const group=scene.getObjectByName('Functional cable harnesses')!,mesh=group.children[0] as T.Mesh;
+ expect(group.children).toHaveLength(1);
+ const geometry=mesh.geometry,vertexCount=175,indexCount=864;
+ const color=geometry.getAttribute('color');
+ for(const [index,wire] of wires.entries()){
+  const start=index*vertexCount;
+  expect([color.getX(start),color.getY(start),color.getZ(start)]).toEqual(new T.Color(wire.color).toArray().map(Math.fround));
+ }
+ expect(geometry.drawRange.count).toBe(wires.length*indexCount);
+ const indices=geometry.index!.array;
+ const initialOrder=indices.slice();
  const array=mesh.geometry.getAttribute('position').array,source=localToWorldPoint(wires[0].from.point,doc.nodes[wires[0].from.bodyId].transform),target=center(mesh,24);
  center(mesh,0).forEach((v,i)=>expect(v).toBeCloseTo(source[i],4));
  const body=bodies.get(wires[0].from.bodyId)!;
@@ -38,7 +48,19 @@ it('keeps cable endpoints on their bodies during separate simulation poses, reus
  center(mesh,0).forEach((v,i)=>expect(v).toBeCloseTo(source[i]+(i===0?100:0),4));
  center(mesh,24).forEach((v,i)=>expect(v).toBeCloseTo(target[i],4));
  const version=mesh.geometry.getAttribute('position').version;display.update();expect(mesh.geometry.getAttribute('position').version).toBe(version);
- bodies.delete(wires[0].from.bodyId);display.update();expect(mesh.visible).toBe(false);
+ const missing=wires[0].from.bodyId;
+ const remaining=wires.filter(wire=>[wire.from,...wire.via,wire.to].every(anchor=>anchor.bodyId!==missing));
+ bodies.delete(missing);display.update();
+ expect(mesh.visible).toBe(true);
+ expect(geometry.drawRange.count).toBe(remaining.length*indexCount);
+ expect(Array.from(indices.slice(0,geometry.drawRange.count))).toEqual(remaining.flatMap(wire=>{
+  const start=wires.indexOf(wire)*indexCount;
+  return Array.from(initialOrder.slice(start,start+indexCount));
+ }));
+ bodies.set(missing,body);display.update();
+ expect(geometry.drawRange.count).toBe(wires.length*indexCount);
+ expect(indices).toEqual(initialOrder);
+ bodies.clear();display.update();expect(mesh.visible).toBe(false);expect(geometry.drawRange.count).toBe(0);
  display.dispose();expect(scene.children).toHaveLength(0);
 });
 it('shows three servo conductors alongside the Atlas motor leads and omits print-only layouts',()=>{
@@ -58,7 +80,7 @@ it('refreshes authored cable anchors on document replacement and in-place edits'
  const display=createRobotWiring(scene,()=>doc,lookup);
  try{
   display.reset([wire]);
-  const mesh=scene.getObjectByName('Cable') as T.Mesh;
+  const mesh=scene.getObjectByName('Robot cables') as T.Mesh;
   const attribute=mesh.geometry.getAttribute('position');
   const start=center(mesh,0)[0],version=attribute.version;
   lookup.mockClear();

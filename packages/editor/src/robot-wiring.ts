@@ -53,19 +53,43 @@ export function robotWires(doc:CadDocument,result:GeometryResult):RobotWire[]{
  return wires;
 }
 const STEPS=24,SIDES=6;
+const VERTICES=(STEPS+1)*(SIDES+1);
 const ring=Array.from({length:SIDES+1},(_,k)=>{
  const angle=k/SIDES*Math.PI*2;
  return {cos:Math.cos(angle),sin:Math.sin(angle)};
 });
+const tubeIndices:number[]=[];
+for(let j=0;j<STEPS;j++)for(let k=0;k<SIDES;k++){
+ const a=j*(SIDES+1)+k,b=a+SIDES+1;
+ tubeIndices.push(a,a+1,b,b,a+1,b+1);
+}
+type Cable={
+ anchors:WireAnchor[];authoredPoints:(Vec3|undefined)[];points:T.Vector3[];
+ curve:T.CatmullRomCurve3;samples:T.Vector3[];dirty:boolean;visible:boolean;
+};
+function markChanged(attribute:T.BufferAttribute,start:number,end:number){
+ // A hidden viewport can receive several updates before WebGL uploads the data.
+ const range=attribute.updateRanges[0];
+ if(range){
+  end=Math.max(end,range.start+range.count);
+  range.start=Math.min(start,range.start);
+  range.count=end-range.start;
+ }else attribute.addUpdateRange(start,end-start);
+ attribute.needsUpdate=true;
+}
 /** Reuse authored anchor coordinates and fixed tube buffers across pose updates. */
 export function createRobotWiring(scene:T.Scene,document:()=>CadDocument,body:(id:string)=>T.Object3D|undefined){
  const group=new T.Group();group.name='Functional cable harnesses';scene.add(group);
  group.matrixAutoUpdate=false;
- const cables:{mesh:T.Mesh<T.BufferGeometry,T.MeshStandardMaterial>;anchors:WireAnchor[];authoredPoints:(Vec3|undefined)[];points:T.Vector3[];curve:T.CatmullRomCurve3;samples:T.Vector3[];dirty:boolean}[]=[];
+ const cables:Cable[]=[];
+ let batch:{mesh:T.Mesh<T.BufferGeometry,T.MeshStandardMaterial>;positions:T.BufferAttribute;normals:T.BufferAttribute;indices:T.BufferAttribute}|undefined;
  const p=new T.Vector3(),tangent=new T.Vector3(),normal=new T.Vector3(),binormal=new T.Vector3();
  let authoredDocument:CadDocument|undefined,immutableAnchors=false;
  const frameBodies=new Map<string,T.Object3D|null>();
- function clear(){for(const c of cables){c.mesh.geometry.dispose();c.mesh.material.dispose();}cables.length=0;frameBodies.clear();authoredDocument=undefined;group.clear();}
+ function clear(){
+  if(batch){batch.mesh.geometry.dispose();batch.mesh.material.dispose();batch=undefined;}
+  cables.length=0;frameBodies.clear();authoredDocument=undefined;group.clear();
+ }
  function refreshAuthoredPoints(doc:CadDocument) {
   if(doc!==authoredDocument){
    authoredDocument=doc;
@@ -93,39 +117,79 @@ export function createRobotWiring(scene:T.Scene,document:()=>CadDocument,body:(i
   return mesh;
  }
  function update(){
-  if(!cables.length)return;
+  if(!batch)return;
+  const {mesh,positions,normals,indices}=batch;
   frameBodies.clear();
   const doc=document();
   if(doc!==authoredDocument||!immutableAnchors)refreshAuthoredPoints(doc);
-  for(const c of cables){
-   let changed=c.dirty;c.mesh.visible=true;
+  let visibilityChanged=false,firstChanged=cables.length,lastChanged=-1;
+  for(let index=0;index<cables.length;index++){
+   const c=cables[index],offset=index*VERTICES;
+   let changed=c.dirty,visible=true;
    for(let i=0;i<c.anchors.length;i++){
-    const authored=c.authoredPoints[i],mesh=authored&&frameBody(c.anchors[i].bodyId);
-    if(!authored||!mesh){c.mesh.visible=false;c.dirty=true;break;}
+    const authored=c.authoredPoints[i],linkedBody=authored&&frameBody(c.anchors[i].bodyId);
+    if(!authored||!linkedBody){visible=false;c.dirty=true;break;}
     const v=c.points[i],x=v.x,y=v.y,z=v.z;
-    v.fromArray(authored).applyMatrix4(mesh.matrixWorld);
+    v.fromArray(authored).applyMatrix4(linkedBody.matrixWorld);
     if(Math.abs(v.x-x)>1e-7||Math.abs(v.y-y)>1e-7||Math.abs(v.z-z)>1e-7)changed=true;
    }
-   if(!c.mesh.visible||!changed)continue;c.dirty=false;
+   if(visible!==c.visible){c.visible=visible;visibilityChanged=true;}
+   if(!visible||!changed)continue;
+   c.dirty=false;
+   firstChanged=Math.min(firstChanged,index);lastChanged=index;
    for(let j=0;j<=STEPS;j++)c.curve.getPoint(j/STEPS,c.samples[j]);
-   const positions=c.mesh.geometry.getAttribute('position') as T.BufferAttribute,normals=c.mesh.geometry.getAttribute('normal') as T.BufferAttribute;
    for(let j=0;j<=STEPS;j++){
     p.copy(c.samples[j]);tangent.subVectors(c.samples[Math.min(STEPS,j+1)],c.samples[Math.max(0,j-1)]).normalize();
     normal.set(0,0,1);if(Math.abs(tangent.z)>.95)normal.set(0,1,0);normal.cross(tangent).normalize();binormal.crossVectors(tangent,normal).normalize();
     for(let k=0;k<=SIDES;k++){
-     const {cos:cs,sin:sn}=ring[k],idx=j*(SIDES+1)+k;
+     const {cos:cs,sin:sn}=ring[k],idx=offset+j*(SIDES+1)+k;
      const x=normal.x*cs+binormal.x*sn,y=normal.y*cs+binormal.y*sn,z=normal.z*cs+binormal.z*sn;
      positions.setXYZ(idx,p.x+x*.55,p.y+y*.55,p.z+z*.55);normals.setXYZ(idx,x,y,z);
     }
    }
-   positions.needsUpdate=true;normals.needsUpdate=true;
+  }
+  if(lastChanged>=0){
+   const start=firstChanged*VERTICES*3,end=(lastChanged+1)*VERTICES*3;
+   markChanged(positions,start,end);markChanged(normals,start,end);
+  }
+  if(visibilityChanged){
+   let count=0;
+   for(let index=0;index<cables.length;index++)if(cables[index].visible){
+    const offset=index*VERTICES;
+    for(const vertex of tubeIndices)indices.array[count++]=offset+vertex;
+   }
+   if(count)markChanged(indices,0,count);
+   mesh.geometry.setDrawRange(0,count);mesh.visible=count>0;
   }
  }
- return {get count(){return cables.length;},reset(wires:RobotWire[]){clear();for(const wire of wires){
-   const geometry=new T.BufferGeometry(),vertices=(STEPS+1)*(SIDES+1);geometry.setAttribute('position',new T.BufferAttribute(new Float32Array(vertices*3),3).setUsage(T.DynamicDrawUsage));geometry.setAttribute('normal',new T.BufferAttribute(new Float32Array(vertices*3),3).setUsage(T.DynamicDrawUsage));
-   const indices=[];for(let j=0;j<STEPS;j++)for(let k=0;k<SIDES;k++){const a=j*(SIDES+1)+k,b=a+SIDES+1;indices.push(a,a+1,b,b,a+1,b+1);}geometry.setIndex(indices);
-   const mesh=new T.Mesh(geometry,new T.MeshStandardMaterial({color:wire.color,roughness:.55}));mesh.name=wire.label;mesh.userData.wireId=wire.id;mesh.frustumCulled=false;mesh.matrixAutoUpdate=false;group.add(mesh);const anchors=[wire.from,...wire.via,wire.to].map(a=>({bodyId:a.bodyId,point:[...a.point] as Vec3})),points=anchors.map(()=>new T.Vector3());cables.push({mesh,anchors,authoredPoints:[],points,curve:new T.CatmullRomCurve3(points,false,'centripetal'),samples:Array.from({length:STEPS+1},()=>new T.Vector3()),dirty:true});
-  }update();},update,dispose(){clear();scene.remove(group);}};
+ function reset(wires:RobotWire[]){
+  clear();
+  if(!wires.length)return;
+  // All opaque cables share the same material. Vertex colors keep individual
+  // conductor colors while the viewport submits the harness in one draw.
+  const geometry=new T.BufferGeometry(),vertices=wires.length*VERTICES;
+  const positions=new T.BufferAttribute(new Float32Array(vertices*3),3).setUsage(T.DynamicDrawUsage);
+  const normals=new T.BufferAttribute(new Float32Array(vertices*3),3).setUsage(T.DynamicDrawUsage);
+  const colors=new T.BufferAttribute(new Float32Array(vertices*3),3);
+  const IndexArray=vertices<=65536?Uint16Array:Uint32Array;
+  const indices=new T.BufferAttribute(new IndexArray(wires.length*tubeIndices.length),1).setUsage(T.DynamicDrawUsage);
+  geometry.setAttribute('position',positions);geometry.setAttribute('normal',normals);geometry.setAttribute('color',colors);
+  geometry.setIndex(indices);geometry.setDrawRange(0,0);
+  const mesh=new T.Mesh(geometry,new T.MeshStandardMaterial({vertexColors:true,roughness:.55}));
+  mesh.name='Robot cables';mesh.frustumCulled=false;mesh.matrixAutoUpdate=false;mesh.visible=false;group.add(mesh);
+  batch={mesh,positions,normals,indices};
+  const color=new T.Color();
+  for(const wire of wires){
+   const offset=cables.length*VERTICES;
+   color.set(wire.color);
+   for(let i=0;i<VERTICES;i++)colors.setXYZ(offset+i,color.r,color.g,color.b);
+   const anchors=[wire.from,...wire.via,wire.to].map(a=>({bodyId:a.bodyId,point:[...a.point] as Vec3}));
+   const points=anchors.map(()=>new T.Vector3());
+   cables.push({anchors,authoredPoints:[],points,curve:new T.CatmullRomCurve3(points,false,'centripetal'),samples:Array.from({length:STEPS+1},()=>new T.Vector3()),dirty:true,visible:false});
+  }
+  update();
+ }
+ return {get count(){return cables.length;},reset,update,dispose(){clear();scene.remove(group);}};
 }
 
 /** Complete factory-installed electronics. Roles/pins agree with the default
