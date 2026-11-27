@@ -5,25 +5,25 @@
   "selected": 2402,
   "mode": "all",
   "seed": null,
-  "labCommit": "587e964cd00f64ee262a938f2bac219c2b9b60e1",
+  "labCommit": "4bd3ee9c99a2dbdb54de006491a95aaf5dd79c4b",
   "timeoutSeconds": 300,
-  "jobs": 4,
+  "jobs": 3,
   "loftRevision": 2,
   "machine": {
    "cpus": 8,
    "model": "Apple M1",
    "loadAverageAtStart": [
-    34.6,
-    38.6,
-    64.9
+    129.2,
+    140.7,
+    161.4
    ],
    "loadAverageAtEnd": [
-    133.7,
-    83.5,
-    75.7
+    65.1,
+    90.7,
+    117.3
    ]
   },
-  "started": "2026-11-26T06:06:04Z",
+  "started": "2026-11-27T11:35:39.786Z",
   "calibration": {
    "volume": {
     "prism": 1.0000000209001643,
@@ -179,9 +179,8 @@
    "node": "v26.4.0",
    "exact": "@classcad/smlibwasm 0.6.2"
   },
-  "finished": "2026-11-26T06:12:14.255Z",
-  "lastRunMinutes": 5.8,
-  "note": "@crispcad/exact-kernel 0.1.3, CrispCAD main 70a2fda plus the harness changes of this commit (smoothLoft; converter writes kernelCAD smooth lofts as smoothLoft; loft allowance from reachable quads). Catalog and native volumes: lab 587e964cd (native measured on ef07c30bf, 2,402 of 2,402). One segment, four workers."
+  "finished": "2026-11-27T11:57:09.588Z",
+  "lastRunMinutes": 21.5
  },
  "models": 2402,
  "modelClasses": {
@@ -251,12 +250,12 @@
   "min": -0.01000861697175326
  },
  "timing": {
-  "manifoldCpuMsTotal": 68289,
-  "exactCpuMsTotal": 719648,
-  "manifoldCpuMsMedianPart": 0.56,
-  "exactCpuMsMedianPart": 3.86,
-  "exactCpuMsMaxPart": 2984.01,
-  "convertWallMsMedian": 7.59
+  "manifoldCpuMsTotal": 129121,
+  "exactCpuMsTotal": 1314696,
+  "manifoldCpuMsMedianPart": 1.18,
+  "exactCpuMsMedianPart": 6.76,
+  "exactCpuMsMaxPart": 5424.63,
+  "convertWallMsMedian": 37.73
  },
  "worstDisagreements": [
   {
@@ -1003,21 +1002,21 @@
  "native": {
   "source": {
    "kernel": "smlib-native",
-   "labCommit": "ef07c30bf1408f2a5a788afd03473c3acae68bce",
+   "labCommit": "763f97d2d775961f9d3d5b4824c49e52c5e15114",
    "statusOnly": false
   },
   "classes": {
-   "all-agree": 2358,
+   "all-agree": 2336,
    "converter-failed": 31,
-   "converter-partial": 11,
-   "converter-error": 2
+   "converter-error": 24,
+   "converter-partial": 11
   },
   "exactVsNative": {
-   "volumeAgreeing": 2358,
-   "areaWithin1e6": 2358,
-   "areaWithin1e3": 2358,
+   "volumeAgreeing": 2336,
+   "areaWithin1e6": 2336,
+   "areaWithin1e3": 2336,
    "areaBeyond1e3": [],
-   "bboxWithin1e3mm": 2358,
+   "bboxWithin1e3mm": 2336,
    "bboxBeyond1e3mm": []
   },
   "models": [
@@ -1079,7 +1078,7 @@
     "nativeParts": 86,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 18090612.162412394
+    "N": 18090612.1624124
    },
    {
     "id": "construction-equipment/pipe-roller-stand.kcad.ts",
@@ -1099,8 +1098,8 @@
     "class": "converter-partial",
     "M": 4314387009,
     "E": 4315929174,
-    "N": 4321833174.024639,
-    "relConverter": -0.0013660869790448338,
+    "N": 4321833174.02464,
+    "relConverter": -0.0013660869790450558,
     "relArea": -0.010756589438426833,
     "dBox": 3.938021109206602e-8
    },
@@ -1113,7 +1112,7 @@
     "class": "converter-partial",
     "M": 3942811.69,
     "E": 3942811.69,
-    "N": 32740219.6248043,
+    "N": 32740219.624804296,
     "relConverter": -0.8795728393033476,
     "relArea": -0.6542982250476779,
     "dBox": 385
@@ -1125,7 +1124,7 @@
     "nativeParts": 203,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 2435888730.101908
+    "N": 2445504782.221866
    },
    {
     "id": "fire-rescue/fire-hose-roll.kcad.ts",
@@ -1143,7 +1142,7 @@
     "nativeParts": 16,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 64509807.37454663
+    "N": 64509807.37454668
    },
    {
     "id": "food-kitchen/apple.kcad.ts",
@@ -1166,7 +1165,7 @@
     "nativeParts": 6,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 527732065.62946033
+    "N": 527732065.62946165
    },
    {
     "id": "hydroponics/dutch-bucket-row.kcad.ts",
@@ -1196,6 +1195,20 @@
     "N": 24079339.245378364
    },
    {
+    "id": "interior/hanging-planter.kcad.ts",
+    "convert": "converted",
+    "parts": 27,
+    "nativeParts": 27,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 8263295.052,
+    "E": 8263295.087,
+    "N": 8289423.2205103235,
+    "relConverter": -0.0031519845006435787,
+    "relArea": 0.005658577733772763,
+    "dBox": 4.805747266800608e-7
+   },
+   {
     "id": "interior/sink-vanity.kcad.ts",
     "convert": "unsupported",
     "parts": 0,
@@ -1215,17 +1228,8 @@
     "E": 34473154.47,
     "N": 65392011.29249345,
     "relConverter": -0.4728231508921751,
-    "relArea": -0.2791089791111385,
+    "relArea": -0.27910897911113863,
     "dBox": 9.29854109082953
-   },
-   {
-    "id": "mining/spiral-concentrator.kcad.ts",
-    "convert": "failed",
-    "parts": 0,
-    "nativeParts": 68,
-    "skipped": 0,
-    "class": "converter-failed",
-    "N": 4867686047.001614
    },
    {
     "id": "mining/rotary-blasthole-drill.kcad.ts",
@@ -1242,18 +1246,83 @@
     "dBox": 0
    },
    {
-    "id": "nature/ground-tile.kcad.ts",
+    "id": "mining/spiral-concentrator.kcad.ts",
+    "convert": "failed",
+    "parts": 0,
+    "nativeParts": 68,
+    "skipped": 0,
+    "class": "converter-failed",
+    "N": 4867686047.001614
+   },
+   {
+    "id": "nature/bird-nest.kcad.ts",
     "convert": "converted",
-    "parts": 2,
-    "nativeParts": 2,
+    "parts": 10,
+    "nativeParts": 10,
     "skipped": 0,
     "class": "converter-error",
-    "M": 928631795.8,
-    "E": 928631795.4,
-    "N": 867682982.3657551,
-    "relConverter": 0.0702431812919353,
-    "relArea": -0.06279134099336336,
-    "dBox": 0
+    "M": 620310.2567,
+    "E": 620310.2628,
+    "N": 620438.5361191073,
+    "relConverter": -0.0002067462152006705,
+    "relArea": 0.00005920074569298883,
+    "dBox": 3.684664591219189e-7
+   },
+   {
+    "id": "nature/bonsai-tree.kcad.ts",
+    "convert": "converted",
+    "parts": 15,
+    "nativeParts": 15,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 10132328.14,
+    "E": 10132328.14,
+    "N": 10133080.377503589,
+    "relConverter": -0.00007423581729981699,
+    "relArea": 0.0000070110126539901785,
+    "dBox": 4.803143838216783e-7
+   },
+   {
+    "id": "nature/boulder-cluster.kcad.ts",
+    "convert": "converted",
+    "parts": 4,
+    "nativeParts": 4,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 502886012.6,
+    "E": 502886013.8,
+    "N": 503042306.59782386,
+    "relConverter": -0.0003106951359238552,
+    "relArea": -0.0009610145227751943,
+    "dBox": 4.4058447201678064e-7
+   },
+   {
+    "id": "nature/bramble.kcad.ts",
+    "convert": "converted",
+    "parts": 36,
+    "nativeParts": 36,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 147994786.4,
+    "E": 147994787.1,
+    "N": 148038679.04504055,
+    "relConverter": -0.00029648971014661907,
+    "relArea": 0.000017396232513178234,
+    "dBox": 3.217051016690675e-7
+   },
+   {
+    "id": "nature/cairn.kcad.ts",
+    "convert": "converted",
+    "parts": 6,
+    "nativeParts": 6,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 29652747.61,
+    "E": 29652747.56,
+    "N": 29657272.690289073,
+    "relConverter": -0.00015258079649904666,
+    "relArea": -0.00043546848564679497,
+    "dBox": 4.481872792894137e-7
    },
    {
     "id": "nature/hill-tile.kcad.ts",
@@ -1264,9 +1333,9 @@
     "class": "converter-error",
     "M": 2159889704,
     "E": 2159889707,
-    "N": 1649702251.958466,
-    "relConverter": 0.30926032527133795,
-    "relArea": -0.11048578556285771,
+    "N": 2160745676.7054806,
+    "relConverter": -0.00039614551342559423,
+    "relArea": 0.00007284244601635237,
     "dBox": 0
    },
    {
@@ -1276,7 +1345,21 @@
     "nativeParts": 8,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 17900175.05290291
+    "N": 18142373.37579899
+   },
+   {
+    "id": "nature/pebble-cluster.kcad.ts",
+    "convert": "converted",
+    "parts": 8,
+    "nativeParts": 8,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 1455030.995,
+    "E": 1455031.001,
+    "N": 1455216.84820256,
+    "relConverter": -0.00012771100251462997,
+    "relArea": -0.0009237095355121294,
+    "dBox": 8.725438078727166e-7
    },
    {
     "id": "nature/rock-arch.kcad.ts",
@@ -1285,7 +1368,119 @@
     "nativeParts": 3,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 9222186670.929546
+    "N": 9227297217.813665
+   },
+   {
+    "id": "nature/rock.kcad.ts",
+    "convert": "converted",
+    "parts": 2,
+    "nativeParts": 2,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 118325546.3,
+    "E": 118325546,
+    "N": 118387057.5445203,
+    "relConverter": -0.0005195799760220332,
+    "relArea": -0.0021450865225906,
+    "dBox": 2.7735040930565447e-7
+   },
+   {
+    "id": "nature/rock-pillar.kcad.ts",
+    "convert": "converted",
+    "parts": 5,
+    "nativeParts": 5,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 2257079646,
+    "E": 2257079606,
+    "N": 2258102915.3417554,
+    "relConverter": -0.0004531721449907433,
+    "relArea": -0.0011557279501261952,
+    "dBox": 3.330815161461942e-7
+   },
+   {
+    "id": "nature/snowy-fir-tree.kcad.ts",
+    "convert": "converted",
+    "parts": 10,
+    "nativeParts": 10,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 12354343120,
+    "E": 12354342790,
+    "N": 12355943025.633293,
+    "relConverter": -0.0001295114124412189,
+    "relArea": 0.000004938399631004842,
+    "dBox": 2.3813754523871467e-7
+   },
+   {
+    "id": "nature/stone-slab.kcad.ts",
+    "convert": "converted",
+    "parts": 4,
+    "nativeParts": 4,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 139944769.8,
+    "E": 139944769.1,
+    "N": 140074232.6491304,
+    "relConverter": -0.0009242495688318586,
+    "relArea": -0.0007845678140866452,
+    "dBox": 4.3533407279028324e-7
+   },
+   {
+    "id": "nature/termite-mound.kcad.ts",
+    "convert": "converted",
+    "parts": 5,
+    "nativeParts": 5,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 1428090900,
+    "E": 1428090898,
+    "N": 1428864992.059414,
+    "relConverter": -0.0005417545140483648,
+    "relArea": -0.00121368881801176,
+    "dBox": 4.069270289619453e-7
+   },
+   {
+    "id": "nature/tumbleweed.kcad.ts",
+    "convert": "converted",
+    "parts": 4,
+    "nativeParts": 4,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 91689393.03,
+    "E": 91689392.15,
+    "N": 92122473.26729183,
+    "relConverter": -0.004701145137899654,
+    "relArea": 0.003987820723850843,
+    "dBox": 5.027651468481054e-7
+   },
+   {
+    "id": "props/sack.kcad.ts",
+    "convert": "converted",
+    "parts": 3,
+    "nativeParts": 3,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 51905470.72,
+    "E": 51905470.62,
+    "N": 51915873.09088411,
+    "relConverter": -0.0002003716833559599,
+    "relArea": -0.0011662597240984507,
+    "dBox": 4.963637252330955e-7
+   },
+   {
+    "id": "props/scarecrow.kcad.ts",
+    "convert": "converted",
+    "parts": 12,
+    "nativeParts": 12,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 120092136.8,
+    "E": 120092136.8,
+    "N": 120096596.2711071,
+    "relConverter": -0.00003713236882285642,
+    "relArea": -0.0000023742034110929566,
+    "dBox": 9.633760100768995e-8
    },
    {
     "id": "props/watering-can.kcad.ts",
@@ -1294,7 +1489,21 @@
     "nativeParts": 3,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 12673184.114120496
+    "N": 12677307.86496471
+   },
+   {
+    "id": "props/trash-bags.kcad.ts",
+    "convert": "converted",
+    "parts": 9,
+    "nativeParts": 9,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 125386317.9,
+    "E": 125386317.6,
+    "N": 125418211.09716499,
+    "relConverter": -0.00025429717810510066,
+    "relArea": -0.0010698929430822401,
+    "dBox": 1.7362663129460998e-7
    },
    {
     "id": "recycling-facility/inbound-message-board.kcad.ts",
@@ -1314,9 +1523,9 @@
     "class": "converter-partial",
     "M": 784187.2363,
     "E": 784637.9482,
-    "N": 3514394.220961973,
-    "relConverter": -0.7767359326054133,
-    "relArea": -0.7875292902892083,
+    "N": 3514394.2209619703,
+    "relConverter": -0.7767359326054131,
+    "relArea": -0.7875292902892085,
     "dBox": 2.1640499880959396e-7
    },
    {
@@ -1342,9 +1551,9 @@
     "class": "converter-partial",
     "M": 6682668.718,
     "E": 6687142.903,
-    "N": 12109775.663275648,
-    "relConverter": -0.4477896957844095,
-    "relArea": -0.6059202725697042,
+    "N": 12109775.663275637,
+    "relConverter": -0.44778969578440897,
+    "relArea": -0.605920272569704,
     "dBox": 2.2154369662226896e-26
    },
    {
@@ -1399,7 +1608,7 @@
     "nativeParts": 7,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 2533408590.8688912
+    "N": 2535297330.8891783
    },
    {
     "id": "terrain/cliff-corner-tile.kcad.ts",
@@ -1408,7 +1617,7 @@
     "nativeParts": 9,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 7318121622.53029
+    "N": 7319661094.518682
    },
    {
     "id": "terrain/cliff-wall-tile.kcad.ts",
@@ -1417,7 +1626,7 @@
     "nativeParts": 9,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 5496810107.841317
+    "N": 5498296601.5346155
    },
    {
     "id": "terrain/lava-tile.kcad.ts",
@@ -1426,7 +1635,7 @@
     "nativeParts": 15,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 791767398.2847551
+    "N": 792127437.2054592
    },
    {
     "id": "terrain/ramp-tile.kcad.ts",
@@ -1435,7 +1644,49 @@
     "nativeParts": 9,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 2868773479.3667345
+    "N": 2868762680.9211645
+   },
+   {
+    "id": "terrain/mountain-peak.kcad.ts",
+    "convert": "converted",
+    "parts": 11,
+    "nativeParts": 11,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 17198244530,
+    "E": 17198244470,
+    "N": 17214900919.470448,
+    "relConverter": -0.000967559996329026,
+    "relArea": -0.0004048044079537627,
+    "dBox": 0
+   },
+   {
+    "id": "terrain/river-bend-tile.kcad.ts",
+    "convert": "converted",
+    "parts": 10,
+    "nativeParts": 10,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 747009008.9,
+    "E": 747009008.9,
+    "N": 747921798.4282762,
+    "relConverter": -0.0012204344494228803,
+    "relArea": -0.0003633389185333513,
+    "dBox": 1.1368683772161603e-13
+   },
+   {
+    "id": "terrain/rocky-ground-tile.kcad.ts",
+    "convert": "converted",
+    "parts": 10,
+    "nativeParts": 10,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 864824781.7,
+    "E": 864824781.7,
+    "N": 864848346.2339332,
+    "relConverter": -0.00002724701276912711,
+    "relArea": -0.00003016715047499119,
+    "dBox": 0
    },
    {
     "id": "terrain/sand-tile.kcad.ts",
@@ -1444,7 +1695,7 @@
     "nativeParts": 6,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 1036846292.9033364
+    "N": 1043531590.0148418
    },
    {
     "id": "terrain/shore-edge-tile.kcad.ts",
@@ -1453,7 +1704,7 @@
     "nativeParts": 12,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 793992744.4519243
+    "N": 794056040.4504793
    },
    {
     "id": "terrain/snow-tile.kcad.ts",
@@ -1462,7 +1713,21 @@
     "nativeParts": 6,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 841289858.6672181
+    "N": 841881176.4586507
+   },
+   {
+    "id": "terrain/ruins-column-tile.kcad.ts",
+    "convert": "converted",
+    "parts": 21,
+    "nativeParts": 21,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 1259232313,
+    "E": 1259232308,
+    "N": 1259866428.5048673,
+    "relConverter": -0.0005033235988515239,
+    "relArea": -0.0001355490128936987,
+    "dBox": 0
    },
    {
     "id": "terrain/waterfall-tile.kcad.ts",
@@ -1471,7 +1736,7 @@
     "nativeParts": 14,
     "skipped": 0,
     "class": "converter-failed",
-    "N": 5536707084.1976385
+    "N": 5537258609.792025
    },
    {
     "id": "water-treatment/grit-classifier.kcad.ts",
@@ -1481,6 +1746,48 @@
     "skipped": 0,
     "class": "converter-failed",
     "N": 62824657.9808237
+   },
+   {
+    "id": "wind-energy/horizontal-axis-wind-turbine.kcad.ts",
+    "convert": "converted",
+    "parts": 39,
+    "nativeParts": 39,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 385905694.3,
+    "E": 386600483.5,
+    "N": 386556235.8818766,
+    "relConverter": 0.00011446618632993122,
+    "relArea": 0.0000639160925743898,
+    "dBox": 4.358275873528328e-8
+   },
+   {
+    "id": "wind-energy/wind-turbine-blade.kcad.ts",
+    "convert": "converted",
+    "parts": 28,
+    "nativeParts": 28,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 47054139.28,
+    "E": 47061112.54,
+    "N": 47032083.124094106,
+    "relConverter": 0.0006172258164558464,
+    "relArea": 0.0001599934496543387,
+    "dBox": 0.42146004255079106
+   },
+   {
+    "id": "wind-energy/offshore-wind-turbine.kcad.ts",
+    "convert": "converted",
+    "parts": 106,
+    "nativeParts": 106,
+    "skipped": 0,
+    "class": "converter-error",
+    "M": 950646546.9,
+    "E": 952565202.6,
+    "N": 952497313.3555009,
+    "relConverter": 0.00007127499841441676,
+    "relArea": 0.0000374971032843785,
+    "dBox": 5.640949893859215e-7
    }
   ]
  }

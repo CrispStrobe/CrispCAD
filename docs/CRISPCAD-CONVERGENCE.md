@@ -630,7 +630,7 @@ Left open: an exact display path for many-hole faces (meshing cost, Phase 2); a 
 renamed on paste (`width` → `width_2`) makes a pasted feature stale until it is recomputed;
 fillets of individual edges need topological naming and are out of scope.
 
-### Phase 4: cross-checking with the catalog. **Done 2026-11-25 (exact kernel 0.1.1); rerun 2026-11-26 with ruled lofts and then smooth lofts on 0.1.3**
+### Phase 4: cross-checking with the catalog. **Done 2026-11-25 (exact kernel 0.1.1); rerun 2026-11-26 with ruled lofts and then smooth lofts on 0.1.3; rerun 2026-11-27 on 0.1.9**
 
 1. Convert the lab's catalog with `scripts/convert-kcad.mjs` (98.7% convert, 93.6% before
    the 2026-11-25 converter fixes).
@@ -639,6 +639,34 @@ fillets of individual edges need topological naming and are out of scope.
    results let us tell converter errors apart from kernel errors.
 4. Record the results next to
    [CODE-CONVERTERS.md](CODE-CONVERTERS.md#kernelcad-kcadts-models-2026-11-24).
+
+**Third rerun 2026-11-27: exact kernel 0.1.9, catalog from lab `4bd3ee9c9`, native volumes
+2,402 of 2,402** (Phase 5.4). Three workers, 21.5 min wall.
+[Details](../experiments/catalog-crosscheck/README.md#results-exact-kernel-019-native-catalog-2402-of-2402-2026-11-27).
+
+| Full catalog | 0.1.3, smooth lofts | **0.1.9** |
+| --- | ---: | ---: |
+| Three-way all-agree | 2,358 | **2,336** |
+| Converter-error | 2 | **24** |
+| Converter-partial / -failed | 11 / 31 | 11 / 31 |
+| Native-failed | 0 | 0 |
+| Manifold vs exact: models agree / disagree | 2,353 / 18 | 2,353 / 18 |
+
+- **Our builds did not change.** Manifold and exact give the same model totals and classes as on
+  0.1.3; a 0.1.7 run the same day equals the 0.1.9 run in all 138,640 part builds.
+- **All 24 converter errors come from the lab's native column now following OpenCASCADE's loft
+  pairing.** 21 models (`nature/tumbleweed` −4.7e-3, `interior/hanging-planter` −3.2e-3 …
+  `terrain/rocky-ground-tile` −2.7e-5, and `nature/hill-tile`) loft sections of equal vertex count
+  that ThruSections re-starts at the vertex closest to the previous section; the lab's native
+  build does the same since `88eeb9123` and matches OCCT to 5.7e-10, while CAD Script's `loft`
+  joins vertices as written (kernel `pairing:'authored'`). `nature/ground-tile` now agrees.
+  Matching them would take a CAD Script loft option that pairs as ThruSections does, in both the
+  exact lowering (`pairing:'closest'`) and the Manifold mesh, for converted programs only, as a
+  new language revision; not done here.
+- **3 wind-turbine models** (smooth lofts, +1.1e-4, +7.1e-5, +6.2e-4): our exact volume is
+  unchanged and equals the lab's native build before `6005ce246`; the lab now lofts the airfoils
+  as wires instead of faces and SMLib's smooth skin comes out slightly smaller. OCCT differs from
+  both by more (up to 4.5e-2 per blade part), so neither is the reference.
 
 **Second rerun 2026-11-26: smooth lofts, catalog and native volumes from lab `587e964cd`**
 (2,402 of 2,402 built natively; the lab fixed its 8 self-crossing models in `ef07c30bf`). CAD
@@ -807,11 +835,27 @@ What follows is the plan for the rest.
    be read with a clear diagnostic.
 3. **Exact display for faces with many holes** (left open in Phase 2): mesh
    cost must stay bounded on the 200-hole debug page on tablet limits.
-4. **Close the lab's last 11 catalog gaps** (see the lab's `docs/kernels.md`):
-   sweeps along curved rails (3), holes drilled into side faces (2), a multi-loop
-   sketch (1), lofts on non-XY planes (1), SMLib extrude errors (4). Target 2,402 of
-   2,402 on `smlib-native`. Each fix that touches the package ships as an exact-kernel
-   release that CrispCAD pins, followed by a catalog cross-check rerun.
+4. **Close the lab's last 11 catalog gaps. Done** (lab `b24fe9b95`, 2026-11-25; confirmed
+   2026-11-27): sweeps along curved rails (3), holes drilled into side faces (2), a multi-loop
+   sketch (1), lofts on non-XY planes (1), SMLib extrude errors (4). All 2,402 of 2,402 build on
+   `smlib-native` with OpenCASCADE blocked, re-measured on lab `4bd3ee9c9` (every volume, area
+   and box equal to the `763f97d2d` run to 1.1e-15). Root causes and fixes, all in the lab's
+   native lowerer: the four extrude errors were outlines that touch themselves (a chevron meeting
+   in one vertex, a closing edge running back along the first, two zero-width slits), which
+   SMLib's `Polygon` rejects; they are split into simple loops. Side-face holes are drilled in
+   OCCT's (u, v) face frame; a `moveTo` after drawn edges starts another loop (even-odd fill);
+   loft sections on YZ and XZ use replicad's plane frames; `spine: 'helix'` sweeps are SMLib's
+   twist deformation (transverse) or a 48-section-per-turn loft (axial). Against OCCT per part:
+   volume within 2.7e-11 for eight of them, 1.5e-8 for the two transverse helices and 7.2e-6 for
+   the axial one; the self-touching outlines lose OCCT's zero-thickness fins and slit walls (area
+   −1.4e-3 to −7.2e-3, the merchandiser's box 40 mm, the fin's length). The table is in the lab's
+   `docs/kernels.md`, "The last 11 catalog models". Nothing needed an `unsupported-feature`
+   refusal, and the exact-kernel package did not change (its only part, the region order of the
+   even-odd polygon profile, shipped in 0.1.1), so there is no new release to pin. The catalog
+   cross-check was rerun on 0.1.9 (Phase 4, 2026-11-27). On our side, only the tram engine of
+   the 11 converts completely; 8 use features CAD Script does not have (`helix` sweeps, side
+   holes, several `moveTo` in one path, a YZ loft, a box over the limits) and stay converter
+   failures.
 5. **CAD Script journal export:** parametric profiles and Booleans of portable bodies
    (still open in Phase 3, step 4).
 

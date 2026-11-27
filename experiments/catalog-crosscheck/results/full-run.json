@@ -4,25 +4,25 @@
  "selected": 2402,
  "mode": "all",
  "seed": null,
- "labCommit": "587e964cd00f64ee262a938f2bac219c2b9b60e1",
+ "labCommit": "4bd3ee9c99a2dbdb54de006491a95aaf5dd79c4b",
  "timeoutSeconds": 300,
- "jobs": 4,
+ "jobs": 3,
  "loftRevision": 2,
  "machine": {
   "cpus": 8,
   "model": "Apple M1",
   "loadAverageAtStart": [
-   34.6,
-   38.6,
-   64.9
+   129.2,
+   140.7,
+   161.4
   ],
   "loadAverageAtEnd": [
-   133.7,
-   83.5,
-   75.7
+   65.1,
+   90.7,
+   117.3
   ]
  },
- "started": "2026-11-26T06:06:04Z",
+ "started": "2026-11-27T11:35:39.786Z",
  "calibration": {
   "volume": {
    "prism": 1.0000000209001643,
@@ -178,7 +178,7 @@
   "node": "v26.4.0",
   "exact": "@classcad/smlibwasm 0.6.2"
  },
- "finished": "2026-11-26T06:12:14.255Z",
- "lastRunMinutes": 5.8,
- "note": "@crispcad/exact-kernel 0.1.3, CrispCAD main 70a2fda plus the harness changes of this commit (smoothLoft; converter writes kernelCAD smooth lofts as smoothLoft; loft allowance from reachable quads). Catalog and native volumes: lab 587e964cd (native measured on ef07c30bf, 2,402 of 2,402). One segment, four workers."
+ "finished": "2026-11-27T11:57:09.588Z",
+ "lastRunMinutes": 21.5,
+ "note": "@crispcad/exact-kernel 0.1.9 (smlibwasm 0.6.2 built from source), CrispCAD main 6195d6c. Catalog: lab 4bd3ee9c9 (catalog and native lowering unchanged up to develop 790f2ba93); native volumes: lab results-catalog-native-volumes.json measured on 763f97d2d, equal to the 2026-11-27 re-measurement on 4bd3ee9c9 to 1.1e-15 (2,402 of 2,402). One segment, three workers. A run on 0.1.7 (CrispCAD b67ab77) the same day gave the same volume and area for every one of the 138,640 part builds."
 }

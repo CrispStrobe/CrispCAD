@@ -163,6 +163,71 @@ field of `results/<name>-models.json`; `results/<name>-summary.json` (`native.mo
 every model that is not `all-agree` or whose area or box differs, with the three volumes
 (`M`, `E`, `N`), `relConverter` = E/N − 1, `relArea` and `dBox`.
 
+## Results: exact kernel 0.1.9, native catalog 2,402 of 2,402 (2026-11-27)
+
+Measured 2026-11-27 on the same machine (load average 65 to 160 from other sessions, three
+workers, 21.5 min wall), Node 26.4.0, `@crispcad/exact-kernel` 0.1.9 (smlibwasm 0.6.2 built from
+source), CrispCAD main `6195d6c`, unchanged harness. A run on 0.1.7 (CrispCAD `b67ab77`, two
+workers, 179 min wall at load 60 to 180) the same day gave the same Manifold and exact volume and
+area for all 138,640 part builds, so 0.1.8 and 0.1.9 change nothing here. **Catalog: kernel lab
+`4bd3ee9c9`** (catalog and native lowering unchanged up to `develop` `790f2ba93`); **native volumes: the lab's committed `results-catalog-native-volumes.json`,
+measured on `763f97d2d`** (2,402 of 2,402; the lab's native lowering is unchanged between the two,
+and its 2026-11-27 re-measurement on `4bd3ee9c9` builds 2,402 of 2,402 again). This is the rerun
+for Phase 5.4 (the lab's last 11 native gaps, closed in lab `b24fe9b95`). Of those 11, our side
+builds one completely: `amusement-park/miniature-park-tram-engine` agrees in all three builds. Two
+convert partially because our converter skips their self-touching outlines (`skid-steer-loader`
+door frame, `impulse-merchandiser` uprights), and the rest of each agrees. Eight are refused by
+the converter for the features the lab added natively: `helix` sweeps (`beam-coupling`,
+`grit-classifier`, `spiral-concentrator`), `shape.holes` and `prismSideY` side holes
+(`plate-heat-exchanger`, `pipe-roller-stand`), several `moveTo` in one path
+(`hydroponic-grow-rack`), a loft on a plane other than XY (`rock-arch`) and a part box over the CAD
+Script limits (`batting-helmet`). They are in the 31 converter failures, unchanged. Files: [`results/full-summary.md`](results/full-summary.md),
+[`full-summary.json`](results/full-summary.json), [`full-models.json`](results/full-models.json),
+[`full-run.json`](results/full-run.json).
+
+| Full catalog | 0.1.3, smooth lofts (lab `587e964cd`) | **0.1.9 (lab `4bd3ee9c9`)** |
+| --- | ---: | ---: |
+| Three-way all-agree | 2,358 | **2,336** |
+| Converter-error | 2 | **24** (native pairing, below) |
+| Converter-partial / -failed | 11 / 31 | 11 / 31 |
+| Native-failed | 0 | 0 |
+| Manifold vs exact: models agree / disagree | 2,353 / 18 | 2,353 / 18 |
+| Parts agree / disagree | 69,340 / 49 | 69,340 / 49 |
+| Exact area = native area to 1e-6 (of volume-agreeing) | 2,358 of 2,358 | 2,336 of 2,336 |
+| Exact CPU (total, slowest part) | 720 s, 3.0 s | 1,315 s, 5.4 s (machine load) |
+
+**No CrispCAD build changed.** Manifold and exact give the same model totals as the 0.1.3 run (to
+the seven significant digits `full-models.json` records) and the same part and Manifold-vs-exact
+classes for every model (the 0.1.4 to 0.1.9 kernel changes do not touch what CrispCAD's lowering
+passes). The
+three-way changes all come from the lab's native column, which since `6005ce246` and `88eeb9123`
+lofts the `.kcad.ts` sources as OpenCASCADE's ThruSections does:
+
+- **21 models: loft sections re-started by ThruSections.** For sections with equal vertex counts
+  ThruSections moves each section's start vertex to where it lies closest to the previous one
+  (`ComputeOrigin`; lab `docs/kernels.md`, "How OCCT pairs sections"). The lab's native build now
+  does the same and matches OCCT to 5.7e-10 part by part; CrispCAD's `loft` joins vertex i to
+  vertex i as written (the kernel's default `pairing:'authored'`), so the converted programs give
+  the as-drawn volume, the one the lab's native build gave before. E/N − 1: `nature/tumbleweed`
+  −4.7e-3, `interior/hanging-planter` −3.2e-3, `terrain/river-bend-tile` −1.2e-3, then
+  `terrain/mountain-peak`, `nature/stone-slab`, `termite-mound`, `rock`, `rock-pillar`,
+  `ruins-column-tile`, `hill-tile`, `boulder-cluster`, `bramble`, `trash-bags`, `bird-nest`,
+  `props/sack`, `cairn`, `snowy-fir-tree`, `pebble-cluster`, `bonsai-tree`, `props/scarecrow`,
+  `terrain/rocky-ground-tile` (−2.7e-5). These are exactly the 20 models plus `hill-tile` that the lab lists as
+  changed by the pairing, with the same magnitudes. `nature/hill-tile`'s exact volume
+  (2,159,889,707 mm³) equals the lab's as-drawn build at `6005ce246` to the unit; `nature/ground-tile`
+  now agrees (it needed only the as-drawn fix). Converted programs would need a CAD Script loft
+  option that pairs as ThruSections does (the kernel's `pairing:'closest'`, plus the same rule in
+  the Manifold mesh) to match; that is a language change for converted programs only, not made here.
+- **3 wind-turbine models: smooth lofts.** `wind-energy/wind-turbine-blade` exact 47,061,112.54 mm³
+  is unchanged and equals the lab's native build before `6005ce246` (47,061,112.51), which lofted
+  the airfoil sections as faces; since then the lab lofts them as wires through the same vertices
+  and SMLib's smooth skin comes out 6.2e-4 smaller (47,032,083.12; `horizontal-axis` +1.1e-4,
+  `offshore` +7.1e-5 for the whole models). The pairing is the same as drawn; OCCT, which
+  approximates one B-spline surface through all sections, differs from both by more (up to 4.5e-2
+  per blade part, lab `docs/kernels.md`). Neither SMLib result is the reference.
+- The partial and refused conversions are the same 11 and 31 as before.
+
 ## Results: smooth lofts, exact kernel 0.1.3 (2026-11-26, second run)
 
 Measured 2026-11-26 on the same machine (load average 35–134), Node 26.4.0,
@@ -586,5 +651,6 @@ The first full run (before the converter fixes) used the exact kernel as it was 
 (the numbers in the "0.1.0" column above, catalog at lab `d09cda7f6`). The runs above use
 `@crispcad/exact-kernel` 0.1.1 (same SMLib build, `@classcad/smlibwasm` 0.6.2) for the
 2026-11-25 results and 0.1.3 for the 2026-11-26 results (same SMLib build; 0.1.2 made `bbox()`
-fast, 0.1.3 refuses self-crossing profiles). The run files record the SMLib build, not the
+fast, 0.1.3 refuses self-crossing profiles), and 0.1.9 for the 2026-11-27 results (smlibwasm
+0.6.2 built from source, byte-identical to the npm binary; 0.1.7 gave identical results). The run files record the SMLib build, not the
 kernel package version; their `note` field names it.
