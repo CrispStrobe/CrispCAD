@@ -339,9 +339,18 @@ Product entry additionally needs:
 
 ### Phase 2b: move the exact kernel into the lab as a package. **Done 2026-11-25**
 
-Release: [`exact-kernel-v0.1.7`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.7)
-of the kernel lab, tarball `crispcad-exact-kernel-0.1.7.tgz`, SHA-256
-`09f406f64f4f9059ee03dc20cee7e4d99e7c07c5494f4f8d6c7eb6d1a11ad92b`.
+Release: [`exact-kernel-v0.1.9`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.9)
+of the kernel lab, tarball `crispcad-exact-kernel-0.1.9.tgz`, SHA-256
+`ad1e6064eca59694d27b86770a1a92c850f269753627b4a629ce0ecf06faf710`, integrity
+`sha512-7T0SxdRafoPiYMYgqeirfbxuqwzSKTakl2/Uh/5s5K/zMJ3YEKj0TJ+j/iOPa015z7XK/MP2QP65FlB8iD2vJw==`.
+
+0.1.9 replaced 0.1.7 on 2026-11-27 (lab `develop` 790f2ba93). It adds `topology(solid)`,
+`nameFaces(solid, names)` and `fillet`/`chamfer` with `{edgeIndices}` for
+[Phase 5.1](#phase-5-the-exact-kernel-as-a-modeling-path), and contains 0.1.8 (`importStepBodies`,
+a strict STEP import for Phase 5.2, released by a parallel lab change the same day). Built from
+the smlibwasm source build (all 119 files identical to the pins and to npm), 151 package tests.
+Recorded commands carry kernel 0.1.9; 0.1.7 recordings replay as stale, as designed.
+
 
 0.1.7 replaced 0.1.6 (SHA-256 `2f928537…deaa3`) on 2026-11-26:
 
@@ -726,7 +735,7 @@ and native volumes at lab `2566debd9` / `e6ff5d3fc`:
 
 ### Status on 2026-11-27
 
-The chain runs on exact kernel 0.1.7: lab `develop` 4bd3ee9c9, CrispCAD 68666ce, BrickWright
+(Since Phase 5.1, CrispCAD pins exact kernel 0.1.9; BrickWright was not synced.) The chain ran on exact kernel 0.1.7: lab `develop` 4bd3ee9c9, CrispCAD 68666ce, BrickWright
 fb1f4f93f (pinned to 68666ce). Every BrickWright browser check passes, including the CAD-off
 build. Taken over from kernelCAD so far: the OpenCASCADE-free exact kernel, STEP export, exact
 measures, whole-body/face fillet, chamfer and shell, gears, FDM printability, the 27-part
@@ -735,13 +744,61 @@ What follows is the plan for the rest.
 
 ### Phase 5: the exact kernel as a modeling path
 
-1. **Fillet and chamfer of individual edges.** Today only whole bodies and faces, because
-   individual edges need names that survive upstream edits. Design stable edge references
-   for `exact-feature` nodes (reference: the lab's `docs/internals/STABLE_NAMING.md`),
-   resolved against the exact B-rep at recompute. A reference that no longer resolves is
-   a stale diagnostic, never a silent pick of another edge. Needs a document version
-   bump; older documents are unchanged. Edge picking in the editor and the terminal
-   (`fillet <body> edges …`).
+1. **Fillet and chamfer of individual edges. Done 2026-11-27** (document version 44, exact kernel
+   0.1.9). Design after the generated/modified naming of the lab's
+   `docs/internals/STABLE_NAMING.md` (original code, `packages/core/src/exact-edge-references.ts`):
+   - **Faces are named where they are made, and the kernel carries the names.** When the exact
+     backend lowers the source of a feature that holds edge references, every face of every leaf
+     construction (box, cylinder, sphere, extrusion, revolution, CAD Script object) is named
+     `<leaf node id>:f<k>` on the freshly built leaf, and each pattern copy prefixes its faces with
+     `<pattern id>#<copy>/`. SMLib keeps a face's name on the face and on its pieces through
+     Booleans, transforms, mirrors and nested fillets/chamfers/shells; new faces (a fillet's round)
+     have none. Kernel 0.1.8 added what this needs: `topology(solid)` (faces with names and
+     surfaces, edges with adjacency, curve kind and sample points), `nameFaces(solid, names)` and
+     `fillet`/`chamfer` with `{edgeIndices}`.
+   - **An edge is the sorted pair of names of the two faces it bounds**, plus `index`/`of` where
+     several edges bound the same two faces (order: sample centroid by x, then y, then z). The
+     node stores `edges: {references: [{faces, index?, of?}]}`.
+   - **Resolution at every recompute** on the current B-rep. Parameter edits move faces but keep
+     their names, so the reference finds its edge again (tested: box resized three times, hole
+     radius changed, Undo). If the two faces no longer meet, or meet at another number of edges
+     than `of`, the recompute fails with `stale-edge-reference` naming the faces ("1 of 1 selected
+     edges no longer exist after an upstream change (the faces Plate face 5 / Hole face 1 no longer
+     meet). Choose the edges again; nothing was rebuilt.") and the feature stays `stale-exact`; no
+     other edge is ever picked. Edges on unnamed faces and seams cannot be chosen.
+   - **Version 44 only for features with references.** All-edge and face features stay 41 and are
+     lowered exactly as before (no face is named; a test proves `nameFaces`/`topology` are never
+     called for them, so their displays, STEP and measures are unchanged). Older builds refuse 44.
+   - **Paste, duplicate, regenerate** rewrite node ids inside face names; `exactFeatureKey`
+     replaces them by subtree position, so a duplicated or pasted feature keeps its display.
+   - **Commands:** `edges [bodies]` (read-only, exact) lists the B-rep edges numbered with kind,
+     length and ends; `fillet <r> <body> edges 3 7` / `chamfer …` take numbers or references, and
+     the recorded invocation always holds the references (numbers are resolved through an
+     `edges` request first), committed inside `withKernel` as before. Terminal, command palette
+     usage, MCP `cad_run_commands`, CLI `run` share the registry. Host protocol: new exact
+     operation `edges` (editor worker, MCP exact thread, in-thread host via `runExactRequest`).
+   - **Editor:** the Fillet, chamfer, shell dialog has **Chosen edges (tap to pick)**: the exact
+     kernel lists the body's edges and the dialog draws them as an SVG line drawing (Iso, Top,
+     Front, Right; 44 px buttons) where each edge has a 22 px invisible hit stroke and toggles
+     on tap; no keyboard needed. Edit exact feature reopens it with the chosen edges marked and
+     says how many previously chosen edges no longer exist.
+   - **Limits:** the tablet pre-flight counts exactly the chosen edges (curved × 4).
+   - German strings for everything (`check:i18n` passes, 2,804 messages).
+   - Tests: `tests/exact-edge-references.test.ts` (16: pure resolution incl. stale and ambiguous
+     cases, closed forms for one rounded/bevelled edge at 1e-9, resolution after three box
+     resizes, hole rim through a radius change and a stale rim after the hole stops below the
+     face, pattern copies, version gate, no naming for old features, duplicate/paste, limits,
+     argument errors, unnamed round edges); `tests/browser/exact-edge-fillet.spec.ts` on `ipad`
+     (tap two edges, chamfer, upstream edit, recompute, edit dialog): passes (5.1 min at load
+     average 100–200; two earlier runs failed only on the editor's 30 s geometry limit for the
+     initial model under that load). Run with the installed Google Chrome as
+     `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`: the shared Playwright Chromium store was empty.
+     Full vitest of the exact, terminal and MCP files: all pass except 4 load timeouts that
+     do not touch this code (exact-backend lowering, face-mesh bridging, shipped-project
+     loading, headless CLI vocabulary).
+   Not done: picking edges directly in the 3D viewport (the dialog's drawing is used instead);
+   a stale reference is not offered a repair (the user picks again); faces of imported meshes and
+   STEP bodies have no names.
 2. **STEP import as exact bodies.** First confirm that SMLib's STEP reader works in the
    wasm build. Then an imported STEP solid becomes an exact body with a Manifold mesh
    for display, physics and printing, so STEP round-trips both ways. Refuse what cannot

@@ -21,10 +21,11 @@ async function run(page:Page,command:string,done:RegExp){
  await expect.poll(async()=>(await entries.count())>before&&done.test((await entries.last().textContent())??''),{timeout:120_000}).toBe(true);
  return (await entries.last().textContent())??'';
 }
+const volume=(text:string)=>Number(/volume ([\d.]+) mm³/.exec(text)?.[1]);
 const press=async(target:Locator,touch:boolean)=>touch?target.tap():target.click();
 
 test('tap two edges, chamfer them exactly, and keep them through an upstream edit',async({page},info)=>{
- test.setTimeout(300_000);
+ test.setTimeout(900_000);
  const touch=!!info.project.use.hasTouch;
  const session=createCadSession();
  session.add({kind:'box',size:[20,30,10]},{name:'Block',transform:{position:[0,0,5],rotation:[0,0,0],scale:[1,1,1]}});
@@ -63,7 +64,7 @@ test('tap two edges, chamfer them exactly, and keep them through an upstream edi
  await ready();
  await expect(page.getByTestId('object-name').filter({hasText:'Chamfer of Block'})).toBeVisible();
  // Two parallel 30 mm edges bevelled by 2: 6000 − 2 · ½ · 2² · 30.
- expect(await run(page,'measure exact "Chamfer of Block"',/volume/)).toMatch(/volume 5880 mm³/);
+ expect(volume(await run(page,'measure exact "Chamfer of Block"',/volume/))).toBeCloseTo(5880,6);
 
  // Upstream edit: make the block taller. The stable references resolve on the new B-rep.
  const input=page.getByRole('button',{name:'Block',exact:true});
@@ -74,7 +75,7 @@ test('tap two edges, chamfer them exactly, and keep them through an upstream edi
  const {region}=await terminal(page),actions=region.locator('.terminal-entry');
  await expect(actions.filter({hasText:'Recompute exact features'})).toHaveCount(1,{timeout:120_000});
  await ready();
- expect(await run(page,'measure exact all',/volume/)).toMatch(/volume 8280 mm³/);
+ expect(volume(await run(page,'measure exact all',/volume/))).toBeCloseTo(8280,6);
 
  // The terminal lists the edges the same way, and the dialog of the feature shows the choice.
  expect(await run(page,'edges "Chamfer of Block"',/edges/)).toMatch(/Chamfer of Block \(.+\): \d+ edges/);
