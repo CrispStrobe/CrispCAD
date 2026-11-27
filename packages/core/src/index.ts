@@ -22,9 +22,9 @@ export * from './sketch-dxf-width.js';
 export * from './templates.js';
 export * from './code.js';
 export * from './code-revision.js';
-export {smoothLoftCurves,smoothLoftRing,smoothLoftVolume,smoothLoftSupport,SMOOTH_LOFT_TOLERANCE,twistedLoftQuad} from './code-loft.js';
+export {smoothLoftCurves,smoothLoftRing,smoothLoftVolume,smoothLoftSupport,SMOOTH_LOFT_TOLERANCE,twistedLoftQuad,closestLoftOrders} from './code-loft.js';
 export {shapeBoundsBySide} from './kcad-bounds.js';
-export type {SmoothLoftCurves} from './code-loft.js';
+export type {SmoothLoftCurves,LoftPairing,LoftSectionOrder} from './code-loft.js';
 
 export * from "./i18n.js";
 

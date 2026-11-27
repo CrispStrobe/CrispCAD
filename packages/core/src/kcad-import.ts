@@ -204,7 +204,9 @@ export function importKernelCAD(source:string,overrides:Record<string,number|str
       // Planes: XY only, one per section (or one per added section, with the base at z=0).
       let origins=sections.map((_,i)=>[0,0,i*spacing]);if(o.planes!==undefined){const planes=list(o.planes).map(p=>{if(!plain(p)||p.plane!=='XY'||Object.keys(p).some(k=>!['plane','origin'].includes(k)))return unsupported('loft plane other than XY');return p.origin===undefined?[0,0,0]:vector(p.origin);});if(planes.length===sections.length)origins=planes;else if(planes.length===sections.length-1)origins=[[0,0,0],...planes];else return unsupported('loft plane count');}
       // kernelCAD lofts are smooth unless ruled: true; through two sections both are the ruled loft.
-      return shape(`${o.ruled!==true&&sections.length>2?'smoothLoft':'loft'}([${(sections as Sketch[]).map((s,i)=>`[${s.contours[0].map(p=>vec([p[0]+origins[i][0],p[1]+origins[i][1],origins[i][2]])).join(', ')}]`).join(', ')}])`);}
+      // Its loft (OpenCASCADE's ThruSections) re-starts each section at the vertex and direction
+      // closest to the previous one: CAD Script's pairing "closest" (document version 46).
+      return shape(`${o.ruled!==true&&sections.length>2?'smoothLoft':'loft'}([${(sections as Sketch[]).map((s,i)=>`[${s.contours[0].map(p=>vec([p[0]+origins[i][0],p[1]+origins[i][1],origins[i][2]])).join(', ')}]`).join(', ')}], {pairing: "closest"})`);}
     }
     return unsupported(path.replace('Sketch.','sketch.'));
    }

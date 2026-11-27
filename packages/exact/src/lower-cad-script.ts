@@ -253,8 +253,8 @@ export function lowerCodeShape(k: ExactKernel, shape: CodeShape): ExactSolid | n
       return profile && revolveProfile(k, profile, shape.angle);
     }
     case 'polyhedron': {
-      if (shape.smooth) return smoothLoft(k, shape.smooth);
-      if (shape.ruled) return ruledLoft(k, shape.ruled, shape.points, shape.faces);
+      if (shape.smooth) return smoothLoft(k, shape.smooth, shape.closest);
+      if (shape.ruled) return ruledLoft(k, shape.closest ?? shape.ruled, shape.points, shape.faces, shape.closest ? 'closest' : 'authored');
       if (shape.faces.length > MAX_POLYHEDRON_FACES) unsupported(`A polyhedron of ${shape.faces.length} faces exceeds the exact faceted-solid budget (${MAX_POLYHEDRON_FACES} faces).`);
       if (isConvexPolyhedron(shape.points, shape.faces)) { const hull = convexHull(shape.points); return k.polyhedron(hull.points, hull.faces); }
       return k.polyhedron(shape.points, shape.faces);
@@ -315,9 +315,11 @@ export function polyhedronVolume(points: readonly Vec3[], faces: readonly (reado
  * each side is the true ruled (bilinear) surface that the mesh facets. Vertex i of a section is
  * joined to vertex i of the next; the result must have the facets' volume (a fan around each
  * twisted quad's centre has exactly the ruled volume), otherwise the kernel did not keep that
- * correspondence and the solid is refused. Revision-1 lofts never get here: they stay polyhedra. */
-function ruledLoft(k: ExactKernel, sections: readonly (readonly Vec3[])[], points: readonly Vec3[], faces: readonly (readonly number[])[]): ExactSolid {
-  const solid = k.loft(sections.map(ring => ({ profile: k.profile.polygon([ring.map(p => [p[0], p[1]] as Vec2)]), at: [0, 0, ring[0][2]] as Vec3 })), { ruled: true });
+ * correspondence and the solid is refused. Revision-1 lofts never get here: they stay polyhedra.
+ * With `{pairing: "closest"}` the sections are the authored ones and the kernel re-starts them
+ * itself (`pairing: 'closest'`), by the rule the mesh applied (closestLoftOrders). */
+function ruledLoft(k: ExactKernel, sections: readonly (readonly Vec3[])[], points: readonly Vec3[], faces: readonly (readonly number[])[], pairing: 'authored' | 'closest' = 'authored'): ExactSolid {
+  const solid = k.loft(sections.map(ring => ({ profile: k.profile.polygon([ring.map(p => [p[0], p[1]] as Vec2)]), at: [0, 0, ring[0][2]] as Vec3 })), pairing === 'closest' ? { ruled: true, pairing } : { ruled: true });
   const expected = polyhedronVolume(points, faces), actual = k.volume(solid);
   if (!(Math.abs(actual - expected) <= 1e-7 * Math.abs(expected))) {
     solid.dispose();
@@ -330,9 +332,10 @@ function ruledLoft(k: ExactKernel, sections: readonly (readonly Vec3[])[], point
  * sections in authored order, the surface that `smoothLoftCurves` describes and the mesh samples
  * (cubic interpolation, chord-length section parameters; docs/CODE-MODE.md#smooth-lofts). Its
  * volume must equal that surface's exact volume, otherwise the kernel built another surface and
- * the solid is refused. */
-function smoothLoft(k: ExactKernel, sections: NonNullable<Extract<CodeShape, { kind: 'polyhedron' }>['smooth']>): ExactSolid {
-  const solid = k.loft(sections.map(ring => ({ profile: k.profile.polygon([ring.map(p => [p[0], p[1]] as Vec2)]), at: [0, 0, ring[0][2]] as Vec3 })), { ruled: false });
+ * the solid is refused. With `{pairing: "closest"}`, `sections` are the re-started ones the mesh
+ * samples and `closest` the authored ones, which the kernel re-starts itself (`pairing: 'closest'`). */
+function smoothLoft(k: ExactKernel, sections: NonNullable<Extract<CodeShape, { kind: 'polyhedron' }>['smooth']>, closest?: readonly (readonly Vec3[])[]): ExactSolid {
+  const solid = k.loft((closest ?? sections).map(ring => ({ profile: k.profile.polygon([ring.map(p => [p[0], p[1]] as Vec2)]), at: [0, 0, ring[0][2]] as Vec3 })), closest ? { ruled: false, pairing: 'closest' } : { ruled: false });
   const expected = smoothLoftVolume(smoothLoftCurves(sections)), actual = k.volume(solid);
   if (!(Math.abs(actual - expected) <= 1e-7 * Math.abs(expected))) {
     solid.dispose();

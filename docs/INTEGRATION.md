@@ -409,6 +409,14 @@ creates declare the pinned exact kernel; a host that passes its own `session` cr
 [Host-created sessions and kernels](#host-created-sessions-and-kernels), or such records are
 refused with a clear message.
 
+**Document version 46: loft pairing (2026-11-27).** CAD Script's `loft` and `smoothLoft` take
+`{pairing: "closest"}`, which re-starts each section at the vertex and direction closest to the
+previous one, as OpenCASCADE's ThruSections does ([CODE-MODE.md](CODE-MODE.md#loft-pairing)); the
+.kcad.ts converter writes it on every loft. Only documents that hold a program with the option
+are version 46; it changes no program revision and no saved geometry. BrickWright needs no code
+change: syncing the SDK is enough, and until then its vendored SDK refuses version 46 documents
+("unsupported format, version or units").
+
 **Document version 44: exact fillets and chamfers of chosen edges (2026-11-27).** An exact
 feature's `edges` may hold stable edge references
 ([PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md#document-versions)). Only documents with such a feature

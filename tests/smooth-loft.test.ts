@@ -89,7 +89,7 @@ describe('document version 43',{timeout:120_000},()=>{
   const node=doc.nodes[id];expect(node.kind==='code'&&node.program.version).toBe(1);
   expect(()=>validateDocument({...doc,version:42})).toThrow('requires document version 43');
   // What an SDK before smoothLoft does: it knows only versions up to 42.
-  expect(()=>validateDocument({...doc,version:44 as 43})).toThrow('unsupported format, version or units');
+  expect(()=>validateDocument({...doc,version:999 as 43})).toThrow('unsupported format, version or units');
   s.undo();expect(s.state.document.version).toBe(initial);
  });
 

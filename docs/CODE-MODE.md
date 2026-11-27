@@ -321,6 +321,44 @@ holds a program calling `smoothLoft` is **document version 43**; `checkDocument`
 or units") as well as the function itself ("Unknown modeling function"). Documents without
 `smoothLoft` keep their version.
 
+### Loft pairing
+
+`loft([section0, ...], {pairing: "closest"})` and `smoothLoft([...], {pairing: "closest"})`
+(2026-11-27) choose which vertices of neighbouring sections are joined. The default,
+`{pairing: "authored"}` or no option, joins vertex *i* to vertex *i* as written (everything
+above). `"closest"` pairs sections the way OpenCASCADE's `BRepOffsetAPI_ThruSections` does, for
+programs converted from models written against that loft:
+
+- the first section keeps its start and direction;
+- each following section is re-started at the vertex, and run in the direction (forward or
+  backward), that minimizes the sum of distances from its vertices to the previous section's
+  (as re-started), after shifting it in the first section's plane so that the two outlines'
+  centroids (length-weighted, of the outline as a curve) line up;
+- a tie keeps the first candidate in the order start 0 forward, start 0 backward, start 1
+  forward, and so on.
+
+A section drawn the other way round is turned to match, so `"closest"` accepts sections of mixed
+winding that an authored loft refuses; after re-starting, the sections must pass the same checks
+as authored ones (one winding, simple, ordered along Z), otherwise the loft is refused. Side
+surfaces (ruled, triangulated in revision 1, or smooth) are then built exactly as for authored
+sections. The mesh and the exact backend use one rule: the exact backend passes the authored
+sections to the exact kernel's `loft(…, {pairing: 'closest'})`, and the mesh applies the same
+computation (`closestLoftOrders`, operation for operation) before meshing; the exact solid is
+refused unless its volume equals the mesh's ruled volume (1e-7) or, for `smoothLoft`, the
+smooth surface's exact volume. A re-started smooth loft's section curves start and close at the
+last vertex (the kernel builds the re-started sections as wires of lines), so its surface can
+differ slightly from the authored one even where no section moves. CAD Script sections are
+always straight-edged single outlines, so none of the kernel's refusals for curved or
+multi-outline sections apply. Example: a square drawn from its second corner on top of one drawn
+from its first gives a prism with `"closest"`, and a twisted solid as authored.
+
+The [.kcad.ts converter](CODE-CONVERTERS.md#kernelcad-kcadts-models-2026-11-24) writes
+`{pairing: "closest"}` on every loft it converts. A document that holds a program with a pairing
+option (either value) is **document version 46**; `checkDocument` refuses it below 46, and SDKs
+that predate it refuse version 46 ("unsupported format, version or units") as well as the option
+itself. Programs without the option, and documents without such programs, are unchanged and keep
+their version; the option changes no program revision.
+
 For `loft` and `smoothLoft`, the existing source/token/mesh budgets still apply. Additional loft limits are
 128 sections, 256 vertices per section, 4,096 total vertices and 131,072 section
 intersection comparisons. No input is resampled to fit. Native edits retain their

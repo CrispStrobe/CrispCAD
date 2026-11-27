@@ -46,4 +46,8 @@ export const messages: Record<string,string> = {
   "CAD Script smoothLoft requires document version 43": "CAD Script smoothLoft erfordert Dokumentversion 43",
   "Smooth loft folds back along Z; space its sections further apart or reduce their offsets": "Der glatte Loft läuft entlang Z zurück; Querschnitte weiter auseinander legen oder ihre Versätze verringern",
   "Smooth loft surface crosses itself between its sections": "Die Fläche des glatten Lofts schneidet sich zwischen ihren Querschnitten selbst",
+  // Loft pairing option (document version 46).
+  "CAD Script loft pairing requires document version 46": "CAD Script Loft-Zuordnung (pairing) erfordert Dokumentversion 46",
+  "Loft options take only pairing": "Loft-Optionen kennen nur pairing",
+  "Loft pairing must be \"authored\" or \"closest\"": "Loft-Zuordnung (pairing) muss \"authored\" oder \"closest\" sein",
 };

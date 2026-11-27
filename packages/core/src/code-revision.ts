@@ -14,16 +14,18 @@
 //  - a document holding a revision-2 program is document version 42.
 // `smoothLoft` (2026-11-26) is the same in both revisions; a document holding a program that calls
 // it is document version 43, so SDKs that cannot build it refuse the document.
+// The loft pairing option (`loft([...], {pairing: "closest"})`, 2026-11-27) is the same in both
+// revisions too; a document holding a program that writes it is document version 46.
 import {compileCode} from './code.js';
 import type {CodeProgram} from './code.js';
 import type {CadDocument} from './document.js';
 import {sameModelValue} from './model-source.js';
 
-const loftUse=new WeakMap<CodeProgram,{loft:boolean;smooth:boolean}|undefined>();
-function loftCalls(program:CodeProgram):{loft:boolean;smooth:boolean}|undefined{
+const loftUse=new WeakMap<CodeProgram,{loft:boolean;smooth:boolean;pairing:boolean}|undefined>();
+function loftCalls(program:CodeProgram):{loft:boolean;smooth:boolean;pairing:boolean}|undefined{
  if(loftUse.has(program))return loftUse.get(program);
- let uses:{loft:boolean;smooth:boolean}|undefined;
- try{const compiled=compileCode(program);uses={loft:compiled.usesLoft,smooth:compiled.usesSmoothLoft};}catch{uses=undefined;}
+ let uses:{loft:boolean;smooth:boolean;pairing:boolean}|undefined;
+ try{const compiled=compileCode(program);uses={loft:compiled.usesLoft,smooth:compiled.usesSmoothLoft,pairing:compiled.usesLoftPairing};}catch{uses=undefined;}
  if(uses!==undefined&&Object.isFrozen(program))loftUse.set(program,uses);
  return uses;
 }
@@ -31,16 +33,19 @@ function loftCalls(program:CodeProgram):{loft:boolean;smooth:boolean}|undefined{
 export function programUsesLoft(program:CodeProgram):boolean|undefined{return loftCalls(program)?.loft;}
 /** True when the source calls `smoothLoft` anywhere; undefined when the program does not compile. */
 export function programUsesSmoothLoft(program:CodeProgram):boolean|undefined{return loftCalls(program)?.smooth;}
+/** True when a `loft` or `smoothLoft` call takes a pairing option; undefined when the program does not compile. */
+export function programUsesLoftPairing(program:CodeProgram):boolean|undefined{return loftCalls(program)?.pairing;}
 /** A revision-1 program with a loft: its lofts are triangulated along the fixed diagonal. */
 export function hasTriangulatedLofts(program:CodeProgram):boolean{
  return program.version===1&&programUsesLoft(program)===true;
 }
 /** Apply the revision rules to the code nodes a commit changed (`previous` → `draft`). */
 export function normalizeCodeRevisions(previous:CadDocument,draft:CadDocument):void{
- let ruled=false,smooth=false;
+ let ruled=false,smooth=false,pairing=false;
  for(const [id,node] of Object.entries(draft.nodes)){
   if(node.kind!=='code')continue;
   smooth||=programUsesSmoothLoft(node.program)===true;
+  pairing||=programUsesLoftPairing(node.program)===true;
   const before=previous.nodes[id],old=before?.kind==='code'?before.program:undefined;
   if(old&&(old===node.program||sameModelValue(old,node.program))){ruled||=node.program.version===2;continue;}
   let revision=node.program.version;
@@ -51,4 +56,5 @@ export function normalizeCodeRevisions(previous:CadDocument,draft:CadDocument):v
  }
  if(ruled&&draft.version<42)draft.version=42;
  if(smooth&&draft.version<43)draft.version=43;
+ if(pairing&&draft.version<46)draft.version=46;
 }

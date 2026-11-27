@@ -200,6 +200,14 @@ interface ExactBody {
   history archives store `brep` (content kind `brep`) and `display` as shared content objects,
   so moving or renaming the body stores no copy. Documents stay within 16 MiB in all.
 
+**Version 46 (2026-11-27) adds the CAD Script loft pairing option**, `loft([...], {pairing:
+"closest"})` and the same for `smoothLoft` ([CODE-MODE.md](CODE-MODE.md#loft-pairing)): sections
+re-started at the vertex and direction closest to the previous one, as OpenCASCADE's ThruSections
+pairs them. `checkDocument` accepts a program that writes the option only in version 46
+documents; a document reaches 46 only when such a program is added or edited in, and Undo returns
+to the earlier version. The option is the same in both CAD Script revisions, so it changes no
+program revision and no saved geometry. Builds that predate 46 refuse such a document.
+
 ## Graph and errors
 
 `designGraph(doc)` derives a deterministic topological order from canonical

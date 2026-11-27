@@ -19,8 +19,74 @@ export function twistedLoftQuad(a:Vec3,b:Vec3,c:Vec3,d:Vec3):boolean{
  * becomes four triangles fanned around the mean of its corners, which has exactly the ruled
  * surface's volume. Then `ruled` in the result holds the normalized sections, so a backend with
  * true ruled surfaces (the exact kernel) can build them instead of the facets. */
-export function loftPolyhedron(input:readonly (readonly Vec3[])[],ruled=false):{points:Vec3[];faces:number[][];ruled?:Vec3[][]}{
- return loftMesh(checkLoftSections(input).sections,ruled);
+export function loftPolyhedron(input:readonly (readonly Vec3[])[],ruled=false,pairing:LoftPairing='authored'):{points:Vec3[];faces:number[][];ruled?:Vec3[][];closest?:Vec3[][]}{
+ if(pairing==='authored')return loftMesh(checkLoftSections(input).sections,ruled);
+ const {paired,kernel}=closestLoftSections(input),mesh=loftMesh(checkLoftSections(paired).sections,ruled);
+ return mesh.ruled?{...mesh,closest:kernel}:mesh;
+}
+
+/** How a loft joins the vertices of neighbouring sections (docs/CODE-MODE.md#loft-pairing).
+ * `'authored'` (the default): vertex i of a section to vertex i of the next, as written.
+ * `'closest'`: each section re-started at the vertex, and run in the direction, closest to the
+ * section before, as OpenCASCADE's ThruSections pairs them (for converted .kcad.ts models). */
+export type LoftPairing='authored'|'closest';
+/** Ring start and direction of `closest` pairing, for each section (the first keeps its own). */
+export interface LoftSectionOrder {start:number;forward:boolean}
+// The rule of the exact kernel's `loft(…, {pairing: 'closest'})` (@crispcad/exact-kernel,
+// compatible-sections.ts, MIT; reimplemented here operation for operation so that the mesh and the
+// exact backend pair every section identically, ties included). Each section's frame is its
+// outline's length-weighted centroid; a section is compared with the previous one (as re-started)
+// after shifting it in the first section's plane so the centroids line up, and the start and
+// direction with the smallest sum of vertex distances wins (forward before backward, earlier start
+// first; only a strictly smaller sum replaces the best so far).
+const sub3=(a:readonly number[],b:readonly number[]):Vec3=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const add3=(a:readonly number[],b:readonly number[]):Vec3=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const mul3=(a:readonly number[],s:number):Vec3=>[a[0]*s,a[1]*s,a[2]*s];
+const dot3=(a:readonly number[],b:readonly number[])=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const dist3=(a:readonly number[],b:readonly number[])=>{const d=sub3(a,b);return Math.sqrt(dot3(d,d));};
+function sectionFrame(points:readonly Vec3[]):{pos:Vec3;axis:Vec3}{
+ let length=0,c:Vec3=[0,0,0],n:Vec3=[0,0,0];
+ for(let k=0;k<points.length;k++){
+  const a=points[k],b=points[(k+1)%points.length],l=dist3(a,b);
+  length+=l;c=add3(c,mul3(add3(a,b),l/2));
+  n=add3(n,[(a[1]-b[1])*(a[2]+b[2]),(a[2]-b[2])*(a[0]+b[0]),(a[0]-b[0])*(a[1]+b[1])]);
+ }
+ return {pos:mul3(c,1/length),axis:mul3(n,1/Math.sqrt(dot3(n,n)))};
+}
+function reorderRing<T>(points:readonly T[],{start,forward}:LoftSectionOrder):T[]{
+ const m=points.length;return Array.from({length:m},(_,k)=>points[forward?(start+k)%m:((start-k)%m+m)%m]);
+}
+/** Start and direction of every section under `closest` pairing (sections in the given order,
+ * equal vertex counts). */
+export function closestLoftOrders(sections:readonly (readonly Vec3[])[]):LoftSectionOrder[]{
+ const frames=sections.map(sectionFrame),first=frames[0],orders:LoftSectionOrder[]=[{start:0,forward:true}];
+ let previous:readonly Vec3[]=sections[0],previousCentre=first.pos;
+ for(let i=1;i<sections.length;i++){
+  const current=sections[i],m=current.length;
+  let centre=frames[i].pos;const v=sub3(centre,previousCentre);
+  centre=sub3(centre,mul3(first.axis,dot3(v,first.axis)));
+  const offset=sub3(previousCentre,centre);
+  let best=Infinity,start=0,forward=true;
+  const sum=(order:(k:number)=>number)=>{let s=0;for(let k=0;k<m;k++)s+=dist3(previous[k],add3(current[order(k)],offset));return s;};
+  for(let j=0;j<m;j++){
+   const f=sum(k=>(j+k)%m);if(f<best){best=f;start=j;forward=true;}
+   const b=sum(k=>((j-k)%m+m)%m);if(b<best){best=b;start=j;forward=false;}
+  }
+  const order={start,forward};orders.push(order);previous=reorderRing(current,order);previousCentre=centre;
+ }
+ return orders;
+}
+/** Sections of a `closest` loft: `kernel` is what the exact kernel receives (authored order and
+ * vertices, every vertex at its section's first Z, as the backend places the profile), `paired`
+ * the authored sections re-started by its rule. Mixed winding is allowed here: the rule turns a
+ * section round if that pairs it closer, and the re-started sections are then checked like any
+ * authored loft (a loft that still has mixed winding, or crosses, is refused). */
+function closestLoftSections(input:readonly (readonly Vec3[])[]):{paired:Vec3[][];kernel:Vec3[][]}{
+ const count=input[0]?.length??0;
+ if(input.length<2||count<3||input.some(r=>r.length!==count||r.some(p=>p.length!==3||p.some(n=>!Number.isFinite(n)||Math.abs(n)>100000))))throw new Error(t('Loft needs matching planar XY sections ordered along Z'));
+ const kernel=input.map(r=>r.map(p=>[p[0],p[1],r[0][2]] as Vec3));
+ const orders=closestLoftOrders(kernel);
+ return {paired:input.map((r,i)=>reorderRing(r.map(p=>[...p] as Vec3),orders[i])),kernel};
 }
 /** Validate loft sections and normalize them to ascending Z and counter-clockwise winding (the
  * vertex correspondence is kept). `descending` and `clockwise` say what was reversed. */
@@ -172,7 +238,15 @@ export function smoothLoftVolume(curves:SmoothLoftCurves):number{
  * sections (twisted quads fan around their centre). The result is closed and manifold. The
  * surface must rise along Z throughout and every slice must stay a simple polygon; otherwise the
  * loft is refused. `smooth` holds the sections as authored, for backends that build the surface. */
-export function smoothLoftPolyhedron(input:readonly (readonly Vec3[])[]):{points:Vec3[];faces:number[][];ruled?:Vec3[][];smooth?:Vec3[][]}{
+export function smoothLoftPolyhedron(sections:readonly (readonly Vec3[])[],pairing:LoftPairing='authored'):{points:Vec3[];faces:number[][];ruled?:Vec3[][];smooth?:Vec3[][];closest?:Vec3[][]}{
+ if(pairing==='authored')return smoothLoftMesh(sections);
+ // The kernel builds re-started sections as wires of lines from their first vertex, whose curve
+ // starts and closes at the last vertex (not at count - 2 as for a drawn polygon): start each ring
+ // one vertex later, so smoothLoftCurves counts that vertex twice. The surface and mesh are the same.
+ const {paired,kernel}=closestLoftSections(sections),mesh=smoothLoftMesh(paired.map(r=>[...r.slice(1),r[0]]));
+ return mesh.ruled||mesh.smooth?{...mesh,closest:kernel}:mesh;
+}
+function smoothLoftMesh(input:readonly (readonly Vec3[])[]):{points:Vec3[];faces:number[][];ruled?:Vec3[][];smooth?:Vec3[][]}{
  const checked=checkLoftSections(input);
  if(input.length===2)return loftMesh(checked.sections,true);
  const authored=input.map(r=>r.map(p=>[...p] as Vec3)),curves=smoothLoftCurves(authored),count=authored[0].length;
