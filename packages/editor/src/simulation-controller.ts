@@ -15,6 +15,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
  let client:ReturnType<typeof createSimulationClient>|undefined,preparing:Promise<void>|undefined,epoch=0,commandEpoch=0,playing=false,program=false,disposed=false,fixBaseOverride:boolean|undefined,rigidPreview=false,timeScale=1,timer:ReturnType<typeof setTimeout>|undefined,lastTime=0,accumulator=0;
  let externalOwner:symbol|undefined;
  let standby:ReturnType<typeof createSimulationClient>|undefined;
+ let workerRevision:number|undefined;
  let frame=emptyFrame(),error='',replayTime:number|undefined,replayPlaying=false,replayTimer:ReturnType<typeof setTimeout>|undefined;const replay=createSimulationReplay();
  const traces=createMotionTraces(),tickets=new Map<string,number>(),settings=new Map<string,{speed:number;limit:number;enabled:boolean}>(),waits=new Map<string,Travel>();
  const fixBase=()=>fixBaseOverride??simulationSettings(session.state.document).fixBase??!!session.state.document.joints?.length;
@@ -55,15 +56,16 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
    const parked=standby?.available?standby:undefined;
    client=parked??createSimulationClient();
    standby=undefined;
-   // A completed worker keeps the authored document and its geometry when
-   // parked. Document edits discard that worker, so a new revision is sent.
-   const source=parked?{}:{document:session.state.document,geometry:geometry||undefined};
+   // A parked worker can reuse qualified construction for a new revision.
+   // Only an unchanged revision can omit the authored snapshot.
+   const revision=session.state.revision;
+   const source=parked&&workerRevision===revision?{}:{document:session.state.document,geometry:geometry||undefined};
    const first=await client.send({
     op:'start',...source,
     wasmURL:new URL(wasmURL,document.baseURI).href,fixBase:fixBase(),rigidPreview,locale:getLocale(),
    });
    if(expected!==epoch||disposed)throw new Error(t('Simulation was stopped'));
-   frame=first;present(frame);
+   workerRevision=revision;frame=first;present(frame);
   })();
   preparing=pending;notify();
   try{await pending;}catch(e){if(expected===epoch)fail(e);throw e;}finally{if(preparing===pending)preparing=undefined;notify();}
@@ -111,7 +113,16 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
  const hidden=()=>{if(document.hidden){if(program)interruptProgram?.();void stop().catch(fail);}};
  const blur=()=>{if(!program&&!externalOwner){if(preparing)reset();else pause();}};
  document.addEventListener('visibilitychange',hidden);window.addEventListener('blur',blur);
- let revision=session.state.revision,documentId=session.state.document.id;const unsubscribe=session.subscribe(state=>{if(state.revision!==revision){revision=state.revision;if(state.document.id!==documentId){documentId=state.document.id;fixBaseOverride=undefined;}if(program)interruptProgram?.();settings.clear();reset(true);}});
+ let revision=session.state.revision,documentId=session.state.document.id;
+ const unsubscribe=session.subscribe(state=>{
+  if(state.revision===revision)return;
+  revision=state.revision;
+  const changedDocument=state.document.id!==documentId;
+  if(changedDocument){documentId=state.document.id;fixBaseOverride=undefined;}
+  if(program)interruptProgram?.();
+  settings.clear();
+  reset(changedDocument);
+ });
  async function acquireExternalClock(){
   if(externalOwner||playing||program||preparing)throw new Error(t('Stop the current simulation before connecting a circuit'));
   const owner=Symbol('external mechanical clock');externalOwner=owner;

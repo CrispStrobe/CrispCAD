@@ -19,7 +19,7 @@ function sceneLayout(doc:CadDocument):SceneLayout{
 }
 let kernel:Promise<GeometryKernel>|undefined,world:Awaited<ReturnType<typeof createPhysicsWorld>>|undefined,scene:SceneLayout|undefined;
 type PreparedConstruction={key:string;geometry:GeometryResult;collisions:ReadonlyMap<string,PreparedCollision>};
-let lastStart:{layout:SceneLayout;construction:PreparedConstruction;shapes:ReturnType<typeof createPhysicsShapeCache>;physics:ReturnType<typeof preparePhysicsDocument>}|undefined;
+let lastStart:{fixedMates:string;layout:SceneLayout;construction:PreparedConstruction;shapes:ReturnType<typeof createPhysicsShapeCache>;physics:ReturnType<typeof preparePhysicsDocument>}|undefined;
 // Candidate hints and assemblies are outside the visual geometry signature.
 function preparationKey(doc:CadDocument,geometryKey:string|undefined){
  return JSON.stringify([geometryKey,Object.values(doc.nodes).map(node=>{
@@ -88,8 +88,13 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
    const {geometry,collisions}=construction!;
    const physics=authored?preparePhysicsDocument(authored):previousStart!.physics;
    const layout=authored?sceneLayout(authored):previousStart!.layout;
-   const shapes=authored?createPhysicsShapeCache():previousStart!.shapes;
+   const fixedMates=authored?JSON.stringify((authored.joints??[])
+    .filter(joint=>joint.kind==='fixed').map(joint=>[joint.bodyA,joint.bodyB])):previousStart!.fixedMates;
    const previousShapes=previousStart?.shapes;
+   // Native compounds depend on the qualified hulls and ordered rigid
+   // membership. A fresh world still reads the new material and mass settings.
+   const shapes=previousStart&&construction===previousStart.construction&&fixedMates===previousStart.fixedMates
+    ?previousStart.shapes:createPhysicsShapeCache();
    try{
     driven.clear();previewBalls.clear();distances={};
     world=await createPhysicsWorld(physics,geometry,collisions,{mode:command.rigidPreview?'rigid-preview':'mechanism',preferSimd:true,shapeCache:shapes,fixBase:command.fixBase});
@@ -97,7 +102,7 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
     for(const map of [angles,lastAngles,speeds,linearPositions,linearSpeeds])for(const key of Object.keys(map))delete map[key];measure();measureSliders();
    }catch(error){if(shapes!==previousShapes)shapes.clear();throw error;}
    if(shapes!==previousShapes)previousShapes?.clear();
-   lastStart={layout,construction:construction!,shapes,physics};
+   lastStart={fixedMates,layout,construction:construction!,shapes,physics};
   }else{
    if(!world)throw new Error(t('Start simulation first'));
    if(command.op==='step'){if(!Number.isFinite(command.seconds)||command.seconds<=0||command.seconds>.05||Math.abs(command.seconds*200-Math.round(command.seconds*200))>1e-8)throw new Error(t('Invalid simulation step'));for(let i=0;i<Math.round(command.seconds*200);i++){world.step(.005);measure();measureSliders();}}

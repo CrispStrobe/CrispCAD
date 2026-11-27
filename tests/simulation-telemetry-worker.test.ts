@@ -20,7 +20,7 @@ const mock=vi.hoisted(()=>{
   setHingeServo:vi.fn((_id:string,angle:number)=>{state.target=angle;}),coastHingeMotor:vi.fn(),
   step:vi.fn((seconds:number)=>{state.time+=seconds;state.angle+=state.speed*seconds;state.linear+=state.linearSpeed*seconds;state.servo+=(state.target-state.servo)*.25;})
  };
- const create=vi.fn(async()=>{for(const key of Object.keys(state) as (keyof typeof state)[])state[key]=0;return world;});
+ const create=vi.fn(async(..._args:unknown[])=>{for(const key of Object.keys(state) as (keyof typeof state)[])state[key]=0;return world;});
  const prepare=vi.fn(async()=>new Map());
  return {world,create,prepare};
 });
@@ -150,6 +150,28 @@ it('parks the world and reuses qualified contacts only for the same construction
  changed.nodes['body-0'].physics={sourcePreset:'new-collision-construction'} as CadDocument['nodes'][string]['physics'];
  await start(changed);
  expect(mock.prepare).toHaveBeenCalledTimes(2);
+});
+
+it('keeps native compounds across material edits and replaces them when fixed mates change',async()=>{
+ const document=scene(2);
+ await start(document);
+ const cache=()=> (mock.create.mock.lastCall![3] as {shapeCache:{clear:()=>void}}).shapeCache;
+ const first=cache();
+
+ const materialEdit=structuredClone(document);
+ materialEdit.nodes['body-0'].physics={...defaultPartPhysics(),friction:.25};
+ expect((await start(materialEdit)).error).toBeUndefined();
+ expect(mock.create.mock.lastCall![0]).toEqual(materialEdit);
+ expect(cache()).toBe(first);
+ expect(first.clear).not.toHaveBeenCalled();
+ expect(mock.prepare).toHaveBeenCalledOnce();
+
+ const weldEdit=structuredClone(materialEdit);
+ weldEdit.joints!.push({id:'weld',kind:'fixed',bodyA:'body-0',bodyB:'body-1'} as NonNullable<CadDocument['joints']>[number]);
+ expect((await start(weldEdit)).error).toBeUndefined();
+ expect(cache()).not.toBe(first);
+ expect(first.clear).toHaveBeenCalledOnce();
+ expect(mock.prepare).toHaveBeenCalledOnce();
 });
 
 it('requires an initial document before a payload-free start',async()=>{

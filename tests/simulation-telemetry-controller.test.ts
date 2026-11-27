@@ -87,7 +87,9 @@ it.each(['edit','dispose'] as const)('does not publish pending telemetry after %
   const sample=lease.stepTelemetry([]),rejected=expect(sample).rejects.toThrow('Simulation was stopped');
   if(action==='edit')f.session.add({kind:'box',size:[5,5,5]});else f.controller.dispose();
   f.frameChanged.mockClear();pending.resolve(telemetry());await rejected;
-  expect(f.frameChanged).not.toHaveBeenCalled();expect(client.dispose).toHaveBeenCalled();
+  expect(f.frameChanged).not.toHaveBeenCalled();
+  if(action==='dispose')expect(client.dispose).toHaveBeenCalled();
+  else expect(client.send).toHaveBeenLastCalledWith({op:'park'});
  }finally{f.dispose();}
 });
 
@@ -165,7 +167,7 @@ it('inspects the end of a stopped recording and returns from replay to the edita
  }finally{f.dispose();}
 });
 
-it('sends the design and geometry on cold starts and reuses both through Stop',async()=>{
+it('sends the design on cold or edited starts and parks the worker through Stop',async()=>{
  const geometry:GeometryResult={bodies:[],volume:0,triangles:0};
  const changedGeometry={...geometry,sourceKey:'edited'};
  const ready=vi.fn(async()=>geometry).mockResolvedValueOnce(geometry).mockResolvedValueOnce(geometry).mockResolvedValueOnce(changedGeometry);
@@ -184,9 +186,15 @@ it('sends the design and geometry on cold starts and reuses both through Stop',a
   expect(restart).not.toHaveProperty('geometry');
   await f.controller.stop();
   f.session.add({kind:'box',size:[3,3,3]});
-  expect(client.dispose).toHaveBeenCalledOnce();
+  expect(client.dispose).not.toHaveBeenCalled();
   await f.controller.prepare();
   expect(client.send).toHaveBeenLastCalledWith(expect.objectContaining({op:'start',document:f.session.state.document,geometry:changedGeometry}));
   expect(ready).toHaveBeenCalledTimes(3);
+
+  await f.controller.stop();
+  f.session.load({...f.session.state.document,id:'another-project'});
+  expect(client.dispose).toHaveBeenCalledOnce();
+  await f.controller.prepare();
+  expect(client.send).toHaveBeenLastCalledWith(expect.objectContaining({op:'start',document:f.session.state.document}));
  }finally{f.dispose();}
 });
