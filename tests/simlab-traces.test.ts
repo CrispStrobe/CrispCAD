@@ -1,10 +1,38 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {it,expect} from 'vitest';
+import {it,expect,vi} from 'vitest';
+import {BufferAttribute} from 'three';
 import {createCadSession,identityTransform} from '@brickwright/cad-core';
-import {createMotionTraces} from '../packages/editor/src/motion-traces.js';
+import {createMotionTraces,createTraceVertices} from '../packages/editor/src/motion-traces.js';
+import type {TraceSample} from '../packages/editor/src/motion-traces.js';
 it('applies authored transforms before physical deltas and bounds trace samples without model edits',()=>{
  const s=createCadSession(),id=s.add({kind:'box',size:[10,10,10]},{transform:{...identityTransform(),position:[10,20,30],rotation:[0,0,90],scale:[2,1,1]}});s.addTracer(id,[1,0,0]);const before=s.serialize(),traces=createMotionTraces();
  const frame=(time:number)=>({time,poses:[{id,positionMm:[5,0,0],quaternion:[0,0,Math.SQRT1_2,Math.SQRT1_2]}],angles:{},speeds:{},linearPositions:{},linearSpeeds:{}});
  traces.record(s.state.document,frame(0));expect(traces.paths()[0].samples[0].point[0]).toBeCloseTo(-17);expect(traces.paths()[0].samples[0].point[1]).toBeCloseTo(10);expect(traces.paths()[0].samples[0].point[2]).toBeCloseTo(30);
  for(let i=1;i<2200;i++)traces.record(s.state.document,frame(i*.02));expect(traces.paths()[0].samples).toHaveLength(2000);const path=traces.paths()[0];path.samples.length=0;expect(traces.paths()[0].samples).toHaveLength(2000);expect(traces.csv().split('\r\n')).toHaveLength(2002);expect(s.serialize()).toBe(before);traces.clear();expect(traces.paths()).toEqual([]);traces.record(s.state.document,frame(0));expect(traces.paths()[0].samples).toHaveLength(1);
+});
+
+it('writes only appended vertices and reuses uploaded prefixes when seeking',()=>{
+ const buffer=new BufferAttribute(new Float32Array(600*3),3),write=createTraceVertices(buffer);
+ const writes=vi.spyOn(buffer,'setXYZ');
+ const samples:TraceSample[]=Array.from({length:600},(_,i)=>({time:i*.02,point:[i,i+1,-i]}));
+ for(let count=1;count<=samples.length;count++){
+  buffer.clearUpdateRanges();
+  write(samples.slice(0,count));
+  expect(buffer.updateRanges).toEqual([{start:(count-1)*3,count:3}]);
+ }
+ expect(writes).toHaveBeenCalledTimes(600);
+ const version=buffer.version;
+ buffer.clearUpdateRanges();
+ write(samples.slice(0,150));write(samples.slice(0,450));write(samples.slice());
+ expect(buffer.version).toBe(version);
+ expect(buffer.updateRanges).toEqual([]);
+ expect(Array.from(buffer.array)).toEqual(samples.flatMap(sample=>sample.point));
+ // Evicting the oldest sample changes the buffer's origin. A new trail also
+ // starts at the first slot, even if it has a similar length.
+ const shifted=samples.slice(1);
+ write(shifted);
+ expect(buffer.getX(0)).toBe(1);
+ expect(buffer.updateRanges).toEqual([{start:0,count:shifted.length*3}]);
+ write([{time:0,point:[-1,-2,-3]}]);
+ expect(Array.from(buffer.array.slice(0,3))).toEqual([-1,-2,-3]);
 });
