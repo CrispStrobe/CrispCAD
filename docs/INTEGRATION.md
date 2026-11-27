@@ -417,6 +417,18 @@ are version 46; it changes no program revision and no saved geometry. BrickWrigh
 change: syncing the SDK is enough, and until then its vendored SDK refuses version 46 documents
 ("unsupported format, version or units").
 
+**Document version 45: STEP import as exact bodies (2026-11-27).** An imported STEP solid is an
+`exact-body` node that stores its B-rep and the exact kernel's display mesh, so a host opens,
+displays, simulates and prints it with Manifold alone. Only documents holding such a node are
+version 45. BrickWright needs no code change: syncing the SDK is enough, and until then its vendored
+SDK refuses version 45 documents ("unsupported format, version or units").
+
+`npm run verify:brickwright -- /path/to/brickwright` round-trips one document of each version from
+41 to 46 through the real BrickWright SB3 writer and loader: byte for byte, parsed again with this
+SDK. The version 44 case fillets two chosen edges and lists the loaded fillet's edges on the
+kernel; the version 45 case imports a STEP export of a 20 × 30 × 40 mm box and evaluates the
+loaded document with Manifold only (24,000 mm³).
+
 **Document version 44: exact fillets and chamfers of chosen edges (2026-11-27).** An exact
 feature's `edges` may hold stable edge references
 ([PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md#document-versions)). Only documents with such a feature
