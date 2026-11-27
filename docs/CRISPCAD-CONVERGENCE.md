@@ -164,7 +164,8 @@ Remaining work for this phase:
 - ~~product entry (iPad WebKit measurements, the geometry worker, cancellation)~~:
   **done 2026-11-25**, see [Phase 3](#phase-3-one-command-vocabulary) steps 1–2;
 - the importer's torus gap;
-- ~~faster meshing of faces with many holes~~: **done 2026-11-26**. Exact features' display
+- ~~faster meshing of faces with many holes~~: **done 2026-11-26** (rounded and bevelled rims:
+  [Phase 5.3](#phase-5-the-exact-kernel-as-a-modeling-path), 2026-11-27). Exact features' display
   meshes are the exact kernel's tessellation, so it mattered after all. SMLib's mesher is
   superlinear in the loops of one planar face (0.85 s CPU for one face with 51 loops, 6.9 s with
   201). A body with a planar face of 8 or more loops is now meshed face by face
@@ -339,10 +340,18 @@ Product entry additionally needs:
 
 ### Phase 2b: move the exact kernel into the lab as a package. **Done 2026-11-25**
 
-Release: [`exact-kernel-v0.1.9`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.9)
-of the kernel lab, tarball `crispcad-exact-kernel-0.1.9.tgz`, SHA-256
-`ad1e6064eca59694d27b86770a1a92c850f269753627b4a629ce0ecf06faf710`, integrity
-`sha512-7T0SxdRafoPiYMYgqeirfbxuqwzSKTakl2/Uh/5s5K/zMJ3YEKj0TJ+j/iOPa015z7XK/MP2QP65FlB8iD2vJw==`.
+Release: [`exact-kernel-v0.1.10`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.10)
+of the kernel lab, tarball `crispcad-exact-kernel-0.1.10.tgz`, SHA-256
+`ffe86ae0099d544c38a1eb3ba9660f4b803b68a84d186f9f2fe1973aa43f9b7d`, integrity
+`sha512-zLTHIvWIE7+Z2PJemxQM+FJqtcN6BES6Yo4eMr3MrEDu8SgtVvmgdgSF7mhOU2Zxohg6nzeoWVieCt89+eKGRg==`.
+
+0.1.10 replaced 0.1.9 (SHA-256 `ad1e6064…faf710`) on 2026-11-27 (lab `develop` 5560590bb). It adds
+`exportStep([{solid, name, color}], {product})`: one product, one solid per body under the body's
+name and colour, read back by `importStepBodies` in order; `exportStep(solid)` is unchanged. CrispCAD
+uses it so STEP export writes body names instead of `part` (see
+[STEP import as exact bodies](#step-import-as-exact-bodies-document-version-45-done-2026-11-27)).
+Built from the smlibwasm source build (all 119 files identical to the pins and to npm), 155 package
+tests. Recorded commands carry kernel 0.1.10; 0.1.9 recordings replay as stale, as designed.
 
 0.1.9 replaced 0.1.7 on 2026-11-27 (lab `develop` 790f2ba93). It adds `topology(solid)`,
 `nameFaces(solid, names)` and `fillet`/`chamfer` with `{edgeIndices}` for
@@ -550,7 +559,8 @@ The lab's own `smlib-native` backend does not use the package yet.
    extruded or revolved become `extrudeProfile`/`revolve` programs, checked by
    rebuilding each one and comparing volume and bounding box. Unused, parametric or
    consumed sketches stay `@replay` text.
-   Still open: parametric profiles and booleans of portable bodies.
+   Parametric profiles and booleans of portable bodies: **done 2026-11-27**, see
+   [Phase 5.5](#phase-5-the-exact-kernel-as-a-modeling-path).
 
 ### Exact features (document version 41). **Done 2026-11-25**
 
@@ -793,7 +803,7 @@ and native volumes at lab `2566debd9` / `e6ff5d3fc`:
 
 ### Status on 2026-11-27
 
-(Since Phase 5.1, CrispCAD pins exact kernel 0.1.9; BrickWright was not synced.) The chain ran on exact kernel 0.1.7: lab `develop` 4bd3ee9c9, CrispCAD 68666ce, BrickWright
+(Since Phase 5.1, CrispCAD pins exact kernel 0.1.9, since the STEP body names 0.1.10; BrickWright was not synced.) The chain ran on exact kernel 0.1.7: lab `develop` 4bd3ee9c9, CrispCAD 68666ce, BrickWright
 fb1f4f93f (pinned to 68666ce). Every BrickWright browser check passes, including the CAD-off
 build. Taken over from kernelCAD so far: the OpenCASCADE-free exact kernel, STEP export, exact
 measures, whole-body/face fillet, chamfer and shell, gears, FDM printability, the 27-part
@@ -863,8 +873,43 @@ What follows is the plan for the rest.
    wasm build. Then an imported STEP solid becomes an exact body with a Manifold mesh
    for display, physics and printing, so STEP round-trips both ways. Refuse what cannot
    be read with a clear diagnostic.
-3. **Exact display for faces with many holes** (left open in Phase 2): mesh
-   cost must stay bounded on the 200-hole debug page on tablet limits.
+3. **Exact display for faces with many holes. Done 2026-11-27** (CrispCAD only; the kernel did not
+   need a change). After Phase 2's face-wise mesher, a fillet or chamfer of a many-hole plate was
+   still displayed slowly: every rounded rim (SMLib's surface of revolution of an arc), bevelled rim
+   (cone) and the hole wall under it was meshed by SMLib face by face, 20–35 ms each, so the display
+   of 200 rounded rims took 28 s CPU, as long as the fillet itself.
+   - **Faces of revolution are meshed in CrispCAD** (`packages/exact/src/face-mesh.ts`,
+     `revolutionMeshes`): a cylinder, cone, torus or surface of revolution between two full coaxial
+     circles gets rows of points around its axis at its profile's positions (a line, or an arc found
+     through the two circles and the face's middle and checked against seven points of the face),
+     as many rows as the 0.01 mm chordal tolerance and 10° need along an arc. Faces whose circles
+     connect share one point count, so a rim, its wall and the planar faces around them meet point
+     for point; a chain any of whose faces fails a check is left to SMLib. Welding in `displayMesh`
+     no longer builds string keys (0.66 → 0.2 s for 40 000 triangles).
+   - **Measured** (Node, product path, shared M1 at load 20–40; plate with n holes, top edges
+     filleted or chamfered 0.5 mm, or shelled; display CPU before → after, triangles):
+
+     | Holes | Fillet | Chamfer | Shell | Plain |
+     | ---: | --- | --- | --- | --- |
+     | 50 | 7.20 → **1.00 s** (115 564 → 39 964) | 3.33 → **0.38 s** | 0.61 → **0.42 s** | 0.43 → 0.35 s |
+     | 100 | 15.52 → **1.33 s** (230 964 → 79 764) | 5.63 → **0.77 s** | 1.17 → **0.77 s** | 0.78 → 0.76 s |
+     | 200 | 28.13 → **2.04 s** (461 764 → 159 364) | 10.93 → **1.20 s** | 2.08 → **1.25 s** | 1.43 → 1.13 s |
+
+     Display is now linear in the holes and a fraction of the kernel operation it follows (fillet of
+     100 rims 11 s, of 200 rims 37 s). Under the tablet limits (at most 100 rounded rims or 160 shell
+     faces) every display above takes at most about 1.3 s CPU on the M1, against 15.5 s before; the
+     200-hole jobs on the debug page stay refused on tablets by the pre-flight, as designed, and their
+     display (desktop or `exact-limits=none`) is about 2 s instead of 28 s. Display volume error
+     1.9e-3–2.6e-3 (the chordal tolerance's, 36 points on a 2 mm hole instead of SMLib's 64).
+     Bench: `experiments/exact-kernel/display-bench.ts`, raw data and details in
+     [experiments/exact-kernel](../experiments/exact-kernel/README.md#rounded-and-bevelled-rims-phase-53-2026-11-27).
+   - Tests: `tests/exact-face-mesh.test.ts` (a 25-hole fillet and chamfer: closed, counts pinned,
+     every face of revolution meshed here, volume within 5e-3 of the exact one and of SMLib's mesh,
+     every rounded-rim point on the exact rim to 1e-6 mm).
+   Not done: the kernel operations themselves (`round_edges`, shell) stay superlinear and are what
+   the tablet limits bound; faces of revolution bounded by anything but full circles (a hole that
+   breaks through an edge) and free-form faces are still SMLib's, face by face; the browser page was
+   not re-measured (the Node numbers are the display step the exact worker runs).
 4. **Close the lab's last 11 catalog gaps. Done** (lab `b24fe9b95`, 2026-11-25; confirmed
    2026-11-27): sweeps along curved rails (3), holes drilled into side faces (2), a multi-loop
    sketch (1), lofts on non-XY planes (1), SMLib extrude errors (4). All 2,402 of 2,402 build on
@@ -886,8 +931,29 @@ What follows is the plan for the rest.
    the 11 converts completely; 8 use features CAD Script does not have (`helix` sweeps, side
    holes, several `moveTo` in one path, a YZ loft, a box over the limits) and stay converter
    failures.
-5. **CAD Script journal export:** parametric profiles and Booleans of portable bodies
-   (still open in Phase 3, step 4).
+5. **CAD Script journal export of parametric profiles and Booleans. Done 2026-11-27**
+   (`packages/core/src/command-journal.ts`, rules in
+   [TERMINAL-WORKSPACE.md](TERMINAL-WORKSPACE.md#journal-export)):
+   - **Parameters** created in the journal (a new design, or new parameters in it) are tracked like
+     bodies; later edits fold in. Rectangles and circles whose values are expressions of them, and
+     extrusion distances, revolution angles and axis offsets, are exported with their expressions;
+     each program begins with `param name: unit = expression;` for every parameter it uses
+     (directly or through another parameter, in creation order), so the exported code object stays
+     parametric (`parameters` overrides change it). Bindings make a parameter edit and every tracked
+     body replay text; a parameter nothing exports stays replay text with its record.
+   - **Booleans** (union, subtract, intersect) of portable bodies nest their inputs' programs as the
+     Manifold evaluator does, then the boolean's transform; hole roles become
+     `subtract(union(solids…), holes…)` (or `union(holes…)`); Booleans of Booleans nest, and
+     separating one gives its inputs back as bodies of their own. A non-portable input or a later
+     non-portable edit (reference, exact feature, a code object operand) makes the Boolean and all its
+     inputs replay text; a hole that no portable Boolean takes stays replay text.
+   - Checked as the sketch export is: every exported program is rebuilt with Manifold and compared
+     with the recorded body in volume (1e-6 relative) and bounding box (1e-4 mm), for primitives,
+     sketch features, parametric profiles on XY/XZ/YZ (extrusions, symmetric ones, revolutions with
+     default and parametric axes) and Booleans (nested, transformed, hole roles, parametric hole
+     cutter). `tests/command-journal.test.ts`: 13 tests (4 new, 2 rewritten for the new rules).
+   Not done: parametric regions, outlines and paths (their polygons are only exported literal),
+   mirrors, patterns, parameter bindings.
 
 #### STEP import as exact bodies (document version 45). **Done 2026-11-27**
 
@@ -955,7 +1021,16 @@ extension, tablet size limit, in German) leave the model unchanged; registry wit
 file reader, MCP preview/commit/refusal and the CLI verb. Browser:
 `tests/browser/step-import-exact.spec.ts` on the `ipad` project.
 
-Left open: STEP export writes the kernel's names (`part`), not body names; assemblies import as
+**Body names in STEP export. Done 2026-11-27** (exact kernel 0.1.10). Export wrote every body as the
+kernel's `part`, so a round trip lost the names. CrispCAD now passes each body's solid with its name
+and colour to the kernel's new `exportStep([{solid, name, color}], {product})`: one product (the
+document title when there are several bodies, else the body's name) with one named, coloured solid
+per body. The touching-bodies check is unchanged. Import reads the names and colours back, so
+export → import → export keeps them (`tests/step-import-exact.test.ts`). Stored exact bodies keep
+their B-rep exactly as before (`storedBody` still writes the single-solid form, `part`), so saved
+geometry does not change.
+
+Left open: assemblies import as
 separate bodies without their product structure; files with surfaces only (no solid) are refused,
 not imported as reference surfaces (the mesh importer does that); faces of many holes in imported
 bodies use the same display path as exact features.

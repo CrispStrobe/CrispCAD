@@ -11,8 +11,8 @@ scorecard as the gate.
 [Product path](#product-path-2026-11-25)). This directory remains the qualification suite. The
 kernel is the CrispCAD kernel lab's
 [`@crispcad/exact-kernel`](https://github.com/CrispStrobe/crispcad-kernel-lab/tree/ccr-f42f1bfe-3ekdio/packages/exact-kernel)
-0.1.9 (MIT AND Apache-2.0), installed from the tarball of the lab release
-[`exact-kernel-v0.1.9`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.9)
+0.1.10 (MIT AND Apache-2.0), installed from the tarball of the lab release
+[`exact-kernel-v0.1.10`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.10)
 and pinned by URL and lockfile integrity (Phase 2b of
 [CRISPCAD-CONVERGENCE.md](../../docs/CRISPCAD-CONVERGENCE.md#phase-2b-move-the-exact-kernel-into-the-lab-as-a-package)).
 Since 2026-11-25 it is a dependency of `packages/exact` (same URL and integrity), and this

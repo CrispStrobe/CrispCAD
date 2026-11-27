@@ -108,6 +108,11 @@ function reachable(doc:CadDocument,ids:readonly string[]){
  ids.forEach(visit);return [...seen].map(id=>doc.nodes[id]);
 }
 
+/** `#rrggbb` as [r, g, b] from 0 to 1. */
+const rgb=(color:string):[number,number,number]=>[1,3,5].map(i=>parseInt(color.slice(i,i+2),16)/255) as [number,number,number];
+/** A document title the kernel accepts as a STEP product name (it refuses control characters). */
+const stepName=(text:string)=>text.length>0&&text.length<=1000&&![...text].some(c=>c.charCodeAt(0)<32||c.charCodeAt(0)===127);
+
 export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(kernel as Partial<SmlibKernel>).maxMemoryBytes):ExactBackend{
  const info:ExactKernelInfo=Object.freeze({...exactKernelIdentity,smlib:kernel.version,licence:kernel.licence});
  // Imported bodies' B-reps, read once and kept between requests (outside any request's scope).
@@ -174,11 +179,10 @@ export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(
    const prepared=prepare(input,ids);
    return kernel.scope(()=>{
     const {doc,targets,solids}=lower(prepared,options);
-    let combined:ExactSolid=solids[0];
     if(solids.length>1){
      // One STEP solid per body: a union may only collect bodies that stay apart.
      const expected=solids.reduce((sum,solid)=>sum+kernel.solidCount(solid),0);
-     combined=kernel.union(solids[0],...solids.slice(1));
+     const combined=kernel.union(solids[0],...solids.slice(1));
      if(kernel.solidCount(combined)!==expected){
       for(let i=0;i<solids.length;i++)for(let j=i+1;j<solids.length;j++){
        if(kernel.solidCount(kernel.union(solids[i],solids[j]))<kernel.solidCount(solids[i])+kernel.solidCount(solids[j]))
@@ -187,7 +191,10 @@ export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(
       throw new ExactKernelError('unsupported',t('Selected bodies touch or overlap, so one STEP file would merge them. Export them separately or combine them first.'));
      }
     }
-    const step=kernel.exportStep(combined),bytes=new TextEncoder().encode(step).byteLength;
+    // Each body is written as its own solid under its name and colour (kernel 0.1.10), so a STEP
+    // round trip keeps them; the product is named after the document when there are several.
+    const step=kernel.exportStep(targets.map((id,i)=>({solid:solids[i],name:doc.nodes[id].name,color:rgb(doc.nodes[id].color)})),targets.length>1&&stepName(doc.title)?{product:doc.title}:{});
+    const bytes=new TextEncoder().encode(step).byteLength;
     if(bytes>MAX_STEP_BYTES)throw new ExactKernelError('unsupported',t('The STEP file exceeds 64 MiB.'));
     return {kernel:info,bodies:targets.map(id=>({id,name:doc.nodes[id].name})),step,bytes};
    });

@@ -72,12 +72,20 @@ describe('round trip: export → import → the same exact bodies',()=>{
    expect(node.origin).toMatchObject({file:'design.step',bytes:encode(step).byteLength,body:i+1,bodies:3});
    expect(node.origin!.sha256).toMatch(/^[0-9a-f]{64}$/);
   }
+  // Body names and colours survive the round trip (kernel 0.1.10; before, every body came back as "part").
+  expect(after.roots.map(id=>after.nodes[id].name)).toEqual(doc.roots.map(id=>doc.nodes[id].name));
+  expect(after.roots.map(id=>after.nodes[id].color)).toEqual(doc.roots.map(id=>doc.nodes[id].color));
+  expect(step).toMatch(new RegExp(`=PRODUCT\\('${doc.title}'`));
+  // A single body: the product carries its name.
+  const pin=doc.roots.find(id=>doc.nodes[id].name==='Pin')!,single=exact.exportStep(doc,[pin]).step;
+  expect(single).toMatch(/=PRODUCT\('Pin'/);expect(single).toMatch(/=MANIFOLD_SOLID_BREP\('Pin'/);
   // Without the exact kernel, Manifold builds the stored display: inside its 0.01 mm chord.
   const shown=manifold.evaluate(after).bodies;
   for(let i=0;i<3;i++)expect(rel(shown[i].volume,before[i].volume),before[i].name).toBeLessThan(2e-3);
   // Exported again, the imported bodies give the same STEP solids back.
   const again=(await imported(exact.exportStep(after).step,'again.step')).session.state.document;
   exact.measure(again).bodies.forEach((b,i)=>expect(rel(b.volume,before[i].volume)).toBeLessThan(1e-9));
+  expect(again.roots.map(id=>again.nodes[id].name)).toEqual(doc.roots.map(id=>doc.nodes[id].name));
  },300_000);
  it('reads files other writers wrote (OpenCASCADE 7.6, two Adafruit bodies, MIT)',async()=>{
   const battery=readFileSync('library/sources/adafruit-electronics/830 Battery Holder 4xAA.step');
@@ -101,9 +109,9 @@ describe('exact work on an imported body',()=>{
  it('fillets, chamfers and shells it exactly (closed forms at 1e-8)',async()=>{
   const r=2,[x,y,z]=[A-2*r,B-2*r,C-2*r];
   const cases:[string,number][]=[
-   [`fillet ${r} part`,x*y*z+2*r*(x*y+y*z+x*z)+Math.PI*r*r*(x+y+z)+4/3*Math.PI*r**3],
-   ['chamfer 2 part --face +z',A*B*C-4*(A+B)+4/3*8],
-   ['shell 2 part --open +z',A*B*C-(A-4)*(B-4)*(C-2)],
+   [`fillet ${r} Block`,x*y*z+2*r*(x*y+y*z+x*z)+Math.PI*r*r*(x+y+z)+4/3*Math.PI*r**3],
+   ['chamfer 2 Block --face +z',A*B*C-4*(A+B)+4/3*8],
+   ['shell 2 Block --open +z',A*B*C-(A-4)*(B-4)*(C-2)],
   ];
   for(const [command,expected] of cases){
    const session=createCadSession(doc,{kernels}),runner=createCommandRunner(session,{exact:host});
@@ -140,8 +148,9 @@ describe('persistence and old documents',()=>{
   const session=createCadSession(loaded,{kernels}),[id]=loaded.roots;
   expect(session.modelSource).toMatch(new RegExp(`exactBody\\("${id}", \\{[\\s\\S]*?\\}, asset\\("${id}"\\)\\)`));
   expect(session.modelSource).not.toMatch(/ISO-10303-21/);
-  expect(session.modelSource).toContain('name: "part"');
-  session.applyModelSource(session.modelSource.replace('name: "part"','name: "Rod renamed"'));
+  // The body keeps its name through export and import (kernel 0.1.10).
+  expect(session.modelSource).toContain('name: "Rod"');
+  session.applyModelSource(session.modelSource.replace('name: "Rod"','name: "Rod renamed"'));
   expect(session.state.document.nodes[id]).toMatchObject({name:'Rod renamed',brep:doc.nodes[id].kind==='exact-body'?doc.nodes[id].brep:undefined});
   const first=await appendPortableRevision(undefined,loaded,'Import STEP');
   const moved=structuredClone(loaded);moved.nodes[id].transform.position=[5,5,5];
@@ -239,7 +248,7 @@ describe('commands: registry, MCP and CLI',()=>{
    const preview=await mcp.call('cad_import_step',{name:'cube.step',base64,expectedRevision:revision,preview:true});
    expect(preview.committed).toBe(false);
    const done=await mcp.call('cad_import_step',{name:'cube.step',base64,expectedRevision:revision});
-   expect(done).toMatchObject({committed:true,objects:[{kind:'exact-body',name:'part'}]});
+   expect(done).toMatchObject({committed:true,objects:[{kind:'exact-body',name:'Cube'}]});
    const measured=await mcp.call('cad_measure_exact',{});
    expect(measured.bodies[0].volume).toBeCloseTo(512,9);
    await expect(mcp.call('cad_import_step',{name:'bad.step',base64:Buffer.from(box('')).toString('base64'),expectedRevision:done.revision})).rejects.toThrow(/holds no solid/);

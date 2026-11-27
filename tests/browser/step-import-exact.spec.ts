@@ -37,7 +37,7 @@ test('import a STEP file as an exact body, work on it exactly, refuse a bad file
  const chooser=page.waitForEvent('filechooser');
  await page.getByRole('button',{name:'Import STEP as exact bodies…',exact:true}).click();
  await (await chooser).setFiles({name:'block.step',mimeType:'model/step',buffer:Buffer.from(step)});
- const body=page.getByTestId('object-name').filter({hasText:'part'});
+ const body=page.getByTestId('object-name').filter({hasText:'Block'});
  await expect(body).toHaveCount(1,{timeout:120_000});
  await ready();
  expect(requests.some(path=>/\/assets\/exact\/smlibwasm-[^/]+\.wasm$/.test(path))).toBe(true);
@@ -45,7 +45,7 @@ test('import a STEP file as an exact body, work on it exactly, refuse a bad file
  expect(await run(page,'measure exact all',/volume/)).toMatch(/volume 6000 mm³/);
 
  // An exact fillet of the imported body (closed form 5,804.696… for r = 2 on every edge).
- expect(await run(page,'fillet 2 part',/Exact fillet|triangles/)).toMatch(/exact volume 5804\.69\d+ mm³/);
+ expect(await run(page,'fillet 2 Block',/Exact fillet|triangles/)).toMatch(/exact volume 5804\.69\d+ mm³/);
  await ready();
  expect(await run(page,'measure exact all',/volume/)).toMatch(/volume 5804\.69\d+ mm³/);
 
@@ -62,7 +62,7 @@ test('import a STEP file as an exact body, work on it exactly, refuse a bad file
  requests.length=0;
  await page.reload();
  await ready();
- await expect(page.getByTestId('object-name').filter({hasText:'Fillet of part'})).toHaveCount(1);
+ await expect(page.getByTestId('object-name').filter({hasText:'Fillet of Block'})).toHaveCount(1);
  await expect(root).not.toHaveAttribute('data-state','error');
  expect(requests.filter(path=>path.includes('/assets/exact/'))).toEqual([]);
 });
