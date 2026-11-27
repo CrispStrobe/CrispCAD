@@ -88,7 +88,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     private var language: String { smoke ? "en" : (UserDefaults.standard.string(forKey:"CADLanguage") ?? (Locale.preferredLanguages.first ?? "en")).lowercased().hasPrefix("de") ? "de" : "en" }
     private func L(_ key:String)->String {
         guard let path=Bundle.main.path(forResource:language,ofType:"lproj"),let bundle=Bundle(path:path) else {return key}
-        return bundle.localizedString(forKey:key,value:key,table:nil)
+        let value=bundle.localizedString(forKey:key,value:key,table:nil)
+        // Items generated from the editor's menu definition carry their German titles with them.
+        if value == key, language == "de", let german=editorMenuGerman[key] {return german}
+        return value
     }
     private var menuTitles: [ObjectIdentifier:String] = [:]
     private func localizeMenu(_ menu:NSMenu) {
@@ -127,17 +130,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         appMenu.addItem(withTitle:"Show All",action:#selector(NSApplication.unhideAllApplications(_:)),keyEquivalent:"");appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Quit CrispCAD", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         func section(_ title:String)->NSMenu {let item=NSMenuItem(title:title,action:nil,keyEquivalent:"");menu.addItem(item);let submenu=NSMenu(title:title);item.submenu=submenu;return submenu}
+        // File, Edit, View and Object come from the editor's menu definition
+        // (EditorMenu.generated.swift); its other sections are submenus.
         let file=section("File")
-        addCommand(file,"New Project","new","n");addCommand(file,"Open Project…","open","o");addCommand(file,"Project Library…","projects","o",[.command,.shift]);file.addItem(.separator())
-        addCommand(file,"Model Library…","model-library");file.addItem(.separator());addCommand(file,"Save Project…","save","s");file.addItem(.separator());addCommand(file,"Import STL or STEP…","import","i");addCommand(file,"Export…","export","e",[.command,.shift]);addCommand(file,"Check Printability…","printability");addCommand(file,"Check for Manufacturing…","manufacturing")
-        let edit=section("Edit")
-        addCommand(edit,"Undo","undo","z");addCommand(edit,"Redo","redo","z",[.command,.shift]);edit.addItem(.separator())
-        addCommand(edit,"Cut","cut","x");addCommand(edit,"Copy","copy","c");addCommand(edit,"Paste","paste","v");addCommand(edit,"Duplicate","duplicate","d");addCommand(edit,"Delete","delete","\u{7f}",[]);edit.addItem(.separator());addCommand(edit,"Select All","select-all","a");addCommand(edit,"Deselect All","deselect")
-        let view=section("View")
-        addCommand(view,"Fit Model","fit","0");addCommand(view,"Home View","home","0",[.command,.shift]);view.addItem(.separator());addCommand(view,"Top","top","1");addCommand(view,"Front","front","2");addCommand(view,"Right","right","3");addCommand(view,"Back","back");addCommand(view,"Left","left");addCommand(view,"Bottom","bottom");view.addItem(.separator());addCommand(view,"Toggle Orthographic Projection","projection");addCommand(view,"Show / Hide Workplane","workplane");addCommand(view,"On-canvas Parameters","readout");addCommand(view,"Show / Hide Objects","objects");addCommand(view,"Show / Hide Properties","properties");addCommand(view,"Model Source","model-source")
-        let object=section("Object")
-        addCommand(object,"Add Shape…","shapes","a",[.command,.shift]);addCommand(object,"Sketch and Extrude…","sketch");addCommand(object,"Code an Object…","code");object.addItem(.separator())
-        addCommand(object,"Select / Drag","select");addCommand(object,"Move","move");addCommand(object,"Rotate","rotate");addCommand(object,"Scale","scale");addCommand(object,"Drop to Workplane","drop");object.addItem(.separator());addCommand(object,"Union","union");addCommand(object,"Subtract","subtract");addCommand(object,"Intersect","intersect");object.addItem(.separator());addCommand(object,"Model Parameters…","parameters")
+        addSection(file,"file",insert:["open":{self.addCommand(file,"Project Library…","projects","o",[.command,.shift])}])
+        // Every other section of the definition (exact modeling, holes and fasteners, assemblies,
+        // drawings and checks, and any added later) is a File submenu, in definition order.
+        file.addItem(.separator())
+        for key in editorMenuSectionOrder where !["file","edit","view","object","tools"].contains(key) {addSubmenu(file,key)}
+        let edit=section("Edit");addSection(edit,"edit")
+        let view=section("View");addSection(view,"view")
+        let object=section("Object");addSection(object,"object")
+        object.addItem(.separator());addSubmenu(object,"tools")
         let windowItem = NSMenuItem(title:"Window",action:nil,keyEquivalent:""); menu.addItem(windowItem); let windowMenu = NSMenu(title: "Window"); windowItem.submenu = windowMenu
         windowMenu.addItem(withTitle: "Minimize", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
         let help=section("Help");addCommand(help,"Workbench Help","help");NSApp.helpMenu=help
@@ -206,6 +210,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     }
     @objc private func modelUndo(){modelUndoRedo(redo:false)}
     @objc private func modelRedo(){modelUndoRedo(redo:true)}
+    /// macOS titles and key equivalents for commands of the shared definition; others use the
+    /// definition's label and have no shortcut.
+    private let nativeCommands:[String:(title:String,key:String,modifiers:NSEvent.ModifierFlags)]=[
+        "new":("New Project","n",[.command]),"open":("Open Project…","o",[.command]),"save":("Save Project…","s",[.command]),"model-library":("Model Library…","",[]),
+        "import":("Import STL or STEP…","i",[.command]),"export":("Export…","e",[.command,.shift]),"printability":("Check Printability…","",[]),"manufacturing":("Check for Manufacturing…","",[]),
+        "undo":("Undo","z",[.command]),"redo":("Redo","z",[.command,.shift]),"cut":("Cut","x",[.command]),"copy":("Copy","c",[.command]),"paste":("Paste","v",[.command]),
+        "duplicate":("Duplicate","d",[.command]),"delete":("Delete","\u{7f}",[]),"select-all":("Select All","a",[.command]),"deselect":("Deselect All","",[]),
+        "fit":("Fit Model","0",[.command]),"home":("Home View","0",[.command,.shift]),"top":("Top","1",[.command]),"front":("Front","2",[.command]),"right":("Right","3",[.command]),
+        "back":("Back","",[]),"left":("Left","",[]),"bottom":("Bottom","",[]),"projection":("Toggle Orthographic Projection","",[]),"workplane":("Show / Hide Workplane","",[]),
+        "readout":("On-canvas Parameters","",[]),"objects":("Show / Hide Objects","",[]),"properties":("Show / Hide Properties","",[]),"model-source":("Model Source","",[]),
+        "shapes":("Add Shape…","a",[.command,.shift]),"sketch":("Sketch and Extrude…","",[]),"code":("Code an Object…","",[]),"select":("Select / Drag","",[]),
+        "drop":("Drop to Workplane","",[]),"parameters":("Model Parameters…","",[]),
+    ]
+    /// The definition's items of one section, separated by group; `insert` adds native items after a command.
+    private func addSection(_ menu:NSMenu,_ key:String,insert:[String:()->Void]=[:]){
+        var group:Int?
+        for entry in editorMenuEntries where entry.section == key {
+            if let group,group != entry.group {menu.addItem(.separator())}
+            group=entry.group
+            if let native=nativeCommands[entry.command] {addCommand(menu,native.title,entry.command,native.key,native.modifiers)}
+            else {addCommand(menu,entry.label,entry.command)}
+            insert[entry.command]?()
+        }
+    }
+    private func addSubmenu(_ menu:NSMenu,_ key:String){
+        guard editorMenuEntries.contains(where:{$0.section == key}) else {return}
+        let title=editorMenuSectionTitles[key] ?? key
+        let item=NSMenuItem(title:title,action:nil,keyEquivalent:"");menu.addItem(item)
+        let submenu=NSMenu(title:title);item.submenu=submenu;addSection(submenu,key)
+    }
     private func addCommand(_ menu:NSMenu,_ title:String,_ command:String,_ key:String="",_ modifiers:NSEvent.ModifierFlags=[.command]){
         let item=menu.addItem(withTitle:title,action:#selector(performEditorCommand(_:)),keyEquivalent:key);item.target=self;item.representedObject=command;item.keyEquivalentModifierMask=key.isEmpty ? [] : modifiers
     }
@@ -235,7 +269,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         case "printability","manufacturing":return editorState["hasBodies"] == true && editorState["ready"] == true
         case "deselect":return editorState["hasSelection"] == true
         case "paste":return editing || pasteboard.availableType(from:[clipboardType,.string]) != nil
-        default:return true
+        default:
+            // Every other item of the shared definition: the editor's own availability
+            // (editor.menuItems(), published as "menu:<command>"); items the editor does not offer
+            // in this host are hidden.
+            guard editorMenuEntries.contains(where:{$0.command == command}),editorState.keys.contains(where:{$0.hasPrefix("menu:")}) else {return true}
+            let enabled=editorState["menu:"+command]
+            menuItem.isHidden=enabled == nil
+            return enabled ?? false
         }
     }
     func applicationWillTerminate(_ notification: Notification) {
@@ -306,7 +347,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             if let menu=NSApp.mainMenu {localizeMenu(menu)}
             reply(true,nil)
         case "state":
-            if let text=body["data"],text.utf8.count<4096,let data=text.data(using:.utf8),let value=(try? JSONSerialization.jsonObject(with:data)) as? [String:Bool] {editorState=value};reply(true,nil)
+            if let text=body["data"],text.utf8.count<16384,let data=text.data(using:.utf8),let value=(try? JSONSerialization.jsonObject(with:data)) as? [String:Bool] {editorState=value};reply(true,nil)
         case "clipboard-read":
             let text=pasteboard.string(forType:clipboardType) ?? pasteboard.string(forType:.string)
             if let text,text.utf8.count>16*1024*1024 {reply(nil,L("Clipboard selection exceeds 16 MiB"))}else{reply(text as Any?,nil)}
@@ -374,7 +415,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { fail(error.localizedDescription) }
     private func pollSmoke() {
         smokeAttempts += 1
-        if smokeAttempts > 180 { fail("Timed out waiting for native editor/geometry/history"); return }
+        if smokeAttempts > 180 { fail("Timed out waiting for native editor/geometry/history (stage \(smokeStage))"); return }
         let script = """
         (() => {
           const host = document.querySelector('#cad-root');
@@ -391,6 +432,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
           if ((\(smokeStage) < 6 && objects.length !== 1) || (\(smokeStage) < 14 && Number(host.dataset.triangles) !== objects.length * 12)) return 'waiting';
           if (!root.querySelector('#save-state').textContent.includes('Saved · iteration')) return 'waiting';
           if (\(smokeStage) === 1) {
+            // Applying parameters is asynchronous (outline solve): wait for its result.
+            if (window.smokeParametersApplied) {
+              const panel = root.querySelector('.parameters-dialog'), status = panel.querySelector('.parameter-status').textContent;
+              if (status.includes('Applying parameters')) return 'waiting';
+              if (!status.includes('Parameters applied')) return 'parameter failure';
+              panel.close(); return 'parameterized';
+            }
             root.querySelector('button[aria-label="Parameters"]').click();
             const panel = root.querySelector('.parameters-dialog');
             const click = label => Array.from(panel.querySelectorAll('button')).find(b => b.textContent === label).click();
@@ -399,9 +447,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             panel.querySelector('[aria-label="Parameter expression"]').value = '40';
             click('Drive a property');
             panel.querySelector('[aria-label="Driving expression"]').value = 'width';
-            click('Apply parameters');
-            if (!panel.querySelector('.parameter-status').textContent.includes('Parameters applied')) return 'parameter failure';
-            panel.close(); return 'parameterized';
+            click('Apply parameters'); window.smokeParametersApplied = true; return 'waiting';
           }
           const doc = JSON.parse(localStorage.getItem('brickwright-cad:standalone:v1'));
           if ((doc.version !== 2 && doc.version !== 3 && doc.version !== 4) || doc.nodes[doc.roots[0]].size[0] !== 40) return 'parameter failure';
@@ -427,7 +473,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
           if (\(smokeStage) === 13) {const panel=root.querySelector('.code-dialog[open]');if(!panel)return 'waiting';Array.from(panel.querySelectorAll('button')).find(b=>b.textContent==='Create code object').click();return 'code-created';}
           if (\(smokeStage) === 14) {const code=Object.values(doc.nodes).find(n=>n.kind==='code');return objects.length===4 && doc.version===4 && code?.program.language==='brickwright-cad-script' ? 'model-source-command':'waiting';}
           if (\(smokeStage) === 15) {const pane=root.querySelector('.model-source-pane:not([hidden])');return pane?.querySelector('textarea')?.value.includes('cad`') && doc.version===4 ? 'model-library-command':'waiting';}
-          if (\(smokeStage) === 16) {const gallery=root.querySelector('.model-library-dialog[open]');if(!gallery||gallery.querySelectorAll('.model-library-card img').length<149||!root.querySelector('.file-tools')?.hidden)return 'waiting';gallery.close();return 'passed';}
+          if (\(smokeStage) === 16) {const gallery=root.querySelector('.model-library-dialog[open]');const cards=gallery?.querySelectorAll('.model-library-card').length??0;if(!gallery||!cards||gallery.querySelectorAll('.model-library-card img').length<Math.min(36,cards)||!root.querySelector('.file-tools')?.hidden)return 'waiting';gallery.close();return 'passed';}
           if (!Array.from(root.querySelectorAll('#iterations option')).some(option => option.textContent.startsWith('#3 ·'))) return 'waiting';
           if (!document.querySelector('.library-dialog .project-card')) return 'waiting';
           return window.brickwrightDesktop && !!window.webkit.messageHandlers.cadSave && !!window.brickwrightPrepareToClose ? 'passed' : 'bridge missing';
@@ -477,7 +523,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             if result as? String == "parameterized" { self.smokeStage = 2 }
             if result as? String == "reload" { self.smokeStage = 3; self.webView.reload(); return }
             if result as? String == "history" { self.smokeStage = 4 }
-            let itemFor:(String)->NSMenuItem?={command in NSApp.mainMenu?.items.compactMap{$0.submenu}.flatMap{$0.items}.first{$0.representedObject as? String == command}}
+            func items(_ menu:NSMenu?)->[NSMenuItem]{(menu?.items ?? []).flatMap{[$0]+items($0.submenu)}}
+            let itemFor:(String)->NSMenuItem?={command in items(NSApp.mainMenu).first{$0.representedObject as? String == command}}
             @MainActor func perform(_ command:String){guard let item=itemFor(command),item.action == #selector(AppDelegate.performEditorCommand(_:)) else{self.fail("Native command missing: \(command)");return};self.performEditorCommand(item)}
             if result as? String == "commands" {
                 for command in ["open","save","import","export","cut","copy","paste","duplicate","delete","fit","parameters","sketch","readout","code"]{if itemFor(command)==nil{self.fail("Native command missing: \(command)");return}}

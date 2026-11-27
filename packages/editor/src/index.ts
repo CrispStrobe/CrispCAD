@@ -61,8 +61,8 @@ import {mountMirrorPanel} from './mirror-panel.js';
 import {mountPatternPanel} from './pattern-panel.js';
 import {mountExactFeaturePanel} from './exact-feature-panel.js';
 import {mountExactMeasurePanel} from './exact-measure-panel.js';
-import {editorMenu,resolveEditorMenu} from './editor-menu.js';
-import type {EditorMenuItem} from './editor-menu.js';
+import {editorToolbarMenu,resolveEditorMenu} from './editor-menu.js';
+import type {EditorMenuItem,EditorToolbarMenu} from './editor-menu.js';
 import {mountExactActivity} from './exact-activity.js';
 import type {ExactLimits} from '@brickwright/cad-exact/limits';
 import {mountCommandPalette} from './command-palette.js';
@@ -488,25 +488,27 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   for (const n of [0, 0.1, 1, 5, 10]) { const o = el('option', '', n === 0 ? t('Off') : `${n} mm`); o.value = String(n); gridSelect.append(o); } gridSelect.value = '1';
   gridSelect.addEventListener('change', () => { grid = Number(gridSelect.value); viewport.setGrid(grid); }); gridLabel.append(gridSelect); const fineLabel=el('label','numbers-toggle',t('Fine')),fineToggle=el('input');fineToggle.type='checkbox';fineToggle.setAttribute('aria-label',t('Fine adjustments'));fineLabel.title=t('Fine adjustments: Shift for move/rotate; Ctrl/⌘ for resize. Shift resizes proportionally; Alt resizes about the center.');fineToggle.onchange=()=>viewport.setFine(fineToggle.checked);fineLabel.prepend(fineToggle);planeBar.append(numbersLabel,fineLabel,gridLabel); viewHost.append(planeBar);
   const undoButton = button('Undo', () => session.undo(),toolbar,'compact-icon'); const redoButton = button('Redo', () => session.redo(),toolbar,'compact-icon');
-  toolGroup('Edit');
-  const mirrorButton=button('Mirror',openMirror);
-  mirrorButton.title=t('Mirror a selected body across a plane');
-  const patternButton=button('Pattern',openPattern);
-  patternButton.title=t('Repeat a selected body in a line or circle');
-  const splitButton=button('Split',openSplit);
-  splitButton.title=t('Cut a selected body into two at a plane');
-  const exactFeatureButton=button('Fillet, chamfer, shell',()=>openExactFeature());
-  exactFeatureButton.title=t('Round, bevel or hollow a selected body exactly with the B-rep kernel');
-  // The rest of the menu's exact items (editor-menu.ts), so this toolbar and a host's menus match.
+  // The toolbar's File and Edit dropdowns are rendered from the editor's menu (editor-menu.ts), so
+  // they list what a host's menus list; each item runs executeCommand.
   const menuButtons=new Map<CadCommand,HTMLButtonElement>();
-  const menuButton=(command:CadCommand,title?:string)=>{const item=editorMenu.find(entry=>entry.command===command)!;const b=button(item.label,()=>executeCommand(command));if(title)b.title=t(title);menuButtons.set(command,b);return b;};
-  menuButton('exact-edges');
-  menuButton('measure-exact','Volume, area, bounds and centroid from the exact B-rep kernel (selected bodies, or all)');
-  menuButton('recompute-exact');
-  // Assemblies (Phase 6.4): groups, exploded views, configurations, mechanism check, planetary preset.
-  menuButton('assembly');menuButton('explode-view');menuButton('configurations');menuButton('mechanism-check');menuButton('planetary-gear');
-  const cutButton=button('Cut',()=>copySelection(true));const copyButton=button('Copy',()=>copySelection());const pasteButton=button('Paste',()=>pasteSelection());
-  const duplicateButton = button('Duplicate', () => executeCommand('duplicate')); const deleteButton = button('Delete', () => executeCommand('delete'));
+  const menuOmit=options.presetProjects?new Set<CadCommand>():new Set<CadCommand>(['robot-projects']);
+  function renderToolbarMenu(menu:EditorToolbarMenu){
+    let last:string|undefined;
+    for(const item of editorToolbarMenu(menu,menuOmit)){
+      const group=`${item.section}:${item.group}`;
+      if(last!==undefined&&group!==last){const rule=el('div','menu-separator');rule.setAttribute('role','separator');toolParent.append(rule);}
+      last=group;
+      const b=button(item.short??item.label,()=>executeCommand(item.command));
+      if(item.hint)b.title=t(item.hint);
+      b.dataset.command=item.command;
+      menuButtons.set(item.command,b);
+    }
+  }
+  const menuButton=(command:CadCommand)=>menuButtons.get(command)!;
+  toolGroup('Edit');
+  renderToolbarMenu('edit');
+  const mirrorButton=menuButton('mirror'),patternButton=menuButton('pattern'),splitButton=menuButton('split-body'),exactFeatureButton=menuButton('exact-feature');
+  const cutButton=menuButton('cut'),copyButton=menuButton('copy'),duplicateButton=menuButton('duplicate'),deleteButton=menuButton('delete');
   const contextActions=el('div','context-actions');contextActions.setAttribute('role','group');contextActions.setAttribute('aria-label',t('Selection actions'));toolbar.append(contextActions);for(const [label,command] of [['Copy','copy'],['Duplicate','duplicate'],['Delete','delete']] as const)button(label,()=>executeCommand(command),contextActions,'compact-icon');
   const fitSelectionActions=()=>{const other=[...toolbar.children].filter(child=>child!==contextActions).reduce((sum,child)=>sum+(child as HTMLElement).getBoundingClientRect().width,0);const gap=parseFloat(getComputedStyle(toolbar).gap)||0;contextActions.dataset.room=String(toolbar.clientWidth>=other+112+gap*toolbar.children.length);};
   const updateToolbarLayout=()=>{
@@ -521,18 +523,18 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const toolbarResize=new ResizeObserver(updateToolbarLayout);toolbarResize.observe(toolbar);
   if(options.toolbarContent)toolbarResize.observe(options.toolbarContent);
   toolGroup('File', 'file-tools');
-  button('Model library',()=>openModelLibrary());
+  renderToolbarMenu('file');
+  // Host-specific File items after the shared ones.
+  {const rule=el('div','menu-separator');rule.setAttribute('role','separator');toolParent.append(rule);}
   if(options.embedded)button('Model library',()=>openModelLibrary(),toolbar,'compact-icon').style.order='-1';
   button('Model source',()=>modelSourcePanel.toggle());
   if(projectsControl){projectsControl.textContent=t('Projects');toolParent.append(projectsControl);}
   if(iterationControl)button('History…',()=>{tree.classList.remove('closed');tree.classList.add('open');partsToggle.setAttribute('aria-pressed','true');iterationControl.focus();});
   async function newProject(){if(!options.requestNew||await options.requestNew())session.load(createDocument());}
-  button('New',newProject);
   const input = el('input'); input.type = 'file'; input.setAttribute('aria-label',t('Open CAD project or geometry')); input.hidden = true; shell.append(input);
   async function chooseOpen(){if(options.requestOpen){const file=await options.requestOpen();if(file)await openFile(file.name,file.bytes);}else input.click();}
-  button('Open',chooseOpen);
   input.accept='.bcad,.bcadhistory,.json,.stl,.step,.stp';input.addEventListener('change', () => { const file = input.files?.[0]; input.value = ''; if (file) run(async () => { if (file.size > 64 * 1024 * 1024) throw new Error(t('Project exceeds 64 MiB')); await openFile(file.name, new Uint8Array(await file.arrayBuffer())); }); });
-  const save = button('Save project', () => deliver('bcad'), toolParent, 'primary'); save.disabled = !options.onExport&&!options.saveProject;
+  const save = menuButton('save'); save.classList.add('primary'); const canSave = !!options.onExport||!!options.saveProject; save.disabled = !canSave;
   const projectActions=el('div','project-actions');projectActions.setAttribute('role','group');projectActions.setAttribute('aria-label',t('Project actions'));
   projectActions.hidden=options.embedded===true;
   const quickAction=(icon:string,label:string,action:()=>unknown)=>{const control=button(icon,action,projectActions,'project-action');control.setAttribute('aria-label',t(label));control.title=t(label);return control;};
@@ -542,7 +544,6 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const importInput=el('input');importInput.type='file';importInput.accept='.stl,.step,.stp';importInput.hidden=true;importInput.setAttribute('aria-label',t('Import STL or STEP geometry'));shell.append(importInput);
   importInput.onchange=()=>{const file=importInput.files?.[0];importInput.value='';if(file)run(async()=>{if(file.size>16*1024*1024)throw new Error(t('Geometry file exceeds 16 MiB'));await importFile(file.name,new Uint8Array(await file.arrayBuffer()));});};
   async function chooseImport(){if(options.requestImport){const file=await options.requestImport();if(file)await importFile(file.name,file.bytes);}else importInput.click();}
-  button('Import STL or STEP…',chooseImport);
   // STEP as exact bodies: the B-rep is kept (exact export, measures, fillet, chamfer, shell), read
   // by the lazily loaded exact kernel. The importer above keeps STEP as reference surface meshes.
   const exactStepInput=el('input');exactStepInput.type='file';exactStepInput.accept='.step,.stp';exactStepInput.hidden=true;exactStepInput.setAttribute('aria-label',t('Import STEP as exact bodies'));shell.append(exactStepInput);
@@ -564,7 +565,6 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     message.textContent=done.output.split('\n')[0];
     await afterExactImport(done.ids);
   }
-  button('Import STEP as exact bodies…',importExactStep);
   async function exportStep(){if(exportButton.disabled)throw new Error(t('Build a solid before exporting'));showExport();exportFormat.value='step';exportFormat.dispatchEvent(new Event('change'));}
   const exportDialog=el('dialog','export-dialog');exportDialog.setAttribute('aria-label',t('Export model'));exportDialog.append(el('h2','',t('Export model')));
   const exportFormat=el('select');exportFormat.setAttribute('aria-label',t('Export format'));for(const [value,label] of [['stl','STL · triangle mesh'],['3mf','3MF · packaged mesh'],['step','STEP · exact B-rep (loads the exact kernel)']]){const option=el('option','',t(label));option.value=value;exportFormat.append(option);}exportDialog.append(exportFormat);
@@ -588,18 +588,16 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       if(session.state.revision!==exportDialogRevision)throw new Error(t('The model changed while exporting. Export again from the current model.'));
     });exportDialog.close();}finally{exporting=false;refreshButtons();}
   },exportActions,'primary');exportDialog.append(exportActions);exportDialog.addEventListener('keydown',event=>event.stopPropagation());shell.append(exportDialog);
-  const exportButton=button('Export…',showExport);exportButton.disabled=true;
-  menuButton('export-step');menuButton('drawing');menuButton('drawing-exact');
+  const exportButton=menuButton('export');exportButton.disabled=true;
   const printabilityPanel=mountPrintabilityPanel(shell,()=>session.state.document,(doc,settings)=>client.checkPrintability(doc,settings));
-  const printabilityButton=button('Check printability…',()=>printabilityPanel.open());printabilityButton.disabled=true;
+  const printabilityButton=menuButton('printability');printabilityButton.disabled=true;
   const assemblyPanel=mountAssemblyPanel(shell,viewHost,session,{bounds:doc=>assemblyHost.bounds(doc),mechanism:(doc,settings,signal)=>assemblyHost.mechanism(doc,settings,signal),present:motions=>viewport.setPresentation(motions)});
   const manufacturingPanel=mountManufacturingPanel(shell,viewHost,{document:()=>session.state.document,selection:()=>session.state.selection.filter(id=>session.state.document.roots.includes(id)),check:(doc,request,signal)=>manufacturingHost.check(doc,request,signal),show:mark=>viewport.showFinding(mark)});
-  const manufacturingButton=button('Check for manufacturing…',()=>manufacturingPanel.open());manufacturingButton.disabled=true;
+  const manufacturingButton=menuButton('manufacturing');manufacturingButton.disabled=true;
   const selectedRoots=()=>session.state.selection.filter(id=>session.state.document.roots.includes(id));
   const materialsPanel=mountMaterialsPanel(shell,{document:()=>session.state.document,selection:selectedRoots,inspect:(doc,request,signal)=>materialsHost.inspect(doc,request,signal),select:ids=>session.select(ids)});
   const blendsPanel=mountSurfaceBlendPanel(shell,viewHost,{document:()=>session.state.document,selection:selectedRoots,inspect:async(doc,request,signal)=>{blendsHost.marks=true;try{return await blendsHost.inspect(doc,request,signal);}finally{blendsHost.marks=false;}},show:mark=>viewport.showFinding(mark)});
   const stepEvidencePanel=mountStepEvidencePanel(shell,{document:()=>session.state.document,selection:selectedRoots,evidence:(request,signal)=>stepEvidence(request,signal),chooseFile:()=>pickExactStep()});
-  menuButton('materials');menuButton('surface-blends');menuButton('step-evidence');
   const viewActions = el('div', 'view-actions'); viewActions.setAttribute('role', 'toolbar'); viewActions.setAttribute('aria-label', 'View controls'); viewHost.append(viewActions);
   button('Home', () => viewport.frame('iso'), viewActions); button('Fit', () => viewport.frame(undefined,true), viewActions);
   button('Zoom in', () => viewport.zoom(1.25), viewActions); button('Zoom out', () => viewport.zoom(0.8), viewActions);
@@ -878,6 +876,9 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   }
   function refreshButtons() {
     const state = session.state; const roots = state.selection.filter(id => state.document.roots.includes(id));
+    // The menu's availability first; the toolbar's own rules below are as strict or stricter.
+    for(const item of menuItems()){const b=menuButtons.get(item.command);if(b)b.disabled=!item.enabled;}
+    save.disabled=!canSave;
     undoButton.disabled = !state.canUndo; redoButton.disabled = !state.canRedo; duplicateButton.disabled = deleteButton.disabled = !roots.length;
     cutButton.disabled=copyButton.disabled=!roots.length;
     dropButton.disabled = !roots.length || running || builtRevision !== state.revision || !built;
@@ -888,7 +889,6 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     exportButton.disabled = exportRun.disabled = exporting || !options.onExport || running || !built || !built.triangles || builtRevision !== state.revision;
     palette.refresh();
     printabilityButton.disabled = running || !built || !built.triangles || builtRevision !== state.revision;
-    for(const item of menuItems()){const b=menuButtons.get(item.command);if(b)b.disabled=!item.enabled;}
     manufacturingButton.disabled = printabilityButton.disabled;
     run(()=>options.onCommandStateChange?.(commandState()));
   }
@@ -1114,8 +1114,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;
-export {editorMenu,editorMenuSections,resolveEditorMenu} from './editor-menu.js';
-export type {EditorMenuEntry,EditorMenuItem,EditorMenuRequirement,EditorMenuSection} from './editor-menu.js';
+export {editorMenu,editorMenuSections,resolveEditorMenu,editorToolbarMenu,editorToolbarMenuOf} from './editor-menu.js';
+export type {EditorMenuEntry,EditorMenuItem,EditorMenuRequirement,EditorMenuSection,EditorToolbarMenu} from './editor-menu.js';
 export { createCadSession } from '@brickwright/cad-core';
 export {createEditorSession,editorKernels,exactKernelIdentity,providesKernel} from './kernels.js';
 // Limits for exact jobs (no kernel code: importing these loads nothing under assets/exact/).

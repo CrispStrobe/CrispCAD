@@ -49,10 +49,28 @@ the system browser. Build assets and signing output are ignored by Git.
 
 ## Native menus and shortcuts
 
+The File, Edit, View and Object menus are generated from the editor's menu definition
+(`packages/editor/src/editor-menu.ts`, the same one the web toolbar and BrickWright use).
+`scripts/generate-mac-menus.mjs` writes `apps/macos/EditorMenu.generated.swift` (commands,
+labels, sections, groups, availability and German titles from the core i18n catalogue) during
+`npm run mac:build`; `tests/editor-menu.test.ts` fails when the committed file is stale. Main.swift
+keeps only the macOS titles and key equivalents of known commands and the macOS-only items
+(About, Settings, Project Library, Window, Help). A command added to the definition appears in
+the native menus without a Swift change, runs through the same `brickwrightExecuteCommand`
+bridge, and is enabled from the editor's own availability (`editor.menuItems()`, published to the
+app with the command state); items the editor does not offer in the app are hidden.
+
 File provides New Project (⌘N), Open Project (⌘O), Project Library (⇧⌘O),
-Save Project (⌘S), Import Geometry (⌘I), and Export (⇧⌘E). Import currently
-accepts closed STL meshes and adds them to the current document. Saved project
-files include the journal; export chooses a printable mesh format.
+Save Project (⌘S), Model Library, Import STL or STEP (⌘I), Import STEP as exact bodies, Export
+(⇧⌘E), Export STEP (exact B-rep) and STEP evidence, then one submenu per further section of the
+definition, in its order: **Exact modeling (B-rep)** (fillet, chamfer or shell, chosen edges,
+measure exactly, recompute, surface blends), **Holes and fasteners** (standard hole, fasten
+holes, standard parts), **Assemblies** (groups, exploded view, configurations, mechanism check,
+planetary gear set) and **Drawings and checks** (assembly drawings, drawing export, printability,
+manufacturing, materials and mass); a section added to the definition later becomes another
+File submenu. Import as a mesh accepts closed STL meshes
+and STEP and adds them to the current document. Saved project files include the journal; export
+chooses a printable mesh format or STEP.
 
 Edit provides Undo/Redo (⌘Z / ⇧⌘Z), Cut/Copy/Paste (⌘X / ⌘C / ⌘V), Duplicate
 (⌘D), Delete and selection commands. These operate on CAD bodies when working
@@ -63,7 +81,8 @@ fresh object/joint IDs and a separate parameter namespace when names collide.
 
 View provides Fit Model (⌘0), Home (⇧⌘0), principal views, projection, workplane
 and panel toggles. Object provides the shape library (⇧⌘A), Select/Move/Rotate/
-Scale, Drop, boolean operations and Parameters. V / Escape returns to Select.
+Scale, Mirror, Pattern, Split, Drop, boolean operations and Parameters, and a **CAD tools** submenu
+(terminal, command palette, code workspace, upgrade lofts). V / Escape returns to Select.
 An Objects-row click gives keyboard focus to the scene, so Delete works directly.
 
 The native smoke test invokes real Cocoa menu targets and transfers a model

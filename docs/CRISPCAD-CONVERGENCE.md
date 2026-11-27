@@ -1743,9 +1743,17 @@ perspective puts the point under the cursor of a receding edge millimetres behin
 lies on, beyond the mouse's narrower slack; depth is now interpolated perspective-correctly
 (`depthAlong`), and `exact-edge-pick-viewport.spec.ts` passes with a mouse as well.
 
-Left open: the macOS app still builds its native menus in Swift (the test keeps them a subset of
-the definition, but the exact items are not in them yet); the standalone web toolbar keeps its own
-File/Edit dropdowns (now with the exact items) rather than rendering the definition.
+Since then (2026-11-27) no host keeps its own copy: the macOS app's native menus are generated
+from the definition at build time (`scripts/generate-mac-menus.mjs` writes
+`apps/macos/EditorMenu.generated.swift`; File gains the exact STEP items and one submenu per
+further section ("Exact modeling (B-rep)", "Holes and fasteners", "Assemblies", "Drawings and
+checks", and any section added later), Object a "CAD tools" submenu;
+enablement comes from `editor.menuItems()`; see [MACOS.md](MACOS.md#native-menus-and-shortcuts)),
+and the standalone toolbar's File and Edit dropdowns are rendered from it (`editorToolbarMenu`:
+Edit takes the object items marked for it and the exact, assembly and edit sections, File the
+rest; an entry's optional `toolbar`, `short` and `hint` say where and how it appears). A
+command added to the definition reaches every host's menus; `tests/editor-menu.test.ts` checks
+the generated Swift table is current.
 
 ## Owner decisions (2026-11-24)
 
