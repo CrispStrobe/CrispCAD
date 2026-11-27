@@ -163,6 +163,46 @@ field of `results/<name>-models.json`; `results/<name>-summary.json` (`native.mo
 every model that is not `all-agree` or whose area or box differs, with the three volumes
 (`M`, `E`, `N`), `relConverter` = E/N − 1, `relArea` and `dBox`.
 
+## Results: loft pairing "closest" (2026-11-27, second run on 0.1.9)
+
+Same catalog (kernel lab `4bd3ee9c9`), same native volumes (the lab's committed
+`results-catalog-native-volumes.json`, now stamped `4bd3ee9c9`), same kernel (0.1.9) and harness as
+the run below; the only change is CrispCAD's: CAD Script's `loft` and `smoothLoft` take
+`{pairing: "closest"}` ([CODE-MODE.md](../../docs/CODE-MODE.md#loft-pairing), document version
+46), which pairs sections as OpenCASCADE's ThruSections does, identically in the Manifold mesh and
+in the exact lowering (the kernel's `pairing: 'closest'`), and the converter writes it on every
+loft. Three workers; the run took 16.6 min wall at load average about 30, and again 90 min at load
+200 to 300 after the converter fix below (two models without lofts timed out at the 300 s wall
+limit under that load and were rerun alone; the committed files are that run).
+
+| Full catalog | 0.1.9, authored pairing | **0.1.9, pairing "closest"** |
+| --- | ---: | ---: |
+| Three-way all-agree | 2,336 | **2,360** |
+| Converter-error | 24 | **0** |
+| Converter-partial / -failed | 11 / 31 | 11 / 31 |
+| Native-failed | 0 | 0 |
+| Manifold vs exact: models agree / disagree | 2,353 / 18 | 2,353 / 18 |
+| Parts agree / disagree | 69,340 / 49 | 69,340 / 49 |
+| Exact area = native area to 1e-6 (of volume-agreeing) | 2,336 of 2,336 | 2,360 of 2,360 |
+| Exact CPU (total, slowest part) | 1,315 s, 5.4 s | 1,389 s, 6.2 s (machine load) |
+
+- **All 21 pairing models agree with native**, exact/native − 1 within 2.4e-9
+  (`nature/tumbleweed` 2.5e-10, was −4.7e-3; `interior/hanging-planter` 2.4e-9, was −3.2e-3;
+  `nature/hill-tile` 1.4e-10; `terrain/rocky-ground-tile` 7.6e-11).
+- **The 3 wind-turbine models agree too** (`wind-turbine-blade` 3.4e-10, was +6.2e-4;
+  `horizontal-axis` −2.1e-10, `offshore` −5.8e-11). Their sections need no re-start, but with
+  `"closest"` the kernel builds the sections as wires of lines, whose smooth-loft curves start and
+  close at the last vertex instead of the one before; CrispCAD's `smoothLoft` with the option
+  counts that vertex twice in its chord-length parameters, as the kernel does, so mesh and exact
+  build follow the lab's native column.
+- **`interior/bean-bag`** came out as a new converter error (−4.5e-6) in the first run: its
+  twelve-gon sections are turned by half a step against each other, so two starts are exactly
+  equally close and the converter's rounding of coordinates to 1e-6 mm tipped the tie the other
+  way. The converter now writes such sections with every digit (only when the rounded and the
+  source numbers pair differently); it agrees to −6.9e-11.
+- Largest exact/native − 1 over all 2,360 agreeing models: 3.1e-7. No Manifold-vs-exact class
+  changed: the option builds the same surfaces both ways.
+
 ## Results: exact kernel 0.1.9, native catalog 2,402 of 2,402 (2026-11-27)
 
 Measured 2026-11-27 on the same machine (load average 65 to 160 from other sessions, three

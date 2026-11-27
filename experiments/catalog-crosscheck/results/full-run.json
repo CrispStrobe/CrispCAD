@@ -5,21 +5,21 @@
  "mode": "all",
  "seed": null,
  "labCommit": "4bd3ee9c99a2dbdb54de006491a95aaf5dd79c4b",
- "timeoutSeconds": 300,
- "jobs": 3,
+ "timeoutSeconds": 900,
+ "jobs": 1,
  "loftRevision": 2,
  "machine": {
   "cpus": 8,
   "model": "Apple M1",
   "loadAverageAtStart": [
-   129.2,
-   140.7,
-   161.4
+   197.3,
+   210.3,
+   200.3
   ],
   "loadAverageAtEnd": [
-   65.1,
-   90.7,
-   117.3
+   184.4,
+   204.4,
+   198.7
   ]
  },
  "started": "2026-11-27T11:35:39.786Z",
@@ -178,7 +178,7 @@
   "node": "v26.4.0",
   "exact": "@classcad/smlibwasm 0.6.2"
  },
- "finished": "2026-11-27T11:57:09.588Z",
- "lastRunMinutes": 21.5,
+ "finished": "2026-11-27T14:47:26.563Z",
+ "lastRunMinutes": 0.9,
  "note": "@crispcad/exact-kernel 0.1.9 (smlibwasm 0.6.2 built from source), CrispCAD main 6195d6c. Catalog: lab 4bd3ee9c9 (catalog and native lowering unchanged up to develop 790f2ba93); native volumes: lab results-catalog-native-volumes.json measured on 763f97d2d, equal to the 2026-11-27 re-measurement on 4bd3ee9c9 to 1.1e-15 (2,402 of 2,402). One segment, three workers. A run on 0.1.7 (CrispCAD b67ab77) the same day gave the same volume and area for every one of the 138,640 part builds."
 }

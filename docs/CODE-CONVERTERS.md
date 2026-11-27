@@ -804,3 +804,11 @@ builds; the smooth-loft wind turbines agree with native to 1e-9; the 2 converter
 ruled lofts that the lab's native build joins at the wrong vertices (see
 [the cross-check](../experiments/catalog-crosscheck/README.md#results-smooth-lofts-exact-kernel-013-2026-11-26-second-run)).
 `for (let …)` closures now get a fresh loop binding per iteration, as in JavaScript.
+
+**Loft pairing (2026-11-27).** The source format's loft pairs sections as OpenCASCADE's
+ThruSections does (each section re-started at the vertex and direction closest to the previous
+one), so the converter writes every loft and smooth loft with `{pairing: "closest"}`
+([CODE-MODE.md](CODE-MODE.md#loft-pairing); document version 46). Sections whose pairing is a tie
+that rounding to 1e-6 mm would decide differently are written with every digit. Against lab
+`4bd3ee9c9`: 2,360 models agree in all three builds and no converted model is a converter error
+([the cross-check](../experiments/catalog-crosscheck/README.md#results-loft-pairing-closest-2026-11-27-second-run-on-019)).

@@ -44,16 +44,15 @@
 | --- | ---: |
 
 Parts built by both kernels: 69389; median |ΔV|/V of agreeing parts 0.00; planar agreeing parts 49614, max |ΔV|/V 9.7e-7.
-Loft parts (twisted ruled or smooth quads): 1873, 69 with quads a Boolean operand can reach; median allowance 1.0e-6 of the volume (real |ΔV|/V 1.3e-8), 1.0e-5 of the area (real 2.6e-7).
+Loft parts (twisted ruled or smooth quads): 1873, 69 with quads a Boolean operand can reach; median allowance 1.0e-6 of the volume (real |ΔV|/V 1.4e-8), 1.0e-5 of the area (real 2.6e-7).
 Low-segment intent probe: 0 parts (0 agree with Manifold within the faceting of the emitted N), median Manifold/intent − 1 = 0.00, min –; 0 exact-unsupported models are unsupported only for that reason.
 Model totals, Manifold vs exact (kernelCAD intent for low segments), 2371 models: 1007 within 1e-6, 1848 within 1e-3, 2368 within 1e-2, 0 beyond 5e-2; median -2.6e-5, 5th percentile -2.9e-3, min -0.01.
-CPU: Manifold 129 s total (median part 1.18 ms); exact 1315 s total (median part 6.76 ms, max 5.4 s).
+CPU: Manifold 171 s total (median part 1.36 ms); exact 1389 s total (median part 7.24 ms, max 6.2 s).
 
 | Three-way class (with native volumes) | Count |
 | --- | ---: |
-| all-agree | 2336 |
+| all-agree | 2360 |
 | converter-failed | 31 |
-| converter-error | 24 |
 | converter-partial | 11 |
 
-Exact vs native where the volumes agree (2336 models): area within 1e-6 for 2336, within 1e-3 for 2336; box within 1e-3 mm for 2336.
+Exact vs native where the volumes agree (2360 models): area within 1e-6 for 2360, within 1e-3 for 2360; box within 1e-3 mm for 2360.

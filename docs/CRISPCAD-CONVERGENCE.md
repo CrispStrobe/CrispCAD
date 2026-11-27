@@ -630,7 +630,7 @@ Left open: an exact display path for many-hole faces (meshing cost, Phase 2); a 
 renamed on paste (`width` → `width_2`) makes a pasted feature stale until it is recomputed;
 fillets of individual edges need topological naming and are out of scope.
 
-### Phase 4: cross-checking with the catalog. **Done 2026-11-25 (exact kernel 0.1.1); rerun 2026-11-26 with ruled lofts and then smooth lofts on 0.1.3; rerun 2026-11-27 on 0.1.9**
+### Phase 4: cross-checking with the catalog. **Done 2026-11-25 (exact kernel 0.1.1); rerun 2026-11-26 with ruled lofts and then smooth lofts on 0.1.3; rerun 2026-11-27 on 0.1.9, and with loft pairing "closest"**
 
 1. Convert the lab's catalog with `scripts/convert-kcad.mjs` (98.7% convert, 93.6% before
    the 2026-11-25 converter fixes).
@@ -639,6 +639,36 @@ fillets of individual edges need topological naming and are out of scope.
    results let us tell converter errors apart from kernel errors.
 4. Record the results next to
    [CODE-CONVERTERS.md](CODE-CONVERTERS.md#kernelcad-kcadts-models-2026-11-24).
+
+**Fourth rerun 2026-11-27: loft pairing "closest" (document version 46), exact kernel 0.1.9, same
+catalog and native volumes.** Owner-approved: CAD Script's `loft` and `smoothLoft` take an opt-in
+`{pairing: "closest"}` ([CODE-MODE.md](CODE-MODE.md#loft-pairing)) that re-starts each section at
+the vertex and direction closest to the previous one, as ThruSections does. The exact lowering
+passes the authored sections to the kernel's `pairing:'closest'`; the Manifold mesh applies the
+same rule (`closestLoftOrders`, the kernel's computation operation for operation, ties included)
+before meshing, and the exact solid is refused unless its volume equals the mesh's ruled volume or
+the smooth surface's exact volume. The default stays authored, and programs and documents without
+the option evaluate byte-identically (no program revision bump was needed; a document holding the
+option is version 46). The .kcad.ts converter writes the option on every loft.
+[Details](../experiments/catalog-crosscheck/README.md#results-loft-pairing-closest-2026-11-27-second-run-on-019).
+
+| Full catalog | 0.1.9, authored | **0.1.9, pairing "closest"** |
+| --- | ---: | ---: |
+| Three-way all-agree | 2,336 | **2,360** |
+| Converter-error | 24 | **0** |
+| Converter-partial / -failed | 11 / 31 | 11 / 31 |
+| Native-failed | 0 | 0 |
+| Manifold vs exact: models agree / disagree | 2,353 / 18 | 2,353 / 18 |
+
+- **The 21 pairing errors agree** with native to 2.4e-9 or better (tumbleweed 2.5e-10, was
+  −4.7e-3), and so do **the 3 wind turbines** (to 3.4e-10): with `"closest"` the kernel lofts line
+  wires whose smooth curves close at the last vertex, which is what the lab's native build does
+  since `6005ce246`; our `smoothLoft` with the option uses the same seam.
+- `interior/bean-bag` showed that rounding converted coordinates to 1e-6 mm can tip an exact tie
+  (twelve-gons turned by half a step); the converter now writes such sections with every digit,
+  and it agrees to 6.9e-11.
+- Every converted model now agrees with native wherever it converts completely; what is left are
+  the 11 partial and 31 refused conversions.
 
 **Third rerun 2026-11-27: exact kernel 0.1.9, catalog from lab `4bd3ee9c9`, native volumes
 2,402 of 2,402** (Phase 5.4). Three workers, 21.5 min wall.
@@ -662,7 +692,7 @@ fillets of individual edges need topological naming and are out of scope.
   joins vertices as written (kernel `pairing:'authored'`). `nature/ground-tile` now agrees.
   Matching them would take a CAD Script loft option that pairs as ThruSections does, in both the
   exact lowering (`pairing:'closest'`) and the Manifold mesh, for converted programs only, as a
-  new language revision; not done here.
+  new language revision; not done here (done as an opt-in option in the fourth rerun, above).
 - **3 wind-turbine models** (smooth lofts, +1.1e-4, +7.1e-5, +6.2e-4): our exact volume is
   unchanged and equals the lab's native build before `6005ce246`; the lab now lofts the airfoils
   as wires instead of faces and SMLib's smooth skin comes out slightly smaller. OCCT differs from
