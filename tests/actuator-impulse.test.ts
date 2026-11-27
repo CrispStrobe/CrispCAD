@@ -109,7 +109,21 @@ it('body-mounted rays ignore their own rigid assembly and see external obstacles
  }finally{position.mockRestore();rotation.mockRestore();world.dispose();s.dispose();}
 });
 
-it('an implicit ideal position servo reaches its target with finite torque and reaction',async()=>{const {world,a,b,joint}=await fixture('hinge',true,true);try{world.setHingeServo(joint,Math.PI/4,.001);for(let i=0;i<1000;i++){world.setHingeServo(joint,Math.PI/4,.001);world.step(.005);}expect(world.hingeAngle(joint)).toBeCloseTo(Math.PI/4,2);expect(()=>world.setHingeServo(joint,NaN,.001)).toThrow();}finally{world.dispose();}});
+it('shares the current hinge angle between telemetry and a torque-limited position servo',async()=>{
+ const {world,joint}=await fixture('hinge',true,true);
+ const J=await loadPhysicsEngine(false),read=vi.spyOn(J.HingeConstraint.prototype,'GetCurrentAngle');
+ try{
+  for(let i=0;i<1000;i++){
+   const angle=world.hingeAngle(joint);
+   world.setHingeServo(joint,Math.PI/4,.001);
+   expect(world.hingeAngle(joint)).toBe(angle);
+   world.step(.005);
+  }
+  expect(world.hingeAngle(joint)).toBeCloseTo(Math.PI/4,2);
+  expect(read).toHaveBeenCalledTimes(1001);
+  expect(()=>world.setHingeServo(joint,NaN,.001)).toThrow();
+ }finally{read.mockRestore();world.dispose();}
+});
 
 it('keeps qualified rover hinge clearances under circuit-like startup torque',async()=>{
  const {createTTRoverDocument}=await import('../packages/editor/src/tt-rover.js'),doc=createTTRoverDocument(),source=JSON.stringify(doc),geometry=kernel.evaluate(doc),prepared=await prepareDocumentCollisions(doc,geometry,kernel),world=await createPhysicsWorld(doc,geometry,prepared);

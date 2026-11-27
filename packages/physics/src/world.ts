@@ -26,7 +26,8 @@ type NativeShape=InstanceType<Awaited<ReturnType<typeof initJolt>>['Shape']>;
 type NativeBody=InstanceType<Awaited<ReturnType<typeof initJolt>>['Body']>;
 type NativeHinge=InstanceType<Awaited<ReturnType<typeof initJolt>>['HingeConstraint']>;
 type NativeSlider=InstanceType<Awaited<ReturnType<typeof initJolt>>['SliderConstraint']>;
-type MotorBinding={joint:CadJoint}&({kind:'hinge';motor:NativeHinge}|{kind:'slider';motor:NativeSlider});
+type HingeBinding={kind:'hinge';joint:CadJoint;motor:NativeHinge;angleRevision:number;angleRad:number};
+type MotorBinding=HingeBinding|{kind:'slider';joint:CadJoint;motor:NativeSlider};
 type RetainedCompound={engine:unknown;tokens:string;inputs:PreparedCollision[];shape:NativeShape};
 type PhysicsShapeCache={clear():void};
 const retainedCompounds=new WeakMap<PhysicsShapeCache,Map<string,RetainedCompound>>();
@@ -102,6 +103,13 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
  type SensorRay={bodyId:string;body:NativeBody;originMm:Vec3;direction:Vec3;rangeMm:number;source:number[];axis:number[];projected?:{revision:number;origin:Vec3;to:Vec3}};
  const sensorRays=new Map<string,SensorRay>();
  let poseRevision=0;
+ function readHingeAngle(binding:HingeBinding){
+  if(binding.angleRevision!==poseRevision){
+   binding.angleRad=binding.motor.GetCurrentAngle();
+   binding.angleRevision=poseRevision;
+  }
+  return binding.angleRad;
+ }
  const actuatorFrames=new Map<string,{
   joint:CadJoint;a:any;b:any;axis:number[];anchorM?:number[];motor:any;impulseConfigured:boolean;
  }>();
@@ -386,7 +394,7 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    // Extra iterations improve loaded-hinge accuracy within that reserve.
    if(joint.kind==='hinge'&&separatedHingePairs.has(pairKey(fixedRoot(joint.bodyA),fixedRoot(joint.bodyB))))cs.mNumPositionStepsOverride=40;
    const constraint=cs.Create(a,b);constraint.AddRef();system.AddConstraint(constraint);constraints.set(joint.id,constraint);temporaries.forEach(v=>J.destroy(v));J.destroy(cs);
-   if(joint.kind==='hinge')motorBindings.set(joint.id,{kind:'hinge',joint,motor:J.castObject(constraint,J.HingeConstraint)});
+   if(joint.kind==='hinge')motorBindings.set(joint.id,{kind:'hinge',joint,motor:J.castObject(constraint,J.HingeConstraint),angleRevision:-1,angleRad:0});
    else if(joint.kind==='slider')motorBindings.set(joint.id,{kind:'slider',joint,motor:J.castObject(constraint,J.SliderConstraint)});
   }
   // Ideal tooth contact at the pitch point between two hinged gears (fork's
@@ -527,8 +535,8 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    // The last substep already checked the current poses. External edits
    // that may break clearance restore collision filtering for affected pairs.
    if(substeps>0&&elapsed===0)checkSeparatedFrames();
-   // Existing sensor bodies move only inside the solver. Mark their cached
-   // poses stale before stepping, including if the native step throws.
+   // Joint angles and sensor poses change during the solver step. Invalidate
+   // their samples before stepping, including if the native step throws.
    if(substeps>0)poseRevision++;
    for(let i=0;i<substeps;i++){
     if(grab){const body=byId.get(grab.id),p=body.GetPosition(),q=body.GetRotation(),point=quaternionPoint(grab.local,[q.GetX(),q.GetY(),q.GetZ(),q.GetW()]).map((v,i)=>v+[p.GetX(),p.GetY(),p.GetZ()][i]),at=new J.RVec3(...point),velocity=bodies.GetPointVelocity(body.GetID(),at),speed=[velocity.GetX(),velocity.GetY(),velocity.GetZ()],acceleration=point.map((v,i)=>400*(grab!.target[i]*.001-v)-40*speed[i]),length=Math.hypot(...acceleration),force=new J.Vec3(...acceleration.map(v=>v*Math.min(1,100/Math.max(1e-9,length))*bodyMass.get(grab!.id)!));body.AddForce(force,at);bodies.ActivateBody(body.GetID());J.destroy(force);J.destroy(at);}
@@ -609,8 +617,8 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    tuneSerialServo(joint.bodyA);
    motor.mMinTorqueLimit=-maxTorqueNm;motor.mMaxTorqueLimit=maxTorqueNm;
    // Ideal internal position loop. Native velocity constraints enforce the
-   // torque bound implicitly; measuring again each coupled step closes the loop.
-   const error=angleRad-hinge.GetCurrentAngle(),speed=Math.max(-Math.PI*5/3,Math.min(Math.PI*5/3,error*12));
+   // torque bound implicitly. Use the same angle as telemetry at this boundary.
+   const error=angleRad-readHingeAngle(binding),speed=Math.max(-Math.PI*5/3,Math.min(Math.PI*5/3,error*12));
    hinge.SetTargetAngularVelocity(speed);enableVelocityMotor(id,hinge);for(const body of [joint.bodyA,joint.bodyB])bodies.ActivateBody(byId.get(body).GetID());
   },
   setHingeMotor(id:string,speedRadS:number,maxTorqueNm:number){
@@ -635,7 +643,7 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    hinge.SetTargetAngularVelocity(0);enableVelocityMotor(id,hinge);
    for(const body of [joint.bodyA,joint.bodyB])bodies.ActivateBody(byId.get(body).GetID());
   },
-  hingeAngle(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const binding=motorBindings.get(id);if(binding?.kind!=='hinge')throw new Error(t('Unknown hinge joint'));return binding.motor.GetCurrentAngle();},
+  hingeAngle(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const binding=motorBindings.get(id);if(binding?.kind!=='hinge')throw new Error(t('Unknown hinge joint'));return readHingeAngle(binding);},
   dispose,
  };
 }
