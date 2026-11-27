@@ -12,7 +12,7 @@ it('applies authored transforms before physical deltas and bounds trace samples 
 });
 
 it('writes only appended vertices and reuses uploaded prefixes when seeking',()=>{
- const buffer=new BufferAttribute(new Float32Array(600*3),3),write=createTraceVertices(buffer);
+ const buffer=new BufferAttribute(new Float32Array(600*3),3),{write}=createTraceVertices(buffer);
  const writes=vi.spyOn(buffer,'setXYZ');
  const samples:TraceSample[]=Array.from({length:600},(_,i)=>({time:i*.02,point:[i,i+1,-i]}));
  for(let count=1;count<=samples.length;count++){
@@ -27,12 +27,31 @@ it('writes only appended vertices and reuses uploaded prefixes when seeking',()=
  expect(buffer.version).toBe(version);
  expect(buffer.updateRanges).toEqual([]);
  expect(Array.from(buffer.array)).toEqual(samples.flatMap(sample=>sample.point));
- // Evicting the oldest sample changes the buffer's origin. A new trail also
- // starts at the first slot, even if it has a similar length.
+ // A trimmed view moves the start index with no upload. A new trail
+ // starts at the first slot even if it has a similar length.
  const shifted=samples.slice(1);
- write(shifted);
- expect(buffer.getX(0)).toBe(1);
- expect(buffer.updateRanges).toEqual([{start:0,count:shifted.length*3}]);
+ expect(write(shifted)).toBe(1);
+ expect(buffer.updateRanges).toEqual([]);
  write([{time:0,point:[-1,-2,-3]}]);
  expect(Array.from(buffer.array.slice(0,3))).toEqual([-1,-2,-3]);
+});
+
+it('retains chronological draw order across wraps and uploads only overwritten slots',()=>{
+ const capacity=5,buffer=new BufferAttribute(new Float32Array(capacity*3),3);
+ const {indices,write}=createTraceVertices(buffer);
+ const samples:TraceSample[]=Array.from({length:17},(_,i)=>({time:i*.02,point:[i,i*2,0]}));
+ expect(write(samples.slice(0,capacity))).toBe(0);
+ for(let end=capacity+1;end<=samples.length;end++){
+  buffer.clearUpdateRanges();
+  const window=samples.slice(end-capacity,end),offset=write(window);
+  const drawn=Array.from(indices.slice(offset,offset+window.length),slot=>buffer.getX(slot));
+  expect(drawn).toEqual(window.map(sample=>sample.point[0]));
+  expect(buffer.updateRanges).toEqual([{start:((end-1)%capacity)*3,count:3}]);
+ }
+ const final=samples.slice(-capacity),version=buffer.version;
+ expect(write(final.slice(0,2))).toBe(write(final));
+ expect(buffer.version).toBe(version);
+ buffer.clearUpdateRanges();
+ for(let i=0;i<15;i++)write([{time:i,point:[i,i,i]}]);
+ expect(buffer.updateRanges.length).toBeLessThanOrEqual(4);
 });

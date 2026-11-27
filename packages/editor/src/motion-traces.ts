@@ -6,25 +6,43 @@ import type {SimulationFrame} from './simulation-protocol.js';
 export interface TraceSample {time:number;point:Vec3}
 export interface TracePath {id:string;bodyId:string;color:string;samples:TraceSample[]}
 export const TRACE_SAMPLE_LIMIT=2000;
-/** Reuse the immutable prefix when a trail grows or replay seeks within it. */
+/** Keep immutable samples in circular vertex slots. The doubled index order
+ * lets a line strip cross the last slot without splitting the draw. */
 export function createTraceVertices(attribute:BufferAttribute){
- let cached:readonly TraceSample[]=[];
- return (samples:readonly TraceSample[])=>{
-  const shared=Math.min(samples.length,cached.length);
-  const samePrefix=shared>0&&samples[0]===cached[0]&&samples[shared-1]===cached[shared-1];
-  if(samePrefix&&samples.length<=cached.length)return;
-  const start=samePrefix?shared:0;
-  cached=samples;
-  if(start===samples.length)return;
-  for(let i=start;i<samples.length;i++)attribute.setXYZ(i,...samples[i].point);
-  const first=start*3,end=samples.length*3;
-  const range=attribute.updateRanges[0];
-  if(range){
-   const last=Math.max(end,range.start+range.count);
-   range.start=Math.min(first,range.start);range.count=last-range.start;
-  }else attribute.addUpdateRange(first,end-first);
-  attribute.needsUpdate=true;
- };
+ const capacity=attribute.count;
+ const indices=Uint16Array.from({length:capacity*2},(_,index)=>index%capacity);
+ let cached:readonly TraceSample[]=[],cachedOffset=0;
+ function mark(start:number,count:number){
+  const first=start*3,size=count*3;
+  const ranges=attribute.updateRanges,last=ranges.at(-1);
+  if(last&&first>=last.start&&first<=last.start+last.count){
+   last.count=Math.max(last.count,first+size-last.start);
+  }else if(ranges.length<4)attribute.addUpdateRange(first,size);
+  else{
+   // Bound the queued uploads if presentation has not drawn for several frames.
+   attribute.clearUpdateRanges();
+   attribute.addUpdateRange(0,capacity*3);
+  }
+ }
+ return {indices,write(samples:readonly TraceSample[]){
+  const index=cached.indexOf(samples[0]);
+  const shared=index<0?0:Math.min(samples.length,cached.length-index);
+  // The producer only appends immutable samples, trims the head, or resets.
+  const overlap=shared>0&&samples[shared-1]===cached[index+shared-1];
+  const offset=overlap?(cachedOffset+index)%capacity:0;
+  const start=overlap?shared:0;
+  if(overlap&&start===samples.length)return offset;
+  cached=samples;cachedOffset=offset;
+  const count=samples.length-start;
+  if(count){
+   for(let i=start;i<samples.length;i++)attribute.setXYZ((offset+i)%capacity,...samples[i].point);
+   const first=(offset+start)%capacity,contiguous=Math.min(count,capacity-first);
+   mark(first,contiguous);
+   if(contiguous<count)mark(0,count-contiguous);
+   attribute.needsUpdate=true;
+  }
+  return offset;
+ }};
 }
 /** Bounded simulated-time samples; no document or history writes. */
 export function createMotionTraces(){

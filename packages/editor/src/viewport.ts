@@ -90,7 +90,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
 
   function clearPreviewBalls(){for(const mesh of previewBalls.values()){scene.remove(mesh);mesh.geometry.dispose();(mesh.material as THREE.Material).dispose();}previewBalls.clear();}
   const traceGroup=new THREE.Group();scene.add(traceGroup);
-  const traceLines=new Map<string,{line:THREE.Line;marker:THREE.Mesh;write:ReturnType<typeof createTraceVertices>}>();
+  const traceLines=new Map<string,{line:THREE.Line;marker:THREE.Mesh;write:ReturnType<typeof createTraceVertices>['write']}>();
   let pointPick:{done:(point:SimulationPoint|null)=>void;gizmo:boolean;cursor:string;draftPlane?:'XY'|'surface'}|undefined;
   // Picking B-rep edges for exact fillets and chamfers (viewport-edge-pick.ts): taps toggle edges, the
   // camera still turns, nothing is selected or moved.
@@ -108,15 +108,26 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
    if(!definitions.length&&!traceLines.size)return;
    const byId=new Map(paths.map(path=>[path.id,path]));
    for(const [id,objects]of traceLines)if(!definitions.some(trace=>trace.id===id)){traceGroup.remove(objects.line,objects.marker);objects.line.geometry.dispose();(objects.line.material as THREE.Material).dispose();objects.marker.geometry.dispose();(objects.marker.material as THREE.Material).dispose();traceLines.delete(id);}
-   for(const trace of definitions){let objects=traceLines.get(trace.id);if(!objects){const geometry=new THREE.BufferGeometry(),positions=new THREE.BufferAttribute(new Float32Array(TRACE_SAMPLE_LIMIT*3),3).setUsage(THREE.DynamicDrawUsage);geometry.setAttribute('position',positions);const line=new THREE.Line(geometry,new THREE.LineBasicMaterial({color:trace.color})),marker=new THREE.Mesh(new THREE.SphereGeometry(1.5,8,4),new THREE.MeshBasicMaterial({color:trace.color}));line.frustumCulled=false;traceGroup.add(line,marker);objects={line,marker,write:createTraceVertices(positions)};traceLines.set(trace.id,objects);}
+   for(const trace of definitions){
+    let objects=traceLines.get(trace.id);
+    if(!objects){
+     const geometry=new THREE.BufferGeometry(),positions=new THREE.BufferAttribute(new Float32Array(TRACE_SAMPLE_LIMIT*3),3).setUsage(THREE.DynamicDrawUsage);
+     const {indices,write}=createTraceVertices(positions);
+     geometry.setAttribute('position',positions);
+     geometry.setIndex(new THREE.BufferAttribute(indices,1));
+     const line=new THREE.Line(geometry,new THREE.LineBasicMaterial({color:trace.color}));
+     const marker=new THREE.Mesh(new THREE.SphereGeometry(1.5,8,4),new THREE.MeshBasicMaterial({color:trace.color}));
+     line.frustumCulled=false;traceGroup.add(line,marker);
+     objects={line,marker,write};traceLines.set(trace.id,objects);
+    }
     let samples=byId.get(trace.id)?.samples;
     if(!samples?.length){
      const sourcePoint=new THREE.Vector3(...localToWorldPoint(trace.point,session.state.document.nodes[trace.bodyId].transform)),pose=presentedPoses.get(trace.bodyId);
      if(pose)sourcePoint.applyQuaternion(new THREE.Quaternion(...pose.quaternion as [number,number,number,number])).add(new THREE.Vector3(...pose.positionMm as Vec3));
      samples=[{time:0,point:sourcePoint.toArray() as Vec3}];
     }
-    objects.write(samples);
-    objects.line.geometry.setDrawRange(0,samples.length);
+    const offset=objects.write(samples);
+    objects.line.geometry.setDrawRange(offset,samples.length);
     objects.marker.position.set(...samples.at(-1)!.point);
    }
    scheduleDraw();
