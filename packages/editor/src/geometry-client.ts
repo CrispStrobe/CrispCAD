@@ -8,7 +8,7 @@ import type {ExactLimits} from '@brickwright/cad-exact/limits';
 /** A timed-out/crashed kernel is discarded; the next edit starts a fresh worker. */
 type OffsetRequest={offset:{sketch:PlanarSketch;context:Pick<CadDocument,'parametric'>;distance:number}};
 type SliceRequest={slice:{geometry:GeometryResult;cut:AssemblyCut}};
-type ExactRequest={exact:{operation:ExactCommandRequest['operation'];document:CadDocument;bodies:string[]}};
+type ExactRequest={exact:{operation:ExactCommandRequest['operation'];document:CadDocument;bodies:string[];step?:ExactCommandRequest['step']}};
 type GeometryPayload={document:CadDocument;printability?:Partial<PrintabilitySettings>}|OffsetRequest|SliceRequest|ExactRequest;
 export type GeometryRequest=GeometryPayload&{request:number;wasmURL:string;locale:string;exactLimits?:ExactLimits};
 type WorkerResult=GeometryResult|SketchProfile|AssemblySection|PrintabilityReport|ExactCommandResult;
@@ -137,7 +137,7 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
   });
   const exactHost:ExactCommandHost={
     run(request,signal){
-      return exact.send<ExactCommandResult>({exact:{operation:request.operation,document:request.document,bodies:[...request.bodies]}},signal);
+      return exact.send<ExactCommandResult>({exact:{operation:request.operation,document:request.document,bodies:[...request.bodies],...(request.step?{step:{name:request.step.name,bytes:request.step.bytes}}:{})}},signal);
     },
   };
   return {

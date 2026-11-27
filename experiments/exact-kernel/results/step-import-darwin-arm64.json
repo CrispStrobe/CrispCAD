@@ -1,0 +1,98 @@
+{
+ "node": "v26.4.0",
+ "date": "2026-11-27T11:24:25.938Z",
+ "kernel": {
+  "id": "smlib",
+  "package": "@crispcad/exact-kernel",
+  "version": "0.1.8",
+  "smlib": "0.6.2",
+  "licence": "MIT AND Apache-2.0"
+ },
+ "wasmMemoryMiB": 275,
+ "rows": [
+  {
+   "file": "box.step",
+   "source": "CrispCAD exact export",
+   "kib": 5,
+   "bodies": 1,
+   "importWallMs": 1280,
+   "importCpuMs": 150,
+   "warmMeasureMs": 26,
+   "storedBrepKiB": 5,
+   "triangles": 12,
+   "documentKiB": 7
+  },
+  {
+   "file": "filleted-box.step",
+   "source": "CrispCAD exact export",
+   "kib": 24,
+   "bodies": 1,
+   "importWallMs": 16244,
+   "importCpuMs": 1565,
+   "warmMeasureMs": 4119,
+   "storedBrepKiB": 26,
+   "triangles": 4604,
+   "documentKiB": 151
+  },
+  {
+   "file": "plate-12-holes.step",
+   "source": "CrispCAD exact export",
+   "kib": 20,
+   "bodies": 1,
+   "importWallMs": 7558,
+   "importCpuMs": 945,
+   "warmMeasureMs": 3674,
+   "storedBrepKiB": 19,
+   "triangles": 1932,
+   "documentKiB": 62
+  },
+  {
+   "file": "830 Battery Holder 4xAA.step",
+   "source": "Adafruit_CAD_Parts (MIT)",
+   "kib": 217,
+   "bodies": 2,
+   "importWallMs": 15922,
+   "importCpuMs": 2098,
+   "warmMeasureMs": 4937,
+   "storedBrepKiB": 143,
+   "triangles": 2276,
+   "documentKiB": 197
+  },
+  {
+   "file": "711 DC Toy Motor.step",
+   "source": "Adafruit_CAD_Parts (MIT)",
+   "kib": 85,
+   "bodies": 2,
+   "importWallMs": 37305,
+   "importCpuMs": 2370,
+   "warmMeasureMs": 6784,
+   "storedBrepKiB": 64,
+   "triangles": 9808,
+   "documentKiB": 321
+  },
+  {
+   "file": "3777 TT Motor.step",
+   "source": "Adafruit_CAD_Parts (MIT)",
+   "kib": 110,
+   "bodies": 8,
+   "importWallMs": 35298,
+   "importCpuMs": 2964,
+   "warmMeasureMs": 9921,
+   "storedBrepKiB": 90,
+   "triangles": 12006,
+   "documentKiB": 404
+  },
+  {
+   "file": "4884 Feather RP2040.step",
+   "source": "Adafruit_CAD_Parts (MIT)",
+   "kib": 2386,
+   "bodies": 58,
+   "importWallMs": 915554,
+   "importCpuMs": 44228,
+   "warmMeasureMs": 121739,
+   "storedBrepKiB": 2992,
+   "triangles": 68994,
+   "documentKiB": 4864
+  }
+ ]
+}

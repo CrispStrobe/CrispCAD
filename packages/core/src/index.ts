@@ -12,6 +12,7 @@ export * from './fragments.js';
 export * from './features.js';
 export * from './exact-feature.js';
 export * from './exact-edge-references.js';
+export * from './exact-body.js';
 export * from './sketch-outline.js';
 export * from './sketch-region.js';
 export * from './region-edge-lengths.js';
@@ -79,5 +80,5 @@ export {runCommandScript,commandScriptLines,COMMAND_SCRIPT_LABEL} from './comman
 export type {CommandScriptOptions,CommandScriptResult} from './command-script.js';
 export {createCommandJournal,exportCommandJournal,primitiveCadScript,portableJournalObjects,JOURNAL_LIMITS,JOURNAL_FORMAT} from './command-journal.js';
 export type {CommandJournal,CommandJournalEntry,JournalExportFormat,JournalExportOptions} from './command-journal.js';
-export {parseExactCommand,resolveExactTargets,formatExactResult,STEP_MIME,parseFaceNormal,parseExactFeatureCommand,parseRecomputeCommand,runExactFeatureCommand,recomputeExactFeatures,editExactFeatureWithKernel,EXACT_FEATURE_COMMANDS} from './exact-commands.js';
-export type {ExactOperation,ExactCommandRequest,ExactCommandResult,ExactCommandHost,ExactCommandFile,ExactCommandOutput,ExactKernelReport,ExactBodyMeasureReport,ExactTiming,ExactFeatureDisplayReport,ExactBodyEdge,ExactBodyEdgesReport,ParsedExactFeatureCommand,ExactEditOutput} from './exact-commands.js';
+export {parseExactCommand,resolveExactTargets,formatExactResult,STEP_MIME,parseFaceNormal,parseExactFeatureCommand,parseRecomputeCommand,runExactFeatureCommand,recomputeExactFeatures,editExactFeatureWithKernel,EXACT_FEATURE_COMMANDS,parseImportCommand,runStepImport,stepFileName} from './exact-commands.js';
+export type {ExactOperation,ExactCommandRequest,ExactCommandResult,ExactCommandHost,ExactCommandFile,ExactCommandOutput,ExactKernelReport,ExactBodyMeasureReport,ExactTiming,ExactFeatureDisplayReport,ExactBodyEdge,ExactBodyEdgesReport,ParsedExactFeatureCommand,ExactEditOutput,ImportedExactBodyReport} from './exact-commands.js';

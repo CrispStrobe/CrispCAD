@@ -33,7 +33,7 @@ export function createEditorSession(document?:CadDocument,options:CadSessionOpti
  */
 export function exactEditHost(session:Pick<CadSession,'kernels'>,host:ExactCommandHost):ExactCommandHost{
  return {run(request,signal){
-  if(request.operation==='feature-display'&&!providesKernel(session.kernels,exactKernelIdentity))
+  if((request.operation==='feature-display'||request.operation==='import-step')&&!providesKernel(session.kernels,exactKernelIdentity))
    return Promise.reject(new Error(t('This editor session does not declare the exact kernel. The host must create it with createEditorSession() (or kernels: [exactKernelIdentity]).')));
   return host.run(request,signal);
  }};

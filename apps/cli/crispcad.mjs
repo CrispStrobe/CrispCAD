@@ -3,11 +3,11 @@
 // Headless CLI over the shared command registry. It reuses the MCP host, so it
 // has the same writer lock, validation, size limits and atomic history append.
 import {resolve,basename,join} from 'node:path';
-import {writeFile} from 'node:fs/promises';
+import {readFile,writeFile} from 'node:fs/promises';
 import {t,setLocale} from '@brickwright/cad-core';
 import {createCodeHost} from '../mcp/host.mjs';
 
-const usage=()=>t('CrispCAD CLI\nnode apps/cli/crispcad.mjs commands\nnode apps/cli/crispcad.mjs run <project.bcad> "<command>" ["<command>" ...] [--dry-run] [--out <directory>]\nnode apps/cli/crispcad.mjs inspect|interference|printability|measure <project.bcad>\nnode apps/cli/crispcad.mjs step <project.bcad> <file.step>\nOptions: --locale en|de. Output is JSON on stdout. measure, step and the commands fillet, chamfer, shell and recompute exact use the exact B-rep kernel; --out writes files that commands produce, such as export step.\n');
+const usage=()=>t('CrispCAD CLI\nnode apps/cli/crispcad.mjs commands\nnode apps/cli/crispcad.mjs run <project.bcad> "<command>" ["<command>" ...] [--dry-run] [--out <directory>]\nnode apps/cli/crispcad.mjs inspect|interference|printability|measure <project.bcad>\nnode apps/cli/crispcad.mjs step <project.bcad> <file.step>\nnode apps/cli/crispcad.mjs import <project.bcad> <file.step> [--dry-run]\nOptions: --locale en|de. Output is JSON on stdout. measure, step, import and the commands fillet, chamfer, shell and recompute exact use the exact B-rep kernel; --out writes files that commands produce, such as export step.\n');
 const argv=process.argv.slice(2),positional=[];let dryRun=false,outDir;
 for(let i=0;i<argv.length;i++){
  if(argv[i]==='--locale'&&['en','de'].includes(argv[i+1]))setLocale(argv[++i]);
@@ -19,7 +19,7 @@ for(let i=0;i<argv.length;i++){
 }
 const [verb,project,...commands]=positional;
 const tools={inspect:'cad_inspect',interference:'cad_check_interference',printability:'cad_check_printability',measure:'cad_measure_exact'};
-if(!verb||verb!=='commands'&&!project||verb==='run'&&!commands.length||verb==='step'&&commands.length!==1||!['commands','run','step',...Object.keys(tools)].includes(verb)){process.stderr.write(usage());process.exit(1);}
+if(!verb||verb!=='commands'&&!project||verb==='run'&&!commands.length||(verb==='step'||verb==='import')&&commands.length!==1||!['commands','run','step','import',...Object.keys(tools)].includes(verb)){process.stderr.write(usage());process.exit(1);}
 const host=await createCodeHost(verb==='commands'?{}:{project:resolve(project)});
 let code=0;
 try{
@@ -33,6 +33,12 @@ try{
    if(outDir){const path=join(outDir,basename(entry.file.name));await writeFile(path,bytes);entry.file={name:entry.file.name,mime:entry.file.mime,bytes:bytes.length,path};}
    else entry.file={name:entry.file.name,mime:entry.file.mime,bytes:bytes.length};
   }
+ }
+ else if(verb==='import'){
+  // STEP as exact bodies: the file's bytes go to cad_import_step (strict: all bodies or none).
+  const path=resolve(commands[0]),bytes=await readFile(path),{revision}=await host.call('cad_get_model');
+  if(bytes.length>3*1024*1024)throw new Error(t('The STEP file exceeds the 3 MiB limit of this host; import it in the editor.'));
+  result=await host.call('cad_import_step',{name:basename(path),base64:bytes.toString('base64'),expectedRevision:revision,...(dryRun?{preview:true}:{})});
  }
  else if(verb==='step'){
   const {base64,...rest}=await host.call('cad_export_step',{}),path=resolve(commands[0]),bytes=Buffer.from(base64,'base64');

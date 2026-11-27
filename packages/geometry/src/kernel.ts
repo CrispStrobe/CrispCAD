@@ -227,6 +227,12 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
         const mesh = new module.Mesh({ numProp: 3, vertProperties: new Float32Array(node.display.positions), triVerts: new Uint32Array(node.display.indices) });
         mesh.merge(); solid = keep(new module.Manifold(mesh)); break;
       }
+      case 'exact-body': {
+        // An imported exact body: Manifold shows, simulates and prints the exact kernel's
+        // tessellation, stored with the B-rep at import (it never goes stale).
+        const mesh = new module.Mesh({ numProp: 3, vertProperties: new Float32Array(node.display.positions), triVerts: new Uint32Array(node.display.indices) });
+        mesh.merge(); solid = keep(new module.Manifold(mesh)); break;
+      }
       case 'boolean': {
         const operands = node.inputs.map(build);
         if(node.useHoleRoles){const solids=operands.filter((_,i)=>doc.nodes[node.inputs[i]].role!=='hole'),holes=operands.filter((_,i)=>doc.nodes[node.inputs[i]].role==='hole');solid=solids.length?keep(module.Manifold.difference([keep(module.Manifold.union(solids)),...holes])):keep(module.Manifold.union(holes));break;}

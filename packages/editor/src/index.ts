@@ -8,7 +8,7 @@ import {mountPrintabilityPanel} from './printability-panel.js';
 import type {mountModelLibraryPanel, ModelLibraryOptions, ModelLibraryProject} from './model-library-panel.js';
 export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
-import { t,formatExactResult,validateDocument as validateExportDocument,FeatureEvaluationError,STALE_EXACT_CODE,staleExactFeatures,recomputeExactFeatures } from '@brickwright/cad-core';
+import { t,formatExactResult,validateDocument as validateExportDocument,FeatureEvaluationError,STALE_EXACT_CODE,staleExactFeatures,recomputeExactFeatures,runStepImport,MAX_STEP_IMPORT_BYTES } from '@brickwright/cad-core';
 import { drawingAssemblyAvailable,isAssemblyDrawingSource,constructionInputs, createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters,redesignScrew } from '@brickwright/cad-core';
 import type { CadDocument, CadSession, DrawingInputs, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe } from '@brickwright/cad-core';
 import { importSTL } from '@brickwright/cad-geometry';
@@ -113,7 +113,7 @@ export interface CadEditorOptions {
   onError?: (error: Error) => void;
 }
 export interface CadCommandState {canUndo:boolean;canRedo:boolean;hasSelection:boolean;canDelete:boolean;canCombine:boolean;canExport:boolean;hasBodies:boolean;ready:boolean}
-export type CadCommand='new'|'open'|'save'|'import'|'export'|'printability'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'exact-feature'|'command-palette'|'readout'|'code'|'code-workspace'|'terminal'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect'|'upgrade-lofts';
+export type CadCommand='new'|'open'|'save'|'import'|'import-step'|'export'|'printability'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'exact-feature'|'command-palette'|'readout'|'code'|'code-workspace'|'terminal'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect'|'upgrade-lofts';
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag); element.className = className; if (text !== undefined) element.textContent = text; return element;
 }
@@ -303,7 +303,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const openCodeWorkspace=()=>codePanel.openWorkspace(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);
   const terminalToggle=button('Terminal',()=>terminal.toggle(),status,'panel-toggle');
   terminalToggle.title=t('CAD terminal (Ctrl/⌘+`)');terminalToggle.setAttribute('aria-keyshortcuts','Control+Backquote Meta+Backquote');
-  const terminal=mountTerminalPanel(shell,session,{executeEditorCommand:executeCommand,openCodeWorkspace,storage:options.workspaceStorage,exact:exactEdits,saveFile:async file=>{if(!options.onExport)throw new Error(t('This host has not provided file export'));await options.onExport({name:file.name,bytes:new TextEncoder().encode(file.text),mime:file.mime});},pickPoint:(done,plane)=>viewport.pickDraftPoint(done,plane),focusCanvas:()=>viewport.canvas.focus({preventScroll:true}),onVisibilityChange:visible=>terminalToggle.setAttribute('aria-pressed',String(visible))});
+  const terminal=mountTerminalPanel(shell,session,{executeEditorCommand:executeCommand,openCodeWorkspace,storage:options.workspaceStorage,exact:exactEdits,saveFile:async file=>{if(!options.onExport)throw new Error(t('This host has not provided file export'));await options.onExport({name:file.name,bytes:new TextEncoder().encode(file.text),mime:file.mime});},pickStepFile:()=>pickExactStep(),afterStepImport:ids=>afterExactImport(ids),pickPoint:(done,plane)=>viewport.pickDraftPoint(done,plane),focusCanvas:()=>viewport.canvas.focus({preventScroll:true}),onVisibilityChange:visible=>terminalToggle.setAttribute('aria-pressed',String(visible))});
   button('Code',()=>codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined),toolbar,'compact-icon').title=t('Code an object');
   const parametersButton=button('Parameters',()=>parametersPanel.open(),toolbar,'compact-icon');parametersButton.title=t('Model parameters and formulas');
   if(options.headerContent){options.headerContent.classList.add('host-actions');designBar.append(options.headerContent);}
@@ -398,6 +398,28 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   importInput.onchange=()=>{const file=importInput.files?.[0];importInput.value='';if(file)run(async()=>{if(file.size>16*1024*1024)throw new Error(t('Geometry file exceeds 16 MiB'));await importFile(file.name,new Uint8Array(await file.arrayBuffer()));});};
   async function chooseImport(){if(options.requestImport){const file=await options.requestImport();if(file)await importFile(file.name,file.bytes);}else importInput.click();}
   button('Import STL or STEP…',chooseImport);
+  // STEP as exact bodies: the B-rep is kept (exact export, measures, fillet, chamfer, shell), read
+  // by the lazily loaded exact kernel. The importer above keeps STEP as reference surface meshes.
+  const exactStepInput=el('input');exactStepInput.type='file';exactStepInput.accept='.step,.stp';exactStepInput.hidden=true;exactStepInput.setAttribute('aria-label',t('Import STEP as exact bodies'));shell.append(exactStepInput);
+  let exactStepChoice:((file:{name:string;bytes:Uint8Array}|undefined)=>void)|undefined;
+  exactStepInput.onchange=()=>{const file=exactStepInput.files?.[0];exactStepInput.value='';const done=exactStepChoice;exactStepChoice=undefined;if(!done)return;if(!file){done(undefined);return;}
+    if(file.size>MAX_STEP_IMPORT_BYTES){done(undefined);run(()=>{throw new Error(t`The STEP file is larger than ${MAX_STEP_IMPORT_BYTES/1048576} MiB.`);});return;}
+    void file.arrayBuffer().then(buffer=>done({name:file.name,bytes:new Uint8Array(buffer)}),()=>done(undefined));};
+  exactStepInput.addEventListener('cancel',()=>{const done=exactStepChoice;exactStepChoice=undefined;done?.(undefined);});
+  async function pickExactStep():Promise<{name:string;bytes:Uint8Array}|undefined>{
+    if(options.requestImport){const file=await options.requestImport();if(file&&!/\.(step|stp)$/i.test(file.name))throw new Error(t('Import STEP accepts .step and .stp files.'));return file??undefined;}
+    exactStepChoice?.(undefined);
+    return new Promise(resolve=>{exactStepChoice=resolve;exactStepInput.click();});
+  }
+  async function afterExactImport(ids:readonly string[]){await whenIdle();session.select([...ids]);viewport.frame(undefined,true);viewport.canvas.focus({preventScroll:true});}
+  async function importExactStep(){
+    const file=await pickExactStep();if(!file)return;
+    message.textContent=t('Reading the STEP file on the exact kernel…');
+    const done=await runStepImport(session,exactEdits,file);
+    message.textContent=done.output.split('\n')[0];
+    await afterExactImport(done.ids);
+  }
+  button('Import STEP as exact bodies…',importExactStep);
   const exportDialog=el('dialog','export-dialog');exportDialog.setAttribute('aria-label',t('Export model'));exportDialog.append(el('h2','',t('Export model')));
   const exportFormat=el('select');exportFormat.setAttribute('aria-label',t('Export format'));for(const [value,label] of [['stl','STL · triangle mesh'],['3mf','3MF · packaged mesh'],['step','STEP · exact B-rep (loads the exact kernel)']]){const option=el('option','',t(label));option.value=value;exportFormat.append(option);}exportDialog.append(exportFormat);
   const attributionHelp=el('p','',t('Recorded sources export as one ZIP containing STL and attribution JSON. Distribute both files together and retain any separately required licence texts and notices.'));
@@ -588,6 +610,11 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       inspector.append(el('p','hint',t`Exact ${t(n.operation)} · ${size} · ${stale?t('out of date'):t('up to date')}`));
       button('Edit exact feature',()=>exactFeaturePanel.open(id,true),inspector);
       const recompute=button('Recompute exact',()=>recomputeExact(),inspector);recompute.disabled=!stale;
+    }
+    if(n.kind==='exact-body'){
+      const from=n.origin?t`from ${n.origin.file}, body ${n.origin.body} of ${n.origin.bodies}`:t('imported');
+      inspector.append(el('p','hint',t`Exact body (STEP B-rep) ${from} · volume ${Number(n.measures.volume.toPrecision(9))} mm³`));
+      button('Fillet, chamfer, shell',()=>openExactFeature(),inspector);
     }
     if(n.kind==='extrusion'||n.kind==='revolution'){
       const sketch=session.state.document.sketches![n.sketchId];inspector.append(el('p','hint',t`${sketch.name} · ${t(sketch.profile.kind)} · ${sketch.plane} plane`));
@@ -818,7 +845,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   async function executeCommand(command:CadCommand){
     switch(command){
       case 'terminal':terminal.toggle();break;case 'code-workspace':openCodeWorkspace();break;
-      case 'new':await newProject();break;case 'open':await chooseOpen();break;case 'save':await deliver('bcad');break;case 'import':await chooseImport();break;case 'export':if(exportButton.disabled)throw new Error(t('Build a solid before exporting'));showExport();break;case 'printability':if(printabilityButton.disabled)throw new Error(t('Build a solid before checking printability'));printabilityPanel.open();break;
+      case 'new':await newProject();break;case 'open':await chooseOpen();break;case 'save':await deliver('bcad');break;case 'import':await chooseImport();break;case 'import-step':await importExactStep();break;case 'export':if(exportButton.disabled)throw new Error(t('Build a solid before exporting'));showExport();break;case 'printability':if(printabilityButton.disabled)throw new Error(t('Build a solid before checking printability'));printabilityPanel.open();break;
       case 'undo':session.undo();break;case 'redo':session.redo();break;case 'cut':await copySelection(true);break;case 'copy':await copySelection();break;case 'paste':await pasteSelection();break;case 'duplicate':session.duplicate();break;case 'delete':session.remove();break;
       case 'select-all':session.select(session.state.document.roots);break;case 'deselect':session.select([]);break;
       case 'select':setMode('select');break;case 'move':setMode('translate');break;case 'rotate':setMode('rotate');break;case 'scale':setMode('scale');break;
@@ -833,7 +860,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'upgrade-lofts':session.upgradeLofts();break;
       default:throw new Error(t('Unknown editor command'));
     }
-    if(!['open','import','save','export','parameters','shapes','code','code-workspace','terminal','model-source','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','exact-feature','model-library','robot-projects','command-palette'].includes(command))viewport.canvas.focus({preventScroll:true});
+    if(!['open','import','import-step','save','export','parameters','shapes','code','code-workspace','terminal','model-source','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','exact-feature','model-library','robot-projects','command-palette'].includes(command))viewport.canvas.focus({preventScroll:true});
   }
   async function deliver(format: 'bcad' | 'stl' | '3mf' | 'step', modificationNotes?: string, checkCanceled: () => void = () => {}) {
     if(format==='bcad'&&options.saveProject){await options.saveProject();return;}

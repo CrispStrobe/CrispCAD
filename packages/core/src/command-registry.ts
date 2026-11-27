@@ -13,11 +13,11 @@ import type {Vec3} from './document.js';
 import {t} from './i18n.js';
 import type {CadSession} from './session.js';
 import {commandArguments,commandNumber,commandTokens,parseCommandPoint} from './command-arguments.js';
-import {EXACT_FEATURE_COMMANDS,formatExactResult,parseExactCommand,parseExactFeatureCommand,parseRecomputeCommand,recomputeExactFeatures,runExactFeatureCommand} from './exact-commands.js';
+import {EXACT_FEATURE_COMMANDS,formatExactResult,parseExactCommand,parseExactFeatureCommand,parseImportCommand,parseRecomputeCommand,recomputeExactFeatures,runExactFeatureCommand,runStepImport} from './exact-commands.js';
 import type {ExactCommandFile,ExactCommandHost,ExactKernelReport} from './exact-commands.js';
 
 export type CommandCategory='terminal'|'create'|'sketch'|'feature'|'selection'|'transform'|'history'|'edit'|'boolean'|'view'|'panel'|'replay'|'exchange'|'analysis';
-export type CommandArgumentKind='point'|'vector'|'number'|'sketch'|'bodies'|'command'|'alias'|'json'|'keyword';
+export type CommandArgumentKind='point'|'vector'|'number'|'sketch'|'bodies'|'command'|'alias'|'json'|'keyword'|'file';
 export interface CommandArgumentSpec {
  readonly name:string;
  readonly kind:CommandArgumentKind;
@@ -81,6 +81,7 @@ const drafting:readonly Draft[]=[
  {name:'code',aliases:['script'],description:'Open the persistent code workspace',usage:'code',category:'panel',editsModel:false,arguments:[]},
  {name:'apply',aliases:[],description:'Replay a recorded model edit',usage:'apply <recorded JSON>',category:'replay',editsModel:true,arguments:[arg('record','json')],headless:true},
  {name:'export',aliases:[],description:'Export geometry',usage:'export [step [all|"name"|id ...]]',category:'exchange',editsModel:false,arguments:[arg('format','keyword',{optional:true,values:['step']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
+ {name:'import',aliases:[],description:'Import a STEP file as exact bodies with the B-rep kernel',usage:'import step [file]',category:'exchange',editsModel:true,arguments:[arg('format','keyword',{values:['step']}),arg('file','file',{optional:true})],headless:true,kernel:'exact'},
  {name:'measure',aliases:[],description:'Measure volume, area and bounds exactly with the B-rep kernel',usage:'measure exact [all|"name"|id ...]',category:'analysis',editsModel:false,arguments:[arg('mode','keyword',{values:['exact']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
  {name:'edges',aliases:[],description:'List the exact B-rep edges of bodies, numbered for fillet and chamfer',usage:'edges ["name"|id ...]',category:'analysis',editsModel:false,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
  {name:'fillet',aliases:[],description:'Round edges exactly with the B-rep kernel',usage:'fillet <radius> [all|"name"|id ...] [--face <normal>] | fillet <radius> "name"|id edges <number|reference> ...',category:'feature',editsModel:true,arguments:[arg('radius','number',{min:.01,max:10000}),arg('targets','bodies',{optional:true,repeated:true}),arg('face','keyword',{optional:true,values:['--face']})],headless:true,kernel:'exact'},
@@ -102,6 +103,7 @@ const palette:readonly PaletteDraft[]=[
  {command:'edit-mirror',label:'Edit mirror',requires:'canEditMirror'},
  {command:'pattern',label:'Pattern body',alias:'linear circular repeat bolt circle',requires:'canWrapBody'},
  {command:'edit-pattern',label:'Edit pattern',requires:'canEditPattern'},
+ {command:'import-step',label:'Import STEP as exact bodies',alias:'step stp B-rep exact import'},
  {command:'exact-feature',label:'Fillet, chamfer or shell',alias:'round bevel hollow exact B-rep',requires:'canWrapBody'},
  {command:'parameters',label:'Parameters',alias:'named dimensions formulas'},
  {command:'code',label:'Code an object',alias:'CAD Script'},
@@ -322,6 +324,8 @@ export interface CommandRunnerOptions {
  /** Serves `export step`, `measure exact`, `fillet`, `chamfer`, `shell` and `recompute exact`;
   * only `runAsync`/`runScriptAsync` use it. */
  exact?:ExactCommandHost;
+ /** Reads the file `import step <file>` names (the CLI; MCP and the editor have their own way in). */
+ readFile?:(path:string)=>Promise<{name:string;bytes:Uint8Array}>;
  signal?:AbortSignal;
 }
 export const COMMAND_LINE_LIMIT=256*1024;
@@ -345,7 +349,7 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
  }
  /** Exact commands read the model; the request holds the snapshot taken now. */
  function exactRequest(spec:CommandSpec,tail:string){
-  if(spec.kernel!=='exact'||EXACT_FEATURE_COMMANDS.includes(spec.name)||spec.name==='recompute')return undefined;
+  if(spec.kernel!=='exact'||EXACT_FEATURE_COMMANDS.includes(spec.name)||spec.name==='recompute'||spec.name==='import')return undefined;
   const parsed=parseExactCommand(session,spec.name,tail);
   if(!parsed)throw new Error(t('Usage: export step [all|"name"|id ...].'));
   return parsed;
@@ -360,6 +364,15 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
    const done=parsed?await runExactFeatureCommand(session,options.exact,parsed,{signal:options.signal,record}):await recomputeExactFeatures(session,options.exact,recompute!.features,{signal:options.signal,record,invocation:recompute!.invocation});
    return {command:spec.name,invocation:done.invocation,output:done.output,edited:session.state.revision!==before,...(done.kernel?{kernel:done.kernel}:{})};
   }
+  if(spec.name==='import'){
+   const {file}=parseImportCommand(tail);
+   if(!options.exact)throw new Error(t('The exact kernel is not available in this host.'));
+   if(!file)throw new Error(t('Usage: import step <file>.'));
+   if(!options.readFile)throw new Error(t('import step needs a host that can read files: use File › Import STEP in the editor, cad_import_step over MCP, or the CLI.'));
+   const before=session.state.revision,record=options.journal?<T,>(line:string,commit:()=>T)=>options.journal!.withInvocation(line,commit):undefined;
+   const done=await runStepImport(session,options.exact,await options.readFile(file),{signal:options.signal,record});
+   return {command:spec.name,invocation:done.invocation,output:done.output,edited:session.state.revision!==before,...(done.kernel?{kernel:done.kernel}:{})};
+  }
   const request=exactRequest(spec,tail);
   if(!request)return run(raw);
   if(!options.exact)throw new Error(t('The exact kernel is not available in this host.'));
@@ -370,7 +383,7 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
  }
  function run(raw:string):CommandRunResult{
   const {text,spec,tail}=parse(raw);
-  if(EXACT_FEATURE_COMMANDS.includes(spec.name)||spec.name==='recompute'||exactRequest(spec,tail))throw new Error(t`${spec.name} uses the exact kernel; run it in a host that loads it.`);
+  if(EXACT_FEATURE_COMMANDS.includes(spec.name)||spec.name==='recompute'||spec.name==='import'||exactRequest(spec,tail))throw new Error(t`${spec.name} uses the exact kernel; run it in a host that loads it.`);
   const name=spec.name,before=session.state.revision;
   const done=(invocation:string,output?:string):CommandRunResult=>({command:name,invocation,...(output!==undefined?{output}:{}),edited:session.state.revision!==before});
   if(name==='apply'||name==='select'&&tail.trim().startsWith('[')){session.executeCommand(name+' '+tail);return done(text.length>240?name:text);}

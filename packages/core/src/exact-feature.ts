@@ -15,6 +15,7 @@
  */
 import {t} from './i18n.js';
 import {geometrySignature} from './hash.js';
+import {exactBodyKey} from './exact-body.js';
 import {featureValue,FeatureEvaluationError} from './features.js';
 import type {FeatureScalar} from './features.js';
 import {evaluateParameters} from './parameters.js';
@@ -138,6 +139,8 @@ export function exactFeatureKey(doc:CadDocument,id:string):string{
   const index=nodes.length;order.set(key,index);nodes.push(null);
   const entry:Record<string,unknown>={...geometry};
   if(n.kind==='exact-feature')delete entry.display;
+  // An imported body's geometry is its B-rep; its display, measures and origin follow from it.
+  if(n.kind==='exact-body'){delete entry.display;delete entry.measures;delete entry.origin;entry.brep=exactBodyKey(n);}
   if(n.kind==='boolean')entry.inputs=n.inputs.map(visit);
   if(n.kind==='mirror'||n.kind==='pattern'||n.kind==='exact-feature')entry.source=visit(n.source);
   if(n.kind==='extrusion'||n.kind==='revolution'){

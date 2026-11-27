@@ -395,7 +395,7 @@ releases changed:
   `scripts/exact-kernel-assets.js`, checked by `tests/exact-kernel-names.test.ts` and the
   `exact-guards` browser spec) until 0.1.7 stopped finding the import by name.
 
-Recorded commands carry kernel 0.1.7; 0.1.6 and older recordings replay as stale, as designed.
+Recorded commands carried kernel 0.1.7 from then; 0.1.6 and older recordings replay as stale, as designed.
 
 0.1.4 replaced 0.1.3 (SHA-256 `f9cfc354…3b8f`) on 2026-11-26. `profile.path` lofts now keep
 each section's outline as authored; SMLib's face construction had re-picked the start vertex
@@ -797,9 +797,11 @@ What follows is the plan for the rest.
      do not touch this code (exact-backend lowering, face-mesh bridging, shipped-project
      loading, headless CLI vocabulary).
    Not done: picking edges directly in the 3D viewport (the dialog's drawing is used instead);
-   a stale reference is not offered a repair (the user picks again); faces of imported meshes and
-   STEP bodies have no names.
-2. **STEP import as exact bodies.** First confirm that SMLib's STEP reader works in the
+   a stale reference is not offered a repair (the user picks again); faces of imported meshes
+   have no names (imported exact STEP bodies, Phase 5.2, are named like any leaf construction).
+2. **STEP import as exact bodies.** **Done 2026-11-27** (exact kernel 0.1.8, pinned as 0.1.9; document
+   version 45; see [STEP import as exact bodies](#step-import-as-exact-bodies-document-version-45-done-2026-11-27)).
+   First confirm that SMLib's STEP reader works in the
    wasm build. Then an imported STEP solid becomes an exact body with a Manifold mesh
    for display, physics and printing, so STEP round-trips both ways. Refuse what cannot
    be read with a clear diagnostic.
@@ -812,6 +814,77 @@ What follows is the plan for the rest.
    release that CrispCAD pins, followed by a catalog cross-check rerun.
 5. **CAD Script journal export:** parametric profiles and Booleans of portable bodies
    (still open in Phase 3, step 4).
+
+#### STEP import as exact bodies (document version 45). **Done 2026-11-27**
+
+**Feasibility (step 1).** SMLib's STEP reader works in the wasm build, in Node and in the editor's
+exact worker. Already in 0.1.7 `importStep` read every file tried; but it is lenient (a body it
+cannot build is left out with a warning the package silenced) and joins several bodies into one
+solid (fusing the 97-body pocket-watch assembly took 170 s, and the two touching bodies of the
+Adafruit battery holder came back as one). Files read (Node, loaded M1, exact kernel 0.1.7/0.1.8):
+
+| File (licence) | Writer | KiB | Bodies | Read | Re-exported STEP reads back |
+| --- | --- | ---: | ---: | ---: | --- |
+| Our own exports: box, filleted box, drilled plate, revolve, rotated sphere, shell+chamfer | CrispCAD/SMLib | 4–112 | 1–3 | 0.1–1.5 s | identical volume and area (1e-9), box (1e-6 mm) |
+| Lab seed parts: M2 screw, NEMA 17/23, heat-set insert, SG90 horn and servo (MIT) | OpenCASCADE 7.6 | 9–1,437 | 1 | 0.1–10.4 s | yes, 0 to 2.4e-14 |
+| SO-100 passive horn and moving jaw (Apache-2.0) | AP242 (Onshape) | 9–572 | 1 | 0.4–10.8 s | yes, ≤ 1.2e-12 |
+| Adafruit battery holder 4×AA, DC toy motor (MIT) | AP214 (Fusion) | 85–217 | 2 | 2.8–3.7 s | yes, ≤ 3.3e-16 |
+| Lab pocket watch (MIT) | OpenCASCADE 7.6 | 2,368 | 97 | 170 s (with the 0.1.7 fuse) | not tried |
+
+Units are converted (an inch file reads as 25.4³ × the volume), assembly placements are applied,
+names and colours are kept. Nothing needed OpenCASCADE.
+
+**Kernel (lab, exact kernel 0.1.8).** `importStepBodies(data, {maxBodies})`: strict (smlibwasm's
+`strict` mode), one solid per body in file order, nothing joined, names, colours and the reader's
+repair notes; the whole file is refused for text that is not STEP, malformed or cut short
+(`invalid-input`), no solid, an unreadable body, an open surface, a body still invalid after repair,
+too many bodies (`unsupported`). Refusals leave no kernel objects behind. `importStep` is
+unchanged. Lab `tests/step-import.test.ts` (14), 144 package tests, licence test green.
+
+**Document (version 45).** `exact-body` nodes keep the body's B-rep as one-solid AP214 STEP text
+written by the kernel (≤ 8 MiB; checked at import to read back with the same volume, area and
+box to 1e-7 and 1e-6 mm), its exact measures at import and the kernel's display mesh (0.01 mm / 10°, closed, bounded
+like a `mesh` node), plus the file's name, sha256, size and the body's index as `origin`. So a
+document opens, displays, simulates and prints without the kernel (Manifold builds the stored
+mesh), and exact work reads the B-rep. Documents reach 45 only by importing one; Undo returns to
+the earlier version; older documents are unchanged. History archives store the B-rep (content
+kind `brep`) and the display once, shared across revisions; model source writes
+`exactBody(id, {...}, asset(id))`. Details: [PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md#document-versions).
+
+**Product.**
+- Editor: **File › Import STEP as exact bodies…** and the palette entry; the generic **Import STL or
+  STEP…** still imports STEP as reference surface meshes (assemblies, PCBs). The kernel chunk is
+  fetched only then. Bodies keep the file's coordinates; the inspector names the file and body.
+- Terminal and registry: `import step` (the editor asks for the file); headless runners take
+  `import step <file>` where the host reads files (`CommandRunnerOptions.readFile`, the CLI).
+- MCP `cad_import_step` (`name`, `base64`, `expectedRevision`, `preview`; one saved step) and CLI
+  `crispcad import <project.bcad> <file.step>`.
+- Exact `export step`, `measure exact`, `fillet`, `chamfer`, `shell` work on imported bodies, and
+  so do Phase 5.1's `edges` and fillets/chamfers of chosen edges: an imported body is a leaf
+  construction whose faces are named `<id>:f<k>` (stable, since its B-rep never changes). The exact
+  backend caches read B-reps between requests (16 bodies, least recently used dropped).
+- Kernel pin: the API came in lab release 0.1.8; CrispCAD pins 0.1.9 (Phase 5.1's release, which
+  contains it). Document version 45, because 5.1 merged first with version 44.
+- Limits: `maxStepImportBytes` (tablet 4 MiB, desktop 16 MiB) refuses a file before the kernel
+  reads it; the request budget (60 s / 120 s) and the memory ceiling apply as for every exact job.
+  Import costs about 1–3 s CPU per 100 KiB of STEP on the M1 (the 2.4 MB, 58-body Adafruit Feather
+  board: 44 s CPU, a 4.9 MB document; [bench](../experiments/exact-kernel/README.md#step-import-2026-11-27)).
+  At most 64 bodies per file. German translations for every message, the kernel's refusals included.
+
+**Tests.** `tests/step-import-exact.test.ts`: export → import of a filleted box, a drilled plate and a
+rotated cylinder agrees per body in volume and area (1e-9) and box (1e-6 mm), the Manifold display
+within 2e-3, and a second export → import again; the Adafruit battery holder (two bodies, names,
+colours); fillet, chamfer and shell of an imported block at the closed forms (1e-8); transform;
+save/load, model source, history archive with shared B-rep and mesh, Undo; refusals (not STEP,
+malformed, cut short, no solid, unknown surface entity, sheet, missing face, empty, wrong
+extension, tablet size limit, in German) leave the model unchanged; registry with and without a
+file reader, MCP preview/commit/refusal and the CLI verb. Browser:
+`tests/browser/step-import-exact.spec.ts` on the `ipad` project.
+
+Left open: STEP export writes the kernel's names (`part`), not body names; assemblies import as
+separate bodies without their product structure; files with surfaces only (no solid) are refused,
+not imported as reference surfaces (the mesh importer does that); faces of many holes in imported
+bodies use the same display path as exact features.
 
 ### Phase 6: kernelCAD's engineering layers
 

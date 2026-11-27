@@ -16,10 +16,13 @@ import type {ExactFaceSelector,ExactFeatureDisplay,ExactFeatureOperation,ExactFe
 import {checkEdgeReferences,formatEdgeReference,parseEdgeReference} from './exact-edge-references.js';
 import type {ExactEdgeReference} from './exact-edge-references.js';
 import type {KernelIdentity} from './session-commands.js';
+import type {ExactBodyData} from './exact-body.js';
+import {MAX_STEP_IMPORT_BYTES} from './exact-body.js';
+import {sha256Hex} from './hash.js';
 import {commandNumber,commandTokens} from './command-arguments.js';
 import {t} from './i18n.js';
 
-export type ExactOperation='export-step'|'measure'|'feature-display'|'edges';
+export type ExactOperation='export-step'|'measure'|'feature-display'|'edges'|'import-step';
 export interface ExactCommandRequest {
  readonly operation:ExactOperation;
  /** Snapshot taken when the command ran. */
@@ -28,7 +31,11 @@ export interface ExactCommandRequest {
   * exact-feature nodes whose display mesh to compute (empty: every stale one). For `edges`, the
   * bodies whose B-rep edges to list. */
  readonly bodies:readonly string[];
+ /** `import-step` only: the file (its name without a path, and its bytes). */
+ readonly step?:{readonly name:string;readonly bytes:Uint8Array};
 }
+/** One body of an imported STEP file, as the exact kernel read and stored it. */
+export interface ImportedExactBodyReport {readonly name:string;readonly color:string|null;readonly body:Omit<ExactBodyData,'origin'>}
 export interface ExactKernelReport extends KernelIdentity {readonly smlib?:string;readonly licence?:string}
 export interface ExactBodyMeasureReport {
  readonly id:string;readonly name:string;
@@ -43,7 +50,8 @@ export type ExactCommandResult=
  |{readonly operation:'measure';readonly kernel:ExactKernelReport;readonly bodies:readonly ExactBodyMeasureReport[];readonly timing?:ExactTiming}
  |{readonly operation:'export-step';readonly kernel:ExactKernelReport;readonly bodies:readonly {id:string;name:string}[];readonly step:string;readonly bytes:number;readonly timing?:ExactTiming}
  |{readonly operation:'feature-display';readonly kernel:ExactKernelReport;readonly features:readonly ExactFeatureDisplayReport[];readonly timing?:ExactTiming}
- |{readonly operation:'edges';readonly kernel:ExactKernelReport;readonly bodies:readonly ExactBodyEdgesReport[];readonly timing?:ExactTiming};
+ |{readonly operation:'edges';readonly kernel:ExactKernelReport;readonly bodies:readonly ExactBodyEdgesReport[];readonly timing?:ExactTiming}
+ |{readonly operation:'import-step';readonly kernel:ExactKernelReport;readonly bodies:readonly ImportedExactBodyReport[];readonly notes:readonly string[];readonly timing?:ExactTiming};
 /**
  * One B-rep edge of a body, for picking: its number in `edges` listings (1-based, in kernel
  * order), curve kind, length, points from start to end in the body's parent frame (world for a
@@ -104,6 +112,7 @@ const kernelLabel=(kernel:ExactKernelReport)=>`${kernel.id} · ${kernel.package}
 const timingLine=(timing?:ExactTiming)=>timing?['\n'+t`Exact kernel: load ${Math.round(timing.loadMs)} ms · run ${Math.round(timing.runMs)} ms · WASM memory ${Math.round(timing.memoryBytes/1048576)} MiB`]:[];
 /** Terminal/CLI text for a result, and the STEP file for an export. */
 export function formatExactResult(result:ExactCommandResult,document:CadDocument):ExactCommandOutput{
+ if(result.operation==='import-step')throw new Error(t('Import STEP files with import step.'));
  if(result.operation==='measure'){
   const lines=result.bodies.map(body=>t`${body.name} (${body.id}): volume ${formatNumber(body.volume)} mm³ · area ${formatNumber(body.area)} mm² · bounds ${formatPoint(body.bounds.min)} – ${formatPoint(body.bounds.max)} · centroid ${formatPoint(body.centroid)}`);
   return {output:[t`Exact measures (${kernelLabel(result.kernel)}):`,...lines].join('\n')+timingLine(result.timing).join(''),kernel:result.kernel};
@@ -289,4 +298,41 @@ export async function editExactFeatureWithKernel(session:CadSession,host:ExactCo
  if(session.state.revision!==revision)throw new Error(t('The model changed while the exact kernel was running. Run the command again.'));
  session.withKernel(result.kernel,()=>session.editExactFeature(id,settings,result.features[0].display));
  return {output:[t`Edited exact feature (${kernelLabel(result.kernel)}):`,...featureLines(result)].join('\n')+timingLine(result.timing).join(''),edited:true,kernel:result.kernel,invocation:''};
+}
+
+/** `import step [file]`: the file to import, or undefined to choose one (the editor's picker). */
+export function parseImportCommand(tail:string):{file?:string}{
+ const tokens=commandTokens(tail);
+ if(!tokens.length||tokens[0].quoted||tokens[0].value.toLowerCase()!=='step'||tokens.length>2)throw new Error(t('Usage: import step [file].'));
+ return tokens[1]?{file:tokens[1].value}:{};
+}
+
+/** A STEP file's name for the model: no path, printable, at most 255 characters. */
+export function stepFileName(name:string):string{
+ const base=name.split(/[\\/]/).pop()!.replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(-255);
+ if(!base)throw new Error(t('Give the STEP file a name.'));
+ return base;
+}
+
+/**
+ * `import step`: the exact kernel reads the file strictly (every body a closed solid, or nothing
+ * is imported), then the session adds one `exact-body` per body in one Undo step inside
+ * `withKernel`, so the recorded command carries the kernel identity. Bodies keep the file's
+ * coordinates. The file's sha256, size and the body's place in it are kept as each body's origin.
+ */
+export async function runStepImport(session:CadSession,host:ExactCommandHost,file:{name:string;bytes:Uint8Array},options:{signal?:AbortSignal;record?:CommitWrapper}={}):Promise<ExactEditOutput&{ids:string[]}>{
+ const name=stepFileName(file.name);
+ if(!/\.(step|stp)$/i.test(name))throw new Error(t('Import STEP accepts .step and .stp files.'));
+ if(!file.bytes.byteLength)throw new Error(t('The STEP file is empty.'));
+ if(file.bytes.byteLength>MAX_STEP_IMPORT_BYTES)throw new Error(t`The STEP file is larger than ${MAX_STEP_IMPORT_BYTES/1048576} MiB.`);
+ const revision=session.state.revision,sha256=await sha256Hex(file.bytes);
+ const result=await host.run({operation:'import-step',document:session.state.document,bodies:[],step:{name,bytes:file.bytes}},options.signal);
+ if(result.operation!=='import-step')throw new Error(t('The exact kernel returned an unexpected result.'));
+ if(session.state.revision!==revision)throw new Error(t('The model changed while the exact kernel was reading the STEP file. Import it again.'));
+ const invocation=`import step ${/^[\w.-]+$/.test(name)?name:quote(name)}`,count=result.bodies.length;
+ const entries=result.bodies.map((body,i)=>({name:body.name,color:body.color,body:{...body.body,origin:{file:name,sha256,bytes:file.bytes.byteLength,body:i+1,bodies:count}}}));
+ const ids=(options.record??plain)(invocation,()=>session.withKernel(result.kernel,()=>session.addExactBodies(entries)));
+ const lines=result.bodies.map((body,i)=>t`${body.name} (${ids[i]}): exact volume ${formatNumber(body.body.measures.volume)} mm³ · area ${formatNumber(body.body.measures.area)} mm² · bounds ${formatPoint(body.body.measures.min)} – ${formatPoint(body.body.measures.max)} · display ${body.body.display.indices.length/3} triangles`);
+ const notes=result.notes.map(note=>t`Repaired while reading: ${note}`);
+ return {output:[t`Imported ${count} exact bodies from ${name} (${kernelLabel(result.kernel)}):`,...lines,...notes].join('\n')+timingLine(result.timing).join(''),edited:true,kernel:result.kernel,invocation,ids};
 }

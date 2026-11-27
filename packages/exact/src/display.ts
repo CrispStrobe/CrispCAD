@@ -8,6 +8,7 @@ import {ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactSolid} from '@crispcad/exact-kernel';
 import {lowerDocumentNode} from './lower-document.js';
 import type {ExactFeatureLimits} from './lower-document.js';
+import type {BrepCache} from './step-import.js';
 import {facewiseMesh,hasManyHoleFace} from './face-mesh.js';
 
 /** Stored coordinates are rounded to 1 nm; Manifold reads them as Float32 anyway. */
@@ -62,10 +63,10 @@ export function displayTessellation(k:ExactKernel,solid:ExactSolid,name:string):
 
 export interface ExactFeatureResult {display:ExactFeatureDisplay;volume:number}
 /** The exact feature `id` built on the exact kernel and tessellated for display. Call inside `k.scope`. */
-export function exactFeatureDisplay(k:ExactKernel,doc:CadDocument,id:string,options:{limits?:ExactFeatureLimits}={}):ExactFeatureResult{
+export function exactFeatureDisplay(k:ExactKernel,doc:CadDocument,id:string,options:{limits?:ExactFeatureLimits;breps?:BrepCache}={}):ExactFeatureResult{
  const node=doc.nodes[id];
  if(node?.kind!=='exact-feature')throw new ExactKernelError('invalid-input',t`${id} is not an exact feature`);
- const solid=lowerDocumentNode(k,doc,id,{local:true,limits:options.limits});
+ const solid=lowerDocumentNode(k,doc,id,{local:true,limits:options.limits,breps:options.breps});
  if(!k.isValid(solid))throw new ExactKernelError('kernel-failure',t`${node.name}: the exact result is not a valid closed solid.`);
  const mesh=displayTessellation(k,solid,node.name);
  return {display:{sourceKey:exactFeatureKey(doc,id),...mesh},volume:k.volume(solid)};

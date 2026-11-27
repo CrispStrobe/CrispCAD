@@ -17,7 +17,7 @@ setLocale('en');
 const params=new URLSearchParams(location.search);
 const holes=Math.min(400,Math.max(1,Math.floor(Number(params.get('holes')??200))||200));
 const choice=params.get('exact-limits')??'tablet';
-const NONE:ExactLimits={maxFeatureEdges:Infinity,maxShellFaces:Infinity,maxMemoryBytes:Infinity,recycleAboveBytes:Infinity,requestTimeoutMs:Infinity};
+const NONE:ExactLimits={maxFeatureEdges:Infinity,maxShellFaces:Infinity,maxMemoryBytes:Infinity,recycleAboveBytes:Infinity,requestTimeoutMs:Infinity,maxStepImportBytes:Infinity};
 const base:ExactLimits=choice==='desktop'?EXACT_LIMITS_DESKTOP:choice==='none'?NONE:EXACT_LIMITS_TABLET;
 // Single overrides, e.g. a low memory-mib to see the ceiling work, or recycle-mib=1 to see the worker
 // end after every job: memory-mib, recycle-mib, timeout-s.

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {commandHelp,commandRegistry,commandScriptLines,runCommandScript,createCommandJournal,EXACT_FEATURE_COMMANDS,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseUpgradeLofts,parseExactCommand,parseExactFeatureCommand,parseRecomputeCommand,prepareCommand,recomputeExactFeatures,runExactFeatureCommand,t} from '@brickwright/cad-core';
+import {commandHelp,commandRegistry,commandScriptLines,runCommandScript,createCommandJournal,EXACT_FEATURE_COMMANDS,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseUpgradeLofts,parseExactCommand,parseExactFeatureCommand,parseImportCommand,parseRecomputeCommand,prepareCommand,recomputeExactFeatures,runExactFeatureCommand,runStepImport,t} from '@brickwright/cad-core';
 import type {CadSession,Vec3,SessionCommandRecord,CommandSpec,CommandStep,CommandValue,PreparedCommand,JournalExportFormat,ExactCommandHost,ExactCommandFile} from '@brickwright/cad-core';
 import type {CadCommand} from './index.js';
 import {terminalArguments,terminalTokens} from './terminal-coordinates.js';
@@ -19,7 +19,11 @@ export type TerminalOptions={executeEditorCommand:(command:CadCommand)=>void|Pro
   * (the editor's lazily loaded exact-kernel worker). */
  exact?:ExactCommandHost;
  /** Delivers a file a command produced, such as the STEP export. */
- saveFile?:(file:ExactCommandFile)=>Promise<void>};
+ saveFile?:(file:ExactCommandFile)=>Promise<void>;
+ /** Lets the user choose a STEP file for `import step` (undefined: cancelled). */
+ pickStepFile?:()=>Promise<{name:string;bytes:Uint8Array}|undefined>;
+ /** Called after `import step` added bodies, e.g. to frame them. */
+ afterStepImport?:(ids:readonly string[])=>void|Promise<void>};
 /** Terminal help/completion order comes from the shared command registry. */
 export const terminalCommands:readonly CommandSpec[]=commandRegistry.filter(entry=>entry.terminal);
 
@@ -218,6 +222,20 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
     const record=<T,>(line:string,commit:()=>T)=>journal.withInvocation(line,commit);
     const done=parsed?await runExactFeatureCommand(session,options.exact,parsed,{record}):await recomputeExactFeatures(session,options.exact,recompute!.features,{record,invocation:recompute!.invocation});
     append('output',done.output);
+    return;
+   }
+   if(name==='import'){
+    const {file}=parseImportCommand(tail);
+    if(file)throw new Error(t('In the editor, type import step and choose the file.'));
+    if(!options.exact)throw new Error(t('The exact kernel is not available in this host.'));
+    if(!options.pickStepFile)throw new Error(t('This host cannot open files.'));
+    const chosen=await options.pickStepFile();
+    if(!chosen){append('output',t('Import cancelled.'));return;}
+    append('output',t('Reading the STEP file on the exact kernel…'));
+    const record=<T,>(line:string,commit:()=>T)=>journal.withInvocation(line,commit);
+    const done=await runStepImport(session,options.exact,chosen,{record});
+    append('output',done.output);
+    await options.afterStepImport?.(done.ids);
     return;
    }
    if(definition.kernel==='exact'){

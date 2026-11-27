@@ -26,6 +26,10 @@ export interface ExactLimits {
  /** The whole request, including the first load, is stopped after this long (ms): the host ends
   * the worker. The kernel's own guard for shell-like steps is derived from it (`exactGuardSeconds`). */
  readonly requestTimeoutMs:number;
+ /** STEP import: files above this size (bytes) are refused before the kernel reads them. Reading,
+  * re-checking and meshing bodies took 1–3 s CPU per 100 KiB of STEP on the loaded M1
+  * (experiments/exact-kernel, "STEP import"), and the whole import shares the request budget. */
+ readonly maxStepImportBytes:number;
 }
 
 const MiB=1048576;
@@ -42,11 +46,11 @@ export const CURVED_EDGE_WEIGHT=4;
  * Defaults for tablets and phones, and every host that does not choose: iPad Safari tabs are
  * killed at roughly 1–1.5 GB for the whole page, and WebAssembly memory never shrinks.
  */
-export const EXACT_LIMITS_TABLET:ExactLimits=Object.freeze({maxFeatureEdges:400,maxShellFaces:160,maxMemoryBytes:512*MiB,recycleAboveBytes:192*MiB,requestTimeoutMs:60000});
+export const EXACT_LIMITS_TABLET:ExactLimits=Object.freeze({maxFeatureEdges:400,maxShellFaces:160,maxMemoryBytes:512*MiB,recycleAboveBytes:192*MiB,requestTimeoutMs:60000,maxStepImportBytes:4*MiB});
 /** For desktop hosts (Electron/WKWebView on a Mac, desktop browsers) that can afford more. */
-export const EXACT_LIMITS_DESKTOP:ExactLimits=Object.freeze({maxFeatureEdges:1000,maxShellFaces:500,maxMemoryBytes:2048*MiB,recycleAboveBytes:512*MiB,requestTimeoutMs:120000});
+export const EXACT_LIMITS_DESKTOP:ExactLimits=Object.freeze({maxFeatureEdges:1000,maxShellFaces:500,maxMemoryBytes:2048*MiB,recycleAboveBytes:512*MiB,requestTimeoutMs:120000,maxStepImportBytes:16*MiB});
 /** No pre-flight refusal and no memory cap (tests, CLI, benches). */
-export const EXACT_LIMITS_NONE:ExactLimits=Object.freeze({maxFeatureEdges:Infinity,maxShellFaces:Infinity,maxMemoryBytes:Infinity,recycleAboveBytes:Infinity,requestTimeoutMs:Infinity});
+export const EXACT_LIMITS_NONE:ExactLimits=Object.freeze({maxFeatureEdges:Infinity,maxShellFaces:Infinity,maxMemoryBytes:Infinity,recycleAboveBytes:Infinity,requestTimeoutMs:Infinity,maxStepImportBytes:Infinity});
 
 /** `limits` with every missing or invalid field taken from `base`. */
 export function resolveExactLimits(limits:Partial<ExactLimits>|undefined,base:ExactLimits=EXACT_LIMITS_TABLET):ExactLimits{

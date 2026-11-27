@@ -169,6 +169,37 @@ interface ExactFeature {
 - STEP export and exact measures rebuild the operation on the exact source; they never read
   `display`.
 
+**Version 45 (2026-11-27) adds `exact-body` nodes**: solids imported from STEP by the exact
+kernel (**File › Import STEP as exact bodies…**, `import step`, MCP `cad_import_step`, CLI
+`import`). A document reaches 45 only when such a body is imported; Undo returns to the earlier
+version, and documents without one keep their version.
+
+```ts
+interface ExactBody {
+  kind: 'exact-body';
+  bodyVersion: 1;
+  brep: { format: 'step'; text: string };   // one solid, AP214, mm, local frame; ≤ 8 MiB
+  measures: { volume: number; area: number; min: Vec3; max: Vec3 };  // exact, at import
+  display: { positions: number[]; indices: number[] };  // kernel tessellation, 0.01 mm / 10°
+  origin?: { file: string; sha256: string; bytes: number; body: number; bodies: number };
+  // Normal SolidNode identity, name, color, transform and physics also apply.
+}
+```
+
+- `brep.text` is the defined form of the B-rep: the body as the exact kernel re-writes it, one
+  solid per node, checked at import to read back with the same volume and area (1e-7) and box
+  (1e-6 mm). It is never edited; `session.update` refuses `brep`, `display`, `measures`, `origin`.
+- `display` is required and never stale (the B-rep cannot change), so a document opens, displays,
+  simulates and prints without the kernel: Manifold builds the mesh like a `mesh` node, with the
+  node's transform. It is closed and consistently oriented and bounded like a `mesh` node.
+- Exact export, exact measures and exact `fillet`/`chamfer`/`shell` read the body from
+  `brep.text` (the exact backend caches it between requests). An exact feature on an imported
+  body depends on the B-rep through `exactBodyKey` (a signature of the text).
+- Only commits inside `session.withKernel(...)` may add one (`session.addExactBodies`), so the
+  recorded command carries the kernel. Model source writes `exactBody(id, {...}, asset(id))`;
+  history archives store `brep` (content kind `brep`) and `display` as shared content objects,
+  so moving or renaming the body stores no copy. Documents stay within 16 MiB in all.
+
 ## Graph and errors
 
 `designGraph(doc)` derives a deterministic topological order from canonical

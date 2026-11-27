@@ -374,6 +374,31 @@ a 70 MiB ceiling failed with "ran out of memory" after 19.7 s, its worker was en
 How the guards work, and the thresholds: see
 [CRISPCAD-CONVERGENCE.md](../../docs/CRISPCAD-CONVERGENCE.md#heavy-exact-jobs-on-ipad-2026-11-26).
 
+## STEP import (2026-11-27)
+
+`step-import-bench.ts` runs the product path of **Import STEP as exact bodies** in Node
+(`runStepImport` → `@brickwright/cad-exact` `importStep`: the strict read of exact kernel 0.1.8,
+each body's B-rep re-written as STEP and read back for the check, its display tessellation), then a
+warm `measure exact` of the imported document. Shared Apple M1 at load average 150–260, so wall
+times are many times the CPU times; compare CPU ([`results/step-import-darwin-arm64.json`](results/step-import-darwin-arm64.json)):
+
+| File (source) | KiB | Bodies | Import CPU (wall) | Stored B-rep | Display | Document |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| box (our export) | 5 | 1 | 0.15 s (1.3 s) | 5 KiB | 12 triangles | 7 KiB |
+| filleted box (our export) | 24 | 1 | 1.6 s (16 s) | 26 KiB | 4,604 | 151 KiB |
+| plate with 12 holes (our export) | 20 | 1 | 0.9 s (7.6 s) | 19 KiB | 1,932 | 62 KiB |
+| Adafruit 830 battery holder (MIT) | 217 | 2 | 2.1 s (16 s) | 143 KiB | 2,276 | 197 KiB |
+| Adafruit 711 DC toy motor (MIT) | 85 | 2 | 2.4 s (37 s) | 64 KiB | 9,808 | 321 KiB |
+| Adafruit 3777 TT motor (MIT) | 110 | 8 | 3.0 s (35 s) | 90 KiB | 12,006 | 404 KiB |
+| Adafruit 4884 Feather RP2040 (MIT) | 2,386 | 58 | 44 s (915 s) | 2,992 KiB | 68,994 | 4,864 KiB |
+
+So import costs roughly 1–3 s CPU per 100 KiB of STEP here (reading, the stored B-rep's read-back
+check and the display mesh). The tablet limit (4 MiB files) refuses only very large files up front;
+the request budget (60 s tablet, 120 s desktop) is what stops an import a device cannot finish (the
+Feather board would be stopped on a tablet, with "the model was not changed"). A first run refused
+the Feather board: one pin header's re-written STEP read back with an area 4.9e-9 off (volume
+2e-12, box identical), over the 1e-9 check then in place; the check is 1e-7 now.
+
 ## Licence audit
 
 **Owner decision (2026-11-24): MIT + Apache-2.0 only.** `node licence-audit.mjs` lists the 23

@@ -11,6 +11,7 @@ const labels:Record<NonNullable<ExactActivity['operation']>,string>={
  'export-step':'STEP export',
  measure:'Exact measure',
  edges:'Exact edges',
+ 'import-step':'STEP import',
 };
 
 export function mountExactActivity(parent:HTMLElement,source:{readonly exactActivity:ExactActivity;onExactActivity(listener:(activity:ExactActivity)=>void):()=>void;cancelExact():void}){

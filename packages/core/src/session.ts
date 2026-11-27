@@ -28,13 +28,15 @@ import type { ParametricDesign } from './parameters.js';
 import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositionExpression} from './fragments.js';
 import {exactFeatureKey} from './exact-feature.js';
 import {EXACT_EDGE_REFERENCE_DOCUMENT_VERSION,isEdgeReferences,mapEdgeReferenceIds} from './exact-edge-references.js';
+import {exactBodyNode} from './exact-body.js';
+import type {ExactBodyData} from './exact-body.js';
 import type {ExactFeature,ExactFeatureDisplay,ExactFeatureSettings} from './exact-feature.js';
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}
  // Gear meshes follow their copied partner; a partner outside the copy is dropped.
  const copied=new Map(joints.map((joint,i)=>[joint.id,result[i].id]));for(const next of result)if(next.gearMesh){const partner=copied.get(next.gearMesh.joint);if(partner)next.gearMesh={...next.gearMesh,joint:partner};else delete next.gearMesh;}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'|'artworkSourceId'|'artworkProfile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38|41|44){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38|41|44|45){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -631,6 +633,26 @@ export function createCadSession(initial: CadDocument = createDocument(), option
         if(display)attachExactDisplay(d,id,display);
       });
     },
+    /** Bodies read from a STEP file by the exact kernel, as `exact-body` nodes in one Undo step
+     * (document version 45). Only inside `withKernel`: the B-rep and display are the kernel's. */
+    addExactBodies(entries:readonly {body:ExactBodyData;name:string;color?:string|null;id?:string;position?:Vec3}[],label='Import STEP'):string[]{
+      if(!entries.length)throw new Error(t('The STEP file holds no solid to import.'));
+      if(!activeKernel)throw new Error(t('Imported exact bodies can only be committed by the exact kernel.'));
+      const ids=entries.map(entry=>entry.id??newId());
+      commit(label,d=>{
+        upgradeModelFeatures(d,45);
+        const names=new Set(d.roots.map(key=>d.nodes[key].name));
+        entries.forEach((entry,i)=>{
+          if(Object.hasOwn(d.nodes,ids[i]))throw new Error(t('Object identity already exists'));
+          const name=uniqueObjectName(entry.name.trim()||t('STEP body'),names);names.add(name);
+          d.nodes[ids[i]]={...exactBodyNode(entry.body),id:ids[i],name,color:entry.color&&/^#[0-9a-fA-F]{6}$/.test(entry.color)?entry.color:'#9aa7b4',
+            transform:{...identityTransform(),position:entry.position?[...entry.position] as Vec3:[0,0,0]}} as SolidNode;
+          d.roots.push(ids[i]);
+        });
+        return ids;
+      });
+      return ids;
+    },
     /** Commit display meshes the exact kernel computed for the current model, in one Undo step. */
     setExactFeatureDisplays(displays:readonly {id:string;display:ExactFeatureDisplay}[]){
       if(!displays.length)return;
@@ -674,6 +696,7 @@ export function createCadSession(initial: CadDocument = createDocument(), option
       if(d.version>=5&&'provenance' in patch)throw new Error('Use attachProvenance to record sources');
       if('program' in patch)throw new Error(t('Use updateCode to edit a code program'));
       if('generator' in patch)throw new Error(t('Use shape regeneration to change generator inputs'));
+      if(d.nodes[id].kind==='exact-body'&&['brep','display','measures','origin','bodyVersion'].some(key=>key in patch))throw new Error(t('An imported exact body keeps its B-rep; import the STEP file again to replace it'));
       if(d.nodes[id].kind==='exact-feature'&&['display','source','operation','size','edges','openFaces','featureVersion'].some(key=>key in patch))throw new Error(t('Edit an exact feature with Edit exact feature, or recompute it with the exact kernel'));
       // Kind and identity cannot be changed by inspector edits.
       if ((patch.id && patch.id !== id) || (patch.kind && patch.kind !== d.nodes[id].kind)) throw new Error(t('Cannot change object identity or kind'));

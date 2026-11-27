@@ -2,7 +2,7 @@
 // Optional exact B-rep backend. Importing this module loads no WebAssembly; `createExactBackend`
 // loads the kernel lab's SMLib build once per process or worker. Hosts import this module
 // lazily (dynamic import) so the default Manifold path never pays for it.
-import {edgeReferences,staleExactFeatures,validateDocument,t} from '@brickwright/cad-core';
+import {constructionInputs,edgeReferences,staleExactFeatures,validateDocument,t} from '@brickwright/cad-core';
 import type {CadDocument,ExactBodyEdgesReport,ExactCommandHost,ExactCommandRequest,ExactCommandResult,ExactFeatureDisplay,KernelIdentity} from '@brickwright/cad-core';
 import {createSmlibKernel,ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactSolid,SmlibKernel,SmlibLoadOptions} from '@crispcad/exact-kernel';
@@ -12,12 +12,16 @@ import {exactFeatureDisplay} from './display.js';
 import {exactKernelOptions} from './limits.js';
 import type {ExactLimits} from './limits.js';
 import type {ExactFeatureLimits} from './lower-document.js';
+import {createBrepCache,importStepBodies} from './step-import.js';
+import type {ExactStepImport} from './step-import.js';
 
 export * from './identity.js';
 export {lowerCodeShape,evaluateCadScript,cadScript,revolveProfile,MIN_EXACT_SEGMENTS,MAX_POLYHEDRON_FACES} from './lower-cad-script.js';
 export {lowerDocumentBody,lowerDocumentNode,sketchProfile,ExactLoweringError,describeExactFace,resolveFeatureEdges} from './lower-document.js';
 export {displayMesh,displayTessellation,exactFeatureDisplay} from './display.js';
 export {triangulatePolygon,facewiseMesh,MANY_LOOPS} from './face-mesh.js';
+export {importStepBodies,storedBody,createBrepCache} from './step-import.js';
+export type {ImportedExactBody,ExactStepImport,BrepCache} from './step-import.js';
 export type {ExactFeatureResult} from './display.js';
 export type {ExactDiagnostic,ExactFeatureLimits} from './lower-document.js';
 export {EXACT_LIMITS_TABLET,EXACT_LIMITS_DESKTOP,EXACT_LIMITS_NONE,CURVED_EDGE_WEIGHT,resolveExactLimits,exactGuardSeconds,exactKernelOptions} from './limits.js';
@@ -51,6 +55,7 @@ export interface ExactEdgesResult {kernel:ExactKernelInfo;bodies:ExactBodyEdgesR
 /** At most this many edges are listed per body (a listing is for picking, not for export). */
 export const MAX_LISTED_EDGES=5000;
 export interface ExactStepResult {kernel:ExactKernelInfo;bodies:{id:string;name:string}[];step:string;bytes:number}
+export interface ExactStepImportResult extends ExactStepImport {kernel:ExactKernelInfo}
 
 /** Bodies an exact command acts on: the given top-level bodies, or every printable one. */
 export function exactTargets(doc:CadDocument,ids?:readonly string[]):string[]{
@@ -85,14 +90,28 @@ export interface ExactBackend {
  /** The B-rep edges of top-level bodies (or exact-feature sources) with their stable references, for picking. */
  edges(doc:CadDocument,ids:readonly string[],options?:ExactRunOptions):ExactEdgesResult;
  featureDisplays(doc:CadDocument,ids?:readonly string[],options?:ExactRunOptions):ExactFeatureDisplayResult;
+ /** Read a STEP file as exact bodies (B-rep, measures and display of each), or refuse it whole. */
+ importStep(bytes:Uint8Array,file:string,options?:ExactRunOptions):ExactStepImportResult;
+}
+
+/** Every node a set of top-level bodies is built from. */
+function reachable(doc:CadDocument,ids:readonly string[]){
+ const seen=new Set<string>(),visit=(id:string)=>{if(seen.has(id))return;seen.add(id);constructionInputs(doc.nodes[id]).forEach(visit);};
+ ids.forEach(visit);return [...seen].map(id=>doc.nodes[id]);
 }
 
 export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(kernel as Partial<SmlibKernel>).maxMemoryBytes):ExactBackend{
  const info:ExactKernelInfo=Object.freeze({...exactKernelIdentity,smlib:kernel.version,licence:kernel.licence});
- const lower=(input:CadDocument,ids?:readonly string[],options:ExactRunOptions={})=>{
+ // Imported bodies' B-reps, read once and kept between requests (outside any request's scope).
+ const breps=createBrepCache(kernel);
+ const prepare=(input:CadDocument,ids?:readonly string[])=>{
   const doc=validateDocument(input),targets=exactTargets(doc,ids);
+  breps.warm(reachable(doc,targets));
+  return {doc,targets};
+ };
+ const lower=({doc,targets}:{doc:CadDocument;targets:string[]},options:ExactRunOptions={})=>{
   return {doc,targets,solids:targets.map(id=>{
-   const solid=lowerDocumentBody(kernel,doc,id,options);
+   const solid=lowerDocumentBody(kernel,doc,id,{...options,breps});
    if(!kernel.isValid(solid))throw new ExactKernelError('kernel-failure',t`${doc.nodes[id].name}: the exact result is not a valid closed solid.`);
    return solid;
   })};
@@ -100,8 +119,9 @@ export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(
  return {
   kernel,info,...(memoryCapBytes?{memoryCapBytes}:{}),
   measure(input,ids,options){
+   const prepared=prepare(input,ids);
    return kernel.scope(()=>{
-    const {doc,targets,solids}=lower(input,ids,options);
+    const {doc,targets,solids}=lower(prepared,options);
     return {kernel:info,bodies:solids.map((solid,i)=>{
      const box=kernel.bbox(solid),mass=kernel.massProperties(solid);
      return {id:targets[i],name:doc.nodes[targets[i]].name,volume:kernel.volume(solid),area:kernel.area(solid),bounds:{min:[...box.min],max:[...box.max]},centroid:[...mass.centroid],solids:kernel.solidCount(solid)};
@@ -114,9 +134,10 @@ export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(
    if(!targets.length)throw new ExactKernelError('invalid-input',t('Name or select the bodies whose edges to list.'));
    if(targets.length>MAX_EXACT_BODIES)throw new ExactKernelError('invalid-input',t`Exact commands are limited to ${MAX_EXACT_BODIES} bodies.`);
    for(const id of targets)if(!doc.nodes[id]||!doc.roots.includes(id)&&!Object.values(doc.nodes).some(n=>n.kind==='exact-feature'&&n.source===id))throw new ExactKernelError('invalid-input',t`Unknown object id: ${id}`);
+   breps.warm(reachable(doc,targets));
    return {kernel:info,bodies:targets.map(id=>kernel.scope(()=>{
     // The body as an exact feature on it would see it: its own transform applied, faces named.
-    const solid=lowerDocumentNode(kernel,doc,id,{named:true,limits:options.limits}),topology=kernel.topology(solid);
+    const solid=lowerDocumentNode(kernel,doc,id,{named:true,limits:options.limits,breps}),topology=kernel.topology(solid);
     if(topology.edges.length>MAX_LISTED_EDGES)throw new ExactKernelError('unsupported',t`${doc.nodes[id].name} has ${topology.edges.length} edges, more than ${MAX_LISTED_EDGES} can be listed. Fillet every edge or a face instead.`);
     const references=edgeReferences(topology);
     return {id,name:doc.nodes[id].name,edges:topology.edges.map((edge,i)=>{
@@ -129,11 +150,18 @@ export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(
    const doc=validateDocument(input),targets=ids?.length?[...new Set(ids)]:staleExactFeatures(doc);
    if(targets.length>MAX_EXACT_BODIES)throw new ExactKernelError('invalid-input',t`Exact commands are limited to ${MAX_EXACT_BODIES} bodies.`);
    for(const id of targets)if(doc.nodes[id]?.kind!=='exact-feature')throw new ExactKernelError('invalid-input',t`${id} is not an exact feature`);
-   return {kernel:info,features:targets.map(id=>kernel.scope(()=>({id,name:doc.nodes[id].name,...exactFeatureDisplay(kernel,doc,id,options)})))};
+   breps.warm(reachable(doc,targets));
+   return {kernel:info,features:targets.map(id=>kernel.scope(()=>({id,name:doc.nodes[id].name,...exactFeatureDisplay(kernel,doc,id,{...options,breps})})))};
+  },
+  importStep(bytes,file,options={}){
+   const limit=options.limits?.maxStepImportBytes;
+   if(limit!==undefined&&bytes.byteLength>limit)throw new ExactKernelError('unsupported',t`${file} is ${(bytes.byteLength/1048576).toFixed(1)} MiB; this device imports STEP files of up to ${Math.round(limit/1048576)} MiB. Import it on a computer, or split the assembly.`);
+   return {kernel:info,...kernel.scope(()=>importStepBodies(kernel,bytes,file))};
   },
   exportStep(input,ids,options){
+   const prepared=prepare(input,ids);
    return kernel.scope(()=>{
-    const {doc,targets,solids}=lower(input,ids,options);
+    const {doc,targets,solids}=lower(prepared,options);
     let combined:ExactSolid=solids[0];
     if(solids.length>1){
      // One STEP solid per body: a union may only collect bodies that stay apart.
@@ -189,6 +217,12 @@ export function isFatalExactError(error:unknown):boolean{
  return false;
 }
 
+const stepInput=(request:ExactCommandRequest)=>{
+ const bytes:unknown=request.step?.bytes;
+ if(bytes instanceof Uint8Array)return bytes;
+ if(bytes instanceof ArrayBuffer)return new Uint8Array(bytes);
+ throw new ExactKernelError('invalid-input',t('Give the STEP file to import.'));
+};
 /**
  * One exact request on a loaded backend, with its timing: what the editor's exact worker, the MCP
  * exact thread and the in-thread fallback all run. `loadMs` is the caller's (0 once loaded).
@@ -198,6 +232,7 @@ export function runExactRequest(backend:ExactBackend,request:ExactCommandRequest
  const computed=request.operation==='measure'?{operation:'measure' as const,...backend.measure(request.document,request.bodies,options)}
   :request.operation==='feature-display'?{operation:'feature-display' as const,...backend.featureDisplays(request.document,request.bodies,options)}
   :request.operation==='edges'?{operation:'edges' as const,...backend.edges(request.document,request.bodies,options)}
+  :request.operation==='import-step'?{operation:'import-step' as const,...backend.importStep(stepInput(request),request.step!.name,options)}
   :{operation:'export-step' as const,...backend.exportStep(request.document,request.bodies,options)};
  return {...computed,timing:{loadMs,runMs:performance.now()-started,memoryBytes:backend.kernel.memory().heap}};
 }

@@ -15,6 +15,8 @@ import {checkFeatures} from './features.js';
 import type {PlanarSketch,ExtrusionFeature,RevolutionFeature,MirrorFeature,PatternFeature} from './features.js';
 import {checkExactFeatureShape} from './exact-feature.js';
 import type {ExactFeature} from './exact-feature.js';
+import {checkExactBodyShape} from './exact-body.js';
+import type {ExactBody} from './exact-body.js';
 import { checkPhysics } from './physics.js';
 import { checkParametricDesign } from './parameters.js';
 import type { ParametricDesign } from './parameters.js';
@@ -24,7 +26,7 @@ import type { PartPhysics, CadJoint } from './physics.js';
 export type Vec3 = [number, number, number];
 export interface Transform { position: Vec3; rotation: Vec3; scale: Vec3 }
 export type Primitive = { kind: 'box'; size: Vec3 } | { kind: 'cylinder'; radius: number; height: number; segments: number } | { kind: 'sphere'; radius: number; segments: number };
-export type Shape = Primitive | ExtrusionFeature | RevolutionFeature | MirrorFeature | PatternFeature | ExactFeature | {kind:'code';program:CodeProgram} | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[]; useHoleRoles?:true } | { kind: 'mesh'; positions: number[]; indices: number[]; surface?: true };
+export type Shape = Primitive | ExtrusionFeature | RevolutionFeature | MirrorFeature | PatternFeature | ExactFeature | ExactBody | {kind:'code';program:CodeProgram} | { kind: 'boolean'; operation: 'union' | 'subtract' | 'intersect'; inputs: string[]; useHoleRoles?:true } | { kind: 'mesh'; positions: number[]; indices: number[]; surface?: true };
 export type SolidNode = { id: string; name: string; color: string; transform: Transform; reference?: boolean; role?: 'solid'|'hole'; provenance?: string[]; physics?: PartPhysics; generator?:GeneratorRecipe } & Shape;
 const noInputs:readonly string[]=[];
 export function constructionInputs(node:SolidNode|undefined):readonly string[]{
@@ -32,7 +34,7 @@ export function constructionInputs(node:SolidNode|undefined):readonly string[]{
   if(node?.kind==='mirror'||node?.kind==='pattern'||node?.kind==='exact-feature')return [node.source];
   return noInputs;
 }
-export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch>; provenance?:ModelProvenance; modelSource?:ModelSource; simulation?:SimulationSettings; tracers?:MotionTracer[]; drawings?:DrawingSheet[] }
+export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch>; provenance?:ModelProvenance; modelSource?:ModelSource; simulation?:SimulationSettings; tracers?:MotionTracer[]; drawings?:DrawingSheet[] }
 export const isCube=(node:SolidNode)=>node.kind==='box'&&node.generator?.preset==='cube';
 function linkedCubeValue(previous:readonly number[],next:readonly number[]):number{const changed=next.filter((v,i)=>Math.abs(v-previous[i])>1e-10*Math.max(1,Math.abs(v)));if(changed.some(v=>Math.abs(v-changed[0])>1e-10*Math.max(1,Math.abs(v))))throw new Error(translate('Cube edges are linked; use a Box for independent dimensions'));return changed[0]??next[0];}
 export function constrainCubeTransform(node:SolidNode,next:Transform):Transform{if(!isCube(node))return next;if(!vec(next.scale,.001,1000))throw new Error(translate('Cube edges are linked; use a Box for independent dimensions'));const axis=next.scale.map((v,i)=>Math.abs(v/node.transform.scale[i]-1)).reduce((best,v,i,a)=>v>a[best]?i:best,0),scale=next.scale[axis];return {...next,scale:[scale,scale,scale]};}
@@ -60,7 +62,7 @@ const vec = (v: unknown, min = -1e6, max = 1e6): v is Vec3 => Array.isArray(v) &
 
 /** Validate before replacing any live state. Unknown versions are refused, never downgraded. */
 export function checkDocument(value: unknown): CadDocument {
-  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44].includes(value.version as number) || value.units !== 'mm') fail(translate('unsupported format, version or units'));
+  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45].includes(value.version as number) || value.units !== 'mm') fail(translate('unsupported format, version or units'));
   if (!idOk(value.id) || !text(value.title) || !record(value.nodes) || !Array.isArray(value.roots)) fail(translate('missing document identity, nodes or roots'));
   const nodes = value.nodes as Record<string, unknown>;
   const entries = Object.entries(nodes);
@@ -87,6 +89,9 @@ export function checkDocument(value: unknown): CadDocument {
         break;
       case 'exact-feature':
         if(!checkExactFeatureShape(raw,value.version as number,source=>idOk(source)&&Object.hasOwn(nodes,source)))fail(translate`bad exact feature on ${id} (requires document version 41, an existing source and a bounded display mesh)`);
+        break;
+      case 'exact-body':
+        if(!checkExactBodyShape(raw,value.version as number))fail(translate`bad exact body on ${id} (requires document version 45, the B-rep as STEP text of at most 8 MiB, its measures and a bounded display mesh)`);
         break;
       case 'mirror':
         if((value.version as number)<13||!idOk(raw.source)||!Object.hasOwn(nodes,raw.source))fail(translate`bad mirror source on ${id}`);
@@ -139,7 +144,7 @@ export function parseDocument(source: string): CadDocument {
 function compactExactDisplays(document: CadDocument): Map<unknown, string> {
   const buffers = new Map<unknown, string>();
   for (const node of Object.values(document.nodes) as {kind?: string; display?: {positions?: unknown; indices?: unknown}}[]) {
-    if (node.kind !== 'exact-feature' || !node.display) continue;
+    if ((node.kind !== 'exact-feature' && node.kind !== 'exact-body') || !node.display) continue;
     for (const array of [node.display.positions, node.display.indices])
       if (Array.isArray(array)) buffers.set(array, `\u0000exact-display:${buffers.size}\u0000`);
   }
