@@ -99,17 +99,38 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
  const ownedBodies:any[]=[],byId=new Map<string,any>(),constraints=new Map<string,any>();let disposed=false,elapsed=0,contactListener:any,partFilter:any;
  const motorBindings=new Map<string,MotorBinding>();
  let rayQuery:ReturnType<typeof createRayQuery>|undefined;
- const bodyRotations=new Map<NativeBody,{revision:number;rotation:number[]}>();
- const sensorPoses=new Map<NativeBody,{revision:number;pose:ReturnType<typeof readPose>}>();
+ type BodyPoseSample={revision:number;positionM?:Vec3;rotation?:number[]};
+ const bodyPoseSamples=new Map<NativeBody,BodyPoseSample>();
  type SensorRay={bodyId:string;body:NativeBody;originMm:Vec3;direction:Vec3;rangeMm:number;source:number[];axis:number[];projected?:{revision:number;origin:Vec3;to:Vec3}};
  const sensorRays=new Map<string,SensorRay>();
  let poseRevision=0;
- function currentRotation(body:NativeBody){
-  const cached=bodyRotations.get(body);
-  if(cached?.revision===poseRevision)return cached.rotation;
-  const q=body.GetRotation(),rotation=[q.GetX(),q.GetY(),q.GetZ(),q.GetW()];
-  bodyRotations.set(body,{revision:poseRevision,rotation});
-  return rotation;
+ // Body transforms stay fixed between native steps. Fetch each field only
+ // when a consumer needs it, and keep samples private to the simulation.
+ function bodyPoseSample(body:NativeBody){
+  let sample=bodyPoseSamples.get(body);
+  if(!sample){
+   sample={revision:poseRevision};
+   bodyPoseSamples.set(body,sample);
+  }else if(sample.revision!==poseRevision){
+   sample.revision=poseRevision;
+   sample.positionM=undefined;
+   sample.rotation=undefined;
+  }
+  return sample;
+ }
+ function currentPositionM(body:NativeBody,sample:BodyPoseSample){
+  if(!sample.positionM){
+   const p=body.GetPosition();
+   sample.positionM=[p.GetX(),p.GetY(),p.GetZ()];
+  }
+  return sample.positionM;
+ }
+ function currentRotation(body:NativeBody,sample:BodyPoseSample){
+  if(!sample.rotation){
+   const q=body.GetRotation();
+   sample.rotation=[q.GetX(),q.GetY(),q.GetZ(),q.GetW()];
+  }
+  return sample.rotation;
  }
  function readHingeAngle(binding:HingeBinding){
   if(binding.angleRevision!==poseRevision){
@@ -230,41 +251,21 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
  for(const frame of separatedFrames.values())group.DisableCollision(bodyIndex.get(frame.bodyA)!,bodyIndex.get(frame.bodyB)!);
  const restoreSeparatedPair=(key:string)=>{if(!separatedHingePairs.delete(key))return;const frame=separatedFrames.get(key)!;if(sceneSettings.selfCollisions!==false)group.EnableCollision(bodyIndex.get(frame.bodyA)!,bodyIndex.get(frame.bodyB)!);};
  const invalidateSeparatedPairs=(id:string)=>{const body=byId.get(id);for(const[key,frame]of separatedFrames)if(byId.get(frame.bodyA)===body||byId.get(frame.bodyB)===body)restoreSeparatedPair(key);};
- type HingePose={position:Vec3;rotation:number[];sample:number};
- const hingePoses=new Map<string,HingePose>();
- for(const {bodyA,bodyB} of separatedFrames.values()){
-  for(const id of [bodyA,bodyB]){
-   if(!hingePoses.has(id))hingePoses.set(id,{position:[0,0,0],rotation:[0,0,0,1],sample:0});
-  }
- }
- let hingeSample=0;
  const currentHingeFrame=(id:string,anchor:Vec3,axis:Vec3)=>{
-  const pose=hingePoses.get(id)!;
-  if(pose.sample!==hingeSample){
-   const body=byId.get(id),position=body.GetPosition(),rotation=body.GetRotation();
-   pose.position[0]=position.GetX();
-   pose.position[1]=position.GetY();
-   pose.position[2]=position.GetZ();
-   pose.rotation[0]=rotation.GetX();
-   pose.rotation[1]=rotation.GetY();
-   pose.rotation[2]=rotation.GetZ();
-   pose.rotation[3]=rotation.GetW();
-   pose.sample=hingeSample;
-  }
-  const point=quaternionPoint(anchor,pose.rotation);
+  const body=bodyForPose(id),sample=bodyPoseSample(body);
+  const position=currentPositionM(body,sample),rotation=currentRotation(body,sample);
+  const point=quaternionPoint(anchor,rotation);
   return {
    anchor:[
-    point[0]+1000*pose.position[0],
-    point[1]+1000*pose.position[1],
-    point[2]+1000*pose.position[2],
+    point[0]+1000*position[0],
+    point[1]+1000*position[1],
+    point[2]+1000*position[2],
    ] as Vec3,
-   axis:quaternionPoint(axis,pose.rotation) as Vec3,
+   axis:quaternionPoint(axis,rotation) as Vec3,
   };
  };
  const checkSeparatedFrames=()=>{
   if(!separatedHingePairs.size)return;
-  // Several hinges can share a body. Sample each pose once per boundary.
-  hingeSample++;
   for(const key of separatedHingePairs){
    const frame=separatedFrames.get(key)!;
    const a=currentHingeFrame(frame.bodyA,frame.anchorA,frame.axisA);
@@ -294,7 +295,7 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    });
   }finally{J.destroy(bc);}
  };
- function dispose(){if(disposed)return;disposed=true;rayQuery?.dispose();rayQuery=undefined;bodyRotations.clear();sensorPoses.clear();sensorRays.clear();motorBindings.clear();for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
+ function dispose(){if(disposed)return;disposed=true;rayQuery?.dispose();rayQuery=undefined;bodyPoseSamples.clear();sensorRays.clear();motorBindings.clear();for(const c of constraints.values()){system.RemoveConstraint(c);c.Release();}for(const body of ownedBodies){bodies.RemoveBody(body.GetID());bodies.DestroyBody(body.GetID());}J.destroy(world);if(impulseVector)J.destroy(impulseVector);if(impulsePoint)J.destroy(impulsePoint);if(contactListener)J.destroy(contactListener);if(partFilter)J.destroy(partFilter);}
  let scratchVertex:any,scratchPosition:any,scratchRotation:any;
  function createCompound(members:typeof meshes):NativeShape{
   const compound=new J.StaticCompoundShapeSettings();
@@ -506,19 +507,9 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
  function bodyRayEndpoints(id:string,originMm:Vec3,direction:Vec3,rangeMm:number,sensorId?:string){
    const ray=prepareSensorRay(id,originMm,direction,rangeMm,sensorId);
    if(ray.projected?.revision===poseRevision)return ray.projected;
-   const {body}=ray;
-   // Pre-step validation and post-step casts can share each native pose
-   // across all rays and welded parts at the same solver boundary.
-   let cached=sensorPoses.get(body);
-   if(cached?.revision!==poseRevision){
-    const p=body.GetPosition();
-    cached={revision:poseRevision,pose:{
-     positionMm:[p.GetX()*1000,p.GetY()*1000,p.GetZ()*1000],quaternion:currentRotation(body),
-    }};
-    sensorPoses.set(body,cached);
-   }
-   const {positionMm,quaternion}=cached.pose;
-   const origin=quaternionPoint(ray.source,quaternion).map((value,i)=>value+positionMm[i]) as Vec3;
+   const {body}=ray,sample=bodyPoseSample(body);
+   const position=currentPositionM(body,sample),quaternion=currentRotation(body,sample);
+   const origin=quaternionPoint(ray.source,quaternion).map((value,i)=>value+position[i]*1000) as Vec3;
    const axis=quaternionPoint(ray.axis,quaternion),length=Math.hypot(...axis);
    const to=origin.map((value,i)=>value+axis[i]/length*rangeMm) as Vec3;
    return ray.projected={revision:poseRevision,origin,to};
@@ -530,8 +521,11 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
   return body;
  }
  function readPose(body:NativeBody){
-  const p=body.GetPosition(),q=body.GetRotation();
-  return {positionMm:[p.GetX()*1000,p.GetY()*1000,p.GetZ()*1000],quaternion:[q.GetX(),q.GetY(),q.GetZ(),q.GetW()]};
+  const sample=bodyPoseSample(body);
+  return {
+   positionMm:currentPositionM(body,sample).map(value=>value*1000),
+   quaternion:currentRotation(body,sample).slice(),
+  };
  }
 
  return {
@@ -546,11 +540,10 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    // The last substep already checked the current poses. External edits
    // that may break clearance restore collision filtering for affected pairs.
    if(substeps>0&&elapsed===0)checkSeparatedFrames();
-   // Joint angles and sensor poses change during the solver step. Invalidate
-   // their samples before stepping, including if the native step throws.
-   if(substeps>0)poseRevision++;
    for(let i=0;i<substeps;i++){
     if(grab){const body=byId.get(grab.id),p=body.GetPosition(),q=body.GetRotation(),point=quaternionPoint(grab.local,[q.GetX(),q.GetY(),q.GetZ(),q.GetW()]).map((v,i)=>v+[p.GetX(),p.GetY(),p.GetZ()][i]),at=new J.RVec3(...point),velocity=bodies.GetPointVelocity(body.GetID(),at),speed=[velocity.GetX(),velocity.GetY(),velocity.GetZ()],acceleration=point.map((v,i)=>400*(grab!.target[i]*.001-v)-40*speed[i]),length=Math.hypot(...acceleration),force=new J.Vec3(...acceleration.map(v=>v*Math.min(1,100/Math.max(1e-9,length))*bodyMass.get(grab!.id)!));body.AddForce(force,at);bodies.ActivateBody(body.GetID());J.destroy(force);J.destroy(at);}
+    // Clearance must sample the new pose after every substep, even in a batch.
+    poseRevision++;
     world.Step(1/200,1);elapsed+=1/200;checkSeparatedFrames();
    }
   },
@@ -558,17 +551,10 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
   get rigidBodyCount(){return assemblies.size+previewCount;},
   get separatedHingePairCount(){return separatedHingePairs.size;},
   pose(id:string){if(disposed)throw new Error(t('Physics world was disposed'));return readPose(bodyForPose(id));},
-  /** Sample each rigid body once while preserving part order and independent pose arrays. */
+  /** Preserve input order and give every part its own writable pose arrays. */
   poses(ids:readonly string[]){
    if(disposed)throw new Error(t('Physics world was disposed'));
-   const sampled=new Map<NativeBody,ReturnType<typeof readPose>>();
-   return ids.map(id=>{
-    const body=bodyForPose(id),existing=sampled.get(body);
-    if(existing)return {id,positionMm:existing.positionMm.slice(),quaternion:existing.quaternion.slice()};
-    const pose=readPose(body);
-    sampled.set(body,pose);
-    return {id,...pose};
-   });
+   return ids.map(id=>({id,...readPose(bodyForPose(id))}));
   },
   angularVelocity(id:string){if(disposed)throw new Error(t('Physics world was disposed'));const body=byId.get(id);if(!body)throw new Error(t('Unknown physics body'));const v=body.GetAngularVelocity();return [v.GetX(),v.GetY(),v.GetZ()];},
   setAngularVelocity(id:string,velocityRadS:Vec3){if(disposed||!velocityRadS.every(Number.isFinite))throw new Error(t('Invalid physics state or velocity'));const body=byId.get(id);if(!body)throw new Error(t('Unknown physics body'));if(body.IsStatic())throw new Error(t('A fixed body cannot be thrown'));invalidateSeparatedPairs(id);const point=new J.RVec3(...sourceCenterM(id)),previous=bodies.GetPointVelocity(body.GetID(),point),center=body.GetCenterOfMassPosition(),r=sourceCenterM(id).map((v,i)=>v-[center.GetX(),center.GetY(),center.GetZ()][i]),prior=[previous.GetX(),previous.GetY(),previous.GetZ()],linear=new J.Vec3(...prior.map((v,i)=>v-velocityRadS[(i+1)%3]*r[(i+2)%3]+velocityRadS[(i+2)%3]*r[(i+1)%3])),angular=new J.Vec3(...velocityRadS);bodies.SetLinearVelocity(body.GetID(),linear);bodies.SetAngularVelocity(body.GetID(),angular);bodies.ActivateBody(body.GetID());J.destroy(point);J.destroy(linear);J.destroy(angular);},
@@ -598,7 +584,7 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
    const {joint,a,b,axis:authoredAxis,anchorM,motor}=actuator;
    // Multiple motors can act on the same chassis before the next step.
    // Impulses change velocity immediately but leave its orientation intact.
-   const q=currentRotation(a);
+   const sample=bodyPoseSample(a),q=currentRotation(a,sample);
    const [x,y,z]=quaternionPoint(authoredAxis,q).map(v=>v*impulse);
    impulseVector??=new J.Vec3(0,0,0);
    // These native settings persist across physics steps in this world.
@@ -611,9 +597,9 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
     actuator.impulseConfigured=true;
    }
    if(joint.kind==='slider'){
-    const origin=a.GetPosition(),offset=quaternionPoint(anchorM!,q);
+    const origin=currentPositionM(a,sample),offset=quaternionPoint(anchorM!,q);
     impulsePoint??=new J.RVec3(0,0,0);
-    impulsePoint.Set(offset[0]+origin.GetX(),offset[1]+origin.GetY(),offset[2]+origin.GetZ());
+    impulsePoint.Set(offset[0]+origin[0],offset[1]+origin[1],offset[2]+origin[2]);
    }
    for(const [body,sign]of [[a,-1],[b,1]] as const){
     if(body.IsStatic())continue;

@@ -24,22 +24,25 @@ it('samples a welded body once in an ordered batch with independent pose arrays'
  const world=await worldFor(fixture());
  const ids=['right','left','right'];
  try{
-  const initial=ids.map(id=>({id,...world.pose(id)}));
   const position=vi.spyOn(J.Body.prototype,'GetPosition');
   const rotation=vi.spyOn(J.Body.prototype,'GetRotation');
   try{
    const batch=world.poses(ids);
+   const initial=ids.map(id=>({id,positionMm:[0,0,0],quaternion:[0,0,0,1]}));
    expect(batch).toEqual(initial);
    expect(position).toHaveBeenCalledTimes(1);
    expect(rotation).toHaveBeenCalledTimes(1);
    batch[0].positionMm[0]=123;
    batch[0].quaternion[0]=1;
    expect(batch.slice(1)).toEqual(initial.slice(1));
+   expect(world.pose('right')).toEqual({positionMm:[0,0,0],quaternion:[0,0,0,1]});
+   expect(position).toHaveBeenCalledTimes(1);
+   expect(rotation).toHaveBeenCalledTimes(1);
   }finally{position.mockRestore();rotation.mockRestore();}
   world.setLinearVelocity('left',[100,0,0]);world.step();
   const moved=world.poses(ids);
   expect(moved).toEqual(ids.map(id=>({id,...world.pose(id)})));
-  expect(moved[0].positionMm[0]).toBeGreaterThan(initial[0].positionMm[0]);
+  expect(moved[0].positionMm[0]).toBeGreaterThan(0);
   expect(()=>world.poses(['missing'])).toThrow('Unknown physics body');
  }finally{world.dispose();}
  expect(()=>world.poses([])).toThrow('disposed');
@@ -123,6 +126,11 @@ it('samples shared hinge assembly poses once at each step boundary',async()=>{
   expect(world.separatedHingePairCount).toBe(2);
   world.step(.01);
   // Three bodies at the initial boundary and after each of two substeps.
+  expect(positions).toHaveBeenCalledTimes(9);
+  expect(rotations).toHaveBeenCalledTimes(9);
+  world.poses(doc.roots);
+  expect(world.bodyRay('left',[0,0,0],[0,0,-1],200)).toBeNull();
+  world.applyJointImpulse(doc.joints![1].id,1e-7);
   expect(positions).toHaveBeenCalledTimes(9);
   expect(rotations).toHaveBeenCalledTimes(9);
   world.step(.005);
