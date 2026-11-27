@@ -66,11 +66,14 @@ try {
  // The same byte-for-byte path for a document, then a parse with this SDK.
  const roundTrip = async (session, version) => {
   assert.equal(session.state.document.version, version);
+  // As saved: a live document may hold properties set to undefined (version 47's hole physics),
+  // which no file keeps.
+  const expected = parseDocument(session.serialize());
   const sb3 = attachCadProject(existing, session.state.document);
-  assert.deepEqual(extractCadProject(sb3), session.state.document);
+  assert.deepEqual(extractCadProject(sb3), expected);
   saved.clear(); const loadedDoc = await bundle.extractBrickwrightState(sb3.buffer.slice(sb3.byteOffset, sb3.byteOffset + sb3.byteLength));
   assert.notEqual(loadedDoc?.outcome, 'refused'); assert.equal(saved.get(CAD_STORAGE_KEY), session.serialize());
-  const parsed = parseDocument(saved.get(CAD_STORAGE_KEY)); assert.deepEqual(parsed, session.state.document);
+  const parsed = parseDocument(saved.get(CAD_STORAGE_KEY)); assert.deepEqual(parsed, expected);
   return parsed;
  };
  const exactBackend = await createExactBackend(); const kernels = [exactKernelIdentity];
@@ -110,4 +113,14 @@ try {
  paired.addCode({ version: CAD_SCRIPT_REVISION, language: 'brickwright-cad-script', parameters: {}, source: 'return loft([[[0,0,0],[20,0,0],[20,20,0],[0,20,0]],[[20,20,15],[0,20,15],[0,0,15],[20,0,15]]], {pairing: "closest"});' });
  await roundTrip(paired, 46);
  console.log('PASS: document version 46 (loft pairing "closest") survives the real Brickwright SB3 writer and loader unchanged and parses with this SDK.');
+ // Document version 47 (standard holes): a counterbored through hole in a plate, the same path,
+ // then displayed by Manifold from the loaded document.
+ const drilled = createCadSession();
+ drilled.add({ kind: 'box', size: [30, 30, 10] }, { name: 'Plate', transform: { ...identityTransform(), position: [0, 0, 5] } });
+ createCommandRunner(drilled).run('hole counterbore M4 through 10 at 0,0,10 in Plate');
+ const v47 = await roundTrip(drilled, 47);
+ assert.ok(Object.values(v47.nodes).some(node => node.kind === 'hole'), 'a hole node');
+ const drilledVolume = manifold.evaluate(v47).bodies[0].volume;
+ assert.ok(drilledVolume > 8000 && drilledVolume < 9000, `drilled plate ${drilledVolume} mm³`);
+ console.log(`PASS: document version 47 (standard holes) survives the real Brickwright SB3 writer and loader unchanged, parses with this SDK and displays (${drilledVolume.toFixed(1)} mm³).`);
 } finally { delete globalThis.localStorage; delete globalThis.window; delete globalThis.CustomEvent; }
