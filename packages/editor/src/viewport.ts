@@ -29,6 +29,8 @@ import {resizedTransforms} from './resize-math.js';
 import {scalePivotRotation,applyGizmoDelta,transformMatrix} from './transform-selection.js';
 import type {TransformPreview,TransformAxisAnchor} from './transform-readout.js';
 import { snapDelta } from './vendor/transform-math.js';
+import {EDGE_PICK_MOUSE_PX,EDGE_PICK_TOUCH_PX,createEdgeOverlay,pickEdgeAt} from './viewport-edge-pick.js';
+import type {EdgeOverlay,PickableEdge} from './viewport-edge-pick.js';
 const RAD = Math.PI / 180;
 export type ViewDirection = 'top' | 'bottom' | 'front' | 'back' | 'right' | 'left' | 'iso';
 const directions: Record<ViewDirection, [number, number, number]> = { top: [0, -0.00001, 1], bottom: [0, -0.00001, -1], front: [0, -1, 0], back: [0, 1, 0], right: [1, 0, 0], left: [-1, 0, 0], iso: [1, -1.4, 1] };
@@ -86,6 +88,11 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const traceGroup=new THREE.Group();scene.add(traceGroup);
   const traceLines=new Map<string,{line:THREE.Line;marker:THREE.Mesh}>();
   let pointPick:{done:(point:SimulationPoint|null)=>void;gizmo:boolean;cursor:string;draftPlane?:'XY'|'surface'}|undefined;
+  // Picking B-rep edges for exact fillets and chamfers (viewport-edge-pick.ts): taps toggle edges, the
+  // camera still turns, nothing is selected or moved.
+  let edgeTargetsTimer:ReturnType<typeof setTimeout>|undefined;
+  let edgePick:{overlay:EdgeOverlay;edges:readonly PickableEdge[];picked:Set<number>;toggle:(index:number)=>void;end:()=>void;gizmo:boolean;cursor:string}|undefined;
+  function endEdgePick(notify=true){if(!edgePick)return;const previous=edgePick;edgePick=undefined;clearTimeout(edgeTargetsTimer);previous.overlay.dispose();gizmo.enabled=previous.gizmo;canvas.style.cursor=previous.cursor;delete canvas.dataset.edgePick;delete canvas.dataset.edgePickTargets;if(notify)previous.end();scheduleDraw();}
   function cancelPointPick(){if(!pointPick)return;const previous=pointPick;pointPick=undefined;if(cameraDrag)cameraDrag.gizmoEnabled=previous.gizmo;else gizmo.enabled=previous.gizmo;canvas.style.cursor=previous.cursor;previous.done(null);scheduleDraw();}
   // Poses and traces arrive together. Coalesce their invalidations into one
   // browser frame; synchronous rendering here drew the same scene twice.
@@ -186,7 +193,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     if(canvas.dataset.transformAxis!==axis)canvas.dataset.transformAxis=axis;
     connectorHandles?.update();resizeControls?.update();publishPreview();
     for(const helper of selectionBoxes.values())helper.update();
-    wiring.update();renderer.render(scene, camera);
+    wiring.update();if(edgePick){clearTimeout(edgeTargetsTimer);edgeTargetsTimer=setTimeout(publishEdgeTargets,120);}renderer.render(scene, camera);
     if(canvas.dataset.simulationRecording)canvas.dispatchEvent(new Event('brickwright-simulation-frame'));
   };
   canvas.addEventListener('brickwright-simulation-capture',draw);
@@ -289,7 +296,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
   const wheel=(event:WheelEvent)=>{event.preventDefault();event.stopImmediatePropagation();if(drag||directDrag?.moved||cameraDrag)return;const action=cameraWheelAction(event,navigationPreset,canvas.clientHeight,cameraGestures);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);};canvas.addEventListener('wheel',wheel,{capture:true,passive:false});
   let gestureScale=1;const gesture=(event:Event)=>{event.preventDefault();const scale=(event as Event&{scale:number}).scale;if(event.type==='gesturestart'){gestureScale=1;return;}if(event.type==='gestureend'){gestureScale=1;return;}if(scale>0&&Number.isFinite(scale)){if(!drag&&!directDrag?.moved)zoomCamera(scale/gestureScale);gestureScale=scale;}};for(const name of ['gesturestart','gesturechange','gestureend'])canvas.addEventListener(name,gesture,{passive:false});
   const nativeGesture=(event:Event)=>{const data=(event as CustomEvent).detail;if(!data||!Number.isFinite(data.x)||!Number.isFinite(data.y))return;let hit:Element|null=document.elementFromPoint(data.x,data.y);while(hit?.shadowRoot)hit=hit.shadowRoot.elementFromPoint(data.x,data.y);if(hit!==canvas)return;data.handled=true;if(drag||directDrag?.moved||cameraDrag)return;if(data.kind==='zoom')zoomCamera(data.factor);else if(data.kind==='wheel'){const action=cameraWheelAction(data,navigationPreset,canvas.clientHeight,cameraGestures);if(action)action.kind==='zoom'?zoomCamera(action.factor):navigate(action.kind,action.dx,action.dy);}};window.addEventListener('brickwright-camera-input',nativeGesture);
-  const cameraKey=(event:KeyboardEvent)=>{if(event.key==='Escape'&&pointPick){event.preventDefault();event.stopImmediatePropagation();cancelPointPick();return;}if(event.code==='Space'){spaceHeld=true;event.preventDefault();}};canvas.addEventListener('keydown',cameraKey);
+  const cameraKey=(event:KeyboardEvent)=>{if(event.key==='Escape'&&edgePick){event.preventDefault();event.stopImmediatePropagation();endEdgePick();return;}if(event.key==='Escape'&&pointPick){event.preventDefault();event.stopImmediatePropagation();cancelPointPick();return;}if(event.code==='Space'){spaceHeld=true;event.preventDefault();}};canvas.addEventListener('keydown',cameraKey);
   const resetCameraKeys=()=>{endGrab();cancelPointPick();if(surfacePlacement.active)endPlacement();endBox();spaceHeld=false;shiftHeld=false;if(cameraDrag){gizmo.enabled=cameraDrag.gizmoEnabled;cameraDrag=undefined;orbit.enabled=true;}};window.addEventListener('blur',resetCameraKeys);
   const onDown = (e: PointerEvent) => {shiftHeld=e.shiftKey;canvas.dataset.fine=String(gizmo.isFine());
     canvas.focus({ preventScroll: true });
@@ -309,6 +316,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     if(simulating){if(grabEnabled&&simulationDrag&&e.button===0){if(grab){endGrab();return;}pointerRay(e);scene.updateMatrixWorld(true);const hit=ray.intersectObjects([...meshes.values(),...previewBalls.values()],false)[0];if(hit){const bodyId=hit.object.userData.id as string;if(session.state.document.nodes[bodyId]?.physics?.motion==='static')return;const point=hit.point.toArray() as Vec3;grab={pointerId:e.pointerId,bodyId,point,target:point,plane:new THREE.Plane().setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()),hit.point),orbit:orbit.enabled};orbit.enabled=false;canvas.setPointerCapture(e.pointerId);simulationDrag({bodyId,point,target:point});e.preventDefault();e.stopImmediatePropagation();}}return;}
     if (e.pointerType === 'touch') { touches.down({ id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp }); if (touches.count > 1) suppressTap = true; }
     if (!down) { down = { x: e.clientX, y: e.clientY, t: e.timeStamp, pointerId: e.pointerId }; if (e.pointerType !== 'touch') suppressTap = false; }
+    if(edgePick)return;
     if(surfacePlacement.active){surfacePlacement.move(e);draw();return;}
     if (gizmo.axis) suppressTap = true;
     if(touches.count>1){endBox();if(directDrag)cancelTransform();return;}
@@ -355,11 +363,40 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     const allow = !suppressTap && !drag && Math.hypot(e.clientX - start.x, e.clientY - start.y) <= TOUCH_SLOP_PX;
     if (!touches.count) suppressTap = false;
     if (!allow) return;
+    if(edgePick){tapEdge(e);return;}
     const rect = canvas.getBoundingClientRect(); pointer.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1); ray.setFromCamera(pointer, camera);
     const hit = ray.intersectObjects([...meshes.values()], false)[0]; const id = hit?.object.userData.id as string | undefined;
     const multi = multiSelect || e.shiftKey || e.ctrlKey || e.metaKey || (gesture?.type === 'end' && gesture.was === 'longPress');
     session.select(id ? (multi ? (selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id]) : [id]) : []);
   };
+  function edgeRay(x:number,y:number){const rect=canvas.getBoundingClientRect();pointer.set(x/rect.width*2-1,-y/rect.height*2+1);ray.setFromCamera(pointer,camera);return ray.ray;}
+  function tapEdge(e:PointerEvent){
+    const pick=edgePick;if(!pick)return;
+    const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;
+    scene.updateMatrixWorld(true);camera.updateMatrixWorld();
+    const r=edgeRay(x,y),surface=ray.intersectObjects([...meshes.values()],false)[0];
+    const radius=e.pointerType==='touch'||e.pointerType==='pen'?EDGE_PICK_TOUCH_PX:EDGE_PICK_MOUSE_PX;
+    // World size of one pixel at the surface, so the slack follows zoom: edges lie on the surface,
+    // and the surface under the finger is a few pixels away from the edge.
+    const depth=surface?.distance??Infinity,perPixel=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom/Math.max(1,rect.height):2*Math.tan((camera as THREE.PerspectiveCamera).fov*RAD/2)*(Number.isFinite(depth)?depth:1)/Math.max(1,rect.height);
+    const index=pickEdgeAt(pick.overlay.project(camera,rect.width,rect.height,r.origin.clone(),r.direction.clone()),x,y,radius,depth,perPixel*radius*1.5);
+    if(index>=0)pick.toggle(index);
+  }
+  function publishEdgeTargets(){
+    // Where each pickable edge's midpoint is on the screen (CSS px from the canvas's top left), for
+    // tests and assistive tools; hidden edges are listed too (their depth decides the pick).
+    const pick=edgePick;if(!pick)return;
+    const rect=canvas.getBoundingClientRect();camera.updateMatrixWorld();
+    const projected=pick.overlay.project(camera,rect.width,rect.height,camera.position.clone(),camera.getWorldDirection(new THREE.Vector3()));
+    const targets=projected.flatMap((edge,index)=>{
+      if(!edge.pickable||!edge.xy.length)return [];
+      const lengths=edge.xy.slice(1).map((p,i)=>Math.hypot(p[0]-edge.xy[i][0],p[1]-edge.xy[i][1])),total=lengths.reduce((a,b)=>a+b,0);
+      let rest=total/2,i=0;while(i<lengths.length-1&&rest>lengths[i]){rest-=lengths[i];i++;}
+      const t=lengths[i]?rest/lengths[i]:0,a=edge.xy[i],b=edge.xy[Math.min(i+1,edge.xy.length-1)];
+      return [{index,x:Math.round(a[0]+(b[0]-a[0])*t),y:Math.round(a[1]+(b[1]-a[1])*t),picked:pick.picked.has(index)}];
+    });
+    const value=JSON.stringify(targets);if(canvas.dataset.edgePickTargets!==value)canvas.dataset.edgePickTargets=value;
+  }
   const onCancel = () => {if(surfacePlacement.active)endPlacement();resetCameraKeys(); down = null; suppressTap = false; touches.reset(); cancelTransform(); };
   const releaseShift=(e:KeyboardEvent)=>{if(e.code==='Space')spaceHeld=false;if(e.key==='Shift'){shiftHeld=false;canvas.dataset.fine=String(fineEnabled);}};window.addEventListener('keyup',releaseShift);
   canvas.addEventListener('pointerdown', onDown,true); canvas.addEventListener('pointermove', onMove,true); canvas.addEventListener('pointerup', onUp,true); canvas.addEventListener('pointercancel', onCancel);
@@ -403,7 +440,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     camera.position.copy(center).addScaledVector(dir.normalize(), distance); orbit.target.copy(center); orbit.update(); draw();
   }
   resizeControls=mountResizeControls(container,{
-    frame:()=>resizeStyle==='dimensions'&&!pointPick&&!surfacePlacement.active&&!directDrag?.moved&&!boxSelect&&!cameraDrag&&(activeMode==='select'||activeMode==='scale')?resizeFrame:undefined,
+    frame:()=>resizeStyle==='dimensions'&&!pointPick&&!edgePick&&!surfacePlacement.active&&!directDrag?.moved&&!boxSelect&&!cameraDrag&&(activeMode==='select'||activeMode==='scale')?resizeFrame:undefined,
     project:p=>{const v=p.clone().project(camera);return [(v.x+1)*container.clientWidth/2,(1-v.y)*container.clientHeight/2,v.z];},
     ray:(x,y)=>{const r=canvas.getBoundingClientRect(),caster=new THREE.Raycaster();caster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);return caster.ray;},camera:()=>camera,grid:()=>gridStep,fine:()=>fineEnabled,
     begin:()=>{cancelTransform();const transforms=new Map<string,Transform>();for(const id of resizeFrame?.ids??[])transforms.set(id,structuredClone(session.state.document.nodes[id].transform));drag={matrix:new THREE.Matrix4(),transforms};resizeDelta=new THREE.Matrix4();resizeFactors=[1,1,1];orbit.enabled=false;},
@@ -411,7 +448,24 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     commit:r=>{resizeFrame=r.frame;orbit.enabled=true;endTransform();},cancel:()=>{orbit.enabled=true;cancelTransform();},error:onError,
   });
   refreshGrid();draw();
-  return {pickDraftPoint(done:(point:Vec3|null)=>void,plane?:'XY'){
+  return {
+    /** Show `edges` over the model and toggle one on each tap; `end` runs when Escape ends picking. */
+    pickEdges(options:{edges:readonly PickableEdge[];picked:readonly number[];toggle:(index:number)=>void;end:()=>void}){
+      if(simulating)throw new Error(t('Reset simulation before picking edges.'));
+      endEdgePick(false);cancelPointPick();if(surfacePlacement.active)endPlacement();cancelTransform();endBox();
+      const overlay=createEdgeOverlay(scene,options.edges);
+      edgePick={overlay,edges:options.edges,picked:new Set(options.picked),toggle:options.toggle,end:options.end,gizmo:gizmo.enabled,cursor:canvas.style.cursor};
+      overlay.paint(edgePick.picked);gizmo.enabled=false;canvas.style.cursor='pointer';canvas.dataset.edgePick=String(options.edges.length);
+      // Fill the view with the body (it is the selection), so neighbouring edges lie apart for a finger.
+      frame(undefined,true);
+      scheduleDraw();
+      return {
+        setPicked(indices:readonly number[]){if(!edgePick||edgePick.overlay!==overlay)return;edgePick.picked=new Set(indices);overlay.paint(edgePick.picked);scheduleDraw();},
+        end(){if(edgePick?.overlay===overlay)endEdgePick(false);},
+      };
+    },
+    get edgePicking(){return !!edgePick;},
+    pickDraftPoint(done:(point:Vec3|null)=>void,plane?:'XY'){
       if(simulating)throw new Error(t('Reset simulation before picking a drafting point.'));
       if(surfacePlacement.active)endPlacement();cancelPointPick();cancelTransform();
       pointPick={done:point=>done(point?.point??null),gizmo:gizmo.enabled,cursor:canvas.style.cursor,draftPlane:plane??'surface'};
@@ -423,7 +477,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
         scene.remove(mesh);mesh.geometry.dispose();(mesh.material as THREE.Material).dispose();previewBalls.delete(id);
       }
       if(!value)endGrab();
-      cancelPointPick();cancelTransform();simulating=value!==null;gizmo.enabled=!simulating;
+      cancelPointPick();if(value)endEdgePick();cancelTransform();simulating=value!==null;gizmo.enabled=!simulating;
       for(const [id,mesh] of meshes)if(!presentedPoses.has(id)&&!mesh.matrix.equals(authoredMatrix)){
         mesh.matrix.copy(authoredMatrix);mesh.matrixWorldNeedsUpdate=true;
       }
@@ -485,6 +539,6 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       const offset = snapDelta([dx, dy, dz], (gridStep || .1)/(fine?10:1));
       session.transform(selected.filter(id => session.state.document.roots.includes(id)).map(id => { const transform = structuredClone(session.state.document.nodes[id].transform); transform.position = transform.position.map((v, i) => v + offset[i]) as Vec3; return { id, transform }; }));
     },
-    dispose() {canvas.removeEventListener('brickwright-simulation-capture',draw);connectorHandles.dispose();endGrab();clearPreviewBalls();cancelPointPick();for(const objects of traceLines.values()){objects.line.geometry.dispose();(objects.line.material as THREE.Material).dispose();objects.marker.geometry.dispose();(objects.marker.material as THREE.Material).dispose();}traceLines.clear();resizeControls?.dispose();resizeControls=undefined;endPlacement(false);surfacePlacement.dispose();moveSurface.dispose(); endBox();marquee.remove();disposed = true;if(pendingDraw!==undefined)cancelAnimationFrame(pendingDraw);canvas.removeEventListener('wheel',wheel,true);canvas.removeEventListener('contextmenu',contextMenu,true);canvas.removeEventListener('keydown',cameraKey);for(const name of ['gesturestart','gesturechange','gestureend'])canvas.removeEventListener(name,gesture);window.removeEventListener('brickwright-camera-input',nativeGesture);window.removeEventListener('blur',resetCameraKeys);window.removeEventListener('keyup',releaseShift); resize.disconnect(); touches.reset(); canvas.removeEventListener('pointerdown', onDown,true); canvas.removeEventListener('pointermove', onMove,true); canvas.removeEventListener('pointerup', onUp,true); canvas.removeEventListener('pointercancel', onCancel); gizmo.removeEventListener('dragging-changed', onDrag); gizmo.removeEventListener('mouseDown', startTransform); gizmo.removeEventListener('objectChange', previewTransform); gizmo.removeEventListener('mouseUp', endTransform); gizmo.removeEventListener('change', scheduleDraw); orbit.removeEventListener('change', cameraChanged); gizmo.dispose(); orbit.dispose();for(const helper of selectionBoxes.values()){scene.remove(helper);helper.geometry.dispose();(helper.material as THREE.Material).dispose();}selectionBoxes.clear(); wiring.dispose();clear(); for (const object of [grid, majorGrid, border, plate, axes]) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()); } for (const sprite of textSprites) { sprite.material.map?.dispose(); sprite.material.dispose(); } renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); cube.remove(); },
+    dispose() {endEdgePick(false);canvas.removeEventListener('brickwright-simulation-capture',draw);connectorHandles.dispose();endGrab();clearPreviewBalls();cancelPointPick();for(const objects of traceLines.values()){objects.line.geometry.dispose();(objects.line.material as THREE.Material).dispose();objects.marker.geometry.dispose();(objects.marker.material as THREE.Material).dispose();}traceLines.clear();resizeControls?.dispose();resizeControls=undefined;endPlacement(false);surfacePlacement.dispose();moveSurface.dispose(); endBox();marquee.remove();disposed = true;if(pendingDraw!==undefined)cancelAnimationFrame(pendingDraw);canvas.removeEventListener('wheel',wheel,true);canvas.removeEventListener('contextmenu',contextMenu,true);canvas.removeEventListener('keydown',cameraKey);for(const name of ['gesturestart','gesturechange','gestureend'])canvas.removeEventListener(name,gesture);window.removeEventListener('brickwright-camera-input',nativeGesture);window.removeEventListener('blur',resetCameraKeys);window.removeEventListener('keyup',releaseShift); resize.disconnect(); touches.reset(); canvas.removeEventListener('pointerdown', onDown,true); canvas.removeEventListener('pointermove', onMove,true); canvas.removeEventListener('pointerup', onUp,true); canvas.removeEventListener('pointercancel', onCancel); gizmo.removeEventListener('dragging-changed', onDrag); gizmo.removeEventListener('mouseDown', startTransform); gizmo.removeEventListener('objectChange', previewTransform); gizmo.removeEventListener('mouseUp', endTransform); gizmo.removeEventListener('change', scheduleDraw); orbit.removeEventListener('change', cameraChanged); gizmo.dispose(); orbit.dispose();for(const helper of selectionBoxes.values()){scene.remove(helper);helper.geometry.dispose();(helper.material as THREE.Material).dispose();}selectionBoxes.clear(); wiring.dispose();clear(); for (const object of [grid, majorGrid, border, plate, axes]) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(material => material.dispose()); } for (const sprite of textSprites) { sprite.material.map?.dispose(); sprite.material.dispose(); } renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); cube.remove(); },
   };
 }

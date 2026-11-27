@@ -37,7 +37,7 @@ export const messages:Record<string,string>={
  'Reading the STEP file on the exact kernel…':'Der exakte Kern liest die STEP-Datei…',
  // Exact backend and the kernel's refusals
  '{0}: its exact B-rep is larger than {1} MiB as STEP, so it cannot be stored in the model.':'{0}: Seine exakte B-Rep ist als STEP größer als {1} MiB und kann daher nicht im Modell gespeichert werden.',
- '{0}: the exact kernel cannot store this body faithfully (its STEP does not read back the same).':'{0}: Der exakte Kern kann diesen Körper nicht originalgetreu speichern (sein STEP liest sich nicht gleich zurück).',
+ '{0}: its stored exact B-rep does not read back as it was imported (volume, area or box differ), so exact work on it is refused. Import the STEP file again.':'{0}: Seine gespeicherte exakte B-Rep liest sich nicht so zurück, wie sie importiert wurde (Volumen, Fläche oder Begrenzungsquader weichen ab), daher wird exakte Arbeit daran verweigert. Importiere die STEP-Datei erneut.',
  '{0}: the stored exact B-rep does not hold exactly one solid.':'{0}: Die gespeicherte exakte B-Rep enthält nicht genau einen Volumenkörper.',
  '{0} is {1} MiB; this device imports STEP files of up to {2} MiB. Import it on a computer, or split the assembly.':'{0} ist {1} MiB groß; dieses Gerät importiert STEP-Dateien bis {2} MiB. Importiere sie auf einem Computer oder teile die Baugruppe auf.',
  'This is not a STEP file: it does not start with ISO-10303-21.':'Das ist keine STEP-Datei: Sie beginnt nicht mit ISO-10303-21.',

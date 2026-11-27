@@ -24,7 +24,16 @@ export interface EdgePicker {
  selected():ExactEdgeReference[];
  /** Show `edges`; `preselect` are references to mark as picked (those not found are reported). */
  show(edges:readonly ExactBodyEdge[],preselect?:readonly ExactEdgeReference[]):void;
- onChange(listener:()=>void):void;
+ /** Returns a function that removes the listener. */
+ onChange(listener:()=>void):()=>void;
+ /** The listed edges and the indices (into them) of the picked ones, for picking in the 3D view. */
+ edges():readonly ExactBodyEdge[];
+ picked():number[];
+ /** Toggle the edge at `index` (as a tap in the drawing does); edges without a reference are ignored. */
+ toggle(index:number):void;
+ clear():void;
+ /** One line saying how many edges are chosen (and how many previously chosen ones are gone). */
+ summary():string;
 }
 
 export function createEdgePicker():EdgePicker{
@@ -44,17 +53,18 @@ export function createEdgePicker():EdgePicker{
   button.onclick=()=>{view=key;viewButtons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));draw();};
   views.append(button);return button;
  });
- clear.onclick=()=>{picked.clear();changed();};
+ clear.onclick=()=>{if(picked.size){picked.clear();changed();}};
 
+ function toggleEdge(i:number){if(!edges[i]?.reference)return;if(picked.has(i))picked.delete(i);else picked.add(i);changed();}
+ const summaryText=()=>(picked.size?t`${picked.size} edges chosen`:t('Tap the edges to round or bevel.'))+(missing?' '+t`${missing} previously chosen edges no longer exist; choose them again.`:'');
  function update(){
   for(const path of svg.querySelectorAll<SVGPathElement>('[data-edge]')){
    const on=picked.has(Number(path.dataset.edge));
    path.setAttribute('aria-checked',String(on));
    path.parentElement?.classList.toggle('picked',on);
   }
-  const count=picked.size;
-  summary.textContent=(count?t`${count} edges chosen`:t('Tap the edges to round or bevel.'))+(missing?' '+t`${missing} previously chosen edges no longer exist; choose them again.`:'');
-  clear.disabled=!count;
+  summary.textContent=summaryText();
+  clear.disabled=!picked.size;
  }
 
  function draw(){
@@ -76,7 +86,7 @@ export function createEdgePicker():EdgePicker{
     const hit=document.createElementNS(SVG,'path');hit.setAttribute('d',d);hit.setAttribute('class','edge-hit');
     hit.dataset.edge=String(i);hit.setAttribute('role','checkbox');hit.setAttribute('tabindex','0');
     hit.setAttribute('aria-label',t`Edge ${edge.number}: ${edge.curve}, ${Number(edge.length.toPrecision(4))} mm`);
-    const toggle=()=>{if(picked.has(i))picked.delete(i);else picked.add(i);changed();};
+    const toggle=()=>toggleEdge(i);
     hit.addEventListener('click',toggle);
     hit.addEventListener('keydown',event=>{if(event.key===' '||event.key==='Enter'){event.preventDefault();toggle();}});
     group.append(hit);
@@ -96,6 +106,11 @@ export function createEdgePicker():EdgePicker{
    for(const ref of preselect){const i=keys.get(formatEdgeReference(ref));if(i===undefined)missing++;else picked.add(i);}
    draw();
   },
-  onChange(listener){listeners.push(listener);},
+  onChange(listener){listeners.push(listener);return ()=>{const i=listeners.indexOf(listener);if(i>=0)listeners.splice(i,1);};},
+  edges:()=>edges,
+  picked:()=>[...picked].sort((a,b)=>a-b),
+  toggle:toggleEdge,
+  clear(){if(!picked.size)return;picked.clear();changed();},
+  summary:summaryText,
  };
 }

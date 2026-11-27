@@ -142,4 +142,6 @@ export const editorStyle = `
 .edge-picker .edge-line{fill:none;stroke:#9bb0c0;stroke-width:2px;vector-effect:non-scaling-stroke;pointer-events:none}.edge-picker .edge.unpickable .edge-line{stroke:#4d6170;stroke-dasharray:3 3}.edge-picker .edge.picked .edge-line{stroke:#fac15a;stroke-width:4px}
 .edge-picker .edge-hit{fill:none;stroke:transparent;stroke-width:22px;vector-effect:non-scaling-stroke;pointer-events:stroke;cursor:pointer;outline:none}.edge-picker .edge-hit:focus-visible{stroke:#fac15a55}.edge-picker .edge:hover .edge-line{stroke:#e7edf5}
 .edge-picker-bar{display:flex;align-items:center;gap:8px}.edge-picker-summary{flex:1;margin:0;font-size:12px}.edge-picker-bar button{min-height:44px}
+.edge-picker-in-view{min-height:44px;align-self:flex-start}
+.edge-pick-bar{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 32px);padding:8px 10px;background:#13222dee;border:1px solid #fac15a88;border-radius:10px;box-shadow:0 6px 24px #0008;color:#e7edf5}.edge-pick-bar p{margin:0;font-size:13px;flex:1;min-width:0}.edge-pick-bar button{min-height:44px;min-width:64px}
 `;

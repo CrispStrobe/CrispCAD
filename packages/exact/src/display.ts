@@ -45,11 +45,11 @@ export function displayMesh(mesh:{positions:ArrayLike<number>;indices:ArrayLike<
 /** The display mesh of `solid` at EXACT_DISPLAY_TOLERANCE, checked by `displayMesh`. A body with a
  * planar face full of holes is meshed face by face (see face-mesh.ts), because SMLib's whole-body
  * mesh is superlinear in the holes of one face; if that path fails, SMLib meshes the whole body. */
-export function displayTessellation(k:ExactKernel,solid:ExactSolid,name:string):Omit<ExactFeatureDisplay,'sourceKey'>{
+export function displayTessellation(k:ExactKernel,solid:ExactSolid,name:string,tolerance:{readonly tolerance:number;readonly angleDeg:number}=EXACT_DISPLAY_TOLERANCE):Omit<ExactFeatureDisplay,'sourceKey'>{
  if(hasManyHoleFace(solid)){
   for(const bands of [true,false]){
    try{
-    const mesh=facewiseMesh(k,solid,{...EXACT_DISPLAY_TOLERANCE,bands});
+    const mesh=facewiseMesh(k,solid,{...tolerance,bands});
     if(!mesh)break;
     // A planar face SMLib had to mesh does not share the bands' circle points: retry without.
     if(mesh.bands&&mesh.planarFallbacks)continue;
@@ -59,7 +59,7 @@ export function displayTessellation(k:ExactKernel,solid:ExactSolid,name:string):
    }
   }
  }
- return displayMesh(k.tessellate(solid,EXACT_DISPLAY_TOLERANCE),name);
+ return displayMesh(k.tessellate(solid,tolerance),name);
 }
 
 export interface ExactFeatureResult {display:ExactFeatureDisplay;volume:number}

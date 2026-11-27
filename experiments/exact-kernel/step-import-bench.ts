@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // STEP import as exact bodies on the product path (@brickwright/cad-exact `importStep`: strict
-// read, the stored B-rep written and read back, display tessellation), then a warm `measure exact`
-// of the imported document (the B-rep cache) and its Manifold-free size. Files: STEP written by
+// read, the stored B-rep written, display tessellation), then the first `measure exact` of the
+// imported document (it reads every stored B-rep and checks it against the measures) and its
+// Manifold-free size. step-import-profile.ts splits the import into phases, before and after. Files: STEP written by
 // our exporter (box, filleted box, drilled plate) and real-world files that are already in this
 // repository under permissive licences (library/sources: Adafruit, MIT).
 // Writes results/step-import-<os>-<arch>.json.
@@ -36,11 +37,11 @@ for (const file of files) {
   try {
     const done = await runStepImport(session, host, file);
     const used = cpuUsage(cpu), importMs = Math.round(performance.now() - wall);
-    const warm = performance.now(); backend.measure(session.state.document);
+    const warm = performance.now(), warmCpu = cpuUsage(); backend.measure(session.state.document); const firstMeasure = cpuUsage(warmCpu);
     const doc = session.state.document, bodies = done.ids.map(id => doc.nodes[id]).filter(n => n.kind === 'exact-body');
     rows.push({
       file: file.name, source: file.source, kib: Math.round(file.bytes.byteLength / 1024), bodies: bodies.length, importWallMs: importMs, importCpuMs: Math.round((used.user + used.system) / 1000),
-      warmMeasureMs: Math.round(performance.now() - warm),
+      firstMeasureWallMs: Math.round(performance.now() - warm), firstMeasureCpuMs: Math.round((firstMeasure.user + firstMeasure.system) / 1000),
       storedBrepKiB: Math.round(bodies.reduce((sum, n) => sum + (n.kind === 'exact-body' ? n.brep.text.length : 0), 0) / 1024),
       triangles: bodies.reduce((sum, n) => sum + (n.kind === 'exact-body' ? n.display.indices.length / 3 : 0), 0),
       documentKiB: Math.round(new TextEncoder().encode(serializeDocument(doc)).byteLength / 1024),

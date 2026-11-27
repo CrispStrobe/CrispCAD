@@ -431,26 +431,44 @@ How the guards work, and the thresholds: see
 
 `step-import-bench.ts` runs the product path of **Import STEP as exact bodies** in Node
 (`runStepImport` → `@brickwright/cad-exact` `importStep`: the strict read of exact kernel 0.1.8,
-each body's B-rep re-written as STEP and read back for the check, its display tessellation), then a
-warm `measure exact` of the imported document. Shared Apple M1 at load average 150–260, so wall
-times are many times the CPU times; compare CPU ([`results/step-import-darwin-arm64.json`](results/step-import-darwin-arm64.json)):
+each body's B-rep re-written as STEP, its display tessellation), then the first `measure exact` of
+the imported document, which reads every stored B-rep and checks it against the measures taken at
+import. Shared Apple M1 at load average 70–300, so wall times are many times the CPU times; compare
+CPU ([`results/step-import-darwin-arm64.json`](results/step-import-darwin-arm64.json)):
 
-| File (source) | KiB | Bodies | Import CPU (wall) | Stored B-rep | Display | Document |
+| File (source) | KiB | Bodies | Import CPU (wall) | First measure CPU | Stored B-rep | Display | Document |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| box (our export) | 5 | 1 | 0.14 s (0.5 s) | 0.02 s | 5 KiB | 12 triangles | 7 KiB |
+| filleted box (our export) | 24 | 1 | 1.2 s (8.6 s) | 0.4 s | 26 KiB | 3,836 | 129 KiB |
+| plate with 12 holes (our export) | 20 | 1 | 0.7 s (3.2 s) | 0.5 s | 19 KiB | 1,932 | 62 KiB |
+| Adafruit 830 battery holder (MIT) | 217 | 2 | 1.6 s (8.0 s) | 0.6 s | 143 KiB | 2,068 | 192 KiB |
+| Adafruit 711 DC toy motor (MIT) | 85 | 2 | 1.4 s (9.3 s) | 0.7 s | 64 KiB | 4,804 | 182 KiB |
+| Adafruit 3777 TT motor (MIT) | 110 | 8 | 1.9 s (14 s) | 1.0 s | 90 KiB | 8,696 | 315 KiB |
+| Adafruit 4884 Feather RP2040 (MIT) | 2,386 | 58 | 19.6 s (151 s) | 10.9 s | 2,992 KiB | 23,036 | 3,646 KiB |
+
+The first run (same day, before the speed-up) took 0.15, 1.6, 0.9, 2.1, 2.4, 3.0 and 44 s CPU to
+import (the Feather board: 68,994 triangles, a 4,864 KiB document): import read each stored B-rep
+back to check it and displayed at 0.01 mm / 10°. `step-import-profile.ts` splits the import into
+phases and measures before and after in one run on the same bodies
+([`results/step-import-profile-darwin-arm64.json`](results/step-import-profile-darwin-arm64.json)):
+
+| File | Read file | Measures | Write STEP | Read back (before) | Display before → after | Import before → after |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| box (our export) | 5 | 1 | 0.15 s (1.3 s) | 5 KiB | 12 triangles | 7 KiB |
-| filleted box (our export) | 24 | 1 | 1.6 s (16 s) | 26 KiB | 4,604 | 151 KiB |
-| plate with 12 holes (our export) | 20 | 1 | 0.9 s (7.6 s) | 19 KiB | 1,932 | 62 KiB |
-| Adafruit 830 battery holder (MIT) | 217 | 2 | 2.1 s (16 s) | 143 KiB | 2,276 | 197 KiB |
-| Adafruit 711 DC toy motor (MIT) | 85 | 2 | 2.4 s (37 s) | 64 KiB | 9,808 | 321 KiB |
-| Adafruit 3777 TT motor (MIT) | 110 | 8 | 3.0 s (35 s) | 90 KiB | 12,006 | 404 KiB |
-| Adafruit 4884 Feather RP2040 (MIT) | 2,386 | 58 | 44 s (915 s) | 2,992 KiB | 68,994 | 4,864 KiB |
+| 830 battery holder | 1.46 s | 0.15 s | 0.51 s | 0.71 s | 1.13 → 0.74 s | 3.96 → 2.86 s |
+| 711 DC toy motor | 0.64 s | 0.09 s | 0.22 s | 0.61 s | 0.93 → 0.48 s | 2.50 → 1.44 s |
+| 3777 TT motor | 0.65 s | 0.17 s | 0.21 s | 0.73 s | 0.86 → 0.69 s | 2.63 → 1.73 s |
+| 4884 Feather RP2040 | 7.39 s | 1.52 s | 3.92 s | 11.13 s | 14.53 → 6.70 s | 38.5 → 19.5 s |
 
-So import costs roughly 1–3 s CPU per 100 KiB of STEP here (reading, the stored B-rep's read-back
-check and the display mesh). The tablet limit (4 MiB files) refuses only very large files up front;
-the request budget (60 s tablet, 120 s desktop) is what stops an import a device cannot finish (the
-Feather board would be stopped on a tablet, with "the model was not changed"). A first run refused
-the Feather board: one pin header's re-written STEP read back with an area 4.9e-9 off (volume
-2e-12, box identical), over the 1e-9 check then in place; the check is 1e-7 now.
+The read-back check now runs where the stored B-rep is read (the first measure above includes it).
+The display of new imports is tessellated at 0.01 mm / 30°: SMLib keeps the 0.01 mm chord at any
+angle (cylinders of radius 0.3, 1 and 5 mm get 16, 32 and 64 sides at 30°, 64 at 10°; largest
+sagitta 0.0067 mm), so only small round features lose triangles. On the Feather board the display's
+largest relative volume difference from the exact body (over its 58 bodies) is 2.4e-3, 2.3e-4 at 10°.
+What remains is the kernel's: SMLib's STEP reader, the STEP writer and the exact box. The tablet
+limit (4 MiB files) refuses only very large files up front; the request budget (60 s tablet, 120 s
+desktop) stops an import a device cannot finish (with "the model was not changed"). A first run
+refused the Feather board: one pin header's re-written STEP read back with an area 4.9e-9 off
+(volume 2e-12, box identical), over the 1e-9 check then in place; the check is 1e-7 now.
 
 ## Licence audit
 

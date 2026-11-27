@@ -24,6 +24,15 @@ export const MAX_EXACT_BODY_BREP_CHARS=8*1024*1024;
 export const MAX_STEP_IMPORT_BODIES=64;
 /** STEP files above this size are refused before the kernel reads them. */
 export const MAX_STEP_IMPORT_BYTES=16*1024*1024;
+/**
+ * The display mesh of a newly imported body: the exact features' chord tolerance (0.01 mm), but a
+ * coarser normal angle. The chord tolerance alone keeps every point of the mesh within 0.01 mm of
+ * the B-rep, far below what a display, a physics proxy or an FDM print resolves; the 10° angle of
+ * EXACT_DISPLAY_TOLERANCE mainly multiplies the triangles of small round features (pins, fillets,
+ * holes), where SMLib's mesher spent most of an import's time. Bodies imported before keep their
+ * stored 0.01 mm / 10° display.
+ */
+export const STEP_IMPORT_DISPLAY_TOLERANCE={tolerance:.01,angleDeg:30} as const;
 
 export interface ExactBodyBrep {
  /** AP214 STEP text with exactly one solid, written by the exact kernel. */
@@ -48,7 +57,8 @@ export interface ExactBody {
  bodyVersion:1;
  brep:ExactBodyBrep;
  measures:ExactBodyMeasures;
- /** The exact kernel's tessellation of the solid at EXACT_DISPLAY_TOLERANCE, local frame. */
+ /** The exact kernel's tessellation of the solid, local frame (STEP_IMPORT_DISPLAY_TOLERANCE since
+  * 2026-11-27, EXACT_DISPLAY_TOLERANCE before; either is valid). */
  display:{positions:number[];indices:number[]};
  origin?:ExactBodyOrigin;
 }

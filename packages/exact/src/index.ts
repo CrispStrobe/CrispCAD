@@ -22,7 +22,7 @@ export {lowerCodeShape,evaluateCadScript,cadScript,revolveProfile,MIN_EXACT_SEGM
 export {lowerDocumentBody,lowerDocumentNode,sketchProfile,ExactLoweringError,describeExactFace,resolveFeatureEdges} from './lower-document.js';
 export {displayMesh,displayTessellation,exactFeatureDisplay} from './display.js';
 export {triangulatePolygon,facewiseMesh,MANY_LOOPS} from './face-mesh.js';
-export {importStepBodies,storedBody,createBrepCache} from './step-import.js';
+export {importStepBodies,storedBody,readStoredBody,createBrepCache} from './step-import.js';
 export {exactDrawingBody,exactDrawingData,drawingMeshTolerance,MAX_DRAWING_FACES,MAX_DRAWING_EDGES,MAX_DRAWING_TRIANGLES} from './drawing.js';
 export type {ExactDrawingBody,ExactDrawingData,ExactDrawingEdge,ExactDrawingFace,ExactDrawingFailure} from './drawing.js';
 export type {ImportedExactBody,ExactStepImport,BrepCache} from './step-import.js';

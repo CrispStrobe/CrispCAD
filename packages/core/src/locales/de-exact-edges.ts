@@ -43,4 +43,10 @@ export const messages:Record<string,string>={
  '{0} previously chosen edges no longer exist; choose them again.':'{0} zuvor gewählte Kanten gibt es nicht mehr; wähle sie erneut.',
  'Edge {0}: {1}, {2} mm':'Kante {0}: {1}, {2} mm',
  'Iso':'Iso',
+ // Picking edges in the 3D view
+ 'Pick in the 3D view':'In der 3D-Ansicht wählen',
+ 'Edge picking':'Kantenauswahl',
+ 'Tap edges on the model.':'Tippe Kanten am Modell an.',
+ 'Done':'Fertig',
+ 'Reset simulation before picking edges.':'Setze die Simulation zurück, bevor du Kanten wählst.',
 };

@@ -1,0 +1,83 @@
+{
+ "node": "v26.4.0",
+ "date": "2026-11-27T14:39:57.700Z",
+ "kernel": "0.6.2",
+ "before": {
+  "tolerance": 0.01,
+  "angleDeg": 10
+ },
+ "after": {
+  "tolerance": 0.01,
+  "angleDeg": 30
+ },
+ "rows": [
+  {
+   "file": "830 Battery Holder 4xAA.step",
+   "kib": 217,
+   "bodies": 2,
+   "cpuMs": {
+    "read file": 1462,
+    "measures": 152,
+    "export step": 507,
+    "read back": 711,
+    "display before": 1127,
+    "display after": 735
+   },
+   "importBeforeMs": 3958,
+   "importAfterMs": 2855,
+   "trianglesBefore": 2276,
+   "trianglesAfter": 2068
+  },
+  {
+   "file": "711 DC Toy Motor.step",
+   "kib": 85,
+   "bodies": 2,
+   "cpuMs": {
+    "read file": 644,
+    "measures": 90,
+    "export step": 219,
+    "read back": 614,
+    "display before": 930,
+    "display after": 484
+   },
+   "importBeforeMs": 2496,
+   "importAfterMs": 1436,
+   "trianglesBefore": 9808,
+   "trianglesAfter": 4804
+  },
+  {
+   "file": "3777 TT Motor.step",
+   "kib": 110,
+   "bodies": 8,
+   "cpuMs": {
+    "read file": 653,
+    "measures": 173,
+    "export step": 214,
+    "read back": 726,
+    "display before": 863,
+    "display after": 692
+   },
+   "importBeforeMs": 2629,
+   "importAfterMs": 1732,
+   "trianglesBefore": 12006,
+   "trianglesAfter": 8696
+  },
+  {
+   "file": "4884 Feather RP2040.step",
+   "kib": 2386,
+   "bodies": 58,
+   "cpuMs": {
+    "read file": 7386,
+    "measures": 1520,
+    "export step": 3918,
+    "read back": 11129,
+    "display before": 14527,
+    "display after": 6698
+   },
+   "importBeforeMs": 38480,
+   "importAfterMs": 19521,
+   "trianglesBefore": 68994,
+   "trianglesAfter": 23036
+  }
+ ]
+}

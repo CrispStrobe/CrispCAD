@@ -864,8 +864,26 @@ What follows is the plan for the rest.
      Full vitest of the exact, terminal and MCP files: all pass except 4 load timeouts that
      do not touch this code (exact-backend lowering, face-mesh bridging, shipped-project
      loading, headless CLI vocabulary).
-   Not done: picking edges directly in the 3D viewport (the dialog's drawing is used instead);
-   a stale reference is not offered a repair (the user picks again); faces of imported meshes
+   **Picking in the 3D view. Done 2026-11-27.** The dialog's **Pick in the 3D view** sets the
+   dialog aside, fills the view with the body and draws the same listed edges over it (`packages/editor/src/viewport-edge-pick.ts`:
+   3 px lines in front, faint ones through the body; chosen edges amber). A tap or click toggles
+   the nearest pickable edge within 24 px for touch and pen, 10 px for a mouse; an edge behind the
+   surface the tap meets is never picked (its depth along the tap's ray is compared with the
+   surface's, with a slack of 1.5 tap radii in model size), and edges without a reference
+   (rounds, seams) are drawn dimmed and never picked. One-finger orbit and two-finger pan/zoom keep
+   working; a tap only toggles edges (no selection, no move, the gizmo is off). A bar over the view
+   counts the choice (Clear edges, Done; 44 px buttons; Escape on a keyboard); Done brings the dialog
+   back with the same edges marked in its drawing, so both toggle one choice and the recorded
+   command holds the same stable references. Edges of an exact feature's source (Edit exact
+   feature) are placed by the transforms of the nodes above it. The canvas publishes the edges'
+   screen midpoints as `data-edge-pick-targets` for tests and assistive tools. The line drawing
+   stays as the fallback. Tests: `tests/viewport-edge-pick.test.ts` (5: polyline distance, nearest
+   pickable edge, touch vs mouse radius, hidden edges never picked, projection, world placement),
+   `tests/browser/exact-edge-pick-viewport.spec.ts` on `ipad` (tap two 30 mm edges on the canvas,
+   untap and retap one, Done, the dialog shows them, chamfer volume 5880 mm³) passes in 31 s, and
+   so do `exact-edge-fillet.spec.ts` and `step-import-exact.spec.ts` (run with the installed Google
+   Chrome: the shared Playwright Chromium store was empty again).
+   Not done: a stale reference is not offered a repair (the user picks again); faces of imported meshes
    have no names (imported exact STEP bodies, Phase 5.2, are named like any leaf construction).
 2. **STEP import as exact bodies.** **Done 2026-11-27** (exact kernel 0.1.8, pinned as 0.1.9; document
    version 45; see [STEP import as exact bodies](#step-import-as-exact-bodies-document-version-45-done-2026-11-27)).
@@ -1002,13 +1020,15 @@ kind `brep`) and the display once, shared across revisions; model source writes
 - Exact `export step`, `measure exact`, `fillet`, `chamfer`, `shell` work on imported bodies, and
   so do Phase 5.1's `edges` and fillets/chamfers of chosen edges: an imported body is a leaf
   construction whose faces are named `<id>:f<k>` (stable, since its B-rep never changes). The exact
-  backend caches read B-reps between requests (16 bodies, least recently used dropped).
+  backend caches read B-reps between requests (16 bodies, least recently used dropped; since
+  2026-11-27 never one the current request needs).
 - Kernel pin: the API came in lab release 0.1.8; CrispCAD pins 0.1.9 (Phase 5.1's release, which
   contains it). Document version 45, because 5.1 merged first with version 44.
 - Limits: `maxStepImportBytes` (tablet 4 MiB, desktop 16 MiB) refuses a file before the kernel
   reads it; the request budget (60 s / 120 s) and the memory ceiling apply as for every exact job.
-  Import costs about 1–3 s CPU per 100 KiB of STEP on the M1 (the 2.4 MB, 58-body Adafruit Feather
-  board: 44 s CPU, a 4.9 MB document; [bench](../experiments/exact-kernel/README.md#step-import-2026-11-27)).
+  Import cost about 1–3 s CPU per 100 KiB of STEP on the M1 (the 2.4 MB, 58-body Adafruit Feather
+  board: 44 s CPU, a 4.9 MB document; [bench](../experiments/exact-kernel/README.md#step-import-2026-11-27));
+  half of that since the speed-up below.
   At most 64 bodies per file. German translations for every message, the kernel's refusals included.
 
 **Tests.** `tests/step-import-exact.test.ts`: export → import of a filleted box, a drilled plate and a
@@ -1030,8 +1050,46 @@ export → import → export keeps them (`tests/step-import-exact.test.ts`). Sto
 their B-rep exactly as before (`storedBody` still writes the single-solid form, `part`), so saved
 geometry does not change.
 
+**Import speed (2026-11-27).** Profiled phase by phase in CPU time
+(`experiments/exact-kernel/step-import-profile.ts`, before and after measured in one run on the same
+bodies; M1 at load average 70–300, so CPU, not wall time). The Feather board's 38.5 s went to the
+kernel's read of the file 7.4 s, measures 1.5 s (almost all the exact box), the stored STEP written
+3.9 s, that STEP read back for the check 11.1 s, display tessellation 14.5 s (one 337-face USB
+connector alone 9.6 s at 10°). Changes, all in CrispCAD (`packages/exact`):
+- **No read-back at import.** The check that the stored STEP rebuilds the body moved to where the
+  stored B-rep is read: every read (`readStoredBody`, behind the B-rep cache) compares the solid with
+  the measures stored at import (volume and area 1e-7, box 1e-6 mm, as before) and refuses exact work
+  on a body that differs, naming it (German too). The import's read was repeated by the first exact
+  request anyway; now that request's read is the check. Documents are unchanged; it also catches a
+  stored B-rep that was edited by hand. The cache is keyed by B-rep and measures.
+- **Display of new imports at 0.01 mm / 30°** (`STEP_IMPORT_DISPLAY_TOLERANCE`; exact features keep
+  0.01 mm / 10°). SMLib keeps the 0.01 mm chord at any angle (measured on cylinders of radius 0.3, 1
+  and 5 mm: 16, 32 and 64 sides, sagitta ≤ 0.0067 mm); the 10° only multiplied the triangles of small
+  round features. Feather: 68,994 → 23,036 triangles, display 14.5 → 6.7 s. Bodies imported earlier
+  keep their stored display.
+- **The B-rep cache keeps every body of a request.** Measuring the 58-body board with 16 kept read
+  42 bodies twice per request.
+
+| File (MIT, Adafruit) | KiB | Bodies | Import CPU before | after | Display triangles before → after |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 830 battery holder 4×AA | 217 | 2 | 3.96 s | 2.86 s | 2,276 → 2,068 |
+| 711 DC toy motor | 85 | 2 | 2.50 s | 1.44 s | 9,808 → 4,804 |
+| 3777 TT motor | 110 | 8 | 2.63 s | 1.73 s | 12,006 → 8,696 |
+| 4884 Feather RP2040 | 2,386 | 58 | 38.5 s | 19.5 s | 68,994 → 23,036 |
+
+The rest is the kernel's own work: reading the file (SMLib's STEP reader, the smlibwasm JavaScript
+and WebAssembly that the lab pins byte for byte to the npm package and its source build, so it is
+not changed here; it already builds a repeated body once and places copies), writing the stored
+STEP and the exact box. A strict and a lenient read of the stored STEP cost the same (8.5 s for the
+58 bodies). No lab release was needed. Not done: parallel import (one exact worker per tablet; a
+second SMLib instance would double the memory the ceiling allows); a 19.5 s CPU import is still
+over a tablet's request budget under heavy load, but within it on an idle M1-class device.
+
 Left open: assemblies import as
-separate bodies without their product structure; files with surfaces only (no solid) are refused,
+separate bodies without their product structure (the kernel returns each body's own name and
+colour, not its product or assembly path: SMLib's reader knows them but its pinned smlibwasm API
+does not return them, and documents have no group node to hold them, so keeping the structure
+needs a kernel API and a document version; not cheap, not done); files with surfaces only (no solid) are refused,
 not imported as reference surfaces (the mesh importer does that); faces of many holes in imported
 bodies use the same display path as exact features.
 

@@ -14,7 +14,7 @@ import {createCadSession,createCommandRunner,createDocument,EXACT_BODY_DOCUMENT_
 import type {CadDocument,ExactCommandHost} from '@brickwright/cad-core';
 import {createGeometryKernel} from '@brickwright/cad-geometry';
 import {appendPortableRevision,readPortableHistory} from '@brickwright/cad-history';
-import {createExactBackend,EXACT_LIMITS_TABLET,exactKernelIdentity,runExactRequest} from '@brickwright/cad-exact';
+import {createBrepCache,createExactBackend,EXACT_LIMITS_TABLET,exactKernelIdentity,runExactRequest} from '@brickwright/cad-exact';
 import type {ExactBackend} from '@brickwright/cad-exact';
 import {createCodeHost} from '../apps/mcp/host.mjs';
 
@@ -96,6 +96,37 @@ describe('round trip: export → import → the same exact bodies',()=>{
   const bodies=exact.measure(doc).bodies;
   expect(bodies.every(b=>b.volume>0&&b.solids===1)).toBe(true);
   expect(rel(bodies[0].volume+bodies[1].volume,19964.766)).toBeLessThan(1e-6);
+  // The B-rep cache keeps every body a request needs, then drops old ones down to its capacity.
+  const cache=createBrepCache(exact.kernel,1),nodes=done.ids.map(id=>doc.nodes[id]);
+  cache.warm(nodes);expect(cache.size).toBe(2);
+  cache.warm(nodes.slice(1));expect(cache.size).toBe(1);
+  cache.clear();
+ },300_000);
+ it('displays at the import tolerance and checks the stored B-rep when the kernel reads it',async()=>{
+  const source=createCadSession(undefined,{kernels});
+  source.add({kind:'cylinder',radius:1,height:4,segments:48},{name:'Pin'});
+  const {session,done}=await imported(exact.exportStep(source.state.document).step,'pin.step');
+  const doc=session.state.document,node=doc.nodes[done.ids[0]];
+  if(node.kind!=='exact-body')throw new Error('not an exact body');
+  // The coarser angle never loosens the 0.01 mm chord tolerance: on a 1 mm pin the chord, not the
+  // 30°, sets the sides (at least 23, not 12). A polygon whose sides stay within 0.01 mm of the
+  // circle loses at most 2π r · 0.01 of the disc's π r², 2 % at r = 1 (12 sides would lose 4.5 %).
+  const shown=manifold.evaluate(doc).bodies[0];
+  expect(rel(shown.volume,4*Math.PI)).toBeLessThan(.02);
+  // A stored B-rep that no longer matches its measures (here: measures changed by 1 %) is refused
+  // by every exact request that reads it, naming the body; nothing is computed on it.
+  for(const [field,change] of [['volume',1.01],['area',1.01]] as const){
+   const tampered=structuredClone(doc),body=tampered.nodes[node.id];
+   if(body.kind!=='exact-body')throw new Error('not an exact body');
+   body.measures={...body.measures,[field]:body.measures[field]*change};
+   expect(()=>exact.measure(tampered)).toThrow(`${node.name}: its stored exact B-rep does not read back as it was imported`);
+  }
+  const moved=structuredClone(doc),body=moved.nodes[node.id];
+  if(body.kind!=='exact-body')throw new Error('not an exact body');
+  body.measures={...body.measures,min:[body.measures.min[0]+.01,body.measures.min[1],body.measures.min[2]]};
+  expect(()=>exact.measure(moved)).toThrow(/does not read back as it was imported/);
+  // The untouched document measures as before.
+  expect(rel(exact.measure(doc).bodies[0].volume,node.measures.volume)).toBeLessThan(1e-12);
  },300_000);
 });
 

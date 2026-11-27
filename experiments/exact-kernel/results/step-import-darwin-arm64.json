@@ -1,23 +1,24 @@
 {
  "node": "v26.4.0",
- "date": "2026-11-27T11:24:25.938Z",
+ "date": "2026-11-27T14:48:36.608Z",
  "kernel": {
   "id": "smlib",
   "package": "@crispcad/exact-kernel",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "smlib": "0.6.2",
   "licence": "MIT AND Apache-2.0"
  },
- "wasmMemoryMiB": 275,
+ "wasmMemoryMiB": 159,
  "rows": [
   {
    "file": "box.step",
    "source": "CrispCAD exact export",
    "kib": 5,
    "bodies": 1,
-   "importWallMs": 1280,
-   "importCpuMs": 150,
-   "warmMeasureMs": 26,
+   "importWallMs": 469,
+   "importCpuMs": 143,
+   "firstMeasureWallMs": 119,
+   "firstMeasureCpuMs": 22,
    "storedBrepKiB": 5,
    "triangles": 12,
    "documentKiB": 7
@@ -27,21 +28,23 @@
    "source": "CrispCAD exact export",
    "kib": 24,
    "bodies": 1,
-   "importWallMs": 16244,
-   "importCpuMs": 1565,
-   "warmMeasureMs": 4119,
+   "importWallMs": 8646,
+   "importCpuMs": 1235,
+   "firstMeasureWallMs": 2816,
+   "firstMeasureCpuMs": 359,
    "storedBrepKiB": 26,
-   "triangles": 4604,
-   "documentKiB": 151
+   "triangles": 3836,
+   "documentKiB": 129
   },
   {
    "file": "plate-12-holes.step",
    "source": "CrispCAD exact export",
    "kib": 20,
    "bodies": 1,
-   "importWallMs": 7558,
-   "importCpuMs": 945,
-   "warmMeasureMs": 3674,
+   "importWallMs": 3171,
+   "importCpuMs": 729,
+   "firstMeasureWallMs": 2442,
+   "firstMeasureCpuMs": 546,
    "storedBrepKiB": 19,
    "triangles": 1932,
    "documentKiB": 62
@@ -51,48 +54,52 @@
    "source": "Adafruit_CAD_Parts (MIT)",
    "kib": 217,
    "bodies": 2,
-   "importWallMs": 15922,
-   "importCpuMs": 2098,
-   "warmMeasureMs": 4937,
+   "importWallMs": 8023,
+   "importCpuMs": 1558,
+   "firstMeasureWallMs": 4564,
+   "firstMeasureCpuMs": 594,
    "storedBrepKiB": 143,
-   "triangles": 2276,
-   "documentKiB": 197
+   "triangles": 2068,
+   "documentKiB": 192
   },
   {
    "file": "711 DC Toy Motor.step",
    "source": "Adafruit_CAD_Parts (MIT)",
    "kib": 85,
    "bodies": 2,
-   "importWallMs": 37305,
-   "importCpuMs": 2370,
-   "warmMeasureMs": 6784,
+   "importWallMs": 9257,
+   "importCpuMs": 1369,
+   "firstMeasureWallMs": 3750,
+   "firstMeasureCpuMs": 666,
    "storedBrepKiB": 64,
-   "triangles": 9808,
-   "documentKiB": 321
+   "triangles": 4804,
+   "documentKiB": 182
   },
   {
    "file": "3777 TT Motor.step",
    "source": "Adafruit_CAD_Parts (MIT)",
    "kib": 110,
    "bodies": 8,
-   "importWallMs": 35298,
-   "importCpuMs": 2964,
-   "warmMeasureMs": 9921,
+   "importWallMs": 14190,
+   "importCpuMs": 1860,
+   "firstMeasureWallMs": 9457,
+   "firstMeasureCpuMs": 994,
    "storedBrepKiB": 90,
-   "triangles": 12006,
-   "documentKiB": 404
+   "triangles": 8696,
+   "documentKiB": 315
   },
   {
    "file": "4884 Feather RP2040.step",
    "source": "Adafruit_CAD_Parts (MIT)",
    "kib": 2386,
    "bodies": 58,
-   "importWallMs": 915554,
-   "importCpuMs": 44228,
-   "warmMeasureMs": 121739,
+   "importWallMs": 150795,
+   "importCpuMs": 19623,
+   "firstMeasureWallMs": 45933,
+   "firstMeasureCpuMs": 10885,
    "storedBrepKiB": 2992,
-   "triangles": 68994,
-   "documentKiB": 4864
+   "triangles": 23036,
+   "documentKiB": 3646
   }
  ]
 }

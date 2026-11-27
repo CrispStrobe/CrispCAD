@@ -228,7 +228,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   // Exact features commit kernel output, which only a session declaring the exact kernel accepts
   // (see createEditorSession). Refuse before loading and running the kernel, not after.
   const exactEdits=exactEditHost(session,client.exact);
-  const exactFeaturePanel=mountExactFeaturePanel(shell,session,()=>exactEdits,async()=>{await whenIdle();viewport.frame();});
+  const exactFeaturePanel=mountExactFeaturePanel(shell,session,()=>exactEdits,async()=>{await whenIdle();viewport.frame();},{pickEdges:options=>viewport.pickEdges(options)});
   const openExactFeature=()=>{
     const [id]=session.state.selection,node=session.state.document.nodes[id];
     if(session.state.selection.length!==1)throw new Error(t('Select a top-level body for the exact feature'));

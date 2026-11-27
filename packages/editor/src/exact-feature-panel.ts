@@ -3,9 +3,10 @@
 // terminal accepts (`fillet 2 <id> --face +z`, `fillet 2 <id> edges <reference> ...`), so
 // validation, the kernel round trip and the single recorded commit are shared with the terminal,
 // MCP and CLI. "Chosen edges" asks the exact kernel for the body's edges and shows them in a
-// tap-to-pick drawing (edge-picker.ts).
-import {commandNumber,editExactFeatureWithKernel,formatEdgeReference,isEdgeReferences,parseExactFeatureCommand,parseFaceNormal,runExactFeatureCommand,t} from '@brickwright/cad-core';
-import type {CadSession,ExactCommandHost,ExactEdgeReference,ExactFaceSelector,ExactFeatureOperation,Vec3} from '@brickwright/cad-core';
+// tap-to-pick drawing (edge-picker.ts); "Pick in the 3D view" sets the dialog aside and lets the
+// same edges be tapped on the model itself (viewport-edge-pick.ts). Both toggle one choice.
+import {commandNumber,constructionInputs,editExactFeatureWithKernel,formatEdgeReference,isEdgeReferences,localToWorldPoint,parseExactFeatureCommand,parseFaceNormal,runExactFeatureCommand,t} from '@brickwright/cad-core';
+import type {CadDocument,CadSession,ExactBodyEdge,ExactCommandHost,ExactEdgeReference,ExactFaceSelector,ExactFeatureOperation,Vec3} from '@brickwright/cad-core';
 import {operationField} from './body-operation-panel.js';
 import {createEdgePicker} from './edge-picker.js';
 
@@ -14,18 +15,36 @@ const faces:readonly {key:string;label:string;normal:Vec3}[]=[
  {key:'+x',label:'Right (+X)',normal:[1,0,0]},{key:'-x',label:'Left (−X)',normal:[-1,0,0]},
  {key:'+y',label:'Back (+Y)',normal:[0,1,0]},{key:'-y',label:'Front (−Y)',normal:[0,-1,0]},
 ];
+/** Picking edges on the model in the 3D view (the viewport's `pickEdges`). */
+export interface EdgePickView {
+ pickEdges(options:{edges:readonly {points:readonly (readonly number[])[];pickable:boolean}[];picked:readonly number[];toggle:(index:number)=>void;end:()=>void}):{setPicked(indices:readonly number[]):void;end():void};
+}
+/** `edges` listed for `id` are in its parent's frame; the 3D view draws in world coordinates. */
+export function edgesInWorld(doc:CadDocument,id:string,edges:readonly ExactBodyEdge[]):(readonly number[])[][]{
+ const parents:CadDocument['nodes'][string][]=[];
+ for(let child=id,guard=0;!doc.roots.includes(child)&&guard<64;guard++){
+  const parent=Object.values(doc.nodes).find(node=>constructionInputs(node).includes(child));
+  if(!parent)break;
+  parents.push(parent);child=parent.id;
+ }
+ return edges.map(edge=>edge.points.map(point=>parents.reduce((p,node)=>localToWorldPoint(p,node.transform),[point[0],point[1],point[2]] as Vec3)));
+}
+
 const faceKey=(selector:ExactFaceSelector|undefined)=>selector&&!('faceNormal' in selector)?undefined:faces.find(face=>selector&&face.normal.every((v,i)=>Math.abs(v-selector.faceNormal[i])<1e-9))?.key;
 
-export function mountExactFeaturePanel(parent:HTMLElement,session:CadSession,exact:()=>ExactCommandHost|undefined,afterApply:()=>Promise<unknown>){
+export function mountExactFeaturePanel(parent:HTMLElement,session:CadSession,exact:()=>ExactCommandHost|undefined,afterApply:()=>Promise<unknown>,view?:EdgePickView){
  const dialog=document.createElement('dialog');
  dialog.className='sketch-dialog body-operation-dialog exact-feature-dialog';
  parent.append(dialog);
  dialog.addEventListener('keydown',event=>event.stopPropagation());
  let epoch=0,controller:AbortController|undefined;
- dialog.addEventListener('close',()=>{epoch++;controller?.abort();});
+ // While edges are picked in the 3D view the dialog is closed but its state is kept.
+ let setAside=false,endViewPick:(()=>void)|undefined;
+ dialog.addEventListener('close',()=>{if(setAside)return;epoch++;controller?.abort();endViewPick?.();});
 
  /** `id`: a top-level body (new feature) or, with `edit`, an exact feature to change. */
  function open(id:string,edit=false){
+  endViewPick?.();
   const doc=session.state.document,node=doc.nodes[id],revision=session.state.revision;
   if(edit?node?.kind!=='exact-feature':!node||node.reference||!doc.roots.includes(id))throw new Error(t('Select a top-level body for the exact feature'));
   const previous=edit&&node.kind==='exact-feature'?node:undefined,ticket=++epoch;
@@ -54,6 +73,36 @@ export function mountExactFeaturePanel(parent:HTMLElement,session:CadSession,exa
   pickerStatus.className='parameter-status';pickerStatus.setAttribute('role','status');
   const pickerBox=document.createElement('div');pickerBox.className='edge-picker-box';pickerBox.append(pickerStatus,picker.element);
   const body=previous?previous.source:id;
+  // Pick in the 3D view: the dialog steps aside, a bar over the view counts the chosen edges, and
+  // Done (or Escape) brings the dialog back with the same choice.
+  const inView=document.createElement('button');inView.type='button';inView.className='edge-picker-in-view';
+  inView.textContent=t('Pick in the 3D view');inView.hidden=!view;inView.disabled=true;
+  pickerBox.append(inView);
+  inView.onclick=()=>{
+   if(!view||setAside)return;
+   const doc=session.state.document,listed=picker.edges(),world=edgesInWorld(doc,body,listed);
+   const bar=document.createElement('div');bar.className='edge-pick-bar';bar.setAttribute('role','toolbar');bar.setAttribute('aria-label',t('Edge picking'));
+   const text=document.createElement('p');text.setAttribute('aria-live','polite');
+   const clearAll=document.createElement('button');clearAll.type='button';clearAll.textContent=t('Clear edges');
+   const done=document.createElement('button');done.type='button';done.className='primary';done.textContent=t('Done');
+   bar.append(text,clearAll,done);parent.append(bar);
+   const refresh=()=>{text.textContent=t('Tap edges on the model.')+' '+picker.summary();clearAll.disabled=!picker.picked().length;pick?.setPicked(picker.picked());};
+   let pick:ReturnType<EdgePickView['pickEdges']>|undefined;
+   const finish=(reopen=true)=>{
+    if(!setAside)return;
+    endViewPick=undefined;pick?.end();bar.remove();unlisten();
+    setAside=false;
+    if(reopen&&epoch===ticket){dialog.showModal();inView.focus();}
+   };
+   const unlisten=picker.onChange(refresh);
+   setAside=true;dialog.close();
+   try{
+    pick=view.pickEdges({edges:listed.map((edge,i)=>({points:world[i],pickable:!!edge.reference})),picked:picker.picked(),toggle:index=>picker.toggle(index),end:()=>finish()});
+   }catch(error){finish();pickerStatus.textContent=error instanceof Error?error.message:String(error);return;}
+   endViewPick=()=>finish(false);
+   clearAll.onclick=()=>picker.clear();done.onclick=()=>finish();
+   refresh();done.focus();
+  };
   let loaded:Promise<void>|undefined;
   const loadEdges=()=>loaded??=(async()=>{
    const host=exact();
@@ -64,6 +113,7 @@ export function mountExactFeaturePanel(parent:HTMLElement,session:CadSession,exa
    if(epoch!==ticket)return;
    pickerStatus.textContent='';
    picker.show(result.bodies[0]?.edges??[],previousReferences);
+   inView.disabled=!picker.edges().some(edge=>edge.reference);
   })().catch(error=>{loaded=undefined;if(epoch===ticket)pickerStatus.textContent=error instanceof Error?error.message:String(error);});
   const open=document.createElement('fieldset'),legend=document.createElement('legend');legend.textContent=t('Open faces');open.append(legend);
   const checks=faces.map(face=>{
@@ -121,6 +171,6 @@ export function mountExactFeaturePanel(parent:HTMLElement,session:CadSession,exa
   };
   dialog.showModal();
  }
- return {open,dispose(){epoch++;controller?.abort();dialog.close();dialog.remove();}};
+ return {open,dispose(){epoch++;controller?.abort();endViewPick?.();dialog.close();dialog.remove();}};
 }
 
