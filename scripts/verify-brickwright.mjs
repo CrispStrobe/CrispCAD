@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 import { strFromU8, unzipSync } from 'fflate';
 import { attachCadProject, extractCadProject } from '@brickwright/cad-brickwright';
-import { CAD_SCRIPT_REVISION, createCadSession, createCommandRunner, identityTransform, parseDocument, runStepImport, serializeDocument, staleExactFeatures } from '@brickwright/cad-core';
+import { CAD_SCRIPT_REVISION, EXACT_DRAWING_DOCUMENT_VERSION, SPLIT_DOCUMENT_VERSION, activeRoots, configuredDocument, createCadSession, createCommandRunner, explodeOffsets, identityTransform, parseDocument, runStepImport, serializeDocument, staleExactFeatures } from '@brickwright/cad-core';
 import { createExactBackend, exactKernelIdentity, runExactRequest } from '@brickwright/cad-exact';
 import { createGeometryKernel } from '@brickwright/cad-geometry';
 const root = resolve(process.argv[2] ?? '../local/lite-work');
@@ -123,4 +123,57 @@ try {
  const drilledVolume = manifold.evaluate(v47).bodies[0].volume;
  assert.ok(drilledVolume > 8000 && drilledVolume < 9000, `drilled plate ${drilledVolume} mm³`);
  console.log(`PASS: document version 47 (standard holes) survives the real Brickwright SB3 writer and loader unchanged, parses with this SDK and displays (${drilledVolume.toFixed(1)} mm³).`);
+ // Document version 48 (exact drawing sheet settings): an assembly sheet of the drilled plate that
+ // keeps "Exact edges (B-rep)" and automatic dimensions; the loaded sheet still has both.
+ const sheeted = createCadSession(v47);
+ const sheetId = sheeted.saveDrawingSheet({ title: 'Plate', source: { kind: 'assembly' }, scale: '1:1', hiddenLines: true, exactEdges: true, autoDimensions: true });
+ assert.equal(EXACT_DRAWING_DOCUMENT_VERSION, 48);
+ const v48 = await roundTrip(sheeted, 48);
+ assert.deepEqual(v48.drawings?.map(sheet => [sheet.id, sheet.exactEdges, sheet.autoDimensions]), [[sheetId, true, true]]);
+ assert.ok(Math.abs(manifold.evaluate(v48).bodies[0].volume - drilledVolume) < 1e-6, 'the sheet does not change the model');
+ console.log('PASS: document version 48 (exact drawing sheet: exact edges and automatic dimensions) survives the real Brickwright SB3 writer and loader unchanged and parses with this SDK.');
+ // Document version 49 (split by plane): both sides of a 30 x 30 x 10 block cut at z = 4 are split
+ // nodes on the same source; the loaded document displays them with Manifold and the exact kernel
+ // measures them.
+ const cut = createCadSession();
+ const slab = cut.add({ kind: 'box', size: [30, 30, 10] }, { name: 'Slab', transform: { ...identityTransform(), position: [0, 0, 5] } });
+ const sides = cut.splitBody(slab, { normal: [0, 0, 1], offset: 4 });
+ assert.equal(SPLIT_DOCUMENT_VERSION, 49); assert.equal(sides.length, 2);
+ const v49 = await roundTrip(cut, 49);
+ assert.deepEqual(v49.roots, sides); assert.ok(sides.every(id => v49.nodes[id].kind === 'split' && v49.nodes[id].source === slab));
+ const halves = manifold.evaluate(v49).bodies.map(body => body.volume), exactHalves = exactBackend.measure(v49).bodies.map(body => body.volume);
+ for (const [shown, expected] of [[halves, [5400, 3600]], [exactHalves, [5400, 3600]]]) shown.forEach((volume, i) => assert.ok(Math.abs(volume - expected[i]) < 1e-6, `split side ${i}: ${volume} mm³, expected ${expected[i]}`));
+ console.log('PASS: document version 49 (split by plane) survives the real Brickwright SB3 writer and loader unchanged, parses with this SDK and displays both sides (Manifold and exact: 5400 + 3600 mm³).');
+ // Document version 50 (assembly block): a nested group, an exploded view, two configurations and a
+ // suppressed body, plus an assembly sheet drawn in the exploded view. The loaded document keeps the
+ // block, leaves the suppressed body out of the model, and switches configurations.
+ const bench = createCadSession();
+ bench.setParametric({ version: 1, parameters: { width: { expression: '10 mm', unit: 'mm' } }, bindings: [] });
+ const baseBox = bench.add({ kind: 'box', size: [10, 10, 10] }, { name: 'Base', transform: { ...identityTransform(), position: [0, 0, 5] } });
+ const lid = bench.add({ kind: 'box', size: [10, 10, 10] }, { name: 'Lid', transform: { ...identityTransform(), position: [0, 0, 15] } });
+ const pin = bench.add({ kind: 'cylinder', radius: 2, height: 10, segments: 48 }, { name: 'Pin', transform: { ...identityTransform(), position: [20, 0, 5] } });
+ bench.setParametric({ ...bench.state.document.parametric, bindings: [{ nodeId: baseBox, property: 'width', expression: 'width' }] });
+ const housing = bench.groupBodies('Housing', [baseBox, lid]); const hardware = bench.groupBodies('Hardware', [pin], { parent: housing });
+ const assemblyHost = { bounds: async doc => manifold.evaluate(doc).bodies.map(body => ({ id: body.id, bounds: body.bounds })) };
+ const benchRunner = createCommandRunner(bench, { assembly: assemblyHost });
+ await benchRunner.runAsync('explode auto axis +z spacing 12 group Housing');
+ const viewId = bench.state.document.assembly.views[0].id;
+ bench.saveDrawingSheet({ title: 'Exploded', source: { kind: 'assembly' }, scale: '1:1', hiddenLines: false, explode: { view: viewId, factor: 1 } });
+ benchRunner.run('config save Narrow');
+ bench.setParametric({ ...bench.state.document.parametric, parameters: { width: { expression: '25 mm', unit: 'mm' } } });
+ benchRunner.run('suppress Pin'); benchRunner.run('config save "Wide, no pin"');
+ const v50 = await roundTrip(bench, 50);
+ assert.deepEqual(v50.assembly, bench.state.document.assembly);
+ assert.deepEqual(v50.assembly.groups.map(group => [group.id, group.name, group.members, group.parent]), [[housing, 'Housing', [baseBox, lid], undefined], [hardware, 'Hardware', [pin], housing]]);
+ assert.deepEqual(v50.assembly.suppressed, [pin]); assert.deepEqual(activeRoots(v50), [baseBox, lid]);
+ assert.deepEqual(configuredDocument(v50).roots, [baseBox, lid]);
+ assert.deepEqual(v50.assembly.configurations.map(config => config.name), ['Narrow', 'Wide, no pin']);
+ assert.deepEqual(v50.drawings?.[0].explode, { view: viewId, factor: 1 });
+ const offsets = explodeOffsets(v50, viewId, 1); assert.ok(offsets.size > 0 && [...offsets.values()].every(offset => offset[0] === 0 && offset[1] === 0 && offset[2] > 0), 'exploded along +z');
+ const shownBench = manifold.evaluate(v50).bodies; assert.deepEqual(shownBench.map(body => body.id), [baseBox, lid]);
+ assert.ok(Math.abs(shownBench[0].volume - 2500) < 1e-6, `wide base ${shownBench[0].volume} mm³`);
+ const reopened = createCadSession(v50); createCommandRunner(reopened).run('config use Narrow');
+ assert.deepEqual(activeRoots(reopened.state.document), [baseBox, lid, pin]);
+ assert.ok(Math.abs(manifold.evaluate(reopened.state.document).bodies[0].volume - 1000) < 1e-6, 'narrow base');
+ console.log(`PASS: document version 50 (assembly: 2 nested groups, an exploded view with ${offsets.size} moved items and a sheet drawn in it, 2 configurations, 1 suppressed body) survives the real Brickwright SB3 writer and loader unchanged, parses with this SDK, leaves the suppressed body out and switches configurations.`);
 } finally { delete globalThis.localStorage; delete globalThis.window; delete globalThis.CustomEvent; }
