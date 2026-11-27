@@ -12,6 +12,7 @@ export * from './fragments.js';
 export * from './features.js';
 export * from './exact-feature.js';
 export * from './exact-edge-references.js';
+export type * from './exact-drawing.js';
 export * from './exact-body.js';
 export * from './sketch-outline.js';
 export * from './sketch-region.js';

@@ -17,19 +17,20 @@ import {checkEdgeReferences,formatEdgeReference,parseEdgeReference} from './exac
 import type {ExactEdgeReference} from './exact-edge-references.js';
 import type {KernelIdentity} from './session-commands.js';
 import type {ExactBodyData} from './exact-body.js';
+import type {ExactDrawingBody,ExactDrawingFailure} from './exact-drawing.js';
 import {MAX_STEP_IMPORT_BYTES} from './exact-body.js';
 import {sha256Hex} from './hash.js';
 import {commandNumber,commandTokens} from './command-arguments.js';
 import {t} from './i18n.js';
 
-export type ExactOperation='export-step'|'measure'|'feature-display'|'edges'|'import-step';
+export type ExactOperation='export-step'|'measure'|'feature-display'|'edges'|'import-step'|'drawing';
 export interface ExactCommandRequest {
  readonly operation:ExactOperation;
  /** Snapshot taken when the command ran. */
  readonly document:CadDocument;
  /** Top-level bodies; empty means every printable body. For `feature-display`, the
   * exact-feature nodes whose display mesh to compute (empty: every stale one). For `edges`, the
-  * bodies whose B-rep edges to list. */
+  * bodies whose B-rep edges to list. For `drawing`, the bodies to draw (empty: every printable one). */
  readonly bodies:readonly string[];
  /** `import-step` only: the file (its name without a path, and its bytes). */
  readonly step?:{readonly name:string;readonly bytes:Uint8Array};
@@ -51,6 +52,7 @@ export type ExactCommandResult=
  |{readonly operation:'export-step';readonly kernel:ExactKernelReport;readonly bodies:readonly {id:string;name:string}[];readonly step:string;readonly bytes:number;readonly timing?:ExactTiming}
  |{readonly operation:'feature-display';readonly kernel:ExactKernelReport;readonly features:readonly ExactFeatureDisplayReport[];readonly timing?:ExactTiming}
  |{readonly operation:'edges';readonly kernel:ExactKernelReport;readonly bodies:readonly ExactBodyEdgesReport[];readonly timing?:ExactTiming}
+ |{readonly operation:'drawing';readonly kernel:ExactKernelReport;readonly bodies:readonly ExactDrawingBody[];readonly failures:readonly ExactDrawingFailure[];readonly timing?:ExactTiming}
  |{readonly operation:'import-step';readonly kernel:ExactKernelReport;readonly bodies:readonly ImportedExactBodyReport[];readonly notes:readonly string[];readonly timing?:ExactTiming};
 /**
  * One B-rep edge of a body, for picking: its number in `edges` listings (1-based, in kernel
@@ -113,6 +115,7 @@ const timingLine=(timing?:ExactTiming)=>timing?['\n'+t`Exact kernel: load ${Math
 /** Terminal/CLI text for a result, and the STEP file for an export. */
 export function formatExactResult(result:ExactCommandResult,document:CadDocument):ExactCommandOutput{
  if(result.operation==='import-step')throw new Error(t('Import STEP files with import step.'));
+ if(result.operation==='drawing')throw new Error(t('Exact drawings are made in the drawing workspace.'));
  if(result.operation==='measure'){
   const lines=result.bodies.map(body=>t`${body.name} (${body.id}): volume ${formatNumber(body.volume)} mm³ · area ${formatNumber(body.area)} mm² · bounds ${formatPoint(body.bounds.min)} – ${formatPoint(body.bounds.max)} · centroid ${formatPoint(body.centroid)}`);
   return {output:[t`Exact measures (${kernelLabel(result.kernel)}):`,...lines].join('\n')+timingLine(result.timing).join(''),kernel:result.kernel};

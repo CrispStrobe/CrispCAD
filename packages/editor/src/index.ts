@@ -10,7 +10,7 @@ export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
 import { t,formatExactResult,validateDocument as validateExportDocument,FeatureEvaluationError,STALE_EXACT_CODE,staleExactFeatures,recomputeExactFeatures,runStepImport,MAX_STEP_IMPORT_BYTES } from '@brickwright/cad-core';
 import { drawingAssemblyAvailable,isAssemblyDrawingSource,constructionInputs, createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters,redesignScrew } from '@brickwright/cad-core';
-import type { CadDocument, CadSession, DrawingInputs, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe } from '@brickwright/cad-core';
+import type { CadDocument, CadSession, DrawingInputs, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe, ExactDrawingData } from '@brickwright/cad-core';
 import { importSTL } from '@brickwright/cad-geometry';
 import {importStep} from './step-import.js';
 import type { AssemblySection,GeometryResult } from '@brickwright/cad-geometry';
@@ -266,12 +266,28 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   paletteButton.setAttribute('aria-keyshortcuts','Control+Shift+P Meta+Shift+P');
   const assemblyProjection=createAssemblyProjectionClient();
   const assemblySections=new WeakMap<GeometryResult,Map<string,Promise<AssemblySection>>>();
-  async function projectDrawingAssembly(sheets:readonly DrawingInputs[]){
+  // Exact drawing data per document, fetched from the exact worker only when a sheet asks for it.
+  const exactDrawings=new WeakMap<CadDocument,Promise<ExactDrawingData>>();
+  function exactDrawingData(doc:CadDocument){
+    let data=exactDrawings.get(doc);
+    if(!data){
+      data=client.exact.run({operation:'drawing',document:doc,bodies:[]}).then(result=>{
+        if(result.operation!=='drawing')throw new Error(t('The exact kernel returned an unexpected result.'));
+        return {bodies:result.bodies,failures:result.failures};
+      },error=>{throw new Error(t`Exact edges are unavailable: ${error instanceof Error?error.message:String(error)}`);});
+      exactDrawings.set(doc,data);
+      void data.catch(()=>{if(exactDrawings.get(doc)===data)exactDrawings.delete(doc);});
+    }
+    return data;
+  }
+  async function projectDrawingAssembly(sheets:readonly DrawingInputs[],options:{exact?:boolean}={}){
     const current=session.state.document;
     const active=()=>!disposed&&session.state.document===current;
     const geometry=await whenIdle();
     if(!active())return undefined;
-    const projection=await assemblyProjection.project(geometry);
+    const exact=options.exact?await exactDrawingData(current):undefined;
+    if(!active())return undefined;
+    const projection=await assemblyProjection.project(geometry,exact);
     if(!active())return undefined;
     const sections:AssemblySection[]=[];
     for(const sheet of sheets){
@@ -516,7 +532,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
         button('Export drawing set (PDF)',async()=>{
           const current=session.state.document;
           const needsAssembly=sheets.some(sheet=>isAssemblyDrawingSource(sheet.source));
-          const projection=needsAssembly?await projectDrawingAssembly(sheets):undefined;
+          const projection=needsAssembly?await projectDrawingAssembly(sheets,{exact:drawingPanel.exactEdges}):undefined;
           if(disposed)return;
           if(needsAssembly&&!projection||session.state.document!==current)throw new Error(t('The design changed while preparing the drawing set. Export again.'));
           await options.onExport!(exportDrawingSetPdf(current,projection));

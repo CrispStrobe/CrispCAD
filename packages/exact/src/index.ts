@@ -13,6 +13,8 @@ import {exactKernelOptions} from './limits.js';
 import type {ExactLimits} from './limits.js';
 import type {ExactFeatureLimits} from './lower-document.js';
 import {createBrepCache,importStepBodies} from './step-import.js';
+import {exactDrawingData} from './drawing.js';
+import type {ExactDrawingData} from './drawing.js';
 import type {ExactStepImport} from './step-import.js';
 
 export * from './identity.js';
@@ -21,6 +23,8 @@ export {lowerDocumentBody,lowerDocumentNode,sketchProfile,ExactLoweringError,des
 export {displayMesh,displayTessellation,exactFeatureDisplay} from './display.js';
 export {triangulatePolygon,facewiseMesh,MANY_LOOPS} from './face-mesh.js';
 export {importStepBodies,storedBody,createBrepCache} from './step-import.js';
+export {exactDrawingBody,exactDrawingData,drawingMeshTolerance,MAX_DRAWING_FACES,MAX_DRAWING_EDGES,MAX_DRAWING_TRIANGLES} from './drawing.js';
+export type {ExactDrawingBody,ExactDrawingData,ExactDrawingEdge,ExactDrawingFace,ExactDrawingFailure} from './drawing.js';
 export type {ImportedExactBody,ExactStepImport,BrepCache} from './step-import.js';
 export type {ExactFeatureResult} from './display.js';
 export type {ExactDiagnostic,ExactFeatureLimits} from './lower-document.js';
@@ -56,6 +60,7 @@ export interface ExactEdgesResult {kernel:ExactKernelInfo;bodies:ExactBodyEdgesR
 export const MAX_LISTED_EDGES=5000;
 export interface ExactStepResult {kernel:ExactKernelInfo;bodies:{id:string;name:string}[];step:string;bytes:number}
 export interface ExactStepImportResult extends ExactStepImport {kernel:ExactKernelInfo}
+export interface ExactDrawingResult extends ExactDrawingData {kernel:ExactKernelInfo}
 
 /** Bodies an exact command acts on: the given top-level bodies, or every printable one. */
 export function exactTargets(doc:CadDocument,ids?:readonly string[]):string[]{
@@ -90,6 +95,9 @@ export interface ExactBackend {
  /** The B-rep edges of top-level bodies (or exact-feature sources) with their stable references, for picking. */
  edges(doc:CadDocument,ids:readonly string[],options?:ExactRunOptions):ExactEdgesResult;
  featureDisplays(doc:CadDocument,ids?:readonly string[],options?:ExactRunOptions):ExactFeatureDisplayResult;
+ /** Edges, faces and a face-wise mesh of each body for a hidden-line drawing; a body the kernel
+  * cannot build is listed in `failures` with the reason (the drawing projects its mesh instead). */
+ drawing(doc:CadDocument,ids?:readonly string[],options?:ExactRunOptions):ExactDrawingResult;
  /** Read a STEP file as exact bodies (B-rep, measures and display of each), or refuse it whole. */
  importStep(bytes:Uint8Array,file:string,options?:ExactRunOptions):ExactStepImportResult;
 }
@@ -152,6 +160,10 @@ export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(
    for(const id of targets)if(doc.nodes[id]?.kind!=='exact-feature')throw new ExactKernelError('invalid-input',t`${id} is not an exact feature`);
    breps.warm(reachable(doc,targets));
    return {kernel:info,features:targets.map(id=>kernel.scope(()=>({id,name:doc.nodes[id].name,...exactFeatureDisplay(kernel,doc,id,{...options,breps})})))};
+  },
+  drawing(input,ids,options={}){
+   const {doc,targets}=prepare(input,ids);
+   return {kernel:info,...exactDrawingData(kernel,doc,targets,{limits:options.limits,breps,fatal:isFatalExactError})};
   },
   importStep(bytes,file,options={}){
    const limit=options.limits?.maxStepImportBytes;
@@ -232,6 +244,7 @@ export function runExactRequest(backend:ExactBackend,request:ExactCommandRequest
  const computed=request.operation==='measure'?{operation:'measure' as const,...backend.measure(request.document,request.bodies,options)}
   :request.operation==='feature-display'?{operation:'feature-display' as const,...backend.featureDisplays(request.document,request.bodies,options)}
   :request.operation==='edges'?{operation:'edges' as const,...backend.edges(request.document,request.bodies,options)}
+  :request.operation==='drawing'?{operation:'drawing' as const,...backend.drawing(request.document,request.bodies,options)}
   :request.operation==='import-step'?{operation:'import-step' as const,...backend.importStep(stepInput(request),request.step!.name,options)}
   :{operation:'export-step' as const,...backend.exportStep(request.document,request.bodies,options)};
  return {...computed,timing:{loadMs,runMs:performance.now()-started,memoryBytes:backend.kernel.memory().heap}};

@@ -2,6 +2,7 @@
 import {drawingArcId,drawingOutlines,evaluateExtrusion,featureValue,localToWorldPoint,rotatePoint,sketchBulgeTessellation,sketchPoint} from '@brickwright/cad-core';
 import type {AssemblyCurveDimension,AssemblyCurveSource,CadDocument,SketchPlane,SketchPoint,SolidNode,Transform,Vec3} from '@brickwright/cad-core';
 import type {AssemblyDrawingEdge} from './assembly-edge-dimension.js';
+import type {PaperArc} from './exact-drawing-layout.js';
 import {placeDrawingAnnotation} from './drawing-annotation.js';
 import type {DrawingAnchorPoint} from './drawing-annotation.js';
 import type {DrawingLayout} from './drawing-page.js';
@@ -52,8 +53,10 @@ function viewAxes(plane:SketchPlane,transform:Transform,view:View){
  return {scale,handedness,angle};
 }
 
+/** With `arcs` (the visible arcs of an exact drawing, per view), an authored curve is visible where an
+ * exact arc of the same centre and radius is; otherwise where its tessellation chords are. */
 export function assemblyDrawingCurves(
- doc:CadDocument,edges:AssemblyDrawingEdge[],paperPoint:(view:View,world:Vec3)=>SketchPoint
+ doc:CadDocument,edges:AssemblyDrawingEdge[],paperPoint:(view:View,world:Vec3)=>SketchPoint,arcs?:PaperArc[][]
 ){
  const grouped=new Map<string,AssemblyDrawingEdge[][]>();
  for(const edge of edges){
@@ -63,6 +66,8 @@ export function assemblyDrawingCurves(
   if(!views){views=[[],[],[]];grouped.set(edge.bodyId,views);}
   views[edge.view].push(edge);
  }
+ // An exact drawing draws circles as arcs, not as picked chords: every such body may have curves.
+ if(arcs)for(const id of doc.roots){const {kind}=doc.nodes[id];if((kind==='cylinder'||kind==='extrusion')&&!grouped.has(id))grouped.set(id,[[],[],[]]);}
  const result:AssemblyDrawingCurve[]=[];
  for(const [bodyId,views] of grouped){
   const node=doc.nodes[bodyId],data=bodyCurves(node,doc);
@@ -70,7 +75,7 @@ export function assemblyDrawingCurves(
   const {plane,start,end,curves}=data,{transform}=node;
   const world=([x,y]:SketchPoint,station:number)=>localToWorldPoint(sketchPoint(plane,x,y,station),transform);
   for(const [index,edges] of views.entries()){
-   if(!edges.length)continue;
+   if(!edges.length&&!arcs?.[index]?.length)continue;
    const view=index as View,axes=viewAxes(plane,transform,view);
    if(!axes)continue;
    const {depth,near,horizontal}=drawingViews[view];
@@ -83,7 +88,8 @@ export function assemblyDrawingCurves(
      const a=angle+sweep*i/segments;
      return world([center[0]+radius*Math.cos(a),center[1]+radius*Math.sin(a)],station);
     });
-    const visible=samples.slice(1).flatMap((b,i)=>candidates(samples[i],b));
+    const visible=arcs?exactArcSegments(arcs[index]??[],paperPoint(view,world(center,station)),radius*axes.scale)
+     :samples.slice(1).flatMap((b,i)=>candidates(samples[i],b));
     if(!visible.length)continue;
     const anchor:DrawingAnchorPoint={id:'curve',label:'',point:paperPoint(view,world(center,station)),radius:radius*axes.scale};
     if(arc)anchor.arc={start:axes.angle(arc.start),sweep:arc.sweep*axes.handedness};
@@ -92,6 +98,18 @@ export function assemblyDrawingCurves(
   }
  }
  return result;
+}
+
+/** Chords on paper of the visible exact arcs with this centre (paper) and radius (model mm). */
+function exactArcSegments(arcs:PaperArc[],center:SketchPoint,radius:number):Segment[]{
+ const out:Segment[]=[];
+ for(const arc of arcs){
+  if(Math.hypot(arc.center[0]-center[0],arc.center[1]-center[1])>1e-3||Math.abs(arc.radius-radius)>Math.max(1e-6,radius*1e-6))continue;
+  const steps=Math.max(2,Math.ceil(Math.abs(arc.sweep)/(Math.PI/24)));
+  const at=(k:number):SketchPoint=>{const a=arc.start+arc.sweep*k/steps;return [arc.center[0]+arc.paperRadius*Math.cos(a),arc.center[1]+arc.paperRadius*Math.sin(a)];};
+  for(let i=0;i<steps;i++)out.push([at(i),at(i+1)]);
+ }
+ return out;
 }
 
 /** Match authored tessellation chords against the visible segments from the projection worker. */

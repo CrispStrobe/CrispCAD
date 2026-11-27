@@ -38,10 +38,17 @@ function previewDrawing(layout:DrawingLayout,assembly:boolean) {
   }else addPath(stroke,d);
  }
  for(const [stroke,paths] of projected)addPath(stroke,paths.join(' '));
- for(const {center:[x,y],radius} of layout.circles){
+ for(const {center:[x,y],radius,arc,hidden} of layout.circles){
+  if(arc){
+   // An arc of an exact edge: counter-clockwise on paper, so clockwise in the flipped SVG.
+   const at=(a:number)=>(x+radius*Math.cos(a))+' '+(layout.height-y-radius*Math.sin(a));
+   const end=arc.start+arc.sweep,large=Math.abs(arc.sweep)>Math.PI?1:0,sweepFlag=arc.sweep>0?0:1;
+   addPath(hidden?'hidden':'visible','M '+at(arc.start)+' A '+radius+' '+radius+' 0 '+large+' '+sweepFlag+' '+at(end));
+   continue;
+  }
   const circle=document.createElementNS(ns,'circle');
   circle.setAttribute('cx',String(x));circle.setAttribute('cy',String(layout.height-y));circle.setAttribute('r',String(radius));
-  circle.setAttribute('class','drawing-visible');svg.append(circle);
+  circle.setAttribute('class',hidden?'drawing-hidden':'drawing-visible');svg.append(circle);
  }
  for(const {x,y,size,text} of layout.texts){
   const label=document.createElementNS(ns,'text');
@@ -51,7 +58,11 @@ function previewDrawing(layout:DrawingLayout,assembly:boolean) {
  return svg;
 }
 
-export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectAssembly:(sheets:readonly DrawingInputs[])=>Promise<AssemblyProjection|undefined>,onExport?: (file:CadFile)=>void|Promise<void>){
+/** How the assembly is projected: from the display meshes, or (`exact`) from the exact B-rep. */
+export type AssemblyProjectionOptions={exact?:boolean};
+export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectAssembly:(sheets:readonly DrawingInputs[],options?:AssemblyProjectionOptions)=>Promise<AssemblyProjection|undefined>,onExport?: (file:CadFile)=>void|Promise<void>){
+ // A view preference of this editor (not saved with the model): assembly sheets use exact edges.
+ let exactEdges=false;
  const dialog=element('dialog');dialog.className='sketch-dialog drawing-dialog';
  dialog.setAttribute('aria-label',t('Drawing sheet'));parent.append(dialog);
  dialog.addEventListener('keydown',event=>event.stopPropagation());
@@ -96,7 +107,10 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    form.append(titleBlockForm);
    const partsList=element('input'),previewPage=element('select');
    partsList.type='checkbox';partsList.checked=saved?.partsList??false;
+   const exactInput=element('input');exactInput.type='checkbox';exactInput.checked=exactEdges;
    if(assembly){
+    label('Exact edges (B-rep)',exactInput);
+    exactInput.title=t('Draw edges, silhouettes and circles from the exact B-rep. Loads the exact kernel; bodies it cannot build are drawn from their mesh and named on the sheet.');
     label('Include parts list',partsList);
     label('Preview page',previewPage);
     previewPage.parentElement!.hidden=true;
@@ -383,9 +397,9 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     try{
      const draft=read();
      if(assembly){
-      status.textContent=t('Projecting assembly…');
+      status.textContent=exactInput.checked?t('Projecting assembly from exact edges…'):t('Projecting assembly…');
       const active=()=>dialog.open&&dialog.firstChild===heading&&ticket===renderTicket&&session.state.document===current;
-      void projectAssembly([draft]).then(projection=>{if(active()&&projection)show(draft,projection);}).catch(error=>{if(active())report(error);});
+      void projectAssembly([draft],{exact:exactInput.checked}).then(projection=>{if(active()&&projection)show(draft,projection);}).catch(error=>{if(active())report(error);});
      }else show(draft);
     }catch(error){report(error);}
     if(!assembly)refreshDimensions();
@@ -448,6 +462,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    section.onchange=offset.onchange=render;
    secondPosition.oninput=jogAt.oninput=render;
    title.oninput=scale.onchange=hidden.onchange=partsList.onchange=render;
+   exactInput.onchange=()=>{exactEdges=exactInput.checked;render();};
    for(const input of Object.values(titleBlockInputs))input.oninput=render;
    save.onclick=()=>{
     try{session.saveDrawingSheet(read(),saved?.id);dialog.close();}
@@ -465,6 +480,8 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     ()=>session.state.document,()=>layout,()=>{previewPage.value='0';showPreview();},render):undefined;
    setPicking(false);refresh();dialog.showModal();
   },
+  /** Whether assembly sheets are projected from exact edges (this editor's choice in the dialog). */
+  get exactEdges(){return exactEdges;},
   dispose(){unsubscribe();dialog.close();dialog.remove();}
  };
 }

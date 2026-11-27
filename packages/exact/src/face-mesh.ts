@@ -192,7 +192,10 @@ class Pool {
 
 export interface FacewiseMesh {positions:number[];indices:number[];
  /** Planar faces triangulated here, those handed back to SMLib, and hole walls meshed as bands. */
- planar:number;planarFallbacks:number;bands:number}
+ planar:number;planarFallbacks:number;bands:number;
+ /** With `faces`: the face of each triangle (its position in the part's face list, the order of
+  * the kernel's `topology(solid).faces`). */
+ faceOf?:number[]}
 
 /** Whether `solid` has a planar face with at least MANY_LOOPS boundary loops (holes + outline). */
 export function hasManyHoleFace(solid:ExactSolid):boolean{
@@ -208,9 +211,13 @@ export function hasManyHoleFace(solid:ExactSolid):boolean{
  * `bands: false` every non-planar face is SMLib's (a planar face SMLib has to mesh does not share
  * the bands' circle points).
  */
-export function facewiseMesh(_k:ExactKernel,solid:ExactSolid,options:{tolerance:number;angleDeg:number;bands?:boolean}):FacewiseMesh|undefined{
+export function facewiseMesh(_k:ExactKernel,solid:ExactSolid,options:{tolerance:number;angleDeg:number;bands?:boolean;faces?:boolean}):FacewiseMesh|undefined{
  const part=partOf(solid);if(!part)return undefined;
  const faces=[...part.faces()],pool=new Pool(),indices:number[]=[];
+ const faceOf:number[]|undefined=options.faces?[]:undefined,order=faceOf?new Map(faces.map((face,i)=>[face._identity(),i])):undefined;
+ let current=0;
+ // Record the face of every triangle added since the last call.
+ const tag=(face:SmFace)=>{if(faceOf&&order){current=order.get(face._identity())!;while(faceOf.length<indices.length/3)faceOf.push(current);}};
  const boundary=new Map<string,[number,number][]>();
  const addMesh=(mesh:SmMesh)=>{
   const map=new Uint32Array(mesh.vertices.length/3);
@@ -232,6 +239,7 @@ export function facewiseMesh(_k:ExactKernel,solid:ExactSolid,options:{tolerance:
   const band=options.bands!==false?cylinderBand(face,options):undefined;
   if(band)bands++;
   boundary.set(face._identity(),addMesh(band??face.mesh(options.tolerance,options.angleDeg)));
+  tag(face);
  }
  let planarFallbacks=0;
  for(const face of planarFaces){
@@ -249,8 +257,9 @@ export function facewiseMesh(_k:ExactKernel,solid:ExactSolid,options:{tolerance:
   }
   if(triangles)indices.push(...triangles);
   else{planarFallbacks++;addMesh(face.mesh(options.tolerance,options.angleDeg));}
+  tag(face);
  }
- return {positions:pool.positions,indices,planar:planarFaces.length-planarFallbacks,planarFallbacks,bands};
+ return {positions:pool.positions,indices,planar:planarFaces.length-planarFallbacks,planarFallbacks,bands,...(faceOf?{faceOf}:{})};
 }
 /**
  * A hole's wall: a cylinder face bounded by two full circles (and its seam), each shared with a planar face. Both

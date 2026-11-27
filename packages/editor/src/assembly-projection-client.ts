@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {getLocale,t} from '@brickwright/cad-core';
+import type {ExactDrawingData} from '@brickwright/cad-core';
 import type {GeometryResult} from '@brickwright/cad-geometry';
 import type {AssemblyProjection} from './assembly-drawing.js';
 import type {AssemblyProjectionRequest,AssemblyProjectionResponse} from './assembly-projection.worker.js';
 
 const makeWorker=()=>new Worker(new URL('./assembly-projection.worker.js',import.meta.url),{type:'module'});
-type ProjectionKey=string|GeometryResult;
+type ProjectionKey=string|GeometryResult|ExactDrawingData;
 type ActiveProjection={
  key:ProjectionKey; promise:Promise<AssemblyProjection>; reject:(error:Error)=>void;
 };
@@ -15,9 +16,11 @@ export function createAssemblyProjectionClient(createWorker=makeWorker){
  let cached:{key:ProjectionKey; value:AssemblyProjection}|undefined;
  let disposed=false;
 
- function project(geometry:GeometryResult):Promise<AssemblyProjection>{
+ /** With `exact` (the exact kernel's drawing data for this geometry's document), lines come from
+  * the exact B-rep; the exact data object is then the cache key. */
+ function project(geometry:GeometryResult,exact?:ExactDrawingData):Promise<AssemblyProjection>{
   if(disposed)return Promise.reject(new Error(t('Editor was disposed')));
-  const key=geometry.sourceKey??geometry;
+  const key=exact??geometry.sourceKey??geometry;
   if(cached?.key===key)return Promise.resolve(cached.value);
   if(active?.key===key)return active.promise;
   active?.reject(new Error(t('The assembly changed while projecting the drawing.')));
@@ -47,7 +50,7 @@ export function createAssemblyProjectionClient(createWorker=makeWorker){
   worker.onmessageerror=()=>job.reject(new Error(t('Assembly projection worker failed.')));
   try{
    // Keep the evaluated mesh buffers available to the viewport and simulation.
-   worker.postMessage({geometry,locale:getLocale()} satisfies AssemblyProjectionRequest);
+   worker.postMessage({geometry,locale:getLocale(),...(exact?{exact}:{})} satisfies AssemblyProjectionRequest);
   }catch(error){
    job.reject(error instanceof Error?error:new Error(String(error)));
   }

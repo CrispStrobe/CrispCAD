@@ -340,7 +340,25 @@ authored radius or sweep of a cylinder, a circle in a sketch extrusion, or a
 sketch bulge arc. They follow parameter and placement edits while the curve
 remains visible and projects as a circle or circular arc. Curves in imported
 meshes, boolean results, and oblique or elliptical projections currently use
-projected straight-edge measurements.
+projected straight-edge measurements. With exact edges the curves of boolean results
+are drawn as true arcs (see below), but curve dimensions still need an authored
+cylinder or sketch curve.
+
+## Assembly drawings from exact edges
+
+Check **Exact edges (B-rep)** in an assembly drawing to take its lines from the exact B-rep
+instead of the display meshes. The exact kernel loads then, not before. Holes and other circular
+edges seen face-on are true circles and arcs of their exact radius, cylinder and sphere outlines
+lie on the exact surface, and hidden lines are clipped at exact positions for planar parts. The
+sheet adds an isometric view in its top-right corner when no section uses it, and notes with the
+exact overall size and the holes grouped by diameter. Model edge and curve dimensions measure the
+exact edges and keep working when the option is switched off again.
+
+A body the exact kernel cannot build, such as an imported mesh, is drawn from its mesh in the same
+views, and the sheet names it ("from the mesh: …"). The choice belongs to the editor, not to the
+saved sheet; the drawing-set PDF uses it as well. Silhouettes of cones, tori and spline surfaces,
+sections and sketch-extrusion sheets still use tessellated or authored geometry. Design, limits
+and tests: [convergence roadmap, Phase 6.1](CRISPCAD-CONVERGENCE.md#drawings-from-exact-edges-done-2026-11-27).
 
 ## Completion criteria
 

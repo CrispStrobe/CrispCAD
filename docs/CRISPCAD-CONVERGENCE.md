@@ -939,7 +939,10 @@ reference for each.
 1. **Drawings from exact edges:** dimensions, measurements and drafting review (lab
    guides `dimensions-measure-drawings*`, `drafting-review*`). Hidden-line views
    computed from the exact B-rep, not from the mesh. Coordinate with
-   [DRAFTING-ROADMAP.md](DRAFTING-ROADMAP.md).
+   [DRAFTING-ROADMAP.md](DRAFTING-ROADMAP.md). **Hidden-line views and exact measures done
+   2026-11-27** (exact kernel 0.1.9, no new kernel release; see
+   [Drawings from exact edges](#drawings-from-exact-edges-done-2026-11-27)). Drafting review
+   (annotation IDs, datums, tolerances, dimensioning styles) is still open.
 2. **Hole-driven fastening:** metric clearance holes and a standard parts library
    (screws, nuts, washers) with ISO thread tables as data (`hole-driven-fastening`,
    `metric-clearance-holes`, `standard-parts-library`).
@@ -952,6 +955,89 @@ reference for each.
 5. **Smaller tools:** split by plane, multi-material inspection, MCP STEP evidence and
    surface-blend tools.
 
+#### Drawings from exact edges. **Done 2026-11-27**
+
+**What it is.** An assembly drawing sheet can take its lines from the exact B-rep instead of the
+display meshes: **Exact edges (B-rep)** in the drawing dialog. The top, front and right views then
+show each body's B-rep edges and the silhouettes of its curved faces, with hidden-line removal; a
+hole is one circle of its exact radius (drawn as a true circle or arc in the preview and as Bézier
+arcs in the PDF), not the chords of its display mesh, and a cylinder's outline lies on its exact
+radius. The sheet adds an isometric view in the free top-right corner (visible lines; at the
+sheet's scale when it fits, otherwise smaller and marked "not to scale"; none when a section uses
+that corner), and two notes from exact geometry: which bodies were drawn from exact edges, and the
+exact overall size with the full cylindrical holes grouped by diameter ("Holes 2 × Ø5 mm"). Model
+edge dimensions measure exact straight edges, and curve dimensions (radius, diameter, arc length)
+match the authored circle or arc to an exact arc of the same centre and radius; dimensions saved on
+mesh sheets resolve on exact sheets and back.
+
+**No silent fallback.** A body the exact kernel cannot build (an imported mesh, a feature it
+refuses, a body over the limits below) is projected from its display mesh in the same hidden-line
+pass, so it still hides and is hidden by the others, and the sheet names it: "Edges: exact B-rep
+for 2 of 3 bodies; from the mesh: Bracket scan". If the kernel itself fails to load or run, the
+dialog shows "Exact edges are unavailable: …" and draws nothing exact. Without the checkbox the
+mesh projection is unchanged and the kernel is never fetched.
+
+**Design.**
+- Kernel side (`packages/exact/src/drawing.ts`, exact request `drawing`): per top-level body, the
+  kernel's `topology(solid)` (curve kinds, sample points, circle centre/radius/axis, the faces each
+  edge bounds; surface kinds with cylinder/sphere radius and axis), the exact bounding box, and a
+  face-wise mesh whose triangles know their face (`facewiseMesh(…, {faces: true})`, the same path as
+  the many-hole display mesh) at a chord tolerance of max(0.01, 2e-4 × diagonal) ≤ 0.05 mm. Each
+  body is built in its own scope; a body that fails becomes `{id, name, code, message}`; fatal kernel
+  errors are rethrown. Types are plain data in core (`exact-drawing.ts`).
+- Projection (`packages/editor/src/exact-drawing-projection.ts`, original code, in the assembly
+  projection worker): candidates are exact edges (lines as two points; circles resampled from their
+  exact centre, radius and axis with the view's extreme points added), skipping edges between
+  coplanar planes, plus silhouettes: mesh sides inside one curved face where it turns from facing
+  the viewer to facing away, moved onto the exact generator (cylinders) or the exact outline circle
+  (spheres); cones, tori and splines keep the mesh's chord tolerance and are counted in the
+  projection report. Occlusion is tested chord by chord against all triangles in a 48 × 48 grid
+  with a depth tolerance of twice the chord tolerance. A triangle side along a curved B-rep edge
+  hides nothing within twice the chord tolerance (the exact curve bulges past the chords); along a
+  straight edge (two planes) the margin is 1e-6 mm, so occlusion boundaries of planar parts are
+  exact. Along each line, hidden or visible runs shorter than three margins next to the other kind
+  are merged (tangent-edge grazing, hidden lines meeting the face that hides them). Coincident lines
+  are drawn once (nearest first), hidden pieces along visible lines are dropped, and arcs of one
+  circle are merged, visible over hidden. Face-on circles and sphere outlines come out as arcs
+  (centre, radius, start, sweep), edge-on and oblique curves as polylines.
+- Sheet (`exact-drawing-layout.ts`, called from `layoutAssemblyDrawing`): arcs become
+  `DrawingCircle`s with optional `arc` and `hidden` (PDF: Bézier quarter-turn segments, dashed when
+  hidden; preview: SVG arcs). The editor keeps the exact data per document (one `drawing` request
+  per model state), the projection client caches by it, and **Export drawing set (PDF)** uses the
+  same choice.
+- Not persisted: the choice is a preference of the editor session (a view setting, not model
+  history), so no document version changes and saved sheets are unchanged.
+- Kernel API: `topology()` and the smlibwasm part's per-face meshes (already used by the display
+  path) were enough, so the lab needed no exact HLR or silhouette API and no release; CrispCAD stays
+  on 0.1.9.
+
+**Limits.** At most 2,000 faces and 6,000 edges per body and 400,000 triangles per drawing (more:
+that body from its mesh, named); bodies drawn from the mesh keep the mesh path's 100,000-triangle
+limit; the projection has the mesh path's visit budget ("exceeds the drawing detail limit"). The
+request runs in the exact worker under the tablet limits (memory ceiling, 60 s budget). Measured on
+the M1 under load: a filleted block (26 faces) 0.6–1.0 s in the kernel and 0.2–0.9 s projecting four
+views; a 200 × 100 plate with 50 holes 1.1–2.0 s and 0.7 s.
+
+**Tests.** `tests/exact-drawing.test.ts` (8): a plate with a through and a blind hole (circle
+radii, visible and hidden circles in the top view, hole walls as hidden lines at exactly x ± r,
+no dashes along the outline, measures); a 12-segment cylinder whose outline is at r on the exact
+path and at r cos 15° on the mesh path; a rotated sphere as one outline circle in every view; an
+edge clipped behind another body at exact positions; an imported mesh drawn from its mesh and named,
+in English and German; the sheet (circles, dashed hidden circle, notes, isometric view, PDF arcs
+and dashes, no hidden lines when switched off); edge and curve dimensions on exact geometry, also
+read back on the mesh path; a filleted block with four quarter arcs of radius 2 per view and its
+outline on the exact extent. Browser: `tests/browser/exact-drawing.spec.ts` on the `ipad` project
+(kernel fetched only on the checkbox, circle of radius 5 at 1:1, notes, isometric view, hidden lines,
+PDF with arcs, back to the mesh projection).
+
+**Left open.** Drafting review (annotation IDs, overrides, datums and tolerances, baseline/chain/
+symmetry styles) and automatic dimensions on the views; exact edges on sketch-extrusion sheets
+(their lines already come from the authored sketch) and in sections (still the mesh slice); exact
+silhouettes of cones, tori and spline surfaces (at the chord tolerance today); ellipses (circles
+seen obliquely) as true elliptical arcs; DXF/SVG export of drawings (the drawing pipeline exports
+PDF); a per-sheet saved choice (would need a document version); MCP and CLI access to exact
+drawings.
+
 ### Phase 7: delivery and qualification
 
 1. Exact features in BrickWright's CAD tab UI, not only through commands, behind the
@@ -961,7 +1047,7 @@ reference for each.
    [heavy exact jobs on iPad](#heavy-exact-jobs-on-ipad-2026-11-26)); needs the owner.
 
 Order: 5.1, 5.2 and 5.4 first (5.4 in the lab, alongside), then 6.1 with the drafting
-work, then the rest of Phase 6 by demand.
+work (hidden-line views from exact edges done 2026-11-27), then the rest of Phase 6 by demand.
 
 ## Owner decisions (2026-11-24)
 

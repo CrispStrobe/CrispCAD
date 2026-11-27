@@ -15,15 +15,16 @@ function drawingContent(layout:DrawingLayout){
   commands.push(stroke==='visible'||stroke==='section'?'0.26 w':stroke==='hatch'?'0.10 w':'0.14 w');
   commands.push(points.map(([x,y],i)=>pair(x,y)+(i?' l':' m')).join(' ')+(closed?' h S':' S'));
  }
- for(const {center:[x,y],radius:r} of layout.circles){
-  const k=r*4*(Math.sqrt(2)-1)/3;
-  const curves=[
-   [x+r,y+k,x+k,y+r,x,y+r],
-   [x-k,y+r,x-r,y+k,x-r,y],
-   [x-r,y-k,x-k,y-r,x,y-r],
-   [x+k,y-r,x+r,y-k,x+r,y]
-  ];
-  commands.push('[] 0 d','0.26 w',pair(x+r,y)+' m '+curves.map(curve=>curve.map(decimal).join(' ')+' c').join(' ')+' h S');
+ for(const {center:[x,y],radius:r,arc,hidden} of layout.circles){
+  // Cubic Béziers of at most a quarter turn each (the full circle is four of them).
+  const start=arc?.start??0,sweep=arc?.sweep??2*Math.PI,count=Math.max(1,Math.ceil(Math.abs(sweep)/(Math.PI/2)-1e-9)),step=sweep/count;
+  const k=4/3*Math.tan(step/4)*r,at=(a:number)=>[x+r*Math.cos(a),y+r*Math.sin(a)];
+  const curves=Array.from({length:count},(_,i)=>{
+   const a=start+i*step,b=a+step,[x0,y0]=at(a),[x3,y3]=at(b);
+   return [x0-k*Math.sin(a),y0+k*Math.cos(a),x3+k*Math.sin(b),y3-k*Math.cos(b),x3,y3];
+  });
+  const [sx,sy]=at(start);
+  commands.push(hidden?'[1.4 0.9] 0 d':'[] 0 d',hidden?'0.14 w':'0.26 w',pair(sx,sy)+' m '+curves.map(curve=>curve.map(decimal).join(' ')+' c').join(' ')+(arc?' S':' h S'));
  }
  for(const {x,y,size,text} of layout.texts){
   commands.push('BT /F1 '+decimal(size)+' Tf '+pair(x,y)+' Td '+textOperand(text)+' Tj ET');

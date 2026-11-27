@@ -6,6 +6,7 @@ import type {AssemblyCut,AssemblySection,BodyMesh,GeometryResult} from '@brickwr
 import {addAssemblyCurveDimensions,assemblyDrawingCurves} from './assembly-curve-dimension.js';
 import {addAssemblyEdgeDimensions,assemblyDrawingEdges} from './assembly-edge-dimension.js';
 import {addAssemblySection} from './assembly-section-view.js';
+import {addExactAssemblyLines,exactProjection} from './exact-drawing-layout.js';
 import {addDrawingFrame,drawingViews} from './drawing-page.js';
 import type {DrawingLayout} from './drawing-page.js';
 
@@ -176,6 +177,8 @@ export function projectAssembly(geometry:GeometryResult){
 }
 
 export type AssemblyProjection=ReturnType<typeof projectAssembly>&{sections?:AssemblySection[]};
+/** The mesh edges and faces the projection reads (also used for bodies an exact drawing draws from their mesh). */
+export {topology as meshDrawingTopology};
 
 export const assemblyCutKey=(cut:AssemblyCut)=>
  [cut.axis,cut.position,...assemblyCutJogs(cut).flatMap(jog=>[jog.at,jog.position])].join(':');
@@ -222,6 +225,9 @@ export function layoutAssemblyDrawing(doc:CadDocument,sheet:DrawingInputs,projec
   }
   page.texts.push({x:left,y:bottom+view.height*factor+4,text:t(view.view),size:3.5});
  }
+ // Lines from the exact B-rep: curves, true arcs, the isometric view and the notes.
+ const exact=exactProjection(projection);
+ const arcs=exact?addExactAssemblyLines(page,sheet,exact,placements,factor,{x:rightX,y:topY,free:!cut}):undefined;
  if(cut){
   const key=assemblyCutKey(cut);
   const section=projection.sections?.find(item=>assemblyCutKey(item.cut)===key);
@@ -234,7 +240,7 @@ export function layoutAssemblyDrawing(doc:CadDocument,sheet:DrawingInputs,projec
   const {horizontal,vertical}=drawingViews[view],{origin}=projection;
   const [,left,bottom]=placements[view];
   return [left+(point[horizontal]-origin[horizontal])*factor,bottom+(point[vertical]-origin[vertical])*factor];
- });
+ },arcs);
  addAssemblyCurveDimensions(page,sheet.curveDimensions??[]);
  const count=projection.bodyIds.length;
  const subtitle=count===1?t('Assembly · 1 body'):t`Assembly · ${count} bodies`;

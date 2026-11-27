@@ -7,7 +7,9 @@ import type {DrawingAnchorPoint} from './drawing-annotation.js';
 
 type Stroke = 'visible'|'hidden'|'center'|'dimension'|'border'|'cut'|'hatch'|'section'|'annotation';
 export type DrawingPath = {points:SketchPoint[]; stroke:Stroke; closed?:boolean};
-export type DrawingCircle = {center:SketchPoint; radius:number};
+/** A circle, or with `arc` a circular arc from `start` through `sweep` (radians, counter-clockwise on
+ * paper); `hidden` draws it dashed. */
+export type DrawingCircle = {center:SketchPoint; radius:number; arc?:{start:number; sweep:number}; hidden?:true};
 export type DrawingText = {x:number; y:number; size:number; text:string};
 export type DrawingLayout = {
  width:number; height:number; paths:DrawingPath[]; circles:DrawingCircle[]; texts:DrawingText[];
