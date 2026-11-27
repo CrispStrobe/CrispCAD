@@ -724,6 +724,71 @@ and native volumes at lab `2566debd9` / `e6ff5d3fc`:
   a self-intersecting outline (helmet chin straps) zero volume but nonzero area; since lab
   `5ea9d18f3` it refuses such outlines, as exact kernel 0.1.3 does.
 
+### Status on 2026-11-27
+
+The chain runs on exact kernel 0.1.7: lab `develop` 4bd3ee9c9, CrispCAD 68666ce, BrickWright
+fb1f4f93f (pinned to 68666ce). Every BrickWright browser check passes, including the CAD-off
+build. Taken over from kernelCAD so far: the OpenCASCADE-free exact kernel, STEP export, exact
+measures, whole-body/face fillet, chamfer and shell, gears, FDM printability, the 27-part
+scorecard, the catalog converter and cross-check, the MCP review tools and one command registry.
+What follows is the plan for the rest.
+
+### Phase 5: the exact kernel as a modeling path
+
+1. **Fillet and chamfer of individual edges.** Today only whole bodies and faces, because
+   individual edges need names that survive upstream edits. Design stable edge references
+   for `exact-feature` nodes (reference: the lab's `docs/internals/STABLE_NAMING.md`),
+   resolved against the exact B-rep at recompute. A reference that no longer resolves is
+   a stale diagnostic, never a silent pick of another edge. Needs a document version
+   bump; older documents are unchanged. Edge picking in the editor and the terminal
+   (`fillet <body> edges …`).
+2. **STEP import as exact bodies.** First confirm that SMLib's STEP reader works in the
+   wasm build. Then an imported STEP solid becomes an exact body with a Manifold mesh
+   for display, physics and printing, so STEP round-trips both ways. Refuse what cannot
+   be read with a clear diagnostic.
+3. **Exact display for faces with many holes** (left open in Phase 2): mesh
+   cost must stay bounded on the 200-hole debug page on tablet limits.
+4. **Close the lab's last 11 catalog gaps** (see the lab's `docs/kernels.md`):
+   sweeps along curved rails (3), holes drilled into side faces (2), a multi-loop
+   sketch (1), lofts on non-XY planes (1), SMLib extrude errors (4). Target 2,402 of
+   2,402 on `smlib-native`. Each fix that touches the package ships as an exact-kernel
+   release that CrispCAD pins, followed by a catalog cross-check rerun.
+5. **CAD Script journal export:** parametric profiles and Booleans of portable bodies
+   (still open in Phase 3, step 4).
+
+### Phase 6: kernelCAD's engineering layers
+
+Each is reimplemented or ported from MIT plain TypeScript, never through OpenCASCADE,
+with headers kept and listed in THIRD-PARTY-NOTICES.md. The lab's guides are the
+reference for each.
+
+1. **Drawings from exact edges:** dimensions, measurements and drafting review (lab
+   guides `dimensions-measure-drawings*`, `drafting-review*`). Hidden-line views
+   computed from the exact B-rep, not from the mesh. Coordinate with
+   [DRAFTING-ROADMAP.md](DRAFTING-ROADMAP.md).
+2. **Hole-driven fastening:** metric clearance holes and a standard parts library
+   (screws, nuts, washers) with ISO thread tables as data (`hole-driven-fastening`,
+   `metric-clearance-holes`, `standard-parts-library`).
+3. **Manufacturing checks beyond FDM:** CNC internal corner radius, edge-radius
+   check, wall thickness measured on the exact body (`cnc-internal-corner-radius`,
+   `edge-radius-check`, `fdm-design-rules`).
+4. **Assemblies:** configurations, exploded view, mechanism validation and the
+   planetary/ring-gear preset from [KERNELCAD-REVIEW.md](KERNELCAD-REVIEW.md#remaining-backlog-from-the-plan);
+   step 5 of [PARAMETRIC-CAD-STRATEGY.md](PARAMETRIC-CAD-STRATEGY.md#delivery-order-and-acceptance).
+5. **Smaller tools:** split by plane, multi-material inspection, MCP STEP evidence and
+   surface-blend tools.
+
+### Phase 7: delivery and qualification
+
+1. Exact features in BrickWright's CAD tab UI, not only through commands, behind the
+   same tablet limits.
+2. A catalog cross-check rerun with every exact-kernel release.
+3. Measure the heavy-job limits on a physical iPad (recipe in
+   [heavy exact jobs on iPad](#heavy-exact-jobs-on-ipad-2026-11-26)); needs the owner.
+
+Order: 5.1, 5.2 and 5.4 first (5.4 in the lab, alongside), then 6.1 with the drafting
+work, then the rest of Phase 6 by demand.
+
 ## Owner decisions (2026-11-24)
 
 - **Licence of the exact kernel: MIT + Apache-2.0 only.** `@classcad/smlibwasm`
