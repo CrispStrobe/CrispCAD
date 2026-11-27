@@ -1104,8 +1104,11 @@ reference for each.
    computed from the exact B-rep, not from the mesh. Coordinate with
    [DRAFTING-ROADMAP.md](DRAFTING-ROADMAP.md). **Hidden-line views and exact measures done
    2026-11-27** (exact kernel 0.1.9, no new kernel release; see
-   [Drawings from exact edges](#drawings-from-exact-edges-done-2026-11-27)). Drafting review
-   (annotation IDs, datums, tolerances, dimensioning styles) is still open.
+   [Drawings from exact edges](#drawings-from-exact-edges-done-2026-11-27)). **Automatic
+   dimensions, hole callouts, ellipses, exact sections, cone and torus outlines, SVG and DXF export,
+   MCP and CLI access done 2026-11-27** (document version 48; see
+   [Exact drawings: dimensions, sections and exchange](#exact-drawings-dimensions-sections-and-exchange-document-version-48-done-2026-11-27)).
+   Drafting review (annotation IDs, datums, tolerances, dimensioning styles) is still open.
 2. **Hole-driven fastening:** metric clearance holes and a standard parts library
    (screws, nuts, washers) with ISO thread tables as data (`hole-driven-fastening`,
    `metric-clearance-holes`, `standard-parts-library`). **Done 2026-11-27** (document version 47; see
@@ -1195,13 +1198,124 @@ outline on the exact extent. Browser: `tests/browser/exact-drawing.spec.ts` on t
 (kernel fetched only on the checkbox, circle of radius 5 at 1:1, notes, isometric view, hidden lines,
 PDF with arcs, back to the mesh projection).
 
-**Left open.** Drafting review (annotation IDs, overrides, datums and tolerances, baseline/chain/
-symmetry styles) and automatic dimensions on the views; exact edges on sketch-extrusion sheets
-(their lines already come from the authored sketch) and in sections (still the mesh slice); exact
-silhouettes of cones, tori and spline surfaces (at the chord tolerance today); ellipses (circles
-seen obliquely) as true elliptical arcs; DXF/SVG export of drawings (the drawing pipeline exports
-PDF); a per-sheet saved choice (would need a document version); MCP and CLI access to exact
-drawings.
+**Left open** (most of it closed by the follow-ups below). Drafting review (annotation IDs,
+overrides, datums and tolerances, baseline/chain/symmetry styles); exact edges on sketch-extrusion
+sheets (their lines already come from the authored sketch); exact silhouettes of spline surfaces
+and surfaces of revolution (at the chord tolerance today).
+
+#### Exact drawings: dimensions, sections and exchange (document version 48). **Done 2026-11-27**
+
+**What it is.** Follow-ups to the exact drawing above, in the order they were asked for:
+
+1. **Automatic dimensions** (the sheet's **Automatic dimensions** checkbox, on by default for a
+   new exact sheet): the exact overall size (X under the front view, Z beside the right view, Y
+   under the right view or beside the top view), hole positions as baseline dimensions from the
+   left and bottom edges of the view that sees the hole end-on (extension lines from the outline,
+   the hole's centre line run out to it, centre marks on every hole), diameters of the remaining
+   full circles and radii of arcs (fillets), grouped and counted ("4× R2"). Vertical dimensions
+   are written turned. Values come from the B-rep (axis origins, radii, the exact bounding box) and
+   carry no unit: the sheet states millimetres.
+2. **Hole callouts** for standard holes (document version 47), in ISO 129-1 order and in words,
+   since the sheet font has no counterbore or depth symbols: `4× M5 clearance Ø5.5 thru`,
+   `M4 clearance (close fit) Ø4.3 × 6 deep`, `2× M6 tapped, drill Ø5 × 12 deep`,
+   `M5 counterbore Ø5.5 thru` / `c'bore Ø10 × 5.4 deep`, `M5 countersink Ø5.5 thru` /
+   `c'sink Ø10.4 × 90°`, `M3 heat-set insert pocket Ø4 × 6.7 deep`. A hole node is matched to its
+   circle by its world mouth (`nodeWorldFrame`), axis and bore; equal holes are counted; a hole
+   inside a pattern or mirror is called out by its diameter. German: `4× M5 Durchgangsbohrung
+   Ø5.5 durchgehend`, `Flachsenkung`, `Kegelsenkung`, `Gewinde … Kernloch`.
+3. **True ellipses**: circles seen at an angle (in the three views and the isometric view) and the
+   ellipses where a plane cuts a cylinder (a B-rep `ellipse` edge between a plane and a cylinder,
+   rebuilt from the cylinder's axis and radius and checked against the kernel's samples to 1e-6)
+   are elliptical arcs: SVG elliptical arcs and DXF `ELLIPSE` entities (exact), PDF Bézier curves
+   as the affine image of the circle's (within 2.7e-4 of the major semi-axis), R12 DXF polylines
+   within 0.01 mm. Hidden and visible parts of one ellipse are merged like circular arcs.
+4. **Exact sections**: with exact edges a section view (straight or with up to four jogs) is drawn
+   from the exact cut faces: every body is split by each leg's plane in the kernel
+   (`splitByPlane`), and the cut face's edges come back as lines, circles (exact centre and radius)
+   and plane–cylinder ellipses. They are clipped to the leg's span along the section (circles and
+   ellipses solved exactly at the jog coordinates), hatched against the curves sampled within
+   0.001 mm, and the jog line is drawn only where one leg has material and the other has none. A
+   body the kernel cannot build or cut is drawn from the mesh slice in the same view.
+5. **SVG and DXF export** of a sheet (its views page; parts list pages stay in the PDF): **Export
+   drawing SVG** (millimetre paper, 297 × 210 mm at actual size) and **Export drawing DXF** with
+   **DXF version** R2000 (AC1015, handles, owners, subclass markers, `$INSUNITS` 4) or R12
+   (AC1009), both in paper millimetres at 1:1, so the views keep the sheet's scale. Circles and arcs
+   are `CIRCLE` and `ARC`, ellipses `ELLIPSE` (R2000), text `TEXT` (turned where the sheet turns
+   it, code page 1252, `\U+` escapes in R2000), and each line kind has a layer with the PDF's
+   linetype and weight (`VISIBLE`, `HIDDEN` dashed, `CENTER`, `DIMENSIONS`, `SECTION`, `HATCH`,
+   `CUTTING_PLANE`, `BORDER`, `TEXT`). The writer is ours (`drawing-dxf.ts`), no dependency.
+6. **Cone and torus outlines on the exact surface**: a cone's silhouette points are moved onto the
+   exact generator through its apex (the apex and half-angle follow from the face's point, normal
+   and axis); a torus's onto the exact outline point of the tube circle through them, choosing
+   between the outline at the point's angle around the axis and at its angle around the tube (the
+   tube circles that are outline as a whole when the axis lies across the view); seen along its
+   axis a torus's outlines are the circles R ± r, drawn as arcs. The report's count of
+   tessellated silhouettes now covers only surfaces of revolution and splines.
+7. **MCP and CLI**: the read-only MCP tool `cad_drawing` (`format` pdf, svg or dxf; `sheet` by id
+   or title, or a default A4 assembly sheet at the largest scale that fits; `exact`,
+   `autoDimensions`, `scale`, `hiddenLines`, `dxfVersion`) returns the file as base64 with notes
+   (bodies drawn from exact edges or meshes, dimensions placed and left off), and the CLI verb
+   `drawing <project.bcad> <out.pdf|out.svg|out.dxf> [--sheet …] [--scale 1:2] [--mesh]
+   [--no-dimensions] [--dxf r12|r2000] [--no-hidden]` writes it.
+8. **Saved choice** (document version 48): an assembly sheet stores `exactEdges` and
+   `autoDimensions` (see [PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md#document-versions)), so a
+   saved exact sheet opens exact and **Export drawing set (PDF)** projects each sheet the way it
+   was saved (exact sheets and mesh sheets in one set). A new sheet starts from the editor's last
+   choice; a sheet saved without it keeps the earlier document version.
+9. **Menu**: **Export drawing (PDF, SVG or DXF)…** in the shared editor menu (section "Drawings and
+   checks") opens the first exact (else the first) saved sheet, or a new exact assembly sheet,
+   with the export controls in view.
+
+**Placement without overlaps.** Each dimension is tried on its view's sides in a preferred order
+(for holes, the side nearer the hole first), in tiers 8 mm from the view and 7 mm apart; leaders
+(callouts, diameters, radii) try ten directions and five lengths, first off the view, then within
+their own view but never across its outline. A place is taken only if the text touches nothing
+already there (views, the isometric and section views, the cutting line, saved dimensions, other
+texts and dimensions, the frame and title block) and no line crosses a text. View labels and the
+notes are placed after the dimensions (labels above the view and its dimensions, else below; the
+notes block where the old notes stood, else top right or under the title). What finds no room is
+left off and counted on the sheet ("Automatic dimensions: 2 left off for lack of room"), never
+drawn over something else. The unit test checks that no two texts on a dimensioned sheet overlap.
+
+**Design.**
+- Projection (`exact-drawing-projection.ts`): edge conics carry U and V (circle: U ⟂ V, both r;
+  plane–cylinder ellipse: semi-axes r / |cos| and r); face-on circles stay arcs, others are
+  converted to the canonical form DXF uses (`drawing-conic.ts`: major semi-axis, ratio, parameter
+  counter-clockwise on paper) and merged per ellipse. The projection also reports, per view, the
+  cylindrical holes seen end-on (centre, radius, visible rim) for the dimensions.
+- Sheet: `DrawingLayout.ellipses`, `DrawingText.angle`, `DrawingLayout.autoDimensions` (the
+  placement report); `drawing-auto-dimensions.ts` (placement, callouts), `exact-section-view.ts`
+  (exact section curves, clipping, jog lines, hatching), `drawing-svg.ts`, `drawing-dxf.ts`.
+- Kernel side: the exact request `section` (`packages/exact/src/section.ts`; at most five planes
+  and 4,000 cut-face edges per body; a body that fails is reported with the reason). The editor
+  caches the cut faces per document and cut, as it caches the drawing data. Kernel 0.1.10 needed
+  no change (`splitByPlane` and `topology`).
+- Headless: `@brickwright/cad-editor/drawing` (`drawing-render.ts`: the sheet a request names, its
+  section, layout with fitting, and the writers) is what the MCP tool and the CLI use; the MCP
+  geometry worker slices the section mesh (`slice` analysis).
+
+**Tests.** `tests/exact-drawing-followups.test.ts` (8): the drilled plate (four M5 clearance holes
+and an M5 counterbore) with overall size, positions 10/40/70 and 7.5/25/42.5, both callouts,
+turned vertical text, no overlapping texts, and German; callouts for every hole type; a cylinder
+tilted 30° with ellipses of ratio cos 30° (top) and sin 30° (front), iso ellipses of ratio 1/√3,
+the canonical form against the conjugate form, PDF Bézier error, SVG arcs, R2000 `ELLIPSE`
+entities and R12 polylines within 0.01 mm; cone generators to 1e-9 and torus outlines (circles 15
+and 9 seen along the axis, tube circles and tangent lines from the side); exact sections (cut-face
+lines at the hole walls, ellipses of semi-axes 6 and 3 for a hole at 60° to the plane, hatching that
+stops at the hole, a stepped cut with no jog line where both legs are solid); DXF R2000 and R12
+parsed back (version, units, handle seed, `CIRCLE` radii, layers, turned and Latin text) and read by
+acad-ts with the same entities, and SVG; version 48 (save, parse, Undo, refusals) and the menu
+entry; MCP `cad_drawing` (default sheet at 2:1, notes, DXF circle and callout; mesh SVG; unknown
+sheet) and the CLI verb. The exact-drawing tests above still pass. DXF R2000 and R12 files from the
+CLI also pass ezdxf 1.x's strict reader and audit with no errors or fixes (checked by hand, not a
+dependency). Browser: `tests/browser/exact-drawing-export.spec.ts` on `ipad` (automatic dimensions
+in the preview, turned text, SVG and R12 DXF downloads read back, the choice saved with the sheet).
+
+**Left open.** Ordinate and chain dimensioning styles, tolerances and datums (drafting review);
+dimensions on sketch-extrusion sheets from exact edges; thread symbols (a tapped hole is called out
+by its tap drill; no cosmetic thread circle); spline-surface outlines; DXF `DIMENSION` entities
+(dimensions are exported as lines and text); DWG export of sheets; layouts in the DXF (the reading
+application creates them); several pages in one SVG or DXF (parts lists are in the PDF only).
 
 #### Hole-driven fastening (document version 47). **Done 2026-11-27**
 
@@ -1278,7 +1392,7 @@ thread) and nuts and inserts are envelopes; detecting bores in bodies that were 
 standard holes (imported or plain cylinders: `classifyClearanceBore` exists, the fasten UI does
 not offer it); fastening across several bodies (a grip is one hole's depth; two plates need one
 hole through both); no fastener metadata on placed parts beyond their names (a later Fasten
-places a second stack); drill points on blind holes; hole callouts on drawings; lock nuts, lock
+places a second stack); drill points on blind holes; lock nuts, lock
 washers, threaded rod and ISO 4014 partial-thread bolts (lab tables have them).
 
 #### Check for manufacturing. **Done 2026-11-27**

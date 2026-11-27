@@ -57,6 +57,7 @@ export const editorMenu:readonly EditorMenuEntry[]=Object.freeze([
  entry('fastening',1,'standard-part','Standard parts'),
  entry('drawing',0,'drawing','Assembly drawing…',{requires:'canDraw'}),
  entry('drawing',0,'drawing-exact','Assembly drawing from exact edges…',{requires:'canDraw',exact:true}),
+ entry('drawing',0,'drawing-export','Export drawing (PDF, SVG or DXF)…',{requires:'canDraw'}),
  entry('drawing',1,'printability','Check printability…',{requires:'canExport'}),
  entry('drawing',1,'manufacturing','Check for manufacturing…',{requires:'canExport',exact:true}),
  entry('edit',0,'undo','Undo',{requires:'canUndo'}),

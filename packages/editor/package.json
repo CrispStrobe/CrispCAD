@@ -8,7 +8,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./worker": "./dist/geometry.worker.js"
+    "./worker": "./dist/geometry.worker.js",
+    "./drawing": {
+      "types": "./dist/drawing-render.d.ts",
+      "import": "./dist/drawing-render.js"
+    }
   },
   "files": [
     "dist",

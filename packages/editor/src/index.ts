@@ -11,10 +11,10 @@ export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
 import { t,formatExactResult,validateDocument as validateExportDocument,FeatureEvaluationError,STALE_EXACT_CODE,staleExactFeatures,recomputeExactFeatures,runStepImport,MAX_STEP_IMPORT_BYTES } from '@brickwright/cad-core';
 import { describeHole,drawingAssemblyAvailable,isAssemblyDrawingSource,constructionInputs, createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters,redesignScrew } from '@brickwright/cad-core';
-import type { CadDocument, CadSession, DrawingInputs, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe, ExactDrawingData , ManufacturingHost } from '@brickwright/cad-core';
-import { importSTL } from '@brickwright/cad-geometry';
+import type { CadDocument, CadSession, DrawingInputs, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe, ExactDrawingData , ExactSectionData, ManufacturingHost } from '@brickwright/cad-core';
+import { assemblyCutJogs,importSTL } from '@brickwright/cad-geometry';
 import {importStep} from './step-import.js';
-import type { AssemblySection,GeometryResult } from '@brickwright/cad-geometry';
+import type { AssemblyCut,AssemblySection,GeometryResult } from '@brickwright/cad-geometry';
 import { createGeometryClient } from './geometry-client.js';
 // Identity only: no WebAssembly is loaded until an exact command runs in the exact worker.
 import {createEditorSession,exactEditHost,exactKernelIdentity} from './kernels.js';
@@ -46,6 +46,7 @@ import {exportSketchDxf} from './sketch-dxf.js';
 import {exportSketchDwg} from './sketch-dwg-client.js';
 import {exportDrawingSetPdf} from './drawing-pdf.js';
 import {assemblyCutKey,resolveAssemblyCut} from './assembly-drawing.js';
+import type {DrawnAssemblySection} from './assembly-section-view.js';
 import {createAssemblyProjectionClient} from './assembly-projection-client.js';
 import {mountDrawingPanel} from './drawing-panel.js';
 import {exportSketchPdf} from './sketch-pdf.js';
@@ -122,7 +123,7 @@ export interface CadEditorOptions {
   onError?: (error: Error) => void;
 }
 export interface CadCommandState {canUndo:boolean;canRedo:boolean;hasSelection:boolean;canDelete:boolean;canCombine:boolean;canExport:boolean;hasBodies:boolean;ready:boolean}
-export type CadCommand='new'|'open'|'save'|'import'|'import-step'|'export'|'printability'|'manufacturing'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'exact-feature'|'command-palette'|'readout'|'code'|'code-workspace'|'terminal'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect'|'upgrade-lofts'|'hole'|'standard-part'|'fasten'|'export-step'|'exact-edges'|'measure-exact'|'recompute-exact'|'drawing'|'drawing-exact';
+export type CadCommand='new'|'open'|'save'|'import'|'import-step'|'export'|'printability'|'manufacturing'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'exact-feature'|'command-palette'|'readout'|'code'|'code-workspace'|'terminal'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect'|'upgrade-lofts'|'hole'|'standard-part'|'fasten'|'export-step'|'exact-edges'|'measure-exact'|'recompute-exact'|'drawing'|'drawing-exact'|'drawing-export';
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag); element.className = className; if (text !== undefined) element.textContent = text; return element;
 }
@@ -293,6 +294,25 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     return data;
   }
   const exactDrawingData=(doc:CadDocument)=>exactBrepData(doc).catch(error=>{throw new Error(t`Exact edges are unavailable: ${error instanceof Error?error.message:String(error)}`);});
+  // Exact sections per document and cut (the cut faces of each body at each leg's plane).
+  const exactSections=new WeakMap<CadDocument,Map<string,Promise<ExactSectionData>>>();
+  function exactSectionData(doc:CadDocument,cut:AssemblyCut){
+    const positions=[cut.position,...assemblyCutJogs(cut).map(jog=>jog.position)],key=cut.axis+':'+positions.join(',');
+    let cache=exactSections.get(doc);
+    if(!cache){cache=new Map();exactSections.set(doc,cache);}
+    let data=cache.get(key);
+    if(!data){
+      if(cache.size>=8)cache.delete(cache.keys().next().value!);
+      data=client.exact.run({operation:'section',document:doc,bodies:[],section:{axis:cut.axis,positions}}).then(result=>{
+        if(result.operation!=='section')throw new Error(t('The exact kernel returned an unexpected result.'));
+        return {axis:result.axis,positions:result.positions,bodies:result.bodies,failures:result.failures};
+      });
+      const saved=data,map=cache;
+      map.set(key,saved);
+      void saved.catch(()=>{if(map.get(key)===saved)map.delete(key);});
+    }
+    return data.catch(error=>{throw new Error(t`Exact edges are unavailable: ${error instanceof Error?error.message:String(error)}`);});
+  }
   // Check for manufacturing (read-only): the exact data when asked for (no fallback in silence: a
   // body or a kernel that fails is checked on its mesh and the report says why), then the meshes
   // and the analysis in the geometry worker.
@@ -317,7 +337,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     if(!active())return undefined;
     const projection=await assemblyProjection.project(geometry,exact);
     if(!active())return undefined;
-    const sections:AssemblySection[]=[];
+    const sections:DrawnAssemblySection[]=[];
     for(const sheet of sheets){
       if(!isAssemblyDrawingSource(sheet.source)||!sheet.section)continue;
       try{
@@ -333,7 +353,10 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
           const saved=result;
           void saved.catch(()=>{if(cache.get(key)===saved)cache.delete(key);});
         }
-        sections.push(await result);
+        const sliced=await result;
+        if(!active())return undefined;
+        // Exact edges: the cut faces from the exact B-rep as well (bodies it cannot cut stay on the mesh slice).
+        sections.push(options.exact?{...sliced,exact:await exactSectionData(current,cut)}:sliced);
         if(!active())return undefined;
       }catch(error){
         throw new Error(sheet.title+' · '+(error instanceof Error?error.message:String(error)));
@@ -569,11 +592,12 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       if(options.onExport&&sheets.length>1){
         button('Export drawing set (PDF)',async()=>{
           const current=session.state.document;
-          const needsAssembly=sheets.some(sheet=>isAssemblyDrawingSource(sheet.source));
-          const projection=needsAssembly?await projectDrawingAssembly(sheets,{exact:drawingPanel.exactEdges}):undefined;
+          // Each assembly sheet with the projection it saved: exact edges or the display meshes.
+          const assembly=sheets.filter(sheet=>isAssemblyDrawingSource(sheet.source)),exactSheets=assembly.filter(sheet=>sheet.exactEdges),meshSheets=assembly.filter(sheet=>!sheet.exactEdges);
+          const [exact,mesh]=await Promise.all([exactSheets.length?projectDrawingAssembly(exactSheets,{exact:true}):undefined,meshSheets.length?projectDrawingAssembly(meshSheets,{exact:false}):undefined]);
           if(disposed)return;
-          if(needsAssembly&&!projection||session.state.document!==current)throw new Error(t('The design changed while preparing the drawing set. Export again.'));
-          await options.onExport!(exportDrawingSetPdf(current,projection));
+          if(exactSheets.length&&!exact||meshSheets.length&&!mesh||session.state.document!==current)throw new Error(t('The design changed while preparing the drawing set. Export again.'));
+          await options.onExport!(exportDrawingSetPdf(current,sheet=>sheet.exactEdges?exact:mesh));
         },group);
       }
       for(const sheet of sheets)button(t`Drawing: ${sheet.title}`,()=>drawingPanel.open({sheetId:sheet.id}),group);
@@ -928,6 +952,14 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'recompute-exact':if(!staleExactFeatures(session.state.document).length){message.textContent=t('No exact feature is out of date.');break;}await recomputeExact();message.textContent=t('Exact features recomputed.');break;
       case 'export-step':await exportStep();break;
       case 'drawing':case 'drawing-exact':if(!drawingAssemblyAvailable(session.state.document))throw new Error(t('Add a solid body to draw the assembly.'));drawingPanel.open({assembly:true,exact:command==='drawing-exact'});break;
+      case 'drawing-export':{
+        // The sheet to export: a saved one (an exact assembly sheet first), else a new exact assembly drawing.
+        const sheets=session.state.document.drawings??[],sheet=sheets.find(item=>item.exactEdges)??sheets[0];
+        if(sheet)drawingPanel.open({sheetId:sheet.id,export:true});
+        else if(drawingAssemblyAvailable(session.state.document))drawingPanel.open({assembly:true,exact:true,export:true});
+        else throw new Error(t('Add a solid body to draw the assembly.'));
+        break;
+      }
       case 'command-palette':palette.open();break;case 'model-source':modelSourcePanel.toggle();break;case 'model-library':return openModelLibrary();case 'robot-projects':return openModelLibrary('projects');case 'code':codePanel.open(session.state.selection.length===1&&session.state.document.nodes[session.state.selection[0]]?.kind==='code'?session.state.selection[0]:undefined);break;case 'readout':readout.setVisible(!readout.visible);break;
       case 'shapes':picker.open(true);break;
       case 'union':case 'subtract':case 'intersect':session.combine(command);break;
@@ -935,7 +967,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'hole':fasteningPanel.openHole();break;case 'standard-part':fasteningPanel.openPart();break;case 'fasten':fasteningPanel.openFasten();break;
       default:throw new Error(t('Unknown editor command'));
     }
-    if(!['open','import','import-step','save','export','parameters','shapes','code','code-workspace','terminal','model-source','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','exact-feature','model-library','robot-projects','command-palette','hole','standard-part','fasten','exact-edges','measure-exact','export-step','drawing','drawing-exact'].includes(command))viewport.canvas.focus({preventScroll:true});
+    if(!['open','import','import-step','save','export','parameters','shapes','code','code-workspace','terminal','model-source','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','exact-feature','model-library','robot-projects','command-palette','hole','standard-part','fasten','exact-edges','measure-exact','export-step','drawing','drawing-exact','drawing-export'].includes(command))viewport.canvas.focus({preventScroll:true});
   }
   async function deliver(format: 'bcad' | 'stl' | '3mf' | 'step', modificationNotes?: string, checkCanceled: () => void = () => {}) {
     if(format==='bcad'&&options.saveProject){await options.saveProject();return;}

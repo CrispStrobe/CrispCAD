@@ -14,32 +14,42 @@
 //   face it bounds, and those slivers must not hide it.
 // - Silhouettes are the mesh edges inside one curved face where the face turns from facing the
 //   viewer to facing away. On cylinders they are moved onto the exact generator line, on spheres
-//   onto the exact outline circle; on other curved surfaces (cones, tori, splines) they stay at
-//   the mesh's chord tolerance and are counted as such in the projection's report.
+//   onto the exact outline circle; on cones onto the exact generator through the apex, and on
+//   tori onto the exact outline point of the tube circle through them (circles of radius R ± r
+//   when the torus is seen along its axis). On other curved surfaces (surfaces of revolution,
+//   splines) they stay at the mesh's chord tolerance and are counted as such in the report.
 //
 // Circular edges seen face-on, and sphere outlines, come out as true arcs (centre, radius, start,
-// sweep), so the PDF draws circles, not polygons. Hidden pieces that coincide with visible lines
+// sweep), so the PDF draws circles, not polygons. Circles seen at an angle, and the ellipses where
+// a plane cuts a cylinder, come out as true elliptical arcs (drawing-conic.ts). Hidden pieces that coincide with visible lines
 // (the far rim of a through hole, a hole's rim seen edge-on along a face) are removed.
 //
 // Bodies the kernel could not build are projected from their display mesh, as the mesh path does
 // (mesh creases and silhouettes), in the same hidden-line pass, and listed with the reason.
 import {t} from '@brickwright/cad-core';
-import type {ExactDrawingBody,ExactDrawingData,SketchPoint,Vec3} from '@brickwright/cad-core';
+import type {ExactDrawingBody,ExactDrawingData,ExactDrawingEdge,ExactDrawingFace,SketchPoint,Vec3} from '@brickwright/cad-core';
 import type {BodyMesh,GeometryResult} from '@brickwright/cad-geometry';
 import {meshDrawingTopology} from './assembly-drawing.js';
 import type {AssemblyProjection} from './assembly-drawing.js';
 import {drawingViews} from './drawing-page.js';
+import {canonicalEllipse} from './drawing-conic.js';
+import type {DrawingEllipse} from './drawing-conic.js';
 
 /** A circular arc on paper-independent view coordinates (model millimetres from the view origin). */
 export type DrawingArc={center:SketchPoint;radius:number;start:number;sweep:number;hidden:boolean};
 export type DrawingPolyline={points:SketchPoint[];hidden:boolean};
-export type ExactViewLines={arcs:DrawingArc[];polylines:DrawingPolyline[]};
+/** An elliptical arc in view coordinates (see drawing-conic.ts for the form). */
+export type DrawingViewEllipse=Omit<DrawingEllipse,'hidden'>&{hidden:boolean};
+export type ExactViewLines={arcs:DrawingArc[];polylines:DrawingPolyline[];ellipses:DrawingViewEllipse[]};
+/** A cylindrical hole whose axis runs along the view direction: its centre in view coordinates
+ * (model millimetres from the view origin), radius, and whether its rim is drawn visible. */
+export type ViewHole={body:number;center:SketchPoint;radius:number;visible:boolean};
 export type ExactProjectionReport={
  /** Bodies drawn from their exact B-rep. */
  exactBodies:string[];
  /** Bodies drawn from their display mesh, and why. */
  meshBodies:{id:string;name:string;reason:string}[];
- /** Silhouette lines of curved faces other than cylinders and spheres, left at the mesh's chord tolerance. */
+ /** Silhouette lines of curved faces other than cylinders, cones, spheres and tori, left at the mesh's chord tolerance. */
  tessellatedSilhouettes:number;
  /** Largest chord tolerance of the occlusion meshes (mm). */
  tolerance:number;
@@ -50,8 +60,10 @@ export type ExactProjectionReport={
 };
 export type ExactAssemblyProjection=AssemblyProjection&{
  exact:ExactProjectionReport;
- /** Arcs and polylines per view, in the order of `views` (top, front, right). */
+ /** Arcs, ellipses and polylines per view, in the order of `views` (top, front, right). */
  lines:ExactViewLines[];
+ /** Cylindrical holes seen end-on, per view (for automatic dimensions). */
+ holes:ViewHole[][];
  /** An isometric view (from front, right and top), visible lines only. */
  iso:{width:number;height:number;segments:Float64Array;lines:ExactViewLines};
 };
@@ -82,32 +94,188 @@ type Triangle={a:Vec3;b:Vec3;c:Vec3;det:number;left:number;bottom:number;right:n
 /** A line to draw: 3D points (a polyline), what it is, and how to report it. */
 type Candidate={
  body:number;points:Vec3[];
- /** A silhouette of a sphere or cylinder, which its own face never hides: the face's owner key. */
+ /** A silhouette of a cylinder, cone, sphere or torus, which its own face never hides: the face's owner key. */
  own?:number;
  /** A straight B-rep or mesh edge (picked for edge dimensions with its full end points). */
  line?:[Vec3,Vec3];
- /** Points lie on this circle (a circular edge, or a sphere's outline); `face-on` arcs are drawn as arcs. */
- circle?:{center:Vec3;radius:number;e1:Vec3;e2:Vec3;angles:number[]};
+ /** Points lie on this conic, center + U cos a + V sin a at `angles` (a circular or elliptical edge,
+  * or a circular outline); `radius` when it is a circle (U ⟂ V, both of that length). Seen face-on a
+  * circle is drawn as an arc, otherwise (unless seen edge-on) the conic is drawn as an ellipse. */
+ conic?:Conic;
 };
+type Conic={center:Vec3;U:Vec3;V:Vec3;normal:Vec3;radius?:number;angles:number[]};
 type Piece={candidate:Candidate;chord:number;from:number;to:number;hidden:boolean};
 
-/** Unit vectors e1, e2 in the plane of a circle with axis `axis`, e1 towards `start`. */
-function circleBasis(center:readonly number[],axis:readonly number[],start:readonly number[]){
+/** A circle of `radius` about `center` in the plane with this axis, its parameter 0 towards `start`. */
+function circleConic(center:readonly number[],radius:number,axis:readonly number[],start:readonly number[]):Omit<Conic,'angles'>{
  const a=norm(axis),e1=norm(sub(start,center)),e2=cross(a,e1);
- return {e1,e2,angle:(p:readonly number[])=>{const r=sub(p,center);return Math.atan2(dot(r,e2),dot(r,e1));}};
+ return {center:[...center] as Vec3,U:e1.map(x=>x*radius) as Vec3,V:e2.map(x=>x*radius) as Vec3,normal:a,radius};
 }
+/** The parameter of a point on a conic (any point: its projection into the conic's frame). */
+function conicAngle(conic:Omit<Conic,'angles'>,p:readonly number[]){
+ const r=sub(p,conic.center),uu=dot(conic.U,conic.U),vv=dot(conic.V,conic.V);
+ return Math.atan2(dot(r,conic.V)/vv,dot(r,conic.U)/uu);
+}
+const conicPoint=(conic:Omit<Conic,'angles'>,a:number)=>add(add(conic.center,conic.U,Math.cos(a)),conic.V,Math.sin(a));
 
-/** Angles to sample on an arc from 0 to `sweep`, with the view's extreme points included. */
-function arcAngles(sweep:number,e1:Vec3,e2:Vec3,frame:Frame){
+/** Angles to sample on a conic arc from 0 to `sweep`, with the view's extreme points included. */
+function arcAngles(sweep:number,U:Vec3,V:Vec3,frame:Frame){
  const steps=Math.max(4,Math.ceil(Math.abs(sweep)/(2*Math.PI)*128));
  const angles=Array.from({length:steps+1},(_,i)=>sweep*i/steps);
- for(const w of [frame.u,frame.v])for(const base of [Math.atan2(dot(e2,w),dot(e1,w))]){
+ for(const w of [frame.u,frame.v])for(const base of [Math.atan2(dot(V,w),dot(U,w))]){
   for(const extreme of [base,base+Math.PI,base-Math.PI,base+2*Math.PI,base-2*Math.PI]){
    const along=sweep>=0?extreme:-extreme,limit=Math.abs(sweep);
    if(along>1e-9&&along<limit-1e-9)angles.push(extreme);
   }
  }
  return [...new Set(angles)].sort((x,y)=>sweep>=0?x-y:y-x);
+}
+
+/**
+ * The exact ellipse of an elliptical edge where a plane cuts a cylinder (a pipe mitred, a hole
+ * through a slanted face): centre where the axis meets the plane, semi-minor axis the radius
+ * across, semi-major radius / |cos| along the axis' trace. Undefined when the edge's faces are not
+ * that pair, or its sample points are off the ellipse (then it stays a polyline of samples).
+ */
+export function planeCylinderEllipse(faces:readonly ExactDrawingFace[],edgeFaces:readonly number[],points:readonly number[]):Omit<Conic,'angles'>|undefined{
+ const pair=edgeFaces.map(i=>faces[i]);
+ const cylinder=pair.find(f=>f?.surface==='cylinder'&&f.axis&&f.radius),plane=pair.find(f=>f?.surface==='plane');
+ if(!cylinder||!plane)return undefined;
+ const a=norm(cylinder.axis!.direction),o=cylinder.axis!.origin,n=norm(plane.normal),c=dot(a,n);
+ if(Math.abs(c)<1e-9||Math.abs(c)>1-1e-12)return undefined;
+ const center=add(o,a,dot(sub(plane.point,o),n)/c),m=norm(add(a,n,-c)),w=cross(n,m),r=cylinder.radius!;
+ const conic={center,U:m.map(x=>x*r/Math.abs(c)) as Vec3,V:w.map(x=>x*r) as Vec3,normal:n};
+ const scale=Math.max(1,r/Math.abs(c));
+ for(let i=0;i<points.length;i+=3){
+  const p:Vec3=[points[i],points[i+1],points[i+2]],q=conicPoint(conic,conicAngle(conic,p));
+  if(Math.hypot(...sub(p,q))>1e-6*scale)return undefined;
+ }
+ return conic;
+}
+
+/** A conic edge from its sample points: the parameter turned so 0 is the edge's start, and the
+ * sweep to its end in the edge's direction (the second sample decides it); closed: a full turn. */
+function turnedConic(conic:Omit<Conic,'angles'>,points:readonly number[],closed:boolean){
+ const at=(i:number)=>conicAngle(conic,[points[3*i],points[3*i+1],points[3*i+2]]);
+ const count=points.length/3,first=at(0),angles=[first];
+ for(let i=1;i<count;i++){let a=at(i);while(a-angles[i-1]>Math.PI)a-=2*Math.PI;while(a-angles[i-1]<-Math.PI)a+=2*Math.PI;angles.push(a);}
+ const direction=Math.sign(angles[1]-first)||1;
+ const sweep=closed?2*Math.PI*direction:Math.max(-2*Math.PI,Math.min(2*Math.PI,angles[count-1]-first));
+ const U=add(conic.U.map(x=>x*Math.cos(first)) as Vec3,conic.V,Math.sin(first)),V=add(conic.V.map(x=>x*Math.cos(first)) as Vec3,conic.U,-Math.sin(first));
+ return {conic:{...conic,U,V},sweep};
+}
+function conicEdge(conic:Omit<Conic,'angles'>,points:readonly number[],closed:boolean,frame:Frame):Conic{
+ const turned=turnedConic(conic,points,closed);
+ return {...turned.conic,angles:arcAngles(turned.sweep,turned.conic.U,turned.conic.V,frame)};
+}
+
+/**
+ * The exact conic of a B-rep edge, if it has one: a circle from its centre, radius and axis, or the
+ * ellipse of a plane cutting a cylinder. Points are center + U cos a + V sin a for a from 0 (the
+ * edge's start) to `sweep`; `radius` is set for circles.
+ */
+export function exactEdgeConic(edge:ExactDrawingEdge,faces:readonly ExactDrawingFace[]){
+ const count=edge.points.length/3;
+ if(count<2)return undefined;
+ const first:Vec3=[edge.points[0],edge.points[1],edge.points[2]];
+ const conic=edge.circle&&edge.circle.radius>0?circleConic(edge.circle.center,edge.circle.radius,edge.circle.axis,first)
+  :edge.curve==='ellipse'?planeCylinderEllipse(faces,edge.faces,edge.points):undefined;
+ if(!conic)return undefined;
+ const turned=turnedConic(conic,edge.points,edge.closed);
+ // A circular arc: its sweep from the exact length (the samples only give the direction).
+ const sweep=edge.circle&&!edge.closed?Math.sign(turned.sweep||1)*Math.min(2*Math.PI,edge.length/edge.circle.radius):turned.sweep;
+ return {center:turned.conic.center,U:turned.conic.U,V:turned.conic.V,radius:turned.conic.radius,sweep};
+}
+
+/** Exact silhouettes of cones and tori: for a point near the silhouette, the silhouette point. */
+type Snap={snap:(p:Vec3)=>Vec3;circle?:(p:Vec3)=>Omit<Conic,'angles'>|undefined};
+
+/** A cone from a face's point, outward normal and axis: apex, unit axis away from the apex, half-angle. */
+function coneSnap(face:ExactDrawingFace,frame:Frame):Snap|undefined{
+ const o=face.axis!.origin,axis=norm(face.axis!.direction),p=face.point,n=face.normal;
+ const rel=sub(p,o),radial=add(rel,axis,-dot(rel,axis)),rho=Math.hypot(...radial);
+ if(rho<1e-9)return undefined;
+ const u=radial.map(x=>x/rho) as Vec3;
+ // The generator through p is perpendicular to the normal in the plane of the axis and p.
+ let g=norm(add(u.map(x=>x*dot(n,axis)) as Vec3,axis,-dot(n,u)));
+ const gu=dot(g,u);
+ if(Math.abs(gu)<1e-9)return undefined;
+ const apex=add(p,g,-rho/gu);
+ if(dot(sub(p,apex),g)<0)g=g.map(x=>-x) as Vec3;
+ const along=dot(sub(p,apex),axis)>=0?axis:axis.map(x=>-x) as Vec3;
+ const alpha=Math.acos(Math.min(1,Math.abs(dot(g,along))));
+ const e1=norm(Math.abs(along[0])<.9?cross(along,[1,0,0]):cross(along,[0,1,0])),e2=cross(along,e1);
+ const d1=dot(e1,frame.d),d2=dot(e2,frame.d),rd=Math.hypot(d1,d2);
+ if(rd<1e-12)return undefined;
+ const k=Math.tan(alpha)*dot(along,frame.d)/rd;
+ if(Math.abs(k)>1)return undefined;
+ const delta=Math.atan2(d2,d1),spread=Math.acos(k);
+ const generator=(phi:number)=>norm(add(along.map(x=>x*Math.cos(alpha)) as Vec3,add(e1.map(x=>x*Math.cos(phi)) as Vec3,e2,Math.sin(phi)),Math.sin(alpha)));
+ const lines=[generator(delta+spread),generator(delta-spread)];
+ return {snap:q=>{
+  const w=sub(q,apex);
+  let best=lines[0],distance=Infinity;
+  for(const line of lines){const s=dot(w,line),off=Math.hypot(...add(w,line,-s));if(off<distance){distance=off;best=line;}}
+  return add(apex,best,dot(w,best));
+ }};
+}
+
+/** A torus from a face's point, normal, minor radius and axis; its tube centre is told apart from
+ * the other candidate by the face's mesh vertices. */
+function torusSnap(face:ExactDrawingFace,frame:Frame,vertices:Vec3[]):Snap|undefined{
+ const o=face.axis!.origin,axis=norm(face.axis!.direction),r=face.radius!,p=face.point,n=face.normal;
+ const candidates=[add(p,n,-r),add(p,n,r)].map(c=>{
+  const rel=sub(c,o),h=dot(rel,axis),R=Math.hypot(...add(rel,axis,-h));
+  const error=vertices.reduce((sum,v)=>{
+   const q=sub(v,o),qh=dot(q,axis),qr=Math.hypot(...add(q,axis,-qh));
+   return sum+Math.abs(Math.hypot(qr-R,qh-h)-r);
+  },0);
+  return {h,R,error};
+ }).sort((x,y)=>x.error-y.error);
+ const {h,R}=candidates[0];
+ if(!(R>1e-9))return undefined;
+ const tube=(q:Vec3)=>{
+  const rel=sub(q,o),radial=add(rel,axis,-dot(rel,axis)),l=Math.hypot(...radial);
+  const u=l>1e-12?radial.map(x=>x/l) as Vec3:norm(Math.abs(axis[0])<.9?cross(axis,[1,0,0]):cross(axis,[0,1,0]));
+  return {u,c:add(add(o,axis,h),u,R)};
+ };
+ const along=Math.abs(dot(axis,frame.d))>1-1e-9;
+ return {
+  snap:q=>{
+   // The outline is where the normal cos ψ u(φ) + sin ψ a is perpendicular to the view. Two
+   // nearby outline points: at q's φ (solving for ψ), and at q's ψ (solving for φ, which finds the
+   // tube circles that are outline as a whole when the axis is across the view); the nearer wins.
+   const {u,c}=tube(q),rel=sub(q,c),dA=dot(frame.d,axis),candidates:Vec3[]=[];
+   const s=add(u.map(x=>x*dA) as Vec3,axis,-dot(frame.d,u)),l=Math.hypot(...s);
+   if(l>1e-12){const ns=s.map(x=>x/l) as Vec3;candidates.push(add(c,ns,dot(rel,ns)>=0?r:-r));}
+   const cosPsi=dot(rel,u)/r,sinPsi=dot(rel,axis)/r;
+   const e1=norm(Math.abs(axis[0])<.9?cross(axis,[1,0,0]):cross(axis,[0,1,0])),e2=cross(axis,e1);
+   const d1=dot(frame.d,e1),d2=dot(frame.d,e2),rd=Math.hypot(d1,d2);
+   if(Math.abs(cosPsi)>1e-12&&rd>1e-12){
+    const k=-sinPsi*dA/(cosPsi*rd);
+    if(Math.abs(k)<=1){
+     const delta=Math.atan2(d2,d1),phiQ=Math.atan2(dot(u,e2),dot(u,e1));
+     for(const phi of [delta+Math.acos(k),delta-Math.acos(k)]){
+      const turn=phi+2*Math.PI*Math.round((phiQ-phi)/(2*Math.PI));
+      const v=add(e1.map(x=>x*Math.cos(turn)) as Vec3,e2,Math.sin(turn)),center=add(add(o,axis,h),v,R);
+      candidates.push(add(add(center,v,r*cosPsi),axis,r*sinPsi));
+     }
+    }
+   }
+   if(!candidates.length){
+    // Seen along the tube's tangent: the whole tube circle is outline.
+    const inPlane=add(rel,cross(u,axis),-dot(rel,cross(u,axis))),m=Math.hypot(...inPlane)||1;
+    return add(c,inPlane,r/m);
+   }
+   return candidates.reduce((best,p)=>Math.hypot(...sub(p,q))<Math.hypot(...sub(best,q))?p:best);
+  },
+  // Seen along the axis, the outlines are the circles of radius R ± r.
+  circle:along?q=>{
+   const {u}=tube(q),rel=sub(q,o),radius=Math.hypot(...add(rel,axis,-dot(rel,axis)));
+   const center=add(o,axis,dot(rel,axis));
+   return Math.abs(radius-(R+r))<Math.abs(radius-(R-r))||R-r<=1e-9?circleConic(center,R+r,axis,add(center,u,1)):circleConic(center,R-r,axis,add(center,u,1));
+  }:undefined,
+ };
 }
 
 /** Lines of one exact body for one view: its edges and the silhouettes of its curved faces. */
@@ -124,13 +292,17 @@ function exactCandidates(body:ExactDrawingBody,index:number,frame:Frame,report:{
   }
   const first=point(edge.points,0),last=point(edge.points,count-1);
   if(edge.curve==='line'){out.push({body:index,points:[first,last],line:[first,last]});continue;}
-  if(edge.circle&&edge.circle.radius>0){
-   const {center,radius,axis}=edge.circle,{e1,e2,angle}=circleBasis(center,axis,first);
-   const step=angle(point(edge.points,1));
-   const sweep=(edge.closed?2*Math.PI:Math.min(2*Math.PI,edge.length/radius))*(step<0?-1:1);
-   const angles=arcAngles(sweep,e1,e2,frame);
-   const at=(a:number)=>add(add(center,e1,radius*Math.cos(a)),e2,radius*Math.sin(a));
-   out.push({body:index,points:angles.map(at),circle:{center:[...center] as Vec3,radius,e1,e2,angles}});
+  let conic:Omit<Conic,'angles'>|undefined;
+  if(edge.circle&&edge.circle.radius>0)conic=circleConic(edge.circle.center,edge.circle.radius,edge.circle.axis,first);
+  else if(edge.curve==='ellipse')conic=planeCylinderEllipse(faces,edge.faces,edge.points);
+  if(conic){
+   const full=conicEdge(conic,edge.points,edge.closed,frame);
+   if(edge.circle&&!edge.closed){
+    // A circular arc: its sweep from the exact length (the samples only give the direction).
+    const direction=Math.sign(full.angles[1]-full.angles[0])||1;
+    full.angles=arcAngles(direction*Math.min(2*Math.PI,edge.length/edge.circle.radius),full.U,full.V,frame);
+   }
+   out.push({body:index,points:full.angles.map(a=>conicPoint(full,a)),conic:full});
    continue;
   }
   out.push({body:index,points:Array.from({length:count},(_,i)=>point(edge.points,i))});
@@ -147,26 +319,33 @@ function exactCandidates(body:ExactDrawingBody,index:number,frame:Frame,report:{
  }
  for(const [faceIndex,segments] of byFace){
   const face=faces[faceIndex];
-  let snap:(p:Vec3)=>Vec3=p=>p;
-  let circle:Candidate['circle'],snapped=true;
+  let snap:Snap|undefined;
   if(face.surface==='cylinder'&&face.axis&&face.radius){
    const o=face.axis.origin,a=norm(face.axis.direction),side=cross(a,frame.d),l=Math.hypot(...side);
    if(l<1e-9)continue;
    const n=side.map(x=>x/l) as Vec3,r=face.radius;
-   snap=p=>{const s=dot(sub(p,o),a),foot=add(o,a,s);return add(foot,n,dot(sub(p,foot),n)>=0?r:-r);};
+   snap={snap:p=>{const s=dot(sub(p,o),a),foot=add(o,a,s);return add(foot,n,dot(sub(p,foot),n)>=0?r:-r);}};
   }else if(face.surface==='sphere'&&face.axis&&face.radius){
    const c=face.axis.origin,r=face.radius,e1=norm(frame.u),e2=norm(frame.v);
-   snap=p=>{const q=sub(p,c),x=dot(q,e1),y=dot(q,e2),l=Math.hypot(x,y)||1;return add(add(c,e1,r*x/l),e2,r*y/l);};
-   circle={center:[...c] as Vec3,radius:r,e1,e2,angles:[]};
-  }else{report.tessellated+=1;snapped=false;}
-  // A sphere or cylinder never hides its own outline; its chords only would, by the chord sag.
-  const own=snapped?ownerKey(index,faceIndex):undefined;
+   const outline:Omit<Conic,'angles'>={center:[...c] as Vec3,U:e1.map(x=>x*r) as Vec3,V:e2.map(x=>x*r) as Vec3,normal:cross(e1,e2),radius:r};
+   snap={snap:p=>{const q=sub(p,c),x=dot(q,e1),y=dot(q,e2),l=Math.hypot(x,y)||1;return add(add(c,e1,r*x/l),e2,r*y/l);},circle:()=>outline};
+  }else if(face.surface==='cone'&&face.axis){
+   snap=coneSnap(face,frame);
+  }else if(face.surface==='torus'&&face.axis&&face.radius){
+   const own=new Set<number>();
+   for(const [a,b] of segments){own.add(a);own.add(b);}
+   snap=torusSnap(face,frame,[...own].slice(0,24).map(vertex));
+  }
+  if(!snap)report.tessellated+=1;
+  // A snapped surface never hides its own outline; its chords only would, by the chord sag.
+  const own=snap?ownerKey(index,faceIndex):undefined;
   for(const chain of chains(segments)){
-   const points=chain.map(i=>snap(vertex(i)));
+   const points=chain.map(i=>snap?snap.snap(vertex(i)):vertex(i));
+   const circle=snap?.circle?.(points[0]);
    if(circle){
-    const angles=points.map(p=>Math.atan2(dot(sub(p,circle!.center),circle!.e2),dot(sub(p,circle!.center),circle!.e1)));
+    const angles=points.map(p=>conicAngle(circle,p));
     for(let i=1;i<angles.length;i++){while(angles[i]-angles[i-1]>Math.PI)angles[i]-=2*Math.PI;while(angles[i]-angles[i-1]<-Math.PI)angles[i]+=2*Math.PI;}
-    out.push({body:index,points,own,circle:{...circle,angles}});
+    out.push({body:index,points:angles.map(a=>conicPoint(circle,a)),own,conic:{...circle,angles}});
    }else out.push({body:index,points,own});
   }
  }
@@ -373,19 +552,36 @@ type ViewOutput={segments:number[];picks:number[];lines:ExactViewLines};
 function assemble(pieces:Piece[],frame:Frame,offset:[number,number],epsilon:number,hiddenWanted:boolean):ViewOutput{
  const project=(p:readonly number[]):SketchPoint=>[dot(p,frame.u)-offset[0],dot(p,frame.v)-offset[1]];
  type Flat={a:SketchPoint;b:SketchPoint;hidden:boolean;piece:Piece;depth:number};
- const flats:Flat[]=[],arcs:{key:string;center:SketchPoint;radius:number;from:number;to:number;hidden:boolean}[]=[];
- const faceOn=(circle:NonNullable<Candidate['circle']>)=>Math.abs(dot(cross(circle.e1,circle.e2),frame.d))>1-1e-9;
+ const flats:Flat[]=[],arcs:{key:string;center:SketchPoint;radius:number;ellipse?:{major:SketchPoint;ratio:number};from:number;to:number;hidden:boolean}[]=[];
+ const ellipseForms=new Map<Conic,ReturnType<typeof canonicalEllipse>|null>();
  for(const piece of pieces){
-  const {candidate,chord,from,to}=piece,{points,circle}=candidate;
-  if(circle&&faceOn(circle)){
-   const a0=circle.angles[chord],a1=circle.angles[chord+1];
-   const center=project(circle.center),handed=Math.sign(dot(cross(circle.e1,circle.e2),frame.d));
+  const {candidate,chord,from,to}=piece,{points,conic}=candidate;
+  const facing=conic?dot(conic.normal,frame.d):0;
+  if(conic&&conic.radius!==undefined&&Math.abs(facing)>1-1e-9){
+   const a0=conic.angles[chord],a1=conic.angles[chord+1];
+   const center=project(conic.center),handed=Math.sign(facing);
    // The arc's angle on paper: the circle's start direction projected, turned by the sweep.
-   const base=Math.atan2(dot(circle.e1,frame.v),dot(circle.e1,frame.u));
+   const base=Math.atan2(dot(conic.U,frame.v),dot(conic.U,frame.u));
    const angle=(a:number)=>base+handed*a;
    const s=angle(a0+(a1-a0)*from),e=angle(a0+(a1-a0)*to);
-   arcs.push({key:center.map(x=>Math.round(x/epsilon)).join(',')+':'+Math.round(circle.radius/epsilon),center,radius:circle.radius,from:Math.min(s,e),to:Math.max(s,e),hidden:piece.hidden});
+   arcs.push({key:center.map(x=>Math.round(x/epsilon)).join(',')+':'+Math.round(conic.radius/epsilon),center,radius:conic.radius,from:Math.min(s,e),to:Math.max(s,e),hidden:piece.hidden});
    continue;
+  }
+  if(conic&&Math.abs(facing)>1e-6){
+   // Seen at an angle: an ellipse, in the canonical form DXF and SVG take.
+   let form=ellipseForms.get(conic);
+   if(form===undefined){
+    form=canonicalEllipse([dot(conic.U,frame.u),dot(conic.U,frame.v)],[dot(conic.V,frame.u),dot(conic.V,frame.v)])??null;
+    ellipseForms.set(conic,form);
+   }
+   if(form){
+    const a0=conic.angles[chord],a1=conic.angles[chord+1];
+    const s=form.toT(a0+(a1-a0)*from),e=form.toT(a0+(a1-a0)*to),center=project(conic.center);
+    const major=Math.hypot(...form.major);
+    const key=center.map(x=>Math.round(x/epsilon)).join(',')+':'+form.major.map(x=>Math.round(x/epsilon)).join(',')+':'+Math.round(form.ratio*major/epsilon);
+    arcs.push({key,center,radius:major,ellipse:{major:form.major,ratio:form.ratio},from:Math.min(s,e),to:Math.max(s,e),hidden:piece.hidden});
+    continue;
+   }
   }
   const p=points[chord],q=points[chord+1],at=(s:number)=>project(add(p,sub(q,p),s));
   flats.push({a:at(from),b:at(to),hidden:piece.hidden,piece,depth:dot(add(p,sub(q,p),(from+to)/2),frame.d)});
@@ -445,14 +641,19 @@ function assemble(pieces:Piece[],frame:Frame,offset:[number,number],epsilon:numb
   if(out.length>1&&out[0][0]<=1e-9&&out.at(-1)![1]>=turn-1e-9){const first=out.shift()!;out.at(-1)![1]=first[1]+turn;}
   return out;
  };
+ const outEllipses:DrawingViewEllipse[]=[];
  for(const list of byCircle.values()){
-  const {center,radius}=list[0];
+  const {center,radius,ellipse}=list[0];
+  const push=(start:number,sweep:number,hidden:boolean)=>{
+   if(ellipse)outEllipses.push({center,major:ellipse.major,ratio:ellipse.ratio,start,sweep,hidden});
+   else outArcs.push({center,radius,start,sweep,hidden});
+  };
   const shown=merge(list.filter(a=>!a.hidden).map(a=>[a.from,a.to]));
-  for(const [a,b] of shown)outArcs.push({center,radius,start:a,sweep:Math.min(2*Math.PI,b-a),hidden:false});
+  for(const [a,b] of shown)push(a,Math.min(2*Math.PI,b-a),false);
   if(!hiddenWanted)continue;
   const cut=normalise(shown).flatMap(([a,b])=>[[a,b],[a+turn,b+turn]] as [number,number][]);
   for(const [a,b] of merge(list.filter(a=>a.hidden).map(a=>[a.from,a.to])))
-   for(const [s,e] of subtract(a,b,cut))if((e-s)*radius>epsilon)outArcs.push({center,radius,start:s,sweep:e-s,hidden:true});
+   for(const [s,e] of subtract(a,b,cut))if((e-s)*radius>epsilon)push(s,e-s,true);
  }
  // Straight edges become segments (and picks); curves and silhouettes join into polylines.
  const segments:number[]=[],picks:number[]=[],polylines:DrawingPolyline[]=[];
@@ -484,18 +685,41 @@ function assemble(pieces:Piece[],frame:Frame,offset:[number,number],epsilon:numb
   }
   out.push(p.at(-1)!);line.points=out;
  }
- return {segments,picks,lines:{arcs:outArcs,polylines}};
+ return {segments,picks,lines:{arcs:outArcs,polylines,ellipses:outEllipses}};
+}
+
+/** A face is a hole's wall: a cylinder facing its axis, bounded by a full circle. */
+function holeFace(body:ExactDrawingBody,index:number){
+ const face=body.faces[index];
+ if(face.surface!=='cylinder'||!face.axis||!face.radius)return false;
+ const foot=add(face.axis.origin,norm(face.axis.direction),dot(sub(face.point,face.axis.origin),norm(face.axis.direction)));
+ if(dot(sub(face.point,foot),face.normal)>=0)return false;
+ return body.edges.some(edge=>edge.closed&&edge.circle&&edge.faces.includes(index));
+}
+
+/** Holes whose axis runs along a view's direction, once per centre and radius. */
+function viewHoles(bodies:readonly (ExactDrawingBody|undefined)[],frame:Frame,offset:[number,number],lines:ExactViewLines):ViewHole[]{
+ const out:ViewHole[]=[];
+ for(const [i,body] of bodies.entries()){
+  if(!body)continue;
+  for(const [index,face] of body.faces.entries()){
+   if(!holeFace(body,index)||Math.abs(dot(norm(face.axis!.direction),frame.d))<1-1e-9)continue;
+   const center:SketchPoint=[dot(face.axis!.origin,frame.u)-offset[0],dot(face.axis!.origin,frame.v)-offset[1]],radius=face.radius!;
+   const same=(p:SketchPoint,r:number)=>Math.hypot(p[0]-center[0],p[1]-center[1])<=1e-6*Math.max(1,radius)&&Math.abs(r-radius)<=1e-7*Math.max(1,radius);
+   if(out.some(hole=>same(hole.center,hole.radius)))continue;
+   const visible=lines.arcs.some(arc=>!arc.hidden&&same(arc.center,arc.radius)&&arc.sweep>=2*Math.PI-1e-6);
+   out.push({body:i,center,radius,visible});
+  }
+ }
+ return out;
 }
 
 /** Exact size and grouped full cylindrical holes of the exactly built bodies. */
 function measures(bodies:readonly ExactDrawingBody[],min:Vec3,max:Vec3){
  const holes=new Map<number,number>();
  for(const body of bodies)for(const [index,face] of body.faces.entries()){
-  if(face.surface!=='cylinder'||!face.axis||!face.radius)continue;
-  const foot=add(face.axis.origin,norm(face.axis.direction),dot(sub(face.point,face.axis.origin),norm(face.axis.direction)));
-  if(dot(sub(face.point,foot),face.normal)>=0)continue;
-  if(!body.edges.some(edge=>edge.closed&&edge.circle&&edge.faces.includes(index)))continue;
-  const diameter=Math.round(face.radius*2e6)/1e6;
+  if(!holeFace(body,index))continue;
+  const diameter=Math.round(face.radius!*2e6)/1e6;
   holes.set(diameter,(holes.get(diameter)??0)+1);
  }
  return {size:[0,1,2].map(i=>max[i]-min[i]) as Vec3,holes:[...holes].sort((a,b)=>a[0]-b[0]).map(([diameter,count])=>({diameter,count}))};
@@ -541,12 +765,14 @@ export function projectExactAssembly(geometry:GeometryResult,exact:ExactDrawingD
   const us=corners.map(c=>dot(c,frame.u)),vs=corners.map(c=>dot(c,frame.v));
   return {offset:[Math.min(...us),Math.min(...vs)] as [number,number],extent:[Math.max(...us)-Math.min(...us),Math.max(...vs)-Math.min(...vs)] as [number,number]};
  };
- const lines:ExactViewLines[]=[];
+ const lines:ExactViewLines[]=[],holes:ViewHole[][]=[];
+ const solids=bodies.map(body=>byId.get(body.id));
  const views=drawingViews.map((view,index)=>{
   const frame=standardFrames[index],{offset,extent:size}=bounds(frame);
   const pieces=hiddenLines(candidatesFor(frame,true),occluders,frame,offset,size,depthTolerance,3*margin);
   const out=assemble(pieces,frame,offset,epsilon,true);
   lines.push(out.lines);
+  holes.push(viewHoles(solids,frame,offset,out.lines));
   return {view:view.view,width:size[0],height:size[1],segments:Float64Array.from(out.segments),edgePicks:Float64Array.from(out.picks)};
  });
  const {offset,extent:isoSize}=bounds(isoFrame);
@@ -560,7 +786,7 @@ export function projectExactAssembly(geometry:GeometryResult,exact:ExactDrawingD
  for(const id of exactBodies){const b=byId.get(id)!.bounds;for(const i of [0,1,2]){exactMin[i]=Math.min(exactMin[i],b.min[i]);exactMax[i]=Math.max(exactMax[i],b.max[i]);}}
  const measured=exactBodies.length?measures(exactBodies.map(id=>byId.get(id)!),exactMin,exactMax):{size:[0,0,0] as Vec3,holes:[]};
  return {
-  views,origin:min,bodyIds:bodies.map(body=>body.id),sourceKey:geometry.sourceKey,lines,
+  views,origin:min,bodyIds:bodies.map(body=>body.id),sourceKey:geometry.sourceKey,lines,holes,
   iso:{width:isoSize[0],height:isoSize[1],segments:Float64Array.from(isoOut.segments),lines:isoOut.lines},
   exact:{exactBodies,meshBodies,tessellatedSilhouettes:report.tessellated,tolerance,...measured},
  };

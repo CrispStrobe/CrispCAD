@@ -5,6 +5,7 @@ import {dirname,resolve} from 'node:path';
 import {CAD_SCRIPT_REVISION,compileBlocksToCadScript,exportBlocksOpenSCAD,exportBlocksJSCAD,createCadSession,createDocument,compileCode,defaultCodeProgram,codeExamples,importOpenSCAD,getOpenSCADImportWarnings,importJSCAD,exportOpenSCAD,exportJSCAD,exportCodeSource,newId,serializeDocument,CODE_LIMITS,basicGeneratorPresets,enclosureGeneratorPresets,curvedGeneratorPresets,transitionGeneratorPresets,defaultGenerator,screwVariant,redesignScrew,t,getLocale,hasModelAttribution,createModelAttributionSidecar,validateDocument,commandRegistry,createCommandRunner,createCommandJournal,resolveManufacturingSettings,formatManufacturingReport,manufacturingVerdict} from '@brickwright/cad-core';
 import {appendPortableRevision,readPortableHistory} from '@brickwright/cad-history';
 import {createPresetDocument} from '@brickwright/cad-editor';
+import {drawingSheetCut,drawingSheetFor,renderDrawingSheet,sectionPlanes,writeDrawing} from '@brickwright/cad-editor/drawing';
 import {exportSTL} from '@brickwright/cad-geometry';
 import {exactKernelIdentity} from '@brickwright/cad-exact/identity';
 import {formatExactResult,runStepImport,fastenerTable,THREADS,STOCK_LENGTHS,HEAT_SET_INSERTS,COUNTERBORE_4762} from '@brickwright/cad-core';
@@ -40,6 +41,7 @@ export const toolDefinitions=[
  spec('cad_export_project','Return a complete history-inclusive .bcad archive as base64; large projects use the configured project file instead.'),
  spec('cad_export_step','Return an exact STEP (AP214) file as base64, built with the optional exact B-rep kernel (SMLib, loaded on first use). One solid per body; objectIds limits the bodies (default: every solid body). Bodies without an exact construction, such as imported meshes or minkowski, fail with a diagnostic naming the body and feature; no mesh is ever written as STEP. Recorded library sources are refused (STL with attribution only).',{objectIds:{type:'array',maxItems:64,items:{type:'string'}}}),
  spec('cad_import_step','Import a STEP file (AP203, AP214 or AP242 B-rep) as exact bodies with the optional exact B-rep kernel (SMLib, loaded on first use): one body per solid in the file, at the file\'s coordinates in millimetres, each keeping its exact B-rep (exact STEP export, measures, fillet, chamfer, shell) and the kernel\'s display mesh. The file is refused as a whole, never imported in part: text that is not STEP, malformed or cut short, no solid, a body the kernel cannot read, an open surface, more than 64 bodies. Saved as one history step; preview saves nothing. base64 holds the file\'s bytes.',{name:{type:'string',minLength:1,maxLength:255},base64:{type:'string',minLength:4,maxLength:4194304},expectedRevision:revision,preview:{type:'boolean'}},['name','base64','expectedRevision'],false),
+ spec('cad_drawing','Render a drawing sheet (read-only, no history entry) as PDF, SVG or DXF and return it as base64. sheet names a saved sheet by id or title; without it, an A4 assembly sheet of every solid body (top, front and right views, isometric view) at the largest scale that fits. exact (default: the saved sheet\'s choice, true for the default sheet) takes edges, circles, ellipses and silhouettes from the exact B-rep kernel (loaded on first use); bodies it cannot build are drawn from their mesh and named in notes. autoDimensions (exact sheets) adds the overall size, hole positions, hole callouts (ISO 129 style, from standard holes), diameters and radii without overlaps. DXF is in paper millimetres (R2000 with ARC, CIRCLE and ELLIPSE entities, or R12 with ellipses as polylines within 0.01 mm); SVG is in millimetres at actual size; PDF includes parts list pages. scale and hiddenLines override the sheet for this rendering only.',{format:{type:'string',enum:['pdf','svg','dxf']},sheet:{type:'string',minLength:1,maxLength:96},exact:{type:'boolean'},autoDimensions:{type:'boolean'},scale:{type:'string',enum:['1:5','1:2','1:1','2:1','5:1']},hiddenLines:{type:'boolean'},dxfVersion:{type:'string',enum:['R2000','R12']}},['format']),
  spec('cad_measure_exact','Measure bodies exactly with the optional B-rep kernel: volume, surface area, bounding box and centroid from the exact solid, not a mesh. objectIds limits the bodies.',{objectIds:{type:'array',maxItems:64,items:{type:'string'}}}),
  spec('cad_export_stl','Return printable binary STL as base64. Recorded library sources automatically include a paired attribution JSON file; supply accurate modificationNotes describing changes since insertion (including when unchanged) and distribute both files together.',{modificationNotes:{type:'string',minLength:1,maxLength:4096}})
 ];
@@ -136,6 +138,31 @@ export async function createCodeHost(options={}){
    const {file}=formatExactResult(result,document),base64=Buffer.from(file.text).toString('base64');
    if(base64.length>3*1024*1024)throw new Error(t('STEP export exceeds the MCP 3 MiB limit; export fewer bodies or use the editor.'));
    return {revision,kernel:result.kernel,bodies:result.bodies,name:file.name,mime:file.mime,base64};
+  }
+  if(name==='cad_drawing'){
+   // Snapshot first: the sheet, the meshes, the exact data and the section all describe this revision.
+   const document=validateDocument(session.state.document),revision=metadata.project.serial;
+   const {sheet,saved}=drawingSheetFor(document,args.sheet,{...(args.scale?{scale:args.scale}:{}),...(args.hiddenLines!==undefined?{hiddenLines:args.hiddenLines}:{}),...(args.exact!==undefined?{exactEdges:args.exact}:{}),...(args.autoDimensions!==undefined?{autoDimensions:args.autoDimensions}:{})});
+   const result=await geometry.evaluate(document,signal);cancelled(signal);
+   let exactData;
+   if(sheet.exactEdges){
+    const drawn=await exact.run({operation:'drawing',document,bodies:[]},signal);cancelled(signal);
+    if(drawn.operation!=='drawing')throw new Error(t('The exact kernel returned an unexpected result.'));
+    exactData={bodies:drawn.bodies,failures:drawn.failures};
+   }
+   const cut=drawingSheetCut(document,sheet);let section;
+   if(cut){
+    section=(await geometry.evaluate(document,signal,undefined,{kind:'slice',options:{cut}})).section;cancelled(signal);
+    if(sheet.exactEdges){
+     const cutFaces=await exact.run({operation:'section',document,bodies:[],section:sectionPlanes(cut)},signal);cancelled(signal);
+     if(cutFaces.operation!=='section')throw new Error(t('The exact kernel returned an unexpected result.'));
+     section={...section,exact:{axis:cutFaces.axis,positions:cutFaces.positions,bodies:cutFaces.bodies,failures:cutFaces.failures}};
+    }
+   }
+   const render=renderDrawingSheet(document,sheet,{geometry:result,...(exactData?{exact:exactData}:{}),...(section?{section}:{})},{fit:!saved&&!args.scale});
+   const file=writeDrawing(render,sheet.title,args.format,args.dxfVersion??'R2000'),base64=Buffer.from(file.bytes).toString('base64');
+   if(base64.length>3*1024*1024)throw new Error(t('The drawing exceeds the MCP 3 MiB limit; draw it in the editor.'));
+   return {revision,sheet:sheet.title,scale:render.scale,exact:!!sheet.exactEdges,pages:args.format==='pdf'?render.pages.length:1,notes:render.notes,name:file.name,mime:file.mime,bytes:file.bytes.length,base64};
   }
   if(name==='cad_export_stl'){
    // Snapshot before worker IO: concurrent requests may advance the live project.

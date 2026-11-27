@@ -27,7 +27,11 @@ export type AssemblyCurveDimension={
 export const drawingAnnotationLimit=24;
 export const drawingTitleBlockLimits={number:24,revision:12,drawnBy:16} as const;
 export type DrawingTitleBlock=Partial<Record<keyof typeof drawingTitleBlockLimits,string>>;
-export type DrawingInputs = {title:string; titleBlock?:DrawingTitleBlock; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]; partsList?:boolean; edgeDimensions?:AssemblyEdgeDimension[]; curveDimensions?:AssemblyCurveDimension[]};
+export type DrawingInputs = {title:string; titleBlock?:DrawingTitleBlock; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]; partsList?:boolean; edgeDimensions?:AssemblyEdgeDimension[]; curveDimensions?:AssemblyCurveDimension[];
+ /** Assembly sheets, document version 48: lines from the exact B-rep, and automatic dimensions on them. */
+ exactEdges?:true; autoDimensions?:true};
+/** The document version that stores an assembly sheet's exact-edges and automatic-dimensions choice. */
+export const EXACT_DRAWING_DOCUMENT_VERSION=48;
 export type DrawingSheet = DrawingInputs & {id:string};
 
 const record = (value:unknown):value is Record<string,unknown> => !!value && typeof value==='object' && !Array.isArray(value);
@@ -77,6 +81,8 @@ export function checkDrawingSheets(doc:CadDocument) {
    if(sheet.section!==undefined&&(doc.version<23||!record(sheet.section)||(sheet.section.jog!==undefined&&doc.version<24)))throw invalid();
   }else if(Object.hasOwn(sheet.source,'kind')||!id(sheet.source.featureId)||!id(sheet.source.sketchId)||!id(sheet.source.profileId))throw invalid();
   if(sheet.partsList!==undefined&&(doc.version<22||!isAssemblyDrawingSource(sheet.source)||typeof sheet.partsList!=='boolean'))throw invalid();
+  if((sheet.exactEdges!==undefined||sheet.autoDimensions!==undefined)&&(doc.version<EXACT_DRAWING_DOCUMENT_VERSION||!isAssemblyDrawingSource(sheet.source)||
+     sheet.exactEdges!==undefined&&sheet.exactEdges!==true||sheet.autoDimensions!==undefined&&(sheet.autoDimensions!==true||sheet.exactEdges!==true)))throw invalid();
   if(sheet.section!==undefined){
    if(doc.version<10||!record(sheet.section)||!['u','v'].includes(String(sheet.section.axis)))throw invalid();
    if(!sectionScalar(sheet.section.position))throw invalid();

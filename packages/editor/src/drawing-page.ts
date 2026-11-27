@@ -4,16 +4,23 @@ import type {DrawingScale,DrawingTitleBlock,SketchPoint} from '@brickwright/cad-
 import type {AssemblyDrawingCurve} from './assembly-curve-dimension.js';
 import type {AssemblyDrawingEdge} from './assembly-edge-dimension.js';
 import type {DrawingAnchorPoint} from './drawing-annotation.js';
+import type {DrawingEllipse} from './drawing-conic.js';
 
 type Stroke = 'visible'|'hidden'|'center'|'dimension'|'border'|'cut'|'hatch'|'section'|'annotation';
 export type DrawingPath = {points:SketchPoint[]; stroke:Stroke; closed?:boolean};
 /** A circle, or with `arc` a circular arc from `start` through `sweep` (radians, counter-clockwise on
  * paper); `hidden` draws it dashed. */
 export type DrawingCircle = {center:SketchPoint; radius:number; arc?:{start:number; sweep:number}; hidden?:true};
-export type DrawingText = {x:number; y:number; size:number; text:string};
+/** `angle`: degrees counter-clockwise on paper (vertical dimension text: 90). */
+export type DrawingText = {x:number; y:number; size:number; text:string; angle?:number};
+export type {DrawingEllipse};
 export type DrawingLayout = {
  width:number; height:number; paths:DrawingPath[]; circles:DrawingCircle[]; texts:DrawingText[];
- anchors:DrawingAnchorPoint[]; annotationIssues:string[]; factor:number; assemblyEdges?:AssemblyDrawingEdge[]; assemblyCurves?:AssemblyDrawingCurve[];
+ /** Elliptical arcs (circles seen at an angle, oblique cuts of cylinders), exact drawings only. */
+ ellipses?:DrawingEllipse[];
+ anchors:DrawingAnchorPoint[]; annotationIssues:string[]; factor:number;
+ /** What automatic dimensions placed (exact assembly sheets with automatic dimensions). */
+ autoDimensions?:{placed:number;omitted:number;callouts:number}; assemblyEdges?:AssemblyDrawingEdge[]; assemblyCurves?:AssemblyDrawingCurve[];
 };
 export const drawingViews = [
  {view:'Top view', horizontal:0, vertical:1, depth:2, near:1},

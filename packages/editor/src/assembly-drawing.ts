@@ -2,13 +2,16 @@
 import {featureValue,t} from '@brickwright/cad-core';
 import type {CadDocument,DrawingInputs,DrawingSection,SketchPoint,Vec3} from '@brickwright/cad-core';
 import {assemblyCutJogs} from '@brickwright/cad-geometry';
-import type {AssemblyCut,AssemblySection,BodyMesh,GeometryResult} from '@brickwright/cad-geometry';
+import type {AssemblyCut,BodyMesh,GeometryResult} from '@brickwright/cad-geometry';
 import {addAssemblyCurveDimensions,assemblyDrawingCurves} from './assembly-curve-dimension.js';
 import {addAssemblyEdgeDimensions,assemblyDrawingEdges} from './assembly-edge-dimension.js';
 import {addAssemblySection} from './assembly-section-view.js';
+import type {DrawnAssemblySection} from './assembly-section-view.js';
 import {addExactAssemblyLines,exactProjection} from './exact-drawing-layout.js';
+import {addAutoDimensions} from './drawing-auto-dimensions.js';
+import type {Box as PaperBox} from './drawing-auto-dimensions.js';
 import {addDrawingFrame,drawingViews} from './drawing-page.js';
-import type {DrawingLayout} from './drawing-page.js';
+import type {DrawingLayout,DrawingText} from './drawing-page.js';
 
 type View=(typeof drawingViews)[number];
 type Triangle={a:Vec3; b:Vec3; c:Vec3; det:number; box:Box; nearest:number};
@@ -176,7 +179,7 @@ export function projectAssembly(geometry:GeometryResult){
  return {views,origin:min,bodyIds:bodies.map(body=>body.id),sourceKey:geometry.sourceKey};
 }
 
-export type AssemblyProjection=ReturnType<typeof projectAssembly>&{sections?:AssemblySection[]};
+export type AssemblyProjection=ReturnType<typeof projectAssembly>&{sections?:DrawnAssemblySection[]};
 /** The mesh edges and faces the projection reads (also used for bodies an exact drawing draws from their mesh). */
 export {topology as meshDrawingTopology};
 
@@ -214,6 +217,7 @@ export function layoutAssemblyDrawing(doc:CadDocument,sheet:DrawingInputs,projec
  }
  const page:DrawingLayout={width:297,height:210,paths:[],texts:[],circles:[],anchors:[],annotationIssues:[],factor};
  const placements=[[top,x,topY],[front,x,baseline],[right,rightX,baseline]] as const;
+ const labels:DrawingText[]=[];
  for(const [view,left,bottom] of placements){
   const point=(u:number,v:number):SketchPoint=>[left+u*factor,bottom+v*factor];
   const {segments}=view;
@@ -223,11 +227,12 @@ export function layoutAssemblyDrawing(doc:CadDocument,sheet:DrawingInputs,projec
      points:[point(segments[i],segments[i+1]),point(segments[i+2],segments[i+3])]});
    }
   }
-  page.texts.push({x:left,y:bottom+view.height*factor+4,text:t(view.view),size:3.5});
+  const label={x:left,y:bottom+view.height*factor+4,text:t(view.view),size:3.5};
+  page.texts.push(label);labels.push(label);
  }
  // Lines from the exact B-rep: curves, true arcs, the isometric view and the notes.
  const exact=exactProjection(projection);
- const arcs=exact?addExactAssemblyLines(page,sheet,exact,placements,factor,{x:rightX,y:topY,free:!cut}):undefined;
+ const added=exact?addExactAssemblyLines(page,sheet,exact,placements,factor,{x:rightX,y:topY,free:!cut}):undefined,arcs=added?.arcs;
  if(cut){
   const key=assemblyCutKey(cut);
   const section=projection.sections?.find(item=>assemblyCutKey(item.cut)===key);
@@ -245,5 +250,20 @@ export function layoutAssemblyDrawing(doc:CadDocument,sheet:DrawingInputs,projec
  const count=projection.bodyIds.length;
  const subtitle=count===1?t('Assembly · 1 body'):t`Assembly · ${count} bodies`;
  addDrawingFrame(page,sheet.title,subtitle,{scale:sheet.scale,titleBlock:sheet.titleBlock});
+ if(exact&&sheet.autoDimensions){
+  // Automatic dimensions keep clear of the views, the isometric and section views, the cutting
+  // line, saved dimensions and every text already on the sheet.
+  const blocked:PaperBox[]=[];
+  if(added?.iso)blocked.push(added.iso);
+  if(cut)blocked.push({l:rightX,b:topY,r:rightX+(cut.axis===0?top.height:top.width)*factor,t:topY+front.height*factor});
+  for(const path of page.paths)if(path.stroke==='cut'||path.stroke==='annotation'||path.stroke==='dimension'){
+   const xs=path.points.map(p=>p[0]),ys=path.points.map(p=>p[1]);
+   blocked.push({l:Math.min(...xs),b:Math.min(...ys),r:Math.max(...xs),t:Math.max(...ys)});
+  }
+  // View labels and notes move out of the dimensions' way: placed after them.
+  const deferred=new Set<DrawingText>([...labels,...added!.notes]);
+  page.texts=page.texts.filter(text=>!deferred.has(text));
+  page.autoDimensions=addAutoDimensions(page,doc,exact,placements,factor,blocked,{labels,notes:added!.notes});
+ }
  return page;
 }

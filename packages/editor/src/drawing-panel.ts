@@ -9,6 +9,10 @@ import type {DrawingLayout} from './drawing-layout.js';
 import {drawingArcPoints,placeDrawingAnnotation} from './drawing-annotation.js';
 import {operationScalar} from './body-operation-panel.js';
 import {exportDrawingPdf} from './drawing-pdf.js';
+import {svgEllipseArc} from './drawing-conic.js';
+import {exportDrawingSvg} from './drawing-svg.js';
+import {exportDrawingDxf} from './drawing-dxf.js';
+import type {DxfVersion} from './drawing-dxf.js';
 
 const element=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{
  const el=document.createElement(tag);
@@ -50,9 +54,17 @@ function previewDrawing(layout:DrawingLayout,assembly:boolean) {
   circle.setAttribute('cx',String(x));circle.setAttribute('cy',String(layout.height-y));circle.setAttribute('r',String(radius));
   circle.setAttribute('class',hidden?'drawing-hidden':'drawing-visible');svg.append(circle);
  }
- for(const {x,y,size,text} of layout.texts){
+ for(const ellipse of layout.ellipses??[]){
+  const {rx,ry,rotation,point}=svgEllipseArc(ellipse,layout.height);
+  const full=ellipse.sweep>=2*Math.PI-1e-9,half=ellipse.start+Math.PI,end=ellipse.start+ellipse.sweep;
+  const arc=(t:number,large:number)=>' A '+rx+' '+ry+' '+rotation+' '+large+' 0 '+point(t).join(' ');
+  // Counter-clockwise on paper is clockwise in the flipped SVG (sweep flag 0); a full ellipse is two halves.
+  addPath(ellipse.hidden?'hidden':'visible','M '+point(ellipse.start).join(' ')+(full?arc(half,0)+arc(ellipse.start,0):arc(end,ellipse.sweep>Math.PI?1:0)));
+ }
+ for(const {x,y,size,text,angle} of layout.texts){
   const label=document.createElementNS(ns,'text');
   label.setAttribute('x',String(x));label.setAttribute('y',String(layout.height-y));
+  if(angle)label.setAttribute('transform',`rotate(${-angle} ${x} ${layout.height-y})`);
   label.setAttribute('font-size',String(size));label.textContent=text;svg.append(label);
  }
  return svg;
@@ -62,7 +74,7 @@ function previewDrawing(layout:DrawingLayout,assembly:boolean) {
 export type AssemblyProjectionOptions={exact?:boolean};
 export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectAssembly:(sheets:readonly DrawingInputs[],options?:AssemblyProjectionOptions)=>Promise<AssemblyProjection|undefined>,onExport?: (file:CadFile)=>void|Promise<void>){
  // A view preference of this editor (not saved with the model): assembly sheets use exact edges.
- let exactEdges=false;
+ let exactEdges=false,lastDxfVersion:DxfVersion='R2000',exportFocus=false;
  const dialog=element('dialog');dialog.className='sketch-dialog drawing-dialog';
  dialog.setAttribute('aria-label',t('Drawing sheet'));parent.append(dialog);
  dialog.addEventListener('keydown',event=>event.stopPropagation());
@@ -70,8 +82,9 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
  const unsubscribe=session.subscribe(()=>{if(dialog.open)refresh?.();});
  return {
   /** `exact` (assembly sheets): switch "Exact edges (B-rep)" on or off before the sheet opens. */
-  open(options:{featureId:string}|{sheetId:string}|{assembly:true;exact?:boolean}){
+  open(options:({featureId:string}|{sheetId:string}|{assembly:true;exact?:boolean})&{export?:boolean}){
    if('assembly' in options&&options.exact!==undefined)exactEdges=options.exact;
+   exportFocus=!!options.export;
    const doc=session.state.document;
    const saved='sheetId' in options?doc.drawings?.find(sheet=>sheet.id===options.sheetId):undefined;
    const initial='featureId' in options?drawingSourceFor(doc,options.featureId):saved?.source;
@@ -109,10 +122,14 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    form.append(titleBlockForm);
    const partsList=element('input'),previewPage=element('select');
    partsList.type='checkbox';partsList.checked=saved?.partsList??false;
-   const exactInput=element('input');exactInput.type='checkbox';exactInput.checked=exactEdges;
+   // A saved sheet keeps its own choice (document version 48); a new one starts from this editor's.
+   const exactInput=element('input');exactInput.type='checkbox';exactInput.checked=saved?!!saved.exactEdges:exactEdges;
+   const autoInput=element('input');autoInput.type='checkbox';autoInput.checked=saved?!!saved.autoDimensions:true;
    if(assembly){
     label('Exact edges (B-rep)',exactInput);
     exactInput.title=t('Draw edges, silhouettes and circles from the exact B-rep. Loads the exact kernel; bodies it cannot build are drawn from their mesh and named on the sheet.');
+    label('Automatic dimensions',autoInput);
+    autoInput.title=t('Overall size, hole positions, hole callouts, diameters and radii from the exact B-rep, placed where they do not overlap.');
     label('Include parts list',partsList);
     label('Preview page',previewPage);
     previewPage.parentElement!.hidden=true;
@@ -209,10 +226,18 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    const footer=element('footer');
    const save=element('button',t('Save drawing sheet'));save.className='primary';
    const pdf=element('button',t('Export drawing PDF'));
+   const svgButton=element('button',t('Export drawing SVG')),dxfButton=element('button',t('Export drawing DXF'));
+   svgButton.title=t('The drawing views as an SVG file in millimetres, at actual size.');
+   dxfButton.title=t('The drawing views as a DXF file in paper millimetres: arcs, circles and ellipses as DXF entities, one layer per line type.');
+   const dxfVersion=element('select');
+   dxfVersion.add(new Option(t('DXF R2000 (ellipses as ELLIPSE)'),'R2000'));
+   dxfVersion.add(new Option(t('DXF R12 (ellipses as polylines)'),'R12'));
+   dxfVersion.value=lastDxfVersion;
+   if(onExport)label('DXF version',dxfVersion);
    const remove=element('button',t('Remove drawing sheet'));
    footer.append(status);
    if(saved)footer.append(remove);
-   if(onExport)footer.append(pdf);
+   if(onExport)footer.append(pdf,svgButton,dxfButton);
    footer.append(save);
    const body=element('div');body.className='drawing-body';body.append(preview,form);
    dialog.append(heading,body,footer);
@@ -273,7 +298,8 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     }}:{};
     if(assembly){
      if(!drawingAssemblyAvailable(current))throw new Error(t('Add a solid body to draw the assembly.'));
-     return {...settings,source:{kind:'assembly'},...cuttingPlane,...(partsList.checked?{partsList:true}:{}),
+     const exactChoice=exactInput.checked?{exactEdges:true as const,...(autoInput.checked?{autoDimensions:true as const}:{})}:{};
+     return {...settings,source:{kind:'assembly'},...cuttingPlane,...(partsList.checked?{partsList:true}:{}),...exactChoice,
       ...(edgeDimensions.length?{edgeDimensions}:{}),...(curveDimensions.length?{curveDimensions}:{})};
     }
     const ref=drawingSourceFor(current,source.value);
@@ -371,7 +397,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     preview.replaceChildren();layout=undefined;pages=[];status.textContent='';
     edgeControls?.refresh();
     previewPage.disabled=true;
-    save.disabled=pdf.disabled=true;
+    save.disabled=pdf.disabled=svgButton.disabled=dxfButton.disabled=true;
     const ticket=++renderTicket,current=session.state.document;
     const show=(draft:DrawingInputs,projection?:AssemblyProjection)=>{
      if(projection){
@@ -392,7 +418,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
      showPreview();
      edgeControls?.refresh();
      save.disabled=false;
-     pdf.disabled=!!layout.annotationIssues.length;
+     pdf.disabled=svgButton.disabled=dxfButton.disabled=!!layout.annotationIssues.length;
      status.textContent=layout.annotationIssues.length?t('Repair or remove unavailable drawing dimensions before exporting.'):'';
     };
     const report=(error:unknown)=>{status.textContent=error instanceof Error?error.message:String(error);};
@@ -464,7 +490,10 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    section.onchange=offset.onchange=render;
    secondPosition.oninput=jogAt.oninput=render;
    title.oninput=scale.onchange=hidden.onchange=partsList.onchange=render;
-   exactInput.onchange=()=>{exactEdges=exactInput.checked;render();};
+   const updateAuto=()=>{autoInput.disabled=!exactInput.checked;};updateAuto();
+   exactInput.onchange=()=>{exactEdges=exactInput.checked;updateAuto();render();};
+   autoInput.onchange=render;
+   dxfVersion.onchange=()=>{lastDxfVersion=dxfVersion.value as DxfVersion;};
    for(const input of Object.values(titleBlockInputs))input.oninput=render;
    save.onclick=()=>{
     try{session.saveDrawingSheet(read(),saved?.id);dialog.close();}
@@ -478,9 +507,20 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     catch(error){if(dialog.open)status.textContent=error instanceof Error?error.message:String(error);}
     finally{pdf.disabled=!layout||!!layout.annotationIssues.length;}
    };
+   const exportFile=async(button:HTMLButtonElement,make:(page:DrawingLayout,title:string)=>CadFile)=>{
+    if(!layout||layout.annotationIssues.length||!onExport)return;
+    button.disabled=true;
+    try{await onExport(make(layout,read().title));}
+    catch(error){if(dialog.open)status.textContent=error instanceof Error?error.message:String(error);}
+    finally{button.disabled=!layout||!!layout.annotationIssues.length;}
+   };
+   svgButton.onclick=()=>exportFile(svgButton,exportDrawingSvg);
+   dxfButton.onclick=()=>exportFile(dxfButton,(page,title)=>exportDrawingDxf(page,title,dxfVersion.value as DxfVersion));
    const edgeControls=assembly?mountAssemblyEdgeControls(edgePanel,preview,status,edgeDimensions,curveDimensions,
     ()=>session.state.document,()=>layout,()=>{previewPage.value='0';showPreview();},render):undefined;
    setPicking(false);refresh();dialog.showModal();
+   // Opened to export: the export controls in view.
+   if(exportFocus&&onExport){dxfVersion.scrollIntoView({block:'nearest'});pdf.focus({preventScroll:true});}
   },
   /** Whether assembly sheets are projected from exact edges (this editor's choice in the dialog). */
   get exactEdges(){return exactEdges;},

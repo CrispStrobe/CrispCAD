@@ -2,10 +2,11 @@
 import {t} from '@brickwright/cad-core';
 import type {AssemblyProjection} from './assembly-drawing.js';
 import type {GeometryResult} from '@brickwright/cad-geometry';
-import type {CadDocument} from '@brickwright/cad-core';
+import type {CadDocument,DrawingSheet} from '@brickwright/cad-core';
 import {layoutDrawingPages} from './drawing-layout.js';
 import type {DrawingLayout} from './drawing-layout.js';
 import {decimal,pair,pointsPerMillimetre,textOperand,vectorPdf} from './vector-pdf.js';
+import {ellipseBeziers} from './drawing-conic.js';
 
 function drawingContent(layout:DrawingLayout){
  if(layout.annotationIssues.length)throw new Error(t('Repair or remove unavailable drawing dimensions before exporting.'));
@@ -26,8 +27,16 @@ function drawingContent(layout:DrawingLayout){
   const [sx,sy]=at(start);
   commands.push(hidden?'[1.4 0.9] 0 d':'[] 0 d',hidden?'0.14 w':'0.26 w',pair(sx,sy)+' m '+curves.map(curve=>curve.map(decimal).join(' ')+' c').join(' ')+(arc?' S':' h S'));
  }
- for(const {x,y,size,text} of layout.texts){
-  commands.push('BT /F1 '+decimal(size)+' Tf '+pair(x,y)+' Td '+textOperand(text)+' Tj ET');
+ // Ellipses: the affine image of the circle's Bézier arcs (within 2.7e-4 of the major semi-axis).
+ for(const ellipse of layout.ellipses??[]){
+  const {start:[sx,sy],curves}=ellipseBeziers(ellipse),full=ellipse.sweep>=2*Math.PI-1e-9;
+  commands.push(ellipse.hidden?'[1.4 0.9] 0 d':'[] 0 d',ellipse.hidden?'0.14 w':'0.26 w',pair(sx,sy)+' m '+curves.map(curve=>curve.map(decimal).join(' ')+' c').join(' ')+(full?' h S':' S'));
+ }
+ for(const {x,y,size,text,angle} of layout.texts){
+  if(angle){
+   const a=angle*Math.PI/180,c=Math.cos(a),s=Math.sin(a);
+   commands.push('BT /F1 '+decimal(size)+' Tf '+[c,s,-s,c].map(decimal).join(' ')+' '+pair(x,y)+' Tm '+textOperand(text)+' Tj ET');
+  }else commands.push('BT /F1 '+decimal(size)+' Tf '+pair(x,y)+' Td '+textOperand(text)+' Tj ET');
  }
  return commands.join('\n')+'\nQ\n';
 }
@@ -42,12 +51,13 @@ export function exportDrawingPdf(layout:DrawingLayout,title:string,additional:Dr
  return file(title,vectorPdf(pages));
 }
 
-export function exportDrawingSetPdf(doc:CadDocument,geometry?:GeometryResult|AssemblyProjection){
+/** `geometry`: the assembly projection, or per sheet the one it uses (exact edges or meshes). */
+export function exportDrawingSetPdf(doc:CadDocument,geometry?:GeometryResult|AssemblyProjection|((sheet:DrawingSheet)=>AssemblyProjection|undefined)){
  const sheets=doc.drawings??[];
  if(!sheets.length)throw new Error(t('Save a drawing sheet before exporting a drawing set.'));
  const layouts=sheets.flatMap(sheet=>{
   try{
-   const pages=layoutDrawingPages(doc,sheet,geometry);
+   const pages=layoutDrawingPages(doc,sheet,typeof geometry==='function'?geometry(sheet):geometry);
    if(pages.some(page=>page.annotationIssues.length))throw new Error(t('Repair or remove unavailable drawing dimensions before exporting.'));
    return pages.map(layout=>({layout,hasTitleBlock:!!sheet.titleBlock}));
   }catch(error){

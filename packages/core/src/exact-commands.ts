@@ -17,13 +17,13 @@ import {checkEdgeReferences,formatEdgeReference,parseEdgeReference} from './exac
 import type {ExactEdgeReference} from './exact-edge-references.js';
 import type {KernelIdentity} from './session-commands.js';
 import type {ExactBodyData} from './exact-body.js';
-import type {ExactDrawingBody,ExactDrawingFailure} from './exact-drawing.js';
+import type {ExactDrawingBody,ExactDrawingFailure,ExactSectionBody} from './exact-drawing.js';
 import {MAX_STEP_IMPORT_BYTES} from './exact-body.js';
 import {sha256Hex} from './hash.js';
 import {commandNumber,commandTokens} from './command-arguments.js';
 import {t} from './i18n.js';
 
-export type ExactOperation='export-step'|'measure'|'feature-display'|'edges'|'import-step'|'drawing';
+export type ExactOperation='export-step'|'measure'|'feature-display'|'edges'|'import-step'|'drawing'|'section';
 export interface ExactCommandRequest {
  readonly operation:ExactOperation;
  /** Snapshot taken when the command ran. */
@@ -34,6 +34,8 @@ export interface ExactCommandRequest {
  readonly bodies:readonly string[];
  /** `import-step` only: the file (its name without a path, and its bytes). */
  readonly step?:{readonly name:string;readonly bytes:Uint8Array};
+ /** `section` only: the world axis the cutting planes are normal to (0: X, 1: Y) and their positions. */
+ readonly section?:{readonly axis:0|1;readonly positions:readonly number[]};
 }
 /** One body of an imported STEP file, as the exact kernel read and stored it. */
 export interface ImportedExactBodyReport {readonly name:string;readonly color:string|null;readonly body:Omit<ExactBodyData,'origin'>}
@@ -53,6 +55,7 @@ export type ExactCommandResult=
  |{readonly operation:'feature-display';readonly kernel:ExactKernelReport;readonly features:readonly ExactFeatureDisplayReport[];readonly timing?:ExactTiming}
  |{readonly operation:'edges';readonly kernel:ExactKernelReport;readonly bodies:readonly ExactBodyEdgesReport[];readonly timing?:ExactTiming}
  |{readonly operation:'drawing';readonly kernel:ExactKernelReport;readonly bodies:readonly ExactDrawingBody[];readonly failures:readonly ExactDrawingFailure[];readonly timing?:ExactTiming}
+ |{readonly operation:'section';readonly kernel:ExactKernelReport;readonly axis:0|1;readonly positions:readonly number[];readonly bodies:readonly ExactSectionBody[];readonly failures:readonly ExactDrawingFailure[];readonly timing?:ExactTiming}
  |{readonly operation:'import-step';readonly kernel:ExactKernelReport;readonly bodies:readonly ImportedExactBodyReport[];readonly notes:readonly string[];readonly timing?:ExactTiming};
 /**
  * One B-rep edge of a body, for picking: its number in `edges` listings (1-based, in kernel
@@ -115,7 +118,7 @@ const timingLine=(timing?:ExactTiming)=>timing?['\n'+t`Exact kernel: load ${Math
 /** Terminal/CLI text for a result, and the STEP file for an export. */
 export function formatExactResult(result:ExactCommandResult,document:CadDocument):ExactCommandOutput{
  if(result.operation==='import-step')throw new Error(t('Import STEP files with import step.'));
- if(result.operation==='drawing')throw new Error(t('Exact drawings are made in the drawing workspace.'));
+ if(result.operation==='drawing'||result.operation==='section')throw new Error(t('Exact drawings are made in the drawing workspace.'));
  if(result.operation==='measure'){
   const lines=result.bodies.map(body=>t`${body.name} (${body.id}): volume ${formatNumber(body.volume)} mm³ · area ${formatNumber(body.area)} mm² · bounds ${formatPoint(body.bounds.min)} – ${formatPoint(body.bounds.max)} · centroid ${formatPoint(body.centroid)}`);
   return {output:[t`Exact measures (${kernelLabel(result.kernel)}):`,...lines].join('\n')+timingLine(result.timing).join(''),kernel:result.kernel};

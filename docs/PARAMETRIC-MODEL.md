@@ -236,6 +236,15 @@ when a standard hole is added; Undo returns to the earlier version. Model source
 `hole(id, {...})`. Standard parts are ordinary screw-generator bodies (threaded) or code objects
 (envelopes) and need no new version. Builds that predate 47 refuse such a document.
 
+**Version 48 (2026-11-27) saves an assembly sheet's exact-drawing choice**: `exactEdges: true`
+(lines from the exact B-rep) and `autoDimensions: true` (automatic dimensions and hole callouts,
+only with `exactEdges`) on assembly drawing sheets
+([CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#exact-drawings-dimensions-sections-and-exchange-document-version-48-done-2026-11-27)).
+Both are absent or `true`; `checkDrawingSheets` accepts them only in version 48 documents and only
+on assembly sheets. A document reaches 48 only when such a sheet is saved; a sheet saved without
+the choice keeps the earlier version, and Undo returns to it. No geometry or other sheet field
+changes. Builds that predate 48 refuse such a document.
+
 ## Graph and errors
 
 `designGraph(doc)` derives a deterministic topological order from canonical

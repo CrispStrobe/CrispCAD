@@ -40,3 +40,16 @@ export interface ExactDrawingBody {
 export interface ExactDrawingFailure {readonly id:string;readonly name:string;readonly code:string;readonly message:string}
 export interface ExactDrawingData {readonly bodies:readonly ExactDrawingBody[];readonly failures:readonly ExactDrawingFailure[]}
 
+
+/**
+ * An edge of a section's cut face (the `section` exact request): the edge, with `faces` indexing
+ * `surfaces`, the cut face and the face across the edge (a cylinder's ellipse needs both).
+ */
+export interface ExactSectionEdge extends ExactDrawingEdge {readonly surfaces:readonly ExactDrawingFace[]}
+/** One body cut at each position of a section (one entry per leg; no edges where the plane misses it). */
+export interface ExactSectionBody {readonly id:string;readonly name:string;readonly legs:readonly (readonly ExactSectionEdge[])[]}
+export interface ExactSectionData {
+ /** The world axis the cutting planes are normal to (0: X, 1: Y) and their positions, one per leg. */
+ readonly axis:0|1;readonly positions:readonly number[];
+ readonly bodies:readonly ExactSectionBody[];readonly failures:readonly ExactDrawingFailure[];
+}

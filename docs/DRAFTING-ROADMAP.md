@@ -355,10 +355,37 @@ exact overall size and the holes grouped by diameter. Model edge and curve dimen
 exact edges and keep working when the option is switched off again.
 
 A body the exact kernel cannot build, such as an imported mesh, is drawn from its mesh in the same
-views, and the sheet names it ("from the mesh: …"). The choice belongs to the editor, not to the
-saved sheet; the drawing-set PDF uses it as well. Silhouettes of cones, tori and spline surfaces,
-sections and sketch-extrusion sheets still use tessellated or authored geometry. Design, limits
-and tests: [convergence roadmap, Phase 6.1](CRISPCAD-CONVERGENCE.md#drawings-from-exact-edges-done-2026-11-27).
+views, and the sheet names it ("from the mesh: …"). Cylinders, cones, spheres and tori have their
+outlines on the exact surface; only spline surfaces and other surfaces of revolution keep the
+tessellation's chord tolerance. Circles seen at an angle, in the views and in the isometric view,
+are true ellipses. Design, limits and tests: [convergence roadmap, Phase 6.1](CRISPCAD-CONVERGENCE.md#drawings-from-exact-edges-done-2026-11-27).
+
+**Automatic dimensions.** With exact edges, check **Automatic dimensions** (on for a new exact
+sheet). The sheet adds the overall size, the positions of the holes from the left and bottom edges
+of the view that sees them end-on, centre marks, the diameters of other circles and the radii of
+arcs. Standard holes get callouts in ISO 129 order, for example `4× M5 clearance Ø5.5 thru` or
+`M5 counterbore Ø5.5 thru` with `c'bore Ø10 × 5.4 deep`. Each dimension goes where it overlaps
+nothing else on the sheet; what finds no room is left off and counted in the notes. Values are
+millimetres without a unit, as the frame states.
+
+**Sections from exact cut faces.** A section of an exact sheet, with or without jogs, is cut from
+the exact B-rep: hole walls are lines at their exact positions, a hole cut obliquely is an ellipse,
+and hatching stops at the exact outline.
+
+**SVG and DXF.** **Export drawing SVG** writes the views page as an SVG in millimetres at actual
+size. **Export drawing DXF** writes it as DXF R2000 or R12 (choose **DXF version**) in paper
+millimetres at 1:1: circles, arcs and (R2000) ellipses are real DXF entities, text is TEXT, and
+each line kind has its own layer and linetype. R12 has no ellipse; ellipses become polylines within
+0.01 mm. Parts list pages are in the PDF only. **Export drawing (PDF, SVG or DXF)…** in the editor
+menu opens a saved sheet (or a new exact one) with these buttons in view.
+
+**Saved with the sheet.** An assembly sheet saved with exact edges keeps that choice and its
+automatic dimensions (document version 48), and **Export drawing set (PDF)** draws each sheet the
+way it was saved. A sheet saved without exact edges is unchanged.
+
+**MCP and command line.** The MCP tool `cad_drawing` renders a saved sheet (or a default A4
+assembly sheet) as PDF, SVG or DXF, and `node apps/cli/crispcad.mjs drawing project.bcad out.dxf`
+writes one; `--mesh`, `--no-dimensions`, `--scale`, `--sheet` and `--dxf r12` change it.
 
 ## Completion criteria
 

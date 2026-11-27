@@ -11,6 +11,7 @@ const analyses={
  inspect:bodies=>({bodies:inspectBodies(bodies)}),
  manufacturing:(bodies,{settings,bodies:ids,exact,exactUnavailable,kernel})=>({report:checkManufacturing({meshes:bodies,bodies:ids,...(exact?{exact}:{}),...(exactUnavailable?{exactUnavailable}:{}),...(kernel?{kernel}:{})},settings)}),
  interference:(bodies,options)=>kernel.interference(bodies,options),
+ slice:(bodies,{cut})=>({section:kernel.sliceAssembly({bodies},cut)}),
  render:(bodies,options)=>({views:options.views.map(view=>({view,png:Buffer.from(renderBodies(bodies,view,options.size)).toString('base64')}))}),
 };
 parentPort.on('message',({id,document,locale,printability,analysis})=>{try{setLocale(locale??'en');const result=kernel.evaluate(document);

@@ -14,7 +14,9 @@ import type {ExactLimits} from './limits.js';
 import type {ExactFeatureLimits} from './lower-document.js';
 import {createBrepCache,importStepBodies} from './step-import.js';
 import {exactDrawingData} from './drawing.js';
+import {exactSectionData} from './section.js';
 import type {ExactDrawingData} from './drawing.js';
+import type {ExactSectionData} from '@brickwright/cad-core';
 import type {ExactStepImport} from './step-import.js';
 
 export * from './identity.js';
@@ -23,6 +25,7 @@ export {lowerDocumentBody,lowerDocumentNode,sketchProfile,ExactLoweringError,des
 export {displayMesh,displayTessellation,exactFeatureDisplay} from './display.js';
 export {triangulatePolygon,facewiseMesh,MANY_LOOPS} from './face-mesh.js';
 export {importStepBodies,storedBody,readStoredBody,createBrepCache} from './step-import.js';
+export {sectionEdges,exactSectionData,MAX_SECTION_PLANES,MAX_SECTION_EDGES} from './section.js';
 export {exactDrawingBody,exactDrawingData,drawingMeshTolerance,MAX_DRAWING_FACES,MAX_DRAWING_EDGES,MAX_DRAWING_TRIANGLES} from './drawing.js';
 export type {ExactDrawingBody,ExactDrawingData,ExactDrawingEdge,ExactDrawingFace,ExactDrawingFailure} from './drawing.js';
 export type {ImportedExactBody,ExactStepImport,BrepCache} from './step-import.js';
@@ -61,6 +64,7 @@ export const MAX_LISTED_EDGES=5000;
 export interface ExactStepResult {kernel:ExactKernelInfo;bodies:{id:string;name:string}[];step:string;bytes:number}
 export interface ExactStepImportResult extends ExactStepImport {kernel:ExactKernelInfo}
 export interface ExactDrawingResult extends ExactDrawingData {kernel:ExactKernelInfo}
+export interface ExactSectionResult extends ExactSectionData {kernel:ExactKernelInfo}
 
 /** Bodies an exact command acts on: the given top-level bodies, or every printable one. */
 export function exactTargets(doc:CadDocument,ids?:readonly string[]):string[]{
@@ -98,6 +102,8 @@ export interface ExactBackend {
  /** Edges, faces and a face-wise mesh of each body for a hidden-line drawing; a body the kernel
   * cannot build is listed in `failures` with the reason (the drawing projects its mesh instead). */
  drawing(doc:CadDocument,ids?:readonly string[],options?:ExactRunOptions):ExactDrawingResult;
+ /** The cut-face edges of each body at each plane of a drawing's section (one per leg). */
+ section(doc:CadDocument,ids:readonly string[]|undefined,cut:{axis:0|1;positions:readonly number[]},options?:ExactRunOptions):ExactSectionResult;
  /** Read a STEP file as exact bodies (B-rep, measures and display of each), or refuse it whole. */
  importStep(bytes:Uint8Array,file:string,options?:ExactRunOptions):ExactStepImportResult;
 }
@@ -170,6 +176,10 @@ export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(
    const {doc,targets}=prepare(input,ids);
    return {kernel:info,...exactDrawingData(kernel,doc,targets,{limits:options.limits,breps,fatal:isFatalExactError})};
   },
+  section(input,ids,cut,options={}){
+   const {doc,targets}=prepare(input,ids);
+   return {kernel:info,...exactSectionData(kernel,doc,targets,cut,{limits:options.limits,breps,fatal:isFatalExactError})};
+  },
   importStep(bytes,file,options={}){
    const limit=options.limits?.maxStepImportBytes;
    if(limit!==undefined&&bytes.byteLength>limit)throw new ExactKernelError('unsupported',t`${file} is ${(bytes.byteLength/1048576).toFixed(1)} MiB; this device imports STEP files of up to ${Math.round(limit/1048576)} MiB. Import it on a computer, or split the assembly.`);
@@ -236,6 +246,10 @@ export function isFatalExactError(error:unknown):boolean{
  return false;
 }
 
+const sectionInput=(request:ExactCommandRequest)=>{
+ if(!request.section)throw new ExactKernelError('invalid-input',t('Give the section axis and up to five cut positions.'));
+ return request.section;
+};
 const stepInput=(request:ExactCommandRequest)=>{
  const bytes:unknown=request.step?.bytes;
  if(bytes instanceof Uint8Array)return bytes;
@@ -252,6 +266,7 @@ export function runExactRequest(backend:ExactBackend,request:ExactCommandRequest
   :request.operation==='feature-display'?{operation:'feature-display' as const,...backend.featureDisplays(request.document,request.bodies,options)}
   :request.operation==='edges'?{operation:'edges' as const,...backend.edges(request.document,request.bodies,options)}
   :request.operation==='drawing'?{operation:'drawing' as const,...backend.drawing(request.document,request.bodies,options)}
+  :request.operation==='section'?{operation:'section' as const,...backend.section(request.document,request.bodies,sectionInput(request),options)}
   :request.operation==='import-step'?{operation:'import-step' as const,...backend.importStep(stepInput(request),request.step!.name,options)}
   :{operation:'export-step' as const,...backend.exportStep(request.document,request.bodies,options)};
  return {...computed,timing:{loadMs,runMs:performance.now()-started,memoryBytes:backend.kernel.memory().heap}};

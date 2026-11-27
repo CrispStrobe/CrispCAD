@@ -6,9 +6,19 @@ import type {AssemblySection} from '@brickwright/cad-geometry';
 import type {AssemblyProjection} from './assembly-drawing.js';
 import {dimensionText} from './drawing-annotation.js';
 import type {DrawingLayout} from './drawing-page.js';
+import {drawExactSectionBody,exactSectionCurves} from './exact-section-view.js';
+import type {ExactSectionData} from '@brickwright/cad-core';
 
-export function addAssemblySection(page:DrawingLayout,projection:AssemblyProjection,section:AssemblySection,topX:number,topY:number,rightX:number){
- if(!section.bodies.length)throw new Error(t('The section plane misses the assembly solids.'));
+/** A section as the mesh slice computed it, with the exact cut faces when the sheet uses exact edges. */
+export type DrawnAssemblySection=AssemblySection&{exact?:ExactSectionData};
+
+export function addAssemblySection(page:DrawingLayout,projection:AssemblyProjection,section:DrawnAssemblySection,topX:number,topY:number,rightX:number){
+ // Bodies with exact cut faces are drawn from them; the others (the kernel could not build or cut
+ // them) from the mesh slice.
+ const exact=section.exact?exactSectionCurves(section.exact,section.cut).filter(body=>body.legs.some(leg=>leg.curves.length)):[];
+ const exactIds=new Set(section.exact?.bodies.map(body=>body.id));
+ const meshBodies=section.bodies.filter(body=>!exactIds.has(body.id));
+ if(!meshBodies.length&&!exact.length)throw new Error(t('The section plane misses the assembly solids.'));
  const {axis,position}=section.cut,across=axis===0?1:0,jogs=assemblyCutJogs(section.cut);
  const {origin}=projection,[top,front]=projection.views;
  const width=(axis===0?top.height:top.width)*page.factor,height=front.height*page.factor;
@@ -38,8 +48,10 @@ export function addAssemblySection(page:DrawingLayout,projection:AssemblyProject
  const value=[position,...jogs.map(jog=>jog.position)].map(dimensionText).join(' / ');
  const legend=axis===0?t`World X = ${value} mm`:t`World Y = ${value} mm`;
  page.texts.push({x:Math.min(rightX,282-legend.length*1.65),y:topY+height+9,text:legend,size:2.8});
+ for(const [index,body] of exact.entries())drawExactSectionBody(page,body,index,([u,z])=>[rightX+(u-origin[across])*page.factor,topY+(z-origin[2])*page.factor],page.factor);
  let crossingsChecked=0;
- for(const [index,body] of section.bodies.entries()){
+ for(const [i,body] of meshBodies.entries()){
+  const index=exact.length+i;
   const loops=body.loops.map(loop=>loop.map(([u,z]):SketchPoint=>[rightX+(u-origin[across])*page.factor,topY+(z-origin[2])*page.factor]));
   const slope=index%2?-1:1;
   const acrossHatch=([x,y]:SketchPoint)=>x-slope*y;
