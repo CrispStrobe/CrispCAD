@@ -14,6 +14,8 @@ export * from './exact-feature.js';
 export * from './exact-edge-references.js';
 export type * from './exact-drawing.js';
 export * from './exact-body.js';
+export * from './fasteners.js';
+export * from './fastening-commands.js';
 export * from './sketch-outline.js';
 export * from './sketch-region.js';
 export * from './region-edge-lengths.js';

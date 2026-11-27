@@ -6,7 +6,7 @@
 //
 // Nothing falls back to a mesh: an imported mesh or any construction without an exact lowering is
 // an ExactKernelError naming the body and the feature.
-import {t,compileCode,evaluateExactFeature,exactCopyFaceName,exactFaceName,isEdgeReferences,isExactFaceName,resolveEdgeReferences,splitExactFaceName,ExactEdgeReferenceError,evaluateExtrusion,evaluateMirror,evaluatePattern,evaluateRevolution,evaluateSketchRegion,featureValue,identityTransform,sketchBulgeMidpoint,sketchOutline} from '@brickwright/cad-core';
+import {t,compileCode,holeProfile,evaluateExactFeature,exactCopyFaceName,exactFaceName,isEdgeReferences,isExactFaceName,resolveEdgeReferences,splitExactFaceName,ExactEdgeReferenceError,evaluateExtrusion,evaluateMirror,evaluatePattern,evaluateRevolution,evaluateSketchRegion,featureValue,identityTransform,sketchBulgeMidpoint,sketchOutline} from '@brickwright/cad-core';
 import type {CadDocument,PlanarSketch,SketchLoop,SketchPoint,SolidNode,Vec3} from '@brickwright/cad-core';
 import {ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactProfile,ExactSolid,PathSegment} from '@crispcad/exact-kernel';
@@ -83,7 +83,7 @@ function rotateXYZ(k:ExactKernel,solid:ExactSolid,degrees:readonly number[]):Exa
 
 /** Leaf constructions: their faces are named `<id>:f<k>` when the result must carry face names. */
 // An imported exact body is a leaf too: its B-rep never changes, so its face numbers are stable.
-const LEAF_KINDS=new Set(['box','cylinder','sphere','code','extrusion','revolution','exact-body']);
+const LEAF_KINDS=new Set(['box','cylinder','sphere','hole','code','extrusion','revolution','exact-body']);
 const nameLeafFaces=(k:ExactKernel,solid:ExactSolid,id:string)=>k.nameFaces(solid,k.topology(solid).faces.map(face=>exactFaceName(id,face.index)));
 /** A pattern copy's faces get the prefix `<pattern>#<copy>/` (faces without our names are left). */
 const nameCopyFaces=(k:ExactKernel,solid:ExactSolid,patternId:string,copy:number)=>k.nameFaces(solid,k.topology(solid).faces.map(face=>isExactFaceName(face.name)?exactCopyFaceName(patternId,copy,face.name):null));
@@ -115,6 +115,8 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
    case 'box':solid=k.box(node.size);break;
    case 'cylinder':solid=k.cylinder(node.radius,node.height);break;
    case 'sphere':solid=k.sphere(node.radius);break;
+   // A standard hole: the same profile Manifold revolves; SMLib makes its walls true cylinders and cones.
+   case 'hole':solid=k.revolve(k.profile.polygon([holeProfile(node)]),360);break;
    case 'code':{
     const lowered=lowerCodeShape(k,compileCode(node.program).shape);
     if(!lowered)throw new ExactKernelError('invalid-input','Code produces no printable solid.');

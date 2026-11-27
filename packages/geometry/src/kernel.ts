@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {localToWorldPoint,t} from '@brickwright/cad-core';
+import {holeProfile,localToWorldPoint,t} from '@brickwright/cad-core';
 import {GeometryResourceLimitError} from './limits.js';
 import {triangulatePolyhedron} from './polyhedron.js';
 import {textProfileContours} from './font-profile.js';
@@ -158,6 +158,8 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
       case 'box': solid = keep(module.Manifold.cube(node.size, true)); break;
       case 'cylinder': solid = keep(module.Manifold.cylinder(node.height, node.radius, node.radius, node.segments, true)); break;
       case 'sphere': solid = keep(module.Manifold.sphere(node.radius, node.segments)); break;
+      // A standard hole: the profile both kernels revolve (fasteners.ts), mouth at z = 0, axis -Z.
+      case 'hole': solid = keep(keepProfile(new module.CrossSection([holeProfile(node)])).revolve(node.segments, 360)); break;
       case 'code': solid=buildCode(compileCode(node.program).shape);if(solid.isEmpty()||solid.volume()<=1e-8)throw new Error(t('Code produces no printable solid'));if(solid.numTri()>200000)throw new GeometryResourceLimitError(t('Evaluated solid exceeds 200000 faces'));break;
       case 'extrusion': {
         const profile=evaluateExtrusion(node,doc);

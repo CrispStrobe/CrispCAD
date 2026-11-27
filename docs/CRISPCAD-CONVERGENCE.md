@@ -1108,7 +1108,8 @@ reference for each.
    (annotation IDs, datums, tolerances, dimensioning styles) is still open.
 2. **Hole-driven fastening:** metric clearance holes and a standard parts library
    (screws, nuts, washers) with ISO thread tables as data (`hole-driven-fastening`,
-   `metric-clearance-holes`, `standard-parts-library`).
+   `metric-clearance-holes`, `standard-parts-library`). **Done 2026-11-27** (document version 47; see
+   [Hole-driven fastening](#hole-driven-fastening-document-version-47-done-2026-11-27)).
 3. **Manufacturing checks beyond FDM:** CNC internal corner radius, edge-radius
    check, wall thickness measured on the exact body (`cnc-internal-corner-radius`,
    `edge-radius-check`, `fdm-design-rules`).
@@ -1200,6 +1201,84 @@ silhouettes of cones, tori and spline surfaces (at the chord tolerance today); e
 seen obliquely) as true elliptical arcs; DXF/SVG export of drawings (the drawing pipeline exports
 PDF); a per-sheet saved choice (would need a document version); MCP and CLI access to exact
 drawings.
+
+#### Hole-driven fastening (document version 47). **Done 2026-11-27**
+
+**What it is.** A **standard hole** is a `hole` node (a cutter with the hole role) made from the
+ISO tables: clearance (ISO 273 close, normal or loose), tapped (the coarse-thread tap drill),
+counterbore (DIN 974-1 seat for ISO 4762 heads), countersink (90°, to the ISO 10642 head) and a
+heat-set insert pocket. It cuts the body it is drilled into (joining an existing solid/hole union
+or forming one), along any axis. **Fasten** reads a hole's standard and places the stack it is made
+for: counterbore → ISO 4762 socket head on the counterbore floor; countersink → ISO 10642 flush
+with the face; through clearance → ISO 4017 hex bolt with ISO 7089 washers and an ISO 4032 nut;
+tapped → the longest stocked screw the hole takes; heat-set pocket → the insert, flush. Bolts take
+the shortest stocked length reaching two pitches past the nut (the lab guide's M5 lap joint, 12 mm
+grip, gives M5 × 25 with 6.3 mm out; its flange, M6 × 20). A family or mode that does not fit the
+hole is refused with the reason; a grip no stocked length reaches names the length it needed.
+**Standard parts** (socket head, button head, countersunk, hex head, set screw, hex nut, washer,
+heat-set insert; M2–M20 where stocked; stocked lengths per thread) are inserted with ISO
+dimensions anywhere.
+
+**Design.**
+- Tables as data: `packages/core/src/fastener-tables.ts` (ISO 261 pitch, ISO 273, tap drills,
+  ISO 4762/7380-1/10642/4017/4026 heads, ISO 4032 nuts, ISO 7089 washers, stocked lengths: rows
+  ported from the lab's `fastenerStockTables`/`fastenerIsoDims`/`holeInsert` with headers kept,
+  THIRD-PARTY-NOTICES.md; counterbores and heat-set inserts added. Heat-set inserts have no ISO
+  standard: typical catalogue pockets, labelled so). Nominal values, not certified geometry.
+- `packages/core/src/fasteners.ts` (original): `standardHole` resolves the dimensions, which are
+  stored on the node, so a later table change never moves saved geometry. The cutter's profile
+  (`holeProfile`, mouth at the origin, axis -Z, 0.2 mm past the mouth and past the far face of a
+  through hole) is revolved by **both** kernels: Manifold for display, SMLib for the exact path,
+  where the walls are true cylinders and the countersink a true cone (tested on the topology).
+  `planFastening` picks the stack; `nodeWorldFrame` composes the hole's transform with the
+  unions above it (refused when scaled, or inside a mirror/pattern/exact feature) and the parts are
+  placed in that frame (`insertPlaced`, one Undo step).
+- Standard screws build on the shape library's screw generator ([SCREW-REDESIGN.md](SCREW-REDESIGN.md)):
+  the ISO head (dk, k), socket (s, t) and coarse pitch go into a version-2 screw recipe (ISO 68
+  thread depth 0.61343 P, root overlap 0.15 P), so a fastened screw is an ordinary threaded,
+  redesignable screw. Where the generator does not reach (M2 and M2.5 pitches under 0.5 mm, more
+  than 64 turns) and for nuts, washers and inserts, the part is an **envelope** CAD Script object
+  (nominal head, shank, hexagon, bores; no thread), which Manifold and the exact kernel both build;
+  `envelope` asks for envelopes everywhere (fast, exact-exportable).
+- Document version 47 for `hole` nodes only (`checkHoleShape`: the hole role, bounded sizes, a
+  seat shallower than the hole); older documents and every other node are unchanged. Model
+  source writes `hole(id, {...})`; history, Undo, paste and duplicate need nothing special.
+  Details: [PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md#document-versions).
+- Commands (registry, terminal, palette, MCP `cad_run_commands`, CLI `run`): `hole <type> <thread>
+  [fit] [<depth>|through <thickness>] [at X,Y,Z] [axis X,Y,Z] [in body]`, `fasten [hole|body|M3 …]
+  [family] [screw|bolt] [length <mm>] [envelope]`, `part <family> <thread> [length] [at] [axis]`,
+  and read-only `fasteners [M3]`. The journal records the canonical invocations. MCP tools:
+  `cad_fastener_table` (read-only), `cad_add_hole`, `cad_fasten`, `cad_insert_part` (one saved
+  step each, `preview`, `expectedRevision`; thin wrappers over the commands).
+- Editor (`packages/editor/src/fastening-panel.ts`): **Standard hole**, **Standard parts** and
+  **Fasten holes** in the command palette (typing `hole` or `part` alone in the terminal opens
+  them); the inspector of a hole shows its standard with **Edit standard hole** and **Fasten this
+  hole**, a body with holes **Fasten holes (n)**. **Pick on a face** steps the dialog aside; one
+  tap places the mouth on the tapped face, drills along its normal into the tapped body, and reads
+  the wall thickness under the tap from the evaluated mesh for a through hole. Selects, number
+  fields and buttons are at least 44 px; no keyboard is needed. German for everything
+  (`check:i18n`: 3,008 messages).
+
+**Tests.** `tests/hole-fastening.test.ts` (17): ISO table values (ISO 273, 261, tap drills,
+heads, nuts, washers, counterbores; 90° heads k = (dk − d)/2), fit read-back (Ø5 is the M6 tap
+drill, not a clearance hole); every hole type cuts the closed-form volume in the exact kernel to
+1e-6 with only planes, cylinders of the table radii and cones, and Manifold agrees within 2e-4 at
+256 segments; side holes and joining a union; validation and version gate; stacks against the
+lab guide's worked examples; ISO → screw-generator recipes pass the generator's checks; a threaded
+bolt stack placed on the plate with the head on its washer and the nut under the plate, no clash
+between plate, washers and nut; fastening sideways and in a rotated union; envelope parts' ISO
+sizes in Manifold and exactly (ISO 7089 M6 washer to 1e-6); model source, history archive,
+journal and Undo; German; MCP tools (preview, commit, refusals). Browser:
+`tests/browser/hole-fastening.spec.ts` on `ipad` (palette, tap on the plate's top, through depth
+read from the mesh, exact volume of the counterbored plate, fasten, standard nut; 50 s).
+
+**Left open.** Threads are cosmetic in holes (a tapped hole is its tap drill; no modelled internal
+thread) and nuts and inserts are envelopes; detecting bores in bodies that were not made as
+standard holes (imported or plain cylinders: `classifyClearanceBore` exists, the fasten UI does
+not offer it); fastening across several bodies (a grip is one hole's depth; two plates need one
+hole through both); no fastener metadata on placed parts beyond their names (a later Fasten
+places a second stack); drill points on blind holes; hole callouts on drawings; lock nuts, lock
+washers, threaded rod and ISO 4014 partial-thread bolts (lab tables have them).
 
 ### Phase 7: delivery and qualification
 

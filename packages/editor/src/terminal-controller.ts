@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {commandHelp,commandRegistry,commandScriptLines,runCommandScript,createCommandJournal,EXACT_FEATURE_COMMANDS,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseUpgradeLofts,parseExactCommand,parseExactFeatureCommand,parseImportCommand,parseRecomputeCommand,prepareCommand,recomputeExactFeatures,runExactFeatureCommand,runStepImport,t} from '@brickwright/cad-core';
-import type {CadSession,Vec3,SessionCommandRecord,CommandSpec,CommandStep,CommandValue,PreparedCommand,JournalExportFormat,ExactCommandHost,ExactCommandFile} from '@brickwright/cad-core';
+import {commandHelp,commandRegistry,commandScriptLines,runCommandScript,createCommandJournal,EXACT_FEATURE_COMMANDS,findCommandSpec,formatExactResult,interactiveCommandNames,listModel,parseUpgradeLofts,parseExactCommand,parseExactFeatureCommand,parseImportCommand,parseRecomputeCommand,prepareCommand,fastenerTable,parseFastenCommand,parseHoleCommand,parsePartCommand,recomputeExactFeatures,runExactFeatureCommand,runStepImport,t} from '@brickwright/cad-core';
+import type {GeneratorRecipe,CadSession,Vec3,SessionCommandRecord,CommandSpec,CommandStep,CommandValue,PreparedCommand,JournalExportFormat,ExactCommandHost,ExactCommandFile} from '@brickwright/cad-core';
 import type {CadCommand} from './index.js';
 import {terminalArguments,terminalTokens} from './terminal-coordinates.js';
+import {createPresetDocument} from './shapes.js';
 import {createTerminalAliases} from './terminal-aliases.js';
 import type {TerminalAlias} from './terminal-aliases.js';
 
@@ -12,6 +13,8 @@ export interface TerminalPrompt {command:string;message:string;point:boolean;pla
 export interface TerminalState {entries:readonly TerminalEntry[];history:readonly string[];prompt?:TerminalPrompt;busy:boolean}
 export interface TerminalCompletion {text:string;caret:number;label:string;description:string}
 type Value=CommandValue;
+/** Threaded ISO screws are the shape library's screw generator (docs/SCREW-REDESIGN.md). */
+const presetBuilder=(recipe:GeneratorRecipe,name:string)=>createPresetDocument(recipe.preset,name,{recipe});
 type Step=CommandStep;
 type Pending={name:string;steps:readonly Step[];values:Value[];revision:number;projectId:string;targets?:readonly string[];finish:(values:Value[])=>void;invocation:PreparedCommand['invocation']};
 export type TerminalOptions={executeEditorCommand:(command:CadCommand)=>void|Promise<void>;openCodeWorkspace:()=>void;storage?:TerminalStorage;
@@ -143,7 +146,7 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
   const count=commandScriptLines(script),shown=script.split(/\r?\n/);
   append('input',(shown.length>24?[...shown.slice(0,23),'…']:shown).join('\n').slice(0,4000));
   try{
-   const done=await runCommandScript(session,expandScriptAliases(script),{exact:options.exact,journal,record:(line,commit)=>journal.withInvocation(line,commit)});
+   const done=await runCommandScript(session,expandScriptAliases(script),{exact:options.exact,generated:presetBuilder,journal,record:(line,commit)=>journal.withInvocation(line,commit)});
    for(const result of done.results)if(result.output!==undefined)append('output',result.output);
    for(const file of done.files){
     if(!options.saveFile)throw new Error(t('This host has not provided file export'));
@@ -208,6 +211,9 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
     append('output',listModel(session));return;
    }
    if(name==='clear'){if(args.length)throw new Error(t('Too many arguments. Use help for command syntax.'));entries=[];emit();return;}
+   if((name==='hole'||name==='part')&&!tail.trim()){await options.executeEditorCommand(name==='hole'?'hole':'standard-part');return;}
+   if(name==='hole'||name==='fasten'||name==='part'){const command=name==='hole'?parseHoleCommand(session,tail):name==='fasten'?parseFastenCommand(session,tail,{generated:presetBuilder}):parsePartCommand(session,tail,{generated:presetBuilder});append('output',journal.withInvocation(command.invocation,()=>command.run()));return;}
+   if(name==='fasteners'){append('output',fastenerTable(tail));return;}
    if(name==='upgrade-lofts'){const command=parseUpgradeLofts(session,tail);append('output',journal.withInvocation(command.invocation,()=>command.run()));return;}
    if(name==='code'){if(args.length)throw new Error(t('Too many arguments. Use help for command syntax.'));options.openCodeWorkspace();return;}
    if(name==='journal'){

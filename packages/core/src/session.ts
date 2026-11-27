@@ -1,6 +1,8 @@
 import {drawingAssemblyAvailable,initializeDrawingOutlineIds,isAssemblyDrawingSource,isDrawingArc,isDrawingVertex,resolveDrawingSource,retainDrawingVertexIds} from './drawing-sheet.js';
 import type {DrawingInputs} from './drawing-sheet.js';
-import {upgradeSimulation,jointAtWorldFrame,materialPhysics,simulationTracers} from './simulation.js';
+import {upgradeSimulation,jointAtWorldFrame,localToWorldPoint,materialPhysics,simulationTracers} from './simulation.js';
+import {eulerFromMatrix,rotationMatrix} from './fasteners.js';
+import type {HoleFeature} from './fasteners.js';
 import type {SimulationSettings} from './simulation.js';
 // SPDX-License-Identifier: BSD-3-Clause
 import {generateModelSource,compileModelSource,updateModelSource,sameModelValue} from './model-source.js';
@@ -36,7 +38,7 @@ function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,ex
  const copied=new Map(joints.map((joint,i)=>[joint.id,result[i].id]));for(const next of result)if(next.gearMesh){const partner=copied.get(next.gearMesh.joint);if(partner)next.gearMesh={...next.gearMesh,joint:partner};else delete next.gearMesh;}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'|'artworkSourceId'|'artworkProfile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38|41|44|45){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38|41|44|45|47){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -184,6 +186,37 @@ export interface CadSessionOptions {
   /** Kernels this host provides. Recorded commands built by another kernel version are refused. */
   kernels?: readonly KernelIdentity[];
 }
+/** Copy a validated fragment into a draft with fresh ids (paste, library insert, standard parts). */
+function insertFragment(d:CadDocument,source:CadDocument,placeRoot:(root:SolidNode)=>void,mergeOffset?:[number,number,number]):string[]{
+ const ids = new Map(Object.keys(source.nodes).map(id => [id, newId()]));
+
+        if(Math.max(d.version,source.version)>=5){assertProvenanceUpgrade(d);assertProvenanceUpgrade(source);}
+        if(source.version>=8&&d.version<8)upgradeSimulation(d);
+        // A first assembly may provide its world defaults. Existing scene settings,
+        // including an intentionally configured empty scene, remain host-owned.
+        if(!d.roots.length&&d.simulation===undefined&&source.version>=8&&source.simulation)d.simulation=structuredClone(source.simulation);
+        d.version=Math.max(d.version,source.version) as CadDocument['version'];
+        const provenanceIds=new Map((source.version>=5?source.provenance?.records??[]:[]).map(r=>[r.id,newId()]));
+        if(source.version>=5&&source.provenance)d.provenance={version:1,records:[...(d.provenance?.records??[]),...source.provenance.records.map(r=>({...structuredClone(r),id:provenanceIds.get(r.id)!}))]};
+        const sketches=new Map(Object.keys(source.sketches??{}).map(id=>[id,newId()]));
+        for(const [id,sketch] of Object.entries(source.sketches??{})){d.sketches??={};const next=structuredClone(sketch);next.id=sketches.get(id)!;next.profile.id=newId();delete next.artworkSourceId;delete next.artworkProfile;d.sketches[next.id]=next;}
+        const names=new Set(d.roots.map(id=>d.nodes[id].name));
+        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version>=5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(isSketchFeature(node))node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if(node.kind==='mirror'||node.kind==='pattern'||node.kind==='exact-feature')node.source=ids.get(node.source)!; if(node.kind==='exact-feature'&&isEdgeReferences(node.edges))node.edges=mapEdgeReferenceIds(node.edges,key=>ids.get(key)); if (source.roots.includes(id)) placeRoot(node); d.nodes[node.id] = node; }
+        const roots = source.roots.map(id => ids.get(id)!); d.roots.push(...roots);
+        for(const id of roots){d.nodes[id].name=uniqueObjectName(d.nodes[id].name,names);names.add(d.nodes[id].name);}
+        if(mergeOffset)mergeFragmentParameters(d,source,ids,mergeOffset,sketches);
+        if(source.version>=8&&source.tracers?.length){if(d.version<8)upgradeSimulation(d);d.tracers=[...(d.tracers??[]),...source.tracers.map(trace=>({...structuredClone(trace),id:newId(),bodyId:ids.get(trace.bodyId)!}))];}
+        if (source.joints?.length) d.joints = [...(d.joints ?? []), ...copyAssemblyJoints(source.joints,ids,d.joints??[])];
+        
+ return roots;
+}
+function composeTransforms(outer:Transform,inner:Transform):Transform{
+ const position=localToWorldPoint(inner.position,{...outer,scale:[1,1,1]});
+ if(inner.rotation.every(v=>v===0))return {position,rotation:[...outer.rotation] as Vec3,scale:[...inner.scale] as Vec3};
+ return {position,rotation:eulerFromMatrix(mulRotation(rotationMatrix(outer.rotation),rotationMatrix(inner.rotation))),scale:[...inner.scale] as Vec3};
+}
+const mulRotation=(a:number[],b:number[])=>{const o=new Array(9).fill(0);for(let i=0;i<3;i++)for(let j=0;j<3;j++)for(let k=0;k<3;k++)o[i*3+j]+=a[i*3+k]*b[k*3+j];return o as Parameters<typeof eulerFromMatrix>[0];};
+
 export function createCadSession(initial: CadDocument = createDocument(), options: CadSessionOptions = {}) {
   const kernels:readonly KernelIdentity[]=Object.freeze((options.kernels??[]).map(kernel=>{checkKernelIdentity(kernel);return Object.freeze({id:kernel.id,package:kernel.package,version:kernel.version});}));
   let activeKernel:KernelIdentity|undefined;
@@ -660,28 +693,47 @@ export function createCadSession(initial: CadDocument = createDocument(), option
     },
     fragment(ids:readonly string[]=selection){return selectionFragment(document,ids);},
     insert(fragment: CadDocument, offset: [number, number, number] = [0, 0, 0],options:{mergeParameters?:boolean;label?:string}={}) {
-      const source = validateDocument(fragment); const ids = new Map(Object.keys(source.nodes).map(id => [id, newId()]));
+      const source = validateDocument(fragment);
       if(source.parametric&&!options.mergeParameters)throw new Error(t('Enable parameter namespace merging when inserting a parametric model'));
-      commit(options.label??'Add shape', d => {
-        if(Math.max(d.version,source.version)>=5){assertProvenanceUpgrade(d);assertProvenanceUpgrade(source);}
-        if(source.version>=8&&d.version<8)upgradeSimulation(d);
-        // A first assembly may provide its world defaults. Existing scene settings,
-        // including an intentionally configured empty scene, remain host-owned.
-        if(!d.roots.length&&d.simulation===undefined&&source.version>=8&&source.simulation)d.simulation=structuredClone(source.simulation);
-        d.version=Math.max(d.version,source.version) as CadDocument['version'];
-        const provenanceIds=new Map((source.version>=5?source.provenance?.records??[]:[]).map(r=>[r.id,newId()]));
-        if(source.version>=5&&source.provenance)d.provenance={version:1,records:[...(d.provenance?.records??[]),...source.provenance.records.map(r=>({...structuredClone(r),id:provenanceIds.get(r.id)!}))]};
-        const sketches=new Map(Object.keys(source.sketches??{}).map(id=>[id,newId()]));
-        for(const [id,sketch] of Object.entries(source.sketches??{})){d.sketches??={};const next=structuredClone(sketch);next.id=sketches.get(id)!;next.profile.id=newId();delete next.artworkSourceId;delete next.artworkProfile;d.sketches[next.id]=next;}
-        const names=new Set(d.roots.map(id=>d.nodes[id].name));
-        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version>=5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(isSketchFeature(node))node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if(node.kind==='mirror'||node.kind==='pattern'||node.kind==='exact-feature')node.source=ids.get(node.source)!; if(node.kind==='exact-feature'&&isEdgeReferences(node.edges))node.edges=mapEdgeReferenceIds(node.edges,key=>ids.get(key)); if (source.roots.includes(id)) node.transform.position = node.transform.position.map((v, i) => v + offset[i]) as [number, number, number]; d.nodes[node.id] = node; }
-        const roots = source.roots.map(id => ids.get(id)!); d.roots.push(...roots);
-        for(const id of roots){d.nodes[id].name=uniqueObjectName(d.nodes[id].name,names);names.add(d.nodes[id].name);}
-        if(options.mergeParameters)mergeFragmentParameters(d,source,ids,offset,sketches);
-        if(source.version>=8&&source.tracers?.length){if(d.version<8)upgradeSimulation(d);d.tracers=[...(d.tracers??[]),...source.tracers.map(trace=>({...structuredClone(trace),id:newId(),bodyId:ids.get(trace.bodyId)!}))];}
-        if (source.joints?.length) d.joints = [...(d.joints ?? []), ...copyAssemblyJoints(source.joints,ids,d.joints??[])];
-        return roots;
+      commit(options.label??'Add shape', d => insertFragment(d,source,root=>{root.transform.position = root.transform.position.map((v, i) => v + offset[i]) as [number, number, number];},options.mergeParameters?offset:undefined));
+    },
+    /** Standard parts (fasteners.ts) placed by world transforms, in one Undo step. Each fragment
+     * root gets `transform` composed with its own. Returns the new root ids. */
+    insertPlaced(entries:readonly {fragment:CadDocument;transform:Transform}[],label='Insert standard parts'):string[]{
+      if(!entries.length)throw new Error(t('Nothing to insert'));
+      const sources=entries.map(entry=>validateDocument(entry.fragment));
+      if(sources.some(source=>source.parametric))throw new Error(t('Enable parameter namespace merging when inserting a parametric model'));
+      let roots:string[]=[];
+      commit(label,d=>{roots=sources.flatMap((source,i)=>insertFragment(d,source,root=>{root.transform=composeTransforms(entries[i].transform,root.transform);}));return roots;});
+      return roots;
+    },
+    /** Standard holes (`hole` nodes, document version 47) in one Undo step. With `target`, the
+     * holes cut that top-level body: they join it when it is already a solid/hole union, otherwise
+     * the body and the holes become one. Returns the hole ids. */
+    addStandardHoles(entries:readonly {hole:HoleFeature;transform:Transform;name?:string}[],target?:string,label='Add standard hole'):string[]{
+      if(!entries.length)throw new Error(t('Nothing to insert'));
+      const ids=entries.map(()=>newId());
+      commit(label,d=>{
+        upgradeModelFeatures(d,47);
+        const names=new Set(Object.values(d.nodes).map(node=>node.name));
+        entries.forEach((entry,i)=>{
+          const name=uniqueObjectName(entry.name??t`${entry.hole.standard.thread} hole`,names);names.add(name);
+          d.nodes[ids[i]]={...structuredClone(entry.hole),id:ids[i],name,color:'#7d8794',role:'hole',transform:structuredClone(entry.transform)} as SolidNode;
+        });
+        if(target===undefined){d.roots.push(...ids);return ids;}
+        const body=d.nodes[target];
+        if(!body||!d.roots.includes(target))throw new Error(t('Choose a top-level body for the hole'));
+        if(body.reference||body.role==='hole')throw new Error(t('Holes cut solid bodies, not reference helpers or other holes'));
+        const identity=JSON.stringify(body.transform)===JSON.stringify(identityTransform());
+        if(body.kind==='boolean'&&body.useHoleRoles&&identity&&body.inputs.length+ids.length<=100){body.inputs=[...body.inputs,...ids];return ids;}
+        if(d.joints?.some(j=>j.bodyA===target||j.bodyB===target))throw new Error(t('Detach the selected bodies’ joints before combining them'));
+        const id=newId(),material=body.physics??defaultPartPhysics();
+        d.nodes[id]={id,kind:'boolean',operation:'union',inputs:[target,...ids],useHoleRoles:true,name:body.name,color:body.color,transform:identityTransform(),physics:{...material,intent:'rigid',parameters:undefined,sourcePreset:undefined,collisionHint:undefined}};
+        body.name=uniqueObjectName(t`${body.name} body`,names);
+        d.roots.splice(d.roots.indexOf(target),1,id);
+        return ids;
       });
+      return ids;
     },
     add(shape: Primitive | Extract<SolidNode, { kind: 'mesh' }>, options: Partial<Pick<SolidNode, 'name' | 'color' | 'transform'>> = {}) {
       const id = newId();

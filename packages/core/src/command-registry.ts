@@ -15,6 +15,8 @@ import type {CadSession} from './session.js';
 import {commandArguments,commandNumber,commandTokens,parseCommandPoint} from './command-arguments.js';
 import {EXACT_FEATURE_COMMANDS,formatExactResult,parseExactCommand,parseExactFeatureCommand,parseImportCommand,parseRecomputeCommand,recomputeExactFeatures,runExactFeatureCommand,runStepImport} from './exact-commands.js';
 import type {ExactCommandFile,ExactCommandHost,ExactKernelReport} from './exact-commands.js';
+import {fastenerTable,parseFastenCommand,parseHoleCommand,parsePartCommand} from './fastening-commands.js';
+import type {GeneratedBuilder} from './fasteners.js';
 
 export type CommandCategory='terminal'|'create'|'sketch'|'feature'|'selection'|'transform'|'history'|'edit'|'boolean'|'view'|'panel'|'replay'|'exchange'|'analysis';
 export type CommandArgumentKind='point'|'vector'|'number'|'sketch'|'bodies'|'command'|'alias'|'json'|'keyword'|'file';
@@ -89,6 +91,10 @@ const drafting:readonly Draft[]=[
  {name:'shell',aliases:[],description:'Hollow a body to a wall thickness with open faces, exactly with the B-rep kernel',usage:'shell <thickness> [all|"name"|id ...] --open <normal> [--open <normal> ...]',category:'feature',editsModel:true,arguments:[arg('thickness','number',{min:.01,max:10000}),arg('targets','bodies',{optional:true,repeated:true}),arg('open','keyword',{values:['--open'],repeated:true})],headless:true,kernel:'exact'},
  {name:'recompute',aliases:[],description:'Recompute out-of-date exact fillets, chamfers and shells with the B-rep kernel',usage:'recompute exact [all|"name"|id ...]',category:'feature',editsModel:true,arguments:[arg('mode','keyword',{values:['exact']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
  {name:'upgrade-lofts',aliases:[],description:'Rebuild triangulated lofts (CAD Script revision 1) as ruled surfaces in one Undo step',usage:'upgrade-lofts [all|"name"|id ...]',category:'edit',editsModel:true,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true},
+ {name:'hole',aliases:[],description:'Add a standard hole: ISO 273 clearance, tapped, counterbore, countersink or heat-set insert pocket',usage:'hole <clearance|tapped|counterbore|countersink|heat-set> <M2…M20> [close|normal|loose] [<depth>|through <thickness>] [at X,Y,Z] [axis X,Y,Z] [in "body"|id]',category:'feature',editsModel:true,arguments:[arg('type','keyword',{values:['clearance','tapped','counterbore','countersink','heat-set']}),arg('thread','keyword',{values:['M2','M2.5','M3','M4','M5','M6','M8','M10','M12','M16','M20']}),arg('options','keyword',{optional:true,repeated:true})],headless:true},
+ {name:'fasten',aliases:[],description:'Place ISO fasteners in standard holes: the screw, washers and nut each hole needs',usage:'fasten [hole|body|M3 ...] [socket-head|button-head|countersunk|hex-bolt|heat-set-insert] [screw|bolt] [length <mm>] [envelope|threaded]',category:'feature',editsModel:true,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true},
+ {name:'part',aliases:[],description:'Insert a standard part with ISO dimensions: screw, nut, washer or heat-set insert',usage:'part <socket-head|button-head|countersunk|hex-bolt|set-screw|hex-nut|washer|heat-set-insert> <M2…M20> [length] [at X,Y,Z] [axis X,Y,Z] [envelope|threaded]',category:'create',editsModel:true,arguments:[arg('family','keyword',{values:['socket-head','button-head','countersunk','hex-bolt','set-screw','hex-nut','washer','heat-set-insert']}),arg('thread','keyword'),arg('options','keyword',{optional:true,repeated:true})],headless:true},
+ {name:'fasteners',aliases:[],description:'List the ISO fastener tables: clearance holes, tap drills, heads, nuts, washers, inserts',usage:'fasteners [M2…M20]',category:'analysis',editsModel:false,arguments:[arg('thread','keyword',{optional:true})],headless:true},
  {name:'journal',aliases:[],description:'Summarize or export the command journal',usage:'journal [export [cadscript|replay]]',category:'terminal',editsModel:false,arguments:[arg('action','keyword',{optional:true,values:['export']}),arg('format','keyword',{optional:true,values:['cadscript','replay']})],headless:true},
 ];
 type PaletteDraft={command:string;label:string;alias?:string;requires?:CommandAvailability};
@@ -104,6 +110,9 @@ const palette:readonly PaletteDraft[]=[
  {command:'pattern',label:'Pattern body',alias:'linear circular repeat bolt circle',requires:'canWrapBody'},
  {command:'edit-pattern',label:'Edit pattern',requires:'canEditPattern'},
  {command:'import-step',label:'Import STEP as exact bodies',alias:'step stp B-rep exact import'},
+ {command:'hole',label:'Standard hole',alias:'drill clearance tapped counterbore countersink heat-set insert ISO 273'},
+ {command:'standard-part',label:'Standard parts',alias:'screw bolt nut washer fastener ISO 4762 insert'},
+ {command:'fasten',label:'Fasten holes',alias:'screw bolt nut washer insert fastener'},
  {command:'exact-feature',label:'Fillet, chamfer or shell',alias:'round bevel hollow exact B-rep',requires:'canWrapBody'},
  {command:'parameters',label:'Parameters',alias:'named dimensions formulas'},
  {command:'code',label:'Code an object',alias:'CAD Script'},
@@ -326,6 +335,9 @@ export interface CommandRunnerOptions {
  exact?:ExactCommandHost;
  /** Reads the file `import step <file>` names (the CLI; MCP and the editor have their own way in). */
  readFile?:(path:string)=>Promise<{name:string;bytes:Uint8Array}>;
+ /** Builds threaded screws for `part` and `fasten` (the editor's createPresetDocument); without it
+  * screws are inserted as envelopes. */
+ generated?:GeneratedBuilder;
  signal?:AbortSignal;
 }
 export const COMMAND_LINE_LIMIT=256*1024;
@@ -396,6 +408,8 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
    return done(text,commandHelp(entry));
   }
   if(name==='list'){if(args.length)throw new Error(t('Too many arguments. Use help for command syntax.'));return done(text,listModel(session));}
+  if(name==='hole'||name==='fasten'||name==='part'){const command=name==='hole'?parseHoleCommand(session,tail):name==='fasten'?parseFastenCommand(session,tail,{generated:options.generated}):parsePartCommand(session,tail,{generated:options.generated}),output=options.journal?options.journal.withInvocation(command.invocation,()=>command.run()):command.run();return done(command.invocation,output);}
+  if(name==='fasteners')return done(text,fastenerTable(tail));
   if(name==='upgrade-lofts'){const command=parseUpgradeLofts(session,tail),output=options.journal?options.journal.withInvocation(command.invocation,()=>command.run()):command.run();return done(command.invocation,output);}
   if(name==='journal'){
    if(!options.journal)throw new Error(t('No command journal is attached.'));

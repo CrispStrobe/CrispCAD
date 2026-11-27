@@ -53,6 +53,10 @@ history. Use a dedicated file: this process is its writer until closed.
 | `cad_export_stl` | Base64 printable mesh; automatic paired attribution for recorded library sources |
 | `cad_export_step` | Read-only exact STEP (AP214) as base64 from the optional exact B-rep kernel; `objectIds` limits the bodies; unsupported bodies fail with a diagnostic naming body and feature |
 | `cad_measure_exact` | Read-only exact volume, area, bounds and centroid per body from the exact kernel |
+| `cad_fastener_table` | Read-only ISO fastener tables: clearance holes (ISO 273), tap drills, heads, nuts, washers, counterbores, heat-set inserts, stocked lengths |
+| `cad_add_hole` | Add a standard hole (clearance, tapped, counterbore, countersink, heat-set pocket; document version 47) as one saved step |
+| `cad_fasten` | Place the ISO screw, washers and nut (or insert) each standard hole is made for, as one saved step |
+| `cad_insert_part` | Insert one ISO standard part (screw, nut, washer, heat-set insert) as one saved step |
 | `cad_list_commands` | Read-only list of the shared command vocabulary with typed arguments |
 | `cad_run_commands` | Run terminal commands headlessly; all edits become one history step |
 

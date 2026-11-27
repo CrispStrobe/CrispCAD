@@ -9,7 +9,7 @@ import type {mountModelLibraryPanel, ModelLibraryOptions, ModelLibraryProject} f
 export type {ModelLibraryOptions} from './model-library-panel.js';
 import {fineNumberKeys} from './precision.js';
 import { t,formatExactResult,validateDocument as validateExportDocument,FeatureEvaluationError,STALE_EXACT_CODE,staleExactFeatures,recomputeExactFeatures,runStepImport,MAX_STEP_IMPORT_BYTES } from '@brickwright/cad-core';
-import { drawingAssemblyAvailable,isAssemblyDrawingSource,constructionInputs, createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters,redesignScrew } from '@brickwright/cad-core';
+import { describeHole,drawingAssemblyAvailable,isAssemblyDrawingSource,constructionInputs, createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters,redesignScrew } from '@brickwright/cad-core';
 import type { CadDocument, CadSession, DrawingInputs, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe, ExactDrawingData } from '@brickwright/cad-core';
 import { importSTL } from '@brickwright/cad-geometry';
 import {importStep} from './step-import.js';
@@ -36,6 +36,7 @@ import type {ShapeBrowserLayout} from './shape-picker.js';
 import type {ShapePreset} from './shapes.js';
 import { mountShapePicker } from './shape-picker.js';
 import { createPresetDocument, evaluatedPreview, presetPreview, shapeCatalog } from './shapes.js';
+import {mountFasteningPanel} from './fastening-panel.js';
 import {mountModelSourcePanel} from './model-source-panel.js';
 import {mountCodePanel} from './code-panel.js';
 import type {CodeWorkspaceStorage} from './code-workspace-state.js';
@@ -113,7 +114,7 @@ export interface CadEditorOptions {
   onError?: (error: Error) => void;
 }
 export interface CadCommandState {canUndo:boolean;canRedo:boolean;hasSelection:boolean;canDelete:boolean;canCombine:boolean;canExport:boolean;hasBodies:boolean;ready:boolean}
-export type CadCommand='new'|'open'|'save'|'import'|'import-step'|'export'|'printability'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'exact-feature'|'command-palette'|'readout'|'code'|'code-workspace'|'terminal'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect'|'upgrade-lofts';
+export type CadCommand='new'|'open'|'save'|'import'|'import-step'|'export'|'printability'|'undo'|'redo'|'cut'|'copy'|'paste'|'duplicate'|'delete'|'select-all'|'deselect'|'select'|'move'|'rotate'|'scale'|'home'|'fit'|'top'|'front'|'right'|'back'|'left'|'bottom'|'projection'|'workplane'|'objects'|'properties'|'drop'|'parameters'|'shapes'|'sketch'|'sketch-path'|'revolve'|'mirror'|'pattern'|'edit-mirror'|'edit-pattern'|'exact-feature'|'command-palette'|'readout'|'code'|'code-workspace'|'terminal'|'model-source'|'model-library'|'robot-projects'|'union'|'subtract'|'intersect'|'upgrade-lofts'|'hole'|'standard-part'|'fasten';
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag); element.className = className; if (text !== undefined) element.textContent = text; return element;
 }
@@ -229,6 +230,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   // (see createEditorSession). Refuse before loading and running the kernel, not after.
   const exactEdits=exactEditHost(session,client.exact);
   const exactFeaturePanel=mountExactFeaturePanel(shell,session,()=>exactEdits,async()=>{await whenIdle();viewport.frame();},{pickEdges:options=>viewport.pickEdges(options)});
+  const fasteningPanel=mountFasteningPanel(shell,session,{evaluate:doc=>client.evaluate(doc),afterApply:async()=>{await whenIdle();},pickPoint:done=>viewport.pickPoint(done),bodies:()=>built?.bodies,generated:(recipe,name)=>createPresetDocument(recipe.preset,name,{recipe})});
   const openExactFeature=()=>{
     const [id]=session.state.selection,node=session.state.document.nodes[id];
     if(session.state.selection.length!==1)throw new Error(t('Select a top-level body for the exact feature'));
@@ -627,6 +629,14 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       button('Edit exact feature',()=>exactFeaturePanel.open(id,true),inspector);
       const recompute=button('Recompute exact',()=>recomputeExact(),inspector);recompute.disabled=!stale;
     }
+    if(n.kind==='hole'){
+      inspector.append(el('p','hint',describeHole(n)));
+      button('Edit standard hole',()=>fasteningPanel.openHole(id),inspector);
+      button('Fasten this hole',()=>fasteningPanel.openFasten([id]),inspector);
+    }else if(session.state.document.roots.includes(id)&&n.kind==='boolean'){
+      const holes:string[]=[],walk=(key:string)=>{const node=session.state.document.nodes[key];if(node?.kind==='hole')holes.push(key);else if(node?.kind==='boolean')node.inputs.forEach(walk);};walk(id);
+      if(holes.length)button(t`Fasten holes (${holes.length})`,()=>fasteningPanel.openFasten(holes),inspector);
+    }
     if(n.kind==='exact-body'){
       const from=n.origin?t`from ${n.origin.file}, body ${n.origin.body} of ${n.origin.bodies}`:t('imported');
       inspector.append(el('p','hint',t`Exact body (STEP B-rep) ${from} · volume ${Number(n.measures.volume.toPrecision(9))} mm³`));
@@ -874,9 +884,10 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
       case 'shapes':picker.open(true);break;
       case 'union':case 'subtract':case 'intersect':session.combine(command);break;
       case 'upgrade-lofts':session.upgradeLofts();break;
+      case 'hole':fasteningPanel.openHole();break;case 'standard-part':fasteningPanel.openPart();break;case 'fasten':fasteningPanel.openFasten();break;
       default:throw new Error(t('Unknown editor command'));
     }
-    if(!['open','import','import-step','save','export','parameters','shapes','code','code-workspace','terminal','model-source','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','exact-feature','model-library','robot-projects','command-palette'].includes(command))viewport.canvas.focus({preventScroll:true});
+    if(!['open','import','import-step','save','export','parameters','shapes','code','code-workspace','terminal','model-source','sketch','sketch-path','revolve','mirror','pattern','edit-mirror','edit-pattern','exact-feature','model-library','robot-projects','command-palette','hole','standard-part','fasten'].includes(command))viewport.canvas.focus({preventScroll:true});
   }
   async function deliver(format: 'bcad' | 'stl' | '3mf' | 'step', modificationNotes?: string, checkCanceled: () => void = () => {}) {
     if(format==='bcad'&&options.saveProject){await options.saveProject();return;}
@@ -925,7 +936,7 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     setTransformReadoutVisible(visible:boolean){readout.setVisible(visible);},get transformReadoutVisible(){return readout.visible;},
     focus() { simulation.refresh(); viewport.canvas.focus(); },
     setStatus(text: string) { if (!disposed) message.textContent = text; },
-    dispose() { if (disposed) return;cancelShapePlacement(); simulation.dispose(); disposed = true; fileLifetime.abort(); toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel?.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); exactFeaturePanel.dispose(); exactActivity.dispose(); unsubscribeRecompute(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); terminal.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); printabilityPanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
+    dispose() { if (disposed) return;fasteningPanel.dispose();cancelShapePlacement(); simulation.dispose(); disposed = true; fileLifetime.abort(); toolbarResize.disconnect();unsubscribe();document.removeEventListener('pointerdown',dismissMenus,true);document.removeEventListener('focusin',dismissMenus,true); shell.removeEventListener('keydown', keyboard); picker.dispose(); modelLibraryPanel?.dispose(); parametersPanel.dispose(); sketchPanel.dispose(); pathPanel.dispose(); mirrorPanel.dispose(); patternPanel.dispose(); exactFeaturePanel.dispose(); exactActivity.dispose(); unsubscribeRecompute(); palette.dispose(); drawingPanel.dispose(); assemblyProjection.dispose(); terminal.dispose(); codePanel.dispose(); modelSourcePanel.dispose(); printabilityPanel.dispose(); readout.dispose(); viewport.dispose(); client.dispose(); for (const w of waiters) w.reject(new Error(t('Editor was disposed'))); waiters.clear(); if (ownsSession) session.dispose(); shadow.replaceChildren(); options.toolbarContent?.remove(); host.removeAttribute('data-state'); host.removeAttribute('data-triangles'); },
   };
 }
 export type CadEditor = ReturnType<typeof mountCadEditor>;

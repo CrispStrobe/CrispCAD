@@ -213,6 +213,29 @@ documents; a document reaches 46 only when such a program is added or edited in,
 to the earlier version. The option is the same in both CAD Script revisions, so it changes no
 program revision and no saved geometry. Builds that predate 46 refuse such a document.
 
+**Version 47 (2026-11-27) adds `hole` nodes**: standard holes for hole-driven fastening
+([CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#hole-driven-fastening-document-version-47-done-2026-11-27)).
+
+```ts
+{kind:'hole';holeVersion:1;role:'hole';
+ standard:{type:'clearance'|'tapped'|'counterbore'|'countersink'|'heat-set';thread:'M2'…'M20';fit?:'close'|'normal'|'loose'};
+ diameter:number;depth:number;through?:true;           // bore (clearance, tap drill or insert pocket), material depth
+ counterbore?:{diameter:number;depth:number};           // or
+ countersink?:{diameter:number;angle:number};
+ segments:number}                                       // display resolution only
+```
+
+The node is a cutter in its own frame: the mouth at the origin, the hole along local -Z. The
+resolved dimensions are stored (a later table change never moves saved geometry); `standard`
+records what they came from. The cutter reaches 0.2 mm (`HOLE_ENTRY_MM`) above the mouth and,
+for a through hole, below the far face; this is part of the version-47 geometry contract.
+Manifold and the exact kernel revolve the same profile (`holeProfile`), so the exact solid has
+true cylinders and cones. `checkDocument` accepts `hole` nodes only in version 47 documents,
+only with the hole role, and only with a seat shallower than the hole. A document reaches 47 only
+when a standard hole is added; Undo returns to the earlier version. Model source writes
+`hole(id, {...})`. Standard parts are ordinary screw-generator bodies (threaded) or code objects
+(envelopes) and need no new version. Builds that predate 47 refuse such a document.
+
 ## Graph and errors
 
 `designGraph(doc)` derives a deterministic topological order from canonical
