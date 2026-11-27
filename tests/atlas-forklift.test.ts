@@ -38,6 +38,17 @@ it('ships an editable mobile forklift with TT drives (A/B), linear mast slider (
  expect(provenance.every(r=>r.asset.licence.spdx==='MIT')).toBe(true);
 });
 
+it('keeps the electronics tray low and seated on the Atlas chassis',()=>{
+ const doc=createAtlasForkliftDocument(),geometry=kernel.evaluate(doc);
+ const tray=geometry.bodies.find(body=>body.id==='electronics-mount')!;
+ const mount=doc.joints!.find(joint=>joint.bodyB===tray.id)!;
+ expect(mount.kind).toBe('fixed');
+ expect(mount.bodyA).toBe('chassis');
+ expect(tray.bounds.min[2]).toBeCloseTo(17.5,4);
+ expect(tray.bounds.max[2]).toBeCloseTo(27.9,4);
+ expect(doc.nodes['electronics-power'].transform.position[2]).toBeCloseTo(35.9,4);
+});
+
 it('separates manufacturing geometry from purchased hardware and imports in one history step',()=>{
  const printDoc=createPresetDocument('robot-atlas-forklift-print');
  expect(printDoc.provenance).toBeUndefined();

@@ -15,7 +15,9 @@ export const robotElectronicsMounts:Record<string,RobotElectronicsMount>= {
  // countersunk head clear; the right-hand posts stand between those screws.
  'robot-tt-rover':{body:'carrier',origin:[16,0,52],rise:7.5,posts:[[-18,-14],[-18,14],[16,-5],[16,5]],access:{radius:4,holes:[[9,-12.5],[9,12.5],[23,-12.5],[23,12.5]]}},
  'robot-steerable-rover':{body:'deck',origin:[-28,0,77.5],rise:1},
- 'robot-atlas-forklift':{body:'chassis',origin:[-58,0,17.5],rise:28.3},
+ // Keep the supply and controller low on the mobile chassis. The taller
+ // tray destabilizes the loaded forks as the carriage reaches its upper limit.
+ 'robot-atlas-forklift':{body:'chassis',origin:[-58,0,17.5],rise:8},
  'robot-mantis-walker':{body:'carrier',origin:[35,0,39.5],rise:1,xs:[-9,9],ys:[-8,8]},
  // Nova: the X 0 drive bays are open to full height, so the front posts stand at X 12.
  'robot-nova-loader':{body:'chassis',origin:[-20,0,29],rise:11,xs:[-15,32],ys:[-18,18]},
