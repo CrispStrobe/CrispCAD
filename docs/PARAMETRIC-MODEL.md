@@ -111,15 +111,25 @@ such a program is added or edited in, and Undo returns to the earlier version. `
 the same in both CAD Script revisions, so it changes no program revision and no saved geometry.
 Builds that predate 43 refuse such a document (and the function).
 
+**Version 44 (2026-11-27) adds edge references to exact features**: a fillet or chamfer may
+round or bevel chosen edges, `edges: {references: [...]}`, instead of every edge or one face's
+edges. `checkDocument` accepts references only in version 44 documents; a document reaches 44
+only when such a feature is added or edited in (Undo returns to the earlier version). Features
+with `'all'` or a face selector keep version 41 and are lowered exactly as before: faces are named
+only for features that hold references. Builds that predate 44 refuse such a document.
+
 ```ts
 interface ExactFaceSelector { faceNormal: [number, number, number]; outermost?: true }
+// Version 44. Face names: `<leaf node id>:f<k>`, prefixed `<pattern id>#<copy>/` per pattern copy.
+interface ExactEdgeReference { faces: [string, string]; index?: number; of?: number }
 interface ExactFeature {
   kind: 'exact-feature';
   featureVersion: 1;
   source: string;                       // the body it rounds, bevels or hollows
   operation: 'fillet' | 'chamfer' | 'shell';
   size: FeatureScalar;                  // radius, distance or wall thickness (mm)
-  edges?: 'all' | ExactFaceSelector;    // fillet and chamfer only
+  edges?: 'all' | ExactFaceSelector     // fillet and chamfer only
+    | { references: ExactEdgeReference[] };  // version 44: chosen edges
   openFaces?: ExactFaceSelector[];      // shell only: 1–6 removed faces
   display?: { sourceKey: string; positions: number[]; indices: number[] };
   // Normal SolidNode identity, name, color, transform and physics also apply.
@@ -128,8 +138,22 @@ interface ExactFeature {
 
 - Selectors follow the kernel interface: every edge, or the edges of one planar face chosen by
   outward normal (`outermost` takes the furthest matching face); shell faces are removed by
-  outward normal. Normals are in the frame the source is placed in. There is no topological
-  naming.
+  outward normal. Normals are in the frame the source is placed in.
+- Edge references (version 44, `packages/core/src/exact-edge-references.ts`): when the exact
+  backend lowers the source of a feature that holds references, every face of every leaf
+  construction (box, cylinder, sphere, extrusion, revolution, code object) is named
+  `<leaf id>:f<k>` (k: the face's position on the freshly built leaf), and each pattern copy
+  prefixes its faces with `<pattern id>#<copy>/`. The exact kernel keeps a name on the face and on
+  its pieces through Booleans, transforms, mirrors and nested exact features; faces an operation
+  makes anew (a fillet's round) have none. An edge is named by the sorted names of the two faces
+  it bounds; where several edges bound the same two faces, `index` of `of` records which one, in
+  the order of their sample centroids (x, then y, then z). Each recompute resolves the references
+  on the current B-rep. Parameter edits move faces but keep their names, so the reference finds
+  its edge again. If the two faces no longer meet, or meet at another number of edges than `of`,
+  the recompute fails with `stale-edge-reference` (the message names the faces) and the feature
+  stays stale; no other edge is picked. Paste, duplicate and regenerate rewrite the node ids in
+  face names, and `exactFeatureKey` replaces them by their position in the source subtree, so a
+  pasted feature keeps its display mesh.
 - `display` is a cache: the exact result tessellated at 0.01 mm / 10°, bounded like a `mesh`
   node (750 000 coordinates, 1 500 000 indices). `sourceKey` is `exactFeatureKey(doc, id)`, a
   signature of the settings, the source subtree's geometry (ignoring IDs, names, colours,

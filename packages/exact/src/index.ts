@@ -2,12 +2,12 @@
 // Optional exact B-rep backend. Importing this module loads no WebAssembly; `createExactBackend`
 // loads the kernel lab's SMLib build once per process or worker. Hosts import this module
 // lazily (dynamic import) so the default Manifold path never pays for it.
-import {staleExactFeatures,validateDocument,t} from '@brickwright/cad-core';
-import type {CadDocument,ExactCommandHost,ExactCommandRequest,ExactCommandResult,ExactFeatureDisplay,KernelIdentity} from '@brickwright/cad-core';
+import {edgeReferences,staleExactFeatures,validateDocument,t} from '@brickwright/cad-core';
+import type {CadDocument,ExactBodyEdgesReport,ExactCommandHost,ExactCommandRequest,ExactCommandResult,ExactFeatureDisplay,KernelIdentity} from '@brickwright/cad-core';
 import {createSmlibKernel,ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactSolid,SmlibKernel,SmlibLoadOptions} from '@crispcad/exact-kernel';
 import {exactKernelIdentity} from './identity.js';
-import {lowerDocumentBody} from './lower-document.js';
+import {lowerDocumentBody,lowerDocumentNode} from './lower-document.js';
 import {exactFeatureDisplay} from './display.js';
 import {exactKernelOptions} from './limits.js';
 import type {ExactLimits} from './limits.js';
@@ -15,7 +15,7 @@ import type {ExactFeatureLimits} from './lower-document.js';
 
 export * from './identity.js';
 export {lowerCodeShape,evaluateCadScript,cadScript,revolveProfile,MIN_EXACT_SEGMENTS,MAX_POLYHEDRON_FACES} from './lower-cad-script.js';
-export {lowerDocumentBody,lowerDocumentNode,sketchProfile,ExactLoweringError} from './lower-document.js';
+export {lowerDocumentBody,lowerDocumentNode,sketchProfile,ExactLoweringError,describeExactFace,resolveFeatureEdges} from './lower-document.js';
 export {displayMesh,displayTessellation,exactFeatureDisplay} from './display.js';
 export {triangulatePolygon,facewiseMesh,MANY_LOOPS} from './face-mesh.js';
 export type {ExactFeatureResult} from './display.js';
@@ -47,6 +47,9 @@ export interface ExactBodyMeasure {
 }
 export interface ExactMeasureResult {kernel:ExactKernelInfo;bodies:ExactBodyMeasure[]}
 export interface ExactFeatureDisplayResult {kernel:ExactKernelInfo;features:{id:string;name:string;display:ExactFeatureDisplay;volume:number}[]}
+export interface ExactEdgesResult {kernel:ExactKernelInfo;bodies:ExactBodyEdgesReport[]}
+/** At most this many edges are listed per body (a listing is for picking, not for export). */
+export const MAX_LISTED_EDGES=5000;
 export interface ExactStepResult {kernel:ExactKernelInfo;bodies:{id:string;name:string}[];step:string;bytes:number}
 
 /** Bodies an exact command acts on: the given top-level bodies, or every printable one. */
@@ -79,6 +82,8 @@ export interface ExactBackend {
  /** One AP214 STEP file with one solid per body, in world millimetres. */
  exportStep(doc:CadDocument,ids?:readonly string[],options?:ExactRunOptions):ExactStepResult;
  /** Display meshes of exact features (default: every missing or stale one), for the model given. */
+ /** The B-rep edges of top-level bodies (or exact-feature sources) with their stable references, for picking. */
+ edges(doc:CadDocument,ids:readonly string[],options?:ExactRunOptions):ExactEdgesResult;
  featureDisplays(doc:CadDocument,ids?:readonly string[],options?:ExactRunOptions):ExactFeatureDisplayResult;
 }
 
@@ -102,6 +107,23 @@ export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(
      return {id:targets[i],name:doc.nodes[targets[i]].name,volume:kernel.volume(solid),area:kernel.area(solid),bounds:{min:[...box.min],max:[...box.max]},centroid:[...mass.centroid],solids:kernel.solidCount(solid)};
     })};
    });
+  },
+  edges(input,ids,options={}){
+   // Top-level bodies, or the source of an exact feature (whose frame is the feature's).
+   const doc=validateDocument(input),targets=[...new Set(ids)];
+   if(!targets.length)throw new ExactKernelError('invalid-input',t('Name or select the bodies whose edges to list.'));
+   if(targets.length>MAX_EXACT_BODIES)throw new ExactKernelError('invalid-input',t`Exact commands are limited to ${MAX_EXACT_BODIES} bodies.`);
+   for(const id of targets)if(!doc.nodes[id]||!doc.roots.includes(id)&&!Object.values(doc.nodes).some(n=>n.kind==='exact-feature'&&n.source===id))throw new ExactKernelError('invalid-input',t`Unknown object id: ${id}`);
+   return {kernel:info,bodies:targets.map(id=>kernel.scope(()=>{
+    // The body as an exact feature on it would see it: its own transform applied, faces named.
+    const solid=lowerDocumentNode(kernel,doc,id,{named:true,limits:options.limits}),topology=kernel.topology(solid);
+    if(topology.edges.length>MAX_LISTED_EDGES)throw new ExactKernelError('unsupported',t`${doc.nodes[id].name} has ${topology.edges.length} edges, more than ${MAX_LISTED_EDGES} can be listed. Fillet every edge or a face instead.`);
+    const references=edgeReferences(topology);
+    return {id,name:doc.nodes[id].name,edges:topology.edges.map((edge,i)=>{
+     const ref=references[i];
+     return {number:i+1,curve:edge.curve,length:edge.length,points:edge.points.map(p=>[...p]),...(ref.reference?{reference:ref.reference}:{unreferable:ref.reason})};
+    })};
+   }))};
   },
   featureDisplays(input,ids,options={}){
    const doc=validateDocument(input),targets=ids?.length?[...new Set(ids)]:staleExactFeatures(doc);
@@ -175,6 +197,7 @@ export function runExactRequest(backend:ExactBackend,request:ExactCommandRequest
  const started=performance.now();
  const computed=request.operation==='measure'?{operation:'measure' as const,...backend.measure(request.document,request.bodies,options)}
   :request.operation==='feature-display'?{operation:'feature-display' as const,...backend.featureDisplays(request.document,request.bodies,options)}
+  :request.operation==='edges'?{operation:'edges' as const,...backend.edges(request.document,request.bodies,options)}
   :{operation:'export-step' as const,...backend.exportStep(request.document,request.bodies,options)};
  return {...computed,timing:{loadMs,runMs:performance.now()-started,memoryBytes:backend.kernel.memory().heap}};
 }

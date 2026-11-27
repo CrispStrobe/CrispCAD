@@ -6,7 +6,7 @@
 //
 // Nothing falls back to a mesh: an imported mesh or any construction without an exact lowering is
 // an ExactKernelError naming the body and the feature.
-import {t,compileCode,evaluateExactFeature,evaluateExtrusion,evaluateMirror,evaluatePattern,evaluateRevolution,evaluateSketchRegion,featureValue,identityTransform,sketchBulgeMidpoint,sketchOutline} from '@brickwright/cad-core';
+import {t,compileCode,evaluateExactFeature,exactCopyFaceName,exactFaceName,isEdgeReferences,isExactFaceName,resolveEdgeReferences,splitExactFaceName,ExactEdgeReferenceError,evaluateExtrusion,evaluateMirror,evaluatePattern,evaluateRevolution,evaluateSketchRegion,featureValue,identityTransform,sketchBulgeMidpoint,sketchOutline} from '@brickwright/cad-core';
 import type {CadDocument,PlanarSketch,SketchLoop,SketchPoint,SolidNode,Vec3} from '@brickwright/cad-core';
 import {ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactProfile,ExactSolid,PathSegment} from '@crispcad/exact-kernel';
@@ -24,6 +24,8 @@ export interface ExactDiagnostic {
  nodeId:string;
  /** Document node kind (`mesh`, `code`, `extrusion`, …). */
  feature:string;
+ /** `stale-edge-reference` when chosen edges no longer resolve (exact-edge-references.ts). */
+ reason?:string;
  message:string;
 }
 export class ExactLoweringError extends ExactKernelError {
@@ -77,8 +79,32 @@ function rotateXYZ(k:ExactKernel,solid:ExactSolid,degrees:readonly number[]):Exa
  return out;
 }
 
-function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:Map<string,ExactSolid>,limits?:ExactFeatureLimits):ExactSolid{
- const cached=cache.get(id);if(cached)return cached;
+/** Leaf constructions: their faces are named `<id>:f<k>` when the result must carry face names. */
+const LEAF_KINDS=new Set(['box','cylinder','sphere','code','extrusion','revolution']);
+const nameLeafFaces=(k:ExactKernel,solid:ExactSolid,id:string)=>k.nameFaces(solid,k.topology(solid).faces.map(face=>exactFaceName(id,face.index)));
+/** A pattern copy's faces get the prefix `<pattern>#<copy>/` (faces without our names are left). */
+const nameCopyFaces=(k:ExactKernel,solid:ExactSolid,patternId:string,copy:number)=>k.nameFaces(solid,k.topology(solid).faces.map(face=>isExactFaceName(face.name)?exactCopyFaceName(patternId,copy,face.name):null));
+
+/** "Plate face 3" (copy 2 of Pattern …) for a face name, for stale-reference messages. */
+export function describeExactFace(doc:CadDocument,name:string):string{
+ try{
+  const {copies,node,face}=splitExactFaceName(name);
+  const label=t`${doc.nodes[node]?.name??node} face ${face+1}`;
+  return copies.length?label+' ('+copies.map(({pattern,copy})=>t`copy ${copy+1} of ${doc.nodes[pattern]?.name??pattern}`).join(', ')+')':label;
+ }catch{return name;}
+}
+
+/**
+ * Edge indices on `source` (lowered with face names) for an exact feature's edge references. A
+ * reference that no longer resolves is an ExactEdgeReferenceError (stale), never another edge.
+ */
+export function resolveFeatureEdges(k:ExactKernel,doc:CadDocument,source:ExactSolid,references:Parameters<typeof resolveEdgeReferences>[1]):number[]{
+ return resolveEdgeReferences(k.topology(source),references,face=>describeExactFace(doc,face));
+}
+
+function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:Map<string,ExactSolid>,limits?:ExactFeatureLimits,named=false):ExactSolid{
+ const key=named?'named:'+id:id;
+ const cached=cache.get(key);if(cached)return cached;
  const node=doc.nodes[id] as SolidNode;
  let solid:ExactSolid;
  try{
@@ -112,12 +138,12 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
    case 'mirror':{
     const {axis,offset}=evaluateMirror(node,doc),normal:[number,number,number]=[0,0,0];
     normal[axis]=1;
-    solid=k.mirror(lowerNode(k,doc,node.source,bodyId,cache,limits),normal);
+    solid=k.mirror(lowerNode(k,doc,node.source,bodyId,cache,limits,named),normal);
     if(offset){const position:[number,number,number]=[0,0,0];position[axis]=2*offset;solid=k.translate(solid,position);}
     break;
    }
    case 'pattern':{
-    const pattern=evaluatePattern(node,doc),source=lowerNode(k,doc,node.source,bodyId,cache,limits),copies=[source];
+    const pattern=evaluatePattern(node,doc),source=lowerNode(k,doc,node.source,bodyId,cache,limits,named),copies=[source];
     if(pattern.mode==='linear'){
      for(let i=1;i<pattern.count;i++){const delta:[number,number,number]=[0,0,0];delta[pattern.axis]=i*pattern.spacing;copies.push(k.translate(source,delta));}
     }else{
@@ -125,11 +151,13 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
      axis[pattern.axis]=1;
      for(let i=1;i<pattern.count;i++)copies.push(k.rotate(source,axis,i*step,pattern.center));
     }
+    // Copies share their source's face names; each copy's faces get their own.
+    if(named)copies.forEach((copy,i)=>{copies[i]=nameCopyFaces(k,copy,id,i);});
     solid=k.union(copies[0],...copies.slice(1));
     break;
    }
    case 'boolean':{
-    const operands=node.inputs.map(input=>lowerNode(k,doc,input,bodyId,cache,limits));
+    const operands=node.inputs.map(input=>lowerNode(k,doc,input,bodyId,cache,limits,named));
     if(node.useHoleRoles){
      const solids=operands.filter((_,i)=>doc.nodes[node.inputs[i]].role!=='hole'),holes=operands.filter((_,i)=>doc.nodes[node.inputs[i]].role==='hole');
      if(!solids.length)unsupported('A combination of holes only has no solid to export.');
@@ -140,17 +168,22 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
    }
    case 'exact-feature':{
     // Always rebuilt on the exact source; the stored display mesh is never used here.
-    const feature=evaluateExactFeature(node,doc),source=lowerNode(k,doc,node.source,bodyId,cache,limits);
+    // Edge references need face names on the source (only then are faces named: documents
+    // without them lower exactly as before).
+    const feature=evaluateExactFeature(node,doc),references=isEdgeReferences(feature.edges)?feature.edges.references:undefined;
+    const source=lowerNode(k,doc,node.source,bodyId,cache,limits,named||!!references);
+    const edges=references?{edgeIndices:resolveFeatureEdges(k,doc,source,references)}:feature.edges as 'all'|{faceNormal:Vec3;outermost?:true}|undefined;
     // Refuse a job that is too large for this host before the kernel runs it (see limits.ts).
-    if(limits)checkExactFeatureCost(source,feature.operation,feature.edges,limits);
-    solid=feature.operation==='fillet'?k.fillet(source,feature.size,feature.edges)
-     :feature.operation==='chamfer'?k.chamfer(source,feature.size,feature.edges)
+    if(limits)checkExactFeatureCost(source,feature.operation,edges,limits);
+    solid=feature.operation==='fillet'?k.fillet(source,feature.size,edges)
+     :feature.operation==='chamfer'?k.chamfer(source,feature.size,edges)
      :k.shell(source,feature.size,feature.openFaces);
     break;
    }
    case 'mesh':return unsupported(node.surface?'Reference surfaces have no exact solid.':'Imported meshes have no exact B-rep; only bodies built from primitives, sketches, features and CAD Script can be exported or measured exactly.');
    default:return unsupported(`'${(node as {kind:string}).kind}' has no exact lowering.`);
   }
+  if(named&&LEAF_KINDS.has(node.kind))solid=nameLeafFaces(k,solid,id);
   const {scale,rotation,position}=node.transform;
   if(scale.some(v=>v!==1))solid=k.scale(solid,scale);
   solid=rotateXYZ(k,solid,rotation);
@@ -158,6 +191,8 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
  }catch(error){
   if(error instanceof ExactLoweringError)throw error;
   const code=error instanceof ExactKernelError?error.code:'invalid-input';
+  if(error instanceof ExactEdgeReferenceError)
+   throw new ExactLoweringError({code:'invalid-input',bodyId,nodeId:id,feature:node.kind,reason:error.code,message:`${node.name}: ${error.message}`},{cause:error});
   let message=error instanceof Error?error.message:String(error);
   // The kernel's own guard on shell/offset steps (`guardSeconds`: 20 s by default; the editor's
   // exact worker derives it from the request budget): its message ends in a developer hint
@@ -166,7 +201,7 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
   if(guard)message=t`The exact kernel stopped this step at its own ${guard[1]} s limit, so it was not built. The model was not changed. Try a simpler body.`;
   throw new ExactLoweringError({code,bodyId,nodeId:id,feature:node.kind,message:`${node.name} (${node.kind}): ${message}`},{cause:error});
  }
- cache.set(id,solid);return solid;
+ cache.set(key,solid);return solid;
 }
 
 /** One top-level body as an exact solid, in world millimetres. Call inside `k.scope` (or dispose
@@ -178,10 +213,10 @@ export function lowerDocumentBody(k:ExactKernel,doc:CadDocument,bodyId:string,op
 
 /** Any node as an exact solid in its parent's frame (its own transform applied). Call inside
  * `k.scope`. With `local`, the node's own transform is left out (the frame of its inputs). */
-export function lowerDocumentNode(k:ExactKernel,doc:CadDocument,id:string,options:{local?:boolean;limits?:ExactFeatureLimits}={}):ExactSolid{
+export function lowerDocumentNode(k:ExactKernel,doc:CadDocument,id:string,options:{local?:boolean;limits?:ExactFeatureLimits;named?:boolean}={}):ExactSolid{
  const node=doc.nodes[id];
  if(!node)throw new ExactKernelError('invalid-input',`${id} is not a node of this model.`);
  const source=options.local?{...doc,nodes:{...doc.nodes,[id]:{...node,transform:identityTransform()}}}:doc;
  const bodyId=doc.roots.find(root=>root===id)??id;
- return lowerNode(k,source,id,bodyId,new Map(),options.limits);
+ return lowerNode(k,source,id,bodyId,new Map(),options.limits,options.named);
 }

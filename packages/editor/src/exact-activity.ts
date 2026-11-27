@@ -10,6 +10,7 @@ const labels:Record<NonNullable<ExactActivity['operation']>,string>={
  'feature-display':'Exact feature',
  'export-step':'STEP export',
  measure:'Exact measure',
+ edges:'Exact edges',
 };
 
 export function mountExactActivity(parent:HTMLElement,source:{readonly exactActivity:ExactActivity;onExactActivity(listener:(activity:ExactActivity)=>void):()=>void;cancelExact():void}){

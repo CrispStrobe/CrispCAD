@@ -27,13 +27,14 @@ import {solveRegionEdgeLengths} from './region-edge-lengths.js';
 import type { ParametricDesign } from './parameters.js';
 import {mergeFragmentParameters,selectionFragment,uniqueObjectName,offsetPositionExpression} from './fragments.js';
 import {exactFeatureKey} from './exact-feature.js';
+import {EXACT_EDGE_REFERENCE_DOCUMENT_VERSION,isEdgeReferences,mapEdgeReferenceIds} from './exact-edge-references.js';
 import type {ExactFeature,ExactFeatureDisplay,ExactFeatureSettings} from './exact-feature.js';
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}
  // Gear meshes follow their copied partner; a partner outside the copy is dropped.
  const copied=new Map(joints.map((joint,i)=>[joint.id,result[i].id]));for(const next of result)if(next.gearMesh){const partner=copied.get(next.gearMesh.joint);if(partner)next.gearMesh={...next.gearMesh,joint:partner};else delete next.gearMesh;}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'|'artworkSourceId'|'artworkProfile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38|41){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38|41|44){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -81,7 +82,7 @@ function appendBodyOperation(doc:CadDocument,id:string,operation:MirrorFeature|P
   if(index<0||!body||body.reference)throw new Error(guard.selection);
   if(doc.joints?.some(j=>j.bodyA===source||j.bodyB===source))throw new Error(guard.joints);
   if(doc.tracers?.some(trace=>trace.bodyId===source))throw new Error(guard.tracers);
-  upgradeModelFeatures(doc,kind==='mirror'?13:kind==='pattern'?14:41);
+  upgradeModelFeatures(doc,kind==='mirror'?13:kind==='pattern'?14:isEdgeReferences(operation.edges)?EXACT_EDGE_REFERENCE_DOCUMENT_VERSION:41);
   const material=body.physics;
   const name=kind==='mirror'?t`Mirror of ${body.name}`:kind==='pattern'?t`Pattern of ${body.name}`:exactOperationName(operation.operation,body.name);
   doc.nodes[id]={...operation,id,name:uniqueObjectName(name,new Set(doc.roots.map(key=>doc.nodes[key].name))),
@@ -480,7 +481,7 @@ export function createCadSession(initial: CadDocument = createDocument(), option
         const connected=(key:string,seen=new Set<string>()):boolean=>{if(key===id)return true;if(seen.has(key))return false;seen.add(key);const n=d.nodes[key];return constructionInputs(n).some(child=>connected(child,seen));};
         if(d.joints?.some(j=>connected(j.bodyA)||connected(j.bodyB)))throw new Error(t('Detach joints before regenerating their bodies'));
         const map=new Map(Object.keys(source.nodes).map(key=>[key,key===source.roots[0]?id:newId()]));
-        for(const [key,node] of Object.entries(source.nodes)){const next=cloneNode(node);next.id=map.get(key)!;if(next.kind==='boolean')next.inputs=next.inputs.map(input=>map.get(input)!);if(next.kind==='mirror'||next.kind==='pattern'||next.kind==='exact-feature')next.source=map.get(next.source)!;d.nodes[next.id]=next;}
+        for(const [key,node] of Object.entries(source.nodes)){const next=cloneNode(node);next.id=map.get(key)!;if(next.kind==='boolean')next.inputs=next.inputs.map(input=>map.get(input)!);if(next.kind==='mirror'||next.kind==='pattern'||next.kind==='exact-feature')next.source=map.get(next.source)!;if(next.kind==='exact-feature'&&isEdgeReferences(next.edges))next.edges=mapEdgeReferenceIds(next.edges,key=>map.get(key));d.nodes[next.id]=next;}
         const retained=d.version>=5?[...new Set([...descendants].flatMap(key=>document.nodes[key]?.provenance??[]))]:[];
         if(d.version<5&&Object.hasOwn(previous,'provenance'))d.nodes[id].provenance=structuredClone(previous.provenance);
         const next=d.nodes[id];if(retained.length)next.provenance=retained;next.name=previous.name;next.color=previous.color;if(previous.role)next.role=previous.role;next.transform=structuredClone(previous.transform);if(options.resetScale)next.transform.scale=[1,1,1];
@@ -624,6 +625,7 @@ export function createCadSession(initial: CadDocument = createDocument(), option
         const node=d.nodes[id];
         if(node?.kind!=='exact-feature')throw new Error(t('Select an exact feature'));
         guardBodyOperationEdit(d,id,node.kind);
+        if(isEdgeReferences(settings.edges))upgradeModelFeatures(d,EXACT_EDGE_REFERENCE_DOCUMENT_VERSION);
         const {display:_old,edges:_edges,openFaces:_faces,...rest}=node;
         d.nodes[id]={...rest,...exactSettings(settings)} as SolidNode;
         if(display)attachExactDisplay(d,id,display);
@@ -650,7 +652,7 @@ export function createCadSession(initial: CadDocument = createDocument(), option
         const sketches=new Map(Object.keys(source.sketches??{}).map(id=>[id,newId()]));
         for(const [id,sketch] of Object.entries(source.sketches??{})){d.sketches??={};const next=structuredClone(sketch);next.id=sketches.get(id)!;next.profile.id=newId();delete next.artworkSourceId;delete next.artworkProfile;d.sketches[next.id]=next;}
         const names=new Set(d.roots.map(id=>d.nodes[id].name));
-        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version>=5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(isSketchFeature(node))node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if(node.kind==='mirror'||node.kind==='pattern'||node.kind==='exact-feature')node.source=ids.get(node.source)!; if (source.roots.includes(id)) node.transform.position = node.transform.position.map((v, i) => v + offset[i]) as [number, number, number]; d.nodes[node.id] = node; }
+        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version>=5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(isSketchFeature(node))node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if(node.kind==='mirror'||node.kind==='pattern'||node.kind==='exact-feature')node.source=ids.get(node.source)!; if(node.kind==='exact-feature'&&isEdgeReferences(node.edges))node.edges=mapEdgeReferenceIds(node.edges,key=>ids.get(key)); if (source.roots.includes(id)) node.transform.position = node.transform.position.map((v, i) => v + offset[i]) as [number, number, number]; d.nodes[node.id] = node; }
         const roots = source.roots.map(id => ids.get(id)!); d.roots.push(...roots);
         for(const id of roots){d.nodes[id].name=uniqueObjectName(d.nodes[id].name,names);names.add(d.nodes[id].name);}
         if(options.mergeParameters)mergeFragmentParameters(d,source,ids,offset,sketches);
@@ -714,6 +716,7 @@ export function createCadSession(initial: CadDocument = createDocument(), option
           const next = newId(); map.set(id, next); const n = cloneNode(d.nodes[id]); n.id = next;
           if (n.kind === 'boolean') n.inputs = n.inputs.map(copy);
           if(n.kind==='mirror'||n.kind==='pattern'||n.kind==='exact-feature')n.source=copy(n.source);
+          if(n.kind==='exact-feature'&&isEdgeReferences(n.edges))n.edges=mapEdgeReferenceIds(n.edges,key=>map.get(key));
           if(isSketchFeature(n)){let sketchId=copiedSketches.get(n.sketchId);if(!sketchId){sketchId=newId();copiedSketches.set(n.sketchId,sketchId);const sketch=structuredClone(d.sketches![n.sketchId]);sketch.id=sketchId;sketch.profile.id=newId();delete sketch.artworkSourceId;delete sketch.artworkProfile;d.sketches![sketchId]=sketch;}n.sketchId=sketchId;}
           d.nodes[next] = n; return next;
         };

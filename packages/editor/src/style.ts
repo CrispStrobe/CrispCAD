@@ -137,4 +137,9 @@ export const editorStyle = `
 .sketch-drawing-line,.sketch-drawing-hover{stroke:#3189e0;stroke-width:2px}
 .sketch-drawing-hover{stroke-dasharray:5 4}
 .sketch-drawing-start{fill:#28a36d}.sketch-drawing-point{fill:#3189e0}
+.edge-picker-box{display:flex;flex-direction:column;gap:6px}.edge-picker{display:flex;flex-direction:column;gap:6px}.edge-picker-views{display:flex;gap:4px;flex-wrap:wrap}.edge-picker-views button{min-height:44px;min-width:56px}
+.edge-picker-drawing{display:block;width:100%;height:min(46vh,300px);background:#0e1922;border:1px solid #405565;border-radius:6px;touch-action:manipulation}
+.edge-picker .edge-line{fill:none;stroke:#9bb0c0;stroke-width:2px;vector-effect:non-scaling-stroke;pointer-events:none}.edge-picker .edge.unpickable .edge-line{stroke:#4d6170;stroke-dasharray:3 3}.edge-picker .edge.picked .edge-line{stroke:#fac15a;stroke-width:4px}
+.edge-picker .edge-hit{fill:none;stroke:transparent;stroke-width:22px;vector-effect:non-scaling-stroke;pointer-events:stroke;cursor:pointer;outline:none}.edge-picker .edge-hit:focus-visible{stroke:#fac15a55}.edge-picker .edge:hover .edge-line{stroke:#e7edf5}
+.edge-picker-bar{display:flex;align-items:center;gap:8px}.edge-picker-summary{flex:1;margin:0;font-size:12px}.edge-picker-bar button{min-height:44px}
 `;

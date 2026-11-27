@@ -89,8 +89,9 @@ commands use the same placement default.
 | `code` | opens the persistent CAD Script workspace | `script` |
 | `export step` | optional bodies: `all`, IDs or quoted names (default: the selection, else every solid body) | |
 | `measure exact` | optional bodies, as for `export step` | |
-| `fillet` | radius; optional bodies (default: the selection); `--face <normal>` | |
-| `chamfer` | distance; optional bodies; `--face <normal>` | |
+| `edges` | bodies (default: the selection); lists their exact B-rep edges, numbered for `fillet … edges` | |
+| `fillet` | radius; optional bodies (default: the selection); `--face <normal>`, or one body and `edges <number\|reference> …` | |
+| `chamfer` | distance; optional bodies; `--face <normal>`, or one body and `edges <number\|reference> …` | |
 | `shell` | wall thickness; optional bodies; one or more `--open <normal>` | |
 | `recompute exact` | optional bodies (default: all) | |
 | `upgrade-lofts` | optional bodies: `all`, IDs or quoted names (default: every code object with triangulated lofts); rebuilds CAD Script revision-1 lofts as ruled surfaces in one Undo step ([language revisions](CODE-MODE.md#language-revisions)); also in the command palette, MCP `cad_run_commands` and the CLI | |
@@ -151,6 +152,8 @@ kernel. They edit the model, so each is one Undo step, recorded with the kernel 
 ```text
 fillet 2 "Bracket"                  # round every edge, r = 2 mm
 chamfer 1 "Bracket" --face top      # bevel the edges of the top face by 1 mm
+edges "Bracket"                     # list its B-rep edges: 1: line · 30 mm · [..] – [..]
+fillet 2 "Bracket" edges 3 7        # round edges 3 and 7 only (recorded as stable references)
 shell 1.5 "Box" --open +z --open -y # hollow to a 1.5 mm wall, open at the top and front
 recompute exact                     # rebuild out-of-date exact features
 ```
@@ -159,7 +162,20 @@ recompute exact                     # rebuild out-of-date exact features
   face, chosen by its outward normal: `+x`, `-x`, `+y`, `-y`, `+z`, `-z`, `top`, `bottom`,
   `front` (−Y), `back`, `left`, `right`, or an explicit `X,Y,Z`. If several faces match, the
   outermost along the normal is used. A shell removes 1 to 6 faces, each `--open <normal>`.
-  There is no topological naming: selectors are re-evaluated on the current source.
+  Face selectors are re-evaluated on the current source.
+- **Chosen edges (document version 44).** `edges <body>` lists the body's B-rep edges, numbered
+  in kernel order, with their curve kind, length and end points. `fillet <r> <body> edges 3 7`
+  (or `chamfer`) takes those edges; the numbers hold only for the listing, so the command
+  records each edge as a stable reference, the names of the two faces it bounds
+  (`<node>:f<k>+<node>:f<k>`, `@i/n` when several edges bound the same two faces), and the
+  recorded line replays with the references. References also work as arguments. They survive
+  upstream parameter edits: each recompute resolves them on the new B-rep. A reference whose faces
+  no longer meet (or meet at another number of edges) makes the recompute fail with a message
+  naming the faces (`stale-edge-reference`); the feature stays stale and no other edge is picked.
+  Edges on faces without a stable name (a fillet's round, imported geometry) and seams cannot be
+  chosen. The Edit menu's dialog has **Chosen edges (tap to pick)**: a line drawing of the edges
+  (Iso, Top, Front, Right) where each edge is tapped on or off; no keyboard is needed.
+  [Design](PARAMETRIC-MODEL.md#document-versions).
 - **Targets** are top-level bodies by ID or exact name, `all`, or (no target) the selection.
   The body becomes the feature's source, under Inputs, and stays editable.
 - **How it is stored.** The node keeps the operation, size and selectors, plus the exact

@@ -206,6 +206,11 @@ shell 2 "Housing" --open +z
 recompute exact
 ```
 
+Individual edges: `edges "Bracket"` lists the body's B-rep edges, numbered (read-only), and
+`chamfer 0.5 "Bracket" edges 3 7` bevels those two. The numbers hold for the current model only;
+the commit records stable edge references (document version 44), which a later script may pass
+instead of numbers.
+
 The exact kernel computes the feature and its display mesh (0.01 mm / 10°) on the trial
 session; the edit is recorded with `context.kernel`, so the script's `journal` replay text
 carries the kernel. The script is then evaluated with Manifold, which uses the display mesh,

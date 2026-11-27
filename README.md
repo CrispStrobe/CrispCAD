@@ -111,7 +111,9 @@ instead of being written as triangles. See [terminal commands](docs/TERMINAL-WOR
 
 **Exact fillet, chamfer and shell (opt-in).** `fillet`, `chamfer` and `shell` (terminal, the
 Edit menu's **Fillet, chamfer, shell** dialog, the command palette, MCP `cad_run_commands` and
-`crispcad run`) round or bevel every edge or the edges of one face, or hollow a body with open
+`crispcad run`) round or bevel every edge, the edges of one face or chosen edges (tapped in the
+dialog, or `edges` then `fillet <r> <body> edges 3 7`; stable references that survive upstream
+edits, document version 44), or hollow a body with open
 faces, on the same exact kernel. The result is stored with its exact tessellation, so display,
 physics and printing keep using Manifold; STEP and exact measures rebuild it exactly. After an
 upstream edit the editor recomputes it as one attributed Undo step; `recompute exact` does it

@@ -10,7 +10,8 @@
  * mesh: they rebuild the operation on the exact source.
  *
  * Selectors follow the kernel interface: every edge, or the edges of one planar face chosen by
- * its outward normal; shell faces are removed by outward normal. There is no topological naming.
+ * its outward normal; shell faces are removed by outward normal. Since document version 44 a
+ * fillet or chamfer may also name individual edges by stable references (exact-edge-references.ts).
  */
 import {t} from './i18n.js';
 import {geometrySignature} from './hash.js';
@@ -18,6 +19,8 @@ import {featureValue,FeatureEvaluationError} from './features.js';
 import type {FeatureScalar} from './features.js';
 import {evaluateParameters} from './parameters.js';
 import type {CadDocument,SolidNode,Vec3} from './document.js';
+import {EXACT_EDGE_REFERENCE_DOCUMENT_VERSION,checkEdgeReferences,isEdgeReferences,mapEdgeReferenceIds} from './exact-edge-references.js';
+import type {ExactEdgeReferences} from './exact-edge-references.js';
 
 /** The first document version that may contain `exact-feature` nodes. */
 export const EXACT_FEATURE_DOCUMENT_VERSION=41;
@@ -27,7 +30,8 @@ export type ExactFeatureOperation=typeof EXACT_FEATURE_OPERATIONS[number];
  * furthest along the normal (otherwise exactly one face must match). Normals are in the
  * feature's local frame, the frame its source is placed in. */
 export interface ExactFaceSelector {faceNormal:Vec3;outermost?:true}
-export type ExactEdgeSelector='all'|ExactFaceSelector;
+/** Every edge, the edges of one planar face, or chosen edges by stable reference (version 44). */
+export type ExactEdgeSelector='all'|ExactFaceSelector|ExactEdgeReferences;
 /** Exact kernel tessellation of the result, valid only for the model it was computed from. */
 export interface ExactFeatureDisplay {sourceKey:string;positions:number[];indices:number[]}
 export interface ExactFeature {
@@ -68,6 +72,7 @@ function checkFaceSelector(value:unknown):ExactFaceSelector{
 /** Structural checks run during document validation (version, source, display buffers). */
 export function checkExactFeatureShape(raw:Record<string,unknown>,version:number,hasNode:(id:unknown)=>boolean):boolean{
  if(version<EXACT_FEATURE_DOCUMENT_VERSION||raw.featureVersion!==1||!hasNode(raw.source)||raw.source===raw.id)return false;
+ if(isEdgeReferences(raw.edges)&&version<EXACT_EDGE_REFERENCE_DOCUMENT_VERSION)return false;
  if(raw.display===undefined)return true;
  const d=raw.display;
  if(!record(d)||Object.keys(d).some(key=>!['sourceKey','positions','indices'].includes(key))||typeof d.sourceKey!=='string'||!sourceKeyPattern.test(d.sourceKey))return false;
@@ -80,7 +85,7 @@ export function checkExactFeatureShape(raw:Record<string,unknown>,version:number
 export interface EvaluatedExactFeature {
  operation:ExactFeatureOperation;
  size:number;
- edges?:'all'|ExactFaceSelector;
+ edges?:'all'|ExactFaceSelector|ExactEdgeReferences;
  openFaces?:ExactFaceSelector[];
 }
 /** Validated settings with the size resolved and face normals normalised. */
@@ -100,7 +105,7 @@ export function evaluateExactFeature(node:ExactFeature&{id:string},doc:Pick<CadD
   }
   if(node.openFaces!==undefined)throw new Error(t('Only a shell has open faces'));
   if(node.edges===undefined)throw new Error(t('Choose all edges or the edges of one face'));
-  return {operation:node.operation,size,edges:node.edges==='all'?'all':checkFaceSelector(node.edges)};
+  return {operation:node.operation,size,edges:node.edges==='all'?'all':isEdgeReferences(node.edges)?checkEdgeReferences(node.edges):checkFaceSelector(node.edges)};
  }catch(error){
   throw new FeatureEvaluationError({source:'feature',id:node.id,message:error instanceof Error?error.message:String(error)});
  }
@@ -143,6 +148,8 @@ export function exactFeatureKey(doc:CadDocument,id:string):string{
   collect(entry);nodes[index]=entry;return index;
  };
  visit(node.source);
+ // Edge references name faces by node id; the key uses each node's position in the subtree.
+ if(settings.edges&&isEdgeReferences(settings.edges))settings.edges=mapEdgeReferenceIds(settings.edges,id=>{const index=order.get(id);return index===undefined?undefined:`n${index}`;});
  if(typeof node.size==='string')texts.push(node.size);
  // Expressions name parameters; their evaluated values are part of the geometry.
  let parameters:unknown=null;

@@ -2,7 +2,7 @@
 // Pre-flight for exact features: count what a fillet, chamfer or shell would touch on its source
 // solid and refuse it before the kernel runs when that exceeds the host's limits (limits.ts).
 import {t} from '@brickwright/cad-core';
-import type {ExactFeatureOperation,ExactEdgeSelector,ExactFaceSelector} from '@brickwright/cad-core';
+import type {ExactFeatureOperation,ExactFaceSelector} from '@brickwright/cad-core';
 import {ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactSolid} from '@crispcad/exact-kernel';
 import {CURVED_EDGE_WEIGHT} from './limits.js';
@@ -20,6 +20,8 @@ export interface ExactFeatureCost {
  readonly weightedEdges:number;
 }
 
+/** What the kernel takes: every edge, one planar face's edges, or chosen edges by index. */
+export type ExactCostEdges='all'|ExactFaceSelector|{readonly edgeIndices:readonly number[]};
 interface SmVector {x:number;y:number;z:number}
 interface SmEdge {readonly geomType:string;_identity?():string}
 interface SmFace {readonly geomType:string;readonly isPlanar?:boolean;normalAt(point?:readonly number[]):SmVector;center?():SmVector;edges():Iterable<SmEdge>}
@@ -48,13 +50,17 @@ function selectedFace(faces:readonly SmFace[],selector:ExactFaceSelector):SmFace
  * Count what an exact feature on `source` would touch. Returns undefined for a solid that is not
  * an smlibwasm part (another backend, a test double): such jobs are not pre-flighted.
  */
-export function exactFeatureCost(source:ExactSolid,operation:ExactFeatureOperation,edges:ExactEdgeSelector='all'):ExactFeatureCost|undefined{
+export function exactFeatureCost(source:ExactSolid,operation:ExactFeatureOperation,edges:ExactCostEdges='all'):ExactFeatureCost|undefined{
  const part=partOf(source);
  if(!part)return undefined;
  const faces=[...part.faces()];
  let selected:Iterable<SmEdge>;
- if(operation!=='shell'&&edges!=='all'){
-  const face=selectedFace(faces,edges);
+ if(operation!=='shell'&&edges!=='all'&&'edgeIndices' in edges){
+  if(!part.edges)return undefined;
+  const all=[...part.edges()];
+  selected=edges.edgeIndices.map(i=>all[i]).filter(Boolean);
+ }else if(operation!=='shell'&&edges!=='all'){
+  const face=selectedFace(faces,edges as ExactFaceSelector);
   // No (unique) face: the kernel refuses the selector itself, with its own message.
   if(!face)return {edges:0,curvedEdges:0,faces:faces.length,weightedEdges:0};
   selected=face.edges();
@@ -73,7 +79,7 @@ export function exactFeatureCost(source:ExactSolid,operation:ExactFeatureOperati
  * Refuse `operation` on `source` when it exceeds `limits`, with a message that says why and what
  * to do. Called before the kernel runs the feature; the model and its history are untouched.
  */
-export function checkExactFeatureCost(source:ExactSolid,operation:ExactFeatureOperation,edges:ExactEdgeSelector|undefined,limits:Pick<ExactLimits,'maxFeatureEdges'|'maxShellFaces'>):ExactFeatureCost|undefined{
+export function checkExactFeatureCost(source:ExactSolid,operation:ExactFeatureOperation,edges:ExactCostEdges|undefined,limits:Pick<ExactLimits,'maxFeatureEdges'|'maxShellFaces'>):ExactFeatureCost|undefined{
  if(!Number.isFinite(limits.maxFeatureEdges)&&!Number.isFinite(limits.maxShellFaces))return undefined;
  const cost=exactFeatureCost(source,operation,edges);
  if(!cost)return undefined;
