@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
-// Picking edges for an exact chamfer directly on the model in the 3D view, by touch (run it on the
-// `ipad` project): the dialog steps aside, taps on the canvas toggle edges (the same stable
+// Picking edges for an exact chamfer directly on the model in the 3D view, by touch on the `ipad`
+// project and by mouse on `chromium`: the dialog steps aside, taps on the canvas toggle edges (the same stable
 // references as the dialog's drawing), Done brings the dialog back with the choice, and the
 // chamfer is built exactly. No keyboard is used.
 import {expect,test} from '@playwright/test';

@@ -1310,8 +1310,8 @@ reachable there only through the terminal. Now:
 - **BrickWright** (host wiring only): its File menu, at the left of the CAD tab's bar, gains
   "Import STEP as exact bodies…" (a `.step,.stp` chooser: `requestImport` now receives
   `{accept, purpose:'exact-step'}`) and "Export STEP (exact B-rep)…", and the submenus "Exact
-  modeling (B-rep)" (fillet/chamfer/shell, chosen edges with 3D picking, measure, recompute) and
-  "Drawings and checks" (assembly drawing, from exact edges); the remaining editor commands join
+  modeling (B-rep)" (fillet/chamfer/shell, chosen edges with 3D picking, measure, recompute),
+  "Holes and fasteners" (Phase 6.2's standard hole, fasten holes, standard parts) and "Drawings and checks" (assembly drawing, from exact edges); the remaining editor commands join
   Edit > CAD tools. With the compact chrome on narrow windows and iPads, the File menu sits in the
   CAD bar and the rest of the menu bar behind the "..." toggle; submenus open on tap.
 - Same tablet limits and lazy loading: every item runs through the same exact worker, so nothing
@@ -1319,6 +1319,12 @@ reachable there only through the terminal. Now:
 - German: `locales/de-editor-menu.ts`; `tests/editor-menu.test.ts` fails on an untranslated item
   and on a macOS menu command the definition lacks. Browser: `tests/browser/editor-menu-exact.spec.ts`
   (desktop and `ipad`).
+
+Fixed on the way: a mouse could not pick the edges of a box's top face in the 3D view (touch
+could). The hidden-edge test interpolated an edge's depth linearly in screen position, which in
+perspective puts the point under the cursor of a receding edge millimetres behind the face it
+lies on, beyond the mouse's narrower slack; depth is now interpolated perspective-correctly
+(`depthAlong`), and `exact-edge-pick-viewport.spec.ts` passes with a mouse as well.
 
 Left open: the macOS app still builds its native menus in Swift (the test keeps them a subset of
 the definition, but the exact items are not in them yet); the standalone web toolbar keeps its own

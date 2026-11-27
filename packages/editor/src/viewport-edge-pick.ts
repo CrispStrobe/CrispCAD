@@ -20,7 +20,22 @@ export interface PickableEdge {
  readonly pickable:boolean;
 }
 /** One edge projected to the screen: CSS px from the canvas's top left and depth along the view. */
-export interface ProjectedEdge {readonly xy:readonly (readonly [number,number])[];readonly depth:readonly number[];readonly pickable:boolean}
+export interface ProjectedEdge {
+ readonly xy:readonly (readonly [number,number])[];readonly depth:readonly number[];readonly pickable:boolean;
+ /**
+  * Projected through a perspective camera: along a segment, depth is not linear in screen
+  * position (the near half of a receding edge covers more of the screen), but the inverse of the
+  * depth along the camera's axis is. `viewDepth` holds that depth per point and `rayScale` turns it
+  * into depth along the ray (1 / the cosine between the ray and the camera's axis).
+  */
+ readonly perspective?:{readonly viewDepth:readonly number[];readonly rayScale:number};
+}
+/** Depth at screen parameter `t` between the depths `a` and `b` of a segment's ends. */
+export function depthAlong(edge:ProjectedEdge,segment:number,t:number):number{
+ const j=Math.min(edge.depth.length-1,segment+1),p=edge.perspective;
+ if(p){const a=p.viewDepth[segment],b=p.viewDepth[j];if(a>0&&b>0)return p.rayScale/((1-t)/a+t/b);}
+ const a=edge.depth[segment],b=edge.depth[j];return a+(b-a)*t;
+}
 
 /** The closest point of the polyline `xy` to (x, y): its distance, segment and parameter on it. */
 export function closestOnPolyline(xy:readonly (readonly [number,number])[],x:number,y:number):{distance:number;segment:number;t:number}{
@@ -48,7 +63,7 @@ export function pickEdgeAt(edges:readonly ProjectedEdge[],x:number,y:number,radi
   if(!edge.pickable||!edge.xy.length)return;
   const near=closestOnPolyline(edge.xy,x,y);
   if(near.distance>radius||near.distance>=bestDistance)return;
-  const a=edge.depth[near.segment],b=edge.depth[Math.min(edge.depth.length-1,near.segment+1)],depth=a+(b-a)*near.t;
+  const depth=depthAlong(edge,near.segment,near.t);
   if(depth>surfaceDepth+slack)return;
   best=i;bestDistance=near.distance;
  });
@@ -90,15 +105,19 @@ export function createEdgeOverlay(scene:THREE.Scene,edges:readonly PickableEdge[
   paint,
   /** The edges in screen px (relative to the canvas) and depth along the ray direction from `origin`. */
   project(camera:THREE.Camera,width:number,height:number,origin:THREE.Vector3,direction:THREE.Vector3):ProjectedEdge[]{
+   const perspective=(camera as THREE.PerspectiveCamera).isPerspectiveCamera===true;
+   const eye=new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld),axis=camera.getWorldDirection(new THREE.Vector3());
+   const rayScale=1/Math.max(1e-6,direction.clone().normalize().dot(axis));
    return edges.map(edge=>{
-    const xy:[number,number][]=[],depth:number[]=[];
+    const xy:[number,number][]=[],depth:number[]=[],viewDepth:number[]=[];
     for(const p of edge.points){
      point.set(p[0],p[1],p[2]);
      depth.push(point.clone().sub(origin).dot(direction));
+     if(perspective)viewDepth.push(point.clone().sub(eye).dot(axis));
      point.project(camera);
      xy.push([(point.x+1)*width/2,(1-point.y)*height/2]);
     }
-    return {xy,depth,pickable:edge.pickable};
+    return {xy,depth,pickable:edge.pickable,...(perspective?{perspective:{viewDepth,rayScale}}:{})};
    });
   },
   dispose(){scene.remove(group);geometry.dispose();front.dispose();hidden.dispose();},

@@ -5,7 +5,7 @@ import {describe,expect,it} from 'vitest';
 import * as THREE from 'three';
 import {createCadSession} from '@brickwright/cad-core';
 import type {ExactBodyEdge} from '@brickwright/cad-core';
-import {EDGE_PICK_MOUSE_PX,EDGE_PICK_TOUCH_PX,closestOnPolyline,createEdgeOverlay,pickEdgeAt} from '../packages/editor/src/viewport-edge-pick.js';
+import {EDGE_PICK_MOUSE_PX,EDGE_PICK_TOUCH_PX,closestOnPolyline,createEdgeOverlay,depthAlong,pickEdgeAt} from '../packages/editor/src/viewport-edge-pick.js';
 import type {ProjectedEdge} from '../packages/editor/src/viewport-edge-pick.js';
 import {edgesInWorld} from '../packages/editor/src/exact-feature-panel.js';
 
@@ -35,6 +35,26 @@ describe('edge picking in the 3D view',()=>{
   expect(pickEdgeAt(edges,50,1,EDGE_PICK_TOUCH_PX,50,1)).toBe(1); // the face in front hides edge 0
   expect(pickEdgeAt([edges[0]],50,1,EDGE_PICK_TOUCH_PX,50,1)).toBe(-1);
   expect(pickEdgeAt([edges[0]],50,1,EDGE_PICK_TOUCH_PX,69.5,1)).toBe(0); // on the surface, within the slack
+ });
+
+ it('takes the depth under the cursor along a receding edge in perspective, so a mouse picks it',()=>{
+  // An edge running away from the camera: its screen midpoint is nearer than its world midpoint.
+  const camera=new THREE.PerspectiveCamera(40,1,.1,1000);camera.position.set(0,40,60);camera.lookAt(0,0,-20);camera.updateMatrixWorld();
+  const overlay=createEdgeOverlay(new THREE.Scene(),[{points:[[0,0,40],[0,0,-80]],pickable:true}]);
+  const screen=(p:THREE.Vector3)=>{const v=p.clone().project(camera);return [(v.x+1)*200,(1-v.y)*200];};
+  const [x0,y0]=screen(new THREE.Vector3(0,0,40)),[x1,y1]=screen(new THREE.Vector3(0,0,-80)),x=(x0+x1)/2,y=(y0+y1)/2;
+  const caster=new THREE.Raycaster();caster.setFromCamera(new THREE.Vector2(x/200-1,1-y/200),camera);
+  const {origin,direction}=caster.ray,[projected]=overlay.project(camera,400,400,origin.clone(),direction.clone());
+  expect(projected.perspective).toBeDefined();
+  // Where the ray meets the edge (the surface under the cursor is there): the true depth.
+  const onEdge=new THREE.Vector3();caster.ray.distanceSqToSegment(new THREE.Vector3(0,0,40),new THREE.Vector3(0,0,-80),undefined,onEdge);
+  const depth=onEdge.clone().sub(origin).dot(direction),slack=.05;
+  const linear=(projected.depth[0]+projected.depth[1])/2;
+  expect(linear-depth).toBeGreaterThan(5*slack); // the screen-linear depth would hide it
+  const screenT=Math.hypot(x-projected.xy[0][0],y-projected.xy[0][1])/Math.hypot(projected.xy[1][0]-projected.xy[0][0],projected.xy[1][1]-projected.xy[0][1]);
+  expect(depthAlong(projected,0,screenT)).toBeCloseTo(depth,3);
+  expect(pickEdgeAt([projected],x,y,EDGE_PICK_MOUSE_PX,depth,slack)).toBe(0);
+  expect(pickEdgeAt([{...projected,perspective:undefined}],x,y,EDGE_PICK_MOUSE_PX,depth,slack)).toBe(-1);
  });
 
  it('projects edges to the screen with their depth along the view',()=>{
