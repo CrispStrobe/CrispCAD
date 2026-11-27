@@ -221,6 +221,11 @@ no Macad3D code or interface has been transplanted.
 5. **Components, configurations and assembly.** Explicit linked versus independent
    instances, parameter variants, stable mate frames and qualified Jolt actuators.
    Share the same headless command layer with Brickwright and CrispMesh.
+   Started 2026-11-27 (document version 50): named groups (a STEP file's product structure kept as
+   groups), configurations (named parameter values and suppressed bodies), exploded views and a
+   mechanism check over the existing Jolt joints and gear meshes, in the shared command layer
+   ([assemblies](CRISPCAD-CONVERGENCE.md#assemblies-document-version-50-done-2026-11-27)). Linked
+   versus independent instances and stable mate frames are still open.
 6. **Optional code view.** A bounded declarative representation and command API over
    the same model. Opening a saved project must not require executing arbitrary JS.
 

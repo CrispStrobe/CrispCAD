@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import type {GeometryResult} from '@brickwright/cad-geometry';
-import {getLocale,t,newId,simulationSettings} from '@brickwright/cad-core';
+import {configuredDocument,getLocale,t,newId,simulationSettings} from '@brickwright/cad-core';
 import type {CadSession,Vec3} from '@brickwright/cad-core';
 import {createSimulationClient} from './simulation-client.js';
 import {createMotionTraces} from './motion-traces.js';
@@ -59,7 +59,9 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
    // A parked worker can reuse qualified construction for a new revision.
    // Only an unchanged revision can omit the authored snapshot.
    const revision=session.state.revision;
-   const source=parked&&workerRevision===revision?{}:{document:session.state.document,geometry:geometry||undefined};
+   // Suppressed bodies (the active configuration) are left out of the simulated assembly.
+   const configured=configuredDocument(session.state.document);
+   const source=parked&&workerRevision===revision?{}:{document:configured,geometry:configured===session.state.document?geometry||undefined:undefined};
    const first=await client.send({
     op:'start',...source,
     wasmURL:new URL(wasmURL,document.baseURI).href,fixBase:fixBase(),rigidPreview,locale:getLocale(),

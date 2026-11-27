@@ -15,6 +15,8 @@ const labels = new Set([
   'Fillet body', 'Chamfer body', 'Shell body', 'Add exact features', 'Edit exact feature', 'Recompute exact features', 'Import STEP',
   'Add standard hole', 'Insert standard part', 'Insert standard parts', 'Fasten holes',
   'Split body', 'Edit split',
+  'Group bodies', 'Rename group', 'Ungroup', 'Edit exploded view', 'Remove exploded view', 'Suppress bodies', 'Unsuppress bodies',
+  'Save configuration', 'Use configuration', 'Remove configuration', 'Insert planetary gear set',
 ]);
 export function translateHistoryLabel(label: string): string {
   if (labels.has(label)) return t(label);

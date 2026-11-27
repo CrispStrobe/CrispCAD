@@ -125,12 +125,17 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    // A saved sheet keeps its own choice (document version 48); a new one starts from this editor's.
    const exactInput=element('input');exactInput.type='checkbox';exactInput.checked=saved?!!saved.exactEdges:exactEdges;
    const autoInput=element('input');autoInput.type='checkbox';autoInput.checked=saved?!!saved.autoDimensions:true;
+   const explodeSelect=element('select');
    if(assembly){
     label('Exact edges (B-rep)',exactInput);
     exactInput.title=t('Draw edges, silhouettes and circles from the exact B-rep. Loads the exact kernel; bodies it cannot build are drawn from their mesh and named on the sheet.');
     label('Automatic dimensions',autoInput);
     autoInput.title=t('Overall size, hole positions, hole callouts, diameters and radii from the exact B-rep, placed where they do not overlap.');
     label('Include parts list',partsList);
+    explodeSelect.add(new Option(t('Assembled'),''));
+    for(const view of session.state.document.assembly?.views??[])explodeSelect.add(new Option(view.name,view.id));
+    explodeSelect.value=saved?.explode?.view??'';
+    if(session.state.document.assembly?.views?.length)label('Exploded view',explodeSelect);
     label('Preview page',previewPage);
     previewPage.parentElement!.hidden=true;
    }
@@ -299,7 +304,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     if(assembly){
      if(!drawingAssemblyAvailable(current))throw new Error(t('Add a solid body to draw the assembly.'));
      const exactChoice=exactInput.checked?{exactEdges:true as const,...(autoInput.checked?{autoDimensions:true as const}:{})}:{};
-     return {...settings,source:{kind:'assembly'},...cuttingPlane,...(partsList.checked?{partsList:true}:{}),...exactChoice,
+     return {...settings,source:{kind:'assembly'},...cuttingPlane,...(partsList.checked?{partsList:true}:{}),...exactChoice,...(explodeSelect.value?{explode:{view:explodeSelect.value,factor:1}}:{}),
       ...(edgeDimensions.length?{edgeDimensions}:{}),...(curveDimensions.length?{curveDimensions}:{})};
     }
     const ref=drawingSourceFor(current,source.value);
@@ -489,7 +494,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    position.oninput=()=>{centerAutomatically=false;render();};
    section.onchange=offset.onchange=render;
    secondPosition.oninput=jogAt.oninput=render;
-   title.oninput=scale.onchange=hidden.onchange=partsList.onchange=render;
+   title.oninput=scale.onchange=hidden.onchange=partsList.onchange=explodeSelect.onchange=render;
    const updateAuto=()=>{autoInput.disabled=!exactInput.checked;};updateAuto();
    exactInput.onchange=()=>{exactEdges=exactInput.checked;updateAuto();render();};
    autoInput.onchange=render;

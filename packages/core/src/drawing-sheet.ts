@@ -27,11 +27,13 @@ export type AssemblyCurveDimension={
 export const drawingAnnotationLimit=24;
 export const drawingTitleBlockLimits={number:24,revision:12,drawnBy:16} as const;
 export type DrawingTitleBlock=Partial<Record<keyof typeof drawingTitleBlockLimits,string>>;
-export type DrawingInputs = {title:string; titleBlock?:DrawingTitleBlock; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]; partsList?:boolean; edgeDimensions?:AssemblyEdgeDimension[]; curveDimensions?:AssemblyCurveDimension[];
+export type DrawingInputs = {title:string; titleBlock?:DrawingTitleBlock; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]; partsList?:boolean; explode?:DrawingExplode; edgeDimensions?:AssemblyEdgeDimension[]; curveDimensions?:AssemblyCurveDimension[];
  /** Assembly sheets, document version 48: lines from the exact B-rep, and automatic dimensions on them. */
  exactEdges?:true; autoDimensions?:true};
 /** The document version that stores an assembly sheet's exact-edges and automatic-dimensions choice. */
 export const EXACT_DRAWING_DOCUMENT_VERSION=48;
+/** An assembly sheet drawn in an exploded view (document version 50): the view and how far. */
+export type DrawingExplode = {view:string; factor:number};
 export type DrawingSheet = DrawingInputs & {id:string};
 
 const record = (value:unknown):value is Record<string,unknown> => !!value && typeof value==='object' && !Array.isArray(value);
@@ -80,6 +82,8 @@ export function checkDrawingSheets(doc:CadDocument) {
    if(doc.version<21||sheet.annotations!==undefined)throw invalid();
    if(sheet.section!==undefined&&(doc.version<23||!record(sheet.section)||(sheet.section.jog!==undefined&&doc.version<24)))throw invalid();
   }else if(Object.hasOwn(sheet.source,'kind')||!id(sheet.source.featureId)||!id(sheet.source.sketchId)||!id(sheet.source.profileId))throw invalid();
+  if(sheet.explode!==undefined&&(doc.version<50||!isAssemblyDrawingSource(sheet.source)||!record(sheet.explode)||Object.keys(sheet.explode).some(key=>key!=='view'&&key!=='factor')||
+     !id(sheet.explode.view)||!doc.assembly?.views?.some(view=>view.id===sheet.explode!.view)||typeof sheet.explode.factor!=='number'||!(sheet.explode.factor>0&&sheet.explode.factor<=1)))throw invalid();
   if(sheet.partsList!==undefined&&(doc.version<22||!isAssemblyDrawingSource(sheet.source)||typeof sheet.partsList!=='boolean'))throw invalid();
   if((sheet.exactEdges!==undefined||sheet.autoDimensions!==undefined)&&(doc.version<EXACT_DRAWING_DOCUMENT_VERSION||!isAssemblyDrawingSource(sheet.source)||
      sheet.exactEdges!==undefined&&sheet.exactEdges!==true||sheet.autoDimensions!==undefined&&(sheet.autoDimensions!==true||sheet.exactEdges!==true)))throw invalid();

@@ -340,10 +340,20 @@ Product entry additionally needs:
 
 ### Phase 2b: move the exact kernel into the lab as a package. **Done 2026-11-25**
 
-Release: [`exact-kernel-v0.1.10`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.10)
-of the kernel lab, tarball `crispcad-exact-kernel-0.1.10.tgz`, SHA-256
-`ffe86ae0099d544c38a1eb3ba9660f4b803b68a84d186f9f2fe1973aa43f9b7d`, integrity
-`sha512-zLTHIvWIE7+Z2PJemxQM+FJqtcN6BES6Yo4eMr3MrEDu8SgtVvmgdgSF7mhOU2Zxohg6nzeoWVieCt89+eKGRg==`.
+Release: [`exact-kernel-v0.1.11`](https://github.com/CrispStrobe/crispcad-kernel-lab/releases/tag/exact-kernel-v0.1.11)
+of the kernel lab, tarball `crispcad-exact-kernel-0.1.11.tgz`, SHA-256
+`24ce04fc2ffe88f9ed6360ed5779588f39d24a05d22c1af42e773c4a28ea6716`, integrity
+`sha512-q5+he8RO8MJFTJiaAQ+glgthncnvUh3wmNmeVw9IlBSMJqlin1TdUf55nH4Pf6fvpcCaAaliR2bnRdsbLzUSuw==`.
+
+0.1.11 replaced 0.1.10 (SHA-256 `ffe86ae0…9b7d`) on 2026-11-27 (lab `develop` df3498a8c). Its
+`importStepBodies` reports the file's product structure: each body's `occurrence` (products and
+occurrence names from the top product down) and the import's `structure` (`assembly`, `flat`,
+`unknown`), read from the STEP text in the reader's own traversal order and kept only when it
+matches the reader's bodies one for one in count and names (see
+[Assemblies](#assemblies-document-version-50-done-2026-11-27)). Built from the smlibwasm source
+build (all 119 files identical to the pins and to npm), 158 package tests, licence test green.
+Recorded commands carry kernel 0.1.11; 0.1.10 recordings replay as stale, as designed.
+
 
 0.1.10 replaced 0.1.9 (SHA-256 `ad1e6064…faf710`) on 2026-11-27 (lab `develop` 5560590bb). It adds
 `exportStep([{solid, name, color}], {product})`: one product, one solid per body under the body's
@@ -1085,11 +1095,9 @@ STEP and the exact box. A strict and a lenient read of the stored STEP cost the 
 second SMLib instance would double the memory the ceiling allows); a 19.5 s CPU import is still
 over a tablet's request budget under heavy load, but within it on an idle M1-class device.
 
-Left open: assemblies import as
-separate bodies without their product structure (the kernel returns each body's own name and
-colour, not its product or assembly path: SMLib's reader knows them but its pinned smlibwasm API
-does not return them, and documents have no group node to hold them, so keeping the structure
-needs a kernel API and a document version; not cheap, not done); files with surfaces only (no solid) are refused,
+Left open: ~~assemblies import as separate bodies without their product structure~~ (done
+2026-11-27 with exact kernel 0.1.11 and document version 50: the file's assembly becomes named
+groups, see [Assemblies](#assemblies-document-version-50-done-2026-11-27)); files with surfaces only (no solid) are refused,
 not imported as reference surfaces (the mesh importer does that); faces of many holes in imported
 bodies use the same display path as exact features.
 
@@ -1119,7 +1127,8 @@ reference for each.
    release; see [Check for manufacturing](#check-for-manufacturing-done-2026-11-27)).
 4. **Assemblies:** configurations, exploded view, mechanism validation and the
    planetary/ring-gear preset from [KERNELCAD-REVIEW.md](KERNELCAD-REVIEW.md#remaining-backlog-from-the-plan);
-   step 5 of [PARAMETRIC-CAD-STRATEGY.md](PARAMETRIC-CAD-STRATEGY.md#delivery-order-and-acceptance).
+   step 5 of [PARAMETRIC-CAD-STRATEGY.md](PARAMETRIC-CAD-STRATEGY.md#delivery-order-and-acceptance). **Done 2026-11-27** (document version 50, exact
+   kernel 0.1.11; see [Assemblies](#assemblies-document-version-50-done-2026-11-27)).
 5. **Smaller tools:** split by plane, multi-material inspection, MCP STEP evidence and
    surface-blend tools. **Done 2026-11-27** (document version 49 for split; see
    [Smaller tools](#smaller-tools-phase-65-document-version-49-done-2026-11-27)).
@@ -1566,6 +1575,126 @@ splitting a body inside a union (only top-level bodies); per-face materials of a
 (inlays still need separate bodies, as in the lab); infill and support in the mass estimate;
 freeform blend radii (curvature of spline faces) and G2 evidence; STEP evidence of assemblies'
 product structure and of files over the import limits (16 MiB; 3 MiB through MCP).
+#### Assemblies (document version 50). **Done 2026-11-27**
+
+**What it is.** An **Assembly** dialog (palette, the editor's Assemblies menu section that
+BrickWright's File menu picks up, terminal `groups`) with four tabs, and the same functions as
+terminal, MCP and CLI commands:
+
+- **Groups and suppression.** Top-level bodies grouped under a name, nested (`group "Housing"
+  Base Lid`, `ungroup`). A body is in at most one group; tapping a group selects its bodies.
+  **Suppress** leaves bodies out of the model (not built, displayed, exported, simulated,
+  checked or drawn) until **Unsuppress**.
+- **STEP product structure.** Import STEP as exact bodies keeps the file's assembly: each
+  occurrence holding several bodies or sub-occurrences becomes a group named after the occurrence
+  (else its product), nested as in the file, with `source:{kind:'step',product,instance}`; a body
+  alone in its occurrence joins the parent group and takes the occurrence's name (the three
+  instances of one standoff are `standoff_0`, `_1`, `_2`, not three "standoff"; the Adafruit
+  MPM3610's 0805 and 0603 parts are `0805-NO:C1`, … rather than six "Body2"). Files without
+  assemblies import as before, without groups and at version 45.
+- **Configurations.** `config save "Wide"` keeps every parameter's expression and the suppressed
+  bodies under a name; `config use` applies them in one Undo step (refused, with the reason, when
+  the parameters drive constrained outlines that need the solver); `config delete`.
+- **Exploded views.** `explode auto [axis|radial] [+z|X,Y,Z] [spacing <mm>] [group "name"]`
+  plans one step per item (each subgroup, each ungrouped body; the lowest along the axis stays,
+  each next one moves one gap further; radial: away from the centre). Steps run one after another
+  as the explosion goes from 0 to 1. **Show** puts a bar over the 3D view with a slider and
+  **Play** (2.5 s); only the displayed meshes move, never the model. An assembly drawing sheet can
+  be drawn in an exploded view (the drawing dialog's **Exploded view**; the projection moves the
+  bodies' meshes by the view's offsets).
+- **Mechanism check.** `mechanism A [range 0 90] [steps 36] [clearance 0.2]` sweeps one hinge or
+  slider through its limits (a full turn for a hinge without limits; a slider needs limits or a
+  range), with the hinges it drives through gear meshes turning at their ratios, and measures every
+  pair of bodies at each sampled pose with Manifold. It reports each colliding pair with the first
+  and last sampled value, the number of poses and the largest overlap volume (and pairs closer
+  than the clearance); the rest pose is checked for every pair, each sweep pose for pairs with a
+  moving body. Pairs a joint connects are exempt unless the joint sets `collideConnected`. A
+  collision in the dialog shows that pose on the slider bar; **Move on a slider** poses the joint
+  by hand. Read-only.
+- **Planetary gear set.** `planetary [sun 12] [planet 12] [planets 3] [module 2] [width 6]
+  [backlash 0.2]` (palette, Assemblies menu, the Mechanism tab of an empty design) inserts sun,
+  planets and an internal ring gear as editable CAD Script gears (the ported involute profiles,
+  `spurGear2d`/`internalSpurGear2d`) on hinges over a fixed carrier plate, with gear meshes
+  (each planet follows the sun at −zp/zs, the ring follows planet 1 at zr/zp), so the simulation
+  turns them together and the ring runs at −zs/zr of the sun (motor A). The ring has zs + 2 zp
+  teeth; equal spacing needs (zs + zr) divisible by the number of planets, and neighbouring
+  planets must clear each other's tips (both refused with the reason). Each planet's phase follows
+  from rolling the sun–planet pair around the sun (φ·(1 + zs/zp) plus the pair's half-tooth
+  alignment), the ring's from planet 1. The set comes grouped, with an exploded view.
+
+**Design.**
+- Kernel (lab, exact kernel 0.1.11): `importStepBodies` returns each body's `occurrence` chain
+  and the import's `structure`. smlibwasm's reader places bodies through the assembly
+  (`NEXT_ASSEMBLY_USAGE_OCCURRENCE` with its `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` and
+  `REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION`, `MAPPED_ITEM`) but returns only each body's
+  own name, and the pinned smlibwasm stays byte for byte the npm build, so the package reads the
+  product entities from the text again (`step-structure.ts`, original code, a small Part 21
+  reader that parses only the entities it needs) and walks the representation graph in the
+  reader's order: each solid in file order, placed by every path up through placed and plain
+  representation relationships, duplicate paths dropped. The result is kept only when it lists
+  the reader's bodies one for one with the same names; otherwise `structure` is `unknown`, every
+  `occurrence` null and a note says so (CrispCAD then imports without groups and says why), so a
+  file the walk reads differently is never grouped wrongly. Matched on an OpenCASCADE 7.6 panel
+  (9 bodies; the three standoff instances at the placements the reader used) and Fusion files
+  (MPM3610 23 bodies, Feather RP2040 58, Metro Mini 55, SO-100 arm 19). No measurable cost next to
+  the reader (a fraction of a second for 2.4 MB).
+- Document (version 50, `packages/core/src/assembly.ts`): one optional `assembly` block (groups,
+  views, configurations, `active`, `suppressed`; see
+  [PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md#document-versions)) and `explode` on assembly sheets.
+  Every commit prunes references to bodies that are no longer top-level, so delete, combine and
+  model-source edits never leave a dangling group. Copy and paste carry groups (renumbered);
+  inserting a fragment carries its groups and exploded views. `activeRoots`/`configuredDocument`
+  are where suppression is applied: the Manifold evaluation, exact targets (export, measure,
+  drawing data, manufacturing) and the simulation start (joints and tracers of suppressed bodies
+  dropped). The geometry key includes the suppression list only when it is not empty, so every
+  existing document keeps its key.
+- Kinematics (`planMechanism`, `mechanismPose`): the swept joint's world frame from body A; its
+  moving side is body B and everything reached through the other joints (a loop back to body A is
+  refused: it cannot be swept alone); hinges coupled through gear meshes (either direction, in
+  chains) turn their own side at the product of the ratios. The sweep (`packages/geometry/src/
+  analysis/mechanism.ts`) moves the evaluated meshes rigidly per pose and calls the kernel's
+  pairwise `interference` (bounding-box prefilter, Manifold intersection, optional `minGap`); in
+  the editor it runs in the geometry worker, over MCP in the geometry thread.
+- Presentation: `viewport.setPresentation(map)` sets display matrices only (reapplied after a
+  rebuild, cleared by the simulation), and the canvas reports `data-presented`. Exploded and pose
+  views are a view state, not history; saving an exploded view or a configuration is.
+- Commands: `group`, `ungroup`, `groups`, `suppress`, `unsuppress`, `config`, `explode`,
+  `mechanism`, `planetary` in the registry (terminal, palette, MCP `cad_run_commands`, CLI `run`),
+  each edit one Undo step with a canonical invocation in the journal. `explode auto` and
+  `mechanism` take an `AssemblyHost` (bounds, mechanism check) that the editor, MCP and CLI
+  provide. MCP tools `cad_assembly` and `cad_check_mechanism` (read-only); CLI verbs `assembly` and
+  `mechanism`. Editor menu: section **Assemblies** (`assembly`, `explode-view`, `configurations`,
+  `mechanism-check`, `planetary-gear`) in `editor-menu.ts`, so BrickWright's menus list them; the
+  standalone toolbar shows them in its Edit menu. German for everything
+  (`locales/de-assembly.ts`).
+
+**Tests.** `tests/assembly.test.ts` (16): groups at version 50 with save/load, model source,
+history archive and Undo back to the earlier version; pruning on delete, copy and paste with
+groups, validation (a body in two groups, a group cycle, the version gate); terminal commands and
+journal; the MPM3610 STEP import grouped as the file nests it (top product, the IC as a subgroup
+with its product and instance, single-body components named after their occurrence) and a file
+without assemblies imported without groups; `stepImportGroups` on hand-made chains; suppression
+through geometry, the geometry key, `configuredDocument` and exact STEP export; configurations
+with parameters and suppression switched and undone; exploded views planned along an axis,
+radially and per group, offsets per step, never moving the model; an assembly sheet in an exploded
+view and the sheet's view dropped with the view; a swinging arm hitting a stop from 85° to 95°
+(3 of 37 poses) and a clear range; closed loops, fixed joints and a slider without limits refused;
+the planetary layout rules, its ratios (planets −1, ring −1/3 for 12/12/36), no tooth interference
+over one tooth pitch of the sun in 2.5° steps and over a full turn, and planets turned half a tooth
+colliding with sun and ring at rest; `planetary` inserted from the terminal with its group and view;
+German; MCP `cad_run_commands` (`planetary`, `explode auto`), `cad_assembly` and
+`cad_check_mechanism` (read-only, revision unchanged). Lab: `tests/step-structure.test.ts` (3).
+Browser: `tests/browser/assembly.spec.ts` on the `ipad` project, by touch.
+
+**Left open.** Linked versus independent instances (a repeated STEP part is stored once per
+instance) and mates with stable frames (joints are the simulation's hinges, sliders, pivots and
+fixed joints); suppression of construction inside a body (configurations suppress top-level bodies
+only); configurations of a part used by several assemblies (the lab's `configurations()` per part
+file) and a bill of materials grouped by configuration; exploded-view trails and per-step
+directions edited by dragging; exact edges on exploded drawing sheets (refused with the reason);
+a continuous swept-volume or exact-distance check between samples, joint-limit suggestion from
+geometry and the lab's rest-pose mate-gap diagnostics; carrier-driven (planet carrier turning)
+planetary sets, which need a carrier body on its own hinge; macOS native menus for the new items.
 
 ### Phase 7: delivery and qualification
 
@@ -1578,7 +1707,7 @@ product structure and of files over the import limits (16 MiB; 3 MiB through MCP
 
 Order: 5.1, 5.2 and 5.4 first (5.4 in the lab, alongside), then 6.1 with the drafting
 work (hidden-line views from exact edges done 2026-11-27), then the rest of Phase 6 by demand
-(6.3, manufacturing checks, done 2026-11-27; 6.5, smaller tools, done 2026-11-27).
+(6.3, manufacturing checks, done 2026-11-27; 6.4, assemblies, done 2026-11-27; 6.5, smaller tools, done 2026-11-27).
 
 ### Exact features in BrickWright's menus (Phase 7.1, 2026-11-27)
 

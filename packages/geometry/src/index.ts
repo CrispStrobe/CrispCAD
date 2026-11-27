@@ -23,3 +23,4 @@ export type {ManufacturingInput} from './analysis/manufacturing.js';
 export {inspectSurfaceBlends} from './analysis/blends.js';
 export type {SurfaceBlendInput} from './analysis/blends.js';
 export {materialMeasures,MAX_OVERLAP_BODIES} from './analysis/materials.js';
+export {checkMechanism} from './analysis/mechanism.js';

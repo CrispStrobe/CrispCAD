@@ -9,7 +9,7 @@
 // itself does not read it back: that read took a quarter of the import time (the 58-body Feather
 // RP2040 board: 8 s of 38 s CPU) and was repeated by the first exact request anyway.
 import {MAX_EXACT_BODY_BREP_CHARS,MAX_STEP_IMPORT_BODIES,MAX_STEP_IMPORT_BYTES,STEP_IMPORT_DISPLAY_TOLERANCE,exactBodyKey,t} from '@brickwright/cad-core';
-import type {ExactBody,ExactBodyData,Vec3} from '@brickwright/cad-core';
+import type {ExactBody,ExactBodyData,StepImportOccurrence,Vec3} from '@brickwright/cad-core';
 import {ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactSolid} from '@crispcad/exact-kernel';
 import {displayTessellation} from './display.js';
@@ -17,6 +17,9 @@ import {displayTessellation} from './display.js';
 export interface ImportedExactBody {
  /** The body's name in the file, or the file's name with its index. */
  name:string;
+ /** The body's place in the file's product structure, top product first (exact kernel 0.1.11),
+  * or null when the kernel could not match it to the bodies. */
+ occurrence:StepImportOccurrence[]|null;
  /** `#rrggbb` from the file, or null. */
  color:string|null;
  body:Omit<ExactBodyData,'origin'>;
@@ -64,9 +67,9 @@ export function importStepBodies(k:ExactKernel,bytes:Uint8Array,file:string):Exa
  try{read=k.importStepBodies(bytes,{maxBodies:MAX_STEP_IMPORT_BODIES});}
  catch(error){throw translatedStepError(error);}
  const base=file.replace(/\.(step|stp)$/i,'')||'STEP body';
- const bodies=read.bodies.map(({solid,name,color},i)=>{
+ const bodies=read.bodies.map(({solid,name,color,occurrence},i)=>{
   const label=cleanName(name)||(read.bodies.length>1?`${base} ${i+1}`:base);
-  return {name:label,color:hex(color),body:storedBody(k,solid,label)};
+  return {name:label,occurrence:occurrence?occurrence.map(o=>({product:o.product,instance:o.instance})):null,color:hex(color),body:storedBody(k,solid,label)};
  });
  return {bodies,notes:read.notes};
 }

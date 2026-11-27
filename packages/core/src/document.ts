@@ -22,6 +22,8 @@ import type {HoleFeature} from './fasteners.js';
 import {checkSplitShape,evaluateSplit} from './split.js';
 import type {SplitFeature} from './split.js';
 import { checkPhysics } from './physics.js';
+import {checkAssembly,prunedAssembly,sameAssembly} from './assembly.js';
+import type {AssemblyDesign} from './assembly.js';
 import { checkParametricDesign } from './parameters.js';
 import type { ParametricDesign } from './parameters.js';
 import {checkGenerator} from './generators.js';
@@ -38,7 +40,7 @@ export function constructionInputs(node:SolidNode|undefined):readonly string[]{
   if(node?.kind==='mirror'||node?.kind==='pattern'||node?.kind==='split'||node?.kind==='exact-feature')return [node.source];
   return noInputs;
 }
-export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch>; provenance?:ModelProvenance; modelSource?:ModelSource; simulation?:SimulationSettings; tracers?:MotionTracer[]; drawings?:DrawingSheet[] }
+export interface CadDocument { format: 'brickwright-cad'; version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50; units: 'mm'; id: string; title: string; nodes: Record<string, SolidNode>; roots: string[]; joints?: CadJoint[]; parametric?: ParametricDesign; sketches?:Record<string,PlanarSketch>; provenance?:ModelProvenance; modelSource?:ModelSource; simulation?:SimulationSettings; tracers?:MotionTracer[]; drawings?:DrawingSheet[]; assembly?:AssemblyDesign }
 export const isCube=(node:SolidNode)=>node.kind==='box'&&node.generator?.preset==='cube';
 function linkedCubeValue(previous:readonly number[],next:readonly number[]):number{const changed=next.filter((v,i)=>Math.abs(v-previous[i])>1e-10*Math.max(1,Math.abs(v)));if(changed.some(v=>Math.abs(v-changed[0])>1e-10*Math.max(1,Math.abs(v))))throw new Error(translate('Cube edges are linked; use a Box for independent dimensions'));return changed[0]??next[0];}
 export function constrainCubeTransform(node:SolidNode,next:Transform):Transform{if(!isCube(node))return next;if(!vec(next.scale,.001,1000))throw new Error(translate('Cube edges are linked; use a Box for independent dimensions'));const axis=next.scale.map((v,i)=>Math.abs(v/node.transform.scale[i]-1)).reduce((best,v,i,a)=>v>a[best]?i:best,0),scale=next.scale[axis];return {...next,scale:[scale,scale,scale]};}
@@ -54,7 +56,10 @@ export function newId(): string {
 export const createDocument = (title = translate('Untitled design')): CadDocument => ({ format: 'brickwright-cad', version: 1, units: 'mm', id: newId(), title, nodes: {}, roots: [] });
 /** Fast stale-result guard, not an authenticity/signing mechanism. */
 export function documentGeometryKey(doc: CadDocument): string {
-  const source=JSON.stringify([doc.id,doc.roots,doc.sketches,doc.parametric,Object.entries(doc.nodes).map(([id,n])=>{const {physics,...geometry}=n;if(doc.version>=5)delete geometry.provenance;return [id,geometry];})]);
+  const parts:unknown[]=[doc.id,doc.roots,doc.sketches,doc.parametric,Object.entries(doc.nodes).map(([id,n])=>{const {physics,...geometry}=n;if(doc.version>=5)delete geometry.provenance;return [id,geometry];})];
+  // Suppressed bodies are not built; documents without suppression keep their key unchanged.
+  if(doc.assembly?.suppressed?.length)parts.push({suppressed:doc.assembly.suppressed});
+  const source=JSON.stringify(parts);
   return geometrySignature(source);
 }
 function fail(message: string): never { throw new Error(translate`Invalid CAD project: ${message}`); }
@@ -66,7 +71,7 @@ const vec = (v: unknown, min = -1e6, max = 1e6): v is Vec3 => Array.isArray(v) &
 
 /** Validate before replacing any live state. Unknown versions are refused, never downgraded. */
 export function checkDocument(value: unknown): CadDocument {
-  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49].includes(value.version as number) || value.units !== 'mm') fail(translate('unsupported format, version or units'));
+  if (!record(value) || value.format !== 'brickwright-cad' || ![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50].includes(value.version as number) || value.units !== 'mm') fail(translate('unsupported format, version or units'));
   if (!idOk(value.id) || !text(value.title) || !record(value.nodes) || !Array.isArray(value.roots)) fail(translate('missing document identity, nodes or roots'));
   const nodes = value.nodes as Record<string, unknown>;
   const entries = Object.entries(nodes);
@@ -138,6 +143,7 @@ export function checkDocument(value: unknown): CadDocument {
   checkFeatures(value as unknown as CadDocument);
   for(const node of Object.values(nodes) as SolidNode[])if(node.kind==='split')evaluateSplit(node,value as unknown as CadDocument);
   checkDrawingSheets(value as unknown as CadDocument);
+  checkAssembly(value as unknown as CadDocument);
   checkModelSource(value as unknown as CadDocument);
   return value as unknown as CadDocument;
 }
@@ -180,4 +186,12 @@ export function pruneDocument(doc: CadDocument) {
   pruneModelProvenance(doc);
   if(doc.version>=8&&doc.tracers)doc.tracers=doc.tracers.filter(trace=>doc.roots.includes(trace.bodyId)&&!doc.nodes[trace.bodyId].reference&&doc.nodes[trace.bodyId].role!=='hole');
   if(doc.parametric)doc.parametric.bindings=doc.parametric.bindings.filter(binding=>keep.has(binding.nodeId));
+  pruneAssemblyReferences(doc);
+}
+/** Drops assembly references to bodies that are no longer top-level, and drawing sheets'
+ * exploded views that no longer exist. Replaces (never mutates) the assembly block. */
+export function pruneAssemblyReferences(doc:CadDocument){
+  if(doc.assembly){const next=prunedAssembly(doc);if(next){if(!sameAssembly(next,doc.assembly))doc.assembly=next;}else delete doc.assembly;}
+  if(doc.drawings?.some(sheet=>sheet.explode&&!doc.assembly?.views?.some(view=>view.id===sheet.explode!.view)))
+    doc.drawings=doc.drawings.map(sheet=>sheet.explode&&!doc.assembly?.views?.some(view=>view.id===sheet.explode!.view)?(({explode:_e,...rest})=>rest)(sheet):sheet);
 }

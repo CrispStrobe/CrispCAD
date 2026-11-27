@@ -9,10 +9,10 @@ import type {CadCommand} from './index.js';
 
 /**
  * The menu an item belongs to. `file`, `edit`, `view` and `object` match the standalone app's
- * menus; `exact` (exact B-rep modeling), `fastening` (standard holes, ISO parts, fasteners), `drawing` (drawings and checks) and `tools` group the
+ * menus; `exact` (exact B-rep modeling), `fastening` (standard holes, ISO parts, fasteners), `assembly` (groups, exploded views, configurations, mechanism check), `drawing` (drawings and checks) and `tools` group the
  * rest so a host with only File and Edit menus can show them as submenus.
  */
-export type EditorMenuSection='file'|'exact'|'fastening'|'drawing'|'edit'|'view'|'object'|'tools';
+export type EditorMenuSection='file'|'exact'|'fastening'|'assembly'|'drawing'|'edit'|'view'|'object'|'tools';
 /** When an item is enabled (all items without one always are). */
 export type EditorMenuRequirement='hasSelection'|'canDelete'|'canCombine'|'canExport'|'hasBodies'|'canUndo'|'canRedo'|'oneBody'|'canDraw';
 export interface EditorMenuEntry {
@@ -35,7 +35,7 @@ export interface EditorMenuItem extends EditorMenuEntry {
 }
 /** English i18n keys naming each section, for hosts that show sections as submenus. */
 export const editorMenuSections:Readonly<Record<EditorMenuSection,string>>=Object.freeze({
- file:'File',exact:'Exact modeling (B-rep)',fastening:'Holes and fasteners',drawing:'Drawings and checks',edit:'Edit',view:'View',object:'Object',tools:'CAD tools',
+ file:'File',exact:'Exact modeling (B-rep)',fastening:'Holes and fasteners',assembly:'Assemblies',drawing:'Drawings and checks',edit:'Edit',view:'View',object:'Object',tools:'CAD tools',
 });
 const entry=(section:EditorMenuSection,group:number,command:CadCommand,label:string,extra:{requires?:EditorMenuRequirement;exact?:true}={}):EditorMenuEntry=>({command,label,section,group,...extra});
 export const editorMenu:readonly EditorMenuEntry[]=Object.freeze([
@@ -57,6 +57,11 @@ export const editorMenu:readonly EditorMenuEntry[]=Object.freeze([
  entry('fastening',0,'hole','Standard hole',{requires:'hasBodies'}),
  entry('fastening',0,'fasten','Fasten holes',{requires:'hasBodies'}),
  entry('fastening',1,'standard-part','Standard parts'),
+ entry('assembly',0,'assembly','Groups and suppression…',{requires:'hasBodies'}),
+ entry('assembly',0,'explode-view','Exploded view',{requires:'hasBodies'}),
+ entry('assembly',0,'configurations','Configurations…',{requires:'hasBodies'}),
+ entry('assembly',1,'mechanism-check','Check mechanism…',{requires:'hasBodies'}),
+ entry('assembly',1,'planetary-gear','Insert planetary gear set'),
  entry('drawing',0,'drawing','Assembly drawing…',{requires:'canDraw'}),
  entry('drawing',0,'drawing-exact','Assembly drawing from exact edges…',{requires:'canDraw',exact:true}),
  entry('drawing',0,'drawing-export','Export drawing (PDF, SVG or DXF)…',{requires:'canDraw'}),

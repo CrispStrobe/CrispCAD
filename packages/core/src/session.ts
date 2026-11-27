@@ -11,8 +11,10 @@ import {generateModelSource,compileModelSource,updateModelSource,sameModelValue}
 import {t} from './i18n.js';
 import type {ModelProvenanceRecord} from './model-provenance.js';
 import {assertProvenanceUpgrade,pruneModelProvenance} from './model-provenance.js';
-import {constructionInputs,isCube,constrainCubeEdit,constrainCubeTransform, checkDocument, createDocument, freezeDocument, identityTransform, newId, parseDocument, pruneDocument, serializeDocument, validateDocument } from './document.js';
+import {pruneAssemblyReferences,constructionInputs,isCube,constrainCubeEdit,constrainCubeTransform, checkDocument, createDocument, freezeDocument, identityTransform, newId, parseDocument, pruneDocument, serializeDocument, validateDocument } from './document.js';
 import type { CadDocument, Primitive, SolidNode, Transform, Vec3 } from './document.js';
+import {applyConfiguration,captureConfiguration,groupBodies as assemblyGroupBodies} from './assembly.js';
+import type {AssemblyDesign,AssemblyGroup,ExplodedView} from './assembly.js';
 import {applyDocumentCommand,checkKernelIdentity,copySessionCommand,createDocumentCommand,parseSessionCommand,sameSessionValue,sessionCommandRecord} from './session-commands.js';
 import type {KernelIdentity} from './session-commands.js';
 import type {SessionCommand,SessionCommandRecord} from './session-commands.js';
@@ -40,7 +42,7 @@ function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,ex
  const copied=new Map(joints.map((joint,i)=>[joint.id,result[i].id]));for(const next of result)if(next.gearMesh){const partner=copied.get(next.gearMesh.joint);if(partner)next.gearMesh={...next.gearMesh,joint:partner};else delete next.gearMesh;}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'|'artworkSourceId'|'artworkProfile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38|41|44|45|47|48|49){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38|41|44|45|47|48|49|50){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -214,6 +216,12 @@ function insertFragment(d:CadDocument,source:CadDocument,placeRoot:(root:SolidNo
         if(mergeOffset)mergeFragmentParameters(d,source,ids,mergeOffset,sketches);
         if(source.version>=8&&source.tracers?.length){if(d.version<8)upgradeSimulation(d);d.tracers=[...(d.tracers??[]),...source.tracers.map(trace=>({...structuredClone(trace),id:newId(),bodyId:ids.get(trace.bodyId)!}))];}
         if (source.joints?.length) d.joints = [...(d.joints ?? []), ...copyAssemblyJoints(source.joints,ids,d.joints??[])];
+        // Groups and exploded views come along (renumbered); configurations stay with their design.
+        if(source.assembly?.groups?.length){
+          const groupIds=new Map(source.assembly.groups.map(g=>[g.id,newId()])),a=d.assembly??{version:1 as const};
+          const views=(source.assembly.views??[]).map(v=>({...structuredClone(v),id:newId(),steps:v.steps.map(step=>({...structuredClone(step),id:newId(),...(step.group!==undefined?{group:groupIds.get(step.group)!}:{}),...(step.bodies?{bodies:step.bodies.map(b=>ids.get(b)!)}:{})}))}));
+          d.assembly={...a,groups:[...(a.groups??[]),...source.assembly.groups.map(g=>({...structuredClone(g),id:groupIds.get(g.id)!,members:g.members.map(m=>ids.get(m)!),...(g.parent!==undefined?{parent:groupIds.get(g.parent)!}:{})}))],...(views.length?{views:[...(a.views??[]),...views]}:{})};
+        }
         
  return roots;
 }
@@ -224,6 +232,18 @@ function composeTransforms(outer:Transform,inner:Transform):Transform{
 }
 const mulRotation=(a:number[],b:number[])=>{const o=new Array(9).fill(0);for(let i=0;i<3;i++)for(let j=0;j<3;j++)for(let k=0;k<3;k++)o[i*3+j]+=a[i*3+k]*b[k*3+j];return o as Parameters<typeof eulerFromMatrix>[0];};
 
+/** A group of an imported STEP file: entry indices of its bodies, the index of its parent group. */
+export interface ImportGroup {name:string;members:number[];parent?:number;source?:AssemblyGroup['source']}
+const assemblyOf=(d:CadDocument):AssemblyDesign=>d.assembly??{version:1};
+function addImportGroups(d:CadDocument,groups:readonly ImportGroup[],ids:readonly string[]){
+  upgradeModelFeatures(d,50);
+  const a=assemblyOf(d),groupIds=groups.map(()=>newId());
+  const added:AssemblyGroup[]=groups.map((g,i)=>{
+    if(g.parent!==undefined&&!(g.parent>=0&&g.parent<i))throw new Error('Import groups must list parents first');
+    return {id:groupIds[i],name:g.name.trim().slice(0,160)||t('STEP assembly'),members:g.members.map(index=>ids[index]),...(g.parent!==undefined?{parent:groupIds[g.parent]}:{}),...(g.source?{source:structuredClone(g.source)}:{})};
+  });
+  d.assembly={...a,groups:[...(a.groups??[]),...added]};
+}
 export function createCadSession(initial: CadDocument = createDocument(), options: CadSessionOptions = {}) {
   const kernels:readonly KernelIdentity[]=Object.freeze((options.kernels??[]).map(kernel=>{checkKernelIdentity(kernel);return Object.freeze({id:kernel.id,package:kernel.package,version:kernel.version});}));
   let activeKernel:KernelIdentity|undefined;
@@ -254,6 +274,7 @@ export function createCadSession(initial: CadDocument = createDocument(), option
     const positioned=positionSketchRegions(draft);
     applyParametricBindings(draft);
     normalizeCodeRevisions(document,draft);
+    pruneAssemblyReferences(draft);
     if(liveModelSource||draft.version>=6&&draft.modelSource){assertProvenanceUpgrade(draft);draft.version=Math.max(6,draft.version) as CadDocument['version'];draft.modelSource={version:1,language:'brickwright-design',source:updateModelSource(draft.modelSource?.source,draft)};}
     checkDocument(draft);
     for(const id of positioned)assertSketchJointsEditable(draft,id);
@@ -455,6 +476,97 @@ export function createCadSession(initial: CadDocument = createDocument(), option
       if(candidate.id!==document.id)throw new Error('Assembly edits must keep the project identity');
       commit(title,d=>{replaceDocumentContents(d,candidate);});
     },
+    /** Groups top-level bodies under a name, in one Undo step (document version 50). The bodies
+     * leave any group they were in. Returns the new group's id. */
+    groupBodies(name:string,ids:readonly string[],options:{parent?:string}={}){
+      const id=newId();
+      commit('Group bodies',d=>{
+        const chosen=[...new Set(ids)];
+        if(!chosen.length||!chosen.every(key=>d.roots.includes(key)))throw new Error(t('Select top-level bodies to group'));
+        const trimmed=name.trim();if(!trimmed||trimmed.length>160||/[\u0000-\u001f]/.test(trimmed))throw new Error(t('Name the group (at most 160 characters)'));
+        upgradeModelFeatures(d,50);
+        const a=assemblyOf(d);
+        if(options.parent!==undefined&&!a.groups?.some(g=>g.id===options.parent))throw new Error(t('The parent group does not exist'));
+        const groups=(a.groups??[]).map(g=>({...g,members:g.members.filter(m=>!chosen.includes(m))}));
+        groups.push({id,name:trimmed,members:chosen,...(options.parent!==undefined?{parent:options.parent}:{})});
+        d.assembly={...a,groups};
+        return chosen;
+      });
+      return id;
+    },
+    renameGroup(id:string,name:string){
+      commit('Rename group',d=>{
+        const trimmed=name.trim();if(!trimmed||trimmed.length>160||/[\u0000-\u001f]/.test(trimmed))throw new Error(t('Name the group (at most 160 characters)'));
+        const a=assemblyOf(d);if(!a.groups?.some(g=>g.id===id))throw new Error(t('The group does not exist'));
+        d.assembly={...a,groups:a.groups.map(g=>g.id===id?{...g,name:trimmed}:g)};
+      });
+    },
+    /** Dissolves a group: its bodies and subgroups move to its parent (or the top level). */
+    ungroup(id:string){
+      commit('Ungroup',d=>{
+        const a=assemblyOf(d),group=a.groups?.find(g=>g.id===id);if(!group)throw new Error(t('The group does not exist'));
+        let groups=a.groups!.filter(g=>g.id!==id).map(g=>g.parent===id?(group.parent!==undefined?{...g,parent:group.parent}:(({parent:_p,...rest})=>rest)(g)):g);
+        if(group.parent!==undefined)groups=groups.map(g=>g.id===group.parent?{...g,members:[...g.members,...group.members]}:g);
+        const views=a.views?.map(v=>({...v,steps:v.steps.flatMap(step=>{if(step.group!==id)return [step];const bodies=assemblyGroupBodies(a,id);return bodies.length?[{id:step.id,bodies,direction:step.direction,distance:step.distance}]:[];})}));
+        d.assembly={...a,groups,...(views?{views}:{})};
+      });
+    },
+    /** Adds an exploded view, or replaces the one with the same id. */
+    setExplodedView(view:ExplodedView){
+      commit('Edit exploded view',d=>{
+        upgradeModelFeatures(d,50);
+        const a=assemblyOf(d),views=a.views??[],next=structuredClone(view);
+        d.assembly={...a,views:views.some(v=>v.id===view.id)?views.map(v=>v.id===view.id?next:v):[...views,next]};
+      });
+    },
+    removeExplodedView(id:string){
+      commit('Remove exploded view',d=>{
+        const a=assemblyOf(d);if(!a.views?.some(v=>v.id===id))throw new Error(t('The exploded view does not exist'));
+        d.assembly={...a,views:a.views.filter(v=>v.id!==id)};
+      });
+    },
+    /** Leaves top-level bodies out of the model (or puts them back), in one Undo step. */
+    setSuppressed(ids:readonly string[],suppressed:boolean){
+      commit(suppressed?'Suppress bodies':'Unsuppress bodies',d=>{
+        const chosen=[...new Set(ids)];
+        if(!chosen.length||!chosen.every(key=>d.roots.includes(key)))throw new Error(t('Select top-level bodies'));
+        if(suppressed)upgradeModelFeatures(d,50);
+        const a=assemblyOf(d),current=new Set(a.suppressed??[]);
+        for(const key of chosen)if(suppressed)current.add(key);else current.delete(key);
+        if(suppressed&&d.roots.every(key=>current.has(key)))throw new Error(t('At least one body must stay in the model'));
+        const next={...a};if(current.size)next.suppressed=d.roots.filter(key=>current.has(key));else delete next.suppressed;
+        d.assembly=next;
+      });
+    },
+    /** Saves the current parameters and suppression as a named configuration (replacing one of
+     * that name), and makes it the active one. Returns its id. */
+    saveConfiguration(name:string){
+      let id=newId();
+      commit('Save configuration',d=>{
+        upgradeModelFeatures(d,50);
+        const a=assemblyOf(d),existing=a.configurations?.find(c=>c.name===name.trim());
+        if(existing)id=existing.id;
+        const config=captureConfiguration(d,name,id);
+        if(!existing&&(a.configurations?.length??0)>=64)throw new Error(t('At most 64 configurations'));
+        d.assembly={...a,configurations:existing?a.configurations!.map(c=>c.id===id?config:c):[...(a.configurations??[]),config],active:id};
+      });
+      return id;
+    },
+    /** Switches to a configuration: its parameter values and suppressed bodies, in one Undo step. */
+    useConfiguration(id:string){
+      const config=document.assembly?.configurations?.find(c=>c.id===id||c.name===id);
+      if(!config)throw new Error(t`Unknown configuration: ${id}`);
+      if(affectedOutlines(document,{...document,parametric:document.parametric?{...document.parametric,parameters:Object.fromEntries(Object.entries(document.parametric.parameters).map(([k,p])=>[k,config.parameters[k]!==undefined?{...p,expression:config.parameters[k]}:p]))}:undefined}).length)
+        throw new Error(t('This configuration changes parameters that drive constrained outlines; apply it from the Parameters panel.'));
+      commit('Use configuration',d=>{applyConfiguration(d,config);});
+    },
+    removeConfiguration(id:string){
+      commit('Remove configuration',d=>{
+        const a=assemblyOf(d),config=a.configurations?.find(c=>c.id===id||c.name===id);if(!config)throw new Error(t`Unknown configuration: ${id}`);
+        const next:AssemblyDesign={...a,configurations:a.configurations!.filter(c=>c!==config)};if(next.active===config.id)delete next.active;
+        d.assembly=next;
+      });
+    },
     saveDrawingSheet(inputs:DrawingInputs,sheetId?:string){
       const id=sheetId??newId();
       commit(sheetId?'Edit drawing sheet':'Add drawing sheet',d=>{
@@ -489,7 +601,7 @@ export function createCadSession(initial: CadDocument = createDocument(), option
         }
         const aligned=sheet.annotations?.some(annotation=>annotation.kind==='aligned');
         const curved=sheet.annotations?.some(annotation=>annotation.kind==='radius'||annotation.kind==='arc-length');
-        const version=sheet.exactEdges!==undefined||sheet.autoDimensions!==undefined?EXACT_DRAWING_DOCUMENT_VERSION:sheet.titleBlock!==undefined?29:assembly?(sheet.curveDimensions!==undefined?27:sheet.section?.additionalJogs!==undefined?26:sheet.edgeDimensions!==undefined?25:sheet.section?.jog!==undefined?24:sheet.section!==undefined?23:sheet.partsList===undefined?21:22):curved?20:aligned?19:outlineAnnotations.length?18:sheet.section?.jog!==undefined?17:sheet.annotations!==undefined?11:sheet.section?10:9;
+        const version=sheet.explode!==undefined?50:sheet.exactEdges!==undefined||sheet.autoDimensions!==undefined?EXACT_DRAWING_DOCUMENT_VERSION:sheet.titleBlock!==undefined?29:assembly?(sheet.curveDimensions!==undefined?27:sheet.section?.additionalJogs!==undefined?26:sheet.edgeDimensions!==undefined?25:sheet.section?.jog!==undefined?24:sheet.section!==undefined?23:sheet.partsList===undefined?21:22):curved?20:aligned?19:outlineAnnotations.length?18:sheet.section?.jog!==undefined?17:sheet.annotations!==undefined?11:sheet.section?10:9;
         if(d.version<version)d.version=version;
         d.drawings=sheetId?sheets.map(item=>item.id===id?sheet:item):[...sheets,sheet];
       });
@@ -717,7 +829,9 @@ export function createCadSession(initial: CadDocument = createDocument(), option
     },
     /** Bodies read from a STEP file by the exact kernel, as `exact-body` nodes in one Undo step
      * (document version 45). Only inside `withKernel`: the B-rep and display are the kernel's. */
-    addExactBodies(entries:readonly {body:ExactBodyData;name:string;color?:string|null;id?:string;position?:Vec3}[],label='Import STEP'):string[]{
+    /** With `groups` (a STEP file's product structure), the bodies are grouped as the file
+     * assembles them: each group lists the indices of its entries and of its parent group. */
+    addExactBodies(entries:readonly {body:ExactBodyData;name:string;color?:string|null;id?:string;position?:Vec3}[],label='Import STEP',groups:readonly ImportGroup[]=[]):string[]{
       if(!entries.length)throw new Error(t('The STEP file holds no solid to import.'));
       if(!activeKernel)throw new Error(t('Imported exact bodies can only be committed by the exact kernel.'));
       const ids=entries.map(entry=>entry.id??newId());
@@ -731,6 +845,7 @@ export function createCadSession(initial: CadDocument = createDocument(), option
             transform:{...identityTransform(),position:entry.position?[...entry.position] as Vec3:[0,0,0]}} as SolidNode;
           d.roots.push(ids[i]);
         });
+        if(groups.length)addImportGroups(d,groups,ids);
         return ids;
       });
       return ids;

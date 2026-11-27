@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-import {holeProfile,localToWorldPoint,t} from '@brickwright/cad-core';
+import {activeRoots,holeProfile,localToWorldPoint,t} from '@brickwright/cad-core';
 import {GeometryResourceLimitError} from './limits.js';
 import {triangulatePolyhedron} from './polyhedron.js';
 import {textProfileContours} from './font-profile.js';
@@ -259,7 +259,8 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
     } catch(error){if(error instanceof FeatureEvaluationError)throw error;throw new FeatureEvaluationError({source:'feature',id,...(error&&typeof error==='object'&&'code'in error&&typeof error.code==='string'?{code:error.code}:{}),message:`${node.name}: ${error instanceof Error?error.message:String(error)}`});}
   };
   try {
-    const bodies = doc.roots.map(id => {
+    // Suppressed bodies (the active configuration leaves them out) are not built.
+    const bodies = activeRoots(doc).map(id => {
       const node=doc.nodes[id];
       if(node.kind==='mesh'&&node.surface)return referenceMesh(node);
       const solid=build(id),mesh=solid.getMesh();

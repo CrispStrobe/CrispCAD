@@ -23,6 +23,10 @@
     "./materials": {
       "types": "./dist/analysis/materials.d.ts",
       "import": "./dist/analysis/materials.js"
+    },
+    "./mechanism": {
+      "types": "./dist/analysis/mechanism.d.ts",
+      "import": "./dist/analysis/mechanism.js"
     }
   },
   "files": [

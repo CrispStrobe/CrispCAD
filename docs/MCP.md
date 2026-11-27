@@ -51,6 +51,8 @@ history. Use a dedicated file: this process is its writer until closed.
 | `cad_render` | Read-only PNG views (iso/top/front/right/back/left/bottom) returned as MCP image content |
 | `cad_check_printability` | Read-only FDM screening of the current model: watertightness, sampled minimum wall, overhangs/bridges, bed fit, six ranked axis orientations |
 | `cad_check_manufacturing` | Read-only check for FDM printing, 3-axis CNC milling or a laser-cut sheet, plus edge-radius rules; exact B-rep where a body has one, mesh otherwise, each check labelled |
+| `cad_assembly` | Read-only assembly: groups (a STEP import's product structure), suppressed bodies, configurations, exploded views (with `view`/`factor`, each body's offset) and joints |
+| `cad_check_mechanism` | Read-only mechanism check: sweep a hinge or slider (with the gears it drives through gear meshes) and report collisions per sampled pose |
 | `cad_export_stl` | Base64 printable mesh; automatic paired attribution for recorded library sources |
 | `cad_export_step` | Read-only exact STEP (AP214) as base64 from the optional exact B-rep kernel; `objectIds` limits the bodies; unsupported bodies fail with a diagnostic naming body and feature |
 | `cad_measure_exact` | Read-only exact volume, area, bounds and centroid per body from the exact kernel |
@@ -134,6 +136,20 @@ the current revision, supply `objectId` and `expectedRevision`, and optionally
 `diameter`, `length` and either `pitch` or `turnsPerStart`. `preview: true` saves
 nothing. Acceptance appends one revision and resets local scale. See
 [thread redesign](SCREW-REDESIGN.md) for defaults and guards.
+
+## Assemblies
+
+`cad_assembly` lists the groups with all their bodies, suppressed bodies, configurations (the
+active one), exploded views and joints (number, motor port, kind, limits, gear mesh); with `view`
+(id or name) and `factor` (0–1) it adds each moved body's exploded offset in millimetres.
+`cad_check_mechanism` sweeps `joint` (motor port `A`, `B`…, joint id or number) through its
+limits, a full turn for a hinge without limits, or `range` (degrees or mm), in `steps` (36), with
+the gears it drives through gear meshes, and reports each colliding pair with the first and last
+sampled value and the largest overlap volume (Manifold), and with `clearanceMm` the pairs closer
+than that. Pairs a joint connects are exempt; the rest pose is checked for every pair. Both are
+read-only. Assembly edits go through `cad_run_commands`: `group`, `ungroup`, `suppress`,
+`unsuppress`, `config save|use|delete`, `explode auto|delete`, `planetary`. The CLI has the verbs
+`mechanism <project> [joint] [--range from,to] [--steps n] [--clearance mm]` and `assembly`.
 
 ## Manufacturing check
 

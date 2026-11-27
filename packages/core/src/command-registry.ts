@@ -18,6 +18,8 @@ import type {ExactCommandFile,ExactCommandHost,ExactKernelReport} from './exact-
 import {fastenerTable,parseFastenCommand,parseHoleCommand,parsePartCommand} from './fastening-commands.js';
 import type {GeneratedBuilder} from './fasteners.js';
 import {formatManufacturingReport,parseManufacturingCommand} from './manufacturing.js';
+import {ASSEMBLY_COMMANDS,parseAssemblyCommand} from './assembly-commands.js';
+import type {AssemblyHost} from './assembly-commands.js';
 import type {ManufacturingHost} from './manufacturing.js';
 import {parseSplitCommand} from './split.js';
 import {formatMaterialsReport,parseMaterialsCommand} from './materials.js';
@@ -108,6 +110,15 @@ const drafting:readonly Draft[]=[
  {name:'materials',aliases:['mass'],description:'Report the material, colour, volume and mass of each body, per material and per colour, and fused or overlapping materials; read-only',usage:'materials [all|"name"|id ...] [--exact]',category:'analysis',editsModel:false,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true},
  {name:'blends',aliases:[],description:'Inspect the fillets, rounds, chamfers and freeform blends of bodies on their exact B-rep, with their radii and tangency; read-only',usage:'blends [all|"name"|id ...]',category:'analysis',editsModel:false,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
  {name:'evidence',aliases:[],description:'STEP evidence: exact measures and a topology summary of a STEP file, or of the model\'s bodies written as STEP and read back; read-only',usage:'evidence step [all|"name"|id ...] | evidence step --file <file.step>',category:'analysis',editsModel:false,arguments:[arg('format','keyword',{values:['step']}),arg('targets','bodies',{optional:true,repeated:true})],headless:true,kernel:'exact'},
+ {name:'group',aliases:[],description:'Group top-level bodies under a name (an assembly)',usage:'group "name" [bodies…] [in "group"]',category:'edit',editsModel:true,arguments:[arg('name','keyword'),arg('targets','bodies',{optional:true,repeated:true})],headless:true},
+ {name:'ungroup',aliases:[],description:'Dissolve a group; its bodies move to the parent group',usage:'ungroup "group"',category:'edit',editsModel:true,arguments:[arg('group','keyword')],headless:true},
+ {name:'groups',aliases:[],description:'List the assembly: groups, bodies, exploded views and configurations',usage:'groups',category:'analysis',editsModel:false,arguments:[],headless:true},
+ {name:'suppress',aliases:[],description:'Leave bodies out of the model (not built, exported, simulated or drawn) until unsuppressed',usage:'suppress [bodies…]',category:'edit',editsModel:true,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true},
+ {name:'unsuppress',aliases:[],description:'Put suppressed bodies back into the model',usage:'unsuppress [bodies…|all]',category:'edit',editsModel:true,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true},
+ {name:'config',aliases:['configuration'],description:'Configurations: named parameter values and suppressed bodies, saved and switched in one Undo step',usage:'config [save|use|delete "name"]',category:'edit',editsModel:true,arguments:[arg('action','keyword',{optional:true,values:['save','use','delete']}),arg('name','keyword',{optional:true})],headless:true},
+ {name:'explode',aliases:[],description:'Exploded views: plan one from the bodies, list or delete them (the model does not move)',usage:'explode [auto [axis|radial] [+z|X,Y,Z] [spacing <mm>] [group "name"] [name "view"] | delete "view"]',category:'edit',editsModel:true,arguments:[arg('action','keyword',{optional:true,values:['auto','delete']})],headless:true},
+ {name:'mechanism',aliases:[],description:'Sweep a joint (and the gears it drives) through its range and report collisions at every sampled pose; read-only',usage:'mechanism [joint] [range <from> <to>] [steps <n>] [clearance <mm>]',category:'analysis',editsModel:false,arguments:[arg('joint','keyword',{optional:true})],headless:true},
+ {name:'planetary',aliases:[],description:'Insert a planetary gear set: sun, planets and ring gear on hinges with gear meshes',usage:'planetary [sun <teeth>] [planet <teeth>] [planets <n>] [module <mm>] [width <mm>] [backlash <mm>]',category:'create',editsModel:true,arguments:[],headless:true},
  {name:'journal',aliases:[],description:'Summarize or export the command journal',usage:'journal [export [cadscript|replay]]',category:'terminal',editsModel:false,arguments:[arg('action','keyword',{optional:true,values:['export']}),arg('format','keyword',{optional:true,values:['cadscript','replay']})],headless:true},
 ];
 type PaletteDraft={command:string;label:string;alias?:string;requires?:CommandAvailability};
@@ -131,6 +142,11 @@ const palette:readonly PaletteDraft[]=[
  {command:'materials',label:'Materials and mass',alias:'multi-material colour filament weight density print',requires:'hasBodies'},
  {command:'surface-blends',label:'Inspect surface blends',alias:'fillet round chamfer radius tangency G1 exact B-rep',requires:'hasBodies'},
  {command:'step-evidence',label:'STEP evidence',alias:'step stp review topology measures round trip SHA-256'},
+ {command:'assembly',label:'Assembly',alias:'groups exploded view configurations suppress mechanism',requires:'hasBodies'},
+ {command:'explode-view',label:'Exploded view',alias:'explode assembly animation',requires:'hasBodies'},
+ {command:'configurations',label:'Configurations',alias:'variants parameter sets suppress',requires:'hasBodies'},
+ {command:'mechanism-check',label:'Check mechanism',alias:'joint sweep collision interference gear motion',requires:'hasBodies'},
+ {command:'planetary-gear',label:'Planetary gear set',alias:'epicyclic sun planet ring gear transmission'},
  {command:'manufacturing',label:'Check for manufacturing',alias:'DFM CNC milling FDM printing laser sheet wall thickness corner radius edge radius undercut',requires:'hasBodies'},
  {command:'exact-feature',label:'Fillet, chamfer or shell',alias:'round bevel hollow exact B-rep',requires:'canWrapBody'},
  {command:'parameters',label:'Parameters',alias:'named dimensions formulas'},
@@ -360,6 +376,8 @@ export interface CommandRunnerOptions {
  blends?:SurfaceBlendHost;
  /** Reads the file `import step <file>` names (the CLI; MCP and the editor have their own way in). */
  readFile?:(path:string)=>Promise<{name:string;bytes:Uint8Array}>;
+ /** Serves `explode auto` (body bounds) and `mechanism` (the mechanism check). */
+ assembly?:AssemblyHost;
  /** Builds threaded screws for `part` and `fasten` (the editor's createPresetDocument); without it
   * screws are inserted as envelopes. */
  generated?:GeneratedBuilder;
@@ -409,6 +427,13 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
    const before=session.state.revision,record=options.journal?<T,>(line:string,commit:()=>T)=>options.journal!.withInvocation(line,commit):undefined;
    const done=await runStepImport(session,options.exact,await options.readFile(file),{signal:options.signal,record});
    return {command:spec.name,invocation:done.invocation,output:done.output,edited:session.state.revision!==before,...(done.kernel?{kernel:done.kernel}:{})};
+  }
+  if((ASSEMBLY_COMMANDS as readonly string[]).includes(spec.name)){
+   const command=parseAssemblyCommand(session,spec.name,tail);
+   if(!command.async)return run(raw);
+   const before=session.state.revision;
+   const output=await command.run(session,options.assembly,options.signal,options.journal?<T,>(line:string,commit:()=>T)=>options.journal!.withInvocation(line,commit):undefined);
+   return {command:spec.name,invocation:command.invocation,output,edited:session.state.revision!==before};
   }
   if(spec.name==='check'){
    const parsed=parseManufacturingCommand(session,tail);
@@ -470,6 +495,12 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
   if(name==='hole'||name==='fasten'||name==='part'){const command=name==='hole'?parseHoleCommand(session,tail):name==='fasten'?parseFastenCommand(session,tail,{generated:options.generated}):parsePartCommand(session,tail,{generated:options.generated}),output=options.journal?options.journal.withInvocation(command.invocation,()=>command.run()):command.run();return done(command.invocation,output);}
   if(name==='fasteners')return done(text,fastenerTable(tail));
   if(name==='split'){const command=parseSplitCommand(session,tail),output=options.journal?options.journal.withInvocation(command.invocation,()=>command.run()):command.run();return done(command.invocation,output);}
+  if((ASSEMBLY_COMMANDS as readonly string[]).includes(name)){
+   const command=parseAssemblyCommand(session,name,tail);
+   if(command.async)throw new Error(t`${name} needs evaluated geometry; run it in a host that provides it.`);
+   const output=options.journal&&command.edits?options.journal.withInvocation(command.invocation,()=>command.run(session) as string):command.run(session) as string;
+   return done(command.invocation,output);
+  }
   if(name==='upgrade-lofts'){const command=parseUpgradeLofts(session,tail),output=options.journal?options.journal.withInvocation(command.invocation,()=>command.run()):command.run();return done(command.invocation,output);}
   if(name==='journal'){
    if(!options.journal)throw new Error(t('No command journal is attached.'));

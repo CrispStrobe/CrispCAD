@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {FeatureEvaluationError,getLocale,t} from '@brickwright/cad-core';
-import type {FeatureDiagnostic,ExactCommandRequest,ExactCommandResult,ExactCommandHost,ExactDrawingData,ManufacturingReport,ManufacturingSettings,MaterialOverlap,MaterialVolume,SurfaceBlendReport} from '@brickwright/cad-core';
+import type {MechanismReport,MechanismSettings,FeatureDiagnostic,ExactCommandRequest,ExactCommandResult,ExactCommandHost,ExactDrawingData,ManufacturingReport,ManufacturingSettings,MaterialOverlap,MaterialVolume,SurfaceBlendReport} from '@brickwright/cad-core';
 import type { CadDocument,PlanarSketch,SketchProfile } from '@brickwright/cad-core';
 import type { AssemblyCut,AssemblySection,GeometryResult,PrintabilityReport,PrintabilitySettings } from '@brickwright/cad-geometry';
 import {EXACT_LIMITS_TABLET,resolveExactLimits} from '@brickwright/cad-exact/limits';
@@ -15,9 +15,9 @@ export type ManufacturingRequest={settings:ManufacturingSettings;bodies:string[]
 export type SurfaceBlendWorkerRequest={blends:{document:CadDocument;exact:ExactDrawingData;bodies:string[];kernel?:string;marks?:boolean}};
 /** The multi-material inspection's measures: volumes and overlaps of the evaluated meshes. */
 export type MaterialMeasures={volumes:MaterialVolume[];overlaps?:MaterialOverlap[]};
-type GeometryPayload={document:CadDocument;printability?:Partial<PrintabilitySettings>;manufacturing?:ManufacturingRequest;materials?:true}|OffsetRequest|SliceRequest|ExactRequest|SurfaceBlendWorkerRequest;
+type GeometryPayload={document:CadDocument;printability?:Partial<PrintabilitySettings>;manufacturing?:ManufacturingRequest;materials?:true;mechanism?:MechanismSettings}|OffsetRequest|SliceRequest|ExactRequest|SurfaceBlendWorkerRequest;
 export type GeometryRequest=GeometryPayload&{request:number;wasmURL:string;locale:string;exactLimits?:ExactLimits};
-type WorkerResult=GeometryResult|SketchProfile|AssemblySection|PrintabilityReport|ManufacturingReport|ExactCommandResult|SurfaceBlendReport|MaterialMeasures;
+type WorkerResult=GeometryResult|SketchProfile|AssemblySection|PrintabilityReport|ManufacturingReport|MechanismReport|ExactCommandResult|SurfaceBlendReport|MaterialMeasures;
 /** An exact-kernel failure with the body and feature it names (see @brickwright/cad-exact). */
 export class ExactCommandError extends Error {
   constructor(message:string,readonly diagnostic?:{code:string;bodyId:string;nodeId:string;feature:string;message:string}){super(message);this.name='ExactCommandError';}
@@ -167,6 +167,10 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
     /** The surface-blend analysis of exact data, in the worker. */
     inspectBlends(request:SurfaceBlendWorkerRequest['blends'],signal?:AbortSignal){
       return geometry.send<SurfaceBlendReport>({blends:request},signal);
+    },
+    /** The mechanism check (Phase 6.4): sweeps a joint in the worker with Manifold. */
+    checkMechanism(document:CadDocument,settings:MechanismSettings,signal?:AbortSignal){
+      return geometry.send<MechanismReport>({document,mechanism:settings},signal);
     },
     /** Exact-kernel requests (`export step`, `measure exact`); the kernel loads on first use. */
     exact:exactHost,

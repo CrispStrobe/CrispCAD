@@ -1,4 +1,4 @@
-export {constructionInputs,isCube,constrainCubeTransform, MAX_DOCUMENT_BYTES, documentGeometryKey, identityTransform, newId, createDocument, validateDocument, parseDocument, serializeDocument, freezeDocument, pruneDocument } from './document.js';
+export {constructionInputs,isCube,constrainCubeTransform, MAX_DOCUMENT_BYTES, documentGeometryKey, identityTransform, newId, createDocument, validateDocument, parseDocument, serializeDocument, freezeDocument, pruneDocument, pruneAssemblyReferences } from './document.js'; export * from './assembly.js'; export * from './planetary.js'; export * from './assembly-commands.js';
 export type { Vec3, Transform, Primitive, Shape, SolidNode, CadDocument } from './document.js';
 export * from './session.js';
 export {parseSessionCommand,serializeSessionCommand,checkKernelIdentity,checkCommandKernel} from './session-commands.js';

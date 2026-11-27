@@ -8,6 +8,8 @@
  * and a body without an exact construction is an error naming the feature.
  */
 import type {CadDocument,Vec3} from './document.js';
+import {stepImportGroups} from './assembly.js';
+import type {StepImportOccurrence} from './assembly.js';
 import {newId} from './document.js';
 import {createCadSession} from './session.js';
 import type {CadSession} from './session.js';
@@ -41,7 +43,10 @@ export interface ExactCommandRequest {
  readonly section?:{readonly axis:0|1;readonly positions:readonly number[]};
 }
 /** One body of an imported STEP file, as the exact kernel read and stored it. */
-export interface ImportedExactBodyReport {readonly name:string;readonly color:string|null;readonly body:Omit<ExactBodyData,'origin'>}
+export interface ImportedExactBodyReport {readonly name:string;readonly color:string|null;readonly body:Omit<ExactBodyData,'origin'>;
+ /** Where the body sits in the file's product structure (top product first), or null when the
+  * kernel could not match it (exact kernel 0.1.11; absent from older kernels). */
+ readonly occurrence?:readonly StepImportOccurrence[]|null}
 export interface ExactKernelReport extends KernelIdentity {readonly smlib?:string;readonly licence?:string}
 export interface ExactBodyMeasureReport {
  readonly id:string;readonly name:string;
@@ -341,9 +346,13 @@ export async function runStepImport(session:CadSession,host:ExactCommandHost,fil
  if(result.operation!=='import-step')throw new Error(t('The exact kernel returned an unexpected result.'));
  if(session.state.revision!==revision)throw new Error(t('The model changed while the exact kernel was reading the STEP file. Import it again.'));
  const invocation=`import step ${/^[\w.-]+$/.test(name)?name:quote(name)}`,count=result.bodies.length;
- const entries=result.bodies.map((body,i)=>({name:body.name,color:body.color,body:{...body.body,origin:{file:name,sha256,bytes:file.bytes.byteLength,body:i+1,bodies:count}}}));
- const ids=(options.record??plain)(invocation,()=>session.withKernel(result.kernel,()=>session.addExactBodies(entries)));
- const lines=result.bodies.map((body,i)=>t`${body.name} (${ids[i]}): exact volume ${formatNumber(body.body.measures.volume)} mm³ · area ${formatNumber(body.body.measures.area)} mm² · bounds ${formatPoint(body.body.measures.min)} – ${formatPoint(body.body.measures.max)} · display ${body.body.display.indices.length/3} triangles`);
- const notes=result.notes.map(note=>t`Repaired while reading: ${note}`);
- return {output:[t`Imported ${count} exact bodies from ${name} (${kernelLabel(result.kernel)}):`,...lines,...notes].join('\n')+timingLine(result.timing).join(''),edited:true,kernel:result.kernel,invocation,ids};
+ // The file's assembly becomes named groups; a body alone in its occurrence takes that occurrence's name.
+ const structure=stepImportGroups(result.bodies.map(body=>body.occurrence??null),result.bodies.map(body=>body.name));
+ const entries=result.bodies.map((body,i)=>({name:structure.names[i],color:body.color,body:{...body.body,origin:{file:name,sha256,bytes:file.bytes.byteLength,body:i+1,bodies:count}}}));
+ const groups=structure.groups.map(g=>({...g,name:g.parent===undefined&&!g.source.product&&!g.source.instance?name.replace(/\.(step|stp)$/i,''):g.name}));
+ const ids=(options.record??plain)(invocation,()=>session.withKernel(result.kernel,()=>session.addExactBodies(entries,'Import STEP',groups)));
+ const lines=result.bodies.map((body,i)=>t`${entries[i].name} (${ids[i]}): exact volume ${formatNumber(body.body.measures.volume)} mm³ · area ${formatNumber(body.body.measures.area)} mm² · bounds ${formatPoint(body.body.measures.min)} – ${formatPoint(body.body.measures.max)} · display ${body.body.display.indices.length/3} triangles`);
+ const notes=result.notes.map(note=>/^The product structure was not kept/.test(note)?t('The file’s product structure could not be matched to its bodies, so they were imported without groups.'):t`Repaired while reading: ${note}`);
+ const grouped=structure.groups.length?[t`Kept the file’s assembly as ${structure.groups.length} groups: ${structure.groups.map(g=>g.name).slice(0,12).join(', ')}${structure.groups.length>12?' …':''}.`]:[];
+ return {output:[t`Imported ${count} exact bodies from ${name} (${kernelLabel(result.kernel)}):`,...lines,...grouped,...notes].join('\n')+timingLine(result.timing).join(''),edited:true,kernel:result.kernel,invocation,ids};
 }

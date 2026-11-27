@@ -2,7 +2,7 @@
 // Optional exact B-rep backend. Importing this module loads no WebAssembly; `createExactBackend`
 // loads the kernel lab's SMLib build once per process or worker. Hosts import this module
 // lazily (dynamic import) so the default Manifold path never pays for it.
-import {constructionInputs,edgeReferences,staleExactFeatures,validateDocument,t} from '@brickwright/cad-core';
+import {activeRoots,constructionInputs,edgeReferences,staleExactFeatures,validateDocument,t} from '@brickwright/cad-core';
 import type {CadDocument,ExactBodyEdgesReport,ExactCommandHost,ExactCommandRequest,ExactCommandResult,ExactFeatureDisplay,KernelIdentity} from '@brickwright/cad-core';
 import {createSmlibKernel,ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactSolid,SmlibKernel,SmlibLoadOptions} from '@crispcad/exact-kernel';
@@ -81,7 +81,7 @@ export function exactTargets(doc:CadDocument,ids?:readonly string[]):string[]{
    if(node.reference)throw new ExactKernelError('invalid-input',t`${node.name} is a reference body and is never exported or measured.`);
    if(node.role==='hole')throw new ExactKernelError('invalid-input',t`${node.name} is a hole body; combine it with a solid first.`);
   }
- }else targets=doc.roots.filter(id=>!doc.nodes[id].reference&&doc.nodes[id].role!=='hole');
+ }else targets=activeRoots(doc).filter(id=>!doc.nodes[id].reference&&doc.nodes[id].role!=='hole');
  if(!targets.length)throw new ExactKernelError('invalid-input',t('The design has no solid bodies to export'));
  if(targets.length>MAX_EXACT_BODIES)throw new ExactKernelError('invalid-input',t`Exact commands are limited to ${MAX_EXACT_BODIES} bodies.`);
  return targets;

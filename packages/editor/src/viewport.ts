@@ -435,6 +435,17 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     canvas.dataset.selected=String(ids.length);placeGizmo(); draw();
   }
   const clear = () => { for (const mesh of meshes.values()) { scene.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose(); } for (const outline of outlines.values()) { outline.geometry.dispose(); (outline.material as THREE.Material).dispose(); } meshes.clear(); outlines.clear(); };
+  // Assembly presentation (exploded views, joint poses): world motions of displayed meshes only.
+  let presentation:ReadonlyMap<string,readonly number[]>|null=null;
+  function applyPresentation(){
+    if(simulating)return;
+    for(const [id,mesh] of meshes){
+      const m=presentation?.get(id);
+      if(m)mesh.matrix.set(m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11],0,0,0,1);else mesh.matrix.identity();
+      mesh.matrixWorldNeedsUpdate=true;
+    }
+    canvas.dataset.presented=String(presentation?.size??0);
+  }
   function update(result: GeometryResult) {
     cancelTransform(); clear();
     for (const body of result.bodies) {
@@ -449,7 +460,7 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       const outline = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 28), new THREE.LineBasicMaterial({ color: '#172a36', transparent: true, opacity: 0.8 })); mesh.add(outline);
       outline.matrixAutoUpdate = false;
       meshes.set(body.id, mesh); outlines.set(body.id, outline); scene.add(mesh);
-    } wiring.reset(robotWires(session.state.document,result));canvas.dataset.wireCount=String(wiring.count);setSelection(selected); draw();
+    } if(presentation)applyPresentation(); wiring.reset(robotWires(session.state.document,result));canvas.dataset.wireCount=String(wiring.count);setSelection(selected); draw();
   }
   function setView(direction: ViewDirection) {
     cancelTransform(); const distance = camera.position.distanceTo(orbit.target);
@@ -535,7 +546,10 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
         }
       }
       canvas.dataset.previewBalls=String(previewBalls.size);placeGizmo();scheduleDraw();
-    }, canvas, update, setSelection, frame, setView, cancelTransform,get interacting(){return surfacePlacement.active||!!boxSelect||!!drag||!!directDrag?.moved;},
+    },
+    /** Shows bodies moved (exploded view, joint pose) without changing the model; null restores. */
+    setPresentation(value:ReadonlyMap<string,readonly number[]>|null){cancelTransform();presentation=value&&value.size?value:null;applyPresentation();placeGizmo();scheduleDraw();},
+    canvas, update, setSelection, frame, setView, cancelTransform,get interacting(){return surfacePlacement.active||!!boxSelect||!!drag||!!directDrag?.moved;},
     beginPlacement(){cancelPointPick();if(surfacePlacement.active)endPlacement(false);cancelTransform();placementControls={rotate:orbit.enableRotate,gizmo:gizmo.enabled};surfacePlacement.begin();orbit.enableRotate=false;gizmo.enabled=false;gizmo.getHelper().visible=false;draw();},
     setPlacementRole(value:'solid'|'hole'){surfacePlacement.setRole(value);draw();},
     setPlacementGeometry(result:GeometryResult){surfacePlacement.setGeometry(result);draw();},

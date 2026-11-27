@@ -264,6 +264,29 @@ empty body. `offset` may be a parameter expression (as a mirror's). `checkDocume
 non-zero finite normal and a side. A document reaches 49 only when a body is split; Undo returns
 to the earlier version. Model source writes `split(id, {...})`. Builds that predate 49 refuse
 such a document.
+**Version 50 (2026-11-27) adds the `assembly` block**: groups, suppression, configurations and
+exploded views ([CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#assemblies-document-version-50-done-2026-11-27)).
+
+```ts
+assembly?:{version:1;
+ groups?:{id;name;members:string[];parent?:string;source?:{kind:'step';product?;instance?}}[]; // top-level bodies, at most one group each
+ views?:{id;name;steps:{id;group?:string;bodies?:string[];direction:Vec3;distance:number}[]}[];   // exploded views (display only)
+ configurations?:{id;name;parameters:Record<string,string>;suppressed:string[]}[];               // named variants
+ active?:string;          // the configuration last switched to
+ suppressed?:string[]}    // bodies left out of the model now
+```
+
+Nothing in the block moves saved geometry: groups name and nest top-level bodies, an exploded view
+moves displayed meshes and drawing projections only, and a configuration is applied as an ordinary
+edit (parameter expressions and `suppressed`, one Undo step). Suppressed bodies are not built,
+exported, simulated, checked or drawn; the geometry key includes them only when the list is not
+empty, so documents without suppression keep their keys. Every commit drops references to bodies
+that are no longer top-level (deleted, combined), then empty groups and steps. An assembly drawing
+sheet may name an exploded view (`explode:{view,factor}`, version 50). `checkDocument` accepts the
+block and `explode` only in version 50 documents; a document reaches 50 only when a group,
+suppression, configuration or exploded view is made (or a STEP assembly is imported, or the
+planetary preset inserted); Undo returns to the earlier version. Model source keeps the block in
+the `project(...)` record. Builds that predate 50 refuse such a document.
 
 ## Graph and errors
 

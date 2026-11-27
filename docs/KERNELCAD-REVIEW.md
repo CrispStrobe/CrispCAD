@@ -79,4 +79,8 @@ Recommended order instead:
 
 ## Remaining backlog from the plan
 
-- Planetary/ring-gear mechanism preset (the planetary showcase is a reasonable fixture).
+- Planetary/ring-gear mechanism preset (the planetary showcase is a reasonable fixture). **Done
+  2026-11-27** (Phase 6.4): `planetary` command, palette and Assemblies menu, `createPlanetaryDocument`;
+  sun, planets and an internal ring from the ported involute profiles, hinges with gear meshes, and
+  a mechanism check that sweeps the sun through a full turn without tooth interference
+  ([CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#assemblies-document-version-50-done-2026-11-27)).

@@ -24,7 +24,7 @@ it('cad_check_manufacturing measures corner fillets on the exact B-rep and chang
  const report=await host.call('cad_check_manufacturing',{process:'cnc'});
  expect(report.revision).toBe(revision);
  expect(report.verdict).toBe('fail');
- expect(report.kernel).toMatch(/^smlib · @crispcad\/exact-kernel 0\.1\.10$/);
+ expect(report.kernel).toMatch(/^smlib · @crispcad\/exact-kernel 0\.1\.11$/);
  const body=report.bodies[0];
  expect(body).toMatchObject({id,geometry:'exact'});
  const corners=body.checks.find((c:any)=>c.id==='cnc.internal-corners');

@@ -18,7 +18,7 @@
         "sha256": "0a53427ff7b14814539e6092fc56d438b60d6d14d4059fddfcdd39dfab489376"
       }
     },
-    "packageLockSha256": "8717d049e6ac1eac9d4910dff13360a20edbd29bc90ad82fd3b5be7801f82a37",
+    "packageLockSha256": "ac30c6aa7289924f2992cb2f440699b9b912f1485fdcf2806e77055ef508276f",
     "manifoldWasmSha256": "73e3b419ad31294f6b1cc478173944e50efc4a34bfdeeff0107bdfc12975f11c"
   },
   "selection": {

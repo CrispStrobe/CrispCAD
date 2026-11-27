@@ -3,7 +3,7 @@ import {pruneGearMeshes} from './physics.js';
 import {updateModelSource} from './model-source.js';
 import {t} from './i18n.js';
 import {pruneModelProvenance} from './model-provenance.js';
-import {constructionInputs,validateDocument} from './document.js';
+import {constructionInputs,pruneAssemblyReferences,validateDocument} from './document.js';
 import type {CadDocument} from './document.js';
 import {isSketchFeature,sketchExpressions,rewriteSketchExpressions,sketchFeatureExpressions,mapPatternScalars,patternExpressions} from './features.js';
 import {evaluateExpression,evaluateParameters} from './parameters.js';
@@ -24,6 +24,8 @@ export function selectionFragment(input:CadDocument,selection:readonly string[])
  const sketches=new Set(Object.values(doc.nodes).flatMap(n=>isSketchFeature(n)?[n.sketchId]:[]));if(doc.sketches)doc.sketches=Object.fromEntries(Object.entries(doc.sketches).filter(([id])=>sketches.has(id)));
  if(doc.version>=8&&doc.tracers)doc.tracers=doc.tracers.filter(trace=>doc.roots.includes(trace.bodyId));
  if(doc.joints)doc.joints=pruneGearMeshes(doc.joints.filter(j=>doc.roots.includes(j.bodyA)&&doc.roots.includes(j.bodyB)));
+ // Copied bodies keep their groups (pruned to the copy); views and configurations stay behind.
+ if(doc.assembly){const groups=doc.assembly.groups;delete doc.assembly;if(groups?.length){doc.assembly={version:1,groups};pruneAssemblyReferences(doc);}}
  if(doc.parametric){
   const original=doc.parametric,values=evaluateParameters(original);original.bindings=original.bindings.filter(binding=>keep.has(binding.nodeId));
   const required=new Set<string>();const references=(expression:string)=>{const names=new Set<string>();evaluateExpression(expression,name=>values[name],{references:names});for(const name of names)if(Object.hasOwn(original.parameters,name))required.add(name);};

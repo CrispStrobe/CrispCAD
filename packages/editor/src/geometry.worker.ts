@@ -65,6 +65,11 @@ self.onmessage = async (event: MessageEvent<GeometryRequest>) => {
       self.postMessage({request,result:materialMeasures(ready,result.bodies)});
       return;
     }
+    if(event.data.mechanism){
+      const {checkMechanism}=await import('@brickwright/cad-geometry/mechanism');
+      self.postMessage({request,result:checkMechanism((bodies,options)=>ready.interference(bodies,options),event.data.document,result,event.data.mechanism)});
+      return;
+    }
     if(event.data.manufacturing){
       const {checkManufacturing}=await import('@brickwright/cad-geometry/manufacturing');
       const {settings,bodies,exact,exactUnavailable,kernel}=event.data.manufacturing;
