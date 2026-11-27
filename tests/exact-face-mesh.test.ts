@@ -3,7 +3,7 @@
 // the polygon-with-holes triangulator, and the face-wise path that replaced SMLib's whole-body
 // mesh for such bodies (superlinear in the hole count: 10-19 s CPU for a plate with 200 holes).
 import {beforeAll,describe,expect,it} from 'vitest';
-import {createExactBackend,createInThreadExactHost,displayMesh,displayTessellation,exactKernelIdentity,triangulatePolygon} from '@brickwright/cad-exact';
+import {createExactBackend,createInThreadExactHost,displayMesh,displayTessellation,exactKernelIdentity,facewiseMesh,triangulatePolygon} from '@brickwright/cad-exact';
 import type {ExactBackend,ExactKernel,ExactSolid} from '@brickwright/cad-exact';
 
 let backend:ExactBackend,k:ExactKernel;
@@ -90,6 +90,40 @@ describe('face-wise display mesh of plates with many holes',()=>{
    expect((volume-exact)/exact).toBeLessThan(.01);
   });
  },180_000);
+ it('meshes rounded and bevelled hole rims and their walls here, closed and within the tolerance (Phase 5.3)',()=>{
+  k.scope(()=>{
+   const top={faceNormal:[0,0,1] as [number,number,number],outermost:true as const};
+   for(const [operation,triangles] of [['fillet',20064],['chamfer',5520]] as const){
+    const source=holePlate(25),solid=operation==='fillet'?k.fillet(source,.5,top):k.chamfer(source,.5,top),exact=k.volume(solid);
+    const before=cpuMs(),mesh=displayTessellation(k,solid,'Plate'),cpu=cpuMs()-before;
+    // SMLib meshed every rim (a surface of revolution of an arc, or a cone) and every wall face by
+    // face, ~20 ms each: 7.2 s CPU for 50 rounded rims; here they are rows of points around each hole.
+    expect(cpu).toBeLessThan(5_000);
+    expect(mesh.indices.length/3).toBe(triangles);
+    const facewise=facewiseMesh(k,solid,{tolerance:.01,angleDeg:10})!;
+    // 25 rims (arcs or cones) and 25 walls (cylinders).
+    expect(facewise.bands).toBe(50);
+    expect(facewise.planarFallbacks).toBe(0);
+    // Inside the tolerance of the exact volume, and of the kernel's own whole-body mesh.
+    const volume=meshVolume(mesh),kernel=meshVolume(displayMesh(k.tessellate(solid,{tolerance:.01,angleDeg:10}),'Plate'));
+    expect(Math.abs(volume-exact)/exact).toBeLessThan(.005);
+    expect(Math.abs(volume-kernel)/exact).toBeLessThan(.005);
+    // Every point of a rim lies on the exact rim: for the fillet, on the arc of radius 0.5 about
+    // the circle 2.5 mm from the hole's axis and 0.5 mm below the top.
+    if(operation==='fillet'){
+     const p=mesh.positions;let checked=0;
+     for(let i=0;i<p.length;i+=3){
+      const [x,y,z]=[p[i],p[i+1],p[i+2]];
+      if(z<2.5-1e-9||z>3-1e-9||x<0||y<0)continue;
+      const radial=Math.hypot(x-4,y-4);
+      if(radial>2.5+1e-6||radial<2-1e-6)continue;
+      expect(Math.abs(Math.hypot(radial-2.5,z-2.5)-.5)).toBeLessThan(1e-6);checked++;
+     }
+     expect(checked).toBeGreaterThan(36*8);
+    }
+   }
+  });
+ },300_000);
  it('falls back to the kernel mesh for bodies without such a face, unchanged',()=>{
   k.scope(()=>{
    const solid=holePlate(3);

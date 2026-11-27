@@ -9,7 +9,7 @@ import type {ExactKernel,ExactSolid} from '@crispcad/exact-kernel';
 import {lowerDocumentNode} from './lower-document.js';
 import type {ExactFeatureLimits} from './lower-document.js';
 import type {BrepCache} from './step-import.js';
-import {facewiseMesh,hasManyHoleFace} from './face-mesh.js';
+import {CellMap,edgeKey,facewiseMesh,hasManyHoleFace} from './face-mesh.js';
 
 /** Stored coordinates are rounded to 1 nm; Manifold reads them as Float32 anyway. */
 const round=(value:number)=>{const r=Math.round(value*1e6)/1e6;return Object.is(r,-0)?0:r;};
@@ -17,23 +17,24 @@ const round=(value:number)=>{const r=Math.round(value*1e6)/1e6;return Object.is(
 /** Weld coincident vertices, drop degenerate triangles and require a closed, consistently
  * oriented surface: every directed edge must be matched by exactly one opposite edge. */
 export function displayMesh(mesh:{positions:ArrayLike<number>;indices:ArrayLike<number>},name:string):Omit<ExactFeatureDisplay,'sourceKey'>{
- const positions:number[]=[],indices:number[]=[],welded=new Map<string,number>(),remap=new Uint32Array(mesh.positions.length/3);
+ const positions:number[]=[],indices:number[]=[],welded=new CellMap(),remap=new Uint32Array(mesh.positions.length/3);
  for(let i=0;i<remap.length;i++){
-  const x=round(mesh.positions[3*i]),y=round(mesh.positions[3*i+1]),z=round(mesh.positions[3*i+2]),key=`${x},${y},${z}`;
-  let index=welded.get(key);
-  if(index===undefined){index=positions.length/3;welded.set(key,index);positions.push(x,y,z);}
+  // Cells of the 1 nm grid the coordinates are rounded to (the same as comparing the rounded values).
+  const ix=Math.round(mesh.positions[3*i]*1e6),iy=Math.round(mesh.positions[3*i+1]*1e6),iz=Math.round(mesh.positions[3*i+2]*1e6);
+  let index=welded.get(ix,iy,iz);
+  if(index===undefined){index=positions.length/3;welded.set(ix,iy,iz,index);positions.push(round(mesh.positions[3*i]),round(mesh.positions[3*i+1]),round(mesh.positions[3*i+2]));}
   remap[i]=index;
  }
- const edges=new Map<string,number>();
+ const edges=new Map<number,number>();
  for(let i=0;i<mesh.indices.length;i+=3){
   const a=remap[mesh.indices[i]],b=remap[mesh.indices[i+1]],c=remap[mesh.indices[i+2]];
   if(a===b||b===c||c===a)continue;
   indices.push(a,b,c);
-  for(const [p,q] of [[a,b],[b,c],[c,a]])edges.set(`${p},${q}`,(edges.get(`${p},${q}`)??0)+1);
+  for(const key of [edgeKey(a,b),edgeKey(b,c),edgeKey(c,a)])edges.set(key,(edges.get(key)??0)+1);
  }
  for(const [edge,count] of edges){
-  const [p,q]=edge.split(',');
-  if(count!==1||edges.get(`${q},${p}`)!==1)throw new ExactKernelError('kernel-failure',t`${name}: the exact tessellation is not a closed surface, so it cannot be displayed.`);
+  const p=Math.floor(edge/67108864),q=edge-p*67108864;
+  if(count!==1||edges.get(edgeKey(q,p))!==1)throw new ExactKernelError('kernel-failure',t`${name}: the exact tessellation is not a closed surface, so it cannot be displayed.`);
  }
  if(positions.length>MAX_EXACT_DISPLAY_POSITIONS||indices.length>MAX_EXACT_DISPLAY_INDICES)
   throw new ExactKernelError('unsupported',t`${name}: the exact display mesh exceeds 250000 vertices or 500000 triangles.`);

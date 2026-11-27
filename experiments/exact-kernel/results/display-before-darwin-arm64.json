@@ -1,0 +1,257 @@
+{
+ "node": "v26.4.0",
+ "date": "2026-11-27T12:13:54.127Z",
+ "note": "process CPU time on a shared, loaded Apple M1; no probe worker (as in the browser editor); display before Phase 5.3 (CrispCAD 60e6d25, exact kernel 0.1.9)",
+ "rows": [
+  {
+   "variant": "plain",
+   "holes": 50,
+   "build": {
+    "cpuMs": 1639,
+    "wallMs": 1203,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 434,
+    "wallMs": 304,
+    "memoryMiB": 64
+   },
+   "triangles": 7412,
+   "volume": 4715.044407846143,
+   "displayVolumeError": 0.00203
+  },
+  {
+   "variant": "plain",
+   "holes": 100,
+   "build": {
+    "cpuMs": 2446,
+    "wallMs": 1724,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 779,
+    "wallMs": 619,
+    "memoryMiB": 64
+   },
+   "triangles": 14812,
+   "volume": 8662.08881569233,
+   "displayVolumeError": 0.00221
+  },
+  {
+   "variant": "plain",
+   "holes": 200,
+   "build": {
+    "cpuMs": 4184,
+    "wallMs": 3804,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 1433,
+    "wallMs": 1097,
+    "memoryMiB": 64
+   },
+   "triangles": 29612,
+   "volume": 15980.177631384704,
+   "displayVolumeError": 0.00239
+  },
+  {
+   "variant": "fillet",
+   "holes": 50,
+   "build": {
+    "cpuMs": 1551,
+    "wallMs": 885,
+    "memoryMiB": 64
+   },
+   "operation": {
+    "cpuMs": 4317,
+    "wallMs": 4304,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 7196,
+    "wallMs": 7446,
+    "memoryMiB": 64
+   },
+   "triangles": 115564,
+   "volume": 4669.414067719274,
+   "displayVolumeError": 0.000608
+  },
+  {
+   "variant": "fillet",
+   "holes": 100,
+   "build": {
+    "cpuMs": 2486,
+    "wallMs": 2597,
+    "memoryMiB": 64
+   },
+   "operation": {
+    "cpuMs": 11541,
+    "wallMs": 20245,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 15520,
+    "wallMs": 34616,
+    "memoryMiB": 64
+   },
+   "triangles": 230964,
+   "volume": 8577.00365511964,
+   "displayVolumeError": 0.000665
+  },
+  {
+   "variant": "fillet",
+   "holes": 200,
+   "build": {
+    "cpuMs": 4186,
+    "wallMs": 5354,
+    "memoryMiB": 64
+   },
+   "operation": {
+    "cpuMs": 39431,
+    "wallMs": 56062,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 28133,
+    "wallMs": 33971,
+    "memoryMiB": 64
+   },
+   "triangles": 461764,
+   "volume": 15818.758051956836,
+   "displayVolumeError": 0.000724
+  },
+  {
+   "variant": "chamfer",
+   "holes": 50,
+   "build": {
+    "cpuMs": 1588,
+    "wallMs": 1237,
+    "memoryMiB": 64
+   },
+   "operation": {
+    "cpuMs": 8171,
+    "wallMs": 16904,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 3329,
+    "wallMs": 3955,
+    "memoryMiB": 64
+   },
+   "triangles": 19420,
+   "volume": 4606.626273477915,
+   "displayVolumeError": 0.000691
+  },
+  {
+   "variant": "chamfer",
+   "holes": 100,
+   "build": {
+    "cpuMs": 2357,
+    "wallMs": 2417,
+    "memoryMiB": 64
+   },
+   "operation": {
+    "cpuMs": 15309,
+    "wallMs": 22346,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 5628,
+    "wallMs": 7461,
+    "memoryMiB": 64
+   },
+   "triangles": 38820,
+   "volume": 8459.585880289042,
+   "displayVolumeError": 0.000753
+  },
+  {
+   "variant": "chamfer",
+   "holes": 200,
+   "build": {
+    "cpuMs": 4206,
+    "wallMs": 6476,
+    "memoryMiB": 64
+   },
+   "operation": {
+    "cpuMs": 36174,
+    "wallMs": 88980,
+    "memoryMiB": 111
+   },
+   "display": {
+    "cpuMs": 10925,
+    "wallMs": 19247,
+    "memoryMiB": 111
+   },
+   "triangles": 77620,
+   "volume": 15595.505093911339,
+   "displayVolumeError": 0.000817
+  },
+  {
+   "variant": "shell",
+   "holes": 50,
+   "build": {
+    "cpuMs": 1580,
+    "wallMs": 930,
+    "memoryMiB": 64
+   },
+   "operation": {
+    "cpuMs": 6129,
+    "wallMs": 7027,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 612,
+    "wallMs": 488,
+    "memoryMiB": 64
+   },
+   "triangles": 14628,
+   "volume": 2348.3428419919633,
+   "displayVolumeError": -0.00199
+  },
+  {
+   "variant": "shell",
+   "holes": 100,
+   "build": {
+    "cpuMs": 2483,
+    "wallMs": 2102,
+    "memoryMiB": 64
+   },
+   "operation": {
+    "cpuMs": 13698,
+    "wallMs": 19845,
+    "memoryMiB": 64
+   },
+   "display": {
+    "cpuMs": 1172,
+    "wallMs": 1191,
+    "memoryMiB": 64
+   },
+   "triangles": 29228,
+   "volume": 4369.185683984004,
+   "displayVolumeError": -0.00214
+  },
+  {
+   "variant": "shell",
+   "holes": 200,
+   "build": {
+    "cpuMs": 4192,
+    "wallMs": 11176,
+    "memoryMiB": 64
+   },
+   "operation": {
+    "cpuMs": 38794,
+    "wallMs": 133299,
+    "memoryMiB": 111
+   },
+   "display": {
+    "cpuMs": 2076,
+    "wallMs": 3420,
+    "memoryMiB": 133
+   },
+   "triangles": 58428,
+   "volume": 8230.871367967758,
+   "displayVolumeError": -0.00227,
+   "note": "rerun with guardSeconds 0: the first run's shell hit the kernel's wall-clock guard on the loaded machine"
+  }
+ ]
+}

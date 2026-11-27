@@ -283,6 +283,59 @@ slightly slower). Shelling 200 holes took 19.6 s, at the edge of the kernel's 20
 heavier load the same shell failed with "the kernel did not finish within 20 s". Both are kernel
 limits, not display ones.
 
+### Rounded and bevelled rims (Phase 5.3, 2026-11-27)
+
+After the fix above, the display of a fillet or chamfer of a many-hole plate was still bound by
+SMLib: every rounded rim (a surface of revolution of an arc), bevelled rim (a cone) and the hole
+wall below it (a cylinder no longer bounded by planar faces) was meshed by SMLib face by face, about
+20–35 ms each, so 200 rounded rims cost 28 s CPU, as much as the fillet itself.
+
+`node display-bench.ts 50,100,200 plain,fillet,chamfer,shell <label>` (one process per case, no
+probe worker, shell guard off since the display is the subject; raw data:
+[`results/display-before-darwin-arm64.json`](results/display-before-darwin-arm64.json) on CrispCAD
+60e6d25 and [`results/display-after-darwin-arm64.json`](results/display-after-darwin-arm64.json)).
+The same plate as above, its top face's edges filleted or chamfered (0.5 mm) or shelled (0.5 mm,
+open top); display = `displayTessellation`, process CPU time, shared M1 at load average 20–40:
+
+| Holes | Variant | Kernel op | Display before | Display now | Triangles before → now | Display volume error now |
+| ---: | --- | ---: | ---: | ---: | --- | ---: |
+| 50 | plain | — | 0.43 s | **0.35 s** | 7 412 (same) | 2.0e-3 |
+| 100 | plain | — | 0.78 s | **0.76 s** | 14 812 (same) | 2.2e-3 |
+| 200 | plain | — | 1.43 s | **1.13 s** | 29 612 (same) | 2.4e-3 |
+| 50 | fillet | 4.3 s | 7.20 s | **1.00 s** | 115 564 → 39 964 | 1.9e-3 |
+| 100 | fillet | 11.1 s | 15.52 s | **1.33 s** | 230 964 → 79 764 | 2.1e-3 |
+| 200 | fillet | 36.6 s | 28.13 s | **2.04 s** | 461 764 → 159 364 | 2.3e-3 |
+| 50 | chamfer | 7.2 s | 3.33 s | **0.38 s** | 19 420 → 11 020 | 2.2e-3 |
+| 100 | chamfer | 13.9 s | 5.63 s | **0.77 s** | 38 820 → 22 020 | 2.4e-3 |
+| 200 | chamfer | 32.2 s | 10.93 s | **1.20 s** | 77 620 → 44 020 | 2.6e-3 |
+| 50 | shell | 5.5 s | 0.61 s | **0.42 s** | 14 628 (same) | -2.0e-3 |
+| 100 | shell | 12.1 s | 1.17 s | **0.77 s** | 29 228 (same) | -2.1e-3 |
+| 200 | shell | 33.3 s | 2.08 s | **1.25 s** | 58 428 (same) | -2.3e-3 |
+
+(Kernel op: the "now" run; the "before" run measured the same within the load's noise. The volume
+error is the display's enclosed volume against the exact one; it is the chordal tolerance's, 0.01 mm
+at 10°, on 2 mm holes: SMLib's whole-body mesh used 64 points per hole where 36 meet the tolerance.)
+
+**Fix** (`packages/exact/src/face-mesh.ts`, `revolutionMeshes`): a cylinder, cone, torus or
+surface of revolution bounded by two full coaxial circles is meshed in JavaScript from its own
+surface: its profile through the two circles and the face's middle is a line or, for tori and
+surfaces of revolution, an arc (checked against seven points of the face, else SMLib meshes it);
+rows of points around the axis at the profile's positions (two for a line, as many as the chordal
+tolerance and the 10° angle need along an arc), joined by quads, oriented by the face's normal.
+Faces whose circles connect (a rim and its wall) form a chain with one point count, so neighbours
+share every circle point, and the planar faces around them are triangulated from those points as
+before. A face is meshed here only if every face across its circles is planar or meshed here too;
+a chain any of whose faces fails a check goes back to SMLib whole. The welding in `displayMesh` and
+the face-wise mesher no longer builds a string key per point and edge (0.66 → 0.2 s for 40 000
+triangles). What remains of the 200-rim fillet's 2 s: the eight faces along the plate's outer
+edges, which SMLib still meshes (about 0.3 s), and the planar triangulation and checks.
+
+Display is now linear in the holes and small beside the kernel operation it follows: under the
+tablet limits (at most 100 rounded rims, 160 shell faces) the display of any of these jobs takes
+about 1.3 s CPU on the M1. `tests/exact-face-mesh.test.ts` checks a 25-hole fillet and chamfer:
+closed, triangle counts pinned, every face of revolution meshed here, volume within 5e-3 of the
+exact one and of SMLib's mesh, and every point of a rounded rim on the exact rim (1e-6 mm).
+
 ### Heavy jobs: limits, memory ceiling and recycling (2026-11-26)
 
 Question: can a heavy exact job kill an iPad tab, and how does the editor end such jobs cleanly?

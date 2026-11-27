@@ -4,12 +4,16 @@
 // SMLib meshes a planar face with many holes in time that grows faster than linearly with the
 // hole count (measured 2026-11-26: one face of a plate with 101 holes 2.2 s CPU, with 201 holes
 // 6.9 s), and that face dominates the whole-body mesh. Every other face costs a roughly constant
-// amount each. So, for a body with such a face: SMLib meshes each non-planar face on its own
-// (per-face meshes share the edge points of whole-body meshing, so they stay watertight), and the
-// planar faces are triangulated here from exactly those boundary points: ear clipping with holes
-// bridged in (Eberly's method), and a grid index so each ear test looks only at nearby vertices.
-// Anything unexpected (an unknown kernel object, a loop that does not close, a polygon the ear
-// clipper cannot finish) falls back to SMLib's own mesh, for the face or for the whole body.
+// amount each (about 20 ms), which a plate with hundreds of holes pays hundreds of times. So, for a
+// body with such a face: faces of revolution between two full circles (a hole's wall, a chamfered
+// or rounded rim) are meshed here from their own surface (rows of points around their axis), SMLib
+// meshes each remaining non-planar face on its own (per-face meshes share the edge points of
+// whole-body meshing, so they stay watertight), and the planar faces are triangulated here from
+// exactly their neighbours' boundary points: ear clipping with holes bridged in (Eberly's method),
+// and a grid index so each ear test looks only at nearby vertices. Anything unexpected (an unknown
+// kernel object, a loop that does not close, a polygon the ear clipper cannot finish, a face of
+// revolution whose samples leave the surface its kind says) falls back to SMLib's own mesh, for the
+// face, its chain of coaxial faces or the whole body.
 import type {ExactKernel,ExactSolid} from '@crispcad/exact-kernel';
 
 /** Planar faces with at least this many boundary loops (outer + holes) take the face-wise path. */
@@ -163,7 +167,7 @@ export function triangulatePolygon(xy:ArrayLike<number>,rings:readonly (readonly
 interface SmVector {x:number;y:number;z:number}
 interface SmMesh {vertices:Float64Array;triangles:Uint32Array}
 interface SmEdge {readonly geomType:string;_isStraight?():boolean;readonly start:SmVector;readonly end:SmVector;readonly isClosed:boolean;readonly radius:number;readonly arcCenter:SmVector;readonly normal:SmVector;faces():Iterable<SmFace>;_identity():string}
-interface SmFace {readonly geomType:string;readonly radius:number;normalAt(point?:readonly number[]):SmVector;wires():ArrayLike<unknown>;edges():Iterable<SmEdge>;mesh(tolerance:number,angle:number):SmMesh;_identity():string}
+interface SmFace {readonly geomType:string;readonly radius:number;normalAt(point?:readonly number[]):SmVector;positionAt(u:number,v:number):SmVector;wires():ArrayLike<unknown>;edges():Iterable<SmEdge>;mesh(tolerance:number,angle:number):SmMesh;_identity():string}
 interface SmPart {faces():Iterable<SmFace>}
 const partOf=(solid:ExactSolid):SmPart|undefined=>{
  const part=(solid as unknown as {part?:SmPart}).part;
@@ -171,27 +175,47 @@ const partOf=(solid:ExactSolid):SmPart|undefined=>{
 };
 
 /** Vertices welded at 1 nm (the precision display meshes are stored at). */
+/** Integer grid cells → values, without building a string key per lookup (a display mesh looks
+ * up hundreds of thousands of points). Collisions of the hash are resolved by comparing cells. */
+export class CellMap {
+ private readonly buckets=new Map<number,number[]>();
+ private static hash(ix:number,iy:number,iz:number){return Math.imul(ix|0,73856093)^Math.imul(iy|0,19349663)^Math.imul(iz|0,83492791)^Math.imul(Math.floor(ix/4294967296)|0,2654435761);}
+ get(ix:number,iy:number,iz:number):number|undefined{
+  const list=this.buckets.get(CellMap.hash(ix,iy,iz));
+  if(list)for(let i=0;i<list.length;i+=4)if(list[i]===ix&&list[i+1]===iy&&list[i+2]===iz)return list[i+3];
+  return undefined;
+ }
+ set(ix:number,iy:number,iz:number,value:number){
+  const key=CellMap.hash(ix,iy,iz),list=this.buckets.get(key);
+  if(list)list.push(ix,iy,iz,value);else this.buckets.set(key,[ix,iy,iz,value]);
+ }
+}
+/** A directed edge between two vertex indices as one number (indices stay below 2^26 here). */
+export const edgeKey=(a:number,b:number)=>a*67108864+b;
+
+/** Vertices welded at 1 nm (the precision display meshes are stored at). */
 class Pool {
  readonly positions:number[]=[];
- private readonly cells=new Map<string,number>();
+ private readonly cells=new CellMap();
  private static readonly Q=1e-6;
  add(x:number,y:number,z:number){
   const q=Pool.Q,ix=Math.round(x/q),iy=Math.round(y/q),iz=Math.round(z/q);
-  let index=this.cells.get(`${ix},${iy},${iz}`);
+  let index=this.cells.get(ix,iy,iz);
   if(index!==undefined)return index;
   // A point within the weld distance can round to the next cell: look there too.
   const fx=x/q-ix,fy=y/q-iy,fz=z/q-iz,dx=Math.abs(fx)>.4?Math.sign(fx):0,dy=Math.abs(fy)>.4?Math.sign(fy):0,dz=Math.abs(fz)>.4?Math.sign(fz):0;
   if(dx||dy||dz)for(const ox of dx?[0,dx]:[0])for(const oy of dy?[0,dy]:[0])for(const oz of dz?[0,dz]:[0]){
-   index=this.cells.get(`${ix+ox},${iy+oy},${iz+oz}`);
-   if(index!==undefined){this.cells.set(`${ix},${iy},${iz}`,index);return index;}
+   index=this.cells.get(ix+ox,iy+oy,iz+oz);
+   if(index!==undefined){this.cells.set(ix,iy,iz,index);return index;}
   }
-  index=this.positions.length/3;this.positions.push(x,y,z);this.cells.set(`${ix},${iy},${iz}`,index);
+  index=this.positions.length/3;this.positions.push(x,y,z);this.cells.set(ix,iy,iz,index);
   return index;
  }
 }
 
 export interface FacewiseMesh {positions:number[];indices:number[];
- /** Planar faces triangulated here, those handed back to SMLib, and hole walls meshed as bands. */
+ /** Planar faces triangulated here, those handed back to SMLib, and faces of revolution (hole
+  * walls, chamfered and rounded rims) meshed here as bands. */
  planar:number;planarFallbacks:number;bands:number;
  /** With `faces`: the face of each triangle (its position in the part's face list, the order of
   * the kernel's `topology(solid).faces`). */
@@ -205,11 +229,11 @@ export function hasManyHoleFace(solid:ExactSolid):boolean{
 }
 
 /**
- * Tessellate `solid` face by face: SMLib per non-planar face, planar faces triangulated here from
- * the same boundary points. Returns undefined when the solid is not an smlibwasm part (call inside
- * `k.scope`). The result is not checked for closedness here; `displayMesh` does that. With
- * `bands: false` every non-planar face is SMLib's (a planar face SMLib has to mesh does not share
- * the bands' circle points).
+ * Tessellate `solid` face by face: faces of revolution between full circles here (`bands`), SMLib
+ * per other non-planar face, planar faces triangulated here from the same boundary points. Returns
+ * undefined when the solid is not an smlibwasm part (call inside `k.scope`). The result is not
+ * checked for closedness here; `displayMesh` does that. With `bands: false` every non-planar face
+ * is SMLib's (a planar face SMLib has to mesh does not share the bands' circle points).
  */
 export function facewiseMesh(_k:ExactKernel,solid:ExactSolid,options:{tolerance:number;angleDeg:number;bands?:boolean;faces?:boolean}):FacewiseMesh|undefined{
  const part=partOf(solid);if(!part)return undefined;
@@ -222,25 +246,24 @@ export function facewiseMesh(_k:ExactKernel,solid:ExactSolid,options:{tolerance:
  const addMesh=(mesh:SmMesh)=>{
   const map=new Uint32Array(mesh.vertices.length/3);
   for(let i=0;i<map.length;i++)map[i]=pool.add(mesh.vertices[3*i],mesh.vertices[3*i+1],mesh.vertices[3*i+2]);
-  const directed=new Set<string>(),segments:[number,number][]=[];
+  const directed=new Set<number>(),segments:[number,number][]=[];
   for(let t=0;t<mesh.triangles.length;t+=3){
    const a=map[mesh.triangles[t]],b=map[mesh.triangles[t+1]],c=map[mesh.triangles[t+2]];
    if(a===b||b===c||c===a)continue;
    indices.push(a,b,c);
-   directed.add(`${a},${b}`);directed.add(`${b},${c}`);directed.add(`${c},${a}`);
+   directed.add(edgeKey(a,b));directed.add(edgeKey(b,c));directed.add(edgeKey(c,a));
   }
-  for(const key of directed){const [a,b]=key.split(',').map(Number);if(!directed.has(`${b},${a}`))segments.push([a,b]);}
+  for(const key of directed){const a=Math.floor(key/67108864),b=key-a*67108864;if(!directed.has(edgeKey(b,a)))segments.push([a,b]);}
   return segments;
  };
  const planarFaces:SmFace[]=[];
- let bands=0;
+ const analytic=options.bands!==false?revolutionMeshes(faces,options):new Map<string,SmMesh>();
  for(const face of faces){
   if(face.geomType==='plane'){planarFaces.push(face);continue;}
-  const band=options.bands!==false?cylinderBand(face,options):undefined;
-  if(band)bands++;
-  boundary.set(face._identity(),addMesh(band??face.mesh(options.tolerance,options.angleDeg)));
+  boundary.set(face._identity(),addMesh(analytic.get(face._identity())??face.mesh(options.tolerance,options.angleDeg)));
   tag(face);
  }
+ const bands=analytic.size;
  let planarFallbacks=0;
  for(const face of planarFaces){
   const rings=planarRings(face,pool,boundary);
@@ -262,49 +285,150 @@ export function facewiseMesh(_k:ExactKernel,solid:ExactSolid,options:{tolerance:
  return {positions:pool.positions,indices,planar:planarFaces.length-planarFallbacks,planarFallbacks,bands,...(faceOf?{faceOf}:{})};
 }
 /**
- * A hole's wall: a cylinder face bounded by two full circles (and its seam), each shared with a planar face. Both
- * neighbours are triangulated here from this band's circle points, so the band may choose them:
- * the same angles on both circles, as many as the chord tolerance and the angle need. SMLib spends
- * a roughly constant ~20 ms per face meshing such a band, which a plate with hundreds of holes
- * pays hundreds of times. Undefined for anything else (SMLib meshes it).
+ * Faces of revolution between two full circles: a hole's wall (cylinder), a chamfered rim (cone)
+ * or a rounded rim (a torus, or SMLib's surface of revolution of an arc), as fillets, chamfers and shells of drilled plates make them by the
+ * hundred. SMLib spends a roughly constant ~20 ms meshing each such face (a 200-hole plate with
+ * rounded rims has 400), so they are meshed here instead, from the surface's own parameters: rows
+ * of points around the axis at the profile's positions (two for a straight profile, as many as the
+ * chordal tolerance and the angle need along a torus' arc), joined by quads.
+ *
+ * Neighbouring faces of revolution share their circles, and the planar faces around them are
+ * triangulated here from those circles' points, so all faces whose circles connect use the same
+ * angles: one count per such chain of coaxial circles (the most any of its rows needs). A face is
+ * meshed here only if every face across its circles is planar or meshed here as well; anything
+ * else (a seam that is not a full circle, a circle off the axis, a surface the checks do not
+ * recognise) is left to SMLib, and so are the faces next to it.
  */
-function cylinderBand(face:SmFace,options:{tolerance:number;angleDeg:number}):SmMesh|undefined{
- if(face.geomType!=='cylinder')return undefined;
- // A periodic face's loop runs circle, seam, circle, seam; edges() leaves the seam out.
- const circles=[...face.edges()];
- if(circles.length!==2)return undefined;
- for(const circle of circles){
-  if(circle.geomType!=='circle'||!circle.isClosed)return undefined;
-  if(![...circle.faces()].every(f=>f.geomType==='plane'||f._identity()===face._identity()))return undefined;
+interface RevolutionFace {face:SmFace;id:string;keys:[string,string];others:[SmFace,SmFace];
+ circles:[{center:number[];radius:number;normal:number[]}, {center:number[];radius:number;normal:number[]}];
+ samples:number[][]}
+const circleKey=(c:SmVector,r:number)=>`${Math.round(c.x*1e6)},${Math.round(c.y*1e6)},${Math.round(c.z*1e6)},${Math.round(r*1e6)}`;
+const dot=(a:readonly number[],b:readonly number[])=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const sub=(a:readonly number[],b:readonly number[])=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+function revolutionMeshes(faces:readonly SmFace[],options:{tolerance:number;angleDeg:number}):Map<string,SmMesh>{
+ const candidates=new Map<string,RevolutionFace>();
+ for(const face of faces){
+  const kind=face.geomType;
+  if(kind!=='cylinder'&&kind!=='cone'&&kind!=='torus'&&kind!=='revolution')continue;
+  // A periodic face's loop runs circle, seam, circle, seam; edges() leaves the seam out.
+  const edges=[...face.edges()],id=face._identity();
+  if(edges.length!==2)continue;
+  const circles:RevolutionFace['circles'][number][]=[],keys:string[]=[],others:SmFace[]=[];
+  for(const edge of edges){
+   if(edge.geomType!=='circle'||!edge.isClosed)break;
+   const adjacent=[...edge.faces()].filter(f=>f._identity()!==id);
+   if(adjacent.length!==1)break;
+   const c=edge.arcCenter,n=edge.normal,r=edge.radius;
+   if(!(r>0))break;
+   circles.push({center:[c.x,c.y,c.z],radius:r,normal:normalise([n.x,n.y,n.z])});keys.push(circleKey(c,r));others.push(adjacent[0]);
+  }
+  if(circles.length!==2||keys[0]===keys[1])continue;
+  if(Math.abs(dot(circles[0].normal,circles[1].normal))<1-1e-9)continue;
+  // Points of the face (its parameter box is the face: it is bounded by two full circles), the
+  // middle first, to find and check its profile.
+  let samples:number[][];
+  try{samples=[.5,.1,.25,.4,.6,.75,.9].map(t=>{const p=face.positionAt(t,t);return [p.x,p.y,p.z];});}catch{continue;}
+  candidates.set(id,{face,id,keys:keys as [string,string],others:others as [SmFace,SmFace],circles:circles as RevolutionFace['circles'],samples});
  }
- const r=circles[0].radius,c0=circles[0].arcCenter,c1=circles[1].arcCenter;
- if(!(r>0)||Math.abs(circles[1].radius-r)>1e-9*Math.max(1,r)||Math.abs(face.radius-r)>1e-7*Math.max(1,r))return undefined;
- const axisVector=[c1.x-c0.x,c1.y-c0.y,c1.z-c0.z],height=Math.hypot(axisVector[0],axisVector[1],axisVector[2]);
- if(!(height>0))return undefined;
- const axis=axisVector.map(x=>x/height);
- for(const circle of circles){const n=circle.normal;if(Math.abs(n.x*axis[0]+n.y*axis[1]+n.z*axis[2])<1-1e-9)return undefined;}
- const sagitta=Math.acos(Math.max(-1,1-options.tolerance/r));
- const count=Math.max(8,Math.ceil(360/options.angleDeg),Math.ceil(Math.PI/Math.max(sagitta,1e-9)));
+ const out=new Map<string,SmMesh>();
+ for(;;){
+  // A face stays only if each face across its circles is planar or stays as well.
+  for(let changed=true;changed;){
+   changed=false;
+   for(const [id,c] of candidates)if(c.others.some(f=>f.geomType!=='plane'&&!candidates.has(f._identity()))){candidates.delete(id);changed=true;}
+  }
+  // Chains of coaxial circles joined by these faces (union-find on the circles).
+  const parent=new Map<string,string>();
+  const find=(key:string):string=>{let p=parent.get(key)??key;while(p!==(parent.get(p)??p))p=parent.get(p)!;parent.set(key,p);return p;};
+  for(const c of candidates.values()){const a=find(c.keys[0]),b=find(c.keys[1]);if(a!==b)parent.set(a,b);}
+  const chains=new Map<string,RevolutionFace[]>();
+  for(const c of candidates.values()){const root=find(c.keys[0]),list=chains.get(root);if(list)list.push(c);else chains.set(root,[c]);}
+  const rejected:string[]=[];
+  out.clear();
+  for(const chain of chains.values()){
+   const meshes=meshChain(chain,options);
+   if(meshes)for(const [id,mesh] of meshes)out.set(id,mesh);
+   else rejected.push(...chain.map(c=>c.id));
+  }
+  if(!rejected.length)return out;
+  for(const id of rejected)candidates.delete(id);
+ }
+}
+/** Mesh one chain of faces around one axis with one angle count, or undefined if any face does
+ * not fit the surface its kind says (then SMLib meshes the whole chain). */
+function meshChain(chain:readonly RevolutionFace[],options:{tolerance:number;angleDeg:number}):Map<string,SmMesh>|undefined{
+ const origin=chain[0].circles[0].center,axis=chain[0].circles[0].normal;
+ const scale=Math.max(1,...chain.flatMap(c=>c.circles.map(circle=>circle.radius)));
+ const meridian=(p:readonly number[])=>{const d=sub(p,origin),z=dot(d,axis);return [Math.hypot(d[0]-z*axis[0],d[1]-z*axis[1],d[2]-z*axis[2]),z];};
+ const angleStep=options.angleDeg*Math.PI/180;
+ const rowsOf=new Map<string,[number,number][]>();
+ for(const c of chain){
+  // Both circles on the chain's axis.
+  for(const circle of c.circles){
+   if(Math.abs(dot(circle.normal,axis))<1-1e-9)return undefined;
+   const d=sub(circle.center,origin),z=dot(d,axis);
+   if(Math.hypot(d[0]-z*axis[0],d[1]-z*axis[1],d[2]-z*axis[2])>1e-7*scale)return undefined;
+  }
+  const [r0,z0]=[c.circles[0].radius,dot(sub(c.circles[0].center,origin),axis)],[r1,z1]=[c.circles[1].radius,dot(sub(c.circles[1].center,origin),axis)];
+  const eps=1e-6*scale,samples=c.samples.map(meridian),[rm,zm]=samples[0];
+  let rows:[number,number][];
+  // The profile through circle 0, the face's middle and circle 1: a line, or for a torus or a
+  // surface of revolution (SMLib makes a hole rim's round one) possibly an arc. Every sample of the
+  // face must lie on it.
+  const ax=r1-r0,az=z1-z0,bx=rm-r0,bz=zm-z0,det=2*(ax*bz-az*bx);
+  const chord=Math.hypot(ax,az);
+  if(!(chord>eps))return undefined;
+  const straight=Math.abs(det)/chord<=2*eps;
+  if(straight||c.face.geomType==='cylinder'||c.face.geomType==='cone'){
+   if(!straight)return undefined;
+   for(const [r,z] of samples)if(Math.abs((r-r0)*az-(z-z0)*ax)/chord>eps)return undefined;
+   if(c.face.geomType==='cylinder'&&(Math.abs(r0-r1)>eps||Math.abs(c.face.radius-r0)>eps))return undefined;
+   rows=[[r0,z0],[r1,z1]];
+  }else{
+   // The circle through the three points (in meridian coordinates, relative to circle 0).
+   const a2=ax*ax+az*az,b2=bx*bx+bz*bz,ox=(bz*a2-az*b2)/det,oz=(ax*b2-bx*a2)/det,R=r0+ox,Z=z0+oz,rho=Math.hypot(ox,oz);
+   if(!(rho>eps)||!Number.isFinite(rho))return undefined;
+   for(const [r,z] of samples)if(Math.abs(Math.hypot(r-R,z-Z)-rho)>eps)return undefined;
+   const angle=(r:number,z:number)=>Math.atan2(z-Z,r-R),turn=(x:number)=>((x%(2*Math.PI))+2*Math.PI)%(2*Math.PI);
+   const phi0=angle(r0,z0);
+   // The arc from circle 0 to circle 1 that passes the face's middle, and holds every sample.
+   let sweep=turn(angle(r1,z1)-phi0);
+   if(turn(angle(rm,zm)-phi0)>sweep)sweep-=2*Math.PI;
+   for(const [r,z] of samples){const along=sweep>0?turn(angle(r,z)-phi0):turn(phi0-angle(r,z));if(along>Math.abs(sweep)+1e-9)return undefined;}
+   const step=Math.min(angleStep,2*Math.acos(Math.max(-1,1-options.tolerance/rho)));
+   const m=Math.max(1,Math.ceil(Math.abs(sweep)/step-1e-9));
+   rows=Array.from({length:m+1},(_,j)=>j===0?[r0,z0]:j===m?[r1,z1]:[R+rho*Math.cos(phi0+sweep*j/m),Z+rho*Math.sin(phi0+sweep*j/m)]);
+  }
+  if(rows.some(([r])=>!(r>eps)))return undefined;
+  rowsOf.set(c.id,rows);
+ }
+ const radii=[...rowsOf.values()].flat().map(([r])=>r);
+ const count=Math.max(8,Math.ceil(360/options.angleDeg-1e-9),...radii.map(r=>Math.ceil(Math.PI/Math.max(Math.acos(Math.max(-1,1-options.tolerance/r)),1e-9))));
  if(count>4096)return undefined;
  const helper=Math.abs(axis[0])<.9?[1,0,0]:[0,1,0],u=normalise(cross(helper,axis)),v=cross(axis,u);
- const vertices=new Float64Array(6*count),triangles=new Uint32Array(6*count);
- for(let i=0;i<count;i++){
-  const t=2*Math.PI*i/count,cos=Math.cos(t),sin=Math.sin(t);
-  for(let j=0;j<3;j++){
-   const radial=r*(cos*u[j]+sin*v[j]);
-   vertices[3*i+j]=[c0.x,c0.y,c0.z][j]+radial;
-   vertices[3*(count+i)+j]=[c1.x,c1.y,c1.z][j]+radial;
+ const cos=Array.from({length:count},(_,i)=>Math.cos(2*Math.PI*i/count)),sin=Array.from({length:count},(_,i)=>Math.sin(2*Math.PI*i/count));
+ const meshes=new Map<string,SmMesh>();
+ for(const c of chain){
+  const rows=rowsOf.get(c.id)!,vertices=new Float64Array(3*count*rows.length);
+  rows.forEach(([r,z],j)=>{
+   for(let i=0;i<count;i++)for(let k=0;k<3;k++)vertices[3*(j*count+i)+k]=origin[k]+z*axis[k]+r*(cos[i]*u[k]+sin[i]*v[k]);
+  });
+  // Orient by the face's outward normal at a quad in the middle row.
+  const j=Math.floor((rows.length-1)/2),a=j*count,b=a+1,B=a+count+1;
+  const at=(q:number)=>[vertices[3*q],vertices[3*q+1],vertices[3*q+2]];
+  const pa=at(a),pb=at(b),pB=at(B),centroid=[0,1,2].map(k=>(pa[k]+pb[k]+pB[k])/3);
+  let outward:SmVector;
+  try{outward=c.face.normalAt(centroid);}catch{return undefined;}
+  const facing=dot(cross(sub(pb,pa),sub(pB,pa)),[outward.x,outward.y,outward.z]);
+  if(!facing)return undefined;
+  const triangles=new Uint32Array(6*count*(rows.length-1));
+  for(let row=0;row+1<rows.length;row++)for(let i=0;i<count;i++){
+   const p=row*count+i,q=row*count+(i+1)%count,P=p+count,Q=q+count;
+   triangles.set(facing>0?[p,q,Q,p,Q,P]:[p,Q,q,p,P,Q],6*(row*count+i));
   }
+  meshes.set(c.id,{vertices,triangles});
  }
- // Orient the band by the face's outward normal (into the hole for a hole's wall).
- const p0=[vertices[0],vertices[1],vertices[2]],outward=face.normalAt(p0),radial=[p0[0]-c0.x,p0[1]-c0.y,p0[2]-c0.z];
- const outwards=outward.x*radial[0]+outward.y*radial[1]+outward.z*radial[2]>0;
- for(let i=0;i<count;i++){
-  const a=i,b=(i+1)%count,A=count+a,B=count+b;
-  // Counter-clockwise around the axis from c0 towards c1, the quad (a, b, B, A) faces outwards.
-  if(outwards)triangles.set([a,b,B,a,B,A],6*i);else triangles.set([a,B,b,a,A,B],6*i);
- }
- return {vertices,triangles};
+ return meshes;
 }
 const cross=(a:number[],b:number[])=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const normalise=(a:number[])=>{const l=Math.hypot(a[0],a[1],a[2]);return a.map(x=>x/l);};
