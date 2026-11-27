@@ -9,6 +9,9 @@ export default defineConfig({
   plugins: [libraryPreviewAssets(), libraryCatalogueAssets()],
   base:'./',
   build:{outDir:'dist/brickwright-sdk',emptyOutDir:true,target:'es2020',
+    // The SDK packager uses the emitted files. Gzip size reporting duplicates
+    // compression work across the large WASM modules and preview catalogue.
+    reportCompressedSize:false,
     lib:{entry:resolve('apps/brickwright/sdk.ts'),formats:['es'],fileName:()=> 'sdk.js'},
     // Keep fonts as files rather than duplicating them into the worker and host.
     assetsInlineLimit:0,

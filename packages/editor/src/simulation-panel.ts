@@ -7,7 +7,7 @@ import {mountSimulationAuthoring} from './simulation-authoring.js';
 import {createSimulationVideo} from './simulation-video.js';
 import type {SimulationPoint} from './simulation-authoring.js';
 import type {TracePath} from './motion-traces.js';
-import type {SimulationPose} from './simulation-protocol.js';
+import type {SimulationFrame,SimulationPose} from './simulation-protocol.js';
 export interface SimulationViewOptions {connectorHandles?:(visible:boolean)=>void;dragEnabled?:(enabled:boolean)=>void;pickPoint?:(done:(point:SimulationPoint|null)=>void)=>()=>void;traces?:(paths:TracePath[])=>void;onInterrupt?:()=>void;onExport?:(file:{name:string;bytes:Uint8Array;mime:string})=>unknown;canvas?:HTMLCanvasElement}
 export function mountSimulationPanel(parent:HTMLElement,session:CadSession,wasmURL:string,ready:()=>Promise<GeometryResult|void>,poses:(value:SimulationPose[]|null)=>void,view:SimulationViewOptions={}){
  const panel=document.createElement('section');panel.hidden=true;panel.className='simulation-panel';panel.setAttribute('aria-label',t('Assembly simulation'));
@@ -36,7 +36,25 @@ export function mountSimulationPanel(parent:HTMLElement,session:CadSession,wasmU
  const rigidHint=document.createElement('small');rigidHint.textContent=t('Rigid preview does not model elastic springs or unconfigured mechanical couplings.');panel.append(rigidHint);
  const joints=document.createElement('div');panel.append(joints);const status=document.createElement('p');status.setAttribute('role','status');panel.append(status);
  const rows=new Map<string,{kind:'hinge'|'slider';speed:HTMLInputElement;limit:HTMLInputElement;enabled:HTMLInputElement;position:HTMLOutputElement}>();
- const controller=createSimulationController(session,wasmURL,ready,update,frame=>{poses(frame?.poses??null);view.traces?.(controller.tracePaths());if(frame){panel.dataset.time=String(frame.time);elapsed.value=`${frame.time.toFixed(3)} s`;for(const [id,row]of rows)row.position.value=row.kind==='hinge'?`${(frame.angles[id]??0).toFixed(1)}°`:`${(frame.linearPositions[id]??0).toFixed(2)} mm`;}else{delete panel.dataset.time;elapsed.value='0.000 s';for(const row of rows.values())row.position.value=row.kind==='hinge'?'0.0°':'0.00 mm';}csv.disabled=!controller.tracePaths().some(path=>path.samples.length);updateReplayControls();},view.onInterrupt);
+ let displayedFrame:SimulationFrame|null=null,hasTraceSamples=false;
+ const controller=createSimulationController(session,wasmURL,ready,update,frame=>{
+  displayedFrame=frame;
+  poses(frame?.poses??null);
+  const paths=controller.tracePaths();
+  view.traces?.(paths);
+  hasTraceSamples=paths.some(path=>path.samples.length);
+  if(!panel.hidden){updateReadouts();updateReplayControls();}
+ },view.onInterrupt);
+ function updateReadouts(){
+  const frame=displayedFrame;
+  if(frame)panel.dataset.time=String(frame.time);
+  else delete panel.dataset.time;
+  elapsed.value=`${(frame?.time??0).toFixed(3)} s`;
+  for(const [id,row]of rows)row.position.value=row.kind==='hinge'
+   ?`${(frame?.angles[id]??0).toFixed(1)}°`
+   :`${(frame?.linearPositions[id]??0).toFixed(2)} mm`;
+  csv.disabled=!hasTraceSamples;
+ }
  const authoring=mountSimulationAuthoring(panel,session,fail,view.pickPoint?done=>{const previous=compact;setCompact(true);const cancel=view.pickPoint!(point=>{setCompact(previous);done(point);});return()=>{cancel();setCompact(previous);};}:undefined);
  const recording=document.createElement('div');panel.append(recording);
  const deliver=(file:{name:string;bytes:Uint8Array;mime:string})=>{if(view.onExport)return view.onExport(file);const url=URL.createObjectURL(new Blob([file.bytes.slice().buffer],{type:file.mime})),a=document.createElement('a');a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);};
@@ -52,7 +70,13 @@ export function mountSimulationPanel(parent:HTMLElement,session:CadSession,wasmU
  const sizeLabel=document.createElement('label'),size=document.createElement('input');size.type='number';size.value='12';size.min='2';size.max='100';sizeLabel.append(document.createTextNode(t('Preview diameter or edge (mm)')),size);size.setAttribute('aria-label',t('Preview diameter or edge (mm)'));launch.append(sizeLabel);
  add('Throw preview object',()=>controller[shape.value==='box'?'throwBox':'throwBall'](ballPosition.map(i=>Number(i.value)) as Vec3,velocities.map(i=>Number(i.value)) as Vec3,Number(size.value)/2),launch);
  function updateReplayControls(){const range=controller.replayRange();replay.min=String(range.first);replay.max=String(range.last);replay.value=String(controller.replayTime??range.last);replay.disabled=previous.disabled=range.count<2;live.disabled=controller.replayTime===undefined;replayPlay.disabled=range.count<2;const replayLabel=t(controller.replayPlaying?'Pause replay':'Play recorded motion');replayPlay.textContent=replayLabel;replayPlay.setAttribute('aria-label',replayLabel);}
- function update(){updateReplayControls();const state=controller.state;view.connectorHandles?.(!panel.hidden&&state.state==='idle');view.dragEnabled?.(dragging.checked&&state.state==='running');panel.dataset.state=state.state;panel.dataset.owner=state.program?'program':'manual';run.disabled=['running','preparing'].includes(state.state);pauseButton.disabled=state.state!=='running';step.disabled=['running','preparing'].includes(state.state);stop.disabled=state.state==='idle'||state.state==='preparing';resetButton.disabled=state.state==='idle';base.disabled=rigid.disabled=state.state!=='idle';base.checked=controller.fixBase;rigid.checked=controller.rigidPreview;authoring.setDisabled(state.state!=='idle');status.textContent=state.error||(state.state==='preparing'?t('Preparing simulation'):'');for(const [id,row]of rows){const exists=(row.kind==='hinge'?controller.motors():controller.sliders()).some(m=>m.id===id);if(!exists)continue;const value=row.kind==='hinge'?controller.setting(id):controller.sliderSetting(id);if(state.state!=='idle'){row.enabled.checked=value.enabled;if((row.speed.getRootNode() as ShadowRoot).activeElement!==row.speed&&document.activeElement!==row.speed)row.speed.value=String(value.speed);}}}
+ function update(){
+  const state=controller.state;
+  view.connectorHandles?.(!panel.hidden&&state.state==='idle');
+  view.dragEnabled?.(dragging.checked&&state.state==='running');
+  if(panel.hidden)return;
+  updateReplayControls();panel.dataset.state=state.state;panel.dataset.owner=state.program?'program':'manual';run.disabled=['running','preparing'].includes(state.state);pauseButton.disabled=state.state!=='running';step.disabled=['running','preparing'].includes(state.state);stop.disabled=state.state==='idle'||state.state==='preparing';resetButton.disabled=state.state==='idle';base.disabled=rigid.disabled=state.state!=='idle';base.checked=controller.fixBase;rigid.checked=controller.rigidPreview;authoring.setDisabled(state.state!=='idle');status.textContent=state.error||(state.state==='preparing'?t('Preparing simulation'):'');for(const [id,row]of rows){const exists=(row.kind==='hinge'?controller.motors():controller.sliders()).some(m=>m.id===id);if(!exists)continue;const value=row.kind==='hinge'?controller.setting(id):controller.sliderSetting(id);if(state.state!=='idle'){row.enabled.checked=value.enabled;if((row.speed.getRootNode() as ShadowRoot).activeElement!==row.speed&&document.activeElement!==row.speed)row.speed.value=String(value.speed);}}
+ }
  function fail(error:unknown){status.textContent=error instanceof Error?error.message:String(error);}
  function rebuild(){joints.replaceChildren();rows.clear();const motors=[...controller.motors().map(m=>({...m,kind:'hinge' as const})),...controller.sliders().map(m=>({...m,kind:'slider' as const}))];
   for(const motor of motors){const row=document.createElement('fieldset'),legend=document.createElement('legend');legend.textContent=`${motor.port} · ${motor.name}`;row.append(legend);
@@ -63,5 +87,5 @@ export function mountSimulationPanel(parent:HTMLElement,session:CadSession,wasmU
   }
  }
  let revision=session.state.revision;const unsubscribe=session.subscribe(state=>{if(state.revision!==revision){revision=state.revision;rebuild();update();}});rebuild();update();
- return {...controller,close,open(){panel.hidden=false;panel.removeAttribute('aria-hidden');view.connectorHandles?.(controller.state.state==='idle');},get active(){return controller.state.state!=='idle';},get state(){return controller.state;},get fixBase(){return controller.fixBase;},get rigidPreview(){return controller.rigidPreview;},get replayPlaying(){return controller.replayPlaying;},get replayTime(){return controller.replayTime;},get timeScale(){return controller.timeScale;},dispose(){view.connectorHandles?.(false);unsubscribe();authoring.dispose();video?.dispose();controller.dispose();panel.remove();}};
+ return {...controller,close,open(){panel.hidden=false;panel.removeAttribute('aria-hidden');updateReadouts();update();},get active(){return controller.state.state!=='idle';},get state(){return controller.state;},get fixBase(){return controller.fixBase;},get rigidPreview(){return controller.rigidPreview;},get replayPlaying(){return controller.replayPlaying;},get replayTime(){return controller.replayTime;},get timeScale(){return controller.timeScale;},dispose(){view.connectorHandles?.(false);unsubscribe();authoring.dispose();video?.dispose();controller.dispose();panel.remove();}};
 }
