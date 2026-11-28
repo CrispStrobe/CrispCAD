@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 /**
  * "Check for manufacturing" (Phase 6.3): a read-only report of one body or several against the
- * rules of a process (FDM printing, 3-axis CNC milling, laser-cut sheet), with edge-radius rules
+ * rules of a process (FDM printing, 3-axis CNC milling, laser-cut sheet, injection moulding), with edge-radius rules
  * on top. Where a body has an exact B-rep, its checks are measured on that (face kinds and radii,
  * edge curves, exact wall distances); otherwise, and for the orientation-dependent FDM checks, on
  * the display mesh. Every check says which it used.
@@ -17,8 +17,8 @@ import {commandNumber,commandTokens} from './command-arguments.js';
 import {t} from './i18n.js';
 
 export const MANUFACTURING_CHECK_VERSION=1;
-export type ManufacturingProcess='fdm'|'cnc'|'laser';
-export const MANUFACTURING_PROCESSES:readonly ManufacturingProcess[]=Object.freeze(['fdm','cnc','laser']);
+export type ManufacturingProcess='fdm'|'cnc'|'laser'|'molding';
+export const MANUFACTURING_PROCESSES:readonly ManufacturingProcess[]=Object.freeze(['fdm','cnc','laser','molding']);
 /** Which sharp edges the edge-radius check refuses: none, convex (external), concave (internal) or both. */
 export type EdgeBreakRule='none'|'external'|'internal'|'all';
 export type ApproachAxis='+x'|'-x'|'+y'|'-y'|'+z'|'-z';
@@ -40,6 +40,19 @@ export interface ManufacturingSettings {
  readonly toolDiameterMm:number;
  readonly approachAxes:readonly ApproachAxis[];
  readonly maxUndercutAreaMm2:number;
+ /** CNC: a pocket deeper than this many tool diameters fails (a standard end mill reaches about 4 ×). */
+ readonly maxPocketDepthRatio:number;
+ /** CNC: list a suggested dogbone (centre and circle) for each internal corner that needs one. */
+ readonly dogbones:boolean;
+ /**
+  * Injection moulding: the direction the mould opens (the two halves part along it), the minimum
+  * draft of faces along it (degrees), the thickest wall (mm) and how far the wall may vary around
+  * its nominal (median) thickness, as a fraction (0.4: from 0.6 × to 1.4 × nominal).
+  */
+ readonly pullAxis:ApproachAxis;
+ readonly minDraftDeg:number;
+ readonly maxWallMm?:number;
+ readonly wallVariation:number;
  /** Edge radius: fillet radius bounds (mm) and which sharp edges are refused. */
  readonly minRadiusMm?:number;
  readonly maxRadiusMm?:number;
@@ -48,7 +61,8 @@ export interface ManufacturingSettings {
 
 export const DEFAULT_MANUFACTURING_SETTINGS:Readonly<ManufacturingSettings>=Object.freeze({
  process:'cnc',exact:true,nozzleMm:.4,minHoleMm:2,maxOverhangDeg:45,maxBridgeMm:10,bedSizeMm:Object.freeze({x:220,y:220,z:250}),
- toolDiameterMm:6,approachAxes:Object.freeze(['+z']) as readonly ApproachAxis[],maxUndercutAreaMm2:1,edgeBreak:'none',
+ toolDiameterMm:6,approachAxes:Object.freeze(['+z']) as readonly ApproachAxis[],maxUndercutAreaMm2:1,maxPocketDepthRatio:4,dogbones:false,
+ pullAxis:'+z',minDraftDeg:1,wallVariation:.4,edgeBreak:'none',
 });
 
 const positive=(value:unknown,max=1e5)=>typeof value==='number'&&Number.isFinite(value)&&value>0&&value<=max;
@@ -56,18 +70,23 @@ const positive=(value:unknown,max=1e5)=>typeof value==='number'&&Number.isFinite
 export function resolveManufacturingSettings(input:Partial<ManufacturingSettings>={}):ManufacturingSettings{
  const d=DEFAULT_MANUFACTURING_SETTINGS;
  const s={...d,...Object.fromEntries(Object.entries(input).filter(([,v])=>v!==undefined)),bedSizeMm:{...d.bedSizeMm,...input.bedSizeMm}} as ManufacturingSettings;
- if(!MANUFACTURING_PROCESSES.includes(s.process))throw new RangeError(t('Choose the process fdm, cnc or laser.'));
+ if(!MANUFACTURING_PROCESSES.includes(s.process))throw new RangeError(t('Choose the process fdm, cnc, laser or molding.'));
  for(const [key,value] of [['nozzleMm',s.nozzleMm],['minHoleMm',s.minHoleMm],['maxBridgeMm',s.maxBridgeMm],['toolDiameterMm',s.toolDiameterMm],['bedSizeMm.x',s.bedSizeMm.x],['bedSizeMm.y',s.bedSizeMm.y],['bedSizeMm.z',s.bedSizeMm.z]] as const)
   if(!positive(value))throw new RangeError(t`${key} must be a positive number of millimetres.`);
- for(const [key,value] of [['minWallMm',s.minWallMm],['minRadiusMm',s.minRadiusMm],['maxRadiusMm',s.maxRadiusMm]] as const)
+ for(const [key,value] of [['minWallMm',s.minWallMm],['maxWallMm',s.maxWallMm],['minRadiusMm',s.minRadiusMm],['maxRadiusMm',s.maxRadiusMm]] as const)
   if(value!==undefined&&!positive(value))throw new RangeError(t`${key} must be a positive number of millimetres.`);
  if(!(typeof s.maxUndercutAreaMm2==='number'&&s.maxUndercutAreaMm2>=0&&Number.isFinite(s.maxUndercutAreaMm2)))throw new RangeError(t('The tolerated undercut area must be zero or more square millimetres.'));
  if(!(s.maxOverhangDeg>0&&s.maxOverhangDeg<90))throw new RangeError(t('The overhang angle must be between 0 and 90 degrees.'));
+ if(!positive(s.maxPocketDepthRatio,1000))throw new RangeError(t('The pocket depth ratio must be a positive number of tool diameters.'));
+ if(!(typeof s.minDraftDeg==='number'&&s.minDraftDeg>=0&&s.minDraftDeg<45))throw new RangeError(t('The draft angle must be from 0 to 45 degrees.'));
+ if(!(typeof s.wallVariation==='number'&&s.wallVariation>0&&s.wallVariation<1))throw new RangeError(t('The wall variation must be a fraction between 0 and 1.'));
+ if(!APPROACH_AXES.includes(s.pullAxis))throw new RangeError(t('The pull direction is +x, -x, +y, -y, +z or -z.'));
+ if(s.minWallMm!==undefined&&s.maxWallMm!==undefined&&s.minWallMm>s.maxWallMm)throw new RangeError(t('The minimum wall is thicker than the maximum wall.'));
  if(s.minRadiusMm!==undefined&&s.maxRadiusMm!==undefined&&s.minRadiusMm>s.maxRadiusMm)throw new RangeError(t('The minimum radius is larger than the maximum radius.'));
  if(!['none','external','internal','all'].includes(s.edgeBreak))throw new RangeError(t('Edge breaks are none, external, internal or all.'));
  const axes=[...new Set(s.approachAxes)];
  if(!axes.length||axes.some(axis=>!APPROACH_AXES.includes(axis)))throw new RangeError(t('Tool approach axes are +x, -x, +y, -y, +z or -z.'));
- return Object.freeze({...s,exact:s.exact!==false,approachAxes:Object.freeze(axes),bedSizeMm:Object.freeze({...s.bedSizeMm})});
+ return Object.freeze({...s,exact:s.exact!==false,dogbones:s.dogbones===true,approachAxes:Object.freeze(axes),bedSizeMm:Object.freeze({...s.bedSizeMm})});
 }
 
 /** What to draw over the model for a finding (world millimetres): polylines, triangles, points. */
@@ -127,11 +146,11 @@ export interface ManufacturingHost {
  check(document:CadDocument,request:{readonly bodies:readonly string[];readonly settings:ManufacturingSettings},signal?:AbortSignal):Promise<ManufacturingReport>;
 }
 
-export const processLabel=(process:ManufacturingProcess)=>process==='fdm'?t('FDM printing'):process==='cnc'?t('CNC milling (3-axis)'):t('Laser-cut sheet');
+export const processLabel=(process:ManufacturingProcess)=>process==='fdm'?t('FDM printing'):process==='cnc'?t('CNC milling (3-axis)'):process==='molding'?t('Injection moulding'):t('Laser-cut sheet');
 
 const quote=(value:string)=>/^[A-Za-z0-9_-]+$/.test(value)?value:'"'+value.replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"';
 const formatNumber=(value:number)=>String(Number(value.toPrecision(12))+0);
-const usage=()=>t('Usage: check fdm|cnc|laser [all|"name"|id ...] [--tool <mm>] [--axes +z,+x] [--min-wall <mm>] [--nozzle <mm>] [--min-hole <mm>] [--min-radius <mm>] [--max-radius <mm>] [--edge-break none|external|internal|all] [--mesh].');
+const usage=()=>t('Usage: check fdm|cnc|laser|molding [all|"name"|id ...] [--tool <mm>] [--axes +z,+x] [--depth-ratio <n>] [--dogbones] [--pull +z] [--draft <deg>] [--min-wall <mm>] [--max-wall <mm>] [--variation <fraction>] [--nozzle <mm>] [--min-hole <mm>] [--min-radius <mm>] [--max-radius <mm>] [--edge-break none|external|internal|all] [--mesh].');
 
 /**
  * `check <process> [targets] [options]`: the bodies (IDs or exact names, `all`, or without
@@ -156,6 +175,12 @@ export function parseManufacturingCommand(session:CadSession,tail:string):{bodie
   else if(flag==='--min-radius')given.minRadiusMm=commandNumber(value(++i));
   else if(flag==='--max-radius')given.maxRadiusMm=commandNumber(value(++i));
   else if(flag==='--edge-break')given.edgeBreak=value(++i).toLowerCase() as EdgeBreakRule;
+  else if(flag==='--dogbones')given.dogbones=true;
+  else if(flag==='--depth-ratio')given.maxPocketDepthRatio=commandNumber(value(++i));
+  else if(flag==='--draft')given.minDraftDeg=commandNumber(value(++i));
+  else if(flag==='--max-wall')given.maxWallMm=commandNumber(value(++i));
+  else if(flag==='--variation')given.wallVariation=commandNumber(value(++i));
+  else if(flag==='--pull'){const axis=value(++i).toLowerCase().trim();given.pullAxis=(/^[xyz]$/.test(axis)?'+'+axis:axis) as ApproachAxis;}
   else if(flag==='--axes')given.approachAxes=value(++i).toLowerCase().split(',').map(axis=>axis.trim()).filter(Boolean).map(axis=>/^[xyz]$/.test(axis)?'+'+axis:axis) as ApproachAxis[];
   else if(flag.startsWith('--'))throw new Error(usage());
   else targets.push(token);
@@ -180,7 +205,13 @@ export function parseManufacturingCommand(session:CadSession,tail:string):{bodie
  if(!settings.exact)options.push('--mesh');
  if(settings.toolDiameterMm!==d.toolDiameterMm)options.push(`--tool ${formatNumber(settings.toolDiameterMm)}`);
  if(settings.approachAxes.join(',')!==d.approachAxes.join(','))options.push(`--axes ${settings.approachAxes.join(',')}`);
+ if(settings.maxPocketDepthRatio!==d.maxPocketDepthRatio)options.push(`--depth-ratio ${formatNumber(settings.maxPocketDepthRatio)}`);
+ if(settings.dogbones)options.push('--dogbones');
+ if(settings.pullAxis!==d.pullAxis)options.push(`--pull ${settings.pullAxis}`);
+ if(settings.minDraftDeg!==d.minDraftDeg)options.push(`--draft ${formatNumber(settings.minDraftDeg)}`);
  if(settings.minWallMm!==undefined)options.push(`--min-wall ${formatNumber(settings.minWallMm)}`);
+ if(settings.maxWallMm!==undefined)options.push(`--max-wall ${formatNumber(settings.maxWallMm)}`);
+ if(settings.wallVariation!==d.wallVariation)options.push(`--variation ${formatNumber(settings.wallVariation)}`);
  if(settings.nozzleMm!==d.nozzleMm)options.push(`--nozzle ${formatNumber(settings.nozzleMm)}`);
  if(settings.minHoleMm!==d.minHoleMm)options.push(`--min-hole ${formatNumber(settings.minHoleMm)}`);
  if(settings.minRadiusMm!==undefined)options.push(`--min-radius ${formatNumber(settings.minRadiusMm)}`);

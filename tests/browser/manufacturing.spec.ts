@@ -2,7 +2,7 @@
 // Check for manufacturing (Phase 6.3) in the editor, by touch: File › Check for manufacturing…,
 // first on the meshes (the exact kernel is not fetched), then on the exact B-rep (fetched on
 // demand); a finding is tapped, marked in the 3D view and stepped through from the bar, and the
-// report comes back. The check reads the model and adds no history entry.
+// report comes back; then suggested dogbones and the injection-moulding checks. The check reads the model and adds no history entry.
 import {expect,test} from '@playwright/test';
 import {CAD_SCRIPT_REVISION,createCadSession,serializeDocument} from '@brickwright/cad-core';
 
@@ -65,6 +65,28 @@ test('checks a milled pocket for CNC on the mesh and on the exact B-rep and mark
  await dialog.getByLabel('End mill diameter (mm)',{exact:true}).fill('4');
  await dialog.getByRole('button',{name:'Run check',exact:true}).tap();
  await expect(corners).toHaveAttribute('data-status','warn',{timeout:60_000});
+ // Dogbones: back at Ø6 the four R2.5 corners need one each; with suggestions on, a finding marks
+ // the relief hole's circles in the 3D view.
+ await dialog.getByLabel('End mill diameter (mm)',{exact:true}).fill('6');
+ await dialog.getByRole('checkbox',{name:'Suggest dogbones',exact:true}).tap();
+ await dialog.getByRole('button',{name:'Run check',exact:true}).tap();
+ const dogbones=body.locator('dd[data-check="cnc.dogbones"]');
+ await expect(dogbones).toHaveAttribute('data-status','warn',{timeout:60_000});
+ await expect(dogbones.locator('button.manufacturing-finding')).toHaveCount(4);
+ await expect(dogbones.locator('button.manufacturing-finding').first()).toContainText('dogbone Ø6 centred at');
+ await expect(body.locator('dd[data-check="cnc.pocket-depth"]')).toHaveAttribute('data-status','pass');
+ await expect(body.locator('dd[data-check="cnc.pocket-depth"]')).toContainText('the deepest 10 mm');
+ await dogbones.locator('button.manufacturing-finding').first().tap();
+ await expect(bar).toContainText('Dogbones');
+ await expect(page.locator('canvas[data-finding]')).toHaveCount(1);
+ await bar.getByRole('button',{name:'Back to report',exact:true}).tap();
+ // Injection moulding: the pocket's walls and the block's sides have no draft along +z.
+ await dialog.getByLabel('Process',{exact:true}).selectOption('molding');
+ await expect(dialog.getByLabel('Mould opens along',{exact:true})).toBeVisible();
+ await dialog.getByRole('button',{name:'Run check',exact:true}).tap();
+ await expect(body.locator('dd[data-check="mold.draft"]')).toHaveAttribute('data-status','fail',{timeout:60_000});
+ await expect(body.locator('dd[data-check="mold.undercuts"]')).toHaveAttribute('data-status','pass');
+ await expect(body.locator('dd[data-check="mold.wall-uniformity"]')).toBeVisible();
  if(process.env.MANUFACTURING_SHOT)await dialog.screenshot({path:process.env.MANUFACTURING_SHOT});
  await dialog.getByRole('button',{name:'Close',exact:true}).tap();
  await expect(dialog).toBeHidden();

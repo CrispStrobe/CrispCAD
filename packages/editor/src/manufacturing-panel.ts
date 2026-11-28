@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // "Check for manufacturing" (Phase 6.3): a dialog that checks the bodies for FDM printing, 3-axis
-// CNC milling or a laser-cut sheet, with edge-radius rules, and lists what it found. Each finding
+// CNC milling, a laser-cut sheet or injection moulding, with edge-radius rules, and lists what it found. Each finding
 // is a button: it sets the dialog aside and marks the faces or edges in the 3D view, with a bar to
 // step through the findings and come back; everything is tappable, so it works on an iPad without
 // a keyboard. Settings are this editor's view preference: nothing is saved with the model, and the
@@ -34,7 +34,7 @@ export function mountManufacturingPanel(shell:HTMLElement,viewHost:HTMLElement,h
  const heading=el('h2','',t('Check for manufacturing'));
  const form=el('div','manufacturing-settings');
  const processWrap=el('label','',t('Process')),process=el('select');process.setAttribute('aria-label',t('Process'));
- for(const value of ['fdm','cnc','laser'] as const){const option=el('option','',processLabel(value));option.value=value;process.append(option);}
+ for(const value of ['fdm','cnc','laser','molding'] as const){const option=el('option','',processLabel(value));option.value=value;process.append(option);}
  process.value=DEFAULT_MANUFACTURING_SETTINGS.process;processWrap.append(process);form.append(processWrap);
  const exactWrap=el('label','manufacturing-toggle'),exact=el('input');exact.type='checkbox';exact.checked=true;
  exactWrap.append(exact,document.createTextNode(' '+t('Exact B-rep where available (loads the exact kernel)')));
@@ -52,15 +52,27 @@ export function mountManufacturingPanel(shell:HTMLElement,viewHost:HTMLElement,h
  const axes=new Map<ApproachAxis,HTMLInputElement>();
  for(const axis of APPROACH_AXES){const wrap=el('label'),input=el('input');input.type='checkbox';input.checked=d.approachAxes.includes(axis);input.setAttribute('aria-label',t`Tool from ${axis}`);wrap.append(input,document.createTextNode(' '+axis));axesWrap.append(wrap);axes.set(axis,input);}
  cnc.append(axesWrap);
+ const depthRatio=numberField(cnc,'Deepest pocket (× tool diameter)',d.maxPocketDepthRatio,.5);
+ const dogboneWrap=el('label','manufacturing-toggle'),dogbones=el('input');dogbones.type='checkbox';dogbones.checked=d.dogbones;
+ dogbones.setAttribute('aria-label',t('Suggest dogbones'));
+ dogboneWrap.append(dogbones,document.createTextNode(' '+t('Suggest dogbones')));
+ dogboneWrap.title=t('For each internal corner a square-cornered part must fit into, show where a tool-diameter relief hole goes.');
+ cnc.append(dogboneWrap);
  const laser=el('fieldset','manufacturing-process');laser.dataset.process='laser';laser.append(el('legend','',processLabel('laser')));
  const web=numberField(laser,'Minimum web (mm)',undefined,.1,t('sheet thickness'));
+ const molding=el('fieldset','manufacturing-process');molding.dataset.process='molding';molding.append(el('legend','',processLabel('molding')));
+ const pullWrap=el('label','',t('Mould opens along')),pull=el('select');pull.setAttribute('aria-label',t('Mould opens along'));
+ for(const axis of APPROACH_AXES){const option=el('option','',axis);option.value=axis;pull.append(option);}
+ pull.value=d.pullAxis;pullWrap.append(pull);molding.append(pullWrap);
+ const draft=numberField(molding,'Minimum draft (°)',d.minDraftDeg,.5),moldWall=numberField(molding,'Minimum wall (mm)',.8,.1),moldMaxWall=numberField(molding,'Maximum wall (mm)',4,.5);
+ const variation=numberField(molding,'Wall variation (%)',100*d.wallVariation,5);
  const edges=el('fieldset','manufacturing-edges');edges.append(el('legend','',t('Edge radius')));
  const minRadius=numberField(edges,'Minimum fillet radius (mm)',undefined,.1,t('none')),maxRadius=numberField(edges,'Maximum fillet radius (mm)',undefined,.1,t('none'));
  const breakWrap=el('label','',t('Sharp edges not allowed')),edgeBreak=el('select');edgeBreak.setAttribute('aria-label',t('Sharp edges not allowed'));
  for(const [value,label] of [['none','None'],['external','External (convex)'],['internal','Internal (concave)'],['all','All']] as const){const option=el('option','',t(label));option.value=value;edgeBreak.append(option);}
  breakWrap.append(edgeBreak);edges.append(breakWrap);
- form.append(fdm,cnc,laser,edges);
- const showProcess=()=>{for(const set of [fdm,cnc,laser])set.hidden=set.dataset.process!==process.value;};
+ form.append(fdm,cnc,laser,molding,edges);
+ const showProcess=()=>{for(const set of [fdm,cnc,laser,molding])set.hidden=set.dataset.process!==process.value;};
  process.addEventListener('change',()=>{showProcess();results.replaceChildren();});showProcess();
  const results=el('div','manufacturing-results');results.setAttribute('aria-live','polite');
  const footer=el('footer'),close=el('button','',t('Close')),run=el('button','primary',t('Run check'));
@@ -84,6 +96,10 @@ export function mountManufacturingPanel(shell:HTMLElement,viewHost:HTMLElement,h
   process:process.value as ManufacturingProcess,exact:exact.checked,
   nozzleMm:Number(nozzle.value),minHoleMm:Number(minHole.value),toolDiameterMm:Number(tool.value),
   approachAxes:APPROACH_AXES.filter(axis=>axes.get(axis)!.checked),
+  maxPocketDepthRatio:Number(depthRatio.value),dogbones:dogbones.checked,
+  pullAxis:pull.value as ApproachAxis,minDraftDeg:Number(draft.value),wallVariation:Number(variation.value)/100,
+  ...(process.value==='molding'&&optional(moldWall)!==undefined?{minWallMm:optional(moldWall)}:{}),
+  ...(process.value==='molding'&&optional(moldMaxWall)!==undefined?{maxWallMm:optional(moldMaxWall)}:{}),
   ...(process.value==='fdm'&&optional(fdmWall)!==undefined?{minWallMm:optional(fdmWall)}:{}),
   ...(process.value==='cnc'&&optional(cncWall)!==undefined?{minWallMm:optional(cncWall)}:{}),
   ...(process.value==='laser'&&optional(web)!==undefined?{minWallMm:optional(web)}:{}),

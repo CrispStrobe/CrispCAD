@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // "Check for manufacturing" (Phase 6.3 of docs/CRISPCAD-CONVERGENCE.md): FDM printing, 3-axis CNC
-// milling and laser-cut sheet, plus an edge-radius check. Original code; the rules and their
+// milling (with pocket depth and dogbones), laser-cut sheet and injection moulding (draft,
+// undercuts along the pull, wall uniformity), plus an edge-radius check. Original code; the rules and their
 // numbers follow the kernel lab's guides (cnc-internal-corner-radius, edge-radius-check,
 // fdm-design-rules), not its implementation.
 //
@@ -95,7 +96,9 @@ function surfaceOf(positions:ArrayLike<number>,indices:ArrayLike<number>,faceOf?
 
 type EdgeKind='convex'|'concave'|'tangent'|'seam';
 export interface EdgeInfo {readonly index:number;readonly kind:EdgeKind;readonly point:Vec3;readonly tangent:Vec3;readonly normals?:readonly [Vec3,Vec3];readonly angleDeg:number;readonly approximate:boolean;readonly line:boolean}
-export interface CylinderGroup {readonly faces:number[];readonly radius:number;readonly origin:Vec3;readonly direction:Vec3;readonly concave:boolean;readonly full:boolean;readonly hMin:number;readonly hMax:number}
+export interface CylinderGroup {readonly faces:number[];readonly radius:number;readonly origin:Vec3;readonly direction:Vec3;readonly concave:boolean;readonly full:boolean;readonly hMin:number;readonly hMax:number;
+ /** Angle the faces cover around the axis (radians; 2π for a full bore or boss). */
+ readonly span:number}
 export interface ExactModel {
  readonly body:ExactDrawingBody;readonly surface:Surface;
  readonly faceTris:number[][];readonly faceArea:number[];
@@ -185,7 +188,7 @@ function buildExactModel(body:ExactDrawingBody):ExactModel{
   if(face.surface!=='cylinder'||!face.axis||face.radius===undefined)return;
   const key={radius:face.radius,origin:[...face.axis.origin] as Vec3,direction:unit(face.axis.direction)};
   let group=cylinders.find(g=>sameCylinder(g,key)&&g.concave===(radialSign(face)<0));
-  if(!group){group={faces:[],...key,concave:radialSign(face)<0,full:false,hMin:Infinity,hMax:-Infinity};cylinders.push(group);}
+  if(!group){group={faces:[],...key,concave:radialSign(face)<0,full:false,hMin:Infinity,hMax:-Infinity,span:0};cylinders.push(group);}
   group.faces.push(f);cylinderOf.set(f,group);
  });
  for(let g=0;g<cylinders.length;g++){
@@ -203,7 +206,7 @@ function buildExactModel(body:ExactDrawingBody):ExactModel{
    for(let b=0;b<720;b++){const centre=(b+.5)*Math.PI/360,offset=(centre-start+4*Math.PI)%(2*Math.PI);if(offset<=span)bins[b]=1;}
   }
   const gap=(720-bins.reduce((sum,b)=>sum+b,0))*Math.PI/360;
-  const full={...group,full:gap<FULL_TURN_GAP,hMin,hMax};
+  const full={...group,full:gap<FULL_TURN_GAP,hMin,hMax,span:2*Math.PI-gap};
   cylinders[g]=full;for(const f of full.faces)cylinderOf.set(f,full);
  }
  const sameSurface=(a:number,b:number)=>{
@@ -265,6 +268,8 @@ const notChecked=(id:string,label:string,geometry:ManufacturingGeometry,why:stri
 // Wall thickness
 
 interface WallHit {readonly thickness:number;readonly from:Vec3;readonly to:Vec3;readonly tri:number;readonly hitTri:number}
+/** One wall sample for the thickness distribution: its weight is the surface area it stands for. */
+interface WallSample extends WallHit {readonly weight:number}
 
 /** The point `p` moved onto the exact surface of face `f` (planes, cylinders, spheres). */
 function projectOnFace(body:ExactDrawingBody,f:number,p:Vec3):Vec3{
@@ -308,20 +313,21 @@ function exactRayParameter(body:ExactDrawingBody,f:number,origin:Vec3,dir:Vec3,n
  * ends the wall. On an exact model the start lies on the exact face and the end on the exact face
  * hit. A short hop whose middle is outside the solid is an air gap, not a wall, and is ignored.
  */
-function sampleWalls(s:Surface,limit:number,options:{model?:ExactModel;filter?:(tri:number)=>boolean}={}):{thinnest:number;samples:number;thin:WallHit[]}{
+function sampleWalls(s:Surface,limit:number,options:{model?:ExactModel;filter?:(tri:number)=>boolean;collect?:WallSample[];budget?:number}={}):{thinnest:number;samples:number;thin:WallHit[]}{
+ const budget=options.budget??WALL_SAMPLE_BUDGET;
  const tris:number[]=[];
  for(let tri=0;tri<s.count;tri++)if(s.area[tri]>1e-12&&(!options.filter||options.filter(tri)))tris.push(tri);
  const longest=tris.map(tri=>{const [a,b,c]=corners(s,tri);return Math.max(length(sub(b,a)),length(sub(c,b)),length(sub(a,c)));});
  let spacing=Math.max(limit,s.diagonal/200,1e-3);
  const perTri=()=>longest.map(l=>Math.min(12,Math.max(1,Math.ceil(l/spacing))));
  let n=perTri();
- while(n.reduce((sum,k)=>sum+k*(k+1)/2,0)>WALL_SAMPLE_BUDGET&&spacing<s.diagonal){spacing*=1.5;n=perTri();}
+ while(n.reduce((sum,k)=>sum+k*(k+1)/2,0)>budget&&spacing<s.diagonal){spacing*=1.5;n=perTri();}
  const model=options.model;
  let thinnest=Infinity,samples=0;const thin:WallHit[]=[];
  tris.forEach((tri,i)=>{
   const [a,b,c]=corners(s,tri),k=n[i],ab=sub(b,a),ac=sub(c,a);
   for(let u=0;u<k;u++)for(let v=0;u+v<k;v++){
-   if(samples>=WALL_SAMPLE_BUDGET*1.2)return;
+   if(samples>=budget*1.2)return;
    const p=add(a,add(scale(ab,(u+1/3)/k),scale(ac,(v+1/3)/k)));
    const f=model?model.body.mesh.faceOf[tri]:-1;
    const start=model?projectOnFace(model.body,f,p):p;
@@ -333,8 +339,15 @@ function sampleWalls(s:Surface,limit:number,options:{model?:ExactModel;filter?:(
    if(!hit)continue;
    const tHit=model?exactRayParameter(model.body,model.body.mesh.faceOf[hit.triIndex],origin,dir,hit.t):hit.t;
    const thickness=tHit+RAY_EPS;
-   if(thickness>=thinnest&&thickness>=limit)continue;
-   if(!s.bvh.pointInside(add(origin,scale(dir,tHit/2))))continue;
+   if(!options.collect&&thickness>=thinnest&&thickness>=limit)continue;
+   const middle=add(origin,scale(dir,tHit/2));
+   if(!s.bvh.pointInside(middle))continue;
+   if(options.collect){
+    // Across the wall, not along it: a ray from a rim runs down the wall it tops, so the wall is
+    // twice the distance from the hop's middle to the nearest surface (the inscribed ball there).
+    const across=Math.min(thickness,2*(s.bvh.closestPoint(middle)?.distance??Infinity));
+    options.collect.push({thickness:across,from:start,to:add(origin,scale(dir,tHit)),tri,hitTri:hit.triIndex,weight:s.area[tri]/(k*(k+1)/2)});
+   }
    thinnest=Math.min(thinnest,thickness);
    if(thickness<limit-1e-9)thin.push({thickness,from:start,to:add(origin,scale(dir,tHit)),tri,hitTri:hit.triIndex});
   }
@@ -499,10 +512,15 @@ const reachable=(s:Surface,from:Vec3,axis:Vec3)=>s.bvh.raycast(from,axis,{tMin:1
 /** Unit approach direction of each setup (the tool comes from +axis toward the part). */
 const axisVectors=(axes:readonly ApproachAxis[])=>axes.map(a=>AXES[a]);
 
-function cncCornerCheck(m:ExactModel,s:ManufacturingSettings):ManufacturingCheck{
- const label=t('Internal corner radius'),toolR=s.toolDiameterMm/2,axes=axisVectors(s.approachAxes),findings:ManufacturingFinding[]=[],advice:ManufacturingFinding[]=[];
- // Sharp vertical corners: concave straight edges along a setup axis between two walls, open to the tool.
- const merged=new Map<string,{edges:number[];length:number;point:Vec3}>();
+/** A sharp vertical internal corner: collinear concave edges along a setup axis between two walls. */
+interface SharpCorner {readonly edges:number[];length:number;readonly point:Vec3;readonly axis:Vec3;readonly normals:readonly [Vec3,Vec3];lo:number;hi:number}
+/**
+ * Internal corners along the setups' axes, open to the tool: sharp ones (radius 0, concave
+ * straight edges between two walls) and partial concave cylinders along an axis (corner fillets;
+ * full bores are drilled, not milled).
+ */
+function internalCorners(m:ExactModel,s:ManufacturingSettings):{sharp:SharpCorner[];fillets:CylinderGroup[]}{
+ const axes=axisVectors(s.approachAxes),merged=new Map<string,SharpCorner>();
  for(const e of m.edges){
   if(e.kind!=='concave'||!e.line||!e.normals)continue;
   const [na,nb]=e.normals,air=unit(add(na,nb)),probe=add(e.point,scale(air,1e-3));
@@ -510,35 +528,182 @@ function cncCornerCheck(m:ExactModel,s:ManufacturingSettings):ManufacturingCheck
   if(floor)continue;
   const axis=axes.find(a=>Math.abs(dot(e.tangent,a))>PARALLEL&&Math.abs(dot(na,a))<WALL&&Math.abs(dot(nb,a))<WALL&&reachable(m.surface,probe,a));
   if(!axis)continue;
-  const len=m.body.edges[e.index].length;
+  const len=m.body.edges[e.index].length,points=m.body.edges[e.index].points;
+  let lo=Infinity,hi=-Infinity;
+  for(let i=0;i<points.length;i+=3){const h=points[i]*axis[0]+points[i+1]*axis[1]+points[i+2]*axis[2];lo=Math.min(lo,h);hi=Math.max(hi,h);}
   // Collinear pieces of one corner line count as one corner.
   const key=[...sub(e.point,scale(axis,dot(e.point,axis)))].map(v=>Math.round(v*1e4)).join(',');
   const entry=merged.get(key);
-  if(entry){entry.edges.push(e.index);entry.length+=len;}else merged.set(key,{edges:[e.index],length:len,point:e.point});
+  if(entry){entry.edges.push(e.index);entry.length+=len;entry.lo=Math.min(entry.lo,lo);entry.hi=Math.max(entry.hi,hi);}
+  else merged.set(key,{edges:[e.index],length:len,point:e.point,axis,normals:[na,nb],lo,hi});
  }
- for(const corner of merged.values())findings.push({text:t`Sharp internal corner (radius 0), ${mm(corner.length)} mm long; the R${mm(toolR)} tool leaves a radius`,value:0,location:location(corner.point),edges:corner.edges,faces:[...new Set(corner.edges.flatMap(e=>m.body.edges[e].faces))],mark:edgeMark(m,corner.edges)});
+ const fillets=m.cylinders.filter(g=>g.concave&&!g.full&&axes.some(a=>Math.abs(dot(g.direction,a))>PARALLEL));
+ return {sharp:[...merged.values()],fillets};
+}
+
+function cncCornerCheck(m:ExactModel,s:ManufacturingSettings):ManufacturingCheck{
+ const label=t('Internal corner radius'),toolR=s.toolDiameterMm/2,findings:ManufacturingFinding[]=[],advice:ManufacturingFinding[]=[];
+ const {sharp,fillets}=internalCorners(m,s);
+ for(const corner of sharp)findings.push({text:t`Sharp internal corner (radius 0), ${mm(corner.length)} mm long; the R${mm(toolR)} tool leaves a radius`,value:0,location:location(corner.point),edges:corner.edges,faces:[...new Set(corner.edges.flatMap(e=>m.body.edges[e].faces))],mark:edgeMark(m,corner.edges)});
  // Concave partial cylinders along a setup axis: pocket-corner fillets. Full bores are drilled.
  let smallest=Infinity;
- for(const g of m.cylinders){
-  if(!g.concave||g.full||!axes.some(a=>Math.abs(dot(g.direction,a))>PARALLEL))continue;
+ for(const g of fillets){
   smallest=Math.min(smallest,g.radius);
   const depth=g.hMax-g.hMin,where=location(faceCentre(m,g.faces));
   if(g.radius<toolR-RADIUS_TOLERANCE)findings.push({text:t`Corner fillet R${mm(g.radius)} below the R${mm(toolR)} tool radius (Ø${mm(s.toolDiameterMm)} end mill)`,value:g.radius,location:where,faces:g.faces,mark:faceMark(m,g.faces)});
   else if(g.radius<depth/3-RADIUS_TOLERANCE)advice.push({text:t`Corner fillet R${mm(g.radius)} is ${mm(depth)} mm deep: below a third of its depth (R${mm(depth/3)}), which needs a long, slender tool`,value:g.radius,location:where,faces:g.faces,mark:faceMark(m,g.faces)});
  }
- const value=merged.size?0:Number.isFinite(smallest)?smallest:undefined;
+ const value=sharp.length?0:Number.isFinite(smallest)?smallest:undefined;
  const extra={...(value!==undefined?{value}:{}),limit:toolR,unit:'mm' as const};
  if(findings.length){
-  const parts=[merged.size?t`${merged.size} sharp internal corners (radius 0)`:'',findings.length-merged.size?t`${findings.length-merged.size} corner fillets as small as R${mm(smallest)}`:''].filter(Boolean).join(t(' and '));
+  const parts=[sharp.length?t`${sharp.length} sharp internal corners (radius 0)`:'',findings.length-sharp.length?t`${findings.length-sharp.length} corner fillets as small as R${mm(smallest)}`:''].filter(Boolean).join(t(' and '));
   return check('cnc.internal-corners',label,'exact','fail',t`${parts} below the R${mm(toolR)} tool radius (Ø${mm(s.toolDiameterMm)} end mill); add fillets ≥ R${mm(toolR)} or use a smaller tool.`,[...findings,...advice],extra);
  }
  if(advice.length)return check('cnc.internal-corners',label,'exact','warn',t`All internal corners along the tool axes are ≥ R${mm(toolR)}, but ${advice.length} are deeper than three times their radius.`,advice,extra);
  return check('cnc.internal-corners',label,'exact','pass',t`All internal corners along the tool axes are ≥ R${mm(toolR)}.`,[],extra);
 }
 
+/** A circle of radius `r` about `centre` in the plane normal to `axis`, as a closed polyline. */
+function circleLine(centre:Vec3,axis:Vec3,r:number,segments=32):number[]{
+ const u=unit(cross(Math.abs(axis[0])<.9?[1,0,0]:[0,1,0],axis)),v=cross(axis,u),out:number[]=[];
+ for(let i=0;i<=segments;i++){const a=2*Math.PI*i/segments;out.push(...add(centre,add(scale(u,r*Math.cos(a)),scale(v,r*Math.sin(a)))));}
+ return out;
+}
+const atHeight=(p:Vec3,axis:Vec3,h:number):Vec3=>add(p,scale(axis,h-dot(p,axis)));
+
+/**
+ * Dogbones: an end mill leaves its own radius in every internal corner along its axis, so a
+ * square-cornered part (a tenon, a sheet slotted into it, a PCB) does not seat there. Each sharp
+ * corner and each corner fillet below the tool radius needs a relief cut. With `dogbones` on, the
+ * finding gives the classic dogbone: a hole of the tool's diameter centred on the corner's
+ * bisector one tool radius from the corner, so its edge passes through the corner. Corners already
+ * relieved (a concave cylinder of at least the tool's radius covering half a turn or more) are
+ * counted, not listed.
+ */
+function dogboneCheck(m:ExactModel,s:ManufacturingSettings):ManufacturingCheck{
+ const label=t('Dogbones'),toolR=s.toolDiameterMm/2,{sharp,fillets}=internalCorners(m,s),findings:ManufacturingFinding[]=[];
+ // A dogbone cut is a concave cylinder of at least the tool's radius through the corner: its two
+ // lobes cover half a turn or more, where a corner fillet covers the corner's supplement (90° for a
+ // right angle).
+ const relieved=fillets.filter(g=>g.span>.8*Math.PI&&g.radius>=toolR-RADIUS_TOLERANCE).length;
+ const suggestion=(corner:Vec3,air:Vec3,axis:Vec3,lo:number,hi:number,lines:number[][])=>{
+  const centre=add(corner,scale(air,toolR)),mid=atHeight(centre,axis,(lo+hi)/2);
+  return {centre:mid,mark:{lines:[...lines,circleLine(atHeight(centre,axis,lo),axis,toolR),circleLine(atHeight(centre,axis,hi),axis,toolR),[...atHeight(centre,axis,lo),...atHeight(centre,axis,hi)]],triangles:[],points:[...mid]}};
+ };
+ for(const c of sharp){
+  const sum=add(c.normals[0],c.normals[1]),air=unit(sub(sum,scale(c.axis,dot(sum,c.axis))));
+  const lines=c.edges.map(e=>edgeLine(m,e)),faces=[...new Set(c.edges.flatMap(e=>m.body.edges[e].faces))],where=atHeight(c.point,c.axis,(c.lo+c.hi)/2);
+  if(s.dogbones){
+   const {centre,mark}=suggestion(c.point,air,c.axis,c.lo,c.hi,lines);
+   findings.push({text:t`Sharp internal corner, ${mm(c.length)} mm long: dogbone Ø${mm(s.toolDiameterMm)} centred at ${pointText(centre)}`,value:0,location:location(centre),edges:c.edges,faces,mark});
+  }else findings.push({text:t`Sharp internal corner, ${mm(c.length)} mm long: the tool leaves R${mm(toolR)}, so a square-cornered part does not seat`,value:0,location:location(where),edges:c.edges,faces,mark:{lines,triangles:[],points:[]}});
+ }
+ for(const g of fillets){
+  if(g.radius>=toolR-RADIUS_TOLERANCE)continue;
+  // The corner the fillet rounds: on the fillet's bisector, r / cos(span / 2) from its axis.
+  const c=faceCentre(m,g.faces),h=dot(sub(c,g.origin),g.direction),axisPoint=add(g.origin,scale(g.direction,h));
+  const toCorner=unit(sub(c,axisPoint)),corner=add(axisPoint,scale(toCorner,g.radius/Math.max(.1,Math.cos(g.span/2))));
+  const lo=dot(g.origin,g.direction)+g.hMin,hi=dot(g.origin,g.direction)+g.hMax,axis=g.direction;
+  if(s.dogbones){
+   const {centre,mark}=suggestion(corner,scale(toCorner,-1),axis,lo,hi,[]);
+   const face=faceMark(m,g.faces);
+   findings.push({text:t`Corner fillet R${mm(g.radius)}, ${mm(hi-lo)} mm deep: dogbone Ø${mm(s.toolDiameterMm)} centred at ${pointText(centre)}`,value:g.radius,location:location(centre),faces:g.faces,mark:{lines:[...face.lines,...mark.lines],triangles:face.triangles,points:mark.points}});
+  }else findings.push({text:t`Corner fillet R${mm(g.radius)} below the R${mm(toolR)} the tool leaves: a square-cornered part does not seat`,value:g.radius,location:location(c),faces:g.faces,mark:faceMark(m,g.faces)});
+ }
+ const done=relieved?' '+t`${relieved} corners are already relieved.`:'';
+ if(!findings.length)return check('cnc.dogbones',label,'exact','pass',(sharp.length+fillets.length?t`No internal corner along the tool axes is tighter than the R${mm(toolR)} tool.`:t('No internal corners along the tool axes.'))+done,[],{limit:toolR,unit:'mm'});
+ const how=s.dogbones?t`Suggested dogbones are holes of the tool's Ø${mm(s.toolDiameterMm)} whose edge passes through the corner.`:t('Turn on Suggest dogbones to list where to put them.');
+ return check('cnc.dogbones',label,'exact','warn',t`${findings.length} internal corners need a dogbone where a square-cornered part must fit (the Ø${mm(s.toolDiameterMm)} end mill leaves R${mm(toolR)}).`+' '+how+done,findings,{value:Math.min(...findings.map(f=>f.value??0)),limit:toolR,unit:'mm'});
+}
+const pointText=(p:readonly number[])=>`[${p.map(v=>mm(v)).join(', ')}]`;
+
+/**
+ * The boundary loops of a planar face: its edges joined end to end (closed edges are loops of
+ * their own), and which one is the outer loop (the largest extent in the face's plane).
+ */
+function faceLoops(m:ExactModel,f:number):{loops:number[][];outer:number}{
+ const own=m.faceEdges[f].filter(e=>m.edges[e].kind!=='seam'),key=(p:readonly number[])=>p.map(v=>Math.round(v*1e5)).join(',');
+ const parent=new Map<string,string>(),findRoot=(k:string):string=>{let r=k;while(parent.get(r)!==r)r=parent.get(r)!;parent.set(k,r);return r;};
+ const ends=own.map(e=>{
+  const pts=m.body.edges[e].points,n=pts.length/3;
+  const a=key([pts[0],pts[1],pts[2]]),b=m.body.edges[e].closed?a:key([pts[3*n-3],pts[3*n-2],pts[3*n-1]]);
+  for(const k of [a,b])if(!parent.has(k))parent.set(k,k);
+  parent.set(findRoot(a),findRoot(b));
+  return a;
+ });
+ const byRoot=new Map<string,number[]>();
+ own.forEach((e,i)=>{const r=findRoot(ends[i]);byRoot.set(r,[...(byRoot.get(r)??[]),e]);});
+ const loops=[...byRoot.values()],n=m.body.faces[f].normal,u=unit(cross(Math.abs(n[0])<.9?[1,0,0]:[0,1,0],n)),v=cross(n,u);
+ const extent=(loop:number[])=>{
+  let a0=Infinity,a1=-Infinity,b0=Infinity,b1=-Infinity;
+  for(const e of loop){const pts=m.body.edges[e].points;for(let i=0;i<pts.length;i+=3){const p=[pts[i],pts[i+1],pts[i+2]];a0=Math.min(a0,dot(p,u));a1=Math.max(a1,dot(p,u));b0=Math.min(b0,dot(p,v));b1=Math.max(b1,dot(p,v));}}
+  return (a1-a0)*(b1-b0);
+ };
+ let outer=0;loops.forEach((loop,i)=>{if(extent(loop)>extent(loops[outer]))outer=i;});
+ return {loops,outer};
+}
+
+/**
+ * Pocket depth against the tool: a pocket's floor is a planar face facing a setup axis, open to the
+ * tool along it, whose outer boundary rises into walls all round (concave edges, or tangent into a
+ * floor fillet); an outer loop with a convex edge is an open side (a step). Holes, islands and
+ * deeper pockets inside the floor do not matter. The walls are the faces joined to the floor
+ * through concave or tangent edges, and the pocket's own depth is their height above the floor. A
+ * pocket in the floor of another pocket is that much deeper for the tool, so the depth is counted
+ * from the top of the outermost pocket. A depth above `maxPocketDepthRatio` tool diameters fails:
+ * a standard end mill's reach.
+ */
+function pocketDepthCheck(m:ExactModel,s:ManufacturingSettings):ManufacturingCheck{
+ const label=t('Pocket depth'),D=s.toolDiameterMm,limit=s.maxPocketDepthRatio*D,axes=axisVectors(s.approachAxes),{body,edges}=m;
+ const height=(faces:Iterable<number>,a:Vec3)=>{let hi=-Infinity;for(const f of faces)for(const tri of m.faceTris[f])for(const p of corners(m.surface,tri))hi=Math.max(hi,dot(p,a));return hi;};
+ const pockets=new Map<number,{floor:number;own:number;walls:number[];axis:Vec3;parent?:number}>();
+ body.faces.forEach((face,f)=>{
+  if(face.surface!=='plane'||!m.faceTris[f].length)return;
+  const a=axes.find(axis=>dot(face.normal,axis)>PARALLEL);if(!a)return;
+  const {loops,outer}=faceLoops(m,f);
+  if(!loops.length||loops[outer].some(e=>edges[e].kind!=='concave'&&edges[e].kind!=='tangent'))return;
+  const probeTri=[...m.faceTris[f]].sort((x,y)=>m.surface.area[y]-m.surface.area[x])[0];
+  if(!reachable(m.surface,add(triCentroid(m.surface,probeTri),scale(a,1e-3)),a))return;
+  // The walls: every face reached from the floor's outer loop through concave or tangent edges that
+  // does not itself face the tool (another floor, the top).
+  const walls=new Set<number>(),queue:number[]=[];
+  const visit=(e:number,from:number)=>{
+   for(const h of body.edges[e].faces){
+    if(h===f||h===from||walls.has(h))continue;
+    const hf=body.faces[h];if(hf.surface==='plane'&&dot(hf.normal,a)>PARALLEL)continue;
+    walls.add(h);queue.push(h);
+   }
+  };
+  for(const e of loops[outer])visit(e,f);
+  while(queue.length&&walls.size<500){const g=queue.pop()!;for(const e of m.faceEdges[g])if(edges[e].kind==='concave'||edges[e].kind==='tangent')visit(e,g);}
+  if(!walls.size)return;
+  const own=height(walls,a)-dot(face.point,a);
+  if(own>1e-6)pockets.set(f,{floor:f,own,walls:[...walls],axis:a});
+ });
+ // A pocket whose walls end (convex) in the floor of another pocket lies in that pocket.
+ for(const p of pockets.values())for(const w of p.walls)for(const e of m.faceEdges[w]){
+  if(edges[e].kind!=='convex')continue;
+  const other=body.edges[e].faces.find(g=>g!==w&&g!==p.floor&&pockets.has(g)&&pockets.get(g)!.axis===p.axis);
+  if(other!==undefined)p.parent=other;
+ }
+ const depthOf=(f:number,seen=new Set<number>()):number=>{const p=pockets.get(f)!;if(p.parent===undefined||seen.has(f))return p.own;seen.add(f);return p.own+depthOf(p.parent,seen);};
+ const list=[...pockets.values()].map(p=>({...p,depth:depthOf(p.floor)}));
+ const extra={limit,unit:'mm' as const};
+ if(!list.length)return check('cnc.pocket-depth',label,'exact','pass',t('No pockets along the tool axes.'),[],extra);
+ const deepest=Math.max(...list.map(p=>p.depth));
+ const findings=list.filter(p=>p.depth>limit+RADIUS_TOLERANCE).sort((x,y)=>y.depth-x.depth).map((p):ManufacturingFinding=>({
+  text:(p.parent!==undefined?t`Pocket ${mm(p.depth)} mm deep (${mm(p.own)} mm below the pocket around it)`:t`Pocket ${mm(p.depth)} mm deep`)+': '+t`${mm(p.depth/D)} × the Ø${mm(D)} end mill, beyond ${mm(s.maxPocketDepthRatio)} ×`,
+  value:p.depth,location:location(faceCentre(m,[p.floor])),faces:[p.floor,...p.walls],mark:faceMark(m,[p.floor])}));
+ if(findings.length)return check('cnc.pocket-depth',label,'exact','fail',t`${findings.length} of ${list.length} pockets deeper than ${mm(s.maxPocketDepthRatio)} × the Ø${mm(D)} end mill (${mm(limit)} mm), the deepest ${mm(deepest)} mm; use a larger or long-reach tool, or a shallower pocket.`,findings,{...extra,value:deepest});
+ return check('cnc.pocket-depth',label,'exact','pass',t`${list.length} pockets, the deepest ${mm(deepest)} mm (limit ${mm(s.maxPocketDepthRatio)} × Ø${mm(D)} = ${mm(limit)} mm).`,[],{...extra,value:deepest});
+}
+
 /** Surface no setup reaches: facing away from every approach axis, or under material along it. */
-function undercutCheck(s:Surface,settings:ManufacturingSettings,model?:ExactModel):ManufacturingCheck{
- const label=t('Undercuts'),geometry:ManufacturingGeometry=model?'exact':'mesh',axes=axisVectors(settings.approachAxes);
+function undercutCheck(s:Surface,settings:ManufacturingSettings,model?:ExactModel,mould=false):ManufacturingCheck{
+ const label=t('Undercuts'),geometry:ManufacturingGeometry=model?'exact':'mesh';
+ // A mould's two halves part along the pull axis: each face must release toward one of them.
+ const names:readonly ApproachAxis[]=mould?[settings.pullAxis,(settings.pullAxis[0]==='+'?'-':'+')+settings.pullAxis[1] as ApproachAxis]:settings.approachAxes;
+ const axes=axisVectors(names),from=names.join(', '),id=mould?'mold.undercuts':'cnc.undercuts';
  const low=axes.map(a=>{let v=Infinity;for(let i=0;i<s.positions.length;i+=3)v=Math.min(v,s.positions[i]*a[0]+s.positions[i+1]*a[1]+s.positions[i+2]*a[2]);return v;});
  const hidden:number[]=[];let area=0;
  for(let tri=0;tri<s.count;tri++){
@@ -547,7 +712,7 @@ function undercutCheck(s:Surface,settings:ManufacturingSettings,model?:ExactMode
   const ok=axes.some((a,k)=>{
    const na=dot(n,a);
    // The face the part rests on in the vice: flat on its lowest plane, facing straight away.
-   if(na<-PARALLEL&&corners(s,tri).every(p=>dot(p,a)-low[k]<1e-3))return true;
+   if(!mould&&na<-PARALLEL&&corners(s,tri).every(p=>dot(p,a)-low[k]<1e-3))return true;
    if(na<-1e-3)return false;
    return s.bvh.raycast(add(c,scale(n,1e-3)),a,{tMin:1e-6,skipTri:tri})===null;
   });
@@ -559,16 +724,20 @@ function undercutCheck(s:Surface,settings:ManufacturingSettings,model?:ExactMode
   for(const tri of hidden){const f=model.body.mesh.faceOf[tri];byFace.set(f,[...(byFace.get(f)??[]),tri]);}
   for(const [f,tris] of byFace){
    const a=tris.reduce((sum,tri)=>sum+s.area[tri],0);
-   findings.push({text:t`${mm(a)} mm² of this face cannot be reached from ${settings.approachAxes.join(', ')}`,value:a,location:location(faceCentre(model,[f])),faces:[f],mark:{lines:model.faceEdges[f].map(e=>edgeLine(model,e)),triangles:trianglesOf(s,tris),points:[]}});
+   findings.push({text:mould?t`${mm(a)} mm² of this face does not release toward ${from}`:t`${mm(a)} mm² of this face cannot be reached from ${from}`,value:a,location:location(faceCentre(model,[f])),faces:[f],mark:{lines:model.faceEdges[f].map(e=>edgeLine(model,e)),triangles:trianglesOf(s,tris),points:[]}});
   }
   findings.sort((a,b)=>(b.value??0)-(a.value??0));
  }else if(hidden.length){
   const largest=[...hidden].sort((a,b)=>s.area[b]-s.area[a])[0];
-  findings.push({text:t`${mm(area)} mm² of surface cannot be reached from ${settings.approachAxes.join(', ')}`,value:area,location:location(triCentroid(s,largest)),mark:{lines:[],triangles:trianglesOf(s,hidden),points:[]}});
+  findings.push({text:mould?t`${mm(area)} mm² of surface does not release toward ${from}`:t`${mm(area)} mm² of surface cannot be reached from ${from}`,value:area,location:location(triCentroid(s,largest)),mark:{lines:[],triangles:trianglesOf(s,hidden),points:[]}});
  }
  const extra={value:area,limit:settings.maxUndercutAreaMm2,unit:'mm2' as const};
- if(area>settings.maxUndercutAreaMm2)return check('cnc.undercuts',label,geometry,'fail',t`${mm(area)} mm² of surface cannot be reached from ${settings.approachAxes.join(', ')}; it needs another setup, a 4/5-axis machine or a redesign.`,findings,extra);
- return check('cnc.undercuts',label,geometry,'pass',t`No undercuts: every surface is reachable from ${settings.approachAxes.join(', ')}.`,[],extra);
+ if(mould){
+  if(area>settings.maxUndercutAreaMm2)return check(id,label,geometry,'fail',t`${mm(area)} mm² of surface is locked in the mould opening along ${from}; it needs a side action (slide or lifter), another parting direction or a redesign.`,findings,extra);
+  return check(id,label,geometry,'pass',t`No undercuts: every surface releases toward ${from}.`,[],extra);
+ }
+ if(area>settings.maxUndercutAreaMm2)return check(id,label,geometry,'fail',t`${mm(area)} mm² of surface cannot be reached from ${from}; it needs another setup, a 4/5-axis machine or a redesign.`,findings,extra);
+ return check(id,label,geometry,'pass',t`No undercuts: every surface is reachable from ${from}.`,[],extra);
 }
 
 /** Mesh-only CNC corners: concave creases along a setup axis (no radii on a mesh). */
@@ -660,6 +829,92 @@ function laserChecks(s:Surface,settings:ManufacturingSettings,model?:ExactModel)
 }
 
 // ---------------------------------------------------------------------------------------------
+// Injection moulding
+
+/**
+ * Draft: the angle between a face and the pull direction, asin |n · pull|. Faces along the pull
+ * with less than `minDraftDeg` drag on the mould as the part is ejected. On the exact B-rep each
+ * triangle takes its face's exact normal at its centroid, and the findings are per B-rep face (its
+ * area below the minimum and its smallest draft); on a mesh, one finding for all of it.
+ */
+function draftCheck(s:Surface,settings:ManufacturingSettings,model?:ExactModel):ManufacturingCheck{
+ const label=t('Draft angle'),geometry:ManufacturingGeometry=model?'exact':'mesh',a=AXES[settings.pullAxis],min=settings.minDraftDeg;
+ const extra={limit:min,unit:'deg' as const};
+ if(min<=0)return check('mold.draft',label,geometry,'info',t('No minimum draft set.'),[],extra);
+ const low=new Map<number,{tris:number[];area:number;least:number}>();let area=0,least=90,smallest=90;
+ for(let tri=0;tri<s.count;tri++){
+  if(s.area[tri]<=1e-12)continue;
+  const f=model?model.body.mesh.faceOf[tri]:-1,c=triCentroid(s,tri);
+  const n=(model?exactNormal(model.body,f,projectOnFace(model.body,f,c)):undefined)??triNormal(s,tri);
+  const draft=Math.asin(Math.min(1,Math.abs(dot(n,a))))/DEG;
+  smallest=Math.min(smallest,draft);
+  if(draft>=min-1e-9)continue;
+  const entry=low.get(f)??{tris:[],area:0,least:90};
+  entry.tris.push(tri);entry.area+=s.area[tri];entry.least=Math.min(entry.least,draft);low.set(f,entry);
+  area+=s.area[tri];least=Math.min(least,draft);
+ }
+ const findings:ManufacturingFinding[]=[];
+ for(const [f,entry] of low){
+  if(model){
+   if(entry.area<1e-6)continue;
+   findings.push({text:t`${mm(entry.area)} mm² of this face (${model.body.faces[f].surface}) has ${mm(entry.least)}° draft, below ${mm(min)}°`,value:entry.least,location:location(faceCentre(model,[f])),faces:[f],mark:{lines:model.faceEdges[f].map(e=>edgeLine(model,e)),triangles:trianglesOf(s,entry.tris),points:[]}});
+  }else findings.push({text:t`${mm(entry.area)} mm² of surface with ${mm(entry.least)}° draft, below ${mm(min)}°`,value:entry.least,location:location(triCentroid(s,entry.tris[0])),mark:{lines:[],triangles:trianglesOf(s,entry.tris),points:[]}});
+ }
+ findings.sort((x,y)=>(x.value??0)-(y.value??0));
+ if(!findings.length)return check('mold.draft',label,geometry,'pass',t`Every face has at least ${mm(min)}° draft along ${settings.pullAxis}; the least ${mm(smallest)}°.`,[],{...extra,value:smallest});
+ return check('mold.draft',label,geometry,'fail',t`${mm(area)} mm² of surface has less than ${mm(min)}° draft along ${settings.pullAxis} (as little as ${mm(least)}°), in ${findings.length} places; add draft so the part ejects.`,findings,{...extra,value:least});
+}
+
+/** Weighted median of the samples' thickness. */
+function nominalThickness(samples:readonly WallSample[]):number{
+ const sorted=[...samples].sort((a,b)=>a.thickness-b.thickness),total=sorted.reduce((sum,x)=>sum+x.weight,0);
+ let acc=0;for(const x of sorted){acc+=x.weight;if(acc>=total/2)return x.thickness;}
+ return sorted.length?sorted[sorted.length-1].thickness:NaN;
+}
+
+/**
+ * Wall uniformity: a moulded part cools evenly, and does not sink or warp, when its walls are close
+ * to one nominal thickness. The wall is sampled as for the minimum wall, but each sample is the
+ * diameter of the ball that fits at the middle of its hop (so a rim's ray running down its own wall
+ * reads the wall, not the wall's height). The nominal is the area-weighted median; a face (exact)
+ * or a spot (mesh) whose median wall is thicker than `maxWallMm` or outside `wallVariation` of the
+ * nominal is listed.
+ */
+function wallUniformityCheck(s:Surface,settings:ManufacturingSettings,model?:ExactModel):ManufacturingCheck{
+ const label=t('Wall uniformity'),geometry:ManufacturingGeometry=model?'exact':'mesh',v=settings.wallVariation,maxWall=settings.maxWallMm??4;
+ const collected:WallSample[]=[];
+ sampleWalls(s,Infinity,{model,collect:collected,budget:WALL_SAMPLE_BUDGET/2});
+ const samples=collected.filter(x=>Number.isFinite(x.thickness)&&x.thickness>0);
+ if(!samples.length)return check('mold.wall-uniformity',label,geometry,'info',t('No opposite wall found within the part.'),[],{unit:'mm'});
+ const nominal=nominalThickness(samples),lowest=Math.min(...samples.map(x=>x.thickness)),highest=Math.max(...samples.map(x=>x.thickness));
+ // Per B-rep face on the exact body; on a mesh, spots of nearby samples.
+ const groups:{key:number;samples:WallSample[];centre:Vec3}[]=[];
+ const radius=Math.max(2*nominal,s.diagonal/50);
+ for(const x of samples){
+  const key=model?model.body.mesh.faceOf[x.tri]:-1;
+  const group=model?groups.find(g=>g.key===key):groups.find(g=>length(sub(g.centre,x.from))<radius);
+  if(group)group.samples.push(x);else groups.push({key,samples:[x],centre:x.from});
+ }
+ const findings:ManufacturingFinding[]=[];
+ for(const g of groups){
+  const median=nominalThickness(g.samples),deviation=median/nominal-1;
+  const thick=median>maxWall+1e-9,uneven=Math.abs(deviation)>v+1e-9;
+  if(!thick&&!uneven)continue;
+  const worst=[...g.samples].sort((a,b)=>Math.abs(b.thickness-nominal)-Math.abs(a.thickness-nominal))[0];
+  const why=thick?t`thicker than the ${mm(maxWall)} mm maximum`:deviation>0?t`${mm(100*deviation)} % thicker than nominal`:t`${mm(-100*deviation)} % thinner than nominal`;
+  const text=t`Wall ${mm(median)} mm against ${mm(nominal)} mm nominal: ${why}`;
+  const measure={lines:[[...worst.from,...worst.to]],points:[...worst.from]};
+  findings.push({text,value:median,location:location(model?faceCentre(model,[g.key]):g.centre),...(model?{faces:[g.key]}:{}),
+   mark:model?faceMark(model,[g.key],measure):{...measure,triangles:trianglesOf(s,[...new Set(g.samples.map(x=>x.tri))])}});
+ }
+ findings.sort((a,b)=>Math.abs((b.value??nominal)-nominal)-Math.abs((a.value??nominal)-nominal));
+ const extra={value:nominal,unit:'mm' as const};
+ const range=t`nominal ${mm(nominal)} mm (median of ${samples.length} samples), from ${mm(lowest)} to ${mm(highest)} mm`;
+ if(findings.length)return check('mold.wall-uniformity',label,geometry,'warn',t`Walls are uneven: ${range}; ${findings.length} regions differ by more than ${mm(100*v)} % or exceed ${mm(maxWall)} mm, which risks sink marks, voids and warping.`,findings,extra);
+ return check('mold.wall-uniformity',label,geometry,'pass',t`Walls are even: ${range}, within ${mm(100*v)} % and at most ${mm(maxWall)} mm.`,[],extra);
+}
+
+// ---------------------------------------------------------------------------------------------
 // FDM rows from the mesh printability screen
 
 function fdmMeshChecks(p:BodyPrintability,settings:ManufacturingSettings):ManufacturingCheck[]{
@@ -725,8 +980,15 @@ export function checkManufacturing(input:ManufacturingInput,options:Partial<Manu
    checks.push(...fdmMeshChecks(printability,settings));
   }else if(settings.process==='cnc'){
    checks.push(model?cncCornerCheck(model,settings):meshCornerCheck(surface,settings));
+   checks.push(model?pocketDepthCheck(model,settings):notChecked('cnc.pocket-depth',t('Pocket depth'),'mesh',t('Pocket floors and walls need the exact B-rep.')));
+   checks.push(model?dogboneCheck(model,settings):notChecked('cnc.dogbones',t('Dogbones'),'mesh',t('Corner radii need the exact B-rep; the mesh check lists sharp internal corners.')));
    checks.push(undercutCheck(surface,settings,model));
    checks.push(wallCheck('cnc.min-wall',t('Minimum wall thickness'),surface,settings.minWallMm??.8,model));
+  }else if(settings.process==='molding'){
+   checks.push(draftCheck(surface,settings,model));
+   checks.push(undercutCheck(surface,settings,model,true));
+   checks.push(wallCheck('mold.min-wall',t('Minimum wall thickness'),surface,settings.minWallMm??.8,model));
+   checks.push(wallUniformityCheck(surface,settings,model));
   }else checks.push(...laserChecks(surface,settings,model));
   checks.push(model?edgeRadiusCheck(model,settings):notChecked('edges.radius',t('Edge radius'),'mesh',t('Fillet radii and sharp edges need the exact B-rep.')));
   return {id:mesh.id,name:mesh.name,geometry:model?'exact':'mesh',...(reason?{reason}:{}),checks};

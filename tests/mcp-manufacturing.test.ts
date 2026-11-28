@@ -54,7 +54,7 @@ it('runs check as a registry command and through the CLI',async()=>{
  const cli=resolve('apps/cli/crispcad.mjs'),exec=promisify(execFile);
  const report=JSON.parse((await exec(process.execPath,[cli,'manufacturing',project,'--process','cnc','--tool','6','--axes','+z'])).stdout);
  expect(report.verdict).toBe('fail');
- expect(report.bodies[0].checks.map((c:any)=>c.id)).toEqual(['cnc.internal-corners','cnc.undercuts','cnc.min-wall','edges.radius']);
+ expect(report.bodies[0].checks.map((c:any)=>c.id)).toEqual(['cnc.internal-corners','cnc.pocket-depth','cnc.dogbones','cnc.undercuts','cnc.min-wall','edges.radius']);
  const german=JSON.parse((await exec(process.execPath,[cli,'manufacturing',project,'--process','laser','--locale','de'])).stdout);
  expect(german.bodies[0].checks[0]).toMatchObject({id:'laser.sheet',status:'fail',label:'Ebenes Blech'});
 },120000);
