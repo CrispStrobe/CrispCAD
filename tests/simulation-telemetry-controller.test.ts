@@ -202,12 +202,12 @@ it.each(['step','stepTelemetry','sense'] as const)('drains in-flight %s before a
 it('refreshes a compact-only run to a full preserved snapshot without advancing physics',async()=>{
  const f=fixture();try{
   const lease=await f.controller.acquireExternalClock();
-  client.send.mockResolvedValueOnce(telemetry(.025));await lease.stepTelemetry([]);
+  client.send.mockResolvedValueOnce(telemetry(.05));await lease.stepTelemetry([]);
   expect(lease.snapshot().time).toBe(0);
-  client.send.mockImplementation(async()=>fullFrame(.025));await lease.releasePaused();
-  expect(f.controller.snapshot()).toEqual(fullFrame(.025));
-  expect(f.controller.state.time).toBe(.025);
-  expect(f.controller.replayRange().last).toBe(.025);
+  client.send.mockImplementation(async()=>fullFrame(.05));await lease.releasePaused();
+  expect(f.controller.snapshot()).toEqual(fullFrame(.05));
+  expect(f.controller.state.time).toBe(.05);
+  expect(f.controller.replayRange().last).toBe(.05);
   expect(client.send.mock.calls.filter(([command])=>command.op==='actuator-step')).toHaveLength(1);
  }finally{f.dispose();}
 });
@@ -236,6 +236,23 @@ it('rejects a failed paused release and the acquisition waiting for it without r
   await expect(replacement).rejects.toThrow('Worker failed while coasting');
   expect(f.controller.state).toMatchObject({state:'idle',error:'Worker failed while coasting'});
   expect(client.dispose).toHaveBeenCalled();
+ }finally{f.dispose();}
+});
+
+it('does not let a manual start waiting on paused release overlap its replacement external owner',async()=>{
+ const f=fixture();try{
+  const lease=await f.controller.acquireExternalClock(),pending=deferred<SimulationFrame>();
+  client.send.mockReturnValueOnce(pending.promise);
+  const step=lease.step([]),stale=expect(step).rejects.toThrow('Simulation was stopped');
+  const paused=lease.releasePaused();
+  const acquiring=f.controller.acquireExternalClock();
+  const manual=f.controller.start(),refused=expect(manual).rejects.toThrow('Simulation was stopped');
+  client.send.mockImplementation(async()=>fullFrame(.005));pending.resolve(fullFrame(.005));
+  await stale;await paused;const replacement=await acquiring;await refused;
+  expect(f.controller.state.state).toBe('running');
+  client.send.mockResolvedValueOnce(fullFrame(.01));await replacement.step([]);
+  expect(f.controller.snapshot()).toEqual(fullFrame(.01));
+  expect(client.send.mock.calls.some(([command])=>command.op==='step')).toBe(false);
  }finally{f.dispose();}
 });
 

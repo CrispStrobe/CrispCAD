@@ -129,7 +129,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
   // received before a successor can observe or advance that world.
   if(externalPause)await externalPause;
   if(externalOwner||playing||program||preparing)throw new Error(t('Stop the current simulation before connecting a circuit'));
-  const owner=Symbol('external mechanical clock');externalOwner=owner;
+  const owner=Symbol('external mechanical clock');externalOwner=owner;commandEpoch++;
   try{await prepare();if(externalOwner!==owner)throw new Error(t('Simulation was stopped'));program=true;notify();}catch(e){if(externalOwner===owner)externalOwner=undefined;throw e;}
   let pending=false,pendingRequest:Promise<unknown>|undefined,pausedRelease:Promise<void>|undefined;
   const track=<T>(request:Promise<T>)=>{pendingRequest=request;return request;};

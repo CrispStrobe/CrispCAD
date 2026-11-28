@@ -1,5 +1,12 @@
 # Preserving an externally clocked mechanical world
 
+The editor package and browser SDK export `createSimulationController` for hosts
+that supply their own UI. It uses the same physics worker as the mounted editor;
+the host supplies a CAD session, the Manifold WASM URL, a geometry-ready callback
+(which may return no geometry and let the worker evaluate it), a state-change
+callback and a frame-display callback. Browser document/visibility and Worker
+interfaces are required, even when no editor UI is mounted.
+
 `createSimulationController(...).acquireExternalClock()` now returns an opt-in
 `releasePaused(): Promise<void>` method. It is intended for finite CrispBASIC
 programs and other external clocks that need to resume an existing physical
@@ -51,3 +58,11 @@ npm run build:brickwright-sdk
 ```
 
 Repository instructions require local checks and keep GitHub Actions disabled.
+
+Local qualification on 2026-11-28: all 35 focused controller/worker tests passed,
+including pause during full, compact and sensor requests, stale-owner release,
+reset/disposal/failure races, successor acquisition, and competing manual start.
+The 24 existing simulation-base, replay, panel, actuator-impulse, motor-model and
+motor-port tests also passed. `npm run build:packages` completed successfully.
+The worker protocol tests use a deterministic test world; the separate
+actuator-impulse and motor-model tests execute the real Jolt physics engine.
