@@ -71,3 +71,22 @@ The 24 existing simulation-base, replay, panel, actuator-impulse, motor-model an
 motor-port tests also passed. `npm run build:packages` completed successfully.
 The worker protocol tests use a deterministic test world; the separate
 actuator-impulse and motor-model tests execute the real Jolt physics engine.
+
+## Recovery integration qualification
+
+The saved clock feature was merged with CAD main `422e5675` on 2026-11-28,
+retaining main's active-configuration filtering and all three feature commits.
+The merged source passed the package build and all 63 tests in these nine
+suites:
+
+```sh
+npm run build:packages
+npx vitest run tests/simulation-telemetry-controller.test.ts tests/simulation-telemetry-worker.test.ts tests/simulation-base.test.ts tests/simulation-replay.test.ts tests/simulation-panel.test.ts tests/actuator-impulse.test.ts tests/motor-models.test.ts tests/motor-ports.test.ts tests/simulation-client.test.ts
+npm run build:brickwright-sdk
+```
+
+The production SDK build also passed its ES2020 host-chunk and separate,
+lazily loaded WebAssembly checks. Its manifest records the producing commit
+and SHA-256 of every asset. Brickwright must synchronize this complete SDK
+before using `releasePaused`; copying only the controller source leaves the
+shipped worker protocol unchanged. No GitHub Actions were run.
