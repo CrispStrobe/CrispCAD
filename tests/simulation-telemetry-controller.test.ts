@@ -27,7 +27,9 @@ it('keeps intermediate samples separate from full snapshots and records only the
  const f=fixture(),document=f.session.serialize(),revision=f.session.state.revision;
  try{
   const lease=await f.controller.acquireExternalClock();f.changed.mockClear();f.frameChanged.mockClear();
-  const reply=telemetry();client.send.mockResolvedValueOnce(reply);
+  const reply=telemetry();
+  // Model delivery from the worker, which gives the receiver an owned copy.
+  client.send.mockImplementationOnce(async()=>structuredClone(reply));
   const sample=await lease.stepTelemetry([{id:'hinge',impulse:.001}]);
   expect(client.send).toHaveBeenLastCalledWith({op:'actuator-step',impulses:[{id:'hinge',impulse:.001}],rays:[],servos:[],telemetryOnly:true});
   expect(sample).toEqual(reply);expect(sample).not.toHaveProperty('poses');
