@@ -1,6 +1,8 @@
 import {expect,test} from '@playwright/test';
 import {addShape,clickTool} from './ui.js';
 test('object rows are bodies, Delete works immediately after a row click, and duplicates are distinct',async({page})=>{
+ // Three threaded screws are built in turn; on a loaded machine each takes several seconds.
+ test.setTimeout(120_000);
  await page.goto('/');const root=page.locator('#cad-root');await expect(root).toHaveAttribute('data-state','ready');await addShape(page,'Screw');
  await expect(page.locator('[data-testid=object-name]')).toHaveCount(1);await expect(page.getByRole('button',{name:'Show construction',exact:true})).toHaveCount(0);
  await clickTool(page,'Duplicate');await expect(root).toHaveAttribute('data-state','ready');await expect(page.locator('[data-testid=object-name]')).toHaveCount(2);

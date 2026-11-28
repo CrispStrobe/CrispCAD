@@ -6,7 +6,8 @@
 import {expect,test} from '@playwright/test';
 import {CAD_SCRIPT_REVISION,createCadSession,serializeDocument} from '@brickwright/cad-core';
 
-test('checks a milled pocket for CNC on the mesh and on the exact B-rep and marks the findings',async({page})=>{
+test('checks a milled pocket for CNC on the mesh and on the exact B-rep and marks the findings',async({page},info)=>{
+ test.skip(!info.project.use.hasTouch,'A touch walkthrough: run on the ipad project.');
  test.setTimeout(300_000);
  const requests:string[]=[];page.on('request',request=>requests.push(new URL(request.url()).pathname));
  const exactFetched=()=>requests.some(path=>/\/assets\/exact\/smlibwasm-[^/]+\.wasm$/.test(path));
