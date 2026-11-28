@@ -14,6 +14,7 @@ const emptyFrame=():SimulationFrame=>({time:0,poses:[],angles:{},speeds:{},linea
 export function createSimulationController(session:CadSession,wasmURL:string,ready:()=>Promise<GeometryResult|void>,changed:()=>void,frameChanged:(frame:SimulationFrame|null)=>void,interruptProgram?:()=>void){
  let client:ReturnType<typeof createSimulationClient>|undefined,preparing:Promise<void>|undefined,epoch=0,commandEpoch=0,playing=false,program=false,disposed=false,fixBaseOverride:boolean|undefined,rigidPreview=false,timeScale=1,timer:ReturnType<typeof setTimeout>|undefined,lastTime=0,accumulator=0;
  let externalOwner:symbol|undefined;
+ let externalPause:Promise<void>|undefined;
  let standby:ReturnType<typeof createSimulationClient>|undefined;
  let workerRevision:number|undefined;
  let frame=emptyFrame(),error='',replayTime:number|undefined,replayPlaying=false,replayTimer:ReturnType<typeof setTimeout>|undefined;const replay=createSimulationReplay();
@@ -126,17 +127,21 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
   reset(changedDocument);
  });
  async function acquireExternalClock(){
+  // Paused release retains the live world. Its final full snapshot must be
+  // received before a successor can observe or advance that world.
+  if(externalPause)await externalPause;
   if(externalOwner||playing||program||preparing)throw new Error(t('Stop the current simulation before connecting a circuit'));
-  const owner=Symbol('external mechanical clock');externalOwner=owner;
+  const owner=Symbol('external mechanical clock');externalOwner=owner;commandEpoch++;
   try{await prepare();if(externalOwner!==owner)throw new Error(t('Simulation was stopped'));program=true;notify();}catch(e){if(externalOwner===owner)externalOwner=undefined;throw e;}
-  let pending=false;
+  let pending=false,pendingRequest:Promise<unknown>|undefined,pausedRelease:Promise<void>|undefined;
+  const track=<T>(request:Promise<T>)=>{pendingRequest=request;return request;};
   return {
    snapshot:()=>structuredClone(frame),
-   async sense(rays:SimulationRay[]){if(externalOwner!==owner||disposed||pending)throw new Error(t('Simulation was stopped'));pending=true;try{const next=await client!.send({op:'sense',rays});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));frame=next;return structuredClone(frame);}finally{pending=false;}},
+   async sense(rays:SimulationRay[]){if(externalOwner!==owner||disposed||pending)throw new Error(t('Simulation was stopped'));pending=true;try{const next=await track(client!.send({op:'sense',rays}));if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));frame=next;return structuredClone(frame);}finally{pending=false;pendingRequest=undefined;}},
    async step(impulses:{id:string;impulse:number}[],rays:SimulationRay[]=[],servos:SimulationServo[]=[],display=true){
     if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));if(pending)throw new Error(t('A mechanical step is already pending'));
     if(impulses.some(v=>!Number.isFinite(v.impulse)||Math.abs(v.impulse)>1))throw new Error(t('Invalid actuator impulse'));
-    pending=true;try{const next=await client!.send({op:'actuator-step',impulses,rays,servos});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));frame=next;if(display){present(frame);notify();}return structuredClone(frame);}finally{pending=false;}
+    pending=true;try{const next=await track(client!.send({op:'actuator-step',impulses,rays,servos}));if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));frame=next;if(display){present(frame);notify();}return structuredClone(frame);}finally{pending=false;pendingRequest=undefined;}
    },
    // Opt-in intermediate feedback. Finish each displayed batch with step(),
    // which refreshes the complete snapshot before present()/replay consume it.
@@ -144,10 +149,43 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
    async stepTelemetry(impulses:{id:string;impulse:number}[],rays:SimulationRay[]=[],servos:SimulationServo[]=[]){
     if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));if(pending)throw new Error(t('A mechanical step is already pending'));
     if(impulses.some(v=>!Number.isFinite(v.impulse)||Math.abs(v.impulse)>1))throw new Error(t('Invalid actuator impulse'));
-    pending=true;try{const next=await client!.send({op:'actuator-step',impulses,rays,servos,telemetryOnly:true});if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));return structuredClone(next);}finally{pending=false;}
+    pending=true;try{const next=await track(client!.send({op:'actuator-step',impulses,rays,servos,telemetryOnly:true}));if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));return structuredClone(next);}finally{pending=false;pendingRequest=undefined;}
    },
    present(){if(externalOwner!==owner||disposed)throw new Error(t('Simulation was stopped'));present(frame);notify();},
-   release(){if(externalOwner===owner)void stop();}
+   release(){if(externalOwner===owner)void stop();},
+   /** Release ownership while retaining live time, poses and velocities.
+    * Invalidates this lease synchronously. A step already sent to the worker
+    * may finish; the returned promise resolves after its full final snapshot
+    * is available. Drives coast without stepping, braking or editing history.
+    */
+   releasePaused(rays:SimulationRay[]=[]){
+    if(externalOwner!==owner)return pausedRelease??Promise.resolve();
+    const active=client!,expected=epoch,outstanding=pendingRequest,finalRays=structuredClone(rays);
+    const current=()=>!disposed&&expected===epoch&&client===active;
+    const settling=Promise.resolve().then(async()=>{
+     // An invalidated caller rejects its own result. The world may still have
+     // advanced, so do not reuse the caller's last public snapshot as truth.
+     await outstanding?.catch(()=>{});
+     if(!current())return;
+     await active.send({op:'stop-motors',action:'coast'});
+     if(!current())return;
+     await active.send({op:'release-grab'});
+     if(!current())return;
+     const next=await active.send({op:'sense',rays:finalRays});
+     if(!current())return;
+     frame=next;replayTime=undefined;
+     for(const [id,value]of settings)settings.set(id,{...value,speed:0,enabled:false});
+     present(frame);
+    }).catch(e=>{if(current())fail(e);throw e;}).finally(()=>{
+     if(preparing===settling)preparing=undefined;
+     if(externalPause===settling)externalPause=undefined;
+     notify();
+    });
+    // Publish the barrier before pause notifies observers, so a synchronous
+    // observer cannot obtain a replacement lease before the worker settles.
+    pausedRelease=settling;externalPause=settling;preparing=settling;pause();
+    return settling;
+   }
   };
  }
  return {motors,sliders,prepare,start,pause,reset:()=>reset(),stop,stopMotors,acquireExternalClock,
