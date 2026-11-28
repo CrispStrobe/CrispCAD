@@ -1138,3 +1138,5 @@ export { shapeCatalog, createPresetDocument } from './shapes.js';
 
 export {readCostumeProfiles,costumeSketchProfile,costumeProfileBounds,matchCostumeProfile} from './costume-profiles.js';
 
+// Shared external-clock controller, also usable by a host without mounting UI.
+export {createSimulationController} from './simulation-controller.js';

@@ -23,4 +23,4 @@ export type SimulationCommand =
  |{op:'ball';shape?:'sphere'|'box';id:string;positionMm:[number,number,number];velocityMmS:[number,number,number];radiusMm:number}
  |{op:'grab';id:string;pointMm:[number,number,number];targetMm:[number,number,number]}
  |{op:'release-grab'}
- |{op:'stop-motors'};
+ |{op:'stop-motors';action?:'brake'|'coast'};

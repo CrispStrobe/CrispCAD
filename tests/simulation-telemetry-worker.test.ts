@@ -17,7 +17,8 @@ const mock=vi.hoisted(()=>{
   hingeAngle:vi.fn((id:string)=>id==='servo'?state.servo:state.angle),sliderPosition:vi.fn(()=>state.linear),
   bodyRay:vi.fn(()=>100-state.linear+state.angle),validateBodyRay:vi.fn(),
   applyJointImpulse:vi.fn((id:string,impulse:number)=>{if(id==='slider')state.linearSpeed+=impulse*10;else state.speed+=impulse*100;}),
-  setHingeServo:vi.fn((_id:string,angle:number)=>{state.target=angle;}),coastHingeMotor:vi.fn(),
+  setHingeServo:vi.fn((_id:string,angle:number)=>{state.target=angle;}),coastHingeMotor:vi.fn(),stopHingeMotor:vi.fn(),
+  setSliderMotor:vi.fn(),stopSliderMotor:vi.fn(),
   step:vi.fn((seconds:number)=>{state.time+=seconds;state.angle+=state.speed*seconds;state.linear+=state.linearSpeed*seconds;state.servo+=(state.target-state.servo)*.25;})
  };
  const create=vi.fn(async(..._args:unknown[])=>{for(const key of Object.keys(state) as (keyof typeof state)[])state[key]=0;return world;});
@@ -150,6 +151,32 @@ it('parks the world and reuses qualified contacts only for the same construction
  changed.nodes['body-0'].physics={sourcePreset:'new-collision-construction'} as CadDocument['nodes'][string]['physics'];
  await start(changed);
  expect(mock.prepare).toHaveBeenCalledTimes(2);
+});
+
+it('coasts all persistent drives without stepping, braking or discarding the world',async()=>{
+ await start(scene(2));
+ await send(actuation());await send({op:'slider',id:'slider',speedMmS:10,forceN:1});
+ const before=(await send({op:'sense',rays:[]})).frame,steps=mock.world.step.mock.calls.length;
+ const stopped=await send({op:'stop-motors',action:'coast'});
+ expect(stopped.error).toBeUndefined();expect(stopped.frame).toEqual(before);
+ expect(mock.world.coastHingeMotor).toHaveBeenCalledExactlyOnceWith('servo');
+ expect(mock.world.stopSliderMotor).toHaveBeenCalledExactlyOnceWith('slider','coast');
+ expect(mock.world.stopHingeMotor).not.toHaveBeenCalled();expect(mock.world.dispose).not.toHaveBeenCalled();
+ expect(mock.world.step).toHaveBeenCalledTimes(steps);
+ await send({op:'stop-motors'});
+ expect(mock.world.stopHingeMotor).not.toHaveBeenCalled();expect(mock.world.stopSliderMotor).toHaveBeenCalledTimes(1);
+ const resumed=await send({op:'actuator-step',impulses:[]});expect(resumed.error).toBeUndefined();expect(resumed.frame.time).toBe(.01);
+});
+
+it('retains braking as the default stop-all action and rejects unknown actions before touching drives',async()=>{
+ await start(scene(2));await send(actuation());await send({op:'slider',id:'slider',speedMmS:10,forceN:1});
+ const invalid=await send({op:'stop-motors',action:'invalid'} as unknown as SimulationCommand);
+ expect(invalid.error).toMatch(/Unsupported CAD stop action/);
+ expect(mock.world.stopHingeMotor).not.toHaveBeenCalled();expect(mock.world.stopSliderMotor).not.toHaveBeenCalled();
+ expect((await send({op:'stop-motors'})).error).toBeUndefined();
+ expect(mock.world.stopHingeMotor).toHaveBeenCalledExactlyOnceWith('servo');
+ expect(mock.world.stopSliderMotor).toHaveBeenCalledExactlyOnceWith('slider',undefined);
+ expect(mock.world.coastHingeMotor).not.toHaveBeenCalled();
 });
 
 it('keeps native compounds across material edits and replaces them when fixed mates change',async()=>{

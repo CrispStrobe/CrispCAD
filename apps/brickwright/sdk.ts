@@ -19,6 +19,7 @@ export {createDocument,parseDocument,serializeDocument,setLocale} from '@brickwr
 // `kernels` itself; createCadSession(document) is the same as createEditorSession(document).
 // mountCadEditor never changes the kernels of a session the host passes.
 export {createEditorSession,createEditorSession as createCadSession,editorKernels,exactKernelIdentity,providesKernel} from '@brickwright/cad-editor';
+export {createSimulationController} from '@brickwright/cad-editor';
 // Exact-job limits for hosts (tablet defaults apply when none are given; see docs/INTEGRATION.md).
 // The editor's menu as data (labels and availability per editor: editor.menuItems()).
 export {editorMenu,editorMenuSections,resolveEditorMenu} from '@brickwright/cad-editor';
