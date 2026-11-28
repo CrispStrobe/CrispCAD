@@ -212,6 +212,18 @@ it('refreshes a compact-only run to a full preserved snapshot without advancing 
  }finally{f.dispose();}
 });
 
+it('samples the requested final sensor rays with the preserved full world',async()=>{
+ const f=fixture();try{
+  const lease=await f.controller.acquireExternalClock();
+  client.send.mockImplementation(async()=>fullFrame(.05));
+  const rays=[{id:'range',bodyId:'body',originMm:[0,0,0] as [number,number,number],direction:[1,0,0] as [number,number,number],rangeMm:4000}];
+  const saved=structuredClone(rays),paused=lease.releasePaused(rays);rays[0].rangeMm=1;
+  await paused;expect(client.send).toHaveBeenLastCalledWith({op:'sense',rays:saved});
+  expect(f.controller.snapshot()).toEqual(fullFrame(.05));
+  expect((await f.controller.acquireExternalClock()).snapshot().distances).toEqual({range:99.95});
+ }finally{f.dispose();}
+});
+
 it.each(['edit','stop','dispose'] as const)('does not restore the world after %s supersedes a paused release',async action=>{
  const f=fixture();try{
   const lease=await f.controller.acquireExternalClock(),pending=deferred<SimulationFrame>();

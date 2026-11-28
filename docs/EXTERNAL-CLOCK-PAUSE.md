@@ -8,7 +8,7 @@ callback and a frame-display callback. Browser document/visibility and Worker
 interfaces are required, even when no editor UI is mounted.
 
 `createSimulationController(...).acquireExternalClock()` now returns an opt-in
-`releasePaused(): Promise<void>` method. It is intended for finite CrispBASIC
+`releasePaused(rays = []): Promise<void>` method. It is intended for finite CrispBASIC
 programs and other external clocks that need to resume an existing physical
 world after a program finishes or is stopped.
 
@@ -27,6 +27,11 @@ those cleanup commands advances physics time, brakes a shaft, destroys the Jolt
 world, or edits the authored document/history. A new acquisition waits for this
 barrier, so compact telemetry and a Stop during an in-flight step cannot leave
 the next owner with a stale full snapshot.
+
+Pass the connected `SimulationRay[]` batch when final distance readings are
+required. The method copies that batch before returning and samples it at the
+preserved world time, without an extra physics step. The default empty batch
+clears distance readings, as the ordinary `sense([])` operation does.
 
 A step already sent before release can finish. Its old caller is rejected as a
 stale owner; the controller's final full snapshot includes its physical result.
@@ -59,7 +64,7 @@ npm run build:brickwright-sdk
 
 Repository instructions require local checks and keep GitHub Actions disabled.
 
-Local qualification on 2026-11-28: all 35 focused controller/worker tests passed,
+Local qualification on 2026-11-28: all 36 focused controller/worker tests passed,
 including pause during full, compact and sensor requests, stale-owner release,
 reset/disposal/failure races, successor acquisition, and competing manual start.
 The 24 existing simulation-base, replay, panel, actuator-impulse, motor-model and

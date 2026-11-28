@@ -156,9 +156,9 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
     * may finish; the returned promise resolves after its full final snapshot
     * is available. Drives coast without stepping, braking or editing history.
     */
-   releasePaused(){
+   releasePaused(rays:SimulationRay[]=[]){
     if(externalOwner!==owner)return pausedRelease??Promise.resolve();
-    const active=client!,expected=epoch,outstanding=pendingRequest;
+    const active=client!,expected=epoch,outstanding=pendingRequest,finalRays=structuredClone(rays);
     const current=()=>!disposed&&expected===epoch&&client===active;
     const settling=Promise.resolve().then(async()=>{
      // An invalidated caller rejects its own result. The world may still have
@@ -169,7 +169,7 @@ export function createSimulationController(session:CadSession,wasmURL:string,rea
      if(!current())return;
      await active.send({op:'release-grab'});
      if(!current())return;
-     const next=await active.send({op:'sense',rays:[]});
+     const next=await active.send({op:'sense',rays:finalRays});
      if(!current())return;
      frame=next;replayTime=undefined;
      for(const [id,value]of settings)settings.set(id,{...value,speed:0,enabled:false});
