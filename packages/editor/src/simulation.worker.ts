@@ -146,7 +146,13 @@ self.onmessage=async(event:MessageEvent<SimulationCommand&{request:number}>)=>{
    else if(command.op==='release-grab')world.releaseGrab();
    else if(command.op==='ball'){if(command.shape==='box')world.spawnBox(command.id,command.positionMm,command.velocityMmS,command.radiusMm);else world.spawnSphere(command.id,command.positionMm,command.velocityMmS,command.radiusMm);previewBalls.set(command.id,{previewRadiusMm:command.radiusMm,previewShape:command.shape??'sphere'});}
    else if(command.op==='impulse')world.applyImpulse(command.id,command.impulseNs,command.pointMm);
-   else if(command.op==='stop-motors')for(const [id,kind]of driven)if(kind==='hinge')world.stopHingeMotor(id);else world.stopSliderMotor(id);
+   else if(command.op==='stop-motors'){
+    if(command.action!==undefined&&command.action!=='brake'&&command.action!=='coast')throw new Error(t('Unsupported CAD stop action'));
+    for(const [id,kind]of driven)if(kind==='hinge'){
+     if(command.action==='coast')world.coastHingeMotor(id);else world.stopHingeMotor(id);
+    }else world.stopSliderMotor(id,command.action);
+    if(command.action==='coast')driven.clear();
+   }
   }
   // Coupled controllers need joint/sensor feedback at 200 Hz, but poses only
   // for the terminal step of a displayed frame. Avoid querying or cloning all

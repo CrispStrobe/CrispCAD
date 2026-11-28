@@ -153,6 +153,92 @@ it('returns to the editable design on manual Stop without requiring Reset',async
  }finally{f.dispose();}
 });
 
+it('releases a circuit paused with its full physical state and resumes without starting a new world',async()=>{
+ const f=fixture(),source=f.session.serialize(),revision=f.session.state.revision;try{
+  const lease=await f.controller.acquireExternalClock();
+  client.send.mockResolvedValueOnce(fullFrame(.005));await lease.step([]);
+  client.send.mockImplementation(async()=>fullFrame(.005));f.frameChanged.mockClear();
+  const paused=lease.releasePaused();
+  await expect(lease.step([])).rejects.toThrow('Simulation was stopped');
+  await paused;
+  expect(f.controller.state).toMatchObject({state:'paused',program:false,time:.005});
+  expect(client.send.mock.calls.slice(-3).map(([command])=>command)).toEqual([
+   {op:'stop-motors',action:'coast'},{op:'release-grab'},{op:'sense',rays:[]}
+  ]);
+  expect(f.frameChanged).toHaveBeenCalledExactlyOnceWith(fullFrame(.005));
+  expect(client.send.mock.calls.filter(([command])=>command.op==='start')).toHaveLength(1);
+  expect(client.send.mock.calls.some(([command])=>command.op==='park')).toBe(false);
+  const replacement=await f.controller.acquireExternalClock();
+  expect(replacement.snapshot()).toEqual(fullFrame(.005));
+  const sends=client.send.mock.calls.length;
+  await lease.releasePaused();lease.release();expect(client.send.mock.calls.length).toBe(sends);
+  client.send.mockResolvedValueOnce(fullFrame(.01));await replacement.step([]);
+  expect(replacement.snapshot()).toEqual(fullFrame(.01));
+  expect(client.send.mock.calls.filter(([command])=>command.op==='start')).toHaveLength(1);
+  expect(f.session.serialize()).toBe(source);expect(f.session.state.revision).toBe(revision);
+  replacement.release();expect(f.controller.state.state).toBe('idle');
+ }finally{f.dispose();}
+});
+
+it.each(['step','stepTelemetry','sense'] as const)('drains in-flight %s before a replacement clock sees the preserved world',async operation=>{
+ const f=fixture();try{
+  const lease=await f.controller.acquireExternalClock(),pending=deferred<SimulationFrame>();
+  client.send.mockReturnValueOnce(pending.promise);
+  const request=lease[operation]([]),rejected=expect(request).rejects.toThrow('Simulation was stopped');
+  const paused=lease.releasePaused();let acquired=false;
+  expect(lease.releasePaused()).toBe(paused);
+  const replacing=f.controller.acquireExternalClock().then(value=>{acquired=true;return value;});
+  await Promise.resolve();expect(acquired).toBe(false);
+  expect(f.controller.state.state).toBe('preparing');
+  client.send.mockImplementation(async()=>fullFrame(.005));
+  pending.resolve(fullFrame(.005));await rejected;await paused;
+  const replacement=await replacing;
+  expect(replacement.snapshot()).toEqual(fullFrame(.005));
+  expect(client.send.mock.calls.filter(([command])=>command.op==='start')).toHaveLength(1);
+  expect(client.send.mock.calls.filter(([command])=>command.op==='actuator-step')).toHaveLength(operation==='sense'?0:1);
+ }finally{f.dispose();}
+});
+
+it('refreshes a compact-only run to a full preserved snapshot without advancing physics',async()=>{
+ const f=fixture();try{
+  const lease=await f.controller.acquireExternalClock();
+  client.send.mockResolvedValueOnce(telemetry(.025));await lease.stepTelemetry([]);
+  expect(lease.snapshot().time).toBe(0);
+  client.send.mockImplementation(async()=>fullFrame(.025));await lease.releasePaused();
+  expect(f.controller.snapshot()).toEqual(fullFrame(.025));
+  expect(f.controller.state.time).toBe(.025);
+  expect(f.controller.replayRange().last).toBe(.025);
+  expect(client.send.mock.calls.filter(([command])=>command.op==='actuator-step')).toHaveLength(1);
+ }finally{f.dispose();}
+});
+
+it.each(['edit','stop','dispose'] as const)('does not restore the world after %s supersedes a paused release',async action=>{
+ const f=fixture();try{
+  const lease=await f.controller.acquireExternalClock(),pending=deferred<SimulationFrame>();
+  client.send.mockReturnValueOnce(pending.promise);
+  const request=lease.step([]),rejected=expect(request).rejects.toThrow('Simulation was stopped');
+  const paused=lease.releasePaused();
+  if(action==='edit')f.session.add({kind:'box',size:[5,5,5]});
+  else if(action==='stop')await f.controller.stop();else f.controller.dispose();
+  f.frameChanged.mockClear();client.send.mockClear();pending.resolve(fullFrame(.005));
+  await rejected;await paused;
+  expect(f.frameChanged).not.toHaveBeenCalled();expect(client.send).not.toHaveBeenCalled();
+  expect(f.controller.state.state).toBe('idle');
+ }finally{f.dispose();}
+});
+
+it('rejects a failed paused release and the acquisition waiting for it without retaining a broken world',async()=>{
+ const f=fixture();try{
+  const lease=await f.controller.acquireExternalClock();
+  client.send.mockRejectedValueOnce(new Error('Worker failed while coasting'));
+  const paused=lease.releasePaused(),replacement=f.controller.acquireExternalClock();
+  await expect(paused).rejects.toThrow('Worker failed while coasting');
+  await expect(replacement).rejects.toThrow('Worker failed while coasting');
+  expect(f.controller.state).toMatchObject({state:'idle',error:'Worker failed while coasting'});
+  expect(client.dispose).toHaveBeenCalled();
+ }finally{f.dispose();}
+});
+
 it('inspects the end of a stopped recording and returns from replay to the editable design',async()=>{
  const f=fixture();try{
   const lease=await f.controller.acquireExternalClock();
