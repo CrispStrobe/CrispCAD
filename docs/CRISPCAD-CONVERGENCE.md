@@ -893,6 +893,20 @@ What follows is the plan for the rest.
    untap and retap one, Done, the dialog shows them, chamfer volume 5880 mm³) passes in 31 s, and
    so do `exact-edge-fillet.spec.ts` and `step-import-exact.spec.ts` (run with the installed Google
    Chrome: the shared Playwright Chromium store was empty again).
+   **Visible edges first (2026-11-28).** The hidden-edge test compared each edge with the surface
+   *under the tap*, with a slack of 1.5 tap radii (several millimetres at a fitted zoom), so the far
+   edges of a thin part, a few pixels from the near ones, could take the tap, and off the silhouette
+   (no surface under the tap) nothing was hidden at all. Now visibility is tested at each candidate
+   edge's own point: the edge's closest point to the tap (mapped back to the world perspective-
+   correctly, `worldParameter`) is cast from the camera against the rendered meshes, and it is
+   seen unless a surface lies more than 3 px (at its depth) + 0.05 mm in front of it. The nearest
+   *visible* edge within the radius wins (`pickVisibleEdgeAt`), for mouse (10 px) and touch or pen
+   (24 px) alike; a hidden edge alone is not picked. `data-edge-pick-targets` gives each target a
+   `visible` flag. Tests: `tests/viewport-edge-pick.test.ts` (+2: a nearer hidden edge never wins,
+   the old test would pick it; perspective-correct world point), and in
+   `exact-edge-pick-viewport.spec.ts` a 0.8 mm plate: tapping each hidden edge's midpoint picks the
+   visible edge next to it (or nothing), on `chromium` (mouse) and `ipad` (touch). That spec fails on
+   both projects with the old picking and passes with the new.
    Not done: a stale reference is not offered a repair (the user picks again); faces of imported meshes
    have no names (imported exact STEP bodies, Phase 5.2, are named like any leaf construction).
 2. **STEP import as exact bodies.** **Done 2026-11-27** (exact kernel 0.1.8, pinned as 0.1.9; document
@@ -1094,6 +1108,47 @@ STEP and the exact box. A strict and a lenient read of the stored STEP cost the 
 58 bodies). No lab release was needed. Not done: parallel import (one exact worker per tablet; a
 second SMLib instance would double the memory the ceiling allows); a 19.5 s CPU import is still
 over a tablet's request budget under heavy load, but within it on an idle M1-class device.
+
+**STEP import on tablets (2026-11-28).** Measured in the built editor in the shared Chromium with the
+iPad Pro 11 emulation and CDP `Emulation.setCPUThrottlingRate` 4
+(`experiments/exact-kernel/browser-step-import.mjs`, results in
+`results/browser-step-import-throttled.json`). Chromium applies the throttle to the page only: for
+the exact (and geometry) worker it answers "Operation is only supported for pages, not workers", so
+the worker's numbers below are an unthrottled M1's, and a tablet-class CPU at a quarter of that
+speed would take about four times as long. Honest numbers, M1 at load average 8–11:
+
+| File (MIT, Adafruit) | Bodies | Worker run (unthrottled) | Choose → bodies on screen | Main thread blocked, total (longest), before → after |
+| --- | ---: | ---: | ---: | --- |
+| 4739 MPM3610 5V buck | 23 | 0.8–1.1 s | 1.8–2.6 s | 0.88 s (0.57 s) → 0.73–1.16 s (0.39–0.87 s): no change beyond noise |
+| 4884 Feather RP2040 | 58 | 5.0–7.0 s | 6.9–9.7 s | 2.29 s (0.96 s) → 1.58–1.86 s (0.61–0.69 s) |
+
+Node, same files (CPU, load 8): MPM3610 2.7 s (the kernel's read of the file 1.6 s, exact boxes
+0.3 s, stored STEP 0.6 s, display 0.3 s); Feather 9.5 s (read 3.7, boxes 0.7, stored STEP 1.8,
+display 3.3 s, 2.5 s of it one USB connector). Under heavy load the same import took 19.5 s CPU
+(the figure above). What changed:
+- **Progress and cancel.** The worker reports the read and each body as it is stored and meshed
+  (`ExactRunOptions.progress`, posted as `{request,progress}` while the kernel keeps working); the
+  status bar's exact chip says "STEP import on the exact kernel: body 12 of 58… 8 s" (German too)
+  and keeps its Cancel, now a 44 px target on touch screens (it was 20 px). Cancel ends the worker;
+  nothing is imported and the history is unchanged (`tests/browser/step-import-progress.spec.ts`,
+  desktop and `ipad`: cancel the Feather board by touch mid-way, then import the MPM3610's 23
+  bodies). While the worker ran the page stayed responsive: after one task of up to 0.7 s at 4× when the file
+  is handed over (the test harness building the 2.4 MB file in the page, hashing it and posting it
+  to the worker), no long task until the result arrives.
+- **Main thread after the result.** Saving the document (`serializeDocument`, run for the autosave)
+  replaced every display buffer's token with one `replace` over the whole text, 116 scans of a
+  3.7 MB document for the Feather board; one pass now, the same text byte for byte (Node: 175 →
+  48 ms, MPM3610 16 → 7 ms; test against the old serializer on two real imports). At 4× that is
+  the drop in main-thread time above. What remains on the main thread is the commit (document
+  check and copy, ~0.35 s at 1×), outline edges and, in this software-rendered Chromium, shader
+  compilation for the first frame (`getProgramInfoLog`, 0.4–2 s, up to 10 s at load 140), which a
+  real GPU does far faster.
+- The worker's own time is SMLib's (read, exact box, STEP writer, tessellation), pinned byte for
+  byte; it was not changed. Repeated bodies are already cheap (26 copies of one 44-triangle part
+  on the Feather board cost 0.3 s together); the cost is in a few large unique bodies.
+
+Not done: throttling the worker itself (Chromium does not allow it; measure on an iPad, Phase
+7.3), a second worker for parallel import, a lighter commit for many-body imports.
 
 Left open: ~~assemblies import as separate bodies without their product structure~~ (done
 2026-11-27 with exact kernel 0.1.11 and document version 50: the file's assembly becomes named
@@ -1585,13 +1640,73 @@ and the CLI verb, also in German. Browser: `tests/browser/manufacturing.spec.ts`
 project (by touch: mesh first with no kernel fetched, then exact, a finding marked in the 3D view
 and stepped through, a smaller tool, no history entry).
 
-**Left open.** Pocket depth against width (≤ 4 × width) and tool length; floor-to-wall radii
-against standard tools; dogbone recognition (it passes as a concave round today, which is right
-for the tool); minimum hole size per tool for CNC; chamfer widths on cone rings and bevels that
-are not strips; draft and sheet-metal checks (the lab's `sheet-metal` and `injection-molding`
-processes); bridges measured on the exact body (the FDM bridge rows are the mesh screen); a
-per-document saved choice of process (would need a document version); laser kerf and part size
-against the bed.
+**Left open (2026-11-27).** Pocket depth against width (≤ 4 × width) and tool length; floor-to-wall radii
+against standard tools; dogbone recognition; minimum hole size per tool for CNC; chamfer widths on
+cone rings and bevels that are not strips; draft and sheet-metal checks (the lab's `sheet-metal`
+and `injection-molding` processes); bridges measured on the exact body; a per-document saved
+choice of process (would need a document version); laser kerf and part size against the bed.
+
+#### Pocket depth, dogbones and injection moulding. **Done 2026-11-28**
+
+Analysis only, like the rest of the check: no document version, no history entry, no geometry
+change (`packages/geometry/src/analysis/manufacturing.ts`, original code).
+
+- **CNC pocket depth** (`cnc.pocket-depth`). A pocket floor is a planar face facing a setup axis,
+  open to the tool along it, whose *outer* boundary loop (its edges joined end to end; the loop
+  with the largest extent in the face's plane) rises into walls all round (concave edges, or
+  tangent into a floor fillet). An outer loop with a convex edge is an open side, a step, and is
+  not a pocket; holes, islands and deeper pockets inside the floor do not matter. The walls are the
+  faces joined to the floor through concave or tangent edges, and the pocket's own depth is their
+  height above it. A pocket in the floor of another pocket adds that pocket's depth, so the depth is
+  what the tool must reach from the top of the outermost pocket. Above `maxPocketDepthRatio` (4)
+  tool diameters it fails ("use a larger or long-reach tool, or a shallower pocket"). Mesh bodies:
+  not checked.
+- **Dogbones** (`cnc.dogbones`). The internal corners along the tool axes the corner check finds
+  (sharp vertical corners, and corner fillets below the tool radius) are listed as needing a
+  relief cut where a square-cornered part must fit (warn). With **Suggest dogbones** (`--dogbones`,
+  MCP `dogbones:true`) each finding gives the classic dogbone: a hole of the tool's diameter
+  centred on the corner's bisector one tool radius from the corner, so its edge passes through the
+  corner; for a fillet the corner is reconstructed from the fillet's axis, radius and the angle it
+  covers (r / cos(span / 2)). The mark draws the circles at floor and rim and the axis. Corners
+  already relieved (a concave cylinder of at least the tool radius covering half a turn or more,
+  which is what a dogbone cut leaves) are counted, not listed. This is the dogbone recognition the
+  previous list left open.
+- **Injection moulding** (process `molding`, a fourth choice in the dialog, the command, MCP and
+  CLI). Settings: the direction the mould opens (`pullAxis`, `+z`), minimum draft (`minDraftDeg`,
+  1°), minimum wall (0.8 mm), maximum wall (`maxWallMm`, 4 mm), tolerated variation around the
+  nominal wall (`wallVariation`, 40 %).
+  - `mold.draft`: draft = asin |n · pull| per triangle, with each B-rep face's exact normal at the
+    triangle (planes, cylinders, cones, spheres, tori); findings per face with the area below the
+    minimum and its least draft (a cone's half angle comes out exactly).
+  - `mold.undercuts`: the undercut ray test along both +pull and −pull (each face must release
+    toward one mould half), without the vice's resting-face exception; fails over the tolerated area
+    ("needs a side action (slide or lifter)").
+  - `mold.min-wall`: the exact wall check.
+  - `mold.wall-uniformity`: the wall sampled as for the minimum wall, but each sample is the
+    diameter of the ball that fits at the middle of its hop (a rim's ray that runs down its own
+    wall would otherwise read the wall's height); nominal = area-weighted median; a B-rep face
+    (exact) or a spot (mesh) whose median wall exceeds `maxWallMm` or differs from the nominal by
+    more than the variation is listed (warn: sink marks, voids, warping).
+- German for every message (`check:i18n`, 3,619 messages).
+
+Tests: `tests/manufacturing-pockets-molding.test.ts` (12): a 10 mm pocket passes Ø6 (limit 24) and
+fails Ø2 ("5 × the Ø2 end mill"); a filleted pocket, a 35 mm pocket in a 50 mm block, a stepped
+pocket (inner floor 20 mm below the top: 10 + 10), a side step (no pocket) and a through hole in
+a floor; mesh not checked; four dogbones of a square pocket on the bisector at exactly R from
+(±15, ±15), four for R2.5 fillets at the reconstructed corners (±20, ±15), none for a Ø4 tool,
+four already-relieved corners; a 2° drafted cup passes 1° (draft measured 2°) and fails 3°, the
+pocket block's 8 vertical faces fail; the side groove's 1,300 mm² undercut along z and none along
+x; a 2 mm cup is even, a 2 mm plate with a 12 mm block on it is uneven with nominal 2 mm (exact and
+mesh); the check list for moulding; the parser's canonical invocation and refusals; German. The
+MCP/CLI test lists the two new CNC rows. Browser: `manufacturing.spec.ts` (ipad) now also turns on
+Suggest dogbones, marks a dogbone in the 3D view and runs moulding.
+
+Left open: pocket width against the tool (a pocket narrower than the tool), floor-to-wall radii
+against standard tools, minimum hole size per tool for CNC, chamfer widths on cone rings and bevels
+that are not strips, ribs and bosses for moulding (rib thickness against the wall, boss walls),
+gates, parting-line choice (the pull axis is given, not found), **sheet-metal checks** (bend radius,
+relief, flange length; still a gap), bridges on the exact body, a saved per-document process,
+laser kerf and part size against the bed.
 
 #### Smaller tools (Phase 6.5, document version 49). **Done 2026-11-27**
 

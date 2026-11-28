@@ -53,8 +53,6 @@ for(const file of files){
  if(!await region.isVisible())await page.getByRole('button',{name:'Terminal',exact:true}).tap();
  // Plain CSS locators while the import runs: role queries cost main-thread time under throttling.
  const input=region.getByRole('combobox',{name:'CAD command'}),entries=page.locator('.terminal-entry');
- // What the status bar's exact chip says while the job runs (progress, when reported).
- await page.evaluate(()=>{const w=window;w.__chip=[];const seen=new Set();new MutationObserver(()=>{const chip=document.querySelector('.exact-activity');const key=chip&&!chip.hidden?(chip.dataset.progress??'busy'):'idle';if(!seen.has(key)){seen.add(key);w.__chip.push([Math.round(performance.now()),key]);}}).observe(document.body,{subtree:true,childList:true,attributes:true,characterData:true});});
  const before=await entries.count();
  // Optionally a CPU profile of the main thread from choosing the file to ready (--profile prefix).
  const cdp=profile?await context.newCDPSession(page):undefined;
@@ -73,13 +71,13 @@ for(const file of files){
  await page.locator('#cad-root[data-state=ready]').waitFor({timeout:300_000});
  const ready=Date.now()-started;
  if(cdp){const {profile:data}=await cdp.send('Profiler.stop');writeFileSync(`${profile}-${basename(file).replace(/\W+/g,'_')}.cpuprofile`,JSON.stringify(data));}
- const probe=await page.evaluate(()=>{const w=window;cancelAnimationFrame(w.__raf);return {gaps:w.__gaps,long:w.__long,chip:w.__chip};});
+ const probe=await page.evaluate(()=>{const w=window;cancelAnimationFrame(w.__raf);return {gaps:w.__gaps,long:w.__long};});
  const run=/run (\d+) ms/.exec(text),load=/load (\d+) ms/.exec(text),bodies=/Imported (\d+) exact bodies/.exec(text);
  const after=(list)=>list.filter(([at,d])=>at+d>=t0).map(([at,d])=>[Math.round(at-t0),d]);
  const gaps=after(probe.gaps),long=after(probe.long);
  const longest=Math.max(0,...gaps.map(g=>g[1])),longTasks=long.reduce((a,b)=>a+b[1],0);
  const row={file:basename(file),rate,bodies:bodies?Number(bodies[1]):null,importedMs:imported,readyMs:ready,workerRunMs:run?Number(run[1]):null,kernelLoadMs:load?Number(load[1]):null,
-  longestFrameGapMs:Math.round(longest),longTasks:long.length,longTaskMs:Math.round(longTasks),framesOver100ms:gaps.length,gaps,long,chip:probe.chip.map(([at,k])=>[Math.round(at-t0),k]).slice(0,8).concat(probe.chip.length>8?[['…',probe.chip.length]]:[]),status:text.split('\n')[0].slice(0,160)};
+  longestFrameGapMs:Math.round(longest),longTasks:long.length,longTaskMs:Math.round(longTasks),framesOver100ms:gaps.length,gaps,long,status:text.split('\n')[0].slice(0,160)};
  console.log(JSON.stringify(row));rows.push(row);
  await context.close();
 }

@@ -1,0 +1,156 @@
+{
+ "date": "2026-11-28",
+ "what": "STEP import in the built editor, shared Chromium, iPad Pro 11 emulation, CDP Emulation.setCPUThrottlingRate 4 on the page (Chromium refuses it for workers: 'Operation is only supported for pages, not workers', so the exact worker ran unthrottled). M1, load average 8-11. before = 3336b7a's serializer (progress reporting present in both), after = one-pass serializer.",
+ "runs": {
+  "before4b": [
+   {
+    "file": "4739 MPM3610 5V Buck.step",
+    "bodies": 23,
+    "importedMs": 2216,
+    "readyMs": 2229,
+    "workerRunMs": 1029,
+    "longestFrameGapMs": 583,
+    "longTasks": 3,
+    "longTaskMs": 881,
+    "long": [
+     [
+      29,
+      119
+     ],
+     [
+      1397,
+      194
+     ],
+     [
+      1611,
+      568
+     ]
+    ]
+   },
+   {
+    "file": "4884 Feather RP2040.step",
+    "bodies": 58,
+    "importedMs": 9649,
+    "readyMs": 9667,
+    "workerRunMs": 6956,
+    "longestFrameGapMs": 965,
+    "longTasks": 3,
+    "longTaskMs": 2285,
+    "long": [
+     [
+      53,
+      695
+     ],
+     [
+      7980,
+      957
+     ],
+     [
+      8982,
+      633
+     ]
+    ]
+   }
+  ],
+  "after4": [
+   {
+    "file": "4739 MPM3610 5V Buck.step",
+    "bodies": 23,
+    "importedMs": 2031,
+    "readyMs": 2045,
+    "workerRunMs": 834,
+    "longestFrameGapMs": 701,
+    "longTasks": 3,
+    "longTaskMs": 939,
+    "long": [
+     [
+      22,
+      98
+     ],
+     [
+      1150,
+      172
+     ],
+     [
+      1342,
+      669
+     ]
+    ]
+   },
+   {
+    "file": "4884 Feather RP2040.step",
+    "bodies": 58,
+    "importedMs": 6922,
+    "readyMs": 6938,
+    "workerRunMs": 4980,
+    "longestFrameGapMs": 600,
+    "longTasks": 3,
+    "longTaskMs": 1584,
+    "long": [
+     [
+      55,
+      600
+     ],
+     [
+      5878,
+      518
+     ],
+     [
+      6431,
+      466
+     ]
+    ]
+   }
+  ],
+  "after4b": [
+   {
+    "file": "4739 MPM3610 5V Buck.step",
+    "bodies": 23,
+    "importedMs": 2547,
+    "readyMs": 2575,
+    "workerRunMs": 1068,
+    "longestFrameGapMs": 882,
+    "longTasks": 3,
+    "longTaskMs": 1157,
+    "long": [
+     [
+      33,
+      112
+     ],
+     [
+      1458,
+      177
+     ],
+     [
+      1656,
+      868
+     ]
+    ]
+   },
+   {
+    "file": "4884 Feather RP2040.step",
+    "bodies": 58,
+    "importedMs": 8161,
+    "readyMs": 8178,
+    "workerRunMs": 5944,
+    "longestFrameGapMs": 652,
+    "longTasks": 3,
+    "longTaskMs": 1855,
+    "long": [
+     [
+      74,
+      660
+     ],
+     [
+      6903,
+      642
+     ],
+     [
+      7577,
+      553
+     ]
+    ]
+   }
+  ]
+ }
+}

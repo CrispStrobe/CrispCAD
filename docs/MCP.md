@@ -159,20 +159,26 @@ edit removed, are errors and change nothing). `cad_assembly` also lists `mates` 
 
 ## Manufacturing check
 
-`cad_check_manufacturing` (`process`: `fdm`, `cnc` or `laser`) checks the current model without
+`cad_check_manufacturing` (`process`: `fdm`, `cnc`, `laser` or `molding`) checks the current model without
 changing it. Bodies with an exact B-rep are measured on it with the exact kernel (loaded on first
 use); `exact:false` skips the kernel. FDM: wall thickness (2 × `nozzleMm`, or `minWallMm`), hole
 diameter (`minHoleMm`, 2), and the printability screen's overhangs, orientation and bed fit. CNC:
 internal corner radius against `toolDiameterMm` (6) along `approachAxes` (`["+z"]`), undercuts
-(`maxUndercutAreaMm2`, 1) and wall thickness (`minWallMm`, 0.8). Laser: a flat sheet of one
+(`maxUndercutAreaMm2`, 1), wall thickness (`minWallMm`, 0.8), pocket depth against
+`maxPocketDepthRatio` (4) tool diameters and internal corners that need dogbones (their suggested
+centres and circles with `dogbones:true`). Molding (injection moulding along `pullAxis`, `+z`): draft
+angle (`minDraftDeg`, 1), undercuts that release toward neither mould half, minimum wall
+(`minWallMm`, 0.8) and wall uniformity around the nominal (median) wall (`wallVariation`, 0.4;
+`maxWallMm`, 4). Laser: a flat sheet of one
 thickness, minimum web (the thickness, or `minWallMm`) and hole size. Every process adds the
 edge-radius check (`minRadiusMm`, `maxRadiusMm`, `edgeBreak`: `none`, `external`, `internal`,
 `all`). Each check reports `geometry` (`exact` or `mesh`); findings carry a world `location`,
 B-rep `faces`/`edges` indices on exact geometry and, with `includeMarks:true`, the triangles and
 lines the editor draws. The result also has a `verdict` and a plain-text `text`. The same check
-is the registry command `check fdm|cnc|laser [targets] [--tool <mm>] [--axes +z,+x] ...` in
+is the registry command `check fdm|cnc|laser|molding [targets] [--tool <mm>] [--axes +z,+x] [--dogbones] [--pull +z] ...` in
 `cad_run_commands`, and the CLI verb `manufacturing` (`--process`, `--tool`, `--axes`,
-`--min-wall`, `--min-radius`, `--max-radius`, `--edge-break`, `--mesh`). See
+`--depth-ratio`, `--dogbones`, `--pull`, `--draft`, `--min-wall`, `--max-wall`, `--variation`,
+`--min-radius`, `--max-radius`, `--edge-break`, `--mesh`). See
 [CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#check-for-manufacturing-done-2026-11-27).
 
 ## Phase 6.5 tools
