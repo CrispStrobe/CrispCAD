@@ -52,7 +52,7 @@ export function exactDrawingBody(k:ExactKernel,solid:ExactSolid,id:string,name:s
  budget.triangles-=triangles;
  return {
   id,name,tolerance,bounds,
-  faces:topology.faces.map(face=>({surface:face.surface,point:[...face.point],normal:[...face.normal],
+  faces:topology.faces.map(face=>({surface:face.surface,...(face.name?{name:face.name}:{}),point:[...face.point],normal:[...face.normal],
    ...(face.radius!==undefined?{radius:face.radius}:{}),
    ...(face.axis?{axis:{origin:[...face.axis.origin],direction:[...face.axis.direction]}}:{})})),
   edges:topology.edges.map(edge=>({curve:edge.curve,faces:[...edge.faces],points:flat(edge.points),closed:edge.closed,length:edge.length,
@@ -72,7 +72,8 @@ export function exactDrawingData(k:ExactKernel,doc:CadDocument,targets:readonly 
   const name=doc.nodes[id].name;
   try{
    bodies.push(k.scope(()=>{
-    const solid=lowerDocumentBody(k,doc,id,{limits:options.limits,breps:options.breps});
+    // Faces named as for edge references: datums and tolerances on a sheet attach to them by name.
+    const solid=lowerDocumentBody(k,doc,id,{limits:options.limits,breps:options.breps,named:true});
     if(!k.isValid(solid))throw new ExactKernelError('kernel-failure',t`${name}: the exact result is not a valid closed solid.`);
     return exactDrawingBody(k,solid,id,name,budget);
    }));

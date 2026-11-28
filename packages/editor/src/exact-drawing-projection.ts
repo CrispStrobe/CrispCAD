@@ -66,7 +66,11 @@ export type ExactAssemblyProjection=AssemblyProjection&{
  holes:ViewHole[][];
  /** An isometric view (from front, right and top), visible lines only. */
  iso:{width:number;height:number;segments:Float64Array;lines:ExactViewLines};
+ /** Named faces and their edges of each body drawn from exact edges, for datums and tolerances (drawing-gdt.ts). */
+ topology:ExactNamedTopology[];
 };
+/** A body's faces (stable names, or null) and edges (the faces they bound, sample points flat x,y,z in world mm). */
+export type ExactNamedTopology={id:string;faces:{name:string|null;surface:string;normal:readonly number[]}[];edges:{faces:readonly number[];points:readonly number[]}[]};
 export const isExactProjection=(projection:AssemblyProjection):projection is ExactAssemblyProjection=>'exact' in projection;
 
 type Frame={u:Vec3;v:Vec3;d:Vec3};
@@ -789,5 +793,8 @@ export function projectExactAssembly(geometry:GeometryResult,exact:ExactDrawingD
   views,origin:min,bodyIds:bodies.map(body=>body.id),sourceKey:geometry.sourceKey,lines,holes,
   iso:{width:isoSize[0],height:isoSize[1],segments:Float64Array.from(isoOut.segments),lines:isoOut.lines},
   exact:{exactBodies,meshBodies,tessellatedSilhouettes:report.tessellated,tolerance,...measured},
+  topology:exactBodies.map(id=>{const body=byId.get(id)!;return {id,
+   faces:body.faces.map(face=>({name:face.name??null,surface:face.surface,normal:face.normal})),
+   edges:body.edges.map(edge=>({faces:edge.faces,points:edge.points}))};}),
  };
 }

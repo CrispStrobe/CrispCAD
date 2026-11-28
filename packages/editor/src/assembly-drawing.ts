@@ -9,6 +9,8 @@ import {addAssemblySection} from './assembly-section-view.js';
 import type {DrawnAssemblySection} from './assembly-section-view.js';
 import {addExactAssemblyLines,exactProjection} from './exact-drawing-layout.js';
 import {addAutoDimensions} from './drawing-auto-dimensions.js';
+import {addDrawingGdt} from './drawing-gdt.js';
+import {addThreadSymbols} from './drawing-threads.js';
 import type {Box as PaperBox} from './drawing-auto-dimensions.js';
 import {addDrawingFrame,drawingViews} from './drawing-page.js';
 import type {DrawingLayout,DrawingText} from './drawing-page.js';
@@ -247,6 +249,11 @@ export function layoutAssemblyDrawing(doc:CadDocument,sheet:DrawingInputs,projec
   return [left+(point[horizontal]-origin[horizontal])*factor,bottom+(point[vertical]-origin[vertical])*factor];
  },arcs);
  addAssemblyCurveDimensions(page,sheet.curveDimensions??[]);
+ if(exact){
+  // Cosmetic threads of tapped standard holes; datums and tolerances on named exact faces and edges.
+  addThreadSymbols(page,doc,exact,placements,factor,sheet.hiddenLines);
+  addDrawingGdt(page,doc,sheet,exact,placements,factor);
+ }
  const count=projection.bodyIds.length;
  const subtitle=count===1?t('Assembly · 1 body'):t`Assembly · ${count} bodies`;
  addDrawingFrame(page,sheet.title,subtitle,{scale:sheet.scale,titleBlock:sheet.titleBlock});

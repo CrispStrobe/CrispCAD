@@ -319,6 +319,28 @@ mates?:{id;kind:'coincident'|'concentric'|'distance';
   `instance(id, {name, color, transform, source, instanceVersion})` and keeps the mates in the
   `project(...)` record. Builds that predate 51 refuse such a document.
 
+**Version 52 (2026-11-28) saves datums and geometric tolerances on exact assembly sheets**
+([CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#datums-tolerances-thread-symbols-and-dxf-dimensions-document-version-52-done-2026-11-28)).
+
+```ts
+datums?:{id;letter:string;          // A–Z without I, O, Q; each letter once per sheet
+ target:string;                     // a stable face name `<node>:f<k>` or an edge `faceA+faceB[@k/n]`
+ view:0|1|2;at:[number,number]}[];  // the view it is drawn in (top, front, right) and its paper position
+tolerances?:{id;characteristic:GdtCharacteristic; // the 14 of ISO 1101 (flatness, position, …)
+ tolerance:number;diameter?:true;modifier?:'M'|'L';
+ datums?:string[];                  // up to three of the sheet's datum letters, in order
+ target:string;view:0|1|2;at:[number,number]}[];
+```
+
+Both lists are only on assembly sheets with `exactEdges: true`. `checkDrawingSheets` accepts them
+only in version 52 documents and checks the targets' form, the letters, the characteristic's rules
+(form tolerances take no datum; orientation, location and run-out tolerances need one; Ø zones and
+material conditions only where they apply) and the paper positions. Targets are resolved on the
+exact B-rep at every drawing; one that no longer resolves is drawn crossed out and named, never
+attached to another face. A document reaches 52 only when such a sheet is saved; Undo returns to the
+earlier version, and no geometry or other field changes. Builds that predate 52 refuse such a
+document.
+
 ## Graph and errors
 
 `designGraph(doc)` derives a deterministic topological order from canonical

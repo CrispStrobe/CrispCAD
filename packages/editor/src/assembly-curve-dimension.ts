@@ -3,7 +3,7 @@ import {drawingArcId,drawingOutlines,evaluateExtrusion,featureValue,localToWorld
 import type {AssemblyCurveDimension,AssemblyCurveSource,CadDocument,SketchPlane,SketchPoint,SolidNode,Transform,Vec3} from '@brickwright/cad-core';
 import type {AssemblyDrawingEdge} from './assembly-edge-dimension.js';
 import type {PaperArc} from './exact-drawing-layout.js';
-import {placeDrawingAnnotation} from './drawing-annotation.js';
+import {addPlacedAnnotation,placeDrawingAnnotation} from './drawing-annotation.js';
 import type {DrawingAnchorPoint} from './drawing-annotation.js';
 import type {DrawingLayout} from './drawing-page.js';
 import {drawingViews} from './drawing-page.js';
@@ -147,7 +147,6 @@ export function addAssemblyCurveDimensions(page:DrawingLayout,dimensions:Assembl
   const drawing=curve?placeDrawingAnnotation({id:dimension.id,sketchId:'assembly',kind:dimension.kind,from:curve.anchor.id,at:dimension.at},
    'assembly',[curve.anchor],page.factor):undefined;
   if(!drawing){page.annotationIssues.push(dimension.id);continue;}
-  for(const points of drawing.paths)page.paths.push({points,stroke:'annotation'});
-  page.texts.push({x:drawing.position[0],y:drawing.position[1],text:drawing.text,size:2.8});
+  addPlacedAnnotation(page,drawing);
  }
 }

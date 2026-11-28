@@ -120,7 +120,8 @@ it('dimensions a drilled plate automatically: overall size, hole positions, call
 it('writes hole callouts in ISO 129 order for every standard hole type',()=>{
  expect(holeCallout(standardHole({type:'clearance',thread:'M5',depth:8,through:true}),4)).toEqual(['4× M5 clearance Ø5.5 thru']);
  expect(holeCallout(standardHole({type:'clearance',thread:'M4',fit:'close',depth:6}),1)).toEqual(['M4 clearance (close fit) Ø4.3 × 6 deep']);
- expect(holeCallout(standardHole({type:'tapped',thread:'M6',depth:12}),2)).toEqual(['2× M6 tapped, drill Ø5 × 12 deep']);
+ // Tapped holes (document version 52 work): thread designation and depth symbol, then the tap drill.
+ expect(holeCallout(standardHole({type:'tapped',thread:'M6',depth:12}),2)).toEqual(['2× M6×1 - 6H ↧ 12','tap drill Ø5 ↧ 12']);
  const csk=standardHole({type:'countersink',thread:'M5',depth:8,through:true});
  expect(holeCallout(csk,1)).toEqual(['M5 countersink Ø5.5 thru',`c'sink Ø${csk.countersink!.diameter} × 90°`]);
  expect(holeCallout(standardHole({type:'heat-set',thread:'M3'}),3)[0]).toMatch(/^3× M3 heat-set insert pocket Ø4 × /);
@@ -296,7 +297,9 @@ it('exports DXF R2000 and R12 with real ARC and CIRCLE entities, layers and mill
   expect(circles.every(x=>x.codes.get(8)![0]==='VISIBLE'||x.codes.get(8)![0]==='HIDDEN')).toBe(true);
   const callout=dxf.entities.find(x=>x.type==='TEXT'&&x.codes.get(1)![0]==='4× M5 clearance Ø5.5 thru');
   expect(callout?.codes.get(8)![0]).toBe('TEXT');
-  expect(dxf.entities.some(x=>x.type==='TEXT'&&Number(x.codes.get(50)?.[0])===90)).toBe(true);
+  // Turned dimension text: a TEXT in R12; in R2000 the dimensions are DIMENSION entities (text turned by 53).
+  if(version==='R12')expect(dxf.entities.some(x=>x.type==='TEXT'&&Number(x.codes.get(50)?.[0])===90)).toBe(true);
+  else expect(dxf.entities.some(x=>x.type==='DIMENSION'&&Number(x.codes.get(53)?.[0])===90)).toBe(true);
   // An independent reader opens it with the same entities.
   const read=DxfReader.readFromStream(bytes);
   const types=new Map<string,number>();

@@ -4,6 +4,7 @@ import type {CadSession,DrawingAnnotation,DrawingDimensionKind,DrawingInputs,Dra
 import type {AssemblyProjection} from './assembly-drawing.js';
 import type {CadFile} from './index.js';
 import {mountAssemblyEdgeControls} from './assembly-edge-controls.js';
+import {mountDrawingGdtControls} from './drawing-gdt-controls.js';
 import {layoutDrawingPages} from './drawing-layout.js';
 import type {DrawingLayout} from './drawing-layout.js';
 import {drawingArcPoints,placeDrawingAnnotation} from './drawing-annotation.js';
@@ -42,12 +43,12 @@ function previewDrawing(layout:DrawingLayout,assembly:boolean) {
   }else addPath(stroke,d);
  }
  for(const [stroke,paths] of projected)addPath(stroke,paths.join(' '));
- for(const {center:[x,y],radius,arc,hidden} of layout.circles){
+ for(const {center:[x,y],radius,arc,hidden,thin} of layout.circles){
   if(arc){
    // An arc of an exact edge: counter-clockwise on paper, so clockwise in the flipped SVG.
    const at=(a:number)=>(x+radius*Math.cos(a))+' '+(layout.height-y-radius*Math.sin(a));
    const end=arc.start+arc.sweep,large=Math.abs(arc.sweep)>Math.PI?1:0,sweepFlag=arc.sweep>0?0:1;
-   addPath(hidden?'hidden':'visible','M '+at(arc.start)+' A '+radius+' '+radius+' 0 '+large+' '+sweepFlag+' '+at(end));
+   addPath(hidden?'hidden':thin?'thread':'visible','M '+at(arc.start)+' A '+radius+' '+radius+' 0 '+large+' '+sweepFlag+' '+at(end));
    continue;
   }
   const circle=document.createElementNS(ns,'circle');
@@ -202,7 +203,9 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    }
    const annotations=structuredClone(saved?.annotations??[]),edgeDimensions=structuredClone(saved?.edgeDimensions??[]);
    const curveDimensions=structuredClone(saved?.curveDimensions??[]);
+   const datums=structuredClone(saved?.datums??[]),tolerances=structuredClone(saved?.tolerances??[]);
    const edgePanel=element('details');edgePanel.className='drawing-dimensions';
+   const gdtPanel=element('details');gdtPanel.className='drawing-dimensions drawing-gdt';
    const dimensions=element('details');dimensions.className='drawing-dimensions';
    dimensions.append(element('summary',t('Drawing dimensions')));
    const labels:Record<DrawingDimensionKind,string>={
@@ -223,6 +226,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    const add=element('button',t('Add dimension'));
    const list=element('ul');list.className='drawing-dimension-list';
    dimensions.append(pick,add,list);form.append(assembly?edgePanel:dimensions);
+   if(assembly)form.append(gdtPanel);
    const heading=element('header');
    const close=element('button','×');close.setAttribute('aria-label',t('Close drawing'));
    close.onclick=()=>dialog.close();heading.append(element('h2',t('Drawing sheet')),close);
@@ -304,8 +308,10 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     if(assembly){
      if(!drawingAssemblyAvailable(current))throw new Error(t('Add a solid body to draw the assembly.'));
      const exactChoice=exactInput.checked?{exactEdges:true as const,...(autoInput.checked?{autoDimensions:true as const}:{})}:{};
+     if((datums.length||tolerances.length)&&!exactInput.checked)throw new Error(t('Datums and tolerances attach to exact faces and edges. Turn on Exact edges (B-rep), or remove them.'));
+     const gdt={...(datums.length?{datums}:{}),...(tolerances.length?{tolerances}:{})};
      return {...settings,source:{kind:'assembly'},...cuttingPlane,...(partsList.checked?{partsList:true}:{}),...exactChoice,...(explodeSelect.value?{explode:{view:explodeSelect.value,factor:1}}:{}),
-      ...(edgeDimensions.length?{edgeDimensions}:{}),...(curveDimensions.length?{curveDimensions}:{})};
+      ...(edgeDimensions.length?{edgeDimensions}:{}),...(curveDimensions.length?{curveDimensions}:{}),...gdt};
     }
     const ref=drawingSourceFor(current,source.value);
     if(!ref)throw new Error(t('Drawing source unavailable. Choose another sketch extrusion.'));
@@ -318,7 +324,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     preview.replaceChildren();
     if(page)preview.append(previewDrawing(page,assembly&&index===0));
    };
-   previewPage.onchange=()=>{edgeControls?.reset();showPreview();edgeControls?.refresh();};
+   previewPage.onchange=()=>{edgeControls?.reset();gdtControls?.reset();showPreview();edgeControls?.refresh();gdtControls?.refresh();};
    let picking=false,editing:string|undefined;
    const setPicking=(active:boolean)=>{
     picking=active;
@@ -391,7 +397,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     highlightAnchors();
    };
    const render=()=>{
-    edgeControls?.reset();
+    edgeControls?.reset();gdtControls?.reset();
     axis.parentElement!.hidden=position.parentElement!.hidden=!section.checked;
     offset.parentElement!.hidden=!section.checked;
     secondPosition.parentElement!.hidden=jogAt.parentElement!.hidden=jogHint.hidden=!section.checked||!offset.checked;
@@ -400,7 +406,7 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
     jogHint.textContent=jogRows.length?t`Enter jog coordinates along ${across} in increasing order.`:
      t`The jog switches to the second cut at this coordinate along ${across}.`;
     preview.replaceChildren();layout=undefined;pages=[];status.textContent='';
-    edgeControls?.refresh();
+    edgeControls?.refresh();gdtControls?.refresh();
     previewPage.disabled=true;
     save.disabled=pdf.disabled=svgButton.disabled=dxfButton.disabled=true;
     const ticket=++renderTicket,current=session.state.document;
@@ -421,10 +427,11 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
       previewPage.disabled=false;
      }
      showPreview();
-     edgeControls?.refresh();
+     edgeControls?.refresh();gdtControls?.refresh();
      save.disabled=false;
      pdf.disabled=svgButton.disabled=dxfButton.disabled=!!layout.annotationIssues.length;
      status.textContent=layout.annotationIssues.length?t('Repair or remove unavailable drawing dimensions before exporting.'):'';
+     gdtControls?.refresh();
     };
     const report=(error:unknown)=>{status.textContent=error instanceof Error?error.message:String(error);};
     try{
@@ -522,6 +529,8 @@ export function mountDrawingPanel(parent:HTMLElement,session:CadSession,projectA
    svgButton.onclick=()=>exportFile(svgButton,exportDrawingSvg);
    dxfButton.onclick=()=>exportFile(dxfButton,(page,title)=>exportDrawingDxf(page,title,dxfVersion.value as DxfVersion));
    const edgeControls=assembly?mountAssemblyEdgeControls(edgePanel,preview,status,edgeDimensions,curveDimensions,
+    ()=>session.state.document,()=>layout,()=>{previewPage.value='0';showPreview();},render):undefined;
+   const gdtControls=assembly?mountDrawingGdtControls(gdtPanel,preview,status,datums,tolerances,
     ()=>session.state.document,()=>layout,()=>{previewPage.value='0';showPreview();},render):undefined;
    setPicking(false);refresh();dialog.showModal();
    // Opened to export: the export controls in view.

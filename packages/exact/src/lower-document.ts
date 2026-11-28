@@ -237,9 +237,9 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
 
 /** One top-level body as an exact solid, in world millimetres. Call inside `k.scope` (or dispose
  * the result); intermediate solids are owned by the caller's scope. */
-export function lowerDocumentBody(k:ExactKernel,doc:CadDocument,bodyId:string,options:{limits?:ExactFeatureLimits;breps?:BrepCache}={}):ExactSolid{
+export function lowerDocumentBody(k:ExactKernel,doc:CadDocument,bodyId:string,options:{limits?:ExactFeatureLimits;breps?:BrepCache;named?:boolean}={}):ExactSolid{
  if(!doc.roots.includes(bodyId))throw new ExactKernelError('invalid-input',`${bodyId} is not a top-level body.`);
- return lowerNode(k,doc,bodyId,bodyId,new Map(),options.limits,false,options.breps);
+ return lowerNode(k,doc,bodyId,bodyId,new Map(),options.limits,!!options.named,options.breps);
 }
 
 /** Any node as an exact solid in its parent's frame (its own transform applied). Call inside

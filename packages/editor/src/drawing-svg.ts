@@ -11,10 +11,12 @@ const number=(value:number)=>String(Number(value.toFixed(4))+0);
 const escape=(text:string)=>text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 /** Stroke weight (mm) and dash pattern of each kind of line, as in the PDF. */
-const strokes:Record<DrawingPath['stroke'],{width:number;dash?:string}>={
+const strokes:Partial<Record<DrawingPath['stroke'],{width:number;dash?:string}>>={
  visible:{width:.26},section:{width:.26},hidden:{width:.14,dash:'1.4 0.9'},cut:{width:.14,dash:'3.5 1 0.7 1'},
  hatch:{width:.1},center:{width:.14},dimension:{width:.14},border:{width:.14},annotation:{width:.14},
 };
+/** Kinds of line that only some sheets have: styled only when used, so other files stay as they were. */
+const extraStrokes:Partial<Record<DrawingPath['stroke'],{width:number;dash?:string}>>={thread:{width:.14},error:{width:.14}};
 
 /** The SVG text of one sheet (paper coordinates are y-up; SVG's are y-down). */
 export function drawingSvg(layout:DrawingLayout,title:string){
@@ -22,10 +24,11 @@ export function drawingSvg(layout:DrawingLayout,title:string){
  const add=(stroke:DrawingPath['stroke'],d:string)=>{const l=groups.get(stroke);if(l)l.push(d);else groups.set(stroke,[d]);};
  for(const {points,stroke,closed} of layout.paths)add(stroke,points.map(([px,py],i)=>(i?'L':'M')+number(px)+' '+y(py)).join(' ')+(closed?' Z':''));
  const circles:string[]=[];
- for(const {center:[cx,cy],radius,arc,hidden} of layout.circles){
-  if(!arc){circles.push(`<circle class="${hidden?'hidden':'visible'}" cx="${number(cx)}" cy="${y(cy)}" r="${number(radius)}"/>`);continue;}
+ for(const {center:[cx,cy],radius,arc,hidden,thin} of layout.circles){
+  const kind=hidden?'hidden':thin?'thread':'visible';
+  if(!arc){circles.push(`<circle class="${kind}" cx="${number(cx)}" cy="${y(cy)}" r="${number(radius)}"/>`);continue;}
   const at=(a:number)=>number(cx+radius*Math.cos(a))+' '+y(cy+radius*Math.sin(a));
-  add(hidden?'hidden':'visible','M'+at(arc.start)+' A'+number(radius)+' '+number(radius)+' 0 '+(Math.abs(arc.sweep)>Math.PI?1:0)+' '+(arc.sweep>0?0:1)+' '+at(arc.start+arc.sweep));
+  add(kind,'M'+at(arc.start)+' A'+number(radius)+' '+number(radius)+' 0 '+(Math.abs(arc.sweep)>Math.PI?1:0)+' '+(arc.sweep>0?0:1)+' '+at(arc.start+arc.sweep));
  }
  for(const ellipse of layout.ellipses??[]){
   const {rx,ry,rotation,point}=svgEllipseArc(ellipse,h),full=ellipse.sweep>=2*Math.PI-1e-9;
@@ -33,7 +36,9 @@ export function drawingSvg(layout:DrawingLayout,title:string){
   const arc=(t:number,large:number)=>' A'+number(rx)+' '+number(ry)+' '+number(rotation)+' '+large+' 0 '+at(t);
   add(ellipse.hidden?'hidden':'visible','M'+at(ellipse.start)+(full?arc(ellipse.start+Math.PI,0)+arc(ellipse.start,0):arc(ellipse.start+ellipse.sweep,ellipse.sweep>Math.PI?1:0)));
  }
- const style=Object.entries(strokes).map(([name,{width,dash}])=>`.${name}{fill:none;stroke:#000;stroke-width:${width};stroke-linecap:round;stroke-linejoin:round${dash?`;stroke-dasharray:${dash}`:''}}`).join('');
+ const used=new Set<string>([...groups.keys(),...(circles.some(circle=>circle.includes('class="thread"'))?['thread']:[])]);
+ const styled={...strokes,...Object.fromEntries(Object.entries(extraStrokes).filter(([name])=>used.has(name)))};
+ const style=Object.entries(styled).map(([name,stroke])=>`.${name}{fill:none;stroke:#000;stroke-width:${stroke!.width};stroke-linecap:round;stroke-linejoin:round${stroke!.dash?`;stroke-dasharray:${stroke!.dash}`:''}}`).join('');
  const texts=layout.texts.map(({x,y:ty,size,text,angle})=>`<text x="${number(x)}" y="${y(ty)}" font-size="${number(size)}"${angle?` transform="rotate(${number(-angle)} ${number(x)} ${y(ty)})"`:''}>${escape(text)}</text>`);
  return [
   '<?xml version="1.0" encoding="UTF-8"?>',

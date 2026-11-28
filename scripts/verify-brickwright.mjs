@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 import { strFromU8, unzipSync } from 'fflate';
 import { attachCadProject, extractCadProject } from '@brickwright/cad-brickwright';
-import { CAD_SCRIPT_REVISION, EXACT_DRAWING_DOCUMENT_VERSION, SPLIT_DOCUMENT_VERSION, activeRoots, configuredDocument, createCadSession, createCommandRunner, createDocument, explodeOffsets, identityTransform, parseDocument, runStepImport, serializeDocument, staleExactFeatures } from '@brickwright/cad-core';
+import { CAD_SCRIPT_REVISION, EXACT_DRAWING_DOCUMENT_VERSION, GDT_DRAWING_DOCUMENT_VERSION, SPLIT_DOCUMENT_VERSION, activeRoots, configuredDocument, createCadSession, createCommandRunner, createDocument, explodeOffsets, identityTransform, parseDocument, runStepImport, serializeDocument, staleExactFeatures } from '@brickwright/cad-core';
 import { createExactBackend, exactKernelIdentity, runExactRequest } from '@brickwright/cad-exact';
 import { createGeometryKernel } from '@brickwright/cad-geometry';
 const root = resolve(process.argv[2] ?? '../local/lite-work');
@@ -206,4 +206,26 @@ try {
  assert.ok([firstCopy, secondCopy].every(id => Math.abs(manifold.evaluate(reopenedRig.state.document).bodies.find(body => body.id === id).volume - 1600) < 1e-6), 'instances follow the edited part');
  assert.match((await createCommandRunner(createCadSession(v51, { kernels }), { exact: exactHost }).runAsync('mate solve').catch(error => ({ output: error.message }))).output, /2 mates hold; 0 bodies moved/);
  console.log('PASS: document version 51 (2 linked instances of one part, a coincident and a concentric mate) survives the real Brickwright SB3 writer and loader unchanged, parses with this SDK, measures the instances exactly like their part, follows an edit of the part and keeps the mates satisfied.');
+ // Document version 52 (datums and tolerances on an exact sheet): datum A on the drilled plate's top
+ // face, datum B on the counterbore's bore, a flatness frame on A and a position frame Ø0.1 (M) to A
+ // and B, attached by stable face names from the exact kernel's drawing data; the loaded sheet keeps
+ // them, and the names still resolve on the loaded model's exact B-rep.
+ const faces = async doc => (await runExactRequest(exactBackend, { operation: 'drawing', document: doc, bodies: [] })).bodies.flatMap(body => body.faces);
+ const holeNode = Object.values(v47.nodes).find(node => node.kind === 'hole').id, plateNode = Object.values(v47.nodes).find(node => node.kind === 'box').id;
+ const v47Faces = await faces(v47);
+ const topFace = v47Faces.find(face => face.name?.startsWith(plateNode + ':f') && face.surface === 'plane' && Math.abs(face.normal[2] - 1) < 1e-9)?.name;
+ const boreFace = v47Faces.find(face => face.name?.startsWith(holeNode + ':f') && face.surface === 'cylinder')?.name;
+ assert.ok(topFace && boreFace, 'named faces in the drawing data');
+ const toleranced = createCadSession(v47);
+ const datums = [{ id: 'datumA', letter: 'A', target: topFace, view: 1, at: [60, 75] }, { id: 'datumB', letter: 'B', target: boreFace, view: 0, at: [20, 160] }];
+ const tolerances = [{ id: 'flat', characteristic: 'flatness', tolerance: 0.05, target: topFace, view: 1, at: [95, 72] },
+  { id: 'pos', characteristic: 'position', tolerance: 0.1, diameter: true, modifier: 'M', datums: ['A', 'B'], target: boreFace, view: 0, at: [60, 165] }];
+ toleranced.saveDrawingSheet({ title: 'Plate', source: { kind: 'assembly' }, scale: '1:1', hiddenLines: true, exactEdges: true, datums, tolerances });
+ assert.equal(GDT_DRAWING_DOCUMENT_VERSION, 52);
+ const v52 = await roundTrip(toleranced, 52);
+ assert.deepEqual(v52.drawings?.[0].datums, datums); assert.deepEqual(v52.drawings?.[0].tolerances, tolerances);
+ assert.deepEqual(v52.nodes, v47.nodes, 'the sheet does not change the model');
+ const v52Faces = new Set((await faces(v52)).map(face => face.name));
+ assert.ok(v52Faces.has(topFace) && v52Faces.has(boreFace), 'the datum faces resolve on the loaded model');
+ console.log('PASS: document version 52 (2 datums and 2 tolerance frames on exact faces, by stable name) survives the real Brickwright SB3 writer and loader unchanged, parses with this SDK, leaves the model unchanged and still resolves on the exact B-rep.');
 } finally { delete globalThis.localStorage; delete globalThis.window; delete globalThis.CustomEvent; }

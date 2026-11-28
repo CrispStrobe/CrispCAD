@@ -2,7 +2,7 @@
 import {localToWorldPoint,worldToLocalPoint} from '@brickwright/cad-core';
 import type {AssemblyEdgeDimension,CadDocument,SketchPoint,Vec3} from '@brickwright/cad-core';
 import type {AssemblyProjection} from './assembly-drawing.js';
-import {placeDrawingAnnotation} from './drawing-annotation.js';
+import {addPlacedAnnotation,placeDrawingAnnotation} from './drawing-annotation.js';
 import type {DrawingLayout} from './drawing-page.js';
 import {drawingViews} from './drawing-page.js';
 
@@ -58,7 +58,6 @@ export function addAssemblyEdgeDimensions(page:DrawingLayout,doc:CadDocument,dim
   const drawing=edge?placeDrawingAnnotation({id:item.id,sketchId:'assembly',kind:'aligned',from:'a',to:'b',at:item.at},
    'assembly',edge.projected.map((point,index)=>({id:index?'b':'a',point,label:''})),page.factor):undefined;
   if(!drawing){page.annotationIssues.push(item.id);continue;}
-  for(const points of drawing.paths)page.paths.push({points,stroke:'annotation'});
-  page.texts.push({x:drawing.position[0],y:drawing.position[1],text:drawing.text,size:2.8});
+  addPlacedAnnotation(page,drawing);
  }
 }

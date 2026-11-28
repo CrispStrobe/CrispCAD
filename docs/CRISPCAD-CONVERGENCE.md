@@ -1116,7 +1116,10 @@ reference for each.
    dimensions, hole callouts, ellipses, exact sections, cone and torus outlines, SVG and DXF export,
    MCP and CLI access done 2026-11-27** (document version 48; see
    [Exact drawings: dimensions, sections and exchange](#exact-drawings-dimensions-sections-and-exchange-document-version-48-done-2026-11-27)).
-   Drafting review (annotation IDs, datums, tolerances, dimensioning styles) is still open.
+   **Datums and geometric tolerances on exact faces and edges, cosmetic threads and thread callouts,
+   and DXF `DIMENSION` entities done 2026-11-28** (document version 52; see
+   [Datums, tolerances, thread symbols and DXF dimensions](#datums-tolerances-thread-symbols-and-dxf-dimensions-document-version-52-done-2026-11-28)).
+   Annotation IDs, ordinate and chain dimensioning styles and DWG export are still open.
 2. **Hole-driven fastening:** metric clearance holes and a standard parts library
    (screws, nuts, washers) with ISO thread tables as data (`hole-driven-fastening`,
    `metric-clearance-holes`, `standard-parts-library`). **Done 2026-11-27** (document version 47; see
@@ -1324,11 +1327,100 @@ CLI also pass ezdxf 1.x's strict reader and audit with no errors or fixes (check
 dependency). Browser: `tests/browser/exact-drawing-export.spec.ts` on `ipad` (automatic dimensions
 in the preview, turned text, SVG and R12 DXF downloads read back, the choice saved with the sheet).
 
-**Left open.** Ordinate and chain dimensioning styles, tolerances and datums (drafting review);
-dimensions on sketch-extrusion sheets from exact edges; thread symbols (a tapped hole is called out
-by its tap drill; no cosmetic thread circle); spline-surface outlines; DXF `DIMENSION` entities
-(dimensions are exported as lines and text); DWG export of sheets; layouts in the DXF (the reading
+**Left open.** Ordinate and chain dimensioning styles; dimensions on sketch-extrusion sheets from
+exact edges; spline-surface outlines; DWG export of sheets; layouts in the DXF (the reading
 application creates them); several pages in one SVG or DXF (parts lists are in the PDF only).
+Tolerances and datums, thread symbols and DXF `DIMENSION` entities were done next (document version
+52, below).
+
+#### Datums, tolerances, thread symbols and DXF dimensions (document version 52). **Done 2026-11-28**
+
+**What it is.**
+1. **Datums and geometric tolerances** on exact assembly sheets: in the drawing dialog,
+   **Datums and tolerances** › **Add datum or tolerance**, tap a face or edge in a view (the nearest
+   outline; a face seen edge-on first, then an edge, then other faces; everything near the tap is
+   offered in **Attached to**), then tap where the symbol goes. A datum is an ISO 5459 datum feature
+   symbol (the letter in a square frame, a leader and the datum triangle standing on the feature);
+   a tolerance is an ISO 1101 feature control frame: one of the 14 characteristics (straightness,
+   flatness, circularity, cylindricity, profile of a line and of a surface, parallelism,
+   perpendicularity, angularity, position, concentricity, symmetry, circular and total run-out),
+   the tolerance with an optional Ø zone and Ⓜ/Ⓛ modifier, and up to three datum letters. Form
+   tolerances take no datum; orientation, location (except position and profiles, where datums are
+   optional) and run-out need one. The leader ends on the face's projected outline (or on the edge)
+   in the chosen view, at the point nearest the symbol. German for everything.
+2. **Stable references, never re-bound.** A datum or frame stores its target by stable name
+   (`<node>:f<k>` for a face, `faceA+faceB[@k/n]` for the edge two faces share, the document
+   version 44 naming of [exact-edge-references.ts](../packages/core/src/exact-edge-references.ts)).
+   Every drawing resolves the name on the exact B-rep as it is now, so a parameter edit or a moved
+   hole moves the leader with its face. A name that does not resolve (the face is gone, the two faces
+   no longer meet or meet at another number of edges, or the body is drawn from its mesh) is drawn
+   crossed out on the `REFERENCE_ERRORS` line kind with the reason ("Datum B: reference lost (Hole
+   face 3 no longer exists)"), the list marks it **Reference lost**, and the sheet cannot be exported
+   until it is placed again or removed. It is never attached to another face or edge.
+3. **Thread symbols for standard tapped holes** (document version 47 `hole` nodes), ISO 6410-1:
+   seen along the axis, a thin 3/4 circle of the major diameter around the tap drill circle (open in
+   the upper right quadrant; dashed where the drill's rim is hidden); from the side, two hidden thin
+   lines of the major diameter along the thread and, for a blind hole, a hidden line across its end.
+   The callout is the ISO 965-1 designation and the thread depth with the depth symbol, then the tap
+   drill: `M4×0.7 - 6H ↧ 8` / `tap drill Ø3.3 ↧ 8`, through holes `M6×1 - 6H thru`. The depth symbol
+   (and the characteristic symbols and modifier circles) are drawn as lines, since the sheet font
+   (Helvetica, WinAnsi) has none; text either side is placed with Helvetica's advance widths.
+4. **DXF `DIMENSION` entities** (R2000): every dimension the sheet draws (automatic overall size and
+   hole positions, diameters and radii of non-hole circles and arcs, saved model edge and curve
+   dimensions, sketch-sheet view sizes and saved sketch dimensions) is a `DIMENSION` entity (rotated,
+   aligned, diameter or radius) with its definition points, the text as drawn, the model value as
+   its measurement and a DIMLFAC override (1 / scale, XDATA `ACAD`/`DSTYLE`), and its lines and text
+   are the geometry of its own anonymous block `*D1`, `*D2`, … (block record, `BLOCK` with flag 1),
+   not repeated in `ENTITIES`. Arc lengths (no R2000 entity), hole callouts, datums and frames stay
+   lines and text. R12 files keep dimensions as lines and text.
+
+**Design.**
+- Core (`drawing-sheet.ts`): `DrawingDatum`, `DrawingToleranceFrame`, `gdtCharacteristics` and the
+  rules above; `checkDrawingSheets` accepts `datums`/`tolerances` only in version 52 on assembly
+  sheets with `exactEdges`. `saveDrawingSheet` raises the document to 52 only for such a sheet.
+- Exact side: the `drawing` request now lowers every body with face names (the same naming as edge
+  references) and reports each face's `name`; geometry, meshes and every other field are unchanged.
+  The projection carries the bodies' named faces and edges (`topology`) back to the sheet.
+- Editor: `drawing-gdt.ts` (resolution, anchors, symbols, crossed-out markers, picking candidates),
+  `drawing-gdt-controls.ts` (the dialog section, 44 px controls, touch first),
+  `drawing-symbols.ts` (Helvetica widths, depth symbol, the 14 characteristic symbols),
+  `drawing-threads.ts`, and `DrawingLayout.dimensions` (each dimension's kind, points, value and
+  the very path and text objects that draw it) used by `drawing-dxf.ts`. Two line kinds only some
+  sheets have (`THREAD`, `REFERENCE_ERRORS`) enter the DXF layer table and SVG style only when used.
+- Unchanged files: a sheet without dimensions exports byte for byte as before (R2000 and R12; the
+  test pins the SHA-256 of the drilled plate's exact and mesh sheets and of a mesh sheet with a
+  tapped hole, taken before the change), and every R12 file without tapped holes is unchanged.
+
+**Tests.** `tests/drawing-gdt.test.ts` (5): datums A and B and a flatness and a position frame
+(Ø0.1 Ⓜ A B) on the drilled plate by face name, the datum triangle on the top face's line in the
+front view, frame cells, picking order (the edge-on face first, edge references offered), an edge
+reference resolving to one edge, the leader following a moved hole, PDF/SVG/DXF; a deleted hole's
+datum and frame crossed out with the reason (English and German), no leader drawn, export refused,
+a stale edge reference; version 52 save, parse, Undo, unchanged nodes, and twelve refusals; thread
+callouts (English and German) and the thread's 3/4 circle (radius 2, around the Ø3.3 drill), hidden
+side lines at x = 15 ± 2 from z = 5 to −3 and the end line, the THREAD layer arc in DXF; nine
+`DIMENSION` entities with blocks `*D1…*D9`, measurements 7.5…80, DIMLFAC 1, block records, lines and
+texts moved into blocks (none lost against R12), read by acad-ts; sketch sheets with rotated,
+aligned, diameter and radius dimensions; the byte-identical SHA-256 checks. The v48 tests were
+updated for the new tapped-hole callout and for turned dimension text now inside `DIMENSION`
+entities (R2000). DXF files with dimensions, datums and frames pass ezdxf 1.4.5's strict reader and
+audit with no errors or fixes (checked by hand in a throwaway venv, not a dependency). Browser:
+`tests/browser/drawing-gdt.spec.ts` on `ipad` (tap the top face, datum A, flatness 0.05, DXF R2000
+with `DIMENSION` entities, saved and drawn again on reopening). `npm run verify:brickwright` has a
+version 52 case.
+
+**Left open.** DWG export of sheets. An MIT route exists: acad-ts 3.9.0 (MIT, already a
+dependency) has the `DwgWriter` the sketch DWG export uses (`encode-sketch-dwg.ts`, AC1032, in a
+worker); a sheet writer would map the layout's lines, arcs, ellipses and text onto it the way
+`drawing-dxf.ts` does. Not done here, and it could only be read back by acad-ts itself (no independent
+MIT/BSD DWG reader is at hand). Also open: the DXF `TOLERANCE` entity (frames are lines and text: its
+`gdt` font codes render differently per application) and `ARC_DIMENSION` (needs R2004+); datums
+and tolerances on sketch-extrusion and mesh sheets (they need exact names); placing them from the
+terminal, MCP or CLI (saved sheets with them are drawn and exported by `cad_drawing` and the CLI
+verb); thread lengths shorter than the hole (the node stores none) and modelled threads; datum
+targets, composite frames, projected zones and all-around symbols; automatic placement that keeps
+other annotations clear of a datum or frame placed later (automatic dimensions avoid them, but a
+datum placed on top of a dimension is drawn there).
 
 #### Hole-driven fastening (document version 47). **Done 2026-11-27**
 
@@ -1401,7 +1493,7 @@ journal and Undo; German; MCP tools (preview, commit, refusals). Browser:
 read from the mesh, exact volume of the counterbored plate, fasten, standard nut; 50 s).
 
 **Left open.** Threads are cosmetic in holes (a tapped hole is its tap drill; no modelled internal
-thread) and nuts and inserts are envelopes; detecting bores in bodies that were not made as
+thread; since document version 52 work, drawings show the cosmetic thread and its callout) and nuts and inserts are envelopes; detecting bores in bodies that were not made as
 standard holes (imported or plain cylinders: `classifyClearanceBore` exists, the fasten UI does
 not offer it); fastening across several bodies (a grip is one hole's depth; two plates need one
 hole through both); no fastener metadata on placed parts beyond their names (a later Fasten

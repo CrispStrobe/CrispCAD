@@ -4,6 +4,7 @@ import type {FeatureScalar,SketchProfile} from './features.js';
 import type {SketchPoint} from './sketch-outline.js';
 import type {SketchOutlineProfile} from './sketch-region.js';
 import type {CadDocument,Vec3} from './document.js';
+import {isExactFaceName,parseEdgeReference} from './exact-edge-references.js';
 
 export const drawingScales = ['1:5','1:2','1:1','2:1','5:1'] as const;
 export type DrawingScale = typeof drawingScales[number];
@@ -29,12 +30,50 @@ export const drawingTitleBlockLimits={number:24,revision:12,drawnBy:16} as const
 export type DrawingTitleBlock=Partial<Record<keyof typeof drawingTitleBlockLimits,string>>;
 export type DrawingInputs = {title:string; titleBlock?:DrawingTitleBlock; source:DrawingSource|AssemblyDrawingSource; scale:DrawingScale; hiddenLines:boolean; section?:DrawingSection; annotations?:DrawingAnnotation[]; partsList?:boolean; explode?:DrawingExplode; edgeDimensions?:AssemblyEdgeDimension[]; curveDimensions?:AssemblyCurveDimension[];
  /** Assembly sheets, document version 48: lines from the exact B-rep, and automatic dimensions on them. */
- exactEdges?:true; autoDimensions?:true};
+ exactEdges?:true; autoDimensions?:true;
+ /** Exact assembly sheets, document version 52: datum features and geometric tolerances on exact faces and edges. */
+ datums?:DrawingDatum[]; tolerances?:DrawingToleranceFrame[]};
 /** The document version that stores an assembly sheet's exact-edges and automatic-dimensions choice. */
 export const EXACT_DRAWING_DOCUMENT_VERSION=48;
 /** An assembly sheet drawn in an exploded view (document version 50): the view and how far. */
 export type DrawingExplode = {view:string; factor:number};
 export type DrawingSheet = DrawingInputs & {id:string};
+
+/** The document version that stores datums and geometric tolerances on exact assembly sheets. */
+export const GDT_DRAWING_DOCUMENT_VERSION=52;
+/**
+ * What a datum or tolerance is attached to, by stable name (exact-edge-references.ts): a face
+ * `<node>:f<k>` (with pattern-copy prefixes), or an edge `faceA+faceB` (with `@k/n` where the two
+ * faces share several edges). It is resolved on the exact B-rep at every drawing; a name that no
+ * longer resolves is shown as an error on the sheet, never attached to another face or edge.
+ */
+export type DrawingGdtTarget=string;
+/** ISO 1101 / ASME Y14.5 geometric characteristics. */
+export const gdtCharacteristics=['straightness','flatness','circularity','cylindricity','profile-line','profile-surface',
+ 'parallelism','perpendicularity','angularity','position','concentricity','symmetry','circular-runout','total-runout'] as const;
+export type GdtCharacteristic=typeof gdtCharacteristics[number];
+/** Form tolerances take no datum; these need at least one. Profiles may have datums or none. */
+export const gdtFormCharacteristics:readonly GdtCharacteristic[]=['straightness','flatness','circularity','cylindricity'];
+export const gdtDatumCharacteristics:readonly GdtCharacteristic[]=['parallelism','perpendicularity','angularity','concentricity','symmetry','circular-runout','total-runout'];
+/** Characteristics whose tolerance zone may be a cylinder (Ø) and that take a material condition modifier. */
+export const gdtDiameterCharacteristics:readonly GdtCharacteristic[]=['straightness','parallelism','perpendicularity','angularity','position','concentricity'];
+/** Datum letters (ISO 5459 leaves out I, O and Q). */
+export const gdtDatumLetters='ABCDEFGHJKLMNPRSTUVWXYZ'.split('');
+export const drawingGdtLimit=24;
+/** A datum feature symbol: the letter in a frame, on a leader to the face or edge, in one view (0 top, 1 front, 2 right). */
+export type DrawingDatum={id:string; letter:string; target:DrawingGdtTarget; view:0|1|2; at:[number,number]};
+/** A feature control frame: characteristic, tolerance (mm; `diameter` for a cylindrical zone, `modifier` M or L), datums in order. */
+export type DrawingToleranceFrame={id:string; characteristic:GdtCharacteristic; tolerance:number; diameter?:true; modifier?:'M'|'L';
+ datums?:string[]; target:DrawingGdtTarget; view:0|1|2; at:[number,number]};
+
+/** Whether `value` is a well-formed GD&T target (a face name or an edge reference). */
+export function isDrawingGdtTarget(value:unknown):value is DrawingGdtTarget{
+ if(typeof value!=='string'||value.length>2100)return false;
+ const text:string=value,face:boolean=isExactFaceName(text);
+ if(face)return true;
+ if(!text.includes('+'))return false;
+ try{parseEdgeReference(text);return true;}catch{return false;}
+}
 
 const record = (value:unknown):value is Record<string,unknown> => !!value && typeof value==='object' && !Array.isArray(value);
 const id = (value:unknown):value is string => typeof value==='string' && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,95}$/.test(value) && !['constructor','prototype','__proto__'].includes(value);
@@ -87,6 +126,7 @@ export function checkDrawingSheets(doc:CadDocument) {
   if(sheet.partsList!==undefined&&(doc.version<22||!isAssemblyDrawingSource(sheet.source)||typeof sheet.partsList!=='boolean'))throw invalid();
   if((sheet.exactEdges!==undefined||sheet.autoDimensions!==undefined)&&(doc.version<EXACT_DRAWING_DOCUMENT_VERSION||!isAssemblyDrawingSource(sheet.source)||
      sheet.exactEdges!==undefined&&sheet.exactEdges!==true||sheet.autoDimensions!==undefined&&(sheet.autoDimensions!==true||sheet.exactEdges!==true)))throw invalid();
+  if(sheet.datums!==undefined||sheet.tolerances!==undefined)checkDrawingGdt(sheet as DrawingSheet,doc.version,invalid);
   if(sheet.section!==undefined){
    if(doc.version<10||!record(sheet.section)||!['u','v'].includes(String(sheet.section.axis)))throw invalid();
    if(!sectionScalar(sheet.section.position))throw invalid();
@@ -143,6 +183,36 @@ export function checkDrawingSheets(doc:CadDocument) {
    }
   }
   unique.add(sheet.id);
+ }
+}
+
+function checkDrawingGdt(sheet:DrawingSheet,version:number,invalid:()=>Error){
+ if(version<GDT_DRAWING_DOCUMENT_VERSION||!isAssemblyDrawingSource(sheet.source)||sheet.exactEdges!==true)throw invalid();
+ const ids=new Set<string>([...(sheet.edgeDimensions??[]),...(sheet.curveDimensions??[])].map(item=>item.id)),letters=new Set<string>();
+ const placed=(item:Record<string,unknown>)=>id(item.id)&&!ids.has(item.id)&&isDrawingGdtTarget(item.target)&&(item.view===0||item.view===1||item.view===2)&&
+  Array.isArray(item.at)&&item.at.length===2&&validDrawingPosition(item.at[0],item.at[1]);
+ if(sheet.datums!==undefined){
+  if(!Array.isArray(sheet.datums)||!sheet.datums.length||sheet.datums.length>gdtDatumLetters.length)throw invalid();
+  for(const datum of sheet.datums){
+   if(!record(datum)||Object.keys(datum).some(key=>!['id','letter','target','view','at'].includes(key))||!placed(datum)||
+      !gdtDatumLetters.includes(datum.letter)||letters.has(datum.letter))throw invalid();
+   ids.add(datum.id);letters.add(datum.letter);
+  }
+ }
+ if(sheet.tolerances!==undefined){
+  if(!Array.isArray(sheet.tolerances)||!sheet.tolerances.length||sheet.tolerances.length>drawingGdtLimit)throw invalid();
+  for(const frame of sheet.tolerances){
+   if(!record(frame)||Object.keys(frame).some(key=>!['id','characteristic','tolerance','diameter','modifier','datums','target','view','at'].includes(key))||!placed(frame))throw invalid();
+   const characteristic=frame.characteristic as GdtCharacteristic;
+   if(!gdtCharacteristics.includes(characteristic)||typeof frame.tolerance!=='number'||!(frame.tolerance>0&&frame.tolerance<=100))throw invalid();
+   if(frame.diameter!==undefined&&(frame.diameter!==true||!gdtDiameterCharacteristics.includes(characteristic)))throw invalid();
+   if(frame.modifier!==undefined&&(!['M','L'].includes(frame.modifier)||!gdtDiameterCharacteristics.includes(characteristic)))throw invalid();
+   const datums=frame.datums;
+   if(datums!==undefined&&(!Array.isArray(datums)||!datums.length||datums.length>3||new Set(datums).size!==datums.length||!datums.every(letter=>letters.has(letter))))throw invalid();
+   if(gdtFormCharacteristics.includes(characteristic)&&datums!==undefined)throw invalid();
+   if(gdtDatumCharacteristics.includes(characteristic)&&datums===undefined)throw invalid();
+   ids.add(frame.id);
+  }
  }
 }
 

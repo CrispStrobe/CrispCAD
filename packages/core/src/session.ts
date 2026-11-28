@@ -1,4 +1,4 @@
-import {EXACT_DRAWING_DOCUMENT_VERSION,drawingAssemblyAvailable,initializeDrawingOutlineIds,isAssemblyDrawingSource,isDrawingArc,isDrawingVertex,resolveDrawingSource,retainDrawingVertexIds} from './drawing-sheet.js';
+import {EXACT_DRAWING_DOCUMENT_VERSION,GDT_DRAWING_DOCUMENT_VERSION,drawingAssemblyAvailable,initializeDrawingOutlineIds,isAssemblyDrawingSource,isDrawingArc,isDrawingVertex,resolveDrawingSource,retainDrawingVertexIds} from './drawing-sheet.js';
 import type {DrawingInputs} from './drawing-sheet.js';
 import {upgradeSimulation,jointAtWorldFrame,localToWorldPoint,materialPhysics,simulationTracers} from './simulation.js';
 import {eulerFromMatrix,rotationMatrix} from './fasteners.js';
@@ -680,7 +680,9 @@ export function createCadSession(initial: CadDocument = createDocument(), option
         const aligned=sheet.annotations?.some(annotation=>annotation.kind==='aligned');
         const curved=sheet.annotations?.some(annotation=>annotation.kind==='radius'||annotation.kind==='arc-length');
         const version=sheet.explode!==undefined?50:sheet.exactEdges!==undefined||sheet.autoDimensions!==undefined?EXACT_DRAWING_DOCUMENT_VERSION:sheet.titleBlock!==undefined?29:assembly?(sheet.curveDimensions!==undefined?27:sheet.section?.additionalJogs!==undefined?26:sheet.edgeDimensions!==undefined?25:sheet.section?.jog!==undefined?24:sheet.section!==undefined?23:sheet.partsList===undefined?21:22):curved?20:aligned?19:outlineAnnotations.length?18:sheet.section?.jog!==undefined?17:sheet.annotations!==undefined?11:sheet.section?10:9;
-        if(d.version<version)d.version=version;
+        // Datums and tolerances (version 52) take precedence over every older field.
+        const needed=sheet.datums!==undefined||sheet.tolerances!==undefined?GDT_DRAWING_DOCUMENT_VERSION:version;
+        if(d.version<needed)d.version=needed as CadDocument['version'];
         d.drawings=sheetId?sheets.map(item=>item.id===id?sheet:item):[...sheets,sheet];
       });
       return id;

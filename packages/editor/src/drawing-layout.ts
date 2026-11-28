@@ -6,10 +6,10 @@ import {layoutAssemblyPartsList} from './assembly-parts-list.js';
 import type {AssemblyProjection} from './assembly-drawing.js';
 import {assemblyProjection,layoutAssemblyDrawing,resolveAssemblyCut} from './assembly-drawing.js';
 import {addDrawingFrame,drawingBorder as border,drawingViews as order} from './drawing-page.js';
-import type {DrawingCircle,DrawingLayout,DrawingPath,DrawingText} from './drawing-page.js';
+import type {DrawingCircle,DrawingDimension,DrawingLayout,DrawingPath,DrawingText} from './drawing-page.js';
 export type {DrawingLayout} from './drawing-page.js';
 
-import {dimensionText,placeDrawingAnnotation} from './drawing-annotation.js';
+import {addPlacedAnnotation,dimensionText,placeDrawingAnnotation} from './drawing-annotation.js';
 import type {DrawingAnchorPoint} from './drawing-annotation.js';
 import {offsetSectionMaterial,sectionMaterial} from './drawing-section.js';
 
@@ -152,7 +152,7 @@ export function layoutDrawing(doc:CadDocument,sheet:DrawingInputs,geometry?:Geom
   throw new Error(t('This drawing does not fit on A4 at this scale. Choose a smaller scale.'));
  }
  const paths:DrawingPath[]=[],texts:DrawingText[]=[],circles:DrawingCircle[]=[];
- const anchors:DrawingAnchorPoint[]=[];
+ const anchors:DrawingAnchorPoint[]=[],dimensions:DrawingDimension[]=[];
  const addPath=(stroke:DrawingPath['stroke'],points:SketchPoint[],closed?:boolean)=>paths.push({stroke,points,closed});
  const addText=(x:number,y:number,text:string,size=3)=>texts.push({x,y,text,size});
  for(const [view,x,y] of [[top,minX,topY],[front,minX,baseline],[right,rightX,baseline]] as const){
@@ -223,14 +223,16 @@ export function layoutDrawing(doc:CadDocument,sheet:DrawingInputs,geometry?:Geom
   }
   addText(x,y+h+4,t(view.view),3.5);
   const bottom=y-6,left=x-7;
-  addPath('dimension',[[x,y-1],[x,bottom],[x+w,bottom],[x+w,y-1]]);
-  addPath('dimension',[[x-1,bottom-1],[x+1,bottom+1]]);
-  addPath('dimension',[[x+w-1,bottom-1],[x+w+1,bottom+1]]);
-  addText(x+1,bottom-5,label(width)+' mm',2.5);
-  addPath('dimension',[[x-1,y],[left,y],[left,y+h],[x-1,y+h]]);
-  addPath('dimension',[[left-1,y-1],[left+1,y+1]]);
-  addPath('dimension',[[left-1,y+h-1],[left+1,y+h+1]]);
-  addText(left-9,y+h/2,label(height),2.5);
+  // The view's overall width and height (recorded for DXF DIMENSION entities).
+  const overall=(kind:0|90,measurement:number,points:SketchPoint[],lines:SketchPoint[][],text:DrawingText)=>{
+   const drawn=lines.map(points=>({stroke:'dimension' as const,points}));
+   paths.push(...drawn);texts.push(text);
+   dimensions.push({kind:'rotated',angle:kind,points,measurement,text:text.text,textAt:[text.x,text.y],paths:drawn,texts:[text]});
+  };
+  overall(0,width,[[x,y],[x+w,y],[x+w,bottom]],[[[x,y-1],[x,bottom],[x+w,bottom],[x+w,y-1]],[[x-1,bottom-1],[x+1,bottom+1]],[[x+w-1,bottom-1],[x+w+1,bottom+1]]],
+   {x:x+1,y:bottom-5,text:label(width)+' mm',size:2.5});
+  overall(90,height,[[x,y],[x,y+h],[left,y+h]],[[[x-1,y],[left,y],[left,y+h],[x-1,y+h]],[[left-1,y-1],[left+1,y+1]],[[left-1,y+h-1],[left+1,y+h+1]]],
+   {x:left-9,y:y+h/2,text:label(height),size:2.5});
  }
  if(section){
   const {material,axis,cut,jog}=section;
@@ -264,16 +266,16 @@ export function layoutDrawing(doc:CadDocument,sheet:DrawingInputs,geometry?:Geom
   addText(15+54*(index%5),34-Math.floor(index/5)*3.2,t`${count} × Ø${diameter} mm`,2.5);
  }
  const annotationIssues:string[]=[];
+ const page:DrawingLayout={width:297,height:210,paths,texts,circles,anchors,annotationIssues,factor,...(dimensions.length?{dimensions}:{})};
  for(const annotation of sheet.annotations??[]){
   const drawing=placeDrawingAnnotation(annotation,sketch.id,anchors,factor);
   if(!drawing){
    annotationIssues.push(annotation.id);
    continue;
   }
-  for(const points of drawing.paths)addPath('annotation',points);
-  addText(...drawing.position,drawing.text,2.8);
+  addPlacedAnnotation(page,drawing);
  }
- return {width:297,height:210,paths,texts,circles,anchors,annotationIssues,factor};
+ return page;
 }
 
 export function layoutDrawingPages(doc:CadDocument,sheet:DrawingInputs,geometry?:GeometryResult|AssemblyProjection){

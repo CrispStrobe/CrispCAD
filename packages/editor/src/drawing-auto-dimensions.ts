@@ -10,14 +10,17 @@
 // taken. Leaders for callouts, diameters and radii try several directions and lengths the same
 // way. What finds no room is left off and counted in a note, never drawn over something else.
 //
-// Hole callouts follow ISO 129-1 practice in words (Helvetica has no counterbore or depth symbol):
-// the count, the thread and kind, the bore and its depth or "thru", and the seat on a second line.
+// Hole callouts follow ISO 129-1 practice in words (Helvetica has no counterbore symbol): the
+// count, the thread and kind, the bore and its depth or "thru", and the seat on a second line. A
+// tapped hole is called out by its thread designation (ISO 965-1: M4×0.7 - 6H) and thread depth
+// with the depth symbol, drawn as lines (drawing-symbols.ts), and its tap drill on the second line.
 // Units are the sheet's millimetres (the frame says so), so values carry no unit.
-import {nodeWorldFrame,seatDepth,t} from '@brickwright/cad-core';
+import {THREADS,nodeWorldFrame,seatDepth,t} from '@brickwright/cad-core';
 import type {CadDocument,HoleFeature,SketchPoint,Vec3} from '@brickwright/cad-core';
 import {dimensionText} from './drawing-annotation.js';
-import {drawingViews} from './drawing-page.js';
-import type {DrawingLayout,DrawingText} from './drawing-page.js';
+import {drawingViews,recordDimension} from './drawing-page.js';
+import type {DrawingDimension,DrawingLayout,DrawingPath,DrawingText} from './drawing-page.js';
+import {DEPTH_SYMBOL,addSymbolText} from './drawing-symbols.js';
 import type {ExactAssemblyProjection} from './exact-drawing-projection.js';
 
 /** A paper rectangle; `text` marks one that lines must not cross. */
@@ -55,7 +58,11 @@ export function holeCallout(hole:HoleFeature,count:number):string[]{
  const fit=hole.standard.fit&&hole.standard.fit!=='normal'?' '+(hole.standard.fit==='close'?t('(close fit)'):t('(loose fit)')):'';
  switch(hole.standard.type){
   case 'clearance':return [n+t`${thread} clearance${fit} ${bore}`];
-  case 'tapped':return [n+(hole.through?t`${thread} tapped thru, drill Ø${d}`:t`${thread} tapped, drill Ø${d} × ${depth} deep`)];
+  case 'tapped':{
+   // The thread runs the full depth of the hole (the hole node stores no separate thread length).
+   const designation=`${thread}×${dimensionText(THREADS[thread].pitch)} - 6H`;
+   return hole.through?[n+t`${designation} thru`,t`tap drill Ø${d} thru`]:[n+`${designation} ${DEPTH_SYMBOL} ${depth}`,t`tap drill Ø${d} ${DEPTH_SYMBOL} ${depth}`];
+  }
   case 'counterbore':return [n+t`${thread} counterbore ${bore}`,t`c'bore Ø${dimensionText(hole.counterbore!.diameter)} × ${dimensionText(seatDepth(hole))} deep`];
   case 'countersink':return [n+t`${thread} countersink ${bore}`,t`c'sink Ø${dimensionText(hole.countersink!.diameter)} × ${dimensionText(hole.countersink!.angle)}°`];
   case 'heat-set':return [n+t`${thread} heat-set insert pocket ${bore}`];
@@ -88,7 +95,9 @@ export function addAutoDimensions(page:DrawingLayout,doc:CadDocument,projection:
   taken.push(...boxes.filter(box=>!texts.includes(box)),...texts.map(box=>Object.assign(grow(box,.4),{text:true})));
   strokes.push(...lines);
  };
- const path=(points:SketchPoint[])=>page.paths.push({stroke:'annotation',points});
+ // Every path drawn is also collected, so a dimension knows the lines it is drawn with.
+ let drawn:DrawingPath[]=[];
+ const path=(points:SketchPoint[])=>{const item={stroke:'annotation' as const,points};page.paths.push(item);drawn.push(item);};
  const tick=([x,y]:SketchPoint)=>path([[x-.9,y-.9],[x+.9,y+.9]]);
 
  type Side='below'|'above'|'left'|'right';
@@ -120,11 +129,13 @@ export function addAutoDimensions(page:DrawingLayout,doc:CadDocument,projection:
     const boxes=[line,tb];
     if(!free(boxes,extensions,[tb]))continue;
     occupy(boxes,extensions,[tb]);
+    drawn=[];
     for(const [s,e] of extensions)path([s,e]);
     const ends:[SketchPoint,SketchPoint]=horizontal?[[a,level],[b,level]]:[[level,a],[level,b]];
     path(fits?ends:horizontal?[[a,level],[b+1.5+w,level]]:[[level,a],[level,b+1.5+w]]);
     tick(ends[0]);tick(ends[1]);
     page.texts.push(label_);
+    recordDimension(page,{kind:'rotated',angle:horizontal?0:90,points:[p,q,ends[1]],measurement:value,text:label,textAt:[label_.x,label_.y],paths:drawn,texts:[label_]});
     report.placed++;
     return index;
    }
@@ -134,7 +145,9 @@ export function addAutoDimensions(page:DrawingLayout,doc:CadDocument,projection:
  };
 
  /** A leader from `anchor` (on a curve, pointing away along `direction`) to the text lines. */
- const leader=(view:number,anchor:SketchPoint,direction:SketchPoint,lines:string[],count=true)=>{
+ type Measure=Pick<DrawingDimension,'kind'|'points'|'measurement'>;
+ /** `measure`: a diameter or radius the leader dimensions (recorded for DXF DIMENSION entities). */
+ const leader=(view:number,anchor:SketchPoint,direction:SketchPoint,lines:string[],count=true,measure?:Measure)=>{
   const angles=[0,-Math.PI/6,Math.PI/6,-Math.PI/3,Math.PI/3,Math.PI/2,-Math.PI/2,Math.PI*2/3,-Math.PI*2/3,Math.PI];
   const base=Math.atan2(direction[1],direction[0]);
   for(const allowOwn of [false,true])for(const length of [6,11,17,24,32])for(const turn of angles){
@@ -152,11 +165,15 @@ export function addAutoDimensions(page:DrawingLayout,doc:CadDocument,projection:
    // The leader must not cross another view.
    if(viewBoxes.some((box,i)=>i!==view&&segments.some(([s,e])=>segmentHits(s,e,box))))continue;
    occupy([block],segments,[block]);
+   drawn=[];
    path([anchor,elbow,shoulder]);
    // An arrowhead at the curve, pointing at it.
    const back=Math.atan2(anchor[1]-elbow[1],anchor[0]-elbow[0]);
-   page.paths.push({stroke:'annotation',closed:true,points:[anchor,[anchor[0]-2.2*Math.cos(back-.3),anchor[1]-2.2*Math.sin(back-.3)],[anchor[0]-2.2*Math.cos(back+.3),anchor[1]-2.2*Math.sin(back+.3)]]});
-   page.texts.push(...texts);
+   const head:DrawingPath={stroke:'annotation',closed:true,points:[anchor,[anchor[0]-2.2*Math.cos(back-.3),anchor[1]-2.2*Math.sin(back-.3)],[anchor[0]-2.2*Math.cos(back+.3),anchor[1]-2.2*Math.sin(back+.3)]]};
+   page.paths.push(head);drawn.push(head);
+   const placedTexts:DrawingText[]=[];
+   for(const text of texts){const added=addSymbolText(page,text);placedTexts.push(...added.texts);drawn.push(...added.paths);}
+   if(measure)recordDimension(page,{...measure,text:lines.join(' '),textAt:[texts[0].x,texts[0].y],paths:drawn,texts:placedTexts});
    if(count)report.placed++;
    return true;
   }
@@ -269,12 +286,13 @@ export function addAutoDimensions(page:DrawingLayout,doc:CadDocument,projection:
    if(a)a.count++;else arcs.set(key,{center:arc.center,radius:arc.radius,mid,count:1});
   }
   for(const c of circles.values()){
-   const center=paper(view,...c.center),r=c.radius*factor;
-   leader(view,[center[0]+r*Math.SQRT1_2,center[1]+r*Math.SQRT1_2],[Math.SQRT1_2,Math.SQRT1_2],[(c.count>1?t`${c.count}× `:'')+'Ø'+dimensionText(2*c.radius)]);
+   const center=paper(view,...c.center),r=c.radius*factor,on:SketchPoint=[center[0]+r*Math.SQRT1_2,center[1]+r*Math.SQRT1_2];
+   leader(view,on,[Math.SQRT1_2,Math.SQRT1_2],[(c.count>1?t`${c.count}× `:'')+'Ø'+dimensionText(2*c.radius)],true,
+    {kind:'diameter',points:[on,[2*center[0]-on[0],2*center[1]-on[1]]],measurement:2*c.radius});
   }
   for(const a of arcs.values()){
-   const center=paper(view,...a.center),r=a.radius*factor,dir:SketchPoint=[Math.cos(a.mid),Math.sin(a.mid)];
-   leader(view,[center[0]+r*dir[0],center[1]+r*dir[1]],dir,[(a.count>1?t`${a.count}× `:'')+'R'+dimensionText(a.radius)]);
+   const center=paper(view,...a.center),r=a.radius*factor,dir:SketchPoint=[Math.cos(a.mid),Math.sin(a.mid)],on:SketchPoint=[center[0]+r*dir[0],center[1]+r*dir[1]];
+   leader(view,on,dir,[(a.count>1?t`${a.count}× `:'')+'R'+dimensionText(a.radius)],true,{kind:'radius',points:[center,on],measurement:a.radius});
   }
  }
  // View labels: above the view and its dimensions, else below it; then the notes as one block.

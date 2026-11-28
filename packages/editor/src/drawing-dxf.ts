@@ -8,11 +8,21 @@
 //
 // R2000 files carry the structure the DXF reference asks for (handles, owners, subclass markers,
 // the block records of model and paper space and the root dictionary); the application that reads
-// the file creates layouts and other objects it needs. Text is code page 1252 (ANSI_1252), as both
+// the file creates layouts and other objects it needs.
+//
+// Dimensions (R2000): each dimension the sheet records (DrawingLayout.dimensions) is a DIMENSION
+// entity (rotated: horizontal or vertical; aligned; diameter; radius) with its definition points on
+// paper, its text as drawn, the model value as its measurement, and a DIMLFAC override (1 / sheet
+// scale, XDATA "ACAD" DSTYLE), so an application that measures it again shows model millimetres.
+// Its lines and text are the geometry of its own anonymous block (*D1, *D2, …), as AutoCAD stores
+// them, and are not repeated in ENTITIES. Arc lengths, hole callouts, datums and tolerance frames
+// stay lines and text. R12 files keep every dimension as lines and text, and a sheet without
+// dimensions is written exactly as before. Text is code page 1252 (ANSI_1252), as both
 // versions expect; characters outside it are written as \U+XXXX in R2000 and as ? in R12.
 import {t} from '@brickwright/cad-core';
 import {ellipsePoint} from './drawing-conic.js';
-import type {DrawingLayout,DrawingPath} from './drawing-page.js';
+import type {DrawingLayout,DrawingPath,DrawingText} from './drawing-page.js';
+import {helveticaWidth} from './drawing-symbols.js';
 import {drawingFileName} from './drawing-svg.js';
 
 export type DxfVersion='R12'|'R2000';
@@ -21,7 +31,12 @@ export const DXF_VERSIONS:readonly DxfVersion[]=['R2000','R12'];
 export const DXF_ELLIPSE_TOLERANCE=.01;
 
 type Layer={name:string;color:number;linetype:string;weight:number};
-const layers:Record<DrawingPath['stroke']|'text',Layer>={
+/** Layers only some sheets have (cosmetic threads, unresolved datum or tolerance references): in the layer table only when used. */
+const extraLayers:Record<'thread'|'error',Layer>={
+ thread:{name:'THREAD',color:4,linetype:'CONTINUOUS',weight:13},
+ error:{name:'REFERENCE_ERRORS',color:1,linetype:'CONTINUOUS',weight:13},
+};
+const layers:Record<Exclude<DrawingPath['stroke'],'thread'|'error'>|'text',Layer>={
  visible:{name:'VISIBLE',color:7,linetype:'CONTINUOUS',weight:25},
  section:{name:'SECTION',color:7,linetype:'CONTINUOUS',weight:25},
  hidden:{name:'HIDDEN',color:8,linetype:'DASHED',weight:13},
@@ -60,6 +75,9 @@ function encode(text:string,version:DxfVersion){
 /** The DXF text of one sheet (its first page: the views). */
 export function drawingDxfBytes(layout:DrawingLayout,version:DxfVersion='R2000'):Uint8Array{
  const r2000=version==='R2000',out:number[]=[];
+ const dimensions=r2000?layout.dimensions??[]:[];
+ const inBlocks={paths:new Set(dimensions.flatMap(d=>d.paths)),texts:new Set(dimensions.flatMap(d=>d.texts))};
+ const layerOf=(stroke:DrawingPath['stroke'])=>stroke==='thread'||stroke==='error'?extraLayers[stroke]:layers[stroke];
  const pair=(code:number,value:string|number)=>{
   for(const c of String(code).padStart(3,' '))out.push(c.charCodeAt(0));
   out.push(13,10);
@@ -70,11 +88,34 @@ export function drawingDxfBytes(layout:DrawingLayout,version:DxfVersion='R2000')
  const point=(x:number,y:number,code=10)=>{pair(code,number(x));pair(code+10,number(y));pair(code+20,'0.0');};
  // Handles of the owners entities and blocks refer to.
  const owners={model:'',paper:''};
+ let owner='';
  const entity=(type:string,layer:Layer,subclass:string)=>{
   pair(0,type);
-  if(r2000){pair(5,handle());pair(330,owners.model);pair(100,'AcDbEntity');}
+  if(r2000){pair(5,handle());pair(330,owner);pair(100,'AcDbEntity');}
   pair(8,layer.name);
   if(r2000)pair(100,subclass);
+ };
+ const polyline=(layer:Layer,points:readonly (readonly [number,number])[],closed:boolean)=>{
+  if(points.length===2&&!closed){
+   entity('LINE',layer,'AcDbLine');point(points[0][0],points[0][1]);point(points[1][0],points[1][1],11);
+   return;
+  }
+  if(r2000){
+   entity('LWPOLYLINE',layer,'AcDbPolyline');
+   pair(90,points.length);pair(70,closed?1:0);pair(43,'0.0');
+   for(const [x,y] of points){pair(10,number(x));pair(20,number(y));}
+   return;
+  }
+  entity('POLYLINE',layer,'');pair(66,1);point(0,0);pair(70,closed?1:0);
+  for(const [x,y] of points){entity('VERTEX',layer,'');point(x,y);}
+  entity('SEQEND',layer,'');
+ };
+ const textEntity=({x,y,size,text,angle}:DrawingText)=>{
+  entity('TEXT',layers.text,'AcDbText');
+  point(x,y);pair(40,number(size));pair(1,text);
+  if(angle)pair(50,number(angle));
+  pair(7,r2000?'Standard':'STANDARD');
+  if(r2000)pair(100,'AcDbText');
  };
  const table=(name:string,count:number,records:()=>void,extra?:()=>void)=>{
   pair(0,'TABLE');pair(2,name);
@@ -120,7 +161,7 @@ export function drawingDxfBytes(layout:DrawingLayout,version:DxfVersion='R2000')
 
  // Tables.
  pair(0,'SECTION');pair(2,'TABLES');
- const blockRecords={model:'',paper:''};
+ const blockRecords={model:'',paper:''},dimensionRecords:string[]=[];
  if(r2000){
   table('VPORT',1,()=>{
    record('VPORT','AcDbViewportTableRecord');
@@ -142,7 +183,8 @@ export function drawingDxfBytes(layout:DrawingLayout,version:DxfVersion='R2000')
    for(const length of pattern){pair(49,number(length));if(r2000)pair(74,0);}
   }
  });
- const used=[...new Map([{name:'0',color:7,linetype:'CONTINUOUS',weight:-3},...Object.values(layers)].map(layer=>[layer.name,layer])).values()];
+ const extra=(['thread','error'] as const).filter(stroke=>layout.paths.some(path=>path.stroke===stroke)||stroke==='thread'&&layout.circles.some(circle=>circle.thin&&!circle.hidden)).map(stroke=>extraLayers[stroke]);
+ const used=[...new Map([{name:'0',color:7,linetype:'CONTINUOUS',weight:-3},...Object.values(layers),...extra].map(layer=>[layer.name,layer])).values()];
  table('LAYER',used.length,()=>{
   for(const layer of used){
    record('LAYER','AcDbLayerTableRecord');
@@ -159,11 +201,17 @@ export function drawingDxfBytes(layout:DrawingLayout,version:DxfVersion='R2000')
   table('UCS',0,()=>{});
   table('APPID',1,()=>{record('APPID','AcDbRegAppTableRecord');pair(2,'ACAD');pair(70,0);});
   table('DIMSTYLE',1,()=>{record('DIMSTYLE','AcDbDimStyleTableRecord',105);pair(2,'Standard');pair(70,0);},()=>pair(100,'AcDbDimStyleTable'));
-  table('BLOCK_RECORD',2,()=>{
+  table('BLOCK_RECORD',2+dimensions.length,()=>{
    for(const key of ['model','paper'] as const){
     record('BLOCK_RECORD','AcDbBlockTableRecord');
     blockRecords[key]=(next-1).toString(16).toUpperCase();
     pair(2,key==='model'?'*Model_Space':'*Paper_Space');
+   }
+   // One anonymous block per dimension, holding its lines and text.
+   for(const [i] of dimensions.entries()){
+    record('BLOCK_RECORD','AcDbBlockTableRecord');
+    dimensionRecords.push((next-1).toString(16).toUpperCase());
+    pair(2,`*D${i+1}`);
    }
   });
  }
@@ -182,29 +230,25 @@ export function drawingDxfBytes(layout:DrawingLayout,version:DxfVersion='R2000')
    if(key==='paper')pair(67,1);
    pair(8,'0');pair(100,'AcDbBlockEnd');
   }
+  for(const [i,dimension] of dimensions.entries()){
+   const name=`*D${i+1}`,record=dimensionRecords[i];
+   pair(0,'BLOCK');pair(5,handle());pair(330,record);pair(100,'AcDbEntity');
+   pair(8,'0');pair(100,'AcDbBlockBegin');pair(2,name);pair(70,1);point(0,0);pair(3,name);pair(1,'');
+   owner=record;
+   for(const {points,stroke,closed} of dimension.paths)if(points.length>1)polyline(layerOf(stroke),points,!!closed);
+   for(const text of dimension.texts)textEntity(text);
+   pair(0,'ENDBLK');pair(5,handle());pair(330,record);pair(100,'AcDbEntity');
+   pair(8,'0');pair(100,'AcDbBlockEnd');
+  }
  }
  pair(0,'ENDSEC');
 
  // Entities.
  pair(0,'SECTION');pair(2,'ENTITIES');
- const polyline=(layer:Layer,points:readonly (readonly [number,number])[],closed:boolean)=>{
-  if(points.length===2&&!closed){
-   entity('LINE',layer,'AcDbLine');point(points[0][0],points[0][1]);point(points[1][0],points[1][1],11);
-   return;
-  }
-  if(r2000){
-   entity('LWPOLYLINE',layer,'AcDbPolyline');
-   pair(90,points.length);pair(70,closed?1:0);pair(43,'0.0');
-   for(const [x,y] of points){pair(10,number(x));pair(20,number(y));}
-   return;
-  }
-  entity('POLYLINE',layer,'');pair(66,1);point(0,0);pair(70,closed?1:0);
-  for(const [x,y] of points){entity('VERTEX',layer,'');point(x,y);}
-  entity('SEQEND',layer,'');
- };
- for(const {points,stroke,closed} of layout.paths)if(points.length>1)polyline(layers[stroke],points,!!closed);
- for(const {center:[x,y],radius,arc,hidden} of layout.circles){
-  const layer=layers[hidden?'hidden':'visible'];
+ owner=owners.model;
+ for(const path of layout.paths)if(path.points.length>1&&!inBlocks.paths.has(path))polyline(layerOf(path.stroke),path.points,!!path.closed);
+ for(const {center:[x,y],radius,arc,hidden,thin} of layout.circles){
+  const layer=hidden?layers.hidden:thin?extraLayers.thread:layers.visible;
   if(!arc||Math.abs(arc.sweep)>=2*Math.PI-1e-12){entity('CIRCLE',layer,'AcDbCircle');point(x,y);pair(40,number(radius));continue;}
   // ARC runs counter-clockwise from 50 to 51.
   const [from,to]=arc.sweep>=0?[arc.start,arc.start+arc.sweep]:[arc.start+arc.sweep,arc.start];
@@ -230,12 +274,33 @@ export function drawingDxfBytes(layout:DrawingLayout,version:DxfVersion='R2000')
   const points=Array.from({length:full?count:count+1},(_,i)=>ellipsePoint(ellipse,ellipse.start+ellipse.sweep*i/count));
   polyline(layer,points,full);
  }
- for(const {x,y,size,text,angle} of layout.texts){
-  entity('TEXT',layers.text,'AcDbText');
-  point(x,y);pair(40,number(size));pair(1,text);
-  if(angle)pair(50,number(angle));
-  pair(7,r2000?'Standard':'STANDARD');
-  if(r2000)pair(100,'AcDbText');
+ for(const text of layout.texts)if(!inBlocks.texts.has(text))textEntity(text);
+ // DIMENSION entities, each naming its block.
+ const lengthFactor=1/(layout.factor||1);
+ for(const [i,dimension] of dimensions.entries()){
+  entity('DIMENSION',layers.annotation,'AcDbDimension');
+  pair(2,`*D${i+1}`);
+  const [p0,p1,p2]=dimension.points;
+  const definition=dimension.kind==='diameter'?p1:dimension.kind==='radius'?p0:p2;
+  point(definition[0],definition[1]);
+  const first=dimension.texts[0],size=first?.size??2.5,width=helveticaWidth(dimension.text,size);
+  const middle=first?.angle===90?[dimension.textAt[0]-size/2,dimension.textAt[1]+width/2]:[dimension.textAt[0]+width/2,dimension.textAt[1]+size/2];
+  point(middle[0],middle[1],11);
+  // 32: the block belongs to this dimension only; 128: the text stays where the sheet put it.
+  pair(70,{rotated:0,aligned:1,diameter:3,radius:4}[dimension.kind]|32|128);
+  pair(71,5);pair(42,number(dimension.measurement));pair(1,dimension.text);
+  if(first?.angle)pair(53,number(first.angle));
+  pair(3,'Standard');
+  if(dimension.kind==='rotated'||dimension.kind==='aligned'){
+   pair(100,'AcDbAlignedDimension');point(p0[0],p0[1],13);point(p1[0],p1[1],14);
+   if(dimension.kind==='rotated'){pair(50,number(dimension.angle??0));pair(100,'AcDbRotatedDimension');}
+  }else{
+   pair(100,dimension.kind==='diameter'?'AcDbDiametricDimension':'AcDbRadialDimension');
+   const on=dimension.kind==='diameter'?p0:p1;
+   point(on[0],on[1],15);pair(40,'0.0');
+  }
+  // DIMLFAC (144) of this dimension: paper millimetres times this are model millimetres.
+  pair(1001,'ACAD');pair(1000,'DSTYLE');pair(1002,'{');pair(1070,144);pair(1040,number(lengthFactor));pair(1002,'}');
  }
  pair(0,'ENDSEC');
 

@@ -19,6 +19,9 @@ export interface ExactDrawingEdge {
 }
 export interface ExactDrawingFace {
  readonly surface:string;
+ /** The face's stable name `<node>:f<k>` (exact-edge-references.ts), where it has one. Drawing data
+  * names the faces of every body, so datums and tolerances can be attached by name. */
+ readonly name?:string;
  /** A point on the face and the outward normal there. */
  readonly point:readonly number[];
  readonly normal:readonly number[];

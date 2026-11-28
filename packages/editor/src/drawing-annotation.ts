@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {t} from '@brickwright/cad-core';
 import type {DrawingAnnotation,SketchPoint} from '@brickwright/cad-core';
+import type {DrawingDimension,DrawingLayout} from './drawing-page.js';
+import {recordDimension} from './drawing-page.js';
+
+/** What a placed annotation measures (see DrawingDimension); arc lengths have none (no R2000 DXF entity). */
+type Measure=Pick<DrawingDimension,'kind'|'points'|'angle'|'measurement'>;
 
 export type DrawingAnchorPoint = {id:string; label:string; point:SketchPoint; radius?:number; arc?:{start:number;sweep:number}};
 export const dimensionText=(value:number)=>String(Number(value.toFixed(3)));
@@ -38,13 +43,16 @@ export function placeDrawingAnnotation(
   const r=first.radius*factor,dx=x-ax,dy=y-ay,length=Math.hypot(dx,dy);
   const start:SketchPoint=length>1e-8?[ax+r*dx/length,ay+r*dy/length]:[ax+r,ay];
   paths.push([start,[x,y],[x+6,y]]);
-  return {paths,text:'Ø'+dimensionText(2*first.radius)+' mm',position:[x+1,y+1.5] as SketchPoint};
+  const opposite:SketchPoint=[2*ax-start[0],2*ay-start[1]];
+  return {paths,text:'Ø'+dimensionText(2*first.radius)+' mm',position:[x+1,y+1.5] as SketchPoint,
+   measure:{kind:'diameter',points:[start,opposite],measurement:2*first.radius} as Measure};
  }
  if(annotation.kind==='radius'){
   if(first.radius===undefined)return undefined;
   const start=radialPoint(first.point,first.radius*factor,curveAngle(annotation.at,first));
   paths.push([start,[x,y],[x+6,y]]);
-  return {paths,text:'R'+dimensionText(first.radius)+' mm',position:[x+1,y+1.5] as SketchPoint};
+  return {paths,text:'R'+dimensionText(first.radius)+' mm',position:[x+1,y+1.5] as SketchPoint,
+   measure:{kind:'radius',points:[first.point,start],measurement:first.radius} as Measure};
  }
  if(annotation.kind==='arc-length'){
   if(first.radius===undefined||!first.arc)return undefined;
@@ -72,7 +80,8 @@ export function placeDrawingAnnotation(
   paths.push([[ax,ay],project(0,offset)],[[bx,by],project(length,offset)],
    [project(Math.min(0,along),offset),project(Math.max(length,along),offset)]);
   for(const s of [0,length])paths.push([project(s-.9,offset-.9),project(s+.9,offset+.9)]);
-  return {paths,text:dimensionText(distance)+' mm',position:[x+1.6,y+1.6] as SketchPoint};
+  return {paths,text:dimensionText(distance)+' mm',position:[x+1.6,y+1.6] as SketchPoint,
+   measure:{kind:'aligned',points:[[ax,ay],[bx,by],project(length,offset)],measurement:distance} as Measure};
  }
  const horizontal=annotation.kind==='linear-x';
  const a=horizontal?ax:ay,b=horizontal?bx:by;
@@ -85,5 +94,14 @@ export function placeDrawingAnnotation(
   paths.push([[ax,ay],[x,ay]],[[bx,by],[x,by]],[[x,Math.min(a,b,y)],[x,Math.max(a,b,y)]]);
   for(const value of [a,b])paths.push([[x-.9,value-.9],[x+.9,value+.9]]);
  }
- return {paths,text:dimensionText(distance)+' mm',position:[x+1.6,y+1.6] as SketchPoint};
+ return {paths,text:dimensionText(distance)+' mm',position:[x+1.6,y+1.6] as SketchPoint,
+  measure:{kind:'rotated',angle:horizontal?0:90,points:[[ax,ay],[bx,by],horizontal?[bx,y]:[x,by]],measurement:distance} as Measure};
+}
+
+/** Draw a placed annotation on the page (thin lines, text of height 2.8) and record what it measures. */
+export function addPlacedAnnotation(page:Pick<DrawingLayout,'paths'|'texts'|'dimensions'>,drawing:NonNullable<ReturnType<typeof placeDrawingAnnotation>>){
+ const paths=drawing.paths.map(points=>({points,stroke:'annotation' as const}));
+ const text={x:drawing.position[0],y:drawing.position[1],text:drawing.text,size:2.8};
+ page.paths.push(...paths);page.texts.push(text);
+ if('measure' in drawing&&drawing.measure)recordDimension(page,{...drawing.measure,text:drawing.text,textAt:drawing.position,paths,texts:[text]});
 }
