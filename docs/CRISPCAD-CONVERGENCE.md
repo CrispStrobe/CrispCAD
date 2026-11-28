@@ -1687,7 +1687,7 @@ change (`packages/geometry/src/analysis/manufacturing.ts`, original code).
     wall would otherwise read the wall's height); nominal = area-weighted median; a B-rep face
     (exact) or a spot (mesh) whose median wall exceeds `maxWallMm` or differs from the nominal by
     more than the variation is listed (warn: sink marks, voids, warping).
-- German for every message (`check:i18n`, 3,619 messages).
+- German for every message (`check:i18n` passes).
 
 Tests: `tests/manufacturing-pockets-molding.test.ts` (12): a 10 mm pocket passes Ø6 (limit 24) and
 fails Ø2 ("5 × the Ø2 end mill"); a filleted pocket, a 35 mm pocket in a 50 mm block, a stepped
