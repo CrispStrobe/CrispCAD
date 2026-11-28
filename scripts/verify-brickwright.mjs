@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 import { strFromU8, unzipSync } from 'fflate';
 import { attachCadProject, extractCadProject } from '@brickwright/cad-brickwright';
-import { CAD_SCRIPT_REVISION, EXACT_DRAWING_DOCUMENT_VERSION, SPLIT_DOCUMENT_VERSION, activeRoots, configuredDocument, createCadSession, createCommandRunner, explodeOffsets, identityTransform, parseDocument, runStepImport, serializeDocument, staleExactFeatures } from '@brickwright/cad-core';
+import { CAD_SCRIPT_REVISION, EXACT_DRAWING_DOCUMENT_VERSION, SPLIT_DOCUMENT_VERSION, activeRoots, configuredDocument, createCadSession, createCommandRunner, createDocument, explodeOffsets, identityTransform, parseDocument, runStepImport, serializeDocument, staleExactFeatures } from '@brickwright/cad-core';
 import { createExactBackend, exactKernelIdentity, runExactRequest } from '@brickwright/cad-exact';
 import { createGeometryKernel } from '@brickwright/cad-geometry';
 const root = resolve(process.argv[2] ?? '../local/lite-work');
@@ -176,4 +176,34 @@ try {
  assert.deepEqual(activeRoots(reopened.state.document), [baseBox, lid, pin]);
  assert.ok(Math.abs(manifold.evaluate(reopened.state.document).bodies[0].volume - 1000) < 1e-6, 'narrow base');
  console.log(`PASS: document version 50 (assembly: 2 nested groups, an exploded view with ${offsets.size} moved items and a sheet drawn in it, 2 configurations, 1 suppressed body) survives the real Brickwright SB3 writer and loader unchanged, parses with this SDK, leaves the suppressed body out and switches configurations.`);
+ // Document version 51 (linked instances and mates): two linked instances of a bracket and a plate
+ // with a bore; a coincident mate puts instance 1 on the plate and a concentric mate puts a pin in
+ // the bore. The loaded document keeps one definition of the bracket (its instances follow an edit
+ // of it), the exact kernel measures the instances like their part, and the mates still hold.
+ const rig = createCadSession(createDocument('Rig'), { kernels }), exactHost = { run: async request => runExactRequest(exactBackend, request) };
+ const plateBox = rig.add({ kind: 'box', size: [40, 40, 10] }, { name: 'Plate', transform: { ...identityTransform(), position: [0, 0, 5] } });
+ const bore = rig.add({ kind: 'cylinder', radius: 3, height: 20, segments: 48 }, { name: 'Bore', transform: { ...identityTransform(), position: [10, 10, 5] } });
+ rig.combine('subtract', [plateBox, bore]); const plate = rig.state.document.roots[0];
+ const bracket = rig.add({ kind: 'box', size: [20, 10, 5] }, { name: 'Bracket', transform: { ...identityTransform(), position: [60, 0, 2.5] } });
+ const rod = rig.add({ kind: 'cylinder', radius: 3, height: 16, segments: 48 }, { name: 'Rod', transform: { ...identityTransform(), position: [-50, 0, 8], rotation: [40, 0, 0] } });
+ const rigRunner = createCommandRunner(rig, { exact: exactHost });
+ rigRunner.run('instance Bracket count 2 step 0,30,0 rotate 0,0,90');
+ const [firstCopy, secondCopy] = rig.state.document.roots.filter(id => rig.state.document.nodes[id].kind === 'instance');
+ const faceOf = async (id, test) => { const r = await exactHost.run({ operation: 'faces', document: rig.state.document, bodies: [id] }); return r.bodies[0].faces.findIndex(test) + 1; };
+ const up = f => f.surface === 'plane' && Math.abs(f.normal[2] - 1) < 1e-9, down = f => f.surface === 'plane' && Math.abs(f.normal[2] + 1) < 1e-9, round = f => f.surface === 'cylinder';
+ await rigRunner.runAsync(`mate coincident ${plate} ${await faceOf(plate, up)} ${firstCopy} ${await faceOf(firstCopy, down)}`);
+ await rigRunner.runAsync(`mate concentric ${plate} ${await faceOf(plate, round)} ${rod} ${await faceOf(rod, round)}`);
+ const v51 = await roundTrip(rig, 51);
+ assert.deepEqual(v51.assembly.mates, rig.state.document.assembly.mates); assert.equal(v51.assembly.mates.length, 2);
+ assert.equal(Object.values(v51.nodes).filter(node => node.kind === 'box' && node.name === 'Bracket').length, 1, 'one definition of the bracket');
+ assert.deepEqual([firstCopy, secondCopy].map(id => [v51.nodes[id].kind, v51.nodes[id].source]), [['instance', bracket], ['instance', bracket]]);
+ const shownRig = new Map(manifold.evaluate(v51).bodies.map(body => [body.id, body]));
+ assert.ok(Math.abs(shownRig.get(firstCopy).bounds.min[2] - 10) < 1e-6, `instance 1 sits on the plate (${shownRig.get(firstCopy).bounds.min[2]})`);
+ const rodBox = shownRig.get(rod).bounds; assert.ok(Math.abs((rodBox.min[0] + rodBox.max[0]) / 2 - 10) < 1e-5 && Math.abs((rodBox.min[1] + rodBox.max[1]) / 2 - 10) < 1e-5, 'the rod is in the bore');
+ const exactRig = exactBackend.measure(v51, [bracket, firstCopy, secondCopy]).bodies.map(body => body.volume);
+ assert.ok(exactRig.every(volume => Math.abs(volume - 1000) < 1e-6), `exact volumes ${exactRig}`);
+ const reopenedRig = createCadSession(v51, { kernels }); reopenedRig.update(bracket, { size: [20, 10, 8] });
+ assert.ok([firstCopy, secondCopy].every(id => Math.abs(manifold.evaluate(reopenedRig.state.document).bodies.find(body => body.id === id).volume - 1600) < 1e-6), 'instances follow the edited part');
+ assert.match((await createCommandRunner(createCadSession(v51, { kernels }), { exact: exactHost }).runAsync('mate solve').catch(error => ({ output: error.message }))).output, /2 mates hold; 0 bodies moved/);
+ console.log('PASS: document version 51 (2 linked instances of one part, a coincident and a concentric mate) survives the real Brickwright SB3 writer and loader unchanged, parses with this SDK, measures the instances exactly like their part, follows an edit of the part and keeps the mates satisfied.');
 } finally { delete globalThis.localStorage; delete globalThis.window; delete globalThis.CustomEvent; }
