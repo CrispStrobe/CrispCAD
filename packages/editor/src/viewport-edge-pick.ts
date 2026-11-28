@@ -3,8 +3,11 @@
 // The exact kernel lists the body's edges (sample points and stable references, the same listing
 // the dialog's line drawing uses); this draws them over the body as wide lines and toggles the edge
 // nearest to a tap or click. A touch gets a wider target than a mouse, so a finger on a tablet can
-// pick an edge without a keyboard. An edge hidden behind the body (the ray from the tap meets a
-// face clearly in front of it) is not picked; one may still be picked after turning the view.
+// pick an edge without a keyboard. Visibility is tested at the edge itself: the nearest edge
+// within the tap radius whose own point under the tap is not behind the rendered surface wins, so a
+// hidden edge that projects next to a visible one (the far side of a thin plate) never takes the
+// tap from it, whether the tap lands on the body or just off its silhouette. A hidden edge may be
+// picked after turning the view.
 import * as THREE from 'three';
 import {LineSegments2} from 'three/addons/lines/LineSegments2.js';
 import {LineSegmentsGeometry} from 'three/addons/lines/LineSegmentsGeometry.js';
@@ -35,6 +38,16 @@ export function depthAlong(edge:ProjectedEdge,segment:number,t:number):number{
  const j=Math.min(edge.depth.length-1,segment+1),p=edge.perspective;
  if(p){const a=p.viewDepth[segment],b=p.viewDepth[j];if(a>0&&b>0)return p.rayScale/((1-t)/a+t/b);}
  const a=edge.depth[segment],b=edge.depth[j];return a+(b-a)*t;
+}
+
+/**
+ * Where screen parameter `t` along a segment lies along the world segment (0 at its start, 1 at
+ * its end). In perspective, screen position is linear in 1 / depth, not in depth.
+ */
+export function worldParameter(edge:ProjectedEdge,segment:number,t:number):number{
+ const j=Math.min(edge.xy.length-1,segment+1),p=edge.perspective;
+ if(p){const a=p.viewDepth[segment],b=p.viewDepth[j];if(a>0&&b>0){const den=(1-t)*b+t*a;return den>0?t*a/den:t;}}
+ return t;
 }
 
 /** The closest point of the polyline `xy` to (x, y): its distance, segment and parameter on it. */
@@ -68,6 +81,24 @@ export function pickEdgeAt(edges:readonly ProjectedEdge[],x:number,y:number,radi
   best=i;bestDistance=near.distance;
  });
  return best;
+}
+
+/**
+ * The edge a tap at (x, y) picks, with visibility tested at each edge's own point: the nearest
+ * pickable edge within `radius` px for which `visible(index, segment, t)` holds (`segment`, `t`:
+ * the edge's closest point to the tap on screen). A nearer hidden edge never wins over a visible
+ * one, and a hidden edge alone is not picked. Returns the edge's index or -1.
+ */
+export function pickVisibleEdgeAt(edges:readonly ProjectedEdge[],x:number,y:number,radius:number,visible:(index:number,segment:number,t:number)=>boolean):number{
+ const candidates:{index:number;distance:number;segment:number;t:number}[]=[];
+ edges.forEach((edge,index)=>{
+  if(!edge.pickable||!edge.xy.length)return;
+  const near=closestOnPolyline(edge.xy,x,y);
+  if(near.distance<=radius)candidates.push({index,...near});
+ });
+ candidates.sort((a,b)=>a.distance-b.distance||a.index-b.index);
+ for(const c of candidates)if(visible(c.index,c.segment,c.t))return c.index;
+ return -1;
 }
 
 const COLOURS={pickable:'#6fd3ff',picked:'#ffb347',unpickable:'#5c6f7c'};
@@ -119,6 +150,11 @@ export function createEdgeOverlay(scene:THREE.Scene,edges:readonly PickableEdge[
     }
     return {xy,depth,pickable:edge.pickable,...(perspective?{perspective:{viewDepth,rayScale}}:{})};
    });
+  },
+  /** The world point at parameter `s` (0–1) of segment `segment` of edge `index`. */
+  pointOn(index:number,segment:number,s:number):THREE.Vector3{
+   const pts=edges[index].points,a=pts[Math.min(segment,pts.length-1)],b=pts[Math.min(segment+1,pts.length-1)];
+   return new THREE.Vector3(a[0]+(b[0]-a[0])*s,a[1]+(b[1]-a[1])*s,a[2]+(b[2]-a[2])*s);
   },
   dispose(){scene.remove(group);geometry.dispose();front.dispose();hidden.dispose();},
  };

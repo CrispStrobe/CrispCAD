@@ -5,7 +5,7 @@ import {describe,expect,it} from 'vitest';
 import * as THREE from 'three';
 import {createCadSession} from '@brickwright/cad-core';
 import type {ExactBodyEdge} from '@brickwright/cad-core';
-import {EDGE_PICK_MOUSE_PX,EDGE_PICK_TOUCH_PX,closestOnPolyline,createEdgeOverlay,depthAlong,pickEdgeAt} from '../packages/editor/src/viewport-edge-pick.js';
+import {EDGE_PICK_MOUSE_PX,EDGE_PICK_TOUCH_PX,closestOnPolyline,createEdgeOverlay,depthAlong,pickEdgeAt,pickVisibleEdgeAt,worldParameter} from '../packages/editor/src/viewport-edge-pick.js';
 import type {ProjectedEdge} from '../packages/editor/src/viewport-edge-pick.js';
 import {edgesInWorld} from '../packages/editor/src/exact-feature-panel.js';
 
@@ -35,6 +35,44 @@ describe('edge picking in the 3D view',()=>{
   expect(pickEdgeAt(edges,50,1,EDGE_PICK_TOUCH_PX,50,1)).toBe(1); // the face in front hides edge 0
   expect(pickEdgeAt([edges[0]],50,1,EDGE_PICK_TOUCH_PX,50,1)).toBe(-1);
   expect(pickEdgeAt([edges[0]],50,1,EDGE_PICK_TOUCH_PX,69.5,1)).toBe(0); // on the surface, within the slack
+ });
+
+ it('tests visibility at each edge itself, so a nearer hidden edge never takes the tap from a visible one',()=>{
+  // The far bottom edge of a thin plate (hidden) projects 4 px from its top edge (visible); the
+  // tap lands on the hidden one, or off the silhouette where no surface is under the tap at all.
+  const edges=[edge([[0,10],[100,10]],70),edge([[0,6],[100,6]],69)];
+  const hidden=new Set([0]),asked:number[]=[];
+  const visible=(index:number)=>{asked.push(index);return !hidden.has(index);};
+  expect(pickVisibleEdgeAt(edges,50,10,EDGE_PICK_TOUCH_PX,visible)).toBe(1);
+  expect(asked).toEqual([0,1]); // nearest first
+  expect(pickVisibleEdgeAt(edges,50,12,EDGE_PICK_MOUSE_PX,visible)).toBe(1);
+  // The old test against the surface under the tap picks the hidden edge here (no surface, or one
+  // within its slack).
+  expect(pickEdgeAt(edges,50,10,EDGE_PICK_TOUCH_PX)).toBe(0);
+  // Alone, a hidden edge is not picked; out of reach, a visible one is not either.
+  expect(pickVisibleEdgeAt([edges[0]],50,10,EDGE_PICK_TOUCH_PX,visible)).toBe(-1);
+  expect(pickVisibleEdgeAt(edges,50,40,EDGE_PICK_TOUCH_PX,visible)).toBe(-1);
+  // Unpickable edges are never asked about.
+  asked.length=0;
+  expect(pickVisibleEdgeAt([{...edges[1],pickable:false}],50,6,EDGE_PICK_TOUCH_PX,visible)).toBe(-1);
+  expect(asked).toEqual([]);
+ });
+
+ it('maps a screen position on a receding edge to its world point perspective-correctly',()=>{
+  const camera=new THREE.PerspectiveCamera(40,1,.1,1000);camera.position.set(0,40,60);camera.lookAt(0,0,-20);camera.updateMatrixWorld();
+  const a=new THREE.Vector3(0,0,40),b=new THREE.Vector3(0,0,-80);
+  const overlay=createEdgeOverlay(new THREE.Scene(),[{points:[[a.x,a.y,a.z],[b.x,b.y,b.z]],pickable:true}]);
+  const [projected]=overlay.project(camera,400,400,camera.position.clone(),camera.getWorldDirection(new THREE.Vector3()));
+  for(const s of [.1,.37,.5,.9]){
+   const world=a.clone().lerp(b,s),v=world.clone().project(camera),x=(v.x+1)*200,y=(1-v.y)*200;
+   const near=closestOnPolyline(projected.xy,x,y);
+   expect(near.distance).toBeLessThan(1e-6);
+   const back=overlay.pointOn(0,near.segment,worldParameter(projected,near.segment,near.t));
+   expect(back.distanceTo(world)).toBeLessThan(1e-6);
+  }
+  // Without perspective the screen parameter is the world parameter.
+  expect(worldParameter({...projected,perspective:undefined},0,.3)).toBe(.3);
+  overlay.dispose();
  });
 
  it('takes the depth under the cursor along a receding edge in perspective, so a mouse picks it',()=>{

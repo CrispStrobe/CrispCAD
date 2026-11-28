@@ -99,3 +99,55 @@ test('tap edges on the model in the 3D view and chamfer them exactly',async({pag
  // Two parallel 30 mm edges bevelled by 2: 6000 − 2 · ½ · 2² · 30.
  expect(volume(await run(page,'measure exact "Chamfer of Block"',/volume/))).toBeCloseTo(5880,6);
 });
+
+test('a hidden edge next to a visible one never takes the tap, on the body or off its silhouette',async({page},info)=>{
+ test.setTimeout(600_000);
+ const touch=!!info.project.use.hasTouch;
+ // A thin plate: in the default view the far bottom edges lie a few pixels from the top edges above them.
+ const session=createCadSession();
+ session.add({kind:'box',size:[40,30,.8]},{name:'Plate',transform:{position:[0,0,.4],rotation:[0,0,0],scale:[1,1,1]}});
+ await page.addInitScript(([key,document])=>{if(!sessionStorage.getItem('seeded')){localStorage.setItem(key,document);sessionStorage.setItem('seeded','1');}},[STORAGE,serializeDocument(session.state.document)] as const);
+ await page.goto('/');
+ const root=page.locator('#cad-root');
+ await expect(root).toHaveAttribute('data-state','ready',{timeout:120_000});
+ await run(page,'select "Plate"',/Select 1 object/);
+ await press(page.locator('summary[aria-label="Edit menu"]'),touch);
+ await press(page.getByRole('button',{name:'Fillet, chamfer, shell',exact:true}),touch);
+ const dialog=page.getByRole('dialog',{name:'Fillet, chamfer or shell'});
+ await dialog.getByRole('combobox',{name:'Edges',exact:true}).selectOption('chosen');
+ await expect(dialog.getByRole('checkbox',{name:/^Edge \d+: /})).toHaveCount(12,{timeout:120_000});
+ await press(dialog.getByRole('button',{name:'Pick in the 3D view',exact:true}),touch);
+ const canvas=page.getByTestId('cad-canvas'),bar=page.getByRole('toolbar',{name:'Edge picking'});
+ await expect(bar).toBeVisible();
+ type Seen=Target&{visible:boolean};
+ const targets=async()=>JSON.parse(await canvas.getAttribute('data-edge-pick-targets')??'[]') as Seen[];
+ await expect.poll(async()=>(await targets()).length,{timeout:30_000}).toBe(12);
+ const box=(await canvas.boundingBox())!,radius=touch?24:10;
+ const all=await targets(),inside=(t:Target)=>t.x>0&&t.y>0&&t.x<box.width&&t.y<box.height-100;
+ const hidden=all.filter(t=>!t.visible&&inside(t)),shown=all.filter(t=>t.visible);
+ expect(hidden.length).toBeGreaterThanOrEqual(3);
+ // Hidden edges with a visible edge's midpoint within the tap radius: the case that used to pick the hidden one.
+ const pairs=hidden.map(h=>({h,v:shown.filter(v=>Math.hypot(v.x-h.x,v.y-h.y)<radius-2).sort((a,b)=>Math.hypot(a.x-h.x,a.y-h.y)-Math.hypot(b.x-h.x,b.y-h.y))[0]})).filter(p=>p.v);
+ expect(pairs.length).toBeGreaterThanOrEqual(1);
+ for(const {h,v} of pairs){
+  const x=box.x+h.x,y=box.y+h.y;
+  if(touch)await page.touchscreen.tap(x,y);else await page.mouse.click(x,y);
+  await expect.poll(async()=>(await targets()).filter(t=>t.picked).map(t=>t.index),{timeout:5_000}).toEqual([v.index]);
+  // Tap the visible edge to clear the choice for the next pair.
+  if(touch)await page.touchscreen.tap(box.x+v.x,box.y+v.y);else await page.mouse.click(box.x+v.x,box.y+v.y);
+  await expect.poll(async()=>(await targets()).filter(t=>t.picked).length,{timeout:5_000}).toBe(0);
+ }
+ // Wherever a hidden edge is tapped, only visible edges are ever chosen.
+ for(const h of hidden){
+  if(touch)await page.touchscreen.tap(box.x+h.x,box.y+h.y);else await page.mouse.click(box.x+h.x,box.y+h.y);
+  await page.waitForTimeout(400);
+  const picked=(await targets()).filter(t=>t.picked);
+  expect(picked.every(t=>t.visible)).toBe(true);
+  if(picked.length){
+   if(touch)await page.touchscreen.tap(box.x+h.x,box.y+h.y);else await page.mouse.click(box.x+h.x,box.y+h.y);
+   await expect.poll(async()=>(await targets()).filter(t=>t.picked).length,{timeout:5_000}).toBe(0);
+  }
+ }
+ await press(bar.getByRole('button',{name:'Done',exact:true}),touch);
+ await expect(dialog).toBeVisible();
+});

@@ -30,7 +30,7 @@ import {resizedTransforms} from './resize-math.js';
 import {scalePivotRotation,applyGizmoDelta,transformMatrix} from './transform-selection.js';
 import type {TransformPreview,TransformAxisAnchor} from './transform-readout.js';
 import { snapDelta } from './vendor/transform-math.js';
-import {EDGE_PICK_MOUSE_PX,EDGE_PICK_TOUCH_PX,createEdgeOverlay,pickEdgeAt} from './viewport-edge-pick.js';
+import {EDGE_PICK_MOUSE_PX,EDGE_PICK_TOUCH_PX,createEdgeOverlay,pickVisibleEdgeAt,worldParameter} from './viewport-edge-pick.js';
 import type {EdgeOverlay,PickableEdge} from './viewport-edge-pick.js';
 import {createFindingOverlay,markBounds} from './viewport-findings.js';
 import type {FindingOverlay} from './viewport-findings.js';
@@ -396,21 +396,35 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
     session.select(id ? (multi ? (selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id]) : [id]) : []);
   };
   function edgeRay(x:number,y:number){const rect=canvas.getBoundingClientRect();pointer.set(x/rect.width*2-1,-y/rect.height*2+1);ray.setFromCamera(pointer,camera);return ray.ray;}
+  /** World size of one CSS pixel at `distance` along the view (the slack follows zoom). */
+  function worldPerPixel(distance:number){const height=Math.max(1,canvas.getBoundingClientRect().height);return camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom/height:2*Math.tan((camera as THREE.PerspectiveCamera).fov*RAD/2)*distance/height;}
+  /**
+   * Whether a point on an edge is seen: the ray from the camera through it meets no rendered
+   * surface clearly in front of it. Edges lie on the surface, so the slack is small: 3 px at that
+   * depth (the display mesh and the exact edge differ by the chord tolerance) plus 0.05 mm.
+   */
+  function edgePointVisible(point:THREE.Vector3){
+   const ndc=point.clone().project(camera);
+   pointer.set(ndc.x,ndc.y);ray.setFromCamera(pointer,camera);
+   const distance=point.clone().sub(ray.ray.origin).dot(ray.ray.direction);
+   const hit=ray.intersectObjects([...meshes.values()],false)[0];
+   return !hit||hit.distance>=distance-(3*worldPerPixel(Math.max(distance,1e-6))+.05);
+  }
   function tapEdge(e:PointerEvent){
     const pick=edgePick;if(!pick)return;
     const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;
     scene.updateMatrixWorld(true);camera.updateMatrixWorld();
-    const r=edgeRay(x,y),surface=ray.intersectObjects([...meshes.values()],false)[0];
+    const r=edgeRay(x,y),origin=r.origin.clone(),direction=r.direction.clone();
     const radius=e.pointerType==='touch'||e.pointerType==='pen'?EDGE_PICK_TOUCH_PX:EDGE_PICK_MOUSE_PX;
-    // World size of one pixel at the surface, so the slack follows zoom: edges lie on the surface,
-    // and the surface under the finger is a few pixels away from the edge.
-    const depth=surface?.distance??Infinity,perPixel=camera instanceof THREE.OrthographicCamera?(camera.top-camera.bottom)/camera.zoom/Math.max(1,rect.height):2*Math.tan((camera as THREE.PerspectiveCamera).fov*RAD/2)*(Number.isFinite(depth)?depth:1)/Math.max(1,rect.height);
-    const index=pickEdgeAt(pick.overlay.project(camera,rect.width,rect.height,r.origin.clone(),r.direction.clone()),x,y,radius,depth,perPixel*radius*1.5);
+    // Visibility at each candidate edge's own point under the tap, not at the tap: a hidden edge
+    // next to a visible one never takes the tap, on the body or just off its silhouette.
+    const projected=pick.overlay.project(camera,rect.width,rect.height,origin,direction);
+    const index=pickVisibleEdgeAt(projected,x,y,radius,(i,segment,t)=>edgePointVisible(pick.overlay.pointOn(i,segment,worldParameter(projected[i],segment,t))));
     if(index>=0)pick.toggle(index);
   }
   function publishEdgeTargets(){
     // Where each pickable edge's midpoint is on the screen (CSS px from the canvas's top left), for
-    // tests and assistive tools; hidden edges are listed too (their depth decides the pick).
+    // tests and assistive tools; hidden edges are listed too, with visible false at their midpoint.
     const pick=edgePick;if(!pick)return;
     const rect=canvas.getBoundingClientRect();camera.updateMatrixWorld();
     const projected=pick.overlay.project(camera,rect.width,rect.height,camera.position.clone(),camera.getWorldDirection(new THREE.Vector3()));
@@ -419,7 +433,8 @@ export function mountViewport(container: HTMLElement, session: CadSession, onErr
       const lengths=edge.xy.slice(1).map((p,i)=>Math.hypot(p[0]-edge.xy[i][0],p[1]-edge.xy[i][1])),total=lengths.reduce((a,b)=>a+b,0);
       let rest=total/2,i=0;while(i<lengths.length-1&&rest>lengths[i]){rest-=lengths[i];i++;}
       const t=lengths[i]?rest/lengths[i]:0,a=edge.xy[i],b=edge.xy[Math.min(i+1,edge.xy.length-1)];
-      return [{index,x:Math.round(a[0]+(b[0]-a[0])*t),y:Math.round(a[1]+(b[1]-a[1])*t),picked:pick.picked.has(index)}];
+      const visible=edgePointVisible(pick.overlay.pointOn(index,i,worldParameter(edge,i,t)));
+      return [{index,x:Math.round(a[0]+(b[0]-a[0])*t),y:Math.round(a[1]+(b[1]-a[1])*t),picked:pick.picked.has(index),visible}];
     });
     const value=JSON.stringify(targets);if(canvas.dataset.edgePickTargets!==value)canvas.dataset.edgePickTargets=value;
   }
