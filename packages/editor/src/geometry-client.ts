@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 import {FeatureEvaluationError,getLocale,t} from '@brickwright/cad-core';
-import type {MechanismReport,MechanismSettings,FeatureDiagnostic,ExactCommandRequest,ExactCommandResult,ExactCommandHost,ExactDrawingData,ManufacturingReport,ManufacturingSettings,MaterialOverlap,MaterialVolume,SurfaceBlendReport} from '@brickwright/cad-core';
+import type {MechanismReport,MechanismSettings,FeatureDiagnostic,ExactCommandRequest,ExactCommandResult,ExactCommandHost,ExactProgress,ExactDrawingData,ManufacturingReport,ManufacturingSettings,MaterialOverlap,MaterialVolume,SurfaceBlendReport} from '@brickwright/cad-core';
 import type { CadDocument,PlanarSketch,SketchProfile } from '@brickwright/cad-core';
 import type { AssemblyCut,AssemblySection,GeometryResult,PrintabilityReport,PrintabilitySettings } from '@brickwright/cad-geometry';
 import {EXACT_LIMITS_TABLET,resolveExactLimits} from '@brickwright/cad-exact/limits';
@@ -26,7 +26,9 @@ export class ExactCommandError extends Error {
  * editor's default (EXACT_LIMITS_TABLET.requestTimeoutMs); hosts change it with `exactLimits`. */
 export const EXACT_TIMEOUT_MS=EXACT_LIMITS_TABLET.requestTimeoutMs;
 /** What the exact worker is doing, for a busy indicator with a Cancel button. */
-export interface ExactActivity {readonly busy:boolean;readonly operation?:ExactCommandRequest['operation'];readonly since?:number}
+export interface ExactActivity {readonly busy:boolean;readonly operation?:ExactCommandRequest['operation'];readonly since?:number;
+  /** How far the running job has got, when it reports it (STEP import). */
+  readonly progress?:ExactProgress}
 export interface GeometryClientOptions {
   /**
    * Runs exact requests when the exact worker cannot start (no `Worker`, a constructor that throws,
@@ -54,9 +56,11 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
     timeoutMs:number;timeoutMessage:()=>string;fallback?:ExactCommandHost;extra?:Record<string,unknown>;
     /** After a result: whether the worker should be discarded once idle (memory grew too much). */
     recycleAfter?:(result:WorkerResult)=>boolean;
+    /** A running request reported progress (the request stays pending). */
+    onProgress?:(payload:GeometryPayload,progress:ExactProgress)=>void;
     onActivity?:(pending:readonly GeometryPayload[])=>void;
   }
-  function channel({timeoutMs,timeoutMessage,fallback,extra={},recycleAfter,onActivity}:ChannelOptions){
+  function channel({timeoutMs,timeoutMessage,fallback,extra={},recycleAfter,onActivity,onProgress}:ChannelOptions){
     let worker: Worker | null = null, answered = false, inThread = false, recycle = false;
     type Pending = { resolve: (r: WorkerResult) => void; reject: (e: Error) => void; timer?: ReturnType<typeof setTimeout>; payload: GeometryPayload; signal?: AbortSignal };
     const pending = new Map<number, Pending>();
@@ -90,8 +94,10 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
       created.onmessage = e => {
         if (worker !== created) return;
         answered = true;
-        const data = e.data as { request: number; result?: WorkerResult; error?: string; fatal?: boolean; diagnostic?:FeatureDiagnostic; exactDiagnostic?:ExactCommandError['diagnostic'] }; const request = pending.get(data.request);
-        if (!request) return; pending.delete(data.request); clearTimeout(request.timer);
+        const data = e.data as { request: number; result?: WorkerResult; error?: string; fatal?: boolean; diagnostic?:FeatureDiagnostic; exactDiagnostic?:ExactCommandError['diagnostic']; progress?:ExactProgress }; const request = pending.get(data.request);
+        if (!request) return;
+        if (data.progress) { onProgress?.(request.payload, data.progress); return; }
+        pending.delete(data.request); clearTimeout(request.timer);
         if (data.fatal) {
           // The kernel in this worker is unusable (a trap or memory exhaustion): end the worker,
           // which frees its memory, and run whatever was queued behind this request in a new one.
@@ -139,6 +145,10 @@ export function createGeometryClient(wasmURL: string, createWorker?: () => Worke
       const next:ExactActivity=first&&'exact' in first?{busy:true,operation:first.exact.operation,since:activityState.busy?activityState.since:Date.now()}:{busy:false};
       if(next.busy===activityState.busy&&next.operation===activityState.operation)return;
       activityState=next;for(const listener of activityListeners)listener(next);
+    },
+    onProgress:(payload,progress)=>{
+      if(!activityState.busy||!('exact' in payload)||payload.exact.operation!==activityState.operation)return;
+      activityState={...activityState,progress};for(const listener of activityListeners)listener(activityState);
     },
   });
   const exactHost:ExactCommandHost={

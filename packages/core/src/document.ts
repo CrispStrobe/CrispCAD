@@ -179,7 +179,12 @@ function compactExactDisplays(document: CadDocument): Map<unknown, string> {
 export function serializeDocument(document: CadDocument): string {
   const valid = validateDocument(document), buffers = compactExactDisplays(valid);
   let result = JSON.stringify(valid, buffers.size ? (_key, value) => buffers.get(value) ?? value : undefined, 2);
-  for (const [array, token] of buffers) result = result.replace(JSON.stringify(token), () => JSON.stringify(array));
+  // One pass over the text for every buffer (a replace per buffer rescanned the whole text each
+  // time: 116 scans of a 5 MB document for a 58-body STEP import). Same output.
+  if (buffers.size) {
+    const byToken = new Map([...buffers].map(([array, token]) => [JSON.stringify(token), array]));
+    result = result.replace(/"\\u0000exact-display:\d+\\u0000"/g, token => byToken.has(token) ? JSON.stringify(byToken.get(token)) : token);
+  }
   if (new TextEncoder().encode(result).length > MAX_DOCUMENT_BYTES) fail(translate('file exceeds 16 MiB'));
   return result;
 }

@@ -21,6 +21,8 @@ const labels:Record<NonNullable<ExactActivity['operation']>,string>={
 export function mountExactActivity(parent:HTMLElement,source:{readonly exactActivity:ExactActivity;onExactActivity(listener:(activity:ExactActivity)=>void):()=>void;cancelExact():void}){
  const chip=document.createElement('span'),text=document.createElement('span'),cancel=document.createElement('button');
  chip.className='exact-activity';chip.hidden=true;
+ // On a touch screen Cancel is a 44 px target (it overhangs the slim status bar).
+ chip.classList.toggle('touch',typeof navigator!=='undefined'&&navigator.maxTouchPoints>0||typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches);
  text.setAttribute('aria-live','polite');
  cancel.type='button';cancel.textContent=t('Cancel');cancel.title=t('Stop the exact kernel. The model is not changed.');
  cancel.setAttribute('aria-label',t('Cancel exact kernel job'));
@@ -30,8 +32,10 @@ export function mountExactActivity(parent:HTMLElement,source:{readonly exactActi
  const render=(activity:ExactActivity)=>{
   chip.hidden=!activity.busy;
   if(!activity.busy){clearInterval(timer);timer=undefined;return;}
-  const seconds=Math.floor((Date.now()-(activity.since??Date.now()))/1000);
-  text.textContent=t`${t(labels[activity.operation??'feature-display'])} on the exact kernel… ${seconds} s`;
+  const seconds=Math.floor((Date.now()-(activity.since??Date.now()))/1000),label=t(labels[activity.operation??'feature-display']),p=activity.progress;
+  // A job that reports progress (STEP import) says where it is: reading the file, then body k of n.
+  if(p){chip.dataset.progress=`${p.phase} ${p.done}/${p.total}`;text.textContent=p.phase==='read'?t`${label} on the exact kernel: reading the file… ${seconds} s`:t`${label} on the exact kernel: body ${Math.min(p.done+1,p.total)} of ${p.total}… ${seconds} s`;}
+  else{delete chip.dataset.progress;text.textContent=t`${label} on the exact kernel… ${seconds} s`;}
  };
  const unsubscribe=source.onExactActivity(activity=>{
   render(activity);

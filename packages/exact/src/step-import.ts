@@ -9,7 +9,7 @@
 // itself does not read it back: that read took a quarter of the import time (the 58-body Feather
 // RP2040 board: 8 s of 38 s CPU) and was repeated by the first exact request anyway.
 import {MAX_EXACT_BODY_BREP_CHARS,MAX_STEP_IMPORT_BODIES,MAX_STEP_IMPORT_BYTES,STEP_IMPORT_DISPLAY_TOLERANCE,exactBodyKey,t} from '@brickwright/cad-core';
-import type {ExactBody,ExactBodyData,StepImportOccurrence,Vec3} from '@brickwright/cad-core';
+import type {ExactBody,ExactBodyData,ExactProgress,StepImportOccurrence,Vec3} from '@brickwright/cad-core';
 import {ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactSolid} from '@crispcad/exact-kernel';
 import {displayTessellation} from './display.js';
@@ -58,19 +58,23 @@ export function translatedStepError(error:unknown):unknown{
  * name of their own. Refuses (ExactKernelError) a file above MAX_STEP_IMPORT_BYTES, with more than
  * MAX_STEP_IMPORT_BODIES bodies, any body the kernel cannot read as a closed solid, a body whose
  * B-rep exceeds MAX_EXACT_BODY_BREP_CHARS as STEP, and a body whose display mesh would not close
- * or is too large.
+ * or is too large. `progress` hears of the read and of each body as it is stored and meshed.
  */
-export function importStepBodies(k:ExactKernel,bytes:Uint8Array,file:string):ExactStepImport{
+export function importStepBodies(k:ExactKernel,bytes:Uint8Array,file:string,progress?:(progress:ExactProgress)=>void):ExactStepImport{
  if(!(bytes instanceof Uint8Array)||!bytes.byteLength)throw new ExactKernelError('invalid-input',t('The STEP file is empty.'));
  if(bytes.byteLength>MAX_STEP_IMPORT_BYTES)throw new ExactKernelError('unsupported',t`The STEP file is larger than ${MAX_STEP_IMPORT_BYTES/1048576} MiB.`);
  let read:ReturnType<ExactKernel['importStepBodies']>;
+ progress?.({phase:'read',done:0,total:1});
  try{read=k.importStepBodies(bytes,{maxBodies:MAX_STEP_IMPORT_BODIES});}
  catch(error){throw translatedStepError(error);}
- const base=file.replace(/\.(step|stp)$/i,'')||'STEP body';
+ const base=file.replace(/\.(step|stp)$/i,'')||'STEP body',total=read.bodies.length;
  const bodies=read.bodies.map(({solid,name,color,occurrence},i)=>{
-  const label=cleanName(name)||(read.bodies.length>1?`${base} ${i+1}`:base);
+  progress?.({phase:'body',done:i,total});
+  const label=cleanName(name)||(total>1?`${base} ${i+1}`:base);
   return {name:label,occurrence:occurrence?occurrence.map(o=>({product:o.product,instance:o.instance})):null,color:hex(color),body:storedBody(k,solid,label)};
  });
+
+ progress?.({phase:'body',done:total,total});
  return {bodies,notes:read.notes};
 }
 

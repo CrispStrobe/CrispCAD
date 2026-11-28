@@ -59,6 +59,11 @@ export interface ExactBodyMeasureReport {
 }
 /** Measured where the kernel runs: loading (0 once loaded), the request, and WASM memory. */
 export interface ExactTiming {readonly loadMs:number;readonly runMs:number;readonly memoryBytes:number}
+/**
+ * How far a long exact job has got, reported while it runs (STEP import: reading the file, then
+ * storing and meshing each body). `done` of `total` steps of the phase.
+ */
+export interface ExactProgress {readonly phase:'read'|'body';readonly done:number;readonly total:number}
 export type ExactCommandResult=
  |{readonly operation:'measure';readonly kernel:ExactKernelReport;readonly bodies:readonly ExactBodyMeasureReport[];readonly timing?:ExactTiming}
  |{readonly operation:'export-step';readonly kernel:ExactKernelReport;readonly bodies:readonly {id:string;name:string}[];readonly step:string;readonly bytes:number;readonly timing?:ExactTiming}

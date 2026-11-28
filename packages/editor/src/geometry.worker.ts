@@ -29,7 +29,8 @@ self.onmessage = async (event: MessageEvent<GeometryRequest>) => {
       exact??=import('@brickwright/cad-exact').then(async module=>({module,backend:await module.createExactBackend(limits?module.exactKernelOptions(limits):{})})).catch(error=>{exact=null;throw error;});
       const {module,backend}=await exact;
       try{
-        const result:ExactCommandResult=module.runExactRequest(backend,event.data.exact,performance.now()-started,{limits});
+        // Progress of a long job (STEP import) reaches the client while the kernel keeps working.
+        const result:ExactCommandResult=module.runExactRequest(backend,event.data.exact,performance.now()-started,{limits,progress:progress=>self.postMessage({request,progress})});
         self.postMessage({request,result});
       }catch(error){
         // A trap or memory exhaustion leaves the kernel unusable: say so, and the client ends this

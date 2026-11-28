@@ -24,6 +24,8 @@ export const messages:Record<string,string>={
  'STEP export':'STEP-Export',
  'Exact measure':'Exakte Messung',
  '{0} on the exact kernel… {1} s':'{0} auf dem exakten Kern … {1} s',
+ '{0} on the exact kernel: reading the file… {1} s':'{0} auf dem exakten Kern: Datei wird gelesen … {1} s',
+ '{0} on the exact kernel: body {1} of {2}… {3} s':'{0} auf dem exakten Kern: Körper {1} von {2} … {3} s',
  'Running on the exact kernel… {0} s':'Läuft auf dem exakten Kern … {0} s',
  'Cancelled. The model was not changed.':'Abgebrochen. Das Modell wurde nicht geändert.',
  'STEP · exact B-rep (loads the exact kernel)':'STEP · exakte B-Rep (lädt den exakten Kern)',

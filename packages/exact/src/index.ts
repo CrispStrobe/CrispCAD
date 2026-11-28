@@ -3,7 +3,7 @@
 // loads the kernel lab's SMLib build once per process or worker. Hosts import this module
 // lazily (dynamic import) so the default Manifold path never pays for it.
 import {isExactFaceName,activeRoots,modelInputs,edgeReferences,staleExactFeatures,validateDocument,t} from '@brickwright/cad-core';
-import type {MateBodyFaces,MateFaceGeometry,Vec3,CadDocument,ExactBodyEdgesReport,ExactCommandHost,ExactCommandRequest,ExactCommandResult,ExactFeatureDisplay,KernelIdentity} from '@brickwright/cad-core';
+import type {MateBodyFaces,MateFaceGeometry,Vec3,CadDocument,ExactBodyEdgesReport,ExactCommandHost,ExactCommandRequest,ExactCommandResult,ExactFeatureDisplay,ExactProgress,KernelIdentity} from '@brickwright/cad-core';
 import {createSmlibKernel,ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactSolid,SmlibKernel,SmlibLoadOptions} from '@crispcad/exact-kernel';
 import {exactKernelIdentity} from './identity.js';
@@ -90,7 +90,11 @@ export function exactTargets(doc:CadDocument,ids?:readonly string[]):string[]{
 
 /** Per request: exact features that would touch more than `limits` allow are refused before the
  * kernel runs them (fillet, chamfer and shell, also when STEP export or a measure rebuilds them). */
-export interface ExactRunOptions {readonly limits?:ExactFeatureLimits}
+export interface ExactRunOptions {
+ readonly limits?:ExactFeatureLimits;
+ /** Called while a long job runs (STEP import), from the thread that runs it. */
+ readonly progress?:(progress:ExactProgress)=>void;
+}
 export interface ExactBackend {
  readonly kernel:ExactKernel;
  readonly info:ExactKernelInfo;
@@ -211,7 +215,7 @@ export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(
   importStep(bytes,file,options={}){
    const limit=options.limits?.maxStepImportBytes;
    if(limit!==undefined&&bytes.byteLength>limit)throw new ExactKernelError('unsupported',t`${file} is ${(bytes.byteLength/1048576).toFixed(1)} MiB; this device imports STEP files of up to ${Math.round(limit/1048576)} MiB. Import it on a computer, or split the assembly.`);
-   return {kernel:info,...kernel.scope(()=>importStepBodies(kernel,bytes,file))};
+   return {kernel:info,...kernel.scope(()=>importStepBodies(kernel,bytes,file,options.progress))};
   },
   stepEvidence(input,options={}){
    if('bytes' in input){
