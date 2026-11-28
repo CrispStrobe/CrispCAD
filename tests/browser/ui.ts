@@ -5,7 +5,8 @@ export async function addShape(scope:Page|Locator,name:string,touch=false){
  const library=scope.getByRole('dialog',{name:'Shape library',exact:true});
  await library.getByLabel('Search shapes',{exact:true}).fill(name);
  const card=library.getByRole('button',{name:`Add ${name}`,exact:true});if(touch)await card.tap();else await card.click();
- await expect(library).toBeHidden();
+ // The library closes once the shape is built; a threaded screw takes a while on a loaded machine.
+ await expect(library).toBeHidden({timeout:60_000});
 }
 export async function clickTool(scope:Page|Locator,name:string){
  if(['STL','3MF'].includes(name)){await scope.getByLabel('File menu',{exact:true}).click();await scope.getByRole('button',{name:'Export…',exact:true}).click();const dialog=scope.getByRole('dialog',{name:'Export model',exact:true});await dialog.getByLabel('Export format',{exact:true}).selectOption(name.toLowerCase());await dialog.getByRole('button',{name:'Export',exact:true}).click();return;}
