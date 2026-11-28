@@ -288,6 +288,37 @@ suppression, configuration or exploded view is made (or a STEP assembly is impor
 planetary preset inserted); Undo returns to the earlier version. Model source keeps the block in
 the `project(...)` record. Builds that predate 50 refuse such a document.
 
+**Version 51 (2026-11-28) adds linked instances and mates**
+([CRISPCAD-CONVERGENCE.md](CRISPCAD-CONVERGENCE.md#linked-instances-and-mates-document-version-51-done-2026-11-28)).
+
+```ts
+// A node kind: another placement of a top-level body's construction (packages/core/src/instances.ts).
+interface InstanceShape {kind:'instance';instanceVersion:1;source:string}  // + id, name, color, transform (scale 1), physics
+// In the assembly block (packages/core/src/mates.ts):
+mates?:{id;kind:'coincident'|'concentric'|'distance';
+ a:{body:string;face:string};b:{body:string;face:string};   // face: `<leaf node id>:f<k>` (the version 44 names)
+ distance?:number;   // distance only, mm from face a to face b along a's outward normal
+ aligned?:true}[]    // planar mates: normals the same way (default: against each other)
+```
+
+- An instance's geometry is its source's construction at the source's scale, turned and moved by
+  the instance's rotation and position (never the source's). It is a top-level body and never an
+  operand; its source is a top-level body that is not an instance, a reference or a hole. The
+  source is not copied, so an edit of the part (dimensions, sketch, code, parameters, features on
+  the root) changes every instance. `modelInputs` is `constructionInputs` plus an instance's source:
+  suppression and the exact kernel's B-rep cache follow it. When an edit leaves a source no longer
+  top-level, a fillet, chamfer or shell on it, or holes cut into it (it is the first operand of a
+  subtraction or the only solid of a solid/hole union), become the new source with the placement
+  adjusted; otherwise (delete, combine, mirror…) each instance becomes an independent copy of the
+  source as it was. Copying an instance without its source copies the part; with it, the link is kept.
+- Mates hold names, not geometry: their faces are found again on the current B-rep at every solve,
+  and a face that is gone is an error. Solving writes the bodies' transforms (an ordinary edit, one
+  Undo step with the mate).
+- `checkDocument` accepts instances and mates only in version 51 documents; a document reaches 51
+  only when an instance or a mate is added; Undo returns to the earlier version. Model source writes
+  `instance(id, {name, color, transform, source, instanceVersion})` and keeps the mates in the
+  `project(...)` record. Builds that predate 51 refuse such a document.
+
 ## Graph and errors
 
 `designGraph(doc)` derives a deterministic topological order from canonical

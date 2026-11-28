@@ -5,6 +5,14 @@
 // turns them together. With the carrier held (a "star" arrangement) the ring turns at
 // −zs/zr of the sun. Grouped as one assembly with an exploded view (document version 50).
 //
+// Turning carrier (any one member fixed): the carrier plate turns on its own hinge over a fixed
+// frame, and sun, planets and ring hinge on the carrier, so the gear meshes keep their ratios in
+// the carrier's frame (as with the carrier held). The fixed member is held by one more mesh: with
+// the ring fixed, ω(ring hinge) = −ω(carrier hinge), so the ring stands still and the sun runs at
+// (zs + zr)/zs of the carrier; with the sun fixed, ω(sun hinge) = −ω(carrier hinge) and the ring
+// runs at (zs + zr)/zr of the carrier (Willis: (ωs − ωc)/(ωr − ωc) = −zr/zs). Motor A turns the
+// carrier.
+//
 // Original code. The meshing phase of each planet follows from rolling the sun–planet pair around
 // the sun; equal spacing needs (zs + zr) divisible by the number of planets.
 import {t} from './i18n.js';
@@ -30,14 +38,23 @@ export interface PlanetaryOptions {
  width?:number;
  /** Backlash in mm on each gear (default 0.2). */
  backlash?:number;
+ /** The member that stands still (default the carrier; `ring` or `sun` make the carrier turn). */
+ fixed?:PlanetaryFixed;
 }
+export type PlanetaryFixed='carrier'|'ring'|'sun';
+export const PLANETARY_FIXED:readonly PlanetaryFixed[]=Object.freeze(['carrier','ring','sun']);
 export interface PlanetaryLayout {sun:number;planet:number;ring:number;planets:number;module:number;width:number;backlash:number;centreDistance:number;ringOuterRadius:number;
  /** Ring speed per unit sun speed with the carrier held. */
- ratio:number}
+ ratio:number;
+ fixed:PlanetaryFixed;
+ /** Absolute speeds of sun, carrier and ring per unit speed of the driven member (motor A: the
+  * sun with the carrier held, else the carrier). */
+ speeds:{sun:number;carrier:number;ring:number}}
 
 /** Checks tooth counts and spacing; the ring has sun + 2 × planet teeth. */
 export function planetaryLayout(options:PlanetaryOptions={}):PlanetaryLayout{
- const sun=options.sunTeeth??12,planet=options.planetTeeth??12,planets=options.planets??3,module=options.module??2,width=options.width??6,backlash=options.backlash??.2;
+ const sun=options.sunTeeth??12,planet=options.planetTeeth??12,planets=options.planets??3,module=options.module??2,width=options.width??6,backlash=options.backlash??.2,fixed=options.fixed??'carrier';
+ if(!PLANETARY_FIXED.includes(fixed))throw new Error(t('The fixed member is the carrier, the ring or the sun'));
  const ring=sun+2*planet;
  assertPlanetaryToothCompatibility({sunTeeth:sun,planetTeeth:planet,ringTeeth:ring});
  if(!Number.isInteger(planets)||planets<2||planets>8)throw new Error(t('A planetary set has 2 to 8 planets'));
@@ -49,7 +66,8 @@ export function planetaryLayout(options:PlanetaryOptions={}):PlanetaryLayout{
  const centreDistance=pitchRadiusMm(module,sun)+pitchRadiusMm(module,planet);
  // Neighbouring planets must clear each other's tips.
  if(2*centreDistance*Math.sin(Math.PI/planets)<=module*(planet+2)+.5)throw new Error(t('The planets are too large to fit side by side; use fewer planets or fewer planet teeth'));
- return {sun,planet,ring,planets,module,width,backlash,centreDistance,ringOuterRadius:pitchRadiusMm(module,ring)+2.5*module+Math.max(3,2*module),ratio:-sun/ring};
+ const speeds=fixed==='carrier'?{sun:1,carrier:0,ring:-sun/ring}:fixed==='ring'?{sun:(sun+ring)/sun,carrier:1,ring:0}:{sun:0,carrier:1,ring:(sun+ring)/ring};
+ return {sun,planet,ring,planets,module,width,backlash,centreDistance,ringOuterRadius:pitchRadiusMm(module,ring)+2.5*module+Math.max(3,2*module),ratio:-sun/ring,fixed,speeds};
 }
 function externalGear(teeth:number,l:PlanetaryLayout,bore:number):CodeProgram{
  return {version:1,language:'brickwright-cad-script',parameters:{},source:`// Involute spur gear (profile adapted from kernelCAD, MIT). Millimetres.
@@ -77,8 +95,12 @@ export function createPlanetaryDocument(options:PlanetaryOptions={}):CadDocument
  const l=planetaryLayout(options),s=createCadSession();
  try{
   const bore=Math.min(2.5,.25*l.module*Math.min(l.sun,l.planet));
-  const plate=s.add({kind:'box',size:[2*l.ringOuterRadius+8,2*l.ringOuterRadius+8,3]},{name:t('Carrier plate'),transform:{...identityTransform(),position:[0,0,-2.5]}});
-  s.update(plate,{physics:{...defaultPartPhysics(),motion:'static'}});
+  const turning=l.fixed!=='carrier',size=2*l.ringOuterRadius+8;
+  // A turning carrier sits on a fixed frame below it (0.5 mm apart) and turns on its own hinge.
+  const frame=turning?s.add({kind:'box',size:[size+6,size+6,3]},{name:t('Frame'),transform:{...identityTransform(),position:[0,0,-6]}}):undefined;
+  if(frame)s.update(frame,{physics:{...defaultPartPhysics(),motion:'static'}});
+  const plate=s.add({kind:'box',size:[size,size,3]},{name:t('Carrier plate'),transform:{...identityTransform(),position:[0,0,-2.5]}});
+  s.update(plate,{physics:{...defaultPartPhysics(),motion:turning?'dynamic':'static'}});
   const gear=(program:CodeProgram,name:string,x:number,y:number,rotation:number)=>{const id=s.addCode(program,name);s.update(id,{transform:{...identityTransform(),position:[x,y,0],rotation:[0,0,rotation]},physics:{...defaultPartPhysics(),intent:'gear',sourcePreset:PLANETARY_ID}});return id;};
   const sun=gear(externalGear(l.sun,l,bore),t('Sun gear'),0,0,0);
   const planets:string[]=[];
@@ -90,14 +112,17 @@ export function createPlanetaryDocument(options:PlanetaryOptions={}):CadDocument
   // The ring presents a tooth where planet 0 has a space (+X): a tooth at 0° for an even planet, a space for an odd one.
   const ring=gear(ringGear(l),t('Ring gear'),0,0,l.planet%2===0?0:180/l.ring);
   const z=l.width/2,axis:[number,number,number]=[0,0,1];
+  const carrierHinge=frame?s.addJoint('hinge',frame,plate,[0,0,z],axis):undefined;
   const sunHinge=s.addJoint('hinge',plate,sun,[0,0,z],axis);
   const planetHinges=planets.map(id=>{const p=s.state.document.nodes[id].transform.position;return s.addJoint('hinge',plate,id,[p[0],p[1],z],axis);});
   const ringHinge=s.addJoint('hinge',plate,ring,[0,0,z],axis);
   // Gear meshes: each planet follows the sun (ω_sun = −zp/zs · ω_planet), the ring follows planet 1 (ω_planet = zr/zp · ω_ring).
   // (meshGears clears the second hinge's own mesh, so the ring is meshed first.)
+  // The fixed member follows the carrier backwards in the carrier's frame, so it stands still.
+  if(carrierHinge)s.meshGears(carrierHinge,l.fixed==='ring'?ringHinge:sunHinge,-1);
   s.meshGears(ringHinge,planetHinges[0],l.ring/l.planet);
   for(const hinge of planetHinges)s.meshGears(hinge,sunHinge,-l.planet/l.sun);
-  s.groupBodies(t('Planetary gear set'),[plate,sun,...planets,ring]);
+  s.groupBodies(t('Planetary gear set'),[...(frame?[frame]:[]),plate,sun,...planets,ring]);
   s.setExplodedView({id:newId(),name:t('Exploded view'),steps:[
    {id:newId(),bodies:[ring],direction:[0,0,1],distance:3*l.width+10},
    {id:newId(),bodies:planets,direction:[0,0,1],distance:2*l.width+5},

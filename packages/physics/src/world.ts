@@ -435,6 +435,9 @@ export async function createPhysicsWorld(document:CadDocument|PhysicsDocument,re
   // GearMeshConstraint): the reaction loads both axles, and the ratio holds
   // relative to each hinge frame. The gear is the hinge body not shared with
   // the partner hinge (bodyB when both or neither are shared).
+  // A mesh between a hinge and a hinge on the body it turns (a planetary set's turning carrier)
+  // needs the carrier's speed in the mesh; the mechanism check models it, this solver does not.
+  for(const joint of doc.joints??[]){const other=joint.kind==='hinge'&&joint.gearMesh?doc.joints!.find(j=>j.id===joint.gearMesh!.joint):undefined;if(other&&(other.bodyA===joint.bodyB||joint.bodyA===other.bodyB))throw new Error(t('Gear meshes on a turning carrier cannot be simulated yet; check the mechanism in Assembly › Mechanism instead.'));}
   for(const joint of doc.joints??[]){
    if(joint.kind!=='hinge'||!joint.gearMesh)continue;const other=doc.joints!.find(j=>j.id===joint.gearMesh!.joint);if(other?.kind!=='hinge')throw new Error(t('Invalid gear mesh'));
    const side=(j:CadJoint,partner:CadJoint)=>{const id=gearBody(j,partner),gearIsA=id===j.bodyA&&id!==j.bodyB,tr=doc.nodes[id].transform,anchor=gearIsA?j.anchorA:j.anchorB,axis=gearIsA?j.axisA:j.axisB;

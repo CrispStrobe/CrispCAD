@@ -7,6 +7,8 @@ import {constructionInputs,pruneAssemblyReferences,validateDocument} from './doc
 import type {CadDocument} from './document.js';
 import {isSketchFeature,sketchExpressions,rewriteSketchExpressions,sketchFeatureExpressions,mapPatternScalars,patternExpressions} from './features.js';
 import {evaluateExpression,evaluateParameters} from './parameters.js';
+import {materializeInstance} from './instances.js';
+import {remapMateFaces} from './mates.js';
 
 export function uniqueObjectName(base:string,used:ReadonlySet<string>,limit=160):string {
   const stem=base.slice(0,limit-8);if(!used.has(base)&&base.length<=limit)return base;
@@ -19,13 +21,16 @@ export function selectionFragment(input:CadDocument,selection:readonly string[])
  const doc=validateDocument(input),chosen=new Set(selection);doc.roots=doc.roots.filter(id=>chosen.has(id));
  delete doc.drawings;
  if(!doc.roots.length)throw new Error(t('Select an object to copy'));
+ // A linked instance copied without its source becomes an independent copy of it.
+ let fresh=0;
+ for(const id of doc.roots){const n=doc.nodes[id];if(n.kind==='instance'&&!chosen.has(n.source)){const map=materializeInstance(doc,id,doc,()=>`${id.slice(0,80)}-part-${++fresh}`);if(doc.assembly?.mates?.length)doc.assembly={...doc.assembly,mates:remapMateFaces(doc.assembly.mates,id,old=>map.get(old))};}}
  const keep=new Set<string>();const visit=(id:string)=>{if(keep.has(id))return;keep.add(id);const node=doc.nodes[id];constructionInputs(node).forEach(visit);};doc.roots.forEach(visit);
  for(const id of Object.keys(doc.nodes))if(!keep.has(id))delete doc.nodes[id];
  const sketches=new Set(Object.values(doc.nodes).flatMap(n=>isSketchFeature(n)?[n.sketchId]:[]));if(doc.sketches)doc.sketches=Object.fromEntries(Object.entries(doc.sketches).filter(([id])=>sketches.has(id)));
  if(doc.version>=8&&doc.tracers)doc.tracers=doc.tracers.filter(trace=>doc.roots.includes(trace.bodyId));
  if(doc.joints)doc.joints=pruneGearMeshes(doc.joints.filter(j=>doc.roots.includes(j.bodyA)&&doc.roots.includes(j.bodyB)));
  // Copied bodies keep their groups (pruned to the copy); views and configurations stay behind.
- if(doc.assembly){const groups=doc.assembly.groups;delete doc.assembly;if(groups?.length){doc.assembly={version:1,groups};pruneAssemblyReferences(doc);}}
+ if(doc.assembly){const {groups,mates}=doc.assembly;delete doc.assembly;if(groups?.length||mates?.length){doc.assembly={version:1,...(groups?.length?{groups}:{}),...(mates?.length?{mates}:{})};pruneAssemblyReferences(doc);}}
  if(doc.parametric){
   const original=doc.parametric,values=evaluateParameters(original);original.bindings=original.bindings.filter(binding=>keep.has(binding.nodeId));
   const required=new Set<string>();const references=(expression:string)=>{const names=new Set<string>();evaluateExpression(expression,name=>values[name],{references:names});for(const name of names)if(Object.hasOwn(original.parameters,name))required.add(name);};

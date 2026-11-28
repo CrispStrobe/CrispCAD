@@ -118,7 +118,10 @@ const drafting:readonly Draft[]=[
  {name:'config',aliases:['configuration'],description:'Configurations: named parameter values and suppressed bodies, saved and switched in one Undo step',usage:'config [save|use|delete "name"]',category:'edit',editsModel:true,arguments:[arg('action','keyword',{optional:true,values:['save','use','delete']}),arg('name','keyword',{optional:true})],headless:true},
  {name:'explode',aliases:[],description:'Exploded views: plan one from the bodies, list or delete them (the model does not move)',usage:'explode [auto [axis|radial] [+z|X,Y,Z] [spacing <mm>] [group "name"] [name "view"] | delete "view"]',category:'edit',editsModel:true,arguments:[arg('action','keyword',{optional:true,values:['auto','delete']})],headless:true},
  {name:'mechanism',aliases:[],description:'Sweep a joint (and the gears it drives) through its range and report collisions at every sampled pose; read-only',usage:'mechanism [joint] [range <from> <to>] [steps <n>] [clearance <mm>]',category:'analysis',editsModel:false,arguments:[arg('joint','keyword',{optional:true})],headless:true},
- {name:'planetary',aliases:[],description:'Insert a planetary gear set: sun, planets and ring gear on hinges with gear meshes',usage:'planetary [sun <teeth>] [planet <teeth>] [planets <n>] [module <mm>] [width <mm>] [backlash <mm>]',category:'create',editsModel:true,arguments:[],headless:true},
+ {name:'instance',aliases:['link'],description:'Place linked instances of a body: copies that share its definition, so editing the part changes every instance',usage:'instance "body" [count <n>] [step X,Y,Z] [rotate X,Y,Z]',category:'edit',editsModel:true,arguments:[arg('targets','bodies')],headless:true},
+ {name:'unlink',aliases:[],description:'Make linked instances independent copies of their part',usage:'unlink [instances…]',category:'edit',editsModel:true,arguments:[arg('targets','bodies',{optional:true,repeated:true})],headless:true},
+ {name:'mate',aliases:['mates'],description:'Mates between faces of two bodies (coincident, concentric, distance), solved into the bodies\' placements; list faces, solve, delete',usage:'mate [coincident|concentric "A" <face> "B" <face> [aligned] | distance <mm> "A" <face> "B" <face> [aligned] | faces "body" | solve | delete <number>]',category:'edit',editsModel:true,arguments:[arg('action','keyword',{optional:true,values:['coincident','concentric','distance','faces','solve','delete']})],headless:true},
+ {name:'planetary',aliases:[],description:'Insert a planetary gear set: sun, planets and ring gear on hinges with gear meshes; the carrier is held, or turns with the ring or the sun fixed',usage:'planetary [sun <teeth>] [planet <teeth>] [planets <n>] [module <mm>] [width <mm>] [backlash <mm>] [fixed carrier|ring|sun]',category:'create',editsModel:true,arguments:[],headless:true},
  {name:'journal',aliases:[],description:'Summarize or export the command journal',usage:'journal [export [cadscript|replay]]',category:'terminal',editsModel:false,arguments:[arg('action','keyword',{optional:true,values:['export']}),arg('format','keyword',{optional:true,values:['cadscript','replay']})],headless:true},
 ];
 type PaletteDraft={command:string;label:string;alias?:string;requires?:CommandAvailability};
@@ -432,7 +435,7 @@ export function createCommandRunner(session:CadSession,options:CommandRunnerOpti
    const command=parseAssemblyCommand(session,spec.name,tail);
    if(!command.async)return run(raw);
    const before=session.state.revision;
-   const output=await command.run(session,options.assembly,options.signal,options.journal?<T,>(line:string,commit:()=>T)=>options.journal!.withInvocation(line,commit):undefined);
+   const output=await command.run(session,options.assembly,options.signal,options.journal?<T,>(line:string,commit:()=>T)=>options.journal!.withInvocation(line,commit):undefined,options.exact);
    return {command:spec.name,invocation:command.invocation,output,edited:session.state.revision!==before};
   }
   if(spec.name==='check'){

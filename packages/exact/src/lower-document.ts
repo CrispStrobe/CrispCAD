@@ -199,6 +199,18 @@ function lowerNode(k:ExactKernel,doc:CadDocument,id:string,bodyId:string,cache:M
    case 'exact-body':
     // An imported STEP body: its stored B-rep, read by the kernel (cached between requests).
     solid=breps?breps.solid(node):createBrepCache(k,0).solid(node);break;
+   case 'instance':{
+    // A linked instance (document version 51): the source's construction without its placement
+    // (only its scale), lowered once per request and shared by every instance of it. Faces keep
+    // the source's leaf names, so a mate names an instance's face as it names the source's.
+    const source=doc.nodes[node.source] as SolidNode,localKey=(named?'named:':'')+'local:'+node.source;
+    let base=cache.get(localKey);
+    if(!base){
+     const local={...doc,nodes:{...doc.nodes,[source.id]:{...source,transform:{...identityTransform(),scale:[...source.transform.scale] as Vec3}}}};
+     base=lowerNode(k,local,source.id,bodyId,new Map(),limits,named,breps);cache.set(localKey,base);
+    }
+    solid=base;break;
+   }
    case 'mesh':return unsupported(node.surface?'Reference surfaces have no exact solid.':'Imported meshes have no exact B-rep; only bodies built from primitives, sketches, features and CAD Script can be exported or measured exactly.');
    default:return unsupported(`'${(node as {kind:string}).kind}' has no exact lowering.`);
   }

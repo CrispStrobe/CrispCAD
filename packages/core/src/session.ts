@@ -37,12 +37,15 @@ import {EXACT_EDGE_REFERENCE_DOCUMENT_VERSION,isEdgeReferences,mapEdgeReferenceI
 import {exactBodyNode} from './exact-body.js';
 import type {ExactBodyData} from './exact-body.js';
 import type {ExactFeature,ExactFeatureDisplay,ExactFeatureSettings} from './exact-feature.js';
+import {INSTANCE_DOCUMENT_VERSION,MAX_INSTANCES,materializeInstance,retargetedPlacement} from './instances.js';
+import {MATE_DOCUMENT_VERSION,remapMateFaces} from './mates.js';
+import type {AssemblyMate} from './mates.js';
 function copyAssemblyJoints(joints:readonly CadJoint[],ids:Map<string,string>,existing:readonly CadJoint[]):CadJoint[]{const result:CadJoint[]=[];for(const joint of joints){const next={...structuredClone(joint),id:newId(),bodyA:ids.get(joint.bodyA)!,bodyB:ids.get(joint.bodyB)!};if(next.control&&[...existing,...result].some(j=>j.control?.port===next.control!.port))next.control={port:allocateMotorPort([...existing,...result])};result.push(next);}
  // Gear meshes follow their copied partner; a partner outside the copy is dropped.
  const copied=new Map(joints.map((joint,i)=>[joint.id,result[i].id]));for(const next of result)if(next.gearMesh){const partner=copied.get(next.gearMesh.joint);if(partner)next.gearMesh={...next.gearMesh,joint:partner};else delete next.gearMesh;}return result;}
 type RevolutionInputs=Pick<RevolutionFeature,'angle'|'axisOffset'>;
 type SketchPatch=Partial<Pick<PlanarSketch,'name'|'plane'|'profile'|'artworkSourceId'|'artworkProfile'>>;
-function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38|41|44|45|47|48|49|50){
+function upgradeModelFeatures(doc:CadDocument,version:12|13|14|15|16|28|31|32|33|34|35|36|37|38|41|44|45|47|48|49|50|51){
   if(doc.version>=version)return;
   assertProvenanceUpgrade(doc);
   if(doc.version<6&&Object.hasOwn(doc,'modelSource'))throw new Error(t('Legacy modelSource data cannot be overwritten'));
@@ -210,7 +213,7 @@ function insertFragment(d:CadDocument,source:CadDocument,placeRoot:(root:SolidNo
         const sketches=new Map(Object.keys(source.sketches??{}).map(id=>[id,newId()]));
         for(const [id,sketch] of Object.entries(source.sketches??{})){d.sketches??={};const next=structuredClone(sketch);next.id=sketches.get(id)!;next.profile.id=newId();delete next.artworkSourceId;delete next.artworkProfile;d.sketches[next.id]=next;}
         const names=new Set(d.roots.map(id=>d.nodes[id].name));
-        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version>=5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(isSketchFeature(node))node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if(node.kind==='mirror'||node.kind==='split'||node.kind==='pattern'||node.kind==='exact-feature')node.source=ids.get(node.source)!; if(node.kind==='exact-feature'&&isEdgeReferences(node.edges))node.edges=mapEdgeReferenceIds(node.edges,key=>ids.get(key)); if (source.roots.includes(id)) placeRoot(node); d.nodes[node.id] = node; }
+        for (const [id, original] of Object.entries(source.nodes)) { const node = cloneNode(original); if(source.version>=5&&node.provenance)node.provenance=node.provenance.map(ref=>provenanceIds.get(ref)!); node.id = ids.get(id)!; if(isSketchFeature(node))node.sketchId=sketches.get(node.sketchId)!; if (node.kind === 'boolean') node.inputs = node.inputs.map(input => ids.get(input)!); if(node.kind==='mirror'||node.kind==='split'||node.kind==='pattern'||node.kind==='exact-feature'||node.kind==='instance')node.source=ids.get(node.source)!; if(node.kind==='exact-feature'&&isEdgeReferences(node.edges))node.edges=mapEdgeReferenceIds(node.edges,key=>ids.get(key)); if (source.roots.includes(id)) placeRoot(node); d.nodes[node.id] = node; }
         const roots = source.roots.map(id => ids.get(id)!); d.roots.push(...roots);
         for(const id of roots){d.nodes[id].name=uniqueObjectName(d.nodes[id].name,names);names.add(d.nodes[id].name);}
         if(mergeOffset)mergeFragmentParameters(d,source,ids,mergeOffset,sketches);
@@ -221,6 +224,12 @@ function insertFragment(d:CadDocument,source:CadDocument,placeRoot:(root:SolidNo
           const groupIds=new Map(source.assembly.groups.map(g=>[g.id,newId()])),a=d.assembly??{version:1 as const};
           const views=(source.assembly.views??[]).map(v=>({...structuredClone(v),id:newId(),steps:v.steps.map(step=>({...structuredClone(step),id:newId(),...(step.group!==undefined?{group:groupIds.get(step.group)!}:{}),...(step.bodies?{bodies:step.bodies.map(b=>ids.get(b)!)}:{})}))}));
           d.assembly={...a,groups:[...(a.groups??[]),...source.assembly.groups.map(g=>({...structuredClone(g),id:groupIds.get(g.id)!,members:g.members.map(m=>ids.get(m)!),...(g.parent!==undefined?{parent:groupIds.get(g.parent)!}:{})}))],...(views.length?{views:[...(a.views??[]),...views]}:{})};
+        }
+        // Mates come along with both their bodies (renumbered, face names following the copies).
+        if(source.assembly?.mates?.length){
+          const a=d.assembly??{version:1 as const},face=(name:string)=>name.replace(/(^|\/)([a-zA-Z0-9][a-zA-Z0-9_-]{0,95})(?=[#:])/g,(_,lead:string,key:string)=>lead+(ids.get(key)??key));
+          const mates=source.assembly.mates.map(m=>({...structuredClone(m),id:newId(),a:{body:ids.get(m.a.body)!,face:face(m.a.face)},b:{body:ids.get(m.b.body)!,face:face(m.b.face)}}));
+          d.assembly={...a,mates:[...(a.mates??[]),...mates]};
         }
         
  return roots;
@@ -243,6 +252,29 @@ function addImportGroups(d:CadDocument,groups:readonly ImportGroup[],ids:readonl
     return {id:groupIds[i],name:g.name.trim().slice(0,160)||t('STEP assembly'),members:g.members.map(index=>ids[index]),...(g.parent!==undefined?{parent:groupIds[g.parent]}:{}),...(g.source?{source:structuredClone(g.source)}:{})};
   });
   d.assembly={...a,groups:[...(a.groups??[]),...added]};
+}
+/**
+ * After an edit, every linked instance must still have a top-level source (instances.ts). When the
+ * source was rounded, bevelled, hollowed or had holes cut into it in place, the instances follow the
+ * new body (their placement adjusted so they keep their place); otherwise each becomes an
+ * independent copy of the source as it was (taken from `before` when the edit deleted it), and its
+ * mates' face names follow the copy.
+ */
+function followInstanceSources(d:CadDocument,before:CadDocument){
+  if(!d.roots.some(id=>d.nodes[id]?.kind==='instance'))return;
+  const roots=new Set(d.roots),unit=(n:SolidNode)=>n.transform.scale.every(v=>v===1);
+  for(const id of [...d.roots]){
+    const node=d.nodes[id];
+    if(node?.kind!=='instance'||roots.has(node.source)&&d.nodes[node.source].kind!=='instance')continue;
+    const sourceId=node.source,source=d.nodes[sourceId];
+    if(source){
+      const users=d.roots.filter(r=>constructionInputs(d.nodes[r]).includes(sourceId)),user=users.length===1?d.nodes[users[0]]:undefined;
+      const inPlace=!!user&&unit(user)&&(user.kind==='exact-feature'||user.kind==='boolean'&&user.inputs[0]===sourceId&&(user.operation==='subtract'||!!user.useHoleRoles&&user.inputs.slice(1).every(i=>d.nodes[i].role==='hole')));
+      if(inPlace){d.nodes[id]={...node,source:user!.id,transform:retargetedPlacement(node.transform,source.transform)};continue;}
+    }
+    const map=materializeInstance(d,id,source?d:before,newId);
+    if(d.assembly?.mates?.length)d.assembly={...d.assembly,mates:remapMateFaces(d.assembly.mates,id,old=>map.get(old))};
+  }
 }
 export function createCadSession(initial: CadDocument = createDocument(), options: CadSessionOptions = {}) {
   const kernels:readonly KernelIdentity[]=Object.freeze((options.kernels??[]).map(kernel=>{checkKernelIdentity(kernel);return Object.freeze({id:kernel.id,package:kernel.package,version:kernel.version});}));
@@ -271,6 +303,7 @@ export function createCadSession(initial: CadDocument = createDocument(), option
   function commit(title: string, edit: (draft: CadDocument) => string[] | void, expected?:CadDocument) {
     const draft = { ...document, ...(document.version>=8&&document.tracers?{tracers:structuredClone(document.tracers)}:{}), roots: [...document.roots], ...(document.joints ? {joints: structuredClone(document.joints)} : {}), ...(document.parametric ? {parametric:structuredClone(document.parametric)} : {}), ...(document.sketches?{sketches:structuredClone(document.sketches)}:{}), nodes: Object.fromEntries(Object.entries(document.nodes).map(([id, node]) => [id, cloneNode(node)])) };
     const nextSelection = edit(draft);
+    followInstanceSources(draft,document);
     const positioned=positionSketchRegions(draft);
     applyParametricBindings(draft);
     normalizeCodeRevisions(document,draft);
@@ -499,6 +532,51 @@ export function createCadSession(initial: CadDocument = createDocument(), option
         const trimmed=name.trim();if(!trimmed||trimmed.length>160||/[\u0000-\u001f]/.test(trimmed))throw new Error(t('Name the group (at most 160 characters)'));
         const a=assemblyOf(d);if(!a.groups?.some(g=>g.id===id))throw new Error(t('The group does not exist'));
         d.assembly={...a,groups:a.groups.map(g=>g.id===id?{...g,name:trimmed}:g)};
+      });
+    },
+    /** Linked instances of a top-level body (document version 51), one per placement (rotation and
+     * position; an instance of an instance links to its source). One Undo step; returns the ids. */
+    addInstances(sourceId:string,placements:readonly Pick<Transform,'position'|'rotation'>[],options:{names?:readonly string[]}={}):string[]{
+      const ids=placements.map(()=>newId());
+      commit('Add linked instances',d=>{
+        const given=d.nodes[sourceId];
+        if(!given||!d.roots.includes(sourceId))throw new Error(t('Select a top-level body to link'));
+        const source=given.kind==='instance'?d.nodes[given.source]:given;
+        if(source.reference||source.role==='hole')throw new Error(t('Reference helpers and holes cannot have linked instances'));
+        if(!placements.length)throw new Error(t('Give at least one placement'));
+        if(Object.values(d.nodes).filter(n=>n.kind==='instance').length+placements.length>MAX_INSTANCES)throw new Error(t`At most ${MAX_INSTANCES} linked instances`);
+        upgradeModelFeatures(d,INSTANCE_DOCUMENT_VERSION);
+        const names=new Set(d.roots.map(key=>d.nodes[key].name));
+        placements.forEach((placement,i)=>{
+          const name=uniqueObjectName(options.names?.[i]?.trim()||t`${source.name} instance`,names);names.add(name);
+          d.nodes[ids[i]]={id:ids[i],kind:'instance',instanceVersion:1,source:source.id,name,color:source.color,transform:{position:[...placement.position] as Vec3,rotation:[...placement.rotation] as Vec3,scale:[1,1,1]},...(source.physics?{physics:structuredClone(source.physics)}:{})} as SolidNode;
+          d.roots.push(ids[i]);
+        });
+        return ids;
+      });
+      return ids;
+    },
+    /** Makes linked instances independent copies of their source (same shape and place), in one Undo step. */
+    unlinkInstances(ids:readonly string[]){
+      commit('Unlink instances',d=>{
+        const chosen=[...new Set(ids)];
+        if(!chosen.length||!chosen.every(id=>d.nodes[id]?.kind==='instance'))throw new Error(t('Select linked instances'));
+        for(const id of chosen){const map=materializeInstance(d,id,d,newId);if(d.assembly?.mates?.length)d.assembly={...d.assembly,mates:remapMateFaces(d.assembly.mates,id,old=>map.get(old))};}
+        return chosen;
+      });
+    },
+    /** Replaces the mates (document version 51) and moves bodies to the placements solved for them,
+     * in one Undo step. */
+    setMates(title:string,mates:readonly AssemblyMate[],placements:readonly {id:string;transform:Transform}[]=[]){
+      commit(title,d=>{
+        if(mates.length)upgradeModelFeatures(d,MATE_DOCUMENT_VERSION);
+        const a=assemblyOf(d),next:AssemblyDesign={...a};
+        if(mates.length)next.mates=structuredClone([...mates]);else delete next.mates;
+        d.assembly=next;
+        for(const {id,transform} of placements){
+          if(!d.roots.includes(id))throw new Error(t('Object does not exist'));
+          const moved={...d.nodes[id],transform:structuredClone(transform)};assertDrivenEdit(d,moved);d.nodes[id]=moved;
+        }
       });
     },
     /** Dissolves a group: its bodies and subgroups move to its parent (or the top level). */

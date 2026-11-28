@@ -51,7 +51,7 @@ history. Use a dedicated file: this process is its writer until closed.
 | `cad_render` | Read-only PNG views (iso/top/front/right/back/left/bottom) returned as MCP image content |
 | `cad_check_printability` | Read-only FDM screening of the current model: watertightness, sampled minimum wall, overhangs/bridges, bed fit, six ranked axis orientations |
 | `cad_check_manufacturing` | Read-only check for FDM printing, 3-axis CNC milling or a laser-cut sheet, plus edge-radius rules; exact B-rep where a body has one, mesh otherwise, each check labelled |
-| `cad_assembly` | Read-only assembly: groups (a STEP import's product structure), suppressed bodies, configurations, exploded views (with `view`/`factor`, each body's offset) and joints |
+| `cad_assembly` | Read-only assembly: groups (a STEP import's product structure), suppressed bodies, configurations, exploded views (with `view`/`factor`, each body's offset), joints, mates and linked instances |
 | `cad_check_mechanism` | Read-only mechanism check: sweep a hinge or slider (with the gears it drives through gear meshes) and report collisions per sampled pose |
 | `cad_export_stl` | Base64 printable mesh; automatic paired attribution for recorded library sources |
 | `cad_export_step` | Read-only exact STEP (AP214) as base64 from the optional exact B-rep kernel; `objectIds` limits the bodies; unsupported bodies fail with a diagnostic naming body and feature |
@@ -148,7 +148,13 @@ the gears it drives through gear meshes, and reports each colliding pair with th
 sampled value and the largest overlap volume (Manifold), and with `clearanceMm` the pairs closer
 than that. Pairs a joint connects are exempt; the rest pose is checked for every pair. Both are
 read-only. Assembly edits go through `cad_run_commands`: `group`, `ungroup`, `suppress`,
-`unsuppress`, `config save|use|delete`, `explode auto|delete`, `planetary`. The CLI has the verbs
+`unsuppress`, `config save|use|delete`, `explode auto|delete`, `planetary [... fixed ring|sun]`,
+and since document version 51 `instance "body" [count n] [step X,Y,Z] [rotate X,Y,Z]` (linked
+instances), `unlink`, and `mate faces "body"`, `mate coincident|concentric "A" <face> "B" <face>
+[aligned]`, `mate distance <mm> ...`, `mate solve`, `mate delete <n>` (faces by number from
+`mate faces` or by name; the result records the names; mates that cannot all hold, and a face an
+edit removed, are errors and change nothing). `cad_assembly` also lists `mates` and `instances`
+(id, name, source). The CLI has the verbs
 `mechanism <project> [joint] [--range from,to] [--steps n] [--clearance mm]` and `assembly`.
 
 ## Manufacturing check

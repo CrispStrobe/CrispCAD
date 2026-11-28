@@ -26,8 +26,10 @@ import {MAX_STEP_IMPORT_BYTES} from './exact-body.js';
 import {sha256Hex} from './hash.js';
 import {commandNumber,commandTokens} from './command-arguments.js';
 import {t} from './i18n.js';
+import type {MateBodyFaces} from './mates.js';
+import {formatMateFaces} from './mates.js';
 
-export type ExactOperation='export-step'|'measure'|'feature-display'|'edges'|'import-step'|'drawing'|'section'|'step-evidence';
+export type ExactOperation='export-step'|'measure'|'feature-display'|'edges'|'import-step'|'drawing'|'section'|'step-evidence'|'faces';
 export interface ExactCommandRequest {
  readonly operation:ExactOperation;
  /** Snapshot taken when the command ran. */
@@ -65,7 +67,9 @@ export type ExactCommandResult=
  |{readonly operation:'drawing';readonly kernel:ExactKernelReport;readonly bodies:readonly ExactDrawingBody[];readonly failures:readonly ExactDrawingFailure[];readonly timing?:ExactTiming}
  |{readonly operation:'section';readonly kernel:ExactKernelReport;readonly axis:0|1;readonly positions:readonly number[];readonly bodies:readonly ExactSectionBody[];readonly failures:readonly ExactDrawingFailure[];readonly timing?:ExactTiming}
  |{readonly operation:'import-step';readonly kernel:ExactKernelReport;readonly bodies:readonly ImportedExactBodyReport[];readonly notes:readonly string[];readonly timing?:ExactTiming}
- |{readonly operation:'step-evidence';readonly kernel:ExactKernelReport;readonly evidence:StepEvidence;readonly timing?:ExactTiming};
+ |{readonly operation:'step-evidence';readonly kernel:ExactKernelReport;readonly evidence:StepEvidence;readonly timing?:ExactTiming}
+ /** The named faces of top-level bodies in world space, for mates (document version 51). */
+ |{readonly operation:'faces';readonly kernel:ExactKernelReport;readonly bodies:readonly MateBodyFaces[];readonly timing?:ExactTiming};
 /**
  * One B-rep edge of a body, for picking: its number in `edges` listings (1-based, in kernel
  * order), curve kind, length, points from start to end in the body's parent frame (world for a
@@ -140,6 +144,7 @@ export function formatExactResult(result:ExactCommandResult,document:CadDocument
   })]);
   return {output:[t`Exact edges (${kernelLabel(result.kernel)}):`,...lines,t('Fillet or chamfer chosen edges with: fillet <radius> "name" edges <number> ...')].join('\n')+timingLine(result.timing).join(''),kernel:result.kernel};
  }
+ if(result.operation==='faces')return {output:[t`Faces for mates (${kernelLabel(result.kernel)}):`,...result.bodies.map(body=>formatMateFaces(body))].join('\n')+timingLine(result.timing).join(''),kernel:result.kernel};
  if(result.operation==='step-evidence')return {output:formatStepEvidence(result.evidence)+'\n'+t`Exact kernel: ${kernelLabel(result.kernel)}`+timingLine(result.timing).join(''),kernel:result.kernel};
  if(result.operation==='feature-display')return {output:[t`Exact display meshes (${kernelLabel(result.kernel)}):`,...featureLines(result)].join('\n')+timingLine(result.timing).join(''),kernel:result.kernel};
  const title=document.title.replace(/[\\/:*?"<>|\u0000-\u001f\u007f]/g,'-').trim().slice(0,230)||'design';

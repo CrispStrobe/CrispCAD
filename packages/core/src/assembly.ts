@@ -9,8 +9,13 @@
 import {t} from './i18n.js';
 import type {CadDocument,Transform,Vec3} from './document.js';
 import type {CadJoint} from './physics.js';
+import type {ExactDrawingData} from './exact-drawing.js';
 import {localToWorldPoint,rotatePoint} from './simulation.js';
 import {evaluateParameters} from './parameters.js';
+import {checkMates,prunedMates} from './mates.js';
+import type {AssemblyMate} from './mates.js';
+import {modelInputs} from './document.js';
+import {materializeInstance} from './instances.js';
 
 /** A named group of top-level bodies. Groups nest through `parent`; a body is in at most one group. */
 export interface AssemblyGroup {
@@ -53,6 +58,8 @@ export interface AssemblyDesign {
  active?:string;
  /** Top-level bodies left out of the model now: not shown, built, exported, simulated or drawn. */
  suppressed?:string[];
+ /** Document version 51: coincident, concentric and distance mates between named faces (mates.ts). */
+ mates?:AssemblyMate[];
 }
 export const ASSEMBLY_DOCUMENT_VERSION=50;
 export const ASSEMBLY_LIMITS={groups:500,views:32,steps:500,configurations:64,parameters:256} as const;
@@ -68,7 +75,7 @@ export function checkAssembly(doc:CadDocument){
  const fail=(why:string):never=>{throw new Error(t`Invalid assembly: ${why}`);};
  if(doc.version<ASSEMBLY_DOCUMENT_VERSION)fail(t('assemblies require document version 50'));
  if(!record(a)||a.version!==1)fail(t('unknown assembly format'));
- const known=new Set(Object.keys(a));for(const key of known)if(!['version','groups','views','configurations','active','suppressed'].includes(key))fail(t`unknown field ${key}`);
+ const known=new Set(Object.keys(a));for(const key of known)if(!['version','groups','views','configurations','active','suppressed','mates'].includes(key))fail(t`unknown field ${key}`);
  const roots=new Set(doc.roots);
  const bodyList=(list:unknown,what:string)=>{if(!Array.isArray(list)||list.length>2000||new Set(list).size!==list.length||!list.every(id=>typeof id==='string'&&roots.has(id)))fail(t`${what} must list existing top-level bodies once each`);return list as string[];};
  const groups=new Map<string,AssemblyGroup>();
@@ -117,6 +124,7 @@ export function checkAssembly(doc:CadDocument){
  }
  if(a.active!==undefined&&!a.configurations?.some(c=>c.id===a.active))fail(t('the active configuration does not exist'));
  if(a.suppressed!==undefined)bodyList(a.suppressed,t('suppressed bodies'));
+ if(a.mates!==undefined)checkMates(doc,a.mates,fail);
 }
 
 /** Drops references to bodies that are no longer top-level (deleted, combined), and groups and
@@ -131,8 +139,8 @@ export function prunedAssembly(doc:Pick<CadDocument,'roots'|'parametric'>&{assem
  const ids=new Set(groups.map(g=>g.id));groups=groups.map(g=>g.parent&&!ids.has(g.parent)?(({parent:_p,...rest})=>rest)(g):g);
  const views=(a.views??[]).map(v=>({...v,steps:v.steps.flatMap(s=>s.group!==undefined?(ids.has(s.group)?[s]:[]):(()=>{const bodies=keep(s.bodies??[]);return bodies.length?[{...s,bodies}]:[];})())}));
  const configurations=(a.configurations??[]).map(c=>({...c,parameters:Object.fromEntries(Object.entries(c.parameters).filter(([name])=>Object.hasOwn(params,name))),suppressed:keep(c.suppressed)}));
- const suppressed=keep(a.suppressed??[]);
- const next:AssemblyDesign={version:1,...(groups.length?{groups}:{}),...(views.length?{views}:{}),...(configurations.length?{configurations}:{}),...(a.active&&configurations.some(c=>c.id===a.active)?{active:a.active}:{}),...(suppressed.length?{suppressed}:{})};
+ const suppressed=keep(a.suppressed??[]),mates=prunedMates(a.mates??[],roots);
+ const next:AssemblyDesign={version:1,...(groups.length?{groups}:{}),...(views.length?{views}:{}),...(configurations.length?{configurations}:{}),...(a.active&&configurations.some(c=>c.id===a.active)?{active:a.active}:{}),...(suppressed.length?{suppressed}:{}),...(mates.length?{mates}:{})};
  return Object.keys(next).length>1?next:undefined;
 }
 
@@ -160,8 +168,12 @@ export function activeRoots(doc:CadDocument):string[]{const off=suppressedBodies
 export function configuredDocument(doc:CadDocument):CadDocument{
  const off=suppressedBodies(doc);if(!off.size)return doc;
  const next=structuredClone(doc) as CadDocument;
+ // Instances of a suppressed part become copies here, so the configured model stays valid.
+ let fresh=0;
+ for(const id of next.roots){const n=next.nodes[id];if(n.kind==='instance'&&off.has(n.source)&&!off.has(id))materializeInstance(next,id,doc,()=>`configured-${++fresh}`);}
  next.roots=next.roots.filter(id=>!off.has(id));
- const keep=new Set<string>();const visit=(id:string)=>{if(keep.has(id))return;keep.add(id);const n=next.nodes[id];if(n?.kind==='boolean')n.inputs.forEach(visit);else if(n&&(n.kind==='mirror'||n.kind==='pattern'||n.kind==='exact-feature'))visit(n.source);};next.roots.forEach(visit);
+ // A linked instance needs its source's construction even when the source itself is suppressed.
+ const keep=new Set<string>();const visit=(id:string)=>{if(keep.has(id))return;keep.add(id);modelInputs(next.nodes[id]).forEach(visit);};next.roots.forEach(visit);
  for(const id of Object.keys(next.nodes))if(!keep.has(id))delete next.nodes[id];
  if(next.joints)next.joints=next.joints.filter(j=>!off.has(j.bodyA)&&!off.has(j.bodyB)).map(j=>j.gearMesh&&!next.joints!.some(o=>o.id===j.gearMesh!.joint&&!off.has(o.bodyA)&&!off.has(o.bodyB))?(({gearMesh:_g,...rest})=>rest)(j):j);
  if(next.tracers)next.tracers=next.tracers.filter(trace=>!off.has(trace.bodyId));
@@ -187,6 +199,22 @@ export function explodeOffsets(doc:Pick<CadDocument,'assembly'>,viewId:string,fa
   for(const id of bodies){const o=out.get(id)??[0,0,0];out.set(id,o.map((v,k)=>v+step.direction[k]*step.distance*share) as Vec3);}
  });
  return out;
+}
+/** Exact drawing data (B-rep edges, faces, face-wise meshes) with each body moved by its exploded
+ * offset: an exploded assembly sheet drawn from exact edges. Bodies without an offset are kept. */
+export function explodedExactDrawing(data:ExactDrawingData,offsets:ReadonlyMap<string,Vec3>):ExactDrawingData{
+ if(!offsets.size)return data;
+ const shift=(p:readonly number[],d:Vec3)=>p.map((v,i)=>v+d[i]);
+ return {...data,bodies:data.bodies.map(body=>{
+  const d=offsets.get(body.id);if(!d||d.every(v=>v===0))return body;
+  const points=(flat:readonly number[])=>flat.map((v,i)=>v+d[i%3]);
+  const positions=new Float64Array(body.mesh.positions);for(let i=0;i<positions.length;i++)positions[i]+=d[i%3];
+  return {...body,
+   faces:body.faces.map(f=>({...f,point:shift(f.point,d),...(f.axis?{axis:{origin:shift(f.axis.origin,d),direction:f.axis.direction}}:{})})),
+   edges:body.edges.map(e=>({...e,points:points(e.points),...(e.circle?{circle:{...e.circle,center:shift(e.circle.center,d)}}:{})})),
+   mesh:{...body.mesh,positions},
+   bounds:{min:shift(body.bounds.min,d),max:shift(body.bounds.max,d)}};
+ })};
 }
 export interface ExplodeBodyBounds {id:string;bounds:{min:readonly number[];max:readonly number[]}}
 export interface AutoExplodeOptions {
@@ -320,9 +348,11 @@ export function planMechanism(doc:CadDocument,jointId:string,range?:[number,numb
   }
  }
  const driven=new Set(ratios.keys());
+ // A joint's side: body B and what hangs on it. Other driven hinges are followed only outward
+ // (from their body A to their body B), so a gear on a turning carrier is carried by it.
  const side=(from:CadJoint)=>{
   const out=new Set<string>([from.bodyB]),stack=[from.bodyB];
-  while(stack.length){const body=stack.pop()!;for(const j of joints){if(j.id===from.id||driven.has(j.id)&&j.id!==from.id)continue;if(off.has(j.bodyA)||off.has(j.bodyB))continue;
+  while(stack.length){const body=stack.pop()!;for(const j of joints){if(j.id===from.id||driven.has(j.id)&&j.bodyA!==body)continue;if(off.has(j.bodyA)||off.has(j.bodyB))continue;
    const next=j.bodyA===body?j.bodyB:j.bodyB===body?j.bodyA:undefined;if(next===undefined||out.has(next))continue;
    if(next===from.bodyA)throw new Error(t`Joint ${from.id} closes a loop: its two sides are also joined elsewhere, so it cannot be swept alone`);
    out.add(next);stack.push(next);}}
@@ -341,9 +371,12 @@ export function planMechanism(doc:CadDocument,jointId:string,range?:[number,numb
  * the modelled pose). Coupled gears turn first, then the swept joint carries its side. */
 export function mechanismPose(doc:CadDocument,plan:MechanismPlan,value:number):Map<string,RigidMotion>{
  const out=new Map<string,RigidMotion>();
- for(const c of plan.coupled){const f=jointWorldFrame(doc,c.joint),m=rotationAbout(f.anchor,f.axis,value*c.ratio*Math.PI/180);for(const id of c.moving)out.set(id,composeMotion(m,out.get(id)??IDENTITY_MOTION));}
- const f=jointWorldFrame(doc,plan.joint),m=plan.unit==='deg'?rotationAbout(f.anchor,f.axis,value*Math.PI/180):translation(f.axis,value);
- for(const id of plan.moving)out.set(id,composeMotion(m,out.get(id)??IDENTITY_MOTION));
+ // Inner joints first (their side is part of an outer joint's side), each about its rest frame,
+ // then the joints that carry them, so a planet turns on its pin and goes round with the carrier.
+ const swept={joint:plan.joint,moving:plan.moving,motion:()=>{const f=jointWorldFrame(doc,plan.joint);return plan.unit==='deg'?rotationAbout(f.anchor,f.axis,value*Math.PI/180):translation(f.axis,value);}};
+ const coupled=plan.coupled.map(c=>({joint:c.joint,moving:c.moving,motion:()=>{const f=jointWorldFrame(doc,c.joint);return rotationAbout(f.anchor,f.axis,value*c.ratio*Math.PI/180);}}));
+ const order=[...coupled,swept].map((entry,i)=>({entry,i})).sort((a,b)=>a.entry.moving.length-b.entry.moving.length||a.i-b.i);
+ for(const {entry} of order){const m=entry.motion();for(const id of entry.moving)out.set(id,composeMotion(m,out.get(id)??IDENTITY_MOTION));}
  return out;
 }
 /** Pairs of bodies a joint connects directly: they touch by design and are not collisions unless

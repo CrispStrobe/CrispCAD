@@ -10,10 +10,13 @@ import type {CadDocument,Vec3} from './document.js';
 import {groupBodies,planExplodedView} from './assembly.js';
 import type {ExplodeBodyBounds,MechanismReport,MechanismSettings} from './assembly.js';
 import {formatMechanismReport} from './assembly.js';
-import {createPlanetaryDocument,planetaryLayout} from './planetary.js';
-import type {PlanetaryOptions} from './planetary.js';
+import {PLANETARY_FIXED,createPlanetaryDocument,planetaryLayout} from './planetary.js';
+import type {PlanetaryFixed,PlanetaryOptions} from './planetary.js';
 import {newId} from './document.js';
 import type {CadJoint} from './physics.js';
+import {MATE_KINDS,formatMateFaces,formatMateSolution,listMates,mateLabel,solveMates} from './mates.js';
+import type {AssemblyMate,MateBodyFaces,MateKind} from './mates.js';
+import type {ExactCommandHost} from './exact-commands.js';
 
 /** What assembly commands need from their host beyond the session: evaluated body bounds (for
  * `explode auto`) and the mechanism check (Manifold, in the geometry worker or thread). */
@@ -25,12 +28,21 @@ export interface AssemblyCommand {
  invocation:string;
  /** Runs the command: at most one commit. Async commands make their commit inside `record` (the
   * journal's wrapper), after the host has answered. */
- run(session:CadSession,host?:AssemblyHost,signal?:AbortSignal,record?:<T>(line:string,commit:()=>T)=>T):Promise<string>|string;
+ run(session:CadSession,host?:AssemblyHost,signal?:AbortSignal,record?:<T>(line:string,commit:()=>T)=>T,exact?:ExactCommandHost):Promise<string>|string;
  /** Needs the host (bounds or mechanism). */
  async?:true;
  edits:boolean;
 }
-export const ASSEMBLY_COMMANDS=['group','ungroup','groups','suppress','unsuppress','config','explode','mechanism','planetary'] as const;
+export const ASSEMBLY_COMMANDS=['group','ungroup','groups','suppress','unsuppress','config','explode','mechanism','planetary','instance','unlink','mate'] as const;
+const matedBodies=(mates:readonly AssemblyMate[])=>[...new Set(mates.flatMap(m=>[m.a.body,m.b.body]))];
+/** The named faces of bodies, from the exact kernel (mates need it). */
+async function mateFaces(doc:CadDocument,ids:readonly string[],exact:ExactCommandHost|undefined,signal?:AbortSignal):Promise<MateBodyFaces[]>{
+ if(!exact)throw new Error(t('Mates use the exact kernel to find faces; run them in the editor, over MCP or in the CLI.'));
+ if(!ids.length)return [];
+ const result=await exact.run({operation:'faces',document:doc,bodies:ids},signal);
+ if(result.operation!=='faces')throw new Error(t('The exact kernel returned an unexpected result.'));
+ return [...result.bodies];
+}
 const quote=(value:string)=>/^[A-Za-z0-9_.:-]+$/.test(value)?value:'"'+value.replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"';
 const num=(value:number)=>String(+value.toFixed(6));
 
@@ -149,11 +161,103 @@ export function parseAssemblyCommand(session:CadSession,name:string,tail:string)
   }};
  }
  if(name==='planetary'){
-  const options:PlanetaryOptions={};const keys:Record<string,keyof PlanetaryOptions>={sun:'sunTeeth',planet:'planetTeeth',planets:'planets',module:'module',width:'width',backlash:'backlash'};
-  for(let i=0;i<tokens.length;i+=2){const key=keys[lower[i]];if(!key||words[i+1]===undefined)throw new Error(t('Usage: planetary [sun <teeth>] [planet <teeth>] [planets <n>] [module <mm>] [width <mm>] [backlash <mm>]'));options[key]=commandNumber(words[i+1]);}
+  const options:PlanetaryOptions={};const keys:Record<string,Exclude<keyof PlanetaryOptions,'fixed'>>={sun:'sunTeeth',planet:'planetTeeth',planets:'planets',module:'module',width:'width',backlash:'backlash'};
+  const usage=()=>new Error(t('Usage: planetary [sun <teeth>] [planet <teeth>] [planets <n>] [module <mm>] [width <mm>] [backlash <mm>] [fixed carrier|ring|sun]'));
+  for(let i=0;i<tokens.length;i+=2){
+   if(words[i+1]===undefined)throw usage();
+   if(lower[i]==='fixed'){const member=lower[i+1] as PlanetaryFixed;if(!PLANETARY_FIXED.includes(member))throw usage();options.fixed=member;continue;}
+   const key=keys[lower[i]];if(!key)throw usage();options[key]=commandNumber(words[i+1]);
+  }
   const layout=planetaryLayout(options);
-  const invocation=`planetary sun ${layout.sun} planet ${layout.planet} planets ${layout.planets} module ${num(layout.module)} width ${num(layout.width)} backlash ${num(layout.backlash)}`;
-  return {invocation,edits:true,run:s=>{s.insert(createPlanetaryDocument(options),[0,0,0],{label:'Insert planetary gear set'});return t`Inserted a planetary gear set: sun ${layout.sun}, ${layout.planets} planets of ${layout.planet}, ring ${layout.ring} teeth, module ${num(layout.module)} mm. With the carrier held, the ring turns at ${num(layout.ratio)} × the sun (motor A).`;}};
+  const invocation=`planetary sun ${layout.sun} planet ${layout.planet} planets ${layout.planets} module ${num(layout.module)} width ${num(layout.width)} backlash ${num(layout.backlash)}${layout.fixed!=='carrier'?` fixed ${layout.fixed}`:''}`;
+  const speeds=layout.fixed==='carrier'?t`With the carrier held, the ring turns at ${num(layout.ratio)} × the sun (motor A).`
+   :layout.fixed==='ring'?t`With the ring fixed, the carrier turns (motor A) and the sun runs at ${num(layout.speeds.sun)} × the carrier: the carrier turns at ${num(1/layout.speeds.sun)} × the sun.`
+   :t`With the sun fixed, the carrier turns (motor A) and the ring runs at ${num(layout.speeds.ring)} × the carrier.`;
+  return {invocation,edits:true,run:s=>{s.insert(createPlanetaryDocument(options),[0,0,0],{label:'Insert planetary gear set'});return t`Inserted a planetary gear set: sun ${layout.sun}, ${layout.planets} planets of ${layout.planet}, ring ${layout.ring} teeth, module ${num(layout.module)} mm.`+' '+speeds;}};
+ }
+ if(name==='instance'){
+  if(!tokens.length)throw new Error(t('Usage: instance "body" [count <n>] [step X,Y,Z] [rotate X,Y,Z]'));
+  const [source]=bodiesFrom(session,tokens.slice(0,1));
+  let count=1,step:Vec3=[10,0,0],rotation:Vec3|undefined;
+  for(let i=1;i<tokens.length;i++){
+   const w=lower[i],value=words[++i];
+   if(value===undefined)throw new Error(t('Usage: instance "body" [count <n>] [step X,Y,Z] [rotate X,Y,Z]'));
+   if(w==='count'){count=commandNumber(value);if(!Number.isInteger(count)||count<1||count>100)throw new Error(t('Count must be a whole number from 1 to 100'));}
+   else if(w==='step'||w==='rotate'){const parts=value.split(',');if(parts.length!==3)throw new Error(t('Enter three values as X,Y,Z.'));const v=parts.map(commandNumber) as Vec3;if(w==='step')step=v;else rotation=v;}
+   else throw new Error(t('Usage: instance "body" [count <n>] [step X,Y,Z] [rotate X,Y,Z]'));
+  }
+  const invocation=`instance ${quote(source)} count ${count} step ${step.map(num).join(',')}${rotation?` rotate ${rotation.map(num).join(',')}`:''}`;
+  const given=doc.nodes[source],part=given.kind==='instance'?doc.nodes[given.source]:given;
+  return {invocation,edits:true,run:s=>{
+   // Each next instance one step further from the body named (an instance counts from its own place).
+   const placements=Array.from({length:count},(_,i)=>({position:given.transform.position.map((v,k)=>v+step[k]*(i+1)) as Vec3,rotation:rotation?[...rotation] as Vec3:[...given.transform.rotation] as Vec3}));
+   const ids=s.addInstances(source,placements);
+   return t`Placed ${ids.length} linked instances of ${part.name}: editing the part changes every instance.`;
+  }};
+ }
+ if(name==='unlink'){
+  const ids=bodiesFrom(session,tokens).filter(id=>doc.nodes[id].kind==='instance');
+  if(!ids.length)throw new Error(t('Select linked instances'));
+  return {invocation:`unlink ${ids.map(quote).join(' ')}`,edits:true,run:s=>{s.unlinkInstances(ids);return t`Unlinked ${ids.length} instances: each is now an independent copy of its part.`;}};
+ }
+ if(name==='mate'){
+  const mates=doc.assembly?.mates??[];
+  if(!tokens.length)return {invocation:'mate',edits:false,run:s=>listMates(s.state.document)};
+  const action=lower[0];
+  if(action==='delete'){
+   if(tokens.length!==2)throw new Error(t('Usage: mate delete <number|id>'));
+   const mate=mates.find(m=>m.id===words[1])??(/^\d+$/.test(words[1])?mates[Number(words[1])-1]:undefined);
+   if(!mate)throw new Error(t`Unknown mate: ${words[1]}. Type mate to list the mates.`);
+   return {invocation:`mate delete ${quote(mate.id)}`,edits:true,run:s=>{s.setMates('Delete mate',(s.state.document.assembly?.mates??[]).filter(m=>m.id!==mate.id));return t`Deleted ${mateLabel(mates,mate)}; the bodies stay where they are.`;}};
+  }
+  if(action==='faces'){
+   const ids=bodiesFrom(session,tokens.slice(1));
+   return {invocation:`mate faces ${ids.map(quote).join(' ')}`,edits:false,async:true,run:async(s,_host,signal,_record,exact)=>{
+    const found=await mateFaces(s.state.document,ids,exact,signal);
+    return [t('Faces for mates:'),...found.map(formatMateFaces),t('Mate them with: mate coincident "A" <face> "B" <face> (a face number from this list or its name).')].join('\n');
+   }};
+  }
+  if(action==='solve'){
+   if(tokens.length!==1)throw new Error(t('Usage: mate solve'));
+   if(!mates.length)throw new Error(t('No mates to solve.'));
+   return {invocation:'mate solve',edits:true,async:true,run:async(s,_host,signal,record,exact)=>{
+    const before=s.state.revision,current=s.state.document,list=current.assembly?.mates??[];
+    const solution=solveMates(current,list,await mateFaces(current,matedBodies(list),exact,signal));
+    if(s.state.revision!==before)throw new Error(t('The model changed while the mates were solved. Run mate solve again.'));
+    if(solution.placements.length)(record??((_line,commit)=>commit()))('mate solve',()=>s.setMates('Solve mates',list,solution.placements));
+    return formatMateSolution(s.state.document,list,solution);
+   }};
+  }
+  // mate coincident|concentric A faceA B faceB [aligned] | mate distance <mm> A faceA B faceB [aligned]
+  const usage=()=>new Error(t('Usage: mate coincident|concentric "A" <face> "B" <face> [aligned] | mate distance <mm> "A" <face> "B" <face> [aligned] | mate faces "body" | mate solve | mate delete <number>'));
+  if(!(MATE_KINDS as readonly string[]).includes(action))throw usage();
+  const kind=action as MateKind;let at=1,distance:number|undefined;
+  if(kind==='distance'){distance=commandNumber(words[at++]??'');if(!(Math.abs(distance)<=100000))throw new Error(t('only a distance mate has a distance (at most 100000 mm)'));}
+  const rest=tokens.slice(at),aligned=rest.length===5&&rest[4].value.toLowerCase()==='aligned';
+  if(rest.length!==(aligned?5:4))throw usage();
+  if(aligned&&kind==='concentric')throw new Error(t('only planar mates can be aligned'));
+  const [bodyA]=bodiesFrom(session,rest.slice(0,1)),[bodyB]=bodiesFrom(session,rest.slice(2,3)),faceA=rest[1].value,faceB=rest[3].value;
+  if(bodyA===bodyB)throw new Error(t('a mate joins two different bodies'));
+  const given=`mate ${kind}${distance!==undefined?` ${num(distance)}`:''} ${quote(bodyA)} ${quote(faceA)} ${quote(bodyB)} ${quote(faceB)}${aligned?' aligned':''}`;
+  const command:AssemblyCommand={invocation:given,edits:true,async:true,run:async(s,_host,signal,record,exact)=>{
+   const before=s.state.revision,current=s.state.document,list=current.assembly?.mates??[];
+   const found=await mateFaces(current,[...new Set([...matedBodies(list),bodyA,bodyB])],exact,signal);
+   const pick=(body:string,face:string)=>{
+    const faces=found.find(b=>b.id===body)!.faces;
+    if(/^\d+$/.test(face)){const f=faces[Number(face)-1];if(!f)throw new Error(t`${current.nodes[body].name} has no face ${face}; list its faces with mate faces.`);return f.name;}
+    if(!faces.some(f=>f.name===face))throw new Error(t`${current.nodes[body].name} has no face ${face}; list its faces with mate faces.`);
+    return face;
+   };
+   const mate:AssemblyMate={id:newId(),kind,a:{body:bodyA,face:pick(bodyA,faceA)},b:{body:bodyB,face:pick(bodyB,faceB)},...(distance!==undefined?{distance}:{}),...(aligned?{aligned:true as const}:{})};
+   const next=[...list,mate],solution=solveMates(current,next,found);
+   if(s.state.revision!==before)throw new Error(t('The model changed while the mates were solved. Run the mate command again.'));
+   const line=`mate ${kind}${distance!==undefined?` ${num(distance)}`:''} ${quote(bodyA)} ${quote(mate.a.face)} ${quote(bodyB)} ${quote(mate.b.face)}${aligned?' aligned':''}`;
+   // The canonical form names the faces, so a replay finds the same faces whatever their numbers.
+   command.invocation=line;
+   (record??((_line,commit)=>commit()))(line,()=>s.setMates('Add mate',next,solution.placements));
+   return formatMateSolution(s.state.document,next,solution);
+  }};
+  return command;
  }
  throw new Error(t('Unknown editor command'));
 }

@@ -17,6 +17,7 @@ const labels = new Set([
   'Split body', 'Edit split',
   'Group bodies', 'Rename group', 'Ungroup', 'Edit exploded view', 'Remove exploded view', 'Suppress bodies', 'Unsuppress bodies',
   'Save configuration', 'Use configuration', 'Remove configuration', 'Insert planetary gear set',
+  'Add linked instances', 'Unlink instances', 'Add mate', 'Delete mate', 'Solve mates',
 ]);
 export function translateHistoryLabel(label: string): string {
   if (labels.has(label)) return t(label);

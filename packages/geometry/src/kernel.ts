@@ -150,11 +150,20 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
     }
     codeCache.set(shape,solid);return solid;
   };
-  const build = (id: string): Manifold => {
-    const cached = cache.get(id); if (cached) return cached;
-    const node = doc.nodes[id]; let solid: Manifold;
-    try {
+  // A node's construction before its own transform: what a linked instance of it places.
+  const localCache = new Map<string, Manifold>();
+  const buildLocal = (id: string): Manifold => {
+    const cached = localCache.get(id); if (cached) return cached;
+    const node = doc.nodes[id];
+    if (node.kind === 'instance') throw new Error(t('A linked instance cannot be the source of another instance'));
+    const solid = construct(id, node);
+    localCache.set(id, solid); return solid;
+  };
+  const construct = (id: string, node: SolidNode): Manifold => {
+    let solid!: Manifold;
     switch (node.kind) {
+      // A linked instance (document version 51): its source's construction at the source's scale.
+      case 'instance': { const source = doc.nodes[node.source]; solid = keep(buildLocal(node.source).scale(source.transform.scale)); break; }
       case 'box': solid = keep(module.Manifold.cube(node.size, true)); break;
       case 'cylinder': solid = keep(module.Manifold.cylinder(node.height, node.radius, node.radius, node.segments, true)); break;
       case 'sphere': solid = keep(module.Manifold.sphere(node.radius, node.segments)); break;
@@ -248,6 +257,13 @@ function evaluateDocument(module: ManifoldToplevel, input: CadDocument, exactCyl
         solid = keep(node.operation === 'union' ? module.Manifold.union(operands) : node.operation === 'subtract' ? module.Manifold.difference(operands) : module.Manifold.intersection(operands)); break;
       }
     }
+    return solid;
+  };
+  const build = (id: string): Manifold => {
+    const cached = cache.get(id); if (cached) return cached;
+    const node = doc.nodes[id];
+    try {
+    const solid = node.kind === 'instance' ? construct(id, node) : buildLocal(id);
     // Both Manifold and the viewport use fixed-axis X, then Y, then Z rotations.
     const scaled = keep(solid.scale(node.transform.scale));
     const rotated = keep(scaled.rotate(node.transform.rotation));

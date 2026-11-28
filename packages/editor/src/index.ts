@@ -15,7 +15,7 @@ import {fineNumberKeys} from './precision.js';
 import { t,formatExactResult,validateDocument as validateExportDocument,FeatureEvaluationError,STALE_EXACT_CODE,staleExactFeatures,recomputeExactFeatures,runStepImport,MAX_STEP_IMPORT_BYTES } from '@brickwright/cad-core';
 import { describeHole,drawingAssemblyAvailable,isAssemblyDrawingSource,constructionInputs, createCadSession, createDocument, identityTransform, newId, parseDocument, defaultPartPhysics,defaultGenerator,generatorFields,validateDocument,serializeDocument,designGraph,evaluateParameters,compileCode,hasModelAttribution,isCube,screwTipStyles,screwTipParameters,redesignScrew } from '@brickwright/cad-core';
 import type { CadDocument, CadSession, DrawingInputs, Primitive, SolidNode, Transform, Vec3, GeneratorRecipe, ExactDrawingData , ExactSectionData, ManufacturingHost, MaterialsHost, SurfaceBlendHost, StepEvidence, AssemblyHost } from '@brickwright/cad-core';
-import {configuredDocument,createPlanetaryDocument,explodeOffsets} from '@brickwright/cad-core';
+import {configuredDocument,createPlanetaryDocument,explodeOffsets,explodedExactDrawing} from '@brickwright/cad-core';
 import { assemblyCutJogs,importSTL } from '@brickwright/cad-geometry';
 import {inspectMaterials,printableBodies} from '@brickwright/cad-core';
 import {importStep} from './step-import.js';
@@ -390,9 +390,10 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     if(!active())return undefined;
     // A sheet drawn in an exploded view projects the bodies where the view puts them.
     const explode=sheets.find(sheet=>isAssemblyDrawingSource(sheet.source)&&sheet.explode)?.explode;
-    if(explode&&options.exact)throw new Error(t('Exact edges are not drawn in exploded views yet; turn off Exact edges (B-rep) or choose Assembled.'));
     const geometry=explode?explodedGeometry(built,current,explode.view,explode.factor):built;
-    const exact=options.exact?await exactDrawingData(current):undefined;
+    // Exact edges in an exploded view: the B-rep data moved by the same offsets as the meshes.
+    const assembled=options.exact?await exactDrawingData(current):undefined;
+    const exact=assembled&&explode?explodedExactDrawing(assembled,explodeOffsets(current,explode.view,explode.factor)):assembled;
     if(!active())return undefined;
     const projection=await assemblyProjection.project(geometry,exact);
     if(!active())return undefined;
@@ -415,7 +416,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
         const sliced=await result;
         if(!active())return undefined;
         // Exact edges: the cut faces from the exact B-rep as well (bodies it cannot cut stay on the mesh slice).
-        sections.push(options.exact?{...sliced,exact:await exactSectionData(current,cut)}:sliced);
+        // (An exploded sheet cuts the moved meshes; its exact cut faces would sit where the bodies were.)
+        sections.push(options.exact&&!explode?{...sliced,exact:await exactSectionData(current,cut)}:sliced);
         if(!active())return undefined;
       }catch(error){
         throw new Error(sheet.title+' · '+(error instanceof Error?error.message:String(error)));
@@ -591,7 +593,8 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
   const exportButton=menuButton('export');exportButton.disabled=true;
   const printabilityPanel=mountPrintabilityPanel(shell,()=>session.state.document,(doc,settings)=>client.checkPrintability(doc,settings));
   const printabilityButton=menuButton('printability');printabilityButton.disabled=true;
-  const assemblyPanel=mountAssemblyPanel(shell,viewHost,session,{bounds:doc=>assemblyHost.bounds(doc),mechanism:(doc,settings,signal)=>assemblyHost.mechanism(doc,settings,signal),present:motions=>viewport.setPresentation(motions)});
+  const assemblyPanel=mountAssemblyPanel(shell,viewHost,session,{bounds:doc=>assemblyHost.bounds(doc),mechanism:(doc,settings,signal)=>assemblyHost.mechanism(doc,settings,signal),present:motions=>viewport.setPresentation(motions),
+    faces:async(doc,ids,signal)=>{const result=await client.exact.run({operation:'faces',document:doc,bodies:ids},signal);if(result.operation!=='faces')throw new Error(t('The exact kernel returned an unexpected result.'));return [...result.bodies];}});
   const manufacturingPanel=mountManufacturingPanel(shell,viewHost,{document:()=>session.state.document,selection:()=>session.state.selection.filter(id=>session.state.document.roots.includes(id)),check:(doc,request,signal)=>manufacturingHost.check(doc,request,signal),show:mark=>viewport.showFinding(mark)});
   const manufacturingButton=menuButton('manufacturing');manufacturingButton.disabled=true;
   const selectedRoots=()=>session.state.selection.filter(id=>session.state.document.roots.includes(id));
@@ -773,6 +776,13 @@ export function mountCadEditor(host: HTMLElement, options: CadEditorOptions) {
     }else if(session.state.document.roots.includes(id)&&n.kind==='boolean'){
       const holes:string[]=[],walk=(key:string)=>{const node=session.state.document.nodes[key];if(node?.kind==='hole')holes.push(key);else if(node?.kind==='boolean')node.inputs.forEach(walk);};walk(id);
       if(holes.length)button(t`Fasten holes (${holes.length})`,()=>fasteningPanel.openFasten(holes),inspector);
+    }
+    if(n.kind==='instance'){
+      // A linked instance (document version 51): its part is edited, the instance only placed.
+      const part=session.state.document.nodes[n.source];
+      inspector.append(el('p','hint',t`Linked instance of ${part?.name??n.source}: edit the part to change every instance.`));
+      button('Select the part',()=>session.select([n.source]),inspector);
+      button('Unlink',()=>session.unlinkInstances([id]),inspector);
     }
     if(n.kind==='exact-body'){
       const from=n.origin?t`from ${n.origin.file}, body ${n.origin.body} of ${n.origin.bodies}`:t('imported');

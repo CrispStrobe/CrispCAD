@@ -2,8 +2,8 @@
 // Optional exact B-rep backend. Importing this module loads no WebAssembly; `createExactBackend`
 // loads the kernel lab's SMLib build once per process or worker. Hosts import this module
 // lazily (dynamic import) so the default Manifold path never pays for it.
-import {activeRoots,constructionInputs,edgeReferences,staleExactFeatures,validateDocument,t} from '@brickwright/cad-core';
-import type {CadDocument,ExactBodyEdgesReport,ExactCommandHost,ExactCommandRequest,ExactCommandResult,ExactFeatureDisplay,KernelIdentity} from '@brickwright/cad-core';
+import {isExactFaceName,activeRoots,modelInputs,edgeReferences,staleExactFeatures,validateDocument,t} from '@brickwright/cad-core';
+import type {MateBodyFaces,MateFaceGeometry,Vec3,CadDocument,ExactBodyEdgesReport,ExactCommandHost,ExactCommandRequest,ExactCommandResult,ExactFeatureDisplay,KernelIdentity} from '@brickwright/cad-core';
 import {createSmlibKernel,ExactKernelError} from '@crispcad/exact-kernel';
 import type {ExactKernel,ExactSolid,SmlibKernel,SmlibLoadOptions} from '@crispcad/exact-kernel';
 import {exactKernelIdentity} from './identity.js';
@@ -69,6 +69,7 @@ export interface ExactStepResult {kernel:ExactKernelInfo;bodies:{id:string;name:
 export interface ExactStepImportResult extends ExactStepImport {kernel:ExactKernelInfo}
 export interface ExactDrawingResult extends ExactDrawingData {kernel:ExactKernelInfo}
 export interface ExactSectionResult extends ExactSectionData {kernel:ExactKernelInfo}
+export interface ExactFacesResult {kernel:ExactKernelInfo;bodies:MateBodyFaces[]}
 
 /** Bodies an exact command acts on: the given top-level bodies, or every printable one. */
 export function exactTargets(doc:CadDocument,ids?:readonly string[]):string[]{
@@ -108,6 +109,8 @@ export interface ExactBackend {
  drawing(doc:CadDocument,ids?:readonly string[],options?:ExactRunOptions):ExactDrawingResult;
  /** The cut-face edges of each body at each plane of a drawing's section (one per leg). */
  section(doc:CadDocument,ids:readonly string[]|undefined,cut:{axis:0|1;positions:readonly number[]},options?:ExactRunOptions):ExactSectionResult;
+ /** The named faces of top-level bodies in world space (surface, point, normal, axis), for mates. */
+ faces(doc:CadDocument,ids:readonly string[],options?:ExactRunOptions):ExactFacesResult;
  /** Read a STEP file as exact bodies (B-rep, measures and display of each), or refuse it whole. */
  importStep(bytes:Uint8Array,file:string,options?:ExactRunOptions):ExactStepImportResult;
  /** Evidence of a STEP file (measures and topology of each body as read), or with a model and no
@@ -117,7 +120,7 @@ export interface ExactBackend {
 
 /** Every node a set of top-level bodies is built from. */
 function reachable(doc:CadDocument,ids:readonly string[]){
- const seen=new Set<string>(),visit=(id:string)=>{if(seen.has(id))return;seen.add(id);constructionInputs(doc.nodes[id]).forEach(visit);};
+ const seen=new Set<string>(),visit=(id:string)=>{if(seen.has(id))return;seen.add(id);modelInputs(doc.nodes[id]).forEach(visit);};
  ids.forEach(visit);return [...seen].map(id=>doc.nodes[id]);
 }
 
@@ -186,6 +189,24 @@ export function createExactBackendFromKernel(kernel:ExactKernel,memoryCapBytes=(
   section(input,ids,cut,options={}){
    const {doc,targets}=prepare(input,ids);
    return {kernel:info,...exactSectionData(kernel,doc,targets,cut,{limits:options.limits,breps,fatal:isFatalExactError})};
+  },
+  faces(input,ids,options={}){
+   const doc=validateDocument(input),targets=[...new Set(ids)];
+   if(!targets.length)throw new ExactKernelError('invalid-input',t('Name or select the bodies whose faces to list.'));
+   if(targets.length>MAX_EXACT_BODIES)throw new ExactKernelError('invalid-input',t`Exact commands are limited to ${MAX_EXACT_BODIES} bodies.`);
+   for(const id of targets)if(!doc.roots.includes(id))throw new ExactKernelError('invalid-input',t`Unknown object id: ${id}`);
+   breps.warm(reachable(doc,targets));
+   return {kernel:info,bodies:targets.map(id=>kernel.scope(()=>{
+    // World space with the faces named as edge references name them (a body's own transform applied).
+    const solid=lowerDocumentNode(kernel,doc,id,{named:true,limits:options.limits,breps}),byName=new Map<string,MateFaceGeometry>();let unnamed=0;
+    for(const face of kernel.topology(solid).faces){
+     if(!face.name||!isExactFaceName(face.name)){unnamed++;continue;}
+     const known=byName.get(face.name),entry:MateFaceGeometry={name:face.name,surface:face.surface,area:face.area,point:[...face.point] as Vec3,normal:[...face.normal] as Vec3,...(face.radius!==undefined?{radius:face.radius}:{}),...(face.axis?{axis:{origin:[...face.axis.origin] as Vec3,direction:[...face.axis.direction] as Vec3}}:{})};
+     // Pieces of one named face (cut apart by a Boolean): the largest piece stands for the face.
+     if(!known)byName.set(face.name,entry);else byName.set(face.name,{...(entry.area>known.area?entry:known),area:known.area+entry.area});
+    }
+    return {id,name:doc.nodes[id].name,faces:[...byName.values()],unnamed};
+   }))};
   },
   importStep(bytes,file,options={}){
    const limit=options.limits?.maxStepImportBytes;
@@ -301,6 +322,7 @@ export function runExactRequest(backend:ExactBackend,request:ExactCommandRequest
   :request.operation==='drawing'?{operation:'drawing' as const,...backend.drawing(request.document,request.bodies,options)}
   :request.operation==='section'?{operation:'section' as const,...backend.section(request.document,request.bodies,sectionInput(request),options)}
   :request.operation==='import-step'?{operation:'import-step' as const,...backend.importStep(stepInput(request),request.step!.name,options)}
+  :request.operation==='faces'?{operation:'faces' as const,...backend.faces(request.document,request.bodies,options)}
   :request.operation==='step-evidence'?{operation:'step-evidence' as const,...backend.stepEvidence(request.step?{bytes:stepInput(request),file:request.step.name}:{doc:request.document,ids:request.bodies},options)}
   :{operation:'export-step' as const,...backend.exportStep(request.document,request.bodies,options)};
  return {...computed,timing:{loadMs,runMs:performance.now()-started,memoryBytes:backend.kernel.memory().heap}};

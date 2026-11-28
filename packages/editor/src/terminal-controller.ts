@@ -265,7 +265,7 @@ export function createTerminalController(session:CadSession,options:TerminalOpti
    }
    if((ASSEMBLY_COMMANDS as readonly string[]).includes(name)){
     const command=parseAssemblyCommand(session,name,tail);
-    if(command.async){append('output',name==='mechanism'?t('Sweeping the joint…'):t('Planning…'));append('output',await command.run(session,options.assembly,undefined,(line,commit)=>journal.withInvocation(line,commit)));return;}
+    if(command.async){append('output',name==='mechanism'?t('Sweeping the joint…'):name==='mate'?t('Solving…'):t('Planning…'));append('output',await command.run(session,options.assembly,undefined,(line,commit)=>journal.withInvocation(line,commit),options.exact));return;}
     append('output',command.edits?journal.withInvocation(command.invocation,()=>command.run(session) as string):command.run(session) as string);
     return;
    }

@@ -1128,7 +1128,10 @@ reference for each.
 4. **Assemblies:** configurations, exploded view, mechanism validation and the
    planetary/ring-gear preset from [KERNELCAD-REVIEW.md](KERNELCAD-REVIEW.md#remaining-backlog-from-the-plan);
    step 5 of [PARAMETRIC-CAD-STRATEGY.md](PARAMETRIC-CAD-STRATEGY.md#delivery-order-and-acceptance). **Done 2026-11-27** (document version 50, exact
-   kernel 0.1.11; see [Assemblies](#assemblies-document-version-50-done-2026-11-27)).
+   kernel 0.1.11; see [Assemblies](#assemblies-document-version-50-done-2026-11-27)). **Linked
+   instances, mates, a turning planetary carrier and exact edges on exploded sheets done 2026-11-28**
+   (document version 51, no new kernel release; see
+   [Linked instances and mates](#linked-instances-and-mates-document-version-51-done-2026-11-28)).
 5. **Smaller tools:** split by plane, multi-material inspection, MCP STEP evidence and
    surface-blend tools. **Done 2026-11-27** (document version 49 for split; see
    [Smaller tools](#smaller-tools-phase-65-document-version-49-done-2026-11-27)).
@@ -1686,15 +1689,144 @@ German; MCP `cad_run_commands` (`planetary`, `explode auto`), `cad_assembly` and
 `cad_check_mechanism` (read-only, revision unchanged). Lab: `tests/step-structure.test.ts` (3).
 Browser: `tests/browser/assembly.spec.ts` on the `ipad` project, by touch.
 
-**Left open.** Linked versus independent instances (a repeated STEP part is stored once per
-instance) and mates with stable frames (joints are the simulation's hinges, sliders, pivots and
-fixed joints); suppression of construction inside a body (configurations suppress top-level bodies
+**Left open.** ~~Linked versus independent instances~~ and ~~mates with stable frames~~ (done
+2026-11-28, version 51; a repeated STEP part is still stored once per instance, see below);
+suppression of construction inside a body (configurations suppress top-level bodies
 only); configurations of a part used by several assemblies (the lab's `configurations()` per part
 file) and a bill of materials grouped by configuration; exploded-view trails and per-step
-directions edited by dragging; exact edges on exploded drawing sheets (refused with the reason);
+directions edited by dragging; ~~exact edges on exploded drawing sheets~~ (done 2026-11-28);
 a continuous swept-volume or exact-distance check between samples, joint-limit suggestion from
-geometry and the lab's rest-pose mate-gap diagnostics; carrier-driven (planet carrier turning)
-planetary sets, which need a carrier body on its own hinge; macOS native menus for the new items.
+geometry and the lab's rest-pose mate-gap diagnostics; ~~carrier-driven (planet carrier turning)
+planetary sets~~ (done 2026-11-28 for the mechanism check; not simulated); ~~macOS native menus for
+the new items~~ (done 2026-11-27, generated from the menu definition).
+
+#### Linked instances and mates (document version 51). **Done 2026-11-28**
+
+**What it is.**
+- **Linked instances.** `instance "Bracket" [count 3] [step X,Y,Z] [rotate X,Y,Z]` (terminal,
+  palette, MCP `cad_run_commands`, CLI `run`; in the Assembly dialog's Groups tab **Linked copies of
+  the selected body**, side by side one body width apart) places copies that share the part's
+  definition: one `instance` node per placement points at the part, nothing of its construction is
+  copied. Changing the part (its size, sketch, code, parameters, a fillet or holes made on it)
+  changes every instance; moving or turning the part moves only the part. `unlink` (or **Unlink**
+  on the instance's row) makes an instance an independent copy, same shape and place. Deleting or
+  combining the part leaves its instances as independent copies of it as it was (Undo links them
+  again). An instance is placed by rotation and position only (scale belongs to the part) and is
+  never combined itself. Instances display, simulate, print, export STEP, measure, check and draw
+  like any body; the exact kernel lowers the part once per request and places it per instance.
+- **Mates.** `mate coincident|concentric "A" <face> "B" <face> [aligned]`, `mate distance <mm> ...`
+  relate a named face of one body to one of another; `mate faces "body"` lists a body's faces
+  (number, name, surface kind, area, normal or axis); `mate solve` places the bodies again after an
+  edit; `mate delete <n>`; `mate` lists them. The Assembly dialog has a **Mates** tab (touch):
+  **Load faces**, two bodies and a face of each from lists, the kind, a distance and **Aligned**,
+  then **Add mate**; each mate has **Delete**, and **Solve mates** re-solves. Coincident and
+  distance take two planar faces (opposed by default: the faces touch; `aligned`: their normals
+  point the same way), concentric two faces with an axis (cylinders, cones). Adding a mate solves
+  all mates and moves the bodies into place in one Undo step; the body of the first mate's first
+  face (or a body with static physics) stays where it is. Mates that cannot all hold are refused
+  with the first mate that conflicts with the ones before it ("Mate 3 (distance) conflicts with
+  the mates before it: they cannot all hold (over-constrained …)"), a mate that adds nothing to the
+  others is refused as redundant, and in both cases nothing moves. Degrees of freedom the mates
+  leave are reported, not refused. A face that an edit removed is reported with the mate and the
+  face ("Mate 1 (concentric): Base has no face … any more"); no other face is ever taken.
+- **Planetary set with a turning carrier.** `planetary … fixed ring|sun` (default `fixed
+  carrier`, the version 50 set unchanged): the carrier plate turns on its own hinge (motor A) over a
+  fixed frame, and sun, planets and ring hinge on the carrier. With the ring fixed the sun runs at
+  (zs + zr)/zs of the carrier (4 × for 12/12/36: the carrier turns at a quarter of the sun); with
+  the sun fixed the ring runs at (zs + zr)/zr (4/3 ×). The mechanism check sweeps the carrier with
+  everything it carries; the set meshes without tooth interference over one tooth pitch and a full
+  turn, and planets half a tooth out of phase collide at rest.
+- **Exploded drawing sheets with exact edges.** An assembly sheet drawn in an exploded view now
+  takes its lines from the exact B-rep too: each body's edges, faces and face-wise mesh move by the
+  view's offset (`explodedExactDrawing`), as its display mesh does. An exploded sheet with a
+  section cuts the moved meshes (the exact cut faces are not moved).
+- **Group rename** in the Assembly dialog is a field in the group's row with **Save** and
+  **Cancel** (Enter and Escape with a keyboard), no browser prompt, so it works on an iPad.
+
+**Design.**
+- Document (version 51): the `instance` node kind (`packages/core/src/instances.ts`) and
+  `assembly.mates` (`packages/core/src/mates.ts`); see
+  [PARAMETRIC-MODEL.md](PARAMETRIC-MODEL.md#document-versions). Both are accepted only at version
+  51, and a document reaches 51 only when an instance or a mate is added; documents up to 50 load,
+  build and save byte for byte as before.
+- Instance geometry (Manifold, `packages/geometry/src/kernel.ts`): the evaluator keeps each node's
+  construction before its own transform (`buildLocal`, cached), so a part and all its instances
+  share one build; an instance scales it by the part's scale and applies its own rotation and
+  position. Exact (`lower-document.ts`): the part is lowered once per request without its
+  placement, faces named as for edge references when asked. `modelInputs` adds an instance's source
+  to `constructionInputs` for suppression (`configuredDocument` turns instances of a suppressed part
+  into copies so the configured model stays valid) and the B-rep cache.
+- Every commit runs `followInstanceSources`: a source that is no longer top-level is followed when
+  the node that replaced it was built on it in place (an exact feature on it; a subtraction or a
+  solid/hole union with it as the solid), with the instance's placement composed with the inverse
+  of the part's rigid placement; otherwise `materializeInstance` copies the part's construction (from
+  the document before the edit when the edit deleted it), sketches and parameter bindings with new
+  ids into the instance's node, and the face names of its mates follow the copy. Copy and paste,
+  duplicate, model source and the history archive carry instances and mates.
+- Faces: a new exact request `faces` lowers each body in world space with its faces named
+  (`<leaf>:f<k>`, kept through Booleans, transforms and features by the kernel) and returns each
+  named face's surface kind, area, point, normal and axis (pieces of one face merged). An
+  instance's faces carry its part's leaf names; the mate's body says which placement is meant.
+- Solver (`solveMates`, original code): bodies in each connected set of mated bodies move rigidly;
+  a constructive pass turns each body (smallest rotation onto its first mate's direction, then
+  about that direction for the second) and shifts it (least squares over the planar distances and
+  axis offsets) onto the mates it has with placed bodies; then a damped Gauss-Newton solve over
+  all moved bodies (rotation vector and translation each) makes every mate hold together
+  (tolerance 1e-7). Residuals: normals `nA + nB` (or `nA − nB` aligned) and `(pB − pA)·nA − d` for
+  planar mates, `dA × dB` and `(oB − oA) × dA` for concentric ones. If the mates cannot hold, the
+  solve is repeated on growing prefixes to name the first conflicting mate; at a solution the
+  Jacobian's rows per mate are orthogonalised in order, and a mate adding no independent row is
+  redundant; the rank gives the freedom left. Then the new transforms are committed with the mates.
+- Mechanism kinematics: a hinge driven through a gear mesh is now followed outward (from its body
+  A to its body B) when the sides are collected, and poses compose inner joints before the joints
+  that carry them, so a planet turns on its pin and goes round with the carrier. Gear trains whose
+  hinges all sit on one fixed base (the version 50 set, gear pairs) pose exactly as before.
+- The fixed member of a turning planetary set is held by one more gear mesh, ω(fixed member's
+  hinge) = −ω(carrier hinge), so in the carrier's frame all meshes keep the ratios of the held set.
+- Commands `instance`, `unlink`, `mate` in the registry and `ASSEMBLY_COMMANDS` (assembly commands
+  now receive the exact host); `mate` records the canonical form with face names in the journal, so
+  a replay finds the same faces whatever their numbers. MCP `cad_assembly` lists `mates` and
+  `instances`. German for everything (`locales/de-assembly-v51.ts`).
+
+**Tests.** `tests/assembly-v51.test.ts` (16): instances at version 51 following edits of the part
+and not its placement, one stored definition, Undo back to the earlier version; refusals (a scaled
+instance, an instance as an operand, a chain, version 50); save/load, model source and the history
+archive, and a version 50 document byte for byte; following a fillet and a subtraction on the part
+in place, independent copies after delete (Undo relinks) and union; exact measure and STEP export
+of instances; copy and paste with and without the part, duplicate; `instance` and `unlink` with
+journal lines; a suppressed part with its instances (geometry and `configuredDocument`); coincident,
+concentric and distance (aligned) mates solved onto a base with a bore, one Undo step each,
+`mate solve` after a manual move; over-constrained (conflicting distance, a duplicate, parallel
+planes) refused with the mate named and nothing moved; a stale face after the bore leaves the
+body, a plane given to a concentric mate, a face number that does not exist, and the solver never
+binding another face; mates on a linked instance by the part's face names, renamed when unlinked;
+the turning planetary set's Willis ratios (layout, poses, planets orbiting), no tooth interference
+over a tooth pitch and a full carrier turn for ring and sun fixed, out-of-phase clash; terminal
+insertion with the canonical invocation; exploded exact drawing data moved per body; German; MCP
+`cad_run_commands` with `instance` and `mate`, `cad_assembly`. Browser:
+`tests/browser/assembly-v51.spec.ts` on the `ipad` project, by touch: a group renamed in place
+(no `window.prompt`), two linked copies placed and one unlinked, a coincident mate added from
+the faces the exact kernel lists. `npm run verify:brickwright` has a version 51 case: two
+instances and two mates through the real BrickWright SB3 writer and loader.
+
+**Left open.**
+- The physics simulation of a turning carrier: its gear meshes relate hinge rates in each hinge's
+  frame, and the Jolt gear constraint does not include the carrier's own speed, so such a set is
+  refused by the simulation with a pointer to the mechanism check rather than turned wrongly.
+- STEP import still stores a repeated part once per occurrence (the reader returns each occurrence
+  placed, as its own B-rep); importing repeated parts as one part with linked instances needs the
+  occurrence's placement from the kernel.
+- Mates: faces are chosen from lists (number, kind, area, normal), not by tapping a face in the 3D
+  view; only coincident, concentric and distance between faces (no edge, point, angle, tangent or
+  symmetric mates, no limits); mates and simulation joints are separate (moving a body by a mate
+  does not move a joint's anchor on the other body); grounding is the first body of each set (or a
+  static one), not chosen per mate; the solver is numeric, so a set started far from a solution
+  may need the faces chosen in another order.
+- Linked instances are placed rigidly (no per-instance scale or parameter overrides) and only as
+  top-level bodies (no instances inside a combination, no pattern of instances); the part is a
+  top-level body of the same document (no external part files).
+- Exact cut faces of a section on an exploded sheet stay where the bodies were (the mesh slice of
+  the moved bodies is drawn instead).
 
 ### Phase 7: delivery and qualification
 

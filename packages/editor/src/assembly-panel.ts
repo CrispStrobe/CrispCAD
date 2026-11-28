@@ -3,9 +3,10 @@
 // mechanism check, with a bar over the 3D view that shows an exploded view or a joint's pose on a
 // slider (and plays it). The bar only moves the displayed meshes; the model stays where it is.
 // Touch first: selects, number fields, sliders and 44 px buttons, so it works on an iPad without a
-// keyboard.
-import {createPlanetaryDocument,explodeOffsets,formatMechanismReport,groupBodies,listJoints,mechanismPose,newId,planExplodedView,planMechanism,t} from '@brickwright/cad-core';
-import type {CadDocument,CadSession,ExplodeBodyBounds,MechanismReport,MechanismSettings,RigidMotion,Vec3} from '@brickwright/cad-core';
+// keyboard. Names are edited in place (no browser prompt). Document version 51 adds linked instances
+// (Groups tab) and mates between faces (Mates tab; the exact kernel names the faces).
+import {MATE_KINDS,MateError,createPlanetaryDocument,explodeOffsets,formatMateSolution,formatMechanismReport,groupBodies,listJoints,mateLabel,mechanismPose,newId,planExplodedView,planMechanism,solveMates,t} from '@brickwright/cad-core';
+import type {AssemblyMate,CadDocument,CadSession,ExplodeBodyBounds,MateBodyFaces,MateKind,MechanismReport,MechanismSettings,RigidMotion,Vec3} from '@brickwright/cad-core';
 
 export interface AssemblyPanelHost {
  /** Evaluated bounds of the bodies in the model now (for planning an exploded view). */
@@ -13,8 +14,10 @@ export interface AssemblyPanelHost {
  mechanism(doc:CadDocument,settings:MechanismSettings,signal:AbortSignal):Promise<MechanismReport>;
  /** Moves displayed meshes (world motions per body); null shows the model as it is. */
  present(motions:ReadonlyMap<string,RigidMotion>|null):void;
+ /** The named faces of bodies (exact kernel), for mates. */
+ faces?(doc:CadDocument,ids:readonly string[],signal?:AbortSignal):Promise<MateBodyFaces[]>;
 }
-type Tab='groups'|'explode'|'configurations'|'mechanism';
+type Tab='groups'|'explode'|'configurations'|'mates'|'mechanism';
 const el=<K extends keyof HTMLElementTagNameMap>(tag:K,className='',text?:string)=>{const e=document.createElement(tag);if(className)e.className=className;if(text!==undefined)e.textContent=text;return e;};
 const button=(label:string,click:()=>void,className='')=>{const b=el('button',className,label);b.type='button';b.onclick=click;return b;};
 const translationOnly=(offsets:ReadonlyMap<string,Vec3>)=>new Map([...offsets].map(([id,d])=>[id,[1,0,0,d[0],0,1,0,d[1],0,0,1,d[2]] as RigidMotion]));
@@ -29,9 +32,9 @@ export function mountAssemblyPanel(shell:HTMLElement,viewHost:HTMLElement,sessio
  dialog.append(heading,tabs,body,status,footer);
  dialog.addEventListener('keydown',event=>event.stopPropagation());
  shell.append(dialog);
- let tab:Tab='groups';
+ let tab:Tab='groups',renaming:string|undefined;
  const tabButtons=new Map<Tab,HTMLButtonElement>();
- for(const [key,label] of [['groups','Groups'],['explode','Exploded view'],['configurations','Configurations'],['mechanism','Mechanism']] as const){
+ for(const [key,label] of [['groups','Groups'],['explode','Exploded view'],['configurations','Configurations'],['mates','Mates'],['mechanism','Mechanism']] as const){
   const b=button(t(label),()=>{tab=key;render();});b.setAttribute('role','tab');b.dataset.tab=key;tabButtons.set(key,b);tabs.append(b);
  }
  const report=(message:string,error=false)=>{status.textContent=message;status.dataset.error=String(error);};
@@ -81,20 +84,31 @@ export function mountAssemblyPanel(shell:HTMLElement,viewHost:HTMLElement,sessio
  function render(){
   for(const [key,b] of tabButtons){b.setAttribute('aria-selected',String(key===tab));b.classList.toggle('primary',key===tab);}
   body.replaceChildren();body.dataset.tab=tab;
-  if(tab==='groups')renderGroups();else if(tab==='explode')renderExplode();else if(tab==='configurations')renderConfigurations();else renderMechanism();
+  if(tab!=='groups')renaming=undefined;
+  if(tab==='groups')renderGroups();else if(tab==='explode')renderExplode();else if(tab==='configurations')renderConfigurations();else if(tab==='mates')renderMates();else renderMechanism();
  }
  function renderGroups(){
   const a=doc().assembly,groups=a?.groups??[],off=new Set(a?.suppressed??[]);
   const tree=el('ul','assembly-tree');
   const bodyRow=(id:string)=>{const li=el('li','assembly-body-row');li.dataset.body=id;
-   const label=button(name(id),()=>session.select([id]),'assembly-name');if(off.has(id))label.classList.add('suppressed');
-   li.append(label,button(off.has(id)?t('Unsuppress'):t('Suppress'),()=>attempt(()=>{session.setSuppressed([id],!off.has(id));return off.has(id)?t`${name(id)} is back in the model.`:t`${name(id)} is suppressed.`;})));return li;};
+   const node=doc().nodes[id],linked=node?.kind==='instance'?node.source:undefined;
+   const label=button(linked?t`${name(id)} (linked to ${name(linked)})`:name(id),()=>session.select([id]),'assembly-name');if(off.has(id))label.classList.add('suppressed');
+   li.append(label,button(off.has(id)?t('Unsuppress'):t('Suppress'),()=>attempt(()=>{session.setSuppressed([id],!off.has(id));return off.has(id)?t`${name(id)} is back in the model.`:t`${name(id)} is suppressed.`;})));
+   if(linked){li.dataset.instance=linked;li.append(button(t('Unlink'),()=>attempt(()=>{session.unlinkInstances([id]);return t`${name(id)} is now an independent copy of ${name(linked)}.`;})));}
+   return li;};
   const visit=(parent:string|undefined,into:HTMLElement)=>{
    for(const g of groups.filter(x=>x.parent===parent)){
     const li=el('li','assembly-group-row');li.dataset.group=g.id;
     const head=el('div','assembly-group-head');
-    head.append(button(`▸ ${g.name} (${groupBodies(a,g.id).length})`,()=>session.select(groupBodies(a,g.id)),'assembly-name'),
-     button(t('Rename'),()=>{const value=prompt(t('Group name'),g.name);if(value!==null)attempt(()=>{session.renameGroup(g.id,value);return t`Renamed the group to ${value}.`;});}),
+    if(renaming===g.id){
+     // Renamed in place: a field with Save and Cancel (Enter and Escape on a keyboard).
+     const field=el('input');field.value=g.name;field.setAttribute('aria-label',t('New group name'));field.className='assembly-rename';field.enterKeyHint='done';
+     const save=()=>{const value=field.value;renaming=undefined;attempt(()=>{session.renameGroup(g.id,value);return t`Renamed the group to ${value.trim()}.`;});};
+     field.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();save();}else if(event.key==='Escape'){event.preventDefault();renaming=undefined;render();}});
+     head.append(field,button(t('Save'),save,'primary'),button(t('Cancel'),()=>{renaming=undefined;render();}));
+     queueMicrotask(()=>{field.focus();field.select();});
+    }else head.append(button(`▸ ${g.name} (${groupBodies(a,g.id).length})`,()=>session.select(groupBodies(a,g.id)),'assembly-name'),
+     button(t('Rename'),()=>{renaming=g.id;report('');render();}),
      button(t('Ungroup'),()=>attempt(()=>{session.ungroup(g.id);return t`Dissolved the group ${g.name}.`;})));
     const children=el('ul');visit(g.id,children);g.members.forEach(m=>children.append(bodyRow(m)));
     li.append(head,children);into.append(li);
@@ -105,7 +119,20 @@ export function mountAssemblyPanel(shell:HTMLElement,viewHost:HTMLElement,sessio
   doc().roots.filter(id=>!grouped.has(id)).forEach(id=>tree.append(bodyRow(id)));
   const make=el('div','assembly-row'),groupName=el('input');groupName.placeholder=t('Group name');groupName.setAttribute('aria-label',t('Group name'));groupName.value=t('Group');
   make.append(groupName,button(t('Group selected bodies'),()=>attempt(()=>{const ids=session.state.selection.filter(id=>doc().roots.includes(id));if(!ids.length)throw new Error(t('Select top-level bodies to group'));session.groupBodies(groupName.value,ids);return t`Grouped ${ids.length} bodies as ${groupName.value}.`;}),'primary'));
-  body.append(el('p','assembly-hint',t('Tap a group or body to select it. Suppressed bodies are left out of the model (not built, exported, simulated or drawn) until you put them back.')),tree,make);
+  const link=el('div','assembly-row'),linkCount=el('input');linkCount.type='number';linkCount.min='1';linkCount.max='100';linkCount.step='1';linkCount.value='1';linkCount.inputMode='numeric';linkCount.setAttribute('aria-label',t('Linked copies'));
+  link.append(linkCount,button(t('Linked copies of the selected body'),()=>void (async()=>{
+   try{
+    const ids=session.state.selection.filter(id=>doc().roots.includes(id));if(ids.length!==1)throw new Error(t('Select one top-level body to link'));
+    const count=Number(linkCount.value);if(!Number.isInteger(count)||count<1||count>100)throw new Error(t('Count must be a whole number from 1 to 100'));
+    const revision=session.state.revision,box=(await host.bounds(doc())).find(b=>b.id===ids[0]);
+    if(session.state.revision!==revision)throw new Error(t('The design changed before this edit could be applied.'));
+    // Side by side along X, one body width (and 5 mm) apart.
+    const step=box?box.bounds.max[0]-box.bounds.min[0]+5:10,from=doc().nodes[ids[0]].transform;
+    const made=session.addInstances(ids[0],Array.from({length:count},(_,i)=>({position:[from.position[0]+step*(i+1),from.position[1],from.position[2]] as Vec3,rotation:[...from.rotation] as Vec3})));
+    report(t`Placed ${made.length} linked instances of ${name(ids[0])}: editing the part changes every instance.`);render();
+   }catch(error){report(error instanceof Error?error.message:String(error),true);}
+  })()));
+  body.append(el('p','assembly-hint',t('Tap a group or body to select it. Suppressed bodies are left out of the model (not built, exported, simulated or drawn) until you put them back.')),tree,make,link);
  }
  function renderExplode(){
   const views=doc().assembly?.views??[];
@@ -147,6 +174,66 @@ export function mountAssemblyPanel(shell:HTMLElement,viewHost:HTMLElement,sessio
   const save=el('div','assembly-row'),configName=el('input');configName.placeholder=t('Configuration name');configName.setAttribute('aria-label',t('Configuration name'));
   save.append(configName,button(t('Save current as configuration'),()=>attempt(()=>{if(!configName.value.trim())throw new Error(t('Name the configuration (at most 160 characters)'));session.saveConfiguration(configName.value);return t`Saved the configuration ${configName.value.trim()}: the current parameters and suppressed bodies.`;}),'primary'));
   body.append(el('p','assembly-hint',t('A configuration keeps the values of every parameter and which bodies are suppressed. Change parameters (Parameters panel) and suppression (Groups), then save; Use switches in one Undo step.')),list,save);
+ }
+ let mateFaces:MateBodyFaces[]|undefined,mateBusy:AbortController|undefined;
+ function renderMates(){
+  const d=doc(),mates=d.assembly?.mates??[];
+  const list=el('ul','assembly-list');
+  mates.forEach(m=>{const li=el('li','assembly-row');li.dataset.mate=m.id;
+   li.append(el('span','',`${mateLabel(mates,m)}${m.kind==='distance'?` ${+m.distance!.toFixed(4)} mm`:''}${m.aligned?t(' (aligned)'):''}: ${name(m.a.body)} – ${name(m.b.body)}`),button(t('Delete'),()=>attempt(()=>{session.setMates('Delete mate',mates.filter(x=>x!==m));return t`Deleted ${mateLabel(mates,m)}; the bodies stay where they are.`;})));
+   list.append(li);});
+  if(!mates.length)list.append(el('li','assembly-hint',t('No mates yet.')));
+  if(!host.faces){body.append(list,el('p','assembly-hint',t('Mates need the exact kernel, which this host does not provide.')));return;}
+  const roots=d.roots.filter(id=>!d.nodes[id].reference&&d.nodes[id].role!=='hole');
+  const labelled=(text:string,input:HTMLElement)=>{const l=el('label','',text);l.append(input);return l;};
+  const kind=el('select');kind.setAttribute('aria-label',t('Mate'));for(const k of MATE_KINDS){const o=el('option','',t(k));o.value=k;kind.append(o);}
+  const distance=el('input');distance.type='number';distance.step='any';distance.inputMode='decimal';distance.value='0';distance.setAttribute('aria-label',t('Distance (mm)'));
+  const aligned=el('input');aligned.type='checkbox';aligned.setAttribute('aria-label',t('Aligned'));
+  const sides=(['a','b'] as const).map(side=>{
+   const bodySelect=el('select');bodySelect.setAttribute('aria-label',side==='a'?t('First body'):t('Second body'));bodySelect.dataset.side=side;
+   for(const id of roots){const o=el('option','',name(id));o.value=id;bodySelect.append(o);}
+   const selected=session.state.selection.filter(id=>roots.includes(id));
+   bodySelect.value=(side==='a'?selected[0]:selected[1])??roots[side==='a'?0:Math.min(1,roots.length-1)]??'';
+   const faceSelect=el('select');faceSelect.setAttribute('aria-label',side==='a'?t('First face'):t('Second face'));faceSelect.dataset.side=side;
+   const fill=()=>{faceSelect.replaceChildren();const faces=mateFaces?.find(b=>b.id===bodySelect.value)?.faces??[];
+    faces.forEach((f,i)=>{const o=el('option','',`${i+1}: ${t(f.surface)} · ${+f.area.toFixed(1)} mm² · ${f.axis?'⊙':`↑ ${f.normal.map(v=>+v.toFixed(2)).join(', ')}`}`);o.value=f.name;faceSelect.append(o);});
+    faceSelect.disabled=!faces.length;};
+   bodySelect.onchange=fill;fill();
+   return {bodySelect,faceSelect,fill};
+  });
+  const load=button(t('Load faces'),()=>void (async()=>{
+   mateBusy?.abort();mateBusy=new AbortController();load.disabled=true;report(t('Reading faces from the exact kernel…'));
+   try{mateFaces=await host.faces!(doc(),roots.slice(0,64),mateBusy.signal);for(const s of sides)s.fill();report(t`${mateFaces.length} bodies: choose a face of each.`);}
+   catch(error){report(error instanceof Error?error.message:String(error),true);}
+   finally{load.disabled=false;}
+  })());
+  const solveWith=async(next:AssemblyMate[],title:string)=>{
+   const revision=session.state.revision,bodies=[...new Set(next.flatMap(m=>[m.a.body,m.b.body]))];
+   const faces=await host.faces!(doc(),bodies,mateBusy?.signal);
+   if(session.state.revision!==revision)throw new Error(t('The design changed before this edit could be applied.'));
+   const solution=solveMates(doc(),next,faces);
+   session.setMates(title,next,solution.placements);
+   return formatMateSolution(doc(),next,solution);
+  };
+  const add=button(t('Add mate'),()=>void (async()=>{
+   add.disabled=true;
+   try{
+    const [a,b]=sides,k=kind.value as MateKind;
+    if(!mateFaces)throw new Error(t('Load the faces first.'));
+    if(a.bodySelect.value===b.bodySelect.value)throw new Error(t('a mate joins two different bodies'));
+    if(!a.faceSelect.value||!b.faceSelect.value)throw new Error(t('Choose a face of each body.'));
+    const mate:AssemblyMate={id:newId(),kind:k,a:{body:a.bodySelect.value,face:a.faceSelect.value},b:{body:b.bodySelect.value,face:b.faceSelect.value},...(k==='distance'?{distance:Number(distance.value)||0}:{}),...(aligned.checked&&k!=='concentric'?{aligned:true as const}:{})};
+    report(t('Solving…'));report(await solveWith([...(doc().assembly?.mates??[]),mate],'Add mate'));mateFaces=undefined;render();
+   }catch(error){report(error instanceof MateError||error instanceof Error?error.message:String(error),true);}
+   finally{add.disabled=false;}
+  })(),'primary');
+  const solve=button(t('Solve mates'),()=>void (async()=>{
+   try{if(!mates.length)throw new Error(t('No mates to solve.'));report(t('Solving…'));report(await solveWith([...mates],'Solve mates'));render();}
+   catch(error){report(error instanceof Error?error.message:String(error),true);}
+  })());
+  const form=el('div','assembly-form');
+  form.append(labelled(t('Mate'),kind),labelled(t('First body'),sides[0].bodySelect),labelled(t('First face'),sides[0].faceSelect),labelled(t('Second body'),sides[1].bodySelect),labelled(t('Second face'),sides[1].faceSelect),labelled(t('Distance (mm)'),distance),labelled(t('Aligned'),aligned),load,add,solve);
+  body.append(el('p','assembly-hint',t('A mate places the second body against the first: coincident or a distance between two flat faces, concentric between two round ones. The first body of the first mate stays where it is; mates that cannot all hold are refused, and nothing moves.')),list,form);
  }
  function renderMechanism(){
   const joints=doc().joints??[];
